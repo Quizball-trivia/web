@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { MatchHeader, DraftPhase } from './components/MatchHeader';
 import { CategoryGameCard } from './components/CategoryGameCard';
 import { toast } from 'sonner';
 import { CategorySummary } from '@/lib/domain';
-import { useCategoriesList } from '@/lib/queries/categories.queries';
+import { useDraftLogic } from './hooks/useDraftLogic';
 import { Loader2 } from 'lucide-react';
 
 interface RankedCategoryBlockingScreenProps {
@@ -20,123 +19,12 @@ export function RankedCategoryBlockingScreen({
   onCategoriesSelected,
 }: RankedCategoryBlockingScreenProps) {
   
-  // Game State
-  const [phase, setPhase] = useState<DraftPhase>('ban');
-  const [timeLeft, setTimeLeft] = useState(15);
-  const [currentActor, setCurrentActor] = useState<'player' | 'opponent'>('player');
+  const { state, actions } = useDraftLogic({ onCategoriesSelected });
   
-  // Selections
-  const [playerBannedId, setPlayerBannedId] = useState<string | null>(null);
-  const [opponentBannedId, setOpponentBannedId] = useState<string | null>(null);
-  const [playerPickedIds, setPlayerPickedIds] = useState<string[]>([]);
-  
-  // Fetch Categories
-  const { data, isLoading } = useCategoriesList({
-    limit: 6,
-    page: 1,
-    is_active: "true",
-  });
-
-  const poolCategories = useMemo(() => data?.items ?? [], [data?.items]);
-
-  // Timer Logic
-  useEffect(() => {
-    if (timeLeft > 0 && phase !== 'ready') {
-      const timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
-      return () => clearTimeout(timer);
-    } else if (timeLeft === 0) {
-      handleTimeExpired();
-    }
-  }, [timeLeft, phase]);
-
-  const handleTimeExpired = () => {
-    if (phase === 'ban') {
-      if (currentActor === 'player' && !playerBannedId) {
-        // Auto-ban
-        const available = poolCategories.filter(c => c.id !== opponentBannedId && c.id !== playerBannedId);
-        if (available.length > 0) handleCategoryClick(available[0]);
-      } else if (currentActor === 'opponent') {
-        // Opponent auto-ban
-        const available = poolCategories.filter(c => c.id !== playerBannedId);
-        const random = available[Math.floor(Math.random() * available.length)];
-        if (random) setOpponentBannedId(random.id);
-        
-        // Move to Pick phase
-        setPhase('pick');
-        setCurrentActor('player');
-        setTimeLeft(30);
-      }
-    } else if (phase === 'pick') {
-       // Auto-pick remaining needed
-       const needed = 3 - playerPickedIds.length;
-       if (needed > 0) {
-          const available = poolCategories.filter(c => 
-             c.id !== playerBannedId && c.id !== opponentBannedId && !playerPickedIds.includes(c.id)
-          );
-          const randomPicks = available.slice(0, needed).map(c => c.id);
-          setPlayerPickedIds(prev => [...prev, ...randomPicks]);
-       }
-       setPhase('ready');
-    }
-  };
-
-  // Bot Opponent Logic
-  useEffect(() => {
-    if (currentActor === 'opponent' && timeLeft > 10) {
-       const reactionTime = Math.random() * 2000 + 1000;
-       const timer = setTimeout(() => {
-          if (phase === 'ban') {
-             const available = poolCategories.filter(c => c.id !== playerBannedId);
-             const random = available[Math.floor(Math.random() * available.length)];
-             if (random) {
-                 setOpponentBannedId(random.id);
-                 toast(`Opponent banned ${random.name}`);
-             }
-             setPhase('pick');
-             setCurrentActor('player');
-             setTimeLeft(30); // 30s to pick
-          }
-       }, reactionTime);
-       return () => clearTimeout(timer);
-    }
-  }, [currentActor, phase, playerBannedId, poolCategories]);
-
-  // Handle completion
-  useEffect(() => {
-     if (phase === 'ready') {
-        const pickedCategories = poolCategories.filter(c => playerPickedIds.includes(c.id));
-        if (pickedCategories.length > 0) {
-           setTimeout(() => {
-              onCategoriesSelected(pickedCategories);
-           }, 1500);
-        }
-     }
-  }, [phase, playerPickedIds, poolCategories, onCategoriesSelected]);
-
-
-  const handleCategoryClick = (category: CategorySummary) => {
-    if (currentActor !== 'player') return;
-    if (playerBannedId === category.id || opponentBannedId === category.id) return;
-
-    if (phase === 'ban') {
-      setPlayerBannedId(category.id);
-      setCurrentActor('opponent');
-      setTimeLeft(15); 
-    } else if (phase === 'pick') {
-       if (playerPickedIds.includes(category.id)) {
-          setPlayerPickedIds(prev => prev.filter(id => id !== category.id));
-       } else if (playerPickedIds.length < 3) {
-          setPlayerPickedIds(prev => [...prev, category.id]);
-       }
-    }
-  };
-
-  const handleConfirmFunction = () => {
-     if (phase === 'pick' && playerPickedIds.length > 0) {
-        setPhase('ready');
-        toast.success("Categories locked! Match starting...");
-     }
-  };
+  const { 
+     phase, timeLeft, currentActor, poolCategories, 
+     playerBannedId, opponentBannedId, isLoading 
+  } = state;
 
   if (isLoading) {
      return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
@@ -156,10 +44,10 @@ export function RankedCategoryBlockingScreen({
        <div className="flex-1 container mx-auto max-w-5xl p-4">
           <div className="text-center mb-6">
              <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground">
-                {phase === 'ban' ? "Ban a Category" : "Vote 3 Categories"}
+                {phase === 'ban' ? "Ban a Category" : "Get Ready!"}
              </h2>
              <p className="text-muted-foreground text-sm">
-                {phase === 'ban' ? "The banned category will be removed from the match." : "Questions will be drawn from these categories."}
+                {phase === 'ban' ? "The banned category will be removed. Playing remaining 2." : "Match starting with remaining categories..."}
              </p>
           </div>
 
@@ -169,7 +57,6 @@ export function RankedCategoryBlockingScreen({
                 
                 if (category.id === playerBannedId) state = 'banned'; 
                 else if (category.id === opponentBannedId) state = 'opponent-banned';
-                else if (playerPickedIds.includes(category.id)) state = 'selected'; 
 
                 const disabled = (!!playerBannedId && category.id !== playerBannedId && phase === 'ban') ||
                                  (!!opponentBannedId && category.id === opponentBannedId);
@@ -180,7 +67,7 @@ export function RankedCategoryBlockingScreen({
                       category={category} 
                       state={state}
                       disabled={disabled || (currentActor !== 'player' && phase === 'ban')}
-                      onClick={() => handleCategoryClick(category)}
+                      onClick={() => actions.handleCategoryClick(category)}
                    />
                 );
              })}
@@ -188,20 +75,7 @@ export function RankedCategoryBlockingScreen({
        </div>
 
        {/* Bottom Action Bar (Pick Phase) */}
-       {phase === 'pick' && (
-          <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/90 backdrop-blur border-t border-border z-20">
-             <div className="container mx-auto max-w-md">
-                <Button 
-                   size="lg" 
-                   className="w-full font-black text-lg uppercase"
-                   disabled={playerPickedIds.length === 0}
-                   onClick={handleConfirmFunction}
-                >
-                   Confirm Selection ({playerPickedIds.length}/3)
-                </Button>
-             </div>
-          </div>
-       )}
+
     </div>
   );
 }

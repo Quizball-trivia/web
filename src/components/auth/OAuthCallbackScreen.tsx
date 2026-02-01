@@ -8,6 +8,7 @@ import { parseOAuthHash } from '@/lib/auth/auth.service';
 import { setTokens } from '@/lib/auth/tokenStorage';
 import { useAuthStore } from '@/stores/auth.store';
 import { AppLogo } from '../AppLogo';
+import { logger } from '@/utils/logger';
 
 export function OAuthCallbackScreen() {
   const router = useRouter();
@@ -17,16 +18,21 @@ export function OAuthCallbackScreen() {
   useEffect(() => {
     const processCallback = async () => {
       try {
+        logger.info('OAuth callback start', { hashLength: window.location.hash.length });
         const tokens = parseOAuthHash(window.location.hash);
         if (!tokens) {
+          logger.warn('OAuth callback missing tokens');
           throw new Error('Missing tokens in callback');
         }
         setTokens(tokens);
+        logger.info('OAuth callback tokens stored');
         // Clear tokens from URL (security: don't leave in browser history)
         window.history.replaceState({}, document.title, window.location.pathname);
         await bootstrap();
+        logger.info('OAuth callback bootstrap success');
         router.replace('/');
       } catch (err) {
+        logger.error('OAuth callback failed', err);
         setError(err instanceof Error ? err.message : 'Authentication failed');
       }
     };

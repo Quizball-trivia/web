@@ -2,6 +2,7 @@ import type { PlayerStats } from '@/types/game';
 import { ProfileMobile } from './profile/ProfileMobile';
 import { ProfileWeb } from './profile/ProfileWeb';
 import { useAuthStore } from '@/stores/auth.store';
+import { logger } from '@/utils/logger';
 
 interface ProfileScreenProps {
   player: PlayerStats;
@@ -19,7 +20,7 @@ export function ProfileScreen(props: ProfileScreenProps) {
       await logout();
       // Navigation handled by auth state change
     } catch (error) {
-      console.error('Logout failed', error);
+      logger.error('Logout failed', error);
     }
   };
 

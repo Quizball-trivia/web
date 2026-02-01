@@ -6,6 +6,7 @@ import { LoginScreen } from "@/components/auth/LoginScreen";
 import { login, socialLogin } from "@/lib/auth/auth.service";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { useAuthStore } from "@/stores/auth.store";
+import { logger } from "@/utils/logger";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,11 +14,13 @@ export default function LoginPage() {
 
   const handleLogin = async (email: string, password: string) => {
     try {
+      logger.info("Login submit", { email });
       await login(email, password);
       await bootstrap();
       const onboardingCompleted = storage.get(STORAGE_KEYS.ONBOARDING_COMPLETE, false);
       router.replace(onboardingCompleted ? "/" : "/onboarding");
     } catch (error) {
+      logger.warn("Login failed", error);
       toast.error("Login failed", {
         description:
           error instanceof Error
@@ -30,8 +33,10 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     try {
       const redirectTo = `${window.location.origin}/auth/callback`;
+      logger.info("Google login click", { redirectTo });
       await socialLogin("google", redirectTo);
     } catch (error) {
+      logger.warn("Google login failed", error);
       toast.error("Google login failed", {
         description: error instanceof Error ? error.message : "Please try again.",
       });

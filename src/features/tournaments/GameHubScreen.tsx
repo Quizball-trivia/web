@@ -5,6 +5,7 @@ import { WorldEventCard, WorldEventProps } from "./components/WorldEventCard";
 import { ChallengeTierCard, ChallengeTierProps } from "./components/ChallengeTierCard";
 import { QuestPathWidget } from "./components/QuestPathWidget";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { logger } from "@/utils/logger";
 
 export function GameHubScreen() {
   
@@ -105,11 +106,11 @@ export function GameHubScreen() {
              
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {CHALLENGES.map(challenge => (
-                   <ChallengeTierCard 
-                      key={challenge.id} 
-                      item={challenge} 
-                      onEnter={(id) => console.log('enter', id)} 
-                   />
+                  <ChallengeTierCard 
+                     key={challenge.id} 
+                     item={challenge} 
+                     onEnter={(id) => logger.info("Challenge enter", { id })} 
+                  />
                 ))}
              </div>
           </section>

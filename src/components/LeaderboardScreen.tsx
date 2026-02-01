@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Card, CardContent } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Trophy, Globe, Flag, Users, Medal, Loader2, Award, Zap, Target } from 'lucide-react';
+import { Trophy, Globe, Flag, Users, Medal, Loader2, Zap, Target } from 'lucide-react';
 import { useLeaderboard, useUserRank } from '@/lib/queries/leaderboard.queries';
 import { LeaderboardTable } from '@/features/leaderboard/components/LeaderboardTable';
 import { LeaderboardPodium } from '@/features/leaderboard/components/LeaderboardPodium';
@@ -20,11 +20,10 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
 
   // Fetch Data
   const { data: entries, isLoading, isError } = useLeaderboard(activeTab);
-  const { data: userAllRankData } = useUserRank(currentPlayerId || 'current-user');
+  useUserRank(currentPlayerId || 'current-user');
 
   // Derived Data
   const topThree = entries ? entries.slice(0, 3) : [];
-  const restOfEntries = entries ? entries.slice(3) : [];
   const userEntry = entries?.find(e => e.isCurrentUser || e.id === currentPlayerId);
 
   return (
@@ -95,7 +94,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
                                 <Users className="size-12 mx-auto text-muted-foreground opacity-50 mb-3" />
                                 <h4 className="font-bold">No Friends Yet</h4>
                                 <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
-                                   Invite friends to see who's the true QuizBall champion!
+                                   Invite friends to see who&apos;s the true QuizBall champion!
                                 </p>
                             </div>
                         )}

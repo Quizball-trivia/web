@@ -5,6 +5,7 @@ import type { ComponentProps } from "react";
 import { toast } from "sonner";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { OnboardingFlow } from "@/components/OnboardingFlow";
+import { logger } from "@/utils/logger";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -12,7 +13,7 @@ export default function OnboardingPage() {
   type OnboardingData = Parameters<ComponentProps<typeof OnboardingFlow>["onComplete"]>[0];
 
   const handleComplete = (data: OnboardingData) => {
-    console.log("[OnboardingPage] Completed with data:", data);
+    logger.info("Onboarding completed", { data });
     storage.set(STORAGE_KEYS.ONBOARDING_COMPLETE, true);
     router.replace("/");
     toast.success("Welcome to QuizBall!", {

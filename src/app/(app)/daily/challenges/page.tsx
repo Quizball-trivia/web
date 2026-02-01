@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { Card } from "@/components/ui/card";
@@ -174,10 +174,7 @@ function ChallengeCard({
 
 export default function DailyChallengesPage() {
   const router = useRouter();
-  const [completedChallenges, setCompletedChallenges] = useState<
-    Map<string, number>
-  >(new Map());
-  const [, setTick] = useState(0);
+  const [tick, setTick] = useState(0);
 
   // Force re-render every minute to update timers
   useEffect(() => {
@@ -186,54 +183,47 @@ export default function DailyChallengesPage() {
     }, 60000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [tick]);
 
-  useEffect(() => {
-    // Load completed challenges from storage
+  const { completedChallenges, needsReset } = useMemo(() => {
     const state = storage.get<DailyChallengeState | null>(
       STORAGE_KEYS.DAILY_CHALLENGE_STATE,
       null
     );
 
-    if (state?.completedChallenges) {
-      // Check if challenges need to be reset (past midnight)
-      const now = new Date();
-      const todayMidnight = new Date(now);
-      todayMidnight.setHours(0, 0, 0, 0);
-
-      const validChallenges = new Map<string, number>();
-
-      Object.entries(state.completedChallenges).forEach(([id, timestamp]) => {
-        // Only keep challenges completed after today's midnight
-        if (timestamp >= todayMidnight.getTime()) {
-          validChallenges.set(id, timestamp);
-        }
-      });
-
-      setCompletedChallenges(validChallenges);
-
-      // Update storage if some challenges were reset
-      if (
-        validChallenges.size !== Object.keys(state.completedChallenges).length
-      ) {
-        storage.set(STORAGE_KEYS.DAILY_CHALLENGE_STATE, {
-          completedChallenges: Object.fromEntries(validChallenges),
-        });
-      }
+    if (!state?.completedChallenges) {
+      return { completedChallenges: new Map<string, number>(), needsReset: false };
     }
+
+    // Check if challenges need to be reset (past midnight)
+    const now = new Date();
+    const todayMidnight = new Date(now);
+    todayMidnight.setHours(0, 0, 0, 0);
+
+    const validChallenges = new Map<string, number>();
+
+    Object.entries(state.completedChallenges).forEach(([id, timestamp]) => {
+      // Only keep challenges completed after today's midnight
+      if (timestamp >= todayMidnight.getTime()) {
+        validChallenges.set(id, timestamp);
+      }
+    });
+
+    const needsReset =
+      validChallenges.size !== Object.keys(state.completedChallenges).length;
+
+    return { completedChallenges: validChallenges, needsReset };
   }, []);
 
-  const handleSelectChallenge = (challengeId: DailyChallengeId) => {
-    // TODO: Navigate to actual challenge game screen
-    // For now, mark as completed immediately
-    const newCompleted = new Map(completedChallenges);
-    newCompleted.set(challengeId, Date.now());
-    setCompletedChallenges(newCompleted);
-
-    // Persist to storage
+  useEffect(() => {
+    if (!needsReset) return;
     storage.set(STORAGE_KEYS.DAILY_CHALLENGE_STATE, {
-      completedChallenges: Object.fromEntries(newCompleted),
+      completedChallenges: Object.fromEntries(completedChallenges),
     });
+  }, [completedChallenges, needsReset]);
+
+  const handleSelectChallenge = (challengeId: DailyChallengeId) => {
+    router.push(`/daily/challenges/${challengeId}`);
   };
 
   const completedCount = ALL_CHALLENGES.filter((c) =>
