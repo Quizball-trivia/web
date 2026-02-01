@@ -22,7 +22,6 @@
 
 # misc
 .DS_Store
-*.pem
 
 # debug
 npm-debug.log*
@@ -32,6 +31,11 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+.envrc
+.npmrc
+.yarnrc
+.yarnrc.yml
+.pnpmrc
 
 # vercel
 .vercel
@@ -39,3 +43,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# secrets / local data
+*.key
+*.crt
+*.cer
+*.pfx
+*.p12
+*.pem
+*.keystore
+*.sqlite
+*.db
+
+# local tooling
+.vscode/
+.idea/
+.eslintcache

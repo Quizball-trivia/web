@@ -1,0 +1,209 @@
+@import "tailwindcss";
+
+:root {
+  --font-size: 16px;
+  --radius: 0.5rem;
+  
+  /* Design System - HSL Colors */
+  --background: 220 20% 10%;
+  --foreground: 0 0% 95%;
+
+  --card: 220 15% 15%;
+  --card-foreground: 0 0% 95%;
+
+  --popover: 220 15% 15%;
+  --popover-foreground: 0 0% 95%;
+
+  --primary: 145 60% 45%;
+  --primary-foreground: 220 20% 10%;
+
+  --secondary: 220 15% 20%;
+  --secondary-foreground: 0 0% 95%;
+
+  --muted: 220 15% 25%;
+  --muted-foreground: 220 10% 60%;
+
+  --accent: 145 60% 45%;
+  --accent-foreground: 220 20% 10%;
+
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 220 15% 25%;
+  --input: 220 15% 25%;
+  --ring: 145 60% 45%;
+
+  --font-weight-medium: 600;
+  --font-weight-normal: 400;
+  --chart-1: 145 60% 45%;
+  --chart-2: 145 60% 55%;
+}
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .glass-surface {
+    background: linear-gradient(180deg, hsla(0, 0%, 100%, 0.03) 0%, hsla(0, 0%, 100%, 0.01) 100%), hsla(220, 20% , 8%, 0.3);
+    backdrop-filter: blur(24px);
+    border-radius: 32px;
+    box-shadow: inset 0 1px 1px hsla(0, 0%, 100%, 0.02);
+  }
+
+  .glass-card {
+    background: linear-gradient(180deg, hsla(0, 0%, 100%, 0.05) 0%, hsla(0, 0%, 100%, 0.01) 100%);
+    box-shadow: 
+      0 10px 40px -10px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 hsla(0, 0%, 100%, 0.06);
+    border-radius: 18px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    border: none;
+  }
+  
+  .glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, hsla(145, 60%, 45%, 0.4), transparent);
+    opacity: 0.3;
+    transition: opacity 0.4s ease, background 0.4s ease;
+  }
+
+  .glass-card:hover {
+    transform: translateY(-3px);
+    background: linear-gradient(180deg, hsla(0, 0%, 100%, 0.08) 0%, hsla(0, 0%, 100%, 0.02) 100%), 
+                radial-gradient(circle at 50% 0%, hsla(145, 60%, 45%, 0.1), transparent 70%);
+    box-shadow: 0 15px 50px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 hsla(0, 0%, 100%, 0.1);
+  }
+
+  .glass-card:hover::before {
+    opacity: 1;
+    background: linear-gradient(90deg, transparent, hsla(145, 60%, 45%, 0.8), transparent);
+  }
+
+  .glass-badge {
+    background: hsla(145, 60%, 45%, 0.1);
+    border: 1px solid hsla(145, 60%, 45%, 0.15);
+    box-shadow: 0 4px 12px hsla(145, 60%, 45%, 0.05);
+    transition: all 0.4s ease;
+  }
+
+  .glass-card:hover .glass-badge {
+    transform: translateY(-2px) scale(1.03) rotate(2deg);
+    border-color: hsla(145, 60%, 45%, 0.3);
+    box-shadow: 0 8px 20px hsla(145, 60%, 45%, 0.15);
+  }
+
+  .glass-bar {
+    background: linear-gradient(180deg, hsla(0, 0%, 100%, 0.04) 0%, hsla(0, 0%, 100%, 0.01) 100%), hsla(220, 20%, 10%, 0.4);
+    border: 1px solid hsla(0, 0%, 100%, 0.06);
+    box-shadow: inset 0 1px 0 hsla(0, 0%, 100%, 0.04);
+    backdrop-filter: blur(16px);
+    border-radius: 9999px;
+  }
+
+
+  .btn-glow {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .btn-glow::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(45deg, hsl(145 60% 45% / 0.5), hsl(145 60% 55% / 0.3), hsl(145 60% 45% / 0.5));
+    border-radius: inherit;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .btn-glow:hover::before {
+    opacity: 1;
+  }
+
+  .btn-glow:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px hsla(145, 60%, 45%, 0.3);
+  }
+
+  .btn-glow-pulse {
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% {
+      box-shadow: 0 0 10px hsla(145, 60%, 45%, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 25px hsla(145, 60%, 45%, 0.6);
+    }
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+
+  .stat-card {
+    transition: all 0.3s ease;
+  }
+
+  .stat-card:hover {
+    transform: scale(1.05);
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
