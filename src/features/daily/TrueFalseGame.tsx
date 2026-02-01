@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
@@ -137,28 +137,7 @@ export function TrueFalseGame({ onBack, onComplete }: TrueFalseGameProps) {
     return Math.floor(streak / 3) + 1;
   };
 
-  useEffect(() => {
-    if (showResult) return;
-
-    if (timeLeft === 0) {
-      handleAnswer(null);
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [timeLeft, showResult]);
-
-  useEffect(() => {
-    setTimeLeft(QUESTION_TIME);
-    setShowResult(false);
-    setSelectedAnswer(null);
-  }, [currentQuestionIndex]);
-
-  const handleAnswer = (answer: boolean | null) => {
+  const handleAnswer = useCallback((answer: boolean | null) => {
     if (showResult) return;
 
     setSelectedAnswer(answer);
@@ -185,6 +164,9 @@ export function TrueFalseGame({ onBack, onComplete }: TrueFalseGameProps) {
 
     setTimeout(() => {
       if (currentQuestionIndex < questions.length - 1) {
+        setTimeLeft(QUESTION_TIME);
+        setShowResult(false);
+        setSelectedAnswer(null);
         setCurrentQuestionIndex((prev) => prev + 1);
       } else {
         const finalCoins = correct
@@ -193,7 +175,31 @@ export function TrueFalseGame({ onBack, onComplete }: TrueFalseGameProps) {
         setTimeout(() => onComplete(finalCoins), 500);
       }
     }, 1500);
-  };
+  }, [
+    showResult,
+    currentQuestion,
+    correctStreak,
+    currentQuestionIndex,
+    questions.length,
+    totalCoins,
+    onComplete,
+  ]);
+
+  useEffect(() => {
+    if (showResult) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          setTimeout(() => handleAnswer(null), 0);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [showResult, handleAnswer]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

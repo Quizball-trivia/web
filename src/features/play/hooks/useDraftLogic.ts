@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { CategorySummary } from '@/lib/domain';
 import { useCategoriesList } from '@/lib/queries/categories.queries';
@@ -29,40 +29,40 @@ export function useDraftLogic({ onCategoriesSelected }: UseDraftLogicProps) {
   const [poolCategories, setPoolCategories] = useState<CategorySummary[]>([]);
   const [isSpinning, setIsSpinning] = useState(true);
 
-  const allCategories = data?.items ?? [];
-
   // Spin Effect
   useEffect(() => {
-    if (allCategories.length === 0) return;
+    const categories = data?.items ?? [];
+    if (categories.length === 0) return;
 
     let spins = 0;
     const maxSpins = 20;
     const interval = setInterval(() => {
-       const shuffled = [...allCategories].sort(() => 0.5 - Math.random()).slice(0, 4);
+       const shuffled = [...categories].sort(() => 0.5 - Math.random()).slice(0, 4);
        setPoolCategories(shuffled);
        spins++;
 
        if (spins >= maxSpins) {
           clearInterval(interval);
           setIsSpinning(false);
-          setPoolCategories([...allCategories].sort(() => 0.5 - Math.random()).slice(0, 4));
+          setPoolCategories([...categories].sort(() => 0.5 - Math.random()).slice(0, 4));
        }
     }, 100);
 
     return () => clearInterval(interval);
-  }, [allCategories.length]); 
+  }, [data?.items]); 
 
-  // Timer Logic
-  useEffect(() => {
-    if (timeLeft > 0 && phase !== 'ready') {
-      const timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
-      return () => clearTimeout(timer);
-    } else if (timeLeft === 0) {
-      handleTimeExpired();
+  const handleCategoryClick = useCallback((category: CategorySummary) => {
+    if (currentActor !== 'player') return;
+    if (playerBannedId === category.id || opponentBannedId === category.id) return;
+
+    if (phase === 'ban') {
+      setPlayerBannedId(category.id);
+      setCurrentActor('opponent');
+      setTimeLeft(15); 
     }
-  }, [timeLeft, phase]);
+  }, [currentActor, playerBannedId, opponentBannedId, phase]);
 
-  const handleTimeExpired = () => {
+  const handleTimeExpired = useCallback(() => {
     if (phase === 'ban') {
       if (currentActor === 'player' && !playerBannedId) {
         // Auto-ban
@@ -75,7 +75,17 @@ export function useDraftLogic({ onCategoriesSelected }: UseDraftLogicProps) {
         setPhase('ready');
       }
     }
-  };
+  }, [phase, currentActor, playerBannedId, opponentBannedId, poolCategories, handleCategoryClick]);
+
+  // Timer Logic
+  useEffect(() => {
+    if (timeLeft > 0 && phase !== 'ready') {
+      const timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (timeLeft === 0) {
+      handleTimeExpired();
+    }
+  }, [timeLeft, phase, handleTimeExpired]);
 
   // Bot Opponent Logic
   useEffect(() => {
@@ -94,7 +104,7 @@ export function useDraftLogic({ onCategoriesSelected }: UseDraftLogicProps) {
        }, reactionTime);
        return () => clearTimeout(timer);
     }
-  }, [currentActor, phase, playerBannedId, poolCategories]);
+  }, [currentActor, phase, playerBannedId, poolCategories, timeLeft]);
 
   // Handle completion
   useEffect(() => {
@@ -108,17 +118,6 @@ export function useDraftLogic({ onCategoriesSelected }: UseDraftLogicProps) {
      }
   }, [phase, playerBannedId, opponentBannedId, poolCategories, onCategoriesSelected]);
 
-
-  const handleCategoryClick = (category: CategorySummary) => {
-    if (currentActor !== 'player') return;
-    if (playerBannedId === category.id || opponentBannedId === category.id) return;
-
-    if (phase === 'ban') {
-      setPlayerBannedId(category.id);
-      setCurrentActor('opponent');
-      setTimeLeft(15); 
-    }
-  };
 
   return {
     state: {

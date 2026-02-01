@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -39,28 +39,25 @@ export function DraftPhaseScreen() {
   };
 
   // Timer Logic
-  useEffect(() => {
-    if (timeLeft > 0 && phase !== 'ready') {
-      const timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
-      return () => clearTimeout(timer);
-    } else if (timeLeft === 0) {
-      handleTimeExpired();
-    }
-  }, [timeLeft, phase]);
-
-  const handleTimeExpired = () => {
+  const handleTimeExpired = useCallback(() => {
     // Determine next step based on phase and actor
     if (phase === 'ban') {
       if (currentActor === 'player' && !playerBannedId) {
         // Auto-ban random
         const available = poolCategories.filter(c => c.id !== opponentBannedId && c.id !== playerBannedId);
-        if (available.length > 0) handleCategoryClick(available[0]);
+        if (available.length > 0) {
+          const pick = available[0];
+          setPlayerBannedId(pick.id);
+          setCurrentActor('opponent');
+          setTimeLeft(15);
+        }
       } else if (currentActor === 'opponent') {
         // Opponent auto-ban
         const available = poolCategories.filter(c => c.id !== playerBannedId);
-        const random = available[Math.floor(Math.random() * available.length)];
-        setOpponentBannedId(random.id);
-        toast("Opponent banned " + random.name);
+        const pick = available[0];
+        if (!pick) return;
+        setOpponentBannedId(pick.id);
+        toast("Opponent banned " + pick.name);
         // Move to Pick phase
         setPhase('pick');
         setCurrentActor('player');
@@ -70,7 +67,21 @@ export function DraftPhaseScreen() {
       // Logic for picking... simplified for this demo to just finish
       setPhase('ready');
     }
-  };
+  }, [phase, currentActor, playerBannedId, opponentBannedId, poolCategories]);
+
+  useEffect(() => {
+    if (phase === 'ready') return;
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          setTimeout(() => handleTimeExpired(), 0);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [phase, handleTimeExpired]);
 
   // Bot Opponent Logic Simulation
   useEffect(() => {
@@ -89,7 +100,7 @@ export function DraftPhaseScreen() {
        }, reactionTime);
        return () => clearTimeout(timer);
     }
-  }, [currentActor, phase, playerBannedId, poolCategories]);
+  }, [currentActor, phase, playerBannedId, poolCategories, timeLeft]);
 
 
   const handleCategoryClick = (category: CategorySummary) => {

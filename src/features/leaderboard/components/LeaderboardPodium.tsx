@@ -1,7 +1,6 @@
 import { AvatarDisplay } from "@/components/AvatarDisplay";
-import { cn } from "@/components/ui/utils";
 import type { LeaderboardEntry } from "@/lib/domain/leaderboard";
-import { Trophy, Crown, Medal } from "lucide-react";
+import { Trophy, Crown } from "lucide-react";
 
 interface LeaderboardPodiumProps {
   topThree: LeaderboardEntry[];

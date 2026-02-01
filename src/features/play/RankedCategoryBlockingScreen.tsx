@@ -1,9 +1,7 @@
 "use client";
 
-import { Button } from '@/components/ui/button';
-import { MatchHeader, DraftPhase } from './components/MatchHeader';
+import { MatchHeader } from './components/MatchHeader';
 import { CategoryGameCard } from './components/CategoryGameCard';
-import { toast } from 'sonner';
 import { CategorySummary } from '@/lib/domain';
 import { useDraftLogic } from './hooks/useDraftLogic';
 import { Loader2 } from 'lucide-react';

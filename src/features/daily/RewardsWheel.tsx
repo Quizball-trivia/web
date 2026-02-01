@@ -117,22 +117,27 @@ export function RewardsWheel({ onRewardWon, onBack }: RewardsWheelProps) {
   const [particles, setParticles] = useState<
     Array<{ id: number; x: number; y: number }>
   >([]);
+  const [now, setNow] = useState(0);
 
   useEffect(() => {
     // Check if user can spin (once per day)
-    const lastSpin = storage.get<number | null>(
-      STORAGE_KEYS.WHEEL_SPIN_TIMESTAMP,
-      null
-    );
-    if (lastSpin) {
-      const now = Date.now();
-      const twentyFourHours = 24 * 60 * 60 * 1000;
+    const timeout = setTimeout(() => {
+      const lastSpin = storage.get<number | null>(
+        STORAGE_KEYS.WHEEL_SPIN_TIMESTAMP,
+        null
+      );
+      if (lastSpin) {
+        const now = Date.now();
+        const twentyFourHours = 24 * 60 * 60 * 1000;
 
-      if (now - lastSpin < twentyFourHours) {
-        setCanSpin(false);
-        setNextSpinTime(lastSpin + twentyFourHours);
+        if (now - lastSpin < twentyFourHours) {
+          setCanSpin(false);
+          setNextSpinTime(lastSpin + twentyFourHours);
+        }
       }
-    }
+    }, 0);
+
+    return () => clearTimeout(timeout);
   }, []);
 
   useEffect(() => {
@@ -149,9 +154,16 @@ export function RewardsWheel({ onRewardWon, onBack }: RewardsWheelProps) {
     }
   }, [canSpin, nextSpinTime]);
 
+  useEffect(() => {
+    if (!nextSpinTime) return;
+    const tick = () => setNow(Date.now());
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [nextSpinTime]);
+
   const getTimeUntilNextSpin = () => {
     if (!nextSpinTime) return "";
-    const now = Date.now();
     const diff = nextSpinTime - now;
 
     const hours = Math.floor(diff / (1000 * 60 * 60));

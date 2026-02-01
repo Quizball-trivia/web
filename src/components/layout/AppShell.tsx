@@ -31,6 +31,7 @@ import {
   Bell,
   LogOut,
   Briefcase,
+  Flame,
 } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 
@@ -157,8 +158,18 @@ export function AppShell({ children }: AppShellProps) {
             <div className="flex-1" />
 
             <div className="flex items-center gap-4">
-              {/* Currencies */}
+              {/* Currencies & Streak */}
               <div className="flex items-center gap-3 mr-4">
+                {/* Streak */}
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20">
+                  <Flame className="size-4 text-orange-500" />
+                  <span className="text-xs text-orange-500/80 font-medium">Streak</span>
+                  <span className="text-sm font-bold text-orange-500">
+                    {playerStats.currentStreak ?? 0}
+                  </span>
+                </div>
+
+                {/* Coins */}
                 <Link
                   href="/store"
                   className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 hover:bg-yellow-500/20 transition-all active:scale-95"
@@ -169,6 +180,7 @@ export function AppShell({ children }: AppShellProps) {
                   </span>
                 </Link>
 
+                {/* Tickets */}
                 <button className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all active:scale-95">
                   <Ticket className="size-4 text-primary" />
                   <span className="text-sm font-bold text-primary">
@@ -274,6 +286,15 @@ export function AppShell({ children }: AppShellProps) {
                 </div>
 
                 <div className="flex items-center gap-2 z-10">
+                  {/* Streak */}
+                  <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/30">
+                    <Flame className="size-4 text-orange-500" />
+                    <span className="text-sm font-bold text-orange-500">
+                      {playerStats.currentStreak ?? 0}
+                    </span>
+                  </div>
+
+                  {/* Coins */}
                   <Link
                     href="/store"
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/30 hover:bg-yellow-500/20 transition-colors active:scale-95"
@@ -284,6 +305,7 @@ export function AppShell({ children }: AppShellProps) {
                     </span>
                   </Link>
 
+                  {/* Tickets */}
                   <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/30 hover:bg-primary/20 transition-colors active:scale-95">
                     <Ticket className="size-4 text-primary" />
                     <span className="text-sm">{playerStats.tickets ?? 10}</span>

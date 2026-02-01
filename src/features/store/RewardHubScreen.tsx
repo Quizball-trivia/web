@@ -1,4 +1,3 @@
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { WalletSection } from "./components/WalletSection";
 import { FeaturedBundleCard } from "./components/FeaturedBundleCard";
 import { RewardQuestCard, RewardQuestProps } from "./components/RewardQuestCard";

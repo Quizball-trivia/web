@@ -17,7 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Check, X, Clock, Trophy, ArrowRight, ArrowLeft } from "lucide-react";
+import { Check, Clock, Trophy, ArrowRight, ArrowLeft } from "lucide-react";
 
 interface AnswerGroup {
   display: string;
@@ -138,21 +138,6 @@ export function CountdownGame({ onBack, onComplete }: CountdownGameProps) {
     questions.length > 0 && currentRound < questions.length && timeRemaining > 0;
   const totalRounds = questions.length;
 
-  useEffect(() => {
-    if (!isGameActive || showRoundTransition) return;
-
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [isGameActive, showRoundTransition]);
-
   const handleRoundEnd = useCallback(() => {
     if (questions.length === 0) return;
 
@@ -179,10 +164,20 @@ export function CountdownGame({ onBack, onComplete }: CountdownGameProps) {
   }, [currentRound, foundAnswers, questions, allRoundAnswers, onComplete]);
 
   useEffect(() => {
-    if (timeRemaining === 0 && !showRoundTransition) {
-      handleRoundEnd();
-    }
-  }, [timeRemaining, showRoundTransition, handleRoundEnd]);
+    if (!isGameActive || showRoundTransition) return;
+
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          setTimeout(() => handleRoundEnd(), 0);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isGameActive, showRoundTransition, handleRoundEnd]);
 
   useEffect(() => {
     if (inputRef.current && !showRoundTransition) {

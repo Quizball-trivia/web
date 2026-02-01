@@ -8,15 +8,13 @@ interface QuestionArenaProps {
   category: string;
   categoryIcon: string;
   difficulty: string;
-  questionNumber?: number;
 }
 
 export function QuestionArena({
   question,
   category,
   categoryIcon,
-  difficulty,
-  questionNumber
+  difficulty
 }: QuestionArenaProps) {
   return (
     <motion.div

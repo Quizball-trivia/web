@@ -74,7 +74,6 @@ export function EmojiGuessGame({ onBack, onComplete }: EmojiGuessGameProps) {
   const [questions] = useState<EmojiQuestion[]>(MOCK_QUESTIONS);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState("");
-  const [correctAnswers, setCorrectAnswers] = useState(0);
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [streak, setStreak] = useState(0);
@@ -119,7 +118,6 @@ export function EmojiGuessGame({ onBack, onComplete }: EmojiGuessGameProps) {
     if (correct) {
       const newStreak = streak + 1;
       setStreak(newStreak);
-      setCorrectAnswers((prev) => prev + 1);
 
       const basePoints = 50;
       const streakBonus = Math.min(newStreak - 1, 5) * 10;
@@ -135,7 +133,6 @@ export function EmojiGuessGame({ onBack, onComplete }: EmojiGuessGameProps) {
         setUserAnswer("");
         setShowFeedback(false);
       } else {
-        const totalCorrect = correct ? correctAnswers + 1 : correctAnswers;
         const finalScore = correct
           ? score + 50 + Math.min(streak, 5) * 10
           : score;

@@ -2,8 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { Question } from "@/types/game";
 import { ToastMessage } from "@/features/game/components/MatchToast";
 
-const getRandom = () => Math.random();
-
 interface GameLogicProps {
   questions: Question[];
   onGameEnd: (score: number, opponentScore: number, correctAnswers: number, playerAnswers: (number | null)[]) => void;
@@ -46,7 +44,6 @@ export function useGameLogic({
 
   // -- 1. AI Behavior --
   useEffect(() => {
-     setOpponentAnswered(false);
      const delay = 1000 + Math.random() * 3000;
      const timer = setTimeout(() => {
         setOpponentAnswered(true);
@@ -130,6 +127,7 @@ export function useGameLogic({
       setSelectedAnswer(null);
       setIsAnswered(false);
       setShowResult(false);
+      setOpponentAnswered(false);
     } else {
       onGameEnd(playerTotalXP, opponentTotalXP, correctAnswersCount, updatedAnswers);
     }

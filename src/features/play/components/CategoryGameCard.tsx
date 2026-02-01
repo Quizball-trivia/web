@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/components/ui/utils";
 import type { CategorySummary } from "@/lib/domain";
 import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
-import { Lock, Check, Users, Flame, Star } from "lucide-react";
+import { Check, Users, Flame, Star } from "lucide-react";
 
 export interface CategoryGameCardProps {
   category: CategorySummary;

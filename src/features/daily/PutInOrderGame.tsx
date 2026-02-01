@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -196,11 +196,14 @@ function shuffleItems(items: PutInOrderItem[]): PutInOrderItem[] {
   return shuffled;
 }
 
+const INITIAL_ITEMS = getRandomItems(MOCK_CHALLENGE, 4);
+const INITIAL_ORDER = shuffleItems(INITIAL_ITEMS);
+
 export function PutInOrderGame({ onBack, onComplete }: PutInOrderGameProps) {
   const [challenge] = useState<PutInOrderChallenge>(MOCK_CHALLENGE);
   const [currentRound, setCurrentRound] = useState(0);
-  const [roundItems, setRoundItems] = useState<PutInOrderItem[]>([]);
-  const [userOrder, setUserOrder] = useState<PutInOrderItem[]>([]);
+  const [roundItems, setRoundItems] = useState<PutInOrderItem[]>(INITIAL_ITEMS);
+  const [userOrder, setUserOrder] = useState<PutInOrderItem[]>(INITIAL_ORDER);
   const [isRevealed, setIsRevealed] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [totalCoins, setTotalCoins] = useState(0);
@@ -217,17 +220,13 @@ export function PutInOrderGame({ onBack, onComplete }: PutInOrderGameProps) {
     })
   );
 
-  useEffect(() => {
-    startNewRound();
-  }, []);
-
-  const startNewRound = () => {
+  const startNewRound = useCallback(() => {
     const items = getRandomItems(challenge, 4);
     const shuffled = shuffleItems(items);
     setRoundItems(items);
     setUserOrder(shuffled);
     setIsRevealed(false);
-  };
+  }, [challenge]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;

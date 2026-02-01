@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -168,9 +168,7 @@ export function ClueGame({ onBack, onComplete }: ClueGameProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState("");
   const [score, setScore] = useState(0);
-  const [correctAnswers, setCorrectAnswers] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [bestStreak, setBestStreak] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [revealedClues, setRevealedClues] = useState(1);
@@ -184,13 +182,17 @@ export function ClueGame({ onBack, onComplete }: ClueGameProps) {
       ? ((currentQuestionIndex + 1) / questions.length) * 100
       : 0;
 
-  useEffect(() => {
-    setRevealedClues(1);
-    setUserAnswer("");
-    setShowResult(false);
-    setTimeRemaining(15);
-    setHasSubmitted(false);
-  }, [currentQuestionIndex]);
+  const handleTimeOut = useCallback(() => {
+    if (revealedClues < currentQuestion.clues.length) {
+      return;
+    }
+    setIsCorrect(false);
+    setShowResult(true);
+    setStreak(0);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+  }, [currentQuestion.clues.length, revealedClues]);
 
   useEffect(() => {
     if (showResult && currentQuestionIndex === questions.length - 1) {
@@ -231,20 +233,7 @@ export function ClueGame({ onBack, onComplete }: ClueGameProps) {
         clearInterval(timerRef.current);
       }
     };
-  }, [revealedClues, showResult, hasSubmitted, currentQuestion?.clues?.length]);
-
-  const handleTimeOut = () => {
-    if (revealedClues < currentQuestion.clues.length) {
-      return;
-    } else {
-      setIsCorrect(false);
-      setShowResult(true);
-      setStreak(0);
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    }
-  };
+  }, [revealedClues, showResult, hasSubmitted, currentQuestion.clues.length, handleTimeOut]);
 
   const handleSubmit = () => {
     if (!userAnswer.trim() || hasSubmitted) return;
@@ -264,10 +253,8 @@ export function ClueGame({ onBack, onComplete }: ClueGameProps) {
       if (revealedClues === 5) points = 25;
 
       setScore((prev) => prev + points);
-      setCorrectAnswers((prev) => prev + 1);
       setStreak((prev) => {
         const newStreak = prev + 1;
-        setBestStreak((current) => Math.max(current, newStreak));
         return newStreak;
       });
 
@@ -311,6 +298,12 @@ export function ClueGame({ onBack, onComplete }: ClueGameProps) {
 
   const handleNext = () => {
     if (currentQuestionIndex < questions.length - 1) {
+      setRevealedClues(1);
+      setUserAnswer("");
+      setShowResult(false);
+      setIsCorrect(false);
+      setTimeRemaining(15);
+      setHasSubmitted(false);
       setCurrentQuestionIndex((prev) => prev + 1);
     }
   };

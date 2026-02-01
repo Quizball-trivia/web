@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
@@ -190,25 +190,6 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
   const remaining = currentMoney - totalAllocated;
   const isFullyAllocated = totalAllocated === currentMoney && currentMoney > 0;
 
-  useEffect(() => {
-    if (showResult || isAnimating || hasConfirmed) return;
-
-    if (timeLeft === 0) {
-      if (totalAllocated === 0) {
-        onComplete(0);
-        return;
-      }
-      handleConfirmBets();
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [timeLeft, showResult, isAnimating, hasConfirmed, totalAllocated]);
-
   const handleBetChange = (index: number, value: number[]) => {
     if (showResult || hasConfirmed) return;
 
@@ -226,7 +207,7 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
     setBets(newBets);
   };
 
-  const handleConfirmBets = () => {
+  const handleConfirmBets = useCallback(() => {
     setHasConfirmed(true);
     setIsAnimating(true);
     setShowClue(false);
@@ -245,7 +226,26 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
       setIsAnimating(false);
       setShowResult(true);
     }, wrongAnswers.length * 1000 + 2000);
-  };
+  }, [bets, currentQuestion]);
+
+  useEffect(() => {
+    if (showResult || isAnimating || hasConfirmed) return;
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          if (totalAllocated === 0) {
+            onComplete(0);
+          } else {
+            handleConfirmBets();
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [showResult, isAnimating, hasConfirmed, totalAllocated, handleConfirmBets, onComplete]);
 
   const handleNextQuestion = () => {
     const correctBet = bets[currentQuestion.correctAnswer];

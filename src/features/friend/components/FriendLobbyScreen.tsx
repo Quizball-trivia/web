@@ -14,19 +14,16 @@ interface FriendLobbyScreenProps {
 }
 
 export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) {
-  const [copied, setCopied] = useState(false);
   const [matchType, setMatchType] = useState<'quizball' | 'buzzer'>('quizball');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [players, setPlayers] = useState([
+  const [players] = useState([
     { id: '1', username: 'You', isHost, isReady: true, avatar: 'avatar-1' },
     { id: '2', username: 'Waiting...', isHost: false, isReady: false, isPlaceholder: true },
   ]);
 
   const copyCode = () => {
     navigator.clipboard.writeText(roomCode);
-    setCopied(true);
     toast.success("Room Code copied!");
-    setTimeout(() => setCopied(false), 2000);
   };
 
   const toggleCategory = (id: string) => {
@@ -53,7 +50,6 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
       // router.push('/game') logic would go here
   };
 
-  const joinedPlayer = players.find(p => !p.isPlaceholder && !p.isHost);
   const canStart = isHost && selectedCategories.length === 4; // && joinedPlayer for real app
 
   return (
@@ -82,7 +78,7 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
                  <div key={idx} className={cn("flex flex-col items-center gap-2 relative", player.isPlaceholder && "opacity-50")}>
                      <div className="relative">
                         <AvatarDisplay 
-                            customization={{ base: (player.avatar || 'avatar-2') as any }} 
+                            customization={{ base: player.avatar || 'avatar-2' }} 
                             size="md" 
                             className={cn("border-2", player.isReady ? "border-green-500" : "border-border")}
                         />

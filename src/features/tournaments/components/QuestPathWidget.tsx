@@ -1,4 +1,3 @@
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/components/ui/utils";
 import { ArrowUp, Lock, Check, MapPin } from "lucide-react";
 
@@ -23,7 +22,7 @@ export function QuestPathWidget({ steps }: QuestPathWidgetProps) {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-             {steps.map((step, i) => {
+             {steps.map((step) => {
                 const isActive = step.status === 'active';
                 const isCompleted = step.status === 'completed';
                 const isLocked = step.status === 'locked';

@@ -4,14 +4,17 @@ import { useState } from 'react';
 import { Button } from './ui/button';
 import { ModeConfirmModal } from '@/features/play/components/ModeConfirmModal';
 import { FriendPlayModal } from '@/features/friend/components/FriendPlayModal';
+import { HomeQuickStatsRow } from '@/features/home/components/dashboard/HomeQuickStatsRow';
+import { HomeRecentMatches } from '@/features/home/components/dashboard/HomeRecentMatches';
+import type { PlayerStats } from '@/types/game';
 
 interface ModeSelectionScreenProps {
   onSelectMode: (mode: 'ranked' | 'friendly' | 'solo') => void;
-  onSelectFriendGameMode: (mode: 'multipleChoice' | 'buzzerBattle') => void;
   ticketsRemaining?: number;
+  playerStats: PlayerStats;
 }
 
-export function ModeSelectionScreen({ onSelectMode, onSelectFriendGameMode, ticketsRemaining = 10 }: ModeSelectionScreenProps) {
+export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playerStats }: ModeSelectionScreenProps) {
   const [selectedMode, setSelectedMode] = useState<'ranked' | 'friendly' | 'solo' | null>(null);
   
   const handleConfirm = () => {
@@ -149,6 +152,16 @@ export function ModeSelectionScreen({ onSelectMode, onSelectFriendGameMode, tick
         </div>
       </div>
       
+      {/* Quick Stats */}
+      <section className="mt-8">
+        <HomeQuickStatsRow playerStats={playerStats} />
+      </section>
+
+      {/* Recent Matches */}
+      <section className="mt-8">
+        <HomeRecentMatches />
+      </section>
+
       {/* Responsive Confirmation Modal (Ranked/Solo) */}
       <ModeConfirmModal
         mode={selectedMode !== 'friendly' ? selectedMode : null}
@@ -159,7 +172,7 @@ export function ModeSelectionScreen({ onSelectMode, onSelectFriendGameMode, tick
       />
 
       {/* Friend Play Modal (Create/Join) */}
-      <FriendPlayModal 
+      <FriendPlayModal
         isOpen={selectedMode === 'friendly'}
         onOpenChange={(open) => !open && setSelectedMode(null)}
       />

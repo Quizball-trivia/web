@@ -1,5 +1,4 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card } from '@/components/ui/card';
 import { cn } from '@/components/ui/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 

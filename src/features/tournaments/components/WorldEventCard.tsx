@@ -2,7 +2,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/components/ui/utils";
-import { Clock, Lock, Trophy, Skull, Users, ArrowRight, Star } from "lucide-react";
+import Image from "next/image";
+import { Clock, Lock, Skull } from "lucide-react";
 
 export interface WorldEventProps {
   title: string;
@@ -144,7 +145,13 @@ export function WorldEventCard({
                  <Skull className="size-full" strokeWidth={1} />
               </div>
               <div className="absolute inset-0 flex items-center justify-center">
-                 <img src="/boss-placeholder.png" alt="Boss" className="size-full object-contain drop-shadow-[0_0_15px_rgba(234,179,8,0.5)] opacity-0" /> {/* Actual image would go here */}
+                 <Image
+                   src="/boss-placeholder.png"
+                   alt="Boss"
+                   width={256}
+                   height={256}
+                   className="size-full object-contain drop-shadow-[0_0_15px_rgba(234,179,8,0.5)] opacity-0"
+                 /> {/* Actual image would go here */}
                  <Skull className="size-32 text-yellow-500 drop-shadow-[0_0_30px_rgba(234,179,8,0.4)]" />
               </div>
            </div>

@@ -37,6 +37,7 @@ export async function getUserRank(userId: string) {
     await new Promise(resolve => setTimeout(resolve, 300));
     return {
         data: {
+             id: userId,
              rank: 156,
              rankPoints: 2450,
              username: 'You',

@@ -16,7 +16,6 @@ import { Users, Plus, LogIn } from "lucide-react";
 import { useIsMobile } from "@/components/ui/use-mobile";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { cn } from "@/components/ui/utils";
 import { toast } from "sonner";
 
 interface FriendPlayModalProps {
@@ -65,7 +64,7 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
              <Users className="size-8" />
           </div>
           <p className="text-muted-foreground text-sm max-w-xs">
-            Create a private room to host a match, or enter a code to join a friend's lobby.
+            Create a private room to host a match, or enter a code to join a friend&apos;s lobby.
           </p>
        </div>
 

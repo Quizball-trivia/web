@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { Card } from "@/components/ui/card";
@@ -43,6 +43,39 @@ const ICON_MAP: Record<IconToken, LucideIcon> = {
 
 interface DailyChallengeState {
   completedChallenges: Record<string, number>;
+}
+
+function computeCompletedChallenges(): {
+  completedChallenges: Map<string, number>;
+  needsReset: boolean;
+} {
+  const state = storage.get<DailyChallengeState | null>(
+    STORAGE_KEYS.DAILY_CHALLENGE_STATE,
+    null
+  );
+
+  if (!state?.completedChallenges) {
+    return { completedChallenges: new Map<string, number>(), needsReset: false };
+  }
+
+  // Check if challenges need to be reset (past midnight)
+  const now = new Date();
+  const todayMidnight = new Date(now);
+  todayMidnight.setHours(0, 0, 0, 0);
+
+  const validChallenges = new Map<string, number>();
+
+  Object.entries(state.completedChallenges).forEach(([id, timestamp]) => {
+    // Only keep challenges completed after today's midnight
+    if (timestamp >= todayMidnight.getTime()) {
+      validChallenges.set(id, timestamp);
+    }
+  });
+
+  const needsReset =
+    validChallenges.size !== Object.keys(state.completedChallenges).length;
+
+  return { completedChallenges: validChallenges, needsReset };
 }
 
 function getTimeUntilReset(): string {
@@ -174,7 +207,7 @@ function ChallengeCard({
 
 export default function DailyChallengesPage() {
   const router = useRouter();
-  const [tick, setTick] = useState(0);
+  const [, setTick] = useState(0);
 
   // Force re-render every minute to update timers
   useEffect(() => {
@@ -183,37 +216,9 @@ export default function DailyChallengesPage() {
     }, 60000);
 
     return () => clearInterval(interval);
-  }, [tick]);
-
-  const { completedChallenges, needsReset } = useMemo(() => {
-    const state = storage.get<DailyChallengeState | null>(
-      STORAGE_KEYS.DAILY_CHALLENGE_STATE,
-      null
-    );
-
-    if (!state?.completedChallenges) {
-      return { completedChallenges: new Map<string, number>(), needsReset: false };
-    }
-
-    // Check if challenges need to be reset (past midnight)
-    const now = new Date();
-    const todayMidnight = new Date(now);
-    todayMidnight.setHours(0, 0, 0, 0);
-
-    const validChallenges = new Map<string, number>();
-
-    Object.entries(state.completedChallenges).forEach(([id, timestamp]) => {
-      // Only keep challenges completed after today's midnight
-      if (timestamp >= todayMidnight.getTime()) {
-        validChallenges.set(id, timestamp);
-      }
-    });
-
-    const needsReset =
-      validChallenges.size !== Object.keys(state.completedChallenges).length;
-
-    return { completedChallenges: validChallenges, needsReset };
   }, []);
+
+  const { completedChallenges, needsReset } = computeCompletedChallenges();
 
   useEffect(() => {
     if (!needsReset) return;

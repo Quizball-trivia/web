@@ -1,7 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/components/ui/utils";
-import { Coins, Ticket, Sparkles, Zap, Check } from "lucide-react";
+import { Ticket, Check } from "lucide-react";
 
 export function FeaturedBundleCard() {
   return (

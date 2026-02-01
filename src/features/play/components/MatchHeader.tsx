@@ -1,7 +1,8 @@
+import Image from "next/image";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/components/ui/utils";
-import { Clock, Shield, Sword } from "lucide-react";
+import { Shield, Sword } from "lucide-react";
 
 export type DraftPhase = 'ban' | 'pick' | 'ready';
 
@@ -33,7 +34,7 @@ export function MatchHeader({ player, opponent, phase, timeLeft, currentActor }:
           {/* Player (Left) */}
           <div className={cn("flex items-center gap-4 transition-opacity", currentActor === 'opponent' && "opacity-60")}>
              <div className="relative">
-                <AvatarDisplay customization={{ base: player.avatar as any }} size="lg" className="border-2 border-blue-500" />
+                <AvatarDisplay customization={{ base: player.avatar }} size="lg" className="border-2 border-blue-500" />
                 <div className="absolute -bottom-2 -right-2 bg-blue-600 text-[10px] font-bold px-1.5 py-0.5 rounded text-white border border-blue-400">
                    YOU
                 </div>
@@ -85,7 +86,14 @@ export function MatchHeader({ player, opponent, phase, timeLeft, currentActor }:
                 {/* Fallback avatar if string provided */}
                 <div className="size-12 rounded-full bg-muted border-2 border-red-500 flex items-center justify-center text-xl overflow-hidden">
                    {opponent.avatar.length > 20 ? ( // Assuming base64 or url vs simple emoji/id
-                       <img src={opponent.avatar} alt="Opponent" className="w-full h-full object-cover" />
+                       <Image
+                         src={opponent.avatar}
+                         alt="Opponent"
+                         width={48}
+                         height={48}
+                         unoptimized
+                         className="w-full h-full object-cover"
+                       />
                    ) : (
                        <span>{opponent.avatar || "😈"}</span>
                    )}

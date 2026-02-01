@@ -1,14 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
 import { Question } from "@/types/game";
 import { MatchScoreHUD } from "@/features/game/components/MatchScoreHUD";
 import { QuestionArena } from "@/features/game/components/QuestionArena";
 import { AnswerCard } from "@/features/game/components/AnswerCard";
-import { MatchToastContainer, ToastMessage } from "@/features/game/components/MatchToast";
-import { Button } from "@/components/ui/button";
+import { MatchToastContainer } from "@/features/game/components/MatchToast";
 import { X } from "lucide-react";
 import { motion } from "motion/react";
-
-const getRandom = () => Math.random();
 
 interface QuizBallGameScreenProps {
   questions: Question[];

@@ -2,10 +2,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Gamepad2, Trophy, Coins, Star } from "lucide-react";
 import { WorldEventCard, WorldEventProps } from "./components/WorldEventCard";
-import { ChallengeTierCard, ChallengeTierProps } from "./components/ChallengeTierCard";
+import { ChallengeTierCard } from "./components/ChallengeTierCard";
 import { QuestPathWidget } from "./components/QuestPathWidget";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { logger } from "@/utils/logger";
+
+const BOSS_EVENT_EXPIRY = new Date(Date.now() + 1000 * 60 * 60 * 48); // 48h
 
 export function GameHubScreen() {
   
@@ -13,7 +14,7 @@ export function GameHubScreen() {
   const BOSS_EVENT: WorldEventProps = {
     title: "The Golden Boot",
     description: "Score 50 goals across all ranked matches this weekend to unlock the exclusive 'Striker' badge and a share of the 1M RP prize pool.",
-    expiryDate: new Date(Date.now() + 1000 * 60 * 60 * 48), // 48h
+    expiryDate: BOSS_EVENT_EXPIRY,
     totalParticipants: 12450,
     maxParticipants: 20000,
     // entryRequirement: {

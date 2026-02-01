@@ -4,14 +4,12 @@ import { Lock, CheckCircle2, Star, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export interface StageCardProps {
-  id: number;
   name: string;
   stage: string;
   description: string;
   icon: string;
   status: 'locked' | 'available' | 'completed' | 'active';
   isActive: boolean;
-  score?: number;
   stars?: number;
   questionsCount: number;
   onClick: () => void;
@@ -19,13 +17,11 @@ export interface StageCardProps {
 }
 
 export function StageCard({
-  id,
   name,
   stage,
   icon,
   status,
   isActive,
-  score,
   stars = 0,
   questionsCount,
   onClick,

@@ -1,4 +1,4 @@
-import { Coins, Ticket, Bell, LogOut, Settings, User } from 'lucide-react';
+import { Coins, Ticket, Bell, LogOut, Settings, User, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import {
@@ -26,8 +26,16 @@ export function TopBar({ playerStats, onNavigate, onNavigateToStore }: TopBarPro
 
       {/* Right Utility Items */}
       <div className="flex items-center gap-4">
-        {/* Currencies */}
+        {/* Currencies & Streak */}
         <div className="flex items-center gap-3 mr-4">
+          {/* Streak */}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20">
+            <Flame className="size-4 text-orange-500" />
+            <span className="text-xs text-orange-500/80 font-medium">Streak</span>
+            <span className="text-sm font-bold text-orange-500">{playerStats.currentStreak ?? 0}</span>
+          </div>
+
+          {/* Coins */}
           <button
             onClick={onNavigateToStore}
             className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 hover:bg-yellow-500/20 transition-all active:scale-95"
@@ -36,6 +44,7 @@ export function TopBar({ playerStats, onNavigate, onNavigateToStore }: TopBarPro
             <span className="text-sm font-bold text-yellow-500">{playerStats.coins.toLocaleString()}</span>
           </button>
 
+          {/* Tickets */}
           <button className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all active:scale-95">
             <Ticket className="size-4 text-primary" />
             <span className="text-sm font-bold text-primary">{playerStats.tickets ?? 10}</span>

@@ -1,7 +1,6 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Coins, Ticket, Plus, Zap } from "lucide-react";
+import { Coins, Ticket, Plus } from "lucide-react";
 
 interface WalletSectionProps {
   coins: number;

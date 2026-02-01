@@ -1,6 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
 import { StageCard } from './StageCard';
-import { motion } from 'framer-motion';
 import { cn } from '@/components/ui/utils';
 
 export interface CareerLevel {
@@ -88,7 +86,6 @@ export function CareerPath({
                          {...level}
                          status={status}
                          isActive={isActive || (isCurrent && selectedLevelId === null && !isCompleted)}
-                         score={levelScores.get(level.id)}
                          onClick={() => onLevelSelect(level)}
                          bgGradient={`to-${level.gradient.split('to-')[1]}`} // Extract color from prop if possible, or simplified
                       />

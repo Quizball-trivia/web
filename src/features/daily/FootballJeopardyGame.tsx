@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -222,41 +222,7 @@ export function FootballJeopardyGame({
   const MAX_TIME = 10;
   const remainingPicks = MAX_PICKS - pickedQuestions.length;
 
-  useEffect(() => {
-    if (!timerActive || timeRemaining <= 0 || showResult) return;
-
-    const interval = setInterval(() => {
-      setTimeRemaining((prev) => {
-        const newTime = prev - 1;
-        if (newTime <= 0) {
-          handleTimeUp();
-        }
-        return newTime;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [timerActive, timeRemaining, showResult]);
-
-  const handleTimeUp = () => {
-    if (showResult || !currentQuestion) return;
-    setTimerActive(false);
-    setShowResult(true);
-
-    if (isCareerPathQuestion(currentQuestion)) {
-      handleCareerPathSubmit(true);
-    } else {
-      const questionValue = getCurrentQuestionValue();
-      const categoryId = currentCategory?.id || "";
-
-      setPickedQuestions((prev) => [
-        ...prev,
-        { categoryId, value: questionValue as 100 | 200 | 300, isCorrect: false },
-      ]);
-    }
-  };
-
-  const getCurrentQuestionValue = (): number => {
+  const getCurrentQuestionValue = useCallback((): number => {
     if (!currentQuestion || !currentCategory) return 100;
 
     for (const [value, q] of Object.entries(currentCategory.questions)) {
@@ -266,7 +232,7 @@ export function FootballJeopardyGame({
       }
     }
     return 100;
-  };
+  }, [currentQuestion, currentCategory]);
 
   const isQuestionPicked = (categoryId: string, value: 100 | 200 | 300) => {
     return pickedQuestions.some(
@@ -323,7 +289,7 @@ export function FootballJeopardyGame({
     ]);
   };
 
-  const handleCareerPathSubmit = (timeUp: boolean = false) => {
+  const handleCareerPathSubmit = useCallback((timeUp: boolean = false) => {
     if (!currentQuestion || !isCareerPathQuestion(currentQuestion)) return;
 
     setTimerActive(false);
@@ -349,7 +315,53 @@ export function FootballJeopardyGame({
       ...prev,
       { categoryId, value: questionValue as 100 | 200 | 300, isCorrect },
     ]);
-  };
+  }, [currentQuestion, currentCategory, textAnswer, getCurrentQuestionValue]);
+
+  useEffect(() => {
+    if (!timerActive || timeRemaining <= 0 || showResult) return;
+
+    const onTimeUp = () => {
+      if (showResult || !currentQuestion) return;
+      setTimerActive(false);
+      setShowResult(true);
+
+      if (isCareerPathQuestion(currentQuestion)) {
+        handleCareerPathSubmit(true);
+      } else {
+        const questionValue = getCurrentQuestionValue();
+        const categoryId = currentCategory?.id || "";
+
+        setPickedQuestions((prev) => [
+          ...prev,
+          {
+            categoryId,
+            value: questionValue as 100 | 200 | 300,
+            isCorrect: false,
+          },
+        ]);
+      }
+    };
+
+    const interval = setInterval(() => {
+      setTimeRemaining((prev) => {
+        const newTime = prev - 1;
+        if (newTime <= 0) {
+          onTimeUp();
+        }
+        return newTime;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [
+    timerActive,
+    timeRemaining,
+    showResult,
+    currentQuestion,
+    currentCategory,
+    handleCareerPathSubmit,
+    getCurrentQuestionValue,
+  ]);
 
   const handleContinue = () => {
     if (pickedQuestions.length >= MAX_PICKS) {

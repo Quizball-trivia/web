@@ -1,7 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card } from "@/components/ui/card";
 import { Check, Plus, Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
@@ -104,7 +103,7 @@ export function CategoryDraftPanel({ selectedCategoryIds, onToggleCategory, isHo
                     
                     {filtered.length === 0 && (
                         <div className="col-span-full py-10 text-center text-muted-foreground text-sm">
-                            No categories found matching "{search}"
+                            No categories found matching &quot;{search}&quot;
                         </div>
                     )}
                 </div>

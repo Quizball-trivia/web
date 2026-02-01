@@ -125,15 +125,8 @@ export default function PlayPage() {
         }
         void startMatch({ mode: "quizball", matchType: "friendly" });
       }}
-      onSelectFriendGameMode={(mode) => {
-        if (mode === "buzzerBattle") {
-          void startMatch({ mode: "buzzer", matchType: "friendly" });
-          return;
-        }
-        // Multiple Choice (QuizBall) - navigate to categories to pick a category first
-        router.push("/categories");
-      }}
       ticketsRemaining={player.tickets || 0}
+      playerStats={player}
     />
   );
 }
