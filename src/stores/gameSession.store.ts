@@ -10,7 +10,9 @@ type GameSessionState = {
   answers: RuntimeAnswer[];
   startedAt: number | null;
   endedAt: number | null;
-  startSession: (config: GameConfig, questions: GameQuestion[]) => void;
+  startSession: (config: GameConfig, questions?: GameQuestion[]) => void;
+  setQuestions: (questions: GameQuestion[]) => void;
+  updateConfig: (config: Partial<GameConfig>) => void;
   setStage: (stage: GameStage) => void;
   submitAnswer: (selectedIndex: number | null, timeMs?: number) => void;
   next: () => void;
@@ -30,7 +32,7 @@ const initialState = {
 
 export const useGameSessionStore = create<GameSessionState>((set, get) => ({
   ...initialState,
-  startSession: (config, questions) => {
+  startSession: (config, questions = []) => {
     const initialStage =
       config.mode === "solo" ? "roundIntro" : "matchmaking";
     set({
@@ -43,6 +45,11 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
       endedAt: null,
     });
   },
+  setQuestions: (questions) => set({ questions }),
+  updateConfig: (partialConfig) =>
+    set((state) => ({
+      config: state.config ? { ...state.config, ...partialConfig } : null,
+    })),
   setStage: (stage) => set({ stage }),
   submitAnswer: (selectedIndex, timeMs) => {
     const { questions, currentIndex, answers } = get();

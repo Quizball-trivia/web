@@ -1,9 +1,9 @@
 import { Badge } from './ui/badge';
 import { Trophy, Users, User, Crown, Gamepad2 } from 'lucide-react';
-import { RankedModeBottomSheet } from './RankedModeBottomSheet';
-import { FriendModeBottomSheet } from './FriendModeBottomSheet';
 import { useState } from 'react';
 import { Button } from './ui/button';
+import { ModeConfirmModal } from '@/features/play/components/ModeConfirmModal';
+import { FriendPlayModal } from '@/features/friend/components/FriendPlayModal';
 
 interface ModeSelectionScreenProps {
   onSelectMode: (mode: 'ranked' | 'friendly' | 'solo') => void;
@@ -12,18 +12,23 @@ interface ModeSelectionScreenProps {
 }
 
 export function ModeSelectionScreen({ onSelectMode, onSelectFriendGameMode, ticketsRemaining = 10 }: ModeSelectionScreenProps) {
-  const [isRankedSheetOpen, setIsRankedSheetOpen] = useState(false);
-  const [isFriendSheetOpen, setIsFriendSheetOpen] = useState(false);
+  const [selectedMode, setSelectedMode] = useState<'ranked' | 'friendly' | 'solo' | null>(null);
   
-  const handleRankedPlay = () => {
-    setIsRankedSheetOpen(false);
-    onSelectMode('ranked');
+  const handleConfirm = () => {
+    if (!selectedMode) return;
+    
+    // Friend mode is handled by FriendPlayModal now, so we only handle ranked/solo here
+    if (selectedMode !== 'friendly') {
+       onSelectMode(selectedMode);
+    }
+    
+    setSelectedMode(null);
   };
 
   return (
     <div className="container mx-auto max-w-5xl py-8 animate-in fade-in duration-500">
       
-      {/* Header not needed as sidebar already says "Play" and tab is active, but a subtle title helps */}
+      {/* Header */}
       <div className="mb-8">
          <h1 className="text-3xl font-bold flex items-center gap-3">
             <Gamepad2 className="size-8 text-primary" />
@@ -34,16 +39,16 @@ export function ModeSelectionScreen({ onSelectMode, onSelectFriendGameMode, tick
       <div className="space-y-6">
         {/* Primary: Ranked Mode */}
         <div
-          onClick={() => setIsRankedSheetOpen(true)}
+          onClick={() => setSelectedMode('ranked')}
           onKeyDown={(event) => {
             if (event.key === "Enter" || event.key === " ") {
               event.preventDefault();
-              setIsRankedSheetOpen(true);
+              setSelectedMode('ranked');
             }
           }}
           role="button"
           tabIndex={0}
-          className="w-full text-left group relative overflow-hidden bg-gradient-to-br from-card to-card/50 border-2 border-border hover:border-primary/50 rounded-3xl p-8 transition-all active:scale-[0.99] shadow-xl"
+          className="w-full text-left group relative overflow-hidden bg-gradient-to-br from-card to-card/50 border-2 border-border hover:border-primary/50 rounded-3xl p-8 transition-all active:scale-[0.99] shadow-xl cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
           
@@ -75,7 +80,7 @@ export function ModeSelectionScreen({ onSelectMode, onSelectFriendGameMode, tick
             </div>
             
             <div className="hidden md:block">
-               <Button size="lg" className="rounded-full px-8 h-12 text-base shadow-lg shadow-primary/20">
+               <Button size="lg" className="rounded-full px-8 h-12 text-base shadow-lg shadow-primary/20 pointer-events-none">
                   Play Ranked
                </Button>
             </div>
@@ -86,16 +91,16 @@ export function ModeSelectionScreen({ onSelectMode, onSelectFriendGameMode, tick
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Friendly Mode */}
           <div
-            onClick={() => setIsFriendSheetOpen(true)}
+            onClick={() => setSelectedMode('friendly')}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
-                setIsFriendSheetOpen(true);
+                setSelectedMode('friendly');
               }
             }}
             role="button"
             tabIndex={0}
-            className="text-left group relative overflow-hidden bg-card/40 border border-border/60 hover:border-blue-500/50 rounded-2xl p-6 transition-all hover:bg-blue-500/5"
+            className="text-left group relative overflow-hidden bg-card/40 border border-border/60 hover:border-blue-500/50 rounded-2xl p-6 transition-all hover:bg-blue-500/5 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
              <div className="flex items-start gap-4">
                <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500 shrink-0">
@@ -106,7 +111,7 @@ export function ModeSelectionScreen({ onSelectMode, onSelectFriendGameMode, tick
                   <p className="text-sm text-muted-foreground mb-4">
                     Create a private room or join a friend&apos;s game. Friendly matches do not affect RP.
                   </p>
-                  <Button variant="outline" size="sm" className="group-hover:bg-blue-500 group-hover:text-white group-hover:border-blue-500 transition-colors">
+                  <Button variant="outline" size="sm" className="group-hover:bg-blue-500 group-hover:text-white group-hover:border-blue-500 transition-colors pointer-events-none">
                      Create / Join Room
                   </Button>
                </div>
@@ -115,16 +120,16 @@ export function ModeSelectionScreen({ onSelectMode, onSelectFriendGameMode, tick
 
           {/* Solo Mode */}
           <div
-            onClick={() => onSelectMode('solo')}
+            onClick={() => setSelectedMode('solo')}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
-                onSelectMode("solo");
+                setSelectedMode('solo');
               }
             }}
             role="button"
             tabIndex={0}
-            className="text-left group relative overflow-hidden bg-card/40 border border-border/60 hover:border-green-500/50 rounded-2xl p-6 transition-all hover:bg-green-500/5"
+            className="text-left group relative overflow-hidden bg-card/40 border border-border/60 hover:border-green-500/50 rounded-2xl p-6 transition-all hover:bg-green-500/5 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
           >
              <div className="flex items-start gap-4">
                <div className="p-3 rounded-xl bg-green-500/10 text-green-500 shrink-0">
@@ -135,7 +140,7 @@ export function ModeSelectionScreen({ onSelectMode, onSelectFriendGameMode, tick
                   <p className="text-sm text-muted-foreground mb-4">
                     Relax and practice your trivia skills against the AI. Great for warming up.
                   </p>
-                  <Button variant="outline" size="sm" className="group-hover:bg-green-500 group-hover:text-white group-hover:border-green-500 transition-colors">
+                  <Button variant="outline" size="sm" className="group-hover:bg-green-500 group-hover:text-white group-hover:border-green-500 transition-colors pointer-events-none">
                      Start Practice
                   </Button>
                </div>
@@ -144,19 +149,19 @@ export function ModeSelectionScreen({ onSelectMode, onSelectFriendGameMode, tick
         </div>
       </div>
       
-      {/* Ranked Mode Bottom Sheet */}
-      <RankedModeBottomSheet
-        open={isRankedSheetOpen}
-        onOpenChange={setIsRankedSheetOpen}
-        onPlay={handleRankedPlay}
+      {/* Responsive Confirmation Modal (Ranked/Solo) */}
+      <ModeConfirmModal
+        mode={selectedMode !== 'friendly' ? selectedMode : null}
+        isOpen={!!selectedMode && selectedMode !== 'friendly'}
+        onOpenChange={(open) => !open && setSelectedMode(null)}
+        onConfirm={handleConfirm}
         ticketsRemaining={ticketsRemaining}
       />
-      
-      {/* Friend Mode Bottom Sheet */}
-      <FriendModeBottomSheet
-        open={isFriendSheetOpen}
-        onOpenChange={setIsFriendSheetOpen}
-        onSelectGameMode={onSelectFriendGameMode}
+
+      {/* Friend Play Modal (Create/Join) */}
+      <FriendPlayModal 
+        isOpen={selectedMode === 'friendly'}
+        onOpenChange={(open) => !open && setSelectedMode(null)}
       />
     </div>
   );

@@ -12,6 +12,16 @@ import { useFeaturedCategories } from "@/lib/queries/featuredCategories.queries"
 import type { CategorySummary, GameQuestion } from "@/lib/domain";
 import type { ListQuestionsQuery } from "@/lib/repositories/questions.repo";
 import { QUESTION_COUNT } from "@/lib/constants/game";
+import { queryKeys } from "@/lib/queries/queryKeys";
+
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
 
 export default function PlayPage() {
   const router = useRouter();
@@ -48,17 +58,38 @@ export default function PlayPage() {
     mode: "solo" | "ranked" | "quizball" | "buzzer";
     matchType: "casual" | "ranked" | "friendly";
   }) => {
-    if (!defaultCategory) {
+    // For ranked mode, start matchmaking without pre-fetching questions
+    // Questions will be fetched after category blocking
+    if (params.mode === "ranked") {
+      startSession({
+        ...params,
+        questionCount: QUESTION_COUNT,
+      });
+      router.push("/game");
+      return;
+    }
+
+    // For other modes, use default category
+    const selectedCategory = defaultCategory;
+
+    if (!selectedCategory) {
       toast.error("Unable to load categories. Please try again.");
       return;
     }
 
+    // Invalidate questions cache to ensure fresh data each game
+    await queryClient.invalidateQueries({
+      queryKey: queryKeys.questions.all,
+    });
+
     let questions: GameQuestion[] = [];
     try {
-      const fetched = await fetchQuestions(defaultCategory.id);
-      questions = fetched.map((question) => ({
+      const fetched = await fetchQuestions(selectedCategory.id);
+      // Shuffle questions for randomized order
+      const shuffledQuestions = shuffleArray(fetched);
+      questions = shuffledQuestions.map((question) => ({
         ...question,
-        categoryName: defaultCategory.name,
+        categoryName: selectedCategory.name,
       }));
     } catch {
       toast.error("Unable to load questions. Please try again.");
@@ -71,9 +102,9 @@ export default function PlayPage() {
     }
 
     const baseConfig = {
-      categoryId: defaultCategory.id,
-      categoryName: defaultCategory.name,
-      categoryIcon: defaultCategory.icon || "⚽",
+      categoryId: selectedCategory.id,
+      categoryName: selectedCategory.name,
+      categoryIcon: selectedCategory.icon || "⚽",
       questionCount: QUESTION_COUNT,
     };
 
@@ -99,7 +130,8 @@ export default function PlayPage() {
           void startMatch({ mode: "buzzer", matchType: "friendly" });
           return;
         }
-        void startMatch({ mode: "quizball", matchType: "friendly" });
+        // Multiple Choice (QuizBall) - navigate to categories to pick a category first
+        router.push("/categories");
       }}
       ticketsRemaining={player.tickets || 0}
     />

@@ -1,6 +1,7 @@
 export type GameStage =
   | "idle"
   | "matchmaking"
+  | "categoryBlocking"
   | "showdown"
   | "roundIntro"
   | "playing"

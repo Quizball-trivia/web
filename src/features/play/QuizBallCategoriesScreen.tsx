@@ -23,7 +23,7 @@ export function QuizBallCategoriesScreen({
   const [selectedCategory, setSelectedCategory] = useState<CategorySummary | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const { data, isLoading, isError } = useCategoriesList({
-    limit: 200,
+    limit: 100,
     page: 1,
     is_active: "true",
   });
