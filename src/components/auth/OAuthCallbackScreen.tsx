@@ -5,7 +5,7 @@ import { Card, CardContent } from '../ui/card';
 import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
 import { parseOAuthHash } from '@/lib/auth/auth.service';
-import { setTokens } from '@/lib/auth/tokenStorage';
+import { getAccessToken, getRefreshToken, setTokens } from '@/lib/auth/tokenStorage';
 import { useAuthStore } from '@/stores/auth.store';
 import { AppLogo } from '../AppLogo';
 import { logger } from '@/utils/logger';
@@ -18,17 +18,38 @@ export function OAuthCallbackScreen() {
   useEffect(() => {
     const processCallback = async () => {
       try {
-        logger.info('OAuth callback start', { hashLength: window.location.hash.length });
-        const tokens = parseOAuthHash(window.location.hash);
-        if (!tokens) {
+        const hash = window.location.hash || "";
+        const existingAccess = getAccessToken();
+        const existingRefresh = getRefreshToken();
+        const lastHash = window.sessionStorage.getItem("quizball_oauth_hash");
+
+        logger.info('OAuth callback start', {
+          hashLength: hash.length,
+          hasAccessToken: !!existingAccess,
+          hasRefreshToken: !!existingRefresh,
+          hasLastHash: !!lastHash,
+        });
+
+        if (hash && lastHash === hash) {
+          logger.info('OAuth callback duplicate hash, skipping');
+          return;
+        }
+
+        const tokens = parseOAuthHash(hash);
+        if (tokens) {
+          setTokens(tokens);
+          window.sessionStorage.setItem("quizball_oauth_hash", hash);
+          logger.info('OAuth callback tokens stored');
+          // Clear tokens from URL (security: don't leave in browser history)
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (!existingAccess || !existingRefresh) {
           logger.warn('OAuth callback missing tokens');
           throw new Error('Missing tokens in callback');
+        } else {
+          logger.info('OAuth callback using existing tokens');
         }
-        setTokens(tokens);
-        logger.info('OAuth callback tokens stored');
-        // Clear tokens from URL (security: don't leave in browser history)
-        window.history.replaceState({}, document.title, window.location.pathname);
-        await bootstrap();
+
+        await bootstrap({ force: true });
         logger.info('OAuth callback bootstrap success');
         router.replace('/');
       } catch (err) {

@@ -13,7 +13,6 @@ export default function CareerPage() {
       onBack={() => router.push("/")}
       onSelectLevel={() => router.push("/game")}
       completedLevels={new Set(player.completedLevels || [])}
-      levelScores={new Map()}
     />
   );
 }

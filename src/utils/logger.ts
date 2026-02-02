@@ -50,7 +50,7 @@ function log(level: LogLevel, message: string, meta?: unknown) {
           : level === "info"
             ? console.info
             : console.debug;
-    method(entry);
+    method(message, entry);
     return;
   }
 

@@ -18,7 +18,6 @@ export interface CareerLevel {
 interface CareerPathProps {
   levels: CareerLevel[];
   completedLevels: Set<number>;
-  levelScores: Map<number, number>;
   currentLevelId: number;
   onLevelSelect: (level: CareerLevel) => void;
   selectedLevelId: number | null;
@@ -27,7 +26,6 @@ interface CareerPathProps {
 export function CareerPath({ 
   levels, 
   completedLevels, 
-  levelScores, 
   currentLevelId,
   selectedLevelId,
   onLevelSelect 

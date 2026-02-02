@@ -1,24 +1,18 @@
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Trophy, Users, User, Gamepad2, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { getRankInfo, getDivisionColor } from '@/utils/rankSystem';
-import { ModeConfirmModal } from '@/features/play/components/ModeConfirmModal';
-import { FriendPlayModal } from '@/features/friend/components/FriendPlayModal';
 import type { PlayerStats } from '@/types/game';
 
 interface HomePlayHeroProps {
   playerStats: PlayerStats;
   onStartRanked: () => void;
+  onOpenFriend: () => void;
 }
 
-export function HomePlayHero({ playerStats, onStartRanked }: HomePlayHeroProps) {
-  const router = useRouter();
-  const [showRankedModal, setShowRankedModal] = useState(false);
-  const [showFriendModal, setShowFriendModal] = useState(false);
+export function HomePlayHero({ playerStats, onStartRanked, onOpenFriend }: HomePlayHeroProps) {
   const rankInfo = getRankInfo(playerStats.rankPoints || 0);
   const divisionColors = getDivisionColor(rankInfo.division);
 
@@ -32,9 +26,10 @@ export function HomePlayHero({ playerStats, onStartRanked }: HomePlayHeroProps) 
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         {/* Primary Ranked Card */}
+        {/* Full width on LG (12 cols) since secondary cards move to Rail. 7/5 split on MD. */}
         <Card
-          className="md:col-span-8 lg:col-span-7 relative overflow-hidden border-2 border-primary/20 hover:border-primary/50 transition-colors duration-500 group cursor-pointer bg-gradient-to-br from-card to-card/50 shadow-[0_0_25px_-5px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_35px_-5px_hsl(var(--primary)/0.5)]"
-          onClick={() => setShowRankedModal(true)}
+          className="md:col-span-8 lg:col-span-12 relative overflow-hidden border-2 border-primary/20 hover:border-primary/50 transition-colors duration-500 group cursor-pointer bg-gradient-to-br from-card to-card/50 shadow-[0_0_25px_-5px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_35px_-5px_hsl(var(--primary)/0.5)]"
+          onClick={onStartRanked}
         >
            {/* Static ambient glow */}
            <div className="absolute inset-0 border-2 border-primary/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
@@ -81,12 +76,12 @@ export function HomePlayHero({ playerStats, onStartRanked }: HomePlayHeroProps) 
            </CardContent>
         </Card>
 
-        {/* Secondary Cards Column */}
-        <div className="md:col-span-4 lg:col-span-5 flex flex-col gap-4">
+        {/* Secondary Cards Column - HIDDEN on LG (Desktop), Visible on Mobile/Tablet */}
+        <div className="md:col-span-4 lg:hidden flex flex-col gap-4">
            {/* Friend Match */}
            <Card
               className="flex-1 cursor-pointer hover:border-blue-500/30 hover:bg-blue-500/5 transition-all duration-300 border border-blue-500/20 bg-card group/card"
-              onClick={() => setShowFriendModal(true)}
+              onClick={onOpenFriend}
            >
               <CardContent className="p-5 flex flex-col h-full justify-center relative">
                  <div className="flex items-center gap-4 mb-2">
@@ -132,24 +127,6 @@ export function HomePlayHero({ playerStats, onStartRanked }: HomePlayHeroProps) 
            </Card>
         </div>
       </div>
-
-      {/* Ranked Mode Confirmation Modal */}
-      <ModeConfirmModal
-        mode="ranked"
-        isOpen={showRankedModal}
-        onOpenChange={setShowRankedModal}
-        onConfirm={() => {
-          setShowRankedModal(false);
-          onStartRanked();
-        }}
-        ticketsRemaining={playerStats.tickets ?? 10}
-      />
-
-      {/* Friend Play Modal */}
-      <FriendPlayModal
-        isOpen={showFriendModal}
-        onOpenChange={setShowFriendModal}
-      />
     </div>
   );
 }

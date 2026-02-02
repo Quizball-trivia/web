@@ -1,12 +1,14 @@
+
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { PlayerStats } from '@/types/game';
 import { HomePlayHero } from './components/dashboard/HomePlayHero';
-import { HomeFeaturedChallenge } from './components/dashboard/HomeFeaturedChallenge';
+import { HomeRightRail } from './components/dashboard/HomeRightRail';
 import { HomeEventTeaser } from './components/dashboard/HomeEventTeaser';
-import { Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useGameSessionStore } from '@/stores/gameSession.store';
 import { QUESTION_COUNT } from '@/lib/constants/game';
+import { ModeConfirmModal } from '@/features/play/components/ModeConfirmModal';
+import { FriendPlayModal } from '@/features/friend/components/FriendPlayModal';
 
 interface HomeDashboardProps {
   playerStats: PlayerStats;
@@ -19,10 +21,14 @@ export function HomeDashboard({
 }: HomeDashboardProps) {
   const router = useRouter();
   const startSession = useGameSessionStore((state) => state.startSession);
+  
+  const [showRankedModal, setShowRankedModal] = useState(false);
+  const [showFriendModal, setShowFriendModal] = useState(false);
 
-  const handleSelectChallenge = () => {
-    router.push('/daily/challenges');
-  };
+  // handleSelectChallenge is no longer used, removing it.
+  // const handleSelectChallenge = () => {
+  //   router.push('/daily/challenges');
+  // };
 
   const handleStartRanked = () => {
     startSession({
@@ -34,39 +40,58 @@ export function HomeDashboard({
   };
 
   return (
-    <div className="container mx-auto max-w-6xl space-y-8 animate-in fade-in duration-500">
+    <div className="container mx-auto max-w-7xl animate-in fade-in duration-500">
+      
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8">
+        {/* LEFT COLUMN: Main Content */}
+        <div className="space-y-8 min-w-0">
+           {/* A) HERO PLAY SECTION */}
+           <section>
+              <HomePlayHero 
+                 playerStats={playerStats} 
+                 onStartRanked={() => setShowRankedModal(true)} 
+                 onOpenFriend={() => setShowFriendModal(true)}
+              />
+           </section>
 
-      {/* A) HERO PLAY SECTION */}
-      <section>
-         <HomePlayHero playerStats={playerStats} onStartRanked={handleStartRanked} />
-      </section>
+           {/* B) BELOW-FOLD SECONDARY CONTENT */}
+           {/* The original structure had a malformed HomeFeaturedChallenge and a duplicate div.
+               Assuming the intent was to have a section for other widgets or just the Event Teaser.
+               Removing the malformed HomeFeaturedChallenge and the duplicate div. */}
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-8">
+              {/* Optional: Add other widgets here if needed, or leave empty for now */}
+           </div>
 
-      {/* B) BELOW-FOLD SECONDARY CONTENT */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-         {/* Left Column */}
-         <div className="space-y-8">
-            <HomeFeaturedChallenge
-               dailyChallengesCompleted={dailyChallengesCompleted}
-               onSelectChallenge={handleSelectChallenge}
-            />
+            {/* Event Teaser */}
+            <HomeEventTeaser />
+        </div>
 
-            {/* Daily Spin Small Link */}
-            <div className="flex justify-center">
-               <Button
-                 variant="ghost"
-                 size="sm"
-                 className="text-muted-foreground hover:text-yellow-500 hover:bg-yellow-500/10 gap-2"
-                 onClick={() => router.push('/daily/rewards')}
-               >
-                 <Sparkles className="size-4" />
-                 Spin Daily Wheel
-               </Button>
-            </div>
-         </div>
+        {/* RIGHT COLUMN: Status Rail (Desktop Only) */}
+        <aside className="hidden lg:block space-y-6 pt-2">
+           <HomeRightRail 
+             dailyChallengesCompleted={dailyChallengesCompleted}
+             onOpenFriend={() => setShowFriendModal(true)} 
+           />
+        </aside>
       </div>
 
-       {/* Event Teaser */}
-       <HomeEventTeaser />
+      {/* Ranked Mode Confirmation Modal */}
+      <ModeConfirmModal
+        mode="ranked"
+        isOpen={showRankedModal}
+        onOpenChange={setShowRankedModal}
+        onConfirm={() => {
+          setShowRankedModal(false);
+          handleStartRanked();
+        }}
+        ticketsRemaining={playerStats.tickets ?? 10}
+      />
+
+      {/* Friend Play Modal */}
+      <FriendPlayModal
+        isOpen={showFriendModal}
+        onOpenChange={setShowFriendModal}
+      />
     </div>
   );
 }

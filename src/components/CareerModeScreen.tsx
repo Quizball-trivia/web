@@ -90,14 +90,12 @@ interface CareerModeScreenProps {
   onBack: () => void;
   onSelectLevel: (levelId: number, levelName: string, questionsCount: number) => void;
   completedLevels: Set<number>;
-  levelScores: Map<number, number>;
 }
 
 export function CareerModeScreen({ 
   onBack, 
   onSelectLevel,
-  completedLevels,
-  levelScores
+  completedLevels
 }: CareerModeScreenProps) {
   // Find current play level (first uncompleted)
   const currentLevelId = useMemo(() => {
@@ -153,7 +151,6 @@ export function CareerModeScreen({
                <CareerPath 
                   levels={careerLevels}
                   completedLevels={completedLevels}
-                  levelScores={levelScores}
                   currentLevelId={currentLevelId}
                   selectedLevelId={selectedLevelId}
                   onLevelSelect={handleLevelSelect}

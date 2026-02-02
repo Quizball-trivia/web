@@ -15,7 +15,7 @@ type AuthState = {
   status: AuthStatus;
   user: User | null;
   hasBootstrapped: boolean;
-  bootstrap: () => Promise<void>;
+  bootstrap: (options?: { force?: boolean }) => Promise<void>;
   setAuthenticated: (user: User) => void;
   logout: () => Promise<void>;
 };
@@ -26,23 +26,33 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   hasBootstrapped: false,
   setAuthenticated: (user) =>
     set({ status: "authenticated", user, hasBootstrapped: true }),
-  bootstrap: async () => {
+  bootstrap: async (options) => {
+    const force = options?.force ?? false;
     const { status, hasBootstrapped } = get();
-    if (status === "authenticated" || status === "anonymous") {
+    const accessToken = getAccessToken();
+    const refreshToken = getRefreshToken();
+
+    if (!force && status === "authenticated") {
       if (!hasBootstrapped) {
         set({ hasBootstrapped: true });
       }
       return;
     }
-    if (hasBootstrapped && status !== "loading") {
+
+    if (!force && status === "anonymous" && !accessToken && !refreshToken) {
+      if (!hasBootstrapped) {
+        set({ hasBootstrapped: true });
+      }
       return;
     }
+
+    if (!force && hasBootstrapped && status !== "loading") {
+      return;
+    }
+
     if (status !== "loading") {
       set({ status: "loading" });
     }
-
-    const accessToken = getAccessToken();
-    const refreshToken = getRefreshToken();
 
     if (!accessToken && !refreshToken) {
       logger.info("Auth bootstrap no tokens");
