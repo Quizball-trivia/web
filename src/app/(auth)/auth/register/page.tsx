@@ -14,7 +14,14 @@ export default function RegisterPage() {
   const handleRegister = async (_username: string, email: string, password: string) => {
     try {
       logger.info("Register submit", { email });
-      await register({ email, password });
+      const result = await register({ email, password });
+      if (!result.tokensSet) {
+        toast.info("Check your email to confirm your account.", {
+          description: "Once confirmed, you can sign in to continue.",
+        });
+        router.replace("/auth/login");
+        return;
+      }
       await bootstrap();
       router.replace("/onboarding");
     } catch (error) {

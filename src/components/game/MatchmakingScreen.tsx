@@ -8,35 +8,18 @@ import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, Users, Loader2 } from 'lucide-react';
 
 interface MatchmakingScreenProps {
-  matchType: 'ranked' | 'casual' | 'friendly';
-  onMatchFound?: (opponent: { id: string; username: string; avatar: string; tier?: string }) => void;
+  matchType: 'ranked' | 'friendly';
   onCancel: () => void;
 }
 
-export function MatchmakingScreen({ matchType, onMatchFound, onCancel }: MatchmakingScreenProps) {
+export function MatchmakingScreen({ matchType, onCancel }: MatchmakingScreenProps) {
   const [progress, setProgress] = useState(0);
   const [searchTime, setSearchTime] = useState(0);
 
   useEffect(() => {
-    // Simulate matchmaking progress
     const progressInterval = setInterval(() => {
       setProgress(prev => Math.min(prev + 10, 90));
     }, 300);
-
-    // Simulate finding a match after 3-5 seconds
-    const matchTimeout = setTimeout(() => {
-      const mockOpponents = [
-        { id: '2', username: 'FootballFan99', avatar: '⚽', tier: 'Silver' },
-        { id: '3', username: 'GoalScorer', avatar: '🥅', tier: 'Gold' },
-        { id: '4', username: 'TriviaKing', avatar: '👑', tier: 'Silver' },
-        { id: '5', username: 'PitchMaster', avatar: '🏟️', tier: 'Bronze' },
-      ];
-      const opponent = mockOpponents[Math.floor(Math.random() * mockOpponents.length)];
-      setProgress(100);
-      if (onMatchFound) {
-        setTimeout(() => onMatchFound(opponent), 500);
-      }
-    }, 3000 + Math.random() * 2000);
 
     // Count search time
     const timeInterval = setInterval(() => {
@@ -46,9 +29,8 @@ export function MatchmakingScreen({ matchType, onMatchFound, onCancel }: Matchma
     return () => {
       clearInterval(progressInterval);
       clearInterval(timeInterval);
-      clearTimeout(matchTimeout);
     };
-  }, [onMatchFound]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -112,7 +94,7 @@ export function MatchmakingScreen({ matchType, onMatchFound, onCancel }: Matchma
                 <Badge
                   className={matchType === 'ranked' ? 'bg-amber-500 text-white' : 'bg-blue-500 text-white'}
                 >
-                  {matchType === 'ranked' ? 'Ranked Match' : matchType === 'friendly' ? 'Friendly Match' : 'Casual Match'}
+                  {matchType === 'ranked' ? 'Ranked Match' : 'Friendly Match'}
                 </Badge>
               </div>
             </CardContent>
@@ -133,7 +115,7 @@ export function MatchmakingScreen({ matchType, onMatchFound, onCancel }: Matchma
             <CardContent className="pt-4 pb-4">
               <div className="text-sm space-y-2">
                 <p className="text-muted-foreground">
-                  <strong className="text-foreground">Tip:</strong> The match will be best of 3 rounds. Each round will be a random game mode. First to win 2 rounds wins the match!
+                  <strong className="text-foreground">Tip:</strong> Matches are 10 fast questions — answer quickly for bonus points.
                 </p>
               </div>
             </CardContent>

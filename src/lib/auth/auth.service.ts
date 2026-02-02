@@ -55,7 +55,12 @@ export async function login(email: string, password: string): Promise<AuthRespon
   return (data as AuthResponse).user ?? null;
 }
 
-export async function register(payload: RegisterPayload): Promise<AuthResponse["user"] | null> {
+export type RegisterResult = {
+  user: AuthResponse["user"] | null;
+  tokensSet: boolean;
+};
+
+export async function register(payload: RegisterPayload): Promise<RegisterResult> {
   logger.info("Auth register start", { email: payload.email });
   const data = await api.POST("/api/v1/auth/register", {
     body: payload,
@@ -64,11 +69,11 @@ export async function register(payload: RegisterPayload): Promise<AuthResponse["
   const tokens = extractTokens(data as AuthResponse | null);
   if (!tokens) {
     logger.warn("Auth register missing tokens");
-    throw new Error("Missing tokens in register response");
+    return { user: (data as AuthResponse | null)?.user ?? null, tokensSet: false };
   }
   setTokens(tokens);
   logger.info("Auth register success");
-  return (data as AuthResponse).user ?? null;
+  return { user: (data as AuthResponse).user ?? null, tokensSet: true };
 }
 
 export async function refresh(): Promise<boolean> {

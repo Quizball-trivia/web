@@ -30,13 +30,8 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
   const [isJoining, setIsJoining] = useState(false);
 
   const handleCreateRoom = () => {
-    // In a real app, this might call an API to create a room first.
-    // For now, we simulate creating a room by generating a random code or navigating to 'new'
-    // functionality to be handled by the /room/[code] page or a middleware.
-    // Let's generate a random 6-char code for demo purposes or use 'new' and let the page handle it.
-    const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
     onOpenChange(false);
-    router.push(`/friend/room/${newCode}?isHost=true`);
+    router.push(`/friend/room/new?isHost=true`);
   };
 
   const handleJoinRoom = () => {

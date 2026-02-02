@@ -1,39 +1,59 @@
 "use client";
 
+import { useEffect, useMemo, useState } from 'react';
+import { Loader2 } from 'lucide-react';
 import { MatchHeader } from './components/MatchHeader';
 import { CategoryGameCard } from './components/CategoryGameCard';
-import { CategorySummary } from '@/lib/domain';
-import { useDraftLogic } from './hooks/useDraftLogic';
-import { Loader2 } from 'lucide-react';
+import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
+import { getSocket } from '@/lib/realtime/socket-client';
+import { usePlayer } from '@/contexts/PlayerContext';
+import { useAuthStore } from '@/stores/auth.store';
+import { logger } from '@/utils/logger';
+import type { CategorySummary } from '@/lib/domain';
 
-interface RankedCategoryBlockingScreenProps {
-  opponent: { id: string; username: string; avatar: string; tier?: string };
-  onCategoriesSelected: (categories: CategorySummary[]) => void;
-  onBack: () => void;
-}
+export function RankedCategoryBlockingScreen() {
+  const { player } = usePlayer();
+  const authUser = useAuthStore((state) => state.user);
+  const selfUserId = authUser?.id ?? player.id;
+  const lobby = useRealtimeMatchStore((state) => state.lobby);
+  const draft = useRealtimeMatchStore((state) => state.draft);
+  const [timeLeft, setTimeLeft] = useState(15);
 
-export function RankedCategoryBlockingScreen({
-  opponent,
-  onCategoriesSelected,
-}: RankedCategoryBlockingScreenProps) {
-  
-  const { state, actions } = useDraftLogic({ onCategoriesSelected });
-  
-  const { 
-     phase, timeLeft, currentActor, poolCategories, 
-     playerBannedId, opponentBannedId, isLoading 
-  } = state;
+  useEffect(() => {
+    if (!draft) return;
+    setTimeLeft(15);
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [draft?.turnUserId, draft?.allowedCategoryIds, draft?.categories]);
 
-  if (isLoading) {
+  const opponent = useMemo(() => {
+    const opponentMember = lobby?.members.find((member) => member.userId !== selfUserId);
+    return {
+      id: opponentMember?.userId ?? 'opponent',
+      username: opponentMember?.username ?? 'Opponent',
+      avatar: opponentMember?.avatarUrl ?? '😈',
+      tier: undefined,
+    };
+  }, [lobby?.members, selfUserId]);
+
+  if (!draft || !lobby) {
      return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
   }
+
+  const phase = draft.allowedCategoryIds ? 'ready' : 'ban';
+  const currentActor = draft.turnUserId === selfUserId ? 'player' : 'opponent';
+  const playerBannedId = draft.bans[selfUserId ?? ''] ?? null;
+  const opponentBannedId = Object.entries(draft.bans).find(([userId]) => userId !== selfUserId)?.[1] ?? null;
+  const poolCategories = draft.categories;
 
   return (
     <div className="min-h-screen bg-background flex flex-col pb-20">
        
        <MatchHeader 
-          player={{ username: 'You', avatar: '😊', rp: 1200 }} 
-          opponent={{ ...opponent, rp: 1150 }} // Use passed opponent, mock rp if missing
+          player={{ username: player.username, avatar: player.avatar, rp: player.rankPoints ?? 1200 }} 
+          opponent={{ ...opponent, rp: player.rankPoints ? player.rankPoints - 50 : 1150 }} 
           phase={phase}
           timeLeft={timeLeft}
           currentActor={currentActor}
@@ -51,21 +71,32 @@ export function RankedCategoryBlockingScreen({
 
           <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
              {poolCategories.map(category => {
+                const cardCategory: CategorySummary = {
+                   id: category.id,
+                   name: category.name,
+                   slug: category.id,
+                   icon: category.icon,
+                };
                 let state: 'default' | 'selected' | 'banned' | 'opponent-banned' = 'default';
                 
                 if (category.id === playerBannedId) state = 'banned'; 
                 else if (category.id === opponentBannedId) state = 'opponent-banned';
 
                 const disabled = (!!playerBannedId && category.id !== playerBannedId && phase === 'ban') ||
-                                 (!!opponentBannedId && category.id === opponentBannedId);
+                                 (!!opponentBannedId && category.id === opponentBannedId) ||
+                                 currentActor !== 'player';
 
                 return (
                    <CategoryGameCard 
                       key={category.id} 
-                      category={category} 
+                      category={cardCategory} 
                       state={state}
-                      disabled={disabled || (currentActor !== 'player' && phase === 'ban')}
-                      onClick={() => actions.handleCategoryClick(category)}
+                      disabled={disabled}
+                      onClick={() => {
+                        if (currentActor !== 'player' || phase !== 'ban') return;
+                        getSocket().emit('draft:ban', { categoryId: category.id });
+                        logger.info('Socket emit draft:ban', { categoryId: category.id });
+                      }}
                    />
                 );
              })}

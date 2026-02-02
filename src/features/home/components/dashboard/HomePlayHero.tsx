@@ -13,6 +13,7 @@ interface HomePlayHeroProps {
 }
 
 export function HomePlayHero({ playerStats, onStartRanked, onOpenFriend }: HomePlayHeroProps) {
+  const router = useRouter();
   const rankInfo = getRankInfo(playerStats.rankPoints || 0);
   const divisionColors = getDivisionColor(rankInfo.division);
 
@@ -130,3 +131,4 @@ export function HomePlayHero({ playerStats, onStartRanked, onOpenFriend }: HomeP
     </div>
   );
 }
+import { useRouter } from 'next/navigation';

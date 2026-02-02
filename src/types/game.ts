@@ -140,7 +140,7 @@ export interface PlayerStats {
   completedLevels?: number[]; // IDs of completed career levels
 }
 
-export type MatchType = 'casual' | 'ranked' | 'friendly';
+export type MatchType = 'ranked' | 'friendly';
 export type PlayMode = 'single' | 'multiplayer';
 
 export interface RoundResult {

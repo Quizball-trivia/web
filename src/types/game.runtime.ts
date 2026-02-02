@@ -11,7 +11,7 @@ export type GameStage =
 
 export type GameMode = "solo" | "ranked" | "buzzer" | "quizball";
 
-export type MatchType = "casual" | "ranked" | "friendly";
+export type MatchType = "ranked" | "friendly";
 
 export interface GameConfig {
   mode: GameMode;

@@ -56,13 +56,14 @@ export default function PlayPage() {
 
   const startMatch = async (params: {
     mode: "solo" | "ranked" | "quizball" | "buzzer";
-    matchType: "casual" | "ranked" | "friendly";
+    matchType?: "ranked" | "friendly";
   }) => {
     // For ranked mode, start matchmaking without pre-fetching questions
     // Questions will be fetched after category blocking
     if (params.mode === "ranked") {
       startSession({
         ...params,
+        matchType: "ranked",
         questionCount: QUESTION_COUNT,
       });
       router.push("/game");
@@ -116,7 +117,7 @@ export default function PlayPage() {
     <ModeSelectionScreen
       onSelectMode={(mode) => {
         if (mode === "solo") {
-          void startMatch({ mode: "solo", matchType: "casual" });
+          void startMatch({ mode: "solo" });
           return;
         }
         if (mode === "ranked") {

@@ -248,7 +248,7 @@ export function QuizBallCategoriesScreen({
             {selectedCategory ? `${selectedCategory.name} Category` : 'Category Selection'}
           </SheetTitle>
           <SheetDescription className="sr-only">
-            {selectedCategory ? `Choose how you want to play ${selectedCategory.name}. Play ranked to compete for leaderboard position or play with a friend for casual practice.` : 'Select your play mode'}
+            {selectedCategory ? `Choose how you want to play ${selectedCategory.name}. Play ranked to compete for leaderboard position or play with a friend for friendly practice.` : 'Select your play mode'}
           </SheetDescription>
           {selectedCategory && (
             <div className="pb-4">
