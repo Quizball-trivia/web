@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import type { ComponentProps } from "react";
 import { toast } from "sonner";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
-import { OnboardingFlow } from "@/components/OnboardingFlow";
+import { OnboardingFlow } from "@/features/onboarding/OnboardingFlow";
 import { logger } from "@/utils/logger";
 
 export default function OnboardingPage() {

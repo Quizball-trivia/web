@@ -13,8 +13,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Users, User, Crown, Ticket, Ban } from "lucide-react";
-import { useIsMobile } from "@/components/ui/use-mobile";
-import { cn } from "@/components/ui/utils";
+import { useIsMobile } from "@/hooks/useMobile";
+import { cn } from "@/lib/utils";
 
 interface ModeConfirmModalProps {
   mode: 'ranked' | 'friendly' | 'solo' | null;

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { cn } from '@/components/ui/utils';
+import { cn } from '@/lib/utils';
 
 interface AnswerCardProps {
   label: string;

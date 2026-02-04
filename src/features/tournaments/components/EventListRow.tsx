@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Calendar, ChevronRight, Lock, Trophy } from 'lucide-react';
-import type { Tournament } from '@/components/TournamentsScreen';
+import type { Tournament } from '../TournamentsScreen';
 
 interface EventListRowProps {
   event: Tournament;

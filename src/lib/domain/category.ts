@@ -17,6 +17,6 @@ export interface CategorySummary {
     avatar: string;
     score: number;
   }[];
-  new?: boolean;
+  isNew?: boolean;
   trending?: boolean;
 }

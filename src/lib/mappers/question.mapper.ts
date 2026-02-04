@@ -18,11 +18,29 @@ interface McqPayload {
   options?: McqOption[];
 }
 
+function isMcqOption(value: unknown): value is McqOption {
+  if (!value || typeof value !== "object") return false;
+  const option = value as { id?: unknown; text?: unknown; is_correct?: unknown };
+  return (
+    typeof option.id === "string" &&
+    typeof option.is_correct === "boolean" &&
+    !!option.text &&
+    typeof option.text === "object"
+  );
+}
+
+function isMcqPayload(value: unknown): value is McqPayload {
+  if (!value || typeof value !== "object") return false;
+  const payload = value as { options?: unknown };
+  if (!Array.isArray(payload.options)) return false;
+  return payload.options.every(isMcqOption);
+}
+
 export function toGameQuestion(
   question: QuestionResponse,
   locale = "en",
 ): GameQuestion {
-  const payload = question.payload as McqPayload | undefined;
+  const payload = isMcqPayload(question.payload) ? question.payload : undefined;
   const options = Array.isArray(payload?.options) ? payload.options : [];
   const correctIndex = options.findIndex((option) => option.is_correct);
 

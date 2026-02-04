@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/components/ui/utils";
+import { cn } from "@/lib/utils";
 import type { CategorySummary } from "@/lib/domain";
 import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
 import { Check, Users, Flame, Star } from "lucide-react";
@@ -55,7 +55,7 @@ export function CategoryGameCard({ category, state, onClick, disabled }: Categor
                   <Flame className="size-2.5 mr-0.5 fill-white" /> HOT
                </Badge>
             )}
-            {category.new && (
+            {category.isNew && (
                <Badge className="bg-blue-500 hover:bg-blue-600 border-0 text-[9px] px-1 py-0 h-auto">
                   NEW
                </Badge>

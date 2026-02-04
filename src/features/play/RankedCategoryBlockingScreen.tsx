@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from 'react';
-import { Loader2 } from 'lucide-react';
 import { MatchHeader } from './components/MatchHeader';
 import { CategoryGameCard } from './components/CategoryGameCard';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
@@ -9,7 +8,8 @@ import { getSocket } from '@/lib/realtime/socket-client';
 import { usePlayer } from '@/contexts/PlayerContext';
 import { useAuthStore } from '@/stores/auth.store';
 import { logger } from '@/utils/logger';
-import type { CategorySummary } from '@/lib/domain';
+import { toCategorySummaryFromDraft } from '@/lib/mappers/category.mapper';
+import { LoadingScreen } from '@/components/shared/LoadingScreen';
 
 export function RankedCategoryBlockingScreen() {
   const { player } = usePlayer();
@@ -21,11 +21,13 @@ export function RankedCategoryBlockingScreen() {
 
   useEffect(() => {
     if (!draft) return;
+    // Reset timer when turn changes
     setTimeLeft(15);
     const interval = setInterval(() => {
       setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft?.turnUserId, draft?.allowedCategoryIds, draft?.categories]);
 
   const opponent = useMemo(() => {
@@ -39,7 +41,7 @@ export function RankedCategoryBlockingScreen() {
   }, [lobby?.members, selfUserId]);
 
   if (!draft || !lobby) {
-     return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
+     return <LoadingScreen text="Preparing Match..." />;
   }
 
   const phase = draft.allowedCategoryIds ? 'ready' : 'ban';
@@ -71,12 +73,7 @@ export function RankedCategoryBlockingScreen() {
 
           <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
              {poolCategories.map(category => {
-                const cardCategory: CategorySummary = {
-                   id: category.id,
-                   name: category.name,
-                   slug: category.id,
-                   icon: category.icon,
-                };
+                const cardCategory = toCategorySummaryFromDraft(category);
                 let state: 'default' | 'selected' | 'banned' | 'opponent-banned' = 'default';
                 
                 if (category.id === playerBannedId) state = 'banned'; 

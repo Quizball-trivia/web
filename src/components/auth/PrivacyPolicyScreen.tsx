@@ -40,7 +40,7 @@ export function PrivacyPolicyScreen({ onBack }: PrivacyPolicyScreenProps) {
                 <p>
                   We collect several different types of information for various purposes to provide and improve our Service to you:
                   <br /><br />
-                  <strong>Personal Data:</strong> While using our Service, we may ask you to provide certain personally identifiable information (e.g., Email address, Username).
+                  <strong>Personal Data:</strong> While using our Service, we may ask you to provide certain personally identifiable information (e.g., Email address, Nickname).
                   <br />
                   <strong>Usage Data:</strong> We may also collect information on how the Service is accessed and used (e.g., gameplay statistics, device information).
                 </p>

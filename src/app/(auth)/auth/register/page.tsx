@@ -11,7 +11,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const bootstrap = useAuthStore((state) => state.bootstrap);
 
-  const handleRegister = async (_username: string, email: string, password: string) => {
+  const handleRegister = async (_nickname: string, email: string, password: string) => {
     try {
       logger.info("Register submit", { email });
       const result = await register({ email, password });

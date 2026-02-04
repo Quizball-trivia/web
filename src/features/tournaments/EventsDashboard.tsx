@@ -1,7 +1,7 @@
 import { EventsStatusStrip } from './components/EventsStatusStrip';
 import { FeaturedEventCard } from './components/FeaturedEventCard';
 import { EventListRow } from './components/EventListRow';
-import type { Tournament } from '@/components/TournamentsScreen';
+import type { Tournament } from './TournamentsScreen';
 import { Sheet, SheetContent, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Coins, Trophy, Calendar, Zap, AlertCircle } from 'lucide-react';

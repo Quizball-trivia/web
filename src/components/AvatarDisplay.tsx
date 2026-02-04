@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { AvatarCustomization } from '../types/game';
+import { getDiceBearAvatarUrl } from '@/lib/avatars';
 
 interface AvatarDisplayProps {
   customization: AvatarCustomization;
@@ -23,10 +24,11 @@ export function AvatarDisplay({
   };
 
   const sizeInPx = getSizeInPixels();
-  
-  // Use DiceBear avatars - notionists style for professional look
-  // or use big-smile for friendly soccer player look
-  const avatarUrl = `https://api.dicebear.com/7.x/big-smile/svg?seed=${customization.base}&backgroundColor=${customization.background || 'b6e3f4,c0aede,d1d4f9'}&size=${sizeInPx}`;
+  const isUrl = /^https?:\/\//i.test(customization.base);
+
+  const avatarUrl = isUrl
+    ? customization.base
+    : getDiceBearAvatarUrl(customization.base, sizeInPx, customization.background);
 
   return (
     <div 

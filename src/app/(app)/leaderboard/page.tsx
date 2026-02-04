@@ -1,6 +1,6 @@
 "use client";
 
-import { LeaderboardScreen } from "@/components/LeaderboardScreen";
+import { LeaderboardScreen } from "@/features/leaderboard/LeaderboardScreen";
 import { usePlayer } from "@/contexts/PlayerContext";
 
 export default function LeaderboardPage() {

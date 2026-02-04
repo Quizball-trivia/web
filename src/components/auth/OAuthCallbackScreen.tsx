@@ -2,13 +2,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
-import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
+import { AlertCircle, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
-import { parseOAuthHash } from '@/lib/auth/auth.service';
-import { getAccessToken, getRefreshToken, setTokens } from '@/lib/auth/tokenStorage';
+import { parseOAuthHash, refreshWithToken } from '@/lib/auth/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
-import { AppLogo } from '../AppLogo';
 import { logger } from '@/utils/logger';
+import { LoadingScreen } from '@/components/shared/LoadingScreen';
 
 export function OAuthCallbackScreen() {
   const router = useRouter();
@@ -19,14 +18,10 @@ export function OAuthCallbackScreen() {
     const processCallback = async () => {
       try {
         const hash = window.location.hash || "";
-        const existingAccess = getAccessToken();
-        const existingRefresh = getRefreshToken();
         const lastHash = window.sessionStorage.getItem("quizball_oauth_hash");
 
         logger.info('OAuth callback start', {
           hashLength: hash.length,
-          hasAccessToken: !!existingAccess,
-          hasRefreshToken: !!existingRefresh,
           hasLastHash: !!lastHash,
         });
 
@@ -37,16 +32,17 @@ export function OAuthCallbackScreen() {
 
         const tokens = parseOAuthHash(hash);
         if (tokens) {
-          setTokens(tokens);
           window.sessionStorage.setItem("quizball_oauth_hash", hash);
-          logger.info('OAuth callback tokens stored');
+          const refreshed = await refreshWithToken(tokens.refreshToken);
+          if (!refreshed) {
+            throw new Error('Failed to establish session');
+          }
+          logger.info('OAuth callback session established');
           // Clear tokens from URL (security: don't leave in browser history)
           window.history.replaceState({}, document.title, window.location.pathname);
-        } else if (!existingAccess || !existingRefresh) {
-          logger.warn('OAuth callback missing tokens');
-          throw new Error('Missing tokens in callback');
         } else {
-          logger.info('OAuth callback using existing tokens');
+          logger.warn('OAuth callback missing tokens');
+          // Fall back to cookie-based session if already set
         }
 
         await bootstrap({ force: true });
@@ -94,20 +90,5 @@ export function OAuthCallbackScreen() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3 }}
-        className="flex flex-col items-center gap-6"
-      >
-        <AppLogo className="size-16" />
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="size-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Completing sign in...</p>
-        </div>
-      </motion.div>
-    </div>
-  );
+  return <LoadingScreen text="Finalizing Transfer..." />;
 }

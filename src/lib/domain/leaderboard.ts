@@ -10,4 +10,9 @@ export interface LeaderboardEntry {
   trendValue: number;
 }
 
+/** User's own rank information, always marked as current user */
+export interface UserRank extends Omit<LeaderboardEntry, 'isCurrentUser'> {
+  isCurrentUser: true;
+}
+
 export type LeaderboardType = 'global' | 'country' | 'friends';

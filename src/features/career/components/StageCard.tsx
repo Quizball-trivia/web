@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/components/ui/utils';
+import { cn } from '@/lib/utils';
 import { Lock, CheckCircle2, Star, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 

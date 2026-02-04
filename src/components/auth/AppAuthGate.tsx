@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth.store";
+import { LoadingScreen } from "@/components/shared/LoadingScreen";
 
 type AppAuthGateProps = {
   children: React.ReactNode;
@@ -27,11 +28,7 @@ export default function AppAuthGate({ children }: AppAuthGateProps) {
   }, [status, router]);
 
   if (status === "loading") {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <span className="text-sm text-gray-500">Loading...</span>
-      </div>
-    );
+    return <LoadingScreen text="Warming Up..." />;
   }
 
   if (status !== "authenticated") {

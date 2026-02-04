@@ -3,7 +3,7 @@ import { AppLogo } from '@/components/AppLogo';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Screen } from '@/types/screens';
-import { cn } from '@/components/ui/utils';
+import { cn } from '@/lib/utils';
 import { useState } from 'react';
 
 interface SidebarProps {

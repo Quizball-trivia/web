@@ -1,5 +1,6 @@
 import type { ListCategoriesQuery } from "@/lib/repositories/categories.repo";
 import type { ListQuestionsQuery } from "@/lib/repositories/questions.repo";
+import type { LeaderboardType } from "@/lib/domain/leaderboard";
 
 export const queryKeys = {
   categories: {
@@ -22,5 +23,18 @@ export const queryKeys = {
       [...queryKeys.questions.all, "list", filters ?? {}] as const,
     detail: (id: string) =>
       [...queryKeys.questions.all, "detail", id] as const,
+  },
+  leaderboard: {
+    all: ["leaderboard"] as const,
+    list: (type: LeaderboardType) =>
+      [...queryKeys.leaderboard.all, "list", type] as const,
+    user: (userId: string) => [...queryKeys.leaderboard.all, "user", userId] as const,
+  },
+  stats: {
+    all: ["stats"] as const,
+    headToHead: (userAId: string, userBId: string) => {
+      const [first, second] = [userAId, userBId].sort();
+      return [...queryKeys.stats.all, "headToHead", first, second] as const;
+    },
   },
 };

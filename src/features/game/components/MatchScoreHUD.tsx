@@ -1,5 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn } from '@/components/ui/utils';
+import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface MatchScoreHUDProps {

@@ -1,10 +1,6 @@
 import { create } from "zustand";
 import { bootstrapUser } from "@/lib/auth/session";
-import {
-  clearTokens,
-  getAccessToken,
-  getRefreshToken,
-} from "@/lib/auth/tokenStorage";
+import { clearTokens } from "@/lib/auth/tokenStorage";
 import { logout as logoutService, refresh } from "@/lib/auth/auth.service";
 import type { User } from "@/lib/types";
 import { logger } from "@/utils/logger";
@@ -29,9 +25,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   bootstrap: async (options) => {
     const force = options?.force ?? false;
     const { status, hasBootstrapped } = get();
-    const accessToken = getAccessToken();
-    const refreshToken = getRefreshToken();
-
     if (!force && status === "authenticated") {
       if (!hasBootstrapped) {
         set({ hasBootstrapped: true });
@@ -39,7 +32,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return;
     }
 
-    if (!force && status === "anonymous" && !accessToken && !refreshToken) {
+    if (!force && status === "anonymous") {
       if (!hasBootstrapped) {
         set({ hasBootstrapped: true });
       }
@@ -54,30 +47,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ status: "loading" });
     }
 
-    if (!accessToken && !refreshToken) {
-      logger.info("Auth bootstrap no tokens");
-      clearTokens();
-      set({ status: "anonymous", user: null, hasBootstrapped: true });
-      return;
-    }
-
-    if (!accessToken && refreshToken) {
-      logger.info("Auth bootstrap refresh needed");
-      const refreshed = await refresh();
-      if (!refreshed) {
-        logger.warn("Auth bootstrap refresh failed");
-        clearTokens();
-        set({ status: "anonymous", user: null, hasBootstrapped: true });
-        return;
-      }
-    }
-
     try {
       const user = await bootstrapUser();
       logger.info("Auth bootstrap success");
       set({ status: "authenticated", user, hasBootstrapped: true });
     } catch {
       logger.warn("Auth bootstrap failed");
+      const refreshed = await refresh();
+      if (refreshed) {
+        try {
+          const user = await bootstrapUser();
+          logger.info("Auth bootstrap after refresh success");
+          set({ status: "authenticated", user, hasBootstrapped: true });
+          return;
+        } catch {
+          logger.warn("Auth bootstrap after refresh failed");
+        }
+      }
       clearTokens();
       set({ status: "anonymous", user: null, hasBootstrapped: true });
     }

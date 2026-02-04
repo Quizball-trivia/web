@@ -1,6 +1,5 @@
 import { io, type Socket } from 'socket.io-client';
 import { API_BASE_URL } from '@/lib/config';
-import { getAccessToken } from '@/lib/auth/tokenStorage';
 import { logger } from '@/utils/logger';
 import type { ClientToServerEvents, ServerToClientEvents } from './socket.types';
 
@@ -10,6 +9,7 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
   const socket = io(API_BASE_URL, {
     autoConnect: false,
     transports: ['websocket'],
+    withCredentials: true,
   });
   socket.on('connect', () => {
     logger.info('Socket connected', { socketId: socket.id });
@@ -38,8 +38,6 @@ export function getSocket(): Socket<ServerToClientEvents, ClientToServerEvents> 
 
 export function connectSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
   const socket = getSocket();
-  const token = getAccessToken();
-  socket.auth = token ? { token } : {};
   if (!socket.connected) {
     logger.info('Socket connect requested');
     socket.connect();

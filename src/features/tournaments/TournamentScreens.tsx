@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 import type { Screen } from '@/types/screens';
-import { TournamentsScreen } from '@/components/TournamentsScreen';
-import { TournamentWaitingRoom } from '@/components/TournamentWaitingRoom';
-import { TournamentGameScreen } from '@/components/TournamentGameScreen';
-import { TournamentResultsScreen } from '@/components/TournamentResultsScreen';
+import { TournamentsScreen } from './TournamentsScreen';
+import { TournamentWaitingRoom } from './TournamentWaitingRoom';
+import { TournamentGameScreen } from './TournamentGameScreen';
+import { TournamentResultsScreen } from './TournamentResultsScreen';
 import { useRouter } from 'next/navigation';
-import type { useTournament } from './useTournament';
+import type { useTournament } from './hooks/useTournament';
 
 interface TournamentScreensProps {
   currentScreen: Screen;

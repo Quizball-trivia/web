@@ -53,7 +53,7 @@ export function toCategorySummary(
     yourBestScore: 0,
     yourRank: 0,
     leaderboardTop,
-    new: isNew,
+    isNew: isNew,
     trending: isTrending,
   };
 }
@@ -67,5 +67,16 @@ export function toCategorySummaryFromDependency(
     name: getI18nText(child.name, locale),
     slug: child.slug,
     icon: getFallbackIcon(child.id),
+  };
+}
+
+export function toCategorySummaryFromDraft(
+  draftCategory: { id: string; name: string; icon: string | null },
+): CategorySummary {
+  return {
+    id: draftCategory.id,
+    name: draftCategory.name,
+    slug: draftCategory.id,
+    icon: draftCategory.icon ?? getFallbackIcon(draftCategory.id),
   };
 }

@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/components/ui/utils";
+import { cn } from "@/lib/utils";
 import { Lock, ChevronRight, Trophy, Gift } from "lucide-react";
 
 export interface ChallengeTierProps {

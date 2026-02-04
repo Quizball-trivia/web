@@ -33,7 +33,7 @@ import {
   Briefcase,
   Flame,
 } from "lucide-react";
-import { cn } from "@/components/ui/utils";
+import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { path: "/play", label: "Play", icon: Gamepad2 },

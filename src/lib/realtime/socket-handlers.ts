@@ -3,6 +3,7 @@ import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { logger } from '@/utils/logger';
 import type {
   DraftState,
+  ErrorPayload,
   LobbyState,
   MatchAnswerAckPayload,
   MatchFinalResultsPayload,
@@ -16,6 +17,7 @@ export function registerSocketHandlers(): void {
   const store = useRealtimeMatchStore.getState();
 
   socket.off('lobby:state');
+  socket.off('error');
   socket.off('draft:start');
   socket.off('draft:banned');
   socket.off('draft:complete');
@@ -33,6 +35,11 @@ export function registerSocketHandlers(): void {
       memberCount: data.members.length,
     });
     store.setLobby(data);
+  });
+
+  socket.on('error', (data: ErrorPayload) => {
+    logger.warn('Socket event error', { code: data.code, message: data.message });
+    store.setError(data);
   });
 
   socket.on('draft:start', (data: DraftState) => {

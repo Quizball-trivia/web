@@ -1,4 +1,4 @@
-import { api } from "@/utils/api";
+import { api } from "@/lib/api/api";
 import type { components } from "@/types/api.generated";
 
 export type FeaturedCategoryResponse =

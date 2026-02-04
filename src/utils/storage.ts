@@ -9,6 +9,7 @@ export const STORAGE_KEYS = {
   ONBOARDING_COMPLETE: 'quizball_onboarding_complete',
   WALKTHROUGH_COMPLETE: 'quizball_walkthrough_complete',
   PLAYER_STATE: 'quizball_player_state',
+  USER_PREFERENCES: 'quizball_user_preferences',
 
   // Game state
   DAILY_CHALLENGE_STATE: 'quizball_daily_challenge',

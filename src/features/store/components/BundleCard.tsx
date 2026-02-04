@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { cn } from "@/components/ui/utils";
+import { cn } from "@/lib/utils";
 import { Coins, Ticket } from "lucide-react";
 
 export interface BundleProps {

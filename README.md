@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# QuizBall Frontend
 
-## Getting Started
+Quiz trivia game frontend built with Next.js 16, React 19, TanStack Query, and Zustand.
 
-First, run the development server:
+## Quick Start
 
 ```bash
+npm install
+cp .env.example .env.local  # Add your API URL
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Project Structure
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── (app)/              # Protected routes (requires auth)
+│   ├── (auth)/             # Auth flows (login, register)
+│   ├── (fullscreen)/       # No shell (game, onboarding)
+│   └── (public)/           # Public pages (privacy, terms)
+├── features/               # Feature modules (screens + components)
+│   ├── game/               # Game gameplay
+│   ├── store/              # In-app store
+│   ├── tournaments/        # Tournament system
+│   └── ...
+├── components/
+│   ├── ui/                 # Shadcn/ui primitives (Button, Card, etc.)
+│   └── shared/             # Shared app components (LoadingScreen)
+├── lib/
+│   ├── api/                # API client
+│   ├── repositories/       # API calls (raw types)
+│   ├── mappers/            # API → Domain transforms
+│   ├── queries/            # TanStack Query hooks
+│   └── domain/             # Frontend domain types
+├── stores/                 # Zustand stores
+├── contexts/               # React contexts
+├── hooks/                  # Shared hooks
+├── services/               # Business logic services
+├── data/                   # Static/mock data
+├── types/                  # TypeScript types
+└── utils/                  # Utility functions
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Adding a New Feature
 
-## Learn More
+1. Create `src/features/<name>/`
+2. Add `<Name>Screen.tsx` (main screen)
+3. Add `components/` for feature-specific components
+4. Add `hooks/` for feature-specific hooks
+5. Create route in `src/app/(app)/<name>/page.tsx`
 
-To learn more about Next.js, take a look at the following resources:
+## Architecture
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+See [CODING-PRACTICES.md](./CODING-PRACTICES.md) for detailed patterns.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Data Flow:**
+```
+API → Repository → Mapper → Query Hook → UI Component
+```
 
-## Deploy on Vercel
+**State Management:**
+- Server state: TanStack Query
+- Client state: Zustand
+- Local state: useState
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Scripts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run dev        # Start dev server
+npm run build      # Production build
+npm run typecheck  # TypeScript check
+npm run lint       # ESLint
+npm run api:sync:local  # Sync OpenAPI types
+```

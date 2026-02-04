@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { CareerModeScreen } from "@/components/CareerModeScreen";
+import { CareerModeScreen } from "@/features/career/CareerModeScreen";
 import { usePlayer } from "@/contexts/PlayerContext";
 
 export default function CareerPage() {

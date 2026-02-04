@@ -1,7 +1,7 @@
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Check, Globe } from 'lucide-react';
-import { useLocale } from './LocaleContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { LOCALES } from '../data/locales';
 
 interface LanguageSelectorProps {
