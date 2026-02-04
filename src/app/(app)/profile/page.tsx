@@ -34,6 +34,8 @@ export default function ProfilePage() {
   };
 
   const handleAvatarChange = async (avatarUrl: string) => {
+    if (isUpdating) return;
+    setIsUpdating(true);
     try {
       const updated = await updateMe({ avatar_url: avatarUrl });
       updateStats({ avatarCustomization: { base: avatarUrl } });
@@ -45,6 +47,8 @@ export default function ProfilePage() {
       toast.error("Failed to update avatar", {
         description: error instanceof Error ? error.message : "Please try again.",
       });
+    } finally {
+      setIsUpdating(false);
     }
   };
 

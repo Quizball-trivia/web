@@ -72,11 +72,6 @@ export function LobbyHeader({ lobbyCode, me, opponent, h2hSummary }: LobbyHeader
 
       {/* Right: Avatars */}
       <div className="flex items-center gap-6 flex-1 justify-center md:justify-end z-10">
-        {/* H2H Mobile */}
-        <div className="md:hidden w-full text-center mb-2">
-           {getH2HText() || (opponent && <span className="text-xs text-muted-foreground">No match history</span>)}
-        </div>
-
         {/* You */}
         <div className="flex flex-col items-center gap-2">
           <div className="relative group">
@@ -128,6 +123,11 @@ export function LobbyHeader({ lobbyCode, me, opponent, h2hSummary }: LobbyHeader
              {opponent?.isReady && <span className="text-[10px] text-green-500 font-bold">Ready</span>}
           </div>
         </div>
+      </div>
+
+      {/* H2H Mobile (Below avatars, full width) */}
+      <div className="md:hidden w-full text-center z-10">
+         {getH2HText() || (opponent && <span className="text-xs text-muted-foreground">No match history</span>)}
       </div>
     </div>
   );
