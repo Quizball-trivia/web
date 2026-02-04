@@ -44,7 +44,7 @@ export function ModeConfirmModal({
       color: "text-yellow-500",
       bgColor: "bg-yellow-500/10",
       borderColor: "border-yellow-500/20",
-      description: "Compete for Rank Points (RP) and climb the leaderboards.",
+      description: "4 Randrom categories appear - each player blocks 1, then compete in the remaining 2",
       entryCost: 1,
       stats: [
         { label: "Format", value: "1v1 Duel" },

@@ -161,13 +161,13 @@ export function AppShell({ children }: AppShellProps) {
               {/* Currencies & Streak */}
               <div className="flex items-center gap-3 mr-4">
                 {/* Streak */}
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20">
+                {/* <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20">
                   <Flame className="size-4 text-orange-500" />
                   <span className="text-xs text-orange-500/80 font-medium">Streak</span>
                   <span className="text-sm font-bold text-orange-500">
                     {playerStats.currentStreak ?? 0}
                   </span>
-                </div>
+                </div> */}
 
                 {/* Coins */}
                 <Link

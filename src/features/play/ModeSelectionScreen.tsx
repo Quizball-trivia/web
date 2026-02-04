@@ -7,6 +7,11 @@ import { FriendPlayModal } from '@/features/friend/components/FriendPlayModal';
 import { HomeQuickStatsRow } from '@/features/home/components/dashboard/HomeQuickStatsRow';
 import { HomeRecentMatches } from '@/features/home/components/dashboard/HomeRecentMatches';
 import type { PlayerStats } from '@/types/game';
+import { CHALLENGES } from '../tournaments/GameHubScreen';
+import { ChallengeTierCard } from '../tournaments/components/ChallengeTierCard';
+import { logger } from '@/utils/logger';
+import { getDivisionColor, getRankInfo } from '@/utils/rankSystem';
+import { Progress } from '@radix-ui/react-progress';
 
 interface ModeSelectionScreenProps {
   onSelectMode: (mode: 'ranked' | 'friendly' | 'solo') => void;
@@ -16,7 +21,8 @@ interface ModeSelectionScreenProps {
 
 export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playerStats }: ModeSelectionScreenProps) {
   const [selectedMode, setSelectedMode] = useState<'ranked' | 'friendly' | 'solo' | null>(null);
-  
+    const rankInfo = getRankInfo(playerStats.rankPoints || 0);
+    const divisionColors = getDivisionColor(rankInfo.division);
   const handleConfirm = () => {
     if (!selectedMode) return;
     
@@ -53,6 +59,7 @@ export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playe
           tabIndex={0}
           className="w-full text-left group relative overflow-hidden bg-gradient-to-br from-card to-card/50 border-2 border-border hover:border-primary/50 rounded-3xl p-8 transition-all active:scale-[0.99] shadow-xl cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
+         
           <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
           
           <div className="relative flex items-center gap-8">
@@ -88,7 +95,25 @@ export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playe
                </Button>
             </div>
           </div>
+          <div className="mt-8 space-y-4">
+                         <div className="flex justify-between items-end">
+                            <div className="flex flex-col">
+                              <div className="flex-row items-center">
+                                <span className="text-4xl font-black tracking-tighter text-foreground">{playerStats.rankPoints ?? 0}<span className="text-lg font-bold text-muted-foreground ml-1">RP</span></span>
+                                  
+                            <Badge variant="outline" className={`${divisionColors.text} ${divisionColors.border} bg-background/50 backdrop-blur px-4 py-1.5 text-sm font-bold shadow-sm ml-10 bottom-1 relative `}>
+                               {rankInfo.division}
+                            </Badge>
+                          
+                         </div>
+                            </div>
+                            <span className="text-sm font-bold text-primary mb-1">{(rankInfo.maxRP || 1000) - ((playerStats.rankPoints ?? 0) % 100)} RP to next division</span>
+                         </div>
+                         <Progress value={rankInfo.progress} className="h-3 bg-secondary/50 border border-primary/10 [&>div]:bg-primary [&>div]:shadow-[0_0_10px_hsl(var(--primary))]" />
+                      </div>
         </div>
+
+      
 
         {/* Secondary Modes: Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -152,6 +177,28 @@ export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playe
         </div>
       </div>
       
+ <section className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150 mt-[40px]">
+             <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold flex items-center gap-2">
+                   <Trophy className="size-5 text-primary" /> 
+                   Weekly Challenges
+                </h2>
+                <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-1 rounded">
+                   Resets in 3d 12h
+                </span>
+             </div>
+             
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {CHALLENGES.map(challenge => (
+                  <ChallengeTierCard
+                     key={challenge.id} 
+                     item={challenge} 
+                     onEnter={(id) => logger.info("Challenge enter", { id })} 
+                  />
+                ))}
+             </div>
+          </section>
+
       {/* Quick Stats */}
       <section className="mt-8">
         <HomeQuickStatsRow playerStats={playerStats} />

@@ -8,6 +8,22 @@ import { logger } from "@/utils/logger";
 
 const BOSS_EVENT_EXPIRY = new Date(Date.now() + 1000 * 60 * 60 * 48); // 48h
 
+
+  export const CHALLENGES = [
+    {
+       id: '1', title: "Money Drop", tier: 'bronze' as const, status: 'open' as const, rewards: "100 RP + Bronze Pack"
+    },
+    {
+       id: '2', title: "Countdown", tier: 'silver' as const, status: 'locked' as const, rewards: "250 RP + Silver Pack", requirement: "Level 10 Required"
+    },
+    {
+       id: '3', title: "Put in Order", tier: 'gold' as const, status: 'locked' as const, rewards: "500 RP + Gold Pack", requirement: "Gold Rank Required"
+    },
+    {
+       id: '4', title: "Clues", tier: 'platinum' as const, status: 'locked' as const, rewards: "1000 RP + Platinum Pack", requirement: "Invite Only"
+    },
+  ];
+
 export function GameHubScreen() {
   
   // Mock World Event
@@ -42,20 +58,7 @@ export function GameHubScreen() {
   ];
 
   // Mock Challenges
-  const CHALLENGES = [
-    {
-       id: '1', title: "Rookie Draft", tier: 'bronze' as const, status: 'open' as const, rewards: "100 RP + Bronze Pack"
-    },
-    {
-       id: '2', title: "Midweek Madness", tier: 'silver' as const, status: 'locked' as const, rewards: "250 RP + Silver Pack", requirement: "Level 10 Required"
-    },
-    {
-       id: '3', title: "Champions League", tier: 'gold' as const, status: 'locked' as const, rewards: "500 RP + Gold Pack", requirement: "Gold Rank Required"
-    },
-    {
-       id: '4', title: "Legends Only", tier: 'platinum' as const, status: 'locked' as const, rewards: "1000 RP + Platinum Pack", requirement: "Invite Only"
-    },
-  ];
+
 
   return (
     <div className="min-h-screen bg-background pb-20">
