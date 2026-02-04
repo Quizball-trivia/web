@@ -40,12 +40,12 @@ export const questionsService = {
         status: 'published',
       });
 
-      const items = response?.items;
+      const items = response?.data;
       if (!items || items.length === 0) {
         throw new Error('No questions returned from API');
       }
 
-      return items.map((item) => toQuestion(item, locale));
+      return items.map((item: QuestionResponse) => toQuestion(item, locale));
     } catch (error) {
       // Log error and fall back to mock data for local/dev
       logger.warn('Failed to fetch questions from API, using mock data', { error });

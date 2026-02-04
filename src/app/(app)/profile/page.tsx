@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { ProfileScreen } from "@/features/profile/ProfileScreen";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { updateMe } from "@/lib/api/endpoints";
@@ -9,7 +8,6 @@ import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth.store";
 
 export default function ProfilePage() {
-  const router = useRouter();
   const { player, updateStats } = usePlayer();
   const authUser = useAuthStore((state) => state.user);
   const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
@@ -54,9 +52,6 @@ export default function ProfilePage() {
     <ProfileScreen
       player={player}
       avatarUrl={authUser?.avatar_url ?? null}
-      onNavigateToStore={() => router.push("/store")}
-      onNavigateToSettings={() => router.push("/settings")}
-      onFeatureFlagsChange={() => {}}
       onNameChange={handleNameChange}
       onAvatarChange={handleAvatarChange}
       isUpdating={isUpdating}

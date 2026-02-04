@@ -106,7 +106,7 @@ export function CareerModeScreen({
 
       {/* Mobile Drawer / Sheet */}
       <div className="lg:hidden">
-         <Sheet open={!!selectedLevelId || !!activeLevelData} onOpenChange={(open) => !open && setSelectedLevelId(null)}>
+         <Sheet open={!!selectedLevelId} onOpenChange={(open) => !open && setSelectedLevelId(null)}>
             <SheetContent side="bottom" className="h-[80vh] p-0 rounded-t-3xl border-t-0">
                 <SheetTitle className="sr-only">Level Details</SheetTitle>
                 {activeLevelData && (
