@@ -23,7 +23,7 @@ export function LoadingScreen({
         <motion.div
            animate={{
              y: [0, -40, 0],
-             scale: [1, 1.1, 0.9, 1], // Squish effect at bottom
+             scale: [1, 1.1, 1], // Slight scale at peak bounce
              rotate: [0, 180, 360]
            }}
            transition={{

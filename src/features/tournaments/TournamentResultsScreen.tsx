@@ -58,7 +58,7 @@ export function TournamentResultsScreen({
   const scoreDifference = Math.abs(playerScore - opponentScore);
 
   // Compute derived stats
-  const accuracy = maxScore > 0 ? Math.min(100, Math.floor((playerScore / maxScore) * 100)) : 0;
+  const accuracy = totalQuestions > 0 ? Math.floor((correctAnswers / totalQuestions) * 100) : 0;
   const averageSpeed = answeredCount > 0 ? (totalTimeSeconds / answeredCount).toFixed(1) : '0.0';
 
   return (

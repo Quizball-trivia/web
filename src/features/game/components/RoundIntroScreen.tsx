@@ -88,7 +88,7 @@ export function RoundIntroScreen({
 
   useEffect(() => {
     // Simulate opponent ready state (in real app, this would come from backend)
-    let innerTimer: ReturnType<typeof setTimeout>;
+    let innerTimer: ReturnType<typeof setTimeout> | undefined;
     const opponentReadyTimer = setTimeout(() => {
       const randomDelay = Math.random() * 3000 + 1000; // 1-4 seconds
       innerTimer = setTimeout(() => {
@@ -98,7 +98,7 @@ export function RoundIntroScreen({
 
     return () => {
       clearTimeout(opponentReadyTimer);
-      clearTimeout(innerTimer);
+      if (innerTimer) clearTimeout(innerTimer);
     };
   }, []);
 

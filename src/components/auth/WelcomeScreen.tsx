@@ -29,9 +29,9 @@ export function WelcomeScreen({ onGetStarted, onLogin }: WelcomeScreenProps) {
   }, []);
 
   return (
-    <div className="min-h-screen w-full bg-[#0B0D12] font-sans text-foreground flex flex-col">
+    <div className="min-h-screen w-full bg-background font-sans text-foreground flex flex-col">
       {/* Navbar */}
-      <header className="flex h-20 items-center justify-between px-6 md:px-12 lg:px-20 shrink-0 border-b border-white/5 bg-[#0B0D12] sticky top-0 z-50">
+      <header className="flex h-20 items-center justify-between px-6 md:px-12 lg:px-20 shrink-0 border-b border-border/30 bg-background sticky top-0 z-50">
         <AppLogo size="md" className="!justify-start" />
         <Button
           variant="ghost"
@@ -59,53 +59,53 @@ export function WelcomeScreen({ onGetStarted, onLogin }: WelcomeScreenProps) {
            {/* Floating Cards Container */}
            <div className="relative w-full h-full">
               {/* YOU Card */}
-              <motion.div 
+              <motion.div
                  animate={shouldReduceMotion ? undefined : { y: [0, -10, 0] }}
                  transition={
                    shouldReduceMotion
                      ? undefined
                      : { duration: 4, repeat: Infinity, ease: "easeInOut" }
                  }
-                 className="absolute top-10 left-0 md:-left-4 z-20 bg-[#161922] p-4 rounded-3xl border-2 border-[#2A2E3B] shadow-2xl skew-y-3"
+                 className="absolute top-10 left-0 md:-left-4 z-20 bg-card p-4 rounded-3xl border-2 border-border shadow-2xl skew-y-3"
               >
                   <div className="flex flex-col items-center gap-2">
                      <div className="relative">
                         <AvatarDisplay customization={{ base: "avatar-1", background: "b6e3f4" }} size="lg" className="rounded-full ring-4 ring-green-500" />
-                        <div className="absolute -bottom-3 bg-green-500 text-[#0B0D12] text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide border-2 border-[#0B0D12]">
+                        <div className="absolute -bottom-3 bg-green-500 text-background text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide border-2 border-background">
                            You
                         </div>
                      </div>
                      <div className="mt-2 text-center">
-                        <div className="font-black text-sm text-white">Rookie</div>
+                        <div className="font-black text-sm text-foreground">Rookie</div>
                         <div className="text-[10px] text-green-500 font-bold uppercase tracking-wider">Division 10</div>
                      </div>
                   </div>
               </motion.div>
 
               {/* VS Badge */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 size-16 rounded-full bg-[#0B0D12] border-4 border-[#2A2E3B] flex items-center justify-center shadow-xl">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 size-16 rounded-full bg-background border-4 border-border flex items-center justify-center shadow-xl">
                  <span className="font-black text-xl italic text-muted-foreground/50 pr-1">VS</span>
               </div>
 
               {/* RIVAL Card */}
-              <motion.div 
+              <motion.div
                  animate={shouldReduceMotion ? undefined : { y: [0, 10, 0] }}
                  transition={
                    shouldReduceMotion
                      ? undefined
                      : { duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }
                  }
-                 className="absolute bottom-10 right-0 md:-right-4 z-10 bg-[#161922] p-4 rounded-3xl border-2 border-[#2A2E3B] shadow-xl -skew-y-3 opacity-80"
+                 className="absolute bottom-10 right-0 md:-right-4 z-10 bg-card p-4 rounded-3xl border-2 border-border shadow-xl -skew-y-3 opacity-80"
               >
                   <div className="flex flex-col items-center gap-2">
                      <div className="relative">
                         <AvatarDisplay customization={{ base: "avatar-8", background: "ffdfbf" }} size="lg" className="rounded-full ring-4 ring-red-500 grayscale-[0.3]" />
-                        <div className="absolute -bottom-3 bg-red-500 text-[#0B0D12] text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide border-2 border-[#0B0D12]">
+                        <div className="absolute -bottom-3 bg-red-500 text-background text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide border-2 border-background">
                            Rival
                         </div>
                      </div>
                      <div className="mt-2 text-center">
-                        <div className="font-black text-sm text-white opacity-80">Pro</div>
+                        <div className="font-black text-sm text-foreground opacity-80">Pro</div>
                         <div className="text-[10px] text-red-500 font-bold uppercase tracking-wider">Division 4</div>
                      </div>
                   </div>
@@ -120,7 +120,7 @@ export function WelcomeScreen({ onGetStarted, onLogin }: WelcomeScreenProps) {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="order-1 md:order-2 flex flex-col items-center md:items-start text-center md:text-left max-w-xl"
         >
-           <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-[1.1] mb-6 text-white">
+           <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-[1.1] mb-6 text-foreground">
               The free, fun, and effective way to learn <span className="text-green-500">football</span>.
            </h1>
            
@@ -144,7 +144,7 @@ export function WelcomeScreen({ onGetStarted, onLogin }: WelcomeScreenProps) {
                 onClick={onGetStarted}
                 className="
                   h-14 rounded-2xl text-lg font-black uppercase tracking-wide
-                  bg-green-500 text-[#0B0D12] hover:bg-green-400
+                  bg-green-500 text-background hover:bg-green-400
                   border-b-[5px] border-green-700 active:border-b-0 active:translate-y-[5px]
                   transition-all shadow-xl hover:shadow-green-500/20
                 "
@@ -158,8 +158,8 @@ export function WelcomeScreen({ onGetStarted, onLogin }: WelcomeScreenProps) {
                 onClick={onLogin}
                 className="
                   h-14 rounded-2xl text-lg font-black uppercase tracking-wide
-                  bg-[#161922] text-white hover:bg-[#1f232e] hover:text-white
-                  border-[#2A2E3B] border-2 border-b-[5px] active:border-b-2 active:translate-y-[3px]
+                  bg-card text-foreground hover:bg-muted hover:text-foreground
+                  border-border border-2 border-b-[5px] active:border-b-2 active:translate-y-[3px]
                   transition-all
                 "
               >
@@ -171,15 +171,15 @@ export function WelcomeScreen({ onGetStarted, onLogin }: WelcomeScreenProps) {
       </main>
 
       {/* Footer / Trust badges */}
-      <footer className="py-8 border-t border-white/5 bg-[#0B0D12]">
+      <footer className="py-8 border-t border-border/30 bg-background">
          <div className="container mx-auto px-6 flex flex-wrap justify-center gap-8 md:gap-16 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
-             <div className="flex items-center gap-2 font-bold text-white">
+             <div className="flex items-center gap-2 font-bold text-foreground">
                 <Shield className="size-5" /> Verified Questions
              </div>
-             <div className="flex items-center gap-2 font-bold text-white">
+             <div className="flex items-center gap-2 font-bold text-foreground">
                 <Swords className="size-5" /> 2.1M Duels Played
              </div>
-             <div className="flex items-center gap-2 font-bold text-white">
+             <div className="flex items-center gap-2 font-bold text-foreground">
                 <Star className="size-5" /> 4.9 App Store Rating
              </div>
          </div>

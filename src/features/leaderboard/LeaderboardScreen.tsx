@@ -20,7 +20,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
 
   // Fetch Data
   const { data: entries, isLoading, isError } = useLeaderboard(activeTab);
-  const { data: userRank } = useUserRank(currentPlayerId || 'current-user');
+  const { data: userRank } = useUserRank(currentPlayerId ?? '');
 
   // Derived Data
   const topThree = entries ? entries.slice(0, 3) : [];

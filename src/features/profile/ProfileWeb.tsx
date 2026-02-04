@@ -55,6 +55,7 @@ export function ProfileWeb({ player, avatarUrl, onNameChange, onAvatarChange, on
   const [editedName, setEditedName] = useState(player.username);
   const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
   const [isSavingAvatar, setIsSavingAvatar] = useState(false);
+  const [nameChangeError, setNameChangeError] = useState<string | null>(null);
 
   const { avatarBase, resolvedAvatarUrl, googleAvatarUrl } = useAvatarUrl({
     avatarUrl,
@@ -63,10 +64,19 @@ export function ProfileWeb({ player, avatarUrl, onNameChange, onAvatarChange, on
   });
 
   const handleNameChange = async () => {
-    if (editedName.trim() !== player.username) {
-      await onNameChange?.(editedName.trim());
+    try {
+      setNameChangeError(null);
+      if (editedName.trim() !== player.username) {
+        await onNameChange?.(editedName.trim());
+      }
+      setIsEditingName(false);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update name';
+      setNameChangeError(errorMessage);
+      toast.error('Failed to update name', {
+        description: errorMessage,
+      });
     }
-    setIsEditingName(false);
   };
 
   const handleAvatarSelect = async (nextUrl: string) => {

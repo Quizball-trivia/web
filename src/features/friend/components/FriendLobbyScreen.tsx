@@ -79,17 +79,17 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
                   <Button
                   size="lg"
                   className={cn(
-                     "w-full h-14 text-lg font-bold transition-all", 
-                     me?.isReady 
-                        ? "bg-muted text-muted-foreground hover:bg-muted cursor-not-allowed opacity-80" 
+                     "w-full h-14 text-lg font-bold transition-all",
+                     me?.isReady
+                        ? "bg-muted/50 text-muted-foreground hover:bg-muted hover:-translate-y-0.5"
                         : "shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5"
                   )}
                   onClick={actions.handleReadyToggle}
-                  disabled={!lobby || me?.isReady}
+                  disabled={!lobby}
                   >
                   {me?.isReady ? (
                      <>
-                        <CheckCircle2 className="size-5 mr-2" /> Ready
+                        <CheckCircle2 className="size-5 mr-2" /> Ready (Click to unready)
                      </>
                   ) : (
                      "Mark Ready"
