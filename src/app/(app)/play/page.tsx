@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ModeSelectionScreen } from "@/components/ModeSelectionScreen";
+import { ModeSelectionScreen } from "@/features/play/ModeSelectionScreen";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useGameSessionStore } from "@/stores/gameSession.store";
 import { useQueryClient } from "@tanstack/react-query";

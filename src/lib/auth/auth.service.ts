@@ -1,5 +1,5 @@
-import { clearTokens, getRefreshToken, setTokens } from "@/lib/auth/tokenStorage";
-import { api } from "@/utils/api";
+import { clearTokens } from "@/lib/auth/tokenStorage";
+import { api } from "@/lib/api/api";
 import { logger } from "@/utils/logger";
 import type { components, paths } from "@/types/api.generated";
 
@@ -31,26 +31,12 @@ type SocialLoginPayload =
     paths["/api/v1/auth/social-login"]["post"]["requestBody"]
   >["content"]["application/json"];
 
-function extractTokens(data: AuthResponse | null) {
-  if (!data) return null;
-  const accessToken = data.access_token ?? undefined;
-  const refreshToken = data.refresh_token ?? undefined;
-  if (!accessToken || !refreshToken) return null;
-  return { accessToken, refreshToken };
-}
-
 export async function login(email: string, password: string): Promise<AuthResponse["user"] | null> {
   logger.info("Auth login start", { email });
   const data = await api.POST("/api/v1/auth/login", {
     body: { email, password } satisfies LoginPayload,
     auth: false,
   });
-  const tokens = extractTokens(data as AuthResponse | null);
-  if (!tokens) {
-    logger.warn("Auth login missing tokens");
-    throw new Error("Missing tokens in login response");
-  }
-  setTokens(tokens);
   logger.info("Auth login success");
   return (data as AuthResponse).user ?? null;
 }
@@ -66,35 +52,36 @@ export async function register(payload: RegisterPayload): Promise<RegisterResult
     body: payload,
     auth: false,
   });
-  const tokens = extractTokens(data as AuthResponse | null);
-  if (!tokens) {
-    logger.warn("Auth register missing tokens");
-    return { user: (data as AuthResponse | null)?.user ?? null, tokensSet: false };
-  }
-  setTokens(tokens);
   logger.info("Auth register success");
-  return { user: (data as AuthResponse).user ?? null, tokensSet: true };
+  const hasTokens = Boolean((data as AuthResponse | null)?.access_token);
+  return { user: (data as AuthResponse).user ?? null, tokensSet: hasTokens };
 }
 
 export async function refresh(): Promise<boolean> {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) return false;
   try {
     logger.info("Auth refresh start");
-    const data = await api.POST("/api/v1/auth/refresh", {
-      body: { refresh_token: refreshToken } satisfies RefreshPayload,
+    await api.POST("/api/v1/auth/refresh", {
       auth: false,
     });
-    const tokens = extractTokens(data as AuthResponse | null);
-    if (!tokens) {
-      logger.warn("Auth refresh missing tokens");
-      return false;
-    }
-    setTokens(tokens);
     logger.info("Auth refresh success");
     return true;
   } catch (error) {
     logger.warn("Auth refresh failed", error);
+    return false;
+  }
+}
+
+export async function refreshWithToken(refreshToken: string): Promise<boolean> {
+  try {
+    logger.info("Auth refresh with token start");
+    await api.POST("/api/v1/auth/refresh", {
+      body: { refresh_token: refreshToken } satisfies RefreshPayload,
+      auth: false,
+    });
+    logger.info("Auth refresh with token success");
+    return true;
+  } catch (error) {
+    logger.warn("Auth refresh with token failed", error);
     return false;
   }
 }

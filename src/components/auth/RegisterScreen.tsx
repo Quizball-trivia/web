@@ -10,7 +10,7 @@ import { motion } from 'motion/react';
 import { AppLogo } from '../AppLogo';
 
 interface RegisterScreenProps {
-  onRegister: (username: string, email: string, password: string) => void;
+  onRegister: (nickname: string, email: string, password: string) => void;
   onGoogleRegister: () => void;
   onBack: () => void;
   onSignIn: () => void;
@@ -26,7 +26,7 @@ export function RegisterScreen({
   onTerms,
   onPrivacy
 }: RegisterScreenProps) {
-  const [username, setUsername] = useState('');
+  const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -42,7 +42,7 @@ export function RegisterScreen({
       alert("Please agree to the terms and conditions");
       return;
     }
-    onRegister(username, email, password);
+    onRegister(nickname, email, password);
   };
 
   return (
@@ -162,15 +162,15 @@ export function RegisterScreen({
               <CardContent className="pt-6">
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="username" className="text-sm">Username</Label>
+                    <Label htmlFor="nickname" className="text-sm">Nickname</Label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                       <Input
-                        id="username"
+                        id="nickname"
                         type="text"
-                        placeholder="Choose a username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder="Choose a nickname"
+                        value={nickname}
+                        onChange={(e) => setNickname(e.target.value)}
                         className="pl-10 h-11 border-primary/10 focus:border-primary/30"
                         required
                       />

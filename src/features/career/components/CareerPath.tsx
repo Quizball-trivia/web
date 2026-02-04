@@ -1,5 +1,5 @@
 import { StageCard } from './StageCard';
-import { cn } from '@/components/ui/utils';
+import { cn } from '@/lib/utils';
 
 export interface CareerLevel {
   id: number;

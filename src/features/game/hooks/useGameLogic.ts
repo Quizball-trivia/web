@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { Question } from "@/types/game";
+import type { GameQuestion } from "@/lib/domain";
 import { ToastMessage } from "@/features/game/components/MatchToast";
 
 interface GameLogicProps {
-  questions: Question[];
+  questions: GameQuestion[];
   onGameEnd: (score: number, opponentScore: number, correctAnswers: number, playerAnswers: (number | null)[]) => void;
   timePerQuestion?: number;
 }
@@ -52,24 +52,24 @@ export function useGameLogic({
   }, [currentQuestionIndex]);
 
   // -- 2. Core Scoring Logic --
-  const calculateResult = useCallback((playerIdx: number | null, oppIdx: boolean) => {
+  const calculateResult = useCallback((playerIdx: number | null, opponentHasAnswered: boolean) => {
      if (!currentQuestion) return;
 
      const opponentIsCorrect = Math.random() > 0.4; // 60% win sim
-     const playerIsCorrect = playerIdx === currentQuestion.correctAnswer;
-     
+     const playerIsCorrect = playerIdx === currentQuestion.correctIndex;
+
      let playerRoundPoints = 0;
      let opponentRoundPoints = 0;
 
      // PLAYER POINTS
      if (playerIsCorrect) {
-        const speedBonus = timeRemaining / timePerQuestion; 
+        const speedBonus = timeRemaining / timePerQuestion;
         const basePoints = 100;
         const bonusPoints = Math.floor(speedBonus * 100);
         playerRoundPoints = basePoints + bonusPoints;
 
-        setPlayerTotalXP(prev => prev + playerRoundPoints); 
-        
+        setPlayerTotalXP(prev => prev + playerRoundPoints);
+
         addToast(`+${playerRoundPoints} PTS`, 'score', 'player');
         if (speedBonus > 0.5) addToast('FAST ANSWER', 'speed', 'player');
         setCorrectAnswersCount(prev => prev + 1);
@@ -78,7 +78,7 @@ export function useGameLogic({
      }
 
      // OPPONENT POINTS
-     if (opponentIsCorrect && oppIdx) { 
+     if (opponentIsCorrect && opponentHasAnswered) { 
           const basePoints = 100;
           const bonusPoints = Math.floor(Math.random() * 80);
           opponentRoundPoints = basePoints + bonusPoints;

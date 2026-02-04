@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { ArrowLeft, Trophy, Users, TrendingUp, Search, Ticket } from 'lucide-react';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
-import { CategoryCard } from '@/components/game/CategoryCard';
+import { CategoryCard } from '@/features/game/components/CategoryCard';
 import type { CategorySummary } from '@/lib/domain';
 import { useCategoriesList } from '@/lib/queries/categories.queries';
 
@@ -140,10 +140,10 @@ export function QuizBallCategoriesScreen({
                             #{category.yourRank || 0}
                           </Badge>
                         )}
-                        {category.new && !(category.yourBestScore || 0) && (
+                        {category.isNew && !(category.yourBestScore || 0) && (
                           <Badge className="bg-primary text-xs h-5">New</Badge>
                         )}
-                        {category.trending && !(category.yourBestScore || 0) && !category.new && (
+                        {category.trending && !(category.yourBestScore || 0) && !category.isNew && (
                           <Badge className="bg-orange-500 text-xs h-5">Hot</Badge>
                         )}
                       </div>
@@ -221,7 +221,7 @@ export function QuizBallCategoriesScreen({
                         {category.trending && (
                           <Badge className="bg-orange-500 text-xs h-5">Hot</Badge>
                         )}
-                        {category.new && !category.trending && (
+                        {category.isNew && !category.trending && (
                           <Badge className="bg-primary text-xs h-5">New</Badge>
                         )}
                       </div>

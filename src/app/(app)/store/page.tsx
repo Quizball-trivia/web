@@ -1,7 +1,7 @@
 "use client";
 
-import { RewardHubScreen } from "@/features/store/RewardHubScreen";
+import { StoreScreen } from "@/features/store/StoreScreen";
 
 export default function StorePage() {
-  return <RewardHubScreen />;
+  return <StoreScreen />;
 }

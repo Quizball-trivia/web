@@ -1,10 +1,12 @@
+"use client";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Check, Plus, Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { cn } from "@/components/ui/utils";
+import { cn } from "@/lib/utils";
 import { useCategoriesList } from "@/lib/queries/categories.queries";
 import { CategorySummary } from "@/lib/domain";
 

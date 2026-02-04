@@ -1,4 +1,5 @@
 export type MatchMode = 'friendly' | 'ranked';
+export type LobbyGameMode = 'friendly' | 'ranked_sim';
 export type LobbyStatus = 'waiting' | 'active' | 'closed';
 
 export type GameStage =
@@ -26,7 +27,15 @@ export interface LobbyState {
   status: LobbyStatus;
   inviteCode: string | null;
   hostUserId: string;
+  settings: LobbySettings;
   members: LobbyMember[];
+}
+
+export interface LobbySettings {
+  gameMode: LobbyGameMode;
+  friendlyRandom: boolean;
+  friendlyCategoryAId: string | null;
+  friendlyCategoryBId: string | null;
 }
 
 export interface DraftCategory {
@@ -82,7 +91,6 @@ export interface MatchAnswerAckPayload {
   isCorrect: boolean;
   correctIndex: number;
   myTotalPoints: number;
-  oppTotalPoints: number;
   oppAnswered: boolean;
 }
 
@@ -114,16 +122,30 @@ export interface MatchFinalResultsPayload {
   durationMs: number;
 }
 
+export interface ErrorPayload {
+  code: string;
+  message: string;
+}
+
 export interface ClientToServerEvents {
   'lobby:create': (data: { mode: MatchMode }) => void;
   'lobby:join_by_code': (data: { inviteCode: string }) => void;
   'lobby:leave': () => void;
   'lobby:ready': (data: { ready: boolean }) => void;
+  'lobby:update_settings': (data: {
+    lobbyId?: string;
+    gameMode: LobbyGameMode;
+    friendlyRandom?: boolean;
+    friendlyCategoryAId?: string | null;
+    friendlyCategoryBId?: string | null;
+  }) => void;
+  'lobby:start': (data?: { lobbyId?: string }) => void;
   'draft:ban': (data: { categoryId: string }) => void;
   'match:answer': (data: { matchId: string; qIndex: number; selectedIndex: number | null; timeMs: number }) => void;
 }
 
 export interface ServerToClientEvents {
+  'error': (data: ErrorPayload) => void;
   'lobby:state': (data: LobbyState) => void;
   'draft:start': (data: DraftState) => void;
   'draft:banned': (data: { actorId: string; categoryId: string }) => void;

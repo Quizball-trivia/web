@@ -13,6 +13,8 @@ export function useRealtimeGameLogic() {
   const currentQuestion = match?.currentQuestion ?? null;
 
   useEffect(() => {
+    // Reset selected answer when question changes - intentional sync pattern
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedAnswer(null);
   }, [currentQuestion?.qIndex]);
 

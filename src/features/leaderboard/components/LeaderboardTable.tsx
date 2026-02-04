@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
-import { cn } from "@/components/ui/utils";
+import { cn } from "@/lib/utils";
 import type { LeaderboardEntry } from "@/lib/domain/leaderboard";
 import { TrendingUp, TrendingDown, Minus, Trophy } from "lucide-react";
 

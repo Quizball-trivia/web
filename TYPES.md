@@ -8,7 +8,7 @@ Goal
 Non-negotiables
 1) Full type safety via OpenAPI-generated types (no `any`, no `Record<string, unknown>` placeholders).
 2) No “Screen enum” routing system. Use real URLs only.
-3) Centralize auth token attach + refresh + retry logic inside the API client layer (single source of truth).
+3) Centralize auth refresh + retry logic inside the API client layer (single source of truth).
 4) Next.js env vars use NEXT_PUBLIC_* (NOT VITE_*).
 
 ───────────────────────────────────────────────────────────────
@@ -23,7 +23,7 @@ Base: {NEXT_PUBLIC_API_URL}
 
 POST /api/v1/auth/login
 POST /api/v1/auth/register
-POST /api/v1/auth/refresh          body: { refresh_token }
+POST /api/v1/auth/refresh          body: { refresh_token } (optional if cookie present)
 POST /api/v1/auth/logout
 POST /api/v1/auth/social-login     body: { provider: 'google', redirect_to: '/auth/callback' }
 POST /api/v1/auth/forgot-password
@@ -31,19 +31,18 @@ POST /api/v1/auth/reset-password   token in header
 GET  /api/v1/users/me
 PUT  /api/v1/users/me
 
-Token storage keys (localStorage)
-- access_token  -> "quizball_auth_token"
-- refresh_token -> "quizball_refresh_token"
-
-Bearer auth
-- Authorization: Bearer <access_token>
+Auth transport (browser)
+- Tokens are stored in **httpOnly cookies** (qb_access_token, qb_refresh_token)
+- JS cannot read tokens (XSS-resistant)
+- API requests must use `credentials: "include"`
+- Bearer auth headers are still supported for non-browser clients
 
 OAuth callback flow (implicit hash, Supabase-style)
 - Redirect returns:
   /auth/callback#access_token=xxx&refresh_token=yyy&expires_in=3600&token_type=bearer
 - Callback page must:
   1) parse URL hash
-  2) store tokens
+  2) call POST /api/v1/auth/refresh with refresh_token (sets cookies)
   3) call GET /api/v1/users/me
   4) route to "/"
 
@@ -79,15 +78,15 @@ Always import real types from api.generated.ts.
 Auth architecture (clean + predictable)
 
 We need an "Auth Gate" because:
-- localStorage + tokens only exist in the browser
+- httpOnly cookies exist in the browser, but are not readable by JS
 - On page load / refresh, we must decide:
-  authenticated vs anonymous (and possibly refresh token)
+  authenticated vs anonymous (and possibly refresh)
 
 Terminology:
 - bootstrap = one-time initialization on the client:
-  - If access token exists → try /users/me
-  - If only refresh token exists → refresh → /users/me
-  - Else → anonymous
+- Try /users/me
+- If 401 → call /auth/refresh → retry /users/me
+- If refresh fails → anonymous
 - This must run ONCE per browser load, not on every render.
 
 Implementation rules:
@@ -96,9 +95,9 @@ Implementation rules:
    - <AppAuthGate> for protected routes
    - <PublicOnlyGate> for auth pages
 3) The API client handles:
-   - attaching Bearer token
+   - sending cookies (`credentials: "include"`)
    - on 401: refresh + retry once
-   - if refresh fails: clear tokens + mark anonymous
+   - if refresh fails: mark anonymous
 
 When bootstrap completes:
 - If authenticated → render protected children
@@ -123,7 +122,7 @@ src/app
     auth/login/page.tsx
     auth/register/page.tsx
     auth/forgot-password/page.tsx
-    auth/callback/page.tsx     (parse hash + store tokens + /users/me + redirect)
+    auth/callback/page.tsx     (parse hash + refresh → /users/me + redirect)
 
   (app)/
     layout.tsx                 (shell: Sidebar + TopBar + <AppAuthGate>)
@@ -162,10 +161,10 @@ Checkpoint A: Types
 4) Add npm run typecheck and ensure it passes
 
 Checkpoint B: Auth correctness
-1) Implement tokenStorage util (keys exactly as above)
+1) Implement cookie-based auth (credentials include)
 2) Implement auth endpoints using typed client
 3) Implement bootstrap + gates
-4) Implement /auth/callback logic
+4) Implement /auth/callback logic (refresh → /users/me)
 
 Checkpoint C: UI wiring
 1) Recreate Sidebar + TopBar styles from old app

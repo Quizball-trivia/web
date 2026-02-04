@@ -8,8 +8,8 @@ import { MatchHeader, DraftPhase } from './components/MatchHeader';
 import { CategoryGameCard } from './components/CategoryGameCard';
 import { useCategoriesList } from '@/lib/queries/categories.queries';
 import { CategorySummary } from '@/lib/domain';
-import { Loader2 } from 'lucide-react';
 import { usePlayer } from '@/contexts/PlayerContext';
+import { LoadingScreen } from '@/components/shared/LoadingScreen';
 
 export function DraftPhaseScreen() {
   const router = useRouter();
@@ -18,6 +18,7 @@ export function DraftPhaseScreen() {
   // Game State
   const [phase, setPhase] = useState<DraftPhase>('ban');
   const [timeLeft, setTimeLeft] = useState(15);
+  const [timerExpired, setTimerExpired] = useState(false);
   const [currentActor, setCurrentActor] = useState<'player' | 'opponent'>('player');
   
   // Selections
@@ -74,14 +75,23 @@ export function DraftPhaseScreen() {
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          setTimeout(() => handleTimeExpired(), 0);
+          setTimerExpired(true);
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [phase, handleTimeExpired]);
+  }, [phase]);
+
+  useEffect(() => {
+    if (timerExpired) {
+      // Handle timer expiration and reset flag - intentional sync pattern
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      handleTimeExpired();
+      setTimerExpired(false);
+    }
+  }, [timerExpired, handleTimeExpired]);
 
   // Bot Opponent Logic Simulation
   useEffect(() => {
@@ -131,7 +141,7 @@ export function DraftPhaseScreen() {
 
 
   if (isLoading || poolCategories.length === 0) {
-     return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
+     return <LoadingScreen text="Loading Categories..." />;
   }
 
   return (

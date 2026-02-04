@@ -1,4 +1,4 @@
-import { cn } from "@/components/ui/utils";
+import { cn } from "@/lib/utils";
 import { ArrowUp, Lock, Check, MapPin } from "lucide-react";
 
 interface QuestNode {

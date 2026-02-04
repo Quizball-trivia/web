@@ -1,3 +1,5 @@
+"use client";
+
 import { X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { MatchScoreHUD } from '@/features/game/components/MatchScoreHUD';

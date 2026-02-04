@@ -1,26 +1,25 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useGameSessionStore } from "@/stores/gameSession.store";
 import { usePlayer } from "@/contexts/PlayerContext";
-import { MatchmakingScreen } from "@/components/game/MatchmakingScreen";
-import { ShowdownScreen } from "@/components/game/ShowdownScreen";
+import { MatchmakingScreen } from "./components/MatchmakingScreen";
+import { ShowdownScreen } from "./components/ShowdownScreen";
 import { RankedCategoryBlockingScreen } from "@/features/play/RankedCategoryBlockingScreen";
-import { RoundIntroScreen } from "@/components/game/RoundIntroScreen";
-import { RoundResultScreen } from "@/components/game/RoundResultScreen";
-import { QuizBallGameScreen } from "@/components/game/QuizBallGameScreen";
-import { QuizBallResultsScreen } from "@/components/game/QuizBallResultsScreen";
-import { RealtimeQuizBallGameScreen } from "@/features/game/RealtimeQuizBallGameScreen";
-import { RealtimeResultsScreen } from "@/features/game/RealtimeResultsScreen";
+import { RoundIntroScreen } from "./components/RoundIntroScreen";
+import { RoundResultScreen } from "./components/RoundResultScreen";
+import { QuizBallGameScreen } from "./components/QuizBallGameScreen";
+import { QuizBallResultsScreen } from "./components/QuizBallResultsScreen";
+import { RealtimeQuizBallGameScreen } from "./RealtimeQuizBallGameScreen";
+import { RealtimeResultsScreen } from "./RealtimeResultsScreen";
 import { useAuthStore } from "@/stores/auth.store";
 import { useRealtimeConnection } from "@/lib/realtime/useRealtimeConnection";
 import { getSocket } from "@/lib/realtime/socket-client";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { logger } from "@/utils/logger";
-import type { Question } from "@/types/game";
+import { useGameStageTransitions } from "@/features/game/hooks/useGameStageTransitions";
 import type { GameMode as LegacyGameMode } from "@/types/game";
-import type { GameQuestion } from "@/lib/domain";
 
 type OpponentInfo = {
   id: string;
@@ -43,17 +42,6 @@ const toLegacyMode = (mode: string | undefined): LegacyGameMode => {
   return "timeAttack";
 };
 
-const toLegacyQuestions = (questions: GameQuestion[]): Question[] => {
-  return questions.map((q) => ({
-    id: q.id,
-    question: q.prompt,
-    options: q.options,
-    correctAnswer: q.correctIndex,
-    difficulty: (q.difficulty || "medium") as Question["difficulty"],
-    category: q.categoryName || "General",
-    clue: q.explanation || "",
-  }));
-};
 
 export function GameStageRouter() {
   const router = useRouter();
@@ -69,12 +57,15 @@ export function GameStageRouter() {
   const realtimeMatch = useRealtimeMatchStore((state) => state.match);
   const resetRealtime = useRealtimeMatchStore((state) => state.reset);
 
-  const [opponent, setOpponent] = useState<OpponentInfo>({
-    id: "opponent",
-    username: "TriviaKing",
-    avatar: "👑",
-    tier: "Silver",
-  });
+  const defaultOpponent = useMemo<OpponentInfo>(
+    () => ({
+      id: "opponent",
+      username: "TriviaKing",
+      avatar: "👑",
+      tier: "Silver",
+    }),
+    [],
+  );
   const [lastGameStats, setLastGameStats] = useState<LastGameStats>({
     playerScore: 0,
     opponentScore: 0,
@@ -83,67 +74,53 @@ export function GameStageRouter() {
   });
   const [roundNumber, setRoundNumber] = useState(1);
   const totalRounds = 3;
-  const rankedRequestRef = useRef(false);
-
   const isMultiplayer = config?.mode !== "solo" && !!config;
   const selfUserId = authUser?.id ?? player.id;
   const socket = useRealtimeConnection({ enabled: isMultiplayer, selfUserId });
 
-  useEffect(() => {
-    if (!isMultiplayer || config?.matchType !== "ranked") return;
-    if (stage === "matchmaking" && !rankedRequestRef.current) {
-      rankedRequestRef.current = true;
-      socket.emit("lobby:create", { mode: "ranked" });
-      logger.info("Socket emit lobby:create", { mode: "ranked" });
-    }
-  }, [isMultiplayer, config?.matchType, stage, socket]);
+  useGameStageTransitions({
+    isMultiplayer,
+    stage,
+    config,
+    socket,
+    realtimeDraft,
+    realtimeMatch,
+    setStage,
+  });
 
-  useEffect(() => {
-    if (stage === "idle") {
-      rankedRequestRef.current = false;
-    }
-  }, [stage]);
-
-  useEffect(() => {
-    if (!isMultiplayer) return;
-    if (realtimeDraft && stage !== "categoryBlocking") {
-      setStage("categoryBlocking");
-    }
-  }, [isMultiplayer, realtimeDraft, setStage, stage]);
-
-  useEffect(() => {
-    if (!isMultiplayer) return;
-    if (realtimeMatch?.currentQuestion && stage !== "playing") {
-      setStage("playing");
-    }
-  }, [isMultiplayer, realtimeMatch?.currentQuestion, setStage, stage]);
-
-  useEffect(() => {
-    if (!isMultiplayer) return;
-    if (realtimeMatch?.finalResults && stage !== "finalResults") {
-      setStage("finalResults");
-    }
-  }, [isMultiplayer, realtimeMatch?.finalResults, setStage, stage]);
-
-  useEffect(() => {
-    if (!isMultiplayer) return;
-    if (realtimeMatch?.opponent) {
-      setOpponent({
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
+  const opponent = useMemo<OpponentInfo>(() => {
+    if (isMultiplayer && realtimeMatch?.opponent) {
+      return {
         id: realtimeMatch.opponent.id,
         username: realtimeMatch.opponent.username,
         avatar: realtimeMatch.opponent.avatarUrl ?? "👑",
-      });
-    } else if (realtimeLobby) {
-      const opp = realtimeLobby.members.find((member) => member.userId !== selfUserId);
+      };
+    }
+    if (isMultiplayer && realtimeLobby) {
+      const opp = realtimeLobby.members.find(
+        (member) => member.userId !== selfUserId
+      );
       if (opp) {
-        setOpponent({
+        return {
           id: opp.userId,
           username: opp.username,
           avatar: opp.avatarUrl ?? "👑",
-        });
+        };
       }
     }
-  }, [isMultiplayer, realtimeLobby, realtimeMatch?.opponent, selfUserId]);
+    return defaultOpponent;
+  }, [defaultOpponent, isMultiplayer, realtimeLobby, realtimeMatch?.opponent, selfUserId]);
+
+  const matchType = config?.matchType || "friendly";
+  const showdownType = matchType === "ranked" ? "ranked" : "friendly";
+  const legacyMode = toLegacyMode(config?.mode);
+
+  const exitToPlay = useCallback(() => {
+    resetRealtime();
+    reset();
+    router.push("/play");
+  }, [reset, resetRealtime, router]);
 
   useEffect(() => {
     if (stage === "idle") {
@@ -151,18 +128,9 @@ export function GameStageRouter() {
     }
   }, [stage, router]);
 
-  const legacyQuestions = useMemo(
-    () => toLegacyQuestions(questions),
-    [questions],
-  );
-
   if (stage === "idle") {
     return null;
   }
-
-  const matchType = config?.matchType || "friendly";
-  const showdownType = matchType === "ranked" ? "ranked" : "friendly";
-  const legacyMode = toLegacyMode(config?.mode);
 
   if (isMultiplayer) {
     if (stage === "matchmaking") {
@@ -172,9 +140,7 @@ export function GameStageRouter() {
           onCancel={() => {
             getSocket().emit("lobby:leave");
             logger.info("Socket emit lobby:leave");
-            resetRealtime();
-            reset();
-            router.push("/play");
+            exitToPlay();
           }}
         />
       );
@@ -194,9 +160,7 @@ export function GameStageRouter() {
           onQuit={() => {
             getSocket().emit("lobby:leave");
             logger.info("Socket emit lobby:leave");
-            resetRealtime();
-            reset();
-            router.push("/play");
+            exitToPlay();
           }}
         />
       );
@@ -221,14 +185,10 @@ export function GameStageRouter() {
           opponentCorrect={opponentStats?.correctAnswers ?? 0}
           totalQuestions={10}
           onPlayAgain={() => {
-            resetRealtime();
-            reset();
-            router.push("/play");
+            exitToPlay();
           }}
           onMainMenu={() => {
-            resetRealtime();
-            reset();
-            router.push("/play");
+            exitToPlay();
           }}
         />
       );
@@ -268,7 +228,7 @@ export function GameStageRouter() {
   if (stage === "playing") {
     return (
       <QuizBallGameScreen
-        questions={legacyQuestions}
+        questions={questions}
         category={config?.categoryName || "General"}
         categoryIcon={config?.categoryIcon || "⚽"}
         playerAvatar={player.avatar}
@@ -285,8 +245,7 @@ export function GameStageRouter() {
           setStage("roundResult");
         }}
         onQuit={() => {
-          reset();
-          router.push("/play");
+          exitToPlay();
         }}
       />
     );
@@ -333,17 +292,15 @@ export function GameStageRouter() {
       oldRank={120}
       newRank={125}
       correctAnswers={lastGameStats.correctAnswers}
-      totalQuestions={legacyQuestions.length}
+      totalQuestions={questions.length}
       coinsEarned={150}
-      questions={legacyQuestions}
+      questions={questions}
       playerAnswers={lastGameStats.playerAnswers}
       onPlayAgain={() => {
-        reset();
-        router.push("/play");
+        exitToPlay();
       }}
       onMainMenu={() => {
-        reset();
-        router.push("/play");
+        exitToPlay();
       }}
     />
   );

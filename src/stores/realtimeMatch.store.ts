@@ -10,6 +10,7 @@ import type {
   MatchRoundResultPayload,
   MatchStartPayload,
   OpponentInfo,
+  ErrorPayload,
 } from '@/lib/realtime/socket.types';
 
 export interface DraftStatus {
@@ -43,6 +44,7 @@ interface RealtimeState {
   draft: DraftStatus | null;
   match: MatchStatus | null;
   selfUserId: string | null;
+  error: ErrorPayload | null;
   setSelfUserId: (userId: string | null) => void;
   setLobby: (lobby: LobbyState) => void;
   setDraftStart: (draft: DraftState) => void;
@@ -54,6 +56,8 @@ interface RealtimeState {
   setOpponentAnswered: () => void;
   setRoundResult: (payload: MatchRoundResultPayload) => void;
   setFinalResults: (payload: MatchFinalResultsPayload) => void;
+  setError: (error: ErrorPayload) => void;
+  clearError: () => void;
   reset: () => void;
 }
 
@@ -62,6 +66,7 @@ const initialState = {
   draft: null,
   match: null,
   selfUserId: null,
+  error: null,
 };
 
 export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
@@ -122,6 +127,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
   setMatchStart: (payload) => {
     logger.info('Realtime store set match start', { matchId: payload.matchId, opponentId: payload.opponent.id });
     set({
+      draft: null,
       match: {
         matchId: payload.matchId,
         opponent: payload.opponent,
@@ -176,7 +182,6 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
           ...state.match,
           answerAck: payload,
           myTotalPoints: payload.myTotalPoints,
-          oppTotalPoints: payload.oppTotalPoints,
           opponentAnswered: payload.oppAnswered,
           questions: {
             ...state.match.questions,
@@ -244,6 +249,11 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         : null,
     }));
   },
+  setError: (error) => {
+    logger.warn('Realtime store set error', { code: error.code, message: error.message });
+    set({ error });
+  },
+  clearError: () => set({ error: null }),
   reset: () => {
     logger.info('Realtime store reset');
     set({ ...initialState });

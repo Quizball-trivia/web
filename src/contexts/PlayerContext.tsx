@@ -1,21 +1,51 @@
-import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo, useEffect, type ReactNode } from 'react';
 import { mockCurrentPlayer } from '@/data/mockData';
-import type { PlayerStats } from '@/types/game';
+import type { PlayerProfile } from '@/lib/domain';
+import { useAuthStore } from '@/stores/auth.store';
 
 interface PlayerContextValue {
-  player: PlayerStats;
+  player: PlayerProfile;
   /** TODO: temporary escape hatch for zero-diff migration — remove once game handlers move out of App.tsx */
-  setPlayer: React.Dispatch<React.SetStateAction<PlayerStats>>;
+  setPlayer: React.Dispatch<React.SetStateAction<PlayerProfile>>;
   updateCoins: (delta: number) => void;
   addXP: (amount: number) => void;
   unlockItem: (itemId: string) => void;
-  updateStats: (updates: Partial<PlayerStats>) => void;
+  updateStats: (updates: Partial<PlayerProfile>) => void;
 }
 
 const PlayerContext = createContext<PlayerContextValue | null>(null);
 
 export function PlayerProvider({ children }: { children: ReactNode }) {
-  const [player, setPlayer] = useState<PlayerStats>(mockCurrentPlayer);
+  const [player, setPlayer] = useState<PlayerProfile>(mockCurrentPlayer);
+  const authUser = useAuthStore((state) => state.user);
+
+  useEffect(() => {
+    if (!authUser) return;
+
+    const newId = authUser.id;
+    const newUsername = authUser.nickname ?? authUser.email?.split('@')[0];
+    const newAvatarUrl = authUser.avatar_url;
+
+    // Sync auth user changes to player context - intentional synchronization pattern
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPlayer((prev) => {
+      const hasChanges =
+        (newId && newId !== prev.id) ||
+        (newUsername && newUsername !== prev.username) ||
+        (newAvatarUrl && newAvatarUrl !== prev.avatarCustomization?.base);
+
+      if (!hasChanges) return prev;
+
+      return {
+        ...prev,
+        id: newId ?? prev.id,
+        username: newUsername ?? prev.username,
+        avatarCustomization: newAvatarUrl
+          ? { base: newAvatarUrl }
+          : prev.avatarCustomization,
+      };
+    });
+  }, [authUser]);
 
   const updateCoins = useCallback((delta: number) => {
     setPlayer(p => ({ ...p, coins: Math.max(0, p.coins + delta) }));
@@ -44,7 +74,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const updateStats = useCallback((updates: Partial<PlayerStats>) => {
+  const updateStats = useCallback((updates: Partial<PlayerProfile>) => {
     setPlayer(p => ({ ...p, ...updates }));
   }, []);
 

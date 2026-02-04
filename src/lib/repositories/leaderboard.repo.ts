@@ -1,7 +1,25 @@
-import type { LeaderboardEntry } from '@/lib/domain/leaderboard';
+export interface LeaderboardEntryResponse {
+  id: string;
+  rank: number;
+  username: string;
+  avatar?: string;
+  level: number;
+  rankPoints: number;
+  isCurrentUser: boolean;
+  trend: 'up' | 'down' | 'same';
+  trendValue: number;
+}
+
+export type UserRankResponse = {
+  id: string;
+  rank: number;
+  rankPoints: number;
+  username: string;
+  level: number;
+};
 
 // Mock data generator
-const generateMockLeaderboard = (count: number): LeaderboardEntry[] => {
+const generateMockLeaderboard = (count: number): LeaderboardEntryResponse[] => {
   return Array.from({ length: count }).map((_, i) => ({
     id: `user-${i}`,
     rank: i + 1,
@@ -42,7 +60,7 @@ export async function getUserRank(userId: string) {
              rankPoints: 2450,
              username: 'You',
              level: 42
-        },
+        } satisfies UserRankResponse,
         error: null
     };
 }

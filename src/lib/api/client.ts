@@ -7,7 +7,7 @@ import {
   type ApiResponse,
   type HttpMethod,
   type PathsWithMethod,
-} from "@/utils/api";
+} from "@/lib/api/api";
 
 type ApiFetchOptions<
   M extends HttpMethod,

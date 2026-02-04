@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { cn } from "@/components/ui/utils";
+import { cn } from "@/lib/utils";
 import { Check, Clock, Coins, Play, RefreshCw } from "lucide-react";
 
 export interface RewardQuestProps {

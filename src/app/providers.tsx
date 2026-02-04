@@ -6,7 +6,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ThemeProvider } from "next-themes";
 import { PlayerProvider } from "@/contexts/PlayerContext";
 import { Toaster } from "@/components/ui/sonner";
-import { LocaleProvider } from "@/components/LocaleContext";
+import { LocaleProvider } from "@/contexts/LocaleContext";
 
 type ProvidersProps = {
   children: React.ReactNode;

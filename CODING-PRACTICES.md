@@ -113,7 +113,7 @@ Rules:
 Example:
 ```ts
 // src/lib/repositories/categories.repo.ts
-import { api } from "@/utils/api";
+import { api } from "@/lib/api/api";
 
 export function listCategories(query?: { status?: string }) {
   return api.GET("/api/v1/categories", { params: { query } });
@@ -288,6 +288,7 @@ export const QuestionCard = memo(function QuestionCard({
 - Repositories: *.repo.ts
 - Mappers: *.mapper.ts
 - Domain types: src/lib/domain/*.ts
+- Shared hooks: src/hooks/*.ts (camelCase, e.g., useMobile.ts)
 
 ### Exports
 - Prefer named exports for utilities/mappers/repos.
@@ -300,6 +301,74 @@ export const QuestionCard = memo(function QuestionCard({
 4. Components
 5. Types
 6. Utils/constants
+
+---
+
+## Feature Folder Structure
+
+Feature-specific code lives in `src/features/<feature>/`. Each feature folder follows this structure:
+
+```
+src/features/<feature>/
+├── components/           # Feature-specific components
+│   └── ComponentName.tsx
+├── hooks/                # Feature-specific hooks
+│   └── useFeatureHook.ts
+├── <Feature>Screen.tsx   # Main screen component
+└── index.ts              # Optional barrel exports
+```
+
+### Examples
+
+```
+src/features/settings/
+├── components/
+│   ├── SettingsSection.tsx
+│   └── SettingsToggle.tsx
+└── SettingsScreen.tsx
+
+src/features/leaderboard/
+├── components/
+│   ├── LeaderboardPodium.tsx
+│   ├── LeaderboardTable.tsx
+│   └── UserRankStrip.tsx
+└── LeaderboardScreen.tsx
+
+src/features/game/
+├── components/
+│   ├── QuestionArena.tsx
+│   ├── AnswerCard.tsx
+│   └── MatchScoreHUD.tsx
+├── hooks/
+│   ├── useGameLogic.ts
+│   └── useRealtimeGameLogic.ts
+└── GameStageRouter.tsx
+```
+
+### What Goes Where
+
+| Location | Contents |
+|----------|----------|
+| `src/features/<feature>/` | Feature screens, feature-specific components/hooks |
+| `src/services/` | Services (API wrappers, business logic) |
+| `src/components/ui/` | Shadcn/ui primitives (button, card, dialog, etc.) |
+| `src/components/shared/` | App-specific shared components (LoadingScreen, etc.) |
+| `src/components/` | Legacy components (prefer features/ for new code) |
+| `src/hooks/` | Shared hooks used across multiple features |
+| `src/contexts/` | React contexts (LocaleContext, PlayerContext) |
+| `src/stores/` | Zustand stores |
+| `src/lib/` | Utilities, API, queries, repositories, mappers, domain types |
+| `src/data/` | Static data, mock data |
+
+### Guidelines
+
+1. **Screen components belong in features**, not in `src/components/`.
+2. **Feature-specific hooks** go in `src/features/<feature>/hooks/`.
+3. **Shared hooks** (used by 2+ features) go in `src/hooks/`.
+4. **All React contexts** live in `src/contexts/`.
+5. **Services** (business logic, API wrappers) go in `src/services/`.
+6. **Import utilities from `@/lib/utils`** (not `@/components/ui/utils`).
+7. **Import API from `@/lib/api/api`** (not `@/utils/api`).
 
 ---
 

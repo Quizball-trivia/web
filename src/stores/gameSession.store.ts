@@ -50,7 +50,8 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
     set((state) => ({
       config: state.config ? { ...state.config, ...partialConfig } : null,
     })),
-  setStage: (stage) => set({ stage }),
+  setStage: (stage) =>
+    set((state) => (state.stage === stage ? state : { stage })),
   submitAnswer: (selectedIndex, timeMs) => {
     const { questions, currentIndex, answers } = get();
     const question = questions[currentIndex];

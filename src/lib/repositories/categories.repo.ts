@@ -1,4 +1,4 @@
-import { api } from "@/utils/api";
+import { api } from "@/lib/api/api";
 import type { components, paths } from "@/types/api.generated";
 
 export type ListCategoriesQuery =

@@ -128,6 +128,7 @@ export interface PlayerStats {
   totalScore: number;
   gamesPlayed: number;
   correctAnswers: number;
+  totalQuestionsAttempted?: number;
   currentStreak: number;
   bestStreak: number;
   achievements: Achievement[];
@@ -171,7 +172,7 @@ export interface MultiplayerMatch {
   currentRound: number;
   roundResults: RoundResult[];
   isComplete: boolean;
-  winner?: 'player1' | 'player2';
+  winner?: 'player1' | 'player2' | 'tie';
 }
 
 export interface BuzzerPlayer {
