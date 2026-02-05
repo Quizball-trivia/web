@@ -5,6 +5,7 @@ import "../styles/globals.css";
 export const metadata: Metadata = {
   title: "QuizBall",
   description: "QuizBall",
+  robots: "noindex, nofollow",
 };
 
 export default function RootLayout({

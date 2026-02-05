@@ -47,7 +47,7 @@ export function OAuthCallbackScreen() {
 
         await bootstrap({ force: true });
         logger.info('OAuth callback bootstrap success');
-        router.replace('/');
+        router.replace('/play');
       } catch (err) {
         logger.error('OAuth callback failed', err);
         setError(err instanceof Error ? err.message : 'Authentication failed');

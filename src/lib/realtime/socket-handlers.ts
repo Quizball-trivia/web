@@ -33,12 +33,13 @@ export function registerSocketHandlers(): void {
       lobbyId: data.lobbyId,
       status: data.status,
       memberCount: data.members.length,
+      memberIds: data.members.map((member) => member.userId),
     });
     store.setLobby(data);
   });
 
   socket.on('error', (data: ErrorPayload) => {
-    logger.warn('Socket event error', { code: data.code, message: data.message });
+    logger.warn('Socket event error', { code: data.code, message: data.message, meta: data.meta });
     store.setError(data);
   });
 
