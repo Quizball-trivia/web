@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "@/lib/config";
+import { getAccessToken } from "@/lib/auth/tokenStorage";
 import type { paths } from "@/types/api.generated";
 
 export type HttpMethod = "get" | "post" | "put" | "patch" | "delete";
@@ -131,6 +132,12 @@ async function request<M extends HttpMethod, P extends PathsWithMethod<M>>(
   options: ApiRequestOptions<M, P> = {},
 ): Promise<ApiResponse<M, P>> {
   const headers = new Headers(options.headers);
+  if (options.auth !== false && !headers.has("Authorization")) {
+    const accessToken = typeof window !== "undefined" ? getAccessToken() : null;
+    if (accessToken) {
+      headers.set("Authorization", `Bearer ${accessToken}`);
+    }
+  }
 
   let body = options.body as
     | BodyInit

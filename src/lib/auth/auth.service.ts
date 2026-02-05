@@ -1,4 +1,4 @@
-import { clearTokens } from "@/lib/auth/tokenStorage";
+import { clearTokens, getRefreshToken, setTokens } from "@/lib/auth/tokenStorage";
 import { api } from "@/lib/api/api";
 import { logger } from "@/utils/logger";
 import type { components, paths } from "@/types/api.generated";
@@ -37,8 +37,12 @@ export async function login(email: string, password: string): Promise<AuthRespon
     body: { email, password } satisfies LoginPayload,
     auth: false,
   });
+  const response = data as AuthResponse;
+  if (response?.access_token && response?.refresh_token) {
+    setTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
+  }
   logger.info("Auth login success");
-  return (data as AuthResponse).user ?? null;
+  return response.user ?? null;
 }
 
 export type RegisterResult = {
@@ -53,16 +57,26 @@ export async function register(payload: RegisterPayload): Promise<RegisterResult
     auth: false,
   });
   logger.info("Auth register success");
-  const hasTokens = Boolean((data as AuthResponse | null)?.access_token);
-  return { user: (data as AuthResponse).user ?? null, tokensSet: hasTokens };
+  const response = data as AuthResponse;
+  if (response?.access_token && response?.refresh_token) {
+    setTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
+  }
+  const hasTokens = Boolean(response?.access_token);
+  return { user: response.user ?? null, tokensSet: hasTokens };
 }
 
 export async function refresh(): Promise<boolean> {
   try {
     logger.info("Auth refresh start");
-    await api.POST("/api/v1/auth/refresh", {
-      auth: false,
-    });
+    const storedRefreshToken = getRefreshToken();
+    if (storedRefreshToken) {
+      return await refreshWithToken(storedRefreshToken);
+    }
+    const data = await api.POST("/api/v1/auth/refresh", { auth: false });
+    const response = data as AuthResponse;
+    if (response?.access_token && response?.refresh_token) {
+      setTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
+    }
     logger.info("Auth refresh success");
     return true;
   } catch (error) {
@@ -74,10 +88,14 @@ export async function refresh(): Promise<boolean> {
 export async function refreshWithToken(refreshToken: string): Promise<boolean> {
   try {
     logger.info("Auth refresh with token start");
-    await api.POST("/api/v1/auth/refresh", {
+    const data = await api.POST("/api/v1/auth/refresh", {
       body: { refresh_token: refreshToken } satisfies RefreshPayload,
       auth: false,
     });
+    const response = data as AuthResponse;
+    if (response?.access_token && response?.refresh_token) {
+      setTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
+    }
     logger.info("Auth refresh with token success");
     return true;
   } catch (error) {
