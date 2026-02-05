@@ -1,12 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, LogOut } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { LobbyHeader } from "./LobbyHeader";
 import { LobbySettings } from "./LobbySettings";
 import { useFriendLobbyLogic } from "../hooks/useFriendLobbyLogic";
+import { AlreadyInLobbyModal } from "./AlreadyInLobbyModal";
 
 interface FriendLobbyScreenProps {
   roomCode: string;
@@ -25,6 +26,7 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
   } = useFriendLobbyLogic({ roomCode, isHost });
 
   const settings = lobby?.settings;
+  const isCurrentHost = Boolean(me?.isHost) || isHost;
   const bothReady = Boolean(me?.isReady && opponent?.isReady);
   const hasFriendlyCategories =
     settings?.friendlyRandom ||
@@ -37,7 +39,7 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
       : "When both players are ready, the match will begin.";
   const canStartMatch =
     Boolean(
-      isHost &&
+      isCurrentHost &&
         bothReady &&
         lobby?.status === "waiting" &&
         settings?.gameMode === "friendly" &&
@@ -49,6 +51,7 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
       
       {/* Header with H2H */}
       <LobbyHeader 
+         lobbyName={lobby?.displayName}
          lobbyCode={lobbyCode} 
          me={me} 
          opponent={opponent} 
@@ -59,7 +62,7 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
          {/* Settings Panel (Host Controls) */}
          <div className="lg:col-span-2 space-y-6">
             <LobbySettings 
-               isHost={isHost}
+               isHost={isCurrentHost}
                lobby={lobby}
                categories={allCategories}
                onUpdateSettings={actions.handleUpdateSettings}
@@ -111,6 +114,16 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
                       Start Match
                     </Button>
                   )}
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="w-full h-12 text-sm font-semibold border-red-500/30 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                    onClick={actions.handleLeaveLobby}
+                    disabled={!lobby}
+                  >
+                    <LogOut className="size-4 mr-2" />
+                    Leave Lobby
+                  </Button>
                   <p className="text-xs text-center text-muted-foreground bg-muted/50 p-2 rounded">
                     {bothReady ? "Both players ready!" : opponent ? "Waiting for both players to ready up..." : "Waiting for opponent..."}
                   </p>
@@ -118,6 +131,11 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
             </Card>
          </div>
       </div>
+
+      <AlreadyInLobbyModal
+        currentLobbyCode={lobby?.inviteCode ?? null}
+        currentLobbyId={lobby?.lobbyId ?? null}
+      />
     </div>
   );
 }

@@ -30,7 +30,6 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   const match = useRealtimeMatchStore((state) => state.match);
   const error = useRealtimeMatchStore((state) => state.error);
   const clearError = useRealtimeMatchStore((state) => state.clearError);
-  const resetRealtime = useRealtimeMatchStore((state) => state.reset);
   const startSession = useGameSessionStore((state) => state.startSession);
 
   // Queries
@@ -53,50 +52,36 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     opponent?.userId
   );
 
-  // 1. Ensure we are not stuck in a previous lobby
+  // 1. Reset local guards after leaving a lobby/match
   useEffect(() => {
-    if (!roomCode) return;
-    if (!lobby && !draft && !match) return;
-
-    const targetCode =
-      roomCode === "new" ? null : roomCode.toUpperCase();
-    const currentCode = lobby?.inviteCode?.toUpperCase() ?? null;
-    const isCurrentHost = lobby?.hostUserId === selfUserId;
-    const shouldLeave =
-      (targetCode && currentCode && targetCode !== currentCode) ||
-      (roomCode === "new" && lobby && !isCurrentHost);
-
-    if (!shouldLeave) return;
-
-    const socket = getSocket();
-    socket.emit("lobby:leave");
-    logger.info("Socket emit lobby:leave (pre-join)", {
-      lobbyId: lobby?.lobbyId,
-      currentCode,
-      targetCode: targetCode ?? "new",
-    });
-    resetRealtime();
-    clearError();
+    if (lobby || draft || match) return;
     startedRef.current = false;
     createdRef.current = false;
-  }, [roomCode, lobby, draft, match, selfUserId, resetRealtime, clearError]);
+  }, [lobby, draft, match]);
 
   // 2. Socket Initialization
   useEffect(() => {
+    if (createdRef.current) return;
     const socket = getSocket();
-    if (isHost && !createdRef.current) {
+    const targetCode = roomCode === "new" ? null : roomCode.toUpperCase();
+    const currentCode = lobby?.inviteCode?.toUpperCase() ?? null;
+
+    if (isHost) {
       createdRef.current = true;
       socket.emit("lobby:create", { mode: "friendly" });
       logger.info("Socket emit lobby:create", { mode: "friendly" });
+      return;
     }
-    if (!isHost && roomCode && !createdRef.current) {
-      createdRef.current = true;
-      socket.emit("lobby:join_by_code", { inviteCode: roomCode });
-      logger.info("Socket emit lobby:join_by_code", {
-        inviteCode: `${roomCode.slice(0, 2)}***`,
-      });
-    }
-  }, [isHost, roomCode]);
+
+    if (!roomCode || roomCode === "new") return;
+    if (currentCode && currentCode === targetCode) return;
+
+    createdRef.current = true;
+    socket.emit("lobby:join_by_code", { inviteCode: roomCode });
+    logger.info("Socket emit lobby:join_by_code", {
+      inviteCode: `${roomCode.slice(0, 2)}***`,
+    });
+  }, [isHost, roomCode, lobby?.inviteCode, lobby]);
 
   // 3. Navigation & Session Logic
   useEffect(() => {
@@ -108,6 +93,16 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
       typeof settingsCount === "number" && settingsCount > 0 ? settingsCount : 10;
     startSession({ mode: "quizball", matchType: "friendly", questionCount: derivedCount });
   }, [lobby, startSession]);
+
+  useEffect(() => {
+    if (!lobby) return;
+    logger.info("Lobby state in UI", {
+      lobbyId: lobby.lobbyId,
+      inviteCode: lobby.inviteCode ?? null,
+      selfUserId,
+      isHost,
+    });
+  }, [lobby?.lobbyId, lobby?.inviteCode, selfUserId, isHost, lobby]);
 
   useEffect(() => {
     if (!draft && !match) return;
@@ -153,6 +148,12 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     logger.info("Socket emit lobby:start");
   };
 
+  const handleLeaveLobby = () => {
+    getSocket().emit("lobby:leave");
+    useRealtimeMatchStore.getState().reset();
+    logger.info("Socket emit lobby:leave");
+  };
+
   return {
     lobby,
     lobbyCode,
@@ -165,6 +166,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
       handleReadyToggle,
       handleUpdateSettings,
       handleStartMatch,
+      handleLeaveLobby,
     },
   };
 }

@@ -33,7 +33,8 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
 
   const handleCreateRoom = () => {
     onOpenChange(false);
-    router.push(`/friend/room/new?isHost=true`);
+    // Redirect to the new Hub which handles creation uniformly
+    router.push("/play/friend?tab=create");
   };
 
   const handleJoinRoom = () => {
@@ -49,7 +50,7 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
 
     onOpenChange(false);
     // Navigate to lobby as guest
-    router.push(`/friend/room/${roomCode.toUpperCase()}?isHost=false`);
+    router.push(`/friend/room/${roomCode.toUpperCase()}`);
     setIsJoining(false);
   };
 
@@ -108,8 +109,22 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
                     Join
                  </Button>
              </div>
+             </div>
           </div>
-       </div>
+
+          {/* Browse Public */}
+          <div className="pt-2">
+             <Button 
+                variant="outline" 
+                className="w-full h-12 border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 text-muted-foreground hover:text-primary transition-all"
+                onClick={() => {
+                   onOpenChange(false);
+                   router.push("/play/friend?tab=browse");
+                }}
+             >
+                <Users className="size-4 mr-2" /> Browse Public Lobbies
+             </Button>
+          </div>
     </div>
   );
 

@@ -201,65 +201,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/stats/head-to-head": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get head-to-head summary for two users */
-        get: {
-            parameters: {
-                query: {
-                    userA: string;
-                    userB: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Head-to-head summary */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** Format: uuid */
-                            userAId: string;
-                            /** Format: uuid */
-                            userBId: string;
-                            winsA: number;
-                            winsB: number;
-                            draws: number;
-                            total: number;
-                            /** Format: date-time */
-                            lastPlayedAt: string | null;
-                        };
-                    };
-                };
-                /** @description Authentication required */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/auth/reset-password": {
         parameters: {
             query?: never;
@@ -379,6 +320,134 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/stats/head-to-head": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get head-to-head summary for two users */
+        get: {
+            parameters: {
+                query: {
+                    userA: string;
+                    userB: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Head-to-head summary */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            userAId: string;
+                            /** Format: uuid */
+                            userBId: string;
+                            winsA: number;
+                            winsB: number;
+                            draws: number;
+                            total: number;
+                            /** Format: date-time */
+                            lastPlayedAt: string | null;
+                        };
+                    };
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lobbies/public": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List public lobbies */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    joinableOnly?: boolean | null;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Public lobby list */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** Format: uuid */
+                                lobbyId: string;
+                                inviteCode: string;
+                                displayName: string;
+                                /** @enum {string} */
+                                gameMode: "friendly" | "ranked_sim";
+                                isPublic: boolean;
+                                /** Format: date-time */
+                                createdAt: string;
+                                memberCount: number;
+                                maxMembers: number;
+                                host: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    username: string | null;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                };
+                            }[];
+                        };
+                    };
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;

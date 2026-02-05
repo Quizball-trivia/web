@@ -18,7 +18,7 @@ export default function LoginPage() {
       await login(email, password);
       await bootstrap();
       const onboardingCompleted = storage.get(STORAGE_KEYS.ONBOARDING_COMPLETE, false);
-      router.replace(onboardingCompleted ? "/" : "/onboarding");
+      router.replace(onboardingCompleted ? "/play" : "/onboarding");
     } catch (error) {
       logger.warn("Login failed", error);
       toast.error("Login failed", {

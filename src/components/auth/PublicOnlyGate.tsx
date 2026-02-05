@@ -22,7 +22,7 @@ export default function PublicOnlyGate({ children }: PublicOnlyGateProps) {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.replace("/");
+      router.replace("/play");
     }
   }, [status, router]);
 

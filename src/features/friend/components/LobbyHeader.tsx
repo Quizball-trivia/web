@@ -9,13 +9,14 @@ import { Copy, Users } from "lucide-react";
 import { toast } from "sonner";
 
 interface LobbyHeaderProps {
+  lobbyName?: string | null;
   lobbyCode: string | null;
   me?: LobbyMember;
   opponent?: LobbyMember;
   h2hSummary: HeadToHeadSummary | null;
 }
 
-export function LobbyHeader({ lobbyCode, me, opponent, h2hSummary }: LobbyHeaderProps) {
+export function LobbyHeader({ lobbyName, lobbyCode, me, opponent, h2hSummary }: LobbyHeaderProps) {
   const copyCode = async () => {
     if (!lobbyCode) return;
     const success = await copyToClipboard(lobbyCode);
@@ -47,7 +48,7 @@ export function LobbyHeader({ lobbyCode, me, opponent, h2hSummary }: LobbyHeader
           <Users className="size-6" />
         </div>
         <div>
-          <h1 className="text-xl font-bold">Friendly Lobby</h1>
+          <h1 className="text-xl font-bold">{lobbyName || "Friendly Lobby"}</h1>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             Code:
             <span className="font-mono font-bold text-foreground bg-muted px-2 py-0.5 rounded select-all">

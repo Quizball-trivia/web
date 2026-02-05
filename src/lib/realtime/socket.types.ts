@@ -26,6 +26,8 @@ export interface LobbyState {
   mode: MatchMode;
   status: LobbyStatus;
   inviteCode: string | null;
+  displayName: string;
+  isPublic: boolean;
   hostUserId: string;
   settings: LobbySettings;
   members: LobbyMember[];
@@ -125,10 +127,11 @@ export interface MatchFinalResultsPayload {
 export interface ErrorPayload {
   code: string;
   message: string;
+  meta?: Record<string, unknown>;
 }
 
 export interface ClientToServerEvents {
-  'lobby:create': (data: { mode: MatchMode }) => void;
+  'lobby:create': (data: { mode: MatchMode; isPublic?: boolean }) => void;
   'lobby:join_by_code': (data: { inviteCode: string }) => void;
   'lobby:leave': () => void;
   'lobby:ready': (data: { ready: boolean }) => void;

@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
+import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
@@ -32,8 +33,11 @@ import {
   LogOut,
   Briefcase,
   Flame,
+  ArrowRight,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getSocket } from "@/lib/realtime/socket-client";
 
 const NAV_ITEMS = [
   { path: "/play", label: "Play", icon: Gamepad2 },
@@ -66,10 +70,29 @@ export function AppShell({ children }: AppShellProps) {
   const { player: playerStats } = usePlayer();
   const logout = useAuthStore((state) => state.logout);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const lobby = useRealtimeMatchStore((state) => state.lobby);
+  const resetRealtime = useRealtimeMatchStore((state) => state.reset);
+  const [socketConnected, setSocketConnected] = useState(true);
 
   const currentPath = pathname ?? "/";
   const showHeader = HEADER_PATHS.includes(currentPath);
   const showNav = !HIDE_NAV_PATHS.some((path) => currentPath.startsWith(path));
+  const inLobbyRoom = currentPath.startsWith("/friend/room");
+  const showLobbyBanner = !!lobby && lobby.status === "waiting" && !inLobbyRoom;
+  const lobbyCode = lobby?.inviteCode ?? "";
+
+  useEffect(() => {
+    const socket = getSocket();
+    setSocketConnected(socket.connected);
+    const handleConnect = () => setSocketConnected(true);
+    const handleDisconnect = () => setSocketConnected(false);
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+    return () => {
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+    };
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -79,6 +102,16 @@ export function AppShell({ children }: AppShellProps) {
   const isPathActive = (path: string) => {
     if (path === "/") return currentPath === "/";
     return currentPath === path || currentPath.startsWith(`${path}/`);
+  };
+
+  const handleReturnToLobby = () => {
+    if (!lobbyCode) return;
+    router.push(`/friend/room/${lobbyCode}`);
+  };
+
+  const handleLeaveLobby = () => {
+    getSocket().emit("lobby:leave");
+    resetRealtime();
   };
 
   return (
@@ -247,9 +280,57 @@ export function AppShell({ children }: AppShellProps) {
           </header>
 
           {/* Content Area */}
-          <main className="flex-1 overflow-y-auto bg-background/50 p-6 scrollbar-hide">
-            {children}
-          </main>
+          <div className="flex-1 overflow-y-auto bg-background/50 scrollbar-hide">
+            {showLobbyBanner && (
+              <div className="px-6 pt-4">
+                <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/15 to-lime-400/15 px-5 py-4 shadow-[0_8px_30px_rgba(16,185,129,0.15)]">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="size-10 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center">
+                        <Gamepad2 className="size-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-emerald-100">
+                          You’re still in{" "}
+                          <span className="text-foreground">{lobby?.displayName ?? "a lobby"}</span>
+                        </p>
+                        <p className="text-xs text-emerald-200/80">
+                          Code{" "}
+                          <span className="font-mono font-bold text-emerald-50">{lobbyCode || "..."}</span>
+                          {!socketConnected && (
+                            <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+                              Reconnecting…
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        className="h-9 bg-emerald-500 text-emerald-950 hover:bg-emerald-400"
+                        onClick={handleReturnToLobby}
+                        disabled={!lobbyCode}
+                      >
+                        Return to Lobby <ArrowRight className="ml-2 size-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-9 border-emerald-500/30 text-emerald-100 hover:bg-emerald-500/10"
+                        onClick={handleLeaveLobby}
+                      >
+                        Leave <X className="ml-2 size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            <main className="p-6">
+              {children}
+            </main>
+          </div>
         </div>
       </div>
 
@@ -317,7 +398,55 @@ export function AppShell({ children }: AppShellProps) {
         )}
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto pb-20">{children}</main>
+        <main className="flex-1 overflow-y-auto pb-20">
+          {showLobbyBanner && (
+            <div className="px-4 pt-4">
+              <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/15 to-lime-400/15 px-4 py-3 shadow-[0_8px_30px_rgba(16,185,129,0.15)]">
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="size-9 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center">
+                      <Gamepad2 className="size-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-emerald-100">
+                        You’re still in{" "}
+                        <span className="text-foreground">{lobby?.displayName ?? "a lobby"}</span>
+                      </p>
+                      <p className="text-xs text-emerald-200/80">
+                        Code{" "}
+                        <span className="font-mono font-bold text-emerald-50">{lobbyCode || "..."}</span>
+                        {!socketConnected && (
+                          <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+                            Reconnecting…
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      className="flex-1 h-10 bg-emerald-500 text-emerald-950 hover:bg-emerald-400"
+                      onClick={handleReturnToLobby}
+                      disabled={!lobbyCode}
+                    >
+                      Return
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 h-10 border-emerald-500/30 text-emerald-100 hover:bg-emerald-500/10"
+                      onClick={handleLeaveLobby}
+                    >
+                      Leave
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {children}
+        </main>
 
         {/* Sticky Play Button - Only on Home Screen */}
         {currentPath === "/" && (
