@@ -10,7 +10,6 @@ interface MatchScoreHUDProps {
   playerName: string;
   opponentName: string;
   timeRemaining: number;
-  maxTime: number;
   roundCurrent: number;
   roundTotal: number;
   playerAnswered: boolean;

@@ -21,6 +21,7 @@ export function MatchmakingScreen({
   rankedFoundOpponent = null,
   onCancel,
 }: MatchmakingScreenProps) {
+  const MAX_FRIENDLY_SEARCH_SECONDS = 30;
   const [progress, setProgress] = useState(0);
   const [searchTime, setSearchTime] = useState(0);
 
@@ -47,7 +48,7 @@ export function MatchmakingScreen({
     }, 300);
 
     const timeInterval = setInterval(() => {
-      setSearchTime(prev => prev + 1);
+      setSearchTime(prev => Math.min(prev + 1, MAX_FRIENDLY_SEARCH_SECONDS));
     }, 1000);
 
     return () => {

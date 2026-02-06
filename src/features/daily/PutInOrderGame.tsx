@@ -329,7 +329,7 @@ export function PutInOrderGame({ onBack, onComplete }: PutInOrderGameProps) {
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg bg-secondary">
-                  <span className="text-sm text-muted-foreground">Win Rate</span>
+                  <span className="text-sm text-muted-foreground">Accuracy</span>
                   <span className="text-lg font-bold">
                     {Math.round((correctCount / challenge.totalQuestions) * 100)}%
                   </span>

@@ -282,10 +282,16 @@ export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playe
             const isLocked = c.status === 'locked';
             const tierColor = { bronze: 'border-b-orange-600/40', silver: 'border-b-slate-400/40', gold: 'border-b-yellow-500/40', platinum: 'border-b-cyan-400/40' }[c.tier];
             const tierBg = { bronze: 'bg-orange-500/15 text-orange-400', silver: 'bg-slate-400/15 text-slate-300', gold: 'bg-yellow-500/15 text-yellow-400', platinum: 'bg-cyan-400/15 text-cyan-300' }[c.tier];
+            const handleChallengeClick = () => {
+              if (isLocked) return;
+              logger.info('Challenge enter', { id: c.id });
+              router.push(`/challenges/${c.id}`);
+            };
+
             return (
               <div
                 key={c.id}
-                onClick={() => !isLocked && logger.info('Challenge enter', { id: c.id })}
+                onClick={handleChallengeClick}
                 className={cn('shrink-0 w-[160px] bg-[#1a1f2e] rounded-2xl border-b-4 p-3 cursor-pointer', tierColor, isLocked && 'opacity-50 cursor-default')}
               >
                 <div className={cn('size-8 rounded-lg flex items-center justify-center mb-2', tierBg)}>

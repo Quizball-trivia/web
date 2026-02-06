@@ -17,6 +17,7 @@ export interface LobbyMember {
   userId: string;
   username: string;
   avatarUrl: string | null;
+  rankPoints?: number;
   isReady: boolean;
   isHost: boolean;
 }

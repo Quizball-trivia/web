@@ -169,12 +169,16 @@ export function GameStageRouter() {
           opponentAvatar={opponent.avatar}
           opponentUsername={opponent.username}
           onQuit={() => {
-            getSocket().emit("match:leave", {
-              matchId: realtimeMatch?.matchId,
-            });
-            logger.info("Socket emit match:leave", {
-              matchId: realtimeMatch?.matchId,
-            });
+            if (realtimeMatch?.matchId) {
+              getSocket().emit("match:leave", {
+                matchId: realtimeMatch.matchId,
+              });
+              logger.info("Socket emit match:leave", {
+                matchId: realtimeMatch.matchId,
+              });
+            } else {
+              logger.info("Socket emit match:leave skipped (missing matchId)");
+            }
             exitToPlay();
           }}
         />

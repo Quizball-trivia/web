@@ -39,6 +39,11 @@ export function LobbyBrowsePanel({ onJoin, isJoiningCode, onActionTriggered }: L
     });
   }, [lobbies, search, filter]);
 
+  const handleJoin = (inviteCode: string) => {
+    onActionTriggered?.();
+    onJoin(inviteCode);
+  };
+
   return (
     <div className="space-y-6">
        {/* Search & Filter Bar */}
@@ -88,7 +93,7 @@ export function LobbyBrowsePanel({ onJoin, isJoiningCode, onActionTriggered }: L
                    <LobbyCard 
                       key={lobby.lobbyId} 
                       lobby={lobby} 
-                      onJoin={onJoin}
+                      onJoin={handleJoin}
                       isJoining={isJoiningCode === lobby.inviteCode}
                    />
                 ))}

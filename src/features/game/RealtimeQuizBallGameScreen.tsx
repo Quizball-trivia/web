@@ -27,6 +27,7 @@ export function RealtimeQuizBallGameScreen({
 }: RealtimeQuizBallGameScreenProps) {
   const { state, actions } = useRealtimeGameLogic();
   const [showQuitModal, setShowQuitModal] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
 
   const {
     currentQuestion,
@@ -44,21 +45,16 @@ export function RealtimeQuizBallGameScreen({
     pauseUntil,
   } = state;
 
-  const [pauseCountdown, setPauseCountdown] = useState<number | null>(null);
-
   useEffect(() => {
-    if (!matchPaused || !pauseUntil) {
-      setPauseCountdown(null);
-      return;
-    }
-    const tick = () => {
-      const remaining = Math.max(0, pauseUntil - Date.now());
-      setPauseCountdown(Math.ceil(remaining / 1000));
-    };
-    tick();
-    const interval = setInterval(tick, 250);
+    if (!matchPaused || !pauseUntil) return;
+    const interval = setInterval(() => setNow(Date.now()), 250);
     return () => clearInterval(interval);
   }, [matchPaused, pauseUntil]);
+
+  const pauseCountdown =
+    matchPaused && pauseUntil ? Math.max(0, Math.ceil((pauseUntil - now) / 1000)) : null;
+  const pauseCountdownLabel =
+    typeof pauseCountdown === 'number' ? `${pauseCountdown}s` : '…';
 
   if (!currentQuestion) {
     return (
@@ -223,7 +219,7 @@ export function RealtimeQuizBallGameScreen({
           <div className="bg-[#1a1f2e] border-b-4 border-b-white/10 rounded-3xl p-6 shadow-lg text-center max-w-sm w-full mx-4 font-fun">
             <div className="text-xl font-black text-white mb-2">Opponent disconnected</div>
             <p className="text-sm text-white/50 font-semibold mb-4">
-              We&apos;ll resume if they return within {pauseCountdown ?? 30}s.
+              We&apos;ll resume if they return within {pauseCountdownLabel}.
             </p>
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/15 text-emerald-400 text-sm font-bold">
               Match paused

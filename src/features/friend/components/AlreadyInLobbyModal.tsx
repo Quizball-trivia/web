@@ -8,14 +8,12 @@ import { toast } from "sonner";
 
 interface AlreadyInLobbyModalProps {
   currentLobbyCode: string | null;
-  currentLobbyId: string | null;
   isOpen?: boolean; // Controlled externally if needed
   onClose?: () => void;
 }
 
 export function AlreadyInLobbyModal({
   currentLobbyCode,
-  currentLobbyId: _currentLobbyId,
   isOpen,
   onClose,
 }: AlreadyInLobbyModalProps) {

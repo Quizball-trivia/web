@@ -47,7 +47,6 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
 
     onOpenChange(false);
     router.push(`/friend/room/${roomCode.toUpperCase()}`);
-    setIsJoining(false);
   };
 
   const Content = (

@@ -49,14 +49,18 @@ export function RankedCategoryBlockingScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft?.turnUserId, draft?.allowedCategoryIds, draft?.categories]);
 
+  const opponentMember = useMemo(
+    () => lobby?.members.find((member) => member.userId !== selfUserId),
+    [lobby?.members, selfUserId]
+  );
+
   const opponent = useMemo(() => {
-    const opponentMember = lobby?.members.find((member) => member.userId !== selfUserId);
     return {
       id: opponentMember?.userId ?? 'opponent',
       username: opponentMember?.username ?? 'Opponent',
       avatar: opponentMember?.avatarUrl ?? '😈',
     };
-  }, [lobby?.members, selfUserId]);
+  }, [opponentMember]);
 
   const h2h = useHeadToHead(selfUserId, opponent.id !== 'opponent' ? opponent.id : undefined);
 
@@ -71,7 +75,7 @@ export function RankedCategoryBlockingScreen() {
   const poolCategories = draft.categories;
 
   const playerRp = player.rankPoints ?? 1200;
-  const opponentRp = playerRp > 50 ? playerRp - 50 : playerRp;
+  const opponentRp = opponentMember?.rankPoints ?? 1200;
 
   return (
     <div className="min-h-screen bg-[#131F24] flex flex-col font-fun">
