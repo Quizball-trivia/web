@@ -12,13 +12,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Users, Plus, LogIn } from "lucide-react";
+import { Users, Plus, LogIn, Globe } from "lucide-react";
 import { useIsMobile } from "@/hooks/useMobile";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface FriendPlayModalProps {
   isOpen: boolean;
@@ -33,108 +32,105 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
 
   const handleCreateRoom = () => {
     onOpenChange(false);
-    // Redirect to the new Hub which handles creation uniformly
     router.push("/play/friend?tab=create");
   };
 
   const handleJoinRoom = () => {
     if (!roomCode.trim()) return;
     setIsJoining(true);
-    
-    // Simulate valid code check
+
     if (roomCode.length < 3) {
-        toast.error("Invalid Room Code");
-        setIsJoining(false);
-        return;
+      toast.error("Invalid Room Code");
+      setIsJoining(false);
+      return;
     }
 
     onOpenChange(false);
-    // Navigate to lobby as guest
     router.push(`/friend/room/${roomCode.toUpperCase()}`);
     setIsJoining(false);
   };
 
   const Content = (
-    <div className="space-y-8 py-4">
-       {/* Header Icon */}
-       <div className="flex flex-col items-center text-center space-y-2">
-          <div className="size-16 rounded-2xl flex items-center justify-center mb-2 border bg-blue-500/10 text-blue-500 border-blue-500/20">
-             <Users className="size-8" />
-          </div>
-          <p className="text-muted-foreground text-sm max-w-xs">
-            Create a private room to host a match, or enter a code to join a friend&apos;s lobby.
-          </p>
-       </div>
+    <div className="space-y-5 font-fun">
+      {/* Header Icon */}
+      <div className="flex flex-col items-center text-center gap-3">
+        <div className="size-20 rounded-full bg-[#1CB0F6] border-4 border-b-[6px] border-[#1899D6] flex items-center justify-center">
+          <Users className="size-9 text-white" strokeWidth={2.5} />
+        </div>
+        <p className="text-sm font-bold text-[#56707A] max-w-xs">
+          Create a private room to host a match, or enter a code to join a friend&apos;s lobby.
+        </p>
+      </div>
 
-       <div className="grid gap-6">
-          {/* Create Room */}
-          <div className="space-y-2">
-             <div className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-2">
-                 <Plus className="size-3" /> Create
-             </div>
-             <Button 
-                size="lg" 
-                className="w-full h-14 text-base font-bold bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-lg shadow-blue-500/20"
-                onClick={handleCreateRoom}
-             >
-                Create New Room
-             </Button>
-          </div>
+      {/* Create Room */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 text-[10px] font-black text-[#56707A] uppercase tracking-wider">
+          <Plus className="size-3.5" /> Create
+        </div>
+        <button
+          onClick={handleCreateRoom}
+          className="w-full py-4 rounded-2xl bg-[#1CB0F6] border-b-4 border-[#1899D6] text-base font-black text-white uppercase tracking-wide hover:bg-[#18A0E0] active:translate-y-[2px] active:border-b-2 transition-all"
+        >
+          Create New Room
+        </button>
+      </div>
 
-          <div className="relative flex items-center gap-4">
-             <div className="h-px bg-border flex-1" />
-             <span className="text-xs text-muted-foreground font-medium uppercase">Or Join</span>
-             <div className="h-px bg-border flex-1" />
-          </div>
+      {/* Divider */}
+      <div className="flex items-center gap-3">
+        <div className="h-[3px] flex-1 rounded-full bg-[#1B2F36]" />
+        <span className="text-[10px] font-black text-[#56707A] uppercase tracking-wider">Or Join</span>
+        <div className="h-[3px] flex-1 rounded-full bg-[#1B2F36]" />
+      </div>
 
-          {/* Join Room */}
-          <div className="space-y-2">
-             <div className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-2">
-                 <LogIn className="size-3" /> Join
-             </div>
-             <div className="flex gap-2">
-                 <Input 
-                    placeholder="Enter Room Code" 
-                    className="h-12 text-lg font-mono uppercase tracking-widest text-center"
-                    value={roomCode}
-                    onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                    maxLength={8}
-                 />
-                 <Button 
-                    size="lg" 
-                    className="h-12 px-6"
-                    disabled={!roomCode.trim() || isJoining}
-                    onClick={handleJoinRoom}
-                 >
-                    Join
-                 </Button>
-             </div>
-             </div>
-          </div>
+      {/* Join Room */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 text-[10px] font-black text-[#56707A] uppercase tracking-wider">
+          <LogIn className="size-3.5" /> Join
+        </div>
+        <div className="flex gap-2">
+          <input
+            placeholder="ROOM CODE"
+            className="flex-1 h-12 rounded-xl bg-[#1B2F36] border-b-[3px] border-[#0D1B21] text-base font-black text-white text-center uppercase tracking-[0.2em] placeholder:text-[#56707A]/50 placeholder:font-bold placeholder:tracking-[0.2em] focus:outline-none focus:ring-2 focus:ring-[#1CB0F6] transition-all font-mono"
+            value={roomCode}
+            onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+            maxLength={8}
+          />
+          <button
+            disabled={!roomCode.trim() || isJoining}
+            onClick={handleJoinRoom}
+            className={cn(
+              "h-12 px-6 rounded-xl border-b-[3px] text-sm font-black text-white uppercase tracking-wide active:translate-y-[2px] active:border-b-0 transition-all",
+              roomCode.trim()
+                ? "bg-[#58CC02] border-[#46A302] hover:bg-[#4CB801]"
+                : "bg-[#243B44] border-[#1B2F36] opacity-50 pointer-events-none"
+            )}
+          >
+            Join
+          </button>
+        </div>
+      </div>
 
-          {/* Browse Public */}
-          <div className="pt-2">
-             <Button 
-                variant="outline" 
-                className="w-full h-12 border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 text-muted-foreground hover:text-primary transition-all"
-                onClick={() => {
-                   onOpenChange(false);
-                   router.push("/play/friend?tab=browse");
-                }}
-             >
-                <Users className="size-4 mr-2" /> Browse Public Lobbies
-             </Button>
-          </div>
+      {/* Browse Public */}
+      <button
+        onClick={() => {
+          onOpenChange(false);
+          router.push("/play/friend?tab=browse");
+        }}
+        className="w-full py-3.5 rounded-2xl bg-[#1B2F36] border-b-4 border-[#0D1B21] border-dashed text-sm font-black text-[#56707A] uppercase tracking-wide hover:bg-[#243B44] hover:text-white active:translate-y-[2px] active:border-b-2 transition-all flex items-center justify-center gap-2"
+      >
+        <Globe className="size-4" />
+        Browse Public Lobbies
+      </button>
     </div>
   );
 
   if (isMobile) {
     return (
       <Sheet open={isOpen} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="rounded-t-3xl border-t border-border/50">
-          <SheetHeader className="mb-2 text-left">
-            <SheetTitle className="text-2xl font-bold flex items-center gap-2">
-               Play with a Friend
+        <SheetContent side="bottom" className="rounded-t-3xl border-t border-white/5 bg-[#131F24] px-5 pb-8">
+          <SheetHeader className="mb-4 text-left">
+            <SheetTitle className="text-xl font-black text-white font-fun">
+              Play with a Friend
             </SheetTitle>
           </SheetHeader>
           {Content}
@@ -145,9 +141,10 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md border-border/50 shadow-2xl p-6">
+      <DialogContent className="sm:max-w-md bg-[#131F24] border-[#1B2F36] shadow-2xl">
         <DialogHeader>
-          <DialogTitle className="text-xl text-center font-bold">Play with a Friend</DialogTitle>
+          <DialogTitle className="text-xl text-center hidden">Play with a Friend</DialogTitle>
+          <div className="text-center text-xl font-black text-white font-fun">Play with a Friend</div>
         </DialogHeader>
         {Content}
       </DialogContent>

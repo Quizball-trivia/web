@@ -1,27 +1,51 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, Users, Loader2 } from 'lucide-react';
+import { motion } from 'motion/react';
+import { Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import type { OpponentInfo } from '@/lib/realtime/socket.types';
 
 interface MatchmakingScreenProps {
   matchType: 'ranked' | 'friendly';
+  rankedSearchDurationMs?: number | null;
+  rankedSearchStartedAt?: number | null;
+  rankedFoundOpponent?: OpponentInfo | null;
   onCancel: () => void;
 }
 
-export function MatchmakingScreen({ matchType, onCancel }: MatchmakingScreenProps) {
+export function MatchmakingScreen({
+  matchType,
+  rankedSearchDurationMs = null,
+  rankedSearchStartedAt = null,
+  rankedFoundOpponent = null,
+  onCancel,
+}: MatchmakingScreenProps) {
   const [progress, setProgress] = useState(0);
   const [searchTime, setSearchTime] = useState(0);
 
   useEffect(() => {
+    if (matchType !== 'ranked' || !rankedSearchStartedAt) return;
+
+    const tick = () => {
+      const elapsed = Math.max(0, Date.now() - rankedSearchStartedAt);
+      const duration = rankedSearchDurationMs ?? 6000;
+      const nextProgress = Math.min(95, Math.floor((elapsed / duration) * 100));
+      setProgress(nextProgress);
+      setSearchTime(Math.floor(elapsed / 1000));
+    };
+    tick();
+    const interval = setInterval(tick, 100);
+    return () => clearInterval(interval);
+  }, [matchType, rankedSearchDurationMs, rankedSearchStartedAt]);
+
+  useEffect(() => {
+    if (matchType === 'ranked') return;
+
     const progressInterval = setInterval(() => {
       setProgress(prev => Math.min(prev + 10, 90));
     }, 300);
 
-    // Count search time
     const timeInterval = setInterval(() => {
       setSearchTime(prev => prev + 1);
     }, 1000);
@@ -30,98 +54,124 @@ export function MatchmakingScreen({ matchType, onCancel }: MatchmakingScreenProp
       clearInterval(progressInterval);
       clearInterval(timeInterval);
     };
-  }, []);
+  }, [matchType]);
+
+  const foundLabel = rankedFoundOpponent?.username ?? 'Opponent';
+  const showFoundState = matchType === 'ranked' && rankedFoundOpponent !== null;
+  const displayedProgress = showFoundState ? 100 : progress;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <div className="border-b bg-background sticky top-0 z-10">
-        <div className="px-4 py-3">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onCancel}
-              aria-label="Go back"
-              className="flex items-center justify-center size-9 rounded-lg hover:bg-secondary transition-colors"
-            >
-              <ArrowLeft className="size-5" />
-            </button>
-            <div>
-              <h1 className="text-xl">Finding Match</h1>
-              <p className="text-sm text-muted-foreground">
-                {matchType === 'ranked' ? 'Ranked matchmaking' : 'Finding opponent'}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#131F24] flex flex-col items-center justify-center font-fun px-6">
 
-      {/* Content */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-md space-y-6">
-          {/* Matchmaking Animation */}
-          <Card className="border-2 border-primary/30">
-            <CardContent className="pt-8 pb-8">
-              <div className="text-center space-y-6">
-                {/* Animated Icon */}
-                <div className="relative inline-flex">
-                  <div className="absolute inset-0 animate-ping">
-                    <div className="size-20 rounded-full bg-primary/20" />
-                  </div>
-                  <div className="relative size-20 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Users className="size-10 text-primary" />
-                  </div>
-                </div>
+      <div className="w-full max-w-sm flex flex-col items-center gap-8">
 
-                {/* Status */}
-                <div>
-                  <h2 className="mb-2">Searching for opponent...</h2>
-                  <p className="text-sm text-muted-foreground">
-                    {searchTime}s elapsed
-                  </p>
-                </div>
+        {/* Animated search icon */}
+        <div className="relative flex items-center justify-center">
+          {/* Ping rings */}
+          {!showFoundState && (
+            <>
+              <motion.div
+                animate={{ scale: [1, 2.2], opacity: [0.3, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeOut' }}
+                className="absolute size-24 rounded-full bg-[#1CB0F6]/20"
+              />
+              <motion.div
+                animate={{ scale: [1, 2.2], opacity: [0.3, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeOut', delay: 0.5 }}
+                className="absolute size-24 rounded-full bg-[#1CB0F6]/20"
+              />
+            </>
+          )}
 
-                {/* Progress */}
-                <div className="space-y-2">
-                  <Progress value={progress} className="h-2" />
-                  <div className="flex items-center justify-center gap-2">
-                    <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">
-                      Looking for players...
-                    </span>
-                  </div>
-                </div>
-
-                {/* Match Type Badge */}
-                <Badge
-                  className={matchType === 'ranked' ? 'bg-amber-500 text-white' : 'bg-blue-500 text-white'}
-                >
-                  {matchType === 'ranked' ? 'Ranked Match' : 'Friendly Match'}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Cancel Button */}
-          <Button
-            onClick={onCancel}
-            variant="outline"
-            className="w-full"
-            size="lg"
+          {/* Center icon */}
+          <motion.div
+            animate={showFoundState ? { scale: [1, 1.15, 1] } : { scale: [1, 1.08, 1] }}
+            transition={showFoundState
+              ? { duration: 0.4, ease: 'easeOut' }
+              : { duration: 1.5, repeat: Infinity, ease: 'easeInOut' }
+            }
+            className={cn(
+              'relative size-24 rounded-full flex items-center justify-center text-5xl border-4 border-b-[6px]',
+              showFoundState
+                ? 'bg-[#58CC02] border-[#46A302]'
+                : 'bg-[#1CB0F6] border-[#1899D6]'
+            )}
           >
-            Cancel Matchmaking
-          </Button>
-
-          {/* Tips */}
-          <Card>
-            <CardContent className="pt-4 pb-4">
-              <div className="text-sm space-y-2">
-                <p className="text-muted-foreground">
-                  <strong className="text-foreground">Tip:</strong> Matches are 10 fast questions — answer quickly for bonus points.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+            {showFoundState ? <Check className="size-11 text-white" strokeWidth={3.5} /> : '⚽'}
+          </motion.div>
         </div>
+
+        {/* Status text */}
+        <div className="text-center">
+          {!showFoundState ? (
+            <>
+              <h2 className="text-2xl font-black text-white uppercase tracking-tight">
+                Searching...
+              </h2>
+              <p className="text-sm font-bold text-[#56707A] mt-1">
+                {searchTime}s elapsed
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="text-2xl font-black text-[#58CC02] uppercase tracking-tight">
+                Opponent Found!
+              </h2>
+              <p className="text-sm font-bold text-[#56707A] mt-1">
+                {foundLabel} joined the match
+              </p>
+            </>
+          )}
+        </div>
+
+        {/* Progress bar */}
+        <div className="w-full space-y-3">
+          <div className="w-full h-4 rounded-full bg-[#243B44] border-b-2 border-[#1B2F36] overflow-hidden">
+            <motion.div
+              className={cn(
+                'h-full rounded-full',
+                showFoundState
+                  ? 'bg-[#58CC02] border-b-2 border-[#46A302]'
+                  : 'bg-[#1CB0F6] border-b-2 border-[#1899D6]'
+              )}
+              initial={{ width: '0%' }}
+              animate={{ width: `${displayedProgress}%` }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+            />
+          </div>
+
+          <p className="text-center text-xs font-bold text-[#56707A]">
+            {showFoundState
+              ? 'Preparing category draft...'
+              : 'Looking for players...'}
+          </p>
+        </div>
+
+        {/* Match type badge */}
+        <div className={cn(
+          'px-4 py-1.5 rounded-full border-b-[3px] text-xs font-black uppercase tracking-wider text-white',
+          matchType === 'ranked'
+            ? 'bg-[#FF9600] border-[#DB8200]'
+            : 'bg-[#1CB0F6] border-[#1899D6]'
+        )}>
+          {matchType === 'ranked' ? 'Ranked Match' : 'Friendly Match'}
+        </div>
+
+        {/* Tip */}
+        <div className="w-full bg-[#1B2F36] rounded-2xl border-b-[3px] border-[#0D1B21] px-5 py-4">
+          <p className="text-sm text-[#56707A]">
+            <span className="font-black text-white">Tip: </span>
+            Matches are 10 fast questions — answer quickly for bonus points.
+          </p>
+        </div>
+
+        {/* Cancel button */}
+        <button
+          onClick={onCancel}
+          className="w-full py-3.5 rounded-2xl bg-[#1B2F36] border-b-4 border-[#0D1B21] text-base font-black text-[#56707A] uppercase tracking-wide hover:bg-[#FF4B4B] hover:border-[#E04242] hover:text-white active:translate-y-[2px] active:border-b-2 transition-all"
+        >
+          Cancel Matchmaking
+        </button>
       </div>
     </div>
   );

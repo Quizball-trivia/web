@@ -6,6 +6,7 @@ import type {
   LobbyState,
   MatchAnswerAckPayload,
   MatchFinalResultsPayload,
+  MatchRejoinAvailablePayload,
   MatchQuestionPayload,
   MatchRoundResultPayload,
   MatchStartPayload,
@@ -39,11 +40,26 @@ export interface MatchStatus {
   finalResults: MatchFinalResultsPayload | null;
 }
 
+export interface RejoinMatchStatus {
+  matchId: string;
+  mode: 'friendly' | 'ranked';
+  opponent: OpponentInfo;
+  graceMs: number;
+  createdAt: number;
+}
+
 interface RealtimeState {
   lobby: LobbyState | null;
   draft: DraftStatus | null;
   match: MatchStatus | null;
   selfUserId: string | null;
+  matchPaused: boolean;
+  pauseUntil: number | null;
+  rankedSearchDurationMs: number | null;
+  rankedSearchStartedAt: number | null;
+  rankedFoundOpponent: OpponentInfo | null;
+  rankedSearching: boolean;
+  rejoinMatch: RejoinMatchStatus | null;
   error: ErrorPayload | null;
   setSelfUserId: (userId: string | null) => void;
   setLobby: (lobby: LobbyState) => void;
@@ -56,6 +72,14 @@ interface RealtimeState {
   setOpponentAnswered: () => void;
   setRoundResult: (payload: MatchRoundResultPayload) => void;
   setFinalResults: (payload: MatchFinalResultsPayload) => void;
+  setMatchPaused: (payload: { graceMs: number }) => void;
+  clearMatchPaused: () => void;
+  setRankedSearchStarted: (payload: { durationMs: number }) => void;
+  setRankedMatchFound: (payload: { opponent: OpponentInfo }) => void;
+  setRankedQueueLeft: () => void;
+  clearRankedMatchmaking: () => void;
+  setRejoinAvailable: (payload: MatchRejoinAvailablePayload) => void;
+  clearRejoinAvailable: () => void;
   setError: (error: ErrorPayload) => void;
   clearError: () => void;
   reset: () => void;
@@ -66,6 +90,13 @@ const initialState = {
   draft: null,
   match: null,
   selfUserId: null,
+  matchPaused: false,
+  pauseUntil: null,
+  rankedSearchDurationMs: null,
+  rankedSearchStartedAt: null,
+  rankedFoundOpponent: null,
+  rankedSearching: false,
+  rejoinMatch: null,
   error: null,
 };
 
@@ -128,6 +159,12 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
     logger.info('Realtime store set match start', { matchId: payload.matchId, opponentId: payload.opponent.id });
     set({
       draft: null,
+      matchPaused: false,
+      pauseUntil: null,
+      rankedSearchDurationMs: null,
+      rankedSearchStartedAt: null,
+      rankedFoundOpponent: null,
+      rejoinMatch: null,
       match: {
         matchId: payload.matchId,
         opponent: payload.opponent,
@@ -146,6 +183,15 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
     logger.info('Realtime store set match question', { matchId: payload.matchId, qIndex: payload.qIndex });
     set((state) => {
       if (!state.match) return state;
+      // Guard: ignore stale/out-of-order question events
+      const currentQIndex = state.match.currentQuestion?.qIndex ?? -1;
+      if (payload.qIndex <= currentQIndex) {
+        logger.warn('Ignoring stale match:question event', {
+          received: payload.qIndex,
+          current: currentQIndex,
+        });
+        return state;
+      }
       return {
         ...state,
         match: {
@@ -241,6 +287,9 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
     logger.info('Realtime store set final results', { matchId: payload.matchId, winnerId: payload.winnerId });
     set((state) => ({
       ...state,
+      matchPaused: false,
+      pauseUntil: null,
+      rejoinMatch: null,
       match: state.match
         ? {
             ...state.match,
@@ -248,6 +297,74 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
           }
         : null,
     }));
+  },
+  setMatchPaused: ({ graceMs }) => {
+    logger.info('Realtime store set match paused', { graceMs });
+    set({
+      matchPaused: true,
+      pauseUntil: Date.now() + graceMs,
+    });
+  },
+  clearMatchPaused: () => {
+    logger.info('Realtime store clear match paused');
+    set({
+      matchPaused: false,
+      pauseUntil: null,
+    });
+  },
+  setRankedSearchStarted: ({ durationMs }) => {
+    logger.info('Realtime store set ranked search started', { durationMs });
+    set({
+      rankedSearchDurationMs: durationMs,
+      rankedSearchStartedAt: Date.now(),
+      rankedFoundOpponent: null,
+      rankedSearching: true,
+    });
+  },
+  setRankedMatchFound: ({ opponent }) => {
+    logger.info('Realtime store set ranked match found', { opponentId: opponent.id });
+    set({
+      rankedFoundOpponent: opponent,
+      rankedSearching: false,
+    });
+  },
+  setRankedQueueLeft: () => {
+    logger.info('Realtime store set ranked queue left');
+    set({
+      rankedSearchDurationMs: null,
+      rankedSearchStartedAt: null,
+      rankedFoundOpponent: null,
+      rankedSearching: false,
+    });
+  },
+  clearRankedMatchmaking: () => {
+    logger.info('Realtime store clear ranked matchmaking');
+    set({
+      rankedSearchDurationMs: null,
+      rankedSearchStartedAt: null,
+      rankedFoundOpponent: null,
+      rankedSearching: false,
+    });
+  },
+  setRejoinAvailable: (payload) => {
+    logger.info('Realtime store set rejoin available', {
+      matchId: payload.matchId,
+      mode: payload.mode,
+      graceMs: payload.graceMs,
+    });
+    set({
+      rejoinMatch: {
+        matchId: payload.matchId,
+        mode: payload.mode,
+        opponent: payload.opponent,
+        graceMs: payload.graceMs,
+        createdAt: Date.now(),
+      },
+    });
+  },
+  clearRejoinAvailable: () => {
+    logger.info('Realtime store clear rejoin available');
+    set({ rejoinMatch: null });
   },
   setError: (error) => {
     logger.warn('Realtime store set error', { code: error.code, message: error.message });
