@@ -7,6 +7,9 @@ const QUESTION_TIME_MS = 6000;
 
 export function useRealtimeGameLogic() {
   const match = useRealtimeMatchStore((state) => state.match);
+  const selfUserId = useRealtimeMatchStore((state) => state.selfUserId);
+  const matchPaused = useRealtimeMatchStore((state) => state.matchPaused);
+  const pauseUntil = useRealtimeMatchStore((state) => state.pauseUntil);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(QUESTION_TIME_MS / 1000);
 
@@ -20,6 +23,7 @@ export function useRealtimeGameLogic() {
 
   useEffect(() => {
     if (!currentQuestion) return;
+    if (matchPaused) return;
 
     const deadline = new Date(currentQuestion.deadlineAt).getTime();
     const interval = setInterval(() => {
@@ -28,7 +32,7 @@ export function useRealtimeGameLogic() {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [currentQuestion]);
+  }, [currentQuestion, matchPaused]);
 
   const answerAck = match?.answerAck && match.currentQuestion?.qIndex === match.answerAck.qIndex
     ? match.answerAck
@@ -40,6 +44,11 @@ export function useRealtimeGameLogic() {
 
   const showResult = Boolean(answerAck || roundResult);
   const isAnswered = selectedAnswer !== null || showResult;
+
+  const myRoundResult = roundResult && selfUserId ? roundResult.players[selfUserId] ?? null : null;
+  const opponentRoundResult = roundResult && selfUserId
+    ? Object.entries(roundResult.players).find(([userId]) => userId !== selfUserId)?.[1] ?? null
+    : null;
 
   const correctIndex = useMemo(() => {
     if (!match || !currentQuestion) return undefined;
@@ -54,6 +63,7 @@ export function useRealtimeGameLogic() {
   const submitAnswer = (index: number) => {
     if (!match || !currentQuestion) return;
     if (isAnswered) return;
+    if (matchPaused) return;
     if (timeRemaining <= 0) return;
     setSelectedAnswer(index);
 
@@ -83,8 +93,12 @@ export function useRealtimeGameLogic() {
       isAnswered,
       correctIndex,
       opponentAnswered,
+      myRoundResult,
+      opponentRoundResult,
       playerScore,
       opponentScore,
+      matchPaused,
+      pauseUntil,
     },
     actions: {
       submitAnswer,

@@ -5,24 +5,23 @@ import { useRouter } from "next/navigation";
 import { getSocket } from "@/lib/realtime/socket-client";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { toast } from "sonner";
-import { useEffect, useState } from "react";
-import { LobbyState } from "@/lib/realtime/socket.types";
 
 interface AlreadyInLobbyModalProps {
   currentLobbyCode: string | null;
-  currentLobbyId: string | null;
   isOpen?: boolean; // Controlled externally if needed
   onClose?: () => void;
 }
 
-export function AlreadyInLobbyModal({ currentLobbyCode, currentLobbyId, isOpen, onClose }: AlreadyInLobbyModalProps) {
+export function AlreadyInLobbyModal({
+  currentLobbyCode,
+  isOpen,
+  onClose,
+}: AlreadyInLobbyModalProps) {
   const router = useRouter();
   const error = useRealtimeMatchStore(state => state.error);
   const lobby = useRealtimeMatchStore(state => state.lobby);
   const clearError = useRealtimeMatchStore(state => state.clearError);
   const resetRealtime = useRealtimeMatchStore(state => state.reset);
-
-  const [show, setShow] = useState(false);
   const meta = (error?.meta ?? {}) as {
     lobbyId?: string;
     inviteCode?: string;
@@ -30,19 +29,12 @@ export function AlreadyInLobbyModal({ currentLobbyCode, currentLobbyId, isOpen, 
     isHost?: boolean;
     status?: string;
   };
-
-  // Auto-detect "ALREADY_IN_LOBBY" error from store
-  useEffect(() => {
-    if (error?.code === "ALREADY_IN_LOBBY") {
-      setShow(true);
-    }
-  }, [error]);
+  const shouldShow = Boolean(isOpen) || error?.code === "ALREADY_IN_LOBBY";
 
   const handleLeaveAndRetry = () => {
     getSocket().emit("lobby:leave");
     resetRealtime();
     clearError();
-    setShow(false);
     toast.info("Left previous lobby. Try joining again.");
     if (onClose) onClose();
   };
@@ -53,7 +45,6 @@ export function AlreadyInLobbyModal({ currentLobbyCode, currentLobbyId, isOpen, 
     
     if (code) {
       router.push(`/friend/room/${code}`);
-      setShow(false);
       clearError();
        if (onClose) onClose();
     } else {
@@ -63,9 +54,8 @@ export function AlreadyInLobbyModal({ currentLobbyCode, currentLobbyId, isOpen, 
   };
 
   return (
-    <Dialog open={show || (!!isOpen)} onOpenChange={(open) => {
+    <Dialog open={shouldShow} onOpenChange={(open) => {
         if (!open) {
-            setShow(false);
             clearError();
             if (onClose) onClose();
         }
@@ -110,7 +100,6 @@ export function AlreadyInLobbyModal({ currentLobbyCode, currentLobbyId, isOpen, 
             <button 
                 className="text-xs text-muted-foreground hover:text-foreground mt-2"
                 onClick={() => {
-                    setShow(false);
                     clearError();
                     if (onClose) onClose();
                 }}

@@ -18,8 +18,6 @@ interface TournamentResultsScreenProps {
   correctAnswers?: number;
   /** Total number of questions in the match */
   totalQuestions?: number;
-  /** Maximum possible score (used for accuracy calculation) */
-  maxScore?: number;
   /** Total time in seconds the player spent answering */
   totalTimeSeconds?: number;
   /** Number of questions the player answered (for average speed) */
@@ -51,7 +49,6 @@ export function TournamentResultsScreen({
   onExit,
   correctAnswers = 0,
   totalQuestions = 10,
-  maxScore = 10000,
   totalTimeSeconds = 0,
   answeredCount = totalQuestions,
 }: TournamentResultsScreenProps) {

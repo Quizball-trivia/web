@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+import { X } from 'lucide-react';
 
 interface MatchScoreHUDProps {
   playerScore: number;
@@ -10,11 +10,11 @@ interface MatchScoreHUDProps {
   playerName: string;
   opponentName: string;
   timeRemaining: number;
-  maxTime: number;
   roundCurrent: number;
   roundTotal: number;
   playerAnswered: boolean;
   opponentAnswered: boolean;
+  onQuit?: () => void;
 }
 
 export function MatchScoreHUD({
@@ -25,117 +25,106 @@ export function MatchScoreHUD({
   playerAvatar,
   opponentAvatar,
   timeRemaining,
-  maxTime,
   roundCurrent,
   roundTotal,
   playerAnswered,
   opponentAnswered,
+  onQuit,
 }: MatchScoreHUDProps) {
-  const timerPercentage = (timeRemaining / maxTime) * 100;
   const isUrgent = timeRemaining <= 3;
+  const progressPercent = (roundCurrent / roundTotal) * 100;
+  const leadDiff = playerScore - opponentScore;
+  const leadText =
+    leadDiff === 0 ? 'Tied' : leadDiff > 0 ? `+${leadDiff} lead` : `+${Math.abs(leadDiff)} lead`;
+  const leadClass =
+    leadDiff === 0 ? 'text-white/45' : leadDiff > 0 ? 'text-emerald-400' : 'text-rose-400';
 
   return (
-    <div className="w-full max-w-4xl mx-auto mb-6">
-      <div className="flex items-center justify-between gap-4">
-        
-        {/* Player Side */}
-        <div className="flex items-center gap-3 flex-1 justify-end">
-          <div className="text-right hidden sm:block">
-             <div className="font-bold text-sm tracking-tight">{playerName}</div>
-             <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold flex items-center justify-end gap-1">
-               {playerAnswered && <span className="text-primary animate-pulse">● Answered</span>}
-             </div>
+    <div className="w-full max-w-4xl mx-auto mb-5 font-fun space-y-3">
+      {/* Progress bar row */}
+      <div className="flex items-center gap-3">
+        {onQuit && (
+          <button
+            onClick={onQuit}
+            className="shrink-0 p-1.5 rounded-full text-white/40 hover:text-white/70 hover:bg-white/5 transition-colors"
+          >
+            <X className="size-5" />
+          </button>
+        )}
+
+        <div className="flex-1 relative h-5 bg-white/10 rounded-full overflow-hidden">
+          <div
+            className="absolute inset-y-0 left-0 rounded-full transition-all duration-500 ease-out"
+            style={{
+              width: `${progressPercent}%`,
+              background: 'linear-gradient(180deg, #4ade80 0%, #22c55e 100%)',
+            }}
+          >
+            {/* Shine overlay */}
+            <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/30 to-transparent h-1/2" />
           </div>
+          <span className="absolute inset-0 flex items-center justify-center text-[11px] font-extrabold text-white tracking-wide">
+            {roundCurrent} / {roundTotal}
+          </span>
+        </div>
+      </div>
+
+      {/* Player strip */}
+      <div className="flex items-center justify-between gap-3">
+        {/* Player side */}
+        <div className="flex items-center gap-3 flex-1 min-w-0 rounded-2xl bg-[#172333]/85 border border-white/10 px-3 py-2.5">
           <Avatar className={cn(
-             "border-2 size-12 shadow-lg transition-all duration-300",
-             playerAnswered ? "border-primary ring-2 ring-primary/30" : "border-border"
+            'size-11 border-2 transition-all duration-300 shrink-0',
+            playerAnswered ? 'border-emerald-400 ring-2 ring-emerald-400/30' : 'border-white/20'
           )}>
             <AvatarImage src={playerAvatar} />
-            <AvatarFallback>{playerName.slice(0, 2).toUpperCase()}</AvatarFallback>
+            <AvatarFallback className="text-xs font-bold bg-white/10">
+              {playerName.slice(0, 2).toUpperCase()}
+            </AvatarFallback>
           </Avatar>
-        </div>
-
-        {/* Center Scoreboard */}
-        <div className="relative flex flex-col items-center shrink-0 w-32">
-           
-           {/* Round Indicator */}
-           <div className="absolute -top-6 text-[10px] font-bold text-muted-foreground bg-background/80 px-2 py-0.5 rounded-full backdrop-blur-sm border">
-              ROUND {roundCurrent} / {roundTotal}
-           </div>
-
-           {/* Score Box */}
-           <div className="relative z-10 flex items-center justify-center gap-4 bg-black/80 backdrop-blur-md rounded-xl border border-white/10 px-6 py-2 shadow-2xl">
-              <KeyframeScore score={playerScore} side="left" />
-              <div className="h-6 w-px bg-white/20" />
-              <KeyframeScore score={opponentScore} side="right" />
-           </div>
-
-           {/* Countdown Ring (Behind/Around) */}
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 size-[4.5rem]">
-               <svg className="size-full -rotate-90">
-                  <circle
-                     className="text-muted/20"
-                     strokeWidth="4"
-                     stroke="currentColor"
-                     fill="transparent"
-                     r="32"
-                     cx="36"
-                     cy="36"
-                  />
-                  <circle
-                     className={cn("transition-all duration-100 ease-linear", isUrgent ? "text-red-500" : "text-primary")}
-                     strokeWidth="4"
-                     strokeDasharray={201}
-                     strokeDashoffset={201 - (201 * timerPercentage) / 100}
-                     strokeLinecap="round"
-                     stroke="currentColor"
-                     fill="transparent"
-                     r="32"
-                     cx="36"
-                     cy="36"
-                  />
-               </svg>
-           </div>
-        </div>
-
-        {/* Opponent Side */}
-        <div className="flex items-center gap-3 flex-1 justify-start">
-          <Avatar className={cn(
-             "border-2 size-12 shadow-lg transition-all duration-300",
-             opponentAnswered ? "border-primary ring-2 ring-primary/30" : "border-border"
-          )}>
-            <AvatarImage src={opponentAvatar} />
-            <AvatarFallback>{opponentName.slice(0, 2).toUpperCase()}</AvatarFallback>
-          </Avatar>
-          <div className="text-left hidden sm:block">
-             <div className="font-bold text-sm tracking-tight">{opponentName}</div>
-             <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold flex items-center gap-1">
-               {opponentAnswered && <span className="text-primary animate-pulse">● Answered</span>}
-             </div>
+          <div className="min-w-0">
+            <div className="text-xs font-bold text-white/85 truncate max-w-[120px]">{playerName}</div>
+            <div className="text-3xl leading-7 font-black text-emerald-300 tabular-nums">
+              {playerScore}
+            </div>
           </div>
         </div>
 
+        {/* Center timer */}
+        <div className="shrink-0 flex flex-col items-center justify-center min-w-[124px]">
+          <div
+            className={cn(
+              'font-fun text-4xl font-black tabular-nums transition-colors duration-200',
+              isUrgent ? 'text-red-500 animate-pulse' : 'text-white'
+            )}
+          >
+            {timeRemaining}
+          </div>
+          <div className="text-[10px] font-black tracking-[0.18em] text-white/35 -mt-0.5 mb-0.5">VS</div>
+          <div className={cn('text-xs font-bold', leadClass)}>
+            {leadText}
+          </div>
+        </div>
+
+        {/* Opponent side */}
+        <div className="flex items-center gap-3 flex-1 min-w-0 justify-end rounded-2xl bg-[#172333]/85 border border-white/10 px-3 py-2.5">
+          <div className="min-w-0 text-right">
+            <div className="text-xs font-bold text-white/85 truncate max-w-[120px] ml-auto">{opponentName}</div>
+            <div className="text-3xl leading-7 font-black text-emerald-300 tabular-nums">
+              {opponentScore}
+            </div>
+          </div>
+          <Avatar className={cn(
+            'size-11 border-2 transition-all duration-300 shrink-0',
+            opponentAnswered ? 'border-emerald-400 ring-2 ring-emerald-400/30' : 'border-white/20'
+          )}>
+            <AvatarImage src={opponentAvatar} />
+            <AvatarFallback className="text-xs font-bold bg-white/10">
+              {opponentName.slice(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+        </div>
       </div>
     </div>
-  );
-}
-
-function KeyframeScore({ score, side }: { score: number; side: 'left' | 'right' }) {
-  return (
-    <AnimatePresence mode="popLayout" custom={side}>
-      <motion.span
-        key={score}
-        initial={{ y: side === 'left' ? 20 : -20, opacity: 0, scale: 0.5 }}
-        animate={{ y: 0, opacity: 1, scale: 1 }}
-        exit={{ y: side === 'left' ? -20 : 20, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
-        className={cn(
-          "text-3xl font-black tabular-nums tracking-tighter text-white",
-          side === 'left' ? "text-left" : "text-right"
-        )}
-      >
-        {score}
-      </motion.span>
-    </AnimatePresence>
   );
 }

@@ -143,6 +143,16 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     logger.info("Socket emit lobby:update_settings", nextSettings);
   };
 
+  const handleToggleVisibility = () => {
+    if (!lobby) return;
+    const nextPublic = !lobby.isPublic;
+    getSocket().emit("lobby:update_settings", {
+      gameMode: lobby.settings.gameMode,
+      isPublic: nextPublic,
+    });
+    logger.info("Socket emit lobby:update_settings (visibility)", { isPublic: nextPublic });
+  };
+
   const handleStartMatch = () => {
     getSocket().emit("lobby:start");
     logger.info("Socket emit lobby:start");
@@ -165,6 +175,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
       copyCode,
       handleReadyToggle,
       handleUpdateSettings,
+      handleToggleVisibility,
       handleStartMatch,
       handleLeaveLobby,
     },

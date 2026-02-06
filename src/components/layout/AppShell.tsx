@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
+import { useGameSessionStore } from "@/stores/gameSession.store";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
@@ -71,19 +72,23 @@ export function AppShell({ children }: AppShellProps) {
   const logout = useAuthStore((state) => state.logout);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const lobby = useRealtimeMatchStore((state) => state.lobby);
+  const rejoinMatch = useRealtimeMatchStore((state) => state.rejoinMatch);
+  const clearRejoinAvailable = useRealtimeMatchStore((state) => state.clearRejoinAvailable);
   const resetRealtime = useRealtimeMatchStore((state) => state.reset);
-  const [socketConnected, setSocketConnected] = useState(true);
+  const startSession = useGameSessionStore((state) => state.startSession);
+  const setGameStage = useGameSessionStore((state) => state.setStage);
+  const [socketConnected, setSocketConnected] = useState(() => getSocket().connected);
 
   const currentPath = pathname ?? "/";
   const showHeader = HEADER_PATHS.includes(currentPath);
   const showNav = !HIDE_NAV_PATHS.some((path) => currentPath.startsWith(path));
   const inLobbyRoom = currentPath.startsWith("/friend/room");
   const showLobbyBanner = !!lobby && lobby.status === "waiting" && !inLobbyRoom;
+  const showRejoinBanner = !!rejoinMatch && !currentPath.startsWith("/game");
   const lobbyCode = lobby?.inviteCode ?? "";
 
   useEffect(() => {
     const socket = getSocket();
-    setSocketConnected(socket.connected);
     const handleConnect = () => setSocketConnected(true);
     const handleDisconnect = () => setSocketConnected(false);
     socket.on("connect", handleConnect);
@@ -112,6 +117,27 @@ export function AppShell({ children }: AppShellProps) {
   const handleLeaveLobby = () => {
     getSocket().emit("lobby:leave");
     resetRealtime();
+  };
+
+  const handleRejoinMatch = () => {
+    if (!rejoinMatch) return;
+
+    startSession({
+      mode: rejoinMatch.mode === "ranked" ? "ranked" : "quizball",
+      matchType: rejoinMatch.mode === "ranked" ? "ranked" : "friendly",
+      questionCount: 10,
+      opponentId: rejoinMatch.opponent.id,
+      opponentUsername: rejoinMatch.opponent.username,
+      opponentAvatar: rejoinMatch.opponent.avatarUrl ?? undefined,
+    });
+    // Avoid re-entering matchmaking queue on rejoin.
+    setGameStage("playing");
+    getSocket().emit("match:rejoin", { matchId: rejoinMatch.matchId });
+    router.push("/game");
+  };
+
+  const handleDismissRejoin = () => {
+    clearRejoinAvailable();
   };
 
   return (
@@ -281,6 +307,45 @@ export function AppShell({ children }: AppShellProps) {
 
           {/* Content Area */}
           <div className="flex-1 overflow-y-auto bg-background/50 scrollbar-hide">
+            {showRejoinBanner && (
+              <div className="px-6 pt-4">
+                <div className="rounded-2xl border border-blue-500/35 bg-gradient-to-r from-blue-500/15 to-cyan-400/15 px-5 py-4 shadow-[0_8px_30px_rgba(59,130,246,0.2)]">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="size-10 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center">
+                        <Gamepad2 className="size-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-blue-100">
+                          Match still active against{" "}
+                          <span className="text-foreground">{rejoinMatch?.opponent.username ?? "Opponent"}</span>
+                        </p>
+                        <p className="text-xs text-blue-200/80">
+                          Rejoin now to continue the game
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        className="h-9 bg-blue-500 text-blue-950 hover:bg-blue-400"
+                        onClick={handleRejoinMatch}
+                      >
+                        Rejoin Match <ArrowRight className="ml-2 size-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-9 border-blue-500/30 text-blue-100 hover:bg-blue-500/10"
+                        onClick={handleDismissRejoin}
+                      >
+                        Dismiss <X className="ml-2 size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             {showLobbyBanner && (
               <div className="px-6 pt-4">
                 <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/15 to-lime-400/15 px-5 py-4 shadow-[0_8px_30px_rgba(16,185,129,0.15)]">
@@ -399,6 +464,45 @@ export function AppShell({ children }: AppShellProps) {
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto pb-20">
+          {showRejoinBanner && (
+            <div className="px-4 pt-4">
+              <div className="rounded-2xl border border-blue-500/35 bg-gradient-to-r from-blue-500/15 to-cyan-400/15 px-4 py-3 shadow-[0_8px_30px_rgba(59,130,246,0.2)]">
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="size-9 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center">
+                      <Gamepad2 className="size-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-blue-100">
+                        Match active vs{" "}
+                        <span className="text-foreground">{rejoinMatch?.opponent.username ?? "Opponent"}</span>
+                      </p>
+                      <p className="text-xs text-blue-200/80">
+                        Rejoin to continue
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      className="flex-1 h-10 bg-blue-500 text-blue-950 hover:bg-blue-400"
+                      onClick={handleRejoinMatch}
+                    >
+                      Rejoin
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 h-10 border-blue-500/30 text-blue-100 hover:bg-blue-500/10"
+                      onClick={handleDismissRejoin}
+                    >
+                      Dismiss
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           {showLobbyBanner && (
             <div className="px-4 pt-4">
               <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/15 to-lime-400/15 px-4 py-3 shadow-[0_8px_30px_rgba(16,185,129,0.15)]">

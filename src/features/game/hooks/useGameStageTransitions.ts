@@ -42,18 +42,16 @@ export function useGameStageTransitions({
 
   useEffect(() => {
     if (!isMultiplayer || config?.matchType !== "ranked") return;
-    if (stage === "matchmaking" && !rankedRequestRef.current) {
+    if (stage !== "matchmaking") {
+      rankedRequestRef.current = false;
+      return;
+    }
+    if (!rankedRequestRef.current) {
       rankedRequestRef.current = true;
-      socket.emit("lobby:create", { mode: "ranked" });
-      logger.info("Socket emit lobby:create", { mode: "ranked" });
+      socket.emit("ranked:queue_join");
+      logger.info("Socket emit ranked:queue_join");
     }
   }, [config?.matchType, isMultiplayer, socket, stage]);
-
-  useEffect(() => {
-    if (stage === "idle") {
-      rankedRequestRef.current = false;
-    }
-  }, [stage]);
 
   useEffect(() => {
     if (!isMultiplayer) return;

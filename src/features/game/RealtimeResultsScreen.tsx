@@ -1,6 +1,16 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Trophy } from 'lucide-react';
+"use client";
+
+import { useEffect, useState } from 'react';
+
+import { motion } from 'motion/react';
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
+import { getRankInfo, getDivisionEmoji, getDivisionColor } from '@/utils/rankSystem';
+import { StatCard, WinIllustration, DrawIllustration, LossIllustration } from './components/ResultsShared';
+
+// Mock RP values — will be replaced by real data later
+const MOCK_OLD_RP = 245;
 
 interface RealtimeResultsScreenProps {
   playerUsername: string;
@@ -24,7 +34,6 @@ export function RealtimeResultsScreen({
   playerScore,
   opponentScore,
   playerCorrect,
-  opponentCorrect,
   totalQuestions,
   onPlayAgain,
   onMainMenu,
@@ -32,62 +41,180 @@ export function RealtimeResultsScreen({
   const playerWon = playerScore > opponentScore;
   const isDraw = playerScore === opponentScore;
 
+  const rpChange = playerWon ? 15 : -15;
+  const oldRP = MOCK_OLD_RP;
+  const newRP = playerWon ? oldRP + 15 : oldRP - 15;
+  const accuracy = totalQuestions === 0 ? 0 : Math.round((playerCorrect / totalQuestions) * 100);
+  const coinsEarned = playerWon ? 25 : 5;
+
+  const rankInfo = getRankInfo(newRP);
+  const divisionEmoji = getDivisionEmoji(rankInfo.division);
+  const divisionColor = getDivisionColor(rankInfo.division);
+
+  const [animatedRP, setAnimatedRP] = useState(0);
+
+  useEffect(() => {
+    const duration = 1200;
+    const steps = 30;
+    const increment = rpChange / steps;
+    let currentStep = 0;
+
+    const timer = setInterval(() => {
+      currentStep++;
+      if (currentStep >= steps) {
+        setAnimatedRP(rpChange);
+        clearInterval(timer);
+      } else {
+        setAnimatedRP(Math.round(increment * currentStep));
+      }
+    }, duration / steps);
+
+    return () => clearInterval(timer);
+  }, [rpChange]);
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="max-w-md w-full space-y-4">
-        <Card className={`border-2 ${playerWon ? 'border-green-500/40' : isDraw ? 'border-yellow-500/40' : 'border-red-500/40'}`}>
-          <CardContent className="pt-6 pb-6 text-center">
-            <div className="text-5xl mb-3">{isDraw ? '🤝' : playerWon ? '🏆' : '😔'}</div>
-            <h2 className="mb-1">{isDraw ? "It's a Draw" : playerWon ? 'Victory!' : 'Defeat'}</h2>
-            <p className="text-sm text-muted-foreground">Final Score</p>
-
-            <div className="mt-5 space-y-3">
-              <div className={`bg-secondary rounded-lg p-3 ${playerWon ? 'ring-2 ring-green-500/40' : ''}`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">{playerAvatar}</span>
-                    <div className="text-left">
-                      <div className="text-sm flex items-center gap-2">
-                        {playerUsername}
-                        {playerWon && <Trophy className="size-4 text-yellow-500" />}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {playerCorrect} / {totalQuestions} correct
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-2xl font-bold">{playerScore}</div>
-                </div>
-              </div>
-
-              <div className={`bg-secondary rounded-lg p-3 ${!playerWon && !isDraw ? 'ring-2 ring-red-500/40' : ''}`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">{opponentAvatar}</span>
-                    <div className="text-left">
-                      <div className="text-sm flex items-center gap-2">
-                        {opponentUsername}
-                        {!playerWon && !isDraw && <Trophy className="size-4 text-yellow-500" />}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {opponentCorrect} / {totalQuestions} correct
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-2xl font-bold">{opponentScore}</div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-2 gap-3">
-          <Button variant="outline" onClick={onMainMenu}>
-            Main Menu
-          </Button>
-          <Button onClick={onPlayAgain}>Play Again</Button>
+    <div className="min-h-screen bg-[#0f1420] flex items-center justify-center p-4">
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="max-w-sm w-full space-y-4 font-fun"
+      >
+        {/* Result header with illustration */}
+        <div className="text-center py-6">
+          {/* Game-themed SVG illustration */}
+          <div className="flex justify-center mb-4">
+            {playerWon ? (
+              <WinIllustration />
+            ) : isDraw ? (
+              <DrawIllustration />
+            ) : (
+              <LossIllustration />
+            )}
+          </div>
+          <h1 className={cn(
+            'text-3xl font-black',
+            playerWon ? 'text-emerald-400' : isDraw ? 'text-yellow-400' : 'text-red-400'
+          )}>
+            {isDraw ? "It's a Draw!" : playerWon ? 'Victory!' : 'Defeat'}
+          </h1>
         </div>
-      </div>
+
+        {/* Player comparison strip */}
+        <div className="bg-[#1a1f2e] rounded-3xl border-b-4 border-b-white/10 p-4 space-y-3">
+          {/* Player */}
+          <div className={cn(
+            'flex items-center gap-3 p-3 rounded-2xl',
+            playerWon ? 'bg-emerald-500/10' : 'bg-white/[0.03]'
+          )}>
+            <Avatar className={cn(
+              'size-11 border-2 shrink-0',
+              playerWon ? 'border-emerald-400 ring-2 ring-emerald-400/30' : 'border-white/20'
+            )}>
+              <AvatarImage src={playerAvatar} />
+              <AvatarFallback className="text-xs font-bold bg-white/10">
+                {playerUsername.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-bold text-white truncate">{playerUsername}</div>
+              <div className="text-xs text-white/40 font-semibold">You</div>
+            </div>
+            <div className="text-2xl font-black text-white tabular-nums">{playerScore.toLocaleString()}</div>
+          </div>
+
+          {/* Opponent */}
+          <div className={cn(
+            'flex items-center gap-3 p-3 rounded-2xl',
+            !playerWon && !isDraw ? 'bg-red-500/10' : 'bg-white/[0.03]'
+          )}>
+            <Avatar className={cn(
+              'size-11 border-2 shrink-0',
+              !playerWon && !isDraw ? 'border-red-400 ring-2 ring-red-400/30' : 'border-white/20'
+            )}>
+              <AvatarImage src={opponentAvatar} />
+              <AvatarFallback className="text-xs font-bold bg-white/10">
+                {opponentUsername.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-bold text-white truncate">{opponentUsername}</div>
+              <div className="text-xs text-white/40 font-semibold">Opponent</div>
+            </div>
+            <div className="text-2xl font-black text-white tabular-nums">{opponentScore.toLocaleString()}</div>
+          </div>
+        </div>
+
+        {/* RP Progression */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-[#1a1f2e] rounded-3xl border-b-4 border-b-white/10 p-4"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{divisionEmoji}</span>
+              <span className={cn('text-sm font-bold', divisionColor.text)}>{rankInfo.division}</span>
+            </div>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.6, type: 'spring' }}
+              className={cn(
+                'text-sm font-black',
+                rpChange > 0 ? 'text-emerald-400' : 'text-red-400'
+              )}
+            >
+              {rpChange > 0 ? '+' : ''}{animatedRP} RP
+            </motion.div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="relative h-4 bg-white/10 rounded-full overflow-hidden mb-2">
+            <motion.div
+              initial={{ width: `${getRankInfo(oldRP).progress}%` }}
+              animate={{ width: `${rankInfo.progress}%` }}
+              transition={{ duration: 1.2, ease: 'easeInOut', delay: 0.5 }}
+              className="absolute inset-y-0 left-0 rounded-full"
+              style={{
+                background: `linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.7))`,
+              }}
+            >
+              <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/25 to-transparent h-1/2" />
+            </motion.div>
+          </div>
+
+          <div className="flex items-center justify-between text-xs text-white/40 font-semibold">
+            <span>{newRP} RP</span>
+            {rankInfo.pointsToNext !== null && (
+              <span>{rankInfo.pointsToNext} pts to next division</span>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Stats row */}
+        <div className="grid grid-cols-3 gap-2">
+          <StatCard label="Accuracy" value={`${accuracy}%`} color="text-blue-400" />
+          <StatCard label="Correct" value={`${playerCorrect}/${totalQuestions}`} color="text-yellow-400" />
+          <StatCard label="Coins" value={`+${coinsEarned}`} color="text-emerald-400" />
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex flex-col gap-2 pt-2">
+          <button
+            onClick={onPlayAgain}
+            className="w-full py-3.5 rounded-2xl bg-emerald-500 border-b-4 border-b-emerald-600 text-white font-extrabold text-sm hover:bg-emerald-400 active:border-b-2 active:translate-y-[2px] transition-all"
+          >
+            Play Again
+          </button>
+          <button
+            onClick={onMainMenu}
+            className="w-full py-3.5 rounded-2xl bg-white/[0.04] border-2 border-white/10 border-b-4 border-b-white/15 text-white/70 font-extrabold text-sm hover:bg-white/[0.07] active:border-b-2 active:translate-y-[2px] transition-all"
+          >
+            Main Menu
+          </button>
+        </div>
+      </motion.div>
     </div>
   );
 }

@@ -55,6 +55,9 @@ export function GameStageRouter() {
   const realtimeLobby = useRealtimeMatchStore((state) => state.lobby);
   const realtimeDraft = useRealtimeMatchStore((state) => state.draft);
   const realtimeMatch = useRealtimeMatchStore((state) => state.match);
+  const rankedSearchDurationMs = useRealtimeMatchStore((state) => state.rankedSearchDurationMs);
+  const rankedSearchStartedAt = useRealtimeMatchStore((state) => state.rankedSearchStartedAt);
+  const rankedFoundOpponent = useRealtimeMatchStore((state) => state.rankedFoundOpponent);
   const resetRealtime = useRealtimeMatchStore((state) => state.reset);
 
   const defaultOpponent = useMemo<OpponentInfo>(
@@ -137,9 +140,17 @@ export function GameStageRouter() {
       return (
         <MatchmakingScreen
           matchType={matchType}
+          rankedSearchDurationMs={rankedSearchDurationMs}
+          rankedSearchStartedAt={rankedSearchStartedAt}
+          rankedFoundOpponent={rankedFoundOpponent}
           onCancel={() => {
-            getSocket().emit("lobby:leave");
-            logger.info("Socket emit lobby:leave");
+            if (matchType === "ranked") {
+              getSocket().emit("ranked:queue_leave");
+              logger.info("Socket emit ranked:queue_leave");
+            } else {
+              getSocket().emit("lobby:leave");
+              logger.info("Socket emit lobby:leave");
+            }
             exitToPlay();
           }}
         />
@@ -158,8 +169,16 @@ export function GameStageRouter() {
           opponentAvatar={opponent.avatar}
           opponentUsername={opponent.username}
           onQuit={() => {
-            getSocket().emit("lobby:leave");
-            logger.info("Socket emit lobby:leave");
+            if (realtimeMatch?.matchId) {
+              getSocket().emit("match:leave", {
+                matchId: realtimeMatch.matchId,
+              });
+              logger.info("Socket emit match:leave", {
+                matchId: realtimeMatch.matchId,
+              });
+            } else {
+              logger.info("Socket emit match:leave skipped (missing matchId)");
+            }
             exitToPlay();
           }}
         />
@@ -185,7 +204,12 @@ export function GameStageRouter() {
           opponentCorrect={opponentStats?.correctAnswers ?? 0}
           totalQuestions={10}
           onPlayAgain={() => {
-            exitToPlay();
+            if (matchType === "ranked") {
+              resetRealtime();
+              setStage("matchmaking");
+              return;
+            }
+            logger.info("Play Again clicked for friendly: rematch flow not implemented yet");
           }}
           onMainMenu={() => {
             exitToPlay();

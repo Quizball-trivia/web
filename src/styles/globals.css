@@ -195,6 +195,18 @@
   .stat-card:hover {
     transform: scale(1.05);
   }
+
+  .font-fun {
+    font-family: 'Nunito', sans-serif;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
 }
 
 @layer utilities {

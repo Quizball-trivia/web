@@ -7,14 +7,12 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { getSocket } from "@/lib/realtime/socket-client";
-import { useRouter } from "next/navigation";
 
 interface CreateJoinPanelProps {
   onActionTriggered?: () => void;
 }
 
 export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
-  const router = useRouter();
   const [inviteCode, setInviteCode] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const [isCreating, setIsCreating] = useState(false);

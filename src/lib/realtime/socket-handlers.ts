@@ -7,8 +7,13 @@ import type {
   LobbyState,
   MatchAnswerAckPayload,
   MatchFinalResultsPayload,
+  MatchOpponentDisconnectedPayload,
+  RankedMatchFoundPayload,
+  RankedSearchStartedPayload,
   MatchQuestionPayload,
   MatchRoundResultPayload,
+  MatchRejoinAvailablePayload,
+  MatchResumePayload,
   MatchStartPayload,
 } from './socket.types';
 
@@ -27,6 +32,12 @@ export function registerSocketHandlers(): void {
   socket.off('match:answer_ack');
   socket.off('match:round_result');
   socket.off('match:final_results');
+  socket.off('match:opponent_disconnected');
+  socket.off('match:resume');
+  socket.off('match:rejoin_available');
+  socket.off('ranked:search_started');
+  socket.off('ranked:match_found');
+  socket.off('ranked:queue_left');
 
   socket.on('lobby:state', (data: LobbyState) => {
     logger.info('Socket event lobby:state', {
@@ -96,5 +107,44 @@ export function registerSocketHandlers(): void {
   socket.on('match:final_results', (data: MatchFinalResultsPayload) => {
     logger.info('Socket event match:final_results', { matchId: data.matchId, winnerId: data.winnerId });
     store.setFinalResults(data);
+  });
+
+  socket.on('match:opponent_disconnected', (data: MatchOpponentDisconnectedPayload) => {
+    logger.info('Socket event match:opponent_disconnected', {
+      matchId: data.matchId,
+      opponentId: data.opponentId,
+      graceMs: data.graceMs,
+    });
+    store.setMatchPaused({ graceMs: data.graceMs });
+  });
+
+  socket.on('match:resume', (data: MatchResumePayload) => {
+    logger.info('Socket event match:resume', { matchId: data.matchId, nextQIndex: data.nextQIndex });
+    store.clearMatchPaused();
+  });
+
+  socket.on('match:rejoin_available', (data: MatchRejoinAvailablePayload) => {
+    logger.info('Socket event match:rejoin_available', {
+      matchId: data.matchId,
+      mode: data.mode,
+      opponentId: data.opponent.id,
+      graceMs: data.graceMs,
+    });
+    store.setRejoinAvailable(data);
+  });
+
+  socket.on('ranked:search_started', (data: RankedSearchStartedPayload) => {
+    logger.info('Socket event ranked:search_started', { durationMs: data.durationMs });
+    store.setRankedSearchStarted({ durationMs: data.durationMs });
+  });
+
+  socket.on('ranked:match_found', (data: RankedMatchFoundPayload) => {
+    logger.info('Socket event ranked:match_found', { lobbyId: data.lobbyId, opponentId: data.opponent.id });
+    store.setRankedMatchFound({ opponent: data.opponent });
+  });
+
+  socket.on('ranked:queue_left', () => {
+    logger.info('Socket event ranked:queue_left');
+    store.setRankedQueueLeft();
   });
 }

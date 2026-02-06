@@ -1,10 +1,20 @@
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
+
+const ANSWER_COLORS = [
+  { bg: 'bg-emerald-500', borderSide: 'border-emerald-500', borderBottom: 'border-b-emerald-600', light: 'bg-emerald-500/15', text: 'text-emerald-400' },
+  { bg: 'bg-blue-500', borderSide: 'border-blue-500', borderBottom: 'border-b-blue-600', light: 'bg-blue-500/15', text: 'text-blue-400' },
+  { bg: 'bg-yellow-500', borderSide: 'border-yellow-500', borderBottom: 'border-b-yellow-600', light: 'bg-yellow-500/15', text: 'text-yellow-400' },
+  { bg: 'bg-purple-500', borderSide: 'border-purple-500', borderBottom: 'border-b-purple-600', light: 'bg-purple-500/15', text: 'text-purple-400' },
+] as const;
 
 interface AnswerCardProps {
   label: string;
   text: string;
+  index?: number;
   isSelected?: boolean;
+  opponentPicked?: boolean;
+  opponentPickCorrect?: boolean;
   state?: 'default' | 'correct' | 'wrong' | 'disabled';
   onClick?: () => void;
   disabled?: boolean;
@@ -13,74 +23,96 @@ interface AnswerCardProps {
 export function AnswerCard({
   label,
   text,
+  index = 0,
   isSelected,
+  opponentPicked = false,
+  opponentPickCorrect,
   state = 'default',
   onClick,
-  disabled
+  disabled,
 }: AnswerCardProps) {
-  
-  const variants = {
-    default: "bg-card hover:border-primary/50 hover:bg-muted/50 border-border",
-    correct: "bg-green-500/20 border-green-500 text-green-500 shadow-[0_0_20px_-5px_rgba(34,197,94,0.4)]",
-    wrong: "bg-red-500/20 border-red-500 text-red-500 opacity-80",
-    disabled: "bg-muted/30 border-transparent opacity-40 cursor-not-allowed"
+  const color = ANSWER_COLORS[index % ANSWER_COLORS.length];
+
+  const getButtonClasses = () => {
+    if (state === 'correct') {
+      return 'bg-emerald-500/15 border-2 border-emerald-500 border-b-4 border-b-emerald-600';
+    }
+    if (state === 'wrong') {
+      return 'bg-red-500/15 border-2 border-red-500 border-b-4 border-b-red-600 animate-[shake_0.4s_ease-in-out]';
+    }
+    if (state === 'disabled') {
+      return 'bg-white/[0.02] border-2 border-white/5 border-b-4 border-b-white/5 opacity-40';
+    }
+    if (isSelected) {
+      return cn('border-2 border-b-4', color.light, color.borderSide, color.borderBottom);
+    }
+    return 'bg-white/[0.04] border-2 border-white/10 border-b-4 border-b-white/15 hover:bg-white/[0.07] active:border-b-2 active:translate-y-[2px]';
   };
 
-  const labelVariants = {
-    default: "bg-muted text-muted-foreground",
-    correct: "bg-green-500 text-white",
-    wrong: "bg-red-500 text-white",
-    disabled: "bg-muted text-muted-foreground"
+  const getLabelClasses = () => {
+    if (state === 'correct') return 'bg-emerald-500 text-white';
+    if (state === 'wrong') return 'bg-red-500 text-white';
+    if (state === 'disabled') return 'bg-white/10 text-white/30';
+    if (isSelected) return cn(color.bg, 'text-white');
+    return cn(color.light, color.text);
   };
-
-  // If selected but not yet resolved, show active state
-  const activeClass = isSelected && state === 'default' 
-     ? "border-primary bg-primary/10 ring-1 ring-primary" 
-     : variants[state];
 
   return (
     <motion.button
-      whileHover={!disabled && state === 'default' ? { scale: 1.02 } : {}}
-      whileTap={!disabled && state === 'default' ? { scale: 0.98 } : {}}
+      whileTap={!disabled && state === 'default' ? { scale: 0.97 } : {}}
       className={cn(
-        "relative w-full text-left rounded-xl border-2 p-1 transition-all duration-200 group outline-none focus-visible:ring-2 focus-visible:ring-primary",
-        activeClass
+        'relative w-full text-left rounded-2xl p-3 transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary font-fun',
+        getButtonClasses(),
+        disabled && 'cursor-not-allowed'
       )}
       onClick={onClick}
       disabled={disabled}
     >
-      <div className={cn(
-          "flex items-center gap-4 p-3 rounded-lg bg-background/40 backdrop-blur-sm h-full w-full",
-          state !== 'default' && "bg-transparent"
-      )}>
-         {/* Label (A, B, C, D) */}
-         <div className={cn(
-            "flex size-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold transition-colors",
-            labelVariants[state],
-            isSelected && state === 'default' && "bg-primary text-primary-foreground"
-         )}>
-            {label}
-         </div>
+      {opponentPicked && (
+        <div
+          className={cn(
+            'absolute right-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide',
+            opponentPickCorrect ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'
+          )}
+        >
+          Opp picked
+        </div>
+      )}
 
-         {/* Text */}
-         <span className={cn(
-            "text-base font-medium flex-1",
-            state === 'correct' && "font-bold",
-         )}>
-            {text}
-         </span>
+      <div className="flex items-center gap-3">
+        {/* Label badge */}
+        <div className={cn(
+          'flex size-9 shrink-0 items-center justify-center rounded-xl text-sm font-black transition-colors',
+          getLabelClasses()
+        )}>
+          {label}
+        </div>
 
-         {/* Reveal Icon */}
-         {state === 'correct' && (
-            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="shrink-0 text-green-500">
-               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-            </motion.div>
-         )}
-         {state === 'wrong' && (
-            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="shrink-0 text-red-500">
-               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-            </motion.div>
-         )}
+        {/* Text */}
+        <span className={cn(
+          'text-sm font-bold flex-1 text-white',
+          state === 'disabled' && 'text-white/40',
+          state === 'correct' && 'text-emerald-300',
+          state === 'wrong' && 'text-red-300',
+        )}>
+          {text}
+        </span>
+
+        {/* Result icon */}
+        {state === 'correct' && (
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="shrink-0">
+            <svg className="size-5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+          </motion.div>
+        )}
+        {state === 'wrong' && (
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="shrink-0">
+            <svg className="size-5 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+            </svg>
+          </motion.div>
+        )}
       </div>
     </motion.button>
   );

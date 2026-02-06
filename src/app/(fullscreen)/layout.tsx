@@ -7,7 +7,7 @@ export default function FullscreenLayout({
 }>) {
   return (
     <AppAuthGate>
-      <div className="min-h-screen bg-background">{children}</div>
+      <div className="min-h-dvh w-full bg-background">{children}</div>
     </AppAuthGate>
   );
 }

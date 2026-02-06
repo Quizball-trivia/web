@@ -1,6 +1,5 @@
 import { api } from "@/lib/api/api";
 import type { paths } from "@/types/api.generated";
-import type { PublicLobby } from "@/lib/domain/lobby";
 
 export type ListPublicLobbiesQuery =
   paths["/api/v1/lobbies/public"]["get"]["parameters"]["query"];

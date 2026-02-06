@@ -1,5 +1,4 @@
 import { AvatarDisplay } from "@/components/AvatarDisplay";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { DEFAULT_AVATAR_PRIMARY, DEFAULT_AVATAR_SECONDARY } from "@/lib/avatars";
 import type { LobbyMember } from "@/lib/realtime/socket.types";
@@ -23,112 +22,97 @@ export function LobbyHeader({ lobbyName, lobbyCode, me, opponent, h2hSummary }: 
     if (success) toast.success("Room Code copied!");
   };
 
-  const getH2HText = () => {
-    if (!opponent || !h2hSummary) return null;
-    return (
-       <div className="flex flex-col items-center">
-          <Badge variant="outline" className="bg-background/50 backdrop-blur border-primary/20 text-xs font-mono mb-1">
-             H2H: You <span className="text-green-500 font-bold mx-1">{h2hSummary.winsA}</span> - <span className="text-red-500 font-bold mx-1">{h2hSummary.winsB}</span> Opponent
-          </Badge>
-          <span className="text-[10px] text-muted-foreground">
-             {h2hSummary.total} games • last played {h2hSummary.lastPlayedAt ? new Date(h2hSummary.lastPlayedAt).toLocaleDateString() : 'never'}
-          </span>
-       </div>
-    );
-  };
-
   return (
-    <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-card border border-border rounded-xl p-4 shadow-sm relative overflow-hidden">
-      {/* Background Decor */}
-      <div className="absolute top-0 right-0 w-64 h-full bg-gradient-to-l from-primary/5 to-transparent pointer-events-none" />
+    <div className="bg-[#1B2F36] rounded-2xl border-b-4 border-[#0D1B21] p-5 font-fun">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-5">
 
-      {/* Left: Code & Title */}
-      <div className="flex items-center gap-4 z-10">
-        <div className="size-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-          <Users className="size-6" />
-        </div>
-        <div>
-          <h1 className="text-xl font-bold">{lobbyName || "Friendly Lobby"}</h1>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            Code:
-            <span className="font-mono font-bold text-foreground bg-muted px-2 py-0.5 rounded select-all">
-              {lobbyCode || "..."}
-            </span>
-            <button
-              onClick={copyCode}
-              aria-label="Copy lobby code"
-              className="hover:text-primary transition-colors"
-              disabled={!lobbyCode}
-            >
-              <Copy className="size-3" />
-            </button>
+        {/* Left: Lobby Name & Code */}
+        <div className="flex items-center gap-4">
+          <div className="size-14 rounded-xl bg-[#1CB0F6]/15 border-2 border-[#1CB0F6]/30 flex items-center justify-center">
+            <Users className="size-7 text-[#1CB0F6]" />
           </div>
-        </div>
-      </div>
-
-      {/* Center: H2H Chip (Mobile: Stacked below, Desktop: Centered) */}
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:block z-10">
-         {getH2HText() || (opponent && <span className="text-xs text-muted-foreground">No match history</span>)}
-      </div>
-
-      {/* Right: Avatars */}
-      <div className="flex items-center gap-6 flex-1 justify-center md:justify-end z-10">
-        {/* You */}
-        <div className="flex flex-col items-center gap-2">
-          <div className="relative group">
-            <AvatarDisplay
-              customization={{ base: me?.avatarUrl ?? DEFAULT_AVATAR_PRIMARY }}
-              size="md"
-              className={cn(
-                "rounded-full transition-all duration-300", 
-                me?.isReady ? "ring-2 ring-green-500 ring-offset-2 ring-offset-background" : "ring-2 ring-primary ring-offset-2 ring-offset-background"
-              )}
-            />
-            {me?.isHost && (
-              <Badge className="absolute -top-1 -right-1 text-[10px] px-1 h-4 rounded-full shadow-sm bg-primary text-black">HOST</Badge>
-            )}
-          </div>
-          <div className="flex flex-col items-center">
-             <span className="text-xs font-bold text-primary flex items-center gap-1">
-                {me?.username || 'You'} <span className="opacity-70 font-normal text-[10px]">(You)</span>
-             </span>
-             {me?.isReady && <span className="text-[10px] text-green-500 font-bold">Ready</span>}
+          <div>
+            <h1 className="text-xl font-black text-white">{lobbyName || "Friendly Lobby"}</h1>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-xs font-bold text-[#56707A]">Code:</span>
+              <span className="font-mono font-black text-sm text-white bg-[#131F24] px-2.5 py-1 rounded-lg border-b-2 border-[#0D1B21] select-all tracking-wider">
+                {lobbyCode || "..."}
+              </span>
+              <button
+                onClick={copyCode}
+                aria-label="Copy lobby code"
+                className="text-[#56707A] hover:text-[#1CB0F6] transition-colors"
+                disabled={!lobbyCode}
+              >
+                <Copy className="size-3.5" />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* VS */}
-        <div className="text-lg font-black text-muted-foreground/30 italic">VS</div>
-
-        {/* Opponent */}
-        <div className={cn("flex flex-col items-center gap-2", !opponent && "opacity-50")}>
-          <div className="relative group">
-             {opponent ? (
-                 <AvatarDisplay
-                  customization={{ base: opponent.avatarUrl ?? DEFAULT_AVATAR_SECONDARY }}
+        {/* Right: Avatars + H2H */}
+        <div className="flex items-center gap-5">
+          {/* You */}
+          <div className="flex flex-col items-center gap-1.5">
+            <div className="relative">
+              <div className={cn(
+                "rounded-full border-[3px] border-b-4 overflow-hidden",
+                me?.isReady ? "border-[#58CC02] shadow-[0_3px_0_0_#46A302]" : "border-[#1CB0F6] shadow-[0_3px_0_0_#1899D6]"
+              )}>
+                <AvatarDisplay
+                  customization={{ base: me?.avatarUrl ?? DEFAULT_AVATAR_PRIMARY }}
                   size="md"
-                  className={cn(
-                    "rounded-full transition-all duration-300", 
-                    opponent.isReady ? "ring-2 ring-green-500 ring-offset-2 ring-offset-background" : "ring-2 ring-red-500 ring-offset-2 ring-offset-background"
-                  )}
+                  className="rounded-full"
                 />
-             ) : (
-                <div className="size-10 rounded-full bg-muted border-2 border-dashed border-muted-foreground flex items-center justify-center">
-                   <Users className="size-4 text-muted-foreground" />
-                </div>
-             )}
+              </div>
+              {me?.isHost && (
+                <span className="absolute -top-2 -right-2 text-[8px] font-black bg-[#FF9600] text-white px-1.5 py-[2px] rounded-full border-b-2 border-[#DB8200] uppercase">HOST</span>
+              )}
+            </div>
+            <span className="text-xs font-black text-[#1CB0F6]">
+              {me?.username || 'You'} <span className="text-[10px] font-bold text-[#56707A]">(You)</span>
+            </span>
+            {me?.isReady && <span className="text-[9px] font-black text-[#58CC02] uppercase">Ready</span>}
           </div>
-          <div className="flex flex-col items-center">
-             <span className="text-xs font-medium flex items-center gap-1">
-                {opponent?.username || 'Waiting...'} 
-             </span>
-             {opponent?.isReady && <span className="text-[10px] text-green-500 font-bold">Ready</span>}
+
+          {/* VS + H2H */}
+          <div className="flex flex-col items-center gap-1">
+            {h2hSummary && opponent && h2hSummary.total > 0 ? (
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-base font-black text-[#1CB0F6] tabular-nums">{h2hSummary.winsA}</span>
+                <span className="text-[10px] font-black text-[#56707A]">-</span>
+                <span className="text-base font-black text-[#FF4B4B] tabular-nums">{h2hSummary.winsB}</span>
+              </div>
+            ) : null}
+            <span className="text-lg font-black text-[#FF4B4B] uppercase">VS</span>
+          </div>
+
+          {/* Opponent */}
+          <div className={cn("flex flex-col items-center gap-1.5", !opponent && "opacity-40")}>
+            <div className="relative">
+              {opponent ? (
+                <div className={cn(
+                  "rounded-full border-[3px] border-b-4 overflow-hidden",
+                  opponent.isReady ? "border-[#58CC02] shadow-[0_3px_0_0_#46A302]" : "border-[#FF4B4B] shadow-[0_3px_0_0_#E04242]"
+                )}>
+                  <AvatarDisplay
+                    customization={{ base: opponent.avatarUrl ?? DEFAULT_AVATAR_SECONDARY }}
+                    size="md"
+                    className="rounded-full"
+                  />
+                </div>
+              ) : (
+                <div className="size-10 rounded-full bg-[#243B44] border-2 border-dashed border-[#56707A] flex items-center justify-center">
+                  <Users className="size-4 text-[#56707A]" />
+                </div>
+              )}
+            </div>
+            <span className="text-xs font-black text-white">
+              {opponent?.username || 'Waiting...'}
+            </span>
+            {opponent?.isReady && <span className="text-[9px] font-black text-[#58CC02] uppercase">Ready</span>}
           </div>
         </div>
-      </div>
-
-      {/* H2H Mobile (Below avatars, full width) */}
-      <div className="md:hidden w-full text-center z-10">
-         {getH2HText() || (opponent && <span className="text-xs text-muted-foreground">No match history</span>)}
       </div>
     </div>
   );
