@@ -89,7 +89,6 @@ export function QuizBallGameScreen({
           playerAvatar={playerAvatar}
           opponentAvatar={opponentAvatar}
           timeRemaining={timeRemaining}
-          maxTime={6}
           roundCurrent={currentQuestionIndex + 1}
           roundTotal={questions.length}
           playerAnswered={isAnswered}

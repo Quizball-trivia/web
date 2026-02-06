@@ -141,7 +141,6 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
 
       <AlreadyInLobbyModal
         currentLobbyCode={lobby?.inviteCode ?? null}
-        currentLobbyId={lobby?.lobbyId ?? null}
       />
     </div>
   );

@@ -89,7 +89,6 @@ export function RealtimeQuizBallGameScreen({
           playerAvatar={playerAvatar}
           opponentAvatar={opponentAvatar}
           timeRemaining={timeRemaining}
-          maxTime={6}
           roundCurrent={currentQuestion.qIndex + 1}
           roundTotal={currentQuestion.total}
           playerAnswered={isAnswered}

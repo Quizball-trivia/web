@@ -108,7 +108,6 @@ export function FriendMatchHubPage() {
       {/* Error Modal */}
       <AlreadyInLobbyModal 
          currentLobbyCode={lobby?.inviteCode ?? null}
-         currentLobbyId={lobby?.lobbyId ?? null}
       />
     </div>
   );
