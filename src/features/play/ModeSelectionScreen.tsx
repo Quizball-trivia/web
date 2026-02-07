@@ -19,18 +19,6 @@ function SoccerBall({ className }: { className?: string }) {
   );
 }
 
-function GoalNet({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 32 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="2" y="4" width="28" height="18" rx="2" />
-      <line x1="2" y1="4" x2="16" y2="16" opacity="0.3" />
-      <line x1="30" y1="4" x2="16" y2="16" opacity="0.3" />
-      <line x1="16" y1="4" x2="16" y2="22" opacity="0.3" />
-      <line x1="2" y1="13" x2="30" y2="13" opacity="0.3" />
-    </svg>
-  );
-}
-
 function Whistle({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
@@ -122,64 +110,72 @@ export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playe
         }}
         role="button"
         tabIndex={0}
-        className="relative rounded-3xl bg-[#1a1f2e] border-b-4 border-b-emerald-500/30 overflow-hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 active:scale-[0.99] transition-transform"
+        className="relative rounded-3xl bg-gradient-to-br from-[#1B3A25] via-[#1B2F36] to-[#1B2F36] border-b-4 border-[#58CC02] overflow-hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#58CC02] active:border-b-2 active:translate-y-[2px] transition-all"
       >
+        {/* Soccer Field Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-white" />
+          <div className="absolute top-0 bottom-0 left-1/2 w-1 bg-white -translate-x-1/2" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full border-2 border-white" />
+        </div>
+
         <StadiumSilhouette />
+
         <div className="relative z-10 p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="size-14 rounded-2xl bg-emerald-500/15 border-2 border-emerald-500/30 flex items-center justify-center">
-                <SoccerBall className="size-8 text-emerald-400" />
+              <div className="size-16 rounded-2xl bg-[#58CC02]/20 border-2 border-[#58CC02]/40 flex items-center justify-center">
+                <SoccerBall className="size-9 text-[#58CC02]" />
               </div>
               <div>
-                <h1 className="text-2xl font-black text-white">Ranked Match</h1>
-                <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">1v1 Competitive</span>
+                <h1 className="text-3xl font-black text-white uppercase">Ranked Match</h1>
+                <span className="text-sm font-bold text-[#58CC02] uppercase tracking-wider">⚽ 1v1 Competitive</span>
               </div>
             </div>
             <div className="hidden md:block">
-              <span className="px-10 py-4 rounded-2xl bg-emerald-500 border-b-[6px] border-b-emerald-700 text-white font-black text-lg inline-block pointer-events-none shadow-[0_0_25px_rgba(16,185,129,0.5),0_0_50px_rgba(16,185,129,0.2)]">
+              <span className="px-14 py-5 rounded-2xl bg-[#4ACA8B] border-b-[6px] border-[#3AA374] text-white font-black text-xl inline-block pointer-events-none shadow-[0_0_30px_rgba(74,202,139,0.4),0_0_60px_rgba(74,202,139,0.2)] animate-[pulse_3s_ease-in-out_infinite]">
                 Play Ranked
               </span>
             </div>
           </div>
 
-          <p className="text-sm text-white/70 mb-3 max-w-xl">
-            Compete for Rank Points (RP) and climb the global leaderboards. Win to promote to higher divisions.
+          <p className="text-base text-white/80 font-semibold mb-4 max-w-xl">
+            🏆 Compete for Rank Points (RP) and climb the global leaderboards. Win to promote to higher divisions!
           </p>
 
           <div className="flex gap-3 mb-4">
-            <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/70">
-              1v1 Duel
+            <span className="text-xs font-black px-4 py-2 rounded-full bg-white/10 border-2 border-white/20 text-white/90">
+              ⚡ 1v1 Duel
             </span>
-            <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/70">
+            <span className="text-xs font-black px-4 py-2 rounded-full bg-[#FFD700]/15 border-2 border-[#FFD700]/30 text-[#FFD700]">
               +5–15 RP / Win
             </span>
           </div>
 
           {/* RP Progress */}
-          <div className="bg-black/20 rounded-2xl p-4">
+          <div className="bg-[#131F24] rounded-2xl border-b-4 border-[#0D1B21] p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <span className="text-lg">{divisionEmoji}</span>
-                <span className={cn('text-sm font-bold', divisionColors.text)}>{rankInfo.division}</span>
+                <span className="text-2xl">{divisionEmoji}</span>
+                <span className={cn('text-base font-black', divisionColors.text)}>{rankInfo.division}</span>
               </div>
-              <span className="text-xs font-bold text-white/60">
+              <span className="text-xs font-bold text-[#56707A]">
                 {rankInfo.pointsToNext !== null ? `${rankInfo.pointsToNext} RP to next` : 'Max Division'}
               </span>
             </div>
-            <div className="relative h-3 bg-white/10 rounded-full overflow-hidden">
+            <div className="relative h-4 bg-[#243B44] rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${rankInfo.progress}%` }}
                 transition={{ duration: 1, ease: 'easeOut', delay: 0.3 }}
-                className="absolute inset-y-0 left-0 rounded-full bg-emerald-500"
+                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#58CC02] to-[#85E000]"
               >
-                <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/25 to-transparent h-1/2" />
+                <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/30 to-transparent h-1/2" />
               </motion.div>
             </div>
-            <div className="text-right mt-1">
-              <span className="text-lg font-black text-white">{playerStats.rankPoints ?? 0}</span>
-              <span className="text-xs font-bold text-white/60 ml-1">RP</span>
+            <div className="text-right mt-2">
+              <span className="text-2xl font-black text-white">{playerStats.rankPoints ?? 0}</span>
+              <span className="text-sm font-bold text-[#56707A] ml-1">RP</span>
             </div>
           </div>
         </div>
@@ -192,17 +188,17 @@ export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playe
         transition={{ delay: 0.1 }}
         className="grid grid-cols-3 gap-3"
       >
-        <div className="bg-[#1a1f2e] rounded-2xl border-b-4 border-b-white/10 p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wider text-white/60 font-bold mb-1">Accuracy</div>
-          <div className="text-xl font-black text-blue-400">{accuracy}%</div>
+        <div className="bg-[#1B2F36] rounded-2xl border-b-4 border-[#2D6A8A]/40 p-4 text-center">
+          <div className="text-xs uppercase tracking-wider text-[#56707A] font-bold mb-1">⚡ Accuracy</div>
+          <div className="text-2xl font-black text-[#2D8CBA]">{accuracy}%</div>
         </div>
-        <div className="bg-[#1a1f2e] rounded-2xl border-b-4 border-b-white/10 p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wider text-white/60 font-bold mb-1">Games</div>
-          <div className="text-xl font-black text-purple-400">{playerStats.gamesPlayed}</div>
+        <div className="bg-[#1B2F36] rounded-2xl border-b-4 border-[#7B5EA7]/40 p-4 text-center">
+          <div className="text-xs uppercase tracking-wider text-[#56707A] font-bold mb-1">🎯 Games</div>
+          <div className="text-2xl font-black text-[#9B7EC8]">{playerStats.gamesPlayed}</div>
         </div>
-        <div className="bg-[#1a1f2e] rounded-2xl border-b-4 border-b-white/10 p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wider text-white/60 font-bold mb-1">Coins</div>
-          <div className="text-xl font-black text-yellow-400">{playerStats.coins.toLocaleString()}</div>
+        <div className="bg-[#1B2F36] rounded-2xl border-b-4 border-[#B8960B]/40 p-4 text-center">
+          <div className="text-xs uppercase tracking-wider text-[#56707A] font-bold mb-1">🪙 Coins</div>
+          <div className="text-2xl font-black text-[#C8A82E]">{playerStats.coins.toLocaleString()}</div>
         </div>
       </motion.div>
 
@@ -224,18 +220,27 @@ export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playe
           }}
           role="button"
           tabIndex={0}
-          className="text-left bg-[#1a1f2e] rounded-2xl border-b-4 border-b-blue-500/20 p-6 hover:bg-[#1e2436] active:border-b-2 active:translate-y-[2px] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          className="relative text-left bg-[#1B2F36] rounded-2xl border-b-4 border-[#1CB0F6] p-6 hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1CB0F6] overflow-hidden"
         >
-          <div className="size-12 rounded-xl bg-blue-500/15 flex items-center justify-center mb-3">
-            <Jersey className="size-6 text-blue-400" />
+          {/* Soccer lines decoration */}
+          <div className="absolute top-0 right-0 w-32 h-32 opacity-5">
+            <div className="absolute top-4 left-0 right-0 h-0.5 bg-white" />
+            <div className="absolute top-8 left-0 right-0 h-0.5 bg-white" />
+            <div className="absolute top-12 left-0 right-0 h-0.5 bg-white" />
           </div>
-          <h3 className="text-xl font-black text-white mb-1">Friendly Match</h3>
-          <p className="text-xs text-white/60 font-semibold mb-4">
-            Create a private room or join a friend&apos;s game. No RP at stake.
-          </p>
-          <span className="px-5 py-2.5 rounded-2xl bg-blue-500 border-b-4 border-b-blue-600 text-white font-extrabold text-sm inline-block pointer-events-none">
-            Create / Join Room
-          </span>
+
+          <div className="relative z-10">
+            <div className="size-14 rounded-xl bg-[#1CB0F6]/20 border-2 border-[#1CB0F6]/40 flex items-center justify-center mb-3">
+              <Jersey className="size-7 text-[#1CB0F6]" />
+            </div>
+            <h3 className="text-2xl font-black text-white mb-2 uppercase">Friendly Match</h3>
+            <p className="text-sm text-[#56707A] font-semibold mb-4">
+              👥 Create a private room or join a friend&apos;s game. No RP at stake.
+            </p>
+            <span className="px-6 py-3 rounded-2xl bg-[#1A7FA8] border-b-4 border-[#14627F] text-white font-black text-sm inline-block pointer-events-none uppercase">
+              Create / Join Room
+            </span>
+          </div>
         </div>
 
         {/* Solo */}
@@ -249,18 +254,25 @@ export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playe
           }}
           role="button"
           tabIndex={0}
-          className="text-left bg-[#1a1f2e] rounded-2xl border-b-4 border-b-orange-500/20 p-6 hover:bg-[#1e2436] active:border-b-2 active:translate-y-[2px] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+          className="relative text-left bg-[#1B2F36] rounded-2xl border-b-4 border-[#FF9600] p-6 hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF9600] overflow-hidden"
         >
-          <div className="size-12 rounded-xl bg-orange-500/15 flex items-center justify-center mb-3">
-            <Boot className="size-6 text-orange-400" />
+          {/* Boot prints decoration */}
+          <div className="absolute bottom-0 right-4 opacity-5">
+            <Boot className="w-24 h-24 text-white" />
           </div>
-          <h3 className="text-xl font-black text-white mb-1">Solo</h3>
-          <p className="text-xs text-white/60 font-semibold mb-4">
-            Start your journey from benchwarmer to legend.
-          </p>
-          <span className="px-5 py-2.5 rounded-2xl bg-orange-500 border-b-4 border-b-orange-600 text-white font-extrabold text-sm inline-block pointer-events-none">
-            Start Practice
-          </span>
+
+          <div className="relative z-10">
+            <div className="size-14 rounded-xl bg-[#FF9600]/20 border-2 border-[#FF9600]/40 flex items-center justify-center mb-3">
+              <Boot className="size-7 text-[#FF9600]" />
+            </div>
+            <h3 className="text-2xl font-black text-white mb-2 uppercase">Solo Practice</h3>
+            <p className="text-sm text-[#56707A] font-semibold mb-4">
+              ⚽ Start your journey from benchwarmer to legend.
+            </p>
+            <span className="px-6 py-3 rounded-2xl bg-[#C47400] border-b-4 border-[#9A5B00] text-white font-black text-sm inline-block pointer-events-none uppercase">
+              Start Practice
+            </span>
+          </div>
         </div>
       </motion.div>
 
@@ -271,17 +283,18 @@ export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playe
         transition={{ delay: 0.3 }}
       >
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-black text-white flex items-center gap-2">
-            <Whistle className="size-4 text-emerald-400" />
+          <h2 className="text-base font-black text-white flex items-center gap-2 uppercase">
+            <Whistle className="size-5 text-[#FFD700]" />
             Weekly Challenges
           </h2>
-          <span className="text-[10px] font-bold text-white/50 bg-white/5 px-2 py-1 rounded-lg">Resets in 3d 12h</span>
+          <span className="text-xs font-bold text-[#56707A] bg-[#1B2F36] px-3 py-1.5 rounded-full border-b-2 border-[#0D1B21]">Resets in 3d 12h</span>
         </div>
         <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
           {CHALLENGES.map((c) => {
             const isLocked = c.status === 'locked';
-            const tierColor = { bronze: 'border-b-orange-600/40', silver: 'border-b-slate-400/40', gold: 'border-b-yellow-500/40', platinum: 'border-b-cyan-400/40' }[c.tier];
-            const tierBg = { bronze: 'bg-orange-500/15 text-orange-400', silver: 'bg-slate-400/15 text-slate-300', gold: 'bg-yellow-500/15 text-yellow-400', platinum: 'bg-cyan-400/15 text-cyan-300' }[c.tier];
+            const tierColor = { bronze: 'border-b-[#FF9600]', silver: 'border-b-slate-400', gold: 'border-b-[#FFD700]', platinum: 'border-b-[#1CB0F6]' }[c.tier];
+            const tierBg = { bronze: 'bg-[#FF9600]/20 text-[#FF9600]', silver: 'bg-slate-400/20 text-slate-300', gold: 'bg-[#FFD700]/20 text-[#FFD700]', platinum: 'bg-[#1CB0F6]/20 text-[#1CB0F6]' }[c.tier];
+            const tierIcon = { bronze: '🥉', silver: '🥈', gold: '🥇', platinum: '💎' }[c.tier];
             const handleChallengeClick = () => {
               if (isLocked) return;
               logger.info('Challenge enter', { id: c.id });
@@ -292,17 +305,27 @@ export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playe
               <div
                 key={c.id}
                 onClick={handleChallengeClick}
-                className={cn('shrink-0 w-[160px] bg-[#1a1f2e] rounded-2xl border-b-4 p-3 cursor-pointer', tierColor, isLocked && 'opacity-50 cursor-default')}
+                onKeyDown={(e) => {
+                  if (!isLocked && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    handleChallengeClick();
+                  }
+                }}
+                role="button"
+                tabIndex={isLocked ? -1 : 0}
+                className={cn(
+                  'shrink-0 w-[180px] bg-[#1B2F36] rounded-2xl border-b-4 p-4',
+                  isLocked
+                    ? 'opacity-50 cursor-default border-b-[#243B44]'
+                    : 'cursor-pointer hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                  tierColor
+                )}
               >
-                <div className={cn('size-8 rounded-lg flex items-center justify-center mb-2', tierBg)}>
-                  {isLocked ? (
-                    <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-                  ) : (
-                    <GoalNet className="size-4" />
-                  )}
+                <div className={cn('size-10 rounded-xl flex items-center justify-center mb-2 text-xl border-2', tierBg, isLocked && 'border-[#243B44]')}>
+                  {isLocked ? '🔒' : tierIcon}
                 </div>
-                <h4 className="text-xs font-black text-white mb-0.5">{c.title}</h4>
-                <p className="text-[10px] font-semibold text-white/50">{isLocked ? c.requirement : c.rewards}</p>
+                <h4 className="text-sm font-black text-white mb-1">{c.title}</h4>
+                <p className="text-xs font-semibold text-[#56707A]">{isLocked ? c.requirement : c.rewards}</p>
               </div>
             );
           })}
@@ -314,33 +337,33 @@ export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playe
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4 }}
-        className="bg-[#1a1f2e] rounded-2xl border-b-4 border-b-white/10 p-4"
+        className="bg-[#1B2F36] rounded-2xl border-b-4 border-[#0D1B21] p-5"
       >
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-black text-white flex items-center gap-2">
-            <SoccerBall className="size-4 text-white/40" />
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base font-black text-white flex items-center gap-2 uppercase">
+            <SoccerBall className="size-5 text-[#58CC02]" />
             Recent Matches
           </h3>
           <button
             onClick={() => router.push('/profile')}
-            className="text-[10px] font-bold text-emerald-400 hover:text-emerald-300 transition-colors"
+            className="text-xs font-bold text-[#1CB0F6] hover:text-[#1CB0F6]/80 transition-colors uppercase tracking-wide"
           >
-            View All
+            View All →
           </button>
         </div>
         <div className="space-y-2">
           {RECENT_MATCHES.map((m) => (
-            <div key={m.id} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/5">
-              <div className="flex items-center gap-2.5">
-                <div className={cn('size-7 rounded-lg flex items-center justify-center text-xs font-black', m.result === 'win' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400')}>
+            <div key={m.id} className="flex items-center justify-between p-4 rounded-xl bg-[#131F24] border-b-2 border-[#0D1B21]">
+              <div className="flex items-center gap-3">
+                <div className={cn('size-9 rounded-xl flex items-center justify-center text-sm font-black border-2', m.result === 'win' ? 'bg-[#58CC02]/20 text-[#58CC02] border-[#58CC02]/40' : 'bg-[#FF4B4B]/20 text-[#FF4B4B] border-[#FF4B4B]/40')}>
                   {m.result === 'win' ? 'W' : 'L'}
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-white">vs {m.opponent}</div>
-                  <div className="text-[10px] text-white/50 font-semibold">{m.mode} · {m.time}</div>
+                  <div className="text-sm font-black text-white">vs {m.opponent}</div>
+                  <div className="text-xs text-[#56707A] font-semibold">{m.mode} · {m.time}</div>
                 </div>
               </div>
-              <span className={cn('text-sm font-black', m.result === 'win' ? 'text-emerald-400' : 'text-red-400')}>{m.rp}</span>
+              <span className={cn('text-base font-black', m.result === 'win' ? 'text-[#58CC02]' : 'text-[#FF4B4B]')}>{m.rp}</span>
             </div>
           ))}
         </div>

@@ -135,14 +135,14 @@ export function ProfileWeb({ player, avatarUrl, onNameChange, onAvatarChange, on
                         <Input
                           value={editedName}
                           onChange={(e) => setEditedName(e.target.value)}
-                          className="h-10 text-2xl lg:text-3xl font-bold bg-transparent border-b border-primary rounded-none focus-visible:ring-0 px-0 w-48 lg:w-64 text-center lg:text-left"
+                          className="h-12 text-2xl lg:text-3xl font-bold bg-card/50 border border-border rounded-xl focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:border-primary px-4 w-48 lg:w-64 text-center lg:text-left"
                           autoFocus
                           disabled={isUpdating}
                         />
-                        <Button size="icon" variant="ghost" onClick={handleNameChange} disabled={isUpdating}>
+                        <Button size="icon" variant="ghost" className="size-10 rounded-xl bg-green-500/15 hover:bg-green-500/25" onClick={handleNameChange} disabled={isUpdating}>
                           <Check className="size-5 text-green-500" />
                         </Button>
-                        <Button size="icon" variant="ghost" onClick={() => setIsEditingName(false)} disabled={isUpdating}>
+                        <Button size="icon" variant="ghost" className="size-10 rounded-xl bg-red-500/15 hover:bg-red-500/25" onClick={() => setIsEditingName(false)} disabled={isUpdating}>
                           <X className="size-5 text-red-500" />
                         </Button>
                       </div>

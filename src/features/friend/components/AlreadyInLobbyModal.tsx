@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { LogOut, ArrowRight, AlertCircle } from "lucide-react";
@@ -5,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { getSocket } from "@/lib/realtime/socket-client";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 
 interface AlreadyInLobbyModalProps {
   currentLobbyCode: string | null;
@@ -31,6 +33,28 @@ export function AlreadyInLobbyModal({
   };
   const shouldShow = Boolean(isOpen) || error?.code === "ALREADY_IN_LOBBY";
 
+  useEffect(() => {
+    if (!shouldShow) return;
+    logger.warn("AlreadyInLobbyModal opened", {
+      reason: isOpen ? "controlled_open" : "realtime_error",
+      errorCode: error?.code ?? null,
+      errorMessage: error?.message ?? null,
+      errorMeta: error?.meta ?? null,
+      lobbyCodeFromStore: lobby?.inviteCode ?? null,
+      lobbyCodeFromError: meta.inviteCode ?? null,
+      currentLobbyCode,
+    });
+  }, [
+    shouldShow,
+    isOpen,
+    error?.code,
+    error?.message,
+    error?.meta,
+    lobby?.inviteCode,
+    meta.inviteCode,
+    currentLobbyCode,
+  ]);
+
   const handleLeaveAndRetry = () => {
     getSocket().emit("lobby:leave");
     resetRealtime();
@@ -56,6 +80,11 @@ export function AlreadyInLobbyModal({
   return (
     <Dialog open={shouldShow} onOpenChange={(open) => {
         if (!open) {
+            logger.info("AlreadyInLobbyModal closed", {
+              errorCode: error?.code ?? null,
+              lobbyCodeFromStore: lobby?.inviteCode ?? null,
+              currentLobbyCode,
+            });
             clearError();
             if (onClose) onClose();
         }

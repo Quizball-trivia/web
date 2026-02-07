@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Copy, Plus, Lock, Globe, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { getSocket } from "@/lib/realtime/socket-client";
+import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 
 interface CreateJoinPanelProps {
   onActionTriggered?: () => void;
@@ -17,10 +18,32 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
   const [isPublic, setIsPublic] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
+  const lobby = useRealtimeMatchStore((state) => state.lobby);
+  const error = useRealtimeMatchStore((state) => state.error);
+  const createTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const joinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearCreateTimeout = () => {
+    if (!createTimeoutRef.current) return;
+    clearTimeout(createTimeoutRef.current);
+    createTimeoutRef.current = null;
+  };
+
+  const clearJoinTimeout = () => {
+    if (!joinTimeoutRef.current) return;
+    clearTimeout(joinTimeoutRef.current);
+    joinTimeoutRef.current = null;
+  };
 
   const handleCreate = () => {
+    if (isCreating) return;
     if (onActionTriggered) onActionTriggered();
     setIsCreating(true);
+    clearCreateTimeout();
+    createTimeoutRef.current = setTimeout(() => {
+      setIsCreating(false);
+      toast.error("Create request timed out. Please retry.");
+    }, 8000);
     getSocket().emit("lobby:create", { mode: "friendly", isPublic });
     
     // We rely on the socket event listener elsewhere to navigate, 
@@ -32,6 +55,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
   };
 
   const handleJoin = () => {
+    if (isJoining) return;
     if (!inviteCode || inviteCode.length < 3) {
       toast.error("Please enter a valid code");
       return;
@@ -39,10 +63,46 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
 
     if (onActionTriggered) onActionTriggered();
     setIsJoining(true);
+    clearJoinTimeout();
+    joinTimeoutRef.current = setTimeout(() => {
+      setIsJoining(false);
+      toast.error("Join request timed out. Please retry.");
+    }, 8000);
     getSocket().emit("lobby:join_by_code", { inviteCode: inviteCode.toUpperCase() });
     
     toast.info(`Joining ${inviteCode.toUpperCase()}...`);
   };
+
+  // Any lobby state means the realtime flow progressed; release local button spinners.
+  useEffect(() => {
+    if (!lobby) return;
+    clearCreateTimeout();
+    clearJoinTimeout();
+    const timer = setTimeout(() => {
+      setIsCreating(false);
+      setIsJoining(false);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [lobby?.lobbyId, lobby?.inviteCode, lobby]);
+
+  // Any realtime error should release local button spinners so user can retry.
+  useEffect(() => {
+    if (!error) return;
+    clearCreateTimeout();
+    clearJoinTimeout();
+    const timer = setTimeout(() => {
+      setIsCreating(false);
+      setIsJoining(false);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [error]);
+
+  useEffect(() => {
+    return () => {
+      clearCreateTimeout();
+      clearJoinTimeout();
+    };
+  }, []);
 
   return (
     <div className="grid gap-6 md:grid-cols-2 max-w-4xl mx-auto">

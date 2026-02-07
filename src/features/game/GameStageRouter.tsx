@@ -20,6 +20,7 @@ import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { logger } from "@/utils/logger";
 import { useGameStageTransitions } from "@/features/game/hooks/useGameStageTransitions";
 import type { GameMode as LegacyGameMode } from "@/types/game";
+import { getDiceBearAvatarUrl } from "@/lib/avatars";
 
 type OpponentInfo = {
   id: string;
@@ -42,6 +43,21 @@ const toLegacyMode = (mode: string | undefined): LegacyGameMode => {
   return "timeAttack";
 };
 
+function resolveGameAvatar(value: string | null | undefined, fallbackSeed: string): string {
+  const raw = value?.trim();
+  if (!raw) return getDiceBearAvatarUrl(fallbackSeed, 96);
+  if (
+    raw.startsWith("http://") ||
+    raw.startsWith("https://") ||
+    raw.startsWith("data:image/") ||
+    raw.startsWith("/")
+  ) {
+    return raw;
+  }
+  // Convert non-URL values (emoji/seed) to an image URL so AvatarImage can render it reliably.
+  return getDiceBearAvatarUrl(raw, 96);
+}
+
 
 export function GameStageRouter() {
   const router = useRouter();
@@ -55,6 +71,9 @@ export function GameStageRouter() {
   const realtimeLobby = useRealtimeMatchStore((state) => state.lobby);
   const realtimeDraft = useRealtimeMatchStore((state) => state.draft);
   const realtimeMatch = useRealtimeMatchStore((state) => state.match);
+  const realtimeError = useRealtimeMatchStore((state) => state.error);
+  const sessionState = useRealtimeMatchStore((state) => state.sessionState);
+  const rankedSearching = useRealtimeMatchStore((state) => state.rankedSearching);
   const rankedSearchDurationMs = useRealtimeMatchStore((state) => state.rankedSearchDurationMs);
   const rankedSearchStartedAt = useRealtimeMatchStore((state) => state.rankedSearchStartedAt);
   const rankedFoundOpponent = useRealtimeMatchStore((state) => state.rankedFoundOpponent);
@@ -80,6 +99,25 @@ export function GameStageRouter() {
   const isMultiplayer = config?.mode !== "solo" && !!config;
   const selfUserId = authUser?.id ?? player.id;
   const socket = useRealtimeConnection({ enabled: isMultiplayer, selfUserId });
+  const [socketConnected, setSocketConnected] = useState(() => socket.connected);
+  const [socketId, setSocketId] = useState<string | null>(() => socket.id ?? null);
+
+  useEffect(() => {
+    const handleConnect = () => {
+      setSocketConnected(true);
+      setSocketId(socket.id ?? null);
+    };
+    const handleDisconnect = () => {
+      setSocketConnected(false);
+      setSocketId(socket.id ?? null);
+    };
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+    return () => {
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+    };
+  }, [socket]);
 
   useGameStageTransitions({
     isMultiplayer,
@@ -118,6 +156,18 @@ export function GameStageRouter() {
   const matchType = config?.matchType || "friendly";
   const showdownType = matchType === "ranked" ? "ranked" : "friendly";
   const legacyMode = toLegacyMode(config?.mode);
+  const playerGameAvatar = useMemo(
+    () =>
+      resolveGameAvatar(
+        authUser?.avatar_url ?? player.avatarCustomization?.base ?? player.avatar,
+        "player"
+      ),
+    [authUser?.avatar_url, player.avatarCustomization?.base, player.avatar]
+  );
+  const opponentGameAvatar = useMemo(
+    () => resolveGameAvatar(opponent.avatar, "opponent"),
+    [opponent.avatar]
+  );
 
   const exitToPlay = useCallback(() => {
     resetRealtime();
@@ -131,6 +181,37 @@ export function GameStageRouter() {
     }
   }, [stage, router]);
 
+  const matchmakingDebugInfo = useMemo(
+    () => ({
+      socketConnected,
+      socketId,
+      sessionState: sessionState?.state ?? "NO_SESSION",
+      activeMatchId: sessionState?.activeMatchId ?? null,
+      waitingLobbyId: sessionState?.waitingLobbyId ?? null,
+      queueSearchId: sessionState?.queueSearchId ?? null,
+      rankedSearching,
+      rankedSearchStartedAt,
+      rankedSearchDurationMs,
+      hasLobby: Boolean(realtimeLobby),
+      hasMatch: Boolean(realtimeMatch),
+      errorCode: realtimeError?.code ?? null,
+    }),
+    [
+      rankedSearchDurationMs,
+      rankedSearchStartedAt,
+      rankedSearching,
+      realtimeError?.code,
+      realtimeLobby,
+      realtimeMatch,
+      sessionState?.activeMatchId,
+      sessionState?.queueSearchId,
+      sessionState?.state,
+      sessionState?.waitingLobbyId,
+      socketConnected,
+      socketId,
+    ]
+  );
+
   if (stage === "idle") {
     return null;
   }
@@ -143,6 +224,7 @@ export function GameStageRouter() {
           rankedSearchDurationMs={rankedSearchDurationMs}
           rankedSearchStartedAt={rankedSearchStartedAt}
           rankedFoundOpponent={rankedFoundOpponent}
+          debugInfo={matchmakingDebugInfo}
           onCancel={() => {
             if (matchType === "ranked") {
               getSocket().emit("ranked:queue_leave");
@@ -164,9 +246,9 @@ export function GameStageRouter() {
     if (stage === "playing") {
       return (
         <RealtimeQuizBallGameScreen
-          playerAvatar={player.avatar}
+          playerAvatar={playerGameAvatar}
           playerUsername={player.username}
-          opponentAvatar={opponent.avatar}
+          opponentAvatar={opponentGameAvatar}
           opponentUsername={opponent.username}
           onQuit={() => {
             if (realtimeMatch?.matchId) {
@@ -178,6 +260,19 @@ export function GameStageRouter() {
               });
             } else {
               logger.info("Socket emit match:leave skipped (missing matchId)");
+            }
+            exitToPlay();
+          }}
+          onForfeit={() => {
+            if (realtimeMatch?.matchId) {
+              getSocket().emit("match:forfeit", {
+                matchId: realtimeMatch.matchId,
+              });
+              logger.info("Socket emit match:forfeit", {
+                matchId: realtimeMatch.matchId,
+              });
+            } else {
+              logger.info("Socket emit match:forfeit skipped (missing matchId)");
             }
             exitToPlay();
           }}
@@ -195,14 +290,16 @@ export function GameStageRouter() {
       return (
         <RealtimeResultsScreen
           playerUsername={player.username}
-          playerAvatar={player.avatar}
+          playerAvatar={playerGameAvatar}
           opponentUsername={opponent.username}
-          opponentAvatar={opponent.avatar}
+          opponentAvatar={opponentGameAvatar}
           playerScore={myStats?.totalPoints ?? realtimeMatch.myTotalPoints}
           opponentScore={opponentStats?.totalPoints ?? realtimeMatch.oppTotalPoints}
           playerCorrect={myStats?.correctAnswers ?? 0}
           opponentCorrect={opponentStats?.correctAnswers ?? 0}
           totalQuestions={10}
+          selfUserId={selfUserId}
+          opponentId={opponent.id}
           onPlayAgain={() => {
             if (matchType === "ranked") {
               resetRealtime();
@@ -255,9 +352,9 @@ export function GameStageRouter() {
         questions={questions}
         category={config?.categoryName || "General"}
         categoryIcon={config?.categoryIcon || "⚽"}
-        playerAvatar={player.avatar}
+        playerAvatar={playerGameAvatar}
         playerUsername={player.username}
-        opponentAvatar={opponent.avatar}
+        opponentAvatar={opponentGameAvatar}
         opponentUsername={opponent.username}
         onGameEnd={(playerScore, opponentScore, correctAnswers, playerAnswers) => {
           setLastGameStats({
@@ -311,8 +408,8 @@ export function GameStageRouter() {
       opponentScore={lastGameStats.opponentScore}
       playerUsername={player.username}
       opponentUsername={opponent.username}
-      playerAvatar={player.avatar}
-      opponentAvatar={opponent.avatar}
+      playerAvatar={playerGameAvatar}
+      opponentAvatar={opponentGameAvatar}
       oldRank={120}
       newRank={125}
       correctAnswers={lastGameStats.correctAnswers}

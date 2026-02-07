@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import "@fontsource-variable/nunito";
 import { Providers } from "./providers";
 import "../styles/globals.css";
 
@@ -15,20 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          rel="preload"
-          as="style"
-          href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap"
-        />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap"
-        />
-      </head>
-      <body className="antialiased">
+      <body className="antialiased" style={{ fontFamily: "'Nunito Variable', sans-serif" }}>
         <Providers>{children}</Providers>
       </body>
     </html>

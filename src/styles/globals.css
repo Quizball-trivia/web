@@ -5,7 +5,7 @@
   --radius: 0.5rem;
   
   /* Design System - HSL Colors */
-  --background: 220 20% 10%;
+  --background: 217 35% 16%;
   --foreground: 0 0% 95%;
 
   --card: 220 15% 15%;
@@ -197,7 +197,7 @@
   }
 
   .font-fun {
-    font-family: 'Nunito', sans-serif;
+    font-family: 'Nunito Variable', sans-serif;
   }
 }
 
@@ -207,6 +207,17 @@
   40% { transform: translateX(6px); }
   60% { transform: translateX(-4px); }
   80% { transform: translateX(4px); }
+}
+
+@keyframes thanos-snap {
+  0% { opacity: 1; filter: brightness(1); }
+  50% { opacity: 0.5; filter: brightness(0.5) blur(2px); }
+  100% { opacity: 0; filter: brightness(0) blur(4px); transform: scale(0.8); }
+}
+
+@keyframes correct-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(88, 204, 2, 0.6); }
+  50% { box-shadow: 0 0 60px rgba(133, 224, 0, 0.9); transform: scale(1.05); }
 }
 
 @layer utilities {

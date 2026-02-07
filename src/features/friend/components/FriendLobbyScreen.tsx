@@ -1,9 +1,10 @@
 "use client";
 
-import { CheckCircle2, LogOut } from "lucide-react";
+import { CheckCircle2, Loader2, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LobbyHeader } from "./LobbyHeader";
 import { LobbySettings } from "./LobbySettings";
+import { WarmupGame } from "./WarmupGame";
 import { useFriendLobbyLogic } from "../hooks/useFriendLobbyLogic";
 import { AlreadyInLobbyModal } from "./AlreadyInLobbyModal";
 
@@ -20,6 +21,8 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
     opponent,
     h2hSummary,
     allCategories,
+    settingsErrorVersion,
+    isStartingMatch,
     actions
   } = useFriendLobbyLogic({ roomCode, isHost });
 
@@ -41,7 +44,8 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
         bothReady &&
         lobby?.status === "waiting" &&
         settings?.gameMode === "friendly" &&
-        hasFriendlyCategories
+        hasFriendlyCategories &&
+        !isStartingMatch
     );
 
   return (
@@ -56,6 +60,11 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
         h2hSummary={h2hSummary}
       />
 
+      {/* Warm-Up Game (when both players are in the lobby) */}
+      {lobby?.status === "waiting" && lobby.members.length === 2 && (
+        <WarmupGame />
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Settings Panel (Host Controls) */}
         <div className="lg:col-span-2 space-y-6">
@@ -64,7 +73,7 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
             lobby={lobby}
             categories={allCategories}
             onUpdateSettings={actions.handleUpdateSettings}
-            onToggleVisibility={actions.handleToggleVisibility}
+            settingsErrorVersion={settingsErrorVersion}
           />
         </div>
 
@@ -108,11 +117,27 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
                     "w-full py-3.5 rounded-2xl border-b-4 text-sm font-black uppercase tracking-wide transition-all",
                     canStartMatch
                       ? "bg-[#1CB0F6] border-[#1899D6] text-white hover:bg-[#18A0E0] active:translate-y-[2px] active:border-b-2"
-                      : "bg-[#243B44] border-[#1B2F36] text-[#56707A]/50 cursor-not-allowed"
+                      : "bg-[#243B44] border-[#1B2F36] text-[#56707A]/50 cursor-not-allowed",
+                    isStartingMatch && "cursor-wait bg-[#1899D6] border-[#127FB3]"
                   )}
                 >
-                  Start Match
+                  {isStartingMatch ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 className="size-4 animate-spin" />
+                      Starting Match...
+                    </span>
+                  ) : (
+                    "Start Match"
+                  )}
                 </button>
+              )}
+
+              {isStartingMatch && (
+                <div className="bg-[#131F24] rounded-xl border-b-[3px] border-[#0D1B21] py-2 px-3 text-center animate-pulse">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-[#1CB0F6]">
+                    Preparing match...
+                  </span>
+                </div>
               )}
 
               {/* Leave Lobby */}

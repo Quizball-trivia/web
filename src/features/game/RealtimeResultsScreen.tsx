@@ -6,11 +6,55 @@ import { motion } from 'motion/react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { useHeadToHead } from '@/lib/queries/stats.queries';
 import { getRankInfo, getDivisionEmoji, getDivisionColor } from '@/utils/rankSystem';
 import { StatCard, WinIllustration, DrawIllustration, LossIllustration } from './components/ResultsShared';
 
 // Mock RP values — will be replaced by real data later
 const MOCK_OLD_RP = 245;
+
+/** Animated number that ticks from `from` → `to` after a delay, with a pop + glow */
+function AnimatedCounter({
+  from,
+  to,
+  delay = 1.5,
+  className,
+}: {
+  from: number;
+  to: number;
+  delay?: number;
+  className?: string;
+}) {
+  const [value, setValue] = useState(from);
+  const [popped, setPopped] = useState(false);
+  const changed = from !== to;
+
+  useEffect(() => {
+    if (!changed) return;
+    const timer = setTimeout(() => {
+      setValue(to);
+      setPopped(true);
+    }, delay * 1000);
+    return () => clearTimeout(timer);
+  }, [from, to, delay, changed]);
+
+  return (
+    <motion.span
+      className={className}
+      animate={popped ? {
+        scale: [1, 1.4, 1],
+        textShadow: [
+          '0 0 0px transparent',
+          '0 0 24px currentColor',
+          '0 0 0px transparent',
+        ],
+      } : {}}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+    >
+      {value}
+    </motion.span>
+  );
+}
 
 interface RealtimeResultsScreenProps {
   playerUsername: string;
@@ -22,6 +66,8 @@ interface RealtimeResultsScreenProps {
   playerCorrect: number;
   opponentCorrect: number;
   totalQuestions: number;
+  selfUserId: string;
+  opponentId: string;
   onPlayAgain: () => void;
   onMainMenu: () => void;
 }
@@ -35,17 +81,31 @@ export function RealtimeResultsScreen({
   opponentScore,
   playerCorrect,
   totalQuestions,
+  selfUserId,
+  opponentId,
   onPlayAgain,
   onMainMenu,
 }: RealtimeResultsScreenProps) {
   const playerWon = playerScore > opponentScore;
   const isDraw = playerScore === opponentScore;
 
-  const rpChange = playerWon ? 15 : -15;
+  // H2H record (already includes this match)
+  const { data: h2hSummary } = useHeadToHead(selfUserId, opponentId);
+  const myWins = h2hSummary?.winsA ?? 0;
+  const oppWins = h2hSummary?.winsB ?? 0;
+  const h2hDraws = h2hSummary?.draws ?? 0;
+  const totalMatches = h2hSummary?.total ?? 0;
+
+  // Derive pre-match scores to animate from old → new
+  const oldMyWins = playerWon ? myWins - 1 : myWins;
+  const oldOppWins = !playerWon && !isDraw ? oppWins - 1 : oppWins;
+  const oldDraws = isDraw ? h2hDraws - 1 : h2hDraws;
+
+  const rpChange = isDraw ? 0 : playerWon ? 15 : -15;
   const oldRP = MOCK_OLD_RP;
-  const newRP = playerWon ? oldRP + 15 : oldRP - 15;
+  const newRP = oldRP + rpChange;
   const accuracy = totalQuestions === 0 ? 0 : Math.round((playerCorrect / totalQuestions) * 100);
-  const coinsEarned = playerWon ? 25 : 5;
+  const coinsEarned = playerWon ? 25 : isDraw ? 10 : 5;
 
   const rankInfo = getRankInfo(newRP);
   const divisionEmoji = getDivisionEmoji(rankInfo.division);
@@ -99,7 +159,7 @@ export function RealtimeResultsScreen({
           </h1>
         </div>
 
-        {/* Player comparison strip */}
+        {/* Player comparison strip + H2H */}
         <div className="bg-[#1a1f2e] rounded-3xl border-b-4 border-b-white/10 p-4 space-y-3">
           {/* Player */}
           <div className={cn(
@@ -142,6 +202,59 @@ export function RealtimeResultsScreen({
             </div>
             <div className="text-2xl font-black text-white tabular-nums">{opponentScore.toLocaleString()}</div>
           </div>
+
+          {/* H2H record (inline) */}
+          {h2hSummary && totalMatches > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              <div className="border-t border-white/[0.06] mt-1 pt-3">
+                <div className="flex items-center justify-center gap-3">
+                  {/* Player wins */}
+                  <AnimatedCounter
+                    from={Math.max(0, oldMyWins)}
+                    to={myWins}
+                    delay={1.8}
+                    className="text-2xl font-black text-emerald-400 tabular-nums"
+                  />
+
+                  <div className="flex items-center gap-2 text-white/25">
+                    <div className="w-5 h-px bg-white/10" />
+                    <span className="text-xs font-bold uppercase tracking-wide whitespace-nowrap">
+                      {h2hDraws > 0 && (
+                        <>
+                          <AnimatedCounter
+                            from={Math.max(0, oldDraws)}
+                            to={h2hDraws}
+                            delay={1.8}
+                            className="text-yellow-400/80"
+                          />
+                          <span className="text-white/25 ml-0.5">
+                            {h2hDraws === 1 ? 'draw' : 'draws'}
+                          </span>
+                          <span className="mx-1.5 text-white/10">|</span>
+                        </>
+                      )}
+                      <span className="text-white/30">
+                        {totalMatches} {totalMatches === 1 ? 'game' : 'games'}
+                      </span>
+                    </span>
+                    <div className="w-5 h-px bg-white/10" />
+                  </div>
+
+                  {/* Opponent wins */}
+                  <AnimatedCounter
+                    from={Math.max(0, oldOppWins)}
+                    to={oppWins}
+                    delay={1.8}
+                    className="text-2xl font-black text-red-400 tabular-nums"
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )}
         </div>
 
         {/* RP Progression */}
@@ -162,7 +275,7 @@ export function RealtimeResultsScreen({
               transition={{ delay: 0.6, type: 'spring' }}
               className={cn(
                 'text-sm font-black',
-                rpChange > 0 ? 'text-emerald-400' : 'text-red-400'
+                rpChange > 0 ? 'text-emerald-400' : rpChange < 0 ? 'text-red-400' : 'text-yellow-400'
               )}
             >
               {rpChange > 0 ? '+' : ''}{animatedRP} RP
