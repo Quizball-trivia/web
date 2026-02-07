@@ -584,7 +584,17 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
     set({ sessionState: payload });
   },
   setError: (error) => {
-    logger.warn('Realtime store set error', { code: error.code, message: error.message });
+    const snapshot = (error.meta as { stateSnapshot?: SessionStatePayload } | undefined)?.stateSnapshot;
+    logger.warn('Realtime store set error', {
+      code: error.code,
+      message: error.message,
+      source: (error.meta as { source?: string } | undefined)?.source ?? null,
+      reason: (error.meta as { reason?: string } | undefined)?.reason ?? null,
+      sessionState: snapshot?.state ?? null,
+      waitingLobbyId: snapshot?.waitingLobbyId ?? null,
+      activeMatchId: snapshot?.activeMatchId ?? null,
+      queueSearchId: snapshot?.queueSearchId ?? null,
+    });
     set({ error });
   },
   clearError: () => set({ error: null }),

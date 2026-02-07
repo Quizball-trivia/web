@@ -65,7 +65,11 @@ export function registerSocketHandlers(): void {
     store.setError({
       code: data.reason,
       message: data.message,
-      meta: { stateSnapshot: data.stateSnapshot },
+      meta: {
+        source: 'session:blocked',
+        reason: data.reason,
+        stateSnapshot: data.stateSnapshot,
+      },
     });
   });
 
