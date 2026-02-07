@@ -76,7 +76,7 @@ export function OAuthCallbackScreen() {
                   <p className="text-muted-foreground">{error}</p>
                 </div>
                 <Button
-                  onClick={() => router.replace('/auth/login')}
+                  onClick={() => router.replace('/auth/welcome')}
                   className="mt-4 gap-2"
                 >
                   <ArrowLeft className="size-4" />

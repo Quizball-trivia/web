@@ -14,7 +14,6 @@ interface LoginScreenProps {
   onFacebookLogin: () => void;
   onBack: () => void;
   onForgotPassword: () => void;
-  onSignUp: () => void;
 }
 
 export function LoginScreen({ 
@@ -22,8 +21,7 @@ export function LoginScreen({
   onGoogleLogin,
   onFacebookLogin,
   onBack, 
-  onForgotPassword,
-  onSignUp 
+  onForgotPassword
 }: LoginScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -210,20 +208,6 @@ export function LoginScreen({
             </Card>
           </motion.div>
 
-          {/* Sign Up Link */}
-          <motion.div 
-            className="text-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-          >
-            <p className="text-sm text-muted-foreground">
-              Don&apos;t have an account?{' '}
-              <button onClick={onSignUp} className="text-primary hover:underline">
-                Sign up
-              </button>
-            </p>
-          </motion.div>
         </div>
       </div>
     </div>

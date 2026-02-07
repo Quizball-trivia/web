@@ -107,7 +107,7 @@ export function AppShell({ children }: AppShellProps) {
 
   const handleLogout = async () => {
     await logout();
-    router.replace("/auth/login");
+    router.replace("/auth/welcome");
   };
 
   const isPathActive = (path: string) => {
