@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { PublicLobby } from "@/lib/domain/lobby";
+import { DEFAULT_AVATAR_SECONDARY, getDiceBearAvatarUrl } from "@/lib/avatars";
 import { ArrowRight, Trophy, Users } from "lucide-react";
 
 interface LobbyCardProps {
@@ -14,6 +15,23 @@ interface LobbyCardProps {
 
 export function LobbyCard({ lobby, onJoin, isJoining }: LobbyCardProps) {
   const isFull = lobby.memberCount >= lobby.maxMembers;
+  const rawHostAvatar = lobby.host.avatarUrl?.trim();
+  const hostAvatarSrc = (() => {
+    if (!rawHostAvatar) {
+      return getDiceBearAvatarUrl(DEFAULT_AVATAR_SECONDARY, 96);
+    }
+
+    if (
+      rawHostAvatar.startsWith("http://") ||
+      rawHostAvatar.startsWith("https://") ||
+      rawHostAvatar.startsWith("data:image/") ||
+      rawHostAvatar.startsWith("/")
+    ) {
+      return rawHostAvatar;
+    }
+
+    return getDiceBearAvatarUrl(rawHostAvatar, 96);
+  })();
   
   return (
     <Card className="group relative overflow-hidden border-border transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5">
@@ -21,7 +39,7 @@ export function LobbyCard({ lobby, onJoin, isJoining }: LobbyCardProps) {
         {/* Host Avatar */}
         <div className="relative shrink-0">
           <Avatar className="size-12 border-2 border-border group-hover:border-primary/50 transition-colors">
-            <AvatarImage src={lobby.host.avatarUrl} alt={lobby.host.username} />
+            <AvatarImage src={hostAvatarSrc} alt={lobby.host.username} />
             <AvatarFallback>{lobby.host.username.slice(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-background border border-border shadow-sm">

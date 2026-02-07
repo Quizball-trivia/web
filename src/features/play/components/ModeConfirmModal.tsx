@@ -79,7 +79,9 @@ export function ModeConfirmModal({
   }[mode];
 
   const isRanked = mode === 'ranked';
-  const hasTickets = ticketsRemaining >= (config.entryCost || 0);
+  // TODO: Re-enable ticket check when ticket system is implemented
+  // const hasTickets = ticketsRemaining >= (config.entryCost || 0);
+  const hasTickets = true; // Temporarily always enabled until tickets are implemented
 
   const Content = (
     <div className="space-y-5 font-fun">

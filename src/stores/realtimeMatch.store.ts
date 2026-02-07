@@ -12,6 +12,12 @@ import type {
   MatchStartPayload,
   OpponentInfo,
   ErrorPayload,
+  WarmupStatePayload,
+  WarmupTappedPayload,
+  WarmupOverPayload,
+  WarmupRestartedPayload,
+  WarmupScoresPayload,
+  SessionStatePayload,
 } from '@/lib/realtime/socket.types';
 
 export interface DraftStatus {
@@ -36,8 +42,26 @@ export interface MatchStatus {
   opponentAnswered: boolean;
   myTotalPoints: number;
   oppTotalPoints: number;
+  opponentRecentPoints: number;
   lastRoundResult: MatchRoundResultPayload | null;
   finalResults: MatchFinalResultsPayload | null;
+  currentQuestionPhase: 'reveal' | 'playing';
+  opponentAnsweredCorrectly: boolean | null;
+}
+
+export interface WarmupStatus {
+  bounceCount: number;
+  nextTurnUserId: string;
+  active: boolean;
+  lastTapperId: string | null;
+  lastTapX: number | null;
+  lastTapY: number | null;
+  playerBest: number;
+  pairBest: number;
+  gameOver: boolean;
+  finalScore: number | null;
+  isNewPlayerBest: boolean;
+  isNewPairBest: boolean;
 }
 
 export interface RejoinMatchStatus {
@@ -52,6 +76,8 @@ interface RealtimeState {
   lobby: LobbyState | null;
   draft: DraftStatus | null;
   match: MatchStatus | null;
+  warmup: WarmupStatus | null;
+  sessionState: SessionStatePayload | null;
   selfUserId: string | null;
   matchPaused: boolean;
   pauseUntil: number | null;
@@ -69,7 +95,13 @@ interface RealtimeState {
   setMatchStart: (payload: MatchStartPayload) => void;
   setMatchQuestion: (payload: MatchQuestionPayload) => void;
   setAnswerAck: (payload: MatchAnswerAckPayload) => void;
-  setOpponentAnswered: () => void;
+  setOpponentAnswered: (payload?: {
+    qIndex?: number;
+    opponentTotalPoints?: number;
+    pointsEarned?: number;
+    isCorrect?: boolean;
+  }) => void;
+  setQuestionPhase: (phase: 'reveal' | 'playing') => void;
   setRoundResult: (payload: MatchRoundResultPayload) => void;
   setFinalResults: (payload: MatchFinalResultsPayload) => void;
   setMatchPaused: (payload: { graceMs: number }) => void;
@@ -80,6 +112,13 @@ interface RealtimeState {
   clearRankedMatchmaking: () => void;
   setRejoinAvailable: (payload: MatchRejoinAvailablePayload) => void;
   clearRejoinAvailable: () => void;
+  setWarmupState: (data: WarmupStatePayload) => void;
+  setWarmupTapped: (data: WarmupTappedPayload) => void;
+  setWarmupOver: (data: WarmupOverPayload) => void;
+  setWarmupRestarted: (data: WarmupRestartedPayload) => void;
+  setWarmupScores: (data: WarmupScoresPayload) => void;
+  clearWarmup: () => void;
+  setSessionState: (payload: SessionStatePayload) => void;
   setError: (error: ErrorPayload) => void;
   clearError: () => void;
   reset: () => void;
@@ -89,6 +128,8 @@ const initialState = {
   lobby: null,
   draft: null,
   match: null,
+  warmup: null,
+  sessionState: null,
   selfUserId: null,
   matchPaused: false,
   pauseUntil: null,
@@ -159,6 +200,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
     logger.info('Realtime store set match start', { matchId: payload.matchId, opponentId: payload.opponent.id });
     set({
       draft: null,
+      warmup: null,
       matchPaused: false,
       pauseUntil: null,
       rankedSearchDurationMs: null,
@@ -174,13 +216,21 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         opponentAnswered: false,
         myTotalPoints: 0,
         oppTotalPoints: 0,
+        opponentRecentPoints: 0,
         lastRoundResult: null,
         finalResults: null,
+        currentQuestionPhase: 'reveal',
+        opponentAnsweredCorrectly: null,
       },
     });
   },
   setMatchQuestion: (payload) => {
-    logger.info('Realtime store set match question', { matchId: payload.matchId, qIndex: payload.qIndex });
+    logger.info('Realtime store set match question', {
+      matchId: payload.matchId,
+      qIndex: payload.qIndex,
+      questionPrompt: payload.question.prompt,
+      questionPromptPreview: payload.question.prompt?.substring(0, 50) + '...',
+    });
     set((state) => {
       if (!state.match) return state;
       // Guard: ignore stale/out-of-order question events
@@ -192,6 +242,14 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         });
         return state;
       }
+
+      logger.info('Store updated with new question', {
+        qIndex: payload.qIndex,
+        prompt: payload.question.prompt,
+        options: payload.question.options,
+        categoryName: payload.question.categoryName,
+      });
+
       return {
         ...state,
         match: {
@@ -199,7 +257,10 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
           currentQuestion: payload,
           answerAck: null,
           opponentAnswered: false,
+          opponentRecentPoints: 0,
           lastRoundResult: null,
+          currentQuestionPhase: 'reveal',
+          opponentAnsweredCorrectly: null,
           questions: {
             ...state.match.questions,
             [payload.qIndex]: {
@@ -219,6 +280,14 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
     });
     set((state) => {
       if (!state.match) return state;
+      const currentQIndex = state.match.currentQuestion?.qIndex;
+      if (currentQIndex !== undefined && payload.qIndex !== currentQIndex) {
+        logger.warn('Ignoring stale match:answer_ack event', {
+          received: payload.qIndex,
+          current: currentQIndex,
+        });
+        return state;
+      }
       const existing = state.match.questions[payload.qIndex];
       const fallbackQuestion = existing?.payload ?? state.match.currentQuestion;
       if (!fallbackQuestion) return state;
@@ -240,15 +309,39 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       };
     });
   },
-  setOpponentAnswered: () => {
-    logger.info('Realtime store set opponent answered');
+  setOpponentAnswered: (payload) => {
+    logger.info('Realtime store set opponent answered', payload);
+    set((state) => {
+      if (!state.match) return state;
+      const currentQIndex = state.match.currentQuestion?.qIndex;
+      if (payload?.qIndex !== undefined && currentQIndex !== undefined && payload.qIndex !== currentQIndex) {
+        logger.warn('Ignoring stale match:opponent_answered event', {
+          received: payload.qIndex,
+          current: currentQIndex,
+        });
+        return state;
+      }
+      return {
+        ...state,
+        match: {
+          ...state.match,
+          opponentAnswered: true,
+          oppTotalPoints: payload?.opponentTotalPoints ?? state.match.oppTotalPoints,
+          opponentRecentPoints: payload?.pointsEarned ?? 0,
+          opponentAnsweredCorrectly: payload?.isCorrect ?? null,
+        },
+      };
+    });
+  },
+  setQuestionPhase: (phase) => {
+    logger.info('Realtime store set question phase', { phase });
     set((state) => {
       if (!state.match) return state;
       return {
         ...state,
         match: {
           ...state.match,
-          opponentAnswered: true,
+          currentQuestionPhase: phase,
         },
       };
     });
@@ -257,6 +350,14 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
     logger.info('Realtime store set round result', { matchId: payload.matchId, qIndex: payload.qIndex });
     set((state) => {
       if (!state.match) return state;
+      const currentQIndex = state.match.currentQuestion?.qIndex;
+      if (currentQIndex !== undefined && payload.qIndex !== currentQIndex) {
+        logger.warn('Ignoring stale match:round_result event', {
+          received: payload.qIndex,
+          current: currentQIndex,
+        });
+        return state;
+      }
       const existing = state.match.questions[payload.qIndex];
       const fallbackQuestion = existing?.payload ?? state.match.currentQuestion;
       if (!fallbackQuestion) return state;
@@ -366,6 +467,122 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
     logger.info('Realtime store clear rejoin available');
     set({ rejoinMatch: null });
   },
+  setWarmupState: (data) => {
+    logger.info('Realtime store set warmup state', { bounceCount: data.bounceCount, active: data.active });
+    set({
+      warmup: {
+        bounceCount: data.bounceCount,
+        nextTurnUserId: data.nextTurnUserId,
+        active: data.active,
+        lastTapperId: data.lastTapperId,
+        lastTapX: null,
+        lastTapY: null,
+        playerBest: 0,
+        pairBest: 0,
+        gameOver: false,
+        finalScore: null,
+        isNewPlayerBest: false,
+        isNewPairBest: false,
+      },
+    });
+  },
+  setWarmupTapped: (data) => {
+    logger.info('Realtime store set warmup tapped', { tapperId: data.tapperId, bounceCount: data.bounceCount });
+    set((state) => ({
+      warmup: {
+        ...(state.warmup ?? {
+          playerBest: 0,
+          pairBest: 0,
+          gameOver: false,
+          finalScore: null,
+          isNewPlayerBest: false,
+          isNewPairBest: false,
+        }),
+        bounceCount: data.bounceCount,
+        nextTurnUserId: data.nextTurnUserId,
+        lastTapperId: data.tapperId,
+        lastTapX: data.tapX,
+        lastTapY: data.tapY,
+        active: true,
+      },
+    }));
+  },
+  setWarmupOver: (data) => {
+    logger.info('Realtime store set warmup over', { finalScore: data.finalScore });
+    set((state) => {
+      if (!state.warmup) return state;
+      const selfId = state.selfUserId;
+      return {
+        warmup: {
+          ...state.warmup,
+          active: false,
+          gameOver: true,
+          finalScore: data.finalScore,
+          playerBest: data.playerBests[selfId ?? ''] ?? state.warmup.playerBest,
+          pairBest: data.pairBest,
+          isNewPlayerBest: data.isNewPlayerBest[selfId ?? ''] ?? false,
+          isNewPairBest: data.isNewPairBest,
+        },
+      };
+    });
+  },
+  setWarmupRestarted: (data) => {
+    logger.info('Realtime store set warmup restarted', { firstTurnUserId: data.firstTurnUserId });
+    set((state) => ({
+      warmup: {
+        bounceCount: 0,
+        nextTurnUserId: data.firstTurnUserId,
+        active: true,
+        lastTapperId: null,
+        lastTapX: null,
+        lastTapY: null,
+        playerBest: state.warmup?.playerBest ?? 0,
+        pairBest: state.warmup?.pairBest ?? 0,
+        gameOver: false,
+        finalScore: null,
+        isNewPlayerBest: false,
+        isNewPairBest: false,
+      },
+    }));
+  },
+  setWarmupScores: (data) => {
+    logger.info('Realtime store set warmup scores', data);
+    set((state) => {
+      if (!state.warmup) {
+        return {
+          warmup: {
+            bounceCount: 0,
+            nextTurnUserId: '',
+            active: false,
+            lastTapperId: null,
+            lastTapX: null,
+            lastTapY: null,
+            playerBest: data.playerBest,
+            pairBest: data.pairBest,
+            gameOver: false,
+            finalScore: null,
+            isNewPlayerBest: false,
+            isNewPairBest: false,
+          },
+        };
+      }
+      return {
+        warmup: {
+          ...state.warmup,
+          playerBest: data.playerBest,
+          pairBest: data.pairBest,
+        },
+      };
+    });
+  },
+  clearWarmup: () => {
+    logger.info('Realtime store clear warmup');
+    set({ warmup: null });
+  },
+  setSessionState: (payload) => {
+    logger.info('Realtime store set session state', payload);
+    set({ sessionState: payload });
+  },
   setError: (error) => {
     logger.warn('Realtime store set error', { code: error.code, message: error.message });
     set({ error });
@@ -373,6 +590,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
   clearError: () => set({ error: null }),
   reset: () => {
     logger.info('Realtime store reset');
-    set({ ...initialState });
+    // Keep identity across UI resets so round-result mapping remains stable.
+    set((state) => ({ ...initialState, selfUserId: state.selfUserId }));
   },
 }));

@@ -595,6 +595,7 @@ export interface paths {
                 query?: {
                     parent_id?: string;
                     is_active?: string;
+                    min_questions?: number;
                     page?: number;
                     limit?: number;
                 };

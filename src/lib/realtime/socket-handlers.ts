@@ -7,6 +7,7 @@ import type {
   LobbyState,
   MatchAnswerAckPayload,
   MatchFinalResultsPayload,
+  MatchOpponentAnsweredPayload,
   MatchOpponentDisconnectedPayload,
   RankedMatchFoundPayload,
   RankedSearchStartedPayload,
@@ -15,6 +16,13 @@ import type {
   MatchRejoinAvailablePayload,
   MatchResumePayload,
   MatchStartPayload,
+  WarmupStatePayload,
+  WarmupTappedPayload,
+  WarmupOverPayload,
+  WarmupRestartedPayload,
+  WarmupScoresPayload,
+  SessionStatePayload,
+  SessionBlockedPayload,
 } from './socket.types';
 
 export function registerSocketHandlers(): void {
@@ -22,6 +30,8 @@ export function registerSocketHandlers(): void {
   const store = useRealtimeMatchStore.getState();
 
   socket.off('lobby:state');
+  socket.off('session:state');
+  socket.off('session:blocked');
   socket.off('error');
   socket.off('draft:start');
   socket.off('draft:banned');
@@ -38,6 +48,26 @@ export function registerSocketHandlers(): void {
   socket.off('ranked:search_started');
   socket.off('ranked:match_found');
   socket.off('ranked:queue_left');
+  socket.off('warmup:state');
+  socket.off('warmup:tapped');
+  socket.off('warmup:over');
+  socket.off('warmup:restarted');
+  socket.off('warmup:scores');
+
+  socket.on('session:state', (data: SessionStatePayload) => {
+    logger.info('Socket event session:state', data);
+    store.setSessionState(data);
+  });
+
+  socket.on('session:blocked', (data: SessionBlockedPayload) => {
+    logger.warn('Socket event session:blocked', data);
+    store.setSessionState(data.stateSnapshot);
+    store.setError({
+      code: data.reason,
+      message: data.message,
+      meta: { stateSnapshot: data.stateSnapshot },
+    });
+  });
 
   socket.on('lobby:state', (data: LobbyState) => {
     logger.info('Socket event lobby:state', {
@@ -51,6 +81,13 @@ export function registerSocketHandlers(): void {
 
   socket.on('error', (data: ErrorPayload) => {
     logger.warn('Socket event error', { code: data.code, message: data.message, meta: data.meta });
+    if (
+      data.code === 'RANKED_QUEUE_BLOCKED' ||
+      data.code === 'RANKED_QUEUE_UNAVAILABLE' ||
+      data.code === 'RANKED_QUEUE_BUSY'
+    ) {
+      store.setRankedQueueLeft();
+    }
     store.setError(data);
   });
 
@@ -81,13 +118,37 @@ export function registerSocketHandlers(): void {
   });
 
   socket.on('match:question', (data: MatchQuestionPayload) => {
-    logger.info('Socket event match:question', { matchId: data.matchId, qIndex: data.qIndex });
+    logger.info('Socket event match:question', {
+      matchId: data.matchId,
+      qIndex: data.qIndex,
+      total: data.total,
+      deadlineAt: data.deadlineAt,
+    });
+    logger.info('Question data received', {
+      questionId: data.question.id,
+      prompt: data.question.prompt,
+      promptType: typeof data.question.prompt,
+      promptLength: data.question.prompt?.length,
+      options: data.question.options,
+      optionsCount: data.question.options?.length,
+      categoryName: data.question.categoryName,
+      difficulty: data.question.difficulty,
+    });
     store.setMatchQuestion(data);
   });
 
-  socket.on('match:opponent_answered', () => {
-    logger.info('Socket event match:opponent_answered');
-    store.setOpponentAnswered();
+  socket.on('match:opponent_answered', (data: MatchOpponentAnsweredPayload) => {
+    logger.info('Socket event match:opponent_answered', {
+      opponentTotalPoints: data.opponentTotalPoints,
+      pointsEarned: data.pointsEarned,
+      isCorrect: data.isCorrect,
+    });
+    store.setOpponentAnswered({
+      qIndex: data.qIndex,
+      opponentTotalPoints: data.opponentTotalPoints,
+      pointsEarned: data.pointsEarned,
+      isCorrect: data.isCorrect,
+    });
   });
 
   socket.on('match:answer_ack', (data: MatchAnswerAckPayload) => {
@@ -107,6 +168,10 @@ export function registerSocketHandlers(): void {
   socket.on('match:final_results', (data: MatchFinalResultsPayload) => {
     logger.info('Socket event match:final_results', { matchId: data.matchId, winnerId: data.winnerId });
     store.setFinalResults(data);
+    socket.emit('match:final_results_ack', {
+      matchId: data.matchId,
+      resultVersion: data.resultVersion,
+    });
   });
 
   socket.on('match:opponent_disconnected', (data: MatchOpponentDisconnectedPayload) => {
@@ -146,5 +211,30 @@ export function registerSocketHandlers(): void {
   socket.on('ranked:queue_left', () => {
     logger.info('Socket event ranked:queue_left');
     store.setRankedQueueLeft();
+  });
+
+  socket.on('warmup:state', (data: WarmupStatePayload) => {
+    logger.info('Socket event warmup:state', { bounceCount: data.bounceCount, active: data.active });
+    store.setWarmupState(data);
+  });
+
+  socket.on('warmup:tapped', (data: WarmupTappedPayload) => {
+    logger.info('Socket event warmup:tapped', { tapperId: data.tapperId, bounceCount: data.bounceCount });
+    store.setWarmupTapped(data);
+  });
+
+  socket.on('warmup:over', (data: WarmupOverPayload) => {
+    logger.info('Socket event warmup:over', { finalScore: data.finalScore });
+    store.setWarmupOver(data);
+  });
+
+  socket.on('warmup:restarted', (data: WarmupRestartedPayload) => {
+    logger.info('Socket event warmup:restarted', { firstTurnUserId: data.firstTurnUserId });
+    store.setWarmupRestarted(data);
+  });
+
+  socket.on('warmup:scores', (data: WarmupScoresPayload) => {
+    logger.info('Socket event warmup:scores', data);
+    store.setWarmupScores(data);
   });
 }

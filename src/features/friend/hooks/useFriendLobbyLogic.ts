@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useRealtimeConnection } from "@/lib/realtime/useRealtimeConnection";
@@ -33,7 +33,11 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   const startSession = useGameSessionStore((state) => state.startSession);
 
   // Queries
-  const { data: categoriesData } = useCategoriesList({ limit: 100, is_active: "true" });
+  const { data: categoriesData } = useCategoriesList({
+    limit: 100,
+    is_active: "true",
+    min_questions: 5,
+  });
   const allCategories = categoriesData?.items ?? [];
 
   // Connection
@@ -41,6 +45,18 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
 
   const startedRef = useRef(false);
   const createdRef = useRef(false);
+  const leavingRef = useRef(false);
+  const initActionRef = useRef<string | null>(null);
+  const startMatchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // visibilityRetryRef and related state removed — coalesced debounce in LobbySettings handles this
+  const [settingsErrorVersion, setSettingsErrorVersion] = useState(0);
+  const [isStartingMatch, setIsStartingMatch] = useState(false);
+
+  const clearStartMatchTimeout = useCallback(() => {
+    if (!startMatchTimeoutRef.current) return;
+    clearTimeout(startMatchTimeoutRef.current);
+    startMatchTimeoutRef.current = null;
+  }, []);
 
   const lobbyCode = lobby?.inviteCode ?? (roomCode === "new" ? "" : roomCode);
   const members = lobby?.members ?? [];
@@ -55,18 +71,28 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   // 1. Reset local guards after leaving a lobby/match
   useEffect(() => {
     if (lobby || draft || match) return;
+    if (leavingRef.current) return;
     startedRef.current = false;
     createdRef.current = false;
-  }, [lobby, draft, match]);
+    initActionRef.current = null;
+    clearStartMatchTimeout();
+    const stopTimer = setTimeout(() => {
+      setIsStartingMatch(false);
+    }, 0);
+    return () => clearTimeout(stopTimer);
+  }, [clearStartMatchTimeout, lobby, draft, match]);
 
   // 2. Socket Initialization
   useEffect(() => {
+    if (leavingRef.current) return;
     if (createdRef.current) return;
     const socket = getSocket();
     const targetCode = roomCode === "new" ? null : roomCode.toUpperCase();
     const currentCode = lobby?.inviteCode?.toUpperCase() ?? null;
 
     if (isHost) {
+      if (initActionRef.current === "create") return;
+      initActionRef.current = "create";
       createdRef.current = true;
       socket.emit("lobby:create", { mode: "friendly" });
       logger.info("Socket emit lobby:create", { mode: "friendly" });
@@ -76,6 +102,9 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     if (!roomCode || roomCode === "new") return;
     if (currentCode && currentCode === targetCode) return;
 
+    const joinKey = `join:${targetCode ?? roomCode.toUpperCase()}`;
+    if (initActionRef.current === joinKey) return;
+    initActionRef.current = joinKey;
     createdRef.current = true;
     socket.emit("lobby:join_by_code", { inviteCode: roomCode });
     logger.info("Socket emit lobby:join_by_code", {
@@ -106,14 +135,43 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
 
   useEffect(() => {
     if (!draft && !match) return;
+    clearStartMatchTimeout();
     router.push("/game");
-  }, [draft, match, router]);
+  }, [clearStartMatchTimeout, draft, match, router]);
 
   useEffect(() => {
     if (!error) return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const isLobbySettingsError =
+      error.code === "LOBBY_SETTINGS_LOCKED" ||
+      error.code === "LOBBY_READY_LOCKED" ||
+      error.code === "INVALID_SETTINGS" ||
+      error.code === "LOBBY_NOT_WAITING" ||
+      error.code === "NOT_HOST" ||
+      error.code === "LOBBY_NOT_FOUND" ||
+      error.code === "NOT_IN_LOBBY" ||
+      error.code === "TRANSITION_IN_PROGRESS";
+
+    if (isLobbySettingsError) {
+      timer = setTimeout(() => {
+        setSettingsErrorVersion((current) => current + 1);
+      }, 0);
+    }
+    clearStartMatchTimeout();
+    const stopStartingTimer = setTimeout(() => {
+      setIsStartingMatch(false);
+    }, 0);
     toast.error(error.message);
     clearError();
-  }, [error, clearError]);
+
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+      clearTimeout(stopStartingTimer);
+    };
+  }, [clearError, clearStartMatchTimeout, error]);
 
   // 3. Actions
   const copyCode = async () => {
@@ -128,41 +186,76 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     logger.info("Socket emit lobby:ready", { ready: !me.isReady });
   };
 
-  const handleUpdateSettings = (updates: Partial<LobbySettingsState>) => {
+  const handleUpdateSettings = useCallback((updates: Partial<LobbySettingsState> & { isPublic?: boolean }) => {
     if (!lobby) return;
+
     const nextSettings = {
       ...lobby.settings,
       ...updates,
     };
-    getSocket().emit("lobby:update_settings", {
+    const emit = {
+      lobbyId: lobby.lobbyId,
       gameMode: nextSettings.gameMode,
       friendlyRandom: nextSettings.friendlyRandom,
       friendlyCategoryAId: nextSettings.friendlyCategoryAId,
       friendlyCategoryBId: nextSettings.friendlyCategoryBId,
-    });
-    logger.info("Socket emit lobby:update_settings", nextSettings);
-  };
+      ...(updates.isPublic !== undefined && { isPublic: updates.isPublic }),
+    };
 
-  const handleToggleVisibility = () => {
-    if (!lobby) return;
-    const nextPublic = !lobby.isPublic;
-    getSocket().emit("lobby:update_settings", {
-      gameMode: lobby.settings.gameMode,
-      isPublic: nextPublic,
-    });
-    logger.info("Socket emit lobby:update_settings (visibility)", { isPublic: nextPublic });
-  };
+    const settingsUnchanged =
+      emit.gameMode === lobby.settings.gameMode &&
+      emit.friendlyRandom === lobby.settings.friendlyRandom &&
+      emit.friendlyCategoryAId === lobby.settings.friendlyCategoryAId &&
+      emit.friendlyCategoryBId === lobby.settings.friendlyCategoryBId;
+
+    const visibilityUnchanged =
+      updates.isPublic === undefined || updates.isPublic === lobby.isPublic;
+
+    if (settingsUnchanged && visibilityUnchanged) {
+      return;
+    }
+
+    getSocket().emit("lobby:update_settings", emit);
+    logger.info("Socket emit lobby:update_settings", emit);
+  }, [lobby]);
 
   const handleStartMatch = () => {
+    if (isStartingMatch) return;
+    setIsStartingMatch(true);
+    clearStartMatchTimeout();
+    startMatchTimeoutRef.current = setTimeout(() => {
+      setIsStartingMatch(false);
+      toast.error("Match start is taking too long. Please try again.");
+    }, 12000);
+
     getSocket().emit("lobby:start");
-    logger.info("Socket emit lobby:start");
+    logger.info("Socket emit lobby:start", {
+      lobbyId: lobby?.lobbyId ?? null,
+    });
   };
 
   const handleLeaveLobby = () => {
+    leavingRef.current = true;
+    createdRef.current = true;
+    startedRef.current = true;
+    initActionRef.current = null;
+    clearStartMatchTimeout();
+    setIsStartingMatch(false);
     getSocket().emit("lobby:leave");
-    useRealtimeMatchStore.getState().reset();
     logger.info("Socket emit lobby:leave");
+    // Leave room route immediately to avoid URL-driven auto-rejoin.
+    router.replace("/play");
+    window.setTimeout(() => {
+      useRealtimeMatchStore.getState().reset();
+      leavingRef.current = false;
+    }, 150);
   };
+
+  useEffect(() => {
+    return () => {
+      clearStartMatchTimeout();
+    };
+  }, [clearStartMatchTimeout]);
 
   return {
     lobby,
@@ -171,11 +264,12 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     opponent,
     h2hSummary: opponent ? h2hSummary ?? null : null,
     allCategories,
+    settingsErrorVersion,
+    isStartingMatch,
     actions: {
       copyCode,
       handleReadyToggle,
       handleUpdateSettings,
-      handleToggleVisibility,
       handleStartMatch,
       handleLeaveLobby,
     },

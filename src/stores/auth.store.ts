@@ -4,6 +4,8 @@ import { clearTokens } from "@/lib/auth/tokenStorage";
 import { logout as logoutService, refresh } from "@/lib/auth/auth.service";
 import type { User } from "@/lib/types";
 import { logger } from "@/utils/logger";
+import { identifyUser, resetUser } from "@/lib/posthog";
+import { setNewRelicUser } from "@/lib/newrelic-browser";
 
 type AuthStatus = "loading" | "anonymous" | "authenticated";
 
@@ -16,12 +18,31 @@ type AuthState = {
   logout: () => Promise<void>;
 };
 
+function syncAnalyticsUser(user: User): void {
+  if (!user.id) {
+    return;
+  }
+
+  identifyUser(user.id, {
+    email: user.email,
+    nickname: user.nickname,
+    created_at: user.created_at,
+  });
+
+  setNewRelicUser(user.id, {
+    email: user.email,
+    nickname: user.nickname,
+  });
+}
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   status: "loading",
   user: null,
   hasBootstrapped: false,
-  setAuthenticated: (user) =>
-    set({ status: "authenticated", user, hasBootstrapped: true }),
+  setAuthenticated: (user) => {
+    set({ status: "authenticated", user, hasBootstrapped: true });
+    syncAnalyticsUser(user);
+  },
   bootstrap: async (options) => {
     const force = options?.force ?? false;
     const { status, hasBootstrapped } = get();
@@ -51,6 +72,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const user = await bootstrapUser();
       logger.info("Auth bootstrap success");
       set({ status: "authenticated", user, hasBootstrapped: true });
+      syncAnalyticsUser(user);
     } catch {
       logger.warn("Auth bootstrap failed");
       const refreshed = await refresh();
@@ -59,6 +81,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           const user = await bootstrapUser();
           logger.info("Auth bootstrap after refresh success");
           set({ status: "authenticated", user, hasBootstrapped: true });
+          syncAnalyticsUser(user);
           return;
         } catch {
           logger.warn("Auth bootstrap after refresh failed");
@@ -75,6 +98,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Best-effort; store state still resets.
     }
     clearTokens();
+    resetUser(); // Reset PostHog user
     set({ status: "anonymous", user: null, hasBootstrapped: true });
   },
 }));

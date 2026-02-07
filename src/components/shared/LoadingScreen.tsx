@@ -1,5 +1,7 @@
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+'use client';
+
+import { motion } from 'motion/react';
+import { cn } from '@/lib/utils';
 
 interface LoadingScreenProps {
   text?: string;
@@ -7,60 +9,177 @@ interface LoadingScreenProps {
   fullScreen?: boolean;
 }
 
+function SoccerBallSVG({ size = 64 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* Ball base */}
+      <circle cx="50" cy="50" r="48" fill="white" stroke="#2A2A2A" strokeWidth="2" />
+
+      {/* Subtle sphere shading */}
+      <radialGradient id="ball-shade" cx="40%" cy="35%" r="60%">
+        <stop offset="0%" stopColor="white" stopOpacity="1" />
+        <stop offset="70%" stopColor="#e8e8e8" stopOpacity="1" />
+        <stop offset="100%" stopColor="#d0d0d0" stopOpacity="1" />
+      </radialGradient>
+      <circle cx="50" cy="50" r="47" fill="url(#ball-shade)" />
+
+      {/* Highlight */}
+      <radialGradient id="ball-highlight" cx="35%" cy="30%" r="25%">
+        <stop offset="0%" stopColor="white" stopOpacity="0.9" />
+        <stop offset="100%" stopColor="white" stopOpacity="0" />
+      </radialGradient>
+      <circle cx="50" cy="50" r="47" fill="url(#ball-highlight)" />
+
+      {/* Center pentagon */}
+      <polygon
+        points="50,30 62,38 58,52 42,52 38,38"
+        fill="#1a1a1a"
+        stroke="#1a1a1a"
+        strokeWidth="0.5"
+        strokeLinejoin="round"
+      />
+
+      {/* Top pentagon */}
+      <polygon
+        points="50,6 58,18 50,22 42,18"
+        fill="#1a1a1a"
+        stroke="#1a1a1a"
+        strokeWidth="0.5"
+        strokeLinejoin="round"
+      />
+
+      {/* Top-right pentagon */}
+      <polygon
+        points="78,22 82,36 72,40 66,32 70,20"
+        fill="#1a1a1a"
+        stroke="#1a1a1a"
+        strokeWidth="0.5"
+        strokeLinejoin="round"
+      />
+
+      {/* Top-left pentagon */}
+      <polygon
+        points="22,22 30,20 34,32 28,40 18,36"
+        fill="#1a1a1a"
+        stroke="#1a1a1a"
+        strokeWidth="0.5"
+        strokeLinejoin="round"
+      />
+
+      {/* Bottom-right pentagon */}
+      <polygon
+        points="84,60 80,74 68,72 64,60 74,54"
+        fill="#1a1a1a"
+        stroke="#1a1a1a"
+        strokeWidth="0.5"
+        strokeLinejoin="round"
+      />
+
+      {/* Bottom-left pentagon */}
+      <polygon
+        points="16,60 26,54 36,60 32,72 20,74"
+        fill="#1a1a1a"
+        stroke="#1a1a1a"
+        strokeWidth="0.5"
+        strokeLinejoin="round"
+      />
+
+      {/* Bottom pentagon */}
+      <polygon
+        points="38,82 42,74 58,74 62,82 50,92"
+        fill="#1a1a1a"
+        stroke="#1a1a1a"
+        strokeWidth="0.5"
+        strokeLinejoin="round"
+      />
+
+      {/* Panel seam lines */}
+      <g stroke="#c0c0c0" strokeWidth="0.8" fill="none" opacity="0.6">
+        {/* Top to center */}
+        <line x1="42" y1="18" x2="38" y2="38" />
+        <line x1="58" y1="18" x2="62" y2="38" />
+        {/* Sides to center */}
+        <line x1="28" y1="40" x2="42" y2="52" />
+        <line x1="72" y1="40" x2="58" y2="52" />
+        {/* Bottom connections */}
+        <line x1="42" y1="52" x2="42" y2="74" />
+        <line x1="58" y1="52" x2="58" y2="74" />
+        {/* Outer connections */}
+        <line x1="34" y1="32" x2="42" y2="18" />
+        <line x1="66" y1="32" x2="58" y2="18" />
+        <line x1="74" y1="54" x2="62" y2="38" />
+        <line x1="26" y1="54" x2="38" y2="38" />
+        <line x1="36" y1="60" x2="42" y2="52" />
+        <line x1="64" y1="60" x2="58" y2="52" />
+        <line x1="32" y1="72" x2="42" y2="74" />
+        <line x1="68" y1="72" x2="58" y2="74" />
+      </g>
+    </svg>
+  );
+}
+
 export function LoadingScreen({
-  text = "Warming up...",
+  text = 'Warming up...',
   className,
-  fullScreen = true
+  fullScreen = true,
 }: LoadingScreenProps) {
   return (
-    <div className={cn(
-      "flex flex-col items-center justify-center bg-background text-foreground",
-      fullScreen ? "fixed inset-0 z-50 bg-background/80 backdrop-blur-sm" : "h-64 w-full",
-      className
-    )}>
-      <div className="relative">
+    <div
+      className={cn(
+        'flex flex-col items-center justify-center bg-background text-foreground',
+        fullScreen
+          ? 'fixed inset-0 z-50 bg-background/80 backdrop-blur-sm'
+          : 'h-64 w-full',
+        className
+      )}
+    >
+      <div className="relative h-32 flex items-end justify-center">
         {/* Bouncing Ball */}
         <motion.div
-           animate={{
-             y: [0, -40, 0],
-             scale: [1, 1.1, 1], // Slight scale at peak bounce
-             rotate: [0, 180, 360]
-           }}
-           transition={{
-             duration: 0.8,
-             repeat: Infinity,
-             ease: "circOut", // Bouncy feel
-             times: [0, 0.5, 1]
-           }}
-           className="relative z-10 flex size-16 items-center justify-center rounded-full bg-white shadow-xl border-4 border-black box-border overflow-hidden"
+          animate={{
+            y: [0, -60, 0],
+            scaleX: [1.1, 0.95, 1.1],
+            scaleY: [0.9, 1.08, 0.9],
+            rotate: [0, 180, 360],
+          }}
+          transition={{
+            duration: 0.7,
+            repeat: Infinity,
+            ease: [0.33, 0, 0.67, 1],
+            times: [0, 0.45, 1],
+          }}
+          className="relative z-10"
         >
-           {/* Simple Football Pattern */}
-           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,white_40%,#e5e5e5_100%)]" />
-           <svg viewBox="0 0 24 24" fill="currentColor" className="size-16 text-black opacity-80">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.07 1.09L13.5 6.5H10.5L9.6 4.6c.74-.23 1.53-.39 2.33-.51zm-4.7 1.83l2.88 3.32L6.5 10.5 4.18 8.18c.64-1.28 1.56-2.4 2.65-3.26zM4.14 12c0-.52.06-1.02.16-1.51l3.43 2L4.65 16.66c-.34-1.44-.51-2.95-.51-4.66zM5.5 18l3.5-3.5 3 1.5-1.5 5.2c-1.93-.56-3.66-1.74-5-3.2zm8 3.86l1.37-4.75 3.13-1.56L16.5 19.5c-1.34.92-2.92 1.6-4.63 2.36l-1.37-4.75zM19.34 16.5l-3.2-3.2L19 10.5l.84 2.38c-.16 1.25-.65 2.42-1.5 3.62zM19.86 12c0 .52-.06 1.02-.16 1.51l-3.43-2 3.08-4.15c.34 1.44.51 2.95.51 4.66zM18.5 6l-3.5 3.5-3-1.5 1.5-5.2c1.93.56 3.66 1.74 5 3.2z" />
-           </svg>
+          <SoccerBallSVG size={56} />
         </motion.div>
-
-        {/* Shadow */}
-        <motion.div
-           animate={{
-             scale: [0.8, 1.5, 0.8],
-             opacity: [0.5, 0.2, 0.5]
-           }}
-           transition={{
-             duration: 0.8,
-             repeat: Infinity,
-             ease: "circOut"
-           }}
-           className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-12 h-2 bg-black/20 rounded-[100%] blur-sm"
-        />
       </div>
+
+      {/* Shadow */}
+      <motion.div
+        animate={{
+          scaleX: [1.2, 0.5, 1.2],
+          opacity: [0.35, 0.1, 0.35],
+        }}
+        transition={{
+          duration: 0.7,
+          repeat: Infinity,
+          ease: [0.33, 0, 0.67, 1],
+          times: [0, 0.45, 1],
+        }}
+        className="w-14 h-3 rounded-[100%] bg-white/10 blur-[2px] mt-1"
+      />
 
       <motion.p
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="mt-8 text-sm font-bold uppercase tracking-widest text-muted-foreground animate-pulse"
+        animate={{ opacity: [0.4, 0.8, 0.4] }}
+        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        className="mt-8 text-sm font-black uppercase tracking-[0.2em] text-white/40 font-fun"
       >
         {text}
       </motion.p>

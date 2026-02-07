@@ -11,9 +11,21 @@ interface QuitMatchModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
+  onSecondaryConfirm?: () => void;
+  confirmLabel?: string;
+  secondaryConfirmLabel?: string;
+  description?: string;
 }
 
-export function QuitMatchModal({ open, onOpenChange, onConfirm }: QuitMatchModalProps) {
+export function QuitMatchModal({
+  open,
+  onOpenChange,
+  onConfirm,
+  onSecondaryConfirm,
+  confirmLabel = "Leave Match",
+  secondaryConfirmLabel = "Leave Temporarily",
+  description = "You'll lose this match if you leave now.",
+}: QuitMatchModalProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className="max-w-xs bg-[#1a1f2e] border-0 border-b-4 border-b-white/10 rounded-3xl p-6 font-fun text-center">
@@ -40,7 +52,7 @@ export function QuitMatchModal({ open, onOpenChange, onConfirm }: QuitMatchModal
           Are you sure?
         </AlertDialogTitle>
         <AlertDialogDescription className="text-white/50 text-sm font-semibold">
-          You&apos;ll lose this match if you leave now.
+          {description}
         </AlertDialogDescription>
 
         <div className="flex flex-col gap-2 mt-4">
@@ -50,11 +62,19 @@ export function QuitMatchModal({ open, onOpenChange, onConfirm }: QuitMatchModal
           >
             Keep Playing
           </button>
+          {onSecondaryConfirm ? (
+            <button
+              onClick={onSecondaryConfirm}
+              className="w-full py-3 rounded-2xl bg-transparent border-2 border-amber-500/40 text-amber-300 font-extrabold text-sm hover:bg-amber-500/10 active:translate-y-[1px] transition-all"
+            >
+              {secondaryConfirmLabel}
+            </button>
+          ) : null}
           <button
             onClick={onConfirm}
             className="w-full py-3 rounded-2xl bg-transparent border-2 border-red-500/40 text-red-400 font-extrabold text-sm hover:bg-red-500/10 active:translate-y-[1px] transition-all"
           >
-            Leave Match
+            {confirmLabel}
           </button>
         </div>
       </AlertDialogContent>

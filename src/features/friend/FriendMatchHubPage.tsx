@@ -10,9 +10,12 @@ import { useRealtimeConnection } from "@/lib/realtime/useRealtimeConnection";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
+import { useQueryClient } from "@tanstack/react-query";
+import { lobbiesKeys } from "@/lib/queries/lobbies.queries";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Users } from "lucide-react";
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 
 export function FriendMatchHubPage() {
   const router = useRouter();
@@ -22,16 +25,28 @@ export function FriendMatchHubPage() {
   const { player } = usePlayer();
   const authUser = useAuthStore((state) => state.user);
   const selfUserId = authUser?.id ?? player.id;
+  const queryClient = useQueryClient();
   
   // Realtime connection
   useRealtimeConnection({ enabled: true, selfUserId });
   
   const lobby = useRealtimeMatchStore(state => state.lobby);
   const error = useRealtimeMatchStore(state => state.error);
+  const clearRealtimeError = useRealtimeMatchStore(state => state.clearError);
   
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isJoiningCode, setIsJoiningCode] = useState<string | null>(null);
   const [isNavigatingToRoom, setIsNavigatingToRoom] = useState(false);
+
+  useEffect(() => {
+    // Prevent stale realtime errors from previous routes from flashing lobby UI in this screen.
+    clearRealtimeError();
+  }, [clearRealtimeError]);
+
+  const handleActionTriggered = () => {
+    clearRealtimeError();
+    setIsNavigatingToRoom(true);
+  };
 
   // Navigate to lobby when lobby state is received (successful join/create), 
   // BUT only if we explicitly initiated navigation.
@@ -46,23 +61,48 @@ export function FriendMatchHubPage() {
   }, [lobby, router, isNavigatingToRoom]);
 
   const handleJoinPublic = (inviteCode: string) => {
-    setIsNavigatingToRoom(true);
-    setIsJoiningCode(inviteCode);
+    const currentCode = lobby?.inviteCode?.toUpperCase() ?? null;
+    const targetCode = inviteCode.toUpperCase();
+    if (currentCode === targetCode) {
+      router.push(`/friend/room/${targetCode}`);
+      return;
+    }
+
+    handleActionTriggered();
+    setIsJoiningCode(targetCode);
     
-    // Lazy import or use hook to get socket
+    // Leave waiting lobby first to avoid leave/join races on the same user session.
     import("@/lib/realtime/socket-client").then(({ getSocket }) => {
-        getSocket().emit("lobby:join_by_code", { inviteCode });
-        toast.info(`Joining ${inviteCode}...`);
+        const socket = getSocket();
+        if (lobby?.lobbyId) {
+          socket.emit("lobby:leave");
+        }
+        window.setTimeout(() => {
+          socket.emit("lobby:join_by_code", { inviteCode: targetCode });
+          toast.info(`Joining ${targetCode}...`);
+        }, lobby?.lobbyId ? 140 : 0);
     });
   };
 
   // Clear joining state if error occurs
   useEffect(() => {
     if (error) {
+      logger.warn("Friend hub observed realtime error", {
+        code: error.code,
+        message: error.message,
+        meta: error.meta ?? null,
+        isNavigatingToRoom,
+        isJoiningCode,
+        lobbyCode: lobby?.inviteCode ?? null,
+      });
+      if (error.code === "LOBBY_NOT_FOUND" && isJoiningCode) {
+        void queryClient.invalidateQueries({ queryKey: lobbiesKeys.public() });
+        toast.error("That lobby just closed. Lobby list refreshed.");
+      }
       setIsJoiningCode(null);
       setIsNavigatingToRoom(false);
     }
-  }, [error]);
+  }, [error, isJoiningCode, isNavigatingToRoom, lobby?.inviteCode, queryClient]);
 
   return (
     <div className="container mx-auto max-w-5xl py-6 animate-in fade-in space-y-6">
@@ -96,12 +136,12 @@ export function FriendMatchHubPage() {
             <LobbyBrowsePanel 
                onJoin={handleJoinPublic}
                isJoiningCode={isJoiningCode}
-               onActionTriggered={() => setIsNavigatingToRoom(true)}
+               onActionTriggered={handleActionTriggered}
             />
          </TabsContent>
 
          <TabsContent value="create">
-            <CreateJoinPanel onActionTriggered={() => setIsNavigatingToRoom(true)} />
+            <CreateJoinPanel onActionTriggered={handleActionTriggered} />
          </TabsContent>
       </Tabs>
 
