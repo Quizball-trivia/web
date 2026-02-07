@@ -18,21 +18,36 @@ export function OAuthCallbackScreen() {
     const processCallback = async () => {
       try {
         const hash = window.location.hash || "";
+        const query = window.location.search || "";
         const lastHash = window.sessionStorage.getItem("quizball_oauth_hash");
+        const lastQuery = window.sessionStorage.getItem("quizball_oauth_query");
 
         logger.info('OAuth callback start', {
           hashLength: hash.length,
+          queryLength: query.length,
           hasLastHash: !!lastHash,
+          hasLastQuery: !!lastQuery,
         });
 
-        if (hash && lastHash === hash) {
-          logger.info('OAuth callback duplicate hash, skipping');
+        if ((hash && lastHash === hash) || (!hash && query && lastQuery === query)) {
+          logger.info('OAuth callback duplicate payload, skipping');
           return;
         }
 
-        const tokens = parseOAuthHash(hash);
+        const queryParams = new URLSearchParams(query.replace(/^\?/, ""));
+        const queryAccessToken = queryParams.get("access_token");
+        const queryRefreshToken = queryParams.get("refresh_token");
+        const tokens = parseOAuthHash(hash) ??
+          (queryAccessToken && queryRefreshToken
+            ? { accessToken: queryAccessToken, refreshToken: queryRefreshToken }
+            : null);
         if (tokens) {
-          window.sessionStorage.setItem("quizball_oauth_hash", hash);
+          if (hash) {
+            window.sessionStorage.setItem("quizball_oauth_hash", hash);
+          }
+          if (query) {
+            window.sessionStorage.setItem("quizball_oauth_query", query);
+          }
           const refreshed = await refreshWithToken(tokens.refreshToken);
           if (!refreshed) {
             throw new Error('Failed to establish session');
@@ -41,7 +56,10 @@ export function OAuthCallbackScreen() {
           // Clear tokens from URL (security: don't leave in browser history)
           window.history.replaceState({}, document.title, window.location.pathname);
         } else {
-          logger.warn('OAuth callback missing tokens');
+          logger.warn('OAuth callback missing tokens', {
+            hasCode: Boolean(queryParams.get("code")),
+            hasError: Boolean(queryParams.get("error")),
+          });
           // Fall back to cookie-based session if already set
         }
 
