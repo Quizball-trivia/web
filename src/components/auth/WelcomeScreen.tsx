@@ -17,7 +17,14 @@ interface WelcomeScreenProps {
 const SUBHEADING_PHRASES = [
   "Climb the ranks.",
   "Outsmart rivals.",
-  "Prove your ball knowledge."
+  "Prove your ball knowledge.",
+  "Build up your status.",
+  "Win tournaments.",
+  "Earn rewards.",
+  "Become a legend.",
+  "Challenge friends.",
+  "Rise to the top.",
+  "Show your skills.",
 ];
 
 export function WelcomeScreen() {
@@ -129,9 +136,9 @@ export function WelcomeScreen() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="order-1 md:order-2 flex flex-col items-center md:items-start text-center md:text-left max-w-xl"
         >
-           <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-[1.1] mb-6 text-foreground">
-              The free, fun, and effective way to learn <span className="text-green-500">football</span>.
-           </h1>
+            <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-[1.1] mb-6 text-foreground">
+              The ultimate <span className="text-green-500">online football trivia battle</span>.
+            </h1>
            
            <div className="h-8 mb-8 flex items-center justify-center md:justify-start">
              <AnimatePresence mode="wait">
@@ -140,7 +147,7 @@ export function WelcomeScreen() {
                  initial={{ opacity: 0, y: 10 }}
                  animate={{ opacity: 1, y: 0 }}
                  exit={{ opacity: 0, y: -10 }}
-                 className="text-lg md:text-xl font-bold text-muted-foreground"
+                 className="text-lg md:text-xl font-bold text-green-600"
                >
                  {SUBHEADING_PHRASES[currentPhraseIndex]}
                </motion.p>
