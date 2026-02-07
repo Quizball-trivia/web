@@ -23,7 +23,7 @@ export default function AppAuthGate({ children }: AppAuthGateProps) {
 
   useEffect(() => {
     if (status === "anonymous") {
-      router.replace("/auth/login");
+      router.replace("/auth/welcome");
     }
   }, [status, router]);
 

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import ClubSelect from './ClubSelect';
 import {
   Trophy,
   Sparkles,
@@ -29,9 +30,9 @@ interface OnboardingFlowProps {
 
 interface OnboardingData {
   favoriteClub: string;
-  age: string;
   preferredLanguage: string;
   avatar: string; // emoji or image URL
+  username: string;
   quizScore: number;
 }
 
@@ -67,11 +68,6 @@ const quizQuestions: QuizQuestion[] = [
     options: ['Germany', 'Argentina', 'Brazil', 'Italy'],
     correctAnswer: 2,
   },
-  {
-    question: 'In which year was the first FIFA World Cup held?',
-    options: ['1926', '1930', '1934', '1938'],
-    correctAnswer: 1,
-  },
 ];
 
 const languages = [
@@ -103,7 +99,6 @@ const getAvatarUrl = (seed: string) => {
 type OnboardingStep =
   | 'welcome'
   | 'question1'
-  | 'question2'
   | 'question3'
   | 'avatar'
   | 'quiz-intro'
@@ -111,24 +106,65 @@ type OnboardingStep =
   | 'summary';
 
 export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
-  const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome');
-  const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
 
-  // Preference data
+  // All state hooks must be declared before any code that uses them
+  const [username, setUsername] = useState('');
+  const [currentStep, setCurrentStep] = useState<OnboardingStep>('question1');
+  const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
   const [favoriteClub, setFavoriteClub] = useState('');
-  const [age, setAge] = useState('');
   const [preferredLanguage, setPreferredLanguage] = useState('');
   const [avatar, setAvatar] = useState('');
-  const [avatarError, setAvatarError] = useState('');
-
-  // Quiz data
   const [currentQuizQuestion, setCurrentQuizQuestion] = useState(0);
   const [quizAnswers, setQuizAnswers] = useState<(number | null)[]>(
     new Array(quizQuestions.length).fill(null)
   );
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showingFeedback, setShowingFeedback] = useState(false);
+  const [timer, setTimer] = useState(10);
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (currentStep === 'quiz' && !showingFeedback) {
+      setTimer(10);
+      let localTimer = 10;
+      const interval = setInterval(() => {
+        setTimer((t) => {
+          if (t > 1) {
+            localTimer--;
+            return t - 1;
+          } else {
+            clearInterval(interval);
+            // Auto-advance if timer runs out and no answer selected
+            if (!showingFeedback && selectedAnswer === null) {
+              setSelectedAnswer(null);
+              setShowingFeedback(true);
+              setTimeout(() => {
+                setShowingFeedback(false);
+                setSelectedAnswer(null);
+                if (currentQuizQuestion < quizQuestions.length - 1) {
+                  setCurrentQuizQuestion((q) => q + 1);
+                } else {
+                  setCurrentStep('summary');
+                }
+              }, 1200);
+            }
+            return 0;
+          }
+        });
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [currentStep, currentQuizQuestion, showingFeedback]);
+
+
+  const stepOrder: OnboardingStep[] = [
+    'question1',
+    'question3',
+    'avatar',
+    'quiz-intro',
+    'quiz',
+    'summary',
+  ];
 
   // Cleanup feedback timeout on unmount
   useEffect(() => {
@@ -139,20 +175,16 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     };
   }, []);
 
+  const goToPrevStep = () => {
+    setDirection('backward');
+    const currentIndex = stepOrder.indexOf(currentStep);
+    if (currentIndex > 0) {
+      setCurrentStep(stepOrder[currentIndex - 1]);
+    }
+  };
+
   const goToNextStep = () => {
     setDirection('forward');
-
-    const stepOrder: OnboardingStep[] = [
-      'welcome',
-      'question1',
-      'question2',
-      'question3',
-      'avatar',
-      'quiz-intro',
-      'quiz',
-      'summary',
-    ];
-
     const currentIndex = stepOrder.indexOf(currentStep);
     if (currentIndex < stepOrder.length - 1) {
       setCurrentStep(stepOrder[currentIndex + 1]);
@@ -209,35 +241,14 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const handleComplete = () => {
     const data: OnboardingData = {
       favoriteClub,
-      age,
       preferredLanguage,
       avatar,
+      username,
       quizScore: calculateScore(),
     };
     onComplete(data);
   };
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (!ALLOWED_AVATAR_TYPES.has(file.type)) {
-      setAvatarError('Please upload a PNG, JPG, WEBP, or GIF image.');
-      return;
-    }
-
-    if (file.size > MAX_AVATAR_SIZE) {
-      setAvatarError('Image must be smaller than 2MB.');
-      return;
-    }
-
-    setAvatarError('');
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setAvatar(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
 
   const variants = {
     enter: (direction: 'forward' | 'backward') => ({
@@ -255,100 +266,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   };
 
   return (
-    <div className="h-screen bg-gradient-to-b from-background via-background to-primary/5 flex flex-col overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-primary/5 flex flex-col items-center justify-center py-12 px-4">
       <AnimatePresence mode="wait" custom={direction}>
-        {/* Welcome Screen */}
-        {currentStep === 'welcome' && (
-          <motion.div
-            key="welcome"
-            custom={direction}
-            variants={variants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: 0.3 }}
-            className="flex-1 flex flex-col items-center justify-center p-6 overflow-hidden"
-          >
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-              className="mb-4"
-            >
-              <div className="size-20 rounded-full bg-gradient-to-br from-primary to-green-600 flex items-center justify-center shadow-lg shadow-primary/30">
-                <Trophy className="size-10 text-background" />
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="text-center mb-6"
-            >
-              <h1 className="mb-3 bg-gradient-to-r from-primary to-green-400 bg-clip-text text-transparent">
-                Welcome to the Trivia Arena!
-              </h1>
-              <p className="text-muted-foreground text-lg">
-                Let&apos;s personalize your experience.
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="w-full max-w-sm space-y-4"
-            >
-              <Button
-                onClick={goToNextStep}
-                size="lg"
-                className="w-full h-14 text-lg"
-              >
-                <Sparkles className="size-5 mr-2" />
-                Start
-              </Button>
-
-              <div className="flex items-center gap-3 justify-center text-muted-foreground text-sm">
-                <div className="flex items-center gap-1">
-                  <CheckCircle2 className="size-4 text-primary" />
-                  <span>4 quick questions</span>
-                </div>
-                <div className="size-1 rounded-full bg-muted-foreground/30" />
-                <div className="flex items-center gap-1">
-                  <CheckCircle2 className="size-4 text-primary" />
-                  <span>Mini quiz</span>
-                </div>
-              </div>
-
-              <button
-                onClick={() => onComplete({
-                  favoriteClub: '',
-                  age: '',
-                  preferredLanguage: '',
-                  avatar: '',
-                  quizScore: 0,
-                })}
-                className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors underline"
-              >
-                Skip for now
-              </button>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8 }}
-              className="mt-6 flex items-center gap-2"
-            >
-              <Flame className="size-5 text-orange-500" />
-              <Star className="size-5 text-yellow-500" />
-              <Trophy className="size-5 text-primary" />
-            </motion.div>
-          </motion.div>
-        )}
-
-        {/* Question 1: Favorite Club */}
+        {/* Club selection and subsequent onboarding steps start here */}
         {currentStep === 'question1' && (
           <motion.div
             key="question1"
@@ -358,284 +278,153 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             animate="center"
             exit="exit"
             transition={{ duration: 0.3 }}
-            className="flex-1 flex flex-col p-6 overflow-hidden"
+            className="w-full max-w-xl mx-auto"
           >
-            {/* Progress */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-2">
-                <Badge variant="outline" className="text-xs">
-                  Question 1 of 3
-                </Badge>
-                <span className="text-xs text-muted-foreground">33%</span>
-              </div>
-              <Progress value={33} className="h-2" />
-            </div>
-
-            {/* Question Content */}
-            <div className="flex-1 flex flex-col justify-between min-h-0">
-              <div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="mb-4"
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="size-12 rounded-xl bg-primary/20 flex items-center justify-center">
-                      <Trophy className="size-6 text-primary" />
-                    </div>
-                    <h2 className="flex-1">Who is your favorite football club?</h2>
+            <Card className="shadow-2xl border-0 !bg-zinc-800">
+              <CardContent className="py-10 px-8 flex flex-col gap-8 !bg-zinc-800 rounded-2xl">
+                {/* Progress */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge variant="outline" className="text-xs">
+                      Step 1 of 3
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">33%</span>
                   </div>
-                  <p className="text-muted-foreground text-sm">
-                    Tell us which team you support so we can personalize your experience.
+                  <Progress value={33} className="h-2" />
+                </div>
+
+                {/* Question Content */}
+                <div className="flex flex-col items-center text-center gap-4">
+                  <div className="flex items-center justify-center mb-2">
+                    <div className="size-16 rounded-xl bg-primary/20 flex items-center justify-center">
+                      <Trophy className="size-8 text-primary" />
+                    </div>
+                  </div>
+                  <h1 className="text-2xl font-bold tracking-tight">Select Your Favorite Football Club</h1>
+                  <p className="text-muted-foreground text-base max-w-md">
+                    Search and select your favorite football club to personalize your experience.
                   </p>
-                </motion.div>
+                  <div className="w-full max-w-md">
+                    <ClubSelect
+                      value={favoriteClub}
+                      onChange={setFavoriteClub}
+                    />
+                  </div>
+                </div>
 
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <Input
-                    value={favoriteClub}
-                    onChange={(e) => setFavoriteClub(e.target.value)}
-                    placeholder="e.g., Manchester United, Barcelona..."
-                    className="h-14 text-lg"
-                    autoFocus
-                  />
-                </motion.div>
-              </div>
+                {/* Actions */}
+                <div className="flex flex-col gap-3 mt-6">
+                  <Button
+                    onClick={goToNextStep}
+                    disabled={!favoriteClub.trim()}
+                    size="lg"
+                    className="w-full h-14 text-lg"
+                  >
+                    Continue
+                    <ChevronRight className="size-5 ml-2" />
+                  </Button>
 
-              {/* Actions */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="space-y-3 mt-4"
-              >
-                <Button
-                  onClick={goToNextStep}
-                  disabled={!favoriteClub.trim()}
-                  size="lg"
-                  className="w-full h-14"
-                >
-                  Continue
-                  <ChevronRight className="size-5 ml-2" />
-                </Button>
-
-                <button
-                  onClick={skipToQuizIntro}
-                  className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Skip
-                </button>
-              </motion.div>
-            </div>
+                  <button
+                    onClick={skipToQuizIntro}
+                    className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Skip
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
           </motion.div>
         )}
 
-        {/* Question 2: Age */}
-        {currentStep === 'question2' && (
-          <motion.div
-            key="question2"
-            custom={direction}
-            variants={variants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: 0.3 }}
-            className="flex-1 flex flex-col p-6 overflow-hidden"
-          >
-            {/* Progress */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-2">
-                <Badge variant="outline" className="text-xs">
-                  Question 2 of 3
-                </Badge>
-                <span className="text-xs text-muted-foreground">66%</span>
-              </div>
-              <Progress value={66} className="h-2" />
-            </div>
-
-            {/* Question Content */}
-            <div className="flex-1 flex flex-col justify-between min-h-0">
-              <div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="mb-4"
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="size-12 rounded-xl bg-primary/20 flex items-center justify-center">
-                      <Target className="size-6 text-primary" />
-                    </div>
-                    <h2 className="flex-1">How old are you?</h2>
-                  </div>
-                  <p className="text-muted-foreground text-sm">
-                    This helps us tailor trivia difficulty to your experience level.
-                  </p>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <Input
-                    type="number"
-                    value={age}
-                    onChange={(e) => setAge(e.target.value)}
-                    placeholder="Enter your age"
-                    className="h-14 text-lg"
-                    min="1"
-                    max="120"
-                    autoFocus
-                  />
-                </motion.div>
-              </div>
-
-              {/* Actions */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="space-y-3 mt-4"
-              >
-                {(() => {
-                  const parsedAge = Number(age);
-                  const isInvalidAge =
-                    Number.isNaN(parsedAge) || parsedAge < 1 || parsedAge > 120;
-                  return (
-                <Button
-                  onClick={goToNextStep}
-                  disabled={!age || isInvalidAge}
-                  size="lg"
-                  className="w-full h-14"
-                >
-                  Continue
-                  <ChevronRight className="size-5 ml-2" />
-                </Button>
-                  );
-                })()}
-
-                <button
-                  onClick={skipToQuizIntro}
-                  className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Skip
-                </button>
-              </motion.div>
-            </div>
-          </motion.div>
-        )}
 
         {/* Question 3: Preferred Language */}
         {currentStep === 'question3' && (
-          <motion.div
-            key="question3"
-            custom={direction}
-            variants={variants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: 0.3 }}
-            className="flex-1 flex flex-col p-6 overflow-hidden"
-          >
-            {/* Progress */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-2">
-                <Badge variant="outline" className="text-xs">
-                  Question 3 of 3
-                </Badge>
-                <span className="text-xs text-muted-foreground">100%</span>
-              </div>
-              <Progress value={100} className="h-2" />
-            </div>
-
-            {/* Question Content */}
-            <div className="flex-1 flex flex-col justify-between min-h-0">
-              <div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="mb-3"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="size-12 rounded-xl bg-primary/20 flex items-center justify-center">
-                      <Globe className="size-6 text-primary" />
-                    </div>
-                    <h2 className="flex-1">Choose your preferred language</h2>
+                    <motion.div
+                      key="question3"
+                      custom={direction}
+                      variants={variants}
+                      initial="enter"
+                      animate="center"
+                      exit="exit"
+                      transition={{ duration: 0.3 }}
+                      className="w-full max-w-xl mx-auto relative"
+                    >
+                      <button
+                        type="button"
+                        onClick={goToPrevStep}
+                        className="absolute left-4 top-4 z-10 flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        <ChevronRight className="rotate-180 size-5" />
+                        Back
+                      </button>
+            <Card className="shadow-2xl border-0 !bg-zinc-800">
+              <CardContent className="py-10 px-8 flex flex-col gap-8 !bg-zinc-800 rounded-2xl">
+                {/* Progress */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge variant="outline" className="text-xs">
+                      Step 2 of 3
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">66%</span>
                   </div>
-                  <p className="text-muted-foreground text-sm">
+                  <Progress value={66} className="h-2" />
+                </div>
+
+                {/* Question Content */}
+                <div className="flex flex-col items-center text-center gap-4">
+                  <div className="flex items-center justify-center mb-2">
+                    <div className="size-16 rounded-xl bg-primary/20 flex items-center justify-center">
+                      <Globe className="size-8 text-primary" />
+                    </div>
+                  </div>
+                  <h1 className="text-2xl font-bold tracking-tight">Choose Your Preferred Language</h1>
+                  <p className="text-muted-foreground text-base max-w-md">
                     Select the language you want to use in the app.
                   </p>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="space-y-3"
-                >
-                  {languages.map((language, index) => (
-                    <motion.button
-                      key={language.code}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 + index * 0.1 }}
-                      onClick={() => setPreferredLanguage(language.code)}
-                      className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
-                        preferredLanguage === language.code
-                          ? 'border-primary bg-primary/10'
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-4">
-                        <span className="text-4xl">{language.flag}</span>
-                        <div className="flex-1">
-                          <div className="text-lg">{language.name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {language.nativeName}
-                          </div>
-                        </div>
+                  <div className="w-full max-w-md flex flex-col gap-3 mt-2">
+                    {languages.map((language, index) => (
+                      <button
+                        key={language.code}
+                        onClick={() => setPreferredLanguage(language.code)}
+                        className={`w-full p-4 rounded-xl border-2 flex items-center gap-4 transition-all text-left text-lg font-medium ${
+                          preferredLanguage === language.code
+                            ? 'border-primary bg-primary/10'
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                      >
+                        <span className="text-3xl">{language.flag}</span>
+                        <span className="flex-1">{language.name}</span>
                         {preferredLanguage === language.code ? (
                           <CheckCircle2 className="size-5 text-primary" />
                         ) : (
                           <Circle className="size-5 text-muted-foreground/30" />
                         )}
-                      </div>
-                    </motion.button>
-                  ))}
-                </motion.div>
-              </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-              {/* Actions */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="space-y-3 mt-4"
-              >
-                <Button
-                  onClick={goToNextStep}
-                  disabled={!preferredLanguage}
-                  size="lg"
-                  className="w-full h-14"
-                >
-                  Continue
-                  <ChevronRight className="size-5 ml-2" />
-                </Button>
+                {/* Actions */}
+                <div className="flex flex-col gap-3 mt-6">
+                  <Button
+                    onClick={goToNextStep}
+                    disabled={!preferredLanguage}
+                    size="lg"
+                    className="w-full h-14 text-lg"
+                  >
+                    Continue
+                    <ChevronRight className="size-5 ml-2" />
+                  </Button>
 
-                <button
-                  onClick={skipToQuizIntro}
-                  className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Skip
-                </button>
-              </motion.div>
-            </div>
+                  <button
+                    onClick={skipToQuizIntro}
+                    className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Skip
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
           </motion.div>
         )}
 
@@ -649,124 +438,59 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             animate="center"
             exit="exit"
             transition={{ duration: 0.3 }}
-            className="flex-1 flex flex-col p-6 overflow-hidden"
+            className="w-full max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[70vh] relative"
           >
-            {/* Progress indicator removed since this is after question 3 */}
-            <div className="mb-4">
-              <Badge variant="outline" className="text-xs">
-                Almost there!
-              </Badge>
-            </div>
-
-            {/* Question Content */}
-            <div className="flex-1 flex flex-col justify-between min-h-0">
-              <div className="flex-1 min-h-0 flex flex-col">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="mb-3"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="size-12 rounded-xl bg-primary/20 flex items-center justify-center">
-                      <User className="size-6 text-primary" />
-                    </div>
-                    <h2 className="flex-1">Choose Your Avatar</h2>
-                  </div>
-                  <p className="text-muted-foreground text-sm">
-                    Select an emoji or upload your own image.
-                  </p>
-                </motion.div>
-
-                {/* Selected Avatar Preview */}
-                {avatar && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 200 }}
-                    className="flex justify-center mb-3"
-                  >
-                    <div className="size-20 rounded-full bg-gradient-to-br from-primary to-green-600 flex items-center justify-center shadow-lg shadow-primary/30 relative overflow-hidden">
-                      {avatar.startsWith('data:') ? (
-                        <Image
-                          src={avatar}
-                          alt="Avatar"
-                          fill
-                          sizes="80px"
-                          unoptimized
-                          className="object-cover"
-                        />
-                      ) : (
-                        <Image
-                          src={getAvatarUrl(avatar)}
-                          alt="Avatar"
-                          fill
-                          sizes="80px"
-                          unoptimized
-                          className="object-cover"
-                        />
-                      )}
-                      <div className="absolute -bottom-1 -right-1 size-7 rounded-full bg-primary flex items-center justify-center shadow-lg">
-                        <CheckCircle2 className="size-3.5 text-background" />
+            <button
+              type="button"
+              onClick={goToPrevStep}
+              className="absolute left-4 top-4 z-10 flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors"
+            >
+              <ChevronRight className="rotate-180 size-5" />
+              Back
+            </button>
+            <Card className="w-full !bg-zinc-800">
+              <CardContent className="p-10 flex flex-col items-center gap-8 !bg-zinc-800 rounded-2xl">
+                <div className="flex flex-col items-center gap-3 w-full">
+                  <Badge variant="outline" className="text-xs mb-2">Almost there!</Badge>
+                  <div className="size-28 rounded-full bg-gradient-to-br from-primary to-green-600 flex items-center justify-center shadow-lg shadow-primary/30 relative overflow-hidden border-4 border-white">
+                    {avatar ? (
+                      <Image
+                        src={getAvatarUrl(avatar)}
+                        alt="Avatar"
+                        fill
+                        sizes="112px"
+                        unoptimized
+                        className="object-cover"
+                      />
+                    ) : (
+                      <User className="size-14 text-primary" />
+                    )}
+                    {avatar && (
+                      <div className="absolute -bottom-1 -right-1 size-8 rounded-full bg-primary flex items-center justify-center shadow-lg">
+                        <CheckCircle2 className="size-4 text-background" />
                       </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Upload Button */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="mb-3"
-                >
+                    )}
+                  </div>
                   <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                    id="avatar-upload"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                    placeholder="Enter your username"
+                    className="text-center text-lg font-semibold py-3 bg-zinc-50 border-2 border-primary/20 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary mt-4"
+                    maxLength={20}
                   />
-                  <label
-                    htmlFor="avatar-upload"
-                    className="w-full p-3 rounded-xl border-2 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 transition-all flex items-center justify-center gap-3 cursor-pointer"
-                  >
-                    <Upload className="size-5 text-primary" />
-                    <span className="text-primary">Upload Your Photo</span>
-                  </label>
-                  {avatarError && (
-                    <p className="mt-2 text-xs text-destructive">
-                      {avatarError}
-                    </p>
-                  )}
-                </motion.div>
-
-                {/* Divider */}
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="h-px bg-border flex-1" />
-                  <span className="text-xs text-muted-foreground">or choose an avatar</span>
-                  <div className="h-px bg-border flex-1" />
+                  <div className="text-xs text-muted-foreground mt-1 text-center">This will be your public display name.</div>
                 </div>
-
-                {/* Emoji Grid */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="flex-1 min-h-0"
-                  style={{ maxHeight: '100%', overflowY: 'auto' }}
-                >
+                <div className="w-full">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="h-px bg-border flex-1" />
+                    <span className="text-xs text-muted-foreground">Choose an avatar</span>
+                    <div className="h-px bg-border flex-1" />
+                  </div>
                   <div className="grid grid-cols-6 gap-2">
                     {avatarSeeds.map((seed, index) => (
-                      <motion.button
+                      <button
                         key={seed}
-                        initial={{ opacity: 0, scale: 0 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.3 + index * 0.02 }}
-                        onClick={() => {
-                          setAvatarError('');
-                          setAvatar(seed);
-                        }}
+                        onClick={() => setAvatar(seed)}
                         className={`relative aspect-square rounded-xl border-2 transition-all flex items-center justify-center overflow-hidden ${
                           avatar === seed
                             ? 'border-primary bg-primary/10 scale-110'
@@ -781,37 +505,34 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                           unoptimized
                           className="object-cover"
                         />
-                      </motion.button>
+                      </button>
                     ))}
                   </div>
+                </div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="space-y-3 mt-6 w-full"
+                >
+                  <Button
+                    onClick={goToNextStep}
+                    disabled={!avatar || !username.trim()}
+                    size="lg"
+                    className="w-full h-14"
+                  >
+                    Continue
+                    <ChevronRight className="size-5 ml-2" />
+                  </Button>
+                  <button
+                    onClick={skipToQuizIntro}
+                    className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Skip
+                  </button>
                 </motion.div>
-              </div>
-
-              {/* Actions */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="space-y-3 mt-4"
-              >
-                <Button
-                  onClick={goToNextStep}
-                  disabled={!avatar}
-                  size="lg"
-                  className="w-full h-14"
-                >
-                  Continue
-                  <ChevronRight className="size-5 ml-2" />
-                </Button>
-
-                <button
-                  onClick={skipToQuizIntro}
-                  className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Skip
-                </button>
-              </motion.div>
-            </div>
+              </CardContent>
+            </Card>
           </motion.div>
         )}
 
@@ -825,83 +546,61 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             animate="center"
             exit="exit"
             transition={{ duration: 0.3 }}
-            className="flex-1 flex flex-col items-center justify-center p-6 overflow-hidden"
+            className="flex-1 flex flex-col items-center justify-center p-6 overflow-hidden relative"
           >
-            <motion.div
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ delay: 0.2, type: 'spring', stiffness: 150 }}
-              className="mb-4"
+            <button
+              type="button"
+              onClick={goToPrevStep}
+              className="absolute left-4 top-4 z-10 flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors"
             >
-              <div className="size-20 rounded-full bg-gradient-to-br from-primary via-green-500 to-blue-500 flex items-center justify-center shadow-lg shadow-primary/30 relative">
-                <Target className="size-10 text-background" />
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-                  className="absolute inset-0 rounded-full border-4 border-transparent border-t-background/30"
-                />
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="text-center mb-6"
-            >
-              <h1 className="mb-3 bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
-                Let&apos;s test your knowledge!
-              </h1>
-              <p className="text-muted-foreground text-lg mb-4">
-                A quick 6-question quiz to get you started.
-              </p>
-              <div className="flex items-center gap-2 justify-center text-sm text-muted-foreground">
-                <Zap className="size-4 text-primary" />
-                <span>Fast-paced</span>
-                <div className="size-1 rounded-full bg-muted-foreground/30" />
-                <Trophy className="size-4 text-primary" />
-                <span>Fun trivia</span>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="w-full max-w-sm"
-            >
-              <Button
-                onClick={() => {
-                  setCurrentStep('quiz');
-                  setCurrentQuizQuestion(0);
-                  setSelectedAnswer(null);
-                }}
-                size="lg"
-                className="w-full h-14 text-lg"
-              >
-                <Sparkles className="size-5 mr-2" />
-                Begin Quiz
-              </Button>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8 }}
-              className="mt-6"
-            >
-              <Card className="bg-primary/5 border-primary/20">
-                <CardContent className="pt-4 pb-4 px-6">
-                  <div className="flex items-center gap-3">
-                    <Trophy className="size-5 text-primary" />
-                    <span className="text-sm text-muted-foreground">
-                      6 questions • Multiple choice
-                    </span>
+              <ChevronRight className="rotate-180 size-5" />
+              Back
+            </button>
+            <div className="w-full max-w-xl mx-auto">
+              <Card className="!bg-zinc-800 border-primary/20 shadow-xl">
+                <CardContent className="py-12 px-10 flex flex-col items-center gap-8 !bg-zinc-800 rounded-2xl">
+                  <div className="flex flex-col items-center gap-4 w-full">
+                    <div className="size-24 rounded-full bg-gradient-to-br from-primary to-blue-500 flex items-center justify-center shadow-lg shadow-primary/30 relative mb-2">
+                      <Target className="size-12 text-background" />
+                    </div>
+                    <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent mb-2">Let&apos;s test your knowledge!</h1>
+                    <p className="text-muted-foreground text-lg mb-2 max-w-md text-center">
+                      A quick 5-question quiz to get you started. You have <span className="font-semibold text-primary">10 seconds</span> for each question!
+                    </p>
+                    <div className="flex items-center gap-4 justify-center text-base text-muted-foreground mb-2">
+                      <Zap className="size-5 text-primary" />
+                      <span>Fast-paced</span>
+                      <div className="size-1 rounded-full bg-muted-foreground/30" />
+                      <Trophy className="size-5 text-primary" />
+                      <span>Fun trivia</span>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      setCurrentStep('quiz');
+                      setCurrentQuizQuestion(0);
+                      setSelectedAnswer(null);
+                    }}
+                    size="lg"
+                    className="w-full h-14 text-lg mt-4"
+                  >
+                    <Sparkles className="size-5 mr-2" />
+                    Begin Quiz
+                  </Button>
+                  <div className="w-full flex items-center justify-center mt-6">
+                    <div className="flex items-center gap-3 bg-zinc-900/80 px-6 py-3 rounded-xl border border-zinc-700">
+                      <span className="text-lg font-semibold text-primary">5</span>
+                      <span className="text-muted-foreground">Questions</span>
+                      <span className="text-lg font-semibold text-primary">10s</span>
+                      <span className="text-muted-foreground">per question</span>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           </motion.div>
+
+
         )}
 
         {/* Quiz Questions */}
@@ -914,11 +613,20 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             animate="center"
             exit="exit"
             transition={{ duration: 0.3 }}
-            className="flex-1 flex flex-col p-6 overflow-hidden"
+            className="flex-1 flex flex-col p-6 overflow-hidden relative"
           >
-            {/* Progress */}
-            <div className="mb-3">
-              <div className="flex items-center justify-between mb-2">
+            <button
+              type="button"
+              onClick={goToPrevStep}
+              className="fixed left-8 top-8 z-30 flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors bg-zinc-900/80 rounded-full px-4 py-2 shadow-lg border border-zinc-700"
+              style={{ minWidth: 80 }}
+            >
+              <ChevronRight className="rotate-180 size-5" />
+              Back
+            </button>
+            {/* Progress & Timer */}
+            <div className="mb-3 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
                 <Badge variant="outline" className="text-xs">
                   {currentQuizQuestion + 1} / {quizQuestions.length}
                 </Badge>
@@ -926,10 +634,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                   {Math.round(((currentQuizQuestion + 1) / quizQuestions.length) * 100)}%
                 </span>
               </div>
-              <Progress
-                value={((currentQuizQuestion + 1) / quizQuestions.length) * 100}
-                className="h-2"
-              />
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Time left:</span>
+                <span className={`text-lg font-bold ${timer <= 3 ? 'text-red-500' : 'text-primary'}`}>{timer}s</span>
+              </div>
             </div>
 
             {/* Question and Options */}
@@ -942,8 +650,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                   transition={{ delay: 0.1 }}
                   className="mb-3"
                 >
-                  <Card className="bg-gradient-to-br from-primary/10 to-blue-500/5 border-primary/20">
-                    <CardContent className="pt-3 pb-3">
+                  <Card className="!bg-zinc-800 border-primary/20">
+                    <CardContent className="pt-3 pb-3 !bg-zinc-800 rounded-2xl">
                       <div className="flex items-start gap-3">
                         <div className="size-8 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
                           <span className="text-primary">
@@ -951,7 +659,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                           </span>
                         </div>
                         <h2 className="text-lg leading-tight">
-                          {quizQuestions[currentQuizQuestion].question}
+                          <span className="block text-2xl md:text-4xl font-bold leading-snug text-white mb-2 text-shadow-lg">
+                            {quizQuestions[currentQuizQuestion].question}
+                          </span>
                         </h2>
                       </div>
                     </CardContent>
@@ -978,44 +688,47 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                         transition={{ delay: 0.2 + index * 0.05 }}
                         onClick={() => handleQuizAnswer(index)}
                         disabled={showingFeedback}
-                        className={`w-full p-3 rounded-xl border-2 transition-all text-left ${
-                          showFeedback
+                        className={`w-full py-6 px-6 rounded-2xl border-2 transition-all text-left text-xl font-semibold shadow-md focus:outline-none focus:ring-4 focus:ring-primary/30
+                          ${showFeedback
                             ? isCorrect
-                              ? 'border-green-500 bg-green-500/10'
-                              : 'border-red-500 bg-red-500/10'
+                              ? 'border-green-500 bg-green-500/10 scale-[1.03]'
+                              : 'border-red-500 bg-red-500/10 scale-[0.98]'
                             : isSelected
-                            ? 'border-primary bg-primary/10'
-                            : 'border-border hover:border-primary/50'
-                        }`}
+                            ? 'border-primary bg-primary/10 scale-[1.02]'
+                            : 'border-border hover:border-primary/60 hover:bg-primary/5'}
+                        `}
+                        style={{ minHeight: 72, marginBottom: 18 }}
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-5">
                           <div
-                            className={`size-8 rounded-lg flex items-center justify-center shrink-0 ${
-                              showFeedback
+                            className={`size-10 rounded-lg flex items-center justify-center shrink-0 text-lg font-bold
+                              ${showFeedback
                                 ? isCorrect
                                   ? 'bg-green-500 text-background'
                                   : 'bg-red-500 text-background'
                                 : isSelected
                                 ? 'bg-primary text-background'
-                                : 'bg-secondary text-muted-foreground'
-                            }`}
+                                : 'bg-secondary text-muted-foreground'}
+                            `}
                           >
                             {showFeedback ? (
                               isCorrect ? (
-                                <CheckCircle2 className="size-4" />
+                                <CheckCircle2 className="size-5" />
                               ) : (
-                                <X className="size-4" />
+                                <X className="size-5" />
                               )
                             ) : (
                               <span>{String.fromCharCode(65 + index)}</span>
                             )}
                           </div>
-                          <span className="flex-1">{option}</span>
+                          <span className="flex-1 text-lg md:text-2xl font-semibold">
+                            {option}
+                          </span>
                           {showFeedback && (
                             isCorrect ? (
-                              <CheckCircle2 className="size-5 text-green-500 shrink-0" />
+                              <CheckCircle2 className="size-6 text-green-500 shrink-0" />
                             ) : (
-                              <X className="size-5 text-red-500 shrink-0" />
+                              <X className="size-6 text-red-500 shrink-0" />
                             )
                           )}
                         </div>
@@ -1077,8 +790,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.6, type: 'spring' }}
               >
-                <Card className="bg-gradient-to-br from-primary/10 to-green-500/5 border-primary/20">
-                  <CardContent className="pt-5 pb-5">
+                <Card className="!bg-zinc-800 border-primary/20">
+                  <CardContent className="pt-5 pb-5 !bg-zinc-800 rounded-2xl">
                     <div className="text-center">
                       <div className="text-5xl mb-2">
                         {calculateScore()}/{quizQuestions.length}

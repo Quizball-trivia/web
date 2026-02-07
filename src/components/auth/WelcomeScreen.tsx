@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FcGoogle } from 'react-icons/fc';
+import { FaFacebook, FaApple } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
 import { Swords, Star, Shield } from 'lucide-react';
 import { AppLogo } from '@/components/AppLogo';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { socialLogin } from '@/lib/auth/auth.service';
 
 interface WelcomeScreenProps {
   onGetStarted: () => void;
@@ -16,8 +20,9 @@ const SUBHEADING_PHRASES = [
   "Prove your ball knowledge."
 ];
 
-export function WelcomeScreen({ onGetStarted, onLogin }: WelcomeScreenProps) {
+export function WelcomeScreen() {
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+  const [loginOpen, setLoginOpen] = useState(false);
   const shouldReduceMotion = useReducedMotion();
 
   // Subheading timer
@@ -28,19 +33,23 @@ export function WelcomeScreen({ onGetStarted, onLogin }: WelcomeScreenProps) {
     return () => clearInterval(timer);
   }, []);
 
+  const handleKickOff = () => setLoginOpen(true);
+  const handleClose = () => setLoginOpen(false);
+  const handleGoogleLogin = async () => {
+    try {
+      const redirectTo = `${window.location.origin}/auth/callback`;
+      await socialLogin('google', redirectTo);
+    } catch (error) {
+      // Optionally handle error (toast, etc)
+      console.error('Google login failed', error);
+    }
+  };
+
   return (
     <div className="min-h-screen w-full bg-background font-sans text-foreground flex flex-col">
       {/* Navbar */}
-      <header className="flex h-20 items-center justify-between px-6 md:px-12 lg:px-20 shrink-0 border-b border-border/30 bg-background sticky top-0 z-50">
+      <header className="flex h-20 items-center px-6 md:px-12 lg:px-20 shrink-0 border-b border-border/30 bg-background sticky top-0 z-50">
         <AppLogo size="md" className="!justify-start" />
-        <Button
-          variant="ghost"
-          size="lg"
-          className="font-bold text-muted-foreground hover:text-foreground text-sm uppercase tracking-wider hover:bg-transparent"
-          onClick={onLogin}
-        >
-          I have an account
-        </Button>
       </header>
 
       {/* Main Content */}
@@ -141,7 +150,7 @@ export function WelcomeScreen({ onGetStarted, onLogin }: WelcomeScreenProps) {
            <div className="flex flex-col w-full sm:w-auto gap-4 min-w-[280px]">
               <Button
                 size="lg"
-                onClick={onGetStarted}
+                onClick={handleKickOff}
                 className="
                   h-14 rounded-2xl text-lg font-black uppercase tracking-wide
                   bg-green-500 text-background hover:bg-green-400
@@ -149,22 +158,38 @@ export function WelcomeScreen({ onGetStarted, onLogin }: WelcomeScreenProps) {
                   transition-all shadow-xl hover:shadow-green-500/20
                 "
               >
-                Get Started
+                Kick off
               </Button>
-
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={onLogin}
-                className="
-                  h-14 rounded-2xl text-lg font-black uppercase tracking-wide
-                  bg-card text-foreground hover:bg-muted hover:text-foreground
-                  border-border border-2 border-b-[5px] active:border-b-2 active:translate-y-[3px]
-                  transition-all
-                "
-              >
-                I already have an account
-              </Button>
+              <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
+                <DialogContent className="max-w-md w-full rounded-2xl p-8">
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl font-bold mb-4 text-center">Sign in to Football Quiz</DialogTitle>
+                  </DialogHeader>
+                  <div className="flex flex-col gap-4 mt-2">
+                    <Button
+                      variant="outline"
+                      className="flex items-center justify-center gap-3 py-4 text-lg font-semibold border-2 border-zinc-300 hover:bg-zinc-100"
+                      onClick={handleGoogleLogin}
+                    >
+                      <FcGoogle className="size-6" /> Continue with Google
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex items-center justify-center gap-3 py-4 text-lg font-semibold border-2 border-zinc-300 hover:bg-zinc-100"
+                      onClick={() => {/* handleFacebookLogin */}}
+                    >
+                      <FaFacebook className="size-6 text-blue-600" /> Continue with Facebook
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex items-center justify-center gap-3 py-4 text-lg font-semibold border-2 border-zinc-300 hover:bg-zinc-100"
+                      onClick={() => {/* handleAppleLogin */}}
+                    >
+                      <FaApple className="size-6 text-black" /> Continue with Apple
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
            </div>
         </motion.div>
 
