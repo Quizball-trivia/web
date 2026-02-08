@@ -41,6 +41,8 @@ export function UserRankStrip({ userEntry }: UserRankStripProps) {
           </div>
 
           {/* Next Rank */}
+          {/* TODO: Replace hardcoded "+5 RP" with dynamic pointsToNext from getRankInfo or a new prop.
+              Handle edge cases (0/undefined => "MAX" or "—"). Currently mock data without backend logic. */}
           <div className="text-right text-xs hidden sm:block">
             <div className="text-[10px] font-fun font-black text-muted-foreground uppercase tracking-widest">Next Rank</div>
             <div className="font-fun font-black text-primary">+5 RP</div>

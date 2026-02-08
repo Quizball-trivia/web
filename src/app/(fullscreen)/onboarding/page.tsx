@@ -26,12 +26,12 @@ export default function OnboardingPage() {
 
       // Save profile data to backend
       await updateMe({
-        nickname: data.username || undefined,
+        nickname: data.username?.trim() || undefined,
         avatar_url: data.avatar
           ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.avatar}&backgroundColor=22c55e`
           : undefined,
-        favorite_club: data.favoriteClub || undefined,
-        preferred_language: data.preferredLanguage || undefined,
+        favorite_club: data.favoriteClub === undefined ? undefined : data.favoriteClub,
+        preferred_language: data.preferredLanguage === undefined ? undefined : data.preferredLanguage,
       });
 
       // Mark onboarding complete

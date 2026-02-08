@@ -10,6 +10,7 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -132,6 +133,9 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
             <SheetTitle className="text-xl font-black text-white font-fun">
               Play with a Friend
             </SheetTitle>
+            <SheetDescription className="sr-only">
+              Create a room or join an existing room with an invite code.
+            </SheetDescription>
           </SheetHeader>
           {Content}
         </SheetContent>

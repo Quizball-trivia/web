@@ -94,9 +94,9 @@ export function WarmupGame() {
   // Ensure ball starts in center while waiting
   useEffect(() => {
     if (isWaitingToStart) {
-      physics.resetBall();
+      physicsRef.current.resetBall();
     }
-  }, [isWaitingToStart, physics]);
+  }, [isWaitingToStart]);
 
   // Helper: attempt hover kick at current cursor position
   const tryHoverKick = useCallback(() => {

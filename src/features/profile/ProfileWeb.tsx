@@ -22,11 +22,25 @@ import { getRankInfo, getDivisionColor, getDivisionEmoji } from '@/utils/rankSys
 import { useAvatarUrl } from './hooks/useAvatarUrl';
 import ClubSelect from '@/features/onboarding/ClubSelect';
 
+export interface ProfileRecentMatch {
+  id: string | number;
+  mode: string;
+  result: 'Win' | 'Loss' | 'Draw';
+  rp: string;
+  time: string;
+  opponent: string;
+}
+
 interface ProfileWebProps {
   player: PlayerStats;
   avatarUrl?: string | null;
   favoriteClub?: string | null;
   preferredLanguage?: string | null;
+  countryRank?: number | string | null;
+  friendsRank?: number | string | null;
+  recentMatches?: ProfileRecentMatch[];
+  recentMatchesLoading?: boolean;
+  recentMatchesError?: string | null;
   onNameChange?: (newName: string) => Promise<void> | void;
   onAvatarChange?: (avatarUrl: string) => Promise<void> | void;
   onClubChange?: (club: string) => Promise<void> | void;
@@ -37,6 +51,8 @@ interface ProfileWebProps {
 
 export function ProfileWeb({
   player, avatarUrl, favoriteClub, preferredLanguage,
+  countryRank = null, friendsRank = null,
+  recentMatches = [], recentMatchesLoading = false, recentMatchesError = null,
   onNameChange, onAvatarChange, onClubChange, onLanguageChange,
   onSignOut, isUpdating = false,
 }: ProfileWebProps) {
@@ -59,6 +75,14 @@ export function ProfileWeb({
   const winRate = player.gamesPlayed > 0
     ? Math.round((player.correctAnswers / (player.gamesPlayed * 10)) * 100)
     : 0;
+  const formatRank = (rankValue: number | string | null | undefined): string => {
+    if (rankValue === null || rankValue === undefined || rankValue === '') return '#--';
+    const normalizedRank = String(rankValue).trim();
+    if (normalizedRank.length === 0) return '#--';
+    return normalizedRank.startsWith('#') ? normalizedRank : `#${normalizedRank}`;
+  };
+  const countryRankDisplay = formatRank(countryRank);
+  const friendsRankDisplay = formatRank(friendsRank);
 
   const handleNameChange = async () => {
     try {
@@ -90,12 +114,6 @@ export function ProfileWeb({
       setIsSavingAvatar(false);
     }
   };
-
-  const recentMatches = [
-    { id: 1, mode: 'Ranked 1v1', result: 'Win', rp: '+25', time: '2h ago', opponent: 'Striker99' },
-    { id: 2, mode: 'Buzzer', result: 'Loss', rp: '-12', time: '5h ago', opponent: 'GoalKeeper' },
-    { id: 3, mode: 'Daily Challenge', result: 'Win', rp: '+10', time: '1d ago', opponent: 'AI' },
-  ];
 
   return (
     <div className="container mx-auto max-w-7xl px-4 py-4 lg:px-6 lg:py-8 space-y-5 font-fun">
@@ -194,9 +212,13 @@ export function ProfileWeb({
                   <div className="w-56">
                     <ClubSelect
                       value={favoriteClub ?? ''}
-                      onChange={(val) => {
-                        onClubChange?.(val);
-                        setIsEditingClub(false);
+                      onChange={async (val) => {
+                        try {
+                          await onClubChange?.(val);
+                          setIsEditingClub(false);
+                        } catch {
+                          toast.error('Failed to update club');
+                        }
                       }}
                     />
                   </div>
@@ -293,6 +315,7 @@ export function ProfileWeb({
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-5">Current Season</p>
 
                 <div className="w-full space-y-2">
+                  {/* TODO(profile-ranks-api): `countryRank` and `friendsRank` may still be mock data from the parent for now; replace with real API-backed rank values. */}
                   <div className="flex justify-between items-center px-4 py-3 bg-background/60 rounded-xl border-b-2 border-border/50">
                     <div className="flex items-center gap-2.5">
                       <Globe className="size-4 text-blue-400" />
@@ -305,14 +328,14 @@ export function ProfileWeb({
                       <MapPin className="size-4 text-red-400" />
                       <span className="text-sm font-bold">Country</span>
                     </div>
-                    <span className="text-sm font-black text-red-400">#12</span>
+                    <span className="text-sm font-black text-red-400">{countryRankDisplay}</span>
                   </div>
                   <div className="flex justify-between items-center px-4 py-3 bg-background/60 rounded-xl border-b-2 border-border/50">
                     <div className="flex items-center gap-2.5">
                       <Users className="size-4 text-green-400" />
                       <span className="text-sm font-bold">Friends</span>
                     </div>
-                    <span className="text-sm font-black text-green-400">#3</span>
+                    <span className="text-sm font-black text-green-400">{friendsRankDisplay}</span>
                   </div>
                 </div>
               </div>
@@ -381,26 +404,54 @@ export function ProfileWeb({
               Recent Activity
             </h3>
             <div className="space-y-2">
-              {recentMatches.map((match) => (
-                <div key={match.id} className="flex items-center justify-between p-3.5 rounded-xl bg-background/60 border-b-2 border-border/50 hover:border-primary/20 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className={`size-9 rounded-xl flex items-center justify-center text-xs font-black border-2 ${
-                      match.result === 'Win'
-                        ? 'bg-green-500/15 text-green-400 border-green-500/30'
-                        : 'bg-red-500/15 text-red-400 border-red-500/30'
-                    }`}>
-                      {match.result === 'Win' ? 'W' : 'L'}
-                    </div>
-                    <div>
-                      <div className="text-sm font-black text-foreground">vs {match.opponent}</div>
-                      <div className="text-xs font-bold text-muted-foreground">{match.mode} · {match.time}</div>
-                    </div>
-                  </div>
-                  <span className={`text-base font-black ${match.result === 'Win' ? 'text-green-400' : 'text-red-400'}`}>
-                    {match.rp}
-                  </span>
+              {/* TODO(profile-activity-api): Parent may still pass mock activity data while API integration is in progress. Replace with real recent matches endpoint data. */}
+              {recentMatchesLoading && (
+                <div className="p-4 rounded-xl bg-background/60 border-b-2 border-border/50 text-sm font-bold text-muted-foreground">
+                  Loading recent matches...
                 </div>
-              ))}
+              )}
+              {!recentMatchesLoading && recentMatchesError && (
+                <div className="p-4 rounded-xl bg-destructive/10 border-b-2 border-destructive/30 text-sm font-bold text-destructive">
+                  {recentMatchesError}
+                </div>
+              )}
+              {!recentMatchesLoading && !recentMatchesError && recentMatches.length === 0 && (
+                <div className="p-4 rounded-xl bg-background/60 border-b-2 border-border/50 text-sm font-bold text-muted-foreground">
+                  No recent matches yet.
+                </div>
+              )}
+              {!recentMatchesLoading && !recentMatchesError && recentMatches.map((match) => {
+                const isWin = match.result === 'Win';
+                const isLoss = match.result === 'Loss';
+                const badgeClass = isWin
+                  ? 'bg-green-500/15 text-green-400 border-green-500/30'
+                  : isLoss
+                    ? 'bg-red-500/15 text-red-400 border-red-500/30'
+                    : 'bg-muted text-muted-foreground border-border';
+                const badgeText = isWin ? 'W' : isLoss ? 'L' : 'D';
+                const rpClass = isWin
+                  ? 'text-green-400'
+                  : isLoss
+                    ? 'text-red-400'
+                    : 'text-muted-foreground';
+
+                return (
+                  <div key={match.id} className="flex items-center justify-between p-3.5 rounded-xl bg-background/60 border-b-2 border-border/50 hover:border-primary/20 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className={`size-9 rounded-xl flex items-center justify-center text-xs font-black border-2 ${badgeClass}`}>
+                        {badgeText}
+                      </div>
+                      <div>
+                        <div className="text-sm font-black text-foreground">vs {match.opponent}</div>
+                        <div className="text-xs font-bold text-muted-foreground">{match.mode} · {match.time}</div>
+                      </div>
+                    </div>
+                    <span className={`text-base font-black ${rpClass}`}>
+                      {match.rp}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </motion.div>
 

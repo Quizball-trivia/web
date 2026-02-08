@@ -1,7 +1,7 @@
 'use client';
 
 import type { PlayerStats } from '@/types/game';
-import { ProfileWeb } from './ProfileWeb';
+import { ProfileWeb, type ProfileRecentMatch } from './ProfileWeb';
 import { useAuthStore } from '@/stores/auth.store';
 import { logger } from '@/utils/logger';
 
@@ -10,6 +10,11 @@ interface ProfileScreenProps {
   avatarUrl?: string | null;
   favoriteClub?: string | null;
   preferredLanguage?: string | null;
+  countryRank?: number | string | null;
+  friendsRank?: number | string | null;
+  recentMatches?: ProfileRecentMatch[];
+  recentMatchesLoading?: boolean;
+  recentMatchesError?: string | null;
   onNameChange?: (newName: string) => Promise<void> | void;
   onAvatarChange?: (avatarUrl: string) => Promise<void> | void;
   onClubChange?: (club: string) => Promise<void> | void;
@@ -36,6 +41,11 @@ export function ProfileScreen(props: ProfileScreenProps) {
         avatarUrl={props.avatarUrl}
         favoriteClub={props.favoriteClub}
         preferredLanguage={props.preferredLanguage}
+        countryRank={props.countryRank}
+        friendsRank={props.friendsRank}
+        recentMatches={props.recentMatches}
+        recentMatchesLoading={props.recentMatchesLoading}
+        recentMatchesError={props.recentMatchesError}
         onNameChange={props.onNameChange}
         onAvatarChange={props.onAvatarChange}
         onClubChange={props.onClubChange}

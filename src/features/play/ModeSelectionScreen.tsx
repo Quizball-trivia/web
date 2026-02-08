@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import { useState, useRef } from 'react';
 import { motion } from 'motion/react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ModeConfirmModal } from '@/features/play/components/ModeConfirmModal';
 import { FriendPlayModal } from '@/features/friend/components/FriendPlayModal';
@@ -169,6 +170,8 @@ export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playe
                 <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/30 to-transparent h-1/2" />
               </motion.div>
             </div>
+            {/* TODO: Replace hardcoded "75%" with computed win rate from playerStats.wins / playerStats.gamesPlayed.
+                Guard against division by zero, show "—" when unavailable. Currently mock data without backend logic. */}
             <div className="flex items-center justify-between mt-2">
               <div className="flex items-center gap-4">
                 <span className="text-xs font-bold text-[#56707A]">🏆 <span className="text-[#2D8CBA] font-black">75%</span> win</span>
@@ -311,12 +314,12 @@ export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playe
             );
           })}
         </div>
-        <button
-          onClick={() => router.push('/daily/challenges')}
-          className="mt-2 text-xs font-bold text-[#1CB0F6] hover:text-[#1CB0F6]/80 transition-colors uppercase tracking-wide"
+        <Link
+          href="/daily/challenges"
+          className="mt-2 inline-block text-xs font-bold text-[#1CB0F6] hover:text-[#1CB0F6]/80 transition-colors uppercase tracking-wide"
         >
           View All Challenges →
-        </button>
+        </Link>
       </motion.div>
 
       {/* ─── 5. Recent Matches ─── */}

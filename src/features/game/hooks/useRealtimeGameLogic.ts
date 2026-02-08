@@ -37,11 +37,13 @@ export function useRealtimeGameLogic() {
     if (currentQuestionIndex === undefined || matchPausedRef.current) return;
 
     const resetTimer = setTimeout(() => {
+      if (matchPausedRef.current) return;
       setShowOptions(false);
       setQuestionPhase('reveal');
     }, 0);
 
     const revealTimer = setTimeout(() => {
+      if (matchPausedRef.current) return;
       setShowOptions(true);
       setQuestionPhase('playing');
     }, QUESTION_REVEAL_MS);

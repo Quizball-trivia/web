@@ -8,6 +8,7 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -184,6 +185,9 @@ export function ModeConfirmModal({
             <SheetTitle className="text-xl font-black text-white font-fun">
               {config.title}
             </SheetTitle>
+            <SheetDescription className="sr-only">
+              Confirm your selected game mode before starting.
+            </SheetDescription>
           </SheetHeader>
           {Content}
         </SheetContent>

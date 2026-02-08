@@ -14,6 +14,23 @@ interface LeaderboardScreenProps {
   currentPlayerId?: string;
 }
 
+const NEXT_REWARD_MILESTONES = [100, 50, 25, 10, 3, 1] as const;
+const MOCK_SEASON_END_DATE = new Date('2026-02-22T23:59:59Z');
+
+function getNextRewardLabel(rank?: number): string {
+  if (typeof rank !== 'number' || Number.isNaN(rank)) return 'TBD';
+  if (rank <= 1) return 'Champion';
+
+  const nextRewardThreshold = NEXT_REWARD_MILESTONES.find((threshold) => rank > threshold) ?? 1;
+  return `Top ${nextRewardThreshold}`;
+}
+
+function computeDaysUntil(targetDate: Date): number | null {
+  const targetMs = targetDate.getTime();
+  if (Number.isNaN(targetMs)) return null;
+  return Math.max(0, Math.ceil((targetMs - Date.now()) / (1000 * 60 * 60 * 24)));
+}
+
 export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
   const [activeTab, setActiveTab] = useState<LeaderboardType>('global');
 
@@ -23,6 +40,11 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
   const topThree = entries ? entries.slice(0, 3) : [];
   const userEntryFromList = entries?.find(e => e.isCurrentUser || e.id === currentPlayerId);
   const userEntry = userEntryFromList ?? userRank;
+  const nextRewardLabel = getNextRewardLabel(userEntry?.rank);
+  const seasonEndsRemaining = computeDaysUntil(MOCK_SEASON_END_DATE);
+  const seasonEndsLabel = seasonEndsRemaining === null
+    ? 'TBD'
+    : `${seasonEndsRemaining} ${seasonEndsRemaining === 1 ? 'Day' : 'Days'}`;
 
   return (
     <div className="flex flex-col bg-background relative" style={{ minHeight: 'calc(100vh - 4rem)' }}>
@@ -139,19 +161,20 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
             transition={{ duration: 0.5, delay: 0.35 }}
             className="grid grid-cols-2 gap-4 mt-8"
           >
+            {/* TODO(leaderboard-api): Replace these mock placeholders with real season metadata (e.g. props.nextReward + computeDaysUntil(props.seasonEndDate)). */}
             <div className="rounded-2xl bg-card border-2 border-primary/20 border-b-4 border-b-primary/30 p-5 flex flex-col items-center text-center active:translate-y-[2px] active:border-b-2 transition-all">
               <div className="size-10 rounded-xl bg-primary/15 flex items-center justify-center mb-2">
                 <Target className="size-5 text-primary" />
               </div>
               <div className="text-[10px] font-fun font-black text-muted-foreground uppercase tracking-widest">Next Reward</div>
-              <div className="font-fun font-black text-foreground text-lg">Top 100</div>
+              <div className="font-fun font-black text-foreground text-lg">{nextRewardLabel}</div>
             </div>
             <div className="rounded-2xl bg-card border-2 border-yellow-500/20 border-b-4 border-b-yellow-500/30 p-5 flex flex-col items-center text-center active:translate-y-[2px] active:border-b-2 transition-all">
               <div className="size-10 rounded-xl bg-yellow-500/15 flex items-center justify-center mb-2">
                 <Zap className="size-5 text-yellow-500" />
               </div>
               <div className="text-[10px] font-fun font-black text-muted-foreground uppercase tracking-widest">Season Ends</div>
-              <div className="font-fun font-black text-foreground text-lg">14 Days</div>
+              <div className="font-fun font-black text-foreground text-lg">{seasonEndsLabel}</div>
             </div>
           </motion.div>
         )}

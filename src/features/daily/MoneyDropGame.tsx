@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 
 import { Slider } from "@/components/ui/slider";
@@ -42,6 +42,16 @@ const OPTION_COLORS = [
   { bg: "bg-yellow-500", light: "bg-yellow-500/15", text: "text-yellow-400", sliderRange: "[&_[data-slot=slider-range]]:bg-yellow-500", sliderThumb: "[&_[data-slot=slider-thumb]]:border-yellow-500" },
   { bg: "bg-purple-500", light: "bg-purple-500/15", text: "text-purple-400", sliderRange: "[&_[data-slot=slider-range]]:bg-purple-500", sliderThumb: "[&_[data-slot=slider-thumb]]:border-purple-500" },
 ];
+
+/* ── Shared card row (letter badge + option text) ── */
+const OptionRow = ({ index, option, color, textClass = "text-white" }: { index: number; option: string; color: typeof OPTION_COLORS[0]; textClass?: string }) => (
+  <div className="flex items-center gap-2.5 min-w-0">
+    <div className={cn("flex size-7 shrink-0 items-center justify-center rounded-lg text-xs font-black", color.light, color.text)}>
+      {String.fromCharCode(65 + index)}
+    </div>
+    <span className={cn("text-sm font-bold truncate", textClass)}>{option}</span>
+  </div>
+);
 
 // Mock questions for testing
 const MOCK_QUESTIONS: Question[] = [
@@ -104,6 +114,16 @@ function DollarBill() {
 
 function BillStack({ amount }: { amount: number }) {
   const dollarCount = Math.min(Math.ceil(amount / 100), 10);
+
+  // Generate stable rotations using a seeded approach based on index
+  const rotations = useMemo(() => {
+    return Array.from({ length: dollarCount }, (_, i) => {
+      // Deterministic pseudo-random rotation based on index
+      const seed = (i * 7 + 3) % 10;
+      return (seed - 5) * 0.5; // Range: -2.5 to 2.5 degrees
+    });
+  }, [dollarCount]);
+
   if (dollarCount === 0) return null;
   return (
     <div className="flex items-end pointer-events-none">
@@ -115,7 +135,7 @@ function BillStack({ amount }: { amount: number }) {
             opacity: 1,
             scale: 1,
             y: 0,
-            rotate: (Math.random() - 0.5) * 5,
+            rotate: rotations[i],
           }}
           transition={{
             duration: 0.3,
@@ -338,16 +358,6 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
       default: return "";
     }
   };
-
-  /* ── Shared card row (letter badge + option text) ── */
-  const OptionRow = ({ index, option, color, textClass = "text-white" }: { index: number; option: string; color: typeof OPTION_COLORS[0]; textClass?: string }) => (
-    <div className="flex items-center gap-2.5 min-w-0">
-      <div className={cn("flex size-7 shrink-0 items-center justify-center rounded-lg text-xs font-black", color.light, color.text)}>
-        {String.fromCharCode(65 + index)}
-      </div>
-      <span className={cn("text-sm font-bold truncate", textClass)}>{option}</span>
-    </div>
-  );
 
   return (
     <div className="-m-6 min-h-screen bg-[#0D1B21] flex flex-col font-fun">

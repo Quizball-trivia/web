@@ -22,6 +22,8 @@ export function WarmupGameLocal() {
   const [, forceRender] = useState(0);
   const [bounceCount, setBounceCount] = useState(0);
   const [bestScore, setBestScore] = useState(0);
+  const bestScoreRef = useRef(0);
+  const [isNewBest, setIsNewBest] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [turn, setTurn] = useState<'player' | 'ai'>('player');
@@ -44,9 +46,16 @@ export function WarmupGameLocal() {
   }, [isGameOver]);
 
   const onDropped = useCallback(() => {
+    const count = bounceCountRef.current;
+    const previousBest = bestScoreRef.current;
+    const newBest = count > previousBest;
+    setIsNewBest(newBest);
+    if (newBest) {
+      bestScoreRef.current = count;
+      setBestScore(count);
+    }
     setIsGameOver(true);
     setIsActive(false);
-    setBestScore((prev) => Math.max(prev, bounceCountRef.current));
   }, []);
 
   const physics = useWarmupPhysics({
@@ -68,17 +77,23 @@ export function WarmupGameLocal() {
     physicsRef.current = physics;
   }, [physics]);
 
-  // Measure container width via callback ref
+  // Measure container width via callback ref + useEffect for ResizeObserver cleanup
+  const [containerEl, setContainerEl] = useState<HTMLDivElement | null>(null);
   const measureRef = useCallback((el: HTMLDivElement | null) => {
-    if (!el) return;
     (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+    setContainerEl(el);
+    if (el) setContainerWidth(el.getBoundingClientRect().width);
+  }, []);
+
+  useEffect(() => {
+    if (!containerEl) return;
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
       if (entry) setContainerWidth(entry.contentRect.width);
     });
-    observer.observe(el);
+    observer.observe(containerEl);
     return () => observer.disconnect();
-  }, []);
+  }, [containerEl]);
 
   // Helper: attempt a player kick at the current cursor position
   const tryPlayerKick = useCallback(() => {
@@ -194,6 +209,7 @@ export function WarmupGameLocal() {
   const handleRestart = useCallback(() => {
     setBounceCount(0);
     bounceCountRef.current = 0;
+    setIsNewBest(false);
     setIsGameOver(false);
     setIsActive(false);
     turnRef.current = 'player';
@@ -315,7 +331,7 @@ export function WarmupGameLocal() {
                   <span className="text-sm font-bold text-[#56707A] ml-2">bounces</span>
                 </div>
 
-                {bounceCount >= bestScore && bounceCount > 0 && (
+                {isNewBest && bounceCount > 0 && (
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
