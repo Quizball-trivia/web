@@ -215,10 +215,11 @@ export function LobbySettings({
     const resetTimer = setTimeout(() => {
       setOptimisticPublic(null);
       setOptimisticRandom(null);
+      setSelectedCategoryIds(serverSelectedCategoryIds);
     }, 0);
 
     return () => clearTimeout(resetTimer);
-  }, [clearFlushTimer, clearInFlightTimeout, lobby?.lobbyId]);
+  }, [clearFlushTimer, clearInFlightTimeout, lobby?.lobbyId, serverSelectedCategoryIds]);
 
   // Sync server categories → local (only when server confirms random is off)
   useEffect(() => {

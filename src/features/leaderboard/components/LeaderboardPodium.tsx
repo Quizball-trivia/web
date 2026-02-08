@@ -1,65 +1,98 @@
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import type { LeaderboardEntry } from "@/lib/domain/leaderboard";
-import { Trophy, Crown } from "lucide-react";
+import { Crown } from "lucide-react";
 
 interface LeaderboardPodiumProps {
   topThree: LeaderboardEntry[];
 }
 
+const podiumConfig = {
+  1: {
+    height: 'h-36',
+    avatarSize: 'lg' as const,
+    borderColor: 'border-yellow-400',
+    bgGlow: 'shadow-[0_0_24px_rgba(250,204,21,0.25)]',
+    barBg: 'bg-gradient-to-t from-yellow-500/25 to-yellow-400/5 border-yellow-500/30',
+    badgeBg: 'bg-yellow-400 text-yellow-900',
+    rpColor: 'text-yellow-500',
+    order: 'order-2',
+    z: 'z-20',
+  },
+  2: {
+    height: 'h-28',
+    avatarSize: 'md' as const,
+    borderColor: 'border-slate-300',
+    bgGlow: '',
+    barBg: 'bg-gradient-to-t from-slate-400/15 to-slate-300/5 border-slate-400/30',
+    badgeBg: 'bg-slate-200 text-slate-800',
+    rpColor: 'text-muted-foreground',
+    order: 'order-1',
+    z: 'z-10',
+  },
+  3: {
+    height: 'h-20',
+    avatarSize: 'md' as const,
+    borderColor: 'border-orange-600/60',
+    bgGlow: '',
+    barBg: 'bg-gradient-to-t from-orange-700/15 to-orange-600/5 border-orange-700/30',
+    badgeBg: 'bg-orange-700/80 text-white',
+    rpColor: 'text-muted-foreground',
+    order: 'order-3',
+    z: 'z-10',
+  },
+};
+
 export function LeaderboardPodium({ topThree }: LeaderboardPodiumProps) {
-  // Ensure we have 3 slots (fill with placeholder if needed, though unlikely for global)
   const [first, second, third] = [
     topThree.find(p => p.rank === 1),
     topThree.find(p => p.rank === 2),
     topThree.find(p => p.rank === 3),
   ];
 
-  if (!first) return null; // Minimum expectation
+  if (!first) return null;
+
+  const players = [
+    { entry: second, rank: 2 as const },
+    { entry: first, rank: 1 as const },
+    { entry: third, rank: 3 as const },
+  ];
 
   return (
-    <div className="flex items-end justify-center gap-4 py-8 px-4 h-64 md:h-80 mb-6 w-full max-w-lg mx-auto">
-      {/* 2nd Place */}
-      <div className="flex flex-col items-center flex-1 z-10">
-        <div className="relative mb-3 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
-           <AvatarDisplay customization={{ base: 'avatar-2' }} size="md" className="border-4 border-slate-300 shadow-xl" />
-           <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-slate-200 text-slate-800 text-xs font-bold px-2 py-0.5 rounded-full shadow border border-white">
-              #{second?.rank || 2}
-           </div>
-        </div>
-        <div className="w-full h-32 bg-gradient-to-t from-slate-400/20 to-slate-300/10 rounded-t-lg border-t border-x border-slate-400/30 flex flex-col items-center justify-start pt-4 backdrop-blur-sm">
-           <span className="font-bold text-sm text-center truncate w-full px-2" title={second?.username}>{second?.username || '-'}</span>
-           <span className="text-xs text-muted-foreground mt-1">{second?.rankPoints.toLocaleString()} RP</span>
-        </div>
-      </div>
+    <div className="rounded-2xl bg-card border-2 border-border border-b-4 p-4 pt-10 pb-0">
+      <div className="flex items-end justify-center gap-3 w-full max-w-md mx-auto">
+        {players.map(({ entry, rank }) => {
+          const config = podiumConfig[rank];
+          if (!entry) return <div key={rank} className={`flex-1 ${config.order}`} />;
 
-      {/* 1st Place */}
-      <div className="flex flex-col items-center flex-1 z-20 -mx-2 hover:scale-105 transition-transform duration-300">
-        <div className="relative mb-3 animate-in fade-in slide-in-from-bottom-8 duration-700">
-           <Crown className="absolute -top-8 left-1/2 -translate-x-1/2 text-yellow-400 size-8 drop-shadow-lg animate-bounce" />
-           <AvatarDisplay customization={{ base: 'avatar-1' }} size="lg" className="border-4 border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.3)]" />
-           <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-yellow-900 text-sm font-black px-3 py-0.5 rounded-full shadow border border-white">
-              #{first.rank}
-           </div>
-        </div>
-        <div className="w-full h-40 bg-gradient-to-t from-yellow-500/20 to-yellow-400/10 rounded-t-lg border-t border-x border-yellow-500/30 flex flex-col items-center justify-start pt-6 backdrop-blur-sm shadow-[0_0_30px_rgba(234,179,8,0.1)]">
-           <span className="font-bold text-base text-center truncate w-full px-2" title={first.username}>{first.username}</span>
-           <span className="text-xs font-bold text-yellow-500 mt-1">{first.rankPoints.toLocaleString()} RP</span>
-           <Trophy className="size-4 text-yellow-500/50 mt-2" />
-        </div>
-      </div>
+          return (
+            <div key={entry.id} className={`flex flex-col items-center flex-1 ${config.z} ${config.order}`}>
+              {/* Avatar */}
+              <div className="relative mb-3">
+                {rank === 1 && (
+                  <Crown className="absolute -top-7 left-1/2 -translate-x-1/2 text-yellow-400 size-7 drop-shadow-lg animate-bounce" />
+                )}
+                <AvatarDisplay
+                  customization={{ base: entry.avatar || `avatar-${rank}` }}
+                  size={config.avatarSize}
+                  className={`border-4 ${config.borderColor} ${config.bgGlow}`}
+                />
+                <div className={`absolute -bottom-2.5 left-1/2 -translate-x-1/2 ${config.badgeBg} text-xs font-black px-2.5 py-0.5 rounded-full shadow border-2 border-background`}>
+                  #{rank}
+                </div>
+              </div>
 
-      {/* 3rd Place */}
-      <div className="flex flex-col items-center flex-1 z-10">
-        <div className="relative mb-3 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-           <AvatarDisplay customization={{ base: 'avatar-3' }} size="md" className="border-4 border-orange-700/60 shadow-xl" />
-           <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-orange-700/80 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow border border-white/20">
-              #{third?.rank || 3}
-           </div>
-        </div>
-        <div className="w-full h-24 bg-gradient-to-t from-orange-800/20 to-orange-700/10 rounded-t-lg border-t border-x border-orange-700/30 flex flex-col items-center justify-start pt-4 backdrop-blur-sm">
-           <span className="font-bold text-sm text-center truncate w-full px-2" title={third?.username}>{third?.username || '-'}</span>
-           <span className="text-xs text-muted-foreground mt-1">{third?.rankPoints.toLocaleString()} RP</span>
-        </div>
+              {/* Pedestal */}
+              <div className={`w-full ${config.height} rounded-t-xl border-t-2 border-x-2 ${config.barBg} flex flex-col items-center justify-start pt-5`}>
+                <span className="font-fun font-black text-sm text-center truncate w-full px-2" title={entry.username}>
+                  {entry.username}
+                </span>
+                <span className={`text-xs font-bold ${config.rpColor} mt-1`}>
+                  {entry.rankPoints.toLocaleString()} RP
+                </span>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

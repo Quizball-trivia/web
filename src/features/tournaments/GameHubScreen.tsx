@@ -1,21 +1,20 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Trophy, Star, Clock, TrendingUp, ArrowUpRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const BOSS_EVENT_EXPIRY = new Date(Date.now() + 1000 * 60 * 60 * 48); // 48h
-
 export const CHALLENGES = [
   {
-    id: '1',
+    id: 'moneyDrop',
     title: 'Money Drop',
     tier: 'bronze' as const,
     status: 'open' as const,
     rewards: '100 RP + Bronze Pack',
   },
   {
-    id: '2',
+    id: 'countdown',
     title: 'Countdown',
     tier: 'silver' as const,
     status: 'locked' as const,
@@ -23,7 +22,7 @@ export const CHALLENGES = [
     requirement: 'Level 10 Required',
   },
   {
-    id: '3',
+    id: 'putInOrder',
     title: 'Put in Order',
     tier: 'gold' as const,
     status: 'locked' as const,
@@ -31,7 +30,7 @@ export const CHALLENGES = [
     requirement: 'Gold Rank Required',
   },
   {
-    id: '4',
+    id: 'clues',
     title: 'Clues',
     tier: 'platinum' as const,
     status: 'locked' as const,
@@ -44,6 +43,7 @@ export const CHALLENGES = [
 function getTimeRemaining(expiryDate: Date): string {
   const now = new Date();
   const diff = expiryDate.getTime() - now.getTime();
+  if (diff <= 0) return 'Ended';
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   if (days > 0) return `${days}d ${hours}h`;
@@ -51,6 +51,8 @@ function getTimeRemaining(expiryDate: Date): string {
 }
 
 export function GameHubScreen() {
+  const [bossEventExpiry] = useState<Date>(() => new Date(Date.now() + 1000 * 60 * 60 * 48));
+
   const QUESTS = [
     {
       id: '1',
@@ -195,7 +197,7 @@ export function GameHubScreen() {
                     </span>
                     <Clock className="size-3 text-[#FFD700]" />
                     <span className="text-xs font-black text-[#FF4B4B]">
-                      Ends in {getTimeRemaining(BOSS_EVENT_EXPIRY)}
+                      Ends in {bossEventExpiry ? getTimeRemaining(bossEventExpiry) : '...'}
                     </span>
                   </div>
 

@@ -59,7 +59,7 @@ export function ArenaScoreSplash({ show, points, side, onComplete }: ArenaScoreS
     return () => clearTimeout(timer);
   }, [show, points, onComplete]);
 
-  if (!show || points === 0) return null;
+  if (!show || points <= 0) return null;
 
   const isLeft = side === 'left';
   const baseColor = isLeft ? '#58CC02' : '#FF9600';

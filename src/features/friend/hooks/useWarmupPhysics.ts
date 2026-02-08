@@ -124,13 +124,17 @@ export function useWarmupPhysics(options: UseWarmupPhysicsOptions): WarmupPhysic
       // Rotation
       rotationRef.current += spinRef.current * dt;
 
-      // Ground detection
-      if (pos.y + BALL_RADIUS >= groundY && !droppedRef.current) {
-        droppedRef.current = true;
+      // Ground detection: always clamp to floor and stop motion once touching ground.
+      // The drop callback is fired only once per fall.
+      if (pos.y + BALL_RADIUS >= groundY) {
         pos.y = groundY - BALL_RADIUS;
         vel.vy = 0;
         vel.vx = 0;
-        onDroppedRef.current();
+
+        if (!droppedRef.current) {
+          droppedRef.current = true;
+          onDroppedRef.current();
+        }
       }
 
       renderRef.current = { x: pos.x, y: pos.y, rotation: rotationRef.current };

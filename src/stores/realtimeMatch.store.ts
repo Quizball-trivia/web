@@ -141,7 +141,7 @@ const initialState = {
   error: null,
 };
 
-export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
+export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
   ...initialState,
   setSelfUserId: (userId) => {
     logger.info('Realtime store set self user id', { selfUserId: userId });
@@ -327,8 +327,10 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
           ...state.match,
           opponentAnswered: true,
           oppTotalPoints: payload?.opponentTotalPoints ?? state.match.oppTotalPoints,
-          opponentRecentPoints: payload?.pointsEarned ?? 0,
-          opponentAnsweredCorrectly: payload?.isCorrect ?? null,
+          opponentRecentPoints:
+            payload?.pointsEarned !== undefined ? payload.pointsEarned : state.match.opponentRecentPoints,
+          opponentAnsweredCorrectly:
+            payload?.isCorrect !== undefined ? payload.isCorrect : state.match.opponentAnsweredCorrectly,
         },
       };
     });
@@ -469,6 +471,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
   },
   setWarmupState: (data) => {
     logger.info('Realtime store set warmup state', { bounceCount: data.bounceCount, active: data.active });
+    const existing = get().warmup;
     set({
       warmup: {
         bounceCount: data.bounceCount,
@@ -477,8 +480,8 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         lastTapperId: data.lastTapperId,
         lastTapX: null,
         lastTapY: null,
-        playerBest: 0,
-        pairBest: 0,
+        playerBest: existing?.playerBest ?? 0,
+        pairBest: existing?.pairBest ?? 0,
         gameOver: false,
         finalScore: null,
         isNewPlayerBest: false,
@@ -510,8 +513,24 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
   setWarmupOver: (data) => {
     logger.info('Realtime store set warmup over', { finalScore: data.finalScore });
     set((state) => {
-      if (!state.warmup) return state;
       const selfId = state.selfUserId;
+      const fallbackWarmup = {
+        bounceCount: 0,
+        nextTurnUserId: '',
+        lastTapperId: null,
+        lastTapX: null,
+        lastTapY: null,
+        active: false,
+        gameOver: true,
+        finalScore: data.finalScore,
+        playerBest: data.playerBests[selfId ?? ''] ?? 0,
+        pairBest: data.pairBest,
+        isNewPlayerBest: data.isNewPlayerBest[selfId ?? ''] ?? false,
+        isNewPairBest: data.isNewPairBest,
+      };
+      if (!state.warmup) {
+        return { warmup: fallbackWarmup };
+      }
       return {
         warmup: {
           ...state.warmup,
@@ -590,6 +609,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       message: error.message,
       source: (error.meta as { source?: string } | undefined)?.source ?? null,
       reason: (error.meta as { reason?: string } | undefined)?.reason ?? null,
+      operation: (error.meta as { operation?: string | null } | undefined)?.operation ?? null,
       sessionState: snapshot?.state ?? null,
       waitingLobbyId: snapshot?.waitingLobbyId ?? null,
       activeMatchId: snapshot?.activeMatchId ?? null,

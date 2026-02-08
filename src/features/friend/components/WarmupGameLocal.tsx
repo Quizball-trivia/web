@@ -2,43 +2,60 @@
 
 import { useRef, useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trophy, Users, RotateCcw } from 'lucide-react';
+import { Trophy, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getSocket } from '@/lib/realtime/socket-client';
-import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useWarmupPhysics } from '../hooks/useWarmupPhysics';
 
 const CONTAINER_HEIGHT = 340;
 const GROUND_Y = CONTAINER_HEIGHT - 20;
 const BALL_SIZE = 64;
 const KICK_COOLDOWN = 400;
+const AI_DELAY_MIN = 100;
+const AI_DELAY_MAX = 300;
+const AI_KICK_ZONE_TOP = CONTAINER_HEIGHT * 0.35;
+const AI_KICK_ZONE_BOTTOM = GROUND_Y - BALL_SIZE;
 const HIT_PADDING = 12;
 
-export function WarmupGame() {
-  const warmup = useRealtimeMatchStore((s) => s.warmup);
-  const selfUserId = useRealtimeMatchStore((s) => s.selfUserId);
+export function WarmupGameLocal() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const tapSeqRef = useRef(0);
   const [containerWidth, setContainerWidth] = useState(360);
   const [, forceRender] = useState(0);
+  const [bounceCount, setBounceCount] = useState(0);
+  const [bestScore, setBestScore] = useState(0);
+  const bestScoreRef = useRef(0);
+  const [isNewBest, setIsNewBest] = useState(false);
+  const [isGameOver, setIsGameOver] = useState(false);
+  const [isActive, setIsActive] = useState(false);
+  const [turn, setTurn] = useState<'player' | 'ai'>('player');
 
-  const isMyTurn = warmup?.nextTurnUserId === selfUserId;
-  const isActive = warmup?.active ?? false;
-  const isGameOver = warmup?.gameOver ?? false;
-  const isWaitingToStart = Boolean(warmup && !isActive && !isGameOver);
-  const canTap = (isMyTurn && isActive && !isGameOver) || isWaitingToStart;
-
-  // Track cursor position for hover-to-kick
-  const cursorRef = useRef<{ x: number; y: number } | null>(null);
+  const turnRef = useRef<'player' | 'ai'>('player');
   const cooldownRef = useRef(0);
-  const canTapRef = useRef(canTap);
+  const aiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bounceCountRef = useRef(0);
+  // Track cursor position so we can detect collision even when mouse is stationary
+  const cursorRef = useRef<{ x: number; y: number } | null>(null);
+  // Track previous ball Y to determine if ball is falling
+  const prevBallYRef = useRef(0);
+  const isActiveRef = useRef(false);
+  const isGameOverRef = useRef(false);
   useEffect(() => {
-    canTapRef.current = canTap;
-  }, [canTap]);
+    isActiveRef.current = isActive;
+  }, [isActive]);
+  useEffect(() => {
+    isGameOverRef.current = isGameOver;
+  }, [isGameOver]);
 
   const onDropped = useCallback(() => {
-    const socket = getSocket();
-    socket.emit('warmup:dropped', { clientTs: Date.now(), y: GROUND_Y });
+    const count = bounceCountRef.current;
+    const previousBest = bestScoreRef.current;
+    const newBest = count > previousBest;
+    setIsNewBest(newBest);
+    if (newBest) {
+      bestScoreRef.current = count;
+      setBestScore(count);
+    }
+    setIsGameOver(true);
+    setIsActive(false);
   }, []);
 
   const physics = useWarmupPhysics({
@@ -49,60 +66,40 @@ export function WarmupGame() {
     onDropped,
   });
 
+  // Stable refs for physics functions
+  const applyKickRef = useRef(physics.applyKick);
+  const resetBallRef = useRef(physics.resetBall);
+  // Stable ref for the physics object (getters read from internal refs so any captured reference works)
   const physicsRef = useRef(physics);
   useEffect(() => {
+    applyKickRef.current = physics.applyKick;
+    resetBallRef.current = physics.resetBall;
     physicsRef.current = physics;
   }, [physics]);
 
-  // Fetch scores on mount
-  useEffect(() => {
-    const socket = getSocket();
-    socket.emit('warmup:get_scores');
+  // Measure container width via callback ref + useEffect for ResizeObserver cleanup
+  const [containerEl, setContainerEl] = useState<HTMLDivElement | null>(null);
+  const measureRef = useCallback((el: HTMLDivElement | null) => {
+    (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+    setContainerEl(el);
+    if (el) setContainerWidth(el.getBoundingClientRect().width);
   }, []);
 
-  // Measure container width
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
+    if (!containerEl) return;
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
       if (entry) setContainerWidth(entry.contentRect.width);
     });
-    observer.observe(el);
+    observer.observe(containerEl);
     return () => observer.disconnect();
-  }, []);
+  }, [containerEl]);
 
-  // Apply kick when tapped event comes from server
-  const lastBounceCountRef = useRef(0);
-  useEffect(() => {
-    if (!warmup) return;
-    if (warmup.bounceCount > lastBounceCountRef.current && warmup.lastTapX !== null && warmup.lastTapY !== null) {
-      physics.applyKick(warmup.lastTapX, warmup.lastTapY);
-    }
-    lastBounceCountRef.current = warmup.bounceCount;
-  }, [warmup, warmup?.bounceCount, warmup?.lastTapX, warmup?.lastTapY, physics]);
-
-  // Reset ball on restart — always to center
-  const prevGameOverRef = useRef(false);
-  useEffect(() => {
-    if (prevGameOverRef.current && !isGameOver && isActive) {
-      physics.resetBall();
-    }
-    prevGameOverRef.current = isGameOver;
-  }, [isGameOver, isActive, physics]);
-
-  // Ensure ball starts in center while waiting
-  useEffect(() => {
-    if (isWaitingToStart) {
-      physicsRef.current.resetBall();
-    }
-  }, [isWaitingToStart]);
-
-  // Helper: attempt hover kick at current cursor position
-  const tryHoverKick = useCallback(() => {
+  // Helper: attempt a player kick at the current cursor position
+  const tryPlayerKick = useCallback(() => {
     const cursor = cursorRef.current;
     if (!cursor) return;
-    if (!canTapRef.current) return;
+    if (turnRef.current !== 'player') return;
     if (Date.now() - cooldownRef.current < KICK_COOLDOWN) return;
 
     const p = physicsRef.current;
@@ -118,24 +115,81 @@ export function WarmupGame() {
     ) {
       const tapX = Math.max(0, Math.min(1, (cursor.x - (bx - halfSize)) / BALL_SIZE));
       const tapY = Math.max(0, Math.min(1, (cursor.y - (by - halfSize)) / BALL_SIZE));
-      tapSeqRef.current += 1;
+
+      if (!isActiveRef.current) {
+        setIsActive(true);
+      }
+
+      applyKickRef.current(tapX, tapY);
+      bounceCountRef.current += 1;
+      setBounceCount(bounceCountRef.current);
+      turnRef.current = 'ai';
+      setTurn('ai');
       cooldownRef.current = Date.now();
-      getSocket().emit('warmup:tap', { tapX, tapY, tapSeq: tapSeqRef.current });
     }
   }, []);
 
-  // Animation frame for smooth rendering + hover-to-kick collision check
+  // Render loop — also checks player collision each frame (handles stationary cursor)
   useEffect(() => {
     if (isGameOver) return;
+    // Run render loop even before active so the pre-game hover-to-start works
     let frame: number;
     const tick = () => {
       forceRender((v) => v + 1);
-      tryHoverKick();
+
+      // Check player kick each frame (cursor might be stationary while ball moves into it)
+      if (!isGameOverRef.current && turnRef.current === 'player') {
+        tryPlayerKick();
+      }
+
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [isGameOver, tryHoverKick]);
+  }, [isGameOver, tryPlayerKick]);
+
+  // AI turn logic
+  useEffect(() => {
+    if (!isActive || isGameOver) return;
+    if (turnRef.current !== 'ai') return;
+
+    let cancelled = false;
+    let frame: number;
+
+    const checkAndKick = () => {
+      if (cancelled) return;
+      const p = physicsRef.current;
+      const ballY = p.ballY;
+      const isFalling = ballY > prevBallYRef.current;
+      prevBallYRef.current = ballY;
+
+      // Wait for ball to be FALLING and in the kickable zone
+      if (isFalling && ballY > AI_KICK_ZONE_TOP && ballY < AI_KICK_ZONE_BOTTOM) {
+        const delay = AI_DELAY_MIN + Math.random() * (AI_DELAY_MAX - AI_DELAY_MIN);
+        aiTimeoutRef.current = setTimeout(() => {
+          if (cancelled || turnRef.current !== 'ai') return;
+          const tapX = 0.5 + (Math.random() - 0.5) * 0.25;
+          const tapY = 0.4 + (Math.random() - 0.5) * 0.15;
+          applyKickRef.current(tapX, tapY);
+          bounceCountRef.current += 1;
+          setBounceCount(bounceCountRef.current);
+          turnRef.current = 'player';
+          setTurn('player');
+          cooldownRef.current = Date.now();
+        }, delay);
+        return; // stop polling
+      }
+      frame = requestAnimationFrame(checkAndKick);
+    };
+
+    frame = requestAnimationFrame(checkAndKick);
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+      if (aiTimeoutRef.current) clearTimeout(aiTimeoutRef.current);
+    };
+  }, [isActive, isGameOver, bounceCount]);
 
   // Track cursor position relative to container
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
@@ -153,14 +207,19 @@ export function WarmupGame() {
   }, []);
 
   const handleRestart = useCallback(() => {
-    tapSeqRef.current = 0;
+    setBounceCount(0);
+    bounceCountRef.current = 0;
+    setIsNewBest(false);
+    setIsGameOver(false);
+    setIsActive(false);
+    turnRef.current = 'player';
+    setTurn('player');
     cooldownRef.current = 0;
-    getSocket().emit('warmup:restart');
+    prevBallYRef.current = 0;
+    resetBallRef.current();
   }, []);
 
-  const bounceCount = warmup?.bounceCount ?? 0;
-  const playerBest = warmup?.playerBest ?? 0;
-  const pairBest = warmup?.pairBest ?? 0;
+  const isPlayerTurn = turn === 'player';
 
   return (
     <div className="bg-[#1B2F36] rounded-2xl border-b-4 border-[#0D1B21] overflow-hidden">
@@ -173,18 +232,14 @@ export function WarmupGame() {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 bg-[#131F24] rounded-xl px-3 py-1.5 border-b-[3px] border-[#0D1B21]">
             <Trophy className="size-3.5 text-[#FF9600]" />
-            <span className="text-xs font-black text-[#FF9600]">{playerBest}</span>
-          </div>
-          <div className="flex items-center gap-1.5 bg-[#131F24] rounded-xl px-3 py-1.5 border-b-[3px] border-[#0D1B21]">
-            <Users className="size-3.5 text-[#CE82FF]" />
-            <span className="text-xs font-black text-[#CE82FF]">{pairBest}</span>
+            <span className="text-xs font-black text-[#FF9600]">{bestScore}</span>
           </div>
         </div>
       </div>
 
       {/* Game Area */}
       <div
-        ref={containerRef}
+        ref={measureRef}
         className="relative select-none"
         style={{ height: CONTAINER_HEIGHT }}
         onPointerMove={handlePointerMove}
@@ -215,7 +270,7 @@ export function WarmupGame() {
         <div
           className={cn(
             'absolute z-20 touch-none flex items-center justify-center',
-            canTap ? 'cursor-pointer' : 'cursor-default'
+            isPlayerTurn && !isGameOver ? 'cursor-pointer' : 'cursor-default'
           )}
           style={{
             width: BALL_SIZE,
@@ -225,7 +280,7 @@ export function WarmupGame() {
             transform: `rotate(${physics.ballRotation}deg)`,
             fontSize: BALL_SIZE * 0.75,
             lineHeight: 1,
-            filter: canTap
+            filter: isPlayerTurn && !isGameOver
               ? 'drop-shadow(0 0 12px rgba(88,204,2,0.5)) drop-shadow(0 0 24px rgba(88,204,2,0.2))'
               : 'none',
             transition: 'filter 0.15s',
@@ -245,13 +300,13 @@ export function WarmupGame() {
           <div className="absolute bottom-6 left-0 right-0 text-center">
             <span className={cn(
               'text-sm font-black uppercase tracking-wide',
-              canTap ? 'text-[#58CC02]' : 'text-[#56707A]'
+              isPlayerTurn ? 'text-[#58CC02]' : 'text-[#56707A]'
             )}>
-              {isWaitingToStart
+              {!isActive
                 ? 'Move to the ball to start!'
-                : isMyTurn
+                : isPlayerTurn
                   ? 'Move to the ball!'
-                  : "Opponent's turn..."}
+                  : "AI's turn..."}
             </span>
           </div>
         )}
@@ -271,13 +326,12 @@ export function WarmupGame() {
                 </h3>
                 <div className="bg-[#131F24] rounded-xl border-b-[3px] border-[#0D1B21] py-3 px-4">
                   <span className="text-3xl font-black text-[#1CB0F6] tabular-nums">
-                    {warmup?.finalScore ?? 0}
+                    {bounceCount}
                   </span>
                   <span className="text-sm font-bold text-[#56707A] ml-2">bounces</span>
                 </div>
 
-                {/* New Best Indicators */}
-                {warmup?.isNewPlayerBest && (
+                {isNewBest && bounceCount > 0 && (
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -285,19 +339,7 @@ export function WarmupGame() {
                     className="bg-[#FF9600]/20 rounded-xl py-2 px-3 border border-[#FF9600]/30"
                   >
                     <span className="text-sm font-black text-[#FF9600] uppercase tracking-wide">
-                      &#127942; New Personal Best!
-                    </span>
-                  </motion.div>
-                )}
-                {warmup?.isNewPairBest && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', delay: 0.35 }}
-                    className="bg-[#CE82FF]/20 rounded-xl py-2 px-3 border border-[#CE82FF]/30"
-                  >
-                    <span className="text-sm font-black text-[#CE82FF] uppercase tracking-wide">
-                      &#127881; New Duo Best!
+                      &#127942; New Best!
                     </span>
                   </motion.div>
                 )}

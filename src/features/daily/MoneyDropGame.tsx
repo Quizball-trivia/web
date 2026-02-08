@@ -1,33 +1,25 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { motion, AnimatePresence } from "motion/react";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
-import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogDescription,
 } from "@/components/ui/alert-dialog";
 import {
   Clock,
-  AlertCircle,
   ArrowRight,
-  ArrowLeft,
+  X,
   DollarSign,
   Split,
   Lightbulb,
   RefreshCw,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Question {
   id: string;
@@ -43,6 +35,23 @@ interface MoneyDropGameProps {
   onBack: () => void;
   onComplete: (finalMoney: number) => void;
 }
+
+const OPTION_COLORS = [
+  { bg: "bg-emerald-500", light: "bg-emerald-500/15", text: "text-emerald-400", sliderRange: "[&_[data-slot=slider-range]]:bg-emerald-500", sliderThumb: "[&_[data-slot=slider-thumb]]:border-emerald-500" },
+  { bg: "bg-blue-500", light: "bg-blue-500/15", text: "text-blue-400", sliderRange: "[&_[data-slot=slider-range]]:bg-blue-500", sliderThumb: "[&_[data-slot=slider-thumb]]:border-blue-500" },
+  { bg: "bg-yellow-500", light: "bg-yellow-500/15", text: "text-yellow-400", sliderRange: "[&_[data-slot=slider-range]]:bg-yellow-500", sliderThumb: "[&_[data-slot=slider-thumb]]:border-yellow-500" },
+  { bg: "bg-purple-500", light: "bg-purple-500/15", text: "text-purple-400", sliderRange: "[&_[data-slot=slider-range]]:bg-purple-500", sliderThumb: "[&_[data-slot=slider-thumb]]:border-purple-500" },
+];
+
+/* ── Shared card row (letter badge + option text) ── */
+const OptionRow = ({ index, option, color, textClass = "text-white" }: { index: number; option: string; color: typeof OPTION_COLORS[0]; textClass?: string }) => (
+  <div className="flex items-center gap-2.5 min-w-0">
+    <div className={cn("flex size-7 shrink-0 items-center justify-center rounded-lg text-xs font-black", color.light, color.text)}>
+      {String.fromCharCode(65 + index)}
+    </div>
+    <span className={cn("text-sm font-bold truncate", textClass)}>{option}</span>
+  </div>
+);
 
 // Mock questions for testing
 const MOCK_QUESTIONS: Question[] = [
@@ -93,7 +102,86 @@ const MOCK_QUESTIONS: Question[] = [
   },
 ];
 
-// Inline HelpButtons component
+/* ── Dollar Bill Sub-components (unchanged animation) ── */
+
+function DollarBill() {
+  return (
+    <div className="w-8 h-5 bg-gradient-to-br from-green-500 to-green-600 rounded-sm border border-green-700 shadow-sm flex items-center justify-center">
+      <span className="text-white text-xs font-bold">$</span>
+    </div>
+  );
+}
+
+function BillStack({ amount }: { amount: number }) {
+  const dollarCount = Math.min(Math.ceil(amount / 100), 10);
+
+  // Generate stable rotations using a seeded approach based on index
+  const rotations = useMemo(() => {
+    return Array.from({ length: dollarCount }, (_, i) => {
+      // Deterministic pseudo-random rotation based on index
+      const seed = (i * 7 + 3) % 10;
+      return (seed - 5) * 0.5; // Range: -2.5 to 2.5 degrees
+    });
+  }, [dollarCount]);
+
+  if (dollarCount === 0) return null;
+  return (
+    <div className="flex items-end pointer-events-none">
+      {[...Array(dollarCount)].map((_, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, scale: 0, y: -20 }}
+          animate={{
+            opacity: 1,
+            scale: 1,
+            y: 0,
+            rotate: rotations[i],
+          }}
+          transition={{
+            duration: 0.3,
+            delay: i * 0.05,
+            type: "spring",
+            stiffness: 300,
+          }}
+          className="relative"
+          style={{
+            marginLeft: i > 0 ? "-8px" : "0",
+            zIndex: dollarCount - i,
+          }}
+        >
+          <DollarBill />
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+function FallingBills({ amount }: { amount: number }) {
+  const count = Math.max(1, Math.min(8, Math.floor(amount / 100)));
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-visible">
+      {Array.from({ length: count }, (_, i) => (
+        <motion.div
+          key={i}
+          className="absolute"
+          style={{ left: `${15 + (i * 70) / count}%`, top: "50%" }}
+          initial={{ y: 0, opacity: 1, rotate: 0 }}
+          animate={{
+            y: [0, 200, 400],
+            opacity: [1, 0.8, 0],
+            rotate: [0, -15 + i * 8, -30 + i * 12],
+          }}
+          transition={{ duration: 1.2, delay: i * 0.08, ease: "easeIn" }}
+        >
+          <DollarBill />
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+/* ── Help Buttons ── */
+
 function HelpButtons({
   fiftyFiftyUsed,
   clueUsed,
@@ -111,58 +199,30 @@ function HelpButtons({
   onChangeQuestion: () => void;
   disabled?: boolean;
 }) {
+  const btnBase =
+    "flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl font-bold text-xs text-white transition-all active:translate-y-[1px] active:border-b-[2px]";
+  const btnActive = "bg-[#243B44] border-b-[3px] border-b-[#1B2F36] hover:bg-[#2C4A55]";
+  const btnUsed = "bg-[#243B44]/50 border-b-[3px] border-b-[#1B2F36]/50 opacity-40";
+
   return (
-    <div className="flex gap-2 justify-center flex-wrap">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={onFiftyFifty}
-        disabled={fiftyFiftyUsed || disabled}
-        className="flex-1 min-w-[90px] relative"
-      >
-        <Split className="size-4 mr-1.5" />
-        <span>50/50</span>
-        {fiftyFiftyUsed && (
-          <Badge className="absolute -top-2 -right-2 h-5 px-1.5 text-xs bg-muted text-muted-foreground">
-            Used
-          </Badge>
-        )}
-      </Button>
-
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={onClue}
-        disabled={clueUsed || disabled}
-        className="flex-1 min-w-[90px] relative"
-      >
-        <Lightbulb className="size-4 mr-1.5" />
-        <span>Clue</span>
-        {clueUsed && (
-          <Badge className="absolute -top-2 -right-2 h-5 px-1.5 text-xs bg-muted text-muted-foreground">
-            Used
-          </Badge>
-        )}
-      </Button>
-
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={onChangeQuestion}
-        disabled={changeQuestionUsed || disabled}
-        className="flex-1 min-w-[90px] relative"
-      >
-        <RefreshCw className="size-4 mr-1.5" />
-        <span>Skip</span>
-        {changeQuestionUsed && (
-          <Badge className="absolute -top-2 -right-2 h-5 px-1.5 text-xs bg-muted text-muted-foreground">
-            Used
-          </Badge>
-        )}
-      </Button>
+    <div className="flex gap-2">
+      <button onClick={onFiftyFifty} disabled={fiftyFiftyUsed || disabled} className={cn(btnBase, fiftyFiftyUsed ? btnUsed : btnActive)}>
+        <Split className="size-3.5" />
+        <span className={cn(fiftyFiftyUsed && "line-through")}>50/50</span>
+      </button>
+      <button onClick={onClue} disabled={clueUsed || disabled} className={cn(btnBase, clueUsed ? btnUsed : btnActive)}>
+        <Lightbulb className="size-3.5" />
+        <span className={cn(clueUsed && "line-through")}>Clue</span>
+      </button>
+      <button onClick={onChangeQuestion} disabled={changeQuestionUsed || disabled} className={cn(btnBase, changeQuestionUsed ? btnUsed : btnActive)}>
+        <RefreshCw className="size-3.5" />
+        <span className={cn(changeQuestionUsed && "line-through")}>Skip</span>
+      </button>
     </div>
   );
 }
+
+/* ── Main Component ── */
 
 export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
   const STARTING_MONEY = 1000;
@@ -192,18 +252,15 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
 
   const handleBetChange = (index: number, value: number[]) => {
     if (showResult || hasConfirmed) return;
-
     const newBets = [...bets];
     const oldBet = newBets[index];
     const newBet = value[0];
     const difference = newBet - oldBet;
-
     if (difference > remaining) {
       newBets[index] = oldBet + remaining;
     } else {
       newBets[index] = newBet;
     }
-
     setBets(newBets);
   };
 
@@ -211,17 +268,14 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
     setHasConfirmed(true);
     setIsAnimating(true);
     setShowClue(false);
-
     const wrongAnswers = currentQuestion.options
       .map((_, index) => index)
       .filter((index) => index !== currentQuestion.correctAnswer && bets[index] > 0);
-
     wrongAnswers.forEach((answerIndex, i) => {
       setTimeout(() => {
         setDroppedAnswers((prev) => [...prev, answerIndex]);
       }, i * 1000);
     });
-
     setTimeout(() => {
       setIsAnimating(false);
       setShowResult(true);
@@ -243,21 +297,17 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
         return prev - 1;
       });
     }, 1000);
-
     return () => clearInterval(timer);
   }, [showResult, isAnimating, hasConfirmed, totalAllocated, handleConfirmBets, onComplete]);
 
   const handleNextQuestion = () => {
     const correctBet = bets[currentQuestion.correctAnswer];
     const newMoney = correctBet;
-
     setCurrentMoney(newMoney);
-
     if (newMoney === 0 || currentQuestionIndex >= questions.length - 1) {
       onComplete(newMoney);
       return;
     }
-
     setCurrentQuestionIndex((prev) => prev + 1);
     setBets([0, 0, 0, 0]);
     setShowResult(false);
@@ -271,35 +321,26 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
 
   const handleFiftyFifty = () => {
     if (fiftyFiftyUsed || showResult || hasConfirmed) return;
-
     setFiftyFiftyUsed(true);
-
     const wrongAnswers = currentQuestion.options
       .map((_, idx) => idx)
       .filter((idx) => idx !== currentQuestion.correctAnswer);
-
     const shuffled = wrongAnswers.sort(() => Math.random() - 0.5);
     const toHide = shuffled.slice(0, 2);
-
     setHiddenAnswers(toHide);
-
     const newBets = [...bets];
-    toHide.forEach((idx) => {
-      newBets[idx] = 0;
-    });
+    toHide.forEach((idx) => { newBets[idx] = 0; });
     setBets(newBets);
   };
 
   const handleClue = () => {
     if (clueUsed || showResult || hasConfirmed) return;
-
     setClueUsed(true);
     setShowClue(true);
   };
 
   const handleChangeQuestion = () => {
     if (changeQuestionUsed || showResult || hasConfirmed) return;
-
     setChangeQuestionUsed(true);
     setBets([0, 0, 0, 0]);
     setHiddenAnswers([]);
@@ -307,385 +348,398 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
     setTimeLeft(QUESTION_TIME);
   };
 
-  const formatMoney = (amount: number) => {
-    return `${amount.toLocaleString()} coins`;
-  };
+  const formatMoney = (amount: number) => `${amount.toLocaleString()} coins`;
 
-  const getDifficultyColor = (difficulty: string) => {
+  const getDifficultyStyle = (difficulty: string) => {
     switch (difficulty) {
-      case "easy":
-        return "bg-green-500/10 text-green-700 dark:text-green-400";
-      case "medium":
-        return "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400";
-      case "hard":
-        return "bg-red-500/10 text-red-700 dark:text-red-400";
-      default:
-        return "";
+      case "easy": return "bg-[#58CC02]/15 text-[#58CC02]";
+      case "medium": return "bg-[#FF9600]/15 text-[#FF9600]";
+      case "hard": return "bg-[#FF4B4B]/15 text-[#FF4B4B]";
+      default: return "";
     }
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <div className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur-sm">
-        <div className="px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowQuitDialog(true)}
-                className="flex items-center justify-center size-9 rounded-xl hover:bg-destructive/10 transition-colors text-destructive"
-              >
-                <ArrowLeft className="size-5" />
-              </button>
-              <div className="flex items-center gap-2">
-                <div className="text-2xl">💰</div>
-                <h1 className="text-xl font-bold">Money Drop</h1>
+    <div className="-m-6 min-h-screen bg-[#0D1B21] flex flex-col font-fun">
+
+      {/* ── Header ── */}
+      <div className="sticky top-0 z-20 bg-[#1B2F36] border-b-[3px] border-[#0D1B21]">
+        <div className="max-w-3xl mx-auto px-4 py-2.5 flex items-center gap-4">
+          {/* Left: close + title */}
+          <button
+            onClick={() => setShowQuitDialog(true)}
+            className="flex items-center justify-center size-8 rounded-lg hover:bg-red-500/10 transition-colors text-white/50 hover:text-red-400"
+          >
+            <X className="size-4" />
+          </button>
+
+          {/* Progress bar */}
+          <div className="flex-1 flex gap-1">
+            {questions.map((_, i) => (
+              <div key={i} className="flex-1 h-2 rounded-full overflow-hidden bg-white/10">
+                <motion.div
+                  className={cn(
+                    "h-full rounded-full",
+                    i < currentQuestionIndex ? "bg-[#58CC02]"
+                      : i === currentQuestionIndex ? "bg-[#1CB0F6]"
+                      : "bg-transparent"
+                  )}
+                  initial={false}
+                  animate={{ width: i <= currentQuestionIndex ? "100%" : "0%" }}
+                  transition={{ duration: 0.4 }}
+                />
               </div>
-            </div>
-
-            {!showResult && !isAnimating && (
-              <motion.div
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 transition-colors ${
-                  timeLeft <= 3
-                    ? "bg-red-500/20 border-red-500 text-red-600 dark:text-red-400"
-                    : timeLeft <= 5
-                      ? "bg-yellow-500/20 border-yellow-500 text-yellow-600 dark:text-yellow-400"
-                      : "bg-primary/20 border-primary text-primary"
-                }`}
-                animate={timeLeft <= 3 ? { scale: [1, 1.1, 1] } : {}}
-                transition={{
-                  duration: 0.5,
-                  repeat: timeLeft <= 3 ? Infinity : 0,
-                }}
-              >
-                <Clock className="size-4" />
-                <span className="text-sm font-mono tabular-nums">{timeLeft}s</span>
-              </motion.div>
-            )}
-
-            <div className="flex items-center gap-2">
-              <DollarSign className="size-5 text-green-500" />
-              <div>
-                <div className="text-xs text-muted-foreground">Balance</div>
-                <div className="text-lg font-bold">{formatMoney(currentMoney)}</div>
-              </div>
-            </div>
-
-            <div className="text-sm text-muted-foreground">
-              {currentQuestionIndex + 1}/{questions.length}
-            </div>
+            ))}
           </div>
 
-          <Progress
-            value={((currentQuestionIndex + 1) / questions.length) * 100}
-            className="h-1.5 mt-3"
-          />
+          {/* Timer */}
+          {!showResult && !isAnimating && (
+            <motion.div
+              className={cn(
+                "flex items-center gap-1 px-2.5 py-1 rounded-full font-bold text-xs tabular-nums",
+                timeLeft <= 3 ? "bg-[#FF4B4B]/20 text-[#FF4B4B]"
+                  : timeLeft <= 5 ? "bg-[#FF9600]/20 text-[#FF9600]"
+                  : "bg-[#58CC02]/20 text-[#58CC02]"
+              )}
+              animate={timeLeft <= 3 ? { scale: [1, 1.08, 1] } : {}}
+              transition={{ duration: 0.5, repeat: timeLeft <= 3 ? Infinity : 0 }}
+            >
+              <Clock className="size-3.5" />
+              {timeLeft}s
+            </motion.div>
+          )}
+
+          {/* Balance */}
+          <div className="flex items-center gap-1">
+            <DollarSign className="size-3.5 text-[#FF9600]" />
+            <span className="text-[#FF9600] font-black text-sm tabular-nums">
+              {currentMoney.toLocaleString()}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 p-4 space-y-4 overflow-y-auto">
-        {/* Question */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between mb-2 text-xs">
-              <span className="text-muted-foreground">
-                Question {currentQuestionIndex + 1} of {questions.length}
-              </span>
-              <div className="flex gap-1.5">
-                <Badge
-                  variant="outline"
-                  className={`${getDifficultyColor(currentQuestion.difficulty)} text-xs`}
-                >
-                  {currentQuestion.difficulty}
-                </Badge>
-                <Badge variant="secondary" className="text-xs">
+      {/* ── Content ── */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-3xl mx-auto px-4 py-4 space-y-3">
+
+          {/* Question + help row */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-[#131F24] rounded-2xl border-b-[3px] border-b-[#0D1B21] p-4"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5">
+                <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold", getDifficultyStyle(currentQuestion.difficulty))}>
+                  {currentQuestion.difficulty.toUpperCase()}
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#1CB0F6]/15 text-[#1CB0F6]">
                   {currentQuestion.category}
-                </Badge>
+                </span>
               </div>
+              <HelpButtons
+                fiftyFiftyUsed={fiftyFiftyUsed}
+                clueUsed={clueUsed}
+                changeQuestionUsed={changeQuestionUsed}
+                onFiftyFifty={handleFiftyFifty}
+                onClue={handleClue}
+                onChangeQuestion={handleChangeQuestion}
+                disabled={showResult || isAnimating || hasConfirmed}
+              />
             </div>
-            <CardTitle className="text-base leading-relaxed">
+            <p className="text-white text-base font-bold leading-snug">
               {currentQuestion.question}
-            </CardTitle>
-          </CardHeader>
-        </Card>
+            </p>
+          </motion.div>
 
-        {/* Help Buttons */}
-        <div className="space-y-3">
-          <HelpButtons
-            fiftyFiftyUsed={fiftyFiftyUsed}
-            clueUsed={clueUsed}
-            changeQuestionUsed={changeQuestionUsed}
-            onFiftyFifty={handleFiftyFifty}
-            onClue={handleClue}
-            onChangeQuestion={handleChangeQuestion}
-            disabled={showResult || isAnimating || hasConfirmed}
-          />
-
-          {showClue && !showResult && !isAnimating && (
-            <Card className="p-3 bg-yellow-500/10 border-yellow-500/30">
-              <div className="flex items-start gap-2">
-                <div className="shrink-0 text-yellow-600 dark:text-yellow-400">💡</div>
-                <div className="text-sm">
-                  <div className="text-yellow-700 dark:text-yellow-300 font-medium mb-1">
-                    Clue:
-                  </div>
-                  <div className="text-muted-foreground">{currentQuestion.clue}</div>
-                </div>
-              </div>
-            </Card>
-          )}
-        </div>
-
-        {/* Betting Interface */}
-        {!showResult && !isAnimating ? (
-          <div className="space-y-4 flex-1">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-medium">Place Your Bets</div>
-              <div
-                className={`text-sm ${remaining === 0 ? "text-green-600 font-medium" : "text-muted-foreground"}`}
+          {/* Clue card */}
+          <AnimatePresence>
+            {showClue && !showResult && !isAnimating && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="bg-[#FF9600]/10 border border-[#FF9600]/30 rounded-xl px-4 py-3 flex items-start gap-2"
               >
-                Remaining: {formatMoney(remaining)}
-              </div>
-            </div>
+                <span className="shrink-0">💡</span>
+                <p className="text-sm text-white/60"><span className="text-[#FF9600] font-bold">Clue: </span>{currentQuestion.clue}</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
+          {/* ── Betting Interface ── */}
+          {!showResult && !isAnimating ? (
             <div className="space-y-3">
-              {currentQuestion.options.map((option, index) => {
-                const isHidden = hiddenAnswers.includes(index);
-                const betAmount = bets[index];
+              {/* Remaining counter */}
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-white/40 uppercase tracking-wide">
+                  Place Your Bets
+                </span>
+                <span className={cn("text-xs font-black tabular-nums", remaining === 0 ? "text-[#58CC02]" : "text-[#FF9600]")}>
+                  {remaining === 0 ? "All allocated" : `${remaining.toLocaleString()} remaining`}
+                </span>
+              </div>
 
-                if (isHidden) {
-                  return (
-                    <Card key={index} className="relative overflow-visible opacity-40">
-                      <CardContent className="p-3">
-                        <div className="flex items-center gap-2">
-                          <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs text-muted-foreground">
+              {/* 2×2 grid on wider screens */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {currentQuestion.options.map((option, index) => {
+                  const isHidden = hiddenAnswers.includes(index);
+                  const betAmount = bets[index];
+                  const color = OPTION_COLORS[index % OPTION_COLORS.length];
+
+                  if (isHidden) {
+                    return (
+                      <div key={index} className="bg-[#1B2F36] rounded-xl border border-white/5 border-b-[3px] border-b-[#0D1B21] px-3 py-2.5 opacity-30">
+                        <div className="flex items-center gap-2.5">
+                          <div className={cn("flex size-7 shrink-0 items-center justify-center rounded-lg text-xs font-black", color.light, color.text)}>
                             {String.fromCharCode(65 + index)}
                           </div>
-                          <span className="text-sm text-muted-foreground">
-                            Hidden by 50/50
-                          </span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                }
-
-                return (
-                  <Card
-                    key={index}
-                    className={`relative overflow-visible ${hasConfirmed ? "opacity-60" : ""}`}
-                  >
-                    <CardContent className="p-3 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-medium">
-                            {String.fromCharCode(65 + index)}
-                          </div>
-                          <span className="text-sm truncate">{option}</span>
-                        </div>
-                        <div className="text-sm font-medium shrink-0 ml-2">
-                          {formatMoney(betAmount)}
+                          <span className="text-xs text-white/40 line-through">{option}</span>
                         </div>
                       </div>
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={index}
+                      className={cn(
+                        "relative bg-[#1B2F36] rounded-xl border border-white/5 border-b-[3px] border-b-[#0D1B21] px-3 py-2.5 overflow-visible",
+                        hasConfirmed && "opacity-60"
+                      )}
+                    >
+                      {/* Top row: badge + option text + bet amount */}
+                      <div className="flex items-center justify-between mb-2">
+                        <OptionRow index={index} option={option} color={color} />
+                        {betAmount > 0 && (
+                          <span className="text-xs font-black text-[#FF9600] tabular-nums shrink-0 ml-2">
+                            {betAmount.toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Slider */}
                       <Slider
                         value={[betAmount]}
                         onValueChange={(value) => handleBetChange(index, value)}
                         max={currentMoney}
                         step={10}
                         disabled={hasConfirmed}
-                        className="w-full"
+                        className={cn(
+                          "w-full",
+                          "[&_[data-slot=slider-track]]:h-1.5 [&_[data-slot=slider-track]]:bg-white/10 [&_[data-slot=slider-track]]:rounded-full",
+                          color.sliderRange,
+                          "[&_[data-slot=slider-thumb]]:size-4 [&_[data-slot=slider-thumb]]:bg-white [&_[data-slot=slider-thumb]]:border-2",
+                          color.sliderThumb
+                        )}
                       />
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
 
-            {!isFullyAllocated && !hasConfirmed && (
-              <div className="flex items-center gap-2 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
-                <AlertCircle className="size-4 text-yellow-600 shrink-0" />
-                <p className="text-xs text-yellow-700 dark:text-yellow-400">
-                  You must allocate all your money before confirming
-                </p>
-              </div>
-            )}
-
-            {!hasConfirmed && (
-              <Button
-                onClick={handleConfirmBets}
-                size="lg"
-                className="w-full"
-                disabled={!isFullyAllocated}
-              >
-                Confirm Bets
-              </Button>
-            )}
-          </div>
-        ) : isAnimating ? (
-          <div className="space-y-3 flex-1">
-            <div className="text-center text-sm text-muted-foreground mb-4">
-              Revealing the answer...
-            </div>
-            {currentQuestion.options.map((option, index) => {
-              const isCorrect = index === currentQuestion.correctAnswer;
-              const betAmount = bets[index];
-              const hasDropped = droppedAnswers.includes(index);
-
-              return (
-                <Card
-                  key={index}
-                  className={`relative ${
-                    isCorrect
-                      ? "border-2 border-green-500 bg-green-500/20"
-                      : hasDropped
-                        ? "opacity-30"
-                        : ""
-                  }`}
-                >
-                  <CardContent className="p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <div
-                          className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-medium ${
-                            isCorrect ? "bg-green-500 text-white" : "bg-secondary"
-                          }`}
-                        >
-                          {String.fromCharCode(65 + index)}
-                        </div>
-                        <span className="text-sm truncate">{option}</span>
-                      </div>
+                      {/* Bill stack — below slider */}
                       {betAmount > 0 && (
-                        <div
-                          className={`text-sm font-medium ${
-                            isCorrect
-                              ? "text-green-600 dark:text-green-400"
-                              : hasDropped
-                                ? "text-red-600 dark:text-red-400"
-                                : ""
-                          }`}
-                        >
-                          {hasDropped ? "-" : ""}
-                          {formatMoney(betAmount)}
+                        <div className="mt-1.5 flex justify-end pointer-events-none">
+                          <BillStack amount={betAmount} />
                         </div>
                       )}
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="space-y-4 flex-1">
-            <div className="space-y-3">
-              {currentQuestion.options.map((option, index) => {
-                const isCorrect = index === currentQuestion.correctAnswer;
-                const betAmount = bets[index];
+                  );
+                })}
+              </div>
 
-                let cardStyle = "bg-secondary";
-                if (isCorrect) {
-                  cardStyle = "bg-green-500/20 border-2 border-green-500";
-                } else if (betAmount > 0) {
-                  cardStyle = "bg-red-500/20 border-2 border-red-500";
-                }
-
-                return (
-                  <Card key={index} className={cardStyle}>
-                    <CardContent className="p-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <div
-                            className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-medium ${
-                              isCorrect
-                                ? "bg-green-500 text-white"
-                                : betAmount > 0
-                                  ? "bg-red-500 text-white"
-                                  : "bg-secondary"
-                            }`}
-                          >
-                            {String.fromCharCode(65 + index)}
-                          </div>
-                          <span className="text-sm truncate">{option}</span>
-                        </div>
-                        <div className="shrink-0 ml-2">
-                          {betAmount > 0 && (
-                            <div
-                              className={`text-sm font-medium ${isCorrect ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}
-                            >
-                              {isCorrect ? "+" : "-"}
-                              {formatMoney(betAmount)}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+              {/* Confirm button */}
+              {!hasConfirmed && (
+                <button
+                  onClick={handleConfirmBets}
+                  disabled={!isFullyAllocated}
+                  className={cn(
+                    "w-full py-3 rounded-xl font-black uppercase tracking-wide text-white text-sm transition-all",
+                    isFullyAllocated
+                      ? "bg-[#58CC02] border-b-[3px] border-b-[#46A302] hover:bg-[#61D806] active:border-b-[2px] active:translate-y-[1px]"
+                      : "bg-[#58CC02]/40 border-b-[3px] border-b-[#46A302]/40 opacity-40 cursor-not-allowed"
+                  )}
+                >
+                  {isFullyAllocated ? "Confirm Bets" : `Allocate all ${currentMoney.toLocaleString()} coins`}
+                </button>
+              )}
             </div>
 
-            <Card
-              className={
-                bets[currentQuestion.correctAnswer] > 0
-                  ? "bg-green-500/10 border-green-500/20"
-                  : "bg-red-500/10 border-red-500/20"
-              }
-            >
-              <CardContent className="pt-4 text-center">
-                <div className="space-y-2">
-                  {bets[currentQuestion.correctAnswer] > 0 ? (
-                    <>
-                      <div className="text-2xl">✓</div>
-                      <div className="text-sm font-medium">
-                        You saved {formatMoney(bets[currentQuestion.correctAnswer])}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        Lost{" "}
-                        {formatMoney(currentMoney - bets[currentQuestion.correctAnswer])}
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="text-2xl">✗</div>
-                      <div className="text-sm font-medium text-red-600 dark:text-red-400">
-                        Lost all {formatMoney(currentMoney)}
-                      </div>
-                    </>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+          ) : isAnimating ? (
+            /* ── Animation Phase ── */
+            <div className="space-y-2.5">
+              <div className="text-center text-xs text-white/40 font-bold uppercase tracking-wide mb-2">
+                Revealing the answer...
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {currentQuestion.options.map((option, index) => {
+                  const isCorrect = index === currentQuestion.correctAnswer;
+                  const betAmount = bets[index];
+                  const hasDropped = droppedAnswers.includes(index);
+                  const color = OPTION_COLORS[index % OPTION_COLORS.length];
 
-            <Button onClick={handleNextQuestion} size="lg" className="w-full">
-              {bets[currentQuestion.correctAnswer] === 0 ||
-              currentQuestionIndex >= questions.length - 1
-                ? "View Results"
-                : "Next Question"}
-              <ArrowRight className="ml-2 size-4" />
-            </Button>
-          </div>
-        )}
+                  if (isCorrect) {
+                    return (
+                      <motion.div
+                        key={index}
+                        className="bg-[#58CC02]/15 rounded-xl border-2 border-[#58CC02] border-b-[3px] border-b-[#46A302] px-3 py-2.5"
+                        animate={{
+                          boxShadow: ["0 0 0px rgba(88,204,2,0)", "0 0 25px rgba(88,204,2,0.5)", "0 0 0px rgba(88,204,2,0)"],
+                          scale: [1, 1.02, 1],
+                        }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <OptionRow index={index} option={option} color={{ ...color, light: "bg-[#58CC02]", text: "text-white" }} textClass="text-emerald-300" />
+                          {betAmount > 0 && (
+                            <span className="text-xs font-black text-[#58CC02] shrink-0 ml-2">+{formatMoney(betAmount)}</span>
+                          )}
+                        </div>
+                      </motion.div>
+                    );
+                  }
+
+                  if (hasDropped && betAmount > 0) {
+                    return (
+                      <motion.div
+                        key={index}
+                        className="relative overflow-visible bg-[#1B2F36] rounded-xl border border-white/5 border-b-[3px] border-b-[#0D1B21] px-3 py-2.5"
+                        animate={{ y: [0, 20, 300], opacity: [1, 0.8, 0], rotateX: [0, 5, 15], scale: [1, 0.95, 0.8] }}
+                        transition={{ duration: 0.8, ease: "easeIn" }}
+                      >
+                        <FallingBills amount={betAmount} />
+                        <div className="flex items-center justify-between">
+                          <OptionRow index={index} option={option} color={color} />
+                          <span className="text-xs font-black text-[#FF4B4B] shrink-0 ml-2">-{formatMoney(betAmount)}</span>
+                        </div>
+                      </motion.div>
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={index}
+                      className={cn(
+                        "bg-[#1B2F36] rounded-xl border border-white/5 border-b-[3px] border-b-[#0D1B21] px-3 py-2.5",
+                        (hasDropped || betAmount === 0) && "opacity-30"
+                      )}
+                    >
+                      <div className="flex items-center justify-between">
+                        <OptionRow index={index} option={option} color={color} />
+                        {betAmount > 0 && (
+                          <span className="text-xs font-black text-white/60 shrink-0 ml-2">{formatMoney(betAmount)}</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+          ) : (
+            /* ── Result Phase ── */
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {currentQuestion.options.map((option, index) => {
+                  const isCorrect = index === currentQuestion.correctAnswer;
+                  const betAmount = bets[index];
+                  const color = OPTION_COLORS[index % OPTION_COLORS.length];
+
+                  return (
+                    <div
+                      key={index}
+                      className={cn(
+                        "rounded-xl border-2 border-b-[3px] px-3 py-2.5",
+                        isCorrect
+                          ? "bg-[#58CC02]/15 border-[#58CC02] border-b-[#46A302]"
+                          : betAmount > 0
+                            ? "bg-[#FF4B4B]/15 border-[#FF4B4B] border-b-[#CC3C3C]"
+                            : "bg-[#1B2F36] border-white/5 border-b-[#0D1B21] opacity-40"
+                      )}
+                    >
+                      <div className="flex items-center justify-between">
+                        <OptionRow
+                          index={index}
+                          option={option}
+                          color={isCorrect ? { ...color, light: "bg-[#58CC02]", text: "text-white" } : betAmount > 0 ? { ...color, light: "bg-[#FF4B4B]", text: "text-white" } : color}
+                          textClass={isCorrect ? "text-emerald-300" : betAmount > 0 ? "text-red-300" : "text-white/40"}
+                        />
+                        {betAmount > 0 && (
+                          <span className={cn("text-xs font-black shrink-0 ml-2", isCorrect ? "text-[#58CC02]" : "text-[#FF4B4B]")}>
+                            {isCorrect ? "+" : "-"}{formatMoney(betAmount)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Result summary */}
+              {bets[currentQuestion.correctAnswer] > 0 ? (
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                  className="bg-[#58CC02]/10 border-2 border-[#58CC02]/30 rounded-xl p-5 text-center"
+                >
+                  <div className="text-2xl mb-1">✅</div>
+                  <div className="text-white font-black text-sm">
+                    You saved {formatMoney(bets[currentQuestion.correctAnswer])}
+                  </div>
+                  <div className="text-white/40 text-xs font-semibold mt-0.5">
+                    Lost {formatMoney(currentMoney - bets[currentQuestion.correctAnswer])}
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                  className="bg-[#FF4B4B]/10 border-2 border-[#FF4B4B]/30 rounded-xl p-5 text-center"
+                >
+                  <div className="text-2xl mb-1">💀</div>
+                  <div className="text-[#FF4B4B] font-black text-sm">
+                    Lost all {formatMoney(currentMoney)}
+                  </div>
+                </motion.div>
+              )}
+
+              <button
+                onClick={handleNextQuestion}
+                className="w-full py-3 rounded-xl bg-[#58CC02] border-b-[3px] border-b-[#46A302] font-black uppercase tracking-wide text-white text-sm hover:bg-[#61D806] active:border-b-[2px] active:translate-y-[1px] transition-all flex items-center justify-center gap-2"
+              >
+                {bets[currentQuestion.correctAnswer] === 0 || currentQuestionIndex >= questions.length - 1
+                  ? "View Results"
+                  : "Next Question"}
+                <ArrowRight className="size-4" />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Quit Dialog */}
+      {/* ── Quit Dialog ── */}
       <AlertDialog open={showQuitDialog} onOpenChange={setShowQuitDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Quit Money Drop?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to quit? You&apos;ll lose your current balance of{" "}
-              {formatMoney(currentMoney)}.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Continue Playing</AlertDialogCancel>
-            <AlertDialogAction
+        <AlertDialogContent className="max-w-xs bg-[#1B2F36] border-0 rounded-3xl p-6 font-fun text-center">
+          <AlertDialogTitle className="text-lg font-black text-white">
+            Quit Money Drop?
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-white/50 text-sm font-semibold">
+            You&apos;ll lose your current balance of {formatMoney(currentMoney)}.
+          </AlertDialogDescription>
+          <div className="flex flex-col gap-2 mt-3">
+            <button
+              onClick={() => setShowQuitDialog(false)}
+              className="w-full py-2.5 rounded-xl bg-[#58CC02] border-b-[3px] border-b-[#46A302] text-white font-black text-sm hover:bg-[#61D806] active:border-b-[2px] active:translate-y-[1px] transition-all"
+            >
+              Keep Playing
+            </button>
+            <button
               onClick={onBack}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="w-full py-2.5 rounded-xl bg-transparent border-2 border-[#FF4B4B]/40 text-[#FF4B4B] font-black text-sm hover:bg-[#FF4B4B]/10 active:translate-y-[1px] transition-all"
             >
               Quit Game
-            </AlertDialogAction>
-          </AlertDialogFooter>
+            </button>
+          </div>
         </AlertDialogContent>
       </AlertDialog>
     </div>

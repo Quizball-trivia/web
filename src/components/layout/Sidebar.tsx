@@ -15,14 +15,14 @@ interface SidebarProps {
 const NAV_ITEMS = [
   { id: 'modeSelection', label: 'Play', icon: Gamepad2 },
   { id: 'tournaments', label: 'Events', icon: Trophy },
-  { id: 'leaderboard', label: 'Ranks', icon: BarChart3 },
+  { id: 'leaderboard', label: 'Leaderboard', icon: BarChart3 },
   { id: 'store', label: 'Store', icon: ShoppingBag },
   { id: 'profile', label: 'Profile', icon: User },
   { id: 'settings', label: 'Settings', icon: Settings },
 ] as const;
 
 export function Sidebar({ currentScreen, onNavigate, className }: SidebarProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   return (
     <div 
@@ -77,18 +77,18 @@ export function Sidebar({ currentScreen, onNavigate, className }: SidebarProps) 
       </ScrollArea>
 
       {/* Footer / Collapse Toggle */}
-      <div className="p-4 border-t border-border/50">
+      <div className="p-3 border-t border-border/50">
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
           onClick={() => setIsCollapsed(!isCollapsed)}
           className={cn(
-            "w-full text-muted-foreground hover:text-foreground",
+            "w-full h-10 bg-primary/10 border-primary/30 text-primary hover:bg-primary/20 hover:text-primary",
             isCollapsed ? "justify-center" : "justify-start gap-3"
           )}
         >
           <Menu className="size-5" />
-          {!isCollapsed && <span>Collapse</span>}
+          {!isCollapsed && <span className="font-semibold">Collapse</span>}
         </Button>
       </div>
     </div>

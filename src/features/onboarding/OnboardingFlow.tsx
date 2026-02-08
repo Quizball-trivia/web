@@ -20,7 +20,6 @@ import {
   Star,
   Globe,
   User,
-  Upload,
   X,
 } from 'lucide-react';
 
@@ -75,14 +74,6 @@ const languages = [
   { code: 'ka', name: 'Georgian', nativeName: 'ქართული', flag: '🇬🇪' },
 ];
 
-const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
-const ALLOWED_AVATAR_TYPES = new Set([
-  'image/png',
-  'image/jpeg',
-  'image/webp',
-  'image/gif',
-]);
-
 // Football-themed avatar seeds for DiceBear API
 const avatarSeeds = [
   'striker', 'goalkeeper', 'defender', 'midfielder', 'captain', 'coach',
@@ -126,11 +117,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   useEffect(() => {
     if (currentStep === 'quiz' && !showingFeedback) {
       setTimer(10);
-      let localTimer = 10;
       const interval = setInterval(() => {
         setTimer((t) => {
           if (t > 1) {
-            localTimer--;
             return t - 1;
           } else {
             clearInterval(interval);
@@ -154,7 +143,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [currentStep, currentQuizQuestion, showingFeedback]);
+  }, [currentStep, currentQuizQuestion, selectedAnswer, showingFeedback]);
 
 
   const stepOrder: OnboardingStep[] = [
@@ -382,7 +371,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                     Select the language you want to use in the app.
                   </p>
                   <div className="w-full max-w-md flex flex-col gap-3 mt-2">
-                    {languages.map((language, index) => (
+                    {languages.map((language) => (
                       <button
                         key={language.code}
                         onClick={() => setPreferredLanguage(language.code)}
@@ -487,7 +476,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                     <div className="h-px bg-border flex-1" />
                   </div>
                   <div className="grid grid-cols-6 gap-2">
-                    {avatarSeeds.map((seed, index) => (
+                    {avatarSeeds.map((seed) => (
                       <button
                         key={seed}
                         onClick={() => setAvatar(seed)}

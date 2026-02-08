@@ -1,12 +1,14 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -183,6 +185,9 @@ export function ModeConfirmModal({
             <SheetTitle className="text-xl font-black text-white font-fun">
               {config.title}
             </SheetTitle>
+            <SheetDescription className="sr-only">
+              Confirm your selected game mode before starting.
+            </SheetDescription>
           </SheetHeader>
           {Content}
         </SheetContent>
@@ -195,6 +200,9 @@ export function ModeConfirmModal({
       <DialogContent className="sm:max-w-md bg-[#131F24] border-[#1B2F36] shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-xl text-center hidden">Confirm {config.title}</DialogTitle>
+          <DialogDescription className="sr-only">
+            Confirm your selected game mode before starting.
+          </DialogDescription>
           <div className="text-center text-xl font-black text-white font-fun">{config.title}</div>
         </DialogHeader>
         {Content}
