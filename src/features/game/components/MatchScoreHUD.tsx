@@ -1,6 +1,9 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
+import { useAnimatedScore } from '@/features/game/hooks/useAnimatedScore';
+import { motion, AnimatePresence } from 'motion/react';
+import { useEffect, useState } from 'react';
 
 interface MatchScoreHUDProps {
   playerScore: number;
@@ -9,11 +12,12 @@ interface MatchScoreHUDProps {
   opponentAvatar: string;
   playerName: string;
   opponentName: string;
-  timeRemaining: number;
+  timeRemaining: number | null;
   roundCurrent: number;
   roundTotal: number;
   playerAnswered: boolean;
   opponentAnswered: boolean;
+  opponentRecentPoints?: number;
   onQuit?: () => void;
 }
 
@@ -29,9 +33,28 @@ export function MatchScoreHUD({
   roundTotal,
   playerAnswered,
   opponentAnswered,
+  opponentRecentPoints = 0,
   onQuit,
 }: MatchScoreHUDProps) {
-  const isUrgent = timeRemaining <= 3;
+  const animatedPlayerScore = useAnimatedScore(playerScore);
+  const animatedOpponentScore = useAnimatedScore(opponentScore);
+
+  // Add splash animation state
+  const [showOpponentSplash, setShowOpponentSplash] = useState(false);
+
+  // Trigger splash when opponent answers
+  useEffect(() => {
+    if (opponentAnswered) {
+      const showTimer = setTimeout(() => setShowOpponentSplash(true), 0);
+      const hideTimer = setTimeout(() => setShowOpponentSplash(false), 1000);
+      return () => {
+        clearTimeout(showTimer);
+        clearTimeout(hideTimer);
+      };
+    }
+  }, [opponentAnswered]);
+
+  const isUrgent = timeRemaining !== null && timeRemaining <= 3;
   const progressPercent = (roundCurrent / roundTotal) * 100;
   const leadDiff = playerScore - opponentScore;
   const leadText =
@@ -82,36 +105,70 @@ export function MatchScoreHUD({
               {playerName.slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <div className="min-w-0">
+          <div className="min-w-0 relative">
             <div className="text-xs font-bold text-white/85 truncate max-w-[120px]">{playerName}</div>
             <div className="text-3xl leading-7 font-black text-emerald-300 tabular-nums">
-              {playerScore}
+              {animatedPlayerScore}
             </div>
           </div>
         </div>
 
         {/* Center timer */}
         <div className="shrink-0 flex flex-col items-center justify-center min-w-[124px]">
-          <div
-            className={cn(
-              'font-fun text-4xl font-black tabular-nums transition-colors duration-200',
-              isUrgent ? 'text-red-500 animate-pulse' : 'text-white'
-            )}
-          >
-            {timeRemaining}
-          </div>
+          {timeRemaining !== null ? (
+            <div
+              className={cn(
+                'font-fun text-4xl font-black tabular-nums transition-colors duration-200',
+                isUrgent ? 'text-red-500 animate-pulse' : 'text-white'
+              )}
+            >
+              {timeRemaining}
+            </div>
+          ) : (
+            <div className="font-fun text-2xl font-black text-white/30">
+              ⚡
+            </div>
+          )}
           <div className="text-[10px] font-black tracking-[0.18em] text-white/35 -mt-0.5 mb-0.5">VS</div>
           <div className={cn('text-xs font-bold', leadClass)}>
             {leadText}
           </div>
         </div>
 
-        {/* Opponent side */}
-        <div className="flex items-center gap-3 flex-1 min-w-0 justify-end rounded-2xl bg-[#172333]/85 border border-white/10 px-3 py-2.5">
-          <div className="min-w-0 text-right">
+        {/* Opponent side - with splash effect */}
+        <motion.div
+          className="flex items-center gap-3 flex-1 min-w-0 justify-end rounded-2xl bg-[#172333]/85 border border-white/10 px-3 py-2.5 relative"
+          animate={showOpponentSplash ? {
+            scale: [1, 1.05, 1],
+            boxShadow: [
+              '0 0 0 0 rgba(88, 204, 2, 0)',
+              '0 0 0 8px rgba(88, 204, 2, 0.3)',
+              '0 0 0 0 rgba(88, 204, 2, 0)',
+            ],
+          } : {}}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+        >
+          {/* Flying score splash on opponent side */}
+          <AnimatePresence>
+            {showOpponentSplash && opponentRecentPoints > 0 && (
+              <motion.div
+                className="absolute -top-8 right-4 pointer-events-none"
+                initial={{ opacity: 1, y: 0, scale: 0.8 }}
+                animate={{ opacity: 0, y: -30, scale: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1, ease: 'easeOut' }}
+              >
+                <div className="text-emerald-400 font-black text-2xl font-fun drop-shadow-lg">
+                  +{opponentRecentPoints}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="min-w-0 text-right relative">
             <div className="text-xs font-bold text-white/85 truncate max-w-[120px] ml-auto">{opponentName}</div>
             <div className="text-3xl leading-7 font-black text-emerald-300 tabular-nums">
-              {opponentScore}
+              {animatedOpponentScore}
             </div>
           </div>
           <Avatar className={cn(
@@ -123,7 +180,7 @@ export function MatchScoreHUD({
               {opponentName.slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

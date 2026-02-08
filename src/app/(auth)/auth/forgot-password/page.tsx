@@ -24,7 +24,7 @@ export default function ForgotPasswordPage() {
   return (
     <ForgotPasswordScreen
       onResetPassword={handleResetPassword}
-      onBack={() => router.push("/auth/login")}
+      onBack={() => router.push("/auth/welcome")}
     />
   );
 }

@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-
 import { motion } from 'motion/react';
+
+import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 
 import { MatchScoreHUD } from '@/features/game/components/MatchScoreHUD';
 import { QuestionArena } from '@/features/game/components/QuestionArena';
 import { AnswerCard } from '@/features/game/components/AnswerCard';
 import { QuitMatchModal } from '@/features/game/components/QuitMatchModal';
+import { ArenaScoreSplash } from '@/features/game/components/ArenaScoreSplash';
 import { useRealtimeGameLogic } from '@/features/game/hooks/useRealtimeGameLogic';
 
 interface RealtimeQuizBallGameScreenProps {
@@ -16,6 +18,7 @@ interface RealtimeQuizBallGameScreenProps {
   opponentAvatar: string;
   opponentUsername: string;
   onQuit: () => void;
+  onForfeit: () => void;
 }
 
 export function RealtimeQuizBallGameScreen({
@@ -24,26 +27,71 @@ export function RealtimeQuizBallGameScreen({
   opponentAvatar,
   opponentUsername,
   onQuit,
+  onForfeit,
 }: RealtimeQuizBallGameScreenProps) {
   const { state, actions } = useRealtimeGameLogic();
   const [showQuitModal, setShowQuitModal] = useState(false);
   const [now, setNow] = useState(() => Date.now());
+  const [showPlayerSplash, setShowPlayerSplash] = useState(false);
+  const [showOpponentSplash, setShowOpponentSplash] = useState(false);
+  const [playerPoints, setPlayerPoints] = useState(0);
+  const [opponentPoints, setOpponentPoints] = useState(0);
 
   const {
     currentQuestion,
     timeRemaining,
     selectedAnswer,
     showResult,
+    roundResolved,
     isAnswered,
     correctIndex,
     opponentAnswered,
-    myRoundResult,
     opponentRoundResult,
     playerScore,
     opponentScore,
     matchPaused,
     pauseUntil,
+    questionPhase,
+    showOptions,
   } = state;
+
+  // Watch for answer acknowledgement to show player splash
+  const match = useRealtimeMatchStore((state) => state.match);
+  const answerAck = match?.answerAck;
+  const opponentRecentPoints = match?.opponentRecentPoints ?? 0;
+
+  // Reset splashes when question changes
+  useEffect(() => {
+    const resetTimer = setTimeout(() => {
+      setShowPlayerSplash(false);
+      setShowOpponentSplash(false);
+    }, 0);
+
+    return () => clearTimeout(resetTimer);
+  }, [currentQuestion?.qIndex]);
+
+  useEffect(() => {
+    if (answerAck?.pointsEarned !== undefined && answerAck?.qIndex === currentQuestion?.qIndex) {
+      const splashTimer = setTimeout(() => {
+        setPlayerPoints(answerAck.pointsEarned);
+        setShowPlayerSplash(true);
+      }, 0);
+
+      return () => clearTimeout(splashTimer);
+    }
+  }, [answerAck, currentQuestion?.qIndex]);
+
+  // Watch for opponent scoring
+  useEffect(() => {
+    if (opponentRecentPoints > 0 && opponentAnswered) {
+      const splashTimer = setTimeout(() => {
+        setOpponentPoints(opponentRecentPoints);
+        setShowOpponentSplash(true);
+      }, 0);
+
+      return () => clearTimeout(splashTimer);
+    }
+  }, [opponentRecentPoints, opponentAnswered]);
 
   useEffect(() => {
     if (!matchPaused || !pauseUntil) return;
@@ -55,6 +103,24 @@ export function RealtimeQuizBallGameScreen({
     matchPaused && pauseUntil ? Math.max(0, Math.ceil((pauseUntil - now) / 1000)) : null;
   const pauseCountdownLabel =
     typeof pauseCountdown === 'number' ? `${pauseCountdown}s` : '…';
+
+  // Debug logging for question rendering
+  useEffect(() => {
+    if (currentQuestion) {
+      console.log('🎯 Rendering question:', {
+        qIndex: currentQuestion.qIndex,
+        questionId: currentQuestion.question.id,
+        prompt: currentQuestion.question.prompt,
+        promptType: typeof currentQuestion.question.prompt,
+        promptLength: currentQuestion.question.prompt?.length,
+        promptPreview: currentQuestion.question.prompt?.substring(0, 100),
+        options: currentQuestion.question.options,
+        optionsCount: currentQuestion.question.options?.length,
+        categoryName: currentQuestion.question.categoryName,
+        difficulty: currentQuestion.question.difficulty,
+      });
+    }
+  }, [currentQuestion]);
 
   if (!currentQuestion) {
     return (
@@ -69,14 +135,21 @@ export function RealtimeQuizBallGameScreen({
   const difficultyLabel = (currentQuestion.question.difficulty ?? 'Medium').toString();
   const difficultyDisplay = difficultyLabel.charAt(0).toUpperCase() + difficultyLabel.slice(1);
 
-  const isCorrectAnswer = typeof correctIndex === 'number' && selectedAnswer === correctIndex;
-  const isWrongAnswer = showResult && typeof correctIndex === 'number' && selectedAnswer !== null && selectedAnswer !== correctIndex;
-  const myResultKnown = myRoundResult != null;
-  const opponentResultKnown = opponentRoundResult != null;
-  const opponentSelectedLabel =
-    opponentRoundResult?.selectedIndex != null
-      ? String.fromCharCode(65 + opponentRoundResult.selectedIndex)
-      : null;
+  const hasAnswerAckForCurrentQuestion = Boolean(
+    answerAck && answerAck.qIndex === currentQuestion.qIndex
+  );
+  const bothPlayersAnswered = Boolean(
+    hasAnswerAckForCurrentQuestion && (answerAck?.oppAnswered || opponentAnswered)
+  );
+  const waitingForOpponent =
+    hasAnswerAckForCurrentQuestion && !bothPlayersAnswered && !roundResolved;
+  const shouldRevealResults = roundResolved && typeof correctIndex === 'number';
+  const isCorrectAnswer = shouldRevealResults && typeof correctIndex === 'number' && selectedAnswer === correctIndex;
+  const isWrongAnswer =
+    shouldRevealResults &&
+    typeof correctIndex === 'number' &&
+    selectedAnswer !== null &&
+    selectedAnswer !== correctIndex;
 
   return (
     <div className="relative min-h-dvh w-full bg-[#0f1420]">
@@ -88,110 +161,124 @@ export function RealtimeQuizBallGameScreen({
           opponentName={opponentUsername}
           playerAvatar={playerAvatar}
           opponentAvatar={opponentAvatar}
-          timeRemaining={timeRemaining}
+          timeRemaining={questionPhase === 'playing' ? timeRemaining : null}
           roundCurrent={currentQuestion.qIndex + 1}
           roundTotal={currentQuestion.total}
           playerAnswered={isAnswered}
           opponentAnswered={opponentAnswered}
+          opponentRecentPoints={opponentRecentPoints}
           onQuit={() => setShowQuitModal(true)}
         />
 
-        <div className="flex-1 flex flex-col justify-center gap-6 mb-12">
-          <QuestionArena
-            question={currentQuestion.question.prompt}
-            category={categoryName}
-            categoryIcon={categoryIcon}
-            difficulty={difficultyDisplay}
-          />
+        <div className="flex-1 flex flex-col justify-center gap-6 mb-12 relative">
+          {/* Question with slide-in animation */}
+          <motion.div
+            key={`question-${currentQuestion.qIndex}`}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
+          >
+            <QuestionArena
+              question={currentQuestion.question.prompt}
+              category={categoryName}
+              categoryIcon={categoryIcon}
+              difficulty={difficultyDisplay}
+            />
+          </motion.div>
 
-          {showResult && !matchPaused && (
-            <div className="w-full max-w-2xl mx-auto -mt-2">
-              <div className="rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-xs font-bold text-white/70">
-                {opponentSelectedLabel
-                  ? `Opponent chose option ${opponentSelectedLabel}`
-                  : 'Opponent did not submit an answer in time'}
-              </div>
+          {/* Question reveal phase indicator */}
+          {questionPhase === 'reveal' && !matchPaused && (
+            <div className="w-full max-w-2xl mx-auto -mt-2 text-center">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+                className="text-blue-300 font-fun font-bold text-sm"
+              >
+                <span className="inline-block animate-pulse">⚡</span> Get ready...
+              </motion.div>
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3 w-full max-w-2xl mx-auto">
-            {currentQuestion.question.options.map((option, index) => {
-              const isSelected = selectedAnswer === index;
-              const isCorrect = typeof correctIndex === 'number' && index === correctIndex;
-              const opponentPicked = showResult && opponentRoundResult?.selectedIndex === index;
-              const opponentPickCorrect = opponentPicked
-                ? Boolean(opponentRoundResult?.isCorrect)
-                : undefined;
+          {/* Arena score splashes */}
+          <ArenaScoreSplash
+            show={showPlayerSplash}
+            points={playerPoints}
+            side="left"
+            onComplete={() => setShowPlayerSplash(false)}
+          />
+          <ArenaScoreSplash
+            show={showOpponentSplash}
+            points={opponentPoints}
+            side="right"
+            onComplete={() => setShowOpponentSplash(false)}
+          />
 
-              let uiState: 'default' | 'correct' | 'wrong' | 'disabled' = 'default';
+          {/* Answer cards */}
+          {showOptions && (
+            <motion.div
+              key={`options-${currentQuestion.qIndex}`}
+              className="grid grid-cols-2 auto-rows-[104px] sm:auto-rows-[112px] gap-3 w-full max-w-2xl mx-auto"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.28, ease: [0.2, 0.9, 0.3, 1] }}
+            >
+              {currentQuestion.question.options.map((option, index) => {
+                const isSelected = selectedAnswer === index;
+                const isCorrect = typeof correctIndex === 'number' && index === correctIndex;
+                const opponentPicked = shouldRevealResults && opponentRoundResult?.selectedIndex === index;
+                // Only show opponent correctness if player has answered
+                const opponentPickCorrect = opponentPicked && isAnswered
+                  ? Boolean(opponentRoundResult?.isCorrect)
+                  : undefined;
 
-              if (showResult) {
-                if (isCorrect) uiState = 'correct';
-                else if (isSelected) uiState = 'wrong';
-                else uiState = 'disabled';
-              } else if (isAnswered && !isSelected) {
-                uiState = 'disabled';
-              }
+                let uiState: 'default' | 'correct' | 'wrong' | 'disabled' = 'default';
 
-              return (
-                <AnswerCard
-                  key={index}
-                  label={String.fromCharCode(65 + index)}
-                  text={option}
-                  index={index}
-                  isSelected={isSelected}
-                  state={uiState}
-                  opponentPicked={opponentPicked}
-                  opponentPickCorrect={opponentPickCorrect}
-                  disabled={isAnswered || matchPaused}
-                  onClick={() => actions.submitAnswer(index)}
-                />
-              );
-            })}
-          </div>
+                if (shouldRevealResults) {
+                  if (isCorrect) uiState = 'correct';
+                  else if (isSelected) uiState = 'wrong';
+                  else uiState = 'disabled';
+                } else if (isAnswered && !isSelected) {
+                  uiState = 'disabled';
+                }
+                const shouldFadeOut = shouldRevealResults && uiState !== 'correct';
 
-          {showResult && !matchPaused && (
-            <div className="w-full max-w-2xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div
-                  className={`rounded-xl border px-3 py-2 text-sm font-bold ${
-                    !myResultKnown
-                      ? 'bg-white/5 border-white/15 text-white/60'
-                      : myRoundResult.isCorrect
-                      ? 'bg-emerald-500/10 border-emerald-500/35 text-emerald-300'
-                      : 'bg-red-500/10 border-red-500/35 text-red-300'
-                  }`}
-                >
-                  You:{' '}
-                  {!myResultKnown
-                    ? 'Awaiting result...'
-                    : myRoundResult.isCorrect
-                    ? `Correct (+${myRoundResult.pointsEarned})`
-                    : 'Incorrect'}
-                </div>
-                <div
-                  className={`rounded-xl border px-3 py-2 text-sm font-bold ${
-                    !opponentResultKnown
-                      ? 'bg-white/5 border-white/15 text-white/60'
-                      : opponentRoundResult.isCorrect
-                      ? 'bg-emerald-500/10 border-emerald-500/35 text-emerald-300'
-                      : 'bg-red-500/10 border-red-500/35 text-red-300'
-                  }`}
-                >
-                  Opponent:{' '}
-                  {!opponentResultKnown
-                    ? 'Awaiting result...'
-                    : opponentRoundResult.isCorrect
-                    ? `Correct (+${opponentRoundResult.pointsEarned})`
-                    : 'Incorrect'}
-                </div>
-              </div>
-            </div>
+                return (
+                  <motion.div
+                    key={`${currentQuestion.qIndex}-${index}`}
+                    className="h-full"
+                    initial={{ opacity: 0, y: 16, scale: 0.94, filter: 'blur(4px)' }}
+                    animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 260,
+                      damping: 20,
+                      mass: 0.7,
+                      delay: index * 0.065,
+                      filter: { duration: 0.22 },
+                    }}
+                  >
+                    <AnswerCard
+                      label={String.fromCharCode(65 + index)}
+                      text={option}
+                      index={index}
+                      isSelected={isSelected}
+                      state={uiState}
+                      opponentPicked={opponentPicked}
+                      opponentPickCorrect={opponentPickCorrect}
+                      fadeOut={shouldFadeOut}
+                      disabled={isAnswered || matchPaused}
+                      onClick={() => actions.submitAnswer(index)}
+                    />
+                  </motion.div>
+                );
+              })}
+            </motion.div>
           )}
 
           {/* Result feedback banner */}
           <div className="text-center h-8">
-            {showResult && !matchPaused && (
+            {(showResult || waitingForOpponent || shouldRevealResults) && !matchPaused && (
               <motion.div
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -203,12 +290,17 @@ export function RealtimeQuizBallGameScreen({
                 {isWrongAnswer && (
                   <span className="text-red-400">Wrong answer</span>
                 )}
-                {!isCorrectAnswer && !isWrongAnswer && (
+                {waitingForOpponent && (
+                  <span className="text-white/40">Waiting for opponent...</span>
+                )}
+                {shouldRevealResults && !isCorrectAnswer && !isWrongAnswer && (
                   <span className="text-white/40">Time&apos;s up!</span>
                 )}
               </motion.div>
             )}
           </div>
+
+          {/* Round transition handled by card animations */}
         </div>
       </div>
 
@@ -230,9 +322,16 @@ export function RealtimeQuizBallGameScreen({
       <QuitMatchModal
         open={showQuitModal}
         onOpenChange={setShowQuitModal}
-        onConfirm={() => {
+        description="Leave temporarily and rejoin before the timer ends, or forfeit now."
+        secondaryConfirmLabel="Leave Temporarily"
+        onSecondaryConfirm={() => {
           setShowQuitModal(false);
           onQuit();
+        }}
+        confirmLabel="Forfeit Match"
+        onConfirm={() => {
+          setShowQuitModal(false);
+          onForfeit();
         }}
       />
     </div>

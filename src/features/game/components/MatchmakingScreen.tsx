@@ -6,11 +6,27 @@ import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { OpponentInfo } from '@/lib/realtime/socket.types';
 
+export interface MatchmakingDebugInfo {
+  socketConnected: boolean;
+  socketId: string | null;
+  sessionState: string;
+  activeMatchId: string | null;
+  waitingLobbyId: string | null;
+  queueSearchId: string | null;
+  rankedSearching: boolean;
+  rankedSearchStartedAt: number | null;
+  rankedSearchDurationMs: number | null;
+  hasLobby: boolean;
+  hasMatch: boolean;
+  errorCode: string | null;
+}
+
 interface MatchmakingScreenProps {
   matchType: 'ranked' | 'friendly';
   rankedSearchDurationMs?: number | null;
   rankedSearchStartedAt?: number | null;
   rankedFoundOpponent?: OpponentInfo | null;
+  debugInfo?: MatchmakingDebugInfo;
   onCancel: () => void;
 }
 
@@ -19,6 +35,7 @@ export function MatchmakingScreen({
   rankedSearchDurationMs = null,
   rankedSearchStartedAt = null,
   rankedFoundOpponent = null,
+  debugInfo,
   onCancel,
 }: MatchmakingScreenProps) {
   const MAX_FRIENDLY_SEARCH_SECONDS = 30;
@@ -30,8 +47,8 @@ export function MatchmakingScreen({
 
     const tick = () => {
       const elapsed = Math.max(0, Date.now() - rankedSearchStartedAt);
-      const duration = rankedSearchDurationMs ?? 6000;
-      const nextProgress = Math.min(95, Math.floor((elapsed / duration) * 100));
+      const safeDuration = Math.max(1, rankedSearchDurationMs ?? 6000);
+      const nextProgress = Math.min(95, Math.floor((elapsed / safeDuration) * 100));
       setProgress(nextProgress);
       setSearchTime(Math.floor(elapsed / 1000));
     };
@@ -165,6 +182,22 @@ export function MatchmakingScreen({
             Matches are 10 fast questions — answer quickly for bonus points.
           </p>
         </div>
+
+        {process.env.NODE_ENV !== "production" && debugInfo ? (
+          <div className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 font-mono text-[11px] text-white/70">
+            <div className="mb-1 text-white/90 font-bold">Matchmaking Debug</div>
+            <div>socket: {debugInfo.socketConnected ? "connected" : "disconnected"} ({debugInfo.socketId ?? "-"})</div>
+            <div>session: {debugInfo.sessionState}</div>
+            <div>queue: {debugInfo.queueSearchId ?? "-"}</div>
+            <div>activeMatch: {debugInfo.activeMatchId ?? "-"}</div>
+            <div>waitingLobby: {debugInfo.waitingLobbyId ?? "-"}</div>
+            <div>rankedSearching: {String(debugInfo.rankedSearching)}</div>
+            <div>searchStartedAt: {debugInfo.rankedSearchStartedAt ?? "-"}</div>
+            <div>searchDurationMs: {debugInfo.rankedSearchDurationMs ?? "-"}</div>
+            <div>hasLobby: {String(debugInfo.hasLobby)} hasMatch: {String(debugInfo.hasMatch)}</div>
+            <div>error: {debugInfo.errorCode ?? "-"}</div>
+          </div>
+        ) : null}
 
         {/* Cancel button */}
         <button

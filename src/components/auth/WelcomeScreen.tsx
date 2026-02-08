@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FcGoogle } from 'react-icons/fc';
 import { FaFacebook, FaApple } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
@@ -8,11 +8,6 @@ import { AppLogo } from '@/components/AppLogo';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { socialLogin } from '@/lib/auth/auth.service';
-
-interface WelcomeScreenProps {
-  onGetStarted: () => void;
-  onLogin?: () => void;
-}
 
 const SUBHEADING_PHRASES = [
   "Climb the ranks.",
@@ -41,7 +36,6 @@ export function WelcomeScreen() {
   }, []);
 
   const handleKickOff = () => setLoginOpen(true);
-  const handleClose = () => setLoginOpen(false);
   const handleGoogleLogin = async () => {
     try {
       const redirectTo = `${window.location.origin}/auth/callback`;
@@ -171,6 +165,9 @@ export function WelcomeScreen() {
                 <DialogContent className="max-w-md w-full rounded-2xl p-8">
                   <DialogHeader>
                     <DialogTitle className="text-2xl font-bold mb-4 text-center">Sign in to Football Quiz</DialogTitle>
+                    <DialogDescription className="text-center">
+                      Choose a provider to continue.
+                    </DialogDescription>
                   </DialogHeader>
                   <div className="flex flex-col gap-4 mt-2">
                     <Button

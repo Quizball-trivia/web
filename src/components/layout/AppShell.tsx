@@ -72,6 +72,7 @@ export function AppShell({ children }: AppShellProps) {
   const logout = useAuthStore((state) => state.logout);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const lobby = useRealtimeMatchStore((state) => state.lobby);
+  const sessionState = useRealtimeMatchStore((state) => state.sessionState);
   const rejoinMatch = useRealtimeMatchStore((state) => state.rejoinMatch);
   const clearRejoinAvailable = useRealtimeMatchStore((state) => state.clearRejoinAvailable);
   const resetRealtime = useRealtimeMatchStore((state) => state.reset);
@@ -86,6 +87,11 @@ export function AppShell({ children }: AppShellProps) {
   const showLobbyBanner = !!lobby && lobby.status === "waiting" && !inLobbyRoom;
   const showRejoinBanner = !!rejoinMatch && !currentPath.startsWith("/game");
   const lobbyCode = lobby?.inviteCode ?? "";
+  const showLobbyDebug = process.env.NODE_ENV !== "production";
+  const localWaitingLobbyId = lobby?.status === "waiting" ? lobby.lobbyId : null;
+  const sessionWaitingLobbyId = sessionState?.waitingLobbyId ?? null;
+  const lobbyDebugMismatch = localWaitingLobbyId !== sessionWaitingLobbyId;
+  const sessionStateLabel = sessionState?.state ?? "NO_SESSION";
 
   useEffect(() => {
     const socket = getSocket();
@@ -101,7 +107,7 @@ export function AppShell({ children }: AppShellProps) {
 
   const handleLogout = async () => {
     await logout();
-    router.replace("/auth/login");
+    router.replace("/auth/welcome");
   };
 
   const isPathActive = (path: string) => {
@@ -122,6 +128,8 @@ export function AppShell({ children }: AppShellProps) {
   const handleRejoinMatch = () => {
     if (!rejoinMatch) return;
 
+    const matchId = rejoinMatch.matchId;
+
     startSession({
       mode: rejoinMatch.mode === "ranked" ? "ranked" : "quizball",
       matchType: rejoinMatch.mode === "ranked" ? "ranked" : "friendly",
@@ -132,11 +140,22 @@ export function AppShell({ children }: AppShellProps) {
     });
     // Avoid re-entering matchmaking queue on rejoin.
     setGameStage("playing");
-    getSocket().emit("match:rejoin", { matchId: rejoinMatch.matchId });
+
+    // Emit rejoin request to server
+    getSocket().emit("match:rejoin", { matchId });
+
+    // Immediately clear rejoin state to prevent duplicate emissions and banner reappearance
+    clearRejoinAvailable();
+
     router.push("/game");
   };
 
-  const handleDismissRejoin = () => {
+  const handleForfeitRejoin = () => {
+    if (!rejoinMatch) {
+      clearRejoinAvailable();
+      return;
+    }
+    getSocket().emit("match:forfeit", { matchId: rejoinMatch.matchId });
     clearRejoinAvailable();
   };
 
@@ -217,6 +236,22 @@ export function AppShell({ children }: AppShellProps) {
             <div className="flex-1" />
 
             <div className="flex items-center gap-4">
+              {showLobbyDebug && (
+                <div
+                  className={cn(
+                    "hidden lg:flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-semibold",
+                    lobbyDebugMismatch
+                      ? "border-amber-500/40 bg-amber-500/15 text-amber-300"
+                      : "border-slate-500/40 bg-slate-500/15 text-slate-200"
+                  )}
+                  title="Temporary lobby/session debug badge"
+                >
+                  <span>LobbyDbg</span>
+                  <span>local:{localWaitingLobbyId ? localWaitingLobbyId.slice(0, 6) : "-"}</span>
+                  <span>session:{sessionWaitingLobbyId ? sessionWaitingLobbyId.slice(0, 6) : "-"}</span>
+                  <span>state:{sessionStateLabel}</span>
+                </div>
+              )}
               {/* Currencies & Streak */}
               <div className="flex items-center gap-3 mr-4">
                 {/* Streak */}
@@ -306,7 +341,7 @@ export function AppShell({ children }: AppShellProps) {
           </header>
 
           {/* Content Area */}
-          <div className="flex-1 overflow-y-auto bg-background/50 scrollbar-hide">
+          <div className="flex-1 overflow-y-auto scrollbar-hide">
             {showRejoinBanner && (
               <div className="px-6 pt-4">
                 <div className="rounded-2xl border border-blue-500/35 bg-gradient-to-r from-blue-500/15 to-cyan-400/15 px-5 py-4 shadow-[0_8px_30px_rgba(59,130,246,0.2)]">
@@ -336,10 +371,10 @@ export function AppShell({ children }: AppShellProps) {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-9 border-blue-500/30 text-blue-100 hover:bg-blue-500/10"
-                        onClick={handleDismissRejoin}
+                        className="h-9 border-red-500/40 text-red-200 hover:bg-red-500/10"
+                        onClick={handleForfeitRejoin}
                       >
-                        Dismiss <X className="ml-2 size-4" />
+                        Forfeit <X className="ml-2 size-4" />
                       </Button>
                     </div>
                   </div>
@@ -405,6 +440,21 @@ export function AppShell({ children }: AppShellProps) {
         {showHeader && (
           <div className="border-b bg-card sticky top-0 z-10">
             <div className="px-4 py-4 bg-background">
+              {showLobbyDebug && (
+                <div
+                  className={cn(
+                    "mb-3 flex items-center gap-2 rounded-lg border px-3 py-2 text-[10px] font-semibold",
+                    lobbyDebugMismatch
+                      ? "border-amber-500/40 bg-amber-500/15 text-amber-300"
+                      : "border-slate-500/40 bg-slate-500/15 text-slate-200"
+                  )}
+                >
+                  <span>LobbyDbg</span>
+                  <span>local:{localWaitingLobbyId ? localWaitingLobbyId.slice(0, 6) : "-"}</span>
+                  <span>session:{sessionWaitingLobbyId ? sessionWaitingLobbyId.slice(0, 6) : "-"}</span>
+                  <span>state:{sessionStateLabel}</span>
+                </div>
+              )}
               <div className="flex items-center justify-between mb-3 relative">
                 <div className="flex items-center gap-2 z-10">
                   {currentPath === "/" ? (
@@ -493,10 +543,10 @@ export function AppShell({ children }: AppShellProps) {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="flex-1 h-10 border-blue-500/30 text-blue-100 hover:bg-blue-500/10"
-                      onClick={handleDismissRejoin}
+                      className="flex-1 h-10 border-red-500/40 text-red-200 hover:bg-red-500/10"
+                      onClick={handleForfeitRejoin}
                     >
-                      Dismiss
+                      Forfeit
                     </Button>
                   </div>
                 </div>

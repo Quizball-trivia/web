@@ -16,6 +16,7 @@ interface AnswerCardProps {
   opponentPicked?: boolean;
   opponentPickCorrect?: boolean;
   state?: 'default' | 'correct' | 'wrong' | 'disabled';
+  fadeOut?: boolean;
   onClick?: () => void;
   disabled?: boolean;
 }
@@ -28,6 +29,7 @@ export function AnswerCard({
   opponentPicked = false,
   opponentPickCorrect,
   state = 'default',
+  fadeOut = false,
   onClick,
   disabled,
 }: AnswerCardProps) {
@@ -35,7 +37,7 @@ export function AnswerCard({
 
   const getButtonClasses = () => {
     if (state === 'correct') {
-      return 'bg-emerald-500/15 border-2 border-emerald-500 border-b-4 border-b-emerald-600';
+      return 'bg-emerald-500/15 border-2 border-emerald-500 border-b-4 border-b-emerald-600 shadow-[0_0_30px_rgba(88,204,2,0.4)]';
     }
     if (state === 'wrong') {
       return 'bg-red-500/15 border-2 border-red-500 border-b-4 border-b-red-600 animate-[shake_0.4s_ease-in-out]';
@@ -57,32 +59,51 @@ export function AnswerCard({
     return cn(color.light, color.text);
   };
 
+  // Fade away only when parent explicitly enables result-phase fade behavior.
+  const shouldFadeAway = fadeOut && state !== 'correct';
+
   return (
     <motion.button
       whileTap={!disabled && state === 'default' ? { scale: 0.97 } : {}}
+      animate={
+        shouldFadeAway
+          ? {
+              opacity: [1, 0.5, 0],
+              filter: ['blur(0px)', 'blur(2px)', 'blur(4px)'],
+              scale: [1, 0.96, 0.88],
+            }
+          : {
+              opacity: 1,
+              filter: 'blur(0px)',
+              scale: 1,
+            }
+      }
+      transition={shouldFadeAway ? { duration: 0.45, ease: 'easeOut' } : { duration: 0.2 }}
       className={cn(
-        'relative w-full text-left rounded-2xl p-3 transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary font-fun',
+        'relative w-full h-full text-left rounded-2xl p-4 min-h-[100px] transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary font-fun',
         getButtonClasses(),
         disabled && 'cursor-not-allowed'
       )}
       onClick={onClick}
       disabled={disabled}
     >
-      {opponentPicked && (
+      {opponentPicked && opponentPickCorrect !== undefined && (
         <div
           className={cn(
-            'absolute right-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide',
-            opponentPickCorrect ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'
+            'absolute right-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-black',
+            opponentPickCorrect
+              ? 'bg-emerald-500/20 text-emerald-300'
+              : 'bg-red-500/20 text-red-300'
           )}
         >
-          Opp picked
+          {opponentPickCorrect ? '✓ Opp' : '✗ Opp'}
         </div>
       )}
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-start gap-3 h-full">
         {/* Label badge */}
         <div className={cn(
-          'flex size-9 shrink-0 items-center justify-center rounded-xl text-sm font-black transition-colors',
+          'flex size-12 shrink-0 items-center justify-center rounded-xl text-base font-black transition-colors',
           getLabelClasses()
         )}>
           {label}
@@ -90,7 +111,7 @@ export function AnswerCard({
 
         {/* Text */}
         <span className={cn(
-          'text-sm font-bold flex-1 text-white',
+          'text-base font-bold flex-1 text-white leading-tight py-1',
           state === 'disabled' && 'text-white/40',
           state === 'correct' && 'text-emerald-300',
           state === 'wrong' && 'text-red-300',

@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { PlayerProvider } from "@/contexts/PlayerContext";
 import { Toaster } from "@/components/ui/sonner";
 import { LocaleProvider } from "@/contexts/LocaleContext";
+import { PostHogPageView } from "@/components/PostHogProvider";
 
 type ProvidersProps = {
   children: React.ReactNode;
@@ -31,6 +32,7 @@ export function Providers({ children }: ProvidersProps) {
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
         <LocaleProvider>
           <PlayerProvider>
+            <PostHogPageView />
             {children}
             <Toaster />
           </PlayerProvider>
