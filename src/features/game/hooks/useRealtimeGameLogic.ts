@@ -3,7 +3,7 @@ import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { getSocket } from '@/lib/realtime/socket-client';
 import { logger } from '@/utils/logger';
 
-const QUESTION_REVEAL_MS = 3000; // 3 second reveal phase before options become clickable
+const QUESTION_REVEAL_MS = 2000; // 2 second reveal phase before options become clickable
 const QUESTION_PLAYING_MS = 10000; // 10 second playing phase
 const ROUND_RESULT_HOLD_MS = 2000; // hold correct answer for 2s before moving to next round
 
