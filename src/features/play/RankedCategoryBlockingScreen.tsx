@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { ShowdownScreen } from './ShowdownScreen';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
@@ -30,15 +31,32 @@ const CARD_COLORS = [
   { bg: '#2A2618', dark: '#FFC800' },  // gold tint
 ];
 
+
 export function RankedCategoryBlockingScreen() {
+  // All hooks must be called before any conditional return
   const { player } = usePlayer();
   const authUser = useAuthStore((state) => state.user);
   const selfUserId = authUser?.id ?? player.id;
   const lobby = useRealtimeMatchStore((state) => state.lobby);
   const draft = useRealtimeMatchStore((state) => state.draft);
   const [timeLeft, setTimeLeft] = useState(15);
+  const [showShowdown, setShowShowdown] = useState(() => {
+    // Show showdown only on first mount, not after banning
+    return true;
+  });
   const scrollRef = useRef<HTMLDivElement>(null);
-
+  const opponentMember = useMemo(
+    () => lobby?.members.find((member) => member.userId !== selfUserId),
+    [lobby?.members, selfUserId]
+  );
+  const opponent = useMemo(() => {
+    return {
+      id: opponentMember?.userId ?? 'opponent',
+      username: opponentMember?.username ?? 'Opponent',
+      avatar: opponentMember?.avatarUrl ?? '😈',
+    };
+  }, [opponentMember]);
+  const h2h = useHeadToHead(selfUserId, opponent.id !== 'opponent' ? opponent.id : undefined);
   useEffect(() => {
     if (!draft) return;
     setTimeLeft(15);
@@ -48,34 +66,45 @@ export function RankedCategoryBlockingScreen() {
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft?.turnUserId, draft?.allowedCategoryIds, draft?.categories]);
-
-  const opponentMember = useMemo(
-    () => lobby?.members.find((member) => member.userId !== selfUserId),
-    [lobby?.members, selfUserId]
-  );
-
-  const opponent = useMemo(() => {
-    return {
-      id: opponentMember?.userId ?? 'opponent',
-      username: opponentMember?.username ?? 'Opponent',
-      avatar: opponentMember?.avatarUrl ?? '😈',
-    };
-  }, [opponentMember]);
-
-  const h2h = useHeadToHead(selfUserId, opponent.id !== 'opponent' ? opponent.id : undefined);
-
+  // Show showdown screen for 15 seconds before banning starts, only once
+  useEffect(() => {
+    if (showShowdown) {
+      const timer = setTimeout(() => {
+        setShowShowdown(false);
+      }, 7000); // 15 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [showShowdown]);
+  const phase = draft?.allowedCategoryIds ? 'ready' : 'ban';
+  const currentActor = draft?.turnUserId === selfUserId ? 'player' : 'opponent';
+  const playerBannedId = draft?.bans[selfUserId ?? ''] ?? null;
+  const opponentBannedId = draft ? Object.entries(draft.bans).find(([userId]) => userId !== selfUserId)?.[1] ?? null : null;
+  const poolCategories = draft?.categories;
+  const playerRp = player.rankPoints ?? 1200;
+  const opponentRp = opponentMember?.rankPoints ?? 1200;
+  // Early return after all hooks
   if (!draft || !lobby) {
     return <LoadingScreen text="Preparing Match..." />;
   }
-
-  const phase = draft.allowedCategoryIds ? 'ready' : 'ban';
-  const currentActor = draft.turnUserId === selfUserId ? 'player' : 'opponent';
-  const playerBannedId = draft.bans[selfUserId ?? ''] ?? null;
-  const opponentBannedId = Object.entries(draft.bans).find(([userId]) => userId !== selfUserId)?.[1] ?? null;
-  const poolCategories = draft.categories;
-
-  const playerRp = player.rankPoints ?? 1200;
-  const opponentRp = opponentMember?.rankPoints ?? 1200;
+  if (showShowdown) {
+    return (
+      <ShowdownScreen
+        player={{
+          avatar: player.avatar,
+          username: player.username,
+          rankPoints: player.rankPoints ?? 1200,
+          level: player.level,
+        }}
+        opponent={{
+          avatar: opponent.avatar,
+          username: opponent.username,
+          rankPoints: opponentMember?.rankPoints ?? 1200,
+          level: opponentMember?.level,
+        }}
+        onContinue={() => setShowShowdown(false)}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#131F24] flex flex-col font-fun">

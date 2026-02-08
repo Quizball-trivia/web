@@ -133,7 +133,7 @@ export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playe
               </div>
             </div>
             <div className="hidden md:block">
-              <span className="px-14 py-5 rounded-2xl bg-[#4ACA8B] border-b-[6px] border-[#3AA374] text-white font-black text-xl inline-block pointer-events-none shadow-[0_0_30px_rgba(74,202,139,0.4),0_0_60px_rgba(74,202,139,0.2)] animate-[pulse_3s_ease-in-out_infinite]">
+              <span className="px-14 py-5 rounded-2xl bg-[#58CC02] border-b-4 border-[#46A302] text-white font-black text-xl inline-block pointer-events-none uppercase tracking-wide transition-all">
                 Play Ranked
               </span>
             </div>
