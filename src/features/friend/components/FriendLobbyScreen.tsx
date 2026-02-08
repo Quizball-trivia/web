@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { LobbyHeader } from "./LobbyHeader";
 import { LobbySettings } from "./LobbySettings";
 import { WarmupGame } from "./WarmupGame";
+import { WarmupGameLocal } from "./WarmupGameLocal";
 import { useFriendLobbyLogic } from "../hooks/useFriendLobbyLogic";
 import { AlreadyInLobbyModal } from "./AlreadyInLobbyModal";
 
@@ -60,9 +61,11 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
         h2hSummary={h2hSummary}
       />
 
-      {/* Warm-Up Game (when both players are in the lobby) */}
-      {lobby?.status === "waiting" && lobby.members.length === 2 && (
+      {/* Warm-Up Game */}
+      {lobby?.status === "waiting" && lobby.members.length === 2 ? (
         <WarmupGame />
+      ) : lobby?.status === "waiting" && (
+        <WarmupGameLocal />
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

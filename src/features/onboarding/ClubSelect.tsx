@@ -16,7 +16,9 @@ export default function ClubSelect({ value, onChange }: ClubSelectProps) {
       placeholder="Search and select your club..."
       isClearable
       classNamePrefix="react-select"
+      menuPortalTarget={typeof document !== 'undefined' ? document.body : undefined}
       styles={{
+        menuPortal: (base) => ({ ...base, zIndex: 9999 }),
         control: (base, state) => ({
           ...base,
           minHeight: 56,

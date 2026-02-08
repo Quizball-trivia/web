@@ -229,6 +229,7 @@ export interface SessionBlockedPayload {
     | "LOBBY_NOT_FOUND"
     | "QUEUE_UNAVAILABLE";
   message: string;
+  operation?: string;
   stateSnapshot: SessionStatePayload;
 }
 

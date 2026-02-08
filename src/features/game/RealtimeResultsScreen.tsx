@@ -25,18 +25,40 @@ function AnimatedCounter({
   delay?: number;
   className?: string;
 }) {
-  const [value, setValue] = useState(from);
+  return (
+    <AnimatedCounterInner
+      key={`${from}-${to}-${delay}`}
+      from={from}
+      to={to}
+      delay={delay}
+      className={className}
+    />
+  );
+}
+
+function AnimatedCounterInner({
+  from,
+  to,
+  delay = 1.5,
+  className,
+}: {
+  from: number;
+  to: number;
+  delay?: number;
+  className?: string;
+}) {
+  const [value, setValue] = useState(() => from);
   const [popped, setPopped] = useState(false);
-  const changed = from !== to;
 
   useEffect(() => {
-    if (!changed) return;
+    if (from === to) return;
+
     const timer = setTimeout(() => {
       setValue(to);
       setPopped(true);
     }, delay * 1000);
     return () => clearTimeout(timer);
-  }, [from, to, delay, changed]);
+  }, [from, to, delay]);
 
   return (
     <motion.span

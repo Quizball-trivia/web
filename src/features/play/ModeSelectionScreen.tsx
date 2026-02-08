@@ -82,10 +82,6 @@ export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playe
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const accuracy = playerStats.gamesPlayed > 0
-    ? Math.round((playerStats.correctAnswers / (playerStats.gamesPlayed * 10)) * 100)
-    : 0;
-
   const handleConfirm = () => {
     if (!selectedMode) return;
     if (selectedMode !== 'friendly') {
@@ -152,7 +148,7 @@ export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playe
             </span>
           </div>
 
-          {/* RP Progress */}
+          {/* RP Progress + Stats */}
           <div className="bg-[#131F24] rounded-2xl border-b-4 border-[#0D1B21] p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -173,36 +169,21 @@ export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playe
                 <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/30 to-transparent h-1/2" />
               </motion.div>
             </div>
-            <div className="text-right mt-2">
-              <span className="text-2xl font-black text-white">{playerStats.rankPoints ?? 0}</span>
-              <span className="text-sm font-bold text-[#56707A] ml-1">RP</span>
+            <div className="flex items-center justify-between mt-2">
+              <div className="flex items-center gap-4">
+                <span className="text-xs font-bold text-[#56707A]">🏆 <span className="text-[#2D8CBA] font-black">75%</span> win</span>
+                <span className="text-xs font-bold text-[#56707A]">🎯 <span className="text-[#9B7EC8] font-black">{playerStats.gamesPlayed}</span> games</span>
+              </div>
+              <div>
+                <span className="text-2xl font-black text-white">{playerStats.rankPoints ?? 0}</span>
+                <span className="text-sm font-bold text-[#56707A] ml-1">RP</span>
+              </div>
             </div>
           </div>
         </div>
       </motion.div>
 
-      {/* ─── 2. Stats Row ─── */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="grid grid-cols-3 gap-3"
-      >
-        <div className="bg-[#1B2F36] rounded-2xl border-b-4 border-[#2D6A8A]/40 p-4 text-center">
-          <div className="text-xs uppercase tracking-wider text-[#56707A] font-bold mb-1">⚡ Accuracy</div>
-          <div className="text-2xl font-black text-[#2D8CBA]">{accuracy}%</div>
-        </div>
-        <div className="bg-[#1B2F36] rounded-2xl border-b-4 border-[#7B5EA7]/40 p-4 text-center">
-          <div className="text-xs uppercase tracking-wider text-[#56707A] font-bold mb-1">🎯 Games</div>
-          <div className="text-2xl font-black text-[#9B7EC8]">{playerStats.gamesPlayed}</div>
-        </div>
-        <div className="bg-[#1B2F36] rounded-2xl border-b-4 border-[#B8960B]/40 p-4 text-center">
-          <div className="text-xs uppercase tracking-wider text-[#56707A] font-bold mb-1">🪙 Coins</div>
-          <div className="text-2xl font-black text-[#C8A82E]">{playerStats.coins.toLocaleString()}</div>
-        </div>
-      </motion.div>
-
-      {/* ─── 3. Secondary Modes Grid ─── */}
+      {/* ─── 2. Secondary Modes Grid ─── */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -298,7 +279,7 @@ export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playe
             const handleChallengeClick = () => {
               if (isLocked) return;
               logger.info('Challenge enter', { id: c.id });
-              router.push(`/challenges/${c.id}`);
+              router.push(`/daily/challenges/${c.id}`);
             };
 
             return (
@@ -330,6 +311,12 @@ export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playe
             );
           })}
         </div>
+        <button
+          onClick={() => router.push('/daily/challenges')}
+          className="mt-2 text-xs font-bold text-[#1CB0F6] hover:text-[#1CB0F6]/80 transition-colors uppercase tracking-wide"
+        >
+          View All Challenges →
+        </button>
       </motion.div>
 
       {/* ─── 5. Recent Matches ─── */}

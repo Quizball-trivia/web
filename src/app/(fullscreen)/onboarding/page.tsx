@@ -1,24 +1,56 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import type { ComponentProps } from "react";
+import { useState, type ComponentProps } from "react";
 import { toast } from "sonner";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { OnboardingFlow } from "@/features/onboarding/OnboardingFlow";
 import { logger } from "@/utils/logger";
+import { updateMe } from "@/lib/api/endpoints";
+import { apiFetch } from "@/lib/api/client";
+import { useAuthStore } from "@/stores/auth.store";
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   type OnboardingData = Parameters<ComponentProps<typeof OnboardingFlow>["onComplete"]>[0];
 
-  const handleComplete = (data: OnboardingData) => {
-    logger.info("Onboarding completed", { data });
-    storage.set(STORAGE_KEYS.ONBOARDING_COMPLETE, true);
-    router.replace("/");
-    toast.success("Welcome to QuizBall!", {
-      description: "Your football trivia journey begins now!",
-    });
+  const handleComplete = async (data: OnboardingData) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
+    try {
+      logger.info("Onboarding completed", { data });
+
+      // Save profile data to backend
+      await updateMe({
+        nickname: data.username || undefined,
+        avatar_url: data.avatar
+          ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.avatar}&backgroundColor=22c55e`
+          : undefined,
+        favorite_club: data.favoriteClub || undefined,
+        preferred_language: data.preferredLanguage || undefined,
+      });
+
+      // Mark onboarding complete
+      const completedUser = await apiFetch("post", "/api/v1/users/me/complete-onboarding");
+      setAuthenticated(completedUser);
+
+      storage.set(STORAGE_KEYS.ONBOARDING_COMPLETE, true);
+      router.replace("/");
+      toast.success("Welcome to QuizBall!", {
+        description: "Your football trivia journey begins now!",
+      });
+    } catch (error) {
+      logger.error("Failed to save onboarding data", error);
+      toast.error("Failed to save your preferences", {
+        description: error instanceof Error ? error.message : "Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return <OnboardingFlow onComplete={handleComplete} />;

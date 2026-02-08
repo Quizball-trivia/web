@@ -68,6 +68,7 @@ export function registerSocketHandlers(): void {
       meta: {
         source: 'session:blocked',
         reason: data.reason,
+        operation: data.operation ?? null,
         stateSnapshot: data.stateSnapshot,
       },
     });

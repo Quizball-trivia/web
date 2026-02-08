@@ -506,6 +506,8 @@ export interface paths {
                         country?: string;
                         /** Format: uri */
                         avatar_url?: string;
+                        favorite_club?: string;
+                        preferred_language?: string;
                     };
                 };
             };
@@ -1884,6 +1886,8 @@ export interface components {
             country: string | null;
             /** Format: uri */
             avatar_url: string | null;
+            favorite_club: string | null;
+            preferred_language: string | null;
             onboarding_complete: boolean;
             /** Format: date-time */
             created_at: string;

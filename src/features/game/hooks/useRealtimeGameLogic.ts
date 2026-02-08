@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { getSocket } from '@/lib/realtime/socket-client';
 import { logger } from '@/utils/logger';
@@ -16,6 +16,11 @@ export function useRealtimeGameLogic() {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(QUESTION_PLAYING_MS / 1000);
   const [showOptions, setShowOptions] = useState(false);
+  const matchPausedRef = useRef(matchPaused);
+
+  useEffect(() => {
+    matchPausedRef.current = matchPaused;
+  }, [matchPaused]);
 
   const currentQuestion = match?.currentQuestion ?? null;
   const currentQuestionIndex = currentQuestion?.qIndex;
@@ -29,7 +34,7 @@ export function useRealtimeGameLogic() {
 
   // Phase transition effect: reveal → playing
   useEffect(() => {
-    if (currentQuestionIndex === undefined || matchPaused) return;
+    if (currentQuestionIndex === undefined || matchPausedRef.current) return;
 
     const resetTimer = setTimeout(() => {
       setShowOptions(false);
@@ -45,7 +50,7 @@ export function useRealtimeGameLogic() {
       clearTimeout(resetTimer);
       clearTimeout(revealTimer);
     };
-  }, [currentQuestionIndex, matchPaused, setQuestionPhase]);
+  }, [currentQuestionIndex, setQuestionPhase]);
 
   // Timer countdown effect
   useEffect(() => {

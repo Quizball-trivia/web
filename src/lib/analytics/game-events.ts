@@ -9,12 +9,14 @@ export function trackGameStart(mode: string, category?: string) {
 }
 
 export function trackGameComplete(mode: string, score: number, correctAnswers: number, totalQuestions: number) {
+  const safeAccuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
+
   trackEvent('game_completed', {
     game_mode: mode,
     score,
     correct_answers: correctAnswers,
     total_questions: totalQuestions,
-    accuracy: (correctAnswers / totalQuestions) * 100,
+    accuracy: safeAccuracy,
   });
 }
 

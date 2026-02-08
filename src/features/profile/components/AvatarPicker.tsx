@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -154,6 +154,7 @@ export function AvatarPicker({
       <DialogContent className="sm:max-w-2xl border-border/50">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Profile Avatar</DialogTitle>
+          <DialogDescription>Choose an avatar image for your profile.</DialogDescription>
         </DialogHeader>
         {Content}
       </DialogContent>

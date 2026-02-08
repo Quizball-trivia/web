@@ -3,6 +3,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -143,6 +144,9 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
       <DialogContent className="sm:max-w-md bg-[#131F24] border-[#1B2F36] shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-xl text-center hidden">Play with a Friend</DialogTitle>
+          <DialogDescription className="sr-only">
+            Create a room or join an existing room with an invite code.
+          </DialogDescription>
           <div className="text-center text-xl font-black text-white font-fun">Play with a Friend</div>
         </DialogHeader>
         {Content}

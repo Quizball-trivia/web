@@ -57,10 +57,12 @@ export async function initNewRelic(): Promise<object | null> {
         },
         loader_config: {
           accountID: process.env.NEXT_PUBLIC_NEW_RELIC_ACCOUNT_ID!,
-          trustKey: process.env.NEXT_PUBLIC_NEW_RELIC_TRUST_KEY!,
           agentID: process.env.NEXT_PUBLIC_NEW_RELIC_AGENT_ID!,
           licenseKey: process.env.NEXT_PUBLIC_NEW_RELIC_LICENSE_KEY!,
           applicationID: process.env.NEXT_PUBLIC_NEW_RELIC_APPLICATION_ID!,
+          ...(process.env.NEXT_PUBLIC_NEW_RELIC_TRUST_KEY && {
+            trustKey: process.env.NEXT_PUBLIC_NEW_RELIC_TRUST_KEY,
+          }),
         },
       });
     } catch (error) {

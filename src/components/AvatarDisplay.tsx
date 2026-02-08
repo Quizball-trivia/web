@@ -32,7 +32,7 @@ export function AvatarDisplay({
 
   return (
     <div 
-      className={`relative flex items-center justify-center ${className}`}
+      className={`relative flex items-center justify-center rounded-full ${className}`}
       style={{ width: sizeInPx, height: sizeInPx }}
     >
       <Image

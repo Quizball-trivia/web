@@ -43,7 +43,7 @@ import { getSocket } from "@/lib/realtime/socket-client";
 const NAV_ITEMS = [
   { path: "/play", label: "Play", icon: Gamepad2 },
   { path: "/events", label: "Events", icon: Trophy },
-  { path: "/leaderboard", label: "Ranks", icon: BarChart3 },
+  { path: "/leaderboard", label: "Leaderboard", icon: BarChart3 },
   { path: "/store", label: "Store", icon: ShoppingBag },
   { path: "/career", label: "Career", icon: Briefcase },
   { path: "/profile", label: "Profile", icon: User },
@@ -53,7 +53,7 @@ const NAV_ITEMS = [
 const MOBILE_NAV_ITEMS = [
   { path: "/", label: "Home", icon: Home },
   { path: "/events", label: "Events", icon: Trophy },
-  { path: "/leaderboard", label: "Ranks", icon: BarChart3 },
+  { path: "/leaderboard", label: "Leaderboard", icon: BarChart3 },
   { path: "/store", label: "Store", icon: ShoppingBag },
   { path: "/profile", label: "Profile", icon: User },
 ] as const;
@@ -70,7 +70,7 @@ export function AppShell({ children }: AppShellProps) {
   const router = useRouter();
   const { player: playerStats } = usePlayer();
   const logout = useAuthStore((state) => state.logout);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const lobby = useRealtimeMatchStore((state) => state.lobby);
   const sessionState = useRealtimeMatchStore((state) => state.sessionState);
   const rejoinMatch = useRealtimeMatchStore((state) => state.rejoinMatch);

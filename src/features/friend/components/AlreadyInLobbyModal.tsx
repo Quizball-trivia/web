@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { LogOut, ArrowRight, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -97,6 +97,9 @@ export function AlreadyInLobbyModal({
             
             <DialogHeader className="space-y-2">
                 <DialogTitle className="text-xl font-bold text-center">You&apos;re already in a room</DialogTitle>
+                <DialogDescription className="sr-only">
+                  You are already in a lobby. Leave the current lobby or return to it.
+                </DialogDescription>
                 <p className="text-muted-foreground text-sm max-w-xs mx-auto">
                    You are currently sitting in{" "}
                    <span className="font-semibold text-foreground">
