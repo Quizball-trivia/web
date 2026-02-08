@@ -45,6 +45,8 @@ export function RankedCategoryBlockingScreen() {
     return true;
   });
   const scrollRef = useRef<HTMLDivElement>(null);
+  const autoBanFired = useRef(false);
+
   const opponentMember = useMemo(
     () => lobby?.members.find((member) => member.userId !== selfUserId),
     [lobby?.members, selfUserId]
@@ -60,12 +62,33 @@ export function RankedCategoryBlockingScreen() {
   useEffect(() => {
     if (!draft) return;
     setTimeLeft(15);
+    autoBanFired.current = false;
     const interval = setInterval(() => {
       setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft?.turnUserId, draft?.allowedCategoryIds, draft?.categories]);
+
+  // Auto-ban a random category when timer expires on player's turn
+  useEffect(() => {
+    if (timeLeft !== 0 || autoBanFired.current) return;
+    if (!selfUserId) return;
+    if (!draft || draft.allowedCategoryIds) return; // already done
+    if (draft.turnUserId !== selfUserId) return; // not our turn
+    const playerBan = draft.bans[selfUserId] ?? null;
+    if (playerBan) return; // already banned
+
+    const bannedIds = new Set(Object.values(draft.bans));
+    const available = draft.categories.filter((c) => !bannedIds.has(c.id));
+    if (available.length === 0) return;
+
+    const randomCategory = available[Math.floor(Math.random() * available.length)];
+    autoBanFired.current = true;
+    getSocket().emit('draft:ban', { categoryId: randomCategory.id });
+    logger.info('Auto-ban on timer expiry', { categoryId: randomCategory.id });
+  }, [timeLeft, draft, selfUserId]);
+
   // Show showdown screen for 15 seconds before banning starts, only once
   useEffect(() => {
     if (showShowdown) {
@@ -79,9 +102,17 @@ export function RankedCategoryBlockingScreen() {
   const currentActor = draft?.turnUserId === selfUserId ? 'player' : 'opponent';
   const playerBannedId = draft?.bans[selfUserId ?? ''] ?? null;
   const opponentBannedId = draft ? Object.entries(draft.bans).find(([userId]) => userId !== selfUserId)?.[1] ?? null : null;
-  const poolCategories = draft?.categories;
+  const poolCategories = draft?.categories ?? [];
   const playerRp = player.rankPoints ?? 1200;
   const opponentRp = opponentMember?.rankPoints ?? 1200;
+
+  // Memoized progress state for the 3-step indicator
+  const { steps } = useMemo(() => {
+    const banCount = Object.keys(draft?.bans ?? {}).length;
+    const isReady = !!draft?.allowedCategoryIds;
+    return { banCount, isReady, steps: [banCount >= 1, banCount >= 2, isReady] };
+  }, [draft?.bans, draft?.allowedCategoryIds]);
+
   // Early return after all hooks
   if (!draft || !lobby) {
     return <LoadingScreen text="Preparing Match..." />;
@@ -99,7 +130,6 @@ export function RankedCategoryBlockingScreen() {
           avatar: opponent.avatar,
           username: opponent.username,
           rankPoints: opponentMember?.rankPoints ?? 1200,
-          level: opponentMember?.level,
         }}
         onContinue={() => setShowShowdown(false)}
       />
@@ -180,11 +210,19 @@ export function RankedCategoryBlockingScreen() {
           </div>
         </div>
 
-        {/* Chunky progress bar */}
+        {/* Chunky progress bar — 3 steps: player ban, opponent ban, ready */}
         <div className="flex gap-1.5 px-5 pb-3 max-w-5xl mx-auto">
-          <div className="h-[10px] flex-1 rounded-full bg-[#FF4B4B] border-b-2 border-[#E04242]" />
-          <div className="h-[10px] flex-1 rounded-full bg-[#243B44] border-b-2 border-[#1B2F36]" />
-          <div className="h-[10px] flex-1 rounded-full bg-[#243B44] border-b-2 border-[#1B2F36]" />
+          {steps.map((done, i) => (
+            <div
+              key={i}
+              className={cn(
+                "h-[10px] flex-1 rounded-full border-b-2 transition-colors duration-300",
+                done
+                  ? "bg-[#FF4B4B] border-[#E04242]"
+                  : "bg-[#243B44] border-[#1B2F36]"
+              )}
+            />
+          ))}
         </div>
       </div>
 
