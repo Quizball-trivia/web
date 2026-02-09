@@ -107,6 +107,8 @@ export function FriendMatchHubPage() {
     joinRetryCountRef.current = 0;
     clearJoinTimeout();
     joinTimeoutRef.current = setTimeout(() => {
+      clearJoinRetryTimer();
+      joinRetryCountRef.current = 0;
       setIsJoiningCode(null);
       setIsNavigatingToRoom(false);
       toast.error("Join is taking too long. Please refresh and try again.");
@@ -146,6 +148,8 @@ export function FriendMatchHubPage() {
       if (isTransientJoinLock && isJoiningCode) {
         if (joinRetryCountRef.current >= 5) {
           clearJoinTimeout();
+          clearJoinRetryTimer();
+          joinRetryCountRef.current = 0;
           setIsJoiningCode(null);
           setIsNavigatingToRoom(false);
           toast.error("Could not join lobby right now. Please try again.");

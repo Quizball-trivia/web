@@ -14,7 +14,7 @@ interface HomeRecentMatchesProps {
 export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesProps) {
   const router = useRouter();
   const fetchCount = collapsedOnly ? COLLAPSED_MATCHES_COUNT : MAX_MATCHES_COUNT;
-  const { data: recentMatches = [], isLoading } = useRecentMatches(fetchCount);
+  const { data: recentMatches = [], isLoading, error } = useRecentMatches(fetchCount);
   const [isExpanded, setIsExpanded] = useState(false);
 
   const matches = useMemo(() =>
@@ -63,12 +63,17 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
               Loading recent matches...
             </div>
           )}
-          {!isLoading && matches.length === 0 && (
+          {!isLoading && error && (
+            <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-sm font-semibold text-red-500">
+              Failed to load recent matches. Please try again later.
+            </div>
+          )}
+          {!isLoading && !error && matches.length === 0 && (
             <div className="p-3.5 rounded-xl bg-background/40 border border-border/40 text-sm font-semibold text-muted-foreground">
               No recent matches yet.
             </div>
           )}
-          {!isLoading && visibleMatches.map((match) => (
+          {!isLoading && !error && visibleMatches.map((match) => (
               <div key={match.id} className="flex items-center justify-between p-3.5 rounded-xl bg-background/40 border border-border/40 hover:bg-background/60 hover:border-border/60 transition-all duration-300 cursor-pointer group shadow-sm hover:shadow-md">
                 <div className="flex items-center gap-3.5">
                     {match.result === 'win' ? (
@@ -110,7 +115,7 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
           ))}
 
           {/* Expand/Collapse button */}
-          {!isLoading && canExpand && (
+          {!isLoading && !error && canExpand && (
             <button
               type="button"
               onClick={() => setIsExpanded((prev) => !prev)}
