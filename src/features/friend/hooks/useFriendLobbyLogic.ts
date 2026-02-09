@@ -46,6 +46,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   const startedRef = useRef(false);
   const createdRef = useRef(false);
   const leavingRef = useRef(false);
+  const prevOpponentIdRef = useRef<string | null>(null);
   const initActionRef = useRef<string | null>(null);
   const startMatchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // visibilityRetryRef and related state removed — coalesced debounce in LobbySettings handles this
@@ -123,6 +124,27 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     startSession({ mode: "quizball", matchType: "friendly", questionCount: derivedCount });
   }, [lobby, startSession]);
 
+  // Explicitly notify the remaining player when an opponent leaves a waiting lobby.
+  useEffect(() => {
+    if (!lobby || leavingRef.current) {
+      prevOpponentIdRef.current = null;
+      return;
+    }
+
+    const prevOpponentId = prevOpponentIdRef.current;
+    const currentOpponentId = opponent?.userId ?? null;
+
+    if (
+      lobby.status === "waiting" &&
+      prevOpponentId &&
+      !currentOpponentId
+    ) {
+      toast.info("Opponent left the lobby.");
+    }
+
+    prevOpponentIdRef.current = currentOpponentId;
+  }, [lobby, opponent?.userId]);
+
   useEffect(() => {
     if (!lobby) return;
     logger.info("Lobby state in UI", {
@@ -144,7 +166,6 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     let timer: ReturnType<typeof setTimeout> | null = null;
 
     const isLobbySettingsError =
-      error.code === "LOBBY_SETTINGS_LOCKED" ||
       error.code === "LOBBY_READY_LOCKED" ||
       error.code === "INVALID_SETTINGS" ||
       error.code === "LOBBY_NOT_WAITING" ||
@@ -152,6 +173,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
       error.code === "LOBBY_NOT_FOUND" ||
       error.code === "NOT_IN_LOBBY" ||
       error.code === "TRANSITION_IN_PROGRESS";
+    const isTransientSettingsBusy = error.code === "LOBBY_SETTINGS_LOCKED";
 
     if (isLobbySettingsError) {
       timer = setTimeout(() => {
@@ -162,7 +184,9 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     const stopStartingTimer = setTimeout(() => {
       setIsStartingMatch(false);
     }, 0);
-    toast.error(error.message);
+    if (!isTransientSettingsBusy) {
+      toast.error(error.message);
+    }
     clearError();
 
     return () => {

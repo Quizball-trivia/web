@@ -15,6 +15,8 @@ const BALL_SIZE = 64;
 const KICK_COOLDOWN = 400;
 const HIT_PADDING = 12;
 const AUTO_RESTART_DELAY_MS = 1200;
+const MAX_DROP_RETRIES = 3;
+const DROP_RETRY_INTERVAL_MS = 800;
 
 export function WarmupGame() {
   const warmup = useRealtimeMatchStore((s) => s.warmup);
@@ -43,8 +45,6 @@ export function WarmupGame() {
   const droppedAtRef = useRef<number | null>(null);
   const dropRetryCountRef = useRef(0);
   const autoRestartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const MAX_DROP_RETRIES = 3;
-  const DROP_RETRY_INTERVAL_MS = 800;
 
   const onDropped = useCallback(() => {
     const socket = getSocket();
@@ -198,7 +198,7 @@ export function WarmupGame() {
     getSocket().emit('warmup:restart');
   }, []);
 
-  const isHost = Boolean(lobby?.members.find((member) => member.userId === selfUserId)?.isHost);
+  const isHost = Boolean(lobby?.members?.find((member) => member.userId === selfUserId)?.isHost);
 
   useEffect(() => {
     if (autoRestartTimerRef.current) {

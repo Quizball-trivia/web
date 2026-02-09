@@ -21,6 +21,7 @@ import type {
   WarmupOverPayload,
   WarmupRestartedPayload,
   WarmupScoresPayload,
+  PresenceOnlineCountPayload,
   SessionStatePayload,
   SessionBlockedPayload,
 } from './socket.types';
@@ -48,6 +49,7 @@ export function registerSocketHandlers(): void {
   socket.off('ranked:search_started');
   socket.off('ranked:match_found');
   socket.off('ranked:queue_left');
+  socket.off('presence:online_count');
   socket.off('warmup:state');
   socket.off('warmup:tapped');
   socket.off('warmup:over');
@@ -216,6 +218,11 @@ export function registerSocketHandlers(): void {
   socket.on('ranked:queue_left', () => {
     logger.info('Socket event ranked:queue_left');
     store.setRankedQueueLeft();
+  });
+
+  socket.on('presence:online_count', (data: PresenceOnlineCountPayload) => {
+    logger.info('Socket event presence:online_count', { onlineUsers: data.onlineUsers });
+    store.setOnlineUsers(data);
   });
 
   socket.on('warmup:state', (data: WarmupStatePayload) => {

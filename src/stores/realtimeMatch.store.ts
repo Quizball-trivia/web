@@ -17,6 +17,7 @@ import type {
   WarmupOverPayload,
   WarmupRestartedPayload,
   WarmupScoresPayload,
+  PresenceOnlineCountPayload,
   SessionStatePayload,
 } from '@/lib/realtime/socket.types';
 
@@ -77,6 +78,7 @@ interface RealtimeState {
   draft: DraftStatus | null;
   match: MatchStatus | null;
   warmup: WarmupStatus | null;
+  onlineUsers: number | null;
   sessionState: SessionStatePayload | null;
   selfUserId: string | null;
   matchPaused: boolean;
@@ -117,6 +119,7 @@ interface RealtimeState {
   setWarmupOver: (data: WarmupOverPayload) => void;
   setWarmupRestarted: (data: WarmupRestartedPayload) => void;
   setWarmupScores: (data: WarmupScoresPayload) => void;
+  setOnlineUsers: (data: PresenceOnlineCountPayload) => void;
   clearWarmup: () => void;
   setSessionState: (payload: SessionStatePayload) => void;
   setError: (error: ErrorPayload) => void;
@@ -129,6 +132,7 @@ const initialState = {
   draft: null,
   match: null,
   warmup: null,
+  onlineUsers: null,
   sessionState: null,
   selfUserId: null,
   matchPaused: false,
@@ -593,6 +597,10 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
         },
       };
     });
+  },
+  setOnlineUsers: (data) => {
+    logger.info('Realtime store set online users', { onlineUsers: data.onlineUsers });
+    set({ onlineUsers: data.onlineUsers });
   },
   clearWarmup: () => {
     logger.info('Realtime store clear warmup');

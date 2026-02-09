@@ -22,6 +22,18 @@ const getStageOrdinal = (stage: GameStage): number => STAGE_ORDER.indexOf(stage)
 const RANKED_QUEUE_RETRY_DELAY_MS = 350;
 const RANKED_QUEUE_MAX_RETRIES = 3;
 
+function computeHasSearchAck(
+  rankedSearchStartedAt: unknown,
+  rankedFoundOpponent: unknown,
+  sessionState: { state?: string } | null,
+): boolean {
+  return (
+    Boolean(rankedSearchStartedAt) ||
+    Boolean(rankedFoundOpponent) ||
+    sessionState?.state === "IN_QUEUE"
+  );
+}
+
 interface GameStageTransitionOptions {
   isMultiplayer: boolean;
   stage: GameStage;
@@ -99,10 +111,11 @@ export function useGameStageTransitions({
         rankedSearchAckTimerRef.current = setTimeout(() => {
           if (!rankedRequestRef.current) return;
           const latest = useRealtimeMatchStore.getState();
-          const hasSearchAck =
-            Boolean(latest.rankedSearchStartedAt) ||
-            Boolean(latest.rankedFoundOpponent) ||
-            latest.sessionState?.state === "IN_QUEUE";
+          const hasSearchAck = computeHasSearchAck(
+            latest.rankedSearchStartedAt,
+            latest.rankedFoundOpponent,
+            latest.sessionState,
+          );
           if (hasSearchAck) return;
           logger.warn("Ranked queue join pending without search acknowledgement", {
             sessionState: latest.sessionState?.state ?? "NO_SESSION",
@@ -127,10 +140,7 @@ export function useGameStageTransitions({
     if (!isMultiplayer || config?.matchType !== "ranked") return;
     if (stage !== "matchmaking") return;
 
-    const hasSearchAck =
-      Boolean(rankedSearchStartedAt) ||
-      Boolean(rankedFoundOpponent) ||
-      sessionState?.state === "IN_QUEUE";
+    const hasSearchAck = computeHasSearchAck(rankedSearchStartedAt, rankedFoundOpponent, sessionState);
     if (hasSearchAck) {
       rankedRetryCountRef.current = 0;
       clearRankedRetryTimer();
@@ -162,6 +172,13 @@ export function useGameStageTransitions({
       rankedRetryCountRef.current += 1;
       emitRankedQueueJoin("retry");
     }, RANKED_QUEUE_RETRY_DELAY_MS);
+
+    return () => {
+      if (rankedRetryTimerRef.current) {
+        clearTimeout(rankedRetryTimerRef.current);
+        rankedRetryTimerRef.current = null;
+      }
+    };
   }, [
     clearRankedRetryTimer,
     config?.matchType,
@@ -175,10 +192,7 @@ export function useGameStageTransitions({
   ]);
 
   useEffect(() => {
-    const hasSearchAck =
-      Boolean(rankedSearchStartedAt) ||
-      Boolean(rankedFoundOpponent) ||
-      sessionState?.state === "IN_QUEUE";
+    const hasSearchAck = computeHasSearchAck(rankedSearchStartedAt, rankedFoundOpponent, sessionState);
     if (hasSearchAck) {
       rankedRetryCountRef.current = 0;
       clearRankedAckTimer();

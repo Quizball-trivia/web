@@ -8,11 +8,7 @@ import {
   ChevronDown, ChevronUp,
   type LucideIcon,
 } from 'lucide-react';
-
-/** Number of matches shown when collapsed */
-const COLLAPSED_MATCHES_COUNT = 3;
-/** Maximum matches to display even when expanded */
-const MAX_MATCHES_COUNT = 20;
+import { COLLAPSED_MATCHES_COUNT, MAX_MATCHES_COUNT } from '@/lib/constants/matches';
 
 const achievementIconMap: Record<string, LucideIcon> = {
   Trophy, Target, Flame, Star, Award, Check, MapPin, Globe, Users, Clock, Zap, Medal, Crown,

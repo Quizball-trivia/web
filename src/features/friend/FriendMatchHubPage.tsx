@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LobbyBrowsePanel } from "./components/LobbyBrowsePanel";
@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Users } from "lucide-react";
 import { toast } from "sonner";
 import { logger } from "@/utils/logger";
+import { connectSocket, getSocket } from "@/lib/realtime/socket-client";
 
 export function FriendMatchHubPage() {
   const router = useRouter();
@@ -31,17 +32,50 @@ export function FriendMatchHubPage() {
   useRealtimeConnection({ enabled: true, selfUserId });
   
   const lobby = useRealtimeMatchStore(state => state.lobby);
+  const sessionState = useRealtimeMatchStore(state => state.sessionState);
+  const onlineUsers = useRealtimeMatchStore(state => state.onlineUsers);
   const error = useRealtimeMatchStore(state => state.error);
   const clearRealtimeError = useRealtimeMatchStore(state => state.clearError);
   
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isJoiningCode, setIsJoiningCode] = useState<string | null>(null);
   const [isNavigatingToRoom, setIsNavigatingToRoom] = useState(false);
+  const joinRetryCountRef = useRef(0);
+  const joinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const joinRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearJoinTimeout = () => {
+    if (!joinTimeoutRef.current) return;
+    clearTimeout(joinTimeoutRef.current);
+    joinTimeoutRef.current = null;
+  };
+
+  const clearJoinRetryTimer = () => {
+    if (!joinRetryTimerRef.current) return;
+    clearTimeout(joinRetryTimerRef.current);
+    joinRetryTimerRef.current = null;
+  };
 
   useEffect(() => {
     // Prevent stale realtime errors from previous routes from flashing lobby UI in this screen.
     clearRealtimeError();
   }, [clearRealtimeError]);
+
+  useEffect(() => {
+    return () => {
+      clearJoinTimeout();
+      clearJoinRetryTimer();
+    };
+  }, []);
+
+  const sessionStateLabel = sessionState?.state ?? "NO_SESSION";
+  const isSessionRecovering =
+    sessionStateLabel === "NO_SESSION" ||
+    sessionStateLabel === "CORRUPT_MULTI_STATE";
+  const isSessionTransitioning = Boolean(
+    error?.code === "TRANSITION_IN_PROGRESS" ||
+    sessionStateLabel === "IN_QUEUE"
+  );
 
   const handleActionTriggered = () => {
     clearRealtimeError();
@@ -70,9 +104,17 @@ export function FriendMatchHubPage() {
 
     handleActionTriggered();
     setIsJoiningCode(targetCode);
+    joinRetryCountRef.current = 0;
+    clearJoinTimeout();
+    joinTimeoutRef.current = setTimeout(() => {
+      setIsJoiningCode(null);
+      setIsNavigatingToRoom(false);
+      toast.error("Join is taking too long. Please refresh and try again.");
+    }, 8000);
     
     // Leave waiting lobby first to avoid leave/join races on the same user session.
     import("@/lib/realtime/socket-client").then(({ getSocket }) => {
+        connectSocket();
         const socket = getSocket();
         if (lobby?.lobbyId) {
           socket.emit("lobby:leave");
@@ -86,7 +128,47 @@ export function FriendMatchHubPage() {
 
   // Clear joining state if error occurs
   useEffect(() => {
+    if (lobby?.inviteCode && isNavigatingToRoom) {
+      clearJoinTimeout();
+      clearJoinRetryTimer();
+      setIsJoiningCode(null);
+      joinRetryCountRef.current = 0;
+    }
+  }, [lobby?.inviteCode, isNavigatingToRoom]);
+
+  useEffect(() => {
     if (error) {
+      const isTransientJoinLock =
+        error.code === "TRANSITION_IN_PROGRESS" &&
+        isNavigatingToRoom &&
+        Boolean(isJoiningCode);
+
+      if (isTransientJoinLock && isJoiningCode) {
+        if (joinRetryCountRef.current >= 5) {
+          clearJoinTimeout();
+          setIsJoiningCode(null);
+          setIsNavigatingToRoom(false);
+          toast.error("Could not join lobby right now. Please try again.");
+          return;
+        }
+        joinRetryCountRef.current += 1;
+        const retryDelayMs = 220 + joinRetryCountRef.current * 100;
+        logger.info("Retrying join after transient transition lock", {
+          inviteCode: `${isJoiningCode.slice(0, 2)}***`,
+          errorCode: error.code,
+          retry: joinRetryCountRef.current,
+          retryDelayMs,
+          sessionState: sessionState?.state ?? "NO_SESSION",
+        });
+        clearJoinRetryTimer();
+        joinRetryTimerRef.current = setTimeout(() => {
+          connectSocket();
+          getSocket().emit("lobby:join_by_code", { inviteCode: isJoiningCode });
+          joinRetryTimerRef.current = null;
+        }, retryDelayMs);
+        return;
+      }
+
       logger.warn("Friend hub observed realtime error", {
         code: error.code,
         message: error.message,
@@ -101,8 +183,11 @@ export function FriendMatchHubPage() {
       }
       setIsJoiningCode(null);
       setIsNavigatingToRoom(false);
+      joinRetryCountRef.current = 0;
+      clearJoinTimeout();
+      clearJoinRetryTimer();
     }
-  }, [error, isJoiningCode, isNavigatingToRoom, lobby?.inviteCode, queryClient]);
+  }, [error, isJoiningCode, isNavigatingToRoom, lobby?.inviteCode, queryClient, sessionState?.state]);
 
   return (
     <div className="container mx-auto max-w-5xl py-6 animate-in fade-in space-y-6">
@@ -121,9 +206,19 @@ export function FriendMatchHubPage() {
          {/* Gamified Stat/Decor (Optional) */}
          <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-card border border-border rounded-full shadow-sm text-sm font-medium">
             <Users className="size-4 text-green-500" />
-            <span>24 players online</span>
+            <span>
+              {onlineUsers === null ? "Players online..." : `${onlineUsers.toLocaleString()} players online`}
+            </span>
          </div>
       </div>
+
+      {(isSessionRecovering || isSessionTransitioning) && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+          {isSessionRecovering
+            ? "Reconnecting session... joining may be delayed for a moment."
+            : "Session transition in progress... please wait a moment."}
+        </div>
+      )}
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">

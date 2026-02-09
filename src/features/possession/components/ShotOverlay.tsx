@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { QuestionArena } from '@/features/game/components/QuestionArena';
 import { AnswerCard } from '@/features/game/components/AnswerCard';
@@ -28,6 +29,19 @@ export function ShotOverlay({
   onAnswer,
   disabled,
 }: ShotOverlayProps) {
+  // Precompute stable confetti properties to avoid jumps on re-render
+  const confetti = useMemo(
+    () =>
+      Array.from({ length: 12 }).map((_, i) => ({
+        angle: (i / 12) * 360,
+        rad: ((i / 12) * 360 * Math.PI) / 180,
+        dist: 80 + Math.random() * 60,
+        rotate: Math.random() * 720,
+        colorIndex: i % 6,
+      })),
+    []
+  );
+
   return (
     <AnimatePresence>
       {visible && (
@@ -101,33 +115,28 @@ export function ShotOverlay({
               ))}
 
               {/* Confetti particles */}
-              {Array.from({ length: 12 }).map((_, i) => {
-                const angle = (i / 12) * 360;
-                const rad = (angle * Math.PI) / 180;
-                const dist = 80 + Math.random() * 60;
-                return (
-                  <motion.div
-                    key={`confetti-${i}`}
-                    initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
-                    animate={{
-                      x: Math.cos(rad) * dist,
-                      y: Math.sin(rad) * dist - 30,
-                      opacity: 0,
-                      scale: 0.3,
-                      rotate: Math.random() * 720,
+              {confetti.map((item, i) => (
+                <motion.div
+                  key={`confetti-${i}`}
+                  initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+                  animate={{
+                    x: Math.cos(item.rad) * item.dist,
+                    y: Math.sin(item.rad) * item.dist - 30,
+                    opacity: 0,
+                    scale: 0.3,
+                    rotate: item.rotate,
+                  }}
+                  transition={{ duration: 1.2, delay: 0.2, ease: 'easeOut' }}
+                  className="absolute left-1/2 top-1/2 -ml-1.5 -mt-1.5"
+                >
+                  <div
+                    className="size-3 rounded-sm"
+                    style={{
+                      backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#a855f7', '#1CB0F6'][item.colorIndex],
                     }}
-                    transition={{ duration: 1.2, delay: 0.2, ease: 'easeOut' }}
-                    className="absolute left-1/2 top-1/2 -ml-1.5 -mt-1.5"
-                  >
-                    <div
-                      className="size-3 rounded-sm"
-                      style={{
-                        backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#a855f7', '#1CB0F6'][i % 6],
-                      }}
-                    />
-                  </motion.div>
-                );
-              })}
+                  />
+                </motion.div>
+              ))}
 
               {/* Main content */}
               <motion.div

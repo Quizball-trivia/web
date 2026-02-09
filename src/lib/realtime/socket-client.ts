@@ -14,7 +14,9 @@ function parseJwtExpMs(token: string): number | null {
   const parts = token.split('.');
   if (parts.length !== 3) return null;
   try {
-    const payload = JSON.parse(atob(parts[1])) as { exp?: number };
+    let b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    while (b64.length % 4 !== 0) b64 += '=';
+    const payload = JSON.parse(atob(b64)) as { exp?: number };
     return typeof payload.exp === 'number' ? payload.exp * 1000 : null;
   } catch {
     return null;

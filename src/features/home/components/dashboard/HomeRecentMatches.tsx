@@ -4,11 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Clock, CheckCircle2, XCircle, ArrowRight, Trophy, Zap, ChevronDown, ChevronUp } from 'lucide-react';
 import { useRecentMatches } from '@/lib/queries/stats.queries';
-
-/** Number of matches shown when collapsed */
-const COLLAPSED_MATCHES_COUNT = 3;
-/** Maximum matches to display even when expanded */
-const MAX_MATCHES_COUNT = 20;
+import { COLLAPSED_MATCHES_COUNT, MAX_MATCHES_COUNT } from '@/lib/constants/matches';
 
 interface HomeRecentMatchesProps {
   /** If true, only show collapsed count without expand option */

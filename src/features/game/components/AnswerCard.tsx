@@ -80,7 +80,7 @@ export function AnswerCard({
       }
       transition={shouldFadeAway ? { duration: 0.45, ease: 'easeOut' } : { duration: 0.2 }}
       className={cn(
-        'relative w-full h-full text-left rounded-2xl p-4 min-h-[100px] transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary font-fun',
+        'relative w-full h-full text-left rounded-2xl p-4 min-h-[100px] transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary font-fun',
         getButtonClasses(),
         disabled && 'cursor-not-allowed'
       )}
