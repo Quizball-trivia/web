@@ -1,6 +1,7 @@
 'use client';
 
 import type { PlayerStats } from '@/types/game';
+import type { MatchStatsSummary } from '@/lib/domain';
 import { ProfileWeb, type ProfileRecentMatch } from './ProfileWeb';
 import { useAuthStore } from '@/stores/auth.store';
 import { logger } from '@/utils/logger';
@@ -12,6 +13,7 @@ interface ProfileScreenProps {
   preferredLanguage?: string | null;
   countryRank?: number | string | null;
   friendsRank?: number | string | null;
+  matchStatsSummary?: MatchStatsSummary | null;
   recentMatches?: ProfileRecentMatch[];
   recentMatchesLoading?: boolean;
   recentMatchesError?: string | null;
@@ -43,6 +45,7 @@ export function ProfileScreen(props: ProfileScreenProps) {
         preferredLanguage={props.preferredLanguage}
         countryRank={props.countryRank}
         friendsRank={props.friendsRank}
+        matchStatsSummary={props.matchStatsSummary}
         recentMatches={props.recentMatches}
         recentMatchesLoading={props.recentMatchesLoading}
         recentMatchesError={props.recentMatchesError}

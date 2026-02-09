@@ -73,10 +73,10 @@ export function PitchVisualization({ playerPosition, playerAvatarUrl, opponentAv
           <rect x="0" y="0" width="500" height="230" rx="12" fill="url(#pitchGrad)" />
           <rect x="0" y="0" width="500" height="230" rx="12" fill="url(#grassStripes)" />
 
-          {/* Zone bands */}
-          <rect x="0" y="0" width="125" height="230" fill="rgba(156,163,175,0.05)" rx="12" />
-          <rect x="375" y="0" width="125" height="230" fill="rgba(255,75,75,0.06)" rx="12" />
-          <rect x="250" y="0" width="125" height="230" fill="rgba(255,150,0,0.04)" />
+          {/* Zone bands: DEF 0-20, MID 21-45, ATT 46-70, BOX 71-100 */}
+          <rect x="0" y="0" width="100" height="230" fill="rgba(156,163,175,0.05)" rx="12" />
+          <rect x="355" y="0" width="145" height="230" fill="rgba(255,75,75,0.06)" rx="12" />
+          <rect x="230" y="0" width="125" height="230" fill="rgba(255,150,0,0.04)" />
 
           {/* Pitch markings */}
           {/* Outer border */}
@@ -107,10 +107,10 @@ export function PitchVisualization({ playerPosition, playerAvatarUrl, opponentAv
           <circle cx="440" cy="115" r="2" fill="rgba(255,255,255,0.15)" />
 
           {/* Zone labels */}
-          <text x="70" y="28" fill="rgba(156,163,175,0.35)" fontSize="9" fontWeight="800" textAnchor="middle" fontFamily="system-ui">DEF</text>
-          <text x="188" y="28" fill="rgba(255,255,255,0.25)" fontSize="9" fontWeight="800" textAnchor="middle" fontFamily="system-ui">MID</text>
-          <text x="312" y="28" fill="rgba(255,150,0,0.35)" fontSize="9" fontWeight="800" textAnchor="middle" fontFamily="system-ui">ATT</text>
-          <text x="440" y="28" fill="rgba(255,75,75,0.35)" fontSize="9" fontWeight="800" textAnchor="middle" fontFamily="system-ui">BOX</text>
+          <text x="50" y="28" fill="rgba(156,163,175,0.35)" fontSize="9" fontWeight="800" textAnchor="middle" fontFamily="system-ui">DEF</text>
+          <text x="165" y="28" fill="rgba(255,255,255,0.25)" fontSize="9" fontWeight="800" textAnchor="middle" fontFamily="system-ui">MID</text>
+          <text x="290" y="28" fill="rgba(255,150,0,0.35)" fontSize="9" fontWeight="800" textAnchor="middle" fontFamily="system-ui">ATT</text>
+          <text x="428" y="28" fill="rgba(255,75,75,0.35)" fontSize="9" fontWeight="800" textAnchor="middle" fontFamily="system-ui">BOX</text>
 
           {/* === Opponent marker === */}
           <motion.g

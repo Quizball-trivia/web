@@ -5,7 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ModeConfirmModal } from '@/features/play/components/ModeConfirmModal';
 import { FriendPlayModal } from '@/features/friend/components/FriendPlayModal';
+import { HomeRecentMatches } from '@/features/home/components/dashboard/HomeRecentMatches';
 import type { PlayerStats } from '@/types/game';
+import type { MatchStatsSummary } from '@/lib/domain';
 import { CHALLENGES } from '../tournaments/GameHubScreen';
 import { logger } from '@/utils/logger';
 import { getDivisionColor, getDivisionEmoji, getRankInfo } from '@/utils/rankSystem';
@@ -62,24 +64,25 @@ function StadiumSilhouette() {
   );
 }
 
-// ── Mock Recent Matches (same as HomeRecentMatches) ──
-const RECENT_MATCHES = [
-  { id: 1, result: 'win' as const, opponent: 'Striker99', mode: 'Ranked', rp: '+15', time: '2h ago' },
-  { id: 2, result: 'loss' as const, opponent: 'GoalKeeper', mode: 'Buzzer', rp: '-8', time: '5h ago' },
-  { id: 3, result: 'win' as const, opponent: 'Captain10', mode: 'League', rp: '+12', time: '1d ago' },
-];
-
 interface ModeSelectionScreenProps {
   onSelectMode: (mode: 'ranked' | 'friendly' | 'solo') => void;
   ticketsRemaining?: number;
   playerStats: PlayerStats;
+  matchStatsSummary?: MatchStatsSummary | null;
 }
 
-export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playerStats }: ModeSelectionScreenProps) {
+export function ModeSelectionScreen({
+  onSelectMode,
+  ticketsRemaining = 10,
+  playerStats,
+  matchStatsSummary = null,
+}: ModeSelectionScreenProps) {
   const [selectedMode, setSelectedMode] = useState<'ranked' | 'friendly' | 'solo' | null>(null);
   const rankInfo = getRankInfo(playerStats.rankPoints || 0);
   const divisionColors = getDivisionColor(rankInfo.division);
   const divisionEmoji = getDivisionEmoji(rankInfo.division);
+  const rankedWinRate = Math.round(matchStatsSummary?.ranked.winRate ?? 0);
+  const rankedGamesPlayed = matchStatsSummary?.ranked.gamesPlayed ?? 0;
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -170,12 +173,10 @@ export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playe
                 <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/30 to-transparent h-1/2" />
               </motion.div>
             </div>
-            {/* TODO: Replace hardcoded "75%" with computed win rate from playerStats.wins / playerStats.gamesPlayed.
-                Guard against division by zero, show "—" when unavailable. Currently mock data without backend logic. */}
             <div className="flex items-center justify-between mt-2">
               <div className="flex items-center gap-4">
-                <span className="text-xs font-bold text-[#56707A]">🏆 <span className="text-[#2D8CBA] font-black">75%</span> win</span>
-                <span className="text-xs font-bold text-[#56707A]">🎯 <span className="text-[#9B7EC8] font-black">{playerStats.gamesPlayed}</span> games</span>
+                <span className="text-xs font-bold text-[#56707A]">🏆 <span className="text-[#2D8CBA] font-black">{rankedWinRate}%</span> win</span>
+                <span className="text-xs font-bold text-[#56707A]">🎯 <span className="text-[#9B7EC8] font-black">{rankedGamesPlayed}</span> games</span>
               </div>
               <div>
                 <span className="text-2xl font-black text-white">{playerStats.rankPoints ?? 0}</span>
@@ -323,41 +324,7 @@ export function ModeSelectionScreen({ onSelectMode, ticketsRemaining = 10, playe
       </motion.div>
 
       {/* ─── 5. Recent Matches ─── */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        className="bg-[#1B2F36] rounded-2xl border-b-4 border-[#0D1B21] p-5"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-black text-white flex items-center gap-2 uppercase">
-            <SoccerBall className="size-5 text-[#58CC02]" />
-            Recent Matches
-          </h3>
-          <button
-            onClick={() => router.push('/profile')}
-            className="text-xs font-bold text-[#1CB0F6] hover:text-[#1CB0F6]/80 transition-colors uppercase tracking-wide"
-          >
-            View All →
-          </button>
-        </div>
-        <div className="space-y-2">
-          {RECENT_MATCHES.map((m) => (
-            <div key={m.id} className="flex items-center justify-between p-4 rounded-xl bg-[#131F24] border-b-2 border-[#0D1B21]">
-              <div className="flex items-center gap-3">
-                <div className={cn('size-9 rounded-xl flex items-center justify-center text-sm font-black border-2', m.result === 'win' ? 'bg-[#58CC02]/20 text-[#58CC02] border-[#58CC02]/40' : 'bg-[#FF4B4B]/20 text-[#FF4B4B] border-[#FF4B4B]/40')}>
-                  {m.result === 'win' ? 'W' : 'L'}
-                </div>
-                <div>
-                  <div className="text-sm font-black text-white">vs {m.opponent}</div>
-                  <div className="text-xs text-[#56707A] font-semibold">{m.mode} · {m.time}</div>
-                </div>
-              </div>
-              <span className={cn('text-base font-black', m.result === 'win' ? 'text-[#58CC02]' : 'text-[#FF4B4B]')}>{m.rp}</span>
-            </div>
-          ))}
-        </div>
-      </motion.div>
+      <HomeRecentMatches collapsedOnly />
 
       {/* ─── 6. Modals (unchanged) ─── */}
       <ModeConfirmModal

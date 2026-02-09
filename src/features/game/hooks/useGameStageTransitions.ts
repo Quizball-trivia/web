@@ -19,6 +19,8 @@ const STAGE_ORDER: GameStage[] = [
 ];
 
 const getStageOrdinal = (stage: GameStage): number => STAGE_ORDER.indexOf(stage);
+const RANKED_QUEUE_RETRY_DELAY_MS = 350;
+const RANKED_QUEUE_MAX_RETRIES = 3;
 
 interface GameStageTransitionOptions {
   isMultiplayer: boolean;
@@ -41,9 +43,12 @@ export function useGameStageTransitions({
 }: GameStageTransitionOptions) {
   const rankedRequestRef = useRef(false);
   const rankedSearchAckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rankedRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rankedRetryCountRef = useRef(0);
   const rankedSearchStartedAt = useRealtimeMatchStore((state) => state.rankedSearchStartedAt);
   const rankedFoundOpponent = useRealtimeMatchStore((state) => state.rankedFoundOpponent);
   const sessionState = useRealtimeMatchStore((state) => state.sessionState);
+  const realtimeErrorCode = useRealtimeMatchStore((state) => state.error?.code ?? null);
 
   const clearRankedAckTimer = useCallback(() => {
     if (!rankedSearchAckTimerRef.current) return;
@@ -51,18 +56,19 @@ export function useGameStageTransitions({
     rankedSearchAckTimerRef.current = null;
   }, []);
 
-  useEffect(() => {
-    if (!isMultiplayer || config?.matchType !== "ranked") return;
-    if (stage !== "matchmaking") {
-      rankedRequestRef.current = false;
-      clearRankedAckTimer();
-      return;
-    }
-    if (!rankedRequestRef.current) {
-      rankedRequestRef.current = true;
+  const clearRankedRetryTimer = useCallback(() => {
+    if (!rankedRetryTimerRef.current) return;
+    clearTimeout(rankedRetryTimerRef.current);
+    rankedRetryTimerRef.current = null;
+  }, []);
+
+  const emitRankedQueueJoin = useCallback(
+    (reason: "initial" | "retry") => {
       const snapshot = useRealtimeMatchStore.getState();
       socket.emit("ranked:queue_join");
       logger.info("Socket emit ranked:queue_join", {
+        reason,
+        retryCount: rankedRetryCountRef.current,
         socketConnected: socket.connected,
         sessionState: snapshot.sessionState?.state ?? "NO_SESSION",
         queueSearchId: snapshot.sessionState?.queueSearchId ?? null,
@@ -70,6 +76,23 @@ export function useGameStageTransitions({
         activeMatchId: snapshot.sessionState?.activeMatchId ?? null,
         rankedSearching: snapshot.rankedSearching,
       });
+    },
+    [socket]
+  );
+
+  useEffect(() => {
+    if (!isMultiplayer || config?.matchType !== "ranked") return;
+    if (stage !== "matchmaking") {
+      rankedRequestRef.current = false;
+      rankedRetryCountRef.current = 0;
+      clearRankedAckTimer();
+      clearRankedRetryTimer();
+      return;
+    }
+    if (!rankedRequestRef.current) {
+      rankedRequestRef.current = true;
+      rankedRetryCountRef.current = 0;
+      emitRankedQueueJoin("initial");
 
       if (process.env.NODE_ENV !== "production") {
         clearRankedAckTimer();
@@ -82,7 +105,6 @@ export function useGameStageTransitions({
             latest.sessionState?.state === "IN_QUEUE";
           if (hasSearchAck) return;
           logger.warn("Ranked queue join pending without search acknowledgement", {
-            socketConnected: socket.connected,
             sessionState: latest.sessionState?.state ?? "NO_SESSION",
             queueSearchId: latest.sessionState?.queueSearchId ?? null,
             waitingLobbyId: latest.sessionState?.waitingLobbyId ?? null,
@@ -95,8 +117,62 @@ export function useGameStageTransitions({
         }, 2500);
       }
     }
-    return clearRankedAckTimer;
-  }, [clearRankedAckTimer, config?.matchType, isMultiplayer, socket, stage]);
+    return () => {
+      clearRankedAckTimer();
+      clearRankedRetryTimer();
+    };
+  }, [clearRankedAckTimer, clearRankedRetryTimer, config?.matchType, emitRankedQueueJoin, isMultiplayer, stage]);
+
+  useEffect(() => {
+    if (!isMultiplayer || config?.matchType !== "ranked") return;
+    if (stage !== "matchmaking") return;
+
+    const hasSearchAck =
+      Boolean(rankedSearchStartedAt) ||
+      Boolean(rankedFoundOpponent) ||
+      sessionState?.state === "IN_QUEUE";
+    if (hasSearchAck) {
+      rankedRetryCountRef.current = 0;
+      clearRankedRetryTimer();
+      return;
+    }
+
+    const shouldRetry =
+      rankedRequestRef.current &&
+      sessionState?.state === "IDLE" &&
+      (realtimeErrorCode === "TRANSITION_IN_PROGRESS" ||
+        realtimeErrorCode === "RANKED_QUEUE_BUSY");
+    if (!shouldRetry) {
+      return;
+    }
+    if (rankedRetryTimerRef.current) {
+      return;
+    }
+    if (rankedRetryCountRef.current >= RANKED_QUEUE_MAX_RETRIES) {
+      logger.warn("Ranked queue join retry limit reached", {
+        retryCount: rankedRetryCountRef.current,
+        errorCode: realtimeErrorCode,
+        sessionState: sessionState?.state ?? "NO_SESSION",
+      });
+      return;
+    }
+
+    rankedRetryTimerRef.current = setTimeout(() => {
+      rankedRetryTimerRef.current = null;
+      rankedRetryCountRef.current += 1;
+      emitRankedQueueJoin("retry");
+    }, RANKED_QUEUE_RETRY_DELAY_MS);
+  }, [
+    clearRankedRetryTimer,
+    config?.matchType,
+    emitRankedQueueJoin,
+    isMultiplayer,
+    rankedFoundOpponent,
+    rankedSearchStartedAt,
+    realtimeErrorCode,
+    sessionState?.state,
+    stage,
+  ]);
 
   useEffect(() => {
     const hasSearchAck =
@@ -104,9 +180,11 @@ export function useGameStageTransitions({
       Boolean(rankedFoundOpponent) ||
       sessionState?.state === "IN_QUEUE";
     if (hasSearchAck) {
+      rankedRetryCountRef.current = 0;
       clearRankedAckTimer();
+      clearRankedRetryTimer();
     }
-  }, [clearRankedAckTimer, rankedFoundOpponent, rankedSearchStartedAt, sessionState?.state]);
+  }, [clearRankedAckTimer, clearRankedRetryTimer, rankedFoundOpponent, rankedSearchStartedAt, sessionState?.state]);
 
   useEffect(() => {
     if (!isMultiplayer) return;

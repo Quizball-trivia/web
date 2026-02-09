@@ -10,12 +10,15 @@ import { useWarmupPhysics } from '../hooks/useWarmupPhysics';
 
 const CONTAINER_HEIGHT = 340;
 const GROUND_Y = CONTAINER_HEIGHT - 20;
+const GROUND_Y_NORMALIZED = GROUND_Y / CONTAINER_HEIGHT;
 const BALL_SIZE = 64;
 const KICK_COOLDOWN = 400;
 const HIT_PADDING = 12;
+const AUTO_RESTART_DELAY_MS = 1200;
 
 export function WarmupGame() {
   const warmup = useRealtimeMatchStore((s) => s.warmup);
+  const lobby = useRealtimeMatchStore((s) => s.lobby);
   const selfUserId = useRealtimeMatchStore((s) => s.selfUserId);
   const containerRef = useRef<HTMLDivElement>(null);
   const tapSeqRef = useRef(0);
@@ -36,10 +39,44 @@ export function WarmupGame() {
     canTapRef.current = canTap;
   }, [canTap]);
 
+  // Track when we emitted dropped, for retry logic
+  const droppedAtRef = useRef<number | null>(null);
+  const dropRetryCountRef = useRef(0);
+  const autoRestartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const MAX_DROP_RETRIES = 3;
+  const DROP_RETRY_INTERVAL_MS = 800;
+
   const onDropped = useCallback(() => {
     const socket = getSocket();
-    socket.emit('warmup:dropped', { clientTs: Date.now(), y: GROUND_Y });
+    socket.emit('warmup:dropped', { clientTs: Date.now(), y: GROUND_Y_NORMALIZED });
+    droppedAtRef.current = Date.now();
+    dropRetryCountRef.current = 0;
   }, []);
+
+  // Retry dropped if server doesn't respond
+  useEffect(() => {
+    if (!isActive || isGameOver) {
+      // Reset retry state when game ends or restarts
+      droppedAtRef.current = null;
+      dropRetryCountRef.current = 0;
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const droppedAt = droppedAtRef.current;
+      if (!droppedAt) return;
+
+      const elapsed = Date.now() - droppedAt;
+      if (elapsed > DROP_RETRY_INTERVAL_MS && dropRetryCountRef.current < MAX_DROP_RETRIES) {
+        dropRetryCountRef.current += 1;
+        const socket = getSocket();
+        socket.emit('warmup:dropped', { clientTs: Date.now(), y: GROUND_Y_NORMALIZED });
+        droppedAtRef.current = Date.now();
+      }
+    }, DROP_RETRY_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, [isActive, isGameOver]);
 
   const physics = useWarmupPhysics({
     containerWidth,
@@ -153,10 +190,34 @@ export function WarmupGame() {
   }, []);
 
   const handleRestart = useCallback(() => {
-    tapSeqRef.current = 0;
+    if (autoRestartTimerRef.current) {
+      clearTimeout(autoRestartTimerRef.current);
+      autoRestartTimerRef.current = null;
+    }
     cooldownRef.current = 0;
     getSocket().emit('warmup:restart');
   }, []);
+
+  const isHost = Boolean(lobby?.members.find((member) => member.userId === selfUserId)?.isHost);
+
+  useEffect(() => {
+    if (autoRestartTimerRef.current) {
+      clearTimeout(autoRestartTimerRef.current);
+      autoRestartTimerRef.current = null;
+    }
+    if (!isGameOver || !isHost) return;
+
+    autoRestartTimerRef.current = setTimeout(() => {
+      handleRestart();
+    }, AUTO_RESTART_DELAY_MS);
+
+    return () => {
+      if (autoRestartTimerRef.current) {
+        clearTimeout(autoRestartTimerRef.current);
+        autoRestartTimerRef.current = null;
+      }
+    };
+  }, [isGameOver, isHost, handleRestart]);
 
   const bounceCount = warmup?.bounceCount ?? 0;
   const playerBest = warmup?.playerBest ?? 0;

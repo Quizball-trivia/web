@@ -21,8 +21,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   Trophy,
-  BarChart3,
-  ShoppingBag,
+  Medal,
+  Gem,
   User,
   Settings,
   Gamepad2,
@@ -36,15 +36,17 @@ import {
   Flame,
   ArrowRight,
   X,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getSocket } from "@/lib/realtime/socket-client";
 
 const NAV_ITEMS = [
   { path: "/play", label: "Play", icon: Gamepad2 },
+  { path: "/leaderboard", label: "Leaderboard", icon: Medal },
+  { path: "/play/friend?tab=browse", label: "Lobbies", icon: Users },
   { path: "/events", label: "Events", icon: Trophy },
-  { path: "/leaderboard", label: "Leaderboard", icon: BarChart3 },
-  { path: "/store", label: "Store", icon: ShoppingBag },
+  { path: "/store", label: "Store", icon: Gem },
   { path: "/career", label: "Career", icon: Briefcase },
   { path: "/profile", label: "Profile", icon: User },
   { path: "/settings", label: "Settings", icon: Settings },
@@ -52,9 +54,9 @@ const NAV_ITEMS = [
 
 const MOBILE_NAV_ITEMS = [
   { path: "/", label: "Home", icon: Home },
-  { path: "/events", label: "Events", icon: Trophy },
-  { path: "/leaderboard", label: "Leaderboard", icon: BarChart3 },
-  { path: "/store", label: "Store", icon: ShoppingBag },
+  { path: "/leaderboard", label: "Leaderboard", icon: Medal },
+  { path: "/play/friend?tab=browse", label: "Lobbies", icon: Users },
+  { path: "/store", label: "Store", icon: Gem },
   { path: "/profile", label: "Profile", icon: User },
 ] as const;
 
@@ -112,7 +114,9 @@ export function AppShell({ children }: AppShellProps) {
 
   const isPathActive = (path: string) => {
     if (path === "/") return currentPath === "/";
-    return currentPath === path || currentPath.startsWith(`${path}/`);
+    // Strip query params for comparison
+    const basePath = path.split("?")[0];
+    return currentPath === basePath || currentPath.startsWith(`${basePath}/`);
   };
 
   const handleReturnToLobby = () => {
