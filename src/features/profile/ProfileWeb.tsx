@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
 import {
   Trophy, Target, Flame, Star, Award, Pencil, Check, X,
   MapPin, Globe, Users, Clock, LogOut, Zap, Medal, Crown,
+  ChevronDown, ChevronUp,
   type LucideIcon,
 } from 'lucide-react';
+import { COLLAPSED_MATCHES_COUNT, MAX_MATCHES_COUNT } from '@/lib/constants/matches';
 
 const achievementIconMap: Record<string, LucideIcon> = {
   Trophy, Target, Flame, Star, Award, Check, MapPin, Globe, Users, Clock, Zap, Medal, Crown,
@@ -18,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
 import type { PlayerStats } from '@/types/game';
+import type { MatchStatsSummary } from '@/lib/domain';
 import { getRankInfo, getDivisionColor, getDivisionEmoji } from '@/utils/rankSystem';
 import { useAvatarUrl } from './hooks/useAvatarUrl';
 import ClubSelect from '@/features/onboarding/ClubSelect';
@@ -38,6 +41,7 @@ interface ProfileWebProps {
   preferredLanguage?: string | null;
   countryRank?: number | string | null;
   friendsRank?: number | string | null;
+  matchStatsSummary?: MatchStatsSummary | null;
   recentMatches?: ProfileRecentMatch[];
   recentMatchesLoading?: boolean;
   recentMatchesError?: string | null;
@@ -52,6 +56,7 @@ interface ProfileWebProps {
 export function ProfileWeb({
   player, avatarUrl, favoriteClub, preferredLanguage,
   countryRank = null, friendsRank = null,
+  matchStatsSummary = null,
   recentMatches = [], recentMatchesLoading = false, recentMatchesError = null,
   onNameChange, onAvatarChange, onClubChange, onLanguageChange,
   onSignOut, isUpdating = false,
@@ -65,6 +70,21 @@ export function ProfileWeb({
   const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
   const [isSavingAvatar, setIsSavingAvatar] = useState(false);
   const [isEditingClub, setIsEditingClub] = useState(false);
+  const [isMatchesExpanded, setIsMatchesExpanded] = useState(false);
+
+  // Compute visible matches: show first 3 when collapsed, up to 20 when expanded
+  const { visibleMatches, hiddenCount, canExpand } = useMemo(() => {
+    const cappedMatches = recentMatches.slice(0, MAX_MATCHES_COUNT);
+    const visible = isMatchesExpanded
+      ? cappedMatches
+      : cappedMatches.slice(0, COLLAPSED_MATCHES_COUNT);
+    const hidden = cappedMatches.length - visible.length;
+    return {
+      visibleMatches: visible,
+      hiddenCount: hidden,
+      canExpand: cappedMatches.length > COLLAPSED_MATCHES_COUNT,
+    };
+  }, [recentMatches, isMatchesExpanded]);
 
   const { avatarBase, resolvedAvatarUrl, googleAvatarUrl } = useAvatarUrl({
     avatarUrl,
@@ -72,9 +92,11 @@ export function ProfileWeb({
     fallbackAvatar: player.avatar,
   });
 
-  const winRate = player.gamesPlayed > 0
-    ? Math.round((player.correctAnswers / (player.gamesPlayed * 10)) * 100)
-    : 0;
+  const overallStats = matchStatsSummary?.overall;
+  const rankedStats = matchStatsSummary?.ranked;
+  const friendlyStats = matchStatsSummary?.friendly;
+  const winRate = Math.round(overallStats?.winRate ?? 0);
+  const gamesPlayed = overallStats?.gamesPlayed ?? 0;
   const formatRank = (rankValue: number | string | null | undefined): string => {
     if (rankValue === null || rankValue === undefined || rankValue === '') return '#--';
     const normalizedRank = String(rankValue).trim();
@@ -199,8 +221,12 @@ export function ProfileWeb({
                 🔥 {player.bestStreak} Streak
               </span>
               <span className="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1.5 rounded-full bg-blue-500/15 border border-blue-500/25 text-blue-400 uppercase tracking-wide">
-                ⚽ {player.gamesPlayed} Matches
+                ⚽ {gamesPlayed} Matches
               </span>
+            </div>
+            <div className="flex items-center justify-center lg:justify-start gap-4 text-xs font-bold text-muted-foreground">
+              <span>Ranked: {rankedStats?.gamesPlayed ?? 0}</span>
+              <span>Friendly: {friendlyStats?.gamesPlayed ?? 0}</span>
             </div>
 
             {/* Preferences */}
@@ -420,7 +446,7 @@ export function ProfileWeb({
                   No recent matches yet.
                 </div>
               )}
-              {!recentMatchesLoading && !recentMatchesError && recentMatches.map((match) => {
+              {!recentMatchesLoading && !recentMatchesError && visibleMatches.map((match) => {
                 const isWin = match.result === 'Win';
                 const isLoss = match.result === 'Loss';
                 const badgeClass = isWin
@@ -452,6 +478,27 @@ export function ProfileWeb({
                   </div>
                 );
               })}
+
+              {/* Expand/Collapse button */}
+              {!recentMatchesLoading && !recentMatchesError && canExpand && (
+                <button
+                  type="button"
+                  onClick={() => setIsMatchesExpanded((prev) => !prev)}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-background/40 border border-border/50 hover:bg-background/60 hover:border-primary/30 transition-all text-sm font-bold text-muted-foreground hover:text-foreground"
+                >
+                  {isMatchesExpanded ? (
+                    <>
+                      <ChevronUp className="size-4" />
+                      Show less
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="size-4" />
+                      Show {hiddenCount} more
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </motion.div>
 

@@ -1,17 +1,45 @@
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, CheckCircle2, XCircle, ArrowRight, Trophy, Zap } from 'lucide-react';
+import { Clock, CheckCircle2, XCircle, ArrowRight, Trophy, Zap, ChevronDown, ChevronUp } from 'lucide-react';
+import { useRecentMatches } from '@/lib/queries/stats.queries';
+import { COLLAPSED_MATCHES_COUNT, MAX_MATCHES_COUNT } from '@/lib/constants/matches';
 
-export function HomeRecentMatches() {
+interface HomeRecentMatchesProps {
+  /** If true, only show collapsed count without expand option */
+  collapsedOnly?: boolean;
+}
+
+export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesProps) {
   const router = useRouter();
+  const fetchCount = collapsedOnly ? COLLAPSED_MATCHES_COUNT : MAX_MATCHES_COUNT;
+  const { data: recentMatches = [], isLoading } = useRecentMatches(fetchCount);
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  // Mock data - replace with real history when available
-  const matches = [
-    { id: 1, result: 'win', opponent: 'Striker99', mode: 'Ranked', rp: '+15', time: '2h ago' },
-    { id: 2, result: 'loss', opponent: 'GoalKeeper', mode: 'Buzzer', rp: '-8', time: '5h ago' },
-    { id: 3, result: 'win', opponent: 'Captain10', mode: 'League', rp: '+12', time: '1d ago' },
-  ];
+  const matches = useMemo(() =>
+    recentMatches.map((match) => ({
+      id: match.matchId,
+      result: match.result,
+      opponent: match.opponent.username,
+      mode: match.mode === 'ranked' ? 'Ranked' : 'Friendly',
+      score: `${match.playerScore}-${match.opponentScore}`,
+      time: match.timeLabel,
+    })),
+    [recentMatches]
+  );
+
+  const { visibleMatches, hiddenCount, canExpand } = useMemo(() => {
+    const visible = isExpanded || collapsedOnly
+      ? matches
+      : matches.slice(0, COLLAPSED_MATCHES_COUNT);
+    const hidden = matches.length - visible.length;
+    return {
+      visibleMatches: visible,
+      hiddenCount: hidden,
+      canExpand: !collapsedOnly && matches.length > COLLAPSED_MATCHES_COUNT,
+    };
+  }, [matches, isExpanded, collapsedOnly]);
 
   return (
     <Card className="h-full border-border/40 bg-card/40 backdrop-blur-sm relative overflow-hidden">
@@ -30,16 +58,30 @@ export function HomeRecentMatches() {
         </div>
 
         <div className="flex-1 flex flex-col justify-center space-y-3 mt-4">
-          {matches.map((match) => (
+          {isLoading && (
+            <div className="p-3.5 rounded-xl bg-background/40 border border-border/40 text-sm font-semibold text-muted-foreground">
+              Loading recent matches...
+            </div>
+          )}
+          {!isLoading && matches.length === 0 && (
+            <div className="p-3.5 rounded-xl bg-background/40 border border-border/40 text-sm font-semibold text-muted-foreground">
+              No recent matches yet.
+            </div>
+          )}
+          {!isLoading && visibleMatches.map((match) => (
               <div key={match.id} className="flex items-center justify-between p-3.5 rounded-xl bg-background/40 border border-border/40 hover:bg-background/60 hover:border-border/60 transition-all duration-300 cursor-pointer group shadow-sm hover:shadow-md">
                 <div className="flex items-center gap-3.5">
                     {match.result === 'win' ? (
                       <div className="p-1.5 rounded-full bg-green-500/10 text-green-500 ring-1 ring-green-500/20">
                          <CheckCircle2 className="size-4 shrink-0" />
                       </div>
-                    ) : (
+                    ) : match.result === 'loss' ? (
                       <div className="p-1.5 rounded-full bg-red-500/10 text-red-500 ring-1 ring-red-500/20">
                          <XCircle className="size-4 shrink-0" />
+                      </div>
+                    ) : (
+                      <div className="p-1.5 rounded-full bg-muted text-muted-foreground ring-1 ring-border">
+                         <Clock className="size-4 shrink-0" />
                       </div>
                     )}
                     <div>
@@ -52,14 +94,41 @@ export function HomeRecentMatches() {
                       </div>
                     </div>
                 </div>
-                
+
                 <div className="flex items-center gap-3">
-                    <span className={`text-base font-black tracking-tight ${match.result === 'win' ? 'text-green-500' : 'text-red-500'}`}>
-                      {match.rp}
+                    <span className={`text-base font-black tracking-tight ${
+                      match.result === 'win'
+                        ? 'text-green-500'
+                        : match.result === 'loss'
+                          ? 'text-red-500'
+                          : 'text-muted-foreground'
+                    }`}>
+                      {match.score}
                     </span>
                 </div>
               </div>
           ))}
+
+          {/* Expand/Collapse button */}
+          {!isLoading && canExpand && (
+            <button
+              type="button"
+              onClick={() => setIsExpanded((prev) => !prev)}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-background/30 border border-border/40 hover:bg-background/50 hover:border-border/60 transition-all text-sm font-semibold text-muted-foreground hover:text-foreground"
+            >
+              {isExpanded ? (
+                <>
+                  <ChevronUp className="size-4" />
+                  Show less
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="size-4" />
+                  Show {hiddenCount} more
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
     </Card>

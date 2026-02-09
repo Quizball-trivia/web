@@ -81,6 +81,7 @@ export function LobbySettings({
   );
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(serverSelectedCategoryIds);
   const lastSentCategoryPairRef = useRef<string | null>(null);
+  const handledErrorVersionRef = useRef(0);
   const canEdit = Boolean(isHost && lobby?.status === "waiting" && !lobby?.members.every((m) => m.isReady));
   const lastLobbyIdRef = useRef<string | null>(null);
 
@@ -88,6 +89,17 @@ export function LobbySettings({
     if (!inFlightTimeoutRef.current) return;
     clearTimeout(inFlightTimeoutRef.current);
     inFlightTimeoutRef.current = null;
+  }, []);
+
+  const hasCategoryTransitionInProgress = useCallback(() => {
+    const pending = pendingChangesRef.current;
+    const inFlight = inFlightChangesRef.current;
+    return Boolean(
+      pending.friendlyCategoryAId !== undefined ||
+      pending.friendlyCategoryBId !== undefined ||
+      inFlight?.friendlyCategoryAId !== undefined ||
+      inFlight?.friendlyCategoryBId !== undefined
+    );
   }, []);
 
   const clearFlushTimer = useCallback(() => {
@@ -229,8 +241,16 @@ export function LobbySettings({
       lastSentCategoryPairRef.current = null;
       return;
     }
+    if (hasCategoryTransitionInProgress()) {
+      return;
+    }
     const syncTimer = setTimeout(() => {
-      setSelectedCategoryIds(serverSelectedCategoryIds);
+      setSelectedCategoryIds((prev) => {
+        if (prev.length === serverSelectedCategoryIds.length && prev.every((id, i) => id === serverSelectedCategoryIds[i])) {
+          return prev;
+        }
+        return serverSelectedCategoryIds;
+      });
     }, 0);
     if (serverSelectedCategoryIds.length === 2) {
       lastSentCategoryPairRef.current = `${serverSelectedCategoryIds[0]}|${serverSelectedCategoryIds[1]}`;
@@ -238,37 +258,12 @@ export function LobbySettings({
       lastSentCategoryPairRef.current = null;
     }
     return () => clearTimeout(syncTimer);
-  }, [mode, serverIsRandom, serverSelectedCategoryIds]);
-
-  // Auto-emit category pair changes via the same coalesced queue.
-  useEffect(() => {
-    if (!canEdit || serverIsRandom || mode !== "friendly") return;
-    if (selectedCategoryIds.length !== 2) return;
-
-    const selectedPairKey = `${selectedCategoryIds[0]}|${selectedCategoryIds[1]}`;
-    const serverPairKey =
-      serverSelectedCategoryIds.length === 2
-        ? `${serverSelectedCategoryIds[0]}|${serverSelectedCategoryIds[1]}`
-        : null;
-
-    if (selectedPairKey === serverPairKey) {
-      lastSentCategoryPairRef.current = selectedPairKey;
-      return;
-    }
-
-    if (lastSentCategoryPairRef.current === selectedPairKey) {
-      return;
-    }
-
-    lastSentCategoryPairRef.current = selectedPairKey;
-    queueChange({
-      friendlyCategoryAId: selectedCategoryIds[0],
-      friendlyCategoryBId: selectedCategoryIds[1],
-    });
-  }, [canEdit, serverIsRandom, mode, queueChange, selectedCategoryIds, serverSelectedCategoryIds]);
+  }, [hasCategoryTransitionInProgress, mode, serverIsRandom, serverSelectedCategoryIds]);
 
   useEffect(() => {
     if (!settingsErrorVersion) return;
+    if (settingsErrorVersion === handledErrorVersionRef.current) return;
+    handledErrorVersionRef.current = settingsErrorVersion;
 
     clearFlushTimer();
     clearInFlightTimeout();
@@ -311,6 +306,34 @@ export function LobbySettings({
         next = [...current, catId];
       } else {
         next = [current[1], catId];
+      }
+
+      // Emit category updates only from explicit user interactions.
+      // This avoids passive state-diff loops across multiple sockets/tabs.
+      if (next.length === 2) {
+        const selectedPairKey = `${next[0]}|${next[1]}`;
+        const pending = pendingChangesRef.current;
+        const inFlight = inFlightChangesRef.current;
+        const targetCategoryAId =
+          pending.friendlyCategoryAId ??
+          inFlight?.friendlyCategoryAId ??
+          (settings?.friendlyCategoryAId ?? null);
+        const targetCategoryBId =
+          pending.friendlyCategoryBId ??
+          inFlight?.friendlyCategoryBId ??
+          (settings?.friendlyCategoryBId ?? null);
+        const targetPairKey =
+          targetCategoryAId && targetCategoryBId
+            ? `${targetCategoryAId}|${targetCategoryBId}`
+            : null;
+
+        if (selectedPairKey !== targetPairKey) {
+          lastSentCategoryPairRef.current = selectedPairKey;
+          queueChange({
+            friendlyCategoryAId: next[0],
+            friendlyCategoryBId: next[1],
+          });
+        }
       }
       return next;
     });

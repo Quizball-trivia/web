@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { QuestionArena } from '@/features/game/components/QuestionArena';
 import { AnswerCard } from '@/features/game/components/AnswerCard';
@@ -28,6 +29,19 @@ export function ShotOverlay({
   onAnswer,
   disabled,
 }: ShotOverlayProps) {
+  // Precompute stable confetti properties to avoid jumps on re-render
+  const confetti = useMemo(
+    () =>
+      Array.from({ length: 12 }).map((_, i) => ({
+        angle: (i / 12) * 360,
+        rad: ((i / 12) * 360 * Math.PI) / 180,
+        dist: 80 + Math.random() * 60,
+        rotate: Math.random() * 720,
+        colorIndex: i % 6,
+      })),
+    []
+  );
+
   return (
     <AnimatePresence>
       {visible && (
@@ -81,20 +95,82 @@ export function ShotOverlay({
           )}
 
           {result === 'goal' && (
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: [0, 1.3, 1] }}
-              transition={{ duration: 0.6, ease: 'easeOut' }}
-              className="text-center"
-            >
-              <div className="text-6xl mb-4">⚽</div>
-              <div className="text-5xl font-black text-emerald-400 font-fun uppercase tracking-widest">
-                GOAAAL!
-              </div>
-              <div className="text-white/60 font-fun mt-2 text-lg">
-                The ball hits the back of the net!
-              </div>
-            </motion.div>
+            <div className="text-center relative">
+              {/* Radiating rings */}
+              {[0, 1, 2].map(i => (
+                <motion.div
+                  key={i}
+                  initial={{ scale: 0.3, opacity: 0.8 }}
+                  animate={{ scale: 3, opacity: 0 }}
+                  transition={{
+                    duration: 1.5,
+                    delay: i * 0.3,
+                    repeat: Infinity,
+                    ease: 'easeOut',
+                  }}
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                >
+                  <div className="size-20 rounded-full border-2 border-emerald-400/40" />
+                </motion.div>
+              ))}
+
+              {/* Confetti particles */}
+              {confetti.map((item, i) => (
+                <motion.div
+                  key={`confetti-${i}`}
+                  initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+                  animate={{
+                    x: Math.cos(item.rad) * item.dist,
+                    y: Math.sin(item.rad) * item.dist - 30,
+                    opacity: 0,
+                    scale: 0.3,
+                    rotate: item.rotate,
+                  }}
+                  transition={{ duration: 1.2, delay: 0.2, ease: 'easeOut' }}
+                  className="absolute left-1/2 top-1/2 -ml-1.5 -mt-1.5"
+                >
+                  <div
+                    className="size-3 rounded-sm"
+                    style={{
+                      backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#a855f7', '#1CB0F6'][item.colorIndex],
+                    }}
+                  />
+                </motion.div>
+              ))}
+
+              {/* Main content */}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: [0, 1.4, 1] }}
+                transition={{ duration: 0.7, ease: 'easeOut' }}
+              >
+                <motion.div
+                  animate={{ rotate: [0, -10, 10, -5, 5, 0] }}
+                  transition={{ duration: 0.6, delay: 0.5 }}
+                  className="text-7xl mb-4"
+                >
+                  ⚽
+                </motion.div>
+              </motion.div>
+
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.3, type: 'spring', stiffness: 200, damping: 12 }}
+              >
+                <div className="text-5xl font-black text-emerald-400 font-fun uppercase tracking-widest">
+                  GOAAAL!
+                </div>
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                  className="text-white/60 font-fun mt-2 text-lg"
+                >
+                  The ball hits the back of the net!
+                </motion.div>
+              </motion.div>
+            </div>
           )}
 
           {result === 'saved' && (

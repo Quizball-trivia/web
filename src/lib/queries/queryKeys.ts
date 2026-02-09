@@ -32,9 +32,12 @@ export const queryKeys = {
   },
   stats: {
     all: ["stats"] as const,
+    summary: () => [...queryKeys.stats.all, "summary"] as const,
     headToHead: (userAId: string, userBId: string) => {
       const [first, second] = [userAId, userBId].sort();
       return [...queryKeys.stats.all, "headToHead", first, second] as const;
     },
+    recentMatches: (limit: number) =>
+      [...queryKeys.stats.all, "recentMatches", limit] as const,
   },
 };

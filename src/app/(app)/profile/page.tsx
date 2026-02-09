@@ -6,11 +6,18 @@ import { usePlayer } from "@/contexts/PlayerContext";
 import { updateMe } from "@/lib/api/endpoints";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth.store";
+import { useMatchStatsSummary, useRecentMatches } from "@/lib/queries/stats.queries";
 
 export default function ProfilePage() {
   const { player, updateStats } = usePlayer();
   const authUser = useAuthStore((state) => state.user);
   const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
+  const {
+    data: recentMatches = [],
+    isLoading: recentMatchesLoading,
+    error: recentMatchesError,
+  } = useRecentMatches(20);
+  const { data: matchStatsSummary = null } = useMatchStatsSummary();
 
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -94,6 +101,26 @@ export default function ProfilePage() {
       avatarUrl={authUser?.avatar_url ?? null}
       favoriteClub={authUser?.favorite_club ?? null}
       preferredLanguage={authUser?.preferred_language ?? null}
+      matchStatsSummary={matchStatsSummary}
+      recentMatches={recentMatches.map((match) => ({
+        id: match.matchId,
+        mode: match.mode === "ranked" ? "Ranked" : "Friendly",
+        result:
+          match.result === "win"
+            ? "Win"
+            : match.result === "loss"
+              ? "Loss"
+              : "Draw",
+        rp: `${match.playerScore}-${match.opponentScore}`,
+        time: match.timeLabel,
+        opponent: match.opponent.username,
+      }))}
+      recentMatchesLoading={recentMatchesLoading}
+      recentMatchesError={
+        recentMatchesError instanceof Error
+          ? recentMatchesError.message
+          : null
+      }
       onNameChange={handleNameChange}
       onAvatarChange={handleAvatarChange}
       onClubChange={handleClubChange}

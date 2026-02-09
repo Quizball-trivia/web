@@ -385,6 +385,121 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/stats/recent-matches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get recent matches for authenticated user */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Recent matches list */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** Format: uuid */
+                                matchId: string;
+                                /** @enum {string} */
+                                mode: "friendly" | "ranked";
+                                /** @enum {string} */
+                                status: "completed" | "abandoned";
+                                /** @enum {string} */
+                                result: "win" | "loss" | "draw";
+                                /** Format: date-time */
+                                endedAt: string | null;
+                                playerScore: number;
+                                opponentScore: number;
+                                opponent: {
+                                    /** Format: uuid */
+                                    id: string | null;
+                                    username: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    isAi: boolean;
+                                };
+                            }[];
+                        };
+                    };
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/stats/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get aggregate match stats for authenticated user */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Aggregate stats summary */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StatsSummaryResponse"];
+                    };
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/lobbies/public": {
         parameters: {
             query?: never;
@@ -1903,6 +2018,42 @@ export interface components {
             total: number;
             /** Format: date-time */
             lastPlayedAt: string | null;
+        };
+        RecentMatchesResponse: {
+            items: {
+                /** Format: uuid */
+                matchId: string;
+                /** @enum {string} */
+                mode: "friendly" | "ranked";
+                /** @enum {string} */
+                status: "completed" | "abandoned";
+                /** @enum {string} */
+                result: "win" | "loss" | "draw";
+                /** Format: date-time */
+                endedAt: string | null;
+                playerScore: number;
+                opponentScore: number;
+                opponent: {
+                    /** Format: uuid */
+                    id: string | null;
+                    username: string;
+                    /** Format: uri */
+                    avatarUrl: string | null;
+                    isAi: boolean;
+                };
+            }[];
+        };
+        ModeStatsSummaryResponse: {
+            gamesPlayed: number;
+            wins: number;
+            losses: number;
+            draws: number;
+            winRate: number;
+        };
+        StatsSummaryResponse: {
+            overall: components["schemas"]["ModeStatsSummaryResponse"];
+            ranked: components["schemas"]["ModeStatsSummaryResponse"];
+            friendly: components["schemas"]["ModeStatsSummaryResponse"];
         };
         I18nField: {
             [key: string]: string;
