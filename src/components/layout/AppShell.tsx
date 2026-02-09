@@ -44,7 +44,7 @@ import { getSocket } from "@/lib/realtime/socket-client";
 const NAV_ITEMS = [
   { path: "/play", label: "Play", icon: Gamepad2 },
   { path: "/leaderboard", label: "Leaderboard", icon: Medal },
-  { path: "/play/friend?tab=browse", label: "Lobbies", icon: Users },
+  { path: "/play/friend?tab=browse", label: "Lobbies", icon: Users, exact: true },
   { path: "/events", label: "Events", icon: Trophy },
   { path: "/store", label: "Store", icon: Gem },
   { path: "/career", label: "Career", icon: Briefcase },
@@ -55,7 +55,7 @@ const NAV_ITEMS = [
 const MOBILE_NAV_ITEMS = [
   { path: "/", label: "Home", icon: Home },
   { path: "/leaderboard", label: "Leaderboard", icon: Medal },
-  { path: "/play/friend?tab=browse", label: "Lobbies", icon: Users },
+  { path: "/play/friend?tab=browse", label: "Lobbies", icon: Users, exact: true },
   { path: "/store", label: "Store", icon: Gem },
   { path: "/profile", label: "Profile", icon: User },
 ] as const;
@@ -112,10 +112,10 @@ export function AppShell({ children }: AppShellProps) {
     router.replace("/auth/welcome");
   };
 
-  const isPathActive = (path: string) => {
+  const isPathActive = (path: string, exact?: boolean) => {
     if (path === "/") return currentPath === "/";
-    // Strip query params for comparison
     const basePath = path.split("?")[0];
+    if (exact) return currentPath === basePath;
     return currentPath === basePath || currentPath.startsWith(`${basePath}/`);
   };
 
@@ -192,7 +192,7 @@ export function AppShell({ children }: AppShellProps) {
           <ScrollArea className="flex-1 py-6">
             <nav className="space-y-2 px-3">
               {NAV_ITEMS.map((item) => {
-                const isActive = isPathActive(item.path);
+                const isActive = isPathActive(item.path, 'exact' in item ? item.exact : undefined);
                 return (
                   <Link
                     key={item.path}
@@ -626,7 +626,7 @@ export function AppShell({ children }: AppShellProps) {
           <div className="fixed bottom-0 left-0 right-0 z-20 bg-background/80 backdrop-blur-lg border-t border-border/50">
             <nav className="flex justify-around px-2 py-2">
               {MOBILE_NAV_ITEMS.map((item) => {
-                const isActive = isPathActive(item.path);
+                const isActive = isPathActive(item.path, 'exact' in item ? item.exact : undefined);
                 return (
                   <Link
                     key={item.path}

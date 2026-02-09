@@ -75,8 +75,9 @@ export function PitchVisualization({ playerPosition, playerAvatarUrl, opponentAv
 
           {/* Zone bands: DEF 0-20, MID 21-45, ATT 46-70, BOX 71-100 */}
           <rect x="0" y="0" width="100" height="230" fill="rgba(156,163,175,0.05)" rx="12" />
-          <rect x="355" y="0" width="145" height="230" fill="rgba(255,75,75,0.06)" rx="12" />
-          <rect x="230" y="0" width="125" height="230" fill="rgba(255,150,0,0.04)" />
+          <rect x="100" y="0" width="125" height="230" fill="rgba(56,189,248,0.03)" />
+          <rect x="225" y="0" width="125" height="230" fill="rgba(255,150,0,0.04)" />
+          <rect x="350" y="0" width="150" height="230" fill="rgba(255,75,75,0.06)" rx="12" />
 
           {/* Pitch markings */}
           {/* Outer border */}

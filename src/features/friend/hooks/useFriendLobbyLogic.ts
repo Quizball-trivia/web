@@ -47,6 +47,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   const createdRef = useRef(false);
   const leavingRef = useRef(false);
   const prevOpponentIdRef = useRef<string | null>(null);
+  const prevLobbyIdRef = useRef<string | null>(null);
   const initActionRef = useRef<string | null>(null);
   const startMatchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // visibilityRetryRef and related state removed — coalesced debounce in LobbySettings handles this
@@ -128,7 +129,15 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   useEffect(() => {
     if (!lobby || leavingRef.current) {
       prevOpponentIdRef.current = null;
+      prevLobbyIdRef.current = null;
       return;
+    }
+
+    // Reset opponent tracking when lobby identity changes
+    const currentLobbyId = lobby.lobbyId;
+    if (prevLobbyIdRef.current !== currentLobbyId) {
+      prevOpponentIdRef.current = null;
+      prevLobbyIdRef.current = currentLobbyId;
     }
 
     const prevOpponentId = prevOpponentIdRef.current;
@@ -143,7 +152,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     }
 
     prevOpponentIdRef.current = currentOpponentId;
-  }, [lobby, opponent?.userId]);
+  }, [lobby, opponent?.userId, lobby?.lobbyId]);
 
   useEffect(() => {
     if (!lobby) return;
