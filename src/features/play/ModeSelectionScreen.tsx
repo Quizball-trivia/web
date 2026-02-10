@@ -184,6 +184,15 @@ export function ModeSelectionScreen({
               </div>
             </div>
           </div>
+          {process.env.NODE_ENV === 'development' && (
+            <Link
+              href="/dev/match"
+              onClick={(e) => e.stopPropagation()}
+              className="mt-3 inline-block text-[10px] font-bold text-yellow-500/60 hover:text-yellow-400 transition-colors uppercase tracking-widest"
+            >
+              Dev Quick Match →
+            </Link>
+          )}
         </div>
       </motion.div>
 

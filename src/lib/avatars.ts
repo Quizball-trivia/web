@@ -39,6 +39,24 @@ export function getDiceBearAvatarUrl(seed: string, size = 128, background = DEFA
   return `https://api.dicebear.com/7.x/big-smile/svg?seed=${encodedSeed}&backgroundColor=${encodedBackground}&size=${size}`;
 }
 
+/**
+ * Resolve an avatar value to a renderable URL.
+ * Supports http(s), data:image, and path URLs; falls back to DiceBear for seeds/emoji.
+ */
+export function resolveAvatarUrl(value: string | null | undefined, fallbackSeed: string, size = 96): string {
+  const raw = value?.trim();
+  if (!raw) return getDiceBearAvatarUrl(fallbackSeed, size);
+  if (
+    raw.startsWith('http://') ||
+    raw.startsWith('https://') ||
+    raw.startsWith('data:image/') ||
+    raw.startsWith('/')
+  ) {
+    return raw;
+  }
+  return getDiceBearAvatarUrl(raw, size);
+}
+
 export function isGoogleAvatarUrl(url: string | null | undefined) {
   if (!url) return false;
   return /googleusercontent\.com/i.test(url);

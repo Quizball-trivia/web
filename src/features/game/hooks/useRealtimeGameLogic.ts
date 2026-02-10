@@ -87,10 +87,7 @@ export function useRealtimeGameLogic() {
     : null;
   const opponentAnswered = match?.opponentAnswered ?? false;
 
-  const roundResolved = Boolean(
-    roundResult ||
-      (answerAck && (answerAck.oppAnswered || opponentAnswered))
-  );
+  const roundResolved = Boolean(roundResult);
 
   useEffect(() => {
     if (!roundResolved || !showOptions || matchPaused) return;

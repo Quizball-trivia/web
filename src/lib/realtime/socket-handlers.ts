@@ -7,6 +7,7 @@ import type {
   LobbyState,
   MatchAnswerAckPayload,
   MatchFinalResultsPayload,
+  MatchStatePayload,
   MatchOpponentAnsweredPayload,
   MatchOpponentDisconnectedPayload,
   RankedMatchFoundPayload,
@@ -38,6 +39,7 @@ export function registerSocketHandlers(): void {
   socket.off('draft:banned');
   socket.off('draft:complete');
   socket.off('match:start');
+  socket.off('match:state');
   socket.off('match:question');
   socket.off('match:opponent_answered');
   socket.off('match:answer_ack');
@@ -120,8 +122,20 @@ export function registerSocketHandlers(): void {
   });
 
   socket.on('match:start', (data: MatchStartPayload) => {
-    logger.info('Socket event match:start', { matchId: data.matchId, opponentId: data.opponent.id });
+    logger.info('Socket event match:start', { matchId: data.matchId, engine: data.engine, opponentId: data.opponent.id });
     store.setMatchStart(data);
+  });
+
+  socket.on('match:state', (data: MatchStatePayload) => {
+    logger.info('Socket event match:state', {
+      matchId: data.matchId,
+      phase: data.phase,
+      half: data.half,
+      sharedPossession: data.sharedPossession,
+      phaseKind: data.phaseKind,
+      phaseRound: data.phaseRound,
+    });
+    store.setMatchState(data);
   });
 
   socket.on('match:question', (data: MatchQuestionPayload) => {

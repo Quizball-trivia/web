@@ -3,6 +3,7 @@
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { X } from 'lucide-react';
 
 interface PossessionHUDProps {
   playerGoals: number;
@@ -16,7 +17,7 @@ interface PossessionHUDProps {
   questionInHalf: number;
   zone: string;
   zoneColor: string;
-  momentum: number;
+  onQuit?: () => void;
 }
 
 export function PossessionHUD({
@@ -31,7 +32,7 @@ export function PossessionHUD({
   questionInHalf,
   zone,
   zoneColor,
-  momentum,
+  onQuit,
 }: PossessionHUDProps) {
   const isUrgent = timeRemaining <= 3;
 
@@ -92,6 +93,16 @@ export function PossessionHUD({
 
       {/* Progress bar + zone pill */}
       <div className="px-3 flex items-center gap-3">
+        {onQuit && (
+          <button
+            onClick={onQuit}
+            className="shrink-0 p-1.5 rounded-full text-white/40 hover:text-white/70 hover:bg-white/5 transition-colors"
+            title="Leave match"
+          >
+            <X className="size-5" />
+          </button>
+        )}
+
         {/* Half progress — green gradient segments like MatchScoreHUD */}
         <div className="flex gap-1.5 flex-1">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -134,46 +145,6 @@ export function PossessionHUD({
             {zone}
           </motion.div>
         </AnimatePresence>
-      </div>
-
-      {/* Momentum meter */}
-      <div className="px-3 flex items-center gap-2">
-        <span className="text-[9px] font-bold uppercase tracking-widest text-white/25 shrink-0">
-          MTM
-        </span>
-        <div className="flex gap-1 flex-1">
-          {Array.from({ length: 6 }).map((_, i) => {
-            const filled = i < momentum;
-            const isHot = momentum >= 4;
-            return (
-              <motion.div
-                key={i}
-                className={cn(
-                  'h-2 flex-1 rounded-full transition-colors duration-300',
-                  filled
-                    ? isHot ? 'bg-orange-400' : 'bg-emerald-400'
-                    : 'bg-white/10'
-                )}
-                animate={filled && isHot ? { opacity: [0.7, 1, 0.7] } : { opacity: 1 }}
-                transition={filled && isHot ? { repeat: Infinity, duration: 0.8, delay: i * 0.1 } : {}}
-                style={filled ? {
-                  boxShadow: isHot
-                    ? '0 0 6px rgba(251,146,60,0.5)'
-                    : '0 0 4px rgba(52,211,153,0.3)',
-                } : undefined}
-              />
-            );
-          })}
-        </div>
-        {momentum >= 4 && (
-          <motion.span
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="text-[9px] font-black uppercase tracking-wider text-orange-400"
-          >
-            SHOT!
-          </motion.span>
-        )}
       </div>
     </div>
   );

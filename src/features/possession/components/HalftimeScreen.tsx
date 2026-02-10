@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { Flame, Shield, Zap } from 'lucide-react';
+import { Flame, Shield, Zap, Info } from 'lucide-react';
+import { PitchVisualization } from './PitchVisualization';
 
 export type TacticalCard = 'press-high' | 'play-safe' | 'all-in';
 
@@ -16,6 +17,10 @@ interface HalftimeScreenProps {
   opponentName: string;
   playerAvatarUrl: string;
   opponentAvatarUrl: string;
+  playerPosition: number;
+  playerMomentum: number;
+  myReady: boolean;
+  opponentReady: boolean;
   onSelectTactic: (tactic: TacticalCard) => void;
 }
 
@@ -26,7 +31,8 @@ const TACTICS = [
     id: 'press-high' as TacticalCard,
     name: 'Press High',
     description: 'Faster pressure, higher risk',
-    effects: ['1.25x speed bonus', '−12 wrong penalty'],
+    whatChanges: 'Reach shooting chances faster',
+    tooltip: 'Your speed bonus increases, pushing you forward quickly — but mistakes cost more ground.',
     color: '#FF9600',
     Icon: Flame,
   },
@@ -34,7 +40,8 @@ const TACTICS = [
     id: 'play-safe' as TacticalCard,
     name: 'Play Safe',
     description: 'Fewer mistakes, slower play',
-    effects: ['−8 wrong penalty', '+9 correct gain'],
+    whatChanges: 'Lose less ground on mistakes',
+    tooltip: "Wrong answers won't push you back as far, but you'll advance more slowly when correct.",
     color: '#1CB0F6',
     Icon: Shield,
   },
@@ -42,11 +49,61 @@ const TACTICS = [
     id: 'all-in' as TacticalCard,
     name: 'All In',
     description: 'Everything to win — or lose',
-    effects: ['+14/−14 swings', 'Shot at 3 momentum'],
+    whatChanges: 'One mistake can decide the match',
+    tooltip: 'Huge swings in both directions. You can shoot at lower momentum, but errors are devastating.',
     color: '#FF4B4B',
     Icon: Zap,
   },
 ] as const;
+
+// ─── Circular Timer ──────────────────────────────────────────
+function CircularTimer({ timeLeft, isUrgent }: { timeLeft: number; isUrgent: boolean }) {
+  const radius = 22;
+  const circumference = 2 * Math.PI * radius;
+  const progress = timeLeft / HALFTIME_DURATION;
+  const offset = circumference * (1 - progress);
+
+  return (
+    <motion.div
+      animate={isUrgent ? { scale: [1, 1.08, 1] } : {}}
+      transition={isUrgent ? { repeat: Infinity, duration: 0.6 } : {}}
+      className="relative flex items-center justify-center"
+    >
+      <svg width="56" height="56" className="-rotate-90">
+        {/* Track */}
+        <circle
+          cx="28"
+          cy="28"
+          r={radius}
+          fill="none"
+          stroke="rgba(255,255,255,0.1)"
+          strokeWidth="4"
+        />
+        {/* Progress */}
+        <motion.circle
+          cx="28"
+          cy="28"
+          r={radius}
+          fill="none"
+          stroke={isUrgent ? '#EF4444' : '#58CC02'}
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+        />
+      </svg>
+      <span
+        className={cn(
+          'absolute text-sm font-black tabular-nums font-fun',
+          isUrgent ? 'text-red-400' : 'text-white'
+        )}
+      >
+        {timeLeft}
+      </span>
+    </motion.div>
+  );
+}
 
 export function HalftimeScreen({
   visible,
@@ -56,50 +113,67 @@ export function HalftimeScreen({
   opponentName,
   playerAvatarUrl,
   opponentAvatarUrl,
+  playerPosition,
+  playerMomentum,
+  myReady,
+  opponentReady,
   onSelectTactic,
 }: HalftimeScreenProps) {
   const [selected, setSelected] = useState<TacticalCard>('play-safe');
   const [timeLeft, setTimeLeft] = useState(HALFTIME_DURATION);
+  const [hoveredTactic, setHoveredTactic] = useState<TacticalCard | null>(null);
+  const [showHint] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return !localStorage.getItem('halftime-hint-seen');
+    }
+    return true;
+  });
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasFiredRef = useRef(false);
 
-  const startTimer = useCallback(() => {
-    setTimeLeft(HALFTIME_DURATION);
-    hasFiredRef.current = false;
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          if (timerRef.current) clearInterval(timerRef.current);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }, []);
-
-  // Start timer when becoming visible
   useEffect(() => {
+    let resetTimer: ReturnType<typeof setTimeout> | null = null;
     if (visible) {
-      setSelected('play-safe');
-      startTimer();
+      // Prevent stale 0s state from auto-submitting before the timer resets.
+      hasFiredRef.current = true;
+      resetTimer = setTimeout(() => {
+        setTimeLeft(HALFTIME_DURATION);
+        hasFiredRef.current = false;
+      }, 0);
+      if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            if (timerRef.current) clearInterval(timerRef.current);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      if (showHint && typeof window !== 'undefined') {
+        localStorage.setItem('halftime-hint-seen', 'true');
+      }
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = null;
+      hasFiredRef.current = true;
+      resetTimer = setTimeout(() => setTimeLeft(HALFTIME_DURATION), 0);
     }
     return () => {
+      if (resetTimer) clearTimeout(resetTimer);
       if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = null;
     };
-  }, [visible, startTimer]);
+  }, [visible, showHint]);
 
-  // Fire callback when timer expires
   useEffect(() => {
+    if (!visible) return;
     if (timeLeft === 0 && !hasFiredRef.current) {
       hasFiredRef.current = true;
       onSelectTactic(selected);
     }
-  }, [timeLeft, selected, onSelectTactic]);
+  }, [visible, timeLeft, selected, onSelectTactic]);
 
-  const progress = timeLeft / HALFTIME_DURATION;
   const isUrgent = timeLeft <= 5;
 
   return (
@@ -109,175 +183,259 @@ export function HalftimeScreen({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 px-4"
+          className="fixed inset-0 z-50 flex flex-col items-center overflow-hidden"
         >
-          <motion.div
-            initial={{ scale: 0.85, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 22 }}
-            className="w-full max-w-md flex flex-col items-center font-fun"
-          >
-            {/* Header */}
-            <div className="mb-5 text-center">
-              <div className="text-white/40 text-[10px] uppercase tracking-[0.35em] font-bold mb-1">
-                Half Time
-              </div>
-              <div className="text-xl font-black text-white uppercase tracking-wide">
-                End of 1st Half
+          {/* ─── Layer 1: Pitch (clearly visible) ─── */}
+          <div className="absolute inset-0">
+            <div className="absolute inset-0 flex items-center justify-center blur-[2px] scale-[1.02]">
+              <div className="w-full max-w-lg">
+                <PitchVisualization
+                  playerPosition={playerPosition}
+                  playerAvatarUrl={playerAvatarUrl}
+                  opponentAvatarUrl={opponentAvatarUrl}
+                  myMomentum={playerMomentum}
+                />
               </div>
             </div>
+            {/* Light dark overlay — pitch stays visible */}
+            <div className="absolute inset-0 bg-black/50" />
+            {/* Soft vignette (edges only) */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 100%)',
+              }}
+            />
+          </div>
 
-            {/* Score */}
-            <div className="flex items-center justify-center gap-5 mb-7">
-              <div className="flex flex-col items-center gap-1.5">
-                <Avatar className="size-14 border-[3px] border-[#1CB0F6]">
+          {/* ─── Layer 2: UI Content ─── */}
+          <div className="relative z-10 w-full max-w-lg flex flex-col items-center font-fun pt-8 px-4">
+
+            {/* ── Broadcast-style score bar ── */}
+            <motion.div
+              initial={{ y: -30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 22 }}
+              className="flex items-center gap-4 bg-black/50 backdrop-blur-md rounded-2xl px-5 py-3 border border-white/10 mb-3"
+            >
+              {/* Player */}
+              <div className="flex items-center gap-2.5">
+                <Avatar className="size-10 border-2 border-[#1CB0F6]">
                   <AvatarImage src={playerAvatarUrl} />
-                  <AvatarFallback className="text-xs font-bold bg-[#1CB0F6]/20 text-[#1CB0F6]">
+                  <AvatarFallback className="text-[10px] font-bold bg-[#1CB0F6]/20 text-[#1CB0F6]">
                     {playerName.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-[10px] text-white/50 uppercase tracking-widest font-bold">
-                  {playerName}
-                </span>
+                <span className="text-xs font-bold text-white/80">{playerName}</span>
               </div>
 
+              {/* Score + Timer */}
               <div className="flex items-center gap-3">
-                <span className="text-5xl font-black text-white tabular-nums">{playerGoals}</span>
-                <span className="text-xl text-white/25 font-black">–</span>
-                <span className="text-5xl font-black text-white tabular-nums">{opponentGoals}</span>
+                <span className="text-4xl font-black text-white tabular-nums">{playerGoals}</span>
+                <CircularTimer timeLeft={timeLeft} isUrgent={isUrgent} />
+                <span className="text-4xl font-black text-white tabular-nums">{opponentGoals}</span>
               </div>
 
-              <div className="flex flex-col items-center gap-1.5">
-                <Avatar className="size-14 border-[3px] border-[#FF4B4B]">
+              {/* Opponent */}
+              <div className="flex items-center gap-2.5">
+                <span className="text-xs font-bold text-white/80">{opponentName}</span>
+                <Avatar className="size-10 border-2 border-[#FF4B4B]">
                   <AvatarImage src={opponentAvatarUrl} />
-                  <AvatarFallback className="text-xs font-bold bg-[#FF4B4B]/20 text-[#FF4B4B]">
+                  <AvatarFallback className="text-[10px] font-bold bg-[#FF4B4B]/20 text-[#FF4B4B]">
                     {opponentName.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-[10px] text-white/50 uppercase tracking-widest font-bold">
-                  {opponentName}
-                </span>
               </div>
-            </div>
+            </motion.div>
 
-            {/* Tactic heading */}
-            <div className="text-white/50 text-[11px] uppercase tracking-[0.25em] font-bold mb-4">
+            {/* Half Time label */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="px-4 py-1 rounded-full bg-white/10 backdrop-blur-sm text-[10px] font-black uppercase tracking-[0.3em] text-white/60 mb-8"
+            >
+              Half Time
+            </motion.div>
+
+            {/* ── Tactic heading ── */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="text-white/60 text-xs uppercase tracking-[0.25em] font-bold mb-3"
+            >
               Choose Your Tactic
-            </div>
+            </motion.div>
 
-            {/* Tactical Cards */}
-            <div className="flex gap-3 w-full mb-6">
+            {/* One-time hint */}
+            {showHint && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-3 px-3 py-2 rounded-lg bg-blue-400/10 backdrop-blur-sm border border-blue-400/20 text-center"
+              >
+                <div className="text-[11px] text-blue-300/90 font-medium leading-relaxed">
+                  Your tactic changes how fast you attack and how risky mistakes are.
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Floating Tactic Cards ── */}
+            <div className="flex gap-3 w-full">
               {TACTICS.map((tactic, i) => {
                 const isSelected = selected === tactic.id;
                 return (
                   <motion.button
                     key={tactic.id}
-                    initial={{ opacity: 0, y: 24, scale: 0.92 }}
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{
                       type: 'spring',
                       stiffness: 300,
                       damping: 22,
-                      delay: 0.15 + i * 0.08,
+                      delay: 0.2 + i * 0.07,
                     }}
                     onClick={() => setSelected(tactic.id)}
+                    onMouseEnter={() => setHoveredTactic(tactic.id)}
+                    onMouseLeave={() => setHoveredTactic(null)}
                     className={cn(
-                      'flex-1 flex flex-col items-center gap-2.5 rounded-2xl p-4 pt-5 transition-all duration-200 cursor-pointer',
-                      'active:translate-y-[2px] active:border-b-2',
+                      'relative flex-1 flex flex-col items-center gap-2.5 rounded-2xl px-4 py-5 transition-all duration-200 cursor-pointer',
+                      'active:translate-y-[1px]',
                       isSelected
-                        ? 'border-2 border-b-4'
-                        : 'bg-[#1B2F36] border-2 border-transparent border-b-4 border-b-[#0D1B21] opacity-50'
+                        ? 'border-2 border-b-4 scale-[1.03]'
+                        : 'border-2 border-b-4 opacity-65'
                     )}
-                    style={
-                      isSelected
-                        ? {
-                            backgroundColor: `${tactic.color}10`,
-                            borderColor: `${tactic.color}80`,
-                            borderBottomColor: `${tactic.color}50`,
-                            boxShadow: `0 0 24px ${tactic.color}25, inset 0 1px 0 ${tactic.color}15`,
-                          }
-                        : undefined
-                    }
+                    style={{
+                      backgroundColor: isSelected ? '#1B2F36' : '#151F24',
+                      borderColor: isSelected ? `${tactic.color}` : '#2a3a42',
+                      borderBottomColor: isSelected ? `${tactic.color}90` : '#1a2a30',
+                      boxShadow: isSelected
+                        ? `0 0 24px ${tactic.color}35, inset 0 1px 0 rgba(255,255,255,0.06)`
+                        : 'inset 0 1px 0 rgba(255,255,255,0.04)',
+                    }}
                   >
-                    {/* Icon */}
+                    {/* Icon — chunky Duolingo-style badge */}
                     <div
-                      className="size-12 rounded-xl flex items-center justify-center border-2"
+                      className="size-14 rounded-2xl flex items-center justify-center border-b-4 transition-all duration-200"
                       style={{
-                        backgroundColor: `${tactic.color}20`,
-                        borderColor: `${tactic.color}40`,
+                        backgroundColor: isSelected ? `${tactic.color}40` : `${tactic.color}25`,
+                        borderBottomColor: isSelected ? `${tactic.color}70` : `${tactic.color}35`,
                       }}
                     >
                       <tactic.Icon
-                        className="size-6"
-                        style={{ color: tactic.color }}
-                        strokeWidth={2.5}
+                        className="size-7"
+                        style={{ color: isSelected ? tactic.color : `${tactic.color}CC` }}
+                        strokeWidth={2.8}
+                        fill={isSelected ? `${tactic.color}40` : `${tactic.color}15`}
                       />
                     </div>
 
                     {/* Name */}
                     <div
                       className={cn(
-                        'text-[13px] font-black uppercase tracking-wide leading-tight',
-                        isSelected ? 'text-white' : 'text-white/70'
+                        'text-[15px] font-black uppercase tracking-wide leading-tight',
+                        isSelected ? 'text-white' : 'text-white/80'
                       )}
                     >
                       {tactic.name}
                     </div>
 
-                    {/* Description */}
-                    <div className="text-[11px] font-semibold text-[#56707A] leading-snug text-center">
+                    {/* Emotional description */}
+                    <div className={cn(
+                      'text-[12px] font-semibold leading-relaxed text-center',
+                      isSelected ? 'text-white/70' : 'text-white/50'
+                    )}>
                       {tactic.description}
                     </div>
 
-                    {/* Effects */}
-                    <div className="flex flex-col gap-0.5 w-full">
-                      {tactic.effects.map((effect, j) => (
-                        <div
-                          key={j}
-                          className="text-[9px] font-bold uppercase tracking-wider text-center"
-                          style={{ color: isSelected ? `${tactic.color}AA` : '#56707A80' }}
+                    {/* "What changes" — only on selected card */}
+                    <AnimatePresence>
+                      {isSelected && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="w-full overflow-hidden"
                         >
-                          {effect}
-                        </div>
-                      ))}
+                          <div
+                            className="text-[10px] font-bold text-center py-1.5 px-2.5 mt-1.5 rounded-lg"
+                            style={{
+                              color: tactic.color,
+                              backgroundColor: `${tactic.color}18`,
+                            }}
+                          >
+                            → {tactic.whatChanges}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Info tooltip trigger */}
+                    <div className="absolute top-1.5 right-1.5">
+                      <div className="relative">
+                        <Info
+                          className="size-3.5 opacity-30 hover:opacity-60 transition-opacity"
+                          style={{ color: isSelected ? tactic.color : '#56707A' }}
+                          strokeWidth={2}
+                        />
+                        {hoveredTactic === tactic.id && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="absolute top-5 right-0 w-44 p-2 rounded-lg bg-black/90 backdrop-blur-sm border border-white/15 shadow-xl z-50 pointer-events-none"
+                          >
+                            <div className="text-[10px] text-white/90 leading-relaxed">
+                              {tactic.tooltip}
+                            </div>
+                          </motion.div>
+                        )}
+                      </div>
                     </div>
                   </motion.button>
                 );
               })}
             </div>
 
-            {/* Timer bar */}
-            <div className="w-full max-w-xs">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-white/30">
-                  2nd half in
-                </span>
-                <motion.span
-                  animate={isUrgent ? { scale: [1, 1.15, 1] } : {}}
-                  transition={isUrgent ? { repeat: Infinity, duration: 0.5 } : {}}
-                  className={cn(
-                    'text-sm font-black tabular-nums',
-                    isUrgent ? 'text-red-400' : 'text-white/60'
-                  )}
-                >
-                  {timeLeft}s
-                </motion.span>
-              </div>
-              <div className="h-2.5 rounded-full bg-white/10 overflow-hidden">
-                <motion.div
-                  className="h-full rounded-full"
-                  initial={{ width: '100%' }}
-                  animate={{ width: `${progress * 100}%` }}
-                  transition={{ duration: 0.4, ease: 'easeOut' }}
-                  style={{
-                    background: isUrgent
-                      ? 'linear-gradient(90deg, #EF4444, #DC2626)'
-                      : 'linear-gradient(90deg, #58CC02, #46A302)',
-                  }}
-                />
-              </div>
-            </div>
-          </motion.div>
+            {/* Confirm / Waiting button */}
+            {!myReady ? (
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                onClick={() => {
+                  if (timerRef.current) clearInterval(timerRef.current);
+                  if (!hasFiredRef.current) {
+                    hasFiredRef.current = true;
+                    onSelectTactic(selected);
+                  }
+                }}
+                className="mt-3 px-10 py-3.5 rounded-xl font-black text-[15px] uppercase tracking-wider text-white bg-[#58CC02] border-2 border-[#58CC02] border-b-4 border-b-[#46a302] hover:bg-[#4ebc02] active:translate-y-[2px] active:border-b-2 transition-all shadow-[0_0_20px_rgba(88,204,2,0.2)]"
+              >
+                Ready ✓
+              </motion.button>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-3 flex flex-col items-center gap-2"
+              >
+                <div className="px-10 py-3.5 rounded-xl font-black text-[15px] uppercase tracking-wider text-white/50 bg-white/10 border-2 border-white/15 border-b-4 border-b-white/10 cursor-default">
+                  ✓ Ready
+                </div>
+                {!opponentReady && (
+                  <motion.div
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                    className="text-[11px] font-bold text-white/40 uppercase tracking-widest"
+                  >
+                    Waiting for opponent…
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

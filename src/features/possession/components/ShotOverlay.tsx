@@ -19,6 +19,12 @@ interface ShotOverlayProps {
 }
 
 const LABELS = ['A', 'B', 'C', 'D'];
+const CONFETTI_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#a855f7', '#1CB0F6'] as const;
+
+function seededUnit(seed: number): number {
+  const x = Math.sin(seed * 9999.77) * 10000;
+  return x - Math.floor(x);
+}
 
 export function ShotOverlay({
   visible,
@@ -35,8 +41,8 @@ export function ShotOverlay({
       Array.from({ length: 12 }).map((_, i) => ({
         angle: (i / 12) * 360,
         rad: ((i / 12) * 360 * Math.PI) / 180,
-        dist: 80 + Math.random() * 60,
-        rotate: Math.random() * 720,
+        dist: 80 + seededUnit(i + 11) * 60,
+        rotate: seededUnit(i + 97) * 720,
         colorIndex: i % 6,
       })),
     []
@@ -132,7 +138,7 @@ export function ShotOverlay({
                   <div
                     className="size-3 rounded-sm"
                     style={{
-                      backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#a855f7', '#1CB0F6'][item.colorIndex],
+                      backgroundColor: CONFETTI_COLORS[item.colorIndex],
                     }}
                   />
                 </motion.div>
