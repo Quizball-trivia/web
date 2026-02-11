@@ -5,6 +5,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { X } from 'lucide-react';
 import type { Phase } from '../types/possession.types';
 
+function getInitials(name: string, fallback: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) return fallback;
+  return trimmed.split(/\s+/).map((s) => s[0]).join('').slice(0, 2).toUpperCase();
+}
+
 interface ShotHUDProps {
   playerGoals: number;
   opponentGoals: number;
@@ -48,7 +54,7 @@ export function ShotHUD({
         <div className="flex items-center gap-3 flex-1 min-w-0 rounded-2xl bg-[#172333]/85 border border-white/10 px-3 py-2.5">
             <Avatar className="size-11 border-2 border-[#1CB0F6] shrink-0">
               <AvatarImage src={playerAvatarUrl} />
-              <AvatarFallback className="text-xs font-bold bg-[#1CB0F6]/20 text-[#1CB0F6]">YO</AvatarFallback>
+              <AvatarFallback className="text-xs font-bold bg-[#1CB0F6]/20 text-[#1CB0F6]">{getInitials(playerName, 'YO')}</AvatarFallback>
             </Avatar>
             <div className="min-w-0">
               <div className="text-xs font-bold text-white/85 truncate">{playerName}</div>
@@ -68,7 +74,7 @@ export function ShotHUD({
             transition={timeRemaining <= 3 ? { repeat: Infinity, duration: 0.6 } : {}}
             className={`text-3xl font-black tabular-nums transition-colors duration-200 ${
               phase === 'shot'
-                ? timeRemaining <= 3 ? 'text-red-500 animate-pulse' : 'text-white'
+                ? timeRemaining <= 3 ? 'text-red-500' : 'text-white'
                 : 'text-white/40'
             }`}
           >
@@ -85,7 +91,7 @@ export function ShotHUD({
           </div>
           <Avatar className="size-11 border-2 border-[#FF4B4B] shrink-0">
             <AvatarImage src={opponentAvatarUrl} />
-            <AvatarFallback className="text-xs font-bold bg-[#FF4B4B]/20 text-[#FF4B4B]">CP</AvatarFallback>
+            <AvatarFallback className="text-xs font-bold bg-[#FF4B4B]/20 text-[#FF4B4B]">{getInitials(opponentName, 'OP')}</AvatarFallback>
           </Avatar>
         </div>
       </div>

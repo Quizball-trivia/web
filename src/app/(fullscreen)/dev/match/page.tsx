@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePlayer } from '@/contexts/PlayerContext';
 import { useAuthStore } from '@/stores/auth.store';
@@ -11,6 +11,8 @@ import { RealtimePossessionMatchScreen } from '@/features/possession/RealtimePos
 import { DevOverlay } from '@/features/dev/DevOverlay';
 import { resolveAvatarUrl } from '@/lib/avatars';
 import { logger } from '@/utils/logger';
+
+const START_TIMEOUT_MS = 8_000;
 
 export default function DevMatchPage() {
   if (process.env.NODE_ENV !== 'development') {
@@ -31,11 +33,35 @@ function DevMatchContent() {
   const match = useRealtimeMatchStore((s) => s.match);
   const finalResults = match?.finalResults ?? null;
   const [starting, setStarting] = useState(false);
+  const startTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Reset starting state once a match arrives or on unmount
+  useEffect(() => {
+    if (match) {
+      setStarting(false);
+      if (startTimerRef.current) {
+        clearTimeout(startTimerRef.current);
+        startTimerRef.current = null;
+      }
+    }
+    return () => {
+      if (startTimerRef.current) {
+        clearTimeout(startTimerRef.current);
+        startTimerRef.current = null;
+      }
+    };
+  }, [match]);
 
   const startMatch = useCallback(() => {
     setStarting(true);
     logger.info('Dev: emitting dev:quick_match');
     getSocket().emit('dev:quick_match');
+
+    // Fallback: reset if server never responds
+    startTimerRef.current = setTimeout(() => {
+      setStarting(false);
+      logger.warn('Dev: quick_match start timed out');
+    }, START_TIMEOUT_MS);
   }, []);
 
   const playAgain = useCallback(() => {

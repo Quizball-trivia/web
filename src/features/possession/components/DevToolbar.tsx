@@ -10,6 +10,8 @@ interface DevToolbarProps {
 }
 
 export function DevToolbar({ phase, onSkipToShot, onSkipToHalftime, onSkipToPenalties }: DevToolbarProps) {
+  if (process.env.NODE_ENV !== 'development') return null;
+
   const hidden = phase === 'fulltime' || phase === 'halftime' || phase === 'penalty-transition' || phase.startsWith('penalty');
   if (hidden) return null;
 

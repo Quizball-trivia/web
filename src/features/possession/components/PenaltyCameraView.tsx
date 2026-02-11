@@ -1,5 +1,6 @@
 'use client';
 
+import { useId } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PitchVisualization } from './PitchVisualization';
 
@@ -35,6 +36,13 @@ export function PenaltyCameraView({
   phase,
   playerPosition,
 }: PenaltyCameraViewProps) {
+  const uid = useId();
+  const kClipId = `kClip-${uid}`;
+  const sClipId = `sClip-${uid}`;
+  const glowShooterId = `penGlowShooter-${uid}`;
+  const glowKeeperId = `penGlowKeeper-${uid}`;
+  const netPatternId = `penaltyNet-${uid}`;
+
   const shooterColor = isPlayerShooter ? '#1CB0F6' : '#FF4B4B';
   const keeperColor = isPlayerShooter ? '#FF4B4B' : '#1CB0F6';
 
@@ -82,7 +90,7 @@ export function PenaltyCameraView({
           style={{ transform: 'scale(2.5) translateX(-35%)' }}
         >
           <defs>
-            <filter id="penGlowShooter" x="-50%" y="-50%" width="200%" height="200%">
+            <filter id={glowShooterId} x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="3" />
               <feFlood floodColor={shooterColor} floodOpacity="0.7" />
               <feComposite in2="SourceAlpha" operator="in" />
@@ -91,7 +99,7 @@ export function PenaltyCameraView({
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-            <filter id="penGlowKeeper" x="-50%" y="-50%" width="200%" height="200%">
+            <filter id={glowKeeperId} x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="3" />
               <feFlood floodColor={keeperColor} floodOpacity="0.7" />
               <feComposite in2="SourceAlpha" operator="in" />
@@ -101,7 +109,7 @@ export function PenaltyCameraView({
               </feMerge>
             </filter>
             {/* Goal net pattern */}
-            <pattern id="penaltyNet" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
+            <pattern id={netPatternId} x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
               <line x1="0" y1="0" x2="0" y2="6" stroke="rgba(255,255,255,0.12)" strokeWidth="0.4" />
               <line x1="0" y1="0" x2="6" y2="0" stroke="rgba(255,255,255,0.12)" strokeWidth="0.4" />
             </pattern>
@@ -122,9 +130,9 @@ export function PenaltyCameraView({
               }
               transition={{ duration: 0.35 }}
             >
-              <circle cx={KEEPER_POS.x} cy={KEEPER_POS.y} r="13" fill="none" stroke={keeperColor} strokeWidth="2" filter="url(#penGlowKeeper)" />
-              <clipPath id="kClip"><circle cx={KEEPER_POS.x} cy={KEEPER_POS.y} r="11" /></clipPath>
-              <image href={defenderAvatarUrl} x={KEEPER_POS.x - 11} y={KEEPER_POS.y - 11} width="22" height="22" clipPath="url(#kClip)" />
+              <circle cx={KEEPER_POS.x} cy={KEEPER_POS.y} r="13" fill="none" stroke={keeperColor} strokeWidth="2" filter={`url(#${glowKeeperId})`} />
+              <clipPath id={kClipId}><circle cx={KEEPER_POS.x} cy={KEEPER_POS.y} r="11" /></clipPath>
+              <image href={defenderAvatarUrl} x={KEEPER_POS.x - 11} y={KEEPER_POS.y - 11} width="22" height="22" clipPath={`url(#${kClipId})`} />
             </motion.g>
             <text x={KEEPER_POS.x} y={KEEPER_POS.y + 18} textAnchor="middle" fill="rgba(255,255,255,0.85)" fontSize="5" fontWeight="800" fontFamily="system-ui">{defenderName}</text>
           </motion.g>
@@ -144,9 +152,9 @@ export function PenaltyCameraView({
               }
               transition={{ duration: 0.35 }}
             >
-              <circle cx={SHOOTER_POS.x} cy={SHOOTER_POS.y} r="13" fill="none" stroke={shooterColor} strokeWidth="2" filter="url(#penGlowShooter)" />
-              <clipPath id="sClip"><circle cx={SHOOTER_POS.x} cy={SHOOTER_POS.y} r="11" /></clipPath>
-              <image href={shooterAvatarUrl} x={SHOOTER_POS.x - 11} y={SHOOTER_POS.y - 11} width="22" height="22" clipPath="url(#sClip)" />
+              <circle cx={SHOOTER_POS.x} cy={SHOOTER_POS.y} r="13" fill="none" stroke={shooterColor} strokeWidth="2" filter={`url(#${glowShooterId})`} />
+              <clipPath id={sClipId}><circle cx={SHOOTER_POS.x} cy={SHOOTER_POS.y} r="11" /></clipPath>
+              <image href={shooterAvatarUrl} x={SHOOTER_POS.x - 11} y={SHOOTER_POS.y - 11} width="22" height="22" clipPath={`url(#${sClipId})`} />
             </motion.g>
             <text x={SHOOTER_POS.x} y={SHOOTER_POS.y + 18} textAnchor="middle" fill="rgba(255,255,255,0.85)" fontSize="5" fontWeight="800" fontFamily="system-ui">{shooterName}</text>
           </motion.g>
@@ -201,7 +209,7 @@ export function PenaltyCameraView({
                 {/* Net ripple — brief flash inside the goal area */}
                 <motion.rect
                   x="479" y="93" width="14" height="44" rx="1"
-                  fill="url(#penaltyNet)"
+                  fill={`url(#${netPatternId})`}
                   initial={{ opacity: 0, x: 479 }}
                   animate={{
                     opacity: [0, 0.8, 0.4, 0],

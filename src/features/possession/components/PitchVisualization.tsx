@@ -4,6 +4,55 @@ import { motion, AnimatePresence } from 'motion/react';
 
 type GoalSide = 'left' | 'right';
 
+// ─── Reusable marker sub-component for player/opponent avatars on the pitch ──
+interface PitchMarkerProps {
+  x: number;
+  y: number;
+  avatarUrl: string;
+  clipId: string;
+  color: string;
+  glowFilter: string;
+  isShooter: boolean;
+  isKeeper: boolean;
+  isSave: boolean;
+  isGoal: boolean;
+  showPenResult: boolean;
+  keeperJolt: Record<string, number[]>;
+}
+
+function PitchMarker({
+  x, y, avatarUrl, clipId, color, glowFilter,
+  isShooter, isKeeper, isSave, isGoal, showPenResult, keeperJolt,
+}: PitchMarkerProps) {
+  const joltAnim = isSave && isKeeper
+    ? keeperJolt
+    : isGoal && isShooter
+      ? { y: [0, -4, 0] }
+      : {};
+
+  return (
+    <motion.g
+      animate={{ x, y }}
+      transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+      filter={`url(#${glowFilter})`}
+    >
+      <motion.g animate={joltAnim} transition={{ duration: 0.35 }}>
+        {isShooter && !showPenResult && (
+          <motion.circle
+            cx="0" cy="0" r="22"
+            fill="none" stroke={color} strokeWidth="1.5" opacity="0.4"
+            animate={{ r: [22, 26, 22], opacity: [0.4, 0.15, 0.4] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        )}
+        <circle cx="0" cy="0" r="18" fill="none" stroke={color} strokeWidth={isKeeper ? 3.5 : 2.5} />
+        <clipPath id={clipId}><circle cx="0" cy="0" r="16" /></clipPath>
+        <image href={avatarUrl} x="-16" y="-16" width="32" height="32" clipPath={`url(#${clipId})`} />
+      </motion.g>
+    </motion.g>
+  );
+}
+
 interface GoalCoordinates {
   penSpotX: number;
   goalLineX: number;
@@ -198,8 +247,6 @@ export function PitchVisualization({
             <pattern id="grassStripes" x="0" y="0" width="60" height="230" patternUnits="userSpaceOnUse">
               <rect x="0" y="0" width="30" height="230" fill="rgba(255,255,255,0.015)" />
             </pattern>
-            <clipPath id="playerClip"><circle cx="0" cy="0" r="16" /></clipPath>
-            <clipPath id="opponentClip"><circle cx="0" cy="0" r="16" /></clipPath>
             <filter id="blueGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="4" result="blur" />
               <feFlood floodColor="#1CB0F6" floodOpacity="0.5" result="color" />
@@ -272,78 +319,26 @@ export function PitchVisualization({
           )}
 
           {/* === Opponent marker === */}
-          {(() => {
-            const isOppShooter = isPenalty && !penaltyMode.isPlayerShooter;
-            const isOppKeeper = isPenalty && penaltyMode.isPlayerShooter;
-            return (
-              <motion.g
-                animate={{ x: opponentX, y: goal.penY }}
-                transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-                filter="url(#redGlow)"
-              >
-                <motion.g
-                  animate={
-                    isSave && isOppKeeper
-                      ? keeperJolt
-                      : {}
-                  }
-                  transition={{ duration: 0.35 }}
-                >
-                  {/* Shooter pulse ring */}
-                  {isOppShooter && !showPenResult && (
-                    <motion.circle
-                      cx="0" cy="0" r="22"
-                      fill="none" stroke="#FF4B4B" strokeWidth="1.5" opacity="0.4"
-                      animate={{ r: [22, 26, 22], opacity: [0.4, 0.15, 0.4] }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-                    />
-                  )}
-                  {/* Keeper thicker ring */}
-                  <circle cx="0" cy="0" r="18" fill="none" stroke="#FF4B4B" strokeWidth={isOppKeeper ? 3.5 : 2.5} />
-                  <clipPath id="oppClipInst"><circle cx="0" cy="0" r="16" /></clipPath>
-                  <image href={opponentAvatarUrl} x="-16" y="-16" width="32" height="32" clipPath="url(#oppClipInst)" />
-                </motion.g>
-              </motion.g>
-            );
-          })()}
+          <PitchMarker
+            x={opponentX} y={goal.penY}
+            avatarUrl={opponentAvatarUrl} clipId="oppClipInst"
+            color="#FF4B4B" glowFilter="redGlow"
+            isShooter={isPenalty && !penaltyMode.isPlayerShooter}
+            isKeeper={isPenalty && penaltyMode.isPlayerShooter}
+            isSave={isSave} isGoal={isGoal}
+            showPenResult={showPenResult} keeperJolt={keeperJolt}
+          />
 
           {/* === Player marker === */}
-          {(() => {
-            const isPlayerShooterRole = isPenalty && penaltyMode.isPlayerShooter;
-            const isPlayerKeeperRole = isPenalty && !penaltyMode.isPlayerShooter;
-            return (
-              <motion.g
-                animate={{ x: playerX, y: goal.penY }}
-                transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-                filter="url(#blueGlow)"
-              >
-                <motion.g
-                  animate={
-                    isSave && isPlayerKeeperRole
-                      ? keeperJolt
-                      : isGoal && isPlayerShooterRole
-                        ? { y: [0, -4, 0] }
-                        : {}
-                  }
-                  transition={{ duration: 0.35 }}
-                >
-                  {/* Shooter pulse ring */}
-                  {isPlayerShooterRole && !showPenResult && (
-                    <motion.circle
-                      cx="0" cy="0" r="22"
-                      fill="none" stroke="#1CB0F6" strokeWidth="1.5" opacity="0.4"
-                      animate={{ r: [22, 26, 22], opacity: [0.4, 0.15, 0.4] }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-                    />
-                  )}
-                  {/* Keeper thicker ring */}
-                  <circle cx="0" cy="0" r="18" fill="none" stroke="#1CB0F6" strokeWidth={isPlayerKeeperRole ? 3.5 : 2.5} />
-                  <clipPath id="playerClipInst"><circle cx="0" cy="0" r="16" /></clipPath>
-                  <image href={playerAvatarUrl} x="-16" y="-16" width="32" height="32" clipPath="url(#playerClipInst)" />
-                </motion.g>
-              </motion.g>
-            );
-          })()}
+          <PitchMarker
+            x={playerX} y={goal.penY}
+            avatarUrl={playerAvatarUrl} clipId="playerClipInst"
+            color="#1CB0F6" glowFilter="blueGlow"
+            isShooter={isPenalty && penaltyMode.isPlayerShooter}
+            isKeeper={isPenalty && !penaltyMode.isPlayerShooter}
+            isSave={isSave} isGoal={isGoal}
+            showPenResult={showPenResult} keeperJolt={keeperJolt}
+          />
 
           {/* === DUAL MOMENTUM METER — hidden during penalties/shots === */}
           {meterVisible && (
@@ -407,7 +402,7 @@ export function PitchVisualization({
 
           {/* === Normal ball (hidden during penalty result or shot result) === */}
           <AnimatePresence>
-            {(!isPenalty || (isPenalty && penaltyMode.phase !== 'result')) && !shotResultActive && (
+            {(!isPenalty || penaltyMode.phase !== 'result') && !shotResultActive && (
               <motion.g
                 key="normal-ball"
                 animate={{ x: isPenalty ? goal.penSpotX : normalBallX, y: 105 }}

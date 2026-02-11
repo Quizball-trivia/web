@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useRealtimeGameLogic } from '@/features/game/hooks/useRealtimeGameLogic';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { getSocket } from '@/lib/realtime/socket-client';
@@ -84,6 +85,7 @@ export function RealtimePossessionMatchScreen({
   const [playerSplashPoints, setPlayerSplashPoints] = useState(0);
   const [opponentSplashPoints, setOpponentSplashPoints] = useState(0);
   const [shotBallOriginX, setShotBallOriginX] = useState(440);
+  const [delayedIsShooter, setDelayedIsShooter] = useState(false);
   const tacticSentRef = useRef(false);
   const prevPhaseRef = useRef<string | null>(null);
   const shownSplashQRef = useRef<{ player: number | null; opponent: number | null }>({
@@ -137,21 +139,7 @@ export function RealtimePossessionMatchScreen({
       penaltyGoals: possessionState.penaltyGoals,
       seatMomentum: possessionState.seatMomentum,
     });
-  }, [
-    match?.matchId,
-    possessionState,
-    possessionState?.attackerSeat,
-    possessionState?.goals,
-    possessionState?.half,
-    possessionState?.normalQuestionsAnsweredInHalf,
-    possessionState?.penaltyGoals,
-    possessionState?.phase,
-    possessionState?.phaseKind,
-    possessionState?.phaseRound,
-    possessionState?.seatMomentum,
-    possessionState?.sharedPossession,
-    possessionState?.shooterSeat,
-  ]);
+  }, [match?.matchId, possessionState]);
 
   const mySeat = match?.mySeat;
   const shooterSeat = possessionState?.shooterSeat ?? null;
@@ -159,7 +147,17 @@ export function RealtimePossessionMatchScreen({
   const isPenaltyQuestion = phaseKind === 'penalty';
   const isShotQuestion = phaseKind === 'shot';
   const isShooter = mySeat !== null && mySeat !== undefined && shooterSeat === mySeat;
-  const canAnswer = !isPenaltyQuestion || isShooter;
+  // Both shooter and keeper answer during penalties (shooter correct = goal, both earn points)
+
+  // Delay icon swap so ball returns to penalty spot before players switch positions
+  useEffect(() => {
+    if (!isPenaltyQuestion) {
+      setDelayedIsShooter(isShooter);
+      return;
+    }
+    const timer = setTimeout(() => setDelayedIsShooter(isShooter), 600);
+    return () => clearTimeout(timer);
+  }, [isShooter, isPenaltyQuestion]);
 
   const myGoals = useMemo(() => {
     if (!match || !possessionState) return 0;
@@ -265,12 +263,16 @@ export function RealtimePossessionMatchScreen({
   const shooterIsMe = shooterSeat !== null && shooterSeat === mySeat;
 
   const mirrored = (possessionState?.half ?? 1) === 2;
+  const ballOnPlayer = myPossessionPct > 50 || (myPossessionPct === 50 && possessionState?.kickOffSeat === mySeat);
 
   const targetGoal = useMemo((): 'left' | 'right' | undefined => {
     if (!isShotQuestion && !isPenaltyQuestion) return undefined;
-    const isMyAction = isShotQuestion ? attackerIsMe : shooterIsMe;
+    // Penalties: always the same goal (like real football) — only icons swap via isPlayerShooter.
+    if (isPenaltyQuestion) return mirrored ? 'left' : 'right';
+    // Shots: goal depends on who's attacking XOR half (camera follows the attacker).
+    const isMyAction = attackerIsMe;
     return (isMyAction !== mirrored) ? 'right' : 'left';
-  }, [isShotQuestion, isPenaltyQuestion, attackerIsMe, shooterIsMe, mirrored]);
+  }, [isShotQuestion, isPenaltyQuestion, attackerIsMe, mirrored]);
 
   useEffect(() => {
     if (!answerAck && !state.roundResult && !state.opponentAnswered) return;
@@ -313,11 +315,20 @@ export function RealtimePossessionMatchScreen({
     return 'miss';
   }, [attackerIsMe, myRound, oppRound, phaseKind, state.roundResult]);
 
+  // Use the round result's shooterSeat (stable) instead of live shooterSeat which may already point to next penalty
+  const resultShooterIsMe = state.roundResult?.shooterSeat != null && state.roundResult.shooterSeat === mySeat;
+
   const penaltyResult: PenaltyResult = useMemo(() => {
     if (!state.roundResult || (state.roundResult.phaseKind ?? phaseKind) !== 'penalty') return null;
-    if (shooterIsMe) return myRound?.isCorrect ? 'goal' : 'saved';
-    return oppRound?.isCorrect ? 'goal' : 'saved';
-  }, [myRound, oppRound, phaseKind, shooterIsMe, state.roundResult]);
+    const shooterRound = resultShooterIsMe ? myRound : oppRound;
+    const keeperRound = resultShooterIsMe ? oppRound : myRound;
+    const shooterCorrect = shooterRound?.isCorrect ?? false;
+    const keeperCorrect = keeperRound?.isCorrect ?? false;
+    // Mirror backend: shooter wrong → saved, both correct → faster wins, shooter correct + keeper wrong → goal
+    if (!shooterCorrect) return 'saved';
+    if (!keeperCorrect) return 'goal';
+    return (shooterRound?.timeMs ?? 10000) < (keeperRound?.timeMs ?? 10000) ? 'goal' : 'saved';
+  }, [myRound, oppRound, phaseKind, resultShooterIsMe, state.roundResult]);
 
   const uiPhase: Phase = useMemo(() => {
     if (isHalftime) return 'halftime';
@@ -505,7 +516,7 @@ export function RealtimePossessionMatchScreen({
               myMomentum={(isPenaltyQuestion || isShotQuestion) ? 0 : myMomentum}
               oppMomentum={(isPenaltyQuestion || isShotQuestion) ? 0 : oppMomentum}
               penaltyMode={isPenaltyQuestion ? {
-                isPlayerShooter: isShooter,
+                isPlayerShooter: delayedIsShooter,
                 result: penaltyResult,
                 phase: state.roundResolved ? 'result' : (state.questionPhase === 'playing' ? 'playing' : 'setup'),
               } : undefined}
@@ -516,8 +527,39 @@ export function RealtimePossessionMatchScreen({
               zoomToGoal={isPenaltyQuestion || isShotQuestion}
               mirrored={mirrored}
               targetGoal={targetGoal}
-              ballOnPlayer={myPossessionPct > 50 ? true : myPossessionPct < 50 ? false : possessionState.kickOffSeat === mySeat}
+              ballOnPlayer={ballOnPlayer}
             />
+
+            {/* Penalty result splash overlay */}
+            <AnimatePresence>
+              {isPenaltyQuestion && penaltyResult && state.roundResolved && (
+                <motion.div
+                  key={`pen-splash-${localQuestionIndex}`}
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                  className="absolute inset-x-0 top-[35%] z-30 flex flex-col items-center pointer-events-none"
+                >
+                  <div className={`text-5xl font-black font-fun uppercase tracking-wider ${
+                    penaltyResult === 'goal' ? 'text-[#58CC02]' : 'text-[#FF4B4B]'
+                  }`}
+                    style={{
+                      textShadow: penaltyResult === 'goal'
+                        ? '0 0 30px rgba(88,204,2,0.5), 0 4px 0 rgba(70,163,2,0.8)'
+                        : '0 0 30px rgba(255,75,75,0.5), 0 4px 0 rgba(200,40,40,0.8)',
+                    }}
+                  >
+                    {penaltyResult === 'goal' ? 'GOAL!' : 'SAVED!'}
+                  </div>
+                  <div className="mt-1 text-sm font-bold text-white/60 font-fun uppercase tracking-widest">
+                    {penaltyResult === 'goal'
+                      ? (resultShooterIsMe ? 'You scored!' : 'Opponent scored')
+                      : (resultShooterIsMe ? 'Keeper saves it!' : 'You saved it!')}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <PossessionFeed
               message={feed.message}
@@ -542,7 +584,7 @@ export function RealtimePossessionMatchScreen({
               onPlayerSplashComplete={() => setShowPlayerSplash(false)}
               onOpponentSplashComplete={() => setShowOpponentSplash(false)}
               onAnswer={(index) => {
-                if (!canAnswer || state.matchPaused) return;
+                if (state.matchPaused) return;
                 actions.submitAnswer(index);
               }}
             />

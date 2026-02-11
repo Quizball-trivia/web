@@ -279,6 +279,7 @@ export const usePossessionMatchStore = create<PossessionMatchStore>((set) => ({
       showOptions: false,
       playerTime: 0,
       opponentTime: 0,
+      timeRemaining: 0,
       showPlayerSplash: false,
       showOpponentSplash: false,
     }),

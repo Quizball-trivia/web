@@ -45,18 +45,19 @@ export function setMasterVolume(vol: number) {
   Howler.volume(vol);
 }
 
+let _muted = false;
+
 /** Mute / unmute all sounds */
 export function setMuted(muted: boolean) {
+  _muted = muted;
   Howler.mute(muted);
 }
 
 /** Check if currently muted */
 export function isMuted(): boolean {
-  // Howler doesn't expose mute state directly, track it ourselves
   return _muted;
 }
 
-let _muted = false;
 export function toggleMute(): boolean {
   _muted = !_muted;
   Howler.mute(_muted);

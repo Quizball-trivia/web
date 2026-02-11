@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface PenaltyTransitionProps {
   visible: boolean;
@@ -9,9 +9,9 @@ interface PenaltyTransitionProps {
 }
 
 export function PenaltyTransition({ visible, playerGoals, opponentGoals }: PenaltyTransitionProps) {
-  if (!visible) return null;
-
   return (
+    <AnimatePresence>
+      {visible && (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -137,5 +137,7 @@ export function PenaltyTransition({ visible, playerGoals, opponentGoals }: Penal
         Answer correctly and faster to score
       </motion.div>
     </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

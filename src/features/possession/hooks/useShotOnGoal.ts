@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { usePossessionMatchStore } from '@/stores/possessionMatch.store';
 import { HARD_QUESTIONS, pickQuestion } from '../data/mockQuestions';
 import { TIMER_SECONDS, BALL_ANIM_MS, QUESTIONS_PER_HALF } from '../types/possession.types';
@@ -13,14 +13,28 @@ export function useShotOnGoal(
 ) {
   const store = usePossessionMatchStore;
   const shotBallOriginRef = useRef(0);
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  const schedule = useCallback((fn: () => void, ms: number) => {
+    const id = setTimeout(fn, ms);
+    timersRef.current.push(id);
+    return id;
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      timersRef.current.forEach(clearTimeout);
+      timersRef.current = [];
+    };
+  }, []);
 
   const initializeShot = useCallback(() => {
     const { player, setTimeRemaining } = store.getState();
     const playerX = 30 + (player.position / 100) * 440;
     shotBallOriginRef.current = player.position > 50 ? playerX + 14 : playerX - 14;
 
-    const sq = pickQuestion(HARD_QUESTIONS, usedQuestionIdsRef.current!);
-    usedQuestionIdsRef.current!.add(sq.id);
+    const usedIds = usedQuestionIdsRef.current ?? new Set<string>();
+    const sq = pickQuestion(HARD_QUESTIONS, usedIds);
 
     const s = store.getState();
     s.setShotQuestion(sq);
@@ -79,48 +93,48 @@ export function useShotOnGoal(
       }
     };
 
-    setTimeout(() => {
+    schedule(() => {
       if (!playerCorrect) {
         // MISS
         playSfx('kick');
         store.getState().setShotResult('miss');
         store.getState().incrementTotalQuestions();
-        setTimeout(() => {
+        schedule(() => {
           const st = store.getState();
           st.setShotResult('pending');
           st.setPlayer((p) => ({ ...p, position: 60, momentum: 0, isShooting: false }));
           st.setOpponent((o) => ({ ...o, position: 40 }));
         }, BALL_ANIM_MS);
-        setTimeout(() => handlePostShot(60), 2500);
+        schedule(() => handlePostShot(60), 2500);
       } else if (aiCorrect && s.shotOpponentTime <= elapsed) {
         // SAVED
         playSfx('kick');
         store.getState().setShotResult('saved');
         store.getState().incrementTotalCorrect();
         store.getState().incrementTotalQuestions();
-        setTimeout(() => {
+        schedule(() => {
           const st = store.getState();
           st.setShotResult('pending');
           st.setPlayer((p) => ({ ...p, position: 60, momentum: 0, isShooting: false }));
           st.setOpponent((o) => ({ ...o, position: 40 }));
         }, BALL_ANIM_MS);
-        setTimeout(() => handlePostShot(60), 2500);
+        schedule(() => handlePostShot(60), 2500);
       } else {
         // GOAL!
         playSfx('kick');
         store.getState().setShotResult('goal');
         store.getState().incrementTotalCorrect();
         store.getState().incrementTotalQuestions();
-        setTimeout(() => {
+        schedule(() => {
           const st = store.getState();
           st.setShotResult('pending');
           st.setPlayer((p) => ({ ...p, goals: p.goals + 1, position: 50, momentum: 0, isShooting: false }));
           st.setOpponent((o) => ({ ...o, position: 50 }));
-          setTimeout(() => store.getState().setPhase('goal'), 500);
+          schedule(() => store.getState().setPhase('goal'), 500);
         }, BALL_ANIM_MS);
       }
     }, 1500);
-  }, [advanceToNextQuestion]);
+  }, [advanceToNextQuestion, schedule]);
 
   return { initializeShot, handleShotAnswer, shotBallOriginRef };
 }

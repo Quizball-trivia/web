@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { Flame, Shield, Zap, Info } from 'lucide-react';
 import { PitchVisualization } from './PitchVisualization';
 
-export type TacticalCard = 'press-high' | 'play-safe' | 'all-in';
+import type { TacticalCard } from '../types/possession.types';
 
 interface HalftimeScreenProps {
   visible: boolean;
@@ -122,6 +122,14 @@ export function HalftimeScreen({
   const [selected, setSelected] = useState<TacticalCard>('play-safe');
   const [timeLeft, setTimeLeft] = useState(HALFTIME_DURATION);
   const [hoveredTactic, setHoveredTactic] = useState<TacticalCard | null>(null);
+
+  // Auto-dismiss tooltip after 3s on touch devices
+  useEffect(() => {
+    if (!hoveredTactic) return;
+    const t = setTimeout(() => setHoveredTactic(null), 3000);
+    return () => clearTimeout(t);
+  }, [hoveredTactic]);
+
   const [showHint] = useState(() => {
     if (typeof window !== 'undefined') {
       return !localStorage.getItem('halftime-hint-seen');
@@ -374,9 +382,19 @@ export function HalftimeScreen({
 
                     {/* Info tooltip trigger */}
                     <div className="absolute top-1.5 right-1.5">
-                      <div className="relative">
+                      <div
+                        className="relative"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setHoveredTactic(hoveredTactic === tactic.id ? null : tactic.id);
+                        }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          setHoveredTactic(hoveredTactic === tactic.id ? null : tactic.id);
+                        }}
+                      >
                         <Info
-                          className="size-3.5 opacity-30 hover:opacity-60 transition-opacity"
+                          className="size-3.5 opacity-30 hover:opacity-60 transition-opacity cursor-pointer"
                           style={{ color: isSelected ? tactic.color : '#56707A' }}
                           strokeWidth={2}
                         />
@@ -384,7 +402,7 @@ export function HalftimeScreen({
                           <motion.div
                             initial={{ opacity: 0, y: -4 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="absolute top-5 right-0 w-44 p-2 rounded-lg bg-black/90 backdrop-blur-sm border border-white/15 shadow-xl z-50 pointer-events-none"
+                            className="absolute top-5 right-0 w-44 p-2 rounded-lg bg-black/90 backdrop-blur-sm border border-white/15 shadow-xl z-50"
                           >
                             <div className="text-[10px] text-white/90 leading-relaxed">
                               {tactic.tooltip}

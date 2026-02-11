@@ -22,12 +22,14 @@ export function IntroScreen({ visible, onStart }: IntroScreenProps) {
             animate={{ scale: [0, 1.15, 1] }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
             onClick={onStart}
+            aria-label="Start match"
             className="text-center font-fun cursor-pointer group"
           >
             <motion.div
               animate={{ scale: [1, 1.15, 1] }}
               transition={{ duration: 1.5, repeat: Infinity }}
               className="text-7xl mb-4"
+              aria-hidden
             >
               ⚽
             </motion.div>

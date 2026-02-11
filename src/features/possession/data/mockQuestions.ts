@@ -55,9 +55,13 @@ export function pickQuestion(pool: GameQuestion[], usedIds: Set<string>): GameQu
   const available = pool.filter(q => !usedIds.has(q.id));
   if (available.length === 0) {
     usedIds.clear();
-    return pool[Math.floor(Math.random() * pool.length)];
+    const chosen = pool[Math.floor(Math.random() * pool.length)];
+    usedIds.add(chosen.id);
+    return chosen;
   }
-  return available[Math.floor(Math.random() * available.length)];
+  const chosen = available[Math.floor(Math.random() * available.length)];
+  usedIds.add(chosen.id);
+  return chosen;
 }
 
 export function getDifficultyLabel(d?: string): string {

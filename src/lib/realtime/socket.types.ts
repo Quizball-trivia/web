@@ -89,8 +89,8 @@ export interface MatchQuestionPayload {
   deadlineAt: string;
   phaseKind?: MatchPhaseKind;
   phaseRound?: number | null;
-  shooterSeat?: number | null;
-  attackerSeat?: number | null;
+  shooterSeat?: 1 | 2 | null;
+  attackerSeat?: 1 | 2 | null;
 }
 
 export interface MatchOpponentAnsweredPayload {
@@ -112,7 +112,7 @@ export interface MatchAnswerAckPayload {
   pointsEarned: number;
   phaseKind?: MatchPhaseKind;
   phaseRound?: number | null;
-  shooterSeat?: number | null;
+  shooterSeat?: 1 | 2 | null;
 }
 
 export interface MatchRoundResultPlayer {
@@ -130,8 +130,8 @@ export interface MatchRoundResultPayload {
   players: Record<string, MatchRoundResultPlayer>;
   phaseKind?: MatchPhaseKind;
   phaseRound?: number | null;
-  shooterSeat?: number | null;
-  attackerSeat?: number | null;
+  shooterSeat?: 1 | 2 | null;
+  attackerSeat?: 1 | 2 | null;
 }
 
 export interface MatchFinalResultPlayer {

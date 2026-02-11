@@ -1,4 +1,4 @@
-import type { TacticalCard } from '../components/HalftimeScreen';
+export type TacticalCard = 'press-high' | 'play-safe' | 'all-in';
 
 // ─── Phase state machine ────────────────────────────────────────
 export type Phase =
@@ -60,5 +60,3 @@ export const INITIAL_POSSESSION: PossessionState = {
   isShooting: false,
 };
 
-// ─── Re-exports for convenience ─────────────────────────────────
-export type { TacticalCard };

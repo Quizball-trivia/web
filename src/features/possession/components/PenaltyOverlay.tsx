@@ -62,16 +62,23 @@ export function PenaltyOverlay({
   if (!visible || !currentQuestion) return null;
 
   // Render score pips (filled circles)
+  const pipColors: Record<string, { filledBg: string; filledBorder: string }> = {
+    green: { filledBg: 'bg-green-500', filledBorder: 'border-green-400' },
+    red: { filledBg: 'bg-red-500', filledBorder: 'border-red-400' },
+  };
+  const fallbackPip = { filledBg: 'bg-gray-500', filledBorder: 'border-gray-400' };
+
   const renderScorePips = (score: number, maxScore: number, color: string) => {
+    const colors = pipColors[color] ?? fallbackPip;
     return Array.from({ length: maxScore }).map((_, i) => (
       <motion.div
         key={i}
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ delay: i * 0.05 }}
-        className={`w-3 h-3 rounded-full ${
-          i < score ? `bg-${color}-500 border-${color}-400` : 'bg-gray-800 border-gray-600'
-        } border-2`}
+        className={`w-3 h-3 rounded-full border-2 ${
+          i < score ? `${colors.filledBg} ${colors.filledBorder}` : 'bg-gray-800 border-gray-600'
+        }`}
       />
     ));
   };

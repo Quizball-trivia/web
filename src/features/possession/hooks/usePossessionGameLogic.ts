@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useCallback, useRef } from 'react';
-import { useShallow } from 'zustand/react/shallow';
+
 import { usePossessionMatchStore } from '@/stores/possessionMatch.store';
 import { useGameSounds } from '@/lib/sounds/useGameSounds';
 import {
@@ -31,8 +31,9 @@ export function usePossessionGameLogic() {
   const { playSfx, toggleMute, isMuted } = useGameSounds();
   const store = usePossessionMatchStore;
 
-  // Subscribe to all state for re-renders
-  const state = usePossessionMatchStore(useShallow((s) => s));
+  // This hook drives the full game loop and reads nearly every field, so we
+  // intentionally subscribe to the entire store instead of slicing.
+  const state = usePossessionMatchStore((s) => s);
 
   const usedQuestionIdsRef = useRef<Set<string>>(new Set());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -139,7 +140,7 @@ export function usePossessionGameLogic() {
     store.getState().setCurrentQuestion(q);
     const t = setTimeout(() => store.getState().setPhase('question-reveal'), 2000);
     return () => clearTimeout(t);
-  }, [state.phase]);
+  }, [state.phase, playSfx]);
 
   // Question reveal
   useEffect(() => {

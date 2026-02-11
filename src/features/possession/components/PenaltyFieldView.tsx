@@ -84,6 +84,13 @@ export function PenaltyFieldView({
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
+            {/* Avatar clip paths */}
+            <clipPath id="keeperClip">
+              <circle cx="400" cy="120" r="22" />
+            </clipPath>
+            <clipPath id="shooterClip">
+              <circle cx="400" cy="470" r="22" />
+            </clipPath>
           </defs>
 
           {/* Field markings - penalty area */}
@@ -126,9 +133,6 @@ export function PenaltyFieldView({
               transition={{ duration: 0.5 }}
             >
               <circle cx="400" cy="120" r="25" fill="none" stroke={isShooterTurn ? '#FF4B4B' : '#1CB0F6'} strokeWidth="3" filter="url(#keeperGlow)" />
-              <clipPath id="keeperClip">
-                <circle cx="400" cy="120" r="22" />
-              </clipPath>
               <image
                 href={defenderAvatarUrl}
                 x="378"
@@ -230,9 +234,6 @@ export function PenaltyFieldView({
               transition={{ duration: 0.5 }}
             >
               <circle cx="400" cy="470" r="25" fill="none" stroke={isShooterTurn ? '#1CB0F6' : '#FF4B4B'} strokeWidth="3" filter="url(#playerGlow)" />
-              <clipPath id="shooterClip">
-                <circle cx="400" cy="470" r="22" />
-              </clipPath>
               <image
                 href={shooterAvatarUrl}
                 x="378"
