@@ -325,8 +325,8 @@ export function PitchVisualization({
             color="#FF4B4B" glowFilter="redGlow"
             isShooter={isPenalty && !penaltyMode.isPlayerShooter}
             isKeeper={isPenalty && penaltyMode.isPlayerShooter}
-            isSave={isSave} isGoal={isGoal}
-            showPenResult={showPenResult} keeperJolt={keeperJolt}
+            isSave={!!isSave} isGoal={!!isGoal}
+            showPenResult={!!showPenResult} keeperJolt={keeperJolt}
           />
 
           {/* === Player marker === */}
@@ -336,8 +336,8 @@ export function PitchVisualization({
             color="#1CB0F6" glowFilter="blueGlow"
             isShooter={isPenalty && penaltyMode.isPlayerShooter}
             isKeeper={isPenalty && !penaltyMode.isPlayerShooter}
-            isSave={isSave} isGoal={isGoal}
-            showPenResult={showPenResult} keeperJolt={keeperJolt}
+            isSave={!!isSave} isGoal={!!isGoal}
+            showPenResult={!!showPenResult} keeperJolt={keeperJolt}
           />
 
           {/* === DUAL MOMENTUM METER — hidden during penalties/shots === */}

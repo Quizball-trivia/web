@@ -58,6 +58,7 @@ function DevMatchContent() {
     getSocket().emit('dev:quick_match');
 
     // Fallback: reset if server never responds
+    if (startTimerRef.current) clearTimeout(startTimerRef.current);
     startTimerRef.current = setTimeout(() => {
       setStarting(false);
       logger.warn('Dev: quick_match start timed out');

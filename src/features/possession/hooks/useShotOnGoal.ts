@@ -16,7 +16,10 @@ export function useShotOnGoal(
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const schedule = useCallback((fn: () => void, ms: number) => {
-    const id = setTimeout(fn, ms);
+    const id = setTimeout(() => {
+      timersRef.current = timersRef.current.filter((t) => t !== id);
+      fn();
+    }, ms);
     timersRef.current.push(id);
     return id;
   }, []);

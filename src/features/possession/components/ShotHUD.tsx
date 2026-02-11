@@ -8,7 +8,7 @@ import type { Phase } from '../types/possession.types';
 function getInitials(name: string, fallback: string): string {
   const trimmed = name.trim();
   if (!trimmed) return fallback;
-  return trimmed.split(/\s+/).map((s) => s[0]).join('').slice(0, 2).toUpperCase();
+  return trimmed.split(/\s+/).map((s) => [...s][0]).join('').slice(0, 2).toUpperCase();
 }
 
 interface ShotHUDProps {

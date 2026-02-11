@@ -388,10 +388,6 @@ export function HalftimeScreen({
                           e.stopPropagation();
                           setHoveredTactic(hoveredTactic === tactic.id ? null : tactic.id);
                         }}
-                        onTouchStart={(e) => {
-                          e.stopPropagation();
-                          setHoveredTactic(hoveredTactic === tactic.id ? null : tactic.id);
-                        }}
                       >
                         <Info
                           className="size-3.5 opacity-30 hover:opacity-60 transition-opacity cursor-pointer"
