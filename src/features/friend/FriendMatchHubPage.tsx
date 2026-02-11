@@ -68,13 +68,13 @@ export function FriendMatchHubPage() {
     };
   }, []);
 
-  const sessionStateLabel = sessionState?.state ?? "NO_SESSION";
+  // Only treat CORRUPT_MULTI_STATE as a recovery scenario.
+  // sessionState === null just means the first session:state event hasn't arrived yet — normal loading, not an error.
   const isSessionRecovering =
-    sessionStateLabel === "NO_SESSION" ||
-    sessionStateLabel === "CORRUPT_MULTI_STATE";
+    sessionState?.state === "CORRUPT_MULTI_STATE";
   const isSessionTransitioning = Boolean(
     error?.code === "TRANSITION_IN_PROGRESS" ||
-    sessionStateLabel === "IN_QUEUE"
+    sessionState?.state === "IN_QUEUE"
   );
 
   const handleActionTriggered = () => {
@@ -107,6 +107,8 @@ export function FriendMatchHubPage() {
     joinRetryCountRef.current = 0;
     clearJoinTimeout();
     joinTimeoutRef.current = setTimeout(() => {
+      clearJoinRetryTimer();
+      joinRetryCountRef.current = 0;
       setIsJoiningCode(null);
       setIsNavigatingToRoom(false);
       toast.error("Join is taking too long. Please refresh and try again.");
@@ -146,6 +148,8 @@ export function FriendMatchHubPage() {
       if (isTransientJoinLock && isJoiningCode) {
         if (joinRetryCountRef.current >= 5) {
           clearJoinTimeout();
+          clearJoinRetryTimer();
+          joinRetryCountRef.current = 0;
           setIsJoiningCode(null);
           setIsNavigatingToRoom(false);
           toast.error("Could not join lobby right now. Please try again.");
@@ -215,8 +219,8 @@ export function FriendMatchHubPage() {
       {(isSessionRecovering || isSessionTransitioning) && (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
           {isSessionRecovering
-            ? "Reconnecting session... joining may be delayed for a moment."
-            : "Session transition in progress... please wait a moment."}
+            ? "Cleaning up a previous session... this will only take a moment."
+            : "Getting things ready... please wait a moment."}
         </div>
       )}
 

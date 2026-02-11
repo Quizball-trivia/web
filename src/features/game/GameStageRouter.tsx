@@ -13,6 +13,7 @@ import { QuizBallGameScreen } from "./components/QuizBallGameScreen";
 import { QuizBallResultsScreen } from "./components/QuizBallResultsScreen";
 import { RealtimeQuizBallGameScreen } from "./RealtimeQuizBallGameScreen";
 import { RealtimeResultsScreen } from "./RealtimeResultsScreen";
+import { RealtimePossessionMatchScreen } from "@/features/possession/RealtimePossessionMatchScreen";
 import { useAuthStore } from "@/stores/auth.store";
 import { useRealtimeConnection } from "@/lib/realtime/useRealtimeConnection";
 import { getSocket } from "@/lib/realtime/socket-client";
@@ -20,7 +21,7 @@ import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { logger } from "@/utils/logger";
 import { useGameStageTransitions } from "@/features/game/hooks/useGameStageTransitions";
 import type { GameMode as LegacyGameMode } from "@/types/game";
-import { getDiceBearAvatarUrl } from "@/lib/avatars";
+import { resolveAvatarUrl } from "@/lib/avatars";
 
 type OpponentInfo = {
   id: string;
@@ -43,21 +44,8 @@ const toLegacyMode = (mode: string | undefined): LegacyGameMode => {
   return "timeAttack";
 };
 
-function resolveGameAvatar(value: string | null | undefined, fallbackSeed: string): string {
-  const raw = value?.trim();
-  if (!raw) return getDiceBearAvatarUrl(fallbackSeed, 96);
-  if (
-    raw.startsWith("http://") ||
-    raw.startsWith("https://") ||
-    raw.startsWith("data:image/") ||
-    raw.startsWith("/")
-  ) {
-    return raw;
-  }
-  // Convert non-URL values (emoji/seed) to an image URL so AvatarImage can render it reliably.
-  return getDiceBearAvatarUrl(raw, 96);
-}
-
+const POSSESSION_TOTAL_QUESTIONS_FALLBACK = 12;
+const CLASSIC_TOTAL_QUESTIONS_FALLBACK = 10;
 
 export function GameStageRouter() {
   const router = useRouter();
@@ -158,14 +146,14 @@ export function GameStageRouter() {
   const legacyMode = toLegacyMode(config?.mode);
   const playerGameAvatar = useMemo(
     () =>
-      resolveGameAvatar(
+      resolveAvatarUrl(
         authUser?.avatar_url ?? player.avatarCustomization?.base ?? player.avatar,
         "player"
       ),
     [authUser?.avatar_url, player.avatarCustomization?.base, player.avatar]
   );
   const opponentGameAvatar = useMemo(
-    () => resolveGameAvatar(opponent.avatar, "opponent"),
+    () => resolveAvatarUrl(opponent.avatar, "opponent"),
     [opponent.avatar]
   );
 
@@ -244,6 +232,43 @@ export function GameStageRouter() {
     }
 
     if (stage === "playing") {
+      if (realtimeMatch?.engine === "possession_v1") {
+        return (
+          <RealtimePossessionMatchScreen
+            playerAvatar={playerGameAvatar}
+            playerUsername={player.username}
+            opponentAvatar={opponentGameAvatar}
+            opponentUsername={opponent.username}
+            onQuit={() => {
+              if (realtimeMatch?.matchId) {
+                getSocket().emit("match:leave", {
+                  matchId: realtimeMatch.matchId,
+                });
+                logger.info("Socket emit match:leave", {
+                  matchId: realtimeMatch.matchId,
+                });
+              } else {
+                logger.info("Socket emit match:leave skipped (missing matchId)");
+              }
+              exitToPlay();
+            }}
+            onForfeit={() => {
+              if (realtimeMatch?.matchId) {
+                getSocket().emit("match:forfeit", {
+                  matchId: realtimeMatch.matchId,
+                });
+                logger.info("Socket emit match:forfeit", {
+                  matchId: realtimeMatch.matchId,
+                });
+              } else {
+                logger.info("Socket emit match:forfeit skipped (missing matchId)");
+              }
+              exitToPlay();
+            }}
+          />
+        );
+      }
+
       return (
         <RealtimeQuizBallGameScreen
           playerAvatar={playerGameAvatar}
@@ -286,6 +311,15 @@ export function GameStageRouter() {
       const opponentStats = selfUserId
         ? Object.entries(final.players).find(([userId]) => userId !== selfUserId)?.[1]
         : undefined;
+      const isPossession = realtimeMatch.engine === "possession_v1";
+      const playerDisplayScore = isPossession
+        ? myStats?.goals ?? 0
+        : myStats?.totalPoints ?? realtimeMatch.myTotalPoints;
+      const opponentDisplayScore = isPossession
+        ? opponentStats?.goals ?? 0
+        : opponentStats?.totalPoints ?? realtimeMatch.oppTotalPoints;
+      const totalQuestionsPlayed = realtimeMatch.currentQuestion?.total
+        ?? (isPossession ? POSSESSION_TOTAL_QUESTIONS_FALLBACK : CLASSIC_TOTAL_QUESTIONS_FALLBACK);
 
       return (
         <RealtimeResultsScreen
@@ -293,11 +327,11 @@ export function GameStageRouter() {
           playerAvatar={playerGameAvatar}
           opponentUsername={opponent.username}
           opponentAvatar={opponentGameAvatar}
-          playerScore={myStats?.totalPoints ?? realtimeMatch.myTotalPoints}
-          opponentScore={opponentStats?.totalPoints ?? realtimeMatch.oppTotalPoints}
+          playerScore={playerDisplayScore}
+          opponentScore={opponentDisplayScore}
           playerCorrect={myStats?.correctAnswers ?? 0}
           opponentCorrect={opponentStats?.correctAnswers ?? 0}
-          totalQuestions={10}
+          totalQuestions={totalQuestionsPlayed}
           selfUserId={selfUserId}
           opponentId={opponent.id}
           onPlayAgain={() => {

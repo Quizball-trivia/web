@@ -3,10 +3,12 @@ import { logger } from '@/utils/logger';
 import type {
   DraftCategory,
   DraftState,
+  MatchEngine,
   LobbyState,
   MatchAnswerAckPayload,
   MatchFinalResultsPayload,
   MatchRejoinAvailablePayload,
+  MatchStatePayload,
   MatchQuestionPayload,
   MatchRoundResultPayload,
   MatchStartPayload,
@@ -36,6 +38,8 @@ export interface MatchQuestionState {
 
 export interface MatchStatus {
   matchId: string;
+  engine: MatchEngine;
+  mySeat: 1 | 2 | null;
   opponent: OpponentInfo;
   currentQuestion: MatchQuestionPayload | null;
   questions: Record<number, MatchQuestionState>;
@@ -48,6 +52,7 @@ export interface MatchStatus {
   finalResults: MatchFinalResultsPayload | null;
   currentQuestionPhase: 'reveal' | 'playing';
   opponentAnsweredCorrectly: boolean | null;
+  possessionState: MatchStatePayload | null;
 }
 
 export interface WarmupStatus {
@@ -96,6 +101,7 @@ interface RealtimeState {
   setDraftComplete: (allowed: [string, string]) => void;
   setMatchStart: (payload: MatchStartPayload) => void;
   setMatchQuestion: (payload: MatchQuestionPayload) => void;
+  setMatchState: (payload: MatchStatePayload) => void;
   setAnswerAck: (payload: MatchAnswerAckPayload) => void;
   setOpponentAnswered: (payload?: {
     qIndex?: number;
@@ -213,6 +219,8 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
       rejoinMatch: null,
       match: {
         matchId: payload.matchId,
+        engine: payload.engine,
+        mySeat: payload.mySeat ?? null,
         opponent: payload.opponent,
         currentQuestion: null,
         questions: {},
@@ -225,7 +233,30 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
         finalResults: null,
         currentQuestionPhase: 'reveal',
         opponentAnsweredCorrectly: null,
+        possessionState: null,
       },
+    });
+  },
+  setMatchState: (payload) => {
+    logger.info('Realtime store set match state', {
+      matchId: payload.matchId,
+      phase: payload.phase,
+      half: payload.half,
+      sharedPossession: payload.sharedPossession,
+      phaseKind: payload.phaseKind,
+      phaseRound: payload.phaseRound,
+    });
+    set((state) => {
+      if (!state.match || state.match.matchId !== payload.matchId) return state;
+      const shouldClearQuestion = payload.phase === 'HALFTIME' || payload.phase === 'COMPLETED';
+      return {
+        ...state,
+        match: {
+          ...state.match,
+          possessionState: payload,
+          currentQuestion: shouldClearQuestion ? null : state.match.currentQuestion,
+        },
+      };
     });
   },
   setMatchQuestion: (payload) => {

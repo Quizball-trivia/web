@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Swords, Star, Shield } from 'lucide-react';
 import { AppLogo } from '@/components/AppLogo';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { socialLogin } from '@/lib/auth/auth.service';
 
 const SUBHEADING_PHRASES = [

@@ -1,5 +1,5 @@
-import { PossessionMatchDemo } from '@/features/possession/PossessionMatchDemo';
+import { redirect } from 'next/navigation';
 
 export default function PossessionTestPage() {
-  return <PossessionMatchDemo />;
+  redirect('/play');
 }
