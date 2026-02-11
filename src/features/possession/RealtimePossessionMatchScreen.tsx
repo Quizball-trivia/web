@@ -336,7 +336,7 @@ export function RealtimePossessionMatchScreen({
       if (state.roundResolved) return 'penalty-result';
       return state.questionPhase === 'playing' ? 'penalty-playing' : 'penalty-question';
     }
-    if (isShotQuestion) return 'shot';
+    if (isShotQuestion) return state.roundResolved ? 'shot-result' : 'shot';
     if (state.roundResolved) return 'reveal';
     return state.questionPhase === 'playing' ? 'playing' : 'question-reveal';
   }, [isHalftime, isPenaltyQuestion, isShotQuestion, state.questionPhase, state.roundResolved]);

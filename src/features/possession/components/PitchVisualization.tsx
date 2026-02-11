@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
 type GoalSide = 'left' | 'right';
@@ -136,6 +137,9 @@ export function PitchVisualization({
   const isPenalty = !!penaltyMode;
   const isShot = !!shotMode;
 
+  // Track where the ball animation last ended so re-mount springs from there
+  const lastBallPosRef = useRef<{ x: number; y: number }>({ x: 250, y: 105 });
+
   // Goal coordinate set based on target
   const goal: GoalCoordinates = (targetGoal ?? 'right') === 'right' ? RIGHT_GOAL : LEFT_GOAL;
 
@@ -178,6 +182,30 @@ export function PitchVisualization({
   // Ball origin — captured at shot start so it doesn't shift when positions reset
   const shotBallOriginX = isShot ? shotMode.ballOriginX : normalBallX;
   const shotBallOriginY = 105;
+
+  // Compute where shot/penalty result ball ends up (for return animation)
+  const shotEndPos = isShotGoal
+    ? { x: goal.goalTarget.x, y: goal.goalTarget.y - 8 }
+    : isShotSave
+      ? { x: goal.goalLineX - 12 * goal.inward, y: goal.penY + 5 }
+      : isShotMiss
+        ? { x: goal.goalLineX + 10 * goal.inward, y: 50 }
+        : null;
+
+  const penEndPos = isGoal
+    ? { x: goal.goalTarget.x, y: goal.goalTarget.y }
+    : isSave
+      ? { x: goal.saveTarget.x, y: goal.saveTarget.y }
+      : null;
+
+  // Update ref when result animations are active
+  if (shotEndPos) lastBallPosRef.current = shotEndPos;
+  if (penEndPos) lastBallPosRef.current = penEndPos;
+
+  // Keep ref current during normal play so it's always accurate
+  if (!shotResultActive && (!isPenalty || penaltyMode.phase !== 'result')) {
+    lastBallPosRef.current = { x: isPenalty ? goal.penSpotX : normalBallX, y: 105 };
+  }
 
   // Zone bands (mirrored reverses order: BOX on left, DEF on right)
   const zoneBands = mirrored
@@ -405,6 +433,7 @@ export function PitchVisualization({
             {(!isPenalty || penaltyMode.phase !== 'result') && !shotResultActive && (
               <motion.g
                 key="normal-ball"
+                initial={{ x: lastBallPosRef.current.x, y: lastBallPosRef.current.y }}
                 animate={{ x: isPenalty ? goal.penSpotX : normalBallX, y: 105 }}
                 exit={{ opacity: 0, transition: { duration: 0.1 } }}
                 transition={{ type: 'spring', stiffness: 140, damping: 18 }}

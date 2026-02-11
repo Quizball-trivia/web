@@ -9,6 +9,7 @@ export type Phase =
   | 'reveal'
   | 'possession-move'
   | 'shot'
+  | 'shot-result'
   | 'goal'
   | 'saved'
   | 'halftime'

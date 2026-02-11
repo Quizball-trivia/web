@@ -55,13 +55,10 @@ export function PossessionQuestionPanel({
 
   const categoryLabel = isPenaltyPhase ? 'Penalty' : isShotPhase ? 'Shot on Goal' : 'Football';
 
-  // For shot questions, there's no dedicated 'shot-reveal' phase — all four
-  // answerStates flip from 'default' simultaneously, so checking [0] is enough
-  // to detect reveal. For normal/penalty phases we use explicit phase names.
   const isReveal = isPenaltyPhase
     ? phase === 'penalty-reveal' || phase === 'penalty-result'
     : isShotPhase
-      ? answerStates[0] !== 'default'
+      ? phase === 'shot-result'
       : phase === 'reveal';
 
   const isPlaying = isPenaltyPhase
