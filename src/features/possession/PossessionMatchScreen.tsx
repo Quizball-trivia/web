@@ -83,7 +83,7 @@ export function PossessionMatchScreen() {
       <div className="w-full max-w-lg flex flex-col">
         {/* Mute toggle */}
         <button
-          onClick={() => { g.toggleMute(); usePossessionMatchStore.getState().setMuted(!g.muted); }}
+          onClick={() => { const muted = g.toggleMute(); usePossessionMatchStore.getState().setMuted(muted); }}
           className="fixed top-4 left-4 z-40 size-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-lg transition-colors"
           title={g.muted ? 'Unmute' : 'Mute'}
         >

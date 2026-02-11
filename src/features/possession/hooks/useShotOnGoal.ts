@@ -37,6 +37,7 @@ export function useShotOnGoal(
     shotBallOriginRef.current = player.position > 50 ? playerX + 14 : playerX - 14;
 
     const usedIds = usedQuestionIdsRef.current ?? new Set<string>();
+    if (!usedQuestionIdsRef.current) usedQuestionIdsRef.current = usedIds;
     const sq = pickQuestion(HARD_QUESTIONS, usedIds);
 
     const s = store.getState();

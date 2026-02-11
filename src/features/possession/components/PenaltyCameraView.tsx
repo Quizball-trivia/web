@@ -50,8 +50,8 @@ export function PenaltyCameraView({
     <div className="fixed inset-0 z-50 bg-[#0a0e1a] overflow-hidden">
       {/* Zoomed pitch — reuses the existing field */}
       <motion.div
-        initial={{ scale: 1, x: 0 }}
-        animate={{ scale: 2.5, x: '-35%' }}
+        initial={{ transform: 'translateX(0%) scale(1)' }}
+        animate={{ transform: 'translateX(-35%) scale(2.5)' }}
         transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
         className="absolute inset-0 flex items-center justify-center"
       >
@@ -87,7 +87,7 @@ export function PenaltyCameraView({
         <svg
           viewBox="0 0 500 230"
           className="w-full max-w-2xl h-auto"
-          style={{ transform: 'scale(2.5) translateX(-35%)' }}
+          style={{ transform: 'translateX(-35%) scale(2.5)' }}
         >
           <defs>
             <filter id={glowShooterId} x="-50%" y="-50%" width="200%" height="200%">

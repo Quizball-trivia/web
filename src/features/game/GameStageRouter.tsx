@@ -44,8 +44,8 @@ const toLegacyMode = (mode: string | undefined): LegacyGameMode => {
   return "timeAttack";
 };
 
-const POSSESSION_TOTAL_QUESTIONS = 12;
-const CLASSIC_TOTAL_QUESTIONS = 10;
+const POSSESSION_TOTAL_QUESTIONS_FALLBACK = 12;
+const CLASSIC_TOTAL_QUESTIONS_FALLBACK = 10;
 
 export function GameStageRouter() {
   const router = useRouter();
@@ -318,7 +318,8 @@ export function GameStageRouter() {
       const opponentDisplayScore = isPossession
         ? opponentStats?.goals ?? 0
         : opponentStats?.totalPoints ?? realtimeMatch.oppTotalPoints;
-      const totalQuestionsPlayed = isPossession ? POSSESSION_TOTAL_QUESTIONS : CLASSIC_TOTAL_QUESTIONS;
+      const totalQuestionsPlayed = realtimeMatch.currentQuestion?.total
+        ?? (isPossession ? POSSESSION_TOTAL_QUESTIONS_FALLBACK : CLASSIC_TOTAL_QUESTIONS_FALLBACK);
 
       return (
         <RealtimeResultsScreen

@@ -100,7 +100,7 @@ export function PenaltyOverlay({
           shooterName={shooterName}
           defenderName={defenderName}
           isPlayerShooter={isShooterTurn}
-          result={result}
+          result={result === 'pending' ? null : result}
           phase={phase}
           playerPosition={playerPosition}
         />

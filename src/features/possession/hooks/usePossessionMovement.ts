@@ -81,7 +81,7 @@ export function calculatePossessionMove(
     }
     return { posDelta: 3, momDelta: 0, message: '+3 → Correct but slower', direction: 'forward' };
   }
-  return { posDelta: -2, momDelta: 0, message: 'Both wrong → -2', direction: 'neutral' };
+  return { posDelta: -2, momDelta: 0, message: 'Both wrong → -2', direction: 'backward' };
 }
 
 export function shouldTriggerShot(newPos: number, newMom: number, shotThreshold: number): boolean {

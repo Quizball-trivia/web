@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { CareerPath, CareerLevel } from './components/CareerPath';
 import { ObjectivesPanel } from './components/ObjectivesPanel';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'motion/react';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { careerLevels } from '@/data/careerLevels';
 

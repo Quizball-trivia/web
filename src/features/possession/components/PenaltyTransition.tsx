@@ -59,7 +59,9 @@ export function PenaltyTransition({ visible, playerGoals, opponentGoals }: Penal
           <div className="text-6xl font-black text-white font-fun">
             {playerGoals} - {opponentGoals}
           </div>
-          <div className="text-gray-400 text-lg mt-2 tracking-wide">Match Tied</div>
+          {playerGoals === opponentGoals && (
+            <div className="text-gray-400 text-lg mt-2 tracking-wide">Match Tied</div>
+          )}
         </motion.div>
 
         {/* Main text */}

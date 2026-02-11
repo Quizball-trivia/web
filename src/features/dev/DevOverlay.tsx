@@ -43,9 +43,9 @@ export function DevOverlay() {
         <Row label="Half" value={ps?.half ?? '—'} />
         <Row label="Poss %" value={ps?.sharedPossession ?? '—'} />
         <Row label="Q in Half" value={`${ps?.normalQuestionsAnsweredInHalf ?? '?'}/6`} />
-        <Row label="Momentum" value={ps ? `S1:${ps.seatMomentum.seat1} S2:${ps.seatMomentum.seat2}` : '—'} />
-        <Row label="Goals" value={ps ? `${ps.goals.seat1} - ${ps.goals.seat2}` : '—'} />
-        <Row label="Pen Goals" value={ps ? `${ps.penaltyGoals.seat1} - ${ps.penaltyGoals.seat2}` : '—'} />
+        <Row label="Momentum" value={ps?.seatMomentum ? `S1:${ps.seatMomentum.seat1} S2:${ps.seatMomentum.seat2}` : '—'} />
+        <Row label="Goals" value={ps?.goals ? `${ps.goals.seat1} - ${ps.goals.seat2}` : '—'} />
+        <Row label="Pen Goals" value={ps?.penaltyGoals ? `${ps.penaltyGoals.seat1} - ${ps.penaltyGoals.seat2}` : '—'} />
         <Row label="PhaseKind" value={ps?.phaseKind ?? '—'} />
         <Row label="Attacker" value={ps?.attackerSeat ?? 'none'} />
         <Row label="Shooter" value={ps?.shooterSeat ?? 'none'} />
