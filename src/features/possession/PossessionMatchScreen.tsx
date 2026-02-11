@@ -183,7 +183,7 @@ export function PossessionMatchScreen() {
               showOptions={activeShowOptions}
               selectedAnswer={activeSelectedAnswer}
               answerStates={activeAnswerStates}
-              opponentAnswer={g.opponentAnswer}
+              opponentAnswer={g.isPenaltyPhase ? g.penaltyOpponentAnswer : g.isShotPhase ? g.shotOpponentAnswer : g.opponentAnswer}
               showPlayerSplash={g.showPlayerSplash}
               showOpponentSplash={g.showOpponentSplash}
               playerSplashPoints={g.playerSplashPoints}
