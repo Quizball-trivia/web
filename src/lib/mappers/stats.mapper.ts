@@ -53,6 +53,11 @@ export function toRecentMatchSummaries(response: RecentMatchesResponse): RecentM
     timeLabel: formatTimeAgo(item.endedAt),
     playerScore: item.playerScore,
     opponentScore: item.opponentScore,
+    playerGoals: item.playerGoals,
+    playerPenaltyGoals: item.playerPenaltyGoals,
+    opponentGoals: item.opponentGoals,
+    opponentPenaltyGoals: item.opponentPenaltyGoals,
+    winnerDecisionMethod: item.winnerDecisionMethod,
     opponent: {
       id: item.opponent.id,
       username: item.opponent.username,

@@ -216,8 +216,9 @@ export function useGameStageTransitions({
 
   useEffect(() => {
     if (!isMultiplayer) return;
-    if (realtimeMatch?.finalResults && getStageOrdinal(stage) < getStageOrdinal("finalResults")) {
+    const completed = realtimeMatch?.finalResults || realtimeMatch?.possessionState?.phase === 'COMPLETED';
+    if (completed && getStageOrdinal(stage) < getStageOrdinal("finalResults")) {
       setStage("finalResults");
     }
-  }, [isMultiplayer, realtimeMatch?.finalResults, setStage, stage]);
+  }, [isMultiplayer, realtimeMatch?.finalResults, realtimeMatch?.possessionState?.phase, setStage, stage]);
 }

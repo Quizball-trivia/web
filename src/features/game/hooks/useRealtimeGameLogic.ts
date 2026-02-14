@@ -3,9 +3,9 @@ import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { getSocket } from '@/lib/realtime/socket-client';
 import { logger } from '@/utils/logger';
 
-const QUESTION_REVEAL_MS = 2000; // 2 second reveal phase before options become clickable
+const QUESTION_REVEAL_MS = 2000; // 2s question entrance before options become clickable
 const QUESTION_PLAYING_MS = 10000; // 10 second playing phase
-const ROUND_RESULT_HOLD_MS = 2000; // hold correct answer for 2s before moving to next round
+const ROUND_RESULT_HOLD_MS = 1800; // hold result for 1.8s before transitioning to next question
 
 export function useRealtimeGameLogic() {
   const match = useRealtimeMatchStore((state) => state.match);
@@ -13,9 +13,12 @@ export function useRealtimeGameLogic() {
   const matchPaused = useRealtimeMatchStore((state) => state.matchPaused);
   const pauseUntil = useRealtimeMatchStore((state) => state.pauseUntil);
   const setQuestionPhase = useRealtimeMatchStore((state) => state.setQuestionPhase);
+  const promotePendingQuestion = useRealtimeMatchStore((state) => state.promotePendingQuestion);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [selectedAnswerQIndex, setSelectedAnswerQIndex] = useState<number | undefined>(undefined);
   const [timeRemaining, setTimeRemaining] = useState(QUESTION_PLAYING_MS / 1000);
   const [showOptions, setShowOptions] = useState(false);
+  const [nowMs, setNowMs] = useState(() => Date.now());
   const matchPausedRef = useRef(matchPaused);
 
   useEffect(() => {
@@ -25,22 +28,37 @@ export function useRealtimeGameLogic() {
   const currentQuestion = match?.currentQuestion ?? null;
   const currentQuestionIndex = currentQuestion?.qIndex;
   const questionPhase = match?.currentQuestionPhase ?? 'reveal';
+  const countdownEndsAt = match?.countdownEndsAt ?? null;
+  const countdownRemainingMs = useMemo(() => {
+    if (!countdownEndsAt) return 0;
+    return Math.max(0, countdownEndsAt - nowMs);
+  }, [countdownEndsAt, nowMs]);
+  const countdownSeconds = Math.ceil(countdownRemainingMs / 1000);
+  const startCountdownActive = countdownRemainingMs > 0 && (currentQuestion?.qIndex ?? 0) === 0;
 
   useEffect(() => {
-    // Reset selected answer when question changes - intentional sync pattern
+    if (!countdownEndsAt) return;
+    const tick = () => setNowMs(Date.now());
+    tick();
+    if (countdownEndsAt <= Date.now()) return;
+    const interval = setInterval(tick, 100);
+    return () => clearInterval(interval);
+  }, [countdownEndsAt]);
+
+  useEffect(() => {
+    // Reset UI state synchronously when question changes — prevents one-frame flash
+    // where new question mounts with stale showOptions=true from previous question.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedAnswer(null);
+    setSelectedAnswerQIndex(undefined);
+    setShowOptions(false);
   }, [currentQuestionIndex]);
 
   // Phase transition effect: reveal → playing
+  // showOptions is already reset synchronously in the question-change effect above,
+  // so we only need the delayed reveal timer here.
   useEffect(() => {
-    if (currentQuestionIndex === undefined || matchPausedRef.current) return;
-
-    const resetTimer = setTimeout(() => {
-      if (matchPausedRef.current) return;
-      setShowOptions(false);
-      setQuestionPhase('reveal');
-    }, 0);
+    if (currentQuestionIndex === undefined || matchPausedRef.current || startCountdownActive) return;
 
     const revealTimer = setTimeout(() => {
       if (matchPausedRef.current) return;
@@ -48,16 +66,13 @@ export function useRealtimeGameLogic() {
       setQuestionPhase('playing');
     }, QUESTION_REVEAL_MS);
 
-    return () => {
-      clearTimeout(resetTimer);
-      clearTimeout(revealTimer);
-    };
-  }, [currentQuestionIndex, setQuestionPhase]);
+    return () => clearTimeout(revealTimer);
+  }, [currentQuestionIndex, setQuestionPhase, startCountdownActive]);
 
   // Timer countdown effect
   useEffect(() => {
     if (!currentQuestion) return;
-    if (matchPaused) return;
+    if (matchPaused || startCountdownActive) return;
 
     // Backend deadline is for 10s playing phase
     // Add reveal offset so countdown starts when options unlock
@@ -76,7 +91,7 @@ export function useRealtimeGameLogic() {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [currentQuestion, matchPaused]);
+  }, [currentQuestion, matchPaused, startCountdownActive]);
 
   const answerAck = match?.answerAck && match.currentQuestion?.qIndex === match.answerAck.qIndex
     ? match.answerAck
@@ -90,17 +105,29 @@ export function useRealtimeGameLogic() {
   const roundResolved = Boolean(roundResult);
 
   useEffect(() => {
-    if (!roundResolved || !showOptions || matchPaused) return;
+    if (!roundResolved || !showOptions || matchPaused || startCountdownActive) return;
 
     const holdTimer = setTimeout(() => {
       setShowOptions(false);
+      // If a question arrived while result was showing, promote it now
+      promotePendingQuestion();
     }, ROUND_RESULT_HOLD_MS);
 
     return () => clearTimeout(holdTimer);
-  }, [roundResolved, showOptions, matchPaused, currentQuestionIndex]);
+  }, [roundResolved, showOptions, matchPaused, currentQuestionIndex, promotePendingQuestion, startCountdownActive]);
+
+  // Promote late-arriving questions: if the hold timer already fired (showOptions=false)
+  // but the question arrived after, it's stuck in pendingQuestion. Promote immediately.
+  const hasPendingQuestion = Boolean(match?.pendingQuestion);
+  useEffect(() => {
+    if (!hasPendingQuestion || showOptions || matchPaused || startCountdownActive) return;
+    // showOptions is false + pendingQuestion exists = hold timer already fired, question arrived late
+    promotePendingQuestion();
+  }, [hasPendingQuestion, showOptions, matchPaused, promotePendingQuestion, startCountdownActive]);
 
   const showResult = Boolean(answerAck || roundResult);
   const isAnswered = selectedAnswer !== null || showResult;
+  const showOptionsVisible = showOptions && !startCountdownActive;
 
   const opponentId = match?.opponent.id ?? null;
   const myRoundResult = useMemo(() => {
@@ -129,6 +156,8 @@ export function useRealtimeGameLogic() {
 
   const correctIndex = useMemo(() => {
     if (!match || !currentQuestion) return undefined;
+    // Primary: read directly from the question payload (sent with question for instant feedback)
+    if (currentQuestion.correctIndex !== undefined) return currentQuestion.correctIndex;
     const stored = match.questions[currentQuestion.qIndex]?.correctIndex;
     return stored ?? answerAck?.correctIndex ?? roundResult?.correctIndex;
   }, [answerAck?.correctIndex, roundResult?.correctIndex, match, currentQuestion]);
@@ -140,9 +169,18 @@ export function useRealtimeGameLogic() {
     if (!match || !currentQuestion) return;
     if (isAnswered) return;
     if (matchPaused) return;
+    if (startCountdownActive) return;
     if (questionPhase !== 'playing') return; // Prevent answers during reveal
     if (timeRemaining <= 0) return;
+
+    logger.info('Submitting answer with resolved correct index sources', {
+      correctIndex,
+      currentQuestionCorrectIndex: currentQuestion.correctIndex,
+      storedQuestionCorrectIndex: match.questions[currentQuestion.qIndex]?.correctIndex,
+    });
+
     setSelectedAnswer(index);
+    setSelectedAnswerQIndex(currentQuestion.qIndex);
 
     const deadlineMs = new Date(currentQuestion.deadlineAt).getTime();
     const elapsed = Math.min(QUESTION_PLAYING_MS, Math.max(0, QUESTION_PLAYING_MS - (deadlineMs - Date.now())));
@@ -166,6 +204,7 @@ export function useRealtimeGameLogic() {
       currentQuestion,
       timeRemaining,
       selectedAnswer,
+      selectedAnswerQIndex,
       showResult,
       roundResolved,
       roundResult,
@@ -179,7 +218,10 @@ export function useRealtimeGameLogic() {
       matchPaused,
       pauseUntil,
       questionPhase,
-      showOptions,
+      showOptions: showOptionsVisible,
+      countdownRemainingMs,
+      countdownSeconds,
+      startCountdownActive,
     },
     actions: {
       submitAnswer,

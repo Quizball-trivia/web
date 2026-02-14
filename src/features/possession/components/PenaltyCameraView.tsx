@@ -12,7 +12,7 @@ interface PenaltyCameraViewProps {
   shooterName: string;
   defenderName: string;
   isPlayerShooter: boolean;
-  result: 'pending' | 'goal' | 'saved' | null;
+  result: 'goal' | 'saved' | null;
   phase: 'setup' | 'playing' | 'result';
   playerPosition: number;
 }

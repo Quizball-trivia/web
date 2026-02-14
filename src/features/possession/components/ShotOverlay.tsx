@@ -43,7 +43,7 @@ export function ShotOverlay({
         rad: ((i / 12) * 360 * Math.PI) / 180,
         dist: 80 + seededUnit(i + 11) * 60,
         rotate: seededUnit(i + 97) * 720,
-        colorIndex: i % 6,
+        colorIndex: i % CONFETTI_COLORS.length,
       })),
     []
   );

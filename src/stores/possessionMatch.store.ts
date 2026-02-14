@@ -147,7 +147,7 @@ interface PossessionMatchActions {
 export type PossessionMatchStore = PossessionMatchState & PossessionMatchActions;
 
 // ─── Initial state ──────────────────────────────────────────────
-const initialState: PossessionMatchState = {
+const createInitialState = (): PossessionMatchState => ({
   phase: 'intro',
   half: 1,
   normalQuestionsInHalf: 0,
@@ -203,7 +203,9 @@ const initialState: PossessionMatchState = {
   penaltyResult: null,
   penaltyShowOptions: false,
   penaltyFieldPhase: 'setup',
-};
+});
+
+const initialState = createInitialState();
 
 // ─── Store ──────────────────────────────────────────────────────
 export const usePossessionMatchStore = create<PossessionMatchStore>((set) => ({
@@ -284,5 +286,5 @@ export const usePossessionMatchStore = create<PossessionMatchStore>((set) => ({
       showOpponentSplash: false,
     }),
 
-  resetMatch: () => set({ ...initialState }),
+  resetMatch: () => set(createInitialState()),
 }));

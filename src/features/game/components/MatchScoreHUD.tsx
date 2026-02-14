@@ -17,6 +17,7 @@ interface MatchScoreHUDProps {
   roundTotal: number;
   playerAnswered: boolean;
   opponentAnswered: boolean;
+  opponentAnsweredCorrectly?: boolean | null;
   opponentRecentPoints?: number;
   onQuit?: () => void;
 }
@@ -33,6 +34,7 @@ export function MatchScoreHUD({
   roundTotal,
   playerAnswered,
   opponentAnswered,
+  opponentAnsweredCorrectly,
   opponentRecentPoints = 0,
   onQuit,
 }: MatchScoreHUDProps) {
@@ -171,15 +173,37 @@ export function MatchScoreHUD({
               {animatedOpponentScore}
             </div>
           </div>
-          <Avatar className={cn(
-            'size-11 border-2 transition-all duration-300 shrink-0',
-            opponentAnswered ? 'border-emerald-400 ring-2 ring-emerald-400/30' : 'border-white/20'
-          )}>
-            <AvatarImage src={opponentAvatar} />
-            <AvatarFallback className="text-xs font-bold bg-white/10">
-              {opponentName.slice(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative shrink-0">
+            <Avatar className={cn(
+              'size-11 border-2 transition-all duration-300',
+              opponentAnswered
+                ? opponentAnsweredCorrectly === true
+                  ? 'border-emerald-400 ring-2 ring-emerald-400/30'
+                  : opponentAnsweredCorrectly === false
+                    ? 'border-red-400 ring-2 ring-red-400/30'
+                    : 'border-white/20'
+                : 'border-white/20'
+            )}>
+              <AvatarImage src={opponentAvatar} />
+              <AvatarFallback className="text-xs font-bold bg-white/10">
+                {opponentName.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <AnimatePresence>
+              {opponentAnswered && opponentAnsweredCorrectly !== null && opponentAnsweredCorrectly !== undefined && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                  className="absolute -top-1 -right-1 size-5 rounded-full flex items-center justify-center text-xs font-bold bg-[#131F24] border-2"
+                  style={{ borderColor: opponentAnsweredCorrectly ? '#58CC02' : '#FF4B4B' }}
+                >
+                  {opponentAnsweredCorrectly ? '\u2713' : '\u2717'}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </motion.div>
       </div>
     </div>

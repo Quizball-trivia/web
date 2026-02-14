@@ -127,6 +127,8 @@ export function PossessionMatchScreen() {
                 penaltyRound={g.penaltyRound}
                 isPenaltySuddenDeath={g.isPenaltySuddenDeath}
                 isPlayerShooter={g.isPlayerShooter}
+                playerName="You"
+                opponentName="CPU"
                 playerAvatarUrl={g.playerAvatar}
                 opponentAvatarUrl={g.opponentAvatar}
                 timeRemaining={g.timeRemaining}
@@ -153,6 +155,8 @@ export function PossessionMatchScreen() {
               playerPosition={g.player.position}
               playerAvatarUrl={g.playerAvatar}
               opponentAvatarUrl={g.opponentAvatar}
+              playerName="You"
+              opponentName="CPU"
               myMomentum={(g.isPenaltyPhase || g.isShotPhase) ? 0 : g.player.momentum}
               penaltyMode={g.isPenaltyPhase ? {
                 isPlayerShooter: g.isPlayerShooter,

@@ -3,14 +3,14 @@ import { logger } from '@/utils/logger';
 import type {
   DraftCategory,
   DraftState,
-  MatchEngine,
   LobbyState,
   MatchAnswerAckPayload,
   MatchFinalResultsPayload,
   MatchRejoinAvailablePayload,
   MatchStatePayload,
-  MatchQuestionPayload,
+  ResolvedMatchQuestionPayload,
   MatchRoundResultPayload,
+  MatchCountdownPayload,
   MatchStartPayload,
   OpponentInfo,
   ErrorPayload,
@@ -23,6 +23,9 @@ import type {
   SessionStatePayload,
 } from '@/lib/realtime/socket.types';
 
+/** Client-side fallback countdown until the server's match:countdown event arrives with the real value. */
+const DEFAULT_COUNTDOWN_MS = 5000;
+
 export interface DraftStatus {
   lobbyId: string;
   categories: DraftCategory[];
@@ -32,19 +35,21 @@ export interface DraftStatus {
 }
 
 export interface MatchQuestionState {
-  payload: MatchQuestionPayload;
+  payload: ResolvedMatchQuestionPayload;
   correctIndex?: number;
 }
 
 export interface MatchStatus {
   matchId: string;
-  engine: MatchEngine;
   mySeat: 1 | 2 | null;
   opponent: OpponentInfo;
-  currentQuestion: MatchQuestionPayload | null;
+  countdownEndsAt: number | null;
+  currentQuestion: ResolvedMatchQuestionPayload | null;
+  pendingQuestion: ResolvedMatchQuestionPayload | null;
   questions: Record<number, MatchQuestionState>;
   answerAck: MatchAnswerAckPayload | null;
   opponentAnswered: boolean;
+  opponentSelectedIndex: number | null;
   myTotalPoints: number;
   oppTotalPoints: number;
   opponentRecentPoints: number;
@@ -53,6 +58,7 @@ export interface MatchStatus {
   currentQuestionPhase: 'reveal' | 'playing';
   opponentAnsweredCorrectly: boolean | null;
   possessionState: MatchStatePayload | null;
+  stateVersion: number;
 }
 
 export interface WarmupStatus {
@@ -100,7 +106,9 @@ interface RealtimeState {
   setDraftBan: (actorId: string, categoryId: string) => void;
   setDraftComplete: (allowed: [string, string]) => void;
   setMatchStart: (payload: MatchStartPayload) => void;
-  setMatchQuestion: (payload: MatchQuestionPayload) => void;
+  setMatchCountdown: (payload: MatchCountdownPayload) => void;
+  setMatchQuestion: (payload: ResolvedMatchQuestionPayload) => void;
+  promotePendingQuestion: () => void;
   setMatchState: (payload: MatchStatePayload) => void;
   setAnswerAck: (payload: MatchAnswerAckPayload) => void;
   setOpponentAnswered: (payload?: {
@@ -108,6 +116,7 @@ interface RealtimeState {
     opponentTotalPoints?: number;
     pointsEarned?: number;
     isCorrect?: boolean;
+    selectedIndex?: number | null;
   }) => void;
   setQuestionPhase: (phase: 'reveal' | 'playing') => void;
   setRoundResult: (payload: MatchRoundResultPayload) => void;
@@ -128,6 +137,7 @@ interface RealtimeState {
   setOnlineUsers: (data: PresenceOnlineCountPayload) => void;
   clearWarmup: () => void;
   setSessionState: (payload: SessionStatePayload) => void;
+  revertDraftBan: (actorId: string) => void;
   setError: (error: ErrorPayload) => void;
   clearError: () => void;
   reset: () => void;
@@ -219,13 +229,15 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
       rejoinMatch: null,
       match: {
         matchId: payload.matchId,
-        engine: payload.engine,
         mySeat: payload.mySeat ?? null,
         opponent: payload.opponent,
+        countdownEndsAt: Date.now() + DEFAULT_COUNTDOWN_MS,
         currentQuestion: null,
+        pendingQuestion: null,
         questions: {},
         answerAck: null,
         opponentAnswered: false,
+        opponentSelectedIndex: null,
         myTotalPoints: 0,
         oppTotalPoints: 0,
         opponentRecentPoints: 0,
@@ -234,7 +246,28 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
         currentQuestionPhase: 'reveal',
         opponentAnsweredCorrectly: null,
         possessionState: null,
+        stateVersion: 0,
       },
+    });
+  },
+  setMatchCountdown: (payload) => {
+    logger.info('Realtime store set match countdown', {
+      matchId: payload.matchId,
+      seconds: payload.seconds,
+      startsAt: payload.startsAt,
+    });
+    set((state) => {
+      if (!state.match || state.match.matchId !== payload.matchId) return state;
+      const startsAtMs = Number.isFinite(new Date(payload.startsAt).getTime())
+        ? new Date(payload.startsAt).getTime()
+        : Date.now() + Math.max(0, payload.seconds) * 1000;
+      return {
+        ...state,
+        match: {
+          ...state.match,
+          countdownEndsAt: startsAtMs,
+        },
+      };
     });
   },
   setMatchState: (payload) => {
@@ -245,16 +278,40 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
       sharedPossession: payload.sharedPossession,
       phaseKind: payload.phaseKind,
       phaseRound: payload.phaseRound,
+      stateVersion: payload.stateVersion,
     });
     set((state) => {
       if (!state.match || state.match.matchId !== payload.matchId) return state;
+      // Reject out-of-order state events via stateVersion
+      const incomingVersion = payload.stateVersion ?? 0;
+      if (incomingVersion > 0 && incomingVersion <= state.match.stateVersion) {
+        logger.warn('Ignoring stale match:state event', {
+          incoming: incomingVersion,
+          current: state.match.stateVersion,
+        });
+        return state;
+      }
       const shouldClearQuestion = payload.phase === 'HALFTIME' || payload.phase === 'COMPLETED';
+      const shouldClearCountdown =
+        payload.phase !== 'NORMAL_PLAY' ||
+        payload.normalQuestionsAnsweredInHalf > 0 ||
+        payload.phaseRound > 1;
       return {
         ...state,
         match: {
           ...state.match,
           possessionState: payload,
+          stateVersion: incomingVersion > 0 ? incomingVersion : state.match.stateVersion,
+          countdownEndsAt: shouldClearCountdown ? null : state.match.countdownEndsAt,
           currentQuestion: shouldClearQuestion ? null : state.match.currentQuestion,
+          pendingQuestion: shouldClearQuestion ? null : state.match.pendingQuestion,
+          answerAck: shouldClearQuestion ? null : state.match.answerAck,
+          lastRoundResult: shouldClearQuestion ? null : state.match.lastRoundResult,
+          opponentAnswered: shouldClearQuestion ? false : state.match.opponentAnswered,
+          opponentSelectedIndex: shouldClearQuestion ? null : state.match.opponentSelectedIndex,
+          opponentRecentPoints: shouldClearQuestion ? 0 : state.match.opponentRecentPoints,
+          opponentAnsweredCorrectly: shouldClearQuestion ? null : state.match.opponentAnsweredCorrectly,
+          currentQuestionPhase: shouldClearQuestion ? 'reveal' : state.match.currentQuestionPhase,
         },
       };
     });
@@ -263,6 +320,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
     logger.info('Realtime store set match question', {
       matchId: payload.matchId,
       qIndex: payload.qIndex,
+      correctIndex: payload.correctIndex,
       questionPrompt: payload.question.prompt,
       questionPromptPreview: payload.question.prompt?.substring(0, 50) + '...',
     });
@@ -278,6 +336,30 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
         return state;
       }
 
+      // Buffer question if we're still showing the last round result.
+      // Exception: when server state is HALFTIME, accept question immediately to avoid
+      // getting stuck if phase transition and question packets arrive out of order.
+      if (state.match.lastRoundResult && state.match.possessionState?.phase !== 'HALFTIME') {
+        logger.info('Buffering match:question as pendingQuestion (result still showing)', {
+          qIndex: payload.qIndex,
+        });
+        return {
+          ...state,
+          match: {
+            ...state.match,
+            pendingQuestion: payload,
+            countdownEndsAt: payload.qIndex > 0 ? null : state.match.countdownEndsAt,
+            questions: {
+              ...state.match.questions,
+              [payload.qIndex]: {
+                payload,
+                correctIndex: payload.correctIndex ?? state.match.questions[payload.qIndex]?.correctIndex,
+              },
+            },
+          },
+        };
+      }
+
       logger.info('Store updated with new question', {
         qIndex: payload.qIndex,
         prompt: payload.question.prompt,
@@ -290,8 +372,11 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
         match: {
           ...state.match,
           currentQuestion: payload,
+          pendingQuestion: null,
+          countdownEndsAt: payload.qIndex > 0 ? null : state.match.countdownEndsAt,
           answerAck: null,
           opponentAnswered: false,
+          opponentSelectedIndex: null,
           opponentRecentPoints: 0,
           lastRoundResult: null,
           currentQuestionPhase: 'reveal',
@@ -300,9 +385,32 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
             ...state.match.questions,
             [payload.qIndex]: {
               payload,
-              correctIndex: state.match.questions[payload.qIndex]?.correctIndex,
+              correctIndex: payload.correctIndex ?? state.match.questions[payload.qIndex]?.correctIndex,
             },
           },
+        },
+      };
+    });
+  },
+  promotePendingQuestion: () => {
+    set((state) => {
+      if (!state.match || !state.match.pendingQuestion) return state;
+      const pending = state.match.pendingQuestion;
+      logger.info('Promoting pending question to current', { qIndex: pending.qIndex });
+      return {
+        ...state,
+        match: {
+          ...state.match,
+          currentQuestion: pending,
+          pendingQuestion: null,
+          countdownEndsAt: pending.qIndex > 0 ? null : state.match.countdownEndsAt,
+          answerAck: null,
+          opponentAnswered: false,
+          opponentSelectedIndex: null,
+          opponentRecentPoints: 0,
+          lastRoundResult: null,
+          currentQuestionPhase: 'reveal',
+          opponentAnsweredCorrectly: null,
         },
       };
     });
@@ -361,6 +469,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
         match: {
           ...state.match,
           opponentAnswered: true,
+          opponentSelectedIndex: payload?.selectedIndex ?? state.match.opponentSelectedIndex,
           oppTotalPoints: payload?.opponentTotalPoints ?? state.match.oppTotalPoints,
           opponentRecentPoints:
             payload?.pointsEarned !== undefined ? payload.pointsEarned : state.match.opponentRecentPoints,
@@ -641,6 +750,15 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
     logger.info('Realtime store set session state', payload);
     set({ sessionState: payload });
   },
+  revertDraftBan: (actorId) =>
+    set((state) => {
+      if (!state.draft) return state;
+      const { [actorId]: _removed, ...remainingBans } = state.draft.bans;
+      return {
+        ...state,
+        draft: { ...state.draft, bans: remainingBans, turnUserId: actorId },
+      };
+    }),
   setError: (error) => {
     const snapshot = (error.meta as { stateSnapshot?: SessionStatePayload } | undefined)?.stateSnapshot;
     logger.warn('Realtime store set error', {

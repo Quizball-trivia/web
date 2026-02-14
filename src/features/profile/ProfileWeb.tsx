@@ -9,6 +9,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { COLLAPSED_MATCHES_COUNT, MAX_MATCHES_COUNT } from '@/lib/constants/matches';
+import type { FormattedMatchScore } from '@/utils/matchScore';
 
 const achievementIconMap: Record<string, LucideIcon> = {
   Trophy, Target, Flame, Star, Award, Check, MapPin, Globe, Users, Clock, Zap, Medal, Crown,
@@ -32,6 +33,7 @@ export interface ProfileRecentMatch {
   rp: string;
   time: string;
   opponent: string;
+  scoreFormatted: FormattedMatchScore;
 }
 
 interface ProfileWebProps {
@@ -289,7 +291,7 @@ export function ProfileWeb({
                       : 'text-muted-foreground hover:text-foreground border-transparent hover:border-border'
                   }`}
                 >
-                  🇬🇪 KA
+                  🇬🇪 GE
                 </button>
               </div>
             </div>
@@ -472,9 +474,23 @@ export function ProfileWeb({
                         <div className="text-xs font-bold text-muted-foreground">{match.mode} · {match.time}</div>
                       </div>
                     </div>
-                    <span className={`text-base font-black ${rpClass}`}>
-                      {match.rp}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-base font-black ${rpClass}`}>
+                        {match.scoreFormatted.score}
+                        {match.scoreFormatted.suffix && (
+                          <span className="text-xs font-bold ml-1 opacity-80">{match.scoreFormatted.suffix}</span>
+                        )}
+                      </span>
+                      {match.scoreFormatted.badge && (
+                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${
+                          match.scoreFormatted.badgeVariant === 'red'
+                            ? 'bg-red-500/15 text-red-400 ring-1 ring-red-500/25'
+                            : 'bg-muted text-muted-foreground ring-1 ring-border'
+                        }`}>
+                          {match.scoreFormatted.badge}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 );
               })}

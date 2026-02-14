@@ -12,6 +12,8 @@ interface PenaltyHUDProps {
   penaltyRound: number;
   isPenaltySuddenDeath: boolean;
   isPlayerShooter: boolean;
+  playerName: string;
+  opponentName: string;
   playerAvatarUrl: string;
   opponentAvatarUrl: string;
   timeRemaining: number;
@@ -25,12 +27,27 @@ export function PenaltyHUD({
   penaltyRound,
   isPenaltySuddenDeath,
   isPlayerShooter,
+  playerName,
+  opponentName,
   playerAvatarUrl,
   opponentAvatarUrl,
   timeRemaining,
   phase,
   onQuit,
 }: PenaltyHUDProps) {
+  // Compute initials from names
+  const getInitials = (name: string) => {
+    if (!name) return '?';
+    const words = name.trim().split(/\s+/);
+    if (words.length >= 2) {
+      return (words[0][0] + words[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
+
+  const playerInitials = getInitials(playerName);
+  const opponentInitials = getInitials(opponentName);
+
   return (
     <div className="w-full font-fun space-y-2 mb-3">
       {onQuit && (
@@ -49,10 +66,10 @@ export function PenaltyHUD({
         <div className="flex items-center gap-3 flex-1 min-w-0 rounded-2xl bg-[#172333]/85 border border-white/10 px-3 py-2.5">
           <Avatar className="size-11 border-2 border-[#1CB0F6] shrink-0">
             <AvatarImage src={playerAvatarUrl} />
-            <AvatarFallback className="text-xs font-bold bg-[#1CB0F6]/20 text-[#1CB0F6]">YO</AvatarFallback>
+            <AvatarFallback className="text-xs font-bold bg-[#1CB0F6]/20 text-[#1CB0F6]">{playerInitials}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <div className="text-xs font-bold text-white/85 truncate">You</div>
+            <div className="text-xs font-bold text-white/85 truncate">{playerName}</div>
             <div className="text-3xl leading-7 font-black text-white tabular-nums">{penaltyPlayerScore}</div>
           </div>
         </div>
@@ -77,12 +94,12 @@ export function PenaltyHUD({
         </div>
         <div className="flex items-center gap-3 flex-1 min-w-0 justify-end rounded-2xl bg-[#172333]/85 border border-white/10 px-3 py-2.5">
           <div className="min-w-0 text-right">
-            <div className="text-xs font-bold text-white/85 truncate ml-auto">CPU</div>
+            <div className="text-xs font-bold text-white/85 truncate ml-auto">{opponentName}</div>
             <div className="text-3xl leading-7 font-black text-white tabular-nums">{penaltyOpponentScore}</div>
           </div>
           <Avatar className="size-11 border-2 border-[#FF4B4B] shrink-0">
             <AvatarImage src={opponentAvatarUrl} />
-            <AvatarFallback className="text-xs font-bold bg-[#FF4B4B]/20 text-[#FF4B4B]">CP</AvatarFallback>
+            <AvatarFallback className="text-xs font-bold bg-[#FF4B4B]/20 text-[#FF4B4B]">{opponentInitials}</AvatarFallback>
           </Avatar>
         </div>
       </div>

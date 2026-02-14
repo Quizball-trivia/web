@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useId, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
 type GoalSide = 'left' | 'right';
@@ -10,7 +10,7 @@ interface PitchMarkerProps {
   x: number;
   y: number;
   avatarUrl: string;
-  clipId: string;
+  avatarAlt: string;
   color: string;
   glowFilter: string;
   isShooter: boolean;
@@ -19,11 +19,13 @@ interface PitchMarkerProps {
   isGoal: boolean;
   showPenResult: boolean;
   keeperJolt: Record<string, number[]>;
+  isPortrait?: boolean;
 }
 
 function PitchMarker({
-  x, y, avatarUrl, clipId, color, glowFilter,
+  x, y, avatarUrl, avatarAlt, color, glowFilter,
   isShooter, isKeeper, isSave, isGoal, showPenResult, keeperJolt,
+  isPortrait = false,
 }: PitchMarkerProps) {
   const joltAnim = isSave && isKeeper
     ? keeperJolt
@@ -34,21 +36,26 @@ function PitchMarker({
   return (
     <motion.g
       animate={{ x, y }}
-      transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+      transition={{ type: 'spring', stiffness: 150, damping: 14, mass: 0.8 }}
       filter={`url(#${glowFilter})`}
     >
-      <motion.g animate={joltAnim} transition={{ duration: 0.35 }}>
-        {isShooter && !showPenResult && (
-          <motion.circle
-            cx="0" cy="0" r="22"
-            fill="none" stroke={color} strokeWidth="1.5" opacity="0.4"
-            animate={{ r: [22, 26, 22], opacity: [0.4, 0.15, 0.4] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        )}
-        <circle cx="0" cy="0" r="18" fill="none" stroke={color} strokeWidth={isKeeper ? 3.5 : 2.5} />
-        <clipPath id={clipId}><circle cx="0" cy="0" r="16" /></clipPath>
-        <image href={avatarUrl} x="-16" y="-16" width="32" height="32" clipPath={`url(#${clipId})`} />
+      <motion.g animate={joltAnim} transition={{ duration: 0.5 }}>
+        <g transform={isPortrait ? 'rotate(90)' : undefined}>
+          {isShooter && !showPenResult && (
+            <motion.circle
+              cx="0" cy="0" r="28"
+              fill="none" stroke={color} strokeWidth="1.5" opacity="0.4"
+              animate={{ r: [28, 33, 28], opacity: [0.4, 0.15, 0.4] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          )}
+          <circle cx="0" cy="0" r="22" fill="none" stroke={color} strokeWidth={isKeeper ? 3.5 : 2.5} />
+          <foreignObject x="-20" y="-20" width="40" height="40">
+            <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden' }}>
+              <img src={avatarUrl} alt={avatarAlt} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+          </foreignObject>
+        </g>
       </motion.g>
     </motion.g>
   );
@@ -107,6 +114,8 @@ interface PitchVisualizationProps {
   playerPosition: number; // 0–100
   playerAvatarUrl: string;
   opponentAvatarUrl: string;
+  playerName?: string;
+  opponentName?: string;
   myMomentum?: number; // 0-6
   oppMomentum?: number; // 0-6
   penaltyMode?: PenaltyMode;
@@ -119,12 +128,16 @@ interface PitchVisualizationProps {
   targetGoal?: GoalSide;
   /** Ball sits on player icon (true) or opponent icon (false). Drives kick-off logic. */
   ballOnPlayer?: boolean;
+  /** Pitch layout orientation. Portrait wraps all content in a 90° rotation matrix. */
+  orientation?: 'landscape' | 'portrait';
 }
 
 export function PitchVisualization({
   playerPosition,
   playerAvatarUrl,
   opponentAvatarUrl,
+  playerName,
+  opponentName,
   myMomentum = 0,
   oppMomentum = 0,
   penaltyMode,
@@ -133,12 +146,26 @@ export function PitchVisualization({
   mirrored = false,
   targetGoal,
   ballOnPlayer = true,
+  orientation = 'landscape',
 }: PitchVisualizationProps) {
   const isPenalty = !!penaltyMode;
   const isShot = !!shotMode;
+  const isPortrait = orientation === 'portrait';
 
-  // Track where the ball animation last ended so re-mount springs from there
-  const lastBallPosRef = useRef<{ x: number; y: number }>({ x: 250, y: 105 });
+  // Scoped SVG IDs to avoid collisions when multiple instances render
+  const reactId = useId();
+  const uid = (name: string) => `${reactId}-${name}`;
+  const playerAvatarAlt = playerName ? `${playerName} avatar` : 'player avatar';
+  const opponentAvatarAlt = opponentName ? `${opponentName} avatar` : 'opponent avatar';
+
+  // Helper: counter-rotate text 90° in portrait mode so labels stay readable
+  const textTf = (cx: number, cy: number) =>
+    isPortrait ? `rotate(90, ${cx}, ${cy})` : undefined;
+
+  // Helper: ball emoji style — counter-rotate in portrait to stay upright
+  const ballEmojiStyle: React.CSSProperties = isPortrait
+    ? { fontSize: '20px', lineHeight: '24px', textAlign: 'center', transform: 'rotate(90deg)' }
+    : { fontSize: '20px', lineHeight: '24px', textAlign: 'center' };
 
   // Goal coordinate set based on target
   const goal: GoalCoordinates = (targetGoal ?? 'right') === 'right' ? RIGHT_GOAL : LEFT_GOAL;
@@ -183,30 +210,6 @@ export function PitchVisualization({
   const shotBallOriginX = isShot ? shotMode.ballOriginX : normalBallX;
   const shotBallOriginY = 105;
 
-  // Compute where shot/penalty result ball ends up (for return animation)
-  const shotEndPos = isShotGoal
-    ? { x: goal.goalTarget.x, y: goal.goalTarget.y - 8 }
-    : isShotSave
-      ? { x: goal.goalLineX - 12 * goal.inward, y: goal.penY + 5 }
-      : isShotMiss
-        ? { x: goal.goalLineX + 10 * goal.inward, y: 50 }
-        : null;
-
-  const penEndPos = isGoal
-    ? { x: goal.goalTarget.x, y: goal.goalTarget.y }
-    : isSave
-      ? { x: goal.saveTarget.x, y: goal.saveTarget.y }
-      : null;
-
-  // Update ref when result animations are active
-  if (shotEndPos) lastBallPosRef.current = shotEndPos;
-  if (penEndPos) lastBallPosRef.current = penEndPos;
-
-  // Keep ref current during normal play so it's always accurate
-  if (!shotResultActive && (!isPenalty || penaltyMode.phase !== 'result')) {
-    lastBallPosRef.current = { x: isPenalty ? goal.penSpotX : normalBallX, y: 105 };
-  }
-
   // Zone bands (mirrored reverses order: BOX on left, DEF on right)
   const zoneBands = mirrored
     ? [
@@ -236,18 +239,57 @@ export function PitchVisualization({
         { x: 428, text: 'BOX', fill: 'rgba(255,75,75,0.35)' },
       ];
 
-  // Camera zoom direction
-  const zoomOrigin = targetGoal === 'left' ? 'left center' : 'right center';
-  const vignetteGradient = targetGoal === 'left'
-    ? 'radial-gradient(ellipse at 20% 50%, transparent 35%, rgba(0,0,0,0.35) 100%)'
-    : 'radial-gradient(ellipse at 80% 50%, transparent 35%, rgba(0,0,0,0.35) 100%)';
+  // Camera zoom direction — portrait maps landscape left→bottom, right→top
+  const zoomOrigin = isPortrait
+    ? (targetGoal === 'left' ? 'center bottom' : 'center top')
+    : (targetGoal === 'left' ? 'left center' : 'right center');
+  const vignetteGradient = isPortrait
+    ? (targetGoal === 'left'
+      ? 'radial-gradient(ellipse at 50% 80%, transparent 35%, rgba(0,0,0,0.35) 100%)'
+      : 'radial-gradient(ellipse at 50% 20%, transparent 35%, rgba(0,0,0,0.35) 100%)')
+    : (targetGoal === 'left'
+      ? 'radial-gradient(ellipse at 20% 50%, transparent 35%, rgba(0,0,0,0.35) 100%)'
+      : 'radial-gradient(ellipse at 80% 50%, transparent 35%, rgba(0,0,0,0.35) 100%)');
 
-  // Keeper jolt direction (away from goal)
-  const keeperJolt = { x: [0, -5 * goal.inward, 3 * goal.inward, 0], y: [0, -3, -1, 0] };
+  // Keeper jolt direction (away from goal) — enhanced amplitude for cinematic feel
+  const keeperJolt = { x: [0, -8 * goal.inward, 4 * goal.inward, 0], y: [0, -6, -2, 0] };
+  const ballTarget = useMemo(() => {
+    if (isGoal) return { x: goal.goalTarget.x, y: goal.goalTarget.y - 8 };
+    if (isSave) return { x: goal.saveTarget.x - 10 * goal.inward, y: goal.saveTarget.y + 5 };
+    if (isShotGoal) {
+      return {
+        x: [shotBallOriginX, (shotBallOriginX + goal.goalTarget.x) / 2, goal.goalTarget.x],
+        y: [shotBallOriginY, shotBallOriginY - 25, goal.goalTarget.y - 8],
+      };
+    }
+    if (isShotSave) {
+      return {
+        x: [shotBallOriginX, goal.goalLineX - 2 * goal.inward, goal.goalLineX - 12 * goal.inward],
+        y: [shotBallOriginY, goal.penY - 10, goal.penY + 5],
+      };
+    }
+    if (isShotMiss) {
+      return {
+        x: [shotBallOriginX, goal.goalLineX + 10 * goal.inward],
+        y: [shotBallOriginY, 50],
+      };
+    }
+    if (isPenalty) return { x: goal.penSpotX, y: 105 };
+    return { x: normalBallX, y: 105 };
+  }, [isGoal, isSave, isShotGoal, isShotSave, isShotMiss, isPenalty, goal, shotBallOriginX, shotBallOriginY, normalBallX]);
+  const ballTransition = useMemo(() => {
+    if (isGoal) return { duration: 0.4, ease: [0.2, 0, 0.4, 1] as const };
+    if (isSave) return { duration: 0.5, ease: [0.3, 0, 0.2, 1] as const };
+    if (isShotGoal) return { duration: 0.4, ease: [0.2, 0, 0.4, 1] as const };
+    if (isShotSave) return { duration: 0.5, ease: [0.3, 0, 0.2, 1] as const, times: [0, 0.5, 1] };
+    if (isShotMiss) return { duration: 0.5, ease: [0.2, 0, 0.6, 1] as const };
+    return { type: 'spring' as const, stiffness: 160, damping: 12, mass: 0.7 };
+  }, [isGoal, isSave, isShotGoal, isShotSave, isShotMiss]);
+  const ballOpacity = isShotMiss ? 0.3 : 1;
 
   return (
-    <div className="w-full px-3">
-      <div className="relative rounded-2xl overflow-hidden border-2 border-emerald-900/60 border-b-4 border-b-emerald-950/80">
+    <div className={isPortrait ? 'h-full flex justify-center' : 'w-full px-3'}>
+      <div className={`relative rounded-2xl overflow-hidden border-2 border-emerald-900/60 border-b-4 border-b-emerald-950/80 ${isPortrait ? 'h-full aspect-[23/50]' : ''}`}>
         {/* Camera zoom wrapper — field container stays anchored, SVG zooms inside */}
         <motion.div
           animate={zoomToGoal ? {
@@ -260,53 +302,60 @@ export function PitchVisualization({
             y: '0%',
           }}
           transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-          style={{ transformOrigin: zoomOrigin }}
+          style={{ transformOrigin: zoomOrigin, ...(isPortrait ? { height: '100%' } : {}) }}
         >
         <svg
-          viewBox="0 0 500 230"
-          className="w-full h-auto"
+          viewBox={isPortrait ? '0 0 230 500' : '0 0 500 230'}
+          className={isPortrait ? 'w-full h-full' : 'w-full h-auto'}
         >
           <defs>
-            <linearGradient id="pitchGrad" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id={uid('pitchGrad')} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#1e5c32" />
               <stop offset="50%" stopColor="#1a472a" />
               <stop offset="100%" stopColor="#143820" />
             </linearGradient>
-            <pattern id="grassStripes" x="0" y="0" width="60" height="230" patternUnits="userSpaceOnUse">
+            <pattern id={uid('grassStripes')} x="0" y="0" width="60" height="230" patternUnits="userSpaceOnUse">
               <rect x="0" y="0" width="30" height="230" fill="rgba(255,255,255,0.015)" />
             </pattern>
-            <filter id="blueGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <filter id={uid('blueGlow')} x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="4" result="blur" />
               <feFlood floodColor="#1CB0F6" floodOpacity="0.5" result="color" />
               <feComposite in="color" in2="blur" operator="in" result="glow" />
               <feMerge><feMergeNode in="glow" /><feMergeNode in="SourceGraphic" /></feMerge>
             </filter>
-            <filter id="redGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <filter id={uid('redGlow')} x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="4" result="blur" />
               <feFlood floodColor="#FF4B4B" floodOpacity="0.5" result="color" />
               <feComposite in="color" in2="blur" operator="in" result="glow" />
               <feMerge><feMergeNode in="glow" /><feMergeNode in="SourceGraphic" /></feMerge>
             </filter>
-            <filter id="ballGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <filter id={uid('ballGlow')} x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="3" result="blur" />
               <feFlood floodColor="#ffffff" floodOpacity="0.6" result="color" />
               <feComposite in="color" in2="blur" operator="in" result="glow" />
               <feMerge><feMergeNode in="glow" /><feMergeNode in="SourceGraphic" /></feMerge>
             </filter>
             {/* Dual momentum meter clip */}
-            <clipPath id="meterClip">
+            <clipPath id={uid('meterClip')}>
               <rect x="125" y="34" width="250" height="9" rx="4.5" />
             </clipPath>
             {/* Goal net pattern (penalty only) */}
-            <pattern id="penNet" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
+            <pattern id={uid('penNet')} x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
               <line x1="0" y1="0" x2="0" y2="6" stroke="rgba(255,255,255,0.12)" strokeWidth="0.4" />
               <line x1="0" y1="0" x2="6" y2="0" stroke="rgba(255,255,255,0.12)" strokeWidth="0.4" />
             </pattern>
           </defs>
 
+          {/* Portrait mode: wrap all content in a 90° rotation matrix.
+              matrix(0,-1,1,0,0,500) maps landscape (x,y) → portrait (y, 500-x):
+              - Landscape left (x=0, DEF) → portrait bottom (y=500)
+              - Landscape right (x=500, BOX) → portrait top (y=0)
+              Animations operate in local coord space, parent transform maps to viewport. */}
+          <g transform={isPortrait ? 'matrix(0,-1,1,0,0,500)' : undefined}>
+
           {/* Field background */}
-          <rect x="0" y="0" width="500" height="230" rx="12" fill="url(#pitchGrad)" />
-          <rect x="0" y="0" width="500" height="230" rx="12" fill="url(#grassStripes)" />
+          <rect x="0" y="0" width="500" height="230" rx="12" fill={`url(#${uid('pitchGrad')})`} />
+          <rect x="0" y="0" width="500" height="230" rx="12" fill={`url(#${uid('grassStripes')})`} />
 
           {/* Zone bands — hidden during penalties */}
           {!isPenalty && (
@@ -337,11 +386,11 @@ export function PitchVisualization({
           <circle cx="60" cy="115" r="2" fill="rgba(255,255,255,0.15)" />
           <circle cx="440" cy="115" r="2" fill="rgba(255,255,255,0.15)" />
 
-          {/* Zone labels — hidden during penalties */}
+          {/* Zone labels — hidden during penalties, counter-rotated in portrait */}
           {!isPenalty && (
             <>
               {zoneLabels.map((l, i) => (
-                <text key={i} x={l.x} y="28" fill={l.fill} fontSize="9" fontWeight="800" textAnchor="middle" fontFamily="system-ui">{l.text}</text>
+                <text key={i} x={l.x} y="28" fill={l.fill} fontSize="9" fontWeight="800" textAnchor="middle" fontFamily="system-ui" transform={textTf(l.x, 28)}>{l.text}</text>
               ))}
             </>
           )}
@@ -349,33 +398,159 @@ export function PitchVisualization({
           {/* === Opponent marker === */}
           <PitchMarker
             x={opponentX} y={goal.penY}
-            avatarUrl={opponentAvatarUrl} clipId="oppClipInst"
-            color="#FF4B4B" glowFilter="redGlow"
+            avatarUrl={opponentAvatarUrl}
+            avatarAlt={opponentAvatarAlt}
+            color="#FF4B4B" glowFilter={uid('redGlow')}
             isShooter={isPenalty && !penaltyMode.isPlayerShooter}
             isKeeper={isPenalty && penaltyMode.isPlayerShooter}
             isSave={!!isSave} isGoal={!!isGoal}
             showPenResult={!!showPenResult} keeperJolt={keeperJolt}
+            isPortrait={isPortrait}
           />
 
           {/* === Player marker === */}
           <PitchMarker
             x={playerX} y={goal.penY}
-            avatarUrl={playerAvatarUrl} clipId="playerClipInst"
-            color="#1CB0F6" glowFilter="blueGlow"
+            avatarUrl={playerAvatarUrl}
+            avatarAlt={playerAvatarAlt}
+            color="#1CB0F6" glowFilter={uid('blueGlow')}
             isShooter={isPenalty && penaltyMode.isPlayerShooter}
             isKeeper={isPenalty && !penaltyMode.isPlayerShooter}
             isSave={!!isSave} isGoal={!!isGoal}
             showPenResult={!!showPenResult} keeperJolt={keeperJolt}
+            isPortrait={isPortrait}
           />
+
+          {/* === UNIFIED BALL — single persistent <motion.g> that never unmounts === */}
+          <motion.g
+            key="ball"
+            animate={{
+              x: ballTarget.x,
+              y: ballTarget.y,
+              opacity: ballOpacity,
+            }}
+            transition={ballTransition}
+          >
+            <motion.circle cx="0" cy="0" r="14" fill="rgba(255,255,255,0.1)" filter={`url(#${uid('ballGlow')})`} />
+            <foreignObject x="-12" y="-12" width="24" height="24">
+              <div style={ballEmojiStyle}>⚽</div>
+            </foreignObject>
+          </motion.g>
+
+          {/* === Decorative overlays (net ripple, text) — separate AnimatePresence === */}
+          <AnimatePresence>
+            {/* Penalty goal: net ripple + GOAL text */}
+            {isGoal && (
+              <motion.g key="pen-goal-decor">
+                <motion.rect
+                  x={goal.netX} y="92" width="9" height="46" rx="1"
+                  fill={`url(#${uid('penNet')})`}
+                  initial={{ opacity: 0 }}
+                  animate={{
+                    opacity: [0, 0.8, 0.4, 0],
+                    x: [goal.netX, goal.netX + 2 * goal.inward, goal.netX + goal.inward, goal.netX],
+                  }}
+                  transition={{ duration: 0.5, delay: 0.35 }}
+                />
+                <motion.text
+                  x={goal.goalTextX} y="82"
+                  textAnchor="middle" fill="#58CC02" fontSize="8" fontWeight="900" fontFamily="system-ui"
+                  initial={{ opacity: 0, y: 86 }}
+                  animate={{ opacity: [0, 1, 1, 0], y: [86, 82, 82, 80] }}
+                  transition={{ duration: 0.5, delay: 0.3, times: [0, 0.2, 0.7, 1] }}
+                  transform={textTf(goal.goalTextX, 82)}
+                >
+                  GOAL
+                </motion.text>
+              </motion.g>
+            )}
+            {/* Penalty save: SAVED text */}
+            {isSave && (
+              <motion.g key="pen-save-decor">
+                <motion.text
+                  x={goal.goalLineX} y={goal.penY - 28}
+                  textAnchor="middle" fill="#FF4B4B" fontSize="7" fontWeight="900" fontFamily="system-ui"
+                  initial={{ opacity: 0, y: goal.penY - 24 }}
+                  animate={{
+                    opacity: [0, 1, 1, 0],
+                    y: [goal.penY - 24, goal.penY - 28, goal.penY - 28, goal.penY - 30],
+                  }}
+                  transition={{ duration: 0.5, delay: 0.25, times: [0, 0.2, 0.7, 1] }}
+                  transform={textTf(goal.goalLineX, goal.penY - 28)}
+                >
+                  SAVED
+                </motion.text>
+              </motion.g>
+            )}
+            {/* Shot goal: net ripple + GOAL text */}
+            {isShotGoal && (
+              <motion.g key="shot-goal-decor">
+                <motion.rect
+                  x={goal.netX} y="92" width="9" height="46" rx="1"
+                  fill={`url(#${uid('penNet')})`}
+                  initial={{ opacity: 0 }}
+                  animate={{
+                    opacity: [0, 0.8, 0.4, 0],
+                    x: [goal.netX, goal.netX + 2 * goal.inward, goal.netX + goal.inward, goal.netX],
+                  }}
+                  transition={{ duration: 0.5, delay: 0.35 }}
+                />
+                <motion.text
+                  x={goal.goalTextX} y="82"
+                  textAnchor="middle" fill="#58CC02" fontSize="8" fontWeight="900" fontFamily="system-ui"
+                  initial={{ opacity: 0, y: 86 }}
+                  animate={{ opacity: [0, 1, 1, 0], y: [86, 82, 82, 80] }}
+                  transition={{ duration: 0.5, delay: 0.3, times: [0, 0.2, 0.7, 1] }}
+                  transform={textTf(goal.goalTextX, 82)}
+                >
+                  GOAL
+                </motion.text>
+              </motion.g>
+            )}
+            {/* Shot save: SAVED text */}
+            {isShotSave && (
+              <motion.g key="shot-save-decor">
+                <motion.text
+                  x={goal.goalLineX} y={goal.penY - 28}
+                  textAnchor="middle" fill="#FF4B4B" fontSize="7" fontWeight="900" fontFamily="system-ui"
+                  initial={{ opacity: 0, y: goal.penY - 24 }}
+                  animate={{
+                    opacity: [0, 1, 1, 0],
+                    y: [goal.penY - 24, goal.penY - 28, goal.penY - 28, goal.penY - 30],
+                  }}
+                  transition={{ duration: 0.5, delay: 0.25, times: [0, 0.2, 0.7, 1] }}
+                  transform={textTf(goal.goalLineX, goal.penY - 28)}
+                >
+                  SAVED
+                </motion.text>
+              </motion.g>
+            )}
+            {/* Shot miss: MISS text */}
+            {isShotMiss && (
+              <motion.g key="shot-miss-decor">
+                <motion.text
+                  x={goal.goalLineX - 20 * goal.inward} y={60}
+                  textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize="7" fontWeight="900" fontFamily="system-ui"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: [0, 0.6, 0.6, 0] }}
+                  transition={{ duration: 0.6, delay: 0.3, times: [0, 0.2, 0.7, 1] }}
+                  transform={textTf(goal.goalLineX - 20 * goal.inward, 60)}
+                >
+                  MISS
+                </motion.text>
+              </motion.g>
+            )}
+          </AnimatePresence>
 
           {/* === DUAL MOMENTUM METER — hidden during penalties/shots === */}
           {meterVisible && (
             <g>
-              {/* "SHOT" label at center — brightens as momentum builds */}
+              {/* "SHOT" label at center — brightens as momentum builds, counter-rotated in portrait */}
               <motion.text
                 x="250" y="30"
                 textAnchor="middle" fill="rgba(255,255,255,1)" fontSize="7" fontWeight="900" fontFamily="system-ui"
                 animate={{ opacity: shotLabelOpacity }}
+                transform={textTf(250, 30)}
               >
                 SHOT
               </motion.text>
@@ -384,22 +559,22 @@ export function PitchVisualization({
               <rect x="125" y="34" width="250" height="9" rx="4.5" fill="rgba(0,0,0,0.45)" stroke="rgba(255,255,255,0.1)" strokeWidth="0.8" />
 
               {/* Fills clipped to rounded bar shape */}
-              <g clipPath="url(#meterClip)">
+              <g clipPath={`url(#${uid('meterClip')})`}>
                 {/* Player fill — blue, grows from left toward center */}
                 <motion.rect
                   x="125" y="34" height="9"
                   fill="#1CB0F6"
-                  initial={{ width: 0 }}
-                  animate={{ width: myFillWidth, opacity: myMomentum > 0 ? 0.85 : 0.2 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                  initial={{ width: 0, scaleY: 1 }}
+                  animate={{ width: myFillWidth, opacity: myMomentum > 0 ? 0.85 : 0.2, scaleY: 1 }}
+                  transition={{ type: 'spring', stiffness: 250, damping: 15 }}
                 />
                 {/* Opponent fill — red, grows from right toward center */}
                 <motion.rect
                   y="34" height="9"
                   fill="#FF4B4B"
-                  initial={{ width: 0, x: 375 }}
-                  animate={{ width: oppFillWidth, x: 375 - oppFillWidth, opacity: oppMomentum > 0 ? 0.85 : 0.2 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                  initial={{ width: 0, x: 375, scaleY: 1 }}
+                  animate={{ width: oppFillWidth, x: 375 - oppFillWidth, opacity: oppMomentum > 0 ? 0.85 : 0.2, scaleY: 1 }}
+                  transition={{ type: 'spring', stiffness: 250, damping: 15 }}
                 />
               </g>
 
@@ -428,193 +603,7 @@ export function PitchVisualization({
             </g>
           )}
 
-          {/* === Normal ball (hidden during penalty result or shot result) === */}
-          <AnimatePresence>
-            {(!isPenalty || penaltyMode.phase !== 'result') && !shotResultActive && (
-              <motion.g
-                key="normal-ball"
-                initial={{ x: lastBallPosRef.current.x, y: lastBallPosRef.current.y }}
-                animate={{ x: isPenalty ? goal.penSpotX : normalBallX, y: 105 }}
-                exit={{ opacity: 0, transition: { duration: 0.1 } }}
-                transition={{ type: 'spring', stiffness: 140, damping: 18 }}
-              >
-                <motion.circle cx="0" cy="0" r="14" fill="rgba(255,255,255,0.1)" filter="url(#ballGlow)" />
-                <foreignObject x="-12" y="-12" width="24" height="24">
-                  <div style={{ fontSize: '20px', lineHeight: '24px', textAlign: 'center' }}>⚽</div>
-                </foreignObject>
-              </motion.g>
-            )}
-          </AnimatePresence>
-
-          {/* === Penalty result: ball travels to goal === */}
-          {isGoal && (
-            <motion.g key="pen-goal-ball">
-              {/* Ball flies into goal */}
-              <motion.g
-                initial={{ x: goal.penSpotX, y: 105 }}
-                animate={{ x: goal.goalTarget.x, y: goal.goalTarget.y - 8 }}
-                transition={{ duration: 0.4, ease: [0.2, 0, 0.4, 1] }}
-              >
-                <motion.circle cx="0" cy="0" r="14" fill="rgba(255,255,255,0.1)" filter="url(#ballGlow)" />
-                <foreignObject x="-12" y="-12" width="24" height="24">
-                  <div style={{ fontSize: '20px', lineHeight: '24px', textAlign: 'center' }}>⚽</div>
-                </foreignObject>
-              </motion.g>
-              {/* Net ripple */}
-              <motion.rect
-                x={goal.netX} y="92" width="9" height="46" rx="1"
-                fill="url(#penNet)"
-                initial={{ opacity: 0 }}
-                animate={{
-                  opacity: [0, 0.8, 0.4, 0],
-                  x: [goal.netX, goal.netX + 2 * goal.inward, goal.netX + goal.inward, goal.netX],
-                }}
-                transition={{ duration: 0.5, delay: 0.35 }}
-              />
-              {/* Small "GOAL" text near goal mouth */}
-              <motion.text
-                x={goal.goalTextX} y="82"
-                textAnchor="middle" fill="#58CC02" fontSize="8" fontWeight="900" fontFamily="system-ui"
-                initial={{ opacity: 0, y: 86 }}
-                animate={{ opacity: [0, 1, 1, 0], y: [86, 82, 82, 80] }}
-                transition={{ duration: 0.5, delay: 0.3, times: [0, 0.2, 0.7, 1] }}
-              >
-                GOAL
-              </motion.text>
-            </motion.g>
-          )}
-
-          {/* === Penalty result: ball saved by keeper === */}
-          {isSave && (
-            <motion.g key="pen-save-ball">
-              {/* Ball travels toward goal, stops at keeper */}
-              <motion.g
-                initial={{ x: goal.penSpotX, y: 105 }}
-                animate={{
-                  x: [goal.penSpotX, goal.saveTarget.x, goal.saveTarget.x - 10 * goal.inward],
-                  y: [105, goal.saveTarget.y - 10, goal.saveTarget.y + 5],
-                }}
-                transition={{ duration: 0.5, ease: [0.3, 0, 0.2, 1], times: [0, 0.5, 1] }}
-              >
-                <motion.circle cx="0" cy="0" r="14" fill="rgba(255,255,255,0.1)" filter="url(#ballGlow)" />
-                <foreignObject x="-12" y="-12" width="24" height="24">
-                  <div style={{ fontSize: '20px', lineHeight: '24px', textAlign: 'center' }}>⚽</div>
-                </foreignObject>
-              </motion.g>
-              {/* Small "SAVED" text near keeper */}
-              <motion.text
-                x={goal.goalLineX} y={goal.penY - 28}
-                textAnchor="middle" fill="#FF4B4B" fontSize="7" fontWeight="900" fontFamily="system-ui"
-                initial={{ opacity: 0, y: goal.penY - 24 }}
-                animate={{
-                  opacity: [0, 1, 1, 0],
-                  y: [goal.penY - 24, goal.penY - 28, goal.penY - 28, goal.penY - 30],
-                }}
-                transition={{ duration: 0.5, delay: 0.25, times: [0, 0.2, 0.7, 1] }}
-              >
-                SAVED
-              </motion.text>
-            </motion.g>
-          )}
-
-          {/* === Shot result: GOAL — ball into net === */}
-          {isShotGoal && (
-            <motion.g key="shot-goal-ball">
-              <motion.g
-                initial={{ x: shotBallOriginX, y: shotBallOriginY }}
-                animate={{ x: goal.goalTarget.x, y: goal.goalTarget.y - 8 }}
-                transition={{ duration: 0.4, ease: [0.2, 0, 0.4, 1] }}
-              >
-                <motion.circle cx="0" cy="0" r="14" fill="rgba(255,255,255,0.1)" filter="url(#ballGlow)" />
-                <foreignObject x="-12" y="-12" width="24" height="24">
-                  <div style={{ fontSize: '20px', lineHeight: '24px', textAlign: 'center' }}>⚽</div>
-                </foreignObject>
-              </motion.g>
-              {/* Net ripple */}
-              <motion.rect
-                x={goal.netX} y="92" width="9" height="46" rx="1"
-                fill="url(#penNet)"
-                initial={{ opacity: 0 }}
-                animate={{
-                  opacity: [0, 0.8, 0.4, 0],
-                  x: [goal.netX, goal.netX + 2 * goal.inward, goal.netX + goal.inward, goal.netX],
-                }}
-                transition={{ duration: 0.5, delay: 0.35 }}
-              />
-              {/* "GOAL" text near goal */}
-              <motion.text
-                x={goal.goalTextX} y="82"
-                textAnchor="middle" fill="#58CC02" fontSize="8" fontWeight="900" fontFamily="system-ui"
-                initial={{ opacity: 0, y: 86 }}
-                animate={{ opacity: [0, 1, 1, 0], y: [86, 82, 82, 80] }}
-                transition={{ duration: 0.5, delay: 0.3, times: [0, 0.2, 0.7, 1] }}
-              >
-                GOAL
-              </motion.text>
-            </motion.g>
-          )}
-
-          {/* === Shot result: SAVED — ball deflected by keeper === */}
-          {isShotSave && (
-            <motion.g key="shot-save-ball">
-              <motion.g
-                initial={{ x: shotBallOriginX, y: shotBallOriginY }}
-                animate={{
-                  x: [shotBallOriginX, goal.goalLineX - 2 * goal.inward, goal.goalLineX - 12 * goal.inward],
-                  y: [shotBallOriginY, goal.penY - 10, goal.penY + 5],
-                }}
-                transition={{ duration: 0.5, ease: [0.3, 0, 0.2, 1], times: [0, 0.5, 1] }}
-              >
-                <motion.circle cx="0" cy="0" r="14" fill="rgba(255,255,255,0.1)" filter="url(#ballGlow)" />
-                <foreignObject x="-12" y="-12" width="24" height="24">
-                  <div style={{ fontSize: '20px', lineHeight: '24px', textAlign: 'center' }}>⚽</div>
-                </foreignObject>
-              </motion.g>
-              {/* "SAVED" text near keeper */}
-              <motion.text
-                x={goal.goalLineX} y={goal.penY - 28}
-                textAnchor="middle" fill="#FF4B4B" fontSize="7" fontWeight="900" fontFamily="system-ui"
-                initial={{ opacity: 0, y: goal.penY - 24 }}
-                animate={{
-                  opacity: [0, 1, 1, 0],
-                  y: [goal.penY - 24, goal.penY - 28, goal.penY - 28, goal.penY - 30],
-                }}
-                transition={{ duration: 0.5, delay: 0.25, times: [0, 0.2, 0.7, 1] }}
-              >
-                SAVED
-              </motion.text>
-            </motion.g>
-          )}
-
-          {/* === Shot result: MISS — ball goes wide === */}
-          {isShotMiss && (
-            <motion.g key="shot-miss-ball">
-              <motion.g
-                initial={{ x: shotBallOriginX, y: shotBallOriginY }}
-                animate={{
-                  x: [shotBallOriginX, goal.goalLineX + 10 * goal.inward],
-                  y: [shotBallOriginY, 50],
-                  opacity: [1, 1, 0.3],
-                }}
-                transition={{ duration: 0.5, ease: [0.2, 0, 0.6, 1] }}
-              >
-                <motion.circle cx="0" cy="0" r="14" fill="rgba(255,255,255,0.1)" filter="url(#ballGlow)" />
-                <foreignObject x="-12" y="-12" width="24" height="24">
-                  <div style={{ fontSize: '20px', lineHeight: '24px', textAlign: 'center' }}>⚽</div>
-                </foreignObject>
-              </motion.g>
-              {/* Subtle "MISS" text */}
-              <motion.text
-                x={goal.goalLineX - 20 * goal.inward} y={60}
-                textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize="7" fontWeight="900" fontFamily="system-ui"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: [0, 0.6, 0.6, 0] }}
-                transition={{ duration: 0.6, delay: 0.3, times: [0, 0.2, 0.7, 1] }}
-              >
-                MISS
-              </motion.text>
-            </motion.g>
-          )}
+          </g>
         </svg>
         </motion.div>
 

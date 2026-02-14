@@ -54,7 +54,7 @@ export function ArenaScoreSplash({ show, points, side, onComplete }: ArenaScoreS
 
     const timer = setTimeout(() => {
       onComplete?.();
-    }, 1000); // Changed from 1800 to 1000ms (1 second)
+    }, 800);
 
     return () => clearTimeout(timer);
   }, [show, points, onComplete]);
@@ -110,7 +110,7 @@ export function ArenaScoreSplash({ show, points, side, onComplete }: ArenaScoreS
                 scale: [1, 1.3, 1.1],
                 opacity: [0.7, 0.3, 0],
               }}
-              transition={{ duration: 1 }}
+              transition={{ duration: 0.9 }}
             />
 
             {/* Score text with chunky border */}
@@ -183,7 +183,7 @@ export function ArenaScoreSplash({ show, points, side, onComplete }: ArenaScoreS
                 scale: [particle.scale, particle.scale * 1.2, 0],
               }}
               transition={{
-                duration: 1.2,
+                duration: 0.9,
                 delay: particle.delay,
                 ease: [0.34, 1.56, 0.64, 1],
               }}
@@ -213,7 +213,7 @@ export function ArenaScoreSplash({ show, points, side, onComplete }: ArenaScoreS
                   rotate: [0, 360],
                 }}
                 transition={{
-                  duration: 0.8,
+                  duration: 0.7,
                   delay: particle.delay,
                   ease: 'easeOut',
                 }}

@@ -7,6 +7,9 @@ import { updateMe } from "@/lib/api/endpoints";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth.store";
 import { useMatchStatsSummary, useRecentMatches } from "@/lib/queries/stats.queries";
+import { useLocale } from "@/contexts/LocaleContext";
+import type { Locale } from "@/data/locales";
+import { formatMatchScore } from "@/utils/matchScore";
 
 export default function ProfilePage() {
   const { player, updateStats } = usePlayer();
@@ -19,6 +22,7 @@ export default function ProfilePage() {
   } = useRecentMatches(20);
   const { data: matchStatsSummary = null } = useMatchStatsSummary();
 
+  const { setLocale } = useLocale();
   const [isUpdating, setIsUpdating] = useState(false);
 
   const handleNameChange = async (name: string) => {
@@ -85,6 +89,7 @@ export default function ProfilePage() {
       if (authUser) {
         setAuthenticated({ ...authUser, preferred_language: updated.preferred_language });
       }
+      setLocale(language as Locale);
       toast.success("Language updated");
     } catch (error) {
       toast.error("Failed to update language", {
@@ -114,6 +119,7 @@ export default function ProfilePage() {
         rp: `${match.playerScore}-${match.opponentScore}`,
         time: match.timeLabel,
         opponent: match.opponent.username,
+        scoreFormatted: formatMatchScore(match),
       }))}
       recentMatchesLoading={recentMatchesLoading}
       recentMatchesError={
