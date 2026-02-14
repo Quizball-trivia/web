@@ -157,9 +157,9 @@ export function PenaltyFieldView({
             </text>
           </motion.g>
 
-          {/* === Ball === */}
+          {/* === Ball (before result, or fallback if result is null) === */}
           <AnimatePresence>
-            {phase !== 'result' && (
+            {(phase !== 'result' || result === null) && (
               <motion.g
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}

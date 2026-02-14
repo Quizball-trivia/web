@@ -209,10 +209,10 @@ export function useGameStageTransitions({
 
   useEffect(() => {
     if (!isMultiplayer) return;
-    if (realtimeMatch?.currentQuestion && getStageOrdinal(stage) < getStageOrdinal("playing")) {
+    if (realtimeMatch && getStageOrdinal(stage) < getStageOrdinal("playing")) {
       setStage("playing");
     }
-  }, [isMultiplayer, realtimeMatch?.currentQuestion, setStage, stage]);
+  }, [isMultiplayer, realtimeMatch, setStage, stage]);
 
   useEffect(() => {
     if (!isMultiplayer) return;

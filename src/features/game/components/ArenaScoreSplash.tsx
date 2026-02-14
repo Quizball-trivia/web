@@ -54,7 +54,7 @@ export function ArenaScoreSplash({ show, points, side, onComplete }: ArenaScoreS
 
     const timer = setTimeout(() => {
       onComplete?.();
-    }, 800);
+    }, 1100);
 
     return () => clearTimeout(timer);
   }, [show, points, onComplete]);

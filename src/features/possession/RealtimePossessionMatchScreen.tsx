@@ -342,7 +342,7 @@ export function RealtimePossessionMatchScreen({
   useEffect(() => {
     setOptimisticOffset(0);
     setOptimisticMomDelta({ my: 0, opp: 0 });
-  }, [possessionPct]);
+  }, [possessionPct, serverMyMomentum, serverOppMomentum]);
 
   const myPossessionPct = Math.max(0, Math.min(100, serverMyPossessionPct + optimisticOffset));
   const myMomentum = Math.max(0, Math.min(6, serverMyMomentum + optimisticMomDelta.my));
