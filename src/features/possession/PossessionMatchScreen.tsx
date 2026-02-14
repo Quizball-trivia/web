@@ -115,6 +115,8 @@ export function PossessionMatchScreen() {
               <ShotHUD
                 playerGoals={g.player.goals}
                 opponentGoals={g.opponent.goals}
+                playerName="You"
+                opponentName="CPU"
                 playerAvatarUrl={g.playerAvatar}
                 opponentAvatarUrl={g.opponentAvatar}
                 timeRemaining={g.timeRemaining}
