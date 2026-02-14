@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { QuestionArena } from '@/features/game/components/QuestionArena';
 import { AnswerCard } from '@/features/game/components/AnswerCard';
 import { ArenaScoreSplash } from '@/features/game/components/ArenaScoreSplash';
@@ -20,6 +20,7 @@ interface PossessionQuestionPanelProps {
   selectedAnswer: number | null;
   answerStates: AnswerStateArray;
   opponentAnswer: number | null;
+  opponentAvatarUrl?: string;
 
   // Splashes
   showPlayerSplash: boolean;
@@ -42,6 +43,7 @@ export function PossessionQuestionPanel({
   selectedAnswer,
   answerStates,
   opponentAnswer,
+  opponentAvatarUrl,
   showPlayerSplash,
   showOpponentSplash,
   playerSplashPoints,
@@ -69,35 +71,26 @@ export function PossessionQuestionPanel({
 
   return (
     <>
-      {/* Question card */}
-      <motion.div
-        key={`question-${question.id}`}
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
-        className="px-4 mt-2"
-      >
-        <QuestionArena
-          question={question.prompt}
-          category={question.categoryName ?? categoryLabel}
-          categoryIcon="⚽"
-          difficulty={getDifficultyLabel(question.difficulty)}
-        />
-      </motion.div>
+      {/* Question card — AnimatePresence for smooth cross-fade between questions */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={`question-${question.id}`}
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+          className="px-4 mt-2"
+        >
+          <QuestionArena
+            question={question.prompt}
+            category={question.categoryName ?? categoryLabel}
+            categoryIcon="⚽"
+            difficulty={getDifficultyLabel(question.difficulty)}
+          />
+        </motion.div>
+      </AnimatePresence>
 
-      {/* "Get ready..." text */}
-      {(phase === 'question-reveal' || phase === 'penalty-question') && (
-        <div className="w-full max-w-2xl mx-auto -mt-2 text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-            className="text-blue-300 font-fun font-bold text-sm"
-          >
-            <span className="inline-block animate-pulse">⚡</span> Get ready...
-          </motion.div>
-        </div>
-      )}
+
 
       {/* Arena score splashes */}
       <div className="relative h-0">
@@ -116,47 +109,52 @@ export function PossessionQuestionPanel({
       </div>
 
       {/* Answer cards */}
-      {showOptions && (
-        <motion.div
-          key={`options-${question.id}`}
-          className="grid grid-cols-2 gap-3 px-4 mt-4 pb-6"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.28, ease: [0.2, 0.9, 0.3, 1] }}
-        >
-          {question.options.map((opt, i) => (
-            <motion.div
-              key={`${question.id}-${i}`}
-              initial={{ opacity: 0, y: 16, scale: 0.94, filter: 'blur(4px)' }}
-              animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-              transition={{
-                type: 'spring',
-                stiffness: 260,
-                damping: 20,
-                mass: 0.7,
-                delay: i * 0.065,
-                filter: { duration: 0.22 },
+      <motion.div
+        key={`options-${question.id}`}
+        className={`grid grid-cols-2 gap-3 px-4 mt-4 pb-6 min-h-[15rem] ${
+          showOptions ? 'pointer-events-auto' : 'pointer-events-none'
+        }`}
+        initial={false}
+        animate={{ opacity: showOptions ? 1 : 0, y: showOptions ? 0 : 8 }}
+        transition={{ duration: 0.25 }}
+        aria-hidden={!showOptions}
+      >
+        {question.options.map((opt, i) => (
+          <motion.div
+            key={`${question.id}-${i}`}
+            initial={false}
+            animate={{
+              opacity: showOptions ? 1 : 0.9,
+              y: showOptions ? 0 : 6,
+              scale: showOptions ? 1 : 0.98,
+            }}
+            transition={{
+              type: 'spring',
+              stiffness: 320,
+              damping: 24,
+              mass: 0.75,
+              delay: showOptions ? i * 0.05 : 0,
+            }}
+          >
+            <AnswerCard
+              label={ANSWER_LABELS[i]}
+              text={opt}
+              index={i}
+              isSelected={selectedAnswer === i}
+              state={answerStates[i]}
+              fadeOut={isReveal}
+              opponentPicked={!isPenaltyPhase && opponentAnswer === i}
+              opponentPickCorrect={!isPenaltyPhase && opponentAnswer !== null ? opponentAnswer === question.correctIndex : undefined}
+              opponentAvatarUrl={opponentAvatarUrl}
+              onClick={() => {
+                if (!showOptions || !isPlaying) return;
+                onAnswer(i);
               }}
-            >
-              <AnswerCard
-                label={ANSWER_LABELS[i]}
-                text={opt}
-                index={i}
-                isSelected={selectedAnswer === i}
-                state={answerStates[i]}
-                fadeOut={isReveal}
-                opponentPicked={!isPenaltyPhase && opponentAnswer === i && phase === 'reveal'}
-                opponentPickCorrect={!isPenaltyPhase && opponentAnswer !== null ? opponentAnswer === question.correctIndex : undefined}
-                onClick={() => {
-                  if (!isPlaying) return;
-                  onAnswer(i);
-                }}
-                disabled={!isPlaying}
-              />
-            </motion.div>
-          ))}
-        </motion.div>
-      )}
+              disabled={!showOptions || !isPlaying}
+            />
+          </motion.div>
+        ))}
+      </motion.div>
     </>
   );
 }

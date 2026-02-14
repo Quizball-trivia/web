@@ -18,6 +18,8 @@ interface PossessionHUDProps {
   zone: string;
   zoneColor: string;
   onQuit?: () => void;
+  opponentAnswered?: boolean;
+  opponentAnsweredCorrectly?: boolean | null;
 }
 
 export function PossessionHUD({
@@ -33,6 +35,8 @@ export function PossessionHUD({
   zone,
   zoneColor,
   onQuit,
+  opponentAnswered,
+  opponentAnsweredCorrectly,
 }: PossessionHUDProps) {
   const isUrgent = timeRemaining <= 3;
 
@@ -75,14 +79,49 @@ export function PossessionHUD({
         </div>
 
         {/* Opponent side */}
-        <div className="flex items-center gap-3 flex-1 min-w-0 justify-end rounded-2xl bg-[#172333]/85 border border-white/10 px-3 py-2.5">
+        <div className={cn(
+          "flex items-center gap-3 flex-1 min-w-0 justify-end rounded-2xl bg-[#172333]/85 border px-3 py-2.5 transition-colors duration-300",
+          opponentAnswered && opponentAnsweredCorrectly === true ? 'border-[#58CC02]/60' :
+          opponentAnswered && opponentAnsweredCorrectly === false ? 'border-[#FF4B4B]/60' :
+          'border-white/10'
+        )}>
           <div className="min-w-0 text-right">
             <div className="text-xs font-bold text-white/85 truncate max-w-[100px] ml-auto">{opponentName}</div>
-            <div className="text-3xl leading-7 font-black text-white tabular-nums">
-              {opponentGoals}
-            </div>
+            <AnimatePresence mode="wait">
+              {opponentAnswered && opponentAnsweredCorrectly !== null && opponentAnsweredCorrectly !== undefined ? (
+                <motion.div
+                  key="opp-result"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.2 }}
+                  className={cn(
+                    "text-xs font-black uppercase tracking-wide",
+                    opponentAnsweredCorrectly ? 'text-[#58CC02]' : 'text-[#FF4B4B]'
+                  )}
+                >
+                  {opponentAnsweredCorrectly ? 'Correct' : 'Wrong'}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="opp-goals"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.2 }}
+                  className="text-3xl leading-7 font-black text-white tabular-nums"
+                >
+                  {opponentGoals}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-          <Avatar className="size-11 border-2 border-[#FF4B4B] shrink-0">
+          <Avatar className={cn(
+            "size-11 border-2 transition-colors duration-300",
+            opponentAnswered && opponentAnsweredCorrectly === true ? 'border-[#58CC02]' :
+            opponentAnswered && opponentAnsweredCorrectly === false ? 'border-[#FF4B4B]' :
+            'border-[#FF4B4B]'
+          )}>
             <AvatarImage src={opponentAvatarUrl} />
             <AvatarFallback className="text-xs font-bold bg-[#FF4B4B]/20 text-[#FF4B4B]">
               {opponentName.slice(0, 2).toUpperCase()}

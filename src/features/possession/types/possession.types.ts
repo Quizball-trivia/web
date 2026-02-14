@@ -1,4 +1,4 @@
-export type TacticalCard = 'press-high' | 'play-safe' | 'all-in';
+export type { TacticalCard } from '@/lib/realtime/socket.types';
 
 // ─── Phase state machine ────────────────────────────────────────
 export type Phase =

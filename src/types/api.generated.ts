@@ -424,6 +424,12 @@ export interface paths {
                                 endedAt: string | null;
                                 playerScore: number;
                                 opponentScore: number;
+                                playerGoals: number;
+                                playerPenaltyGoals: number;
+                                opponentGoals: number;
+                                opponentPenaltyGoals: number;
+                                /** @enum {string|null} */
+                                winnerDecisionMethod: "goals" | "penalty_goals" | "total_points_fallback" | "forfeit" | null;
                                 opponent: {
                                     /** Format: uuid */
                                     id: string | null;
@@ -478,7 +484,29 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["StatsSummaryResponse"];
+                        "application/json": {
+                            overall: {
+                                gamesPlayed: number;
+                                wins: number;
+                                losses: number;
+                                draws: number;
+                                winRate: number;
+                            };
+                            ranked: {
+                                gamesPlayed: number;
+                                wins: number;
+                                losses: number;
+                                draws: number;
+                                winRate: number;
+                            };
+                            friendly: {
+                                gamesPlayed: number;
+                                wins: number;
+                                losses: number;
+                                draws: number;
+                                winRate: number;
+                            };
+                        };
                     };
                 };
                 /** @description Authentication required */
@@ -2033,6 +2061,12 @@ export interface components {
                 endedAt: string | null;
                 playerScore: number;
                 opponentScore: number;
+                playerGoals: number;
+                playerPenaltyGoals: number;
+                opponentGoals: number;
+                opponentPenaltyGoals: number;
+                /** @enum {string|null} */
+                winnerDecisionMethod: "goals" | "penalty_goals" | "total_points_fallback" | "forfeit" | null;
                 opponent: {
                     /** Format: uuid */
                     id: string | null;
@@ -2043,17 +2077,28 @@ export interface components {
                 };
             }[];
         };
-        ModeStatsSummaryResponse: {
-            gamesPlayed: number;
-            wins: number;
-            losses: number;
-            draws: number;
-            winRate: number;
-        };
         StatsSummaryResponse: {
-            overall: components["schemas"]["ModeStatsSummaryResponse"];
-            ranked: components["schemas"]["ModeStatsSummaryResponse"];
-            friendly: components["schemas"]["ModeStatsSummaryResponse"];
+            overall: {
+                gamesPlayed: number;
+                wins: number;
+                losses: number;
+                draws: number;
+                winRate: number;
+            };
+            ranked: {
+                gamesPlayed: number;
+                wins: number;
+                losses: number;
+                draws: number;
+                winRate: number;
+            };
+            friendly: {
+                gamesPlayed: number;
+                wins: number;
+                losses: number;
+                draws: number;
+                winRate: number;
+            };
         };
         I18nField: {
             [key: string]: string;

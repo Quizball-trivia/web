@@ -15,8 +15,6 @@ export const STORAGE_KEYS = {
   DAILY_CHALLENGE_STATE: 'quizball_daily_challenge',
   WHEEL_SPIN_TIMESTAMP: 'quizball_wheel_spin',
 
-  // Feature flags
-  FEATURE_FLAGS: 'quizball_features',
   DEV_MODE: 'quizball_dev_mode',
 } as const;
 
@@ -27,7 +25,6 @@ const MIGRATIONS: Partial<Record<string, StorageKey>> = {
   'quizball-locale': STORAGE_KEYS.LOCALE,
   'onboardingCompleted': STORAGE_KEYS.ONBOARDING_COMPLETE,
   'walkthroughCompleted': STORAGE_KEYS.WALKTHROUGH_COMPLETE,
-  'featureFlags': STORAGE_KEYS.FEATURE_FLAGS,
   'lastWheelSpin': STORAGE_KEYS.WHEEL_SPIN_TIMESTAMP,
 };
 

@@ -7,8 +7,13 @@ import { TIMER_SECONDS, BALL_ANIM_MS, QUESTIONS_PER_HALF } from '../types/posses
 import type { AnswerStateArray } from '../types/possession.types';
 import { playSfx } from '@/lib/sounds';
 
+// AI defender behavior constants
+const AI_MIN_DELAY_SEC = 2;
+const AI_MAX_DELAY_SEC = 8;
+const AI_CORRECT_PROBABILITY = 0.55;
+
 export function useShotOnGoal(
-  usedQuestionIdsRef: React.RefObject<Set<string>>,
+  usedQuestionIdsRef: React.MutableRefObject<Set<string>>,
   advanceToNextQuestion: (position: number) => void,
 ) {
   const store = usePossessionMatchStore;
@@ -36,9 +41,7 @@ export function useShotOnGoal(
     const playerX = 30 + (player.position / 100) * 440;
     shotBallOriginRef.current = player.position > 50 ? playerX + 14 : playerX - 14;
 
-    const usedIds = usedQuestionIdsRef.current ?? new Set<string>();
-    if (!usedQuestionIdsRef.current) usedQuestionIdsRef.current = usedIds;
-    const sq = pickQuestion(HARD_QUESTIONS, usedIds);
+    const sq = pickQuestion(HARD_QUESTIONS, usedQuestionIdsRef.current);
 
     const s = store.getState();
     s.setShotQuestion(sq);
@@ -51,8 +54,8 @@ export function useShotOnGoal(
     s.incrementTotalShots();
 
     // Pre-determine AI defender answer
-    const aiDelay = 2 + Math.random() * 6;
-    const isCorrect = Math.random() < 0.55;
+    const aiDelay = AI_MIN_DELAY_SEC + Math.random() * (AI_MAX_DELAY_SEC - AI_MIN_DELAY_SEC);
+    const isCorrect = Math.random() < AI_CORRECT_PROBABILITY;
     const aiAnswer = isCorrect
       ? sq.correctIndex
       : ((sq.correctIndex + 1 + Math.floor(Math.random() * 3)) % 4);
@@ -60,7 +63,7 @@ export function useShotOnGoal(
     s.setShotOpponentTime(aiDelay);
 
     setTimeRemaining(TIMER_SECONDS);
-  }, [usedQuestionIdsRef]);
+  }, []);
 
   const handleShotAnswer = useCallback((index: number, stopTimer: () => void) => {
     const s = store.getState();

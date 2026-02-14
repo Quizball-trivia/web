@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Clock, CheckCircle2, XCircle, ArrowRight, Trophy, Zap, ChevronDown, ChevronUp } from 'lucide-react';
 import { useRecentMatches } from '@/lib/queries/stats.queries';
 import { COLLAPSED_MATCHES_COUNT, MAX_MATCHES_COUNT } from '@/lib/constants/matches';
+import { formatMatchScore } from '@/utils/matchScore';
 
 interface HomeRecentMatchesProps {
   /** If true, only show collapsed count without expand option */
@@ -18,14 +19,20 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
   const [isExpanded, setIsExpanded] = useState(false);
 
   const matches = useMemo(() =>
-    recentMatches.map((match) => ({
-      id: match.matchId,
-      result: match.result,
-      opponent: match.opponent.username,
-      mode: match.mode === 'ranked' ? 'Ranked' : 'Friendly',
-      score: `${match.playerScore}-${match.opponentScore}`,
-      time: match.timeLabel,
-    })),
+    recentMatches.map((match) => {
+      const formatted = formatMatchScore(match);
+      return {
+        id: match.matchId,
+        result: match.result,
+        opponent: match.opponent.username,
+        mode: match.mode === 'ranked' ? 'Ranked' : 'Friendly',
+        score: formatted.score,
+        scoreSuffix: formatted.suffix,
+        scoreBadge: formatted.badge,
+        scoreBadgeVariant: formatted.badgeVariant,
+        time: match.timeLabel,
+      };
+    }),
     [recentMatches]
   );
 
@@ -64,7 +71,11 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
             </div>
           )}
           {!isLoading && error && (
-            <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-sm font-semibold text-red-500">
+            <div
+              role="alert"
+              aria-live="polite"
+              className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-sm font-semibold text-red-500"
+            >
               Failed to load recent matches. Please try again later.
             </div>
           )}
@@ -100,7 +111,7 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                     <span className={`text-base font-black tracking-tight ${
                       match.result === 'win'
                         ? 'text-green-500'
@@ -109,7 +120,19 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
                           : 'text-muted-foreground'
                     }`}>
                       {match.score}
+                      {match.scoreSuffix && (
+                        <span className="text-xs font-bold ml-1 opacity-80">{match.scoreSuffix}</span>
+                      )}
                     </span>
+                    {match.scoreBadge && (
+                      <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${
+                        match.scoreBadgeVariant === 'red'
+                          ? 'bg-red-500/15 text-red-500 ring-1 ring-red-500/25'
+                          : 'bg-muted text-muted-foreground ring-1 ring-border'
+                      }`}>
+                        {match.scoreBadge}
+                      </span>
+                    )}
                 </div>
               </div>
           ))}

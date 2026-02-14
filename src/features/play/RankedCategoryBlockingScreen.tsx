@@ -264,8 +264,9 @@ export function RankedCategoryBlockingScreen() {
                   transition={{ delay: 0.2 + i * 0.08, type: 'spring', stiffness: 200, damping: 20 }}
                   onClick={() => {
                     if (disabled || isBanned) return;
+                    useRealtimeMatchStore.getState().setDraftBan(selfUserId, category.id);
                     getSocket().emit('draft:ban', { categoryId: category.id });
-                    logger.info('Socket emit draft:ban', { categoryId: category.id });
+                    logger.info('Socket emit draft:ban (optimistic)', { categoryId: category.id });
                   }}
                   className={cn(
                     'shrink-0 w-[220px] snap-center rounded-3xl overflow-hidden transition-all duration-200',

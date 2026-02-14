@@ -222,7 +222,7 @@ export function PenaltyOverlay({
                   question={currentQuestion.prompt}
                   category={currentQuestion.categoryName ?? 'Penalty'}
                   categoryIcon="⚽"
-                  difficulty="Hard"
+                  difficulty={currentQuestion.difficulty ?? 'Hard'}
                 />
               </motion.div>
 

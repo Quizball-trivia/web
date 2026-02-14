@@ -15,6 +15,7 @@ interface AnswerCardProps {
   isSelected?: boolean;
   opponentPicked?: boolean;
   opponentPickCorrect?: boolean;
+  opponentAvatarUrl?: string;
   state?: 'default' | 'correct' | 'wrong' | 'disabled';
   fadeOut?: boolean;
   onClick?: () => void;
@@ -28,6 +29,7 @@ export function AnswerCard({
   isSelected,
   opponentPicked = false,
   opponentPickCorrect,
+  opponentAvatarUrl,
   state = 'default',
   fadeOut = false,
   onClick,
@@ -78,7 +80,7 @@ export function AnswerCard({
               scale: 1,
             }
       }
-      transition={shouldFadeAway ? { duration: 0.45, ease: 'easeOut' } : { duration: 0.2 }}
+      transition={shouldFadeAway ? { duration: 0.3, ease: 'easeOut' } : { duration: 0.2 }}
       className={cn(
         'relative w-full h-full text-left rounded-2xl p-4 min-h-[100px] transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary font-fun',
         getButtonClasses(),
@@ -88,16 +90,28 @@ export function AnswerCard({
       disabled={disabled}
     >
       {opponentPicked && opponentPickCorrect !== undefined && (
-        <div
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 22 }}
           className={cn(
-            'absolute right-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-black',
+            'absolute -right-2 -top-2 z-10 flex items-center justify-center size-8 rounded-full border-[3px] shadow-lg',
             opponentPickCorrect
-              ? 'bg-emerald-500/20 text-emerald-300'
-              : 'bg-red-500/20 text-red-300'
+              ? 'border-[#58CC02] shadow-[0_0_10px_rgba(88,204,2,0.4)]'
+              : 'border-[#FF4B4B] shadow-[0_0_10px_rgba(255,75,75,0.4)]'
           )}
         >
-          {opponentPickCorrect ? '✓ Opp' : '✗ Opp'}
-        </div>
+          {opponentAvatarUrl ? (
+            <img src={opponentAvatarUrl} alt="" className="size-full rounded-full object-cover" />
+          ) : (
+            <div className={cn(
+              'size-full rounded-full flex items-center justify-center text-[10px] font-black',
+              opponentPickCorrect ? 'bg-[#58CC02] text-white' : 'bg-[#FF4B4B] text-white'
+            )}>
+              {opponentPickCorrect ? '✓' : '✗'}
+            </div>
+          )}
+        </motion.div>
       )}
 
       <div className="flex items-start gap-3 h-full">

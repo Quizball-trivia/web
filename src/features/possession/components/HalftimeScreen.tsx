@@ -201,6 +201,8 @@ export function HalftimeScreen({
                   playerPosition={playerPosition}
                   playerAvatarUrl={playerAvatarUrl}
                   opponentAvatarUrl={opponentAvatarUrl}
+                  playerName={playerName}
+                  opponentName={opponentName}
                   myMomentum={playerMomentum}
                 />
               </div>
@@ -217,7 +219,7 @@ export function HalftimeScreen({
           </div>
 
           {/* ─── Layer 2: UI Content ─── */}
-          <div className="relative z-10 w-full max-w-lg flex flex-col items-center font-fun pt-8 px-4">
+          <div className="relative z-10 w-full max-w-lg lg:max-w-3xl flex flex-col items-center font-fun pt-8 px-4">
 
             {/* ── Broadcast-style score bar ── */}
             <motion.div

@@ -43,6 +43,8 @@ export function getTacticModifiers(half: 1 | 2, tactic: TacticalCard | null): Ta
       return { correctVsWrongGain: 9, wrongVsCorrectPenalty: -8, speedBonusMultiplier: 1, shotMomentumThreshold: 4 };
     case 'all-in':
       return { correctVsWrongGain: 14, wrongVsCorrectPenalty: -14, speedBonusMultiplier: 1, shotMomentumThreshold: 3 };
+    default:
+      return defaults;
   }
 }
 

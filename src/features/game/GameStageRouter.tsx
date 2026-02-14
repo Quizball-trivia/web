@@ -11,7 +11,6 @@ import { RoundIntroScreen } from "./components/RoundIntroScreen";
 import { RoundResultScreen } from "./components/RoundResultScreen";
 import { QuizBallGameScreen } from "./components/QuizBallGameScreen";
 import { QuizBallResultsScreen } from "./components/QuizBallResultsScreen";
-import { RealtimeQuizBallGameScreen } from "./RealtimeQuizBallGameScreen";
 import { RealtimeResultsScreen } from "./RealtimeResultsScreen";
 import { RealtimePossessionMatchScreen } from "@/features/possession/RealtimePossessionMatchScreen";
 import { useAuthStore } from "@/stores/auth.store";
@@ -45,7 +44,6 @@ const toLegacyMode = (mode: string | undefined): LegacyGameMode => {
 };
 
 const POSSESSION_TOTAL_QUESTIONS_FALLBACK = 12;
-const CLASSIC_TOTAL_QUESTIONS_FALLBACK = 10;
 
 export function GameStageRouter() {
   const router = useRouter();
@@ -148,12 +146,13 @@ export function GameStageRouter() {
     () =>
       resolveAvatarUrl(
         authUser?.avatar_url ?? player.avatarCustomization?.base ?? player.avatar,
-        "player"
+        "player",
+        256
       ),
     [authUser?.avatar_url, player.avatarCustomization?.base, player.avatar]
   );
   const opponentGameAvatar = useMemo(
-    () => resolveAvatarUrl(opponent.avatar, "opponent"),
+    () => resolveAvatarUrl(opponent.avatar, "opponent", 256),
     [opponent.avatar]
   );
 
@@ -232,45 +231,8 @@ export function GameStageRouter() {
     }
 
     if (stage === "playing") {
-      if (realtimeMatch?.engine === "possession_v1") {
-        return (
-          <RealtimePossessionMatchScreen
-            playerAvatar={playerGameAvatar}
-            playerUsername={player.username}
-            opponentAvatar={opponentGameAvatar}
-            opponentUsername={opponent.username}
-            onQuit={() => {
-              if (realtimeMatch?.matchId) {
-                getSocket().emit("match:leave", {
-                  matchId: realtimeMatch.matchId,
-                });
-                logger.info("Socket emit match:leave", {
-                  matchId: realtimeMatch.matchId,
-                });
-              } else {
-                logger.info("Socket emit match:leave skipped (missing matchId)");
-              }
-              exitToPlay();
-            }}
-            onForfeit={() => {
-              if (realtimeMatch?.matchId) {
-                getSocket().emit("match:forfeit", {
-                  matchId: realtimeMatch.matchId,
-                });
-                logger.info("Socket emit match:forfeit", {
-                  matchId: realtimeMatch.matchId,
-                });
-              } else {
-                logger.info("Socket emit match:forfeit skipped (missing matchId)");
-              }
-              exitToPlay();
-            }}
-          />
-        );
-      }
-
       return (
-        <RealtimeQuizBallGameScreen
+        <RealtimePossessionMatchScreen
           playerAvatar={playerGameAvatar}
           playerUsername={player.username}
           opponentAvatar={opponentGameAvatar}
@@ -305,21 +267,24 @@ export function GameStageRouter() {
       );
     }
 
-    if (stage === "finalResults" && realtimeMatch?.finalResults) {
-      const final = realtimeMatch.finalResults;
-      const myStats = selfUserId ? final.players[selfUserId] : undefined;
-      const opponentStats = selfUserId
+    if (stage === "finalResults") {
+      const final = realtimeMatch?.finalResults;
+      const myStats = selfUserId && final ? final.players[selfUserId] : undefined;
+      const opponentStats = selfUserId && final
         ? Object.entries(final.players).find(([userId]) => userId !== selfUserId)?.[1]
         : undefined;
-      const isPossession = realtimeMatch.engine === "possession_v1";
-      const playerDisplayScore = isPossession
-        ? myStats?.goals ?? 0
-        : myStats?.totalPoints ?? realtimeMatch.myTotalPoints;
-      const opponentDisplayScore = isPossession
-        ? opponentStats?.goals ?? 0
-        : opponentStats?.totalPoints ?? realtimeMatch.oppTotalPoints;
-      const totalQuestionsPlayed = realtimeMatch.currentQuestion?.total
-        ?? (isPossession ? POSSESSION_TOTAL_QUESTIONS_FALLBACK : CLASSIC_TOTAL_QUESTIONS_FALLBACK);
+
+      // Use finalResults if available, otherwise derive scores from possessionState
+      const poss = realtimeMatch?.possessionState;
+      const mySeat = realtimeMatch?.mySeat;
+      const playerDisplayScore = myStats?.goals
+        ?? (mySeat === 2 ? poss?.goals.seat2 : poss?.goals.seat1)
+        ?? 0;
+      const opponentDisplayScore = opponentStats?.goals
+        ?? (mySeat === 2 ? poss?.goals.seat1 : poss?.goals.seat2)
+        ?? 0;
+      const totalQuestionsPlayed = realtimeMatch?.currentQuestion?.total
+        ?? POSSESSION_TOTAL_QUESTIONS_FALLBACK;
 
       return (
         <RealtimeResultsScreen

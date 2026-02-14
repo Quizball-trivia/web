@@ -1,6 +1,8 @@
 import { getSocket } from './socket-client';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { logger } from '@/utils/logger';
+import { storage, STORAGE_KEYS } from '@/utils/storage';
+import { getI18nText } from '@/lib/utils/i18n';
 import type {
   DraftState,
   ErrorPayload,
@@ -14,6 +16,7 @@ import type {
   RankedSearchStartedPayload,
   MatchQuestionPayload,
   MatchRoundResultPayload,
+  MatchCountdownPayload,
   MatchRejoinAvailablePayload,
   MatchResumePayload,
   MatchStartPayload,
@@ -39,6 +42,7 @@ export function registerSocketHandlers(): void {
   socket.off('draft:banned');
   socket.off('draft:complete');
   socket.off('match:start');
+  socket.off('match:countdown');
   socket.off('match:state');
   socket.off('match:question');
   socket.off('match:opponent_answered');
@@ -97,6 +101,17 @@ export function registerSocketHandlers(): void {
     ) {
       store.setRankedQueueLeft();
     }
+    // Rollback optimistic draft ban on server rejection
+    if (
+      data.code === 'NOT_YOUR_TURN' ||
+      data.code === 'INVALID_CATEGORY' ||
+      data.code === 'BAN_FAILED'
+    ) {
+      const selfUserId = store.selfUserId;
+      if (selfUserId) {
+        store.revertDraftBan(selfUserId);
+      }
+    }
     store.setError(data);
   });
 
@@ -122,8 +137,17 @@ export function registerSocketHandlers(): void {
   });
 
   socket.on('match:start', (data: MatchStartPayload) => {
-    logger.info('Socket event match:start', { matchId: data.matchId, engine: data.engine, opponentId: data.opponent.id });
+    logger.info('Socket event match:start', { matchId: data.matchId, opponentId: data.opponent.id });
     store.setMatchStart(data);
+  });
+
+  socket.on('match:countdown', (data: MatchCountdownPayload) => {
+    logger.info('Socket event match:countdown', {
+      matchId: data.matchId,
+      seconds: data.seconds,
+      startsAt: data.startsAt,
+    });
+    store.setMatchCountdown(data);
   });
 
   socket.on('match:state', (data: MatchStatePayload) => {
@@ -139,23 +163,32 @@ export function registerSocketHandlers(): void {
   });
 
   socket.on('match:question', (data: MatchQuestionPayload) => {
+    logger.debug('Inspecting match:question correctIndex payload type', {
+      correctIndex: data.correctIndex,
+      correctIndexType: typeof data.correctIndex,
+    });
     logger.info('Socket event match:question', {
       matchId: data.matchId,
       qIndex: data.qIndex,
       total: data.total,
       deadlineAt: data.deadlineAt,
+      correctIndex: data.correctIndex,
     });
-    logger.info('Question data received', {
-      questionId: data.question.id,
-      prompt: data.question.prompt,
-      promptType: typeof data.question.prompt,
-      promptLength: data.question.prompt?.length,
-      options: data.question.options,
-      optionsCount: data.question.options?.length,
-      categoryName: data.question.categoryName,
-      difficulty: data.question.difficulty,
-    });
-    store.setMatchQuestion(data);
+
+    // Resolve i18n fields to the user's preferred locale
+    const locale = storage.get(STORAGE_KEYS.LOCALE, 'en');
+    const resolvedData = {
+      ...data,
+      question: {
+        ...data.question,
+        prompt: getI18nText(data.question.prompt, locale),
+        options: data.question.options.map((opt) => getI18nText(opt, locale)),
+        categoryName: data.question.categoryName
+          ? getI18nText(data.question.categoryName, locale)
+          : undefined,
+      },
+    };
+    store.setMatchQuestion(resolvedData);
   });
 
   socket.on('match:opponent_answered', (data: MatchOpponentAnsweredPayload) => {
@@ -169,6 +202,7 @@ export function registerSocketHandlers(): void {
       opponentTotalPoints: data.opponentTotalPoints,
       pointsEarned: data.pointsEarned,
       isCorrect: data.isCorrect,
+      selectedIndex: data.selectedIndex,
     });
   });
 
