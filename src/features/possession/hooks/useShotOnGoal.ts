@@ -63,7 +63,7 @@ export function useShotOnGoal(
     s.setShotOpponentTime(aiDelay);
 
     setTimeRemaining(TIMER_SECONDS);
-  }, [usedQuestionIdsRef]);
+  }, []);
 
   const handleShotAnswer = useCallback((index: number, stopTimer: () => void) => {
     const s = store.getState();

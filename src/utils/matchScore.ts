@@ -26,7 +26,7 @@ export function formatMatchScore(match: Pick<
   }
 
   if (match.winnerDecisionMethod === "penalty_goals") {
-    const penaltyScore = `${match.playerGoals + match.playerPenaltyGoals}-${match.opponentGoals + match.opponentPenaltyGoals}`;
+    const penaltyScore = `${match.playerPenaltyGoals}-${match.opponentPenaltyGoals}`;
     return { score: goalScore, suffix: `(P ${penaltyScore})`, badge: null, badgeVariant: null };
   }
 

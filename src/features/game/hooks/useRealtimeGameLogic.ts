@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { getSocket } from '@/lib/realtime/socket-client';
 import { logger } from '@/utils/logger';
+import { QUESTION_REVEAL_MS } from '@/features/possession/types/possession.types';
 
-const QUESTION_REVEAL_MS = 2000; // 2s question entrance before options become clickable
 const QUESTION_PLAYING_MS = 10000; // 10 second playing phase
 const ROUND_RESULT_HOLD_MS = 1800; // hold result for 1.8s before transitioning to next question
 
@@ -41,8 +41,13 @@ export function useRealtimeGameLogic() {
     const tick = () => setNowMs(Date.now());
     tick();
     if (countdownEndsAt <= Date.now()) return;
-    const interval = setInterval(tick, 100);
-    return () => clearInterval(interval);
+    const intervalId = setInterval(() => {
+      tick();
+      if (Date.now() >= countdownEndsAt) {
+        clearInterval(intervalId);
+      }
+    }, 100);
+    return () => clearInterval(intervalId);
   }, [countdownEndsAt]);
 
   useEffect(() => {

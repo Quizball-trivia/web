@@ -18,7 +18,6 @@ interface PossessionHUDProps {
   zone: string;
   zoneColor: string;
   onQuit?: () => void;
-  playerAnswered?: boolean;
   opponentAnswered?: boolean;
   opponentAnsweredCorrectly?: boolean | null;
 }
@@ -36,7 +35,6 @@ export function PossessionHUD({
   zone,
   zoneColor,
   onQuit,
-  playerAnswered,
   opponentAnswered,
   opponentAnsweredCorrectly,
 }: PossessionHUDProps) {

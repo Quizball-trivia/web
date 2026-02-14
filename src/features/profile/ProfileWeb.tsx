@@ -30,7 +30,6 @@ export interface ProfileRecentMatch {
   id: string | number;
   mode: string;
   result: 'Win' | 'Loss' | 'Draw';
-  rp: string;
   time: string;
   opponent: string;
   scoreFormatted: FormattedMatchScore;

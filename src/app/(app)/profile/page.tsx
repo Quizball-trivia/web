@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth.store";
 import { useMatchStatsSummary, useRecentMatches } from "@/lib/queries/stats.queries";
 import { useLocale } from "@/contexts/LocaleContext";
-import type { Locale } from "@/data/locales";
+import { LOCALES, type Locale } from "@/data/locales";
 import { formatMatchScore } from "@/utils/matchScore";
 
 export default function ProfilePage() {
@@ -83,6 +83,10 @@ export default function ProfilePage() {
 
   const handleLanguageChange = async (language: string) => {
     if (isUpdating) return;
+    if (!LOCALES.some((l) => l.code === language)) {
+      toast.error("Invalid language selected");
+      return;
+    }
     setIsUpdating(true);
     try {
       const updated = await updateMe({ preferred_language: language });
@@ -116,7 +120,6 @@ export default function ProfilePage() {
             : match.result === "loss"
               ? "Loss"
               : "Draw",
-        rp: `${match.playerScore}-${match.opponentScore}`,
         time: match.timeLabel,
         opponent: match.opponent.username,
         scoreFormatted: formatMatchScore(match),

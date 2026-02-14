@@ -99,7 +99,7 @@ export function RealtimePossessionMatchScreen({
   const isPenaltyPhaseServer = phase === 'PENALTY_SHOOTOUT';
   const [penaltyCountdownEndsAt, setPenaltyCountdownEndsAt] = useState<number | null>(null);
   const [penaltyCountdownNow, setPenaltyCountdownNow] = useState(() => Date.now());
-  const prevPenaltyPhaseRef = useRef(false);
+  const prevPenaltyPhaseRef = useRef(isPenaltyPhaseServer);
 
   // Delay halftime screen by 2s so the last round result is visible first
   useEffect(() => {
@@ -833,7 +833,6 @@ export function RealtimePossessionMatchScreen({
                   zone={zone}
                   zoneColor={zoneColor}
                   onQuit={() => setShowQuitModal(true)}
-                  playerAnswered={state.isAnswered}
                   opponentAnswered={state.opponentAnswered}
                   opponentAnsweredCorrectly={opponentAnsweredCorrectly}
                 />

@@ -107,7 +107,7 @@ export function registerSocketHandlers(): void {
       data.code === 'INVALID_CATEGORY' ||
       data.code === 'BAN_FAILED'
     ) {
-      const selfUserId = useRealtimeMatchStore.getState().selfUserId;
+      const selfUserId = store.selfUserId;
       if (selfUserId) {
         store.revertDraftBan(selfUserId);
       }
