@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useGameSessionStore } from "@/stores/gameSession.store";
 import { usePlayer } from "@/contexts/PlayerContext";
-import { MatchmakingScreen } from "./components/MatchmakingScreen";
+import { MatchmakingMapScreen } from "./components/MatchmakingMapScreen";
 import { ShowdownScreen } from "./components/ShowdownScreen";
 import { RankedCategoryBlockingScreen } from "@/features/play/RankedCategoryBlockingScreen";
 import { RoundIntroScreen } from "./components/RoundIntroScreen";
@@ -206,11 +206,13 @@ export function GameStageRouter() {
   if (isMultiplayer) {
     if (stage === "matchmaking") {
       return (
-        <MatchmakingScreen
+        <MatchmakingMapScreen
           matchType={matchType}
           rankedSearchDurationMs={rankedSearchDurationMs}
           rankedSearchStartedAt={rankedSearchStartedAt}
           rankedFoundOpponent={rankedFoundOpponent}
+          selfUsername={player.username}
+          selfAvatarCustomization={player.avatarCustomization}
           debugInfo={matchmakingDebugInfo}
           onCancel={() => {
             if (matchType === "ranked") {

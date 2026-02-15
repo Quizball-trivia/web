@@ -60,6 +60,34 @@ export interface OpponentInfo {
   id: string;
   username: string;
   avatarUrl: string | null;
+  country?: string;
+  countryCode?: string;
+  city?: string;
+  flag?: string;
+  lat?: number;
+  lon?: number;
+  latitude?: number;
+  longitude?: number;
+  location?: {
+    country?: string;
+    countryCode?: string;
+    city?: string;
+    flag?: string;
+    lat?: number;
+    lon?: number;
+    latitude?: number;
+    longitude?: number;
+  };
+  geo?: {
+    country?: string;
+    countryCode?: string;
+    city?: string;
+    flag?: string;
+    lat?: number;
+    lon?: number;
+    latitude?: number;
+    longitude?: number;
+  };
 }
 
 /** Wire format — i18n objects sent from backend. Resolved to strings in socket-handlers. */
@@ -243,6 +271,18 @@ export interface RankedMatchFoundPayload {
 
 export interface RankedQueueJoinPayload {
   searchMode?: 'human_first';
+  geoHint?: {
+    ip?: string;
+    city?: string;
+    region?: string;
+    country?: string;
+    latitude?: number;
+    longitude?: number;
+    countryCode?: string;
+    timezone?: string;
+    locale?: string;
+    source?: 'ip_lookup' | 'browser_geolocation' | 'client_locale' | 'unknown';
+  };
 }
 
 export interface WarmupTapPayload {

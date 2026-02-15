@@ -95,7 +95,7 @@ export function ModeSelectionScreen({
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 space-y-5 font-fun">
+    <div className="max-w-5xl mx-auto px-3 py-4 space-y-4 md:px-4 md:py-6 md:space-y-5 font-fun">
 
       {/* ─── 1. Ranked Hero Card ─── */}
       <motion.div
@@ -121,49 +121,49 @@ export function ModeSelectionScreen({
 
         <StadiumSilhouette />
 
-        <div className="relative z-10 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="size-16 rounded-2xl bg-[#58CC02]/20 border-2 border-[#58CC02]/40 flex items-center justify-center">
-                <SoccerBall className="size-9 text-[#58CC02]" />
+        <div className="relative z-10 p-4 md:p-6">
+          <div className="flex items-center justify-between mb-2 md:mb-4">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="size-10 md:size-16 rounded-xl md:rounded-2xl bg-[#58CC02]/20 border-2 border-[#58CC02]/40 flex items-center justify-center">
+                <SoccerBall className="size-5 md:size-9 text-[#58CC02]" />
               </div>
               <div>
-                <h1 className="text-3xl font-black text-white uppercase">Ranked Match</h1>
-                <span className="text-sm font-bold text-[#58CC02] uppercase tracking-wider">⚽ 1v1 Competitive</span>
+                <h1 className="text-lg md:text-3xl font-black text-white uppercase leading-tight">Ranked Match</h1>
+                <span className="text-[10px] md:text-sm font-bold text-[#58CC02] uppercase tracking-wider">1v1 Competitive</span>
               </div>
             </div>
-            <div className="hidden md:block">
-              <span className="px-14 py-5 rounded-2xl bg-[#58CC02] border-b-4 border-[#46A302] text-white font-black text-xl inline-block pointer-events-none uppercase tracking-wide transition-all">
-                Play Ranked
+            <div>
+              <span className="px-8 py-3.5 md:px-14 md:py-5 rounded-2xl bg-[#58CC02] border-b-4 border-[#46A302] text-white font-black text-base md:text-xl inline-block pointer-events-none uppercase tracking-wide transition-all">
+                Play
               </span>
             </div>
           </div>
 
-          <p className="text-base text-white/80 font-semibold mb-4 max-w-xl">
+          <p className="hidden md:block text-base text-white/80 font-semibold mb-4 max-w-xl">
             🏆 Compete for Rank Points (RP) and climb the global leaderboards. Win to promote to higher divisions!
           </p>
 
-          <div className="flex gap-3 mb-4">
-            <span className="text-xs font-black px-4 py-2 rounded-full bg-white/10 border-2 border-white/20 text-white/90">
+          <div className="flex gap-1.5 md:gap-3 mb-2 md:mb-4">
+            <span className="text-[10px] md:text-xs font-black px-2.5 md:px-4 py-1 md:py-2 rounded-full bg-white/10 border border-white/20 md:border-2 text-white/90">
               ⚡ 1v1 Duel
             </span>
-            <span className="text-xs font-black px-4 py-2 rounded-full bg-[#FFD700]/15 border-2 border-[#FFD700]/30 text-[#FFD700]">
+            <span className="text-[10px] md:text-xs font-black px-2.5 md:px-4 py-1 md:py-2 rounded-full bg-[#FFD700]/15 border border-[#FFD700]/30 md:border-2 text-[#FFD700]">
               +5–15 RP / Win
             </span>
           </div>
 
           {/* RP Progress + Stats */}
-          <div className="bg-[#131F24] rounded-2xl border-b-4 border-[#0D1B21] p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">{divisionEmoji}</span>
-                <span className={cn('text-base font-black', divisionColors.text)}>{rankInfo.division}</span>
+          <div className="bg-[#131F24] rounded-xl md:rounded-2xl border-b-[3px] md:border-b-4 border-[#0D1B21] p-2.5 md:p-4">
+            <div className="flex items-center justify-between mb-1.5 md:mb-2">
+              <div className="flex items-center gap-1.5 md:gap-2">
+                <span className="text-lg md:text-2xl">{divisionEmoji}</span>
+                <span className={cn('text-sm md:text-base font-black', divisionColors.text)}>{rankInfo.division}</span>
               </div>
-              <span className="text-xs font-bold text-[#56707A]">
+              <span className="text-[10px] md:text-xs font-bold text-[#56707A]">
                 {rankInfo.pointsToNext !== null ? `${rankInfo.pointsToNext} RP to next` : 'Max Division'}
               </span>
             </div>
-            <div className="relative h-4 bg-[#243B44] rounded-full overflow-hidden">
+            <div className="relative h-3 md:h-4 bg-[#243B44] rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${rankInfo.progress}%` }}
@@ -173,14 +173,14 @@ export function ModeSelectionScreen({
                 <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/30 to-transparent h-1/2" />
               </motion.div>
             </div>
-            <div className="flex items-center justify-between mt-2">
-              <div className="flex items-center gap-4">
-                <span className="text-xs font-bold text-[#56707A]">🏆 <span className="text-[#2D8CBA] font-black">{rankedWinRate}%</span> win</span>
-                <span className="text-xs font-bold text-[#56707A]">🎯 <span className="text-[#9B7EC8] font-black">{rankedGamesPlayed}</span> games</span>
+            <div className="flex items-center justify-between mt-1.5 md:mt-2">
+              <div className="flex items-center gap-3 md:gap-4">
+                <span className="text-[10px] md:text-xs font-bold text-[#56707A]">🏆 <span className="text-[#2D8CBA] font-black">{rankedWinRate}%</span> win</span>
+                <span className="text-[10px] md:text-xs font-bold text-[#56707A]">🎯 <span className="text-[#9B7EC8] font-black">{rankedGamesPlayed}</span> games</span>
               </div>
               <div>
-                <span className="text-2xl font-black text-white">{playerStats.rankPoints ?? 0}</span>
-                <span className="text-sm font-bold text-[#56707A] ml-1">RP</span>
+                <span className="text-xl md:text-2xl font-black text-white">{playerStats.rankPoints ?? 0}</span>
+                <span className="text-xs md:text-sm font-bold text-[#56707A] ml-1">RP</span>
               </div>
             </div>
           </div>
@@ -214,7 +214,7 @@ export function ModeSelectionScreen({
           }}
           role="button"
           tabIndex={0}
-          className="relative text-left bg-[#1B2F36] rounded-2xl border-b-4 border-[#1CB0F6] p-6 hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1CB0F6] overflow-hidden"
+          className="relative text-left bg-[#1B2F36] rounded-2xl border-b-4 border-[#1CB0F6] p-4 md:p-6 hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1CB0F6] overflow-hidden"
         >
           {/* Soccer lines decoration */}
           <div className="absolute top-0 right-0 w-32 h-32 opacity-5">
@@ -224,14 +224,14 @@ export function ModeSelectionScreen({
           </div>
 
           <div className="relative z-10">
-            <div className="size-14 rounded-xl bg-[#1CB0F6]/20 border-2 border-[#1CB0F6]/40 flex items-center justify-center mb-3">
-              <Jersey className="size-7 text-[#1CB0F6]" />
+            <div className="size-11 md:size-14 rounded-xl bg-[#1CB0F6]/20 border-2 border-[#1CB0F6]/40 flex items-center justify-center mb-2 md:mb-3">
+              <Jersey className="size-6 md:size-7 text-[#1CB0F6]" />
             </div>
-            <h3 className="text-2xl font-black text-white mb-2 uppercase">Friendly Match</h3>
-            <p className="text-sm text-[#56707A] font-semibold mb-4">
+            <h3 className="text-xl md:text-2xl font-black text-white mb-1 md:mb-2 uppercase">Friendly Match</h3>
+            <p className="text-xs md:text-sm text-[#56707A] font-semibold mb-3 md:mb-4">
               👥 Create a private room or join a friend&apos;s game. No RP at stake.
             </p>
-            <span className="px-6 py-3 rounded-2xl bg-[#1A7FA8] border-b-4 border-[#14627F] text-white font-black text-sm inline-block pointer-events-none uppercase">
+            <span className="px-5 py-2.5 md:px-6 md:py-3 rounded-2xl bg-[#1A7FA8] border-b-4 border-[#14627F] text-white font-black text-xs md:text-sm inline-block pointer-events-none uppercase">
               Create / Join Room
             </span>
           </div>
@@ -248,7 +248,7 @@ export function ModeSelectionScreen({
           }}
           role="button"
           tabIndex={0}
-          className="relative text-left bg-[#1B2F36] rounded-2xl border-b-4 border-[#FF9600] p-6 hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF9600] overflow-hidden"
+          className="relative text-left bg-[#1B2F36] rounded-2xl border-b-4 border-[#FF9600] p-4 md:p-6 hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF9600] overflow-hidden"
         >
           {/* Boot prints decoration */}
           <div className="absolute bottom-0 right-4 opacity-5">
@@ -256,14 +256,14 @@ export function ModeSelectionScreen({
           </div>
 
           <div className="relative z-10">
-            <div className="size-14 rounded-xl bg-[#FF9600]/20 border-2 border-[#FF9600]/40 flex items-center justify-center mb-3">
-              <Boot className="size-7 text-[#FF9600]" />
+            <div className="size-11 md:size-14 rounded-xl bg-[#FF9600]/20 border-2 border-[#FF9600]/40 flex items-center justify-center mb-2 md:mb-3">
+              <Boot className="size-6 md:size-7 text-[#FF9600]" />
             </div>
-            <h3 className="text-2xl font-black text-white mb-2 uppercase">Solo Practice</h3>
-            <p className="text-sm text-[#56707A] font-semibold mb-4">
+            <h3 className="text-xl md:text-2xl font-black text-white mb-1 md:mb-2 uppercase">Solo Practice</h3>
+            <p className="text-xs md:text-sm text-[#56707A] font-semibold mb-3 md:mb-4">
               ⚽ Start your journey from benchwarmer to legend.
             </p>
-            <span className="px-6 py-3 rounded-2xl bg-[#C47400] border-b-4 border-[#9A5B00] text-white font-black text-sm inline-block pointer-events-none uppercase">
+            <span className="px-5 py-2.5 md:px-6 md:py-3 rounded-2xl bg-[#C47400] border-b-4 border-[#9A5B00] text-white font-black text-xs md:text-sm inline-block pointer-events-none uppercase">
               Start Practice
             </span>
           </div>

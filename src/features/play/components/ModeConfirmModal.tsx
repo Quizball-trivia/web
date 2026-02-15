@@ -46,8 +46,8 @@ export function ModeConfirmModal({
       entryCost: 1,
       stats: [
         { label: "FORMAT", value: "1v1 Duel" },
-        { label: "DURATION", value: "~2 min" },
-        { label: "QUESTIONS", value: "10" },
+        { label: "DURATION", value: "~5 min" },
+        { label: "QUESTIONS", value: "12–18" },
       ],
     },
     friendly: {

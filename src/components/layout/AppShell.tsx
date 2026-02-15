@@ -61,11 +61,32 @@ const MOBILE_NAV_ITEMS = [
 ] as const;
 
 const HIDE_NAV_PATHS = ["/game", "/onboarding"];
-const HEADER_PATHS = ["/", "/events", "/leaderboard", "/profile", "/store"];
+const HEADER_PATHS = ["/", "/play", "/events", "/leaderboard", "/profile", "/store", "/career"];
 
 type AppShellProps = {
   children: React.ReactNode;
 };
+
+type RankedGeoHintDebug = {
+  city?: string;
+  region?: string;
+  country?: string;
+  countryCode?: string;
+  latitude?: number;
+  longitude?: number;
+  source?: string;
+};
+
+function readRankedGeoHintDebug(): RankedGeoHintDebug | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem("ranked_geo_hint_v1");
+    if (!raw) return null;
+    return JSON.parse(raw) as RankedGeoHintDebug;
+  } catch {
+    return null;
+  }
+}
 
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
@@ -81,9 +102,12 @@ export function AppShell({ children }: AppShellProps) {
   const startSession = useGameSessionStore((state) => state.startSession);
   const setGameStage = useGameSessionStore((state) => state.setStage);
   const [socketConnected, setSocketConnected] = useState(() => getSocket().connected);
+  const [rankedGeoHintDebug, setRankedGeoHintDebug] = useState<RankedGeoHintDebug | null>(
+    () => readRankedGeoHintDebug()
+  );
 
   const currentPath = pathname ?? "/";
-  const showHeader = HEADER_PATHS.includes(currentPath);
+  const showHeader = HEADER_PATHS.some((p) => p === "/" ? currentPath === "/" : currentPath.startsWith(p));
   const showNav = !HIDE_NAV_PATHS.some((path) => currentPath.startsWith(path));
   const inLobbyRoom = currentPath.startsWith("/friend/room");
   const showLobbyBanner = !!lobby && lobby.status === "waiting" && !inLobbyRoom;
@@ -104,6 +128,16 @@ export function AppShell({ children }: AppShellProps) {
     return () => {
       socket.off("connect", handleConnect);
       socket.off("disconnect", handleDisconnect);
+    };
+  }, []);
+
+  useEffect(() => {
+    const sync = () => setRankedGeoHintDebug(readRankedGeoHintDebug());
+    window.addEventListener("storage", sync);
+    const intervalId = window.setInterval(sync, 1500);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.clearInterval(intervalId);
     };
   }, []);
 
@@ -254,6 +288,20 @@ export function AppShell({ children }: AppShellProps) {
                   <span>local:{localWaitingLobbyId ? localWaitingLobbyId.slice(0, 6) : "-"}</span>
                   <span>session:{sessionWaitingLobbyId ? sessionWaitingLobbyId.slice(0, 6) : "-"}</span>
                   <span>state:{sessionStateLabel}</span>
+                  <span>
+                    loc:{rankedGeoHintDebug?.city ?? "-"},
+                    {rankedGeoHintDebug?.countryCode ?? rankedGeoHintDebug?.country ?? "-"}
+                  </span>
+                  <span>
+                    ll:
+                    {typeof rankedGeoHintDebug?.latitude === "number"
+                      ? rankedGeoHintDebug.latitude.toFixed(2)
+                      : "-"},
+                    {typeof rankedGeoHintDebug?.longitude === "number"
+                      ? rankedGeoHintDebug.longitude.toFixed(2)
+                      : "-"}
+                  </span>
+                  <span>src:{rankedGeoHintDebug?.source ?? "-"}</span>
                 </div>
               )}
               {/* Currencies & Streak */}
@@ -457,6 +505,20 @@ export function AppShell({ children }: AppShellProps) {
                   <span>local:{localWaitingLobbyId ? localWaitingLobbyId.slice(0, 6) : "-"}</span>
                   <span>session:{sessionWaitingLobbyId ? sessionWaitingLobbyId.slice(0, 6) : "-"}</span>
                   <span>state:{sessionStateLabel}</span>
+                  <span>
+                    loc:{rankedGeoHintDebug?.city ?? "-"},
+                    {rankedGeoHintDebug?.countryCode ?? rankedGeoHintDebug?.country ?? "-"}
+                  </span>
+                  <span>
+                    ll:
+                    {typeof rankedGeoHintDebug?.latitude === "number"
+                      ? rankedGeoHintDebug.latitude.toFixed(2)
+                      : "-"},
+                    {typeof rankedGeoHintDebug?.longitude === "number"
+                      ? rankedGeoHintDebug.longitude.toFixed(2)
+                      : "-"}
+                  </span>
+                  <span>src:{rankedGeoHintDebug?.source ?? "-"}</span>
                 </div>
               )}
               <div className="flex items-center justify-between mb-3 relative">
@@ -481,7 +543,7 @@ export function AppShell({ children }: AppShellProps) {
                       </div>
                     </Link>
                   ) : (
-                    <AppLogo size="sm" />
+                    <AppLogo size="sm" iconOnly />
                   )}
                 </div>
 
@@ -608,7 +670,7 @@ export function AppShell({ children }: AppShellProps) {
 
         {/* Sticky Play Button - Only on Home Screen */}
         {currentPath === "/" && (
-          <div className="fixed bottom-16 left-0 right-0 z-30 bg-background/80 backdrop-blur-lg border-t border-border/50">
+          <div className="fixed bottom-16 left-0 right-0 z-30 bg-background border-t border-border/50">
             <div className="px-4 pt-3.5 pb-3 flex justify-center">
               <Button
                 onClick={() => router.push("/play")}
@@ -623,7 +685,7 @@ export function AppShell({ children }: AppShellProps) {
 
         {/* Bottom Navigation */}
         {showNav && (
-          <div className="fixed bottom-0 left-0 right-0 z-20 bg-background/80 backdrop-blur-lg border-t border-border/50">
+          <div className="fixed bottom-0 left-0 right-0 z-20 bg-background border-t border-border/50">
             <nav className="flex justify-around px-2 py-2">
               {MOBILE_NAV_ITEMS.map((item) => {
                 const isActive = isPathActive(item.path, 'exact' in item ? item.exact : undefined);
