@@ -4,6 +4,8 @@ import type {
   ServerToClientEvents,
   ClientToServerEvents,
   RankedQueueJoinPayload,
+  OpponentInfo,
+  SessionStatePayload,
 } from "@/lib/realtime/socket.types";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import type { DraftStatus, MatchStatus } from "@/stores/realtimeMatch.store";
@@ -31,6 +33,58 @@ const IP_LOOKUP_TIMEOUT_MS = 1800;
 
 type RankedGeoHint = NonNullable<RankedQueueJoinPayload["geoHint"]>;
 
+interface IpWhoResponse {
+  success?: boolean;
+  ip?: string;
+  city?: string;
+  region?: string;
+  country?: string;
+  country_code?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+function isIpWhoResponse(value: unknown): value is IpWhoResponse {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<IpWhoResponse>;
+  const isMaybeString = (input: unknown) => input === undefined || typeof input === "string";
+  const isMaybeNumber = (input: unknown) => input === undefined || typeof input === "number";
+  const isMaybeBoolean = (input: unknown) => input === undefined || typeof input === "boolean";
+  return (
+    isMaybeBoolean(candidate.success) &&
+    isMaybeString(candidate.ip) &&
+    isMaybeString(candidate.city) &&
+    isMaybeString(candidate.region) &&
+    isMaybeString(candidate.country) &&
+    isMaybeString(candidate.country_code) &&
+    isMaybeNumber(candidate.latitude) &&
+    isMaybeNumber(candidate.longitude)
+  );
+}
+
+function isRankedGeoHint(value: unknown): value is RankedGeoHint {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<RankedGeoHint>;
+  const isMaybeString = (input: unknown) => input === undefined || typeof input === "string";
+  const isMaybeNumber = (input: unknown) => input === undefined || typeof input === "number";
+  return (
+    isMaybeString(candidate.ip) &&
+    isMaybeString(candidate.city) &&
+    isMaybeString(candidate.region) &&
+    isMaybeString(candidate.country) &&
+    isMaybeString(candidate.countryCode) &&
+    isMaybeNumber(candidate.latitude) &&
+    isMaybeNumber(candidate.longitude) &&
+    isMaybeString(candidate.timezone) &&
+    isMaybeString(candidate.locale) &&
+    (candidate.source === undefined ||
+      candidate.source === "ip_lookup" ||
+      candidate.source === "browser_geolocation" ||
+      candidate.source === "client_locale" ||
+      candidate.source === "unknown")
+  );
+}
+
 function roundCoord(value: number): number {
   return Math.round(value * 1000) / 1000;
 }
@@ -52,16 +106,9 @@ async function getIpLookupHint(): Promise<Partial<RankedGeoHint>> {
       cache: "no-store",
     });
     if (!response.ok) return {};
-    const data = (await response.json()) as {
-      success?: boolean;
-      ip?: string;
-      city?: string;
-      region?: string;
-      country?: string;
-      country_code?: string;
-      latitude?: number;
-      longitude?: number;
-    };
+    const rawData: unknown = await response.json();
+    if (!isIpWhoResponse(rawData)) return {};
+    const data = rawData;
     if (data.success === false) return {};
     return {
       ip: data.ip,
@@ -122,9 +169,9 @@ async function getBrowserGeoHint(): Promise<Partial<RankedGeoHint>> {
 }
 
 function computeHasSearchAck(
-  rankedSearchStartedAt: unknown,
-  rankedFoundOpponent: unknown,
-  sessionState: { state?: string } | null,
+  rankedSearchStartedAt: number | null | undefined,
+  rankedFoundOpponent: OpponentInfo | null | undefined,
+  sessionState: SessionStatePayload | null,
 ): boolean {
   return (
     Boolean(rankedSearchStartedAt) ||
@@ -181,7 +228,8 @@ export function useGameStageTransitions({
     try {
       const cachedRaw = window.localStorage.getItem(GEO_HINT_CACHE_KEY);
       if (cachedRaw) {
-        const cached = JSON.parse(cachedRaw) as RankedGeoHint;
+        const parsed: unknown = JSON.parse(cachedRaw);
+        const cached = isRankedGeoHint(parsed) ? parsed : baseHint;
         rankedGeoHintRef.current = { ...baseHint, ...cached };
         logger.info("Ranked geo hint loaded from cache", {
           baseHint,

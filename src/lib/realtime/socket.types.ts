@@ -64,30 +64,37 @@ export interface OpponentInfo {
   countryCode?: string;
   city?: string;
   flag?: string;
-  lat?: number;
-  lon?: number;
-  latitude?: number;
-  longitude?: number;
-  location?: {
-    country?: string;
-    countryCode?: string;
-    city?: string;
-    flag?: string;
-    lat?: number;
-    lon?: number;
-    latitude?: number;
-    longitude?: number;
-  };
-  geo?: {
-    country?: string;
-    countryCode?: string;
-    city?: string;
-    flag?: string;
-    lat?: number;
-    lon?: number;
-    latitude?: number;
-    longitude?: number;
-  };
+  lat?: number | string;
+  lon?: number | string;
+  lng?: number | string;
+  long?: number | string;
+  latitude?: number | string;
+  longitude?: number | string;
+  x?: number | string;
+  y?: number | string;
+  location?: OpponentGeoPayload | string;
+  geo?: OpponentGeoPayload | string;
+}
+
+export interface OpponentGeoPayload {
+  country?: string;
+  countryCode?: string;
+  country_code?: string;
+  countryName?: string;
+  country_name?: string;
+  city?: string;
+  cityName?: string;
+  region?: string;
+  regionName?: string;
+  flag?: string;
+  lat?: number | string;
+  lon?: number | string;
+  lng?: number | string;
+  long?: number | string;
+  latitude?: number | string;
+  longitude?: number | string;
+  x?: number | string;
+  y?: number | string;
 }
 
 /** Wire format — i18n objects sent from backend. Resolved to strings in socket-handlers. */

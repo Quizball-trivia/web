@@ -77,12 +77,29 @@ type RankedGeoHintDebug = {
   source?: string;
 };
 
+function isRankedGeoHintDebug(value: unknown): value is RankedGeoHintDebug {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<RankedGeoHintDebug>;
+  const isMaybeString = (input: unknown) => input === undefined || typeof input === "string";
+  const isMaybeNumber = (input: unknown) => input === undefined || typeof input === "number";
+  return (
+    isMaybeString(candidate.city) &&
+    isMaybeString(candidate.region) &&
+    isMaybeString(candidate.country) &&
+    isMaybeString(candidate.countryCode) &&
+    isMaybeNumber(candidate.latitude) &&
+    isMaybeNumber(candidate.longitude) &&
+    isMaybeString(candidate.source)
+  );
+}
+
 function readRankedGeoHintDebug(): RankedGeoHintDebug | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = window.localStorage.getItem("ranked_geo_hint_v1");
     if (!raw) return null;
-    return JSON.parse(raw) as RankedGeoHintDebug;
+    const parsed: unknown = JSON.parse(raw);
+    return isRankedGeoHintDebug(parsed) ? parsed : null;
   } catch {
     return null;
   }

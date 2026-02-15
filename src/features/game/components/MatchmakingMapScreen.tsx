@@ -5,7 +5,7 @@ import { motion, AnimatePresence, useMotionValue, useSpring, animate } from "mot
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
-import type { OpponentInfo } from "@/lib/realtime/socket.types";
+import type { OpponentInfo, OpponentGeoPayload } from "@/lib/realtime/socket.types";
 import type { AvatarCustomization } from "@/types/game";
 import { avatarSeeds, getDiceBearAvatarUrl } from "@/lib/avatars";
 import { logger } from "@/utils/logger";
@@ -58,12 +58,29 @@ interface CachedGeoHint {
   source?: string;
 }
 
+function isCachedGeoHint(value: unknown): value is CachedGeoHint {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<CachedGeoHint>;
+  const isMaybeNumber = (v: unknown) => v === undefined || typeof v === "number";
+  const isMaybeString = (v: unknown) => v === undefined || typeof v === "string";
+  return (
+    isMaybeString(candidate.city) &&
+    isMaybeString(candidate.region) &&
+    isMaybeString(candidate.country) &&
+    isMaybeString(candidate.countryCode) &&
+    isMaybeNumber(candidate.latitude) &&
+    isMaybeNumber(candidate.longitude) &&
+    isMaybeString(candidate.source)
+  );
+}
+
 function readCachedGeoHint(): CachedGeoHint | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = window.localStorage.getItem(GEO_HINT_CACHE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as CachedGeoHint;
+    const parsed: unknown = JSON.parse(raw);
+    return isCachedGeoHint(parsed) ? parsed : null;
   } catch {
     return null;
   }
@@ -304,8 +321,11 @@ const CITY_LOCATION_OVERRIDES: Record<string, OpponentLocationCandidate> = {
   moscow: { lon: 37.62, lat: 55.75, city: "Moscow", country: "Russia", flag: "🇷🇺" },
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
+function getGeoObject(
+  value: OpponentInfo["location"] | OpponentInfo["geo"]
+): OpponentGeoPayload | null {
+  if (!value || typeof value !== "object") return null;
+  return value;
 }
 
 function normalizeGeoText(value: string): string {
@@ -398,77 +418,64 @@ function resolveCountryFallback(countryKey: string | null): OpponentLocationCand
 function resolveOpponentLocation(
   opponent: OpponentInfo
 ): OpponentLocationCandidate {
-  const raw = opponent as OpponentInfo & {
-    country?: string;
-    countryCode?: string;
-    city?: string;
-    flag?: string;
-    lat?: number | string;
-    lon?: number | string;
-    latitude?: number | string;
-    longitude?: number | string;
-    location?: Record<string, unknown> | string;
-    geo?: Record<string, unknown> | string;
-  };
-
-  const geoObj = isRecord(raw.geo)
-      ? raw.geo
-    : isRecord(raw.location)
-      ? raw.location
-      : {};
-  const locationText = typeof raw.location === "string"
-    ? raw.location
-    : typeof raw.geo === "string"
-      ? raw.geo
+  const geoObj = getGeoObject(opponent.geo) ?? getGeoObject(opponent.location) ?? null;
+  const locationText = typeof opponent.location === "string"
+    ? opponent.location
+    : typeof opponent.geo === "string"
+      ? opponent.geo
       : "";
 
   const lat = parseNumber(
-    raw.lat ??
-      raw.latitude ??
-      geoObj.lat ??
-      geoObj.latitude ??
-      geoObj.y
+    opponent.lat ??
+      opponent.latitude ??
+      geoObj?.lat ??
+      geoObj?.latitude ??
+      geoObj?.y
   );
   const lon = parseNumber(
-    raw.lon ??
-      raw.longitude ??
-      (raw as { lng?: unknown }).lng ??
-      (raw as { long?: unknown }).long ??
-      geoObj.lon ??
-      geoObj.lng ??
-      geoObj.long ??
-      geoObj.longitude ??
-      geoObj.x
+    opponent.lon ??
+      opponent.longitude ??
+      opponent.lng ??
+      opponent.long ??
+      geoObj?.lon ??
+      geoObj?.lng ??
+      geoObj?.long ??
+      geoObj?.longitude ??
+      geoObj?.x
   );
   const cityHint =
-    raw.city?.trim() ||
-    String(geoObj.city ?? "").trim() ||
-    String((geoObj as { cityName?: unknown }).cityName ?? "").trim() ||
-    String((geoObj as { regionName?: unknown }).regionName ?? "").trim();
+    opponent.city?.trim() ||
+    geoObj?.city?.trim() ||
+    geoObj?.cityName?.trim() ||
+    geoObj?.regionName?.trim() ||
+    geoObj?.region?.trim() ||
+    "";
   const countryHint =
-    raw.country?.trim() ||
-    String(geoObj.country ?? "").trim() ||
-    String((geoObj as { countryName?: unknown }).countryName ?? "").trim() ||
-    String((geoObj as { country_name?: unknown }).country_name ?? "").trim();
+    opponent.country?.trim() ||
+    geoObj?.country?.trim() ||
+    geoObj?.countryName?.trim() ||
+    geoObj?.country_name?.trim() ||
+    "";
   const countryCodeHint =
-    raw.countryCode?.trim() ||
-    String(geoObj.countryCode ?? "").trim() ||
-    String((geoObj as { country_code?: unknown }).country_code ?? "").trim();
+    opponent.countryCode?.trim() ||
+    geoObj?.countryCode?.trim() ||
+    geoObj?.country_code?.trim() ||
+    "";
   const countryKey =
     detectCountryKey(countryCodeHint) ??
     detectCountryKey(countryHint) ??
     detectCountryKey(cityHint) ??
     detectCountryKey(locationText) ??
-    detectCountryKey(raw.username) ??
-    detectCountryKey(raw.id);
+    detectCountryKey(opponent.username) ??
+    detectCountryKey(opponent.id);
   const countryFallback = resolveCountryFallback(countryKey);
   const cityFallback = resolveLocationFromCity(`${cityHint} ${locationText}`.trim());
-  const geoFlag = String(geoObj.flag ?? "").trim();
+  const geoFlag = geoObj?.flag?.trim() ?? "";
   const resolvedCity = cityHint || cityFallback?.city || countryFallback?.city || "Unknown city";
   const resolvedCountry = countryHint || cityFallback?.country || countryFallback?.country || "Unknown country";
-  const resolvedFlag = raw.flag?.trim() || geoFlag || cityFallback?.flag || countryFallback?.flag || "🏳️";
+  const resolvedFlag = opponent.flag?.trim() || geoFlag || cityFallback?.flag || countryFallback?.flag || "🏳️";
 
-  if (isValidGeoPoint(lon, lat)) {
+  if (lon !== null && lat !== null && isValidGeoPoint(lon, lat)) {
     if (cityFallback) {
       const lonDelta = Math.abs(lon - cityFallback.lon);
       const latDelta = Math.abs(lat - cityFallback.lat);
@@ -626,41 +633,28 @@ export function MatchmakingMapScreen({
   }, [rankedFoundOpponent]);
   const opponentRawGeo = useMemo(() => {
     if (!rankedFoundOpponent) return null;
-    const raw = rankedFoundOpponent as OpponentInfo & {
-      country?: string;
-      countryCode?: string;
-      city?: string;
-      lat?: number | string;
-      lon?: number | string;
-      latitude?: number | string;
-      longitude?: number | string;
-      geo?: Record<string, unknown> | string;
-      location?: Record<string, unknown> | string;
-    };
-    const geoObj = isRecord(raw.geo)
-      ? raw.geo
-      : isRecord(raw.location)
-        ? raw.location
-        : {};
+    const geoObj = getGeoObject(rankedFoundOpponent.geo) ??
+      getGeoObject(rankedFoundOpponent.location) ??
+      null;
     return {
-      city: raw.city ?? String(geoObj.city ?? ""),
-      country: raw.country ?? String(geoObj.country ?? ""),
-      countryCode: raw.countryCode ?? String(geoObj.countryCode ?? ""),
-      lat: raw.lat ?? raw.latitude ?? geoObj.lat ?? geoObj.latitude ?? geoObj.y ?? null,
+      city: rankedFoundOpponent.city ?? geoObj?.city ?? geoObj?.cityName ?? null,
+      country: rankedFoundOpponent.country ?? geoObj?.country ?? geoObj?.countryName ?? geoObj?.country_name ?? null,
+      countryCode: rankedFoundOpponent.countryCode ?? geoObj?.countryCode ?? geoObj?.country_code ?? null,
+      lat: rankedFoundOpponent.lat ?? rankedFoundOpponent.latitude ?? geoObj?.lat ?? geoObj?.latitude ?? geoObj?.y ?? null,
       lon:
-        raw.lon ??
-        raw.longitude ??
-        (raw as { lng?: unknown }).lng ??
-        (raw as { long?: unknown }).long ??
-        geoObj.lon ??
-        geoObj.lng ??
-        geoObj.long ??
-        geoObj.longitude ??
-        geoObj.x ??
+        rankedFoundOpponent.lon ??
+        rankedFoundOpponent.longitude ??
+        rankedFoundOpponent.lng ??
+        rankedFoundOpponent.long ??
+        geoObj?.lon ??
+        geoObj?.lng ??
+        geoObj?.long ??
+        geoObj?.longitude ??
+        geoObj?.x ??
         null,
       locationText:
-        (typeof raw.location === "string" && raw.location) ||
-        (typeof raw.geo === "string" && raw.geo) ||
+        (typeof rankedFoundOpponent.location === "string" && rankedFoundOpponent.location) ||
+        (typeof rankedFoundOpponent.geo === "string" && rankedFoundOpponent.geo) ||
         "",
     };
   }, [rankedFoundOpponent]);
