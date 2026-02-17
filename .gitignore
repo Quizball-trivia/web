@@ -33,6 +33,7 @@ yarn-error.log*
 .env*
 .envrc
 .npmrc
+!.npmrc
 .yarnrc
 .yarnrc.yml
 .pnpmrc
