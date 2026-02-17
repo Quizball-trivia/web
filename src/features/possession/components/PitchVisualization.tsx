@@ -20,12 +20,14 @@ interface PitchMarkerProps {
   showPenResult: boolean;
   keeperJolt: Record<string, number[]>;
   isPortrait?: boolean;
+  size?: number; // avatar diameter in px
 }
 
 function PitchMarker({
   x, y, avatarUrl, avatarAlt, color, glowFilter,
   isShooter, isKeeper, isSave, isGoal, showPenResult, keeperJolt,
   isPortrait = false,
+  size = 40,
 }: PitchMarkerProps) {
   const joltAnim = isSave && isKeeper
     ? keeperJolt
@@ -43,14 +45,14 @@ function PitchMarker({
         <g transform={isPortrait ? 'rotate(90)' : undefined}>
           {isShooter && !showPenResult && (
             <motion.circle
-              cx="0" cy="0" r="28"
+              cx="0" cy="0" r={size * 0.7}
               fill="none" stroke={color} strokeWidth="1.5" opacity="0.4"
-              animate={{ r: [28, 33, 28], opacity: [0.4, 0.15, 0.4] }}
+              animate={{ r: [size * 0.7, size * 0.85, size * 0.7], opacity: [0.4, 0.15, 0.4] }}
               transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
             />
           )}
-          <circle cx="0" cy="0" r="22" fill="none" stroke={color} strokeWidth={isKeeper ? 3.5 : 2.5} />
-          <foreignObject x="-20" y="-20" width="40" height="40">
+          <circle cx="0" cy="0" r={size * 0.55} fill="none" stroke={color} strokeWidth={isKeeper ? 3.5 : 2.5} />
+          <foreignObject x={-size/2} y={-size/2} width={size} height={size}>
             <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={avatarUrl} alt={avatarAlt} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -106,6 +108,8 @@ interface ShotMode {
   result: 'pending' | 'goal' | 'saved' | 'miss';
   /** Captured ball X position at shot start (SVG coords). Stays fixed during animation. */
   ballOriginX: number;
+  /** Whether the player is attacking (shooting) or defending (goalkeeping) */
+  isPlayerAttacker: boolean;
 }
 
 /** Shot momentum threshold at which a shot on goal triggers */
@@ -182,13 +186,17 @@ export function PitchVisualization({
     ? normalPlayerX + (mirrored ? -14 : 14)
     : normalOpponentX + (mirrored ? 14 : -14);
 
-  // Final positions (penalty overrides normal)
+  // Final positions (penalty/shot overrides normal)
   const playerX = isPenalty
     ? (penaltyMode.isPlayerShooter ? goal.penSpotX : goal.goalLineX)
-    : normalPlayerX;
+    : isShot && shotMode
+      ? (shotMode.isPlayerAttacker ? shotMode.ballOriginX : goal.goalLineX)
+      : normalPlayerX;
   const opponentX = isPenalty
     ? (penaltyMode.isPlayerShooter ? goal.goalLineX : goal.penSpotX)
-    : normalOpponentX;
+    : isShot && shotMode
+      ? (shotMode.isPlayerAttacker ? goal.goalLineX : shotMode.ballOriginX)
+      : normalOpponentX;
 
   // Dual momentum meter (hidden during penalties/shots)
   const meterVisible = !isPenalty && !isShot;
@@ -209,7 +217,7 @@ export function PitchVisualization({
   const isShotMiss = shotResultActive && shotMode.result === 'miss';
   // Ball origin — captured at shot start so it doesn't shift when positions reset
   const shotBallOriginX = isShot ? shotMode.ballOriginX : normalBallX;
-  const shotBallOriginY = 105;
+  const shotBallOriginY = 145; // Below shooter's feet (avatar at 115 + radius 28 + ball offset)
 
   // Zone bands (mirrored reverses order: BOX on left, DEF on right)
   const zoneBands = mirrored
@@ -276,8 +284,16 @@ export function PitchVisualization({
       };
     }
     if (isPenalty) return { x: goal.penSpotX, y: 105 };
-    return { x: normalBallX, y: 105 };
-  }, [isGoal, isSave, isShotGoal, isShotSave, isShotMiss, isPenalty, goal, shotBallOriginX, shotBallOriginY, normalBallX]);
+    // During shot pending, position ball between shooter and goal
+    if (isShot && shotMode.result === 'pending') {
+      return {
+        x: (shotBallOriginX + goal.goalLineX) / 2,
+        y: 115
+      };
+    }
+    // Position ball at the boundary between blue and red zones
+    return { x: mirrored ? (470 - (playerPosition / 100) * 455) : (15 + (playerPosition / 100) * 455), y: 112 };
+  }, [isGoal, isSave, isShotGoal, isShotSave, isShotMiss, isPenalty, isShot, shotMode, goal, shotBallOriginX, shotBallOriginY, playerPosition, mirrored]);
   const ballTransition = useMemo(() => {
     if (isGoal) return { duration: 0.4, ease: [0.2, 0, 0.4, 1] as const };
     if (isSave) return { duration: 0.5, ease: [0.3, 0, 0.2, 1] as const };
@@ -387,40 +403,258 @@ export function PitchVisualization({
           <circle cx="60" cy="115" r="2" fill="rgba(255,255,255,0.15)" />
           <circle cx="440" cy="115" r="2" fill="rgba(255,255,255,0.15)" />
 
-          {/* Zone labels — hidden during penalties, counter-rotated in portrait */}
-          {!isPenalty && (
+
+          {/* === Player avatars — ONLY shown during shots and penalties === */}
+          {(isPenalty || isShot) && (
             <>
-              {zoneLabels.map((l, i) => (
-                <text key={i} x={l.x} y="28" fill={l.fill} fontSize="9" fontWeight="800" textAnchor="middle" fontFamily="system-ui" transform={textTf(l.x, 28)}>{l.text}</text>
-              ))}
+              {/* === Opponent marker === */}
+              <PitchMarker
+                x={opponentX} y={goal.penY}
+                avatarUrl={opponentAvatarUrl}
+                avatarAlt={opponentAvatarAlt}
+                color="#FF4B4B" glowFilter={uid('redGlow')}
+                isShooter={isPenalty ? !penaltyMode.isPlayerShooter : (isShot && shotMode ? !shotMode.isPlayerAttacker : false)}
+                isKeeper={isPenalty ? penaltyMode.isPlayerShooter : (isShot && shotMode ? shotMode.isPlayerAttacker : false)}
+                isSave={!!isSave || !!isShotSave} isGoal={!!isGoal || !!isShotGoal}
+                showPenResult={!!showPenResult || !!shotResultActive} keeperJolt={keeperJolt}
+                isPortrait={isPortrait}
+                size={isShot ? 30 : 40}
+              />
+
+              {/* === Player marker === */}
+              <PitchMarker
+                x={playerX} y={goal.penY}
+                avatarUrl={playerAvatarUrl}
+                avatarAlt={playerAvatarAlt}
+                color="#1CB0F6" glowFilter={uid('blueGlow')}
+                isShooter={isPenalty ? penaltyMode.isPlayerShooter : (isShot && shotMode ? shotMode.isPlayerAttacker : false)}
+                isKeeper={isPenalty ? !penaltyMode.isPlayerShooter : (isShot && shotMode ? !shotMode.isPlayerAttacker : false)}
+                isSave={!!isSave || !!isShotSave} isGoal={!!isGoal || !!isShotGoal}
+                showPenResult={!!showPenResult || !!shotResultActive} keeperJolt={keeperJolt}
+                isPortrait={isPortrait}
+                size={isShot ? 30 : 40}
+              />
             </>
           )}
 
-          {/* === Opponent marker === */}
-          <PitchMarker
-            x={opponentX} y={goal.penY}
-            avatarUrl={opponentAvatarUrl}
-            avatarAlt={opponentAvatarAlt}
-            color="#FF4B4B" glowFilter={uid('redGlow')}
-            isShooter={isPenalty && !penaltyMode.isPlayerShooter}
-            isKeeper={isPenalty && penaltyMode.isPlayerShooter}
-            isSave={!!isSave} isGoal={!!isGoal}
-            showPenResult={!!showPenResult} keeperJolt={keeperJolt}
-            isPortrait={isPortrait}
-          />
+          {/* === Live Score Tracker Style — ONLY shown during normal gameplay === */}
+          {!isPenalty && !isShot && (
+            <>
+              {/* Possession tracking visualization */}
+              <g>
+                {/* Main possession bar container */}
+                <rect x="15" y="70" width="470" height="90" fill="rgba(0,0,0,0.2)" rx="6" />
 
-          {/* === Player marker === */}
-          <PitchMarker
-            x={playerX} y={goal.penY}
-            avatarUrl={playerAvatarUrl}
-            avatarAlt={playerAvatarAlt}
-            color="#1CB0F6" glowFilter={uid('blueGlow')}
-            isShooter={isPenalty && penaltyMode.isPlayerShooter}
-            isKeeper={isPenalty && !penaltyMode.isPlayerShooter}
-            isSave={!!isSave} isGoal={!!isGoal}
-            showPenResult={!!showPenResult} keeperJolt={keeperJolt}
-            isPortrait={isPortrait}
-          />
+                {/* Center line */}
+                <line x1="250" y1="70" x2="250" y2="160" stroke="rgba(255,255,255,0.1)" strokeWidth="2" />
+
+                {/* Player's possession fill (always from their defensive end) */}
+                <motion.rect
+                  x={mirrored ? 470 - (playerPosition / 100) * 455 : 15}
+                  y="70"
+                  width={(playerPosition / 100) * 455}
+                  height="90"
+                  fill="#1CB0F6"
+                  opacity="0.18"
+                  rx="6"
+                  animate={{
+                    opacity: [0.15, 0.22, 0.15],
+                  }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                />
+
+                {/* Opponent's possession fill */}
+                <motion.rect
+                  x={mirrored ? 15 : 15 + (playerPosition / 100) * 455}
+                  y="70"
+                  width={((100 - playerPosition) / 100) * 455}
+                  height="90"
+                  fill="#FF4B4B"
+                  opacity="0.12"
+                  rx="6"
+                  animate={{
+                    opacity: [0.08, 0.15, 0.08],
+                  }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
+                />
+
+                {/* Player avatar (positioned close to white line on blue side) */}
+                <motion.g
+                  animate={{
+                    x: mirrored ? (470 - (playerPosition / 100) * 455 + 35) : (15 + (playerPosition / 100) * 455 - 35),
+                    scale: mirrored ? (playerPosition < 50 ? [1, 1.08, 1] : 1) : (playerPosition > 50 ? [1, 1.08, 1] : 1),
+                  }}
+                  transition={{
+                    x: { type: 'spring', stiffness: 160, damping: 12, mass: 0.7 },
+                    scale: { duration: 1.5, repeat: Infinity, ease: 'easeInOut' }
+                  }}
+                >
+                  <circle
+                    cx="0"
+                    cy="115"
+                    r="22"
+                    fill="none"
+                    stroke="#1CB0F6"
+                    strokeWidth="2"
+                  />
+                  <g transform={isPortrait ? 'rotate(90, 0, 115)' : undefined}>
+                    <foreignObject
+                      x="-22"
+                      y="93"
+                      width="44"
+                      height="44"
+                    >
+                      <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden' }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={playerAvatarUrl} alt={playerAvatarAlt} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    </foreignObject>
+                  </g>
+                </motion.g>
+
+                {/* Opponent avatar (positioned close to white line on red side) */}
+                <motion.g
+                  animate={{
+                    x: mirrored ? (470 - (playerPosition / 100) * 455 - 35) : (15 + (playerPosition / 100) * 455 + 35),
+                    scale: mirrored ? (playerPosition > 50 ? [1, 1.08, 1] : 1) : (playerPosition < 50 ? [1, 1.08, 1] : 1),
+                  }}
+                  transition={{
+                    x: { type: 'spring', stiffness: 160, damping: 12, mass: 0.7 },
+                    scale: { duration: 1.5, repeat: Infinity, ease: 'easeInOut' }
+                  }}
+                >
+                  <circle
+                    cx="0"
+                    cy="115"
+                    r="22"
+                    fill="none"
+                    stroke="#FF4B4B"
+                    strokeWidth="2"
+                  />
+                  <g transform={isPortrait ? 'rotate(90, 0, 115)' : undefined}>
+                    <foreignObject
+                      x="-22"
+                      y="93"
+                      width="44"
+                      height="44"
+                    >
+                      <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden' }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={opponentAvatarUrl} alt={opponentAvatarAlt} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    </foreignObject>
+                  </g>
+                </motion.g>
+
+                {/* Ball position indicator - positioned at boundary between blue/red zones */}
+                <motion.g
+                  animate={{ x: mirrored ? (470 - (playerPosition / 100) * 455) : (15 + (playerPosition / 100) * 455) }}
+                  transition={{ type: 'spring', stiffness: 160, damping: 12, mass: 0.7 }}
+                >
+                  {/* Vertical indicator line */}
+                  <motion.line
+                    x1="0" y1="65" x2="0" y2="165"
+                    stroke="white"
+                    strokeWidth="2.5"
+                    opacity="0.9"
+                    animate={{
+                      opacity: [0.7, 1, 0.7],
+                    }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                  />
+                </motion.g>
+
+                {/* Possession percentages - counter-rotated in portrait */}
+                <g transform={textTf(0, 0)}>
+                  {/* Player possession % */}
+                  <motion.text
+                    x={mirrored ? (470 - (playerPosition / 100) * 455 + 35) : (15 + (playerPosition / 100) * 455 - 35)}
+                    y="180"
+                    textAnchor="middle"
+                    fill="#1CB0F6"
+                    fontSize="12"
+                    fontWeight="900"
+                    fontFamily="system-ui"
+                    animate={{
+                      x: mirrored ? (470 - (playerPosition / 100) * 455 + 35) : (15 + (playerPosition / 100) * 455 - 35),
+                    }}
+                    transition={{ type: 'spring', stiffness: 160, damping: 12, mass: 0.7 }}
+                  >
+                    {Math.round(playerPosition)}%
+                  </motion.text>
+
+                  {/* Opponent possession % */}
+                  <motion.text
+                    x={mirrored ? (470 - (playerPosition / 100) * 455 - 35) : (15 + (playerPosition / 100) * 455 + 35)}
+                    y="180"
+                    textAnchor="middle"
+                    fill="#FF4B4B"
+                    fontSize="12"
+                    fontWeight="900"
+                    fontFamily="system-ui"
+                    animate={{
+                      x: mirrored ? (470 - (playerPosition / 100) * 455 - 35) : (15 + (playerPosition / 100) * 455 + 35),
+                    }}
+                    transition={{ type: 'spring', stiffness: 160, damping: 12, mass: 0.7 }}
+                  >
+                    {Math.round(100 - playerPosition)}%
+                  </motion.text>
+
+                  {/* Player name */}
+                  <motion.text
+                    x={mirrored ? (470 - (playerPosition / 100) * 455 + 35) : (15 + (playerPosition / 100) * 455 - 35)}
+                    y="195"
+                    textAnchor="middle"
+                    fill="rgba(255,255,255,0.7)"
+                    fontSize="8"
+                    fontWeight="700"
+                    fontFamily="system-ui"
+                    animate={{
+                      x: mirrored ? (470 - (playerPosition / 100) * 455 + 35) : (15 + (playerPosition / 100) * 455 - 35),
+                    }}
+                    transition={{ type: 'spring', stiffness: 160, damping: 12, mass: 0.7 }}
+                  >
+                    {playerName || 'YOU'}
+                  </motion.text>
+
+                  {/* Opponent name */}
+                  <motion.text
+                    x={mirrored ? (470 - (playerPosition / 100) * 455 - 35) : (15 + (playerPosition / 100) * 455 + 35)}
+                    y="195"
+                    textAnchor="middle"
+                    fill="rgba(255,255,255,0.7)"
+                    fontSize="8"
+                    fontWeight="700"
+                    fontFamily="system-ui"
+                    animate={{
+                      x: mirrored ? (470 - (playerPosition / 100) * 455 - 35) : (15 + (playerPosition / 100) * 455 + 35),
+                    }}
+                    transition={{ type: 'spring', stiffness: 160, damping: 12, mass: 0.7 }}
+                  >
+                    {opponentName || 'OPPONENT'}
+                  </motion.text>
+
+
+                  {/* Zone indicator */}
+                  <text
+                    x="250"
+                    y="210"
+                    textAnchor="middle"
+                    fill="rgba(255,255,255,0.35)"
+                    fontSize="7"
+                    fontWeight="700"
+                    fontFamily="system-ui"
+                  >
+                    {playerPosition < 33.33
+                      ? 'DEFENSIVE ZONE'
+                      : playerPosition < 66.67
+                        ? 'MIDFIELD ZONE'
+                        : 'ATTACKING ZONE'}
+                  </text>
+                </g>
+              </g>
+            </>
+          )}
 
           {/* === UNIFIED BALL — single persistent <motion.g> that never unmounts === */}
           <motion.g
@@ -432,7 +666,7 @@ export function PitchVisualization({
             }}
             transition={ballTransition}
           >
-            <motion.circle cx="0" cy="0" r="14" fill="rgba(255,255,255,0.1)" filter={`url(#${uid('ballGlow')})`} />
+            <motion.circle  cx="0" cy="0" r="14" fill="rgba(255,255,255,0.1)" filter={`url(#${uid('ballGlow')})`} />
             <foreignObject x="-12" y="-12" width="24" height="24">
               <div style={ballEmojiStyle}>⚽</div>
             </foreignObject>
@@ -543,66 +777,6 @@ export function PitchVisualization({
             )}
           </AnimatePresence>
 
-          {/* === DUAL MOMENTUM METER — hidden during penalties/shots === */}
-          {meterVisible && (
-            <g>
-              {/* "SHOT" label at center — brightens as momentum builds, counter-rotated in portrait */}
-              <motion.text
-                x="250" y="30"
-                textAnchor="middle" fill="rgba(255,255,255,1)" fontSize="7" fontWeight="900" fontFamily="system-ui"
-                animate={{ opacity: shotLabelOpacity }}
-                transform={textTf(250, 30)}
-              >
-                SHOT
-              </motion.text>
-
-              {/* Background bar */}
-              <rect x="125" y="34" width="250" height="9" rx="4.5" fill="rgba(0,0,0,0.45)" stroke="rgba(255,255,255,0.1)" strokeWidth="0.8" />
-
-              {/* Fills clipped to rounded bar shape */}
-              <g clipPath={`url(#${uid('meterClip')})`}>
-                {/* Player fill — blue, grows from left toward center */}
-                <motion.rect
-                  x="125" y="34" height="9"
-                  fill="#1CB0F6"
-                  initial={{ width: 0, scaleY: 1 }}
-                  animate={{ width: myFillWidth, opacity: myMomentum > 0 ? 0.85 : 0.2, scaleY: 1 }}
-                  transition={{ type: 'spring', stiffness: 250, damping: 15 }}
-                />
-                {/* Opponent fill — red, grows from right toward center */}
-                <motion.rect
-                  y="34" height="9"
-                  fill="#FF4B4B"
-                  initial={{ width: 0, x: 375, scaleY: 1 }}
-                  animate={{ width: oppFillWidth, x: 375 - oppFillWidth, opacity: oppMomentum > 0 ? 0.85 : 0.2, scaleY: 1 }}
-                  transition={{ type: 'spring', stiffness: 250, damping: 15 }}
-                />
-              </g>
-
-              {/* Center divider — shot threshold line */}
-              <line x1="250" y1="33" x2="250" y2="44" stroke="rgba(255,255,255,0.35)" strokeWidth="1.2" />
-
-              {/* Pulse glow when player reaches threshold */}
-              {myMomentum >= SHOT_VISUAL_THRESHOLD && (
-                <motion.rect
-                  x="125" y="34" width="125" height="9" rx="4.5"
-                  fill="none" stroke="#1CB0F6" strokeWidth="1.5"
-                  animate={{ opacity: [0.7, 0.25, 0.7] }}
-                  transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' }}
-                />
-              )}
-
-              {/* Pulse glow when opponent reaches threshold */}
-              {oppMomentum >= SHOT_VISUAL_THRESHOLD && (
-                <motion.rect
-                  x="250" y="34" width="125" height="9" rx="4.5"
-                  fill="none" stroke="#FF4B4B" strokeWidth="1.5"
-                  animate={{ opacity: [0.7, 0.25, 0.7] }}
-                  transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' }}
-                />
-              )}
-            </g>
-          )}
 
           </g>
         </svg>

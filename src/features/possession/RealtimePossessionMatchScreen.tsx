@@ -352,23 +352,17 @@ export function RealtimePossessionMatchScreen({
   const attackerIsMe = attackerSeat !== null && attackerSeat === mySeat;
   const shooterIsMe = shooterSeat !== null && shooterSeat === mySeat;
 
-  const mirrored = (possessionState?.half ?? 1) === 2;
+  const mirrored = false; // Always keep blue on bottom, red on top (no side switching)
   const ballOnPlayer = myPossessionPct > 50 || (myPossessionPct === 50 && possessionState?.kickOffSeat === mySeat);
 
   useEffect(() => {
     if (localQuestionIndex === null || !possessionState) return;
     if (phaseKind !== 'shot') return;
-    const isMirrored = possessionState.half === 2;
     const isAttackerMe = possessionState.attackerSeat === mySeat;
-    if (isMirrored) {
-      const basePlayerX = 470 - (myPossessionPct / 100) * 440;
-      const baseOpponentX = basePlayerX + 30;
-      setShotBallOriginX(isAttackerMe ? basePlayerX - 14 : baseOpponentX + 14);
-    } else {
-      const basePlayerX = 30 + (myPossessionPct / 100) * 440;
-      const baseOpponentX = basePlayerX - 30;
-      setShotBallOriginX(isAttackerMe ? basePlayerX + 14 : baseOpponentX - 14);
-    }
+    // Always use non-mirrored calculation (blue bottom, red top)
+    const basePlayerX = 30 + (myPossessionPct / 100) * 440;
+    const baseOpponentX = basePlayerX - 30;
+    setShotBallOriginX(isAttackerMe ? basePlayerX + 14 : baseOpponentX - 14);
   }, [localQuestionIndex, myPossessionPct, mySeat, phaseKind, possessionState]);
 
   const targetGoal = useMemo((): 'left' | 'right' | undefined => {
@@ -654,6 +648,7 @@ export function RealtimePossessionMatchScreen({
     shotMode: isShotQuestion ? {
       result: shotResult,
       ballOriginX: shotBallOriginX,
+      isPlayerAttacker: attackerIsMe,
     } : undefined,
     zoomToGoal: isPenaltyQuestion || isShotQuestion,
     mirrored,

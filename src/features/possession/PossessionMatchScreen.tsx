@@ -168,6 +168,7 @@ export function PossessionMatchScreen() {
               shotMode={g.isShotPhase ? {
                 result: g.shotResult,
                 ballOriginX: g.shotBallOriginRef.current,
+                isPlayerAttacker: true, // In single-player mode, player always shoots
               } : undefined}
               zoomToGoal={g.isPenaltyPhase || g.isShotPhase}
             />
