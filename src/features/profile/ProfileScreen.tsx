@@ -2,6 +2,7 @@
 
 import type { PlayerStats } from '@/types/game';
 import type { MatchStatsSummary } from '@/lib/domain';
+import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import { ProfileWeb, type ProfileRecentMatch } from './ProfileWeb';
 import { useAuthStore } from '@/stores/auth.store';
 import { logger } from '@/utils/logger';
@@ -14,6 +15,8 @@ interface ProfileScreenProps {
   countryRank?: number | string | null;
   friendsRank?: number | string | null;
   matchStatsSummary?: MatchStatsSummary | null;
+  rankedProfile?: RankedProfileResponse | null;
+  rankedProfileLoading?: boolean;
   recentMatches?: ProfileRecentMatch[];
   recentMatchesLoading?: boolean;
   recentMatchesError?: string | null;
@@ -46,6 +49,8 @@ export function ProfileScreen(props: ProfileScreenProps) {
         countryRank={props.countryRank}
         friendsRank={props.friendsRank}
         matchStatsSummary={props.matchStatsSummary}
+        rankedProfile={props.rankedProfile}
+        rankedProfileLoading={props.rankedProfileLoading}
         recentMatches={props.recentMatches}
         recentMatchesLoading={props.recentMatchesLoading}
         recentMatchesError={props.recentMatchesError}

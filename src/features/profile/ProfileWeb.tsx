@@ -22,8 +22,40 @@ import { toast } from 'sonner';
 
 import type { PlayerStats } from '@/types/game';
 import type { MatchStatsSummary } from '@/lib/domain';
-import { getRankInfo, getDivisionColor, getDivisionEmoji } from '@/utils/rankSystem';
+import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import { useAvatarUrl } from './hooks/useAvatarUrl';
+
+type TierName =
+  | 'Academy'
+  | 'Youth Prospect'
+  | 'Reserve'
+  | 'Bench'
+  | 'Rotation'
+  | 'Starting11'
+  | 'Key Player'
+  | 'Captain'
+  | 'World-Class'
+  | 'Legend'
+  | 'GOAT';
+
+const tierConfig: Record<TierName, { emoji: string; color: string; gradient: string }> = {
+  'Academy':        { emoji: '🏫', color: 'text-slate-300',   gradient: 'from-slate-500 to-slate-400' },
+  'Youth Prospect': { emoji: '🌱', color: 'text-lime-300',    gradient: 'from-lime-600 to-lime-400' },
+  'Reserve':        { emoji: '📋', color: 'text-zinc-300',    gradient: 'from-zinc-500 to-zinc-400' },
+  'Bench':          { emoji: '🪑', color: 'text-amber-300',   gradient: 'from-amber-600 to-amber-400' },
+  'Rotation':       { emoji: '🔄', color: 'text-blue-300',    gradient: 'from-blue-500 to-blue-400' },
+  'Starting11':     { emoji: '⚽', color: 'text-green-300',   gradient: 'from-green-500 to-green-400' },
+  'Key Player':     { emoji: '⭐', color: 'text-yellow-300',  gradient: 'from-yellow-500 to-yellow-400' },
+  'Captain':        { emoji: '©️',  color: 'text-orange-300',  gradient: 'from-orange-500 to-orange-400' },
+  'World-Class':    { emoji: '💎', color: 'text-cyan-300',    gradient: 'from-cyan-500 to-cyan-400' },
+  'Legend':         { emoji: '👑', color: 'text-purple-300',  gradient: 'from-purple-500 to-purple-400' },
+  'GOAT':           { emoji: '🐐', color: 'text-fuchsia-300', gradient: 'from-fuchsia-500 to-fuchsia-400' },
+};
+
+function getTierVisual(tier: string) {
+  const isKnownTier = (value: string): value is TierName => value in tierConfig;
+  return isKnownTier(tier) ? tierConfig[tier] : tierConfig['Academy'];
+}
 import ClubSelect from '@/features/onboarding/ClubSelect';
 
 export interface ProfileRecentMatch {
@@ -43,6 +75,8 @@ interface ProfileWebProps {
   countryRank?: number | string | null;
   friendsRank?: number | string | null;
   matchStatsSummary?: MatchStatsSummary | null;
+  rankedProfile?: RankedProfileResponse | null;
+  rankedProfileLoading?: boolean;
   recentMatches?: ProfileRecentMatch[];
   recentMatchesLoading?: boolean;
   recentMatchesError?: string | null;
@@ -58,13 +92,18 @@ export function ProfileWeb({
   player, avatarUrl, favoriteClub, preferredLanguage,
   countryRank = null, friendsRank = null,
   matchStatsSummary = null,
+  rankedProfile = null, rankedProfileLoading = false,
   recentMatches = [], recentMatchesLoading = false, recentMatchesError = null,
   onNameChange, onAvatarChange, onClubChange, onLanguageChange,
   onSignOut, isUpdating = false,
 }: ProfileWebProps) {
-  const rankInfo = getRankInfo(player.rankPoints || 0);
-  const divisionColors = getDivisionColor(rankInfo.division);
-  const divisionEmoji = getDivisionEmoji(rankInfo.division);
+  const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
+  const placementPlayed = rankedProfile?.placementPlayed ?? 0;
+  const placementRequired = rankedProfile?.placementRequired ?? 3;
+  const displayRp = isPlacementInProgress ? 0 : (rankedProfile?.rp ?? 0);
+  const tierVisual = rankedProfile ? getTierVisual(rankedProfile.tier) : getTierVisual('Academy');
+  const rankedDataReady = !rankedProfileLoading && rankedProfile !== null;
+  const showRankTier = rankedDataReady && !isPlacementInProgress;
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(player.username);
@@ -204,13 +243,25 @@ export function ProfileWeb({
               )}
             </div>
 
-            {/* Level + Division */}
+            {/* Level + Tier */}
             <div className="flex items-center justify-center lg:justify-start gap-2 flex-wrap">
               <span className="text-sm font-black text-primary uppercase tracking-wide">Level {player.level}</span>
               <span className="text-muted-foreground">·</span>
-              <span className={`text-sm font-black uppercase tracking-wide ${divisionColors.text}`}>
-                {divisionEmoji} {rankInfo.division}
-              </span>
+              {rankedProfileLoading && (
+                <span className="text-sm font-black uppercase tracking-wide text-muted-foreground">
+                  Loading...
+                </span>
+              )}
+              {showRankTier && (
+                <span className={`text-sm font-black uppercase tracking-wide ${tierVisual.color}`}>
+                  {tierVisual.emoji} {rankedProfile!.tier}
+                </span>
+              )}
+              {rankedDataReady && isPlacementInProgress && (
+                <span className="text-sm font-black uppercase tracking-wide text-primary">
+                  Placement {placementPlayed}/{placementRequired}
+                </span>
+              )}
             </div>
 
             {/* Stats chips */}
@@ -298,23 +349,55 @@ export function ProfileWeb({
 
           {/* RP Progress */}
           <div className="w-full lg:w-72 bg-background/60 rounded-2xl border-b-[3px] border-border p-4 mt-2 lg:mt-0 shrink-0">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Rank Progress</span>
-            </div>
-            <div className="relative h-3.5 bg-muted rounded-full overflow-hidden mb-2">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${rankInfo.progress}%` }}
-                transition={{ duration: 1, ease: 'easeOut', delay: 0.3 }}
-                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#58CC02] to-[#85E000]"
-              >
-                <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/25 to-transparent h-1/2" />
-              </motion.div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-2xl font-black text-foreground">{player.rankPoints ?? 0} <span className="text-sm font-bold text-muted-foreground">RP</span></span>
-              <span className="text-xs font-bold text-muted-foreground">{rankInfo.pointsToNext} to next</span>
-            </div>
+            {rankedProfileLoading ? (
+              <div className="space-y-2.5 animate-pulse">
+                <div className="h-3 w-28 bg-muted rounded" />
+                <div className="h-3.5 bg-muted rounded-full" />
+                <div className="flex items-center justify-between">
+                  <div className="h-6 w-16 bg-muted rounded" />
+                  <div className="h-3 w-14 bg-muted rounded" />
+                </div>
+              </div>
+            ) : isPlacementInProgress ? (
+              <>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Placement Matches</span>
+                  <span className="text-xs font-black text-primary">{placementPlayed}/{placementRequired}</span>
+                </div>
+                <div className="relative h-3.5 bg-muted rounded-full overflow-hidden mb-2">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(placementPlayed / placementRequired) * 100}%` }}
+                    transition={{ duration: 0.8, ease: 'easeOut' }}
+                    className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#58CC02] to-[#85E000]"
+                  >
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/25 to-transparent h-1/2" />
+                  </motion.div>
+                </div>
+                <div className="text-xs font-bold text-muted-foreground">
+                  Play placement matches to get your rank.
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Rank Progress</span>
+                </div>
+                <div className="relative h-3.5 bg-muted rounded-full overflow-hidden mb-2">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: '100%' }}
+                    transition={{ duration: 1, ease: 'easeOut', delay: 0.3 }}
+                    className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#58CC02] to-[#85E000]"
+                  >
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/25 to-transparent h-1/2" />
+                  </motion.div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl font-black text-foreground">{displayRp} <span className="text-sm font-bold text-muted-foreground">RP</span></span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </motion.div>
@@ -333,38 +416,65 @@ export function ProfileWeb({
               transition={{ delay: 0.08 }}
               className="rounded-2xl bg-card border-b-4 border-border overflow-hidden"
             >
-              <div className={`h-1.5 bg-gradient-to-r ${divisionColors.gradient}`} />
+              <div className={`h-1.5 bg-gradient-to-r ${tierVisual.gradient}`} />
               <div className="p-6 flex flex-col items-center">
                 <div className="size-20 rounded-2xl bg-primary/10 border-2 border-primary/25 flex items-center justify-center mb-3">
-                  <Trophy className={`size-10 ${divisionColors.text}`} />
+                  <Trophy className={`size-10 ${tierVisual.color}`} />
                 </div>
-                <h2 className="text-xl font-black uppercase tracking-wide">{rankInfo.division}</h2>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-5">Current Season</p>
+                {rankedProfileLoading && (
+                  <div className="animate-pulse space-y-3 w-full flex flex-col items-center">
+                    <div className="h-6 w-32 bg-muted rounded" />
+                    <div className="h-3 w-24 bg-muted rounded" />
+                    <div className="w-full space-y-2 mt-2">
+                      <div className="h-12 bg-muted rounded-xl" />
+                      <div className="h-12 bg-muted rounded-xl" />
+                      <div className="h-12 bg-muted rounded-xl" />
+                    </div>
+                  </div>
+                )}
+                {showRankTier && (
+                  <>
+                    <h2 className="text-xl font-black uppercase tracking-wide">{tierVisual.emoji} {rankedProfile!.tier}</h2>
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-5">Current Season</p>
 
-                <div className="w-full space-y-2">
-                  {/* TODO(profile-ranks-api): `countryRank` and `friendsRank` may still be mock data from the parent for now; replace with real API-backed rank values. */}
-                  <div className="flex justify-between items-center px-4 py-3 bg-background/60 rounded-xl border-b-2 border-border/50">
-                    <div className="flex items-center gap-2.5">
-                      <Globe className="size-4 text-blue-400" />
-                      <span className="text-sm font-bold">World Rank</span>
+                    <div className="w-full space-y-2">
+                      <div className="flex justify-between items-center px-4 py-3 bg-background/60 rounded-xl border-b-2 border-border/50">
+                        <div className="flex items-center gap-2.5">
+                          <Globe className="size-4 text-blue-400" />
+                          <span className="text-sm font-bold">World Rank</span>
+                        </div>
+                        <span className="text-sm font-black text-blue-400">#{player.rank}</span>
+                      </div>
+                      <div className="flex justify-between items-center px-4 py-3 bg-background/60 rounded-xl border-b-2 border-border/50">
+                        <div className="flex items-center gap-2.5">
+                          <MapPin className="size-4 text-red-400" />
+                          <span className="text-sm font-bold">Country</span>
+                        </div>
+                        <span className="text-sm font-black text-red-400">{countryRankDisplay}</span>
+                      </div>
+                      <div className="flex justify-between items-center px-4 py-3 bg-background/60 rounded-xl border-b-2 border-border/50">
+                        <div className="flex items-center gap-2.5">
+                          <Users className="size-4 text-green-400" />
+                          <span className="text-sm font-bold">Friends</span>
+                        </div>
+                        <span className="text-sm font-black text-green-400">{friendsRankDisplay}</span>
+                      </div>
                     </div>
-                    <span className="text-sm font-black text-blue-400">#{player.rank}</span>
-                  </div>
-                  <div className="flex justify-between items-center px-4 py-3 bg-background/60 rounded-xl border-b-2 border-border/50">
-                    <div className="flex items-center gap-2.5">
-                      <MapPin className="size-4 text-red-400" />
-                      <span className="text-sm font-bold">Country</span>
+                  </>
+                )}
+                {rankedDataReady && isPlacementInProgress && (
+                  <>
+                    <h2 className="text-xl font-black uppercase tracking-wide text-primary">Unranked</h2>
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-5">
+                      Placement {placementPlayed}/{placementRequired}
+                    </p>
+                    <div className="w-full p-4 bg-background/60 rounded-xl border-b-2 border-border/50 text-center">
+                      <p className="text-sm font-bold text-foreground">
+                        Play placement matches to get your rank.
+                      </p>
                     </div>
-                    <span className="text-sm font-black text-red-400">{countryRankDisplay}</span>
-                  </div>
-                  <div className="flex justify-between items-center px-4 py-3 bg-background/60 rounded-xl border-b-2 border-border/50">
-                    <div className="flex items-center gap-2.5">
-                      <Users className="size-4 text-green-400" />
-                      <span className="text-sm font-bold">Friends</span>
-                    </div>
-                    <span className="text-sm font-black text-green-400">{friendsRankDisplay}</span>
-                  </div>
-                </div>
+                  </>
+                )}
               </div>
             </motion.div>
 

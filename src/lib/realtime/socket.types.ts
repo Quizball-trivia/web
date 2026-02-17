@@ -209,6 +209,24 @@ export interface MatchFinalResultPlayer {
   penaltyGoals?: number;
 }
 
+export interface RankedUserOutcome {
+  userId: string;
+  oldRp: number;
+  newRp: number;
+  deltaRp: number;
+  oldTier: string;
+  newTier: string;
+  placementStatus: 'unplaced' | 'in_progress' | 'placed';
+  placementPlayed: number;
+  placementRequired: number;
+  isPlacement: boolean;
+}
+
+export interface RankedMatchOutcomePayload {
+  isPlacement: boolean;
+  byUserId: Record<string, RankedUserOutcome>;
+}
+
 export interface MatchFinalResultsPayload {
   matchId: string;
   winnerId: string | null;
@@ -217,6 +235,7 @@ export interface MatchFinalResultsPayload {
   resultVersion: number;
   winnerDecisionMethod?: 'goals' | 'penalty_goals' | 'total_points_fallback' | null;
   totalPointsFallbackUsed?: boolean;
+  rankedOutcome?: RankedMatchOutcomePayload | null;
 }
 
 export interface MatchStatePayload {
@@ -246,6 +265,7 @@ export interface MatchStatePayload {
     seat1: boolean;
     seat2: boolean;
   };
+  penaltySuddenDeath?: boolean;
   stateVersion?: number;
 }
 

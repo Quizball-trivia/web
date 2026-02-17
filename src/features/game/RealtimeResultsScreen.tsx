@@ -2,16 +2,47 @@
 
 import { useEffect, useState } from 'react';
 
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useHeadToHead } from '@/lib/queries/stats.queries';
 import { getRankInfo, getDivisionEmoji, getDivisionColor } from '@/utils/rankSystem';
+import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import { StatCard, WinIllustration, DrawIllustration, LossIllustration } from './components/ResultsShared';
+import type { RankedMatchOutcomePayload } from '@/lib/realtime/socket.types';
 
-// Mock RP values — will be replaced by real data later
-const MOCK_OLD_RP = 245;
+type TierName =
+  | 'Academy'
+  | 'Youth Prospect'
+  | 'Reserve'
+  | 'Bench'
+  | 'Rotation'
+  | 'Starting11'
+  | 'Key Player'
+  | 'Captain'
+  | 'World-Class'
+  | 'Legend'
+  | 'GOAT';
+
+const tierConfig: Record<TierName, { emoji: string; color: string; glow: string }> = {
+  'Academy':        { emoji: '🏫', color: 'text-slate-300',   glow: 'shadow-slate-400/40' },
+  'Youth Prospect': { emoji: '🌱', color: 'text-lime-300',    glow: 'shadow-lime-400/40' },
+  'Reserve':        { emoji: '📋', color: 'text-zinc-300',    glow: 'shadow-zinc-400/40' },
+  'Bench':          { emoji: '🪑', color: 'text-amber-300',   glow: 'shadow-amber-400/40' },
+  'Rotation':       { emoji: '🔄', color: 'text-blue-300',    glow: 'shadow-blue-400/40' },
+  'Starting11':     { emoji: '⚽', color: 'text-green-300',   glow: 'shadow-green-400/40' },
+  'Key Player':     { emoji: '⭐', color: 'text-yellow-300',  glow: 'shadow-yellow-400/40' },
+  'Captain':        { emoji: '©️',  color: 'text-orange-300',  glow: 'shadow-orange-400/40' },
+  'World-Class':    { emoji: '💎', color: 'text-cyan-300',    glow: 'shadow-cyan-400/40' },
+  'Legend':         { emoji: '👑', color: 'text-purple-300',  glow: 'shadow-purple-400/40' },
+  'GOAT':           { emoji: '🐐', color: 'text-fuchsia-300', glow: 'shadow-fuchsia-400/40' },
+};
+
+function getTierVisual(tier: string) {
+  const isKnownTier = (value: string): value is TierName => value in tierConfig;
+  return isKnownTier(tier) ? tierConfig[tier] : tierConfig['Academy'];
+}
 
 /** Animated number that ticks from `from` → `to` after a delay, with a pop + glow */
 function AnimatedCounter({
@@ -79,6 +110,7 @@ function AnimatedCounterInner({
 }
 
 interface RealtimeResultsScreenProps {
+  matchType: 'ranked' | 'friendly';
   playerUsername: string;
   playerAvatar: string;
   opponentUsername: string;
@@ -90,11 +122,14 @@ interface RealtimeResultsScreenProps {
   totalQuestions: number;
   selfUserId: string;
   opponentId: string;
+  rankedOutcome?: RankedMatchOutcomePayload | null;
+  preMatchRankedProfile?: RankedProfileResponse | null;
   onPlayAgain: () => void;
   onMainMenu: () => void;
 }
 
 export function RealtimeResultsScreen({
+  matchType,
   playerUsername,
   playerAvatar,
   opponentUsername,
@@ -105,6 +140,8 @@ export function RealtimeResultsScreen({
   totalQuestions,
   selfUserId,
   opponentId,
+  rankedOutcome,
+  preMatchRankedProfile,
   onPlayAgain,
   onMainMenu,
 }: RealtimeResultsScreenProps) {
@@ -123,9 +160,27 @@ export function RealtimeResultsScreen({
   const oldOppWins = !playerWon && !isDraw ? oppWins - 1 : oppWins;
   const oldDraws = isDraw ? h2hDraws - 1 : h2hDraws;
 
-  const rpChange = isDraw ? 0 : playerWon ? 15 : -15;
-  const oldRP = MOCK_OLD_RP;
-  const newRP = oldRP + rpChange;
+  // --- Ranked data from backend settlement ---
+  const myOutcome = rankedOutcome?.byUserId[selfUserId] ?? null;
+
+  // Placement state: use pre-match profile (already known) + increment by 1
+  const preIsPlacement = preMatchRankedProfile ? preMatchRankedProfile.placementStatus !== 'placed' : false;
+  const isPlacementMatch = myOutcome ? myOutcome.isPlacement === true : (matchType === 'ranked' && preIsPlacement);
+  const placementPlayed = myOutcome?.placementPlayed ?? (preIsPlacement ? Math.min(preMatchRankedProfile!.placementPlayed + 1, preMatchRankedProfile!.placementRequired) : 0);
+  const placementRequired = myOutcome?.placementRequired ?? preMatchRankedProfile?.placementRequired ?? 3;
+  const placementMatchesLeft = Math.max(0, placementRequired - placementPlayed);
+  // justPlaced: optimistic if this was the last placement match
+  const optimisticJustPlaced = preIsPlacement && placementPlayed >= placementRequired;
+  const justPlaced = myOutcome ? (myOutcome.isPlacement && myOutcome.placementStatus === 'placed') : optimisticJustPlaced;
+
+  // RP from backend settlement
+  const rpChange = myOutcome?.deltaRp ?? 0;
+  const oldRP = myOutcome?.oldRp ?? 0;
+  const newRP = myOutcome?.newRp ?? 0;
+
+  // Show RP card when ranked + placed (not in placement) + has real data
+  const showRankedRpCard = matchType === 'ranked' && myOutcome != null && !myOutcome.isPlacement;
+
   const accuracy = totalQuestions === 0 ? 0 : Math.round((playerCorrect / totalQuestions) * 100);
   const coinsEarned = playerWon ? 25 : isDraw ? 10 : 5;
 
@@ -134,8 +189,14 @@ export function RealtimeResultsScreen({
   const divisionColor = getDivisionColor(rankInfo.division);
 
   const [animatedRP, setAnimatedRP] = useState(0);
+  const [showRankReveal, setShowRankReveal] = useState(false);
 
   useEffect(() => {
+    if (rpChange === 0) {
+      setAnimatedRP(0);
+      return;
+    }
+
     const duration = 1200;
     const steps = 30;
     const increment = rpChange / steps;
@@ -153,6 +214,17 @@ export function RealtimeResultsScreen({
 
     return () => clearInterval(timer);
   }, [rpChange]);
+
+  // Trigger rank reveal after placement bar fills to 100%
+  useEffect(() => {
+    if (!justPlaced) return;
+    const timer = setTimeout(() => setShowRankReveal(true), 1800);
+    return () => clearTimeout(timer);
+  }, [justPlaced]);
+
+  const hasServerReveal = myOutcome != null;
+  const revealTier = myOutcome?.newTier ?? preMatchRankedProfile?.tier ?? 'Academy';
+  const tierVisual = getTierVisual(revealTier);
 
   return (
     <div className="min-h-screen bg-[#0f1420] flex items-center justify-center p-4">
@@ -279,53 +351,144 @@ export function RealtimeResultsScreen({
           )}
         </div>
 
-        {/* RP Progression */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-[#1a1f2e] rounded-3xl border-b-4 border-b-white/10 p-4"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">{divisionEmoji}</span>
-              <span className={cn('text-sm font-bold', divisionColor.text)}>{rankInfo.division}</span>
-            </div>
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.6, type: 'spring' }}
-              className={cn(
-                'text-sm font-black',
-                rpChange > 0 ? 'text-emerald-400' : rpChange < 0 ? 'text-red-400' : 'text-yellow-400'
-              )}
-            >
-              {rpChange > 0 ? '+' : ''}{animatedRP} RP
-            </motion.div>
-          </div>
-
-          {/* Progress bar */}
-          <div className="relative h-4 bg-white/10 rounded-full overflow-hidden mb-2">
-            <motion.div
-              initial={{ width: `${getRankInfo(oldRP).progress}%` }}
-              animate={{ width: `${rankInfo.progress}%` }}
-              transition={{ duration: 1.2, ease: 'easeInOut', delay: 0.5 }}
-              className="absolute inset-y-0 left-0 rounded-full"
-              style={{
-                background: `linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.7))`,
-              }}
-            >
-              <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/25 to-transparent h-1/2" />
-            </motion.div>
-          </div>
-
-          <div className="flex items-center justify-between text-xs text-white/40 font-semibold">
-            <span>{newRP} RP</span>
-            {rankInfo.pointsToNext !== null && (
-              <span>{rankInfo.pointsToNext} pts to next division</span>
+        {matchType === 'ranked' && (
+          <>
+            {/* Placement progress card */}
+            {isPlacementMatch && (
+              <AnimatePresence mode="wait">
+                {!showRankReveal ? (
+                  <motion.div
+                    key="placement-progress"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ delay: 0.3 }}
+                    className="bg-[#1a1f2e] rounded-3xl border-b-4 border-b-white/10 p-4"
+                  >
+                    <div className="mb-3 flex items-center justify-between">
+                      <div className="text-sm font-black uppercase tracking-wide text-[#58CC02]">Placement Progress</div>
+                      <div className="text-sm font-black text-[#85E000]">{placementPlayed}/{placementRequired}</div>
+                    </div>
+                    <div className="relative h-4 bg-white/10 rounded-full overflow-hidden mb-2">
+                      <motion.div
+                        initial={{ width: `${(Math.max(0, placementPlayed - 1) / placementRequired) * 100}%` }}
+                        animate={{ width: `${(placementPlayed / placementRequired) * 100}%` }}
+                        transition={{ duration: 0.7, ease: 'easeOut' }}
+                        className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#58CC02] to-[#85E000]"
+                      >
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/25 to-transparent h-1/2" />
+                      </motion.div>
+                    </div>
+                    <div className="text-xs font-semibold text-white/60">
+                      {justPlaced
+                        ? 'Placements complete! Revealing your rank...'
+                        : `Complete placements to unlock your rank. ${placementMatchesLeft} match${placementMatchesLeft === 1 ? '' : 'es'} left.`
+                      }
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="rank-reveal"
+                    initial={{ opacity: 0, scale: 0.6 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ type: 'spring', damping: 12, stiffness: 150 }}
+                    className={cn(
+                      'bg-[#1a1f2e] rounded-3xl border-b-4 border-b-white/10 p-6 text-center relative overflow-hidden',
+                      hasServerReveal && `shadow-[0_0_60px_-10px] ${tierVisual.glow}`
+                    )}
+                  >
+                    {hasServerReveal ? (
+                      <>
+                        {/* Glow background */}
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: [0, 0.3, 0.15] }}
+                          transition={{ duration: 1.5 }}
+                          className="absolute inset-0 bg-gradient-to-b from-emerald-500/10 via-emerald-500/5 to-transparent pointer-events-none"
+                        />
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: [0, 1.3, 1] }}
+                          transition={{ duration: 0.6, delay: 0.15 }}
+                          className="text-5xl mb-2"
+                        >
+                          {tierVisual.emoji}
+                        </motion.div>
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.4 }}
+                        >
+                          <div className="text-xs font-bold uppercase tracking-wider text-white/40 mb-1">Your Rank</div>
+                          <div className={cn('text-2xl font-black', tierVisual.color)}>{revealTier}</div>
+                          <div className="text-sm font-bold text-white/60 mt-1">{newRP} RP</div>
+                        </motion.div>
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center gap-3 py-2">
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+                          className="size-10 rounded-full border-3 border-white/10 border-t-[#58CC02]"
+                        />
+                        <div className="text-sm font-bold text-white/50">Calculating your rank...</div>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             )}
-          </div>
-        </motion.div>
+
+            {/* RP change card for placed players */}
+            {showRankedRpCard && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="bg-[#1a1f2e] rounded-3xl border-b-4 border-b-white/10 p-4"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{divisionEmoji}</span>
+                    <span className={cn('text-sm font-bold', divisionColor.text)}>{rankInfo.division}</span>
+                  </div>
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.6, type: 'spring' }}
+                    className={cn(
+                      'text-sm font-black',
+                      rpChange > 0 ? 'text-emerald-400' : rpChange < 0 ? 'text-red-400' : 'text-yellow-400'
+                    )}
+                  >
+                    {rpChange > 0 ? '+' : ''}{animatedRP} RP
+                  </motion.div>
+                </div>
+
+                <div className="relative h-4 bg-white/10 rounded-full overflow-hidden mb-2">
+                  <motion.div
+                    initial={{ width: `${getRankInfo(oldRP).progress}%` }}
+                    animate={{ width: `${rankInfo.progress}%` }}
+                    transition={{ duration: 1.2, ease: 'easeInOut', delay: 0.5 }}
+                    className="absolute inset-y-0 left-0 rounded-full"
+                    style={{
+                      background: `linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.7))`,
+                    }}
+                  >
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/25 to-transparent h-1/2" />
+                  </motion.div>
+                </div>
+
+                <div className="flex items-center justify-between text-xs text-white/40 font-semibold">
+                  <span>{newRP} RP</span>
+                  {rankInfo.pointsToNext !== null && (
+                    <span>{rankInfo.pointsToNext} pts to next division</span>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </>
+        )}
 
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-2">

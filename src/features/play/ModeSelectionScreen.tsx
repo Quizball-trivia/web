@@ -6,11 +6,42 @@ import { useRouter } from 'next/navigation';
 import { ModeConfirmModal } from '@/features/play/components/ModeConfirmModal';
 import { FriendPlayModal } from '@/features/friend/components/FriendPlayModal';
 import { HomeRecentMatches } from '@/features/home/components/dashboard/HomeRecentMatches';
-import type { PlayerStats } from '@/types/game';
 import type { MatchStatsSummary } from '@/lib/domain';
+import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import { CHALLENGES } from '../tournaments/GameHubScreen';
 import { logger } from '@/utils/logger';
-import { getDivisionColor, getDivisionEmoji, getRankInfo } from '@/utils/rankSystem';
+
+type TierName =
+  | 'Academy'
+  | 'Youth Prospect'
+  | 'Reserve'
+  | 'Bench'
+  | 'Rotation'
+  | 'Starting11'
+  | 'Key Player'
+  | 'Captain'
+  | 'World-Class'
+  | 'Legend'
+  | 'GOAT';
+
+const tierConfig: Record<TierName, { emoji: string; color: string }> = {
+  'Academy':        { emoji: '🏫', color: 'text-slate-300' },
+  'Youth Prospect': { emoji: '🌱', color: 'text-lime-300' },
+  'Reserve':        { emoji: '📋', color: 'text-zinc-300' },
+  'Bench':          { emoji: '🪑', color: 'text-amber-300' },
+  'Rotation':       { emoji: '🔄', color: 'text-blue-300' },
+  'Starting11':     { emoji: '⚽', color: 'text-green-300' },
+  'Key Player':     { emoji: '⭐', color: 'text-yellow-300' },
+  'Captain':        { emoji: '©️',  color: 'text-orange-300' },
+  'World-Class':    { emoji: '💎', color: 'text-cyan-300' },
+  'Legend':         { emoji: '👑', color: 'text-purple-300' },
+  'GOAT':           { emoji: '🐐', color: 'text-fuchsia-300' },
+};
+
+function getTierVisual(tier: string) {
+  const isKnownTier = (value: string): value is TierName => value in tierConfig;
+  return isKnownTier(tier) ? tierConfig[tier] : tierConfig['Academy'];
+}
 
 // ── Soccer SVG Icons ──
 function SoccerBall({ className }: { className?: string }) {
@@ -67,20 +98,25 @@ function StadiumSilhouette() {
 interface ModeSelectionScreenProps {
   onSelectMode: (mode: 'ranked' | 'friendly' | 'solo') => void;
   ticketsRemaining?: number;
-  playerStats: PlayerStats;
   matchStatsSummary?: MatchStatsSummary | null;
+  rankedProfile: RankedProfileResponse | null;
+  rankedProfileLoading?: boolean;
 }
 
 export function ModeSelectionScreen({
   onSelectMode,
   ticketsRemaining = 10,
-  playerStats,
   matchStatsSummary = null,
+  rankedProfile,
+  rankedProfileLoading = false,
 }: ModeSelectionScreenProps) {
   const [selectedMode, setSelectedMode] = useState<'ranked' | 'friendly' | 'solo' | null>(null);
-  const rankInfo = getRankInfo(playerStats.rankPoints || 0);
-  const divisionColors = getDivisionColor(rankInfo.division);
-  const divisionEmoji = getDivisionEmoji(rankInfo.division);
+  const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
+  const placementPlayed = rankedProfile?.placementPlayed ?? 0;
+  const placementRequired = rankedProfile?.placementRequired ?? 3;
+  const placementMatchesLeft = Math.max(0, placementRequired - placementPlayed);
+  const displayRp = isPlacementInProgress ? 0 : (rankedProfile?.rp ?? 0);
+  const tierVisual = rankedProfile ? getTierVisual(rankedProfile.tier) : getTierVisual('Academy');
   const rankedWinRate = Math.round(matchStatsSummary?.ranked.winRate ?? 0);
   const rankedGamesPlayed = matchStatsSummary?.ranked.gamesPlayed ?? 0;
   const router = useRouter();
@@ -129,11 +165,18 @@ export function ModeSelectionScreen({
               </div>
               <div>
                 <h1 className="text-lg md:text-3xl font-black text-white uppercase leading-tight">Ranked Match</h1>
-                <span className="text-[10px] md:text-sm font-bold text-[#58CC02] uppercase tracking-wider">1v1 Competitive</span>
+                <span className="text-[10px] md:text-sm font-bold text-[#58CC02] uppercase tracking-wider">
+                  {!rankedProfileLoading && isPlacementInProgress ? `Placement ${placementPlayed}/${placementRequired}` : '1v1 Competitive'}
+                </span>
               </div>
             </div>
             <div>
-              <span className="px-8 py-3.5 md:px-14 md:py-5 rounded-2xl bg-[#58CC02] border-b-4 border-[#46A302] text-white font-black text-base md:text-xl inline-block pointer-events-none uppercase tracking-wide transition-all">
+              <span
+                className={cn(
+                  "px-8 py-3.5 md:px-14 md:py-5 rounded-2xl bg-[#58CC02] border-b-4 border-[#46A302] text-white font-black text-base md:text-xl inline-block pointer-events-none uppercase tracking-wide transition-all",
+                  isPlacementInProgress && "shadow-[0_0_12px_rgba(88,204,2,0.28)] animate-[pulse_4.5s_ease-in-out_infinite]"
+                )}
+              >
                 Play
               </span>
             </div>
@@ -142,6 +185,14 @@ export function ModeSelectionScreen({
           <p className="hidden md:block text-base text-white/80 font-semibold mb-4 max-w-xl">
             🏆 Compete for Rank Points (RP) and climb the global leaderboards. Win to promote to higher divisions!
           </p>
+
+          {!rankedProfileLoading && isPlacementInProgress && (
+            <div className="mb-2 rounded-lg border border-[#B483FF]/45 bg-[#B483FF]/10 px-3 py-1.5 shadow-[0_0_10px_rgba(180,131,255,0.22)] inline-flex">
+              <p className="text-[11px] md:text-xs font-black uppercase tracking-wide text-[#D8B8FF]">
+                Finish placements to unlock your rank
+              </p>
+            </div>
+          )}
 
           <div className="flex gap-1.5 md:gap-3 mb-2 md:mb-4">
             <span className="text-[10px] md:text-xs font-black px-2.5 md:px-4 py-1 md:py-2 rounded-full bg-white/10 border border-white/20 md:border-2 text-white/90">
@@ -154,19 +205,44 @@ export function ModeSelectionScreen({
 
           {/* RP Progress + Stats */}
           <div className="bg-[#131F24] rounded-xl md:rounded-2xl border-b-[3px] md:border-b-4 border-[#0D1B21] p-2.5 md:p-4">
+            {rankedProfileLoading ? (
+              <div className="space-y-2.5 animate-pulse">
+                <div className="flex items-center justify-between">
+                  <div className="h-4 w-36 bg-[#243B44] rounded" />
+                  <div className="h-3 w-20 bg-[#243B44] rounded" />
+                </div>
+                <div className="h-3 md:h-4 bg-[#243B44] rounded-full" />
+                <div className="flex items-center justify-between">
+                  <div className="flex gap-3">
+                    <div className="h-3 w-16 bg-[#243B44] rounded" />
+                    <div className="h-3 w-16 bg-[#243B44] rounded" />
+                  </div>
+                  <div className="h-6 w-12 bg-[#243B44] rounded" />
+                </div>
+              </div>
+            ) : (
+            <>
             <div className="flex items-center justify-between mb-1.5 md:mb-2">
               <div className="flex items-center gap-1.5 md:gap-2">
-                <span className="text-lg md:text-2xl">{divisionEmoji}</span>
-                <span className={cn('text-sm md:text-base font-black', divisionColors.text)}>{rankInfo.division}</span>
+                <span className={cn("text-sm md:text-base font-black", isPlacementInProgress ? "text-[#85E000]" : tierVisual.color)}>
+                  {isPlacementInProgress ? "UNRANKED (PLACEMENT)" : `${tierVisual.emoji} ${rankedProfile?.tier ?? 'Academy'}`}
+                </span>
               </div>
-              <span className="text-[10px] md:text-xs font-bold text-[#56707A]">
-                {rankInfo.pointsToNext !== null ? `${rankInfo.pointsToNext} RP to next` : 'Max Division'}
+              <span className={cn(
+                "font-black",
+                isPlacementInProgress
+                  ? "text-sm md:text-base text-[#D8B8FF]"
+                  : "text-[10px] md:text-xs text-[#56707A]"
+              )}>
+                {isPlacementInProgress
+                  ? `${placementMatchesLeft} to rank reveal`
+                  : 'Competitive'}
               </span>
             </div>
             <div className="relative h-3 md:h-4 bg-[#243B44] rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
-                animate={{ width: `${rankInfo.progress}%` }}
+                animate={{ width: `${isPlacementInProgress ? (placementPlayed / placementRequired) * 100 : 100}%` }}
                 transition={{ duration: 1, ease: 'easeOut', delay: 0.3 }}
                 className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#58CC02] to-[#85E000]"
               >
@@ -179,10 +255,12 @@ export function ModeSelectionScreen({
                 <span className="text-[10px] md:text-xs font-bold text-[#56707A]">🎯 <span className="text-[#9B7EC8] font-black">{rankedGamesPlayed}</span> games</span>
               </div>
               <div>
-                <span className="text-xl md:text-2xl font-black text-white">{playerStats.rankPoints ?? 0}</span>
+                <span className="text-xl md:text-2xl font-black text-white">{displayRp}</span>
                 <span className="text-xs md:text-sm font-bold text-[#56707A] ml-1">RP</span>
               </div>
             </div>
+            </>
+            )}
           </div>
           {process.env.NODE_ENV === 'development' && (
             <Link

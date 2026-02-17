@@ -63,6 +63,7 @@ export function useShotOnGoal(
     s.setShotOpponentTime(aiDelay);
 
     setTimeRemaining(TIMER_SECONDS);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleShotAnswer = useCallback((index: number, stopTimer: () => void) => {
@@ -141,6 +142,7 @@ export function useShotOnGoal(
         }, BALL_ANIM_MS);
       }
     }, 1500);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [advanceToNextQuestion, schedule]);
 
   return { initializeShot, handleShotAnswer, shotBallOriginRef };

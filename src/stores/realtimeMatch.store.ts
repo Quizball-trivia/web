@@ -753,7 +753,8 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
   revertDraftBan: (actorId) =>
     set((state) => {
       if (!state.draft) return state;
-      const { [actorId]: _removed, ...remainingBans } = state.draft.bans;
+      const remainingBans = { ...state.draft.bans };
+      delete remainingBans[actorId];
       return {
         ...state,
         draft: { ...state.draft, bans: remainingBans, turnUserId: actorId },
