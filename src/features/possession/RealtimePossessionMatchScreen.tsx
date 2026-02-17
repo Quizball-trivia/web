@@ -809,7 +809,7 @@ export function RealtimePossessionMatchScreen({
                   penaltyPlayerScore={myPenaltyGoals}
                   penaltyOpponentScore={oppPenaltyGoals}
                   penaltyRound={Math.max(1, possessionState.phaseRound)}
-                  isPenaltySuddenDeath={Math.max(myPenaltyGoals, oppPenaltyGoals) >= 5}
+                  isPenaltySuddenDeath={possessionState.penaltySuddenDeath ?? false}
                   isPlayerShooter={isShooter}
                   playerName={playerUsername}
                   opponentName={opponentUsername}

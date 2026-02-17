@@ -9,6 +9,7 @@ import { useGameSessionStore } from '@/stores/gameSession.store';
 import { QUESTION_COUNT } from '@/lib/constants/game';
 import { ModeConfirmModal } from '@/features/play/components/ModeConfirmModal';
 import { FriendPlayModal } from '@/features/friend/components/FriendPlayModal';
+import { useMatchStatsSummary } from '@/lib/queries/stats.queries';
 
 interface HomeDashboardProps {
   playerStats: PlayerStats;
@@ -21,6 +22,7 @@ export function HomeDashboard({
 }: HomeDashboardProps) {
   const router = useRouter();
   const startSession = useGameSessionStore((state) => state.startSession);
+  const { data: matchStatsSummary = null } = useMatchStatsSummary();
   
   const [showRankedModal, setShowRankedModal] = useState(false);
   const [showFriendModal, setShowFriendModal] = useState(false);
@@ -49,6 +51,7 @@ export function HomeDashboard({
            <section>
               <HomePlayHero 
                  playerStats={playerStats} 
+                 rankedGamesPlayed={matchStatsSummary?.ranked.gamesPlayed ?? null}
                  onStartRanked={() => setShowRankedModal(true)} 
                  onOpenFriend={() => setShowFriendModal(true)}
               />

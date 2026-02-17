@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 const ANSWER_COLORS = [
   { bg: 'bg-emerald-500', borderSide: 'border-emerald-500', borderBottom: 'border-b-emerald-600', light: 'bg-emerald-500/15', text: 'text-emerald-400' },
@@ -102,7 +103,14 @@ export function AnswerCard({
           )}
         >
           {opponentAvatarUrl ? (
-            <img src={opponentAvatarUrl} alt="" className="size-full rounded-full object-cover" />
+            <Image
+              src={opponentAvatarUrl}
+              alt=""
+              width={32}
+              height={32}
+              unoptimized
+              className="size-full rounded-full object-cover"
+            />
           ) : (
             <div className={cn(
               'size-full rounded-full flex items-center justify-center text-[10px] font-black',

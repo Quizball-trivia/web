@@ -52,6 +52,7 @@ function PitchMarker({
           <circle cx="0" cy="0" r="22" fill="none" stroke={color} strokeWidth={isKeeper ? 3.5 : 2.5} />
           <foreignObject x="-20" y="-20" width="40" height="40">
             <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={avatarUrl} alt={avatarAlt} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
           </foreignObject>

@@ -7,6 +7,7 @@ import { updateMe } from "@/lib/api/endpoints";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth.store";
 import { useMatchStatsSummary, useRecentMatches } from "@/lib/queries/stats.queries";
+import { useRankedProfile } from "@/lib/queries/ranked.queries";
 import { useLocale } from "@/contexts/LocaleContext";
 import { LOCALES, type Locale } from "@/data/locales";
 import { formatMatchScore } from "@/utils/matchScore";
@@ -21,6 +22,7 @@ export default function ProfilePage() {
     error: recentMatchesError,
   } = useRecentMatches(20);
   const { data: matchStatsSummary = null } = useMatchStatsSummary();
+  const { data: rankedProfile, isLoading: rankedProfileLoading } = useRankedProfile();
 
   const { setLocale } = useLocale();
   const [isUpdating, setIsUpdating] = useState(false);
@@ -111,6 +113,8 @@ export default function ProfilePage() {
       favoriteClub={authUser?.favorite_club ?? null}
       preferredLanguage={authUser?.preferred_language ?? null}
       matchStatsSummary={matchStatsSummary}
+      rankedProfile={rankedProfile ?? null}
+      rankedProfileLoading={rankedProfileLoading}
       recentMatches={recentMatches.map((match) => ({
         id: match.matchId,
         mode: match.mode === "ranked" ? "Ranked" : "Friendly",

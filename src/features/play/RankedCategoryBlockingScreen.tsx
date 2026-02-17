@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ShowdownScreen } from './ShowdownScreen';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';

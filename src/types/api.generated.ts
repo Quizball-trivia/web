@@ -597,6 +597,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ranked/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get ranked profile for authenticated user */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Ranked profile */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            rp: number;
+                            /** @enum {string} */
+                            tier: "Academy" | "Youth Prospect" | "Reserve" | "Bench" | "Rotation" | "Starting11" | "Key Player" | "Captain" | "World-Class" | "Legend" | "GOAT";
+                            /** @enum {string} */
+                            placementStatus: "unplaced" | "in_progress" | "placed";
+                            placementPlayed: number;
+                            placementRequired: number;
+                            placementWins: number;
+                            currentWinStreak: number;
+                            /** Format: date-time */
+                            lastRankedMatchAt: string | null;
+                        };
+                    };
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/me": {
         parameters: {
             query?: never;
@@ -2099,6 +2156,19 @@ export interface components {
                 draws: number;
                 winRate: number;
             };
+        };
+        RankedProfileResponse: {
+            rp: number;
+            /** @enum {string} */
+            tier: "Academy" | "Youth Prospect" | "Reserve" | "Bench" | "Rotation" | "Starting11" | "Key Player" | "Captain" | "World-Class" | "Legend" | "GOAT";
+            /** @enum {string} */
+            placementStatus: "unplaced" | "in_progress" | "placed";
+            placementPlayed: number;
+            placementRequired: number;
+            placementWins: number;
+            currentWinStreak: number;
+            /** Format: date-time */
+            lastRankedMatchAt: string | null;
         };
         I18nField: {
             [key: string]: string;

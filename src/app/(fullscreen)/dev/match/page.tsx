@@ -35,10 +35,9 @@ function DevMatchContent() {
   const [starting, setStarting] = useState(false);
   const startTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Reset starting state once a match arrives or on unmount
+  // Clear pending start timeout once a match arrives or on unmount
   useEffect(() => {
     if (match) {
-      setStarting(false);
       if (startTimerRef.current) {
         clearTimeout(startTimerRef.current);
         startTimerRef.current = null;

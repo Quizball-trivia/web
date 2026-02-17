@@ -30,6 +30,10 @@ export const queryKeys = {
       [...queryKeys.leaderboard.all, "list", type] as const,
     user: (userId: string) => [...queryKeys.leaderboard.all, "user", userId] as const,
   },
+  ranked: {
+    all: ["ranked"] as const,
+    profile: () => [...queryKeys.ranked.all, "profile"] as const,
+  },
   stats: {
     all: ["stats"] as const,
     summary: () => [...queryKeys.stats.all, "summary"] as const,

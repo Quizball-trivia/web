@@ -1,4 +1,5 @@
 import { Trophy, Users, User, Gamepad2, ArrowRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,14 +9,22 @@ import type { PlayerStats } from '@/types/game';
 
 interface HomePlayHeroProps {
   playerStats: PlayerStats;
+  rankedGamesPlayed?: number | null;
   onStartRanked: () => void;
   onOpenFriend: () => void;
 }
 
-export function HomePlayHero({ playerStats, onStartRanked, onOpenFriend }: HomePlayHeroProps) {
+export function HomePlayHero({ playerStats, rankedGamesPlayed = null, onStartRanked, onOpenFriend }: HomePlayHeroProps) {
   const router = useRouter();
   const rankInfo = getRankInfo(playerStats.rankPoints || 0);
   const divisionColors = getDivisionColor(rankInfo.division);
+  const placementRequired = 3;
+  const placementPlayed = Math.min(rankedGamesPlayed ?? 0, placementRequired);
+  const placementMatchesLeft = Math.max(0, placementRequired - placementPlayed);
+  const isPlacementInProgress =
+    rankedGamesPlayed !== undefined &&
+    rankedGamesPlayed !== null &&
+    rankedGamesPlayed < placementRequired;
 
   return (
     <div className="space-y-6">
@@ -47,13 +56,18 @@ export function HomePlayHero({ playerStats, onStartRanked, onOpenFriend }: HomeP
                        </div>
                        <div>
                           <h2 className="text-3xl font-black tracking-tight group-hover:text-primary transition-colors duration-300">Play Ranked</h2>
+                          {isPlacementInProgress && (
+                            <p className="text-xs font-black text-primary mt-1 uppercase tracking-wide">
+                              Unranked: {placementMatchesLeft} placement match{placementMatchesLeft === 1 ? '' : 'es'} left
+                            </p>
+                          )}
                        </div>
                     </div>
                  </div>
                  
                  <div className="flex flex-col items-end">
-                    <Badge variant="outline" className={`${divisionColors.text} ${divisionColors.border} bg-background/50 backdrop-blur px-4 py-1.5 text-sm font-bold shadow-sm`}>
-                       {rankInfo.division}
+                    <Badge variant="outline" className={`${isPlacementInProgress ? 'text-primary border-primary/40' : `${divisionColors.text} ${divisionColors.border}`} bg-background/50 backdrop-blur px-4 py-1.5 text-sm font-bold shadow-sm`}>
+                       {isPlacementInProgress ? `Placement ${placementPlayed}/${placementRequired}` : rankInfo.division}
                     </Badge>
                  </div>
               </div>
@@ -61,17 +75,26 @@ export function HomePlayHero({ playerStats, onStartRanked, onOpenFriend }: HomeP
               <div className="mt-8 space-y-4">
                  <div className="flex justify-between items-end">
                     <div className="flex flex-col">
-                        <span className="text-4xl font-black tracking-tighter text-foreground">{playerStats.rankPoints ?? 0}<span className="text-lg font-bold text-muted-foreground ml-1">RP</span></span>
+                        <span className="text-4xl font-black tracking-tighter text-foreground">{isPlacementInProgress ? 0 : (playerStats.rankPoints ?? 0)}<span className="text-lg font-bold text-muted-foreground ml-1">RP</span></span>
                     </div>
-                    <span className="text-sm font-bold text-primary mb-1">{(rankInfo.maxRP || 1000) - ((playerStats.rankPoints ?? 0) % 100)} RP to next division</span>
+                    <span className="text-sm font-bold text-primary mb-1">
+                      {isPlacementInProgress
+                        ? `${placementMatchesLeft} to rank reveal`
+                        : rankInfo.pointsToNext != null
+                          ? `${rankInfo.pointsToNext} RP to next division`
+                          : 'Max Division'}
+                    </span>
                  </div>
-                 <Progress value={rankInfo.progress} className="h-3 bg-secondary/50 border border-primary/10 [&>div]:bg-primary [&>div]:shadow-[0_0_10px_hsl(var(--primary))]" />
+                 <Progress
+                   value={isPlacementInProgress ? (placementPlayed / placementRequired) * 100 : rankInfo.progress}
+                   className="h-3 bg-secondary/50 border border-primary/10 [&>div]:bg-primary [&>div]:shadow-[0_0_10px_hsl(var(--primary))]"
+                 />
               </div>
 
               <div className="mt-10">
-                 <Button size="lg" className="w-full md:w-auto text-lg px-10 py-7 shadow-[0_0_25px_-5px_hsl(var(--primary)/0.5)] hover:shadow-[0_0_40px_-5px_hsl(var(--primary)/0.7)] transition-all duration-300 font-bold bg-primary hover:bg-primary/90 text-primary-foreground">
+                 <Button size="lg" className={`w-full md:w-auto text-lg px-10 py-7 shadow-[0_0_25px_-5px_hsl(var(--primary)/0.5)] hover:shadow-[0_0_40px_-5px_hsl(var(--primary)/0.7)] transition-all duration-300 font-bold bg-primary hover:bg-primary/90 text-primary-foreground ${isPlacementInProgress ? 'animate-[pulse_4.5s_ease-in-out_infinite] shadow-[0_0_12px_hsl(var(--primary)/0.45)]' : ''}`}>
                     <Gamepad2 className="mr-2.5 size-6" />
-                    Play Ranked Match
+                    Play
                  </Button>
               </div>
            </CardContent>
@@ -131,4 +154,3 @@ export function HomePlayHero({ playerStats, onStartRanked, onOpenFriend }: HomeP
     </div>
   );
 }
-import { useRouter } from 'next/navigation';

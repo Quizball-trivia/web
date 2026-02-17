@@ -9,8 +9,8 @@ import type { OpponentInfo, OpponentGeoPayload } from "@/lib/realtime/socket.typ
 import type { AvatarCustomization } from "@/types/game";
 import { avatarSeeds, getDiceBearAvatarUrl } from "@/lib/avatars";
 import { logger } from "@/utils/logger";
-import { feature } from "topojson-client";
-import type { Topology, GeometryCollection } from "topojson-specification";
+import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
+import { geoNaturalEarth1 } from "d3-geo";
 import worldTopo from "world-atlas/land-110m.json";
 
 // ── Types ──
@@ -41,10 +41,6 @@ interface MatchmakingMapScreenProps {
   onCancel: () => void;
 }
 
-// ── Mercator projection ──
-
-const MAP_W = 1000;
-const MAP_H = 600;
 const MOBILE_BREAKPOINT = 768;
 const GEO_HINT_CACHE_KEY = "ranked_geo_hint_v1";
 
@@ -86,60 +82,22 @@ function readCachedGeoHint(): CachedGeoHint | null {
   }
 }
 
-function mercatorX(lon: number): number {
-  return ((lon + 180) / 360) * MAP_W;
-}
-
-function mercatorY(lat: number): number {
-  const latRad = (lat * Math.PI) / 180;
-  const mercN = Math.log(Math.tan(Math.PI / 4 + latRad / 2));
-  const clampedMercN = Math.max(-3.0, Math.min(3.0, mercN));
-  return MAP_H / 2 - (MAP_W * clampedMercN) / (2 * Math.PI);
-}
+const MAP_W = 1000;
+const MAP_H = 550;
+const PROJ_SCALE = 170;
+const PROJ_CENTER: [number, number] = [10, 5];
+const proj = geoNaturalEarth1()
+  .scale(PROJ_SCALE)
+  .center(PROJ_CENTER)
+  .translate([MAP_W / 2, MAP_H / 2]);
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-function projectCoords(coords: number[][]): string {
-  return (
-    coords
-      .map(([lon, lat], i) => {
-        const x = mercatorX(lon);
-        const y = mercatorY(lat);
-        return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
-      })
-      .join(" ") + " Z"
-  );
-}
-
-// ── Convert TopoJSON → SVG paths (computed once) ──
-
-function buildMapPaths(): string[] {
-  const topo = worldTopo as unknown as Topology;
-  const landGeo = feature(topo, topo.objects.land as GeometryCollection);
-  const paths: string[] = [];
-  for (const feat of landGeo.features) {
-    const geom = feat.geometry;
-    if (geom.type === "Polygon") {
-      for (const ring of geom.coordinates) {
-        paths.push(projectCoords(ring as number[][]));
-      }
-    } else if (geom.type === "MultiPolygon") {
-      for (const polygon of geom.coordinates) {
-        for (const ring of polygon) {
-          paths.push(projectCoords(ring as number[][]));
-        }
-      }
-    }
-  }
-  return paths;
-}
-
-let _cachedPaths: string[] | null = null;
-function getMapPaths(): string[] {
-  if (!_cachedPaths) _cachedPaths = buildMapPaths();
-  return _cachedPaths;
+/** Project [lon, lat] → [px, py] matching ComposableMap's internal projection */
+function projectPoint(lon: number, lat: number): [number, number] {
+  return proj([lon, lat]) ?? [MAP_W / 2, MAP_H / 2];
 }
 
 // ── Pin colors ──
@@ -551,12 +509,14 @@ function resolveOpponentLocation(
 }
 
 function generateFakePlayers(): FakePlayer[] {
-  return CITY_DATA.map((c, i) => ({
+  return CITY_DATA.map((c, i) => {
+    const [px, py] = projectPoint(c.lon, c.lat);
+    return {
     id: i,
     lon: c.lon,
     lat: c.lat,
-    x: mercatorX(c.lon),
-    y: mercatorY(c.lat),
+    x: px,
+    y: py,
     color: PIN_COLORS[i % PIN_COLORS.length],
     avatarUrl: getDiceBearAvatarUrl(avatarSeeds[i % avatarSeeds.length] ?? `player-${i + 1}`, 64),
     name: c.name,
@@ -565,12 +525,15 @@ function generateFakePlayers(): FakePlayer[] {
     country: c.country,
     delay: 0.6 + i * 0.15,
     source: "seeded_city",
-  }));
+  };
+  });
 }
 
 // ── Self-player position ──
 
-const SELF_POS = { x: mercatorX(0), y: mercatorY(51.5) };
+const SELF_LON = 0;
+const SELF_LAT = 51.5;
+const [SELF_X, SELF_Y] = projectPoint(SELF_LON, SELF_LAT);
 
 // ── Pan constants ──
 // The map starts showing Americas and pans right across Europe, Asia
@@ -586,7 +549,6 @@ export function MatchmakingMapScreen({
   debugInfo,
   onCancel,
 }: MatchmakingMapScreenProps) {
-  const mapPaths = useMemo(() => getMapPaths(), []);
   const fakePlayers = useMemo(() => generateFakePlayers(), []);
   const localGeoHint = readCachedGeoHint();
   const [visiblePins, setVisiblePins] = useState<Set<number>>(new Set());
@@ -613,12 +575,13 @@ export function MatchmakingMapScreen({
   const opponentPin = useMemo<FakePlayer | null>(() => {
     if (!rankedFoundOpponent) return null;
     const resolved = resolveOpponentLocation(rankedFoundOpponent);
+    const [oppX, oppY] = projectPoint(resolved.lon, resolved.lat);
     return {
       id: 10000 + (hashString(rankedFoundOpponent.id ?? rankedFoundOpponent.username ?? "opponent") % 1000),
       lon: resolved.lon,
       lat: resolved.lat,
-      x: mercatorX(resolved.lon),
-      y: mercatorY(resolved.lat),
+      x: oppX,
+      y: oppY,
       color: "#FF4B4B",
       avatarUrl:
         rankedFoundOpponent.avatarUrl ??
@@ -776,21 +739,15 @@ export function MatchmakingMapScreen({
     };
   }, [showFoundState, fakePlayers, opponentPinId]);
 
-  // Scan line Y position
-  const [scanLineY, setScanLineY] = useState(0);
-  useEffect(() => {
-    if (showFoundState) return;
-    const id = setInterval(() => setScanLineY((p) => (p >= MAP_H ? 0 : p + 2)), 16);
-    return () => clearInterval(id);
-  }, [showFoundState]);
-
   return (
     <div className="fixed inset-0 z-50 bg-[#0D1117] overflow-hidden font-fun select-none">
       {/* ── Map ── */}
-      <motion.svg
-        viewBox={`0 0 ${MAP_W} ${MAP_H}`}
-        preserveAspectRatio={isMobile ? "xMidYMid meet" : "xMidYMid slice"}
-        className="absolute inset-0 w-full h-full"
+      <ComposableMap
+        width={MAP_W}
+        height={MAP_H}
+        projection="geoNaturalEarth1"
+        projectionConfig={{ scale: PROJ_SCALE, center: PROJ_CENTER }}
+        style={{ width: "100%", height: "100%", position: "absolute", inset: 0, background: "#0D1117" }}
       >
         <motion.g
           style={{
@@ -803,63 +760,42 @@ export function MatchmakingMapScreen({
             transformOrigin: "0px 0px",
           }}
         >
-          {/* Ocean */}
-          <rect width={MAP_W} height={MAP_H} fill="#0D1117" />
+          <Geographies geography={worldTopo}>
+            {({ geographies }) =>
+              geographies.map((geo) => (
+                <Geography
+                  key={geo.rsmKey}
+                  geography={geo}
+                  fill="#1C2733"
+                  stroke="#2D3F4E"
+                  strokeWidth={0.5}
+                  style={{ default: { outline: "none" }, hover: { outline: "none" }, pressed: { outline: "none" } }}
+                />
+              ))
+            }
+          </Geographies>
 
-          {/* Graticule */}
-          {Array.from({ length: 37 }).map((_, i) => {
-            const lon = -180 + i * 10;
-            const x = mercatorX(lon);
-            return (
-              <line
-                key={`v${i}`}
-                x1={x} y1={0} x2={x} y2={MAP_H}
-                stroke="#161B22" strokeWidth="0.5" opacity="0.5"
-              />
-            );
-          })}
-          {[-60, -40, -20, 0, 20, 40, 60].map((lat) => {
-            const y = mercatorY(lat);
-            return (
-              <line
-                key={`h${lat}`}
-                x1={0} y1={y} x2={MAP_W} y2={y}
-                stroke="#161B22" strokeWidth="0.5" opacity="0.5"
-              />
-            );
-          })}
-
-          {/* Land masses */}
-          {mapPaths.map((d, i) => (
-            <path key={i} d={d} fill="#1C2733" stroke="#2D3F4E" strokeWidth="0.5" />
-          ))}
-
-          {/* Scan line */}
-          {!showFoundState && (
-            <rect x={0} y={scanLineY} width={MAP_W} height={2} fill="#1CB0F6" opacity="0.35" />
-          )}
-
-        <defs>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="3" result="b" />
-            <feMerge>
-              <feMergeNode in="b" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
+          <defs>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="b" />
+              <feMerge>
+                <feMergeNode in="b" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
 
           {/* Self marker */}
-          <g>
-            <circle cx={SELF_POS.x} cy={SELF_POS.y} r="5" fill="#58CC02" opacity="0.15">
+          <Marker coordinates={[SELF_LON, SELF_LAT]}>
+            <circle cx={0} cy={0} r="5" fill="#58CC02" opacity="0.15">
               <animate attributeName="r" values="5;14;5" dur="2s" repeatCount="indefinite" />
               <animate attributeName="opacity" values="0.25;0;0.25" dur="2s" repeatCount="indefinite" />
             </circle>
-            <circle cx={SELF_POS.x} cy={SELF_POS.y} r="4" fill="#58CC02" stroke="#46A302" strokeWidth="1.2" />
-            <text x={SELF_POS.x} y={SELF_POS.y - 8} textAnchor="middle" fill="#58CC02" fontSize="5" fontWeight="900">
+            <circle cx={0} cy={0} r="4" fill="#58CC02" stroke="#46A302" strokeWidth="1.2" />
+            <text x={0} y={-8} textAnchor="middle" fill="#58CC02" fontSize="5" fontWeight="900">
               YOU
             </text>
-          </g>
+          </Marker>
 
           {/* Player pins */}
           {mapPlayers.map((p) => {
@@ -869,11 +805,11 @@ export function MatchmakingMapScreen({
             if (!visible && !showFoundState) return null;
 
             return (
-              <g key={p.id}>
+              <Marker key={p.id} coordinates={[p.lon, p.lat]}>
                 {/* Pulse ring */}
                 {(highlighted || isOpp) && (
                   <circle
-                    cx={p.x} cy={p.y} r="5"
+                    cx={0} cy={0} r="5"
                     fill={p.color} opacity="0.2"
                     filter="url(#glow)"
                   >
@@ -882,96 +818,93 @@ export function MatchmakingMapScreen({
                   </circle>
                 )}
 
-                {/* Pin group */}
-                <g transform={`translate(${p.x},${p.y})`}>
-                  {/* Drop shadow */}
-                  <ellipse cx="0" cy="1" rx="3.5" ry="1.2" fill="rgba(0,0,0,0.35)" />
+                {/* Drop shadow */}
+                <ellipse cx="0" cy="1" rx="3.5" ry="1.2" fill="rgba(0,0,0,0.35)" />
 
-                  {/* Pin body */}
-                  <path
-                    d="M0,-15 C-6.5,-15 -10,-11 -10,-6 C-10,1.5 0,8 0,8 C0,8 10,1.5 10,-6 C10,-11 6.5,-15 0,-15 Z"
-                    fill={p.color}
-                    stroke={isOpp ? "#fff" : "rgba(0,0,0,0.4)"}
-                    strokeWidth={isOpp ? "1.5" : "0.5"}
-                    opacity={isOpp ? 1 : highlighted ? 0.95 : 0.8}
-                  >
-                    {!showFoundState && (
-                      <animateTransform
-                        attributeName="transform"
-                        type="translate"
-                        values="0,0;0,-1.5;0,0"
-                        dur={`${2 + (p.id % 4) * 0.3}s`}
-                        repeatCount="indefinite"
-                      />
-                    )}
-                  </path>
-
-                  {/* Avatar circle with profile-style image */}
-                  <defs>
-                    <clipPath id={`pin-avatar-${p.id}`}>
-                      <circle cx="0" cy="-7.5" r="5.1" />
-                    </clipPath>
-                  </defs>
-                  <circle cx="0" cy="-7.5" r="5.5" fill="#0D1117" stroke={p.color} strokeWidth="0.8" />
-                  <image
-                    href={p.avatarUrl}
-                    x="-5.1"
-                    y="-12.6"
-                    width="10.2"
-                    height="10.2"
-                    preserveAspectRatio="xMidYMid slice"
-                    clipPath={`url(#pin-avatar-${p.id})`}
-                  />
-
-                  {/* Name label (only when highlighted or opponent) */}
-                  {(isOpp || (highlighted && !showFoundState)) && (
-                    <g>
-                      <rect
-                        x={-p.name.length * 2.5 - 4}
-                        y="-27"
-                        width={p.name.length * 5 + 8}
-                        height="9"
-                        rx="3"
-                        fill="rgba(0,0,0,0.7)"
-                      />
-                      <text
-                        x="0" y="-20.5"
-                        textAnchor="middle"
-                        fill="white"
-                        fontSize="5.5"
-                        fontWeight="bold"
-                      >
-                        {p.name}
-                      </text>
-                    </g>
+                {/* Pin body */}
+                <path
+                  d="M0,-15 C-6.5,-15 -10,-11 -10,-6 C-10,1.5 0,8 0,8 C0,8 10,1.5 10,-6 C10,-11 6.5,-15 0,-15 Z"
+                  fill={p.color}
+                  stroke={isOpp ? "#fff" : "rgba(0,0,0,0.4)"}
+                  strokeWidth={isOpp ? "1.5" : "0.5"}
+                  opacity={isOpp ? 1 : highlighted ? 0.95 : 0.8}
+                >
+                  {!showFoundState && (
+                    <animateTransform
+                      attributeName="transform"
+                      type="translate"
+                      values="0,0;0,-1.5;0,0"
+                      dur={`${2 + (p.id % 4) * 0.3}s`}
+                      repeatCount="indefinite"
+                    />
                   )}
-                  {isOpp && (
-                    <motion.g
-                      initial={{ opacity: 0, scale: 0.85 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 1.35, duration: 0.3 }}
+                </path>
+
+                {/* Avatar circle with profile-style image */}
+                <defs>
+                  <clipPath id={`pin-avatar-${p.id}`}>
+                    <circle cx="0" cy="-7.5" r="5.1" />
+                  </clipPath>
+                </defs>
+                <circle cx="0" cy="-7.5" r="5.5" fill="#0D1117" stroke={p.color} strokeWidth="0.8" />
+                <image
+                  href={p.avatarUrl}
+                  x="-5.1"
+                  y="-12.6"
+                  width="10.2"
+                  height="10.2"
+                  preserveAspectRatio="xMidYMid slice"
+                  clipPath={`url(#pin-avatar-${p.id})`}
+                />
+
+                {/* Name label (only when highlighted or opponent) */}
+                {(isOpp || (highlighted && !showFoundState)) && (
+                  <g>
+                    <rect
+                      x={-p.name.length * 2.5 - 4}
+                      y="-27"
+                      width={p.name.length * 5 + 8}
+                      height="9"
+                      rx="3"
+                      fill="rgba(0,0,0,0.7)"
+                    />
+                    <text
+                      x="0" y="-20.5"
+                      textAnchor="middle"
+                      fill="white"
+                      fontSize="5.5"
+                      fontWeight="bold"
                     >
-                      <rect
-                        x="6.5"
-                        y="-17.2"
-                        width="10.5"
-                        height="7.5"
-                        rx="2.8"
-                        fill="rgba(13,17,23,0.92)"
-                        stroke="rgba(255,255,255,0.35)"
-                        strokeWidth="0.45"
-                      />
-                      <text x="11.7" y="-11.8" textAnchor="middle" fontSize="5.7">
-                        {p.flag}
-                      </text>
-                    </motion.g>
-                  )}
-                </g>
-              </g>
+                      {p.name}
+                    </text>
+                  </g>
+                )}
+                {isOpp && (
+                  <motion.g
+                    initial={{ opacity: 0, scale: 0.85 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 1.35, duration: 0.3 }}
+                  >
+                    <rect
+                      x="6.5"
+                      y="-17.2"
+                      width="10.5"
+                      height="7.5"
+                      rx="2.8"
+                      fill="rgba(13,17,23,0.92)"
+                      stroke="rgba(255,255,255,0.35)"
+                      strokeWidth="0.45"
+                    />
+                    <text x="11.7" y="-11.8" textAnchor="middle" fontSize="5.7">
+                      {p.flag}
+                    </text>
+                  </motion.g>
+                )}
+              </Marker>
             );
           })}
         </motion.g>
-      </motion.svg>
+      </ComposableMap>
 
       {/* ── Overlays ── */}
       <div

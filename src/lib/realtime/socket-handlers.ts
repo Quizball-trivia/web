@@ -1,5 +1,7 @@
 import { getSocket } from './socket-client';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
+import { QueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/queries/queryKeys';
 import { logger } from '@/utils/logger';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 import { getI18nText } from '@/lib/utils/i18n';
@@ -30,7 +32,7 @@ import type {
   SessionBlockedPayload,
 } from './socket.types';
 
-export function registerSocketHandlers(): void {
+export function registerSocketHandlers(queryClient?: QueryClient): void {
   const socket = getSocket();
   const store = useRealtimeMatchStore.getState();
 
@@ -227,6 +229,9 @@ export function registerSocketHandlers(): void {
       matchId: data.matchId,
       resultVersion: data.resultVersion,
     });
+    if (queryClient) {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.ranked.all });
+    }
   });
 
   socket.on('match:opponent_disconnected', (data: MatchOpponentDisconnectedPayload) => {

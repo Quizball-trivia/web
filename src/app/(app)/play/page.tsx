@@ -10,6 +10,7 @@ import { getQuestionsListQuery } from "@/lib/queries/questions.queries";
 import { useCategoriesList } from "@/lib/queries/categories.queries";
 import { useFeaturedCategories } from "@/lib/queries/featuredCategories.queries";
 import { useMatchStatsSummary } from "@/lib/queries/stats.queries";
+import { useRankedProfile } from "@/lib/queries/ranked.queries";
 import type { CategorySummary, GameQuestion } from "@/lib/domain";
 import type { ListQuestionsQuery } from "@/lib/repositories/questions.repo";
 import { QUESTION_COUNT } from "@/lib/constants/game";
@@ -31,6 +32,7 @@ export default function PlayPage() {
   const queryClient = useQueryClient();
   const { data: featuredData } = useFeaturedCategories();
   const { data: matchStatsSummary = null } = useMatchStatsSummary();
+  const { data: rankedProfile, isLoading: rankedProfileLoading } = useRankedProfile();
   const { data: categoriesData } = useCategoriesList({
     limit: 100,
     page: 1,
@@ -129,8 +131,9 @@ export default function PlayPage() {
         void startMatch({ mode: "quizball", matchType: "friendly" });
       }}
       ticketsRemaining={player.tickets || 0}
-      playerStats={player}
       matchStatsSummary={matchStatsSummary}
+      rankedProfile={rankedProfile ?? null}
+      rankedProfileLoading={rankedProfileLoading}
     />
   );
 }

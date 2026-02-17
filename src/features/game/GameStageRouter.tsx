@@ -21,6 +21,8 @@ import { logger } from "@/utils/logger";
 import { useGameStageTransitions } from "@/features/game/hooks/useGameStageTransitions";
 import type { GameMode as LegacyGameMode } from "@/types/game";
 import { resolveAvatarUrl } from "@/lib/avatars";
+import { useRankedProfile } from "@/lib/queries/ranked.queries";
+import { usePossessionMatchStore } from "@/stores/possessionMatch.store";
 
 type OpponentInfo = {
   id: string;
@@ -64,6 +66,10 @@ export function GameStageRouter() {
   const rankedSearchStartedAt = useRealtimeMatchStore((state) => state.rankedSearchStartedAt);
   const rankedFoundOpponent = useRealtimeMatchStore((state) => state.rankedFoundOpponent);
   const resetRealtime = useRealtimeMatchStore((state) => state.reset);
+
+  const { data: rankedProfile } = useRankedProfile();
+  const clientTotalCorrect = usePossessionMatchStore((s) => s.totalCorrect);
+  const clientTotalQuestions = usePossessionMatchStore((s) => s.totalQuestions);
 
   const defaultOpponent = useMemo<OpponentInfo>(
     () => ({
@@ -290,17 +296,20 @@ export function GameStageRouter() {
 
       return (
         <RealtimeResultsScreen
+          matchType={matchType}
           playerUsername={player.username}
           playerAvatar={playerGameAvatar}
           opponentUsername={opponent.username}
           opponentAvatar={opponentGameAvatar}
           playerScore={playerDisplayScore}
           opponentScore={opponentDisplayScore}
-          playerCorrect={myStats?.correctAnswers ?? 0}
+          playerCorrect={myStats?.correctAnswers ?? clientTotalCorrect}
           opponentCorrect={opponentStats?.correctAnswers ?? 0}
-          totalQuestions={totalQuestionsPlayed}
+          totalQuestions={totalQuestionsPlayed || clientTotalQuestions}
           selfUserId={selfUserId}
           opponentId={opponent.id}
+          rankedOutcome={final?.rankedOutcome ?? null}
+          preMatchRankedProfile={rankedProfile ?? null}
           onPlayAgain={() => {
             if (matchType === "ranked") {
               resetRealtime();

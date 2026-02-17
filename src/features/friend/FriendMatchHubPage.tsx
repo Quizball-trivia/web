@@ -12,8 +12,7 @@ import { useAuthStore } from "@/stores/auth.store";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { useQueryClient } from "@tanstack/react-query";
 import { lobbiesKeys } from "@/lib/queries/lobbies.queries";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { toast } from "sonner";
 import { logger } from "@/utils/logger";
 import { connectSocket, getSocket } from "@/lib/realtime/socket-client";
@@ -198,11 +197,6 @@ export function FriendMatchHubPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-wider text-xs">
-               <Button variant="ghost" size="sm" className="h-6 px-1.5 -ml-2 text-muted-foreground" onClick={() => router.back()}>
-                  <ArrowLeft className="size-4 mr-1" /> Back
-               </Button>
-            </div>
             <h1 className="text-3xl font-black tracking-tight">Friend Match</h1>
             <p className="text-muted-foreground">Jump into an open room or start your own.</p>
          </div>
