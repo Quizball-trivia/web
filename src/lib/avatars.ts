@@ -57,6 +57,11 @@ export function resolveAvatarUrl(value: string | null | undefined, fallbackSeed:
   return getDiceBearAvatarUrl(raw, size);
 }
 
+/** Check whether a string looks like a renderable URL (for `<img>`) vs an emoji/text literal. */
+export function isAvatarUrl(avatar: string): boolean {
+  return avatar.startsWith('http') || avatar.startsWith('/') || avatar.startsWith('data:image/');
+}
+
 export function isGoogleAvatarUrl(url: string | null | undefined) {
   if (!url) return false;
   return /googleusercontent\.com/i.test(url);

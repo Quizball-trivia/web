@@ -131,11 +131,11 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     store.setDraftBan(data.actorId, data.categoryId);
   });
 
-  socket.on('draft:complete', (data: { allowedCategoryIds: [string, string] }) => {
+  socket.on('draft:complete', (data: { halfOneCategoryId: string }) => {
     logger.info('Socket event draft:complete', {
-      allowedCategoryIds: data.allowedCategoryIds,
+      halfOneCategoryId: data.halfOneCategoryId,
     });
-    store.setDraftComplete(data.allowedCategoryIds);
+    store.setDraftComplete(data.halfOneCategoryId);
   });
 
   socket.on('match:start', (data: MatchStartPayload) => {
@@ -157,7 +157,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       matchId: data.matchId,
       phase: data.phase,
       half: data.half,
-      sharedPossession: data.sharedPossession,
+      possessionDiff: data.possessionDiff,
       phaseKind: data.phaseKind,
       phaseRound: data.phaseRound,
     });

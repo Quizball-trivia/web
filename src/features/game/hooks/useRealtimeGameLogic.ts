@@ -26,6 +26,7 @@ export function useRealtimeGameLogic() {
   }, [matchPaused]);
 
   const currentQuestion = match?.currentQuestion ?? null;
+  const isLastAttackQuestion = currentQuestion?.phaseKind === 'last_attack';
   const currentQuestionIndex = currentQuestion?.qIndex;
   const questionPhase = match?.currentQuestionPhase ?? 'reveal';
   const countdownEndsAt = match?.countdownEndsAt ?? null;
@@ -207,6 +208,7 @@ export function useRealtimeGameLogic() {
   return {
     state: {
       currentQuestion,
+      isLastAttackQuestion,
       timeRemaining,
       selectedAnswer,
       selectedAnswerQIndex,

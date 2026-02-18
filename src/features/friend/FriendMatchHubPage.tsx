@@ -113,18 +113,19 @@ export function FriendMatchHubPage() {
       toast.error("Join is taking too long. Please refresh and try again.");
     }, 8000);
     
-    // Leave waiting lobby first to avoid leave/join races on the same user session.
-    import("@/lib/realtime/socket-client").then(({ getSocket }) => {
-        connectSocket();
-        const socket = getSocket();
-        if (lobby?.lobbyId) {
-          socket.emit("lobby:leave");
-        }
-        window.setTimeout(() => {
-          socket.emit("lobby:join_by_code", { inviteCode: targetCode });
-          toast.info(`Joining ${targetCode}...`);
-        }, lobby?.lobbyId ? 140 : 0);
-    });
+    // Leave → join: ideally we'd wait for a server ack on lobby:leave, but the
+    // backend event signature is fire-and-forget (`() => void`).  The 140 ms
+    // delay is a pragmatic workaround; the TRANSITION_IN_PROGRESS retry below
+    // covers the race if the leave hasn't completed in time.
+    connectSocket();
+    const socket = getSocket();
+    if (lobby?.lobbyId) {
+      socket.emit("lobby:leave");
+    }
+    setTimeout(() => {
+      socket.emit("lobby:join_by_code", { inviteCode: targetCode });
+      toast.info(`Joining ${targetCode}...`);
+    }, lobby?.lobbyId ? 140 : 0);
   };
 
   // Clear joining state if error occurs

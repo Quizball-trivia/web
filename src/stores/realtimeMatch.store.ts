@@ -31,7 +31,7 @@ export interface DraftStatus {
   categories: DraftCategory[];
   bans: Record<string, string>;
   turnUserId: string | null;
-  allowedCategoryIds: [string, string] | null;
+  halfOneCategoryId: string | null;
 }
 
 export interface MatchQuestionState {
@@ -104,7 +104,7 @@ interface RealtimeState {
   setLobby: (lobby: LobbyState) => void;
   setDraftStart: (draft: DraftState) => void;
   setDraftBan: (actorId: string, categoryId: string) => void;
-  setDraftComplete: (allowed: [string, string]) => void;
+  setDraftComplete: (halfOneCategoryId: string) => void;
   setMatchStart: (payload: MatchStartPayload) => void;
   setMatchCountdown: (payload: MatchCountdownPayload) => void;
   setMatchQuestion: (payload: ResolvedMatchQuestionPayload) => void;
@@ -186,7 +186,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
         categories: draft.categories,
         bans: {},
         turnUserId: draft.turnUserId,
-        allowedCategoryIds: null,
+        halfOneCategoryId: null,
       },
     });
   },
@@ -204,14 +204,14 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
         },
       };
     }),
-  setDraftComplete: (allowed) => {
-    logger.info('Realtime store set draft complete', { allowedCategoryIds: allowed });
+  setDraftComplete: (halfOneCategoryId) => {
+    logger.info('Realtime store set draft complete', { halfOneCategoryId });
     set((state) => ({
       ...state,
       draft: state.draft
         ? {
             ...state.draft,
-            allowedCategoryIds: allowed,
+            halfOneCategoryId,
           }
         : null,
     }));
@@ -275,7 +275,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
       matchId: payload.matchId,
       phase: payload.phase,
       half: payload.half,
-      sharedPossession: payload.sharedPossession,
+      possessionDiff: payload.possessionDiff,
       phaseKind: payload.phaseKind,
       phaseRound: payload.phaseRound,
       stateVersion: payload.stateVersion,

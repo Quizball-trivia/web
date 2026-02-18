@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { Trophy, Check, Loader2, Timer } from 'lucide-react';
 import { motion } from 'motion/react';
 import { GameMode } from '@/types/game';
+import { InlineAvatar as AvatarDisplay } from '@/components/InlineAvatar';
 
 interface RoundIntroScreenProps {
   roundNumber: number;
@@ -182,13 +183,13 @@ export function RoundIntroScreen({
             </div>
             <div className="flex items-center justify-center gap-6">
               <div className="text-center">
-                <div className="text-3xl mb-1">{playerAvatar}</div>
+                <AvatarDisplay avatar={playerAvatar} alt={playerUsername} size="lg" />
                 <div className="text-sm mb-1">{playerUsername}</div>
                 <div className="text-2xl">{playerRoundsWon}</div>
               </div>
               <div className="text-2xl text-muted-foreground">-</div>
               <div className="text-center">
-                <div className="text-3xl mb-1">{opponentAvatar}</div>
+                <AvatarDisplay avatar={opponentAvatar} alt={opponentUsername} size="lg" />
                 <div className="text-sm mb-1">{opponentUsername}</div>
                 <div className="text-2xl">{opponentRoundsWon}</div>
               </div>
@@ -202,7 +203,7 @@ export function RoundIntroScreen({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">{playerAvatar}</span>
+                  <AvatarDisplay avatar={playerAvatar} alt={playerUsername} size="sm" />
                   <span className="text-sm">{playerUsername}</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -219,7 +220,7 @@ export function RoundIntroScreen({
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">{opponentAvatar}</span>
+                  <AvatarDisplay avatar={opponentAvatar} alt={opponentUsername} size="sm" />
                   <span className="text-sm">{opponentUsername}</span>
                 </div>
                 <div className="flex items-center gap-2">

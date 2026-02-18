@@ -12,37 +12,8 @@ import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import { StatCard, WinIllustration, DrawIllustration, LossIllustration } from './components/ResultsShared';
 import type { RankedMatchOutcomePayload } from '@/lib/realtime/socket.types';
 
-type TierName =
-  | 'Academy'
-  | 'Youth Prospect'
-  | 'Reserve'
-  | 'Bench'
-  | 'Rotation'
-  | 'Starting11'
-  | 'Key Player'
-  | 'Captain'
-  | 'World-Class'
-  | 'Legend'
-  | 'GOAT';
+import { getTierVisual } from '@/utils/tierVisuals';
 
-const tierConfig: Record<TierName, { emoji: string; color: string; glow: string }> = {
-  'Academy':        { emoji: '🏫', color: 'text-slate-300',   glow: 'shadow-slate-400/40' },
-  'Youth Prospect': { emoji: '🌱', color: 'text-lime-300',    glow: 'shadow-lime-400/40' },
-  'Reserve':        { emoji: '📋', color: 'text-zinc-300',    glow: 'shadow-zinc-400/40' },
-  'Bench':          { emoji: '🪑', color: 'text-amber-300',   glow: 'shadow-amber-400/40' },
-  'Rotation':       { emoji: '🔄', color: 'text-blue-300',    glow: 'shadow-blue-400/40' },
-  'Starting11':     { emoji: '⚽', color: 'text-green-300',   glow: 'shadow-green-400/40' },
-  'Key Player':     { emoji: '⭐', color: 'text-yellow-300',  glow: 'shadow-yellow-400/40' },
-  'Captain':        { emoji: '©️',  color: 'text-orange-300',  glow: 'shadow-orange-400/40' },
-  'World-Class':    { emoji: '💎', color: 'text-cyan-300',    glow: 'shadow-cyan-400/40' },
-  'Legend':         { emoji: '👑', color: 'text-purple-300',  glow: 'shadow-purple-400/40' },
-  'GOAT':           { emoji: '🐐', color: 'text-fuchsia-300', glow: 'shadow-fuchsia-400/40' },
-};
-
-function getTierVisual(tier: string) {
-  const isKnownTier = (value: string): value is TierName => value in tierConfig;
-  return isKnownTier(tier) ? tierConfig[tier] : tierConfig['Academy'];
-}
 
 /** Animated number that ticks from `from` → `to` after a delay, with a pop + glow */
 function AnimatedCounter({
@@ -167,7 +138,7 @@ export function RealtimeResultsScreen({
   const preIsPlacement = preMatchRankedProfile ? preMatchRankedProfile.placementStatus !== 'placed' : false;
   const isPlacementMatch = myOutcome ? myOutcome.isPlacement === true : (matchType === 'ranked' && preIsPlacement);
   const placementPlayed = myOutcome?.placementPlayed ?? (preIsPlacement ? Math.min(preMatchRankedProfile!.placementPlayed + 1, preMatchRankedProfile!.placementRequired) : 0);
-  const placementRequired = myOutcome?.placementRequired ?? preMatchRankedProfile?.placementRequired ?? 3;
+  const placementRequired = Math.max(1, myOutcome?.placementRequired ?? preMatchRankedProfile?.placementRequired ?? 3);
   const placementMatchesLeft = Math.max(0, placementRequired - placementPlayed);
   // justPlaced: optimistic if this was the last placement match
   const optimisticJustPlaced = preIsPlacement && placementPlayed >= placementRequired;

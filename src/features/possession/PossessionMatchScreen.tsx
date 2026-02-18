@@ -186,6 +186,7 @@ export function PossessionMatchScreen() {
               phase={g.phase}
               isPenaltyPhase={g.isPenaltyPhase}
               isShotPhase={g.isShotPhase}
+              isLastAttackPhase={false}
               question={activeQuestion}
               showOptions={activeShowOptions}
               selectedAnswer={activeSelectedAnswer}
@@ -212,7 +213,6 @@ export function PossessionMatchScreen() {
           playerAvatarUrl={g.playerAvatar}
           opponentAvatarUrl={g.opponentAvatar}
           playerPosition={g.player.position}
-          playerMomentum={g.player.momentum}
           myReady={false}
           opponentReady={true}
           onSelectTactic={g.handleTacticSelected}

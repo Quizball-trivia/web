@@ -533,7 +533,6 @@ function generateFakePlayers(): FakePlayer[] {
 
 const SELF_LON = 0;
 const SELF_LAT = 51.5;
-const [SELF_X, SELF_Y] = projectPoint(SELF_LON, SELF_LAT);
 
 // ── Pan constants ──
 // The map starts showing Americas and pans right across Europe, Asia
@@ -783,6 +782,12 @@ export function MatchmakingMapScreen({
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
+            {/* Avatar clip paths for all player pins */}
+            {mapPlayers.map((p) => (
+              <clipPath key={`clip-${p.id}`} id={`pin-avatar-${p.id}`}>
+                <circle cx="0" cy="-7.5" r="5.1" />
+              </clipPath>
+            ))}
           </defs>
 
           {/* Self marker */}
@@ -841,11 +846,6 @@ export function MatchmakingMapScreen({
                 </path>
 
                 {/* Avatar circle with profile-style image */}
-                <defs>
-                  <clipPath id={`pin-avatar-${p.id}`}>
-                    <circle cx="0" cy="-7.5" r="5.1" />
-                  </clipPath>
-                </defs>
                 <circle cx="0" cy="-7.5" r="5.5" fill="#0D1117" stroke={p.color} strokeWidth="0.8" />
                 <image
                   href={p.avatarUrl}

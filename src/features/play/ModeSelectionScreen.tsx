@@ -11,37 +11,7 @@ import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import { CHALLENGES } from '../tournaments/GameHubScreen';
 import { logger } from '@/utils/logger';
 
-type TierName =
-  | 'Academy'
-  | 'Youth Prospect'
-  | 'Reserve'
-  | 'Bench'
-  | 'Rotation'
-  | 'Starting11'
-  | 'Key Player'
-  | 'Captain'
-  | 'World-Class'
-  | 'Legend'
-  | 'GOAT';
-
-const tierConfig: Record<TierName, { emoji: string; color: string }> = {
-  'Academy':        { emoji: '🏫', color: 'text-slate-300' },
-  'Youth Prospect': { emoji: '🌱', color: 'text-lime-300' },
-  'Reserve':        { emoji: '📋', color: 'text-zinc-300' },
-  'Bench':          { emoji: '🪑', color: 'text-amber-300' },
-  'Rotation':       { emoji: '🔄', color: 'text-blue-300' },
-  'Starting11':     { emoji: '⚽', color: 'text-green-300' },
-  'Key Player':     { emoji: '⭐', color: 'text-yellow-300' },
-  'Captain':        { emoji: '©️',  color: 'text-orange-300' },
-  'World-Class':    { emoji: '💎', color: 'text-cyan-300' },
-  'Legend':         { emoji: '👑', color: 'text-purple-300' },
-  'GOAT':           { emoji: '🐐', color: 'text-fuchsia-300' },
-};
-
-function getTierVisual(tier: string) {
-  const isKnownTier = (value: string): value is TierName => value in tierConfig;
-  return isKnownTier(tier) ? tierConfig[tier] : tierConfig['Academy'];
-}
+import { getTierVisual } from '@/utils/tierVisuals';
 
 // ── Soccer SVG Icons ──
 function SoccerBall({ className }: { className?: string }) {
@@ -113,7 +83,7 @@ export function ModeSelectionScreen({
   const [selectedMode, setSelectedMode] = useState<'ranked' | 'friendly' | 'solo' | null>(null);
   const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
   const placementPlayed = rankedProfile?.placementPlayed ?? 0;
-  const placementRequired = rankedProfile?.placementRequired ?? 3;
+  const placementRequired = Math.max(1, rankedProfile?.placementRequired ?? 3);
   const placementMatchesLeft = Math.max(0, placementRequired - placementPlayed);
   const displayRp = isPlacementInProgress ? 0 : (rankedProfile?.rp ?? 0);
   const tierVisual = rankedProfile ? getTierVisual(rankedProfile.tier) : getTierVisual('Academy');

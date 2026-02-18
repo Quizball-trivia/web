@@ -305,7 +305,7 @@ export function GameStageRouter() {
           opponentScore={opponentDisplayScore}
           playerCorrect={myStats?.correctAnswers ?? clientTotalCorrect}
           opponentCorrect={opponentStats?.correctAnswers ?? 0}
-          totalQuestions={totalQuestionsPlayed || clientTotalQuestions}
+          totalQuestions={totalQuestionsPlayed ?? clientTotalQuestions}
           selfUserId={selfUserId}
           opponentId={opponent.id}
           rankedOutcome={final?.rankedOutcome ?? null}
@@ -331,9 +331,9 @@ export function GameStageRouter() {
       <ShowdownScreen
         matchType={showdownType}
         playerUsername={player.username}
-        playerAvatar={player.avatar}
+        playerAvatar={playerGameAvatar}
         opponentUsername={opponent.username}
-        opponentAvatar={opponent.avatar}
+        opponentAvatar={opponentGameAvatar}
         onComplete={() => setStage("roundIntro")}
       />
     );
@@ -347,8 +347,8 @@ export function GameStageRouter() {
         mode={legacyMode}
         playerUsername={player.username}
         opponentUsername={opponent.username}
-        playerAvatar={player.avatar}
-        opponentAvatar={opponent.avatar}
+        playerAvatar={playerGameAvatar}
+        opponentAvatar={opponentGameAvatar}
         playerRoundsWon={0}
         opponentRoundsWon={0}
         onReady={() => setStage("playing")}
@@ -393,8 +393,8 @@ export function GameStageRouter() {
         opponentScore={lastGameStats.opponentScore}
         playerUsername={player.username}
         opponentUsername={opponent.username}
-        playerAvatar={player.avatar}
-        opponentAvatar={opponent.avatar}
+        playerAvatar={playerGameAvatar}
+        opponentAvatar={opponentGameAvatar}
         playerRoundsWon={playerWonRound ? 1 : 0}
         opponentRoundsWon={!playerWonRound ? 1 : 0}
         isRanked={matchType === "ranked"}

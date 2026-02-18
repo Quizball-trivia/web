@@ -11,7 +11,7 @@ export function DevOverlay() {
 
   if (process.env.NODE_ENV !== 'development') return null;
 
-  const skipTo = (target: 'halftime' | 'shot' | 'penalties' | 'second_half') => {
+  const skipTo = (target: 'halftime' | 'last_attack' | 'shot' | 'penalties' | 'second_half') => {
     if (!match?.matchId) return;
     getSocket().emit('dev:skip_to', { matchId: match.matchId, target });
   };
@@ -41,9 +41,8 @@ export function DevOverlay() {
       <div className="p-3 space-y-1.5 text-[11px] border-b border-[#2a4a55]">
         <Row label="Phase" value={ps?.phase ?? '—'} color={phaseColor(ps?.phase)} />
         <Row label="Half" value={ps?.half ?? '—'} />
-        <Row label="Poss %" value={ps?.sharedPossession ?? '—'} />
+        <Row label="Poss Diff" value={ps?.possessionDiff ?? '—'} />
         <Row label="Q in Half" value={`${ps?.normalQuestionsAnsweredInHalf ?? '?'}/6`} />
-        <Row label="Momentum" value={ps?.seatMomentum ? `S1:${ps.seatMomentum.seat1} S2:${ps.seatMomentum.seat2}` : '—'} />
         <Row label="Goals" value={ps?.goals ? `${ps.goals.seat1} - ${ps.goals.seat2}` : '—'} />
         <Row label="Pen Goals" value={ps?.penaltyGoals ? `${ps.penaltyGoals.seat1} - ${ps.penaltyGoals.seat2}` : '—'} />
         <Row label="PhaseKind" value={ps?.phaseKind ?? '—'} />
@@ -57,7 +56,7 @@ export function DevOverlay() {
       <div className="p-3 grid grid-cols-2 gap-2">
         <SkipBtn label="Halftime" onClick={() => skipTo('halftime')} color="bg-[#1CB0F6]" />
         <SkipBtn label="2nd Half" onClick={() => skipTo('second_half')} color="bg-[#58CC02]" />
-        <SkipBtn label="Shot" onClick={() => skipTo('shot')} color="bg-[#FF9600]" />
+        <SkipBtn label="Last Attack" onClick={() => skipTo('last_attack')} color="bg-[#FF9600]" />
         <SkipBtn label="Penalties" onClick={() => skipTo('penalties')} color="bg-[#FF4B4B]" />
       </div>
     </div>
@@ -87,6 +86,7 @@ function SkipBtn({ label, onClick, color }: { label: string; onClick: () => void
 function phaseColor(phase?: string): string {
   switch (phase) {
     case 'NORMAL_PLAY': return 'text-[#58CC02]';
+    case 'LAST_ATTACK': return 'text-[#FF9600]';
     case 'SHOT_ON_GOAL': return 'text-[#FF9600]';
     case 'HALFTIME': return 'text-[#1CB0F6]';
     case 'PENALTY_SHOOTOUT': return 'text-[#FF4B4B]';

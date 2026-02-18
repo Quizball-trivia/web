@@ -1,8 +1,20 @@
 export type MatchMode = 'friendly' | 'ranked';
 export type LobbyGameMode = 'friendly' | 'ranked_sim';
 export type LobbyStatus = 'waiting' | 'active' | 'closed';
-export type MatchPhase = 'NORMAL_PLAY' | 'SHOT_ON_GOAL' | 'HALFTIME' | 'PENALTY_SHOOTOUT' | 'COMPLETED';
-export type MatchPhaseKind = 'normal' | 'shot' | 'penalty';
+export type MatchPhase =
+  | 'NORMAL_PLAY'
+  | 'LAST_ATTACK'
+  /** @deprecated Kept for compatibility with historical data only. */
+  | 'SHOT_ON_GOAL'
+  | 'HALFTIME'
+  | 'PENALTY_SHOOTOUT'
+  | 'COMPLETED';
+export type MatchPhaseKind =
+  | 'normal'
+  | 'last_attack'
+  /** @deprecated Kept for compatibility with historical data only. */
+  | 'shot'
+  | 'penalty';
 export type TacticalCard = 'press-high' | 'play-safe' | 'all-in';
 
 export type GameStage =
@@ -182,9 +194,6 @@ export interface MatchRoundResultPlayer {
 
 export interface MatchRoundResultDeltas {
   possessionDelta: number;
-  momentumSeat1Delta: number;
-  momentumSeat2Delta: number;
-  shotOutcome: 'goal' | 'saved' | 'miss' | null;
   penaltyOutcome: 'goal' | 'saved' | null;
   goalScoredBySeat: 1 | 2 | null;
 }
@@ -209,7 +218,7 @@ export interface MatchFinalResultPlayer {
   penaltyGoals?: number;
 }
 
-export interface RankedUserOutcome {
+export interface RankedUserOutcomePayload {
   userId: string;
   oldRp: number;
   newRp: number;
@@ -224,7 +233,7 @@ export interface RankedUserOutcome {
 
 export interface RankedMatchOutcomePayload {
   isPlacement: boolean;
-  byUserId: Record<string, RankedUserOutcome>;
+  byUserId: Record<string, RankedUserOutcomePayload>;
 }
 
 export interface MatchFinalResultsPayload {
@@ -242,12 +251,8 @@ export interface MatchStatePayload {
   matchId: string;
   phase: MatchPhase;
   half: 1 | 2;
-  sharedPossession: number;
+  possessionDiff: number;
   normalQuestionsAnsweredInHalf: number;
-  seatMomentum: {
-    seat1: number;
-    seat2: number;
-  };
   attackerSeat: 1 | 2 | null;
   kickOffSeat: 1 | 2;
   goals: {
@@ -261,9 +266,13 @@ export interface MatchStatePayload {
   phaseKind: MatchPhaseKind;
   phaseRound: number;
   shooterSeat: 1 | 2 | null;
-  halftimeReady: {
-    seat1: boolean;
-    seat2: boolean;
+  halftime: {
+    deadlineAt: string | null;
+    categoryOptions: DraftCategory[];
+    bans: {
+      seat1: string | null;
+      seat2: string | null;
+    };
   };
   penaltySuddenDeath?: boolean;
   stateVersion?: number;
@@ -412,7 +421,7 @@ export interface ClientToServerEvents {
   'ranked:queue_leave': () => void;
   'draft:ban': (data: { categoryId: string }) => void;
   'match:answer': (data: { matchId: string; qIndex: number; selectedIndex: number | null; timeMs: number }) => void;
-  'match:tactic_select': (data: { matchId: string; tactic: TacticalCard }) => void;
+  'match:halftime_ban': (data: { matchId: string; categoryId: string }) => void;
   'match:leave': (data?: { matchId?: string }) => void;
   'match:rejoin': (data?: { matchId?: string }) => void;
   'match:forfeit': (data?: { matchId?: string }) => void;
@@ -422,7 +431,7 @@ export interface ClientToServerEvents {
   'warmup:restart': () => void;
   'warmup:get_scores': () => void;
   'dev:quick_match': () => void;
-  'dev:skip_to': (data: { matchId: string; target: 'halftime' | 'shot' | 'penalties' | 'second_half' }) => void;
+  'dev:skip_to': (data: { matchId: string; target: 'halftime' | 'last_attack' | 'shot' | 'penalties' | 'second_half' }) => void;
 }
 
 export interface ServerToClientEvents {
@@ -433,7 +442,7 @@ export interface ServerToClientEvents {
   'lobby:state': (data: LobbyState) => void;
   'draft:start': (data: DraftState) => void;
   'draft:banned': (data: { actorId: string; categoryId: string }) => void;
-  'draft:complete': (data: { allowedCategoryIds: [string, string] }) => void;
+  'draft:complete': (data: { halfOneCategoryId: string }) => void;
   'match:start': (data: MatchStartPayload) => void;
   'match:countdown': (data: MatchCountdownPayload) => void;
   'match:state': (data: MatchStatePayload) => void;

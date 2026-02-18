@@ -42,12 +42,14 @@ function DevMatchContent() {
         clearTimeout(startTimerRef.current);
         startTimerRef.current = null;
       }
+      setStarting(false);
     }
     return () => {
       if (startTimerRef.current) {
         clearTimeout(startTimerRef.current);
         startTimerRef.current = null;
       }
+      setStarting(false);
     };
   }, [match]);
 

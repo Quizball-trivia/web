@@ -25,37 +25,8 @@ import type { MatchStatsSummary } from '@/lib/domain';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import { useAvatarUrl } from './hooks/useAvatarUrl';
 
-type TierName =
-  | 'Academy'
-  | 'Youth Prospect'
-  | 'Reserve'
-  | 'Bench'
-  | 'Rotation'
-  | 'Starting11'
-  | 'Key Player'
-  | 'Captain'
-  | 'World-Class'
-  | 'Legend'
-  | 'GOAT';
+import { getTierVisual } from '@/utils/tierVisuals';
 
-const tierConfig: Record<TierName, { emoji: string; color: string; gradient: string }> = {
-  'Academy':        { emoji: '🏫', color: 'text-slate-300',   gradient: 'from-slate-500 to-slate-400' },
-  'Youth Prospect': { emoji: '🌱', color: 'text-lime-300',    gradient: 'from-lime-600 to-lime-400' },
-  'Reserve':        { emoji: '📋', color: 'text-zinc-300',    gradient: 'from-zinc-500 to-zinc-400' },
-  'Bench':          { emoji: '🪑', color: 'text-amber-300',   gradient: 'from-amber-600 to-amber-400' },
-  'Rotation':       { emoji: '🔄', color: 'text-blue-300',    gradient: 'from-blue-500 to-blue-400' },
-  'Starting11':     { emoji: '⚽', color: 'text-green-300',   gradient: 'from-green-500 to-green-400' },
-  'Key Player':     { emoji: '⭐', color: 'text-yellow-300',  gradient: 'from-yellow-500 to-yellow-400' },
-  'Captain':        { emoji: '©️',  color: 'text-orange-300',  gradient: 'from-orange-500 to-orange-400' },
-  'World-Class':    { emoji: '💎', color: 'text-cyan-300',    gradient: 'from-cyan-500 to-cyan-400' },
-  'Legend':         { emoji: '👑', color: 'text-purple-300',  gradient: 'from-purple-500 to-purple-400' },
-  'GOAT':           { emoji: '🐐', color: 'text-fuchsia-300', gradient: 'from-fuchsia-500 to-fuchsia-400' },
-};
-
-function getTierVisual(tier: string) {
-  const isKnownTier = (value: string): value is TierName => value in tierConfig;
-  return isKnownTier(tier) ? tierConfig[tier] : tierConfig['Academy'];
-}
 import ClubSelect from '@/features/onboarding/ClubSelect';
 
 export interface ProfileRecentMatch {
@@ -99,7 +70,7 @@ export function ProfileWeb({
 }: ProfileWebProps) {
   const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
   const placementPlayed = rankedProfile?.placementPlayed ?? 0;
-  const placementRequired = rankedProfile?.placementRequired ?? 3;
+  const placementRequired = Math.max(1, rankedProfile?.placementRequired ?? 3);
   const displayRp = isPlacementInProgress ? 0 : (rankedProfile?.rp ?? 0);
   const tierVisual = rankedProfile ? getTierVisual(rankedProfile.tier) : getTierVisual('Academy');
   const rankedDataReady = !rankedProfileLoading && rankedProfile !== null;
@@ -246,7 +217,9 @@ export function ProfileWeb({
             {/* Level + Tier */}
             <div className="flex items-center justify-center lg:justify-start gap-2 flex-wrap">
               <span className="text-sm font-black text-primary uppercase tracking-wide">Level {player.level}</span>
-              <span className="text-muted-foreground">·</span>
+              {(rankedProfileLoading || showRankTier || (rankedDataReady && isPlacementInProgress)) && (
+                <span className="text-muted-foreground">·</span>
+              )}
               {rankedProfileLoading && (
                 <span className="text-sm font-black uppercase tracking-wide text-muted-foreground">
                   Loading...

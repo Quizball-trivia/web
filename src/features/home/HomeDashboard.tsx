@@ -51,7 +51,7 @@ export function HomeDashboard({
            <section>
               <HomePlayHero 
                  playerStats={playerStats} 
-                 rankedGamesPlayed={matchStatsSummary?.ranked.gamesPlayed ?? null}
+                 rankedGamesPlayed={matchStatsSummary?.ranked?.gamesPlayed ?? null}
                  onStartRanked={() => setShowRankedModal(true)} 
                  onOpenFriend={() => setShowFriendModal(true)}
               />

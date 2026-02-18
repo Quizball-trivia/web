@@ -13,6 +13,7 @@ interface PossessionQuestionPanelProps {
   phase: Phase;
   isPenaltyPhase: boolean;
   isShotPhase: boolean;
+  isLastAttackPhase: boolean;
 
   // Question data (resolved by caller for the active mode)
   question: GameQuestion | null;
@@ -38,6 +39,7 @@ export function PossessionQuestionPanel({
   phase,
   isPenaltyPhase,
   isShotPhase,
+  isLastAttackPhase,
   question,
   showOptions,
   selectedAnswer,
@@ -55,7 +57,13 @@ export function PossessionQuestionPanel({
   if (phase === 'goal') return null;
   if (!question) return null;
 
-  const categoryLabel = isPenaltyPhase ? 'Penalty' : isShotPhase ? 'Shot on Goal' : 'Football';
+  const categoryLabel = isPenaltyPhase
+    ? 'Penalty'
+    : isShotPhase
+      ? 'Shot on Goal'
+      : isLastAttackPhase
+        ? 'Last Attack'
+        : 'Football';
 
   const isReveal = isPenaltyPhase
     ? phase === 'penalty-reveal' || phase === 'penalty-result'
