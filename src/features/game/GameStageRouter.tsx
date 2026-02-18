@@ -292,6 +292,7 @@ export function GameStageRouter() {
         ?? (mySeat === 2 ? poss?.goals.seat1 : poss?.goals.seat2)
         ?? 0;
       const totalQuestionsPlayed = realtimeMatch?.currentQuestion?.total
+        ?? clientTotalQuestions
         ?? POSSESSION_TOTAL_QUESTIONS_FALLBACK;
 
       return (
@@ -305,7 +306,7 @@ export function GameStageRouter() {
           opponentScore={opponentDisplayScore}
           playerCorrect={myStats?.correctAnswers ?? clientTotalCorrect}
           opponentCorrect={opponentStats?.correctAnswers ?? 0}
-          totalQuestions={totalQuestionsPlayed ?? clientTotalQuestions}
+          totalQuestions={totalQuestionsPlayed}
           selfUserId={selfUserId}
           opponentId={opponent.id}
           rankedOutcome={final?.rankedOutcome ?? null}

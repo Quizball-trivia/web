@@ -17,6 +17,9 @@ import { toast } from "sonner";
 import { logger } from "@/utils/logger";
 import { connectSocket, getSocket } from "@/lib/realtime/socket-client";
 
+/** Delay (ms) between lobby:leave and lobby:join_by_code to let the server process the leave. */
+const LOBBY_LEAVE_JOIN_DELAY_MS = 140;
+
 export function FriendMatchHubPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -125,7 +128,7 @@ export function FriendMatchHubPage() {
     setTimeout(() => {
       socket.emit("lobby:join_by_code", { inviteCode: targetCode });
       toast.info(`Joining ${targetCode}...`);
-    }, lobby?.lobbyId ? 140 : 0);
+    }, lobby?.lobbyId ? LOBBY_LEAVE_JOIN_DELAY_MS : 0);
   };
 
   // Clear joining state if error occurs

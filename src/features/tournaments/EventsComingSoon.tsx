@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import { Trophy, Sparkles, Zap, Star } from 'lucide-react';
 
 const floatingIcons = [
@@ -13,6 +13,8 @@ const floatingIcons = [
 ];
 
 export function EventsComingSoon() {
+  const shouldReduce = useReducedMotion();
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 pb-24 font-fun relative overflow-hidden">
       {/* Ambient glow */}
@@ -26,6 +28,7 @@ export function EventsComingSoon() {
         {/* Floating icons around the trophy */}
         {floatingIcons.map(({ Icon, x, y, delay, color, size, rotate }, i) => (
           <motion.div
+            aria-hidden
             key={i}
             className="absolute"
             style={{ left: '50%', top: '50%' }}
@@ -47,7 +50,7 @@ export function EventsComingSoon() {
               animate={{ y: [0, -6, 0] }}
               transition={{
                 duration: 2.5 + delay,
-                repeat: Infinity,
+                repeat: shouldReduce ? 0 : Infinity,
                 ease: 'easeInOut',
               }}
             >
@@ -74,9 +77,10 @@ export function EventsComingSoon() {
 
           {/* Pulse ring */}
           <motion.div
+            aria-hidden
             className="absolute inset-0 rounded-3xl border-2 border-[#FFD700]/40"
             animate={{ scale: [1, 1.3, 1.3], opacity: [0.6, 0, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeOut' }}
+            transition={{ duration: 2, repeat: shouldReduce ? 0 : Infinity, ease: 'easeOut' }}
           />
         </motion.div>
 
@@ -88,7 +92,7 @@ export function EventsComingSoon() {
           transition={{ delay: 0.4, duration: 0.6, ease: 'easeOut' }}
         >
           {/* Letter-by-letter stagger for "COMING SOON" */}
-          <div className="flex gap-1">
+          <h1 aria-label="Coming Soon" className="flex gap-1">
             {'COMING SOON'.split('').map((char, i) => (
               <motion.span
                 key={i}
@@ -105,7 +109,7 @@ export function EventsComingSoon() {
                 {char === ' ' ? '\u00A0' : char}
               </motion.span>
             ))}
-          </div>
+          </h1>
 
           <motion.p
             className="text-[#56707A] text-base sm:text-lg font-semibold text-center max-w-xs leading-relaxed"
@@ -126,6 +130,7 @@ export function EventsComingSoon() {
         >
           {[0, 1, 2].map((i) => (
             <motion.div
+              aria-hidden
               key={i}
               className="w-3 h-3 rounded-full bg-[#1CB0F6]"
               animate={{
@@ -134,7 +139,7 @@ export function EventsComingSoon() {
               }}
               transition={{
                 duration: 1.4,
-                repeat: Infinity,
+                repeat: shouldReduce ? 0 : Infinity,
                 delay: i * 0.3,
                 ease: 'easeInOut',
               }}

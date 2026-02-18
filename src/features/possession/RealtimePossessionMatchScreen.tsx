@@ -72,6 +72,8 @@ export function RealtimePossessionMatchScreen({
 }: RealtimePossessionMatchScreenProps) {
   const { state, actions } = useRealtimeGameLogic();
   const { playSfx, toggleMute, isMuted } = useGameSounds();
+  const devPossessionAnimation = useRealtimeMatchStore((store) => store.devPossessionAnimation);
+  const clearDevPossessionAnimation = useRealtimeMatchStore((store) => store.clearDevPossessionAnimation);
   const match = useRealtimeMatchStore((store) => store.match);
   const answerAck = match?.answerAck ?? null;
   const opponentAnsweredCorrectly = match?.opponentAnsweredCorrectly ?? null;
@@ -192,6 +194,11 @@ export function RealtimePossessionMatchScreen({
   }, [state.roundResult, playSfx]);
 
   useEffect(() => {
+    if (!devPossessionAnimation) return;
+    playSfx('kick');
+  }, [devPossessionAnimation, playSfx]);
+
+  useEffect(() => {
     if (!match?.matchId || !possessionState) return;
     logger.info('Possession debug state transition', {
       matchId: match.matchId,
@@ -237,7 +244,24 @@ export function RealtimePossessionMatchScreen({
     return null;
   }, [phaseKind, possessionState?.attackerSeat, state.roundResult]);
 
-  const isAttackAnimationPhase = roundAttackAnimation !== null;
+  const devAttackAnimation = useMemo((): { result: ShotResult; attackerSeat: 1 | 2 | null } | null => {
+    if (!devPossessionAnimation) return null;
+    return {
+      result: devPossessionAnimation.result,
+      attackerSeat: devPossessionAnimation.attackerSeat,
+    };
+  }, [devPossessionAnimation]);
+
+  const activeAttackAnimation = roundAttackAnimation ?? (state.roundResult ? null : devAttackAnimation);
+
+  useEffect(() => {
+    if (!devPossessionAnimation) return;
+    const holdMs = devPossessionAnimation.result === 'goal' ? 2000 : 1500;
+    const timer = setTimeout(() => clearDevPossessionAnimation(), holdMs);
+    return () => clearTimeout(timer);
+  }, [clearDevPossessionAnimation, devPossessionAnimation]);
+
+  const isAttackAnimationPhase = activeAttackAnimation !== null;
   const isShotVisualPhase = isShotQuestion || isAttackAnimationPhase;
 
   const isShooter = mySeat !== null && mySeat !== undefined && shooterSeat === mySeat;
@@ -368,11 +392,9 @@ export function RealtimePossessionMatchScreen({
   }, [possessionPct]);
 
   const myPossessionPct = Math.max(0, Math.min(100, serverMyPossessionPct + optimisticOffset));
-  const myMomentum = 0;
-  const oppMomentum = 0;
 
   const attackerSeat = (isAttackAnimationPhase
-    ? roundAttackAnimation?.attackerSeat
+    ? activeAttackAnimation?.attackerSeat
     : (localQuestion?.attackerSeat ?? possessionState?.attackerSeat)) ?? null;
   const attackerIsMe = attackerSeat !== null && attackerSeat === mySeat;
   const shooterIsMe = shooterSeat !== null && shooterSeat === mySeat;
@@ -381,14 +403,24 @@ export function RealtimePossessionMatchScreen({
   const ballOnPlayer = myPossessionPct > 50 || (myPossessionPct === 50 && possessionState?.kickOffSeat === mySeat);
 
   useEffect(() => {
-    if (localQuestionIndex === null || !possessionState) return;
+    if (!possessionState) return;
     if (!isShotVisualPhase) return;
     const isAttackerMe = attackerSeat === mySeat;
     // Always use non-mirrored calculation (blue bottom, red top)
     const basePlayerX = 30 + (myPossessionPct / 100) * 440;
     const baseOpponentX = basePlayerX - 30;
     setShotBallOriginX(isAttackerMe ? basePlayerX + 14 : baseOpponentX - 14);
-  }, [attackerSeat, isShotVisualPhase, localQuestionIndex, myPossessionPct, mySeat, possessionState]);
+  }, [attackerSeat, isShotVisualPhase, myPossessionPct, mySeat, possessionState]);
+
+  const shotAnimationVariant = useMemo(() => {
+    if (state.roundResult) {
+      return state.roundResult.qIndex % 3;
+    }
+    if (devPossessionAnimation) {
+      return devPossessionAnimation.id % 3;
+    }
+    return (localQuestion?.qIndex ?? 0) % 3;
+  }, [devPossessionAnimation, localQuestion?.qIndex, state.roundResult]);
 
   const targetGoal = useMemo((): 'left' | 'right' | undefined => {
     if (!isShotVisualPhase && !isPenaltyQuestion) return undefined;
@@ -471,7 +503,7 @@ export function RealtimePossessionMatchScreen({
   }, [answerAck?.isCorrect, attackerIsMe, isShotQuestion, myRound, oppRound, opponentAnsweredCorrectly, phaseKind, state.roundResult]);
 
   const shotResult: ShotResult = isAttackAnimationPhase
-    ? roundAttackAnimation.result
+    ? (activeAttackAnimation?.result ?? 'pending')
     : optimisticShotResult;
 
   // Use the round result's shooterSeat (stable) instead of live shooterSeat which may already point to next penalty
@@ -662,8 +694,6 @@ export function RealtimePossessionMatchScreen({
     opponentAvatarUrl: opponentAvatar,
     playerName: playerUsername,
     opponentName: opponentUsername,
-    myMomentum: (isPenaltyQuestion || isShotVisualPhase) ? 0 : myMomentum,
-    oppMomentum: (isPenaltyQuestion || isShotVisualPhase) ? 0 : oppMomentum,
     penaltyMode: isPenaltyQuestion ? {
       isPlayerShooter: delayedIsShooter,
       result: penaltyResult,
@@ -673,6 +703,7 @@ export function RealtimePossessionMatchScreen({
       result: shotResult,
       ballOriginX: shotBallOriginX,
       isPlayerAttacker: attackerIsMe,
+      variant: shotAnimationVariant,
     } : undefined,
     zoomToGoal: isPenaltyQuestion || isShotVisualPhase,
     mirrored,
@@ -903,7 +934,7 @@ export function RealtimePossessionMatchScreen({
             </>
           )}
 
-          {isHalftime && (
+          {isHalftime && possessionState && (
             <HalftimeScreen
               visible={true}
               playerGoals={myGoals}

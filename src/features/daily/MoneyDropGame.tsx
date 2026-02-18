@@ -49,7 +49,7 @@ const OptionRow = ({ index, option, color, textClass = "text-white" }: { index: 
     <div className={cn("flex size-8 md:size-9 shrink-0 items-center justify-center rounded-lg md:rounded-xl text-sm font-black", color.light, color.text)}>
       {String.fromCharCode(65 + index)}
     </div>
-    <span className={cn("text-sm md:text-base font-bold truncate", textClass)}>{option}</span>
+    <span className={cn("text-sm md:text-base font-bold truncate", textClass)} title={option}>{option}</span>
   </div>
 );
 

@@ -130,7 +130,7 @@ export default function ProfilePage() {
       }))}
       recentMatchesLoading={recentMatchesLoading}
       recentMatchesError={
-        recentMatchesError instanceof Error
+        recentMatchesError instanceof Error && recentMatches.length === 0
           ? recentMatchesError.message
           : null
       }

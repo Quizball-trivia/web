@@ -153,7 +153,9 @@ export function usePossessionGameLogic() {
     store.getState().setCurrentQuestion(q);
     const t = setTimeout(() => store.getState().setPhase('question-reveal'), 2000);
     return () => clearTimeout(t);
-  }, [state.phase, playSfx]);
+  // playSfx is stable (module-level); only re-run on phase change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.phase]);
 
   // Question reveal
   useEffect(() => {
@@ -311,6 +313,7 @@ export function usePossessionGameLogic() {
   useEffect(() => {
     if (state.phase !== 'halftime') return;
     playSfx('whistle');
+  // playSfx is stable (module-level); only re-run on phase change
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase]);
 
@@ -318,6 +321,7 @@ export function usePossessionGameLogic() {
   useEffect(() => {
     if (state.phase !== 'fulltime') return;
     playSfx('whistle');
+  // playSfx is stable (module-level); only re-run on phase change
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase]);
 
@@ -522,6 +526,7 @@ export function usePossessionGameLogic() {
     usedQuestionIdsRef.current.clear();
     store.getState().resetMatch();
     store.getState().setPhase('pregame');
+  // Deps: store is module-level and stable; usedQuestionIdsRef is a ref
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -532,6 +537,7 @@ export function usePossessionGameLogic() {
     s.setOpponent((o) => ({ ...o, position: 20 }));
     s.resetQuestionState();
     s.setPhase('shot');
+  // Deps: store is module-level and stable; dev-only helper
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -541,6 +547,7 @@ export function usePossessionGameLogic() {
     s.setPlayer((p) => ({ ...p, goals: 1 }));
     s.setOpponent((o) => ({ ...o, goals: 1 }));
     s.setPhase('penalty-transition');
+  // Deps: store is module-level and stable; dev-only helper
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -551,6 +558,7 @@ export function usePossessionGameLogic() {
     s.setPlayer((p) => ({ ...p, goals: 1, position: 65, momentum: 3 }));
     s.setOpponent((o) => ({ ...o, goals: 1, position: 35 }));
     s.setPhase('halftime');
+  // Deps: store is module-level and stable; dev-only helper
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

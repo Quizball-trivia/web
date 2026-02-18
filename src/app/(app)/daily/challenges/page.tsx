@@ -128,7 +128,7 @@ function ChallengeCard({
       transition={{ duration: 0.35, delay: 0.15 + index * 0.06, ease: "easeOut" }}
     >
       <button
-        onClick={() => !isCompleted && onClick()}
+        onClick={onClick}
         disabled={isCompleted}
         className={`w-full text-left rounded-2xl border-b-4 transition-all overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#58CC02] ${
           isCompleted
@@ -140,7 +140,7 @@ function ChallengeCard({
           <div className="flex items-center gap-4 md:gap-5">
             {/* Icon */}
             <div
-              className={`size-14 md:size-18 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border-2 ${
+              className={`size-14 md:size-[4.5rem] rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border-2 ${
                 isCompleted
                   ? "bg-[#58CC02]/20 border-[#58CC02]/40"
                   : `${challenge.iconBgColor} ${accent.iconBorder}`
@@ -219,7 +219,8 @@ export default function DailyChallengesPage() {
     storage.set(STORAGE_KEYS.DAILY_CHALLENGE_STATE, {
       completedChallenges: Object.fromEntries(completedChallenges),
     });
-  }, [completedChallenges, needsReset]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- completedChallenges is a new Map each render; needsReset is the real trigger
+  }, [needsReset]);
 
   const handleSelectChallenge = (challengeId: DailyChallengeId) => {
     router.push(`/daily/challenges/${challengeId}`);
@@ -242,6 +243,7 @@ export default function DailyChallengesPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 md:gap-3">
               <button
+                aria-label="Back to home"
                 onClick={() => router.push("/")}
                 className="flex items-center justify-center size-9 md:size-10 rounded-xl bg-[#1B2F36] border-b-[3px] border-[#0D1B21] hover:bg-[#243B44] active:border-b-[1px] active:translate-y-[2px] transition-all"
               >

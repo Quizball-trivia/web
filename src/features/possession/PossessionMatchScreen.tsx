@@ -186,7 +186,7 @@ export function PossessionMatchScreen() {
               phase={g.phase}
               isPenaltyPhase={g.isPenaltyPhase}
               isShotPhase={g.isShotPhase}
-              isLastAttackPhase={false}
+              isLastAttackPhase={false} // Single-player mode; realtime multiplayer uses useRealtimeGameLogic for last-attack
               question={activeQuestion}
               showOptions={activeShowOptions}
               selectedAnswer={activeSelectedAnswer}

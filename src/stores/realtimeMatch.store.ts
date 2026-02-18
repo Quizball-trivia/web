@@ -84,6 +84,12 @@ export interface RejoinMatchStatus {
   createdAt: number;
 }
 
+export interface DevPossessionAnimation {
+  id: number;
+  result: 'goal' | 'saved' | 'miss';
+  attackerSeat: 1 | 2;
+}
+
 interface RealtimeState {
   lobby: LobbyState | null;
   draft: DraftStatus | null;
@@ -99,6 +105,7 @@ interface RealtimeState {
   rankedFoundOpponent: OpponentInfo | null;
   rankedSearching: boolean;
   rejoinMatch: RejoinMatchStatus | null;
+  devPossessionAnimation: DevPossessionAnimation | null;
   error: ErrorPayload | null;
   setSelfUserId: (userId: string | null) => void;
   setLobby: (lobby: LobbyState) => void;
@@ -138,6 +145,8 @@ interface RealtimeState {
   clearWarmup: () => void;
   setSessionState: (payload: SessionStatePayload) => void;
   revertDraftBan: (actorId: string) => void;
+  triggerDevPossessionAnimation: (payload: { result: 'goal' | 'saved' | 'miss'; attackerSeat: 1 | 2 }) => void;
+  clearDevPossessionAnimation: () => void;
   setError: (error: ErrorPayload) => void;
   clearError: () => void;
   reset: () => void;
@@ -158,6 +167,7 @@ const initialState = {
   rankedFoundOpponent: null,
   rankedSearching: false,
   rejoinMatch: null,
+  devPossessionAnimation: null,
   error: null,
 };
 
@@ -760,6 +770,14 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
         draft: { ...state.draft, bans: remainingBans, turnUserId: actorId },
       };
     }),
+  triggerDevPossessionAnimation: ({ result, attackerSeat }) => {
+    const id = Date.now();
+    logger.info('Realtime store trigger dev possession animation', { id, result, attackerSeat });
+    set({ devPossessionAnimation: { id, result, attackerSeat } });
+  },
+  clearDevPossessionAnimation: () => {
+    set({ devPossessionAnimation: null });
+  },
   setError: (error) => {
     const snapshot = (error.meta as { stateSnapshot?: SessionStatePayload } | undefined)?.stateSnapshot;
     logger.warn('Realtime store set error', {

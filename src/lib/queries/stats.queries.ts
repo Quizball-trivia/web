@@ -25,6 +25,9 @@ export function useRecentMatches(limit = 10) {
       const data = await getRecentMatches({ limit });
       return toRecentMatchSummaries(data);
     },
+    retry: 2,
+    staleTime: 5 * 60_000,   // 5 min — avoid refetching on every page visit
+    gcTime: 30 * 60_000,     // 30 min — keep cache warm for offline-ish resilience
   });
 }
 
@@ -35,5 +38,8 @@ export function useMatchStatsSummary() {
       const data = await getStatsSummary();
       return toMatchStatsSummary(data);
     },
+    retry: 2,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
   });
 }

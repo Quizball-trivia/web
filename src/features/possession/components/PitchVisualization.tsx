@@ -110,10 +110,9 @@ interface ShotMode {
   ballOriginX: number;
   /** Whether the player is attacking (shooting) or defending (goalkeeping) */
   isPlayerAttacker: boolean;
+  /** Optional animation variant index used to diversify shot visuals. */
+  variant?: number;
 }
-
-/** Shot momentum threshold at which a shot on goal triggers */
-const SHOT_VISUAL_THRESHOLD = 4;
 
 interface PitchVisualizationProps {
   playerPosition: number; // 0–100
@@ -137,14 +136,20 @@ interface PitchVisualizationProps {
   orientation?: 'landscape' | 'portrait';
 }
 
+function toShotVariant(value: number | undefined): 0 | 1 | 2 {
+  const normalized = ((value ?? 0) % 3 + 3) % 3;
+  if (normalized === 1 || normalized === 2) return normalized;
+  return 0;
+}
+
 export function PitchVisualization({
   playerPosition,
   playerAvatarUrl,
   opponentAvatarUrl,
   playerName,
   opponentName,
-  myMomentum = 0,
-  oppMomentum = 0,
+  myMomentum: _myMomentum = 0,
+  oppMomentum: _oppMomentum = 0,
   penaltyMode,
   shotMode,
   zoomToGoal,
@@ -156,6 +161,8 @@ export function PitchVisualization({
   const isPenalty = !!penaltyMode;
   const isShot = !!shotMode;
   const isPortrait = orientation === 'portrait';
+  void _myMomentum;
+  void _oppMomentum;
 
   // Scoped SVG IDs to avoid collisions when multiple instances render
   const reactId = useId();
@@ -198,13 +205,6 @@ export function PitchVisualization({
       ? (shotMode.isPlayerAttacker ? goal.goalLineX : shotMode.ballOriginX)
       : normalOpponentX;
 
-  // Dual momentum meter (hidden during penalties/shots)
-  const meterVisible = !isPenalty && !isShot;
-  const myFillWidth = Math.min(125, (myMomentum / SHOT_VISUAL_THRESHOLD) * 125);
-  const oppFillWidth = Math.min(125, (oppMomentum / SHOT_VISUAL_THRESHOLD) * 125);
-  const maxMomentum = Math.max(myMomentum, oppMomentum);
-  const shotLabelOpacity = Math.min(1, 0.15 + maxMomentum * 0.2);
-
   // Penalty result state
   const showPenResult = isPenalty && penaltyMode.phase === 'result' && penaltyMode.result;
   const isGoal = showPenResult && penaltyMode.result === 'goal';
@@ -215,6 +215,10 @@ export function PitchVisualization({
   const isShotGoal = shotResultActive && shotMode.result === 'goal';
   const isShotSave = shotResultActive && shotMode.result === 'saved';
   const isShotMiss = shotResultActive && shotMode.result === 'miss';
+  const shotVariant = toShotVariant(shotMode?.variant);
+  const shotGoalLabel = shotVariant === 1 ? 'TOP BINS' : shotVariant === 2 ? 'CLINICAL' : 'GOAL';
+  const shotSaveLabel = shotVariant === 1 ? 'DENIED' : shotVariant === 2 ? 'STOPPED' : 'SAVED';
+  const shotMissLabel = shotVariant === 1 ? 'OFF TARGET' : shotVariant === 2 ? 'HIT POST' : 'MISS';
   // Ball origin — captured at shot start so it doesn't shift when positions reset
   const shotBallOriginX = isShot ? shotMode.ballOriginX : normalBallX;
   const shotBallOriginY = 145; // Below shooter's feet (avatar at 115 + radius 28 + ball offset)
@@ -232,20 +236,6 @@ export function PitchVisualization({
         { x: 100, w: 125, fill: 'rgba(56,189,248,0.03)' },
         { x: 225, w: 125, fill: 'rgba(255,150,0,0.04)' },
         { x: 350, w: 150, fill: 'rgba(255,75,75,0.06)', rx: 12 },
-      ];
-
-  const zoneLabels = mirrored
-    ? [
-        { x: 450, text: 'DEF', fill: 'rgba(156,163,175,0.35)' },
-        { x: 335, text: 'MID', fill: 'rgba(255,255,255,0.25)' },
-        { x: 210, text: 'ATT', fill: 'rgba(255,150,0,0.35)' },
-        { x: 72, text: 'BOX', fill: 'rgba(255,75,75,0.35)' },
-      ]
-    : [
-        { x: 50, text: 'DEF', fill: 'rgba(156,163,175,0.35)' },
-        { x: 165, text: 'MID', fill: 'rgba(255,255,255,0.25)' },
-        { x: 290, text: 'ATT', fill: 'rgba(255,150,0,0.35)' },
-        { x: 428, text: 'BOX', fill: 'rgba(255,75,75,0.35)' },
       ];
 
   // Camera zoom direction — portrait maps landscape left→bottom, right→top
@@ -266,18 +256,54 @@ export function PitchVisualization({
     if (isGoal) return { x: goal.goalTarget.x, y: goal.goalTarget.y - 8 };
     if (isSave) return { x: goal.saveTarget.x - 10 * goal.inward, y: goal.saveTarget.y + 5 };
     if (isShotGoal) {
+      if (shotVariant === 1) {
+        return {
+          x: [shotBallOriginX, (shotBallOriginX + goal.goalTarget.x) / 2 - 20 * goal.inward, goal.goalTarget.x],
+          y: [shotBallOriginY, 68, goal.goalTarget.y - 16],
+        };
+      }
+      if (shotVariant === 2) {
+        return {
+          x: [shotBallOriginX, goal.goalLineX - 20 * goal.inward, goal.goalTarget.x],
+          y: [shotBallOriginY, goal.penY + 6, goal.goalTarget.y + 2],
+        };
+      }
       return {
         x: [shotBallOriginX, (shotBallOriginX + goal.goalTarget.x) / 2, goal.goalTarget.x],
         y: [shotBallOriginY, shotBallOriginY - 25, goal.goalTarget.y - 8],
       };
     }
     if (isShotSave) {
+      if (shotVariant === 1) {
+        return {
+          x: [shotBallOriginX, goal.goalLineX - 2 * goal.inward, goal.goalLineX - 20 * goal.inward],
+          y: [shotBallOriginY, goal.penY - 16, goal.penY - 36],
+        };
+      }
+      if (shotVariant === 2) {
+        return {
+          x: [shotBallOriginX, goal.goalLineX - 5 * goal.inward, goal.goalLineX - 18 * goal.inward],
+          y: [shotBallOriginY, goal.penY + 4, goal.penY + 22],
+        };
+      }
       return {
         x: [shotBallOriginX, goal.goalLineX - 2 * goal.inward, goal.goalLineX - 12 * goal.inward],
         y: [shotBallOriginY, goal.penY - 10, goal.penY + 5],
       };
     }
     if (isShotMiss) {
+      if (shotVariant === 1) {
+        return {
+          x: [shotBallOriginX, goal.goalLineX - 22 * goal.inward],
+          y: [shotBallOriginY, goal.penY - 8],
+        };
+      }
+      if (shotVariant === 2) {
+        return {
+          x: [shotBallOriginX, goal.goalLineX + 2 * goal.inward, goal.goalLineX - 16 * goal.inward],
+          y: [shotBallOriginY, goal.penY - 12, goal.penY + 20],
+        };
+      }
       return {
         x: [shotBallOriginX, goal.goalLineX + 10 * goal.inward],
         y: [shotBallOriginY, 50],
@@ -293,15 +319,15 @@ export function PitchVisualization({
     }
     // Position ball at the boundary between blue and red zones
     return { x: mirrored ? (470 - (playerPosition / 100) * 455) : (15 + (playerPosition / 100) * 455), y: 112 };
-  }, [isGoal, isSave, isShotGoal, isShotSave, isShotMiss, isPenalty, isShot, shotMode, goal, shotBallOriginX, shotBallOriginY, playerPosition, mirrored]);
+  }, [isGoal, isSave, isShotGoal, isShotSave, isShotMiss, isPenalty, isShot, shotMode, shotVariant, goal, shotBallOriginX, shotBallOriginY, playerPosition, mirrored]);
   const ballTransition = useMemo(() => {
     if (isGoal) return { duration: 0.4, ease: [0.2, 0, 0.4, 1] as const };
     if (isSave) return { duration: 0.5, ease: [0.3, 0, 0.2, 1] as const };
-    if (isShotGoal) return { duration: 0.4, ease: [0.2, 0, 0.4, 1] as const };
-    if (isShotSave) return { duration: 0.5, ease: [0.3, 0, 0.2, 1] as const, times: [0, 0.5, 1] };
-    if (isShotMiss) return { duration: 0.5, ease: [0.2, 0, 0.6, 1] as const };
+    if (isShotGoal) return { duration: shotVariant === 1 ? 0.55 : shotVariant === 2 ? 0.38 : 0.45, ease: [0.2, 0, 0.4, 1] as const };
+    if (isShotSave) return { duration: shotVariant === 1 ? 0.6 : 0.5, ease: [0.3, 0, 0.2, 1] as const, times: [0, 0.5, 1] };
+    if (isShotMiss) return { duration: shotVariant === 1 ? 0.45 : 0.55, ease: [0.2, 0, 0.6, 1] as const };
     return { type: 'spring' as const, stiffness: 160, damping: 12, mass: 0.7 };
-  }, [isGoal, isSave, isShotGoal, isShotSave, isShotMiss]);
+  }, [isGoal, isSave, isShotGoal, isShotSave, isShotMiss, shotVariant]);
   const ballOpacity = isShotMiss ? 0.3 : 1;
 
   return (
@@ -735,10 +761,10 @@ export function PitchVisualization({
                   textAnchor="middle" fill="#58CC02" fontSize="8" fontWeight="900" fontFamily="system-ui"
                   initial={{ opacity: 0, y: 86 }}
                   animate={{ opacity: [0, 1, 1, 0], y: [86, 82, 82, 80] }}
-                  transition={{ duration: 0.5, delay: 0.3, times: [0, 0.2, 0.7, 1] }}
+                  transition={{ duration: 0.6, delay: 0.25, times: [0, 0.2, 0.75, 1] }}
                   transform={textTf(goal.goalTextX, 82)}
                 >
-                  GOAL
+                  {shotGoalLabel}
                 </motion.text>
               </motion.g>
             )}
@@ -753,10 +779,10 @@ export function PitchVisualization({
                     opacity: [0, 1, 1, 0],
                     y: [goal.penY - 24, goal.penY - 28, goal.penY - 28, goal.penY - 30],
                   }}
-                  transition={{ duration: 0.5, delay: 0.25, times: [0, 0.2, 0.7, 1] }}
+                  transition={{ duration: 0.55, delay: 0.2, times: [0, 0.2, 0.75, 1] }}
                   transform={textTf(goal.goalLineX, goal.penY - 28)}
                 >
-                  SAVED
+                  {shotSaveLabel}
                 </motion.text>
               </motion.g>
             )}
@@ -768,10 +794,10 @@ export function PitchVisualization({
                   textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize="7" fontWeight="900" fontFamily="system-ui"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: [0, 0.6, 0.6, 0] }}
-                  transition={{ duration: 0.6, delay: 0.3, times: [0, 0.2, 0.7, 1] }}
+                  transition={{ duration: 0.65, delay: 0.25, times: [0, 0.2, 0.75, 1] }}
                   transform={textTf(goal.goalLineX - 20 * goal.inward, 60)}
                 >
-                  MISS
+                  {shotMissLabel}
                 </motion.text>
               </motion.g>
             )}
