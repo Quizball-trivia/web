@@ -11,15 +11,8 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useHeadToHead } from '@/lib/queries/stats.queries';
 import { logger } from '@/utils/logger';
 import { cn } from '@/lib/utils';
+import { isAvatarUrl } from '@/lib/avatars';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
-
-function isAvatarUrl(avatar: string): boolean {
-  return (
-    avatar.startsWith("http://") ||
-    avatar.startsWith("https://") ||
-    avatar.startsWith("data:image/")
-  );
-}
 
 // Dark-tinted category card colors (subtle accent on dark bg)
 const CARD_COLORS = [
@@ -68,13 +61,13 @@ export function RankedCategoryBlockingScreen() {
     }, 1000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft?.turnUserId, draft?.allowedCategoryIds, draft?.categories]);
+  }, [draft?.turnUserId, draft?.halfOneCategoryId, draft?.categories]);
 
   // Auto-ban a random category when timer expires on player's turn
   useEffect(() => {
     if (timeLeft !== 0 || autoBanFired.current) return;
     if (!selfUserId) return;
-    if (!draft || draft.allowedCategoryIds) return; // already done
+    if (!draft || draft.halfOneCategoryId) return; // already done
     if (draft.turnUserId !== selfUserId) return; // not our turn
     const playerBan = draft.bans[selfUserId] ?? null;
     if (playerBan) return; // already banned
@@ -98,7 +91,7 @@ export function RankedCategoryBlockingScreen() {
       return () => clearTimeout(timer);
     }
   }, [showShowdown]);
-  const phase = draft?.allowedCategoryIds ? 'ready' : 'ban';
+  const phase = draft?.halfOneCategoryId ? 'ready' : 'ban';
   const currentActor = draft?.turnUserId === selfUserId ? 'player' : 'opponent';
   const playerBannedId = draft?.bans[selfUserId ?? ''] ?? null;
   const opponentBannedId = draft ? Object.entries(draft.bans).find(([userId]) => userId !== selfUserId)?.[1] ?? null : null;
@@ -109,9 +102,9 @@ export function RankedCategoryBlockingScreen() {
   // Memoized progress state for the 3-step indicator
   const { steps } = useMemo(() => {
     const banCount = Object.keys(draft?.bans ?? {}).length;
-    const isReady = !!draft?.allowedCategoryIds;
+    const isReady = !!draft?.halfOneCategoryId;
     return { banCount, isReady, steps: [banCount >= 1, banCount >= 2, isReady] };
-  }, [draft?.bans, draft?.allowedCategoryIds]);
+  }, [draft?.bans, draft?.halfOneCategoryId]);
 
   // Early return after all hooks
   if (!draft || !lobby) {
@@ -236,8 +229,8 @@ export function RankedCategoryBlockingScreen() {
           </h2>
           <p className="text-sm text-[#56707A] font-bold mt-1.5">
             {phase === 'ban'
-              ? "Tap a card to remove it. Playing remaining 2."
-              : "Match starting with remaining categories..."}
+              ? "Tap a card to remove it. One category remains for Half 1."
+              : "Match starting with selected Half 1 category..."}
           </p>
         </motion.div>
 

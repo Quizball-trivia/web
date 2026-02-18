@@ -2,15 +2,8 @@ import Image from "next/image";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { isAvatarUrl } from "@/lib/avatars";
 import { Shield, Sword } from "lucide-react";
-
-function isAvatarUrl(avatar: string): boolean {
-  return (
-    avatar.startsWith("http://") ||
-    avatar.startsWith("https://") ||
-    avatar.startsWith("data:image/")
-  );
-}
 
 export type DraftPhase = 'ban' | 'pick' | 'ready';
 

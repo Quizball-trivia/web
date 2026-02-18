@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { Trophy, Clock, Check, Loader2, Award, TrendingUp } from 'lucide-react';
 import { motion } from 'motion/react';
 import { GameMode } from '@/types/game';
+import { InlineAvatar as AvatarDisplay } from '@/components/InlineAvatar';
 
 interface RoundResultScreenProps {
   roundNumber: number;
@@ -190,7 +191,7 @@ export function RoundResultScreen({
               <div className="space-y-4">
                 <div className="bg-secondary rounded-lg p-4">
                   <div className="flex items-center justify-center gap-2 mb-2">
-                    <span className="text-3xl">{playerAvatar}</span>
+                    <AvatarDisplay avatar={playerAvatar} alt={playerUsername} size="lg" />
                     <h3>{playerUsername}</h3>
                   </div>
                   <div className="text-sm text-muted-foreground">
@@ -264,7 +265,7 @@ export function RoundResultScreen({
               <div className={`bg-secondary rounded-lg p-3 ${playerWon ? 'ring-2 ring-green-500/50' : ''}`}>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl">{playerAvatar}</span>
+                    <AvatarDisplay avatar={playerAvatar} alt={playerUsername} />
                     <span>{playerUsername}</span>
                     {playerWon && <Trophy className="size-4 text-yellow-500" />}
                   </div>
@@ -277,7 +278,7 @@ export function RoundResultScreen({
               <div className={`bg-secondary rounded-lg p-3 ${!playerWon && !isDraw ? 'ring-2 ring-red-500/50' : ''}`}>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl">{opponentAvatar}</span>
+                    <AvatarDisplay avatar={opponentAvatar} alt={opponentUsername} />
                     <span>{opponentUsername}</span>
                     {!playerWon && !isDraw && <Trophy className="size-4 text-yellow-500" />}
                   </div>
@@ -314,7 +315,7 @@ export function RoundResultScreen({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">{playerAvatar}</span>
+                  <AvatarDisplay avatar={playerAvatar} alt={playerUsername} size="sm" />
                   <span className="text-sm">{playerUsername}</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -331,7 +332,7 @@ export function RoundResultScreen({
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">{opponentAvatar}</span>
+                  <AvatarDisplay avatar={opponentAvatar} alt={opponentUsername} size="sm" />
                   <span className="text-sm">{opponentUsername}</span>
                 </div>
                 <div className="flex items-center gap-2">

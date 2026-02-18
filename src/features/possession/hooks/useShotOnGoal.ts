@@ -63,7 +63,8 @@ export function useShotOnGoal(
     s.setShotOpponentTime(aiDelay);
 
     setTimeRemaining(TIMER_SECONDS);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Deps: store is a module-level Zustand store, usedQuestionIdsRef is a stable ref,
+  // TIMER_SECONDS + other values are compile-time constants — all stable, no re-run needed.
   }, []);
 
   const handleShotAnswer = useCallback((index: number, stopTimer: () => void) => {
@@ -142,7 +143,7 @@ export function useShotOnGoal(
         }, BALL_ANIM_MS);
       }
     }, 1500);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Deps: store is a module-level Zustand store; constants (TIMER_SECONDS, BALL_ANIM_MS, etc.) are stable.
   }, [advanceToNextQuestion, schedule]);
 
   return { initializeShot, handleShotAnswer, shotBallOriginRef };

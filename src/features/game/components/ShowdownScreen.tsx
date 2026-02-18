@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Badge } from '@/components/ui/badge';
 import { Zap, Swords } from 'lucide-react';
+import { isAvatarUrl } from '@/lib/avatars';
 
 interface ShowdownScreenProps {
   playerUsername: string;
@@ -75,9 +76,13 @@ export function ShowdownScreen({
                 repeat: Infinity,
                 repeatType: "reverse"
               }}
-              className="text-7xl mb-3 drop-shadow-lg"
+              className="size-[72px] mb-3 drop-shadow-lg flex items-center justify-center"
             >
-              {playerAvatar}
+              {isAvatarUrl(playerAvatar) ? (
+                <img src={playerAvatar} alt={playerUsername} className="size-full rounded-full object-cover border-2 border-primary/30" />
+              ) : (
+                <span className="text-7xl">{playerAvatar}</span>
+              )}
             </motion.div>
             <div className="text-center">
               <div className="font-medium mb-1">{playerUsername}</div>
@@ -133,9 +138,13 @@ export function ShowdownScreen({
                 repeatType: "reverse",
                 delay: 0.5
               }}
-              className="text-7xl mb-3 drop-shadow-lg"
+              className="size-[72px] mb-3 drop-shadow-lg flex items-center justify-center"
             >
-              {opponentAvatar}
+              {isAvatarUrl(opponentAvatar) ? (
+                <img src={opponentAvatar} alt={opponentUsername} className="size-full rounded-full object-cover border-2 border-destructive/30" />
+              ) : (
+                <span className="text-7xl">{opponentAvatar}</span>
+              )}
             </motion.div>
             <div className="text-center">
               <div className="font-medium mb-1">{opponentUsername}</div>

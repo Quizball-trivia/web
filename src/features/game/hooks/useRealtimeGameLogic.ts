@@ -6,6 +6,7 @@ import { QUESTION_REVEAL_MS } from '@/features/possession/types/possession.types
 
 const QUESTION_PLAYING_MS = 10000; // 10 second playing phase
 const ROUND_RESULT_HOLD_MS = 1800; // hold result for 1.8s before transitioning to next question
+const GOAL_CELEBRATION_HOLD_MS = 2000; // keep goal celebrations visible for 2s before next question
 
 export function useRealtimeGameLogic() {
   const match = useRealtimeMatchStore((state) => state.match);
@@ -26,6 +27,7 @@ export function useRealtimeGameLogic() {
   }, [matchPaused]);
 
   const currentQuestion = match?.currentQuestion ?? null;
+  const isLastAttackQuestion = currentQuestion?.phaseKind === 'last_attack';
   const currentQuestionIndex = currentQuestion?.qIndex;
   const questionPhase = match?.currentQuestionPhase ?? 'reveal';
   const countdownEndsAt = match?.countdownEndsAt ?? null;
@@ -105,6 +107,7 @@ export function useRealtimeGameLogic() {
   const roundResult = match?.lastRoundResult && match.currentQuestion?.qIndex === match.lastRoundResult.qIndex
     ? match.lastRoundResult
     : null;
+  const roundResultHoldMs = roundResult?.deltas?.goalScoredBySeat ? GOAL_CELEBRATION_HOLD_MS : ROUND_RESULT_HOLD_MS;
   const opponentAnswered = match?.opponentAnswered ?? false;
 
   const roundResolved = Boolean(roundResult);
@@ -116,10 +119,10 @@ export function useRealtimeGameLogic() {
       setShowOptions(false);
       // If a question arrived while result was showing, promote it now
       promotePendingQuestion();
-    }, ROUND_RESULT_HOLD_MS);
+    }, roundResultHoldMs);
 
     return () => clearTimeout(holdTimer);
-  }, [roundResolved, showOptions, matchPaused, currentQuestionIndex, promotePendingQuestion, startCountdownActive]);
+  }, [roundResolved, showOptions, matchPaused, currentQuestionIndex, promotePendingQuestion, roundResultHoldMs, startCountdownActive]);
 
   // Promote late-arriving questions: if the hold timer already fired (showOptions=false)
   // but the question arrived after, it's stuck in pendingQuestion. Promote immediately.
@@ -207,6 +210,7 @@ export function useRealtimeGameLogic() {
   return {
     state: {
       currentQuestion,
+      isLastAttackQuestion,
       timeRemaining,
       selectedAnswer,
       selectedAnswerQIndex,

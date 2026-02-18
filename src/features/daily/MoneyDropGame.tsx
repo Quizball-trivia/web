@@ -45,11 +45,11 @@ const OPTION_COLORS = [
 
 /* ── Shared card row (letter badge + option text) ── */
 const OptionRow = ({ index, option, color, textClass = "text-white" }: { index: number; option: string; color: typeof OPTION_COLORS[0]; textClass?: string }) => (
-  <div className="flex items-center gap-2.5 min-w-0">
-    <div className={cn("flex size-7 shrink-0 items-center justify-center rounded-lg text-xs font-black", color.light, color.text)}>
+  <div className="flex items-center gap-2.5 md:gap-3 min-w-0">
+    <div className={cn("flex size-8 md:size-9 shrink-0 items-center justify-center rounded-lg md:rounded-xl text-sm font-black", color.light, color.text)}>
       {String.fromCharCode(65 + index)}
     </div>
-    <span className={cn("text-sm font-bold truncate", textClass)}>{option}</span>
+    <span className={cn("text-sm md:text-base font-bold truncate", textClass)} title={option}>{option}</span>
   </div>
 );
 
@@ -200,7 +200,7 @@ function HelpButtons({
   disabled?: boolean;
 }) {
   const btnBase =
-    "flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl font-bold text-xs text-white transition-all active:translate-y-[1px] active:border-b-[2px]";
+    "flex items-center justify-center gap-1 md:gap-1.5 px-3 py-2 md:px-4 md:py-2.5 rounded-xl font-bold text-xs md:text-sm text-white transition-all active:translate-y-[1px] active:border-b-2";
   const btnActive = "bg-[#243B44] border-b-[3px] border-b-[#1B2F36] hover:bg-[#2C4A55]";
   const btnUsed = "bg-[#243B44]/50 border-b-[3px] border-b-[#1B2F36]/50 opacity-40";
 
@@ -364,11 +364,11 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
 
       {/* ── Header ── */}
       <div className="sticky top-0 z-20 bg-[#1B2F36] border-b-[3px] border-[#0D1B21]">
-        <div className="max-w-3xl mx-auto px-4 py-2.5 flex items-center gap-4">
+        <div className="max-w-3xl mx-auto px-3 md:px-4 py-2.5 md:py-3 flex items-center gap-2.5 md:gap-4">
           {/* Left: close + title */}
           <button
             onClick={() => setShowQuitDialog(true)}
-            className="flex items-center justify-center size-8 rounded-lg hover:bg-red-500/10 transition-colors text-white/50 hover:text-red-400"
+            className="flex items-center justify-center size-8 rounded-lg hover:bg-red-500/10 transition-colors text-white/50 hover:text-red-400 shrink-0"
           >
             <X className="size-4" />
           </button>
@@ -376,7 +376,7 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
           {/* Progress bar */}
           <div className="flex-1 flex gap-1">
             {questions.map((_, i) => (
-              <div key={i} className="flex-1 h-2 rounded-full overflow-hidden bg-white/10">
+              <div key={i} className="flex-1 h-2 md:h-2.5 rounded-full overflow-hidden bg-white/10">
                 <motion.div
                   className={cn(
                     "h-full rounded-full",
@@ -396,7 +396,7 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
           {!showResult && !isAnimating && (
             <motion.div
               className={cn(
-                "flex items-center gap-1 px-2.5 py-1 rounded-full font-bold text-xs tabular-nums",
+                "flex items-center gap-1 md:gap-1.5 px-2 py-1 md:px-3 md:py-1.5 rounded-full font-bold text-xs md:text-sm tabular-nums shrink-0",
                 timeLeft <= 3 ? "bg-[#FF4B4B]/20 text-[#FF4B4B]"
                   : timeLeft <= 5 ? "bg-[#FF9600]/20 text-[#FF9600]"
                   : "bg-[#58CC02]/20 text-[#58CC02]"
@@ -410,9 +410,9 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
           )}
 
           {/* Balance */}
-          <div className="flex items-center gap-1">
-            <DollarSign className="size-3.5 text-[#FF9600]" />
-            <span className="text-[#FF9600] font-black text-sm tabular-nums">
+          <div className="flex items-center gap-1 md:gap-1.5 shrink-0">
+            <DollarSign className="size-3.5 md:size-4 text-[#FF9600]" />
+            <span className="text-[#FF9600] font-black text-sm md:text-base tabular-nums">
               {currentMoney.toLocaleString()}
             </span>
           </div>
@@ -421,20 +421,20 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
 
       {/* ── Content ── */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto px-4 py-4 space-y-3">
+        <div className="max-w-3xl mx-auto px-3 md:px-4 py-4 md:py-5 pb-24 space-y-3 md:space-y-4">
 
           {/* Question + help row */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-[#131F24] rounded-2xl border-b-[3px] border-b-[#0D1B21] p-4"
+            className="bg-[#131F24] rounded-2xl border-b-[3px] border-b-[#0D1B21] p-4 md:p-6"
           >
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-1.5">
-                <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold", getDifficultyStyle(currentQuestion.difficulty))}>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+              <div className="flex items-center gap-2">
+                <span className={cn("px-2.5 py-1 rounded-full text-xs font-bold", getDifficultyStyle(currentQuestion.difficulty))}>
                   {currentQuestion.difficulty.toUpperCase()}
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#1CB0F6]/15 text-[#1CB0F6]">
+                <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#1CB0F6]/15 text-[#1CB0F6]">
                   {currentQuestion.category}
                 </span>
               </div>
@@ -448,7 +448,7 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
                 disabled={showResult || isAnimating || hasConfirmed}
               />
             </div>
-            <p className="text-white text-base font-bold leading-snug">
+            <p className="text-white text-lg md:text-xl font-bold leading-snug">
               {currentQuestion.question}
             </p>
           </motion.div>
@@ -473,16 +473,16 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
             <div className="space-y-3">
               {/* Remaining counter */}
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-white/40 uppercase tracking-wide">
+                <span className="text-xs md:text-sm font-bold text-white/40 uppercase tracking-wide">
                   Place Your Bets
                 </span>
-                <span className={cn("text-xs font-black tabular-nums", remaining === 0 ? "text-[#58CC02]" : "text-[#FF9600]")}>
+                <span className={cn("text-xs md:text-sm font-black tabular-nums", remaining === 0 ? "text-[#58CC02]" : "text-[#FF9600]")}>
                   {remaining === 0 ? "All allocated" : `${remaining.toLocaleString()} remaining`}
                 </span>
               </div>
 
               {/* 2×2 grid on wider screens */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {currentQuestion.options.map((option, index) => {
                   const isHidden = hiddenAnswers.includes(index);
                   const betAmount = bets[index];
@@ -490,12 +490,12 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
 
                   if (isHidden) {
                     return (
-                      <div key={index} className="bg-[#1B2F36] rounded-xl border border-white/5 border-b-[3px] border-b-[#0D1B21] px-3 py-2.5 opacity-30">
-                        <div className="flex items-center gap-2.5">
-                          <div className={cn("flex size-7 shrink-0 items-center justify-center rounded-lg text-xs font-black", color.light, color.text)}>
+                      <div key={index} className="bg-[#1B2F36] rounded-2xl border border-white/5 border-b-4 border-b-[#0D1B21] px-3 py-3 md:px-4 md:py-4 opacity-30">
+                        <div className="flex items-center gap-3">
+                          <div className={cn("flex size-8 md:size-9 shrink-0 items-center justify-center rounded-xl text-sm font-black", color.light, color.text)}>
                             {String.fromCharCode(65 + index)}
                           </div>
-                          <span className="text-xs text-white/40 line-through">{option}</span>
+                          <span className="text-sm text-white/40 line-through">{option}</span>
                         </div>
                       </div>
                     );
@@ -505,15 +505,15 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
                     <div
                       key={index}
                       className={cn(
-                        "relative bg-[#1B2F36] rounded-xl border border-white/5 border-b-[3px] border-b-[#0D1B21] px-3 py-2.5 overflow-visible",
+                        "relative bg-[#1B2F36] rounded-2xl border border-white/5 border-b-4 border-b-[#0D1B21] px-3 py-3 md:px-4 md:py-4 overflow-visible",
                         hasConfirmed && "opacity-60"
                       )}
                     >
                       {/* Top row: badge + option text + bet amount */}
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between mb-2 md:mb-3">
                         <OptionRow index={index} option={option} color={color} />
                         {betAmount > 0 && (
-                          <span className="text-xs font-black text-[#FF9600] tabular-nums shrink-0 ml-2">
+                          <span className="text-sm font-black text-[#FF9600] tabular-nums shrink-0 ml-2">
                             {betAmount.toLocaleString()}
                           </span>
                         )}
@@ -528,16 +528,16 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
                         disabled={hasConfirmed}
                         className={cn(
                           "w-full",
-                          "[&_[data-slot=slider-track]]:h-1.5 [&_[data-slot=slider-track]]:bg-white/10 [&_[data-slot=slider-track]]:rounded-full",
+                          "[&_[data-slot=slider-track]]:h-2 md:[&_[data-slot=slider-track]]:h-2.5 [&_[data-slot=slider-track]]:bg-white/10 [&_[data-slot=slider-track]]:rounded-full",
                           color.sliderRange,
-                          "[&_[data-slot=slider-thumb]]:size-4 [&_[data-slot=slider-thumb]]:bg-white [&_[data-slot=slider-thumb]]:border-2",
+                          "[&_[data-slot=slider-thumb]]:size-5 [&_[data-slot=slider-thumb]]:bg-white [&_[data-slot=slider-thumb]]:border-2",
                           color.sliderThumb
                         )}
                       />
 
                       {/* Bill stack — below slider */}
                       {betAmount > 0 && (
-                        <div className="mt-1.5 flex justify-end pointer-events-none">
+                        <div className="mt-2 flex justify-end pointer-events-none">
                           <BillStack amount={betAmount} />
                         </div>
                       )}
@@ -552,10 +552,10 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
                   onClick={handleConfirmBets}
                   disabled={!isFullyAllocated}
                   className={cn(
-                    "w-full py-3 rounded-xl font-black uppercase tracking-wide text-white text-sm transition-all",
+                    "w-full py-3.5 md:py-4 rounded-2xl font-black uppercase tracking-wide text-white text-sm md:text-base transition-all",
                     isFullyAllocated
-                      ? "bg-[#58CC02] border-b-[3px] border-b-[#46A302] hover:bg-[#61D806] active:border-b-[2px] active:translate-y-[1px]"
-                      : "bg-[#58CC02]/40 border-b-[3px] border-b-[#46A302]/40 opacity-40 cursor-not-allowed"
+                      ? "bg-[#58CC02] border-b-4 border-b-[#46A302] hover:bg-[#61D806] active:border-b-2 active:translate-y-[2px]"
+                      : "bg-[#58CC02]/40 border-b-4 border-b-[#46A302]/40 opacity-40 cursor-not-allowed"
                   )}
                 >
                   {isFullyAllocated ? "Confirm Bets" : `Allocate all ${currentMoney.toLocaleString()} coins`}
@@ -565,11 +565,11 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
 
           ) : isAnimating ? (
             /* ── Animation Phase ── */
-            <div className="space-y-2.5">
-              <div className="text-center text-xs text-white/40 font-bold uppercase tracking-wide mb-2">
+            <div className="space-y-3">
+              <div className="text-center text-sm text-white/40 font-bold uppercase tracking-wide mb-2">
                 Revealing the answer...
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {currentQuestion.options.map((option, index) => {
                   const isCorrect = index === currentQuestion.correctAnswer;
                   const betAmount = bets[index];
@@ -580,7 +580,7 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
                     return (
                       <motion.div
                         key={index}
-                        className="bg-[#58CC02]/15 rounded-xl border-2 border-[#58CC02] border-b-[3px] border-b-[#46A302] px-3 py-2.5"
+                        className="bg-[#58CC02]/15 rounded-2xl border-2 border-[#58CC02] border-b-4 border-b-[#46A302] px-4 py-4"
                         animate={{
                           boxShadow: ["0 0 0px rgba(88,204,2,0)", "0 0 25px rgba(88,204,2,0.5)", "0 0 0px rgba(88,204,2,0)"],
                           scale: [1, 1.02, 1],
@@ -590,7 +590,7 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
                         <div className="flex items-center justify-between">
                           <OptionRow index={index} option={option} color={{ ...color, light: "bg-[#58CC02]", text: "text-white" }} textClass="text-emerald-300" />
                           {betAmount > 0 && (
-                            <span className="text-xs font-black text-[#58CC02] shrink-0 ml-2">+{formatMoney(betAmount)}</span>
+                            <span className="text-sm font-black text-[#58CC02] shrink-0 ml-2">+{formatMoney(betAmount)}</span>
                           )}
                         </div>
                       </motion.div>
@@ -601,14 +601,14 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
                     return (
                       <motion.div
                         key={index}
-                        className="relative overflow-visible bg-[#1B2F36] rounded-xl border border-white/5 border-b-[3px] border-b-[#0D1B21] px-3 py-2.5"
+                        className="relative overflow-visible bg-[#1B2F36] rounded-2xl border border-white/5 border-b-4 border-b-[#0D1B21] px-4 py-4"
                         animate={{ y: [0, 20, 300], opacity: [1, 0.8, 0], rotateX: [0, 5, 15], scale: [1, 0.95, 0.8] }}
                         transition={{ duration: 0.8, ease: "easeIn" }}
                       >
                         <FallingBills amount={betAmount} />
                         <div className="flex items-center justify-between">
                           <OptionRow index={index} option={option} color={color} />
-                          <span className="text-xs font-black text-[#FF4B4B] shrink-0 ml-2">-{formatMoney(betAmount)}</span>
+                          <span className="text-sm font-black text-[#FF4B4B] shrink-0 ml-2">-{formatMoney(betAmount)}</span>
                         </div>
                       </motion.div>
                     );
@@ -618,14 +618,14 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
                     <div
                       key={index}
                       className={cn(
-                        "bg-[#1B2F36] rounded-xl border border-white/5 border-b-[3px] border-b-[#0D1B21] px-3 py-2.5",
+                        "bg-[#1B2F36] rounded-2xl border border-white/5 border-b-4 border-b-[#0D1B21] px-4 py-4",
                         (hasDropped || betAmount === 0) && "opacity-30"
                       )}
                     >
                       <div className="flex items-center justify-between">
                         <OptionRow index={index} option={option} color={color} />
                         {betAmount > 0 && (
-                          <span className="text-xs font-black text-white/60 shrink-0 ml-2">{formatMoney(betAmount)}</span>
+                          <span className="text-sm font-black text-white/60 shrink-0 ml-2">{formatMoney(betAmount)}</span>
                         )}
                       </div>
                     </div>
@@ -636,8 +636,8 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
 
           ) : (
             /* ── Result Phase ── */
-            <div className="space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {currentQuestion.options.map((option, index) => {
                   const isCorrect = index === currentQuestion.correctAnswer;
                   const betAmount = bets[index];
@@ -647,7 +647,7 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
                     <div
                       key={index}
                       className={cn(
-                        "rounded-xl border-2 border-b-[3px] px-3 py-2.5",
+                        "rounded-2xl border-2 border-b-4 px-4 py-4",
                         isCorrect
                           ? "bg-[#58CC02]/15 border-[#58CC02] border-b-[#46A302]"
                           : betAmount > 0
@@ -663,7 +663,7 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
                           textClass={isCorrect ? "text-emerald-300" : betAmount > 0 ? "text-red-300" : "text-white/40"}
                         />
                         {betAmount > 0 && (
-                          <span className={cn("text-xs font-black shrink-0 ml-2", isCorrect ? "text-[#58CC02]" : "text-[#FF4B4B]")}>
+                          <span className={cn("text-sm font-black shrink-0 ml-2", isCorrect ? "text-[#58CC02]" : "text-[#FF4B4B]")}>
                             {isCorrect ? "+" : "-"}{formatMoney(betAmount)}
                           </span>
                         )}
@@ -679,13 +679,13 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                  className="bg-[#58CC02]/10 border-2 border-[#58CC02]/30 rounded-xl p-5 text-center"
+                  className="bg-[#58CC02]/10 border-2 border-[#58CC02]/30 rounded-2xl p-6 text-center"
                 >
-                  <div className="text-2xl mb-1">✅</div>
-                  <div className="text-white font-black text-sm">
+                  <div className="text-3xl mb-1">✅</div>
+                  <div className="text-white font-black text-base md:text-lg">
                     You saved {formatMoney(bets[currentQuestion.correctAnswer])}
                   </div>
-                  <div className="text-white/40 text-xs font-semibold mt-0.5">
+                  <div className="text-white/40 text-sm font-semibold mt-0.5">
                     Lost {formatMoney(currentMoney - bets[currentQuestion.correctAnswer])}
                   </div>
                 </motion.div>
@@ -694,10 +694,10 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                  className="bg-[#FF4B4B]/10 border-2 border-[#FF4B4B]/30 rounded-xl p-5 text-center"
+                  className="bg-[#FF4B4B]/10 border-2 border-[#FF4B4B]/30 rounded-2xl p-6 text-center"
                 >
-                  <div className="text-2xl mb-1">💀</div>
-                  <div className="text-[#FF4B4B] font-black text-sm">
+                  <div className="text-3xl mb-1">💀</div>
+                  <div className="text-[#FF4B4B] font-black text-base md:text-lg">
                     Lost all {formatMoney(currentMoney)}
                   </div>
                 </motion.div>
@@ -705,7 +705,7 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
 
               <button
                 onClick={handleNextQuestion}
-                className="w-full py-3 rounded-xl bg-[#58CC02] border-b-[3px] border-b-[#46A302] font-black uppercase tracking-wide text-white text-sm hover:bg-[#61D806] active:border-b-[2px] active:translate-y-[1px] transition-all flex items-center justify-center gap-2"
+                className="w-full py-4 rounded-2xl bg-[#58CC02] border-b-4 border-b-[#46A302] font-black uppercase tracking-wide text-white text-base hover:bg-[#61D806] active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-2"
               >
                 {bets[currentQuestion.correctAnswer] === 0 || currentQuestionIndex >= questions.length - 1
                   ? "View Results"

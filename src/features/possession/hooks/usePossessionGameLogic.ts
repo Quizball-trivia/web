@@ -1,5 +1,5 @@
 'use client';
-/* eslint-disable react-hooks/exhaustive-deps */
+
 
 import { useEffect, useCallback, useRef } from 'react';
 
@@ -51,6 +51,8 @@ export function usePossessionGameLogic() {
     s.setCurrentQuestion(q);
     s.resetQuestionState();
     s.setPhase('question-reveal');
+  // Deps: store is module-level Zustand, usedQuestionIdsRef is a stable ref, getDifficultyForZone/getQuestionPool/pickQuestion are pure functions.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const { initializeShot, handleShotAnswer, shotBallOriginRef } = useShotOnGoal(
@@ -71,6 +73,8 @@ export function usePossessionGameLogic() {
         return prev - 1;
       });
     }, 1000);
+  // Deps: store is module-level, TIMER_SECONDS is a constant.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const stopTimer = useCallback(() => {
@@ -92,6 +96,8 @@ export function usePossessionGameLogic() {
         return prev - 1;
       });
     }, 1000);
+  // Deps: store is module-level, PENALTY_TIMER is a constant.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const stopPenaltyTimer = useCallback(() => {
@@ -114,18 +120,24 @@ export function usePossessionGameLogic() {
     if (state.timeRemaining === 0 && state.phase === 'playing' && state.selectedAnswer === null) {
       handleAnswer(-1);
     }
+  // handleAnswer is intentionally omitted; we only want to fire when timer/phase/answer change.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.timeRemaining, state.phase, state.selectedAnswer]);
 
   useEffect(() => {
     if (state.timeRemaining === 0 && state.phase === 'penalty-playing' && state.penaltyPlayerAnswer === null) {
       handlePenaltyAnswer(-1);
     }
+  // handlePenaltyAnswer intentionally omitted.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.timeRemaining, state.phase, state.penaltyPlayerAnswer]);
 
   useEffect(() => {
     if (state.timeRemaining === 0 && state.phase === 'shot' && state.shotSelectedAnswer === null) {
       handleShotAnswer(-1, stopTimer);
     }
+  // handleShotAnswer/stopTimer intentionally omitted.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.timeRemaining, state.phase, state.shotSelectedAnswer]);
 
   // ─── Phase effects ────────────────────────────────────────────
@@ -141,7 +153,9 @@ export function usePossessionGameLogic() {
     store.getState().setCurrentQuestion(q);
     const t = setTimeout(() => store.getState().setPhase('question-reveal'), 2000);
     return () => clearTimeout(t);
-  }, [state.phase, playSfx]);
+  // playSfx is stable (module-level); only re-run on phase change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.phase]);
 
   // Question reveal
   useEffect(() => {
@@ -168,6 +182,8 @@ export function usePossessionGameLogic() {
       store.getState().setOpponentTime(delay / 1000);
     }, delay);
     return () => clearTimeout(t);
+  // store is module-level; only re-run when phase or question changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase, state.currentQuestion?.id]);
 
   // Reveal phase
@@ -206,6 +222,8 @@ export function usePossessionGameLogic() {
 
     const t = setTimeout(() => store.getState().setPhase('possession-move'), 2000);
     return () => clearTimeout(t);
+  // Intentionally only re-run on phase change; state fields read inside are snapshots.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase]);
 
   // Possession move
@@ -257,6 +275,8 @@ export function usePossessionGameLogic() {
     }, 1500);
 
     return () => clearTimeout(t);
+  // Intentionally only re-run on phase change.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase]);
 
   // Shot phase init
@@ -285,18 +305,24 @@ export function usePossessionGameLogic() {
       }
     }, 3000);
     return () => clearTimeout(t);
+  // Intentionally only re-run on phase change.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase]);
 
   // Halftime
   useEffect(() => {
     if (state.phase !== 'halftime') return;
     playSfx('whistle');
+  // playSfx is stable (module-level); only re-run on phase change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase]);
 
   // Fulltime
   useEffect(() => {
     if (state.phase !== 'fulltime') return;
     playSfx('whistle');
+  // playSfx is stable (module-level); only re-run on phase change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase]);
 
   // ─── Penalty effects ──────────────────────────────────────────
@@ -312,6 +338,7 @@ export function usePossessionGameLogic() {
       s.setPhase('penalty-question');
     }, 3000);
     return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase]);
 
   useEffect(() => {
@@ -352,6 +379,7 @@ export function usePossessionGameLogic() {
       store.getState().setPenaltyOpponentTime(delay / 1000);
     }, delay);
     return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase, state.penaltyQuestion?.id]);
 
   useEffect(() => {
@@ -369,6 +397,7 @@ export function usePossessionGameLogic() {
       store.getState().setPhase('penalty-result');
     }, 2000);
     return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase]);
 
   useEffect(() => {
@@ -443,6 +472,7 @@ export function usePossessionGameLogic() {
     }, 3000);
 
     return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase]);
 
   // ─── Handlers ─────────────────────────────────────────────────
@@ -488,12 +518,16 @@ export function usePossessionGameLogic() {
       st.resetQuestionState();
       st.setPhase('question-reveal');
     }, 500);
+  // Deps: store is module-level, playSfx/usedQuestionIdsRef are stable.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handlePlayAgain = useCallback(() => {
     usedQuestionIdsRef.current.clear();
     store.getState().resetMatch();
     store.getState().setPhase('pregame');
+  // Deps: store is module-level and stable; usedQuestionIdsRef is a ref
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ─── Dev helpers ──────────────────────────────────────────────
@@ -503,6 +537,8 @@ export function usePossessionGameLogic() {
     s.setOpponent((o) => ({ ...o, position: 20 }));
     s.resetQuestionState();
     s.setPhase('shot');
+  // Deps: store is module-level and stable; dev-only helper
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSkipToPenalties = useCallback(() => {
@@ -511,6 +547,8 @@ export function usePossessionGameLogic() {
     s.setPlayer((p) => ({ ...p, goals: 1 }));
     s.setOpponent((o) => ({ ...o, goals: 1 }));
     s.setPhase('penalty-transition');
+  // Deps: store is module-level and stable; dev-only helper
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSkipToHalftime = useCallback(() => {
@@ -520,6 +558,8 @@ export function usePossessionGameLogic() {
     s.setPlayer((p) => ({ ...p, goals: 1, position: 65, momentum: 3 }));
     s.setOpponent((o) => ({ ...o, goals: 1, position: 35 }));
     s.setPhase('halftime');
+  // Deps: store is module-level and stable; dev-only helper
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ─── Derived state ────────────────────────────────────────────

@@ -1,3 +1,5 @@
+"use client";
+
 import { Trophy, Users, User, Gamepad2, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';

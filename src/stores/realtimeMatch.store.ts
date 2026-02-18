@@ -31,7 +31,7 @@ export interface DraftStatus {
   categories: DraftCategory[];
   bans: Record<string, string>;
   turnUserId: string | null;
-  allowedCategoryIds: [string, string] | null;
+  halfOneCategoryId: string | null;
 }
 
 export interface MatchQuestionState {
@@ -84,6 +84,12 @@ export interface RejoinMatchStatus {
   createdAt: number;
 }
 
+export interface DevPossessionAnimation {
+  id: number;
+  result: 'goal' | 'saved' | 'miss';
+  attackerSeat: 1 | 2;
+}
+
 interface RealtimeState {
   lobby: LobbyState | null;
   draft: DraftStatus | null;
@@ -99,12 +105,13 @@ interface RealtimeState {
   rankedFoundOpponent: OpponentInfo | null;
   rankedSearching: boolean;
   rejoinMatch: RejoinMatchStatus | null;
+  devPossessionAnimation: DevPossessionAnimation | null;
   error: ErrorPayload | null;
   setSelfUserId: (userId: string | null) => void;
   setLobby: (lobby: LobbyState) => void;
   setDraftStart: (draft: DraftState) => void;
   setDraftBan: (actorId: string, categoryId: string) => void;
-  setDraftComplete: (allowed: [string, string]) => void;
+  setDraftComplete: (halfOneCategoryId: string) => void;
   setMatchStart: (payload: MatchStartPayload) => void;
   setMatchCountdown: (payload: MatchCountdownPayload) => void;
   setMatchQuestion: (payload: ResolvedMatchQuestionPayload) => void;
@@ -138,6 +145,8 @@ interface RealtimeState {
   clearWarmup: () => void;
   setSessionState: (payload: SessionStatePayload) => void;
   revertDraftBan: (actorId: string) => void;
+  triggerDevPossessionAnimation: (payload: { result: 'goal' | 'saved' | 'miss'; attackerSeat: 1 | 2 }) => void;
+  clearDevPossessionAnimation: () => void;
   setError: (error: ErrorPayload) => void;
   clearError: () => void;
   reset: () => void;
@@ -158,6 +167,7 @@ const initialState = {
   rankedFoundOpponent: null,
   rankedSearching: false,
   rejoinMatch: null,
+  devPossessionAnimation: null,
   error: null,
 };
 
@@ -186,7 +196,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
         categories: draft.categories,
         bans: {},
         turnUserId: draft.turnUserId,
-        allowedCategoryIds: null,
+        halfOneCategoryId: null,
       },
     });
   },
@@ -204,14 +214,14 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
         },
       };
     }),
-  setDraftComplete: (allowed) => {
-    logger.info('Realtime store set draft complete', { allowedCategoryIds: allowed });
+  setDraftComplete: (halfOneCategoryId) => {
+    logger.info('Realtime store set draft complete', { halfOneCategoryId });
     set((state) => ({
       ...state,
       draft: state.draft
         ? {
             ...state.draft,
-            allowedCategoryIds: allowed,
+            halfOneCategoryId,
           }
         : null,
     }));
@@ -275,7 +285,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
       matchId: payload.matchId,
       phase: payload.phase,
       half: payload.half,
-      sharedPossession: payload.sharedPossession,
+      possessionDiff: payload.possessionDiff,
       phaseKind: payload.phaseKind,
       phaseRound: payload.phaseRound,
       stateVersion: payload.stateVersion,
@@ -760,6 +770,14 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
         draft: { ...state.draft, bans: remainingBans, turnUserId: actorId },
       };
     }),
+  triggerDevPossessionAnimation: ({ result, attackerSeat }) => {
+    const id = Date.now();
+    logger.info('Realtime store trigger dev possession animation', { id, result, attackerSeat });
+    set({ devPossessionAnimation: { id, result, attackerSeat } });
+  },
+  clearDevPossessionAnimation: () => {
+    set({ devPossessionAnimation: null });
+  },
   setError: (error) => {
     const snapshot = (error.meta as { stateSnapshot?: SessionStatePayload } | undefined)?.stateSnapshot;
     logger.warn('Realtime store set error', {
