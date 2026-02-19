@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <!-- Body -->
+  <circle cx="60" cy="32" r="20" fill="#1CB0F6"/>
+  <!-- Eyes -->
+  <circle cx="52" cy="30" r="3" fill="white"/>
+  <circle cx="68" cy="30" r="3" fill="white"/>
+  <circle cx="53" cy="30" r="1.5" fill="#131F24"/>
+  <circle cx="69" cy="30" r="1.5" fill="#131F24"/>
+  <!-- Smile -->
+  <path d="M50 38 Q60 46 70 38" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Jersey area (torso) -->
+  <rect x="35" y="52" rx="12" ry="12" width="50" height="42" fill="#1CB0F6"/>
+  <!-- Jersey collar -->
+  <path d="M48 52 Q60 60 72 52" stroke="#1890CC" stroke-width="2.5" fill="none"/>
+  <!-- Arms -->
+  <rect x="22" y="56" rx="8" ry="8" width="16" height="28" fill="#1CB0F6"/>
+  <rect x="82" y="56" rx="8" ry="8" width="16" height="28" fill="#1CB0F6"/>
+  <!-- Shorts -->
+  <rect x="38" y="90" rx="6" ry="6" width="20" height="18" fill="#131F24"/>
+  <rect x="62" y="90" rx="6" ry="6" width="20" height="18" fill="#131F24"/>
+  <!-- Number -->
+  <text x="60" y="80" text-anchor="middle" font-family="Arial Black" font-size="18" font-weight="900" fill="white">9</text>
+</svg>

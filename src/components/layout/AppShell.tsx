@@ -47,7 +47,6 @@ const NAV_ITEMS = [
   { path: "/play/friend?tab=browse", label: "Lobbies", icon: Users, exact: true },
   { path: "/events", label: "Events", icon: Trophy },
   { path: "/store", label: "Store", icon: Gem },
-  { path: "/career", label: "Career", icon: Briefcase },
   { path: "/profile", label: "Profile", icon: User },
   { path: "/settings", label: "Settings", icon: Settings },
 ] as const;
