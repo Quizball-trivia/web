@@ -328,6 +328,11 @@ export function GameStageRouter() {
   }
 
   if (stage === "showdown") {
+    const oppInfo = realtimeMatch?.opponent ?? rankedFoundOpponent;
+    // Extract opponent country from various possible fields
+    const oppGeo = oppInfo?.geo && typeof oppInfo.geo === 'object' ? oppInfo.geo : null;
+    const oppCountry = oppInfo?.country ?? oppGeo?.country ?? oppGeo?.countryName ?? oppGeo?.country_name;
+    const oppCountryCode = oppInfo?.countryCode ?? oppGeo?.countryCode ?? oppGeo?.country_code;
     return (
       <ShowdownScreen
         matchType={showdownType}
@@ -336,6 +341,22 @@ export function GameStageRouter() {
         opponentUsername={opponent.username}
         opponentAvatar={opponentGameAvatar}
         onComplete={() => setStage("roundIntro")}
+        playerInfo={{
+          username: player.username,
+          avatar: playerGameAvatar,
+          rankPoints: rankedProfile?.rp ?? player.rankPoints,
+          level: player.level,
+          tier: rankedProfile?.tier,
+          country: authUser?.country ?? undefined,
+          favoriteClub: authUser?.favorite_club ?? undefined,
+        }}
+        opponentInfo={oppInfo ? {
+          username: oppInfo.username,
+          avatar: opponentGameAvatar,
+          country: oppCountry,
+          countryCode: oppCountryCode,
+          flag: oppInfo.flag,
+        } : undefined}
       />
     );
   }

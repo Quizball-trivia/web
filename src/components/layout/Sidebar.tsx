@@ -1,4 +1,4 @@
-import { Trophy, BarChart3, ShoppingBag, User, Settings, Gamepad2, Menu } from 'lucide-react';
+import { Trophy, BarChart3, Gem, User, Settings, Gamepad2, Menu, ShoppingBag } from 'lucide-react';
 import { AppLogo } from '@/components/AppLogo';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -22,7 +22,7 @@ const NAV_ITEMS = [
 ] as const;
 
 export function Sidebar({ currentScreen, onNavigate, className }: SidebarProps) {
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
     <div 
