@@ -34,6 +34,9 @@ function DevMatchContent() {
   const finalResults = match?.finalResults ?? null;
   const [starting, setStarting] = useState(false);
   const startTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resetStarting = useCallback(() => {
+    setStarting(false);
+  }, []);
 
   // Clear pending start timeout once a match arrives or on unmount
   useEffect(() => {
@@ -42,16 +45,16 @@ function DevMatchContent() {
         clearTimeout(startTimerRef.current);
         startTimerRef.current = null;
       }
-      setStarting(false);
+      queueMicrotask(resetStarting);
     }
     return () => {
       if (startTimerRef.current) {
         clearTimeout(startTimerRef.current);
         startTimerRef.current = null;
       }
-      setStarting(false);
+      resetStarting();
     };
-  }, [match]);
+  }, [match, resetStarting]);
 
   const startMatch = useCallback(() => {
     setStarting(true);
@@ -61,15 +64,15 @@ function DevMatchContent() {
     // Fallback: reset if server never responds
     if (startTimerRef.current) clearTimeout(startTimerRef.current);
     startTimerRef.current = setTimeout(() => {
-      setStarting(false);
+      resetStarting();
       logger.warn('Dev: quick_match start timed out');
     }, START_TIMEOUT_MS);
-  }, []);
+  }, [resetStarting]);
 
   const playAgain = useCallback(() => {
     useRealtimeMatchStore.getState().reset();
-    setStarting(false);
-  }, []);
+    resetStarting();
+  }, [resetStarting]);
 
   const playerAvatar = resolveAvatarUrl(authUser?.avatar_url ?? player.avatarCustomization?.base ?? player.avatar, player.id);
   const opponentAvatar = resolveAvatarUrl(match?.opponent?.avatarUrl, match?.opponent?.id ?? 'ai');

@@ -654,6 +654,584 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/store/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List active store products */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Active store products */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** Format: uuid */
+                                id: string;
+                                slug: string;
+                                /** @enum {string} */
+                                type: "coin_pack" | "ticket_pack" | "avatar" | "chance_card";
+                                /** @default {} */
+                                name: {
+                                    [key: string]: string;
+                                };
+                                /** @default {} */
+                                description: {
+                                    [key: string]: string;
+                                };
+                                priceCents: number;
+                                currency: string;
+                                metadata?: unknown;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/store/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Stripe checkout session */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        productSlug: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Checkout URL created */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uri */
+                            url: string;
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Product not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Stripe checkout creation failed */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/store/purchase-coins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Purchase non-coin-pack products with coin balance */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        productSlug: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Product purchased with coins */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            wallet: {
+                                coins: number;
+                                tickets: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Insufficient coins or invalid product type */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Product not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/store/wallet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get authenticated wallet balances */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Wallet balances */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            coins: number;
+                            tickets: number;
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/store/inventory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get authenticated user inventory */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description User inventory */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** Format: uuid */
+                                inventoryId: string;
+                                /** Format: uuid */
+                                productId: string;
+                                slug: string;
+                                /** @enum {string} */
+                                type: "coin_pack" | "ticket_pack" | "avatar" | "chance_card";
+                                /** @default {} */
+                                name: {
+                                    [key: string]: string;
+                                };
+                                /** @default {} */
+                                description: {
+                                    [key: string]: string;
+                                };
+                                metadata?: unknown;
+                                quantity: number;
+                                /** Format: date-time */
+                                acquiredAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/store/dev/grant-self": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Development-only self wallet grant
+         * @description Local development helper for quickly granting coins/tickets to the authenticated user.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        coinsDelta?: number;
+                        ticketsDelta?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated wallet after grant */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            wallet: {
+                                coins: number;
+                                tickets: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not available outside local environment */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/store/admin/adjustments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply manual admin adjustment
+         * @description Requires admin role
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        userId: string;
+                        coinsDelta?: number;
+                        ticketsDelta?: number;
+                        inventoryGrants?: {
+                            productSlug: string;
+                            /** @default 1 */
+                            quantity?: number;
+                        }[];
+                        reason: string;
+                        idempotencyKey?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Adjustment result */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            applied: boolean;
+                            wallet: {
+                                coins: number;
+                                tickets: number;
+                            };
+                            inventoryApplied: {
+                                productSlug: string;
+                                /** @default 1 */
+                                quantity: number;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Invalid adjustment request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/store/admin/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List store transaction logs
+         * @description Requires admin role
+         */
+        get: {
+            parameters: {
+                query?: {
+                    userId?: string;
+                    purchaseId?: string;
+                    eventType?: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed";
+                    outcome?: "success" | "failure";
+                    from?: string;
+                    to?: string;
+                    page?: number;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Paginated store transaction logs */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed";
+                                /** @enum {string} */
+                                outcome: "success" | "failure";
+                                /** Format: uuid */
+                                purchaseId: string | null;
+                                /** Format: uuid */
+                                userId: string | null;
+                                /** Format: uuid */
+                                actorUserId: string | null;
+                                /** Format: uuid */
+                                productId: string | null;
+                                stripeCheckoutId: string | null;
+                                stripePaymentIntent: string | null;
+                                coinsDelta: number;
+                                ticketsDelta: number;
+                                inventoryDelta?: unknown;
+                                reason: string | null;
+                                errorCode: string | null;
+                                errorMessage: string | null;
+                                requestId: string | null;
+                                metadata?: unknown;
+                                idempotencyKey: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                            page: number;
+                            limit: number;
+                            total: number;
+                            totalPages: number;
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/me": {
         parameters: {
             query?: never;
@@ -2169,6 +2747,139 @@ export interface components {
             currentWinStreak: number;
             /** Format: date-time */
             lastRankedMatchAt: string | null;
+        };
+        StoreProductsResponse: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                slug: string;
+                /** @enum {string} */
+                type: "coin_pack" | "ticket_pack" | "avatar" | "chance_card";
+                /** @default {} */
+                name: {
+                    [key: string]: string;
+                };
+                /** @default {} */
+                description: {
+                    [key: string]: string;
+                };
+                priceCents: number;
+                currency: string;
+                metadata?: unknown;
+            }[];
+        };
+        StoreWalletResponse: {
+            coins: number;
+            tickets: number;
+        };
+        StoreInventoryResponse: {
+            items: {
+                /** Format: uuid */
+                inventoryId: string;
+                /** Format: uuid */
+                productId: string;
+                slug: string;
+                /** @enum {string} */
+                type: "coin_pack" | "ticket_pack" | "avatar" | "chance_card";
+                /** @default {} */
+                name: {
+                    [key: string]: string;
+                };
+                /** @default {} */
+                description: {
+                    [key: string]: string;
+                };
+                metadata?: unknown;
+                quantity: number;
+                /** Format: date-time */
+                acquiredAt: string;
+            }[];
+        };
+        CreateCheckoutResponse: {
+            /** Format: uri */
+            url: string;
+        };
+        PurchaseWithCoinsResponse: {
+            wallet: {
+                coins: number;
+                tickets: number;
+            };
+        };
+        ManualAdjustmentResponse: {
+            applied: boolean;
+            wallet: {
+                coins: number;
+                tickets: number;
+            };
+            inventoryApplied: {
+                productSlug: string;
+                /** @default 1 */
+                quantity: number;
+            }[];
+        };
+        StoreTransactionLogResponse: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed";
+            /** @enum {string} */
+            outcome: "success" | "failure";
+            /** Format: uuid */
+            purchaseId: string | null;
+            /** Format: uuid */
+            userId: string | null;
+            /** Format: uuid */
+            actorUserId: string | null;
+            /** Format: uuid */
+            productId: string | null;
+            stripeCheckoutId: string | null;
+            stripePaymentIntent: string | null;
+            coinsDelta: number;
+            ticketsDelta: number;
+            inventoryDelta?: unknown;
+            reason: string | null;
+            errorCode: string | null;
+            errorMessage: string | null;
+            requestId: string | null;
+            metadata?: unknown;
+            idempotencyKey: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        ListStoreTransactionsResponse: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed";
+                /** @enum {string} */
+                outcome: "success" | "failure";
+                /** Format: uuid */
+                purchaseId: string | null;
+                /** Format: uuid */
+                userId: string | null;
+                /** Format: uuid */
+                actorUserId: string | null;
+                /** Format: uuid */
+                productId: string | null;
+                stripeCheckoutId: string | null;
+                stripePaymentIntent: string | null;
+                coinsDelta: number;
+                ticketsDelta: number;
+                inventoryDelta?: unknown;
+                reason: string | null;
+                errorCode: string | null;
+                errorMessage: string | null;
+                requestId: string | null;
+                metadata?: unknown;
+                idempotencyKey: string | null;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+            page: number;
+            limit: number;
+            total: number;
+            totalPages: number;
         };
         I18nField: {
             [key: string]: string;

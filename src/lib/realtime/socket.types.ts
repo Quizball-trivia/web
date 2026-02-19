@@ -133,6 +133,7 @@ export interface ResolvedGameQuestion {
 
 export interface MatchStartPayload {
   matchId: string;
+  mode: MatchMode;
   mySeat?: 1 | 2;
   opponent: OpponentInfo;
 }
@@ -154,6 +155,20 @@ export interface MatchQuestionPayload {
   phaseRound?: number | null;
   shooterSeat?: 1 | 2 | null;
   attackerSeat?: 1 | 2 | null;
+}
+
+export interface MatchChanceCardUsePayload {
+  matchId: string;
+  qIndex: number;
+  clientActionId: string;
+}
+
+export interface MatchChanceCardAppliedPayload {
+  matchId: string;
+  qIndex: number;
+  clientActionId: string;
+  eliminatedIndices: number[];
+  remainingQuantity: number;
 }
 
 /** Locale-resolved version of MatchQuestionPayload for use in the store & components. */
@@ -421,6 +436,7 @@ export interface ClientToServerEvents {
   'ranked:queue_leave': () => void;
   'draft:ban': (data: { categoryId: string }) => void;
   'match:answer': (data: { matchId: string; qIndex: number; selectedIndex: number | null; timeMs: number }) => void;
+  'match:chance_card_use': (data: MatchChanceCardUsePayload) => void;
   'match:halftime_ban': (data: { matchId: string; categoryId: string }) => void;
   'match:leave': (data?: { matchId?: string }) => void;
   'match:rejoin': (data?: { matchId?: string }) => void;
@@ -447,6 +463,7 @@ export interface ServerToClientEvents {
   'match:countdown': (data: MatchCountdownPayload) => void;
   'match:state': (data: MatchStatePayload) => void;
   'match:question': (data: MatchQuestionPayload) => void;
+  'match:chance_card_applied': (data: MatchChanceCardAppliedPayload) => void;
   'match:opponent_answered': (data: MatchOpponentAnsweredPayload) => void;
   'match:answer_ack': (data: MatchAnswerAckPayload) => void;
   'match:round_result': (data: MatchRoundResultPayload) => void;

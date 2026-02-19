@@ -44,4 +44,10 @@ export const queryKeys = {
     recentMatches: (limit: number) =>
       [...queryKeys.stats.all, "recentMatches", limit] as const,
   },
+  store: {
+    all: ["store"] as const,
+    products: () => [...queryKeys.store.all, "products"] as const,
+    wallet: () => [...queryKeys.store.all, "wallet"] as const,
+    inventory: () => [...queryKeys.store.all, "inventory"] as const,
+  },
 };

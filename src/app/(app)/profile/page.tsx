@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { ProfileScreen } from "@/features/profile/ProfileScreen";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { updateMe } from "@/lib/api/endpoints";
@@ -8,11 +10,15 @@ import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth.store";
 import { useMatchStatsSummary, useRecentMatches } from "@/lib/queries/stats.queries";
 import { useRankedProfile } from "@/lib/queries/ranked.queries";
+import { queryKeys } from "@/lib/queries/queryKeys";
 import { useLocale } from "@/contexts/LocaleContext";
 import { LOCALES, type Locale } from "@/data/locales";
 import { formatMatchScore } from "@/utils/matchScore";
+import { useEffect } from "react";
 
 export default function ProfilePage() {
+  const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const { player, updateStats } = usePlayer();
   const authUser = useAuthStore((state) => state.user);
   const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
@@ -26,6 +32,18 @@ export default function ProfilePage() {
 
   const { setLocale } = useLocale();
   const [isUpdating, setIsUpdating] = useState(false);
+  const purchaseStatus = searchParams.get("purchase");
+
+  useEffect(() => {
+    if (purchaseStatus === "success") {
+      toast.success("Purchase completed. Refreshing your unlocks.");
+      void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+    }
+    if (purchaseStatus === "cancelled") {
+      toast.message("Purchase cancelled.");
+    }
+  }, [purchaseStatus, queryClient]);
 
   const handleNameChange = async (name: string) => {
     if (isUpdating) return;

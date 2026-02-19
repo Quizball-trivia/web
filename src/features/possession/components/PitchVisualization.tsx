@@ -29,11 +29,15 @@ function PitchMarker({
   isPortrait = false,
   size = 40,
 }: PitchMarkerProps) {
+  const isGoalCelebration = isGoal && isShooter;
   const joltAnim = isSave && isKeeper
     ? keeperJolt
-    : isGoal && isShooter
-      ? { y: [0, -4, 0] }
+    : isGoalCelebration
+      ? { x: [0, 8, -8, 6, -6, 4, -4, 0], y: [0, -4, -1, -5, -2, -4, 0, 0] }
       : {};
+  const joltTransition = isGoalCelebration
+    ? { duration: 1.8, ease: 'easeInOut' as const }
+    : { duration: 0.5 };
 
   return (
     <motion.g
@@ -41,7 +45,7 @@ function PitchMarker({
       transition={{ type: 'spring', stiffness: 150, damping: 14, mass: 0.8 }}
       filter={`url(#${glowFilter})`}
     >
-      <motion.g animate={joltAnim} transition={{ duration: 0.5 }}>
+      <motion.g animate={joltAnim} transition={joltTransition}>
         <g transform={isPortrait ? 'rotate(90)' : undefined}>
           {isShooter && !showPenResult && (
             <motion.circle
@@ -136,9 +140,9 @@ interface PitchVisualizationProps {
   orientation?: 'landscape' | 'portrait';
 }
 
-function toShotVariant(value: number | undefined): 0 | 1 | 2 {
-  const normalized = ((value ?? 0) % 3 + 3) % 3;
-  if (normalized === 1 || normalized === 2) return normalized;
+function toShotVariant(value: number | undefined): 0 | 1 | 2 | 3 | 4 {
+  const normalized = ((value ?? 0) % 5 + 5) % 5;
+  if (normalized === 1 || normalized === 2 || normalized === 3 || normalized === 4) return normalized;
   return 0;
 }
 
@@ -216,7 +220,15 @@ export function PitchVisualization({
   const isShotSave = shotResultActive && shotMode.result === 'saved';
   const isShotMiss = shotResultActive && shotMode.result === 'miss';
   const shotVariant = toShotVariant(shotMode?.variant);
-  const shotGoalLabel = shotVariant === 1 ? 'TOP BINS' : shotVariant === 2 ? 'CLINICAL' : 'GOAL';
+  const shotGoalLabel = shotVariant === 1
+    ? 'TOP BINS'
+    : shotVariant === 2
+      ? 'CLINICAL'
+      : shotVariant === 3
+        ? 'BENDER'
+        : shotVariant === 4
+          ? 'SCREAMER'
+          : 'GOAL';
   const shotSaveLabel = shotVariant === 1 ? 'DENIED' : shotVariant === 2 ? 'STOPPED' : 'SAVED';
   const shotMissLabel = shotVariant === 1 ? 'OFF TARGET' : shotVariant === 2 ? 'HIT POST' : 'MISS';
   // Ball origin — captured at shot start so it doesn't shift when positions reset
@@ -266,6 +278,23 @@ export function PitchVisualization({
         return {
           x: [shotBallOriginX, goal.goalLineX - 20 * goal.inward, goal.goalTarget.x],
           y: [shotBallOriginY, goal.penY + 6, goal.goalTarget.y + 2],
+        };
+      }
+      if (shotVariant === 3) {
+        return {
+          x: [
+            shotBallOriginX,
+            shotBallOriginX - 28 * goal.inward,
+            (shotBallOriginX + goal.goalTarget.x) / 2 - 10 * goal.inward,
+            goal.goalTarget.x,
+          ],
+          y: [shotBallOriginY, shotBallOriginY - 24, 76, goal.goalTarget.y - 10],
+        };
+      }
+      if (shotVariant === 4) {
+        return {
+          x: [shotBallOriginX, (shotBallOriginX + goal.goalTarget.x) / 2, goal.goalTarget.x - 8 * goal.inward, goal.goalTarget.x],
+          y: [shotBallOriginY, 84, 62, goal.goalTarget.y - 6],
         };
       }
       return {
@@ -323,7 +352,18 @@ export function PitchVisualization({
   const ballTransition = useMemo(() => {
     if (isGoal) return { duration: 0.4, ease: [0.2, 0, 0.4, 1] as const };
     if (isSave) return { duration: 0.5, ease: [0.3, 0, 0.2, 1] as const };
-    if (isShotGoal) return { duration: shotVariant === 1 ? 0.55 : shotVariant === 2 ? 0.38 : 0.45, ease: [0.2, 0, 0.4, 1] as const };
+    if (isShotGoal) {
+      const duration = shotVariant === 1
+        ? 0.55
+        : shotVariant === 2
+          ? 0.38
+          : shotVariant === 3
+            ? 0.62
+            : shotVariant === 4
+              ? 0.48
+              : 0.45;
+      return { duration, ease: [0.2, 0, 0.4, 1] as const };
+    }
     if (isShotSave) return { duration: shotVariant === 1 ? 0.6 : 0.5, ease: [0.3, 0, 0.2, 1] as const, times: [0, 0.5, 1] };
     if (isShotMiss) return { duration: shotVariant === 1 ? 0.45 : 0.55, ease: [0.2, 0, 0.6, 1] as const };
     return { type: 'spring' as const, stiffness: 160, damping: 12, mass: 0.7 };

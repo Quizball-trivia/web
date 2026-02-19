@@ -5,6 +5,7 @@ import type {
   DraftState,
   LobbyState,
   MatchAnswerAckPayload,
+  MatchChanceCardAppliedPayload,
   MatchFinalResultsPayload,
   MatchRejoinAvailablePayload,
   MatchStatePayload,
@@ -41,6 +42,7 @@ export interface MatchQuestionState {
 
 export interface MatchStatus {
   matchId: string;
+  mode: 'friendly' | 'ranked';
   mySeat: 1 | 2 | null;
   opponent: OpponentInfo;
   countdownEndsAt: number | null;
@@ -59,6 +61,20 @@ export interface MatchStatus {
   opponentAnsweredCorrectly: boolean | null;
   possessionState: MatchStatePayload | null;
   stateVersion: number;
+  optimisticChanceCard: OptimisticChanceCardState | null;
+}
+
+export interface OptimisticChanceCardState {
+  qIndex: number;
+  clientActionId: string;
+  eliminatedIndices: number[];
+  pending: boolean;
+  pendingSync: boolean;
+  rollbackSnapshot: {
+    eliminatedIndices: number[];
+    remainingQuantityBefore: number | null;
+  };
+  remainingQuantityAfter: number | null;
 }
 
 export interface WarmupStatus {
@@ -126,6 +142,15 @@ interface RealtimeState {
     selectedIndex?: number | null;
   }) => void;
   setQuestionPhase: (phase: 'reveal' | 'playing') => void;
+  applyOptimisticChanceCard: (payload: {
+    qIndex: number;
+    clientActionId: string;
+    eliminatedIndices: number[];
+    remainingQuantityBefore: number | null;
+  }) => void;
+  markOptimisticChanceCardPendingSync: (payload: { qIndex: number; clientActionId: string }) => void;
+  confirmOptimisticChanceCard: (payload: MatchChanceCardAppliedPayload) => void;
+  rollbackOptimisticChanceCard: (payload?: { qIndex?: number; clientActionId?: string }) => void;
   setRoundResult: (payload: MatchRoundResultPayload) => void;
   setFinalResults: (payload: MatchFinalResultsPayload) => void;
   setMatchPaused: (payload: { graceMs: number }) => void;
@@ -239,6 +264,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
       rejoinMatch: null,
       match: {
         matchId: payload.matchId,
+        mode: payload.mode,
         mySeat: payload.mySeat ?? null,
         opponent: payload.opponent,
         countdownEndsAt: Date.now() + DEFAULT_COUNTDOWN_MS,
@@ -257,6 +283,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
         opponentAnsweredCorrectly: null,
         possessionState: null,
         stateVersion: 0,
+        optimisticChanceCard: null,
       },
     });
   },
@@ -322,6 +349,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
           opponentRecentPoints: shouldClearQuestion ? 0 : state.match.opponentRecentPoints,
           opponentAnsweredCorrectly: shouldClearQuestion ? null : state.match.opponentAnsweredCorrectly,
           currentQuestionPhase: shouldClearQuestion ? 'reveal' : state.match.currentQuestionPhase,
+          optimisticChanceCard: shouldClearQuestion ? null : state.match.optimisticChanceCard,
         },
       };
     });
@@ -391,6 +419,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
           lastRoundResult: null,
           currentQuestionPhase: 'reveal',
           opponentAnsweredCorrectly: null,
+          optimisticChanceCard: null,
           questions: {
             ...state.match.questions,
             [payload.qIndex]: {
@@ -421,6 +450,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
           lastRoundResult: null,
           currentQuestionPhase: 'reveal',
           opponentAnsweredCorrectly: null,
+          optimisticChanceCard: null,
         },
       };
     });
@@ -502,6 +532,93 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
       };
     });
   },
+  applyOptimisticChanceCard: (payload) => {
+    logger.info('Realtime store apply optimistic 50-50 card', payload);
+    set((state) => {
+      if (!state.match) return state;
+      const currentQIndex = state.match.currentQuestion?.qIndex;
+      if (currentQIndex === undefined || currentQIndex !== payload.qIndex) return state;
+
+      return {
+        ...state,
+        match: {
+          ...state.match,
+          optimisticChanceCard: {
+            qIndex: payload.qIndex,
+            clientActionId: payload.clientActionId,
+            eliminatedIndices: payload.eliminatedIndices,
+            pending: true,
+            pendingSync: false,
+            rollbackSnapshot: {
+              eliminatedIndices: payload.eliminatedIndices,
+              remainingQuantityBefore: payload.remainingQuantityBefore,
+            },
+            remainingQuantityAfter: null,
+          },
+        },
+      };
+    });
+  },
+  markOptimisticChanceCardPendingSync: (payload) => {
+    set((state) => {
+      if (!state.match?.optimisticChanceCard) return state;
+      const optimistic = state.match.optimisticChanceCard;
+      if (optimistic.qIndex !== payload.qIndex || optimistic.clientActionId !== payload.clientActionId || !optimistic.pending) {
+        return state;
+      }
+      return {
+        ...state,
+        match: {
+          ...state.match,
+          optimisticChanceCard: {
+            ...optimistic,
+            pending: false,
+            pendingSync: true,
+          },
+        },
+      };
+    });
+  },
+  confirmOptimisticChanceCard: (payload) => {
+    logger.info('Realtime store confirm 50-50 card', payload);
+    set((state) => {
+      if (!state.match) return state;
+      const optimistic = state.match.optimisticChanceCard;
+      if (!optimistic) return state;
+      if (optimistic.qIndex !== payload.qIndex) return state;
+      if (optimistic.clientActionId !== payload.clientActionId) return state;
+
+      return {
+        ...state,
+        match: {
+          ...state.match,
+          optimisticChanceCard: {
+            ...optimistic,
+            eliminatedIndices: payload.eliminatedIndices,
+            pending: false,
+            pendingSync: false,
+            remainingQuantityAfter: payload.remainingQuantity,
+          },
+        },
+      };
+    });
+  },
+  rollbackOptimisticChanceCard: (payload) => {
+    logger.warn('Realtime store rollback optimistic 50-50 card', payload);
+    set((state) => {
+      if (!state.match?.optimisticChanceCard) return state;
+      const optimistic = state.match.optimisticChanceCard;
+      if (payload?.qIndex !== undefined && optimistic.qIndex !== payload.qIndex) return state;
+      if (payload?.clientActionId && optimistic.clientActionId !== payload.clientActionId) return state;
+      return {
+        ...state,
+        match: {
+          ...state.match,
+          optimisticChanceCard: null,
+        },
+      };
+    });
+  },
   setRoundResult: (payload) => {
     logger.info('Realtime store set round result', { matchId: payload.matchId, qIndex: payload.qIndex });
     set((state) => {
@@ -529,6 +646,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
           lastRoundResult: payload,
           myTotalPoints: myTotals?.totalPoints ?? state.match.myTotalPoints,
           oppTotalPoints: opponentTotals?.totalPoints ?? state.match.oppTotalPoints,
+          optimisticChanceCard: null,
           questions: {
             ...state.match.questions,
             [payload.qIndex]: {
@@ -551,6 +669,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
         ? {
             ...state.match,
             finalResults: payload,
+            optimisticChanceCard: null,
           }
         : null,
     }));

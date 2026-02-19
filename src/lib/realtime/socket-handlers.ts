@@ -5,9 +5,11 @@ import { queryKeys } from '@/lib/queries/queryKeys';
 import { logger } from '@/utils/logger';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 import { getI18nText } from '@/lib/utils/i18n';
+import { toast } from 'sonner';
 import type {
   DraftState,
   ErrorPayload,
+  MatchChanceCardAppliedPayload,
   LobbyState,
   MatchAnswerAckPayload,
   MatchFinalResultsPayload,
@@ -47,6 +49,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   socket.off('match:countdown');
   socket.off('match:state');
   socket.off('match:question');
+  socket.off('match:chance_card_applied');
   socket.off('match:opponent_answered');
   socket.off('match:answer_ack');
   socket.off('match:round_result');
@@ -114,6 +117,28 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
         store.revertDraftBan(selfUserId);
       }
     }
+
+    if (
+      data.code === 'CHANCE_CARD_NOT_AVAILABLE'
+      || data.code === 'CHANCE_CARD_NOT_ALLOWED'
+      || data.code === 'CHANCE_CARD_ALREADY_USED'
+      || data.code === 'CHANCE_CARD_SYNC_FAILED'
+    ) {
+      const meta = data.meta as
+        | {
+          qIndex?: number;
+          clientActionId?: string;
+        }
+        | undefined;
+      store.rollbackOptimisticChanceCard({
+        qIndex: typeof meta?.qIndex === 'number' ? meta.qIndex : undefined,
+        clientActionId: typeof meta?.clientActionId === 'string' ? meta.clientActionId : undefined,
+      });
+      toast.error(data.message);
+      if (queryClient) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
+      }
+    }
     store.setError(data);
   });
 
@@ -141,6 +166,9 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   socket.on('match:start', (data: MatchStartPayload) => {
     logger.info('Socket event match:start', { matchId: data.matchId, opponentId: data.opponent.id });
     store.setMatchStart(data);
+    if (queryClient) {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+    }
   });
 
   socket.on('match:countdown', (data: MatchCountdownPayload) => {
@@ -193,6 +221,14 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     store.setMatchQuestion(resolvedData);
   });
 
+  socket.on('match:chance_card_applied', (data: MatchChanceCardAppliedPayload) => {
+    logger.info('Socket event match:chance_card_applied', data);
+    store.confirmOptimisticChanceCard(data);
+    if (queryClient) {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
+    }
+  });
+
   socket.on('match:opponent_answered', (data: MatchOpponentAnsweredPayload) => {
     logger.info('Socket event match:opponent_answered', {
       opponentTotalPoints: data.opponentTotalPoints,
@@ -231,6 +267,8 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     });
     if (queryClient) {
       void queryClient.invalidateQueries({ queryKey: queryKeys.ranked.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
     }
   });
 

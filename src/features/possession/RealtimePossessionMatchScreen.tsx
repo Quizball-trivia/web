@@ -18,6 +18,7 @@ import { PossessionFeed } from './components/PossessionFeed';
 import { PossessionQuestionPanel } from './components/PossessionQuestionPanel';
 import { useGameSounds } from '@/lib/sounds/useGameSounds';
 import { logger } from '@/utils/logger';
+import { useStoreInventory } from '@/lib/queries/store.queries';
 
 interface RealtimePossessionMatchScreenProps {
   playerAvatar: string;
@@ -62,6 +63,13 @@ function toRevealAnswerStates(
   }) as AnswerStateArray;
 }
 
+function createClientActionId(): string {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID();
+  }
+  return `cc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 export function RealtimePossessionMatchScreen({
   playerAvatar,
   playerUsername,
@@ -75,6 +83,8 @@ export function RealtimePossessionMatchScreen({
   const devPossessionAnimation = useRealtimeMatchStore((store) => store.devPossessionAnimation);
   const clearDevPossessionAnimation = useRealtimeMatchStore((store) => store.clearDevPossessionAnimation);
   const match = useRealtimeMatchStore((store) => store.match);
+  const applyOptimisticChanceCard = useRealtimeMatchStore((store) => store.applyOptimisticChanceCard);
+  const markOptimisticChanceCardPendingSync = useRealtimeMatchStore((store) => store.markOptimisticChanceCardPendingSync);
   const answerAck = match?.answerAck ?? null;
   const opponentAnsweredCorrectly = match?.opponentAnsweredCorrectly ?? null;
   const opponentRecentPoints = match?.opponentRecentPoints ?? 0;
@@ -93,6 +103,7 @@ export function RealtimePossessionMatchScreen({
     player: null,
     opponent: null,
   });
+  const { data: inventoryData } = useStoreInventory();
 
   const possessionState = match?.possessionState;
   const phase = possessionState?.phase;
@@ -301,6 +312,41 @@ export function RealtimePossessionMatchScreen({
   const serverMyPossessionPct = mySeat === 2 ? 100 - possessionPct : possessionPct;
   const localQuestion = state.currentQuestion;
   const localQuestionIndex = localQuestion?.qIndex ?? null;
+  const optimisticChanceCard = match?.optimisticChanceCard ?? null;
+
+  const chanceCardBaseQuantity = useMemo(() => {
+    const inventoryItems = inventoryData?.items ?? [];
+    const chanceCardItem = inventoryItems.find((item) => item.slug === 'chance_card_5050');
+    return chanceCardItem?.quantity ?? 0;
+  }, [inventoryData?.items]);
+
+  const activeOptimisticChanceCard = useMemo(() => {
+    if (!optimisticChanceCard || localQuestionIndex === null) return null;
+    if (optimisticChanceCard.qIndex !== localQuestionIndex) return null;
+    return optimisticChanceCard;
+  }, [localQuestionIndex, optimisticChanceCard]);
+
+  const chanceCardCount = useMemo(() => {
+    if (!activeOptimisticChanceCard) return chanceCardBaseQuantity;
+    if (activeOptimisticChanceCard.remainingQuantityAfter !== null) {
+      return activeOptimisticChanceCard.remainingQuantityAfter;
+    }
+    if (activeOptimisticChanceCard.pending || activeOptimisticChanceCard.pendingSync) {
+      return Math.max(0, chanceCardBaseQuantity - 1);
+    }
+    return chanceCardBaseQuantity;
+  }, [activeOptimisticChanceCard, chanceCardBaseQuantity]);
+
+  useEffect(() => {
+    if (!activeOptimisticChanceCard?.pending) return;
+    const timer = setTimeout(() => {
+      markOptimisticChanceCardPendingSync({
+        qIndex: activeOptimisticChanceCard.qIndex,
+        clientActionId: activeOptimisticChanceCard.clientActionId,
+      });
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [activeOptimisticChanceCard, markOptimisticChanceCardPendingSync]);
 
   // Optimistic possession state/refs — values computed after myRound/oppRound are defined below
   const [optimisticOffset, setOptimisticOffset] = useState(0);
@@ -338,6 +384,39 @@ export function RealtimePossessionMatchScreen({
     getSocket().emit('match:halftime_ban', {
       matchId: match.matchId,
       categoryId,
+    });
+  };
+
+  const handleUseChanceCard = () => {
+    if (!match || !localQuestion) return;
+    if (match.mode !== 'ranked') return;
+    if (isPenaltyQuestion || isShotVisualPhase || isHalftime) return;
+    if (state.questionPhase !== 'playing') return;
+    if (state.roundResolved || state.selectedAnswer !== null) return;
+    if (activeOptimisticChanceCard) return;
+    if (chanceCardCount <= 0) return;
+    if (typeof state.correctIndex !== 'number' || state.correctIndex < 0) return;
+
+    const optionsCount = localQuestion.question.options.length;
+    const wrongIndices = Array.from({ length: optionsCount }, (_, index) => index).filter(
+      (index) => index !== state.correctIndex
+    );
+    if (wrongIndices.length < 2) return;
+
+    const eliminatedIndices = wrongIndices.slice(0, 2);
+    const clientActionId = createClientActionId();
+
+    applyOptimisticChanceCard({
+      qIndex: localQuestion.qIndex,
+      clientActionId,
+      eliminatedIndices,
+      remainingQuantityBefore: chanceCardCount,
+    });
+
+    getSocket().emit('match:chance_card_use', {
+      matchId: match.matchId,
+      qIndex: localQuestion.qIndex,
+      clientActionId,
     });
   };
 
@@ -414,12 +493,12 @@ export function RealtimePossessionMatchScreen({
 
   const shotAnimationVariant = useMemo(() => {
     if (state.roundResult) {
-      return state.roundResult.qIndex % 3;
+      return state.roundResult.qIndex % 5;
     }
     if (devPossessionAnimation) {
-      return devPossessionAnimation.id % 3;
+      return devPossessionAnimation.id % 5;
     }
-    return (localQuestion?.qIndex ?? 0) % 3;
+    return (localQuestion?.qIndex ?? 0) % 5;
   }, [devPossessionAnimation, localQuestion?.qIndex, state.roundResult]);
 
   const targetGoal = useMemo((): 'left' | 'right' | undefined => {
@@ -916,8 +995,13 @@ export function RealtimePossessionMatchScreen({
                     showOptions={state.showOptions}
                     selectedAnswer={state.selectedAnswer}
                     answerStates={answerStates}
+                    eliminatedIndices={activeOptimisticChanceCard?.eliminatedIndices ?? []}
                     opponentAnswer={opponentAnswer}
                     opponentAvatarUrl={opponentAvatar}
+                    chanceCardCount={chanceCardCount}
+                    chanceCardPending={Boolean(activeOptimisticChanceCard?.pending || activeOptimisticChanceCard?.pendingSync)}
+                    chanceCardPendingSync={Boolean(activeOptimisticChanceCard?.pendingSync)}
+                    onUseChanceCard={handleUseChanceCard}
                     showPlayerSplash={showPlayerSplash}
                     showOpponentSplash={showOpponentSplash}
                     playerSplashPoints={playerSplashPoints}

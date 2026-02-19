@@ -8,6 +8,7 @@ import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import type { AnswerStateArray, Phase } from '../types/possession.types';
 import { ANSWER_LABELS } from '../types/possession.types';
 import { getDifficultyLabel } from '../data/mockQuestions';
+import { Sparkles } from 'lucide-react';
 
 interface PossessionQuestionPanelProps {
   phase: Phase;
@@ -20,8 +21,13 @@ interface PossessionQuestionPanelProps {
   showOptions: boolean;
   selectedAnswer: number | null;
   answerStates: AnswerStateArray;
+  eliminatedIndices?: number[];
   opponentAnswer: number | null;
   opponentAvatarUrl?: string;
+  chanceCardCount?: number;
+  chanceCardPending?: boolean;
+  chanceCardPendingSync?: boolean;
+  onUseChanceCard?: () => void;
 
   // Splashes
   showPlayerSplash: boolean;
@@ -44,8 +50,13 @@ export function PossessionQuestionPanel({
   showOptions,
   selectedAnswer,
   answerStates,
+  eliminatedIndices = [],
   opponentAnswer,
   opponentAvatarUrl,
+  chanceCardCount = 0,
+  chanceCardPending = false,
+  chanceCardPendingSync = false,
+  onUseChanceCard,
   showPlayerSplash,
   showOpponentSplash,
   playerSplashPoints,
@@ -76,6 +87,13 @@ export function PossessionQuestionPanel({
     : isShotPhase
       ? phase === 'shot' && selectedAnswer === null
       : phase === 'playing';
+  const canUseChanceCard =
+    !isPenaltyPhase &&
+    !isShotPhase &&
+    isPlaying &&
+    chanceCardCount > 0 &&
+    !chanceCardPending &&
+    typeof onUseChanceCard === 'function';
 
   return (
     <>
@@ -116,6 +134,28 @@ export function PossessionQuestionPanel({
         />
       </div>
 
+      {!isPenaltyPhase && !isShotPhase && (
+        <div className="px-4 mt-2">
+          <button
+            type="button"
+            onClick={onUseChanceCard}
+            disabled={!canUseChanceCard}
+            className={`w-full rounded-2xl border px-4 py-2.5 text-sm font-black uppercase tracking-wide transition-colors ${
+              canUseChanceCard
+                ? 'border-rose-400/60 bg-rose-500/15 text-rose-200 hover:bg-rose-500/25'
+                : 'border-white/10 bg-white/5 text-white/40 cursor-not-allowed'
+            }`}
+          >
+            <span className="inline-flex items-center gap-2">
+              <Sparkles className="size-4" />
+              50-50 Card ({chanceCardCount})
+              {chanceCardPending ? ' - Applying...' : ''}
+              {chanceCardPendingSync ? ' - Syncing...' : ''}
+            </span>
+          </button>
+        </div>
+      )}
+
       {/* Answer cards */}
       <motion.div
         key={`options-${question.id}`}
@@ -127,7 +167,12 @@ export function PossessionQuestionPanel({
         transition={{ duration: 0.25 }}
         aria-hidden={!showOptions}
       >
-        {question.options.map((opt, i) => (
+        {question.options.map((opt, i) => {
+          const isEliminated = eliminatedIndices.includes(i) && selectedAnswer !== i;
+          const cardState = isEliminated && answerStates[i] === 'default'
+            ? 'disabled'
+            : answerStates[i];
+          return (
           <motion.div
             key={`${question.id}-${i}`}
             initial={false}
@@ -149,19 +194,21 @@ export function PossessionQuestionPanel({
               text={opt}
               index={i}
               isSelected={selectedAnswer === i}
-              state={answerStates[i]}
+              state={cardState}
               fadeOut={isReveal}
               opponentPicked={!isPenaltyPhase && opponentAnswer === i}
               opponentPickCorrect={!isPenaltyPhase && opponentAnswer !== null ? opponentAnswer === question.correctIndex : undefined}
               opponentAvatarUrl={opponentAvatarUrl}
               onClick={() => {
                 if (!showOptions || !isPlaying) return;
+                if (isEliminated) return;
                 onAnswer(i);
               }}
-              disabled={!showOptions || !isPlaying}
+              disabled={!showOptions || !isPlaying || isEliminated}
             />
           </motion.div>
-        ))}
+          );
+        })}
       </motion.div>
     </>
   );

@@ -7,6 +7,7 @@ import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { useGameSessionStore } from "@/stores/gameSession.store";
+import { useStoreWallet } from "@/lib/queries/store.queries";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
@@ -33,7 +34,6 @@ import {
   Bell,
   LogOut,
   Briefcase,
-  Flame,
   ArrowRight,
   X,
   Users,
@@ -108,6 +108,7 @@ export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { player: playerStats } = usePlayer();
+  const { data: storeWallet } = useStoreWallet();
   const logout = useAuthStore((state) => state.logout);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const lobby = useRealtimeMatchStore((state) => state.lobby);
@@ -134,6 +135,8 @@ export function AppShell({ children }: AppShellProps) {
   const sessionWaitingLobbyId = sessionState?.waitingLobbyId ?? null;
   const lobbyDebugMismatch = localWaitingLobbyId !== sessionWaitingLobbyId;
   const sessionStateLabel = sessionState?.state ?? "NO_SESSION";
+  const navbarCoins = storeWallet?.coins ?? playerStats.coins;
+  const navbarTickets = storeWallet?.tickets ?? (playerStats.tickets ?? 0);
 
   useEffect(() => {
     const socket = getSocket();
@@ -320,17 +323,8 @@ export function AppShell({ children }: AppShellProps) {
                   <span>src:{rankedGeoHintDebug?.source ?? "-"}</span>
                 </div>
               )}
-              {/* Currencies & Streak */}
+              {/* Currencies */}
               <div className="flex items-center gap-3 mr-4">
-                {/* Streak */}
-                {/* <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20">
-                  <Flame className="size-4 text-orange-500" />
-                  <span className="text-xs text-orange-500/80 font-medium">Streak</span>
-                  <span className="text-sm font-bold text-orange-500">
-                    {playerStats.currentStreak ?? 0}
-                  </span>
-                </div> */}
-
                 {/* Coins */}
                 <Link
                   href="/store"
@@ -338,17 +332,20 @@ export function AppShell({ children }: AppShellProps) {
                 >
                   <Coins className="size-4 text-yellow-500" />
                   <span className="text-sm font-bold text-yellow-500">
-                    {playerStats.coins.toLocaleString()}
+                    {navbarCoins.toLocaleString()}
                   </span>
                 </Link>
 
                 {/* Tickets */}
-                <button className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all active:scale-95">
+                <Link
+                  href="/store"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all active:scale-95"
+                >
                   <Ticket className="size-4 text-primary" />
                   <span className="text-sm font-bold text-primary">
-                    {playerStats.tickets ?? 10}
+                    {navbarTickets}
                   </span>
-                </button>
+                </Link>
               </div>
 
               <div className="h-6 w-px bg-border/50" />
@@ -506,7 +503,7 @@ export function AppShell({ children }: AppShellProps) {
       <div className="flex flex-col min-h-screen md:hidden">
         {/* Header */}
         {showHeader && (
-          <div className="border-b bg-card sticky top-0 z-10">
+          <div className="border-b bg-card">
             <div className="px-4 py-4 bg-background">
               {showLobbyDebug && (
                 <div
@@ -564,14 +561,6 @@ export function AppShell({ children }: AppShellProps) {
                 </div>
 
                 <div className="flex items-center gap-2 z-10">
-                  {/* Streak */}
-                  <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/30">
-                    <Flame className="size-4 text-orange-500" />
-                    <span className="text-sm font-bold text-orange-500">
-                      {playerStats.currentStreak ?? 0}
-                    </span>
-                  </div>
-
                   {/* Coins */}
                   <Link
                     href="/store"
@@ -579,15 +568,18 @@ export function AppShell({ children }: AppShellProps) {
                   >
                     <Coins className="size-4 text-yellow-500" />
                     <span className="text-sm">
-                      {playerStats.coins.toLocaleString()}
+                      {navbarCoins.toLocaleString()}
                     </span>
                   </Link>
 
                   {/* Tickets */}
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/30 hover:bg-primary/20 transition-colors active:scale-95">
+                  <Link
+                    href="/store"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/30 hover:bg-primary/20 transition-colors active:scale-95"
+                  >
                     <Ticket className="size-4 text-primary" />
-                    <span className="text-sm">{playerStats.tickets ?? 10}</span>
-                  </button>
+                    <span className="text-sm">{navbarTickets}</span>
+                  </Link>
                 </div>
               </div>
             </div>
