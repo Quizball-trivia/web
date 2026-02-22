@@ -96,7 +96,6 @@ export const getStoreProductsQuery = () => ({
     };
   },
   ...STORE_PRODUCTS_QUERY_OPTIONS,
-  options: STORE_PRODUCTS_QUERY_OPTIONS,
 });
 
 export function useStoreProducts() {
@@ -107,7 +106,6 @@ export const getStoreWalletQuery = () => ({
   queryKey: queryKeys.store.wallet(),
   queryFn: async (): Promise<StoreWalletResponse> => getStoreWallet(),
   ...STORE_WALLET_QUERY_OPTIONS,
-  options: STORE_WALLET_QUERY_OPTIONS,
 });
 
 export function useStoreWallet() {
@@ -123,7 +121,6 @@ export const getStoreInventoryQuery = () => ({
     };
   },
   ...STORE_INVENTORY_QUERY_OPTIONS,
-  options: STORE_INVENTORY_QUERY_OPTIONS,
 });
 
 export function useStoreInventory() {

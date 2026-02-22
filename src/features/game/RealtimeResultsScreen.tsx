@@ -206,10 +206,13 @@ export function RealtimeResultsScreen({
 
   const rpTierInfo = getRankedTierProgress(newRP);
   const oldRpTierInfo = getRankedTierProgress(oldRP);
+  const tierChanged = rpTierInfo.tier !== oldRpTierInfo.tier;
+  const tierPromoted = tierChanged && newRP > oldRP;
   const rpTierVisual = getTierVisual(rpTierInfo.tier);
 
   const [animatedRP, setAnimatedRP] = useState(0);
   const [showRankReveal, setShowRankReveal] = useState(false);
+  const [tierTransitionPhase, setTierTransitionPhase] = useState<'fill' | 'settled'>('fill');
 
   useEffect(() => {
     if (rpChange === 0) {
@@ -234,6 +237,18 @@ export function RealtimeResultsScreen({
 
     return () => clearInterval(timer);
   }, [rpChange]);
+
+  // Tier change: fill to boundary first, then settle to new progress after a pause
+  useEffect(() => {
+    if (!tierChanged) {
+      setTierTransitionPhase('settled');
+      return;
+    }
+    setTierTransitionPhase('fill');
+    // 0.5s initial delay + 1.2s fill animation + 0.4s pause before resetting
+    const timer = setTimeout(() => setTierTransitionPhase('settled'), 2100);
+    return () => clearTimeout(timer);
+  }, [tierChanged]);
 
   // Trigger rank reveal after placement bar fills to 100%
   useEffect(() => {
@@ -488,8 +503,15 @@ export function RealtimeResultsScreen({
                 <div className="relative h-4 bg-white/10 rounded-full overflow-hidden mb-2">
                   <motion.div
                     initial={{ width: `${oldRpTierInfo.progress}%` }}
-                    animate={{ width: `${rpTierInfo.progress}%` }}
-                    transition={{ duration: 1.2, ease: 'easeInOut', delay: 0.5 }}
+                    animate={{
+                      width: tierChanged && tierTransitionPhase === 'fill'
+                        ? (tierPromoted ? '100%' : '0%')
+                        : `${rpTierInfo.progress}%`,
+                    }}
+                    transition={tierTransitionPhase === 'settled' && tierChanged
+                      ? { duration: 0.8, ease: 'easeOut' }
+                      : { duration: 1.2, ease: 'easeInOut', delay: 0.5 }
+                    }
                     className="absolute inset-y-0 left-0 rounded-full"
                     style={{
                       background: `linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.7))`,

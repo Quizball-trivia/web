@@ -34,17 +34,8 @@ const RANKED_TIER_BANDS: Array<{ tier: RankedTier; minRp: number; maxRpExclusive
 ];
 
 export function tierFromRp(rp: number): RankedTier {
-  if (rp >= 3200) return "GOAT";
-  if (rp >= 2900) return "Legend";
-  if (rp >= 2600) return "World-Class";
-  if (rp >= 2200) return "Captain";
-  if (rp >= 1850) return "Key Player";
-  if (rp >= 1500) return "Starting11";
-  if (rp >= 1200) return "Rotation";
-  if (rp >= 900) return "Bench";
-  if (rp >= 600) return "Reserve";
-  if (rp >= 300) return "Youth Prospect";
-  return "Academy";
+  const band = RANKED_TIER_BANDS.find((entry) => rp >= entry.minRp);
+  return band?.tier ?? "Academy";
 }
 
 export function getRankedTierProgress(rp: number): RankedTierProgress {

@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api/api";
@@ -213,6 +213,7 @@ function CosmeticCard({ item, onBuy }: { item: CosmeticItem; onBuy: (c: Cosmetic
 
 export function StoreScreen() {
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: productsData } = useStoreProducts();
@@ -277,8 +278,8 @@ export function StoreScreen() {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("purchase");
     const cleaned = params.toString();
-    router.replace(cleaned ? `?${cleaned}` : window.location.pathname, { scroll: false });
-  }, [searchParams, queryClient, router]);
+    router.replace(cleaned ? `?${cleaned}` : pathname, { scroll: false });
+  }, [searchParams, pathname, queryClient, router]);
 
   const coinBundles = useMemo<BundleProps[]>(() => {
     const config: Array<{ id: string; title: string; amount: number; bonus?: number; isPopular?: boolean; slug: string }> = [
