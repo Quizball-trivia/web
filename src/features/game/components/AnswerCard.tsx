@@ -1,6 +1,5 @@
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
-import Image from 'next/image';
 
 const ANSWER_COLORS = [
   { bg: 'bg-emerald-500', borderSide: 'border-emerald-500', borderBottom: 'border-b-emerald-600', light: 'bg-emerald-500/15', text: 'text-emerald-400' },
@@ -16,6 +15,7 @@ interface AnswerCardProps {
   isSelected?: boolean;
   opponentPicked?: boolean;
   opponentPickCorrect?: boolean;
+  /** @deprecated kept for backward compatibility; not used/rendered */
   opponentAvatarUrl?: string;
   state?: 'default' | 'correct' | 'wrong' | 'disabled';
   fadeOut?: boolean;
@@ -30,12 +30,14 @@ export function AnswerCard({
   isSelected,
   opponentPicked = false,
   opponentPickCorrect,
-  opponentAvatarUrl,
+  /** @deprecated kept for backward compatibility; not used/rendered */
+  opponentAvatarUrl: _opponentAvatarUrl,
   state = 'default',
   fadeOut = false,
   onClick,
   disabled,
 }: AnswerCardProps) {
+  void _opponentAvatarUrl;
   const color = ANSWER_COLORS[index % ANSWER_COLORS.length];
 
   const getButtonClasses = () => {
@@ -83,42 +85,43 @@ export function AnswerCard({
       }
       transition={shouldFadeAway ? { duration: 0.3, ease: 'easeOut' } : { duration: 0.2 }}
       className={cn(
-        'relative w-full h-full text-left rounded-2xl p-4 min-h-[100px] transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary font-fun',
+        'relative w-full h-full text-left rounded-2xl p-4 min-h-[100px] transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary font-fun overflow-hidden',
         getButtonClasses(),
         disabled && 'cursor-not-allowed'
       )}
       onClick={onClick}
       disabled={disabled}
     >
-      {opponentPicked && opponentPickCorrect !== undefined && (
+      {/* Left notch — player's pick */}
+      {isSelected && (state === 'correct' || state === 'wrong') && (
         <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: 'spring', stiffness: 500, damping: 22 }}
+          initial={{ x: -14, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 22 }}
           className={cn(
-            'absolute -right-2 -top-2 z-10 flex items-center justify-center size-8 rounded-full border-[3px] shadow-lg',
-            opponentPickCorrect
-              ? 'border-[#58CC02] shadow-[0_0_10px_rgba(88,204,2,0.4)]'
-              : 'border-[#FF4B4B] shadow-[0_0_10px_rgba(255,75,75,0.4)]'
+            'absolute left-0 top-1/2 -translate-y-1/2 w-[10px] h-10 rounded-r-lg flex items-center justify-center',
+            state === 'correct'
+              ? 'bg-[#58CC02] shadow-[0_0_12px_rgba(88,204,2,0.7)]'
+              : 'bg-[#FF4B4B] shadow-[0_0_12px_rgba(255,75,75,0.7)]'
           )}
         >
-          {opponentAvatarUrl ? (
-            <Image
-              src={opponentAvatarUrl}
-              alt=""
-              width={32}
-              height={32}
-              unoptimized
-              className="size-full rounded-full object-cover"
-            />
-          ) : (
-            <div className={cn(
-              'size-full rounded-full flex items-center justify-center text-[10px] font-black',
-              opponentPickCorrect ? 'bg-[#58CC02] text-white' : 'bg-[#FF4B4B] text-white'
-            )}>
-              {opponentPickCorrect ? '✓' : '✗'}
-            </div>
+          <div className="w-[3px] h-5 rounded-full bg-white/60" />
+        </motion.div>
+      )}
+      {/* Right notch — opponent's pick */}
+      {opponentPicked && opponentPickCorrect !== undefined && (
+        <motion.div
+          initial={{ x: 14, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+          className={cn(
+            'absolute right-0 top-1/2 -translate-y-1/2 w-[10px] h-10 rounded-l-lg flex items-center justify-center',
+            opponentPickCorrect
+              ? 'bg-[#58CC02] shadow-[0_0_12px_rgba(88,204,2,0.7)]'
+              : 'bg-[#FF4B4B] shadow-[0_0_12px_rgba(255,75,75,0.7)]'
           )}
+        >
+          <div className="w-[3px] h-5 rounded-full bg-white/60" />
         </motion.div>
       )}
 
@@ -140,22 +143,6 @@ export function AnswerCard({
         )}>
           {text}
         </span>
-
-        {/* Result icon */}
-        {state === 'correct' && (
-          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="shrink-0">
-            <svg className="size-5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 6 9 17l-5-5" />
-            </svg>
-          </motion.div>
-        )}
-        {state === 'wrong' && (
-          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="shrink-0">
-            <svg className="size-5 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 6 6 18" /><path d="m6 6 12 12" />
-            </svg>
-          </motion.div>
-        )}
       </div>
     </motion.button>
   );

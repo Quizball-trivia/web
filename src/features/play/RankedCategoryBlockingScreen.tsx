@@ -9,10 +9,12 @@ import { getSocket } from '@/lib/realtime/socket-client';
 import { usePlayer } from '@/contexts/PlayerContext';
 import { useAuthStore } from '@/stores/auth.store';
 import { useHeadToHead } from '@/lib/queries/stats.queries';
+import { useRankedProfile } from '@/lib/queries/ranked.queries';
 import { logger } from '@/utils/logger';
 import { cn } from '@/lib/utils';
-import { isAvatarUrl } from '@/lib/avatars';
+import { isAvatarUrl, resolveAvatarUrl } from '@/lib/avatars';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
+import { tierFromRp } from '@/utils/rankedTier';
 
 // Dark-tinted category card colors (subtle accent on dark bg)
 const CARD_COLORS = [
@@ -29,9 +31,13 @@ export function RankedCategoryBlockingScreen() {
   // All hooks must be called before any conditional return
   const { player } = usePlayer();
   const authUser = useAuthStore((state) => state.user);
-  const selfUserId = authUser?.id ?? player.id;
+  const connectedSelfUserId = useRealtimeMatchStore((state) => state.selfUserId);
+  const selfUserId = connectedSelfUserId ?? authUser?.id ?? null;
   const lobby = useRealtimeMatchStore((state) => state.lobby);
   const draft = useRealtimeMatchStore((state) => state.draft);
+  const rankedFoundOpponent = useRealtimeMatchStore((state) => state.rankedFoundOpponent);
+  const matchOpponent = useRealtimeMatchStore((state) => state.match?.opponent);
+  const { data: rankedProfile } = useRankedProfile();
   const [timeLeft, setTimeLeft] = useState(15);
   const [showShowdown, setShowShowdown] = useState(() => {
     // Show showdown only on first mount, not after banning
@@ -44,14 +50,23 @@ export function RankedCategoryBlockingScreen() {
     () => lobby?.members.find((member) => member.userId !== selfUserId),
     [lobby?.members, selfUserId]
   );
+  const playerResolvedAvatar = useMemo(
+    () =>
+      resolveAvatarUrl(
+        authUser?.avatar_url ?? player.avatarCustomization?.base ?? player.avatar,
+        selfUserId || 'player',
+        256
+      ),
+    [authUser?.avatar_url, player.avatarCustomization?.base, player.avatar, selfUserId]
+  );
   const opponent = useMemo(() => {
     return {
       id: opponentMember?.userId ?? 'opponent',
       username: opponentMember?.username ?? 'Opponent',
-      avatar: opponentMember?.avatarUrl ?? '😈',
+      avatar: resolveAvatarUrl(opponentMember?.avatarUrl, opponentMember?.userId ?? 'opponent', 256),
     };
   }, [opponentMember]);
-  const h2h = useHeadToHead(selfUserId, opponent.id !== 'opponent' ? opponent.id : undefined);
+  const h2h = useHeadToHead(selfUserId ?? undefined, opponent.id !== 'opponent' ? opponent.id : undefined);
   useEffect(() => {
     if (!draft) return;
     setTimeLeft(15);
@@ -96,8 +111,14 @@ export function RankedCategoryBlockingScreen() {
   const playerBannedId = draft?.bans[selfUserId ?? ''] ?? null;
   const opponentBannedId = draft ? Object.entries(draft.bans).find(([userId]) => userId !== selfUserId)?.[1] ?? null : null;
   const poolCategories = draft?.categories ?? [];
-  const playerRp = player.rankPoints ?? 1200;
-  const opponentRp = opponentMember?.rankPoints ?? 1200;
+  const playerRp = rankedProfile?.rp ?? player.rankPoints;
+  const realtimeOpponentRpRaw = matchOpponent?.rp ?? rankedFoundOpponent?.rp;
+  const opponentRp =
+    realtimeOpponentRpRaw != null && Number.isFinite(Number(realtimeOpponentRpRaw))
+      ? Number(realtimeOpponentRpRaw)
+      : opponentMember?.rankPoints;
+  const playerTier = playerRp != null ? tierFromRp(playerRp) : undefined;
+  const opponentTier = opponentRp != null ? tierFromRp(opponentRp) : undefined;
 
   // Memoized progress state for the 3-step indicator
   const { steps } = useMemo(() => {
@@ -114,15 +135,17 @@ export function RankedCategoryBlockingScreen() {
     return (
       <ShowdownScreen
         player={{
-          avatar: player.avatar,
+          avatar: playerResolvedAvatar,
           username: player.username,
-          rankPoints: player.rankPoints ?? 1200,
+          rankPoints: playerRp,
           level: player.level,
+          tier: playerTier,
         }}
         opponent={{
           avatar: opponent.avatar,
           username: opponent.username,
-          rankPoints: opponentMember?.rankPoints ?? 1200,
+          rankPoints: opponentRp,
+          tier: opponentTier,
         }}
         onContinue={() => setShowShowdown(false)}
       />
@@ -140,17 +163,17 @@ export function RankedCategoryBlockingScreen() {
           <div className={cn("flex items-center gap-3 transition-opacity duration-300", currentActor === 'opponent' && "opacity-50")}>
             <div className="relative">
               <div className="size-14 rounded-full bg-[#131F24] border-[4px] border-[#1CB0F6] flex items-center justify-center text-3xl overflow-hidden shadow-[0_3px_0_0_#1899D6]">
-                {isAvatarUrl(player.avatar) ? (
-                  <Image src={player.avatar} alt="You" width={56} height={56} unoptimized className="w-full h-full object-cover" />
+                {isAvatarUrl(playerResolvedAvatar) ? (
+                  <Image src={playerResolvedAvatar} alt="You" width={56} height={56} unoptimized className="w-full h-full object-cover" />
                 ) : (
-                  <span>{player.avatar || '🧑'}</span>
+                  <span>{playerResolvedAvatar || '🧑'}</span>
                 )}
               </div>
               <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[9px] font-black bg-[#1CB0F6] text-white px-2 py-[2px] rounded-full border-b-2 border-[#1899D6] uppercase tracking-wide">YOU</span>
             </div>
             <div className="hidden sm:block">
               <div className="text-[15px] font-black text-white leading-none">{player.username}</div>
-              <div className="text-xs font-extrabold text-[#56707A] mt-0.5">{playerRp} RP</div>
+              <div className="text-xs font-extrabold text-[#56707A] mt-0.5">{playerRp != null ? `${playerRp} RP` : '— RP'}</div>
             </div>
           </div>
 
@@ -198,7 +221,7 @@ export function RankedCategoryBlockingScreen() {
             </div>
             <div className="hidden sm:block text-right">
               <div className="text-[15px] font-black text-white leading-none">{opponent.username}</div>
-              <div className="text-xs font-extrabold text-[#56707A] mt-0.5">{opponentRp} RP</div>
+              <div className="text-xs font-extrabold text-[#56707A] mt-0.5">{opponentRp != null ? `${opponentRp} RP` : '— RP'}</div>
             </div>
           </div>
         </div>
@@ -256,7 +279,7 @@ export function RankedCategoryBlockingScreen() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 + i * 0.08, type: 'spring', stiffness: 200, damping: 20 }}
                   onClick={() => {
-                    if (disabled || isBanned) return;
+                    if (disabled || isBanned || !selfUserId) return;
                     useRealtimeMatchStore.getState().setDraftBan(selfUserId, category.id);
                     getSocket().emit('draft:ban', { categoryId: category.id });
                     logger.info('Socket emit draft:ban (optimistic)', { categoryId: category.id });

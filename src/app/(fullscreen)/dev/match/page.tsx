@@ -150,7 +150,7 @@ function DevMatchContent() {
             getSocket().emit('match:leave', { matchId: match.matchId });
           }
           useRealtimeMatchStore.getState().reset();
-          setStarting(false);
+          resetStarting();
         }}
         onForfeit={() => {
           if (match.matchId) {

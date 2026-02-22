@@ -23,6 +23,8 @@ import type { GameMode as LegacyGameMode } from "@/types/game";
 import { resolveAvatarUrl } from "@/lib/avatars";
 import { useRankedProfile } from "@/lib/queries/ranked.queries";
 import { usePossessionMatchStore } from "@/stores/possessionMatch.store";
+import { LoadingScreen } from "@/components/shared/LoadingScreen";
+import { tierFromRp } from "@/utils/rankedTier";
 
 type OpponentInfo = {
   id: string;
@@ -61,6 +63,7 @@ export function GameStageRouter() {
   const realtimeMatch = useRealtimeMatchStore((state) => state.match);
   const realtimeError = useRealtimeMatchStore((state) => state.error);
   const sessionState = useRealtimeMatchStore((state) => state.sessionState);
+  const connectedSelfUserId = useRealtimeMatchStore((state) => state.selfUserId);
   const rankedSearching = useRealtimeMatchStore((state) => state.rankedSearching);
   const rankedSearchDurationMs = useRealtimeMatchStore((state) => state.rankedSearchDurationMs);
   const rankedSearchStartedAt = useRealtimeMatchStore((state) => state.rankedSearchStartedAt);
@@ -76,7 +79,7 @@ export function GameStageRouter() {
       id: "opponent",
       username: "TriviaKing",
       avatar: "👑",
-      tier: "Silver",
+      tier: tierFromRp(0),
     }),
     [],
   );
@@ -89,7 +92,7 @@ export function GameStageRouter() {
   const [roundNumber, setRoundNumber] = useState(1);
   const totalRounds = 3;
   const isMultiplayer = config?.mode !== "solo" && !!config;
-  const selfUserId = authUser?.id ?? player.id;
+  const selfUserId = connectedSelfUserId ?? authUser?.id ?? player.id;
   const socket = useRealtimeConnection({ enabled: isMultiplayer, selfUserId });
   const [socketConnected, setSocketConnected] = useState(() => socket.connected);
   const [socketId, setSocketId] = useState<string | null>(() => socket.id ?? null);
@@ -206,11 +209,16 @@ export function GameStageRouter() {
   );
 
   if (stage === "idle") {
-    return null;
+    return <LoadingScreen />;
   }
 
   if (isMultiplayer) {
     if (stage === "matchmaking") {
+      // Friendly matches skip matchmaking — match data arrives before navigation.
+      // Show bouncing ball instead of the map/searching screen for that brief transition frame.
+      if (realtimeMatch) {
+        return <LoadingScreen />;
+      }
       return (
         <MatchmakingMapScreen
           matchType={matchType}
@@ -308,7 +316,11 @@ export function GameStageRouter() {
           opponentCorrect={opponentStats?.correctAnswers ?? 0}
           totalQuestions={totalQuestionsPlayed}
           selfUserId={selfUserId}
+          finalWinnerId={final?.winnerId}
+          winnerDecisionMethod={final?.winnerDecisionMethod ?? null}
+          preMatchRp={rankedProfile?.rp ?? player.rankPoints}
           opponentId={opponent.id}
+          opponentRp={realtimeMatch?.opponent?.rp != null ? Number(realtimeMatch.opponent.rp) : undefined}
           rankedOutcome={final?.rankedOutcome ?? null}
           preMatchRankedProfile={rankedProfile ?? null}
           onPlayAgain={() => {
@@ -329,6 +341,17 @@ export function GameStageRouter() {
 
   if (stage === "showdown") {
     const oppInfo = realtimeMatch?.opponent ?? rankedFoundOpponent;
+    const playerRankPoints = rankedProfile?.rp ?? player.rankPoints;
+    const opponentRankPoints =
+      oppInfo?.rp != null && Number.isFinite(Number(oppInfo.rp))
+        ? Number(oppInfo.rp)
+        : undefined;
+    const showdownOpponentUsername = oppInfo?.username ?? opponent.username;
+    const showdownOpponentAvatar = resolveAvatarUrl(
+      oppInfo?.avatarUrl ?? opponent.avatar,
+      "opponent",
+      256
+    );
     // Extract opponent country from various possible fields
     const oppGeo = oppInfo?.geo && typeof oppInfo.geo === 'object' ? oppInfo.geo : null;
     const oppCountry = oppInfo?.country ?? oppGeo?.country ?? oppGeo?.countryName ?? oppGeo?.country_name;
@@ -338,21 +361,23 @@ export function GameStageRouter() {
         matchType={showdownType}
         playerUsername={player.username}
         playerAvatar={playerGameAvatar}
-        opponentUsername={opponent.username}
-        opponentAvatar={opponentGameAvatar}
+        opponentUsername={showdownOpponentUsername}
+        opponentAvatar={showdownOpponentAvatar}
         onComplete={() => setStage("roundIntro")}
         playerInfo={{
           username: player.username,
           avatar: playerGameAvatar,
-          rankPoints: rankedProfile?.rp ?? player.rankPoints,
+          rankPoints: playerRankPoints,
           level: player.level,
-          tier: rankedProfile?.tier,
+          tier: playerRankPoints != null ? tierFromRp(playerRankPoints) : undefined,
           country: authUser?.country ?? undefined,
           favoriteClub: authUser?.favorite_club ?? undefined,
         }}
         opponentInfo={oppInfo ? {
           username: oppInfo.username,
-          avatar: opponentGameAvatar,
+          avatar: showdownOpponentAvatar,
+          rankPoints: opponentRankPoints,
+          tier: opponentRankPoints != null ? tierFromRp(opponentRankPoints) : undefined,
           country: oppCountry,
           countryCode: oppCountryCode,
           flag: oppInfo.flag,

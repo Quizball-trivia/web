@@ -27,13 +27,11 @@ import {
   User,
   Settings,
   Gamepad2,
-  Menu,
   Home,
   Coins,
   Ticket,
   Bell,
   LogOut,
-  Briefcase,
   ArrowRight,
   X,
   Users,
@@ -110,7 +108,6 @@ export function AppShell({ children }: AppShellProps) {
   const { player: playerStats } = usePlayer();
   const { data: storeWallet } = useStoreWallet();
   const logout = useAuthStore((state) => state.logout);
-  const [isCollapsed, setIsCollapsed] = useState(true);
   const lobby = useRealtimeMatchStore((state) => state.lobby);
   const sessionState = useRealtimeMatchStore((state) => state.sessionState);
   const rejoinMatch = useRealtimeMatchStore((state) => state.rejoinMatch);
@@ -224,19 +221,14 @@ export function AppShell({ children }: AppShellProps) {
         <aside
           className={cn(
             "flex flex-col bg-card border-r border-border transition-all duration-300 h-screen sticky top-0",
-            isCollapsed ? "w-20" : "w-64",
+            "w-64",
           )}
         >
           {/* Sidebar Header */}
           <div className="h-16 flex items-center px-4 border-b border-border/50">
-            <div
-              className={cn(
-                "flex items-center gap-3 overflow-hidden",
-                isCollapsed && "justify-center w-full",
-              )}
-            >
+            <div className="flex items-center gap-3 overflow-hidden">
               <Link href="/" className="hover:opacity-80 transition-opacity">
-                {isCollapsed ? <AppLogo size="sm" iconOnly /> : <AppLogo size="sm" />}
+                <AppLogo size="sm" />
               </Link>
             </div>
           </div>
@@ -252,38 +244,19 @@ export function AppShell({ children }: AppShellProps) {
                     href={item.path}
                     className={cn(
                       "w-full flex items-center gap-3 py-2 px-4 rounded-lg transition-all",
-                      isCollapsed ? "justify-center px-0" : "justify-start",
+                      "justify-start",
                       isActive
                         ? "bg-primary/10 text-primary hover:bg-primary/20"
                         : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
                     )}
-                    title={isCollapsed ? item.label : undefined}
                   >
                     <item.icon className="size-5 shrink-0" />
-                    {!isCollapsed && (
-                      <span className="font-medium truncate">{item.label}</span>
-                    )}
+                    <span className="font-medium truncate">{item.label}</span>
                   </Link>
                 );
               })}
             </nav>
           </ScrollArea>
-
-          {/* Collapse Toggle */}
-          <div className="p-4 border-t border-border/50">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className={cn(
-                "w-full text-muted-foreground hover:text-foreground",
-                isCollapsed ? "justify-center" : "justify-start gap-3",
-              )}
-            >
-              <Menu className="size-5" />
-              {!isCollapsed && <span>Collapse</span>}
-            </Button>
-          </div>
         </aside>
 
         {/* Main Wrapper */}

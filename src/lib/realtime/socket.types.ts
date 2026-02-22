@@ -72,6 +72,7 @@ export interface OpponentInfo {
   id: string;
   username: string;
   avatarUrl: string | null;
+  rp?: number;
   country?: string;
   countryCode?: string;
   city?: string;
@@ -257,7 +258,7 @@ export interface MatchFinalResultsPayload {
   players: Record<string, MatchFinalResultPlayer>;
   durationMs: number;
   resultVersion: number;
-  winnerDecisionMethod?: 'goals' | 'penalty_goals' | 'total_points_fallback' | null;
+  winnerDecisionMethod?: 'goals' | 'penalty_goals' | 'total_points_fallback' | 'forfeit' | null;
   totalPointsFallbackUsed?: boolean;
   rankedOutcome?: RankedMatchOutcomePayload | null;
 }
@@ -284,6 +285,7 @@ export interface MatchStatePayload {
   halftime: {
     deadlineAt: string | null;
     categoryOptions: DraftCategory[];
+    firstBanSeat: 1 | 2 | null;
     bans: {
       seat1: string | null;
       seat2: string | null;

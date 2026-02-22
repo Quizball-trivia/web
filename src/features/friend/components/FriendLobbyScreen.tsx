@@ -32,9 +32,7 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
   const bothReady = Boolean(me?.isReady && opponent?.isReady);
   const hasFriendlyCategories =
     settings?.friendlyRandom ||
-    (settings?.friendlyCategoryAId &&
-      settings?.friendlyCategoryBId &&
-      settings?.friendlyCategoryAId !== settings?.friendlyCategoryBId);
+    Boolean(settings?.friendlyCategoryAId);
   const readyCopy =
     settings?.gameMode === "friendly"
       ? "When both players are ready, the host can start the match."

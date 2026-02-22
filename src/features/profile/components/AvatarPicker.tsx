@@ -1,48 +1,45 @@
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useMobile";
 import { avatarSeeds, getDiceBearAvatarUrl } from "@/lib/avatars";
-import { createStoreCheckout } from "@/lib/repositories/store.repo";
+import { purchaseStoreWithCoins } from "@/lib/repositories/store.repo";
 import { useStoreInventory, useStoreProducts, type StoreProductDTO } from "@/lib/queries/store.queries";
 import { queryKeys } from "@/lib/queries/queryKeys";
 import { Check, Loader2, Lock, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-
-const PREMIUM_AVATAR_CONFIG = [
-  { slug: "avatar_ronaldo", seed: "ronaldo", label: "Ronaldo" },
-  { slug: "avatar_messi", seed: "messi", label: "Messi" },
-  { slug: "avatar_neymar", seed: "neymar", label: "Neymar" },
-  { slug: "avatar_mbappe", seed: "mbappe", label: "Mbappe" },
-] as const;
-
-const PREMIUM_SEEDS: ReadonlySet<string> = new Set(PREMIUM_AVATAR_CONFIG.map((item) => item.seed));
+import { ApiError } from "@/lib/api/api";
+import {
+  getAvatarImage,
+  getAvatarLabel,
+  getAvatarSeed,
+  isJerseyAvatarProduct,
+  isKnownPremiumAvatarSeed,
+} from "@/lib/store/avatar-products";
 
 /** Show only 8 free avatars (2 rows of 4) */
 const FREE_AVATAR_LIMIT = 8;
+const HIDDEN_PREMIUM_PROFILE_SLUGS = new Set<string>([
+  "avatar_ronaldo",
+  "avatar_messi",
+  "avatar_neymar",
+  "avatar_mbappe",
+  "avatar_lion",
+]);
 
-function formatUsd(priceCents: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(priceCents / 100);
+function formatCoins(value: number): string {
+  return `${value.toLocaleString()} coins`;
 }
 
-function readAvatarMetadata(
-  metadata: unknown
-): { avatarKey?: string; assetUrl?: string } | null {
-  if (!metadata || typeof metadata !== "object") return null;
-  const raw = metadata as { avatarKey?: unknown; assetUrl?: unknown };
-  return {
-    avatarKey: typeof raw.avatarKey === "string" ? raw.avatarKey : undefined,
-    assetUrl: typeof raw.assetUrl === "string" ? raw.assetUrl : undefined,
-  };
+function toPersistedAvatarUrl(url: string): string {
+  if (!url.startsWith("/")) return url;
+  if (typeof window === "undefined") return url;
+  return `${window.location.origin}${url}`;
 }
 
 interface AvatarPickerProps {
@@ -66,58 +63,101 @@ export function AvatarPicker({
   const router = useRouter();
   const queryClient = useQueryClient();
   const [lockedAvatarSlug, setLockedAvatarSlug] = useState<string | null>(null);
+  const [optimisticOwnedSlugs, setOptimisticOwnedSlugs] = useState<Set<string>>(new Set());
   const { data: productsData } = useStoreProducts();
   const { data: inventoryData } = useStoreInventory();
 
-  useEffect(() => {
-    if (!open) return;
-    void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
-  }, [open, queryClient]);
+  const premiumProducts = useMemo(() => {
+    const items: Array<{
+      product: StoreProductDTO;
+      label: string;
+      avatarUrl: string;
+      avatarKey: string;
+    }> = [];
+
+    for (const item of productsData?.items ?? []) {
+      if (item.type !== "avatar") continue;
+      if (isJerseyAvatarProduct(item)) continue;
+      if (HIDDEN_PREMIUM_PROFILE_SLUGS.has(item.slug)) continue;
+      const avatarKey = getAvatarSeed(item);
+      const avatarUrl = getAvatarImage(item, 96);
+      const label = getAvatarLabel(item);
+
+      items.push({
+        product: item,
+        label,
+        avatarUrl,
+        avatarKey,
+      });
+    }
+
+    return items;
+  }, [productsData]);
+
+  const premiumAvatarKeys = useMemo(
+    () => new Set(premiumProducts.map((item) => item.avatarKey)),
+    [premiumProducts]
+  );
 
   const seedUrls = useMemo(
     () =>
       avatarSeeds
-        .filter((seed) => !PREMIUM_SEEDS.has(seed))
+        .filter((seed) => {
+          const normalized = seed.toLowerCase();
+          if (isKnownPremiumAvatarSeed(normalized)) return false;
+          return !premiumAvatarKeys.has(normalized);
+        })
         .slice(0, FREE_AVATAR_LIMIT)
         .map((seed) => ({ seed, url: getDiceBearAvatarUrl(seed, 96) })),
-    []
+    [premiumAvatarKeys]
   );
 
-  const premiumProductsBySlug = useMemo(() => {
-    const map = new Map<string, StoreProductDTO>();
-    for (const item of productsData?.items ?? []) {
-      if (item.type !== "avatar") continue;
-      map.set(item.slug, item);
-    }
-    return map;
-  }, [productsData]);
-
   const ownedAvatarSlugs = useMemo(() => {
-    const set = new Set<string>();
+    const set = new Set<string>(optimisticOwnedSlugs);
     for (const item of inventoryData?.items ?? []) {
       if (item.type === "avatar") set.add(item.slug);
     }
     return set;
-  }, [inventoryData]);
+  }, [inventoryData, optimisticOwnedSlugs]);
 
   const checkoutMutation = useMutation({
-    mutationFn: async (productSlug: string) => createStoreCheckout({ productSlug }),
-    onSuccess: (result) => {
-      window.location.href = result.url;
+    mutationFn: async (productSlug: string) => purchaseStoreWithCoins({ productSlug }),
+    onSuccess: (_response, productSlug) => {
+      setOptimisticOwnedSlugs((previous) => {
+        const next = new Set(previous);
+        next.add(productSlug);
+        return next;
+      });
+      toast.success("Avatar unlocked.");
+      void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+      setLockedAvatarSlug(null);
+
+      const unlockedAvatar = premiumProducts.find((item) => item.product.slug === productSlug);
+      if (unlockedAvatar) {
+        onSelect(toPersistedAvatarUrl(unlockedAvatar.avatarUrl));
+      }
     },
-    onError: () => {
-      toast.error("Unable to start checkout. Try again.");
+    onError: (error) => {
+      if (error instanceof ApiError && error.status === 400) {
+        toast.error("Not enough coins for this avatar.");
+        return;
+      }
+      if (error instanceof ApiError && error.status === 401) {
+        toast.error("Session expired. Please sign in again.");
+        return;
+      }
+      toast.error("Unable to complete purchase. Try again.");
     },
   });
 
-  const selectedLockedConfig = PREMIUM_AVATAR_CONFIG.find((item) => item.slug === lockedAvatarSlug) ?? null;
-  const selectedLockedProduct = lockedAvatarSlug ? premiumProductsBySlug.get(lockedAvatarSlug) : undefined;
-  const selectedLockedPrice = selectedLockedProduct?.priceCents ?? null;
+  const selectedLockedProduct = premiumProducts.find((item) => item.product.slug === lockedAvatarSlug);
+  const selectedLockedPrice = selectedLockedProduct?.product.priceCents ?? null;
 
   const handlePremiumAvatarClick = (slug: string, avatarUrl: string) => {
     const isOwned = ownedAvatarSlugs.has(slug);
     if (isOwned) {
-      onSelect(avatarUrl);
+      onSelect(toPersistedAvatarUrl(avatarUrl));
       return;
     }
     setLockedAvatarSlug(slug);
@@ -172,7 +212,7 @@ export function AvatarPicker({
                     ? "border-primary bg-primary/10"
                     : "border-border hover:border-primary/60 hover:bg-muted/30"
                 )}
-                onClick={() => onSelect(url)}
+                onClick={() => onSelect(toPersistedAvatarUrl(url))}
                 disabled={isSaving}
               >
                 <div className="relative mx-auto size-12 rounded-full overflow-hidden border border-border bg-background">
@@ -198,16 +238,14 @@ export function AvatarPicker({
           <Sparkles className="size-3 text-amber-400" />
         </div>
         <div className="grid grid-cols-4 gap-2">
-          {PREMIUM_AVATAR_CONFIG.map((premium) => {
-            const product = premiumProductsBySlug.get(premium.slug);
-            const parsedMetadata = readAvatarMetadata(product?.metadata);
-            const avatarUrl = parsedMetadata?.assetUrl ?? getDiceBearAvatarUrl(premium.seed, 96);
-            const isOwned = ownedAvatarSlugs.has(premium.slug);
+          {premiumProducts.map((premium) => {
+            const isOwned = ownedAvatarSlugs.has(premium.product.slug);
+            const avatarUrl = premium.avatarUrl;
             const isSelected = currentAvatarUrl === avatarUrl;
 
             return (
               <button
-                key={premium.slug}
+                key={premium.product.slug}
                 type="button"
                 className={cn(
                   "group relative rounded-xl border p-1.5 text-left transition-all",
@@ -217,7 +255,7 @@ export function AvatarPicker({
                       : "border-border hover:border-primary/60 hover:bg-muted/30"
                     : "border-border/70 bg-muted/20 hover:border-amber-500/60"
                 )}
-                onClick={() => handlePremiumAvatarClick(premium.slug, avatarUrl)}
+                onClick={() => handlePremiumAvatarClick(premium.product.slug, avatarUrl)}
                 disabled={isSaving || checkoutMutation.isPending}
               >
                 <div className="relative mx-auto size-12 rounded-full overflow-hidden border border-border bg-background">
@@ -253,18 +291,18 @@ export function AvatarPicker({
           <DialogHeader>
             <DialogTitle className="text-lg font-black">Premium avatar locked</DialogTitle>
             <DialogDescription>
-              {selectedLockedConfig
-                ? `${selectedLockedConfig.label} is a premium avatar. Buy it to unlock and use it in your profile.`
+              {selectedLockedProduct
+                ? `${selectedLockedProduct.label} is a premium avatar. Buy it to unlock and use it in your profile.`
                 : "This premium avatar is locked."}
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex items-center justify-between rounded-xl border border-border bg-muted/30 px-3 py-2">
             <span className="text-sm font-semibold">
-              {selectedLockedConfig?.label ?? "Premium Avatar"}
+              {selectedLockedProduct?.label ?? "Premium Avatar"}
             </span>
             <span className="text-sm font-black text-amber-300">
-              {selectedLockedPrice !== null ? formatUsd(selectedLockedPrice) : "Unavailable"}
+              {selectedLockedPrice !== null ? formatCoins(selectedLockedPrice) : "Unavailable"}
             </span>
           </div>
 
@@ -289,10 +327,10 @@ export function AvatarPicker({
               {checkoutMutation.isPending ? (
                 <span className="inline-flex items-center gap-2">
                   <Loader2 className="size-4 animate-spin" />
-                  Redirecting
+                  Processing
                 </span>
               ) : (
-                "Buy now"
+                "Buy with coins"
               )}
             </Button>
           </div>

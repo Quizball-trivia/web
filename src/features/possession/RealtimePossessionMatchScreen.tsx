@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useRealtimeGameLogic } from '@/features/game/hooks/useRealtimeGameLogic';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
@@ -16,9 +16,16 @@ import { PenaltyHUD } from './components/PenaltyHUD';
 import { PitchVisualization } from './components/PitchVisualization';
 import { PossessionFeed } from './components/PossessionFeed';
 import { PossessionQuestionPanel } from './components/PossessionQuestionPanel';
+import { RoundTransitionOverlay } from './components/RoundTransitionOverlay';
+import { GoalCelebrationOverlay } from './components/GoalCelebrationOverlay';
 import { useGameSounds } from '@/lib/sounds/useGameSounds';
 import { logger } from '@/utils/logger';
 import { useStoreInventory } from '@/lib/queries/store.queries';
+import { LoadingScreen } from '@/components/shared/LoadingScreen';
+
+const TRANSITION_DELAY_MS = 1600;
+const FIELD_RESULT_COMPARE_MS = 900;
+const FIELD_POSSESSION_CUE_MS = 300;
 
 interface RealtimePossessionMatchScreenProps {
   playerAvatar: string;
@@ -78,7 +85,9 @@ export function RealtimePossessionMatchScreen({
   onQuit,
   onForfeit,
 }: RealtimePossessionMatchScreenProps) {
-  const { state, actions } = useRealtimeGameLogic();
+  const [firstQuestionIntro, setFirstQuestionIntro] = useState(true); // Start true so overlay covers question 1 from first render
+  const firstIntroExpiredRef = useRef(false);
+  const { state, actions } = useRealtimeGameLogic({ transitionDelayMs: TRANSITION_DELAY_MS, blockReveal: firstQuestionIntro });
   const { playSfx, toggleMute, isMuted } = useGameSounds();
   const devPossessionAnimation = useRealtimeMatchStore((store) => store.devPossessionAnimation);
   const clearDevPossessionAnimation = useRealtimeMatchStore((store) => store.clearDevPossessionAnimation);
@@ -87,15 +96,28 @@ export function RealtimePossessionMatchScreen({
   const markOptimisticChanceCardPendingSync = useRealtimeMatchStore((store) => store.markOptimisticChanceCardPendingSync);
   const answerAck = match?.answerAck ?? null;
   const opponentAnsweredCorrectly = match?.opponentAnsweredCorrectly ?? null;
-  const opponentRecentPoints = match?.opponentRecentPoints ?? 0;
   const realtimeError = useRealtimeMatchStore((store) => store.error);
   const [showQuitModal, setShowQuitModal] = useState(false);
   const [muted, setMuted] = useState(false);
+  const [goalCelebration, setGoalCelebration] = useState<{ scorerName: string; isMeScorer: boolean } | null>(null);
+  const goalCelebrationHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const goalCelebrationQRef = useRef<number | null>(null);
+  const pendingGoalRef = useRef<{ scorerName: string; isMeScorer: boolean; qIndex: number } | null>(null);
+  const [transitionSnapshot, setTransitionSnapshot] = useState<{ questionNumber: number; categoryName: string; half: 1 | 2; isExtra: boolean }>({
+    questionNumber: 1,
+    categoryName: 'Football',
+    half: 1,
+    isExtra: false,
+  });
+  const transitionVisibleRef = useRef(false);
   const [showPlayerSplash, setShowPlayerSplash] = useState(false);
   const [showOpponentSplash, setShowOpponentSplash] = useState(false);
   const [playerSplashPoints, setPlayerSplashPoints] = useState(0);
   const [opponentSplashPoints, setOpponentSplashPoints] = useState(0);
   const [shotBallOriginX, setShotBallOriginX] = useState(440);
+  const shotOriginCaptureKeyRef = useRef<string | null>(null);
+  const attackOriginQRef = useRef<number | null>(null);
+  const attackOriginPctRef = useRef<number | null>(null);
   const [delayedIsShooter, setDelayedIsShooter] = useState(false);
   const halftimeBanSentRef = useRef(false);
   const prevPhaseRef = useRef<string | null>(null);
@@ -114,10 +136,11 @@ export function RealtimePossessionMatchScreen({
   const [penaltyCountdownNow, setPenaltyCountdownNow] = useState(() => Date.now());
   const prevPenaltyPhaseRef = useRef(isPenaltyPhaseServer);
 
-  // Delay halftime screen by 2s so the last round result is visible first
+  // Delay halftime screen so the last round's result hold (2.5s), field animation, and score
+  // splashes all complete before the halftime screen appears.
   useEffect(() => {
     if (isHalftimeServer) {
-      const timer = setTimeout(() => setIsHalftime(true), 2000);
+      const timer = setTimeout(() => setIsHalftime(true), 4500);
       return () => clearTimeout(timer);
     }
     setIsHalftime(false);
@@ -275,6 +298,68 @@ export function RealtimePossessionMatchScreen({
   const isAttackAnimationPhase = activeAttackAnimation !== null;
   const isShotVisualPhase = isShotQuestion || isAttackAnimationPhase;
 
+  // Goal celebration: stage 1 — capture goal info from round result (but don't show yet).
+  // The actual overlay waits until answer results have been displayed (roundResultHoldDone).
+  useEffect(() => {
+    if (!state.roundResult) return;
+    const deltas = state.roundResult.deltas;
+    const scorerSeat = deltas?.goalScoredBySeat ?? null;
+    if (!scorerSeat) return;
+    // Only celebrate normal/last_attack goals — penalty goals have their own splash.
+    // Use roundResult.phaseKind directly (always present from server); never fall back to
+    // the live phaseKind which may have already advanced to the next phase.
+    const kind = state.roundResult.phaseKind;
+    if (kind !== 'normal' && kind !== 'last_attack') return;
+    // Explicitly exclude penalty outcomes that leak goalScoredBySeat
+    if (deltas?.penaltyOutcome) return;
+    const qIdx = state.roundResult.qIndex;
+    if (goalCelebrationQRef.current === qIdx) return;
+    goalCelebrationQRef.current = qIdx;
+    const isMeScorer = scorerSeat === mySeat;
+    pendingGoalRef.current = {
+      scorerName: isMeScorer ? playerUsername : opponentUsername,
+      isMeScorer,
+      qIndex: qIdx,
+    };
+  }, [state.roundResult, mySeat, playerUsername, opponentUsername]);
+
+  // Clear stale pending goal when the question changes — prevents a goal captured in
+  // round N from firing on round N+1's roundResultHoldDone if stage 2 didn't run in time.
+  // Skip clearing when currentQIdx becomes null (match end) to let roundResultHoldDone run.
+  const currentQIdx = state.currentQuestion?.qIndex;
+  useEffect(() => {
+    if (currentQIdx !== null && currentQIdx !== undefined) {
+      pendingGoalRef.current = null;
+    }
+  }, [currentQIdx]);
+
+  // Goal celebration: stage 2 — show overlay AFTER answer result hold is done (notches visible for 2.5s first).
+  useEffect(() => {
+    if (!state.roundResultHoldDone || !pendingGoalRef.current) return;
+    const info = pendingGoalRef.current;
+    pendingGoalRef.current = null;
+    setGoalCelebration({ scorerName: info.scorerName, isMeScorer: info.isMeScorer });
+  }, [state.roundResultHoldDone]);
+
+  // Keep goal overlay lifetime independent from roundResultHoldDone transitions.
+  useEffect(() => {
+    if (!goalCelebration) return;
+    if (goalCelebrationHideTimerRef.current) {
+      clearTimeout(goalCelebrationHideTimerRef.current);
+    }
+    goalCelebrationHideTimerRef.current = setTimeout(() => {
+      setGoalCelebration(null);
+      goalCelebrationHideTimerRef.current = null;
+    }, 2500);
+
+    return () => {
+      if (goalCelebrationHideTimerRef.current) {
+        clearTimeout(goalCelebrationHideTimerRef.current);
+        goalCelebrationHideTimerRef.current = null;
+      }
+    };
+  }, [goalCelebration]);
+
   const isShooter = mySeat !== null && mySeat !== undefined && shooterSeat === mySeat;
   // Both shooter and keeper answer during penalties (shooter correct = goal, both earn points)
 
@@ -312,6 +397,29 @@ export function RealtimePossessionMatchScreen({
   const serverMyPossessionPct = mySeat === 2 ? 100 - possessionPct : possessionPct;
   const localQuestion = state.currentQuestion;
   const localQuestionIndex = localQuestion?.qIndex ?? null;
+
+  // "QUESTION 1" intro overlay: starts as `true` so it covers the first question from
+  // the very first render (no flash). Once countdown ends and qIndex 0 is active, schedule
+  // auto-hide after 2s. The hook's reveal timer (QUESTION_REVEAL_MS=3s) is blocked via
+  // blockReveal while this is true, so it starts fresh after the overlay exits — giving
+  // ~2s of question-only visibility before options appear.
+  useEffect(() => {
+    if (firstIntroExpiredRef.current) return;
+    // If we reconnected to a later question, skip the intro
+    if (localQuestionIndex !== null && localQuestionIndex !== 0) {
+      firstIntroExpiredRef.current = true;
+      setFirstQuestionIntro(false);
+      return;
+    }
+    // Wait for countdown to finish and question 0 to be active
+    if (localQuestionIndex !== 0 || state.startCountdownActive) return;
+    const timer = setTimeout(() => {
+      firstIntroExpiredRef.current = true;
+      setFirstQuestionIntro(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [localQuestionIndex, state.startCountdownActive]);
+
   const optimisticChanceCard = match?.optimisticChanceCard ?? null;
 
   const chanceCardBaseQuantity = useMemo(() => {
@@ -443,23 +551,23 @@ export function RealtimePossessionMatchScreen({
     return Object.values(state.roundResult.players)[1] ?? null;
   }, [state.roundResult, meUserId, opponentUserId]);
 
-  // Compute optimistic possession offset when round resolves
-  // Prefer authoritative deltas from round_result.deltas; fall back to approximation
+  // Compute optimistic possession offset when round resolves.
+  // Normal phases: no optimistic offset — the server possessionPct update moves the field once.
+  // Non-normal phases (last_attack): apply immediately for snappy feedback.
   useEffect(() => {
     if (!state.roundResult || !myRound || !oppRound) return;
     const kind = state.roundResult.phaseKind ?? phaseKind;
-    if (kind !== 'normal' && kind !== 'last_attack') return;
+    if (kind === 'normal') return; // let server state handle the single field animation
+    if (kind !== 'last_attack') return;
     const qIdx = state.roundResult.qIndex;
     if (optimisticAppliedQRef.current === qIdx) return;
     optimisticAppliedQRef.current = qIdx;
 
     const deltas = state.roundResult.deltas;
     if (deltas) {
-      // Authoritative delta is seat1 perspective on possessionDiff scale.
       const mySignedDelta = mySeat === 2 ? -deltas.possessionDelta : deltas.possessionDelta;
       setOptimisticOffset(mySignedDelta / 2);
     } else {
-      // Fallback: approximate deltas when server doesn't send them (backward compat).
       const mySignedDelta = myRound.pointsEarned - oppRound.pointsEarned;
       setOptimisticOffset(mySignedDelta / 2);
     }
@@ -470,7 +578,83 @@ export function RealtimePossessionMatchScreen({
     setOptimisticOffset(0);
   }, [possessionPct]);
 
-  const myPossessionPct = Math.max(0, Math.min(100, serverMyPossessionPct + optimisticOffset));
+  const immediateMyPossessionPct = Math.max(10, Math.min(90, serverMyPossessionPct + optimisticOffset));
+  const [myPossessionPct, setMyPossessionPct] = useState(immediateMyPossessionPct);
+  const latestPossessionRef = useRef(immediateMyPossessionPct);
+  const prevPhaseForFieldResetRef = useRef<string | null>(phase ?? null);
+  const delayedFieldQRef = useRef<number | null>(null);
+  const fieldReleaseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [fieldMotionLocked, setFieldMotionLocked] = useState(false);
+
+  useEffect(() => {
+    latestPossessionRef.current = immediateMyPossessionPct;
+  }, [immediateMyPossessionPct]);
+
+  useEffect(() => {
+    const prevPhase = prevPhaseForFieldResetRef.current;
+    prevPhaseForFieldResetRef.current = phase ?? null;
+    if (prevPhase !== 'HALFTIME' || phase !== 'NORMAL_PLAY' || possessionState?.half !== 2) return;
+
+    // Start second half from center instantly before the next question motion.
+    if (fieldReleaseTimerRef.current) {
+      clearTimeout(fieldReleaseTimerRef.current);
+      fieldReleaseTimerRef.current = null;
+    }
+    delayedFieldQRef.current = null;
+    setFieldMotionLocked(false);
+    setOptimisticOffset(0);
+    latestPossessionRef.current = 50;
+    setMyPossessionPct(50);
+  }, [phase, possessionState?.half]);
+
+  useEffect(() => {
+    if (fieldMotionLocked) return;
+    const activeRoundQIdx = state.roundResult?.qIndex ?? null;
+    if (activeRoundQIdx !== null && delayedFieldQRef.current === activeRoundQIdx) return;
+    setMyPossessionPct(immediateMyPossessionPct);
+  }, [fieldMotionLocked, immediateMyPossessionPct, state.roundResult]);
+
+  useLayoutEffect(() => {
+    if (!state.roundResult) return;
+    const kind = state.roundResult.phaseKind ?? phaseKind;
+    if (kind !== 'normal' && kind !== 'last_attack') return;
+    const qIdx = state.roundResult.qIndex;
+    if (delayedFieldQRef.current === qIdx) return;
+    delayedFieldQRef.current = qIdx;
+    setFieldMotionLocked(true);
+    if (fieldReleaseTimerRef.current) clearTimeout(fieldReleaseTimerRef.current);
+    fieldReleaseTimerRef.current = setTimeout(() => {
+      setFieldMotionLocked(false);
+      setMyPossessionPct(latestPossessionRef.current);
+      fieldReleaseTimerRef.current = null;
+    }, FIELD_RESULT_COMPARE_MS + FIELD_POSSESSION_CUE_MS);
+  }, [phaseKind, state.roundResult]);
+
+  useEffect(() => {
+    delayedFieldQRef.current = null;
+    if (fieldReleaseTimerRef.current) {
+      clearTimeout(fieldReleaseTimerRef.current);
+      fieldReleaseTimerRef.current = null;
+    }
+    setFieldMotionLocked(false);
+    setMyPossessionPct(latestPossessionRef.current);
+  }, [localQuestionIndex]);
+
+  useEffect(() => {
+    if (phase !== 'HALFTIME' && phase !== 'COMPLETED') return;
+    if (fieldReleaseTimerRef.current) {
+      clearTimeout(fieldReleaseTimerRef.current);
+      fieldReleaseTimerRef.current = null;
+    }
+    setFieldMotionLocked(false);
+    setMyPossessionPct(latestPossessionRef.current);
+  }, [phase]);
+
+  useEffect(() => {
+    return () => {
+      if (fieldReleaseTimerRef.current) clearTimeout(fieldReleaseTimerRef.current);
+    };
+  }, []);
 
   const attackerSeat = (isAttackAnimationPhase
     ? activeAttackAnimation?.attackerSeat
@@ -481,15 +665,50 @@ export function RealtimePossessionMatchScreen({
   const mirrored = false; // Always keep blue on bottom, red on top (no side switching)
   const ballOnPlayer = myPossessionPct > 50 || (myPossessionPct === 50 && possessionState?.kickOffSeat === mySeat);
 
+  // Capture the attack-start position once per resolved round so shot origin does not
+  // jump when possession resets to center after a goal.
   useEffect(() => {
-    if (!possessionState) return;
-    if (!isShotVisualPhase) return;
+    if (!isAttackAnimationPhase) {
+      attackOriginQRef.current = null;
+      attackOriginPctRef.current = null;
+      return;
+    }
+    const qIdx = state.roundResult?.qIndex ?? localQuestion?.qIndex ?? null;
+    if (qIdx === null) return;
+    if (attackOriginQRef.current === qIdx) return;
+    attackOriginQRef.current = qIdx;
+    attackOriginPctRef.current = myPossessionPct;
+  }, [isAttackAnimationPhase, localQuestion?.qIndex, myPossessionPct, state.roundResult?.qIndex]);
+
+  useEffect(() => {
+    if (!isShotVisualPhase || !possessionState) {
+      shotOriginCaptureKeyRef.current = null;
+      return;
+    }
+    const captureKey = isAttackAnimationPhase
+      ? `attack:${state.roundResult?.qIndex ?? localQuestion?.qIndex ?? 'na'}`
+      : `shot:${localQuestion?.qIndex ?? 'na'}`;
+    if (shotOriginCaptureKeyRef.current === captureKey) return;
+    shotOriginCaptureKeyRef.current = captureKey;
+
+    const sourcePossessionPct = isAttackAnimationPhase
+      ? (attackOriginPctRef.current ?? myPossessionPct)
+      : myPossessionPct;
     const isAttackerMe = attackerSeat === mySeat;
     // Always use non-mirrored calculation (blue bottom, red top)
-    const basePlayerX = 30 + (myPossessionPct / 100) * 440;
+    const basePlayerX = 30 + (sourcePossessionPct / 100) * 440;
     const baseOpponentX = basePlayerX - 30;
     setShotBallOriginX(isAttackerMe ? basePlayerX + 14 : baseOpponentX - 14);
-  }, [attackerSeat, isShotVisualPhase, myPossessionPct, mySeat, possessionState]);
+  }, [
+    attackerSeat,
+    isAttackAnimationPhase,
+    isShotVisualPhase,
+    localQuestion?.qIndex,
+    myPossessionPct,
+    mySeat,
+    possessionState,
+    state.roundResult?.qIndex,
+  ]);
 
   const shotAnimationVariant = useMemo(() => {
     if (state.roundResult) {
@@ -524,7 +743,8 @@ export function RealtimePossessionMatchScreen({
     if (shownSplashQRef.current.player === activeQIndex) return;
     if (state.selectedAnswer !== state.correctIndex) return;
 
-    const points = answerAck?.pointsEarned ?? 90;
+    const optimisticPoints = Math.max(0, Math.min(100, state.timeRemaining * 10));
+    const points = answerAck?.pointsEarned ?? optimisticPoints;
     setPlayerSplashPoints(points);
     setShowPlayerSplash(true);
     shownSplashQRef.current.player = activeQIndex;
@@ -551,13 +771,20 @@ export function RealtimePossessionMatchScreen({
     const opponentCorrectResolved = oppRound?.isCorrect === true;
     if (opponentCorrectImmediate || opponentCorrectResolved) {
       const points = opponentCorrectImmediate
-        ? opponentRecentPoints
+        ? Math.max(0, Math.min(100, state.timeRemaining * 10))
         : (oppRound?.pointsEarned ?? 0);
       setOpponentSplashPoints(points);
       setShowOpponentSplash(true);
       shownSplashQRef.current.opponent = activeQIndex;
     }
-  }, [localQuestion?.qIndex, oppRound, opponentAnsweredCorrectly, opponentRecentPoints, phaseKind, state.opponentAnswered, state.roundResult]);
+  }, [localQuestion?.qIndex, oppRound, opponentAnsweredCorrectly, phaseKind, state.opponentAnswered, state.roundResult, state.timeRemaining]);
+
+  // Reconcile opponent splash points to authoritative round result when it arrives.
+  useEffect(() => {
+    if (!state.roundResult || !oppRound?.isCorrect) return;
+    if (shownSplashQRef.current.opponent !== state.roundResult.qIndex) return;
+    setOpponentSplashPoints(oppRound.pointsEarned);
+  }, [oppRound, state.roundResult]);
 
   // Optimistic shot outcome — predict from local data before round_result arrives
   const optimisticShotResult: ShotResult = useMemo(() => {
@@ -745,7 +972,56 @@ export function RealtimePossessionMatchScreen({
     return { message: null, direction: 'neutral', side: 'left' };
   }, [answerAck, attackerIsMe, isAttackAnimationPhase, myRound, oppRound, opponentAnsweredCorrectly, penaltyResult, phaseKind, resultShooterIsMe, shotResult, state.opponentAnswered, state.roundResult]);
 
-  const showMainUI = !isHalftime || Boolean(state.currentQuestion);
+  const pendingQuestion = match?.pendingQuestion ?? null;
+  const isHalfBoundaryRound = state.roundResult?.phaseKind === 'normal' && state.roundResult?.phaseRound === 6;
+  const hasConcreteNextQuestion = Boolean(pendingQuestion);
+  const allowBoundaryTransition = !isHalfBoundaryRound || hasConcreteNextQuestion;
+
+  // Round transition overlay — for normal-phase inter-round transitions + first question intro
+  const showRoundTransition = phase === 'NORMAL_PLAY'
+    && (state.roundResultHoldDone || firstQuestionIntro)
+    && allowBoundaryTransition
+    && !isPenaltyQuestion && !isShotQuestion && !isLastAttackQuestion && !isHalftime
+    && !goalCelebration; // Hide transition overlay while goal celebration is playing
+
+  // Snapshot transition data when the overlay APPEARS, so the values stay stable
+  // during the exit animation (prevents "Question 5" jumping to "Question 6" when
+  // the pending question gets promoted while the overlay is fading out).
+  useEffect(() => {
+    if (showRoundTransition && !transitionVisibleRef.current) {
+      transitionVisibleRef.current = true;
+      const isExtra = pendingQuestion?.phaseKind === 'last_attack';
+      const questionNumber = firstQuestionIntro
+        ? 1
+        : isExtra
+          ? 0 // unused when isExtra=true, overlay shows "Extra Question"
+          : (pendingQuestion?.phaseRound
+            ?? (typeof localQuestion?.phaseRound === 'number' ? localQuestion.phaseRound + 1 : 1));
+      const categoryName = firstQuestionIntro
+        ? (localQuestion?.question.categoryName ?? 'Football')
+        : (pendingQuestion?.question.categoryName
+          ?? localQuestion?.question.categoryName
+          ?? 'Football');
+      const half = (possessionState?.half ?? 1) as 1 | 2;
+      setTransitionSnapshot({ questionNumber, categoryName, half, isExtra });
+      return;
+    }
+
+    if (!showRoundTransition && transitionVisibleRef.current) {
+      transitionVisibleRef.current = false;
+    }
+  }, [
+    firstQuestionIntro,
+    localQuestion?.phaseRound,
+    localQuestion?.question.categoryName,
+    pendingQuestion?.phaseKind,
+    pendingQuestion?.phaseRound,
+    pendingQuestion?.question.categoryName,
+    possessionState?.half,
+    showRoundTransition,
+  ]);
+
+  const showMainUI = !isHalftime;
   const showStartCountdown = state.startCountdownActive;
   const countdownDisplay = Math.max(1, state.countdownSeconds);
 
@@ -760,7 +1036,7 @@ export function RealtimePossessionMatchScreen({
             </div>
           </div>
         ) : (
-          <div className="text-sm text-white/50 font-fun font-bold">Waiting for possession state...</div>
+          <LoadingScreen fullScreen={false} className="min-h-0 h-auto" />
         )}
       </div>
     );
@@ -956,7 +1232,7 @@ export function RealtimePossessionMatchScreen({
                   opponentName={opponentUsername}
                   playerAvatarUrl={playerAvatar}
                   opponentAvatarUrl={opponentAvatar}
-                  timeRemaining={state.roundResolved ? 0 : state.timeRemaining}
+                  timeRemaining={state.questionPhase === 'playing' && state.showOptions && !state.roundResolved ? state.timeRemaining : null}
                   half={possessionState.half}
                   questionInHalf={questionProgress}
                   zone={zone}
@@ -986,33 +1262,52 @@ export function RealtimePossessionMatchScreen({
                     penaltyResult={feed.penaltyResult ?? null}
                   />
 
-                  <PossessionQuestionPanel
-                    phase={uiPhase}
-                    isPenaltyPhase={isPenaltyQuestion}
-                    isShotPhase={isShotVisualPhase}
-                    isLastAttackPhase={isLastAttackQuestion}
-                    question={question}
-                    showOptions={state.showOptions}
-                    selectedAnswer={state.selectedAnswer}
-                    answerStates={answerStates}
-                    eliminatedIndices={activeOptimisticChanceCard?.eliminatedIndices ?? []}
-                    opponentAnswer={opponentAnswer}
-                    opponentAvatarUrl={opponentAvatar}
-                    chanceCardCount={chanceCardCount}
-                    chanceCardPending={Boolean(activeOptimisticChanceCard?.pending || activeOptimisticChanceCard?.pendingSync)}
-                    chanceCardPendingSync={Boolean(activeOptimisticChanceCard?.pendingSync)}
-                    onUseChanceCard={handleUseChanceCard}
-                    showPlayerSplash={showPlayerSplash}
-                    showOpponentSplash={showOpponentSplash}
-                    playerSplashPoints={playerSplashPoints}
-                    opponentSplashPoints={opponentSplashPoints}
-                    onPlayerSplashComplete={() => setShowPlayerSplash(false)}
-                    onOpponentSplashComplete={() => setShowOpponentSplash(false)}
-                    onAnswer={(index) => {
-                      if (state.matchPaused) return;
-                      actions.submitAnswer(index);
-                    }}
-                  />
+                  <div className="relative">
+                    {/* Question panel fades in AFTER overlay exits (opacity 0 while overlay showing) */}
+                    <motion.div
+                      animate={{ opacity: showRoundTransition ? 0 : 1 }}
+                      transition={{ duration: showRoundTransition ? 0 : 0.8 }}
+                      initial={false}
+                    >
+                      <PossessionQuestionPanel
+                        phase={uiPhase}
+                        isPenaltyPhase={isPenaltyQuestion}
+                        isShotPhase={isShotVisualPhase}
+                        isLastAttackPhase={isLastAttackQuestion}
+                        question={question}
+                        showOptions={state.showOptions}
+                        selectedAnswer={state.selectedAnswer}
+                        answerStates={answerStates}
+                        eliminatedIndices={activeOptimisticChanceCard?.eliminatedIndices ?? []}
+                        opponentAnswer={opponentAnswer}
+                        opponentAvatarUrl={opponentAvatar}
+                        chanceCardCount={chanceCardCount}
+                        chanceCardPending={Boolean(activeOptimisticChanceCard?.pending || activeOptimisticChanceCard?.pendingSync)}
+                        chanceCardPendingSync={Boolean(activeOptimisticChanceCard?.pendingSync)}
+                        onUseChanceCard={handleUseChanceCard}
+                        showPlayerSplash={showPlayerSplash}
+                        showOpponentSplash={showOpponentSplash}
+                        playerSplashPoints={playerSplashPoints}
+                        opponentSplashPoints={opponentSplashPoints}
+                        onPlayerSplashComplete={() => setShowPlayerSplash(false)}
+                        onOpponentSplashComplete={() => setShowOpponentSplash(false)}
+                        onAnswer={(index) => {
+                          if (state.matchPaused) return;
+                          actions.submitAnswer(index);
+                        }}
+                      />
+                    </motion.div>
+                    <AnimatePresence>
+                      {showRoundTransition && (
+                        <RoundTransitionOverlay
+                          questionNumber={transitionSnapshot.questionNumber}
+                          categoryName={transitionSnapshot.categoryName}
+                          half={transitionSnapshot.half}
+                          isExtra={transitionSnapshot.isExtra}
+                        />
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </>
               )}
             </>
@@ -1030,6 +1325,8 @@ export function RealtimePossessionMatchScreen({
               playerPosition={myPossessionPct}
               deadlineAt={possessionState.halftime.deadlineAt}
               categoryOptions={possessionState.halftime.categoryOptions}
+              mySeat={mySeat}
+              firstBanSeat={possessionState.halftime.firstBanSeat}
               myBan={mySeat === 2 ? possessionState.halftime.bans.seat2 : mySeat === 1 ? possessionState.halftime.bans.seat1 : null}
               opponentBan={mySeat === 2 ? possessionState.halftime.bans.seat1 : mySeat === 1 ? possessionState.halftime.bans.seat2 : null}
               onBanCategory={handleHalftimeBan}
@@ -1038,6 +1335,16 @@ export function RealtimePossessionMatchScreen({
         </div>
 
       </div>
+
+      {/* Goal celebration overlay */}
+      <AnimatePresence>
+        {goalCelebration && (
+          <GoalCelebrationOverlay
+            scorerName={goalCelebration.scorerName}
+            isMeScorer={goalCelebration.isMeScorer}
+          />
+        )}
+      </AnimatePresence>
 
       <QuitMatchModal
         open={showQuitModal}

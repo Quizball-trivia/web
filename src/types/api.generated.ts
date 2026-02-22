@@ -417,6 +417,8 @@ export interface paths {
                                 /** @enum {string} */
                                 mode: "friendly" | "ranked";
                                 /** @enum {string} */
+                                competition: "friendly" | "placement" | "ranked";
+                                /** @enum {string} */
                                 status: "completed" | "abandoned";
                                 /** @enum {string} */
                                 result: "win" | "loss" | "draw";
@@ -430,6 +432,7 @@ export interface paths {
                                 opponentPenaltyGoals: number;
                                 /** @enum {string|null} */
                                 winnerDecisionMethod: "goals" | "penalty_goals" | "total_points_fallback" | "forfeit" | null;
+                                rpDelta: number | null;
                                 opponent: {
                                     /** Format: uuid */
                                     id: string | null;
@@ -2689,6 +2692,8 @@ export interface components {
                 /** @enum {string} */
                 mode: "friendly" | "ranked";
                 /** @enum {string} */
+                competition: "friendly" | "placement" | "ranked";
+                /** @enum {string} */
                 status: "completed" | "abandoned";
                 /** @enum {string} */
                 result: "win" | "loss" | "draw";
@@ -2702,6 +2707,7 @@ export interface components {
                 opponentPenaltyGoals: number;
                 /** @enum {string|null} */
                 winnerDecisionMethod: "goals" | "penalty_goals" | "total_points_fallback" | "forfeit" | null;
+                rpDelta: number | null;
                 opponent: {
                     /** Format: uuid */
                     id: string | null;

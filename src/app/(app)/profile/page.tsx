@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { ProfileScreen } from "@/features/profile/ProfileScreen";
 import { usePlayer } from "@/contexts/PlayerContext";
@@ -18,6 +18,7 @@ import { useEffect } from "react";
 
 export default function ProfilePage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const { player, updateStats } = usePlayer();
   const authUser = useAuthStore((state) => state.user);
@@ -35,6 +36,7 @@ export default function ProfilePage() {
   const purchaseStatus = searchParams.get("purchase");
 
   useEffect(() => {
+    if (!purchaseStatus) return;
     if (purchaseStatus === "success") {
       toast.success("Purchase completed. Refreshing your unlocks.");
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
@@ -43,7 +45,12 @@ export default function ProfilePage() {
     if (purchaseStatus === "cancelled") {
       toast.message("Purchase cancelled.");
     }
-  }, [purchaseStatus, queryClient]);
+    // Clear the query param so the toast doesn't re-fire on remount/navigation
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("purchase");
+    const cleaned = params.toString();
+    router.replace(cleaned ? `?${cleaned}` : window.location.pathname, { scroll: false });
+  }, [purchaseStatus, queryClient, router, searchParams]);
 
   const handleNameChange = async (name: string) => {
     if (isUpdating) return;
@@ -136,6 +143,7 @@ export default function ProfilePage() {
       recentMatches={recentMatches.map((match) => ({
         id: match.matchId,
         mode: match.mode === "ranked" ? "Ranked" : "Friendly",
+        competition: match.competition,
         result:
           match.result === "win"
             ? "Win"
@@ -143,6 +151,7 @@ export default function ProfilePage() {
               ? "Loss"
               : "Draw",
         time: match.timeLabel,
+        rpDelta: match.rpDelta,
         opponent: match.opponent.username,
         scoreFormatted: formatMatchScore(match),
       }))}

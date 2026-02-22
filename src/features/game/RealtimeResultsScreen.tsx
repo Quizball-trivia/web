@@ -1,19 +1,30 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { AnimatePresence, motion } from 'motion/react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useHeadToHead } from '@/lib/queries/stats.queries';
-import { getRankInfo, getDivisionEmoji, getDivisionColor } from '@/utils/rankSystem';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import { StatCard, WinIllustration, DrawIllustration, LossIllustration } from './components/ResultsShared';
 import type { RankedMatchOutcomePayload } from '@/lib/realtime/socket.types';
 
 import { getTierVisual } from '@/utils/tierVisuals';
+import { getRankedTierProgress, tierFromRp } from '@/utils/rankedTier';
 
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function computeOptimisticDelta(playerRp: number, opponentRp: number, isWin: boolean, isForfeitLoss = false): number {
+  const rankDiff = opponentRp - playerRp;
+  if (isWin) return Math.round(25 + clamp(rankDiff / 50, -15, 20));
+  const lossDelta = Math.round(-25 + clamp(rankDiff / 50, -25, 10));
+  if (isForfeitLoss) return lossDelta - 10;
+  return lossDelta;
+}
 
 /** Animated number that ticks from `from` → `to` after a delay, with a pop + glow */
 function AnimatedCounter({
@@ -92,7 +103,11 @@ interface RealtimeResultsScreenProps {
   opponentCorrect: number;
   totalQuestions: number;
   selfUserId: string;
+  finalWinnerId?: string | null;
+  winnerDecisionMethod?: 'goals' | 'penalty_goals' | 'total_points_fallback' | 'forfeit' | null;
+  preMatchRp?: number;
   opponentId: string;
+  opponentRp?: number;
   rankedOutcome?: RankedMatchOutcomePayload | null;
   preMatchRankedProfile?: RankedProfileResponse | null;
   onPlayAgain: () => void;
@@ -110,14 +125,23 @@ export function RealtimeResultsScreen({
   playerCorrect,
   totalQuestions,
   selfUserId,
+  finalWinnerId,
+  winnerDecisionMethod,
+  preMatchRp,
   opponentId,
+  opponentRp,
   rankedOutcome,
   preMatchRankedProfile,
   onPlayAgain,
   onMainMenu,
 }: RealtimeResultsScreenProps) {
-  const playerWon = playerScore > opponentScore;
-  const isDraw = playerScore === opponentScore;
+  const hasAuthoritativeWinner = finalWinnerId !== undefined;
+  const playerWon = hasAuthoritativeWinner
+    ? finalWinnerId !== null && finalWinnerId !== opponentId
+    : playerScore > opponentScore;
+  const isDraw = hasAuthoritativeWinner
+    ? finalWinnerId === null
+    : playerScore === opponentScore;
 
   // H2H record (already includes this match)
   const { data: h2hSummary } = useHeadToHead(selfUserId, opponentId);
@@ -132,7 +156,13 @@ export function RealtimeResultsScreen({
   const oldDraws = isDraw ? h2hDraws - 1 : h2hDraws;
 
   // --- Ranked data from backend settlement ---
-  const myOutcome = rankedOutcome?.byUserId[selfUserId] ?? null;
+  const myOutcome = useMemo(() => {
+    if (!rankedOutcome) return null;
+    const bySelf = rankedOutcome.byUserId[selfUserId];
+    if (bySelf) return bySelf;
+    const byNonOpponent = Object.entries(rankedOutcome.byUserId).find(([userId]) => userId !== opponentId)?.[1];
+    return byNonOpponent ?? null;
+  }, [opponentId, rankedOutcome, selfUserId]);
 
   // Placement state: use pre-match profile (already known) + increment by 1
   const preIsPlacement = preMatchRankedProfile ? preMatchRankedProfile.placementStatus !== 'placed' : false;
@@ -144,20 +174,39 @@ export function RealtimeResultsScreen({
   const optimisticJustPlaced = preIsPlacement && placementPlayed >= placementRequired;
   const justPlaced = myOutcome ? (myOutcome.isPlacement && myOutcome.placementStatus === 'placed') : optimisticJustPlaced;
 
-  // RP from backend settlement
-  const rpChange = myOutcome?.deltaRp ?? 0;
-  const oldRP = myOutcome?.oldRp ?? 0;
-  const newRP = myOutcome?.newRp ?? 0;
+  // Optimistic RP for post-placement ranked matches (show immediately, don't wait for server)
+  const oldRpBase = preMatchRankedProfile?.rp ?? preMatchRp ?? 0;
+  const opponentRpValue = typeof opponentRp === 'number' && Number.isFinite(opponentRp)
+    ? opponentRp
+    : null;
+  const canOptimistic = matchType === 'ranked'
+    && !isPlacementMatch
+    && Number.isFinite(oldRpBase)
+    && hasAuthoritativeWinner
+    && !isDraw;
 
-  // Show RP card when ranked + placed (not in placement) + has real data
-  const showRankedRpCard = matchType === 'ranked' && myOutcome != null && !myOutcome.isPlacement;
+  const isSelfWinner = playerWon;
+  const isForfeitLoss = winnerDecisionMethod === 'forfeit' && !isSelfWinner;
+
+  // Use server data if available, otherwise optimistic
+  const rpChange = myOutcome?.deltaRp
+    ?? (canOptimistic
+      ? computeOptimisticDelta(oldRpBase, opponentRpValue ?? oldRpBase, isSelfWinner, isForfeitLoss)
+      : 0);
+  const oldRP = myOutcome?.oldRp ?? oldRpBase;
+  const newRP = myOutcome?.newRp ?? (canOptimistic ? Math.max(0, oldRP + rpChange) : 0);
+
+  // Show RP card immediately for optimistic OR when server confirms
+  const showRankedRpCard = matchType === 'ranked'
+    && !isPlacementMatch
+    && (myOutcome != null || canOptimistic);
 
   const accuracy = totalQuestions === 0 ? 0 : Math.round((playerCorrect / totalQuestions) * 100);
   const coinsEarned = playerWon ? 25 : isDraw ? 10 : 5;
 
-  const rankInfo = getRankInfo(newRP);
-  const divisionEmoji = getDivisionEmoji(rankInfo.division);
-  const divisionColor = getDivisionColor(rankInfo.division);
+  const rpTierInfo = getRankedTierProgress(newRP);
+  const oldRpTierInfo = getRankedTierProgress(oldRP);
+  const rpTierVisual = getTierVisual(rpTierInfo.tier);
 
   const [animatedRP, setAnimatedRP] = useState(0);
   const [showRankReveal, setShowRankReveal] = useState(false);
@@ -194,8 +243,8 @@ export function RealtimeResultsScreen({
   }, [justPlaced]);
 
   const hasServerReveal = myOutcome != null;
-  const revealTier = myOutcome?.newTier ?? preMatchRankedProfile?.tier ?? 'Academy';
-  const tierVisual = getTierVisual(revealTier);
+  const revealTier = tierFromRp(myOutcome?.newRp ?? newRP);
+  const revealTierVisual = getTierVisual(revealTier);
 
   return (
     <div className="min-h-screen bg-[#0f1420] flex items-center justify-center p-4">
@@ -365,7 +414,7 @@ export function RealtimeResultsScreen({
                     transition={{ type: 'spring', damping: 12, stiffness: 150 }}
                     className={cn(
                       'bg-[#1a1f2e] rounded-3xl border-b-4 border-b-white/10 p-6 text-center relative overflow-hidden',
-                      hasServerReveal && `shadow-[0_0_60px_-10px] ${tierVisual.glow}`
+                      hasServerReveal && `shadow-[0_0_60px_-10px] ${revealTierVisual.glow}`
                     )}
                   >
                     {hasServerReveal ? (
@@ -383,7 +432,7 @@ export function RealtimeResultsScreen({
                           transition={{ duration: 0.6, delay: 0.15 }}
                           className="text-5xl mb-2"
                         >
-                          {tierVisual.emoji}
+                          {revealTierVisual.emoji}
                         </motion.div>
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
@@ -391,7 +440,7 @@ export function RealtimeResultsScreen({
                           transition={{ delay: 0.4 }}
                         >
                           <div className="text-xs font-bold uppercase tracking-wider text-white/40 mb-1">Your Rank</div>
-                          <div className={cn('text-2xl font-black', tierVisual.color)}>{revealTier}</div>
+                          <div className={cn('text-2xl font-black', revealTierVisual.color)}>{revealTier}</div>
                           <div className="text-sm font-bold text-white/60 mt-1">{newRP} RP</div>
                         </motion.div>
                       </>
@@ -420,8 +469,8 @@ export function RealtimeResultsScreen({
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">{divisionEmoji}</span>
-                    <span className={cn('text-sm font-bold', divisionColor.text)}>{rankInfo.division}</span>
+                    <span className="text-lg">{rpTierVisual.emoji}</span>
+                    <span className={cn('text-sm font-bold', rpTierVisual.color)}>{rpTierInfo.tier}</span>
                   </div>
                   <motion.div
                     initial={{ scale: 0 }}
@@ -438,8 +487,8 @@ export function RealtimeResultsScreen({
 
                 <div className="relative h-4 bg-white/10 rounded-full overflow-hidden mb-2">
                   <motion.div
-                    initial={{ width: `${getRankInfo(oldRP).progress}%` }}
-                    animate={{ width: `${rankInfo.progress}%` }}
+                    initial={{ width: `${oldRpTierInfo.progress}%` }}
+                    animate={{ width: `${rpTierInfo.progress}%` }}
                     transition={{ duration: 1.2, ease: 'easeInOut', delay: 0.5 }}
                     className="absolute inset-y-0 left-0 rounded-full"
                     style={{
@@ -452,8 +501,8 @@ export function RealtimeResultsScreen({
 
                 <div className="flex items-center justify-between text-xs text-white/40 font-semibold">
                   <span>{newRP} RP</span>
-                  {rankInfo.pointsToNext !== null && (
-                    <span>{rankInfo.pointsToNext} pts to next division</span>
+                  {rpTierInfo.pointsToNext !== null && (
+                    <span>{rpTierInfo.pointsToNext} pts to next tier</span>
                   )}
                 </div>
               </motion.div>

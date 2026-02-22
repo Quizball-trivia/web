@@ -44,7 +44,7 @@ export interface TacticModifiers {
 }
 
 // ─── Constants ──────────────────────────────────────────────────
-export const QUESTION_REVEAL_MS = 2000;
+export const QUESTION_REVEAL_MS = 3000;
 export const QUESTIONS_PER_HALF = 6;
 export const TIMER_SECONDS = 10;
 export const PENALTY_TIMER = 5;

@@ -26,6 +26,8 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
         result: match.result,
         opponent: match.opponent.username,
         mode: match.mode === 'ranked' ? 'Ranked' : 'Friendly',
+        competition: match.competition,
+        rpDelta: match.rpDelta,
         score: formatted.score,
         scoreSuffix: formatted.suffix,
         scoreBadge: formatted.badge,
@@ -112,6 +114,17 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
                 </div>
 
                 <div className="flex items-center gap-2">
+                    {match.competition !== 'friendly' && match.rpDelta !== null && (
+                      <span className={`text-[10px] font-black px-1.5 py-0.5 rounded border ${
+                        match.rpDelta > 0
+                          ? 'bg-green-500/15 text-green-500 ring-1 ring-green-500/25 border-green-500/30'
+                          : match.rpDelta < 0
+                            ? 'bg-red-500/15 text-red-500 ring-1 ring-red-500/25 border-red-500/30'
+                            : 'bg-muted text-muted-foreground ring-1 ring-border border-border'
+                      }`}>
+                        {`${match.rpDelta >= 0 ? '+' : ''}${match.rpDelta} RP`}
+                      </span>
+                    )}
                     <span className={`text-base font-black tracking-tight ${
                       match.result === 'win'
                         ? 'text-green-500'

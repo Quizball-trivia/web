@@ -7,8 +7,11 @@ import { ArenaScoreSplash } from '@/features/game/components/ArenaScoreSplash';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import type { AnswerStateArray, Phase } from '../types/possession.types';
 import { ANSWER_LABELS } from '../types/possession.types';
-import { getDifficultyLabel } from '../data/mockQuestions';
-import { Sparkles } from 'lucide-react';
+function getDifficultyLabel(d?: string): string {
+  if (d === 'hard') return 'Hard';
+  if (d === 'medium') return 'Medium';
+  return 'Easy';
+}
 
 interface PossessionQuestionPanelProps {
   phase: Phase;
@@ -97,14 +100,15 @@ export function PossessionQuestionPanel({
 
   return (
     <>
-      {/* Question card — AnimatePresence for smooth cross-fade between questions */}
-      <AnimatePresence mode="wait">
+      {/* Question card — popLayout pops exiting question out of flow to prevent height doubling */}
+      <AnimatePresence mode="popLayout" initial={false}>
         <motion.div
           key={`question-${question.id}`}
-          initial={{ opacity: 0, y: -12 }}
-          animate={{ opacity: 1, y: 0 }}
+          layout
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2, ease: 'easeOut' }}
+          transition={{ duration: 0.15 }}
           className="px-4 mt-2"
         >
           <QuestionArena
@@ -134,32 +138,10 @@ export function PossessionQuestionPanel({
         />
       </div>
 
-      {!isPenaltyPhase && !isShotPhase && (
-        <div className="px-4 mt-2">
-          <button
-            type="button"
-            onClick={onUseChanceCard}
-            disabled={!canUseChanceCard}
-            className={`w-full rounded-2xl border px-4 py-2.5 text-sm font-black uppercase tracking-wide transition-colors ${
-              canUseChanceCard
-                ? 'border-rose-400/60 bg-rose-500/15 text-rose-200 hover:bg-rose-500/25'
-                : 'border-white/10 bg-white/5 text-white/40 cursor-not-allowed'
-            }`}
-          >
-            <span className="inline-flex items-center gap-2">
-              <Sparkles className="size-4" />
-              50-50 Card ({chanceCardCount})
-              {chanceCardPending ? ' - Applying...' : ''}
-              {chanceCardPendingSync ? ' - Syncing...' : ''}
-            </span>
-          </button>
-        </div>
-      )}
-
       {/* Answer cards */}
       <motion.div
         key={`options-${question.id}`}
-        className={`grid grid-cols-2 gap-3 px-4 mt-4 pb-6 min-h-[15rem] ${
+        className={`grid grid-cols-2 gap-3 px-4 mt-4 min-h-[15rem] ${
           showOptions ? 'pointer-events-auto' : 'pointer-events-none'
         }`}
         initial={false}
@@ -195,7 +177,7 @@ export function PossessionQuestionPanel({
               index={i}
               isSelected={selectedAnswer === i}
               state={cardState}
-              fadeOut={isReveal}
+              fadeOut={false}
               opponentPicked={!isPenaltyPhase && opponentAnswer === i}
               opponentPickCorrect={!isPenaltyPhase && opponentAnswer !== null ? opponentAnswer === question.correctIndex : undefined}
               opponentAvatarUrl={opponentAvatarUrl}
@@ -210,6 +192,43 @@ export function PossessionQuestionPanel({
           );
         })}
       </motion.div>
+
+      {/* Power-ups bar — below answers */}
+      {!isPenaltyPhase && !isShotPhase && (
+        <motion.div
+          initial={false}
+          animate={{ opacity: showOptions ? 1 : 0 }}
+          transition={{ duration: 0.2 }}
+          className="px-4 mt-3 pb-6"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-bold font-fun uppercase tracking-[0.18em] text-[#56707A]">
+              Power Ups
+            </span>
+          </div>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onUseChanceCard}
+              disabled={!canUseChanceCard}
+              className={`flex items-center gap-2.5 rounded-xl border-2 border-b-4 px-4 py-2.5 transition-colors ${
+                canUseChanceCard
+                  ? 'bg-[#1B2F36] border-[#FF9600] border-b-[#CC7800] text-white hover:bg-[#1B2F36]/80 active:border-b-2 active:translate-y-[2px]'
+                  : 'bg-[#1B2F36]/50 border-white/10 border-b-white/10 text-white/30 cursor-not-allowed'
+              }`}
+            >
+              <span className="text-lg font-black font-fun tracking-tight">50/50</span>
+              <span className={`text-xs font-bold font-fun tabular-nums ${canUseChanceCard ? 'text-[#FF9600]' : 'text-white/30'}`}>
+                {chanceCardPending
+                  ? 'Applying...'
+                  : chanceCardPendingSync
+                    ? 'Syncing...'
+                    : `×${chanceCardCount}`}
+              </span>
+            </button>
+          </div>
+        </motion.div>
+      )}
     </>
   );
 }

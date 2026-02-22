@@ -236,6 +236,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       isCorrect: data.isCorrect,
     });
     store.setOpponentAnswered({
+      matchId: data.matchId,
       qIndex: data.qIndex,
       opponentTotalPoints: data.opponentTotalPoints,
       pointsEarned: data.pointsEarned,
@@ -267,6 +268,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     });
     if (queryClient) {
       void queryClient.invalidateQueries({ queryKey: queryKeys.ranked.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.stats.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
     }

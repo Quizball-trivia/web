@@ -561,6 +561,7 @@ export function MatchmakingMapScreen({
   const showFoundState = matchType === "ranked" && rankedFoundOpponent !== null;
   const scanRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const panAnimRef = useRef<ReturnType<typeof animate> | null>(null);
+  const fallbackSearchStartedAtRef = useRef<number | null>(null);
 
   // Motion values for smooth pan → zoom transition
   const mapX = useMotionValue(DESKTOP_CAMERA.startX);
@@ -712,10 +713,14 @@ export function MatchmakingMapScreen({
 
   // Search elapsed timer
   useEffect(() => {
-    if (matchType !== "ranked" || !rankedSearchStartedAt) return;
+    if (matchType !== "ranked") return;
+    if (fallbackSearchStartedAtRef.current == null) {
+      fallbackSearchStartedAtRef.current = Date.now();
+    }
+    const startedAt = rankedSearchStartedAt ?? fallbackSearchStartedAtRef.current;
     const tick = () =>
       setSearchTime(
-        Math.floor(Math.max(0, Date.now() - rankedSearchStartedAt) / 1000)
+        Math.floor(Math.max(0, Date.now() - startedAt) / 1000)
       );
     tick();
     const id = setInterval(tick, 1000);

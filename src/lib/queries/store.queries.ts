@@ -71,6 +71,22 @@ const toStoreInventoryDTO = (
   acquiredAt: item.acquiredAt,
 });
 
+const STORE_PRODUCTS_QUERY_OPTIONS = {
+  staleTime: 10 * 60_000,
+  gcTime: 30 * 60_000,
+} as const;
+
+const STORE_WALLET_QUERY_OPTIONS = {
+  staleTime: 5 * 60_000,
+  gcTime: 30 * 60_000,
+} as const;
+
+const STORE_INVENTORY_QUERY_OPTIONS = {
+  staleTime: 60_000,
+  gcTime: 30 * 60_000,
+  refetchOnWindowFocus: true,
+} as const;
+
 export const getStoreProductsQuery = () => ({
   queryKey: queryKeys.store.products(),
   queryFn: async (): Promise<{ items: StoreProductDTO[] }> => {
@@ -79,6 +95,8 @@ export const getStoreProductsQuery = () => ({
       items: data.items.map(toStoreProductDTO),
     };
   },
+  ...STORE_PRODUCTS_QUERY_OPTIONS,
+  options: STORE_PRODUCTS_QUERY_OPTIONS,
 });
 
 export function useStoreProducts() {
@@ -88,6 +106,8 @@ export function useStoreProducts() {
 export const getStoreWalletQuery = () => ({
   queryKey: queryKeys.store.wallet(),
   queryFn: async (): Promise<StoreWalletResponse> => getStoreWallet(),
+  ...STORE_WALLET_QUERY_OPTIONS,
+  options: STORE_WALLET_QUERY_OPTIONS,
 });
 
 export function useStoreWallet() {
@@ -102,6 +122,8 @@ export const getStoreInventoryQuery = () => ({
       items: data.items.map(toStoreInventoryDTO),
     };
   },
+  ...STORE_INVENTORY_QUERY_OPTIONS,
+  options: STORE_INVENTORY_QUERY_OPTIONS,
 });
 
 export function useStoreInventory() {

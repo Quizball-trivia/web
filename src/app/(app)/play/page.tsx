@@ -11,6 +11,7 @@ import { useCategoriesList } from "@/lib/queries/categories.queries";
 import { useFeaturedCategories } from "@/lib/queries/featuredCategories.queries";
 import { useMatchStatsSummary } from "@/lib/queries/stats.queries";
 import { useRankedProfile } from "@/lib/queries/ranked.queries";
+import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import type { CategorySummary, GameQuestion } from "@/lib/domain";
 import type { ListQuestionsQuery } from "@/lib/repositories/questions.repo";
 import { QUESTION_COUNT } from "@/lib/constants/game";
@@ -29,6 +30,7 @@ export default function PlayPage() {
   const router = useRouter();
   const { player } = usePlayer();
   const startSession = useGameSessionStore((state) => state.startSession);
+  const resetRealtime = useRealtimeMatchStore((state) => state.reset);
   const queryClient = useQueryClient();
   const { data: featuredData } = useFeaturedCategories();
   const { data: matchStatsSummary = null } = useMatchStatsSummary();
@@ -62,6 +64,9 @@ export default function PlayPage() {
     mode: "solo" | "ranked" | "quizball" | "buzzer";
     matchType?: "ranked" | "friendly";
   }) => {
+    // Always clear stale realtime state before opening a new game flow.
+    resetRealtime();
+
     // For ranked mode, start matchmaking without pre-fetching questions
     // Questions will be fetched after category blocking
     if (params.mode === "ranked") {
