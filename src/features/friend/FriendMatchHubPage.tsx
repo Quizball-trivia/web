@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LobbyBrowsePanel } from "./components/LobbyBrowsePanel";
@@ -58,6 +58,16 @@ export function FriendMatchHubPage() {
     joinRetryTimerRef.current = null;
   };
 
+  const resetJoiningCodeState = useCallback(() => {
+    setIsJoiningCode(null);
+    joinRetryCountRef.current = 0;
+  }, []);
+
+  const resetJoinNavigationState = useCallback(() => {
+    resetJoiningCodeState();
+    setIsNavigatingToRoom(false);
+  }, [resetJoiningCodeState]);
+
   useEffect(() => {
     // Prevent stale realtime errors from previous routes from flashing lobby UI in this screen.
     clearRealtimeError();
@@ -110,9 +120,7 @@ export function FriendMatchHubPage() {
     clearJoinTimeout();
     joinTimeoutRef.current = setTimeout(() => {
       clearJoinRetryTimer();
-      joinRetryCountRef.current = 0;
-      setIsJoiningCode(null);
-      setIsNavigatingToRoom(false);
+      resetJoinNavigationState();
       toast.error("Join is taking too long. Please refresh and try again.");
     }, 8000);
     
@@ -136,10 +144,9 @@ export function FriendMatchHubPage() {
     if (lobby?.inviteCode && isNavigatingToRoom) {
       clearJoinTimeout();
       clearJoinRetryTimer();
-      setIsJoiningCode(null);
-      joinRetryCountRef.current = 0;
+      queueMicrotask(resetJoiningCodeState);
     }
-  }, [lobby?.inviteCode, isNavigatingToRoom]);
+  }, [isNavigatingToRoom, lobby?.inviteCode, resetJoiningCodeState]);
 
   useEffect(() => {
     if (error) {
@@ -152,9 +159,7 @@ export function FriendMatchHubPage() {
         if (joinRetryCountRef.current >= 5) {
           clearJoinTimeout();
           clearJoinRetryTimer();
-          joinRetryCountRef.current = 0;
-          setIsJoiningCode(null);
-          setIsNavigatingToRoom(false);
+          queueMicrotask(resetJoinNavigationState);
           toast.error("Could not join lobby right now. Please try again.");
           return;
         }
@@ -188,13 +193,19 @@ export function FriendMatchHubPage() {
         void queryClient.invalidateQueries({ queryKey: lobbiesKeys.public() });
         toast.error("That lobby just closed. Lobby list refreshed.");
       }
-      setIsJoiningCode(null);
-      setIsNavigatingToRoom(false);
-      joinRetryCountRef.current = 0;
+      queueMicrotask(resetJoinNavigationState);
       clearJoinTimeout();
       clearJoinRetryTimer();
     }
-  }, [error, isJoiningCode, isNavigatingToRoom, lobby?.inviteCode, queryClient, sessionState?.state]);
+  }, [
+    error,
+    isJoiningCode,
+    isNavigatingToRoom,
+    lobby?.inviteCode,
+    queryClient,
+    resetJoinNavigationState,
+    sessionState?.state,
+  ]);
 
   return (
     <div className="container mx-auto max-w-5xl py-6 animate-in fade-in space-y-6">

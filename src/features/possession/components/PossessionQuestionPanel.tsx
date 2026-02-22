@@ -7,7 +7,11 @@ import { ArenaScoreSplash } from '@/features/game/components/ArenaScoreSplash';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import type { AnswerStateArray, Phase } from '../types/possession.types';
 import { ANSWER_LABELS } from '../types/possession.types';
-import { getDifficultyLabel } from '../data/mockQuestions';
+function getDifficultyLabel(d?: string): string {
+  if (d === 'hard') return 'Hard';
+  if (d === 'medium') return 'Medium';
+  return 'Easy';
+}
 
 interface PossessionQuestionPanelProps {
   phase: Phase;
@@ -20,8 +24,13 @@ interface PossessionQuestionPanelProps {
   showOptions: boolean;
   selectedAnswer: number | null;
   answerStates: AnswerStateArray;
+  eliminatedIndices?: number[];
   opponentAnswer: number | null;
   opponentAvatarUrl?: string;
+  chanceCardCount?: number;
+  chanceCardPending?: boolean;
+  chanceCardPendingSync?: boolean;
+  onUseChanceCard?: () => void;
 
   // Splashes
   showPlayerSplash: boolean;
@@ -44,8 +53,13 @@ export function PossessionQuestionPanel({
   showOptions,
   selectedAnswer,
   answerStates,
+  eliminatedIndices = [],
   opponentAnswer,
   opponentAvatarUrl,
+  chanceCardCount = 0,
+  chanceCardPending = false,
+  chanceCardPendingSync = false,
+  onUseChanceCard,
   showPlayerSplash,
   showOpponentSplash,
   playerSplashPoints,
@@ -76,17 +90,25 @@ export function PossessionQuestionPanel({
     : isShotPhase
       ? phase === 'shot' && selectedAnswer === null
       : phase === 'playing';
+  const canUseChanceCard =
+    !isPenaltyPhase &&
+    !isShotPhase &&
+    isPlaying &&
+    chanceCardCount > 0 &&
+    !chanceCardPending &&
+    typeof onUseChanceCard === 'function';
 
   return (
     <>
-      {/* Question card — AnimatePresence for smooth cross-fade between questions */}
-      <AnimatePresence mode="wait">
+      {/* Question card — popLayout pops exiting question out of flow to prevent height doubling */}
+      <AnimatePresence mode="popLayout" initial={false}>
         <motion.div
           key={`question-${question.id}`}
-          initial={{ opacity: 0, y: -12 }}
-          animate={{ opacity: 1, y: 0 }}
+          layout
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2, ease: 'easeOut' }}
+          transition={{ duration: 0.15 }}
           className="px-4 mt-2"
         >
           <QuestionArena
@@ -119,7 +141,7 @@ export function PossessionQuestionPanel({
       {/* Answer cards */}
       <motion.div
         key={`options-${question.id}`}
-        className={`grid grid-cols-2 gap-3 px-4 mt-4 pb-6 min-h-[15rem] ${
+        className={`grid grid-cols-2 gap-3 px-4 mt-4 min-h-[15rem] ${
           showOptions ? 'pointer-events-auto' : 'pointer-events-none'
         }`}
         initial={false}
@@ -127,7 +149,12 @@ export function PossessionQuestionPanel({
         transition={{ duration: 0.25 }}
         aria-hidden={!showOptions}
       >
-        {question.options.map((opt, i) => (
+        {question.options.map((opt, i) => {
+          const isEliminated = eliminatedIndices.includes(i) && selectedAnswer !== i;
+          const cardState = isEliminated && answerStates[i] === 'default'
+            ? 'disabled'
+            : answerStates[i];
+          return (
           <motion.div
             key={`${question.id}-${i}`}
             initial={false}
@@ -149,20 +176,59 @@ export function PossessionQuestionPanel({
               text={opt}
               index={i}
               isSelected={selectedAnswer === i}
-              state={answerStates[i]}
-              fadeOut={isReveal}
+              state={cardState}
+              fadeOut={false}
               opponentPicked={!isPenaltyPhase && opponentAnswer === i}
               opponentPickCorrect={!isPenaltyPhase && opponentAnswer !== null ? opponentAnswer === question.correctIndex : undefined}
               opponentAvatarUrl={opponentAvatarUrl}
               onClick={() => {
                 if (!showOptions || !isPlaying) return;
+                if (isEliminated) return;
                 onAnswer(i);
               }}
-              disabled={!showOptions || !isPlaying}
+              disabled={!showOptions || !isPlaying || isEliminated}
             />
           </motion.div>
-        ))}
+          );
+        })}
       </motion.div>
+
+      {/* Power-ups bar — below answers */}
+      {!isPenaltyPhase && !isShotPhase && (
+        <motion.div
+          initial={false}
+          animate={{ opacity: showOptions ? 1 : 0 }}
+          transition={{ duration: 0.2 }}
+          className="px-4 mt-3 pb-6"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-bold font-fun uppercase tracking-[0.18em] text-[#56707A]">
+              Power Ups
+            </span>
+          </div>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onUseChanceCard}
+              disabled={!canUseChanceCard}
+              className={`flex items-center gap-2.5 rounded-xl border-2 border-b-4 px-4 py-2.5 transition-colors ${
+                canUseChanceCard
+                  ? 'bg-[#1B2F36] border-[#FF9600] border-b-[#CC7800] text-white hover:bg-[#1B2F36]/80 active:border-b-2 active:translate-y-[2px]'
+                  : 'bg-[#1B2F36]/50 border-white/10 border-b-white/10 text-white/30 cursor-not-allowed'
+              }`}
+            >
+              <span className="text-lg font-black font-fun tracking-tight">50/50</span>
+              <span className={`text-xs font-bold font-fun tabular-nums ${canUseChanceCard ? 'text-[#FF9600]' : 'text-white/30'}`}>
+                {chanceCardPending
+                  ? 'Applying...'
+                  : chanceCardPendingSync
+                    ? 'Syncing...'
+                    : `×${chanceCardCount}`}
+              </span>
+            </button>
+          </div>
+        </motion.div>
+      )}
     </>
   );
 }

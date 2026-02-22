@@ -12,7 +12,7 @@ interface PossessionHUDProps {
   opponentName: string;
   playerAvatarUrl: string;
   opponentAvatarUrl: string;
-  timeRemaining: number;
+  timeRemaining: number | null;
   half: 1 | 2;
   questionInHalf: number;
   zone: string;
@@ -38,7 +38,8 @@ export function PossessionHUD({
   opponentAnswered,
   opponentAnsweredCorrectly,
 }: PossessionHUDProps) {
-  const isUrgent = timeRemaining <= 3;
+  const isUrgent = timeRemaining !== null && timeRemaining <= 3;
+  const showTimer = timeRemaining !== null;
 
   return (
     <div className="w-full font-fun space-y-3 mb-3">
@@ -65,16 +66,16 @@ export function PossessionHUD({
           <div className="px-2.5 py-0.5 rounded-full bg-white/10 text-[10px] font-black uppercase tracking-[0.15em] text-white/60 mb-1">
             {half === 1 ? '1st Half' : '2nd Half'}
           </div>
-          <motion.div
-            animate={isUrgent ? { scale: [1, 1.1, 1] } : {}}
-            transition={isUrgent ? { repeat: Infinity, duration: 0.6 } : {}}
+          <div
             className={cn(
-              'text-3xl font-black tabular-nums transition-colors duration-200',
-              isUrgent ? 'text-red-500 animate-pulse' : 'text-white'
+              'text-3xl font-black tabular-nums transition-all duration-200',
+              showTimer
+                ? isUrgent ? 'text-red-500 opacity-100 scale-100' : 'text-white opacity-100 scale-100'
+                : 'text-white/20 opacity-0 scale-90'
             )}
           >
-            {timeRemaining}
-          </motion.div>
+            {showTimer ? timeRemaining : '\u00B7'}
+          </div>
           <div className="text-[10px] font-black tracking-[0.18em] text-white/35 -mt-0.5">VS</div>
         </div>
 

@@ -3,6 +3,7 @@ export type WinnerDecisionMethod = "goals" | "penalty_goals" | "total_points_fal
 export interface RecentMatchSummary {
   matchId: string;
   mode: "friendly" | "ranked";
+  competition: "friendly" | "placement" | "ranked";
   status: "completed" | "abandoned";
   result: "win" | "loss" | "draw";
   endedAt: string | null;
@@ -14,6 +15,7 @@ export interface RecentMatchSummary {
   opponentGoals: number;
   opponentPenaltyGoals: number;
   winnerDecisionMethod: WinnerDecisionMethod | null;
+  rpDelta: number | null;
   opponent: {
     id: string | null;
     username: string;

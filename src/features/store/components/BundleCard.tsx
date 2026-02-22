@@ -9,19 +9,20 @@ export interface BundleProps {
   amount: number;
   bonus?: number;
   price: string;
-  currencyType: 'coins' | 'tickets';
+  currencyType: "coins" | "tickets";
   imageColor?: string;
   isPopular?: boolean;
+  onBuy?: () => void;
 }
 
-export function BundleCard({ title, amount, bonus, price, currencyType, isPopular }: BundleProps) {
-  const isCoin = currencyType === 'coins';
+export function BundleCard({ title, amount, bonus, price, currencyType, isPopular, onBuy }: BundleProps) {
+  const isCoin = currencyType === "coins";
 
   return (
     <motion.div
       whileHover={{ scale: 1.04, y: -4 }}
       whileTap={{ scale: 0.97 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
       className="relative"
     >
       {isPopular && (
@@ -38,13 +39,11 @@ export function BundleCard({ title, amount, bonus, price, currencyType, isPopula
             ? "border-yellow-500/20 border-b-yellow-500/40 hover:border-yellow-500/40"
             : "border-purple-500/20 border-b-purple-500/40 hover:border-purple-500/40"
       )}>
-        {/* Background glow */}
         <div className={cn(
           "absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 size-32 rounded-full blur-[60px] opacity-30",
           isPopular ? "bg-orange-500" : isCoin ? "bg-yellow-500" : "bg-purple-500"
         )} />
 
-        {/* Icon */}
         <div className="relative mb-3">
           <div className={cn(
             "size-16 rounded-2xl flex items-center justify-center border-2 border-b-4 transition-colors",
@@ -64,14 +63,14 @@ export function BundleCard({ title, amount, bonus, price, currencyType, isPopula
           )}
         </div>
 
-        {/* Amount */}
         <div className="text-center mb-4">
           <div className="text-2xl font-black font-fun tabular-nums tracking-tight">{amount.toLocaleString()}</div>
           <div className="text-[11px] font-bold uppercase text-[#56707A] tracking-wider mt-0.5">{title}</div>
         </div>
 
-        {/* Price Button */}
         <Button
+          type="button"
+          onClick={onBuy}
           className={cn(
             "w-full font-black text-sm rounded-xl border-b-4 active:border-b-0 active:mt-1 transition-all",
             isPopular

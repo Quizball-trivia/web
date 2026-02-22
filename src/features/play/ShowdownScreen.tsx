@@ -7,7 +7,7 @@ import { Trophy, Swords, Shield, Star } from 'lucide-react';
 interface PlayerShowdownInfo {
   avatar: string;
   username: string;
-  rankPoints: number;
+  rankPoints?: number;
   level?: number;
   tier?: string;
   country?: string;
@@ -125,13 +125,15 @@ function PlayerCard({
         {/* Stats row */}
         <div className="flex items-center justify-center gap-3 flex-wrap">
           {/* Rank points */}
-          <div className={cn(
-            "flex items-center gap-1.5 px-3 py-1 rounded-full border-2 border-b-4 text-sm font-black",
-            accentBorder, "bg-white/5"
-          )}>
-            <Trophy className="size-3.5" />
-            <span>{info.rankPoints} RP</span>
-          </div>
+          {info.rankPoints !== undefined && (
+            <div className={cn(
+              "flex items-center gap-1.5 px-3 py-1 rounded-full border-2 border-b-4 text-sm font-black",
+              accentBorder, "bg-white/5"
+            )}>
+              <Trophy className="size-3.5" />
+              <span>{info.rankPoints} RP</span>
+            </div>
+          )}
 
           {/* Level */}
           {info.level !== undefined && (

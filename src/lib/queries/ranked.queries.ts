@@ -6,6 +6,8 @@ export function useRankedProfile() {
   return useQuery({
     queryKey: queryKeys.ranked.profile(),
     queryFn: getRankedProfile,
+    staleTime: 0,
     refetchOnMount: "always",
+    gcTime: 30 * 60_000,
   });
 }

@@ -231,15 +231,14 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
       gameMode: nextSettings.gameMode,
       friendlyRandom: nextSettings.friendlyRandom,
       friendlyCategoryAId: nextSettings.friendlyCategoryAId,
-      friendlyCategoryBId: nextSettings.friendlyCategoryBId,
+      friendlyCategoryBId: nextSettings.friendlyCategoryBId ?? null,
       ...(updates.isPublic !== undefined && { isPublic: updates.isPublic }),
     };
 
     const settingsUnchanged =
       emit.gameMode === lobby.settings.gameMode &&
       emit.friendlyRandom === lobby.settings.friendlyRandom &&
-      emit.friendlyCategoryAId === lobby.settings.friendlyCategoryAId &&
-      emit.friendlyCategoryBId === lobby.settings.friendlyCategoryBId;
+      emit.friendlyCategoryAId === lobby.settings.friendlyCategoryAId;
 
     const visibilityUnchanged =
       updates.isPublic === undefined || updates.isPublic === lobby.isPublic;

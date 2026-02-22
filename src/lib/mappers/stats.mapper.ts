@@ -47,6 +47,7 @@ export function toRecentMatchSummaries(response: RecentMatchesResponse): RecentM
   return response.items.map((item) => ({
     matchId: item.matchId,
     mode: item.mode,
+    competition: item.competition ?? (item.mode === "friendly" ? "friendly" : "ranked"),
     status: item.status,
     result: item.result,
     endedAt: item.endedAt,
@@ -58,6 +59,7 @@ export function toRecentMatchSummaries(response: RecentMatchesResponse): RecentM
     opponentGoals: item.opponentGoals,
     opponentPenaltyGoals: item.opponentPenaltyGoals,
     winnerDecisionMethod: item.winnerDecisionMethod,
+    rpDelta: item.rpDelta ?? null,
     opponent: {
       id: item.opponent.id,
       username: item.opponent.username,

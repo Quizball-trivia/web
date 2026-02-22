@@ -169,7 +169,7 @@ export function ModeSelectionScreen({
               ⚡ 1v1 Duel
             </span>
             <span className="text-[10px] md:text-xs font-black px-2.5 md:px-4 py-1 md:py-2 rounded-full bg-[#FFD700]/15 border border-[#FFD700]/30 md:border-2 text-[#FFD700]">
-              +5–15 RP / Win
+              +10–45 RP / Win
             </span>
           </div>
 

@@ -132,9 +132,9 @@ export function LoadingScreen({
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center bg-background text-foreground',
+        'flex flex-col items-center justify-center bg-[#0f1420] text-foreground',
         fullScreen
-          ? 'fixed inset-0 z-50 bg-background/80 backdrop-blur-sm'
+          ? 'fixed inset-0 z-50'
           : 'h-64 w-full',
         className
       )}

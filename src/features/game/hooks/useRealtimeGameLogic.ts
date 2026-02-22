@@ -5,10 +5,18 @@ import { logger } from '@/utils/logger';
 import { QUESTION_REVEAL_MS } from '@/features/possession/types/possession.types';
 
 const QUESTION_PLAYING_MS = 10000; // 10 second playing phase
-const ROUND_RESULT_HOLD_MS = 1800; // hold result for 1.8s before transitioning to next question
-const GOAL_CELEBRATION_HOLD_MS = 2000; // keep goal celebrations visible for 2s before next question
+const ROUND_RESULT_HOLD_MS = 2500; // hold result for 2.5s before transitioning to next question
+const GOAL_CELEBRATION_EXTRA_MS = 2500; // extra delay for GOOOL overlay before round transition
 
-export function useRealtimeGameLogic() {
+interface UseRealtimeGameLogicOptions {
+  /** Extra delay (ms) between hiding options and promoting the next question. Used for round transition overlay. */
+  transitionDelayMs?: number;
+  /** When true, the question reveal timer is blocked (options + timer won't start). */
+  blockReveal?: boolean;
+}
+
+export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) {
+  const { transitionDelayMs = 0, blockReveal = false } = options;
   const match = useRealtimeMatchStore((state) => state.match);
   const selfUserId = useRealtimeMatchStore((state) => state.selfUserId);
   const matchPaused = useRealtimeMatchStore((state) => state.matchPaused);
@@ -19,6 +27,8 @@ export function useRealtimeGameLogic() {
   const [selectedAnswerQIndex, setSelectedAnswerQIndex] = useState<number | undefined>(undefined);
   const [timeRemaining, setTimeRemaining] = useState(QUESTION_PLAYING_MS / 1000);
   const [showOptions, setShowOptions] = useState(false);
+  const [roundResultHoldDone, setRoundResultHoldDone] = useState(false);
+  const [transitionElapsed, setTransitionElapsed] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const matchPausedRef = useRef(matchPaused);
 
@@ -59,13 +69,30 @@ export function useRealtimeGameLogic() {
     setSelectedAnswer(null);
     setSelectedAnswerQIndex(undefined);
     setShowOptions(false);
-  }, [currentQuestionIndex]);
+    setTimeRemaining(QUESTION_PLAYING_MS / 1000);
+
+    // If the transition overlay was showing, keep roundResultHoldDone=true briefly
+    // so the overlay lingers while the question panel swaps underneath. This prevents
+    // the old question text from flashing when the overlay exits.
+    if (roundResultHoldDone) {
+      const lingerTimer = setTimeout(() => {
+        setRoundResultHoldDone(false);
+        setTransitionElapsed(false);
+      }, 450); // enough for question AnimatePresence swap (0.2s exit + 0.2s enter)
+      return () => clearTimeout(lingerTimer);
+    }
+
+    setRoundResultHoldDone(false);
+    setTransitionElapsed(false);
+  }, [currentQuestionIndex]); // eslint-disable-line react-hooks/exhaustive-deps -- roundResultHoldDone read intentionally without dep
 
   // Phase transition effect: reveal → playing
   // showOptions is already reset synchronously in the question-change effect above,
   // so we only need the delayed reveal timer here.
+  // blockReveal gates the timer so options + answer countdown don't start while
+  // an intro overlay is still showing (e.g. first question "QUESTION 1" overlay).
   useEffect(() => {
-    if (currentQuestionIndex === undefined || matchPausedRef.current || startCountdownActive) return;
+    if (currentQuestionIndex === undefined || matchPausedRef.current || startCountdownActive || blockReveal) return;
 
     const revealTimer = setTimeout(() => {
       if (matchPausedRef.current) return;
@@ -74,22 +101,27 @@ export function useRealtimeGameLogic() {
     }, QUESTION_REVEAL_MS);
 
     return () => clearTimeout(revealTimer);
-  }, [currentQuestionIndex, setQuestionPhase, startCountdownActive]);
+  }, [currentQuestionIndex, setQuestionPhase, startCountdownActive, blockReveal]);
 
-  // Timer countdown effect
+  // Timer countdown effect — purely client-driven from when options appear
+  const optionsShownAtRef = useRef<number | null>(null);
   useEffect(() => {
-    if (!currentQuestion) return;
+    if (showOptions) {
+      optionsShownAtRef.current = Date.now();
+    } else {
+      optionsShownAtRef.current = null;
+    }
+  }, [showOptions]);
+
+  useEffect(() => {
+    if (!showOptions || !currentQuestion) return;
     if (matchPaused || startCountdownActive) return;
 
-    // Backend deadline is for 10s playing phase
-    // Add reveal offset so countdown starts when options unlock
-    const backendDeadline = new Date(currentQuestion.deadlineAt).getTime();
-    const adjustedDeadline = backendDeadline + QUESTION_REVEAL_MS;
+    const startedAt = optionsShownAtRef.current ?? Date.now();
 
     const interval = setInterval(() => {
-      const remainingMs = adjustedDeadline - Date.now();
-      // Only show countdown if we're in the playing phase
-      // During reveal phase, don't show timer at all (handled in component)
+      const elapsedMs = Date.now() - startedAt;
+      const remainingMs = QUESTION_PLAYING_MS - elapsedMs;
       if (remainingMs > 0) {
         setTimeRemaining(Math.ceil(remainingMs / 1000));
       } else {
@@ -98,7 +130,7 @@ export function useRealtimeGameLogic() {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [currentQuestion, matchPaused, startCountdownActive]);
+  }, [showOptions, currentQuestion, matchPaused, startCountdownActive]);
 
   const answerAck = match?.answerAck && match.currentQuestion?.qIndex === match.answerAck.qIndex
     ? match.answerAck
@@ -107,31 +139,51 @@ export function useRealtimeGameLogic() {
   const roundResult = match?.lastRoundResult && match.currentQuestion?.qIndex === match.lastRoundResult.qIndex
     ? match.lastRoundResult
     : null;
-  const roundResultHoldMs = roundResult?.deltas?.goalScoredBySeat ? GOAL_CELEBRATION_HOLD_MS : ROUND_RESULT_HOLD_MS;
+  const roundResultHoldMs = ROUND_RESULT_HOLD_MS;
   const opponentAnswered = match?.opponentAnswered ?? false;
 
   const roundResolved = Boolean(roundResult);
 
+  const currentPhaseKind = currentQuestion?.phaseKind ?? 'normal';
+  const isGoalRound = Boolean(roundResult?.deltas?.goalScoredBySeat);
+  const isFinalGoalRound = isGoalRound && match?.possessionState?.phase === 'COMPLETED';
+  const goalExtra = isFinalGoalRound ? GOAL_CELEBRATION_EXTRA_MS : 0;
+  const effectiveDelay = currentPhaseKind === 'normal' ? transitionDelayMs + goalExtra : 0;
+
+  // Hold timer — hide options after result display, then either signal transition
+  // (normal phases with delay) or let the gate effect promote directly (non-normal).
   useEffect(() => {
     if (!roundResolved || !showOptions || matchPaused || startCountdownActive) return;
 
     const holdTimer = setTimeout(() => {
       setShowOptions(false);
-      // If a question arrived while result was showing, promote it now
-      promotePendingQuestion();
+      if (effectiveDelay > 0) {
+        setRoundResultHoldDone(true);
+      }
     }, roundResultHoldMs);
 
     return () => clearTimeout(holdTimer);
-  }, [roundResolved, showOptions, matchPaused, currentQuestionIndex, promotePendingQuestion, roundResultHoldMs, startCountdownActive]);
+  }, [roundResolved, showOptions, matchPaused, currentQuestionIndex, roundResultHoldMs, startCountdownActive, effectiveDelay]);
 
-  // Promote late-arriving questions: if the hold timer already fired (showOptions=false)
-  // but the question arrived after, it's stuck in pendingQuestion. Promote immediately.
+  // Transition delay timer — when the overlay is showing, count down the delay.
+  // Sets transitionElapsed=true which opens the gate for promotion.
+  useEffect(() => {
+    if (!roundResultHoldDone) return;
+    const timer = setTimeout(() => setTransitionElapsed(true), effectiveDelay);
+    return () => clearTimeout(timer);
+  }, [roundResultHoldDone, effectiveDelay]);
+
+  // Unified promote gate — advances to the next question when conditions are met.
+  // Handles: (a) non-transition promotes (effectiveDelay=0), (b) post-transition promotes,
+  // and (c) late-arriving questions in both cases. The gate stays open (transitionElapsed=true)
+  // until the question actually changes, so stragglers are caught immediately.
   const hasPendingQuestion = Boolean(match?.pendingQuestion);
   useEffect(() => {
     if (!hasPendingQuestion || showOptions || matchPaused || startCountdownActive) return;
-    // showOptions is false + pendingQuestion exists = hold timer already fired, question arrived late
+    // During transition gap: wait for transition delay to elapse
+    if (roundResultHoldDone && !transitionElapsed) return;
     promotePendingQuestion();
-  }, [hasPendingQuestion, showOptions, matchPaused, promotePendingQuestion, startCountdownActive]);
+  }, [hasPendingQuestion, showOptions, roundResultHoldDone, transitionElapsed, matchPaused, promotePendingQuestion, startCountdownActive]);
 
   const showResult = Boolean(answerAck || roundResult);
   const isAnswered = selectedAnswer !== null || showResult;
@@ -190,8 +242,8 @@ export function useRealtimeGameLogic() {
     setSelectedAnswer(index);
     setSelectedAnswerQIndex(currentQuestion.qIndex);
 
-    const deadlineMs = new Date(currentQuestion.deadlineAt).getTime();
-    const elapsed = Math.min(QUESTION_PLAYING_MS, Math.max(0, QUESTION_PLAYING_MS - (deadlineMs - Date.now())));
+    const startedAt = optionsShownAtRef.current ?? Date.now();
+    const elapsed = Math.min(QUESTION_PLAYING_MS, Math.max(0, Date.now() - startedAt));
 
     getSocket().emit('match:answer', {
       matchId: match.matchId,
@@ -228,6 +280,7 @@ export function useRealtimeGameLogic() {
       pauseUntil,
       questionPhase,
       showOptions: showOptionsVisible,
+      roundResultHoldDone,
       countdownRemainingMs,
       countdownSeconds,
       startCountdownActive,

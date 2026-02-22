@@ -6,6 +6,7 @@ import { logger } from '@/utils/logger';
 import type { ClientToServerEvents, ServerToClientEvents } from './socket.types';
 
 let socketInstance: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
+let socketOverride: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
 let connectInFlight: Promise<void> | null = null;
 let authRecoveryInFlight: Promise<void> | null = null;
 const ACCESS_TOKEN_REFRESH_SKEW_MS = 30_000;
@@ -144,7 +145,13 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
   return socket;
 }
 
+/** Override the socket singleton (used by test/mock pages to inject a fake socket). */
+export function __setSocketOverride(socket: Socket<ServerToClientEvents, ClientToServerEvents> | null): void {
+  socketOverride = socket;
+}
+
 export function getSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
+  if (socketOverride) return socketOverride;
   if (!socketInstance) {
     socketInstance = createSocket();
   }

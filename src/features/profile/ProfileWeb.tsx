@@ -32,8 +32,10 @@ import ClubSelect from '@/features/onboarding/ClubSelect';
 export interface ProfileRecentMatch {
   id: string | number;
   mode: string;
+  competition: "friendly" | "placement" | "ranked";
   result: 'Win' | 'Loss' | 'Draw';
   time: string;
+  rpDelta: number | null;
   opponent: string;
   scoreFormatted: FormattedMatchScore;
 }
@@ -544,6 +546,18 @@ export function ProfileWeb({
                   : isLoss
                     ? 'text-red-400'
                     : 'text-muted-foreground';
+                const competitionLabel = match.competition === 'friendly'
+                  ? 'Friendly'
+                  : match.competition === 'placement'
+                    ? 'Placement'
+                    : 'Ranked';
+                const showRpDelta = match.competition === 'ranked' && match.rpDelta !== null;
+                const rpDeltaClass = (match.rpDelta ?? 0) > 0
+                  ? 'bg-green-500/15 text-green-400 border-green-500/30'
+                  : (match.rpDelta ?? 0) < 0
+                    ? 'bg-red-500/15 text-red-400 border-red-500/30'
+                    : 'bg-muted text-muted-foreground border-border';
+                const formattedRpDelta = `${(match.rpDelta ?? 0) >= 0 ? '+' : ''}${match.rpDelta ?? 0} RP`;
 
                 return (
                   <div key={match.id} className="flex items-center justify-between p-3.5 rounded-xl bg-background/60 border-b-2 border-border/50 hover:border-primary/20 transition-colors">
@@ -553,10 +567,15 @@ export function ProfileWeb({
                       </div>
                       <div>
                         <div className="text-sm font-black text-foreground">vs {match.opponent}</div>
-                        <div className="text-xs font-bold text-muted-foreground">{match.mode} · {match.time}</div>
+                        <div className="text-xs font-bold text-muted-foreground">{competitionLabel} · {match.time}</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      {showRpDelta && (
+                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded border ${rpDeltaClass}`}>
+                          {formattedRpDelta}
+                        </span>
+                      )}
                       <span className={`text-base font-black ${rpClass}`}>
                         {match.scoreFormatted.score}
                         {match.scoreFormatted.suffix && (

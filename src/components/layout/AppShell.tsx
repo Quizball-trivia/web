@@ -7,6 +7,7 @@ import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { useGameSessionStore } from "@/stores/gameSession.store";
+import { useStoreWallet } from "@/lib/queries/store.queries";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
@@ -26,14 +27,11 @@ import {
   User,
   Settings,
   Gamepad2,
-  Menu,
   Home,
   Coins,
   Ticket,
   Bell,
   LogOut,
-  Briefcase,
-  Flame,
   ArrowRight,
   X,
   Users,
@@ -108,8 +106,8 @@ export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { player: playerStats } = usePlayer();
+  const { data: storeWallet } = useStoreWallet();
   const logout = useAuthStore((state) => state.logout);
-  const [isCollapsed, setIsCollapsed] = useState(true);
   const lobby = useRealtimeMatchStore((state) => state.lobby);
   const sessionState = useRealtimeMatchStore((state) => state.sessionState);
   const rejoinMatch = useRealtimeMatchStore((state) => state.rejoinMatch);
@@ -134,6 +132,8 @@ export function AppShell({ children }: AppShellProps) {
   const sessionWaitingLobbyId = sessionState?.waitingLobbyId ?? null;
   const lobbyDebugMismatch = localWaitingLobbyId !== sessionWaitingLobbyId;
   const sessionStateLabel = sessionState?.state ?? "NO_SESSION";
+  const navbarCoins = storeWallet?.coins ?? playerStats.coins;
+  const navbarTickets = storeWallet?.tickets ?? (playerStats.tickets ?? 0);
 
   useEffect(() => {
     const socket = getSocket();
@@ -221,19 +221,14 @@ export function AppShell({ children }: AppShellProps) {
         <aside
           className={cn(
             "flex flex-col bg-card border-r border-border transition-all duration-300 h-screen sticky top-0",
-            isCollapsed ? "w-20" : "w-64",
+            "w-64",
           )}
         >
           {/* Sidebar Header */}
           <div className="h-16 flex items-center px-4 border-b border-border/50">
-            <div
-              className={cn(
-                "flex items-center gap-3 overflow-hidden",
-                isCollapsed && "justify-center w-full",
-              )}
-            >
+            <div className="flex items-center gap-3 overflow-hidden">
               <Link href="/" className="hover:opacity-80 transition-opacity">
-                {isCollapsed ? <AppLogo size="sm" iconOnly /> : <AppLogo size="sm" />}
+                <AppLogo size="sm" />
               </Link>
             </div>
           </div>
@@ -249,38 +244,19 @@ export function AppShell({ children }: AppShellProps) {
                     href={item.path}
                     className={cn(
                       "w-full flex items-center gap-3 py-2 px-4 rounded-lg transition-all",
-                      isCollapsed ? "justify-center px-0" : "justify-start",
+                      "justify-start",
                       isActive
                         ? "bg-primary/10 text-primary hover:bg-primary/20"
                         : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
                     )}
-                    title={isCollapsed ? item.label : undefined}
                   >
                     <item.icon className="size-5 shrink-0" />
-                    {!isCollapsed && (
-                      <span className="font-medium truncate">{item.label}</span>
-                    )}
+                    <span className="font-medium truncate">{item.label}</span>
                   </Link>
                 );
               })}
             </nav>
           </ScrollArea>
-
-          {/* Collapse Toggle */}
-          <div className="p-4 border-t border-border/50">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className={cn(
-                "w-full text-muted-foreground hover:text-foreground",
-                isCollapsed ? "justify-center" : "justify-start gap-3",
-              )}
-            >
-              <Menu className="size-5" />
-              {!isCollapsed && <span>Collapse</span>}
-            </Button>
-          </div>
         </aside>
 
         {/* Main Wrapper */}
@@ -320,17 +296,8 @@ export function AppShell({ children }: AppShellProps) {
                   <span>src:{rankedGeoHintDebug?.source ?? "-"}</span>
                 </div>
               )}
-              {/* Currencies & Streak */}
+              {/* Currencies */}
               <div className="flex items-center gap-3 mr-4">
-                {/* Streak */}
-                {/* <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20">
-                  <Flame className="size-4 text-orange-500" />
-                  <span className="text-xs text-orange-500/80 font-medium">Streak</span>
-                  <span className="text-sm font-bold text-orange-500">
-                    {playerStats.currentStreak ?? 0}
-                  </span>
-                </div> */}
-
                 {/* Coins */}
                 <Link
                   href="/store"
@@ -338,17 +305,20 @@ export function AppShell({ children }: AppShellProps) {
                 >
                   <Coins className="size-4 text-yellow-500" />
                   <span className="text-sm font-bold text-yellow-500">
-                    {playerStats.coins.toLocaleString()}
+                    {navbarCoins.toLocaleString()}
                   </span>
                 </Link>
 
                 {/* Tickets */}
-                <button className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all active:scale-95">
+                <Link
+                  href="/store"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all active:scale-95"
+                >
                   <Ticket className="size-4 text-primary" />
                   <span className="text-sm font-bold text-primary">
-                    {playerStats.tickets ?? 10}
+                    {navbarTickets}
                   </span>
-                </button>
+                </Link>
               </div>
 
               <div className="h-6 w-px bg-border/50" />
@@ -506,7 +476,7 @@ export function AppShell({ children }: AppShellProps) {
       <div className="flex flex-col min-h-screen md:hidden">
         {/* Header */}
         {showHeader && (
-          <div className="border-b bg-card sticky top-0 z-10">
+          <div className="border-b bg-card">
             <div className="px-4 py-4 bg-background">
               {showLobbyDebug && (
                 <div
@@ -564,14 +534,6 @@ export function AppShell({ children }: AppShellProps) {
                 </div>
 
                 <div className="flex items-center gap-2 z-10">
-                  {/* Streak */}
-                  <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/30">
-                    <Flame className="size-4 text-orange-500" />
-                    <span className="text-sm font-bold text-orange-500">
-                      {playerStats.currentStreak ?? 0}
-                    </span>
-                  </div>
-
                   {/* Coins */}
                   <Link
                     href="/store"
@@ -579,15 +541,18 @@ export function AppShell({ children }: AppShellProps) {
                   >
                     <Coins className="size-4 text-yellow-500" />
                     <span className="text-sm">
-                      {playerStats.coins.toLocaleString()}
+                      {navbarCoins.toLocaleString()}
                     </span>
                   </Link>
 
                   {/* Tickets */}
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/30 hover:bg-primary/20 transition-colors active:scale-95">
+                  <Link
+                    href="/store"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/30 hover:bg-primary/20 transition-colors active:scale-95"
+                  >
                     <Ticket className="size-4 text-primary" />
-                    <span className="text-sm">{playerStats.tickets ?? 10}</span>
-                  </button>
+                    <span className="text-sm">{navbarTickets}</span>
+                  </Link>
                 </div>
               </div>
             </div>

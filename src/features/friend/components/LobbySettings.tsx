@@ -72,15 +72,9 @@ export function LobbySettings({
   const isRandom = optimisticRandom ?? serverIsRandom;
 
   // --- Category state ---
-  const serverSelectedCategoryIds = useMemo(
-    () =>
-      [settings?.friendlyCategoryAId ?? null, settings?.friendlyCategoryBId ?? null].filter(
-        (id): id is string => Boolean(id)
-      ),
-    [settings?.friendlyCategoryAId, settings?.friendlyCategoryBId]
-  );
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(serverSelectedCategoryIds);
-  const lastSentCategoryPairRef = useRef<string | null>(null);
+  const serverSelectedCategoryId = settings?.friendlyCategoryAId ?? null;
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(serverSelectedCategoryId);
+  const lastSentCategoryIdRef = useRef<string | null>(null);
   const handledErrorVersionRef = useRef(0);
   const canEdit = Boolean(isHost && lobby?.status === "waiting" && !lobby?.members.every((m) => m.isReady));
   const lastLobbyIdRef = useRef<string | null>(null);
@@ -96,9 +90,7 @@ export function LobbySettings({
     const inFlight = inFlightChangesRef.current;
     return Boolean(
       pending.friendlyCategoryAId !== undefined ||
-      pending.friendlyCategoryBId !== undefined ||
-      inFlight?.friendlyCategoryAId !== undefined ||
-      inFlight?.friendlyCategoryBId !== undefined
+      inFlight?.friendlyCategoryAId !== undefined
     );
   }, []);
 
@@ -186,9 +178,7 @@ export function LobbySettings({
       (inFlight.gameMode === undefined || inFlight.gameMode === mode) &&
       (inFlight.friendlyRandom === undefined || inFlight.friendlyRandom === serverIsRandom) &&
       (inFlight.friendlyCategoryAId === undefined ||
-        inFlight.friendlyCategoryAId === (settings?.friendlyCategoryAId ?? null)) &&
-      (inFlight.friendlyCategoryBId === undefined ||
-        inFlight.friendlyCategoryBId === (settings?.friendlyCategoryBId ?? null));
+        inFlight.friendlyCategoryAId === (settings?.friendlyCategoryAId ?? null));
 
     if (!applied) return;
 
@@ -209,7 +199,6 @@ export function LobbySettings({
     serverIsPublic,
     serverIsRandom,
     settings?.friendlyCategoryAId,
-    settings?.friendlyCategoryBId,
   ]);
 
   // Hard reset local settings transition state when switching lobbies.
@@ -222,43 +211,37 @@ export function LobbySettings({
     clearInFlightTimeout();
     pendingChangesRef.current = {};
     inFlightChangesRef.current = null;
-    lastSentCategoryPairRef.current = null;
+    lastSentCategoryIdRef.current = null;
 
     const resetTimer = setTimeout(() => {
       setOptimisticPublic(null);
       setOptimisticRandom(null);
-      setSelectedCategoryIds(serverSelectedCategoryIds);
+      setSelectedCategoryId(serverSelectedCategoryId);
     }, 0);
 
     return () => clearTimeout(resetTimer);
-  }, [clearFlushTimer, clearInFlightTimeout, lobby?.lobbyId, serverSelectedCategoryIds]);
+  }, [clearFlushTimer, clearInFlightTimeout, lobby?.lobbyId, serverSelectedCategoryId]);
 
-  // Sync server categories → local (only when server confirms random is off)
+  // Sync server category → local (only when server confirms random is off)
   useEffect(() => {
     if (serverIsRandom || mode !== "friendly") {
-      // Don't clear selectedCategoryIds — they're hidden behind {!isRandom && ...}
-      // and preserving them prevents a 1-frame gray flash when toggling random back off.
-      lastSentCategoryPairRef.current = null;
+      // Don't clear selectedCategoryId — it's hidden behind {!isRandom && ...}
+      // and preserving it prevents a 1-frame gray flash when toggling random back off.
+      lastSentCategoryIdRef.current = null;
       return;
     }
     if (hasCategoryTransitionInProgress()) {
       return;
     }
     const syncTimer = setTimeout(() => {
-      setSelectedCategoryIds((prev) => {
-        if (prev.length === serverSelectedCategoryIds.length && prev.every((id, i) => id === serverSelectedCategoryIds[i])) {
-          return prev;
-        }
-        return serverSelectedCategoryIds;
+      setSelectedCategoryId((prev) => {
+        if (prev === serverSelectedCategoryId) return prev;
+        return serverSelectedCategoryId;
       });
     }, 0);
-    if (serverSelectedCategoryIds.length === 2) {
-      lastSentCategoryPairRef.current = `${serverSelectedCategoryIds[0]}|${serverSelectedCategoryIds[1]}`;
-    } else {
-      lastSentCategoryPairRef.current = null;
-    }
+    lastSentCategoryIdRef.current = serverSelectedCategoryId;
     return () => clearTimeout(syncTimer);
-  }, [hasCategoryTransitionInProgress, mode, serverIsRandom, serverSelectedCategoryIds]);
+  }, [hasCategoryTransitionInProgress, mode, serverIsRandom, serverSelectedCategoryId]);
 
   useEffect(() => {
     if (!settingsErrorVersion) return;
@@ -269,18 +252,18 @@ export function LobbySettings({
     clearInFlightTimeout();
     pendingChangesRef.current = {};
     inFlightChangesRef.current = null;
-    lastSentCategoryPairRef.current = null;
+    lastSentCategoryIdRef.current = null;
 
     const rollbackTimer = setTimeout(() => {
       setOptimisticPublic(null);
       setOptimisticRandom(null);
       if (!serverIsRandom && mode === "friendly") {
-        setSelectedCategoryIds(serverSelectedCategoryIds);
+        setSelectedCategoryId(serverSelectedCategoryId);
       }
     }, 0);
 
     return () => clearTimeout(rollbackTimer);
-  }, [clearFlushTimer, clearInFlightTimeout, mode, serverIsRandom, serverSelectedCategoryIds, settingsErrorVersion]);
+  }, [clearFlushTimer, clearInFlightTimeout, mode, serverIsRandom, serverSelectedCategoryId, settingsErrorVersion]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -298,45 +281,25 @@ export function LobbySettings({
 
   const toggleCategory = (catId: string) => {
     if (!canEdit || isRandom) return;
-    setSelectedCategoryIds((current) => {
-      let next: string[];
-      if (current.includes(catId)) {
-        next = current.filter((id) => id !== catId);
-      } else if (current.length < 2) {
-        next = [...current, catId];
-      } else {
-        next = [current[1], catId];
-      }
 
-      // Emit category updates only from explicit user interactions.
-      // This avoids passive state-diff loops across multiple sockets/tabs.
-      if (next.length === 2) {
-        const selectedPairKey = `${next[0]}|${next[1]}`;
-        const pending = pendingChangesRef.current;
-        const inFlight = inFlightChangesRef.current;
-        const targetCategoryAId =
-          pending.friendlyCategoryAId ??
-          inFlight?.friendlyCategoryAId ??
-          (settings?.friendlyCategoryAId ?? null);
-        const targetCategoryBId =
-          pending.friendlyCategoryBId ??
-          inFlight?.friendlyCategoryBId ??
-          (settings?.friendlyCategoryBId ?? null);
-        const targetPairKey =
-          targetCategoryAId && targetCategoryBId
-            ? `${targetCategoryAId}|${targetCategoryBId}`
-            : null;
+    const next = selectedCategoryId === catId ? null : catId;
+    setSelectedCategoryId(next);
 
-        if (selectedPairKey !== targetPairKey) {
-          lastSentCategoryPairRef.current = selectedPairKey;
-          queueChange({
-            friendlyCategoryAId: next[0],
-            friendlyCategoryBId: next[1],
-          });
-        }
-      }
-      return next;
-    });
+    // Emit category update only from explicit user interactions.
+    const pending = pendingChangesRef.current;
+    const inFlight = inFlightChangesRef.current;
+    const targetCategoryAId =
+      pending.friendlyCategoryAId ??
+      inFlight?.friendlyCategoryAId ??
+      (settings?.friendlyCategoryAId ?? null);
+
+    if (next !== targetCategoryAId) {
+      lastSentCategoryIdRef.current = next;
+      queueChange({
+        friendlyCategoryAId: next,
+        friendlyCategoryBId: null,
+      });
+    }
   };
 
   const handleVisibilityClick = () => {
@@ -369,7 +332,7 @@ export function LobbySettings({
 
     if (nextRandom === targetRandom) {
       // Net no-op: clear any pending random change
-      clearPendingKeys(["friendlyRandom", "friendlyCategoryAId", "friendlyCategoryBId"]);
+      clearPendingKeys(["friendlyRandom", "friendlyCategoryAId"]);
       if (nextRandom === serverIsRandom) {
         setOptimisticRandom(null);
       }
@@ -379,23 +342,23 @@ export function LobbySettings({
     if (nextRandom) {
       queueChange({ friendlyRandom: true });
     } else {
-      // Turning random off — include categories
-      let cats = selectedCategoryIds;
-      if (cats.length < 2) {
-        const fallback = categories.slice(0, 2).map((cat) => cat.id);
-        if (fallback.length < 2) {
+      // Turning random off — include category
+      let cat = selectedCategoryId;
+      if (!cat) {
+        const fallback = categories[0]?.id ?? null;
+        if (!fallback) {
           toast.error("Not enough categories to disable random");
           setOptimisticRandom(null); // revert
           return;
         }
-        cats = fallback;
-        setSelectedCategoryIds(fallback);
-        toast.info("Random disabled. Default categories selected.");
+        cat = fallback;
+        setSelectedCategoryId(fallback);
+        toast.info("Random disabled. Default category selected.");
       }
       queueChange({
         friendlyRandom: false,
-        friendlyCategoryAId: cats[0],
-        friendlyCategoryBId: cats[1],
+        friendlyCategoryAId: cat,
+        friendlyCategoryBId: null,
       });
     }
   };
@@ -541,29 +504,34 @@ export function LobbySettings({
             </button>
 
             {!isRandom && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {categories.map(cat => {
-                  const isSelected = selectedCategoryIds.includes(cat.id);
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => toggleCategory(cat.id)}
-                      disabled={!canEdit || isRandom}
-                      className={cn(
-                        "flex items-center gap-2 p-3 rounded-xl text-sm font-bold transition-all border-b-[3px]",
-                        isSelected
-                          ? "bg-[#58CC02]/15 border-[#58CC02] text-white"
-                          : "bg-[#131F24] border-[#0D1B21] text-[#56707A] hover:text-white hover:bg-[#1B2F36]",
-                        (!canEdit || isRandom) && "opacity-50 cursor-not-allowed"
-                      )}
-                    >
-                      {cat.icon && <span className="text-base">{cat.icon}</span>}
-                      <span className="truncate">{cat.name}</span>
-                      {isSelected && <Check className="size-3.5 ml-auto text-[#58CC02]" />}
-                    </button>
-                  );
-                })}
-              </div>
+              <>
+                <p className="text-[10px] font-bold text-[#56707A]">
+                  Pick one category for the first half. The second half category is chosen at halftime.
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {categories.map(cat => {
+                    const isSelected = selectedCategoryId === cat.id;
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => toggleCategory(cat.id)}
+                        disabled={!canEdit || isRandom}
+                        className={cn(
+                          "flex items-center gap-2 p-3 rounded-xl text-sm font-bold transition-all border-b-[3px]",
+                          isSelected
+                            ? "bg-[#58CC02]/15 border-[#58CC02] text-white"
+                            : "bg-[#131F24] border-[#0D1B21] text-[#56707A] hover:text-white hover:bg-[#1B2F36]",
+                          (!canEdit || isRandom) && "opacity-50 cursor-not-allowed"
+                        )}
+                      >
+                        {cat.icon && <span className="text-base">{cat.icon}</span>}
+                        <span className="truncate">{cat.name}</span>
+                        {isSelected && <Check className="size-3.5 ml-auto text-[#58CC02]" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
             )}
 
             {isRandom && (
