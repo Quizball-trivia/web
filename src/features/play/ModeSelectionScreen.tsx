@@ -73,6 +73,14 @@ interface ModeSelectionScreenProps {
   rankedProfileLoading?: boolean;
 }
 
+const IS_DEV = process.env.NODE_ENV === 'development';
+
+const PLACEHOLDER_OBJECTIVES = [
+  { title: 'Streak Master', desc: 'Answer 10 in a row', reward: '+150 coins', icon: '🔥' },
+  { title: 'Social Butterfly', desc: 'Challenge 2 friends', reward: '+120 coins', icon: '👥' },
+  { title: 'Perfect Game', desc: '100% accuracy match', reward: '+200 coins', icon: '🎯' },
+];
+
 export function ModeSelectionScreen({
   onSelectMode,
   ticketsRemaining = 10,
@@ -318,7 +326,7 @@ export function ModeSelectionScreen({
         </div>
       </motion.div>
 
-      {/* ─── 4. Weekly Challenges (Horizontal Scroll) ─── */}
+      {/* ─── 3. Daily Challenges (Horizontal Scroll) ─── */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -327,9 +335,10 @@ export function ModeSelectionScreen({
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-black text-white flex items-center gap-2 uppercase">
             <Whistle className="size-5 text-[#FFD700]" />
-            Weekly Challenges
+            Daily Challenges
           </h2>
-          <span className="text-xs font-bold text-[#56707A] bg-[#1B2F36] px-3 py-1.5 rounded-full border-b-2 border-[#0D1B21]">Resets in 3d 12h</span>
+          {/* TODO: Replace hardcoded "Resets in 12h" with a live countdown computed from the daily reset timestamp */}
+          <span className="text-xs font-bold text-[#56707A] bg-[#1B2F36] px-3 py-1.5 rounded-full border-b-2 border-[#0D1B21]">Resets in 12h</span>
         </div>
         <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
           {CHALLENGES.map((c) => {
@@ -380,10 +389,95 @@ export function ModeSelectionScreen({
         </Link>
       </motion.div>
 
+      {/* ─── 4. Objectives ─── */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.35 }}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-black text-white flex items-center gap-2 uppercase">
+            <Boot className="size-5 text-[#CE82FF]" />
+            Objectives
+          </h2>
+          {/* TODO: Replace hardcoded "1/4 complete" with dynamic values from objectives API/hook */}
+          <span className="text-xs font-bold text-[#56707A] bg-[#1B2F36] px-3 py-1.5 rounded-full border-b-2 border-[#0D1B21]">1/4 complete</span>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
+          {/* TODO: Replace hardcoded progress (33%, "1/3", "+100 coins") with dynamic values from objectives API/hook */}
+          <Link
+            href="/objectives"
+            className="shrink-0 w-[220px] bg-[#1B2F36] rounded-2xl border-b-4 border-b-[#CE82FF] p-4 hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all"
+          >
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="size-10 rounded-xl bg-[#CE82FF]/20 border-2 border-[#CE82FF]/40 flex items-center justify-center text-lg">
+                ⚡
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-sm font-black text-white truncate">Morning Kickoff</h4>
+                <p className="text-[11px] font-semibold text-[#56707A] truncate">Play 3 matches</p>
+              </div>
+            </div>
+            <div className="h-2 bg-[#243B44] rounded-full overflow-hidden mb-2">
+              <div className="h-full bg-gradient-to-r from-[#CE82FF] to-[#E0A8FF] rounded-full" style={{ width: '33%' }} />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-black text-[#CE82FF]">1/3</span>
+              <span className="text-[10px] font-bold text-[#56707A] bg-[#243B44] px-2 py-0.5 rounded-full">+100 coins</span>
+            </div>
+          </Link>
+
+          {/* Other objectives — unlocked in dev mode */}
+          {PLACEHOLDER_OBJECTIVES.map((obj) => {
+            const isLocked = !IS_DEV;
+            const Wrapper = IS_DEV ? Link : 'div' as React.ElementType;
+            const wrapperProps = IS_DEV ? { href: '/objectives' } : {};
+            return (
+              <Wrapper
+                key={obj.title}
+                {...wrapperProps}
+                className={cn(
+                  'shrink-0 w-[220px] bg-[#1B2F36] rounded-2xl border-b-4 p-4',
+                  isLocked
+                    ? 'border-b-[#243B44] opacity-50 cursor-default'
+                    : 'border-b-[#CE82FF] hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all'
+                )}
+              >
+                <div className="flex items-center gap-2.5 mb-3">
+                  <div className={cn(
+                    'size-10 rounded-xl border-2 flex items-center justify-center text-lg',
+                    isLocked ? 'bg-[#243B44] border-[#243B44]' : 'bg-[#CE82FF]/20 border-[#CE82FF]/40'
+                  )}>
+                    {isLocked ? '🔒' : obj.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-black text-white truncate">{obj.title}</h4>
+                    <p className="text-[11px] font-semibold text-[#56707A] truncate">{obj.desc}</p>
+                  </div>
+                </div>
+                <div className="h-2 bg-[#243B44] rounded-full overflow-hidden mb-2">
+                  <div className="h-full bg-[#56707A] rounded-full" style={{ width: '0%' }} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black text-[#56707A]">0/1</span>
+                  <span className="text-[10px] font-bold text-[#56707A] bg-[#243B44] px-2 py-0.5 rounded-full">{obj.reward}</span>
+                </div>
+              </Wrapper>
+            );
+          })}
+        </div>
+        <Link
+          href="/objectives"
+          className="mt-2 inline-block text-xs font-bold text-[#CE82FF] hover:text-[#CE82FF]/80 transition-colors uppercase tracking-wide"
+        >
+          View All Objectives →
+        </Link>
+      </motion.div>
+
       {/* ─── 5. Recent Matches ─── */}
       <HomeRecentMatches collapsedOnly />
 
-      {/* ─── 6. Modals (unchanged) ─── */}
+      {/* ─── 6. Modals ─── */}
       <ModeConfirmModal
         mode={selectedMode !== 'friendly' ? selectedMode : null}
         isOpen={!!selectedMode && selectedMode !== 'friendly'}

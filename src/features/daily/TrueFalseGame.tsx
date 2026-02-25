@@ -3,10 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from 'motion/react';
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
   Clock,
   CheckCircle2,
@@ -16,6 +12,7 @@ import {
   Flame,
   ArrowLeft,
 } from "lucide-react";
+import { QuitGameDialog } from "./QuitGameDialog";
 
 interface Question {
   id: string;
@@ -128,6 +125,7 @@ export function TrueFalseGame({ onBack, onComplete }: TrueFalseGameProps) {
   const [correctStreak, setCorrectStreak] = useState(0);
   const [currentMultiplier, setCurrentMultiplier] = useState(1);
   const [selectedAnswer, setSelectedAnswer] = useState<boolean | null>(null);
+  const [showQuitDialog, setShowQuitDialog] = useState(false);
 
   const currentQuestion = questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
@@ -202,32 +200,32 @@ export function TrueFalseGame({ onBack, onComplete }: TrueFalseGameProps) {
   }, [showResult, handleAnswer]);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="fixed inset-0 z-40 bg-[#131F24] font-fun flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur-sm">
-        <div className="px-4 py-4">
+      <div className="bg-[#1B2F36] border-b-[3px] border-[#131F24]">
+        <div className="max-w-2xl mx-auto px-3 md:px-4 py-2.5 md:py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button
-                onClick={onBack}
-                className="flex items-center justify-center size-9 rounded-xl hover:bg-secondary active:scale-95 transition-all"
+                onClick={() => setShowQuitDialog(true)}
+                className="flex items-center justify-center size-9 rounded-xl hover:bg-[#243B44] active:scale-95 transition-all text-white"
               >
                 <ArrowLeft className="size-5" />
               </button>
               <div className="flex items-center gap-2">
-                <div className="text-2xl">✅</div>
-                <h1 className="text-xl font-bold">True or False</h1>
+                <CheckCircle2 className="size-6 text-[#58CC02]" />
+                <h1 className="text-lg md:text-xl font-black uppercase text-white">True or False</h1>
               </div>
             </div>
 
             {!showResult && (
               <motion.div
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 transition-colors ${
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border-2 font-bold transition-colors ${
                   timeLeft <= 2
-                    ? "bg-red-500/20 border-red-500 text-red-600 dark:text-red-400"
+                    ? "bg-[#FF4B4B]/20 border-[#FF4B4B] text-[#FF4B4B]"
                     : timeLeft <= 3
-                      ? "bg-yellow-500/20 border-yellow-500 text-yellow-600 dark:text-yellow-400"
-                      : "bg-primary/20 border-primary text-primary"
+                      ? "bg-[#FF9600]/20 border-[#FF9600] text-[#FF9600]"
+                      : "bg-[#1CB0F6]/20 border-[#1CB0F6] text-[#1CB0F6]"
                 }`}
                 animate={
                   timeLeft <= 2
@@ -249,14 +247,14 @@ export function TrueFalseGame({ onBack, onComplete }: TrueFalseGameProps) {
             )}
 
             <div className="flex items-center gap-2">
-              <Coins className="size-5 text-yellow-500" />
+              <Coins className="size-5 text-[#FFD700]" />
               <div>
-                <div className="text-xs text-muted-foreground">Coins</div>
-                <div className="text-lg font-bold">{totalCoins}</div>
+                <div className="text-xs text-[#56707A]">Coins</div>
+                <div className="text-lg font-black text-white">{totalCoins}</div>
               </div>
             </div>
 
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-[#56707A] font-bold">
               {currentQuestionIndex + 1}/10
             </div>
           </div>
@@ -265,149 +263,150 @@ export function TrueFalseGame({ onBack, onComplete }: TrueFalseGameProps) {
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-lg p-2 mt-3"
+              className="flex items-center justify-center gap-2 bg-[#FF9600]/15 border border-[#FF9600]/30 rounded-xl p-2 mt-3"
             >
-              <Flame className="size-4 text-orange-500" />
-              <span className="text-sm">
+              <Flame className="size-4 text-[#FF9600]" />
+              <span className="text-sm text-white font-bold">
                 {currentMultiplier}x Streak! {correctStreak} correct in a row
               </span>
-              <Flame className="size-4 text-orange-500" />
+              <Flame className="size-4 text-[#FF9600]" />
             </motion.div>
           )}
 
-          <Progress value={progress} className="h-1.5 mt-3" />
+          <div className="h-2 bg-white/10 rounded-full overflow-hidden mt-3">
+            <div
+              className="h-full bg-[#58CC02] rounded-full transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-4 space-y-4">
-        <Card className="flex-1 flex flex-col">
-          <CardContent className="pt-6 pb-6 flex-1 flex flex-col">
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-2">
-                <Badge variant="outline" className="text-xs">
-                  Question {currentQuestionIndex + 1}
-                </Badge>
-                <Badge variant="secondary" className="text-xs">
-                  {currentQuestion.category}
-                </Badge>
-              </div>
-              <h2 className="text-xl font-semibold leading-relaxed text-center">
-                {currentQuestion.question}
-              </h2>
+      <div className="flex-1 overflow-y-auto">
+        <div className="min-h-full p-3 md:p-4 lg:flex lg:flex-col lg:justify-center">
+        <div className="max-w-2xl mx-auto space-y-4 w-full">
+        <div className="bg-[#1B2F36] rounded-xl border-b-4 border-[#0F1F26] p-4 md:p-5 flex flex-col">
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-[#243B44] text-[#1CB0F6]">
+                Question {currentQuestionIndex + 1}
+              </span>
+              <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-[#243B44] text-white">
+                {currentQuestion.category}
+              </span>
             </div>
+            <h2 className="text-lg md:text-xl font-bold leading-relaxed text-center text-white">
+              {currentQuestion.question}
+            </h2>
+          </div>
 
-            <AnimatePresence mode="wait">
-              {showResult && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  className={`mb-3 p-3 rounded-lg border-2 ${
-                    isCorrect
-                      ? "bg-green-500/10 border-green-500/30"
-                      : "bg-red-500/10 border-red-500/30"
-                  }`}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    {isCorrect ? (
-                      <>
-                        <CheckCircle2 className="size-5 text-green-600" />
-                        <div className="text-center">
-                          <div className="text-sm font-medium text-green-700 dark:text-green-400">
-                            Correct!
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            +{COINS_PER_ANSWER * currentMultiplier} coins
-                            {currentMultiplier > 1 &&
-                              ` (${currentMultiplier}x)`}
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <XCircle className="size-5 text-red-600" />
-                        <div className="text-center">
-                          <div className="text-sm font-medium text-red-700 dark:text-red-400">
-                            {selectedAnswer === null
-                              ? "Time's Up!"
-                              : "Incorrect"}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            Streak reset
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <div className="grid grid-cols-2 gap-4 flex-1">
-              <Button
-                onClick={() => handleAnswer(true)}
-                disabled={showResult}
-                size="lg"
-                className={`h-28 text-xl ${
-                  showResult
-                    ? selectedAnswer === true
-                      ? isCorrect
-                        ? "bg-green-600 hover:bg-green-600"
-                        : "bg-red-600 hover:bg-red-600"
-                      : currentQuestion.correctAnswer === 0
-                        ? "bg-green-600/50 hover:bg-green-600/50"
-                        : ""
-                    : ""
+          <AnimatePresence mode="wait">
+            {showResult && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className={`mb-3 p-3 rounded-xl border-b-4 ${
+                  isCorrect
+                    ? "bg-[#58CC02]/15 border-b-[#46A302]"
+                    : "bg-[#FF4B4B]/10 border-b-[#CC3C3C]"
                 }`}
-                variant={
-                  showResult && currentQuestion.correctAnswer === 0
-                    ? "default"
-                    : "outline"
-                }
               >
-                <div className="flex flex-col items-center gap-2">
-                  <CheckCircle2 className="size-10" />
-                  <span>TRUE</span>
+                <div className="flex items-center justify-center gap-2">
+                  {isCorrect ? (
+                    <>
+                      <CheckCircle2 className="size-5 text-[#58CC02]" />
+                      <div className="text-center">
+                        <div className="text-sm font-bold text-[#58CC02]">
+                          Correct!
+                        </div>
+                        <div className="text-xs text-[#56707A]">
+                          +{COINS_PER_ANSWER * currentMultiplier} coins
+                          {currentMultiplier > 1 &&
+                            ` (${currentMultiplier}x)`}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="size-5 text-[#FF4B4B]" />
+                      <div className="text-center">
+                        <div className="text-sm font-bold text-[#FF4B4B]">
+                          {selectedAnswer === null
+                            ? "Time's Up!"
+                            : "Incorrect"}
+                        </div>
+                        <div className="text-xs text-[#56707A]">
+                          Streak reset
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
-              </Button>
-
-              <Button
-                onClick={() => handleAnswer(false)}
-                disabled={showResult}
-                size="lg"
-                className={`h-28 text-xl ${
-                  showResult
-                    ? selectedAnswer === false
-                      ? isCorrect
-                        ? "bg-green-600 hover:bg-green-600"
-                        : "bg-red-600 hover:bg-red-600"
-                      : currentQuestion.correctAnswer === 1
-                        ? "bg-green-600/50 hover:bg-green-600/50"
-                        : ""
-                    : ""
-                }`}
-                variant={
-                  showResult && currentQuestion.correctAnswer === 1
-                    ? "default"
-                    : "outline"
-                }
-              >
-                <div className="flex flex-col items-center gap-2">
-                  <X className="size-10" />
-                  <span>FALSE</span>
-                </div>
-              </Button>
-            </div>
-
-            {!showResult && correctStreak < 3 && (
-              <div className="text-center text-xs text-muted-foreground mt-3">
-                Get 3 correct in a row for 2x coins!
-              </div>
+              </motion.div>
             )}
-          </CardContent>
-        </Card>
+          </AnimatePresence>
+
+          <div className="grid grid-cols-2 gap-4 flex-1">
+            <button
+              onClick={() => handleAnswer(true)}
+              disabled={showResult}
+              className={`h-28 rounded-xl text-xl font-black uppercase text-white transition-all flex items-center justify-center ${
+                showResult
+                  ? selectedAnswer === true
+                    ? isCorrect
+                      ? "bg-[#58CC02] border-b-4 border-b-[#46A302]"
+                      : "bg-[#FF4B4B] border-b-4 border-b-[#CC3C3C]"
+                    : currentQuestion.correctAnswer === 0
+                      ? "bg-[#58CC02]/50 border-b-4 border-b-[#46A302]/50"
+                      : "bg-[#243B44] border-b-4 border-b-[#1B2F36]"
+                  : "bg-[#58CC02] border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px]"
+              } disabled:opacity-60`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <CheckCircle2 className="size-10" />
+                <span>TRUE</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleAnswer(false)}
+              disabled={showResult}
+              className={`h-28 rounded-xl text-xl font-black uppercase text-white transition-all flex items-center justify-center ${
+                showResult
+                  ? selectedAnswer === false
+                    ? isCorrect
+                      ? "bg-[#58CC02] border-b-4 border-b-[#46A302]"
+                      : "bg-[#FF4B4B] border-b-4 border-b-[#CC3C3C]"
+                    : currentQuestion.correctAnswer === 1
+                      ? "bg-[#58CC02]/50 border-b-4 border-b-[#46A302]/50"
+                      : "bg-[#243B44] border-b-4 border-b-[#1B2F36]"
+                  : "bg-[#FF4B4B] border-b-4 border-b-[#CC3C3C] active:border-b-2 active:translate-y-[2px]"
+              } disabled:opacity-60`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <X className="size-10" />
+                <span>FALSE</span>
+              </div>
+            </button>
+          </div>
+
+          {!showResult && correctStreak < 3 && (
+            <div className="text-center text-xs text-[#56707A] mt-3">
+              Get 3 correct in a row for 2x coins!
+            </div>
+          )}
+        </div>
+        </div>
+        </div>
       </div>
+
+      <QuitGameDialog
+        open={showQuitDialog}
+        onOpenChange={setShowQuitDialog}
+        onQuit={onBack}
+      />
     </div>
   );
 }

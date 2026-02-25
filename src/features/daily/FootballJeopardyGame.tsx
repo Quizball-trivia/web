@@ -3,9 +3,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from 'motion/react';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   ArrowLeft,
@@ -20,6 +17,7 @@ import {
   Sparkles,
   Star,
 } from "lucide-react";
+import { QuitGameDialog } from "./QuitGameDialog";
 
 interface Question {
   id: string;
@@ -72,7 +70,7 @@ const createJeopardyCategories = (): JeopardyCategory[] => {
       id: "career-paths",
       name: "Career Paths",
       emoji: "🛣️",
-      accentColor: "#a855f7",
+      accentColor: "#CE82FF",
       isCareerPath: true,
       questions: {
         100: {
@@ -116,7 +114,7 @@ const createJeopardyCategories = (): JeopardyCategory[] => {
       id: "transfer-records",
       name: "Transfer Records",
       emoji: "💰",
-      accentColor: "#f59e0b",
+      accentColor: "#FF9600",
       questions: {
         100: {
           id: "tr-100",
@@ -154,7 +152,7 @@ const createJeopardyCategories = (): JeopardyCategory[] => {
       id: "iconic-moments",
       name: "Iconic Moments",
       emoji: "⚡",
-      accentColor: "#3b82f6",
+      accentColor: "#1CB0F6",
       questions: {
         100: {
           id: "im-100",
@@ -217,6 +215,7 @@ export function FootballJeopardyGame({
 
   const [timeRemaining, setTimeRemaining] = useState(10);
   const [timerActive, setTimerActive] = useState(false);
+  const [showQuitDialog, setShowQuitDialog] = useState(false);
 
   const MAX_PICKS = 5;
   const MAX_TIME = 10;
@@ -383,63 +382,63 @@ export function FootballJeopardyGame({
     const isLowTime = percentage < 25;
 
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="fixed inset-0 z-40 bg-[#131F24] font-fun flex flex-col">
         {/* Header */}
-        <div className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur-sm">
-          <div className="px-4 py-4">
-            <div className="flex items-center justify-between mb-2.5">
-              <div className="flex items-center gap-2">
+        <div className="bg-[#1B2F36] border-b-[3px] border-[#131F24]">
+          <div className="max-w-2xl lg:max-w-3xl mx-auto px-3 md:px-4 lg:px-6 py-2.5 md:py-3 lg:py-4">
+            <div className="flex items-center justify-between mb-2.5 lg:mb-3">
+              <div className="flex items-center gap-2 lg:gap-3">
                 <div
-                  className="flex size-10 items-center justify-center rounded-lg"
+                  className="flex size-10 lg:size-12 items-center justify-center rounded-lg lg:rounded-xl"
                   style={{ backgroundColor: `${currentCategory?.accentColor}20` }}
                 >
-                  <span className="text-xl">{currentCategory?.emoji}</span>
+                  <span className="text-xl lg:text-2xl">{currentCategory?.emoji}</span>
                 </div>
                 <div>
-                  <h2 className="text-sm font-medium">
+                  <h2 className="text-sm lg:text-base font-bold text-white">
                     {currentCategory?.name || "Question"}
                   </h2>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs lg:text-sm text-[#56707A]">
                     Question {pickedQuestions.length + 1} of {MAX_PICKS}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Badge
-                  variant="outline"
-                  className="gap-1 h-7"
+              <div className="flex items-center gap-2 lg:gap-3">
+                <span
+                  className="inline-flex items-center gap-1 lg:gap-1.5 px-2 py-1 lg:px-3 lg:py-1.5 rounded-lg text-xs lg:text-sm font-bold border"
                   style={{
                     borderColor: currentCategory?.accentColor,
                     color: currentCategory?.accentColor,
+                    backgroundColor: `${currentCategory?.accentColor}15`,
                   }}
                 >
-                  <Coins className="size-3" />
+                  <Coins className="size-3 lg:size-4" />
                   {getCurrentQuestionValue()}
-                </Badge>
-                <Badge variant="secondary" className="gap-1 h-7">
-                  <Trophy className="size-3" />
+                </span>
+                <span className="inline-flex items-center gap-1 lg:gap-1.5 px-2 py-1 lg:px-3 lg:py-1.5 rounded-lg text-xs lg:text-sm font-bold bg-[#243B44] text-white">
+                  <Trophy className="size-3 lg:size-4 text-[#FFD700]" />
                   {totalScore}
-                </Badge>
+                </span>
               </div>
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-1 lg:space-y-1.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <Clock
-                    className={`size-3.5 ${isLowTime ? "text-destructive" : "text-muted-foreground"}`}
+                    className={`size-3.5 lg:size-4 ${isLowTime ? "text-[#FF4B4B]" : "text-[#56707A]"}`}
                   />
                   <span
-                    className={`text-xs ${isLowTime ? "text-destructive" : ""}`}
+                    className={`text-xs lg:text-sm font-bold ${isLowTime ? "text-[#FF4B4B]" : "text-[#56707A]"}`}
                   >
                     {timeRemaining}s remaining
                   </span>
                 </div>
               </div>
-              <div className="relative h-1 bg-secondary rounded-full overflow-hidden">
+              <div className="relative h-1.5 lg:h-2 bg-white/10 rounded-full overflow-hidden">
                 <motion.div
                   className={`absolute inset-y-0 left-0 rounded-full ${
-                    isLowTime ? "bg-destructive" : ""
+                    isLowTime ? "bg-[#FF4B4B]" : ""
                   }`}
                   style={{
                     backgroundColor: isLowTime
@@ -455,7 +454,9 @@ export function FootballJeopardyGame({
         </div>
 
         {/* Question Content */}
-        <div className="flex-1 p-4 space-y-3 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto">
+          <div className="min-h-full p-3 md:p-4 lg:p-6 lg:flex lg:flex-col lg:justify-center">
+          <div className="max-w-2xl lg:max-w-3xl mx-auto space-y-3 lg:space-y-4 w-full">
           <AnimatePresence mode="wait">
             {isCareerPath ? (
               <motion.div
@@ -464,21 +465,21 @@ export function FootballJeopardyGame({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
               >
-                <Card
-                  className="border-l-4"
+                <div
+                  className="bg-[#1B2F36] rounded-xl border-b-4 border-[#0F1F26] border-l-4 p-4 md:p-5 lg:p-6"
                   style={{ borderLeftColor: currentCategory?.accentColor }}
                 >
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm flex items-center gap-2">
+                  <div className="pb-3 lg:pb-4">
+                    <h3 className="text-sm lg:text-base font-bold text-white flex items-center gap-2">
                       <Star
-                        className="size-4"
+                        className="size-4 lg:size-5"
                         style={{ color: currentCategory?.accentColor }}
                       />
                       Identify the player from their career path
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-center gap-2.5 flex-wrap">
+                    </h3>
+                  </div>
+                  <div className="space-y-4 lg:space-y-5">
+                    <div className="flex items-center justify-center gap-2.5 lg:gap-4 flex-wrap">
                       {currentQuestion.teams.map((team, index) => (
                         <React.Fragment key={index}>
                           <motion.div
@@ -488,7 +489,7 @@ export function FootballJeopardyGame({
                             transition={{ delay: index * 0.1 }}
                           >
                             <div
-                              className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl border-2"
+                              className="w-14 h-14 lg:w-18 lg:h-18 rounded-xl flex items-center justify-center text-2xl lg:text-3xl border-2"
                               style={{
                                 borderColor: currentCategory?.accentColor,
                                 backgroundColor: `${currentCategory?.accentColor}10`,
@@ -496,13 +497,13 @@ export function FootballJeopardyGame({
                             >
                               {team.emoji}
                             </div>
-                            <div className="text-xs text-center max-w-[80px] text-muted-foreground">
+                            <div className="text-xs lg:text-sm text-center max-w-[80px] lg:max-w-[100px] text-[#56707A]">
                               {team.name}
                             </div>
                           </motion.div>
                           {index < currentQuestion.teams.length - 1 && (
                             <ArrowRight
-                              className="size-5 shrink-0 mb-5"
+                              className="size-5 lg:size-6 shrink-0 mb-5 lg:mb-6"
                               style={{ color: currentCategory?.accentColor }}
                             />
                           )}
@@ -511,7 +512,7 @@ export function FootballJeopardyGame({
                     </div>
 
                     {!showResult ? (
-                      <div className="space-y-2">
+                      <div className="space-y-2 lg:space-y-3">
                         <Input
                           type="text"
                           placeholder="Type player name..."
@@ -522,53 +523,53 @@ export function FootballJeopardyGame({
                               handleCareerPathSubmit();
                             }
                           }}
-                          className="text-center h-10 border-2"
+                          className="bg-[#243B44] border-2 text-white placeholder:text-[#56707A] text-center h-10 lg:h-12 lg:text-base rounded-xl"
                           style={{
                             borderColor: textAnswer
                               ? currentCategory?.accentColor
-                              : undefined,
+                              : "#1B2F36",
                           }}
                           disabled={showResult}
                           autoFocus
                         />
-                        <p className="text-xs text-center text-muted-foreground">
+                        <p className="text-xs lg:text-sm text-center text-[#56707A]">
                           Press Enter to submit
                         </p>
                       </div>
                     ) : (
                       <div
-                        className={`p-3 rounded-xl border-2 ${
+                        className={`p-3 lg:p-4 rounded-xl border-b-4 ${
                           pickedQuestions[pickedQuestions.length - 1]?.isCorrect
-                            ? "bg-green-500/10 border-green-500"
-                            : "bg-red-500/10 border-red-500"
+                            ? "bg-[#58CC02]/15 border-b-[#46A302]"
+                            : "bg-[#FF4B4B]/10 border-b-[#CC3C3C]"
                         }`}
                       >
                         <div className="text-center space-y-1.5">
                           <div className="flex items-center justify-center gap-2">
                             {pickedQuestions[pickedQuestions.length - 1]
                               ?.isCorrect ? (
-                              <CheckCircle2 className="size-5 text-green-600" />
+                              <CheckCircle2 className="size-5 lg:size-6 text-[#58CC02]" />
                             ) : (
-                              <XCircle className="size-5 text-red-600" />
+                              <XCircle className="size-5 lg:size-6 text-[#FF4B4B]" />
                             )}
-                            <span className="text-sm font-medium">
+                            <span className="text-sm lg:text-base font-bold text-white">
                               {pickedQuestions[pickedQuestions.length - 1]
                                 ?.isCorrect
                                 ? "Correct!"
                                 : "Incorrect"}
                             </span>
                           </div>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs lg:text-sm text-[#56707A]">
                             Answer:{" "}
-                            <span className="text-foreground">
+                            <span className="text-white">
                               {currentQuestion.correctAnswer}
                             </span>
                           </p>
                         </div>
                       </div>
                     )}
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </motion.div>
             ) : (
               <motion.div
@@ -577,16 +578,16 @@ export function FootballJeopardyGame({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
               >
-                <Card
-                  className="border-l-4"
+                <div
+                  className="bg-[#1B2F36] rounded-xl border-b-4 border-[#0F1F26] border-l-4 p-4 md:p-5 lg:p-6"
                   style={{ borderLeftColor: currentCategory?.accentColor }}
                 >
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm leading-relaxed">
+                  <div className="pb-3 lg:pb-4">
+                    <h3 className="text-sm lg:text-lg font-bold leading-relaxed text-white">
                       {(currentQuestion as Question).question}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
+                    </h3>
+                  </div>
+                  <div className="space-y-2 lg:space-y-3">
                     {(currentQuestion as Question).options.map((option, index) => {
                       const isSelected = selectedAnswer === index;
                       const isCorrect =
@@ -600,38 +601,40 @@ export function FootballJeopardyGame({
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.05 }}
-                          className={`w-full text-left p-3 rounded-lg border-2 transition-all text-sm ${
+                          className={`w-full text-left p-3 lg:p-4 rounded-xl border-b-4 transition-all text-sm lg:text-base text-white ${
                             showCorrect
-                              ? "bg-green-500/10 border-green-500"
+                              ? "bg-[#58CC02]/15 border-b-[#46A302]"
                               : showIncorrect
-                                ? "bg-red-500/10 border-red-500"
+                                ? "bg-[#FF4B4B]/10 border-b-[#CC3C3C]"
                                 : isSelected
-                                  ? "border-transparent"
-                                  : "bg-secondary/30 hover:bg-secondary/50 border-transparent"
+                                  ? "border-b-[#0F1F26]"
+                                  : "bg-[#243B44]/50 hover:bg-[#243B44] border-b-[#1B2F36]"
                           }`}
                           style={{
                             backgroundColor:
                               isSelected && !showResult
                                 ? `${currentCategory?.accentColor}15`
                                 : undefined,
-                            borderColor:
+                            borderLeftColor:
                               isSelected && !showResult
                                 ? currentCategory?.accentColor
                                 : undefined,
+                            borderLeftWidth:
+                              isSelected && !showResult ? "4px" : undefined,
                           }}
                           onClick={() => handleAnswerSelect(index)}
                           disabled={showResult}
                         >
-                          <div className="flex items-center gap-2.5">
+                          <div className="flex items-center gap-2.5 lg:gap-3">
                             <div
-                              className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-medium transition-all ${
+                              className={`flex size-6 lg:size-8 shrink-0 items-center justify-center rounded-full text-xs lg:text-sm font-bold transition-all ${
                                 showCorrect
-                                  ? "border-2 border-green-500 bg-green-500 text-white"
+                                  ? "border-2 border-[#58CC02] bg-[#58CC02] text-white"
                                   : showIncorrect
-                                    ? "border-2 border-red-500 bg-red-500 text-white"
+                                    ? "border-2 border-[#FF4B4B] bg-[#FF4B4B] text-white"
                                     : isSelected
                                       ? "text-white"
-                                      : "border-2 border-muted-foreground/30"
+                                      : "border-2 border-[#56707A]/30"
                               }`}
                               style={{
                                 backgroundColor:
@@ -645,9 +648,9 @@ export function FootballJeopardyGame({
                               }}
                             >
                               {showCorrect ? (
-                                <CheckCircle2 className="size-3.5" />
+                                <CheckCircle2 className="size-3.5 lg:size-4" />
                               ) : showIncorrect ? (
-                                <XCircle className="size-3.5" />
+                                <XCircle className="size-3.5 lg:size-4" />
                               ) : (
                                 String.fromCharCode(65 + index)
                               )}
@@ -657,56 +660,64 @@ export function FootballJeopardyGame({
                         </motion.button>
                       );
                     })}
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
 
           <AnimatePresence mode="wait">
             {!showResult ? (
-              <Button
+              <button
                 key="submit"
-                className="w-full h-11 text-white"
-                style={{ backgroundColor: currentCategory?.accentColor }}
+                className="w-full py-3 lg:py-4 rounded-xl font-black text-white lg:text-lg transition-all active:border-b-2 active:translate-y-[2px] disabled:opacity-50 disabled:active:border-b-4 disabled:active:translate-y-0 flex items-center justify-center gap-2"
+                style={{
+                  backgroundColor: currentCategory?.accentColor,
+                  borderBottom: `4px solid ${currentCategory?.accentColor}CC`,
+                }}
                 onClick={
                   isCareerPath ? () => handleCareerPathSubmit() : handleSubmitAnswer
                 }
                 disabled={isCareerPath ? !textAnswer.trim() : selectedAnswer === null}
               >
-                <Sparkles className="size-4 mr-2" />
+                <Sparkles className="size-4 lg:size-5" />
                 Submit Answer
-              </Button>
+              </button>
             ) : (
-              <div key="continue" className="space-y-2.5">
+              <div key="continue" className="space-y-2.5 lg:space-y-3">
                 {pickedQuestions[pickedQuestions.length - 1]?.isCorrect && (
                   <motion.div
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="text-center p-3 rounded-lg bg-green-500/10 border-2 border-green-500/30"
+                    className="text-center p-3 lg:p-4 rounded-xl bg-[#58CC02]/15 border-b-4 border-b-[#46A302]"
                   >
-                    <p className="text-sm text-green-600 flex items-center justify-center gap-2 font-medium">
-                      <Coins className="size-4" />+{getCurrentQuestionValue()} points
+                    <p className="text-sm lg:text-base text-[#58CC02] flex items-center justify-center gap-2 font-bold">
+                      <Coins className="size-4 lg:size-5" />+{getCurrentQuestionValue()} points
                       earned
                     </p>
                   </motion.div>
                 )}
-                <Button className="w-full h-11" onClick={handleContinue}>
+                <button
+                  className="w-full py-3 lg:py-4 rounded-xl font-black text-white lg:text-lg bg-[#58CC02] border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-2"
+                  onClick={handleContinue}
+                >
                   {pickedQuestions.length >= MAX_PICKS ? (
                     <>
-                      <Trophy className="size-4 mr-2" />
+                      <Trophy className="size-4 lg:size-5" />
                       View Results
                     </>
                   ) : (
                     <>
                       Continue
-                      <ArrowRight className="size-4 ml-2" />
+                      <ArrowRight className="size-4 lg:size-5" />
                     </>
                   )}
-                </Button>
+                </button>
               </div>
             )}
           </AnimatePresence>
+          </div>
+          </div>
         </div>
       </div>
     );
@@ -714,82 +725,75 @@ export function FootballJeopardyGame({
 
   // Jeopardy board view
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="fixed inset-0 z-40 bg-[#131F24] font-fun flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur-sm">
-        <div className="px-4 py-4">
+      <div className="bg-[#1B2F36] border-b-[3px] border-[#131F24]">
+        <div className="max-w-2xl lg:max-w-3xl mx-auto px-3 md:px-4 lg:px-6 py-2.5 md:py-3 lg:py-4">
           <div className="flex items-center gap-3">
             <button
-              onClick={onBack}
-              className="flex items-center justify-center size-9 rounded-xl hover:bg-secondary active:scale-95 transition-all"
+              onClick={() => setShowQuitDialog(true)}
+              className="flex items-center justify-center size-9 lg:size-11 rounded-xl hover:bg-[#243B44] active:scale-95 transition-all text-white"
             >
-              <ArrowLeft className="size-5" />
+              <ArrowLeft className="size-5 lg:size-6" />
             </button>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <Brain className="size-5 text-primary" />
-                <h1 className="text-lg font-bold">Football Jeopardy</h1>
+                <Brain className="size-5 lg:size-6 text-[#1CB0F6]" />
+                <h1 className="text-lg lg:text-xl font-black uppercase text-white">Football Jeopardy</h1>
               </div>
             </div>
-            <Badge variant="secondary" className="gap-1.5">
-              <Trophy className="size-3.5 text-primary" />
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 lg:px-3 lg:py-1.5 rounded-lg text-xs lg:text-sm font-bold bg-[#243B44] text-white">
+              <Trophy className="size-3.5 lg:size-4 text-[#FFD700]" />
               {totalScore}
-            </Badge>
+            </span>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 overflow-y-auto p-3 md:p-4 lg:p-6">
+        <div className="max-w-2xl lg:max-w-3xl mx-auto space-y-3 lg:space-y-4">
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-2">
-          <Card>
-            <CardContent className="pt-2.5 pb-2.5">
-              <div className="flex flex-col items-center">
-                <Target className="size-4 text-primary mb-0.5" />
-                <div className="text-[10px] text-muted-foreground">Picks Left</div>
-                <div className="text-lg font-bold mt-0.5">{remainingPicks}</div>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-3 gap-2 lg:gap-3">
+          <div className="bg-[#1B2F36] rounded-xl border-b-4 border-[#0F1F26] p-3 lg:p-4">
+            <div className="flex flex-col items-center">
+              <Target className="size-4 lg:size-5 text-[#1CB0F6] mb-0.5" />
+              <div className="text-[10px] lg:text-xs text-[#56707A]">Picks Left</div>
+              <div className="text-lg lg:text-xl font-black text-white mt-0.5">{remainingPicks}</div>
+            </div>
+          </div>
 
-          <Card>
-            <CardContent className="pt-2.5 pb-2.5">
-              <div className="flex flex-col items-center">
-                <Trophy className="size-4 text-primary mb-0.5" />
-                <div className="text-[10px] text-muted-foreground">Correct</div>
-                <div className="text-lg font-bold mt-0.5">{correctAnswers}</div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="bg-[#1B2F36] rounded-xl border-b-4 border-[#0F1F26] p-3 lg:p-4">
+            <div className="flex flex-col items-center">
+              <Trophy className="size-4 lg:size-5 text-[#FFD700] mb-0.5" />
+              <div className="text-[10px] lg:text-xs text-[#56707A]">Correct</div>
+              <div className="text-lg lg:text-xl font-black text-white mt-0.5">{correctAnswers}</div>
+            </div>
+          </div>
 
-          <Card>
-            <CardContent className="pt-2.5 pb-2.5">
-              <div className="flex flex-col items-center">
-                <Clock className="size-4 text-primary mb-0.5" />
-                <div className="text-[10px] text-muted-foreground">Per Q</div>
-                <div className="text-lg font-bold mt-0.5">10s</div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="bg-[#1B2F36] rounded-xl border-b-4 border-[#0F1F26] p-3 lg:p-4">
+            <div className="flex flex-col items-center">
+              <Clock className="size-4 lg:size-5 text-[#FF9600] mb-0.5" />
+              <div className="text-[10px] lg:text-xs text-[#56707A]">Per Q</div>
+              <div className="text-lg lg:text-xl font-black text-white mt-0.5">10s</div>
+            </div>
+          </div>
         </div>
 
         {/* Instructions */}
-        <Card className="border-l-4 border-l-primary bg-primary/5">
-          <CardContent className="pt-2.5 pb-2.5">
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Pick <span className="text-foreground font-medium">{MAX_PICKS} questions</span>{" "}
-              from the categories below. Each question has{" "}
-              <span className="text-foreground font-medium">10 seconds</span> to answer.
-              Points: <span className="text-green-600">100</span>,{" "}
-              <span className="text-orange-600">200</span>,{" "}
-              <span className="text-red-600">300</span>.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="bg-[#1B2F36] rounded-xl border-b-4 border-[#0F1F26] border-l-4 border-l-[#1CB0F6] p-3 lg:p-4">
+          <p className="text-xs lg:text-sm text-[#56707A] leading-relaxed">
+            Pick <span className="text-white font-bold">{MAX_PICKS} questions</span>{" "}
+            from the categories below. Each question has{" "}
+            <span className="text-white font-bold">10 seconds</span> to answer.
+            Points: <span className="text-[#58CC02] font-bold">100</span>,{" "}
+            <span className="text-[#FF9600] font-bold">200</span>,{" "}
+            <span className="text-[#FF4B4B] font-bold">300</span>.
+          </p>
+        </div>
 
         {/* Jeopardy Board */}
-        <div className="space-y-3">
+        <div className="space-y-3 lg:space-y-4">
           {categories.map((category, categoryIndex) => (
             <motion.div
               key={category.id}
@@ -798,12 +802,12 @@ export function FootballJeopardyGame({
               transition={{ delay: categoryIndex * 0.05 }}
               className="relative"
             >
-              <div className="flex items-center gap-2 px-3 py-2 mb-2">
-                <span className="text-xl">{category.emoji}</span>
-                <span className="text-sm text-muted-foreground">{category.name}</span>
+              <div className="flex items-center gap-2 lg:gap-3 px-3 py-2 mb-2">
+                <span className="text-xl lg:text-2xl">{category.emoji}</span>
+                <span className="text-sm lg:text-base text-[#56707A] font-bold">{category.name}</span>
               </div>
 
-              <div className="grid grid-cols-3 gap-3 px-3">
+              <div className="grid grid-cols-3 gap-3 lg:gap-4 px-3">
                 {([100, 200, 300] as const).map((value) => {
                   const isPicked = isQuestionPicked(category.id, value);
                   const pickedQuestion = pickedQuestions.find(
@@ -823,15 +827,16 @@ export function FootballJeopardyGame({
                           ? { scale: 0.98 }
                           : {}
                       }
-                      className={`h-14 rounded-xl transition-all relative text-white font-bold flex items-center justify-center shadow-sm ${
+                      className={`h-14 lg:h-18 rounded-xl transition-all relative text-white font-black lg:text-lg flex items-center justify-center ${
                         isPicked
                           ? pickedQuestion?.isCorrect
-                            ? "bg-green-500/20 border-2 border-green-500"
-                            : "bg-red-500/20 border-2 border-red-500"
-                          : "hover:opacity-90"
+                            ? "bg-[#58CC02]/20 border-2 border-[#58CC02]"
+                            : "bg-[#FF4B4B]/20 border-2 border-[#FF4B4B]"
+                          : "border-b-4 hover:opacity-90 active:border-b-2 active:translate-y-[2px]"
                       }`}
                       style={{
                         backgroundColor: !isPicked ? `${category.accentColor}` : undefined,
+                        borderBottomColor: !isPicked ? `${category.accentColor}CC` : undefined,
                       }}
                       onClick={() => handleQuestionSelect(category.id, value)}
                       disabled={isPicked || pickedQuestions.length >= MAX_PICKS}
@@ -839,9 +844,9 @@ export function FootballJeopardyGame({
                       {isPicked ? (
                         <div className="flex items-center justify-center">
                           {pickedQuestion?.isCorrect ? (
-                            <CheckCircle2 className="size-5 text-green-600" />
+                            <CheckCircle2 className="size-5 lg:size-6 text-[#58CC02]" />
                           ) : (
-                            <XCircle className="size-5 text-red-600" />
+                            <XCircle className="size-5 lg:size-6 text-[#FF4B4B]" />
                           )}
                         </div>
                       ) : (
@@ -863,17 +868,24 @@ export function FootballJeopardyGame({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
             >
-              <Button
-                className="w-full h-12 bg-primary hover:bg-primary/90"
+              <button
+                className="w-full py-3.5 lg:py-5 rounded-xl font-black text-white lg:text-lg bg-[#58CC02] border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-2"
                 onClick={handleContinue}
               >
-                <Trophy className="size-4 mr-2" />
+                <Trophy className="size-4 lg:size-5" />
                 Finish & View Results
-              </Button>
+              </button>
             </motion.div>
           )}
         </AnimatePresence>
+        </div>
       </div>
+
+      <QuitGameDialog
+        open={showQuitDialog}
+        onOpenChange={setShowQuitDialog}
+        onQuit={onBack}
+      />
     </div>
   );
 }

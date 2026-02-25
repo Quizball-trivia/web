@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { ComponentType } from "react";
+import { ComponentType, useEffect, useCallback, useState, useRef } from "react";
 
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { MoneyDropGame } from "@/features/daily/MoneyDropGame";
@@ -11,6 +11,7 @@ import { TrueFalseGame } from "@/features/daily/TrueFalseGame";
 import { EmojiGuessGame } from "@/features/daily/EmojiGuessGame";
 import { CountdownGame } from "@/features/daily/CountdownGame";
 import { PutInOrderGame } from "@/features/daily/PutInOrderGame";
+import { QuitGameDialog } from "@/features/daily/QuitGameDialog";
 import type { DailyChallengeId } from "@/features/home/challenges";
 
 interface DailyChallengeState {
@@ -40,19 +41,47 @@ export default function ChallengePage() {
   const params = useParams();
   const router = useRouter();
   const challengeId = params.challengeId as DailyChallengeId;
+  const [showBrowserBackDialog, setShowBrowserBackDialog] = useState(false);
+  const guardPushed = useRef(false);
 
   const GameComponent = GAME_COMPONENTS[challengeId];
 
-  if (!GameComponent) {
-    router.push("/daily/challenges");
-    return null;
-  }
+  // Redirect to challenges list if invalid challengeId (must be in an effect, not during render)
+  useEffect(() => {
+    if (!GameComponent) {
+      router.replace("/daily/challenges");
+    }
+  }, [GameComponent, router]);
 
-  const handleBack = () => {
-    router.push("/daily/challenges");
-  };
+  // Intercept browser back button / mouse back button
+  useEffect(() => {
+    // Push a guard history entry so pressing back doesn't leave the page
+    if (!guardPushed.current) {
+      window.history.pushState({ gameGuard: true }, "");
+      guardPushed.current = true;
+    }
 
-  const handleComplete: GameScreenProps["onComplete"] = () => {
+    const handlePopState = () => {
+      // Re-push the guard to stay on the page and show quit dialog
+      window.history.pushState({ gameGuard: true }, "");
+      setShowBrowserBackDialog(true);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  const handleBack = useCallback(() => {
+    router.push("/daily/challenges");
+  }, [router]);
+
+  const handleBrowserBackConfirm = useCallback(() => {
+    setShowBrowserBackDialog(false);
+    router.push("/daily/challenges");
+  }, [router]);
+
+  // TODO: score parameter intentionally unused — score persistence is not yet implemented
+  const handleComplete: GameScreenProps["onComplete"] = useCallback(() => {
     // Mark challenge as completed
     const state = storage.get<DailyChallengeState | null>(
       STORAGE_KEYS.DAILY_CHALLENGE_STATE,
@@ -68,7 +97,20 @@ export default function ChallengePage() {
 
     // Navigate back to challenges list
     router.push("/daily/challenges");
-  };
+  }, [challengeId, router]);
 
-  return <GameComponent onBack={handleBack} onComplete={handleComplete} />;
+  if (!GameComponent) {
+    return null;
+  }
+
+  return (
+    <>
+      <GameComponent onBack={handleBack} onComplete={handleComplete} />
+      <QuitGameDialog
+        open={showBrowserBackDialog}
+        onOpenChange={setShowBrowserBackDialog}
+        onQuit={handleBrowserBackConfirm}
+      />
+    </>
+  );
 }
