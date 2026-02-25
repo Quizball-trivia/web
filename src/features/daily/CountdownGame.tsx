@@ -2,22 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Check, Clock, Trophy, ArrowRight, ArrowLeft } from "lucide-react";
+import { QuitGameDialog } from "./QuitGameDialog";
+import { Check, CheckCircle2, Clock, Timer, Lightbulb, Trophy, ArrowRight, ArrowLeft } from "lucide-react";
 
 interface AnswerGroup {
   display: string;
@@ -233,204 +220,194 @@ export function CountdownGame({ onBack, onComplete }: CountdownGameProps) {
 
   if (!currentQuestion) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground">Loading questions...</p>
-          </CardContent>
-        </Card>
+      <div className="fixed inset-0 z-40 bg-[#131F24] font-fun flex items-center justify-center">
+        <div className="bg-[#1B2F36] rounded-xl border-b-4 border-[#0F1F26] p-6">
+          <p className="text-center text-[#56707A]">Loading questions...</p>
+        </div>
       </div>
     );
   }
 
   if (showRoundTransition) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardContent className="pt-6 text-center space-y-4">
-            <div className="text-6xl mb-4">✅</div>
-            <h2 className="text-2xl font-bold">Round {currentRound + 1} Complete!</h2>
-            <div className="space-y-2">
-              <p className="text-muted-foreground">You found</p>
-              <div className="text-4xl text-primary font-bold">{foundAnswers.length}</div>
-              <p className="text-muted-foreground">answers</p>
+      <div className="fixed inset-0 z-40 bg-[#131F24] font-fun flex items-center justify-center p-4">
+        <div className="bg-[#1B2F36] rounded-xl border-b-4 border-[#0F1F26] p-6 md:p-8 max-w-md w-full text-center space-y-4">
+          <div className="mb-4"><CheckCircle2 className="size-14 text-[#58CC02] mx-auto" /></div>
+          <h2 className="text-2xl font-black uppercase text-white">Round {currentRound + 1} Complete!</h2>
+          <div className="space-y-2">
+            <p className="text-[#56707A]">You found</p>
+            <div className="text-4xl text-[#1CB0F6] font-black">{foundAnswers.length}</div>
+            <p className="text-[#56707A]">answers</p>
+          </div>
+          {currentRound < questions.length - 1 && (
+            <div className="pt-4">
+              <p className="text-sm text-[#56707A]">Next round starting...</p>
             </div>
-            {currentRound < questions.length - 1 && (
-              <div className="pt-4">
-                <p className="text-sm text-muted-foreground">Next round starting...</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          )}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="fixed inset-0 z-40 bg-[#131F24] font-fun flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur-sm">
-        <div className="px-4 py-4">
+      <div className="bg-[#1B2F36] border-b-[3px] border-[#131F24]">
+        <div className="max-w-2xl mx-auto px-3 md:px-4 py-2.5 md:py-3">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowQuitDialog(true)}
-                className="flex items-center justify-center size-9 rounded-xl hover:bg-secondary active:scale-95 transition-all"
+                className="flex items-center justify-center size-9 rounded-xl hover:bg-[#243B44] active:scale-95 transition-all text-white"
               >
                 <ArrowLeft className="size-5" />
               </button>
               <div className="flex items-center gap-2">
-                <div className="text-2xl">⏱️</div>
-                <h1 className="text-xl font-bold">Countdown</h1>
+                <Timer className="size-6 text-[#1CB0F6]" />
+                <h1 className="text-lg md:text-xl font-black uppercase text-white">Countdown</h1>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              <Badge variant="outline">
+              <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-[#243B44] text-white">
                 Round {currentRound + 1}/{totalRounds}
-              </Badge>
-              <Badge variant="outline" className="bg-primary/10">
-                <Trophy className="size-3 mr-1" />
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-[#1CB0F6]/15 text-[#1CB0F6]">
+                <Trophy className="size-3" />
                 {allRoundAnswers.reduce((sum, arr) => sum + arr.length, 0) +
                   foundAnswers.length}
-              </Badge>
+              </span>
             </div>
           </div>
 
-          <Progress value={((currentRound + 1) / totalRounds) * 100} className="h-1.5" />
+          <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-[#58CC02] rounded-full transition-all duration-300"
+              style={{ width: `${((currentRound + 1) / totalRounds) * 100}%` }}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Quit Dialog */}
-      <AlertDialog open={showQuitDialog} onOpenChange={setShowQuitDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Quit Game?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to quit? Your progress will be lost.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={onBack}>Quit</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto">
+        <div className="min-h-full p-3 md:p-4 lg:flex lg:flex-col lg:justify-center">
+        <div className="max-w-2xl mx-auto space-y-3 w-full">
         {/* Timer */}
-        <Card
-          className={`border-2 ${timeRemaining <= 5 ? "border-red-500 animate-pulse" : "border-primary/30"}`}
+        <div
+          className={`bg-[#1B2F36] rounded-xl border-b-4 p-4 md:p-5 ${
+            timeRemaining <= 5
+              ? "border-b-[#CC3C3C] animate-pulse"
+              : "border-b-[#0F1F26]"
+          }`}
         >
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Clock
-                  className={`size-5 ${timeRemaining <= 5 ? "text-red-500" : "text-primary"}`}
-                />
-                <span className="text-sm text-muted-foreground">Time Remaining</span>
-              </div>
-              <div
-                className={`text-3xl font-bold ${timeRemaining <= 5 ? "text-red-500" : "text-primary"}`}
-              >
-                {timeRemaining}s
-              </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Clock
+                className={`size-5 ${timeRemaining <= 5 ? "text-[#FF4B4B]" : "text-[#1CB0F6]"}`}
+              />
+              <span className="text-sm text-[#56707A] font-bold">Time Remaining</span>
             </div>
-          </CardContent>
-        </Card>
+            <div
+              className={`text-3xl font-black ${timeRemaining <= 5 ? "text-[#FF4B4B]" : "text-[#1CB0F6]"}`}
+            >
+              {timeRemaining}s
+            </div>
+          </div>
+        </div>
 
         {/* Category */}
-        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
-          <CardHeader>
-            <div className="space-y-2">
-              <Badge className="bg-primary text-primary-foreground">
-                {currentQuestion.category}
-              </Badge>
-              <CardTitle className="text-2xl">{currentQuestion.prompt}</CardTitle>
-            </div>
-          </CardHeader>
-        </Card>
+        <div className="bg-[#1B2F36] rounded-xl border-b-4 border-b-[#0F1F26] p-4 md:p-5">
+          <div className="space-y-2">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-[#1CB0F6] text-white">
+              {currentQuestion.category}
+            </span>
+            <h2 className="text-xl md:text-2xl font-black text-white">{currentQuestion.prompt}</h2>
+          </div>
+        </div>
 
         {/* Input */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-2">
-              <label className="text-sm text-muted-foreground">Type your answer</label>
-              <Input
-                ref={inputRef}
-                type="text"
-                value={inputValue}
-                onChange={handleInputChange}
-                onKeyDown={handleInputKeyDown}
-                placeholder="Press Enter to submit..."
-                className="text-lg h-12"
-                autoComplete="off"
-                autoCapitalize="off"
-              />
-              <p className="text-xs text-muted-foreground">
-                💡 Tip: Don&apos;t worry about exact spelling - close matches count!
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-[#1B2F36] rounded-xl border-b-4 border-b-[#0F1F26] p-4 md:p-5">
+          <div className="space-y-2">
+            <label className="text-sm text-[#56707A] font-bold">Type your answer</label>
+            <Input
+              ref={inputRef}
+              type="text"
+              value={inputValue}
+              onChange={handleInputChange}
+              onKeyDown={handleInputKeyDown}
+              placeholder="Press Enter to submit..."
+              className="bg-[#243B44] border-2 border-[#1B2F36] text-white placeholder:text-[#56707A] focus:border-[#1CB0F6] text-lg h-12 rounded-xl"
+              autoComplete="off"
+              autoCapitalize="off"
+            />
+            <p className="text-xs text-[#56707A]">
+              <Lightbulb className="size-3.5 inline-block align-text-bottom mr-1 text-[#FF9600]" />Tip: Don&apos;t worry about exact spelling - close matches count!
+            </p>
+          </div>
+        </div>
 
         {/* Recent Answer Feedback */}
         {recentAnswer && (
           <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 animate-in fade-in zoom-in duration-300">
-            <Card className="border-2 border-green-500 bg-green-500/10">
-              <CardContent className="pt-6 px-8">
-                <div className="flex items-center gap-3">
-                  <div className="size-12 rounded-full bg-green-500 flex items-center justify-center">
-                    <Check className="size-6 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground">Correct!</div>
-                    <div className="text-xl font-bold">{recentAnswer}</div>
-                  </div>
+            <div className="bg-[#1B2F36] rounded-xl border-b-4 border-b-[#46A302] p-6 px-8">
+              <div className="flex items-center gap-3">
+                <div className="size-12 rounded-full bg-[#58CC02] flex items-center justify-center">
+                  <Check className="size-6 text-white" />
                 </div>
-              </CardContent>
-            </Card>
+                <div>
+                  <div className="text-sm text-[#56707A]">Correct!</div>
+                  <div className="text-xl font-black text-white">{recentAnswer}</div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
         {/* Found Answers */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center justify-between">
-              <span>Answers Found</span>
-              <Badge variant="outline" className="bg-primary/10">
-                {foundAnswers.length}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {foundAnswers.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                No answers found yet. Start typing!
-              </p>
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                {foundAnswers.map((answer, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 p-2 rounded-lg bg-green-500/10 border border-green-500/30"
-                  >
-                    <Check className="size-4 text-green-600 shrink-0" />
-                    <span className="text-sm truncate">{answer}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <div className="bg-[#1B2F36] rounded-xl border-b-4 border-b-[#0F1F26] p-4 md:p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-black text-white">Answers Found</h3>
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-[#1CB0F6]/15 text-[#1CB0F6]">
+              {foundAnswers.length}
+            </span>
+          </div>
+          {foundAnswers.length === 0 ? (
+            <p className="text-sm text-[#56707A] text-center py-8">
+              No answers found yet. Start typing!
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              {foundAnswers.map((answer, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-2 p-2 rounded-lg bg-[#58CC02]/15 border border-[#58CC02]/30"
+                >
+                  <Check className="size-4 text-[#58CC02] shrink-0" />
+                  <span className="text-sm truncate text-white">{answer}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Skip Button */}
-        <Button onClick={handleSkipRound} variant="outline" className="w-full" size="lg">
-          <ArrowRight className="size-4 mr-2" />
+        <button
+          onClick={handleSkipRound}
+          className="w-full py-3 rounded-xl font-black text-white bg-[#243B44] border-b-4 border-b-[#1B2F36] active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-2"
+        >
+          <ArrowRight className="size-4" />
           Skip to Next Round
-        </Button>
+        </button>
+        </div>
+        </div>
       </div>
+
+      <QuitGameDialog
+        open={showQuitDialog}
+        onOpenChange={setShowQuitDialog}
+        onQuit={onBack}
+      />
     </div>
   );
 }

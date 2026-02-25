@@ -126,11 +126,12 @@ function ChallengeCard({
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: 0.15 + index * 0.06, ease: "easeOut" }}
+      className="h-full"
     >
       <button
         onClick={onClick}
         disabled={isCompleted}
-        className={`w-full text-left rounded-2xl border-b-4 transition-all overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#58CC02] ${
+        className={`w-full h-full text-left rounded-2xl border-b-4 transition-all overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#58CC02] ${
           isCompleted
             ? "bg-[#1B2F36]/60 border-b-[#58CC02]/50 cursor-default opacity-70"
             : `bg-[#1B2F36] ${accent.border} hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] cursor-pointer`
@@ -239,7 +240,7 @@ export default function DailyChallengesPage() {
     <div className="min-h-screen bg-[#131F24] font-fun">
       {/* ─── Header ─── */}
       <div className="sticky top-0 z-20 bg-[#131F24]/95 backdrop-blur-sm border-b-2 border-[#1B2F36]">
-        <div className="max-w-2xl mx-auto px-3 md:px-4 py-3 md:py-4">
+        <div className="max-w-2xl lg:max-w-4xl mx-auto px-3 md:px-4 py-3 md:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 md:gap-3">
               <button
@@ -268,7 +269,7 @@ export default function DailyChallengesPage() {
       </div>
 
       {/* ─── Content ─── */}
-      <div className="max-w-2xl mx-auto px-3 md:px-4 py-4 md:py-6 space-y-3 md:space-y-4">
+      <div className="max-w-2xl lg:max-w-4xl mx-auto px-3 md:px-4 py-4 md:py-6 space-y-3 md:space-y-4">
         {/* ─── Progress Card ─── */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -326,7 +327,7 @@ export default function DailyChallengesPage() {
         </motion.div>
 
         {/* ─── Challenge Cards ─── */}
-        <div className="space-y-2.5 md:space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 md:gap-3">
           {ALL_CHALLENGES.map((challenge, i) => (
             <ChallengeCard
               key={challenge.id}

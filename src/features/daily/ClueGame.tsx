@@ -2,11 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -14,7 +10,10 @@ import {
   ArrowRight,
   Trophy,
   Clock,
+  Lightbulb,
+  Star,
 } from "lucide-react";
+import { QuitGameDialog } from "./QuitGameDialog";
 
 interface Clue {
   type: "text" | "emoji";
@@ -87,6 +86,11 @@ function findBestMatch(
   }
 
   return null;
+}
+
+const POINTS_BY_CLUE: Record<number, number> = { 1: 200, 2: 150, 3: 100, 4: 50, 5: 25 };
+function getPoints(revealedClues: number): number {
+  return POINTS_BY_CLUE[revealedClues] ?? 25;
 }
 
 // Mock questions for testing
@@ -174,6 +178,7 @@ export function ClueGame({ onBack, onComplete }: ClueGameProps) {
   const [revealedClues, setRevealedClues] = useState(1);
   const [timeRemaining, setTimeRemaining] = useState(15);
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [showQuitDialog, setShowQuitDialog] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const currentQuestion = questions[currentQuestionIndex];
@@ -246,17 +251,8 @@ export function ClueGame({ onBack, onComplete }: ClueGameProps) {
       setIsCorrect(true);
       setShowResult(true);
 
-      let points = 200;
-      if (revealedClues === 2) points = 150;
-      if (revealedClues === 3) points = 100;
-      if (revealedClues === 4) points = 50;
-      if (revealedClues === 5) points = 25;
-
-      setScore((prev) => prev + points);
-      setStreak((prev) => {
-        const newStreak = prev + 1;
-        return newStreak;
-      });
+      setScore((prev) => prev + getPoints(revealedClues));
+      setStreak((prev) => prev + 1);
 
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -318,37 +314,35 @@ export function ClueGame({ onBack, onComplete }: ClueGameProps) {
 
   if (!currentQuestion) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground">
-              Loading questions...
-            </p>
-          </CardContent>
-        </Card>
+      <div className="fixed inset-0 z-40 bg-[#131F24] font-fun flex items-center justify-center">
+        <div className="bg-[#1B2F36] rounded-xl border-b-4 border-[#0F1F26] p-6">
+          <p className="text-center text-[#56707A]">
+            Loading questions...
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="fixed inset-0 z-40 bg-[#131F24] font-fun flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur-sm">
-        <div className="px-4 py-4">
+      <div className="bg-[#1B2F36] border-b-[3px] border-[#131F24]">
+        <div className="max-w-2xl mx-auto px-3 md:px-4 py-2.5 md:py-3">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
               <button
-                onClick={onBack}
-                className="flex items-center justify-center size-9 rounded-xl hover:bg-secondary active:scale-95 transition-all"
+                onClick={() => setShowQuitDialog(true)}
+                className="flex items-center justify-center size-9 rounded-xl hover:bg-[#243B44] active:scale-95 transition-all text-white"
               >
                 <ArrowLeft className="size-5" />
               </button>
               <div>
                 <div className="flex items-center gap-2">
-                  <div className="text-2xl">💡</div>
-                  <h1 className="text-xl font-bold">Clues Challenge</h1>
+                  <Lightbulb className="size-6 text-[#FF9600]" />
+                  <h1 className="text-lg md:text-xl font-black uppercase text-white">Clues Challenge</h1>
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-xs text-[#56707A] font-bold">
                   Question {currentQuestionIndex + 1}/{questions.length}
                 </div>
               </div>
@@ -356,196 +350,196 @@ export function ClueGame({ onBack, onComplete }: ClueGameProps) {
             <div className="flex items-center gap-3">
               <div className="text-right">
                 <div className="flex items-center gap-1">
-                  <Trophy className="size-4 text-yellow-500" />
-                  <span className="text-sm font-bold">{score}</span>
+                  <Trophy className="size-4 text-[#FFD700]" />
+                  <span className="text-sm font-black text-white">{score}</span>
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-xs text-[#56707A] font-bold">
                   Streak: {streak}
                 </div>
               </div>
             </div>
           </div>
-          <Progress value={progress} className="h-1.5" />
+          <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-[#58CC02] rounded-full transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        <Card className="border-2 border-primary/20">
-          <CardContent className="pt-6 pb-6">
-            <div className="text-center mb-4">
-              <h3 className="text-sm text-muted-foreground mb-1">
-                Guess the {currentQuestion.category}
-              </h3>
-              <Badge variant="outline" className="mb-3">
-                {currentQuestion.category}
-              </Badge>
-              {!showResult && (
-                <div className="flex items-center justify-center gap-2 text-lg">
-                  <Clock
-                    className={`size-5 ${timeRemaining <= 5 ? "text-red-500" : "text-primary"}`}
-                  />
-                  <span
-                    className={
-                      timeRemaining <= 5 ? "text-red-500" : "text-primary"
-                    }
-                  >
-                    {timeRemaining}s
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Clues */}
-            <div className="space-y-3 mb-6">
-              {currentQuestion.clues.slice(0, revealedClues).map((clue, index) => (
-                <div
-                  key={index}
-                  className="p-4 bg-secondary rounded-lg text-center animate-in fade-in slide-in-from-bottom-2 duration-300"
-                  style={{
-                    animationDelay: `${index * 100}ms`,
-                  }}
-                >
-                  {clue.type === "emoji" ? (
-                    <div className="text-4xl">{clue.content}</div>
-                  ) : (
-                    <div className="text-base">{clue.content}</div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Clue Progress */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="min-h-full p-3 md:p-4 lg:flex lg:flex-col lg:justify-center">
+        <div className="max-w-2xl mx-auto space-y-4 w-full">
+        <div className="bg-[#1B2F36] rounded-xl border-b-4 border-[#0F1F26] p-4 md:p-5">
+          <div className="text-center mb-4">
+            <h3 className="text-sm text-[#56707A] mb-1">
+              Guess the {currentQuestion.category}
+            </h3>
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-[#243B44] text-[#1CB0F6] mb-3">
+              {currentQuestion.category}
+            </span>
             {!showResult && (
-              <div className="flex items-center justify-center gap-2 mb-4">
-                {currentQuestion.clues.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`h-2 w-12 rounded-full transition-colors ${
-                      index < revealedClues ? "bg-primary" : "bg-secondary"
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Points Indicator */}
-            {!showResult && (
-              <div className="text-center text-sm text-muted-foreground mb-4">
-                {revealedClues === 1 && "⭐ Answer now: 200 points"}
-                {revealedClues === 2 && "⭐ Answer now: 150 points"}
-                {revealedClues === 3 && "⭐ Answer now: 100 points"}
-                {revealedClues === 4 && "⭐ Answer now: 50 points"}
-                {revealedClues === 5 && "⭐ Answer now: 25 points"}
-              </div>
-            )}
-
-            {/* Answer Input */}
-            {!showResult ? (
-              <div className="space-y-3">
-                <Input
-                  type="text"
-                  placeholder="Type your answer..."
-                  value={userAnswer}
-                  onChange={(e) => setUserAnswer(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  className="text-center text-lg h-12"
-                  autoFocus
-                  disabled={hasSubmitted}
+              <div className="flex items-center justify-center gap-2 text-lg">
+                <Clock
+                  className={`size-5 ${timeRemaining <= 5 ? "text-[#FF4B4B]" : "text-[#1CB0F6]"}`}
                 />
-                <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    onClick={handleSubmit}
-                    className="w-full"
-                    size="lg"
-                    disabled={!userAnswer.trim() || hasSubmitted}
-                  >
-                    {hasSubmitted ? "Submitted..." : "Submit"}
-                  </Button>
-                  <Button
-                    onClick={handleGiveUp}
-                    variant="outline"
-                    className="w-full"
-                    size="lg"
-                    disabled={hasSubmitted}
-                  >
-                    Give Up
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div
-                  className={`p-4 rounded-lg text-center ${
-                    isCorrect
-                      ? "bg-green-500/10 border-2 border-green-500/30"
-                      : "bg-red-500/10 border-2 border-red-500/30"
+                <span
+                  className={`font-black ${
+                    timeRemaining <= 5 ? "text-[#FF4B4B]" : "text-[#1CB0F6]"
                   }`}
                 >
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    {isCorrect ? (
-                      <>
-                        <CheckCircle2 className="size-6 text-green-600" />
-                        <span className="text-green-700 dark:text-green-400 font-medium">
-                          Correct!
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <XCircle className="size-6 text-red-600" />
-                        <span className="text-red-700 dark:text-red-400 font-medium">
-                          {hasSubmitted ? "Incorrect" : "Time's Up!"}
-                        </span>
-                      </>
-                    )}
-                  </div>
+                  {timeRemaining}s
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Clues */}
+          <div className="space-y-3 mb-6">
+            {currentQuestion.clues.slice(0, revealedClues).map((clue, index) => (
+              <div
+                key={index}
+                className="p-4 bg-[#243B44] rounded-xl border-b-4 border-[#1B2F36] text-center text-white animate-in fade-in slide-in-from-bottom-2 duration-300"
+                style={{
+                  animationDelay: `${index * 100}ms`,
+                }}
+              >
+                {clue.type === "emoji" ? (
+                  <div className="text-4xl">{clue.content}</div>
+                ) : (
+                  <div className="text-base">{clue.content}</div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Clue Progress */}
+          {!showResult && (
+            <div className="flex items-center justify-center gap-2 mb-4">
+              {currentQuestion.clues.map((_, index) => (
+                <div
+                  key={index}
+                  className={`h-2 w-12 rounded-full transition-colors ${
+                    index < revealedClues ? "bg-[#1CB0F6]" : "bg-white/10"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Points Indicator */}
+          {!showResult && (
+            <div className="text-center text-sm text-[#56707A] mb-4 font-bold flex items-center justify-center gap-1.5">
+              <Star className="size-4 text-[#FFD700]" />
+              Answer now: {getPoints(revealedClues)} points
+            </div>
+          )}
+
+          {/* Answer Input */}
+          {!showResult ? (
+            <div className="space-y-3">
+              <Input
+                type="text"
+                placeholder="Type your answer..."
+                value={userAnswer}
+                onChange={(e) => setUserAnswer(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="bg-[#243B44] border-2 border-[#1B2F36] text-white placeholder:text-[#56707A] focus:border-[#1CB0F6] text-center text-lg h-12 rounded-xl"
+                autoFocus
+                disabled={hasSubmitted}
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={handleSubmit}
+                  className="w-full py-3 rounded-xl font-black text-white bg-[#58CC02] border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px] transition-all disabled:opacity-50 disabled:active:border-b-4 disabled:active:translate-y-0"
+                  disabled={!userAnswer.trim() || hasSubmitted}
+                >
+                  {hasSubmitted ? "Submitted..." : "Submit"}
+                </button>
+                <button
+                  onClick={handleGiveUp}
+                  className="w-full py-3 rounded-xl font-black text-white bg-[#243B44] border-b-4 border-b-[#1B2F36] active:border-b-2 active:translate-y-[2px] transition-all disabled:opacity-50 disabled:active:border-b-4 disabled:active:translate-y-0"
+                  disabled={hasSubmitted}
+                >
+                  Give Up
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div
+                className={`p-4 rounded-xl text-center border-b-4 ${
+                  isCorrect
+                    ? "bg-[#58CC02]/15 border-b-[#46A302]"
+                    : "bg-[#FF4B4B]/10 border-b-[#CC3C3C]"
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2 mb-2">
                   {isCorrect ? (
-                    <div className="text-sm text-muted-foreground">
-                      +
-                      {revealedClues === 1
-                        ? 200
-                        : revealedClues === 2
-                          ? 150
-                          : revealedClues === 3
-                            ? 100
-                            : revealedClues === 4
-                              ? 50
-                              : 25}{" "}
-                      points
-                    </div>
+                    <>
+                      <CheckCircle2 className="size-6 text-[#58CC02]" />
+                      <span className="text-[#58CC02] font-bold">
+                        Correct!
+                      </span>
+                    </>
                   ) : (
-                    <div>
-                      <div className="text-sm text-muted-foreground mb-1">
-                        Correct answer:
-                      </div>
-                      <div className="text-lg font-medium">
-                        {currentQuestion.displayAnswer}
-                      </div>
-                    </div>
+                    <>
+                      <XCircle className="size-6 text-[#FF4B4B]" />
+                      <span className="text-[#FF4B4B] font-bold">
+                        {hasSubmitted ? "Incorrect" : "Time's Up!"}
+                      </span>
+                    </>
                   )}
                 </div>
-
-                {currentQuestionIndex < questions.length - 1 ? (
-                  <Button onClick={handleNext} className="w-full" size="lg">
-                    Next Question
-                    <ArrowRight className="size-4 ml-2" />
-                  </Button>
+                {isCorrect ? (
+                  <div className="text-sm text-[#56707A]">
+                    +{getPoints(revealedClues)} points
+                  </div>
                 ) : (
-                  <div className="text-center text-sm text-muted-foreground py-3">
-                    Loading results...
+                  <div>
+                    <div className="text-sm text-[#56707A] mb-1">
+                      Correct answer:
+                    </div>
+                    <div className="text-lg font-bold text-white">
+                      {currentQuestion.displayAnswer}
+                    </div>
                   </div>
                 )}
               </div>
-            )}
-          </CardContent>
-        </Card>
+
+              {currentQuestionIndex < questions.length - 1 ? (
+                <button
+                  onClick={handleNext}
+                  className="w-full py-3 rounded-xl font-black text-white bg-[#58CC02] border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-2"
+                >
+                  Next Question
+                  <ArrowRight className="size-4" />
+                </button>
+              ) : (
+                <div className="text-center text-sm text-[#56707A] py-3">
+                  Loading results...
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Hints */}
-        <div className="text-center text-xs text-muted-foreground space-y-1">
-          <p>⏱️ 15 seconds per clue - answer quickly!</p>
-          <p>💡 Fewer clues = more points</p>
+        <div className="text-center text-xs text-[#56707A] space-y-1">
+          <p className="flex items-center justify-center gap-1"><Clock className="size-3.5 text-[#1CB0F6]" /> 15 seconds per clue - answer quickly!</p>
+          <p className="flex items-center justify-center gap-1"><Lightbulb className="size-3.5 text-[#FF9600]" /> Fewer clues = more points</p>
+        </div>
+        </div>
         </div>
       </div>
+
+      <QuitGameDialog
+        open={showQuitDialog}
+        onOpenChange={setShowQuitDialog}
+        onQuit={onBack}
+      />
     </div>
   );
 }
