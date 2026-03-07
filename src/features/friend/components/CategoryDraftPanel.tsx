@@ -92,7 +92,12 @@ export function CategoryDraftPanel({ selectedCategoryIds, onToggleCategory, isHo
                                 !isHost && "cursor-default active:scale-100"
                              )}
                           >
-                             <span className="text-2xl">{category.icon || "⚽"}</span>
+                             <div className="size-10 rounded-lg overflow-hidden flex items-center justify-center bg-muted shrink-0">
+                               {category.imageUrl
+                                 ? <img src={category.imageUrl} alt={category.name} className="size-full object-contain" />
+                                 : <span className="text-2xl">{category.icon || "⚽"}</span>
+                               }
+                             </div>
                              <span className="text-xs font-medium leading-tight line-clamp-2">{category.name}</span>
                              {isSelected && (
                                 <div className="absolute top-2 right-2 size-4 bg-primary text-primary-foreground rounded-full flex items-center justify-center shadow-sm">
@@ -134,7 +139,12 @@ export function CategoryDraftPanel({ selectedCategoryIds, onToggleCategory, isHo
                          >
                             {category ? (
                                <div className="flex items-center gap-2 w-full px-3">
-                                  <span className="text-lg">{category.icon || "⚽"}</span>
+                                  <div className="size-7 rounded overflow-hidden flex items-center justify-center bg-muted shrink-0">
+                                    {category.imageUrl
+                                      ? <img src={category.imageUrl} alt={category.name} className="size-full object-contain" />
+                                      : <span className="text-base">{category.icon || "⚽"}</span>
+                                    }
+                                  </div>
                                   <span className="text-xs font-medium truncate flex-1 text-left">{category.name}</span>
                                   {isHost && (
                                      <button 

@@ -71,12 +71,13 @@ export function toCategorySummaryFromDependency(
 }
 
 export function toCategorySummaryFromDraft(
-  draftCategory: { id: string; name: string; icon: string | null },
+  draftCategory: { id: string; name: string; icon: string | null; imageUrl?: string | null },
 ): CategorySummary {
   return {
     id: draftCategory.id,
     name: draftCategory.name,
     slug: draftCategory.id,
     icon: draftCategory.icon ?? getFallbackIcon(draftCategory.id),
+    imageUrl: draftCategory.imageUrl ?? undefined,
   };
 }

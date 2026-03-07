@@ -10,6 +10,7 @@ import { usePlayer } from '@/contexts/PlayerContext';
 import { useAuthStore } from '@/stores/auth.store';
 import { useHeadToHead } from '@/lib/queries/stats.queries';
 import { useRankedProfile } from '@/lib/queries/ranked.queries';
+import { useCategoriesList } from '@/lib/queries/categories.queries';
 import { logger } from '@/utils/logger';
 import { cn } from '@/lib/utils';
 import { isAvatarUrl, resolveAvatarUrl } from '@/lib/avatars';
@@ -110,7 +111,12 @@ export function RankedCategoryBlockingScreen() {
   const currentActor = draft?.turnUserId === selfUserId ? 'player' : 'opponent';
   const playerBannedId = draft?.bans[selfUserId ?? ''] ?? null;
   const opponentBannedId = draft ? Object.entries(draft.bans).find(([userId]) => userId !== selfUserId)?.[1] ?? null : null;
-  const poolCategories = draft?.categories ?? [];
+  const { data: categoriesData } = useCategoriesList({ limit: 100, is_active: 'true' });
+  const poolCategories = useMemo(() => {
+    const draftCats = draft?.categories ?? [];
+    const imageUrlMap = new Map(categoriesData?.items?.map(c => [c.id, c.imageUrl]) ?? []);
+    return draftCats.map(c => ({ ...c, imageUrl: imageUrlMap.get(c.id) ?? null }));
+  }, [draft?.categories, categoriesData?.items]);
   const playerRp = rankedProfile?.rp ?? player.rankPoints;
   const realtimeOpponentRpRaw = matchOpponent?.rp ?? rankedFoundOpponent?.rp;
   const opponentRp =
@@ -296,12 +302,23 @@ export function RankedCategoryBlockingScreen() {
                     className="aspect-[4/5] flex items-center justify-center relative"
                     style={{ backgroundColor: isBanned ? '#243B44' : color.bg }}
                   >
-                    <span className={cn(
-                      "text-8xl transition-all duration-300 drop-shadow-lg",
-                      isBanned && "grayscale opacity-40 scale-90"
-                    )}>
-                      {category.icon || '⚽'}
-                    </span>
+                    {category.imageUrl ? (
+                      <img
+                        src={category.imageUrl}
+                        alt={category.name}
+                        className={cn(
+                          "w-full h-full object-contain absolute inset-0 transition-all duration-300",
+                          isBanned && "grayscale opacity-40 scale-90"
+                        )}
+                      />
+                    ) : (
+                      <span className={cn(
+                        "text-8xl transition-all duration-300 drop-shadow-lg",
+                        isBanned && "grayscale opacity-40 scale-90"
+                      )}>
+                        {category.icon || '⚽'}
+                      </span>
+                    )}
 
                     {/* Banned overlay */}
                     <AnimatePresence>

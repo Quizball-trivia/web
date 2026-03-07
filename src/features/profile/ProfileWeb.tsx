@@ -5,7 +5,7 @@ import { motion } from 'motion/react';
 import {
   Trophy, Target, Flame, Star, Award, Pencil, Check, X,
   MapPin, Globe, Users, Clock, LogOut, Zap, Medal, Crown,
-  ChevronDown, ChevronUp,
+  ChevronDown, ChevronUp, Coins, Ticket, Settings2,
   type LucideIcon,
 } from 'lucide-react';
 import { COLLAPSED_MATCHES_COUNT, MAX_MATCHES_COUNT } from '@/lib/constants/matches';
@@ -85,7 +85,6 @@ export function ProfileWeb({
   const [isEditingClub, setIsEditingClub] = useState(false);
   const [isMatchesExpanded, setIsMatchesExpanded] = useState(false);
 
-  // Compute visible matches: show first 3 when collapsed, up to 20 when expanded
   const { visibleMatches, hiddenCount, canExpand } = useMemo(() => {
     const cappedMatches = recentMatches.slice(0, MAX_MATCHES_COUNT);
     const visible = isMatchesExpanded
@@ -110,6 +109,18 @@ export function ProfileWeb({
   const friendlyStats = matchStatsSummary?.friendly;
   const winRate = Math.round(overallStats?.winRate ?? 0);
   const gamesPlayed = overallStats?.gamesPlayed ?? 0;
+  const wins = overallStats?.wins ?? 0;
+  const losses = overallStats?.losses ?? 0;
+  const draws = overallStats?.draws ?? 0;
+  const wldTotal = wins + losses + draws;
+  const winPct = wldTotal > 0 ? (wins / wldTotal) * 100 : 0;
+  const lossPct = wldTotal > 0 ? (losses / wldTotal) * 100 : 0;
+  const drawPct = wldTotal > 0 ? (draws / wldTotal) * 100 : 0;
+
+  const xpProgress = player.xpToNextLevel > 0
+    ? Math.min(100, (player.xp / player.xpToNextLevel) * 100)
+    : 0;
+
   const formatRank = (rankValue: number | string | null | undefined): string => {
     if (rankValue === null || rankValue === undefined || rankValue === '') return '#--';
     const normalizedRank = String(rankValue).trim();
@@ -164,11 +175,16 @@ export function ProfileWeb({
         </div>
 
         <div className="relative flex flex-col lg:flex-row items-center lg:items-start gap-6 lg:gap-8">
-          {/* Avatar */}
+          {/* Avatar with tier-colored ring */}
           <button
             type="button"
             onClick={() => setIsAvatarPickerOpen(true)}
-            className="group relative size-24 lg:size-28 rounded-2xl border-4 border-primary/30 bg-background shadow-lg flex items-center justify-center overflow-hidden shrink-0 active:scale-95 transition-transform"
+            className={`group relative size-28 lg:size-32 rounded-2xl border-4 bg-background shadow-lg flex items-center justify-center overflow-hidden shrink-0 active:scale-95 transition-transform ${
+              showRankTier ? `${tierVisual.glow} shadow-lg` : ''
+            }`}
+            style={{
+              borderColor: showRankTier ? undefined : 'rgba(28, 176, 246, 0.3)',
+            }}
             aria-label="Change avatar"
           >
             <AvatarDisplay
@@ -216,113 +232,65 @@ export function ProfileWeb({
               )}
             </div>
 
-            {/* Level + Tier */}
+            {/* Level + Tier badge */}
             <div className="flex items-center justify-center lg:justify-start gap-2 flex-wrap">
-              <span className="text-sm font-black text-primary uppercase tracking-wide">Level {player.level}</span>
-              {(rankedProfileLoading || showRankTier || (rankedDataReady && isPlacementInProgress)) && (
-                <span className="text-muted-foreground">·</span>
-              )}
-              {rankedProfileLoading && (
-                <span className="text-sm font-black uppercase tracking-wide text-muted-foreground">
-                  Loading...
-                </span>
-              )}
+              <span className="inline-flex items-center gap-1 text-xs font-black px-3 py-1.5 rounded-full bg-primary/15 border border-primary/25 text-primary uppercase tracking-wide">
+                Level {player.level}
+              </span>
               {showRankTier && (
-                <span className={`text-sm font-black uppercase tracking-wide ${tierVisual.color}`}>
+                <span className={`inline-flex items-center gap-1 text-xs font-black px-3 py-1.5 rounded-full bg-gradient-to-r ${tierVisual.gradient} bg-opacity-15 border border-white/10 text-white uppercase tracking-wide`}>
                   {tierVisual.emoji} {rankedProfile!.tier}
                 </span>
               )}
               {rankedDataReady && isPlacementInProgress && (
-                <span className="text-sm font-black uppercase tracking-wide text-primary">
+                <span className="inline-flex items-center gap-1 text-xs font-black px-3 py-1.5 rounded-full bg-muted border border-border text-muted-foreground uppercase tracking-wide">
                   Placement {placementPlayed}/{placementRequired}
+                </span>
+              )}
+              {rankedProfileLoading && (
+                <span className="inline-flex items-center gap-1 text-xs font-black px-3 py-1.5 rounded-full bg-muted border border-border text-muted-foreground uppercase tracking-wide animate-pulse">
+                  Loading...
                 </span>
               )}
             </div>
 
-            {/* Stats chips */}
-            <div className="flex items-center justify-center lg:justify-start gap-2 pt-1 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1.5 rounded-full bg-green-500/15 border border-green-500/25 text-green-400 uppercase tracking-wide">
-                🏆 {winRate}% Win Rate
-              </span>
-              <span className="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1.5 rounded-full bg-orange-500/15 border border-orange-500/25 text-orange-400 uppercase tracking-wide">
-                🔥 {player.bestStreak} Streak
-              </span>
-              <span className="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1.5 rounded-full bg-blue-500/15 border border-blue-500/25 text-blue-400 uppercase tracking-wide">
-                ⚽ {gamesPlayed} Matches
-              </span>
-            </div>
-            <div className="flex items-center justify-center lg:justify-start gap-4 text-xs font-bold text-muted-foreground">
-              <span>Ranked: {rankedStats?.gamesPlayed ?? 0}</span>
-              <span>Friendly: {friendlyStats?.gamesPlayed ?? 0}</span>
-            </div>
-
-            {/* Preferences */}
-            <div className="flex items-center justify-center lg:justify-start gap-3 pt-1 flex-wrap">
-              {/* Club */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm">⚽</span>
-                {isEditingClub ? (
-                  <div className="w-56">
-                    <ClubSelect
-                      value={favoriteClub ?? ''}
-                      onChange={async (val) => {
-                        try {
-                          await onClubChange?.(val);
-                          setIsEditingClub(false);
-                        } catch {
-                          toast.error('Failed to update club');
-                        }
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <>
-                    <span className="text-sm font-bold text-muted-foreground">
-                      {favoriteClub || 'No club set'}
-                    </span>
-                    <button
-                      onClick={() => setIsEditingClub(true)}
-                      className="text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors"
-                      aria-label="Edit favorite club"
-                      disabled={isUpdating}
-                    >
-                      <Pencil className="size-3" />
-                    </button>
-                  </>
-                )}
+            {/* XP Progress Bar */}
+            <div className="max-w-sm mx-auto lg:mx-0">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">XP Progress</span>
+                <span className="text-[10px] font-black text-primary">{player.xp} / {player.xpToNextLevel}</span>
               </div>
-
-              <div className="w-px h-5 bg-border" />
-
-              {/* Language */}
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => onLanguageChange?.('en')}
-                  disabled={isUpdating}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wide transition-all border-b-2 active:translate-y-[1px] active:border-b-0 ${
-                    preferredLanguage === 'en'
-                      ? 'bg-primary/15 text-primary border-primary/30'
-                      : 'text-muted-foreground hover:text-foreground border-transparent hover:border-border'
-                  }`}
+              <div className="relative h-3 bg-muted rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${xpProgress}%` }}
+                  transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-primary to-[#85E0FF]"
                 >
-                  🇬🇧 EN
-                </button>
-                <button
-                  onClick={() => onLanguageChange?.('ka')}
-                  disabled={isUpdating}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wide transition-all border-b-2 active:translate-y-[1px] active:border-b-0 ${
-                    preferredLanguage === 'ka'
-                      ? 'bg-primary/15 text-primary border-primary/30'
-                      : 'text-muted-foreground hover:text-foreground border-transparent hover:border-border'
-                  }`}
-                >
-                  🇬🇪 GE
-                </button>
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/25 to-transparent h-1/2" />
+                </motion.div>
               </div>
+            </div>
+
+            {/* Economy: Coins & Tickets */}
+            <div className="flex items-center justify-center lg:justify-start gap-3">
+              <span className="inline-flex items-center gap-1.5 text-sm font-black text-yellow-400">
+                <Coins className="size-4" />
+                {player.coins.toLocaleString()}
+              </span>
+              {player.tickets !== undefined && (
+                <>
+                  <div className="w-px h-4 bg-border" />
+                  <span className="inline-flex items-center gap-1.5 text-sm font-black text-purple-400">
+                    <Ticket className="size-4" />
+                    {player.tickets}
+                  </span>
+                </>
+              )}
             </div>
           </div>
 
-          {/* RP Progress */}
+          {/* RP Progress Card */}
           <div className="w-full lg:w-72 bg-background/60 rounded-2xl border-b-[3px] border-border p-4 mt-2 lg:mt-0 shrink-0">
             {rankedProfileLoading ? (
               <div className="space-y-2.5 animate-pulse">
@@ -356,20 +324,27 @@ export function ProfileWeb({
             ) : (
               <>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Rank Progress</span>
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Rank Points</span>
+                  {rankedProfile?.currentWinStreak && rankedProfile.currentWinStreak > 1 ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-black text-orange-400">
+                      <Flame className="size-3" />
+                      {rankedProfile.currentWinStreak} streak
+                    </span>
+                  ) : null}
                 </div>
-                <div className="relative h-3.5 bg-muted rounded-full overflow-hidden mb-2">
+                <div className="flex items-baseline gap-1 mb-2">
+                  <span className="text-3xl font-black text-foreground">{displayRp}</span>
+                  <span className="text-sm font-bold text-muted-foreground">RP</span>
+                </div>
+                <div className="relative h-3 bg-muted rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: '100%' }}
                     transition={{ duration: 1, ease: 'easeOut', delay: 0.3 }}
-                    className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#58CC02] to-[#85E000]"
+                    className={`absolute inset-y-0 left-0 rounded-full bg-gradient-to-r ${tierVisual.gradient}`}
                   >
                     <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/25 to-transparent h-1/2" />
                   </motion.div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl font-black text-foreground">{displayRp} <span className="text-sm font-bold text-muted-foreground">RP</span></span>
                 </div>
               </>
             )}
@@ -377,7 +352,38 @@ export function ProfileWeb({
         </div>
       </motion.div>
 
-      {/* ─── 2. Main Content Grid ─── */}
+      {/* ─── 2. Quick Stats Row ─── */}
+      <div className="grid grid-cols-3 gap-3">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.06 }}
+          className="rounded-2xl bg-card border-b-4 border-green-500/30 p-4 text-center"
+        >
+          <div className="text-3xl lg:text-4xl font-black text-green-400">{winRate}%</div>
+          <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">Win Rate</div>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="rounded-2xl bg-card border-b-4 border-orange-500/30 p-4 text-center"
+        >
+          <div className="text-3xl lg:text-4xl font-black text-orange-400">{player.bestStreak}</div>
+          <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">Best Streak</div>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.14 }}
+          className="rounded-2xl bg-card border-b-4 border-blue-500/30 p-4 text-center"
+        >
+          <div className="text-3xl lg:text-4xl font-black text-blue-400">{gamesPlayed}</div>
+          <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">Matches</div>
+        </motion.div>
+      </div>
+
+      {/* ─── 3. Main Content Grid ─── */}
       <div className="grid grid-cols-12 gap-5 lg:gap-8">
 
         {/* Left Column */}
@@ -453,11 +459,67 @@ export function ProfileWeb({
               </div>
             </motion.div>
 
+            {/* W/L/D Breakdown */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.12 }}
+              className="rounded-2xl bg-card border-b-4 border-border p-5"
+            >
+              <h3 className="text-sm font-black uppercase tracking-widest flex items-center gap-2 mb-4">
+                <Target className="size-4 text-primary" />
+                Win / Loss / Draw
+              </h3>
+
+              {/* Visual bar */}
+              {wldTotal > 0 ? (
+                <>
+                  <div className="flex rounded-full overflow-hidden h-4 mb-3">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${winPct}%` }}
+                      transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
+                      className="bg-green-500 relative"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent h-1/2 rounded-l-full" />
+                    </motion.div>
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${drawPct}%` }}
+                      transition={{ duration: 0.8, ease: 'easeOut', delay: 0.4 }}
+                      className="bg-muted-foreground/50"
+                    />
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${lossPct}%` }}
+                      transition={{ duration: 0.8, ease: 'easeOut', delay: 0.5 }}
+                      className="bg-red-500 relative"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent h-1/2 rounded-r-full" />
+                    </motion.div>
+                  </div>
+                  <div className="flex justify-between text-xs font-black">
+                    <span className="text-green-400">{wins}W</span>
+                    <span className="text-muted-foreground">{draws}D</span>
+                    <span className="text-red-400">{losses}L</span>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-border/50 flex justify-between text-xs font-bold text-muted-foreground">
+                    <span>Ranked: {rankedStats?.gamesPlayed ?? 0}</span>
+                    <span>Friendly: {friendlyStats?.gamesPlayed ?? 0}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="text-sm font-bold text-muted-foreground text-center py-2">
+                  No matches played yet.
+                </div>
+              )}
+            </motion.div>
+
             {/* Badges */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.14 }}
+              transition={{ delay: 0.16 }}
               className="rounded-2xl bg-card border-b-4 border-border p-5"
             >
               <div className="flex items-center justify-between mb-3">
@@ -483,12 +545,96 @@ export function ProfileWeb({
                     +{player.badges.length - 5}
                   </span>
                 )}
+                {player.badges.length === 0 && (
+                  <span className="text-xs font-bold text-muted-foreground">No badges earned yet.</span>
+                )}
+              </div>
+            </motion.div>
+
+            {/* Preferences */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="rounded-2xl bg-card border-b-4 border-border p-5"
+            >
+              <h3 className="text-sm font-black uppercase tracking-widest flex items-center gap-2 mb-4">
+                <Settings2 className="size-4 text-muted-foreground" />
+                Preferences
+              </h3>
+              <div className="space-y-3">
+                {/* Club */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-muted-foreground uppercase tracking-wide">Club</span>
+                  <div className="flex items-center gap-2">
+                    {isEditingClub ? (
+                      <div className="w-48">
+                        <ClubSelect
+                          value={favoriteClub ?? ''}
+                          onChange={async (val) => {
+                            try {
+                              await onClubChange?.(val);
+                              setIsEditingClub(false);
+                            } catch {
+                              toast.error('Failed to update club');
+                            }
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <>
+                        <span className="text-sm font-bold text-foreground">
+                          {favoriteClub || 'Not set'}
+                        </span>
+                        <button
+                          onClick={() => setIsEditingClub(true)}
+                          className="text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors"
+                          aria-label="Edit favorite club"
+                          disabled={isUpdating}
+                        >
+                          <Pencil className="size-3" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="h-px bg-border/50" />
+
+                {/* Language */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-muted-foreground uppercase tracking-wide">Language</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => onLanguageChange?.('en')}
+                      disabled={isUpdating}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wide transition-all border-b-2 active:translate-y-[1px] active:border-b-0 ${
+                        preferredLanguage === 'en'
+                          ? 'bg-primary/15 text-primary border-primary/30'
+                          : 'text-muted-foreground hover:text-foreground border-transparent hover:border-border'
+                      }`}
+                    >
+                      🇬🇧 EN
+                    </button>
+                    <button
+                      onClick={() => onLanguageChange?.('ka')}
+                      disabled={isUpdating}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wide transition-all border-b-2 active:translate-y-[1px] active:border-b-0 ${
+                        preferredLanguage === 'ka'
+                          ? 'bg-primary/15 text-primary border-primary/30'
+                          : 'text-muted-foreground hover:text-foreground border-transparent hover:border-border'
+                      }`}
+                    >
+                      🇬🇪 GE
+                    </button>
+                  </div>
+                </div>
               </div>
             </motion.div>
 
             {/* Sign Out */}
             {onSignOut && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.24 }}>
                 <button
                   onClick={onSignOut}
                   className="w-full py-3 rounded-2xl bg-card border-b-4 border-border text-sm font-black text-muted-foreground uppercase tracking-wide hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 active:translate-y-[2px] active:border-b-0 transition-all flex items-center justify-center gap-2"
@@ -516,10 +662,20 @@ export function ProfileWeb({
               Recent Activity
             </h3>
             <div className="space-y-2">
-              {/* TODO(profile-activity-api): Parent may still pass mock activity data while API integration is in progress. Replace with real recent matches endpoint data. */}
               {recentMatchesLoading && (
-                <div className="p-4 rounded-xl bg-background/60 border-b-2 border-border/50 text-sm font-bold text-muted-foreground">
-                  Loading recent matches...
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center justify-between p-3.5 rounded-xl bg-background/60 border-b-2 border-border/50 animate-pulse">
+                      <div className="flex items-center gap-3">
+                        <div className="size-9 rounded-xl bg-muted" />
+                        <div className="space-y-1.5">
+                          <div className="h-3.5 w-24 bg-muted rounded" />
+                          <div className="h-3 w-32 bg-muted rounded" />
+                        </div>
+                      </div>
+                      <div className="h-5 w-12 bg-muted rounded" />
+                    </div>
+                  ))}
                 </div>
               )}
               {!recentMatchesLoading && recentMatchesError && (
@@ -528,11 +684,13 @@ export function ProfileWeb({
                 </div>
               )}
               {!recentMatchesLoading && !recentMatchesError && recentMatches.length === 0 && (
-                <div className="p-4 rounded-xl bg-background/60 border-b-2 border-border/50 text-sm font-bold text-muted-foreground">
-                  No recent matches yet.
+                <div className="p-6 rounded-xl bg-background/60 border-b-2 border-border/50 text-center">
+                  <div className="text-2xl mb-2">⚽</div>
+                  <div className="text-sm font-bold text-muted-foreground">No recent matches yet.</div>
+                  <div className="text-xs text-muted-foreground/70 mt-1">Play a match and it will show up here!</div>
                 </div>
               )}
-              {!recentMatchesLoading && !recentMatchesError && visibleMatches.map((match) => {
+              {!recentMatchesLoading && !recentMatchesError && visibleMatches.map((match, index) => {
                 const isWin = match.result === 'Win';
                 const isLoss = match.result === 'Loss';
                 const badgeClass = isWin
@@ -560,7 +718,13 @@ export function ProfileWeb({
                 const formattedRpDelta = `${(match.rpDelta ?? 0) >= 0 ? '+' : ''}${match.rpDelta ?? 0} RP`;
 
                 return (
-                  <div key={match.id} className="flex items-center justify-between p-3.5 rounded-xl bg-background/60 border-b-2 border-border/50 hover:border-primary/20 transition-colors">
+                  <motion.div
+                    key={match.id}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.05 * index, duration: 0.3 }}
+                    className="flex items-center justify-between p-3.5 rounded-xl bg-background/60 border-b-2 border-border/50 hover:border-primary/20 transition-colors"
+                  >
                     <div className="flex items-center gap-3">
                       <div className={`size-9 rounded-xl flex items-center justify-center text-xs font-black border-2 ${badgeClass}`}>
                         {badgeText}
@@ -592,7 +756,7 @@ export function ProfileWeb({
                         </span>
                       )}
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
 
@@ -632,13 +796,18 @@ export function ProfileWeb({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {player.achievements.map((achievement) => {
                 const Icon = achievementIconMap[achievement.icon] || Trophy;
+                const hasProgress = achievement.progress !== undefined && achievement.target !== undefined;
+                const progressPct = hasProgress
+                  ? Math.min(100, ((achievement.progress ?? 0) / Math.max(1, achievement.target ?? 1)) * 100)
+                  : achievement.unlocked ? 100 : 0;
+
                 return (
                   <div
                     key={achievement.id}
                     className={`flex items-center gap-4 p-4 rounded-2xl border-b-[3px] transition-all ${
                       achievement.unlocked
                         ? 'bg-card border-primary/30'
-                        : 'bg-card border-border opacity-50'
+                        : 'bg-card border-border opacity-60'
                     }`}
                   >
                     <div className={`size-12 rounded-xl flex items-center justify-center shrink-0 border-2 ${
@@ -651,21 +820,27 @@ export function ProfileWeb({
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-black truncate">{achievement.title}</div>
                       <div className="text-xs font-bold text-muted-foreground truncate">
-                        {achievement.unlocked ? 'Completed' : 'Locked'}
+                        {achievement.unlocked
+                          ? 'Completed'
+                          : hasProgress
+                            ? `${achievement.progress} / ${achievement.target}`
+                            : 'Locked'}
                       </div>
                       <div className="mt-2 h-2 w-full bg-muted rounded-full overflow-hidden">
-                        <div
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${progressPct}%` }}
+                          transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
                           className={`h-full rounded-full ${
                             achievement.unlocked
                               ? 'bg-gradient-to-r from-primary to-primary/70'
-                              : 'bg-muted-foreground/50'
+                              : 'bg-muted-foreground/40'
                           }`}
-                          style={{ width: achievement.unlocked ? '100%' : '30%' }}
                         >
                           {achievement.unlocked && (
                             <div className="h-1/2 rounded-full bg-gradient-to-b from-white/20 to-transparent" />
                           )}
-                        </div>
+                        </motion.div>
                       </div>
                     </div>
                     {achievement.unlocked && (

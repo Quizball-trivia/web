@@ -508,7 +508,7 @@ export function LobbySettings({
                 <p className="text-[10px] font-bold text-[#56707A]">
                   Pick one category for the first half. The second half category is chosen at halftime.
                 </p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <div className="max-h-72 overflow-y-auto space-y-1.5 pr-1 scrollbar-thin scrollbar-thumb-[#243B44] scrollbar-track-transparent">
                   {categories.map(cat => {
                     const isSelected = selectedCategoryId === cat.id;
                     return (
@@ -517,16 +517,21 @@ export function LobbySettings({
                         onClick={() => toggleCategory(cat.id)}
                         disabled={!canEdit || isRandom}
                         className={cn(
-                          "flex items-center gap-2 p-3 rounded-xl text-sm font-bold transition-all border-b-[3px]",
+                          "w-full flex items-center gap-3 px-3 py-3.5 rounded-xl font-bold transition-all border-b-[3px]",
                           isSelected
                             ? "bg-[#58CC02]/15 border-[#58CC02] text-white"
                             : "bg-[#131F24] border-[#0D1B21] text-[#56707A] hover:text-white hover:bg-[#1B2F36]",
                           (!canEdit || isRandom) && "opacity-50 cursor-not-allowed"
                         )}
                       >
-                        {cat.icon && <span className="text-base">{cat.icon}</span>}
-                        <span className="truncate">{cat.name}</span>
-                        {isSelected && <Check className="size-3.5 ml-auto text-[#58CC02]" />}
+                        <div className="size-9 rounded-lg overflow-hidden shrink-0 flex items-center justify-center bg-[#243B44]">
+                          {cat.imageUrl
+                            ? <img src={cat.imageUrl} alt={cat.name} className="size-full object-contain" />
+                            : <span className="text-xl">{cat.icon}</span>
+                          }
+                        </div>
+                        <span className="flex-1 text-left text-sm truncate">{cat.name}</span>
+                        {isSelected && <Check className="size-4 shrink-0 text-[#58CC02]" />}
                       </button>
                     );
                   })}

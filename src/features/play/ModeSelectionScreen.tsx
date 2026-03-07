@@ -12,6 +12,7 @@ import { CHALLENGES } from '../tournaments/GameHubScreen';
 import { logger } from '@/utils/logger';
 
 import { getTierVisual } from '@/utils/tierVisuals';
+import { getRankedTierProgress } from '@/utils/rankedTier';
 
 // ── Soccer SVG Icons ──
 function SoccerBall({ className }: { className?: string }) {
@@ -97,6 +98,7 @@ export function ModeSelectionScreen({
   const tierVisual = rankedProfile ? getTierVisual(rankedProfile.tier) : getTierVisual('Academy');
   const rankedWinRate = Math.round(matchStatsSummary?.ranked.winRate ?? 0);
   const rankedGamesPlayed = matchStatsSummary?.ranked.gamesPlayed ?? 0;
+  const tierProgress = getRankedTierProgress(displayRp);
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -220,7 +222,7 @@ export function ModeSelectionScreen({
             <div className="relative h-3 md:h-4 bg-[#243B44] rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
-                animate={{ width: `${isPlacementInProgress ? (placementPlayed / placementRequired) * 100 : 100}%` }}
+                animate={{ width: `${isPlacementInProgress ? (placementPlayed / placementRequired) * 100 : tierProgress.progress}%` }}
                 transition={{ duration: 1, ease: 'easeOut', delay: 0.3 }}
                 className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#58CC02] to-[#85E000]"
               >
