@@ -1280,7 +1280,6 @@ export function RealtimePossessionMatchScreen({
                         answerStates={answerStates}
                         eliminatedIndices={activeOptimisticChanceCard?.eliminatedIndices ?? []}
                         opponentAnswer={opponentAnswer}
-                        opponentAvatarUrl={opponentAvatar}
                         chanceCardCount={chanceCardCount}
                         chanceCardPending={Boolean(activeOptimisticChanceCard?.pending || activeOptimisticChanceCard?.pendingSync)}
                         chanceCardPendingSync={Boolean(activeOptimisticChanceCard?.pendingSync)}

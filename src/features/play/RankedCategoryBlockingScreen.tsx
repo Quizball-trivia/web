@@ -12,7 +12,7 @@ import { useHeadToHead } from '@/lib/queries/stats.queries';
 import { useRankedProfile } from '@/lib/queries/ranked.queries';
 import { useCategoriesList } from '@/lib/queries/categories.queries';
 import { logger } from '@/utils/logger';
-import { cn } from '@/lib/utils';
+import { cn, parseRp } from '@/lib/utils';
 import { isAvatarUrl, resolveAvatarUrl } from '@/lib/avatars';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { tierFromRp } from '@/utils/rankedTier';
@@ -98,12 +98,12 @@ export function RankedCategoryBlockingScreen() {
     logger.info('Auto-ban on timer expiry', { categoryId: randomCategory.id });
   }, [timeLeft, draft, selfUserId]);
 
-  // Show showdown screen for 15 seconds before banning starts, only once
+  // Show showdown screen for 7 seconds before banning starts, only once
   useEffect(() => {
     if (showShowdown) {
       const timer = setTimeout(() => {
         setShowShowdown(false);
-      }, 7000); // 15 seconds
+      }, 7000);
       return () => clearTimeout(timer);
     }
   }, [showShowdown]);
@@ -118,11 +118,7 @@ export function RankedCategoryBlockingScreen() {
     return draftCats.map(c => ({ ...c, imageUrl: imageUrlMap.get(c.id) ?? null }));
   }, [draft?.categories, categoriesData?.items]);
   const playerRp = rankedProfile?.rp ?? player.rankPoints;
-  const realtimeOpponentRpRaw = matchOpponent?.rp ?? rankedFoundOpponent?.rp;
-  const opponentRp =
-    realtimeOpponentRpRaw != null && Number.isFinite(Number(realtimeOpponentRpRaw))
-      ? Number(realtimeOpponentRpRaw)
-      : opponentMember?.rankPoints;
+  const opponentRp = parseRp(matchOpponent?.rp ?? rankedFoundOpponent?.rp) ?? opponentMember?.rankPoints;
   const playerTier = playerRp != null ? tierFromRp(playerRp) : undefined;
   const opponentTier = opponentRp != null ? tierFromRp(opponentRp) : undefined;
 
@@ -291,33 +287,41 @@ export function RankedCategoryBlockingScreen() {
                     logger.info('Socket emit draft:ban (optimistic)', { categoryId: category.id });
                   }}
                   className={cn(
-                    'shrink-0 w-[220px] snap-center rounded-3xl overflow-hidden transition-all duration-200',
+                    'group shrink-0 w-[220px] snap-center rounded-3xl overflow-hidden transition-all duration-200',
                     !disabled && !isBanned && 'cursor-pointer active:scale-[0.95] active:translate-y-[2px]',
                     disabled && !isBanned && 'cursor-default',
                     playerBannedId && !isPlayerBanned && !isOpponentBanned && 'opacity-25 pointer-events-none scale-95',
                   )}
                 >
-                  {/* Icon area — bright Duolingo color */}
+                  {/* Artwork area */}
                   <div
-                    className="aspect-[4/5] flex items-center justify-center relative"
-                    style={{ backgroundColor: isBanned ? '#243B44' : color.bg }}
+                    className="aspect-[4/5] relative overflow-hidden"
+                    style={{ backgroundColor: category.imageUrl ? '#15242D' : (isBanned ? '#243B44' : color.bg) }}
                   >
                     {category.imageUrl ? (
-                      <img
-                        src={category.imageUrl}
-                        alt={category.name}
-                        className={cn(
-                          "w-full h-full object-contain absolute inset-0 transition-all duration-300",
-                          isBanned && "grayscale opacity-40 scale-90"
-                        )}
-                      />
+                      <>
+                        <div
+                          className={cn(
+                            'absolute inset-0 bg-cover bg-center transition-transform duration-500',
+                            !isBanned && 'group-hover:scale-105',
+                            isBanned && 'grayscale'
+                          )}
+                          style={{ backgroundImage: `url("${category.imageUrl}")` }}
+                        />
+                        <div className={cn(
+                          'absolute inset-0 bg-gradient-to-b from-black/10 via-black/15 to-black/70',
+                          isBanned && 'bg-black/55'
+                        )} />
+                      </>
                     ) : (
-                      <span className={cn(
-                        "text-8xl transition-all duration-300 drop-shadow-lg",
-                        isBanned && "grayscale opacity-40 scale-90"
-                      )}>
-                        {category.icon || '⚽'}
-                      </span>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className={cn(
+                          'text-8xl transition-all duration-300 drop-shadow-lg',
+                          isBanned && 'grayscale opacity-40 scale-90'
+                        )}>
+                          {category.icon || '⚽'}
+                        </span>
+                      </div>
                     )}
 
                     {/* Banned overlay */}

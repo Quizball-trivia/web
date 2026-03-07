@@ -68,6 +68,9 @@ function StadiumSilhouette() {
 
 interface ModeSelectionScreenProps {
   onSelectMode: (mode: 'ranked' | 'friendly' | 'solo') => void;
+  /** If provided, called when ranked card is clicked BEFORE the confirm modal opens.
+   *  Return `true` to prevent the confirm modal from showing (i.e. the caller handles it). */
+  onRankedIntercept?: () => boolean;
   ticketsRemaining?: number;
   matchStatsSummary?: MatchStatsSummary | null;
   rankedProfile: RankedProfileResponse | null;
@@ -84,6 +87,7 @@ const PLACEHOLDER_OBJECTIVES = [
 
 export function ModeSelectionScreen({
   onSelectMode,
+  onRankedIntercept,
   ticketsRemaining = 10,
   matchStatsSummary = null,
   rankedProfile,
@@ -117,10 +121,14 @@ export function ModeSelectionScreen({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        onClick={() => setSelectedMode('ranked')}
+        onClick={() => {
+          if (onRankedIntercept?.()) return;
+          setSelectedMode('ranked');
+        }}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
+            if (onRankedIntercept?.()) return;
             setSelectedMode('ranked');
           }
         }}

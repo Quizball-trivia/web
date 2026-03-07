@@ -25,6 +25,8 @@ import { useRankedProfile } from "@/lib/queries/ranked.queries";
 import { usePossessionMatchStore } from "@/stores/possessionMatch.store";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { tierFromRp } from "@/utils/rankedTier";
+import { parseRp } from "@/lib/utils";
+import { TrainingMatchScreen } from "@/features/training/TrainingMatchScreen";
 
 type OpponentInfo = {
   id: string;
@@ -208,6 +210,10 @@ export function GameStageRouter() {
     ]
   );
 
+  if (config?.mode === "training") {
+    return <TrainingMatchScreen onComplete={exitToPlay} />;
+  }
+
   if (stage === "idle") {
     return <LoadingScreen />;
   }
@@ -342,10 +348,7 @@ export function GameStageRouter() {
   if (stage === "showdown") {
     const oppInfo = realtimeMatch?.opponent ?? rankedFoundOpponent;
     const playerRankPoints = rankedProfile?.rp ?? player.rankPoints;
-    const opponentRankPoints =
-      oppInfo?.rp != null && Number.isFinite(Number(oppInfo.rp))
-        ? Number(oppInfo.rp)
-        : undefined;
+    const opponentRankPoints = parseRp(oppInfo?.rp);
     const showdownOpponentUsername = oppInfo?.username ?? opponent.username;
     const showdownOpponentAvatar = resolveAvatarUrl(
       oppInfo?.avatarUrl ?? opponent.avatar,

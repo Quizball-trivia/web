@@ -6,7 +6,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { PitchVisualization } from './PitchVisualization';
 import type { DraftCategory } from '@/lib/realtime/socket.types';
-import type { TacticalCard } from '../types/possession.types';
 
 interface HalftimeScreenProps {
   visible: boolean;
@@ -24,17 +23,9 @@ interface HalftimeScreenProps {
   myBan?: string | null;
   opponentBan?: string | null;
   onBanCategory?: (categoryId: string) => void;
-  myReady?: boolean;
-  opponentReady?: boolean;
-  onSelectTactic?: (tactic: TacticalCard) => void;
 }
 
 const FALLBACK_HALFTIME_SECONDS = 20;
-const LEGACY_TACTIC_OPTIONS: DraftCategory[] = [
-  { id: 'press-high', name: 'Press High', icon: null },
-  { id: 'play-safe', name: 'Play Safe', icon: null },
-  { id: 'all-in', name: 'All In', icon: null },
-];
 
 function CircularTimer({ timeLeft, totalDuration, isUrgent }: { timeLeft: number; totalDuration: number; isUrgent: boolean }) {
   const radius = 26;
@@ -91,9 +82,6 @@ export function HalftimeScreen({
   myBan = null,
   opponentBan = null,
   onBanCategory,
-  myReady,
-  opponentReady,
-  onSelectTactic,
 }: HalftimeScreenProps) {
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [showBanPhase, setShowBanPhase] = useState(false);
@@ -109,57 +97,54 @@ export function HalftimeScreen({
   }, [visible]);
 
   useEffect(() => {
-    if (!visible) return;
-    const timer = setInterval(() => setNowMs(Date.now()), 200);
+    if (!visible || !deadlineAt) return;
+    const timer = setInterval(() => {
+      const remaining = new Date(deadlineAt).getTime() - Date.now();
+      setNowMs(Date.now());
+      if (remaining <= 0) clearInterval(timer);
+    }, 200);
     return () => clearInterval(timer);
-  }, [visible]);
+  }, [visible, deadlineAt]);
 
-  const totalDuration = useMemo(() => {
-    if (!deadlineAt) return FALLBACK_HALFTIME_SECONDS;
-    const deadlineMs = new Date(deadlineAt).getTime();
-    if (!Number.isFinite(deadlineMs)) return FALLBACK_HALFTIME_SECONDS;
-    const durationSec = Math.ceil((deadlineMs - Date.now()) / 1000);
-    return Math.max(1, durationSec);
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- only compute once when deadlineAt first arrives
+  // Parse deadline once — only changes when a new halftime starts
+  const deadlineMs = useMemo(() => {
+    if (!deadlineAt) return null;
+    const ms = new Date(deadlineAt).getTime();
+    return Number.isFinite(ms) ? ms : null;
   }, [deadlineAt]);
 
-  const timeLeft = useMemo(() => {
-    if (!deadlineAt) return FALLBACK_HALFTIME_SECONDS;
-    const deadlineMs = new Date(deadlineAt).getTime();
-    if (!Number.isFinite(deadlineMs)) return FALLBACK_HALFTIME_SECONDS;
-    return Math.max(0, Math.ceil((deadlineMs - nowMs) / 1000));
-  }, [deadlineAt, nowMs]);
+  const totalDuration = useMemo(() => {
+    if (!deadlineMs) return FALLBACK_HALFTIME_SECONDS;
+    const durationSec = Math.ceil((deadlineMs - nowMs) / 1000);
+    return Math.max(1, durationSec);
+    // Freeze the ring duration when a new halftime deadline arrives.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deadlineMs]);
 
-  const isLegacyTacticMode = typeof onSelectTactic === 'function';
-  const resolvedOptions = useMemo(
-    () => (isLegacyTacticMode ? LEGACY_TACTIC_OPTIONS : categoryOptions),
-    [categoryOptions, isLegacyTacticMode]
-  );
-  const resolvedMyBan = isLegacyTacticMode ? (myReady ? 'locked' : null) : myBan;
-  const resolvedOpponentBan = isLegacyTacticMode ? (opponentReady ? 'locked' : null) : opponentBan;
+  const timeLeft = useMemo(() => {
+    if (!deadlineMs) return FALLBACK_HALFTIME_SECONDS;
+    return Math.max(0, Math.ceil((deadlineMs - nowMs) / 1000));
+  }, [deadlineMs, nowMs]);
+
   const isUrgent = timeLeft <= 5;
   const bannedIds = useMemo(
-    () => new Set([resolvedMyBan, resolvedOpponentBan].filter((id): id is string => Boolean(id) && id !== 'locked')),
-    [resolvedMyBan, resolvedOpponentBan]
+    () => new Set([myBan, opponentBan].filter((id): id is string => Boolean(id))),
+    [myBan, opponentBan]
   );
-  const bothBansSubmitted = isLegacyTacticMode
-    ? Boolean(myReady && opponentReady)
-    : Boolean(myBan && opponentBan);
+  const bothBansSubmitted = Boolean(myBan && opponentBan);
   const remainingCategory = useMemo(
     () => (bothBansSubmitted
-      ? (resolvedOptions.find((category) => !bannedIds.has(category.id)) ?? null)
+      ? (categoryOptions.find((category) => !bannedIds.has(category.id)) ?? null)
       : null),
-    [bothBansSubmitted, resolvedOptions, bannedIds]
+    [bothBansSubmitted, categoryOptions, bannedIds]
   );
 
-  const myTurn = isLegacyTacticMode
-    ? !myReady
-    : mySeat === (firstBanSeat ?? 2)
-      ? !resolvedMyBan
-      : mySeat === 1 || mySeat === 2
-        ? Boolean(resolvedOpponentBan && !resolvedMyBan)
-        : false;
-  const canBan = isLegacyTacticMode ? !myReady : myTurn;
+  const myTurn = mySeat === (firstBanSeat ?? 2)
+    ? !myBan
+    : mySeat === 1 || mySeat === 2
+      ? Boolean(opponentBan && !myBan)
+      : false;
+  const canBan = myTurn;
 
   return (
     <AnimatePresence>
@@ -268,14 +253,14 @@ export function HalftimeScreen({
                     transition={{ delay: 0.1 }}
                     className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] text-[#56707A] mb-3 sm:mb-4"
                   >
-                    {isLegacyTacticMode ? 'Pick Your Tactic' : 'Ban 1 Category Each'}
+                    Ban 1 Category Each
                   </motion.div>
 
                   {/* Category / tactic cards */}
                   <div className="flex flex-col sm:flex-row gap-3 w-full">
-                    {resolvedOptions.map((category, index) => {
-                      const isMyBan = resolvedMyBan === category.id;
-                      const isOpponentBan = resolvedOpponentBan === category.id;
+                    {categoryOptions.map((category, index) => {
+                      const isMyBan = myBan === category.id;
+                      const isOpponentBan = opponentBan === category.id;
                       const isRemaining = bothBansSubmitted && !isMyBan && !isOpponentBan && remainingCategory?.id === category.id;
                       const disabled = isMyBan || isOpponentBan || !canBan;
 
@@ -302,24 +287,32 @@ export function HalftimeScreen({
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           transition={{ type: 'spring', stiffness: 300, damping: 22, delay: 0.15 + index * 0.08 }}
                           disabled={disabled}
-                          onClick={() => {
-                            if (isLegacyTacticMode) {
-                              onSelectTactic?.(category.id as TacticalCard);
-                              return;
-                            }
-                            onBanCategory?.(category.id);
-                          }}
+                          onClick={() => onBanCategory?.(category.id)}
                           className={cn(
-                            'relative flex-1 flex flex-col items-center gap-2 rounded-2xl px-4 py-5 sm:py-6 border-2 border-b-4 transition-all duration-200 min-h-[80px] sm:min-h-[100px]',
+                            'relative flex-1 flex flex-col justify-end rounded-2xl overflow-hidden px-4 py-5 sm:py-6 border-2 border-b-4 transition-all duration-200 min-h-[150px] sm:min-h-[180px]',
                             disabled ? 'cursor-default' : 'cursor-pointer hover:scale-[1.03] active:translate-y-[2px] active:border-b-2'
                           )}
                           style={{
-                            backgroundColor: bgColor,
+                            backgroundColor: category.imageUrl ? '#15242D' : bgColor,
                             borderColor,
                             borderBottomColor,
                             opacity: (isMyBan || isOpponentBan) ? 0.75 : 1,
                           }}
                         >
+                          {category.imageUrl ? (
+                            <>
+                              <div
+                                className="absolute inset-0 bg-cover bg-center"
+                                style={{ backgroundImage: `url("${category.imageUrl}")` }}
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-black/25 to-black/85" />
+                            </>
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center text-6xl sm:text-7xl opacity-90">
+                              {category.icon || '⚽'}
+                            </div>
+                          )}
+
                           {/* Status icon */}
                           {(isMyBan || isOpponentBan) && (
                             <motion.div
@@ -346,19 +339,18 @@ export function HalftimeScreen({
                             </motion.div>
                           )}
 
-                          <div className="text-sm sm:text-base font-black text-white/90 text-center leading-snug uppercase tracking-wide">
-                            {category.name}
-                          </div>
-                          <div className={cn(
-                            'text-[10px] sm:text-xs font-bold uppercase tracking-widest',
-                            isMyBan ? 'text-[#1CB0F6]'
-                              : isOpponentBan ? 'text-[#FF4B4B]'
-                                : isRemaining ? 'text-[#58CC02]'
-                                  : 'text-white/40'
-                          )}>
-                            {isLegacyTacticMode
-                              ? (canBan ? 'Tap To Lock' : 'Locked')
-                              : (isMyBan
+                          <div className="relative z-10 w-full">
+                            <div className="text-sm sm:text-base font-black text-white text-left leading-snug uppercase tracking-wide drop-shadow-md">
+                              {category.name}
+                            </div>
+                            <div className={cn(
+                              'mt-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-left',
+                              isMyBan ? 'text-[#1CB0F6]'
+                                : isOpponentBan ? 'text-[#FF4B4B]'
+                                  : isRemaining ? 'text-[#58CC02]'
+                                    : 'text-white/70'
+                            )}>
+                              {isMyBan
                                 ? 'Your Ban'
                                 : isOpponentBan
                                   ? 'Their Ban'
@@ -366,7 +358,8 @@ export function HalftimeScreen({
                                     ? '2nd Half'
                                     : canBan
                                       ? 'Tap To Ban'
-                                      : 'Opponent Turn')}
+                                      : 'Opponent Turn'}
+                            </div>
                           </div>
                         </motion.button>
                       );
@@ -380,17 +373,13 @@ export function HalftimeScreen({
                     transition={{ delay: 0.3 }}
                     className="mt-4 sm:mt-6 text-xs sm:text-sm font-bold uppercase tracking-widest text-white/50 text-center"
                   >
-                    {!isLegacyTacticMode && bothBansSubmitted
+                    {bothBansSubmitted
                       ? `2nd half category: ${remainingCategory?.name ?? 'Deciding...'}`
-                      : !isLegacyTacticMode && myBan
+                      : myBan
                         ? 'Waiting for opponent ban...'
-                        : !isLegacyTacticMode && !canBan
+                        : !canBan
                           ? 'Opponent is choosing a ban...'
-                          : !isLegacyTacticMode
-                            ? 'Choose one category to ban'
-                      : isLegacyTacticMode
-                        ? (myReady ? (opponentReady ? 'Both players locked in' : 'Waiting for opponent...') : 'Choose one tactic')
-                        : ''}
+                          : 'Choose one category to ban'}
                   </motion.div>
                 </motion.div>
               )}

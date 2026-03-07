@@ -9,7 +9,7 @@ export type GameStage =
   | "roundTransition"
   | "finalResults";
 
-export type GameMode = "solo" | "ranked" | "buzzer" | "quizball";
+export type GameMode = "solo" | "ranked" | "buzzer" | "quizball" | "training";
 
 export type MatchType = "ranked" | "friendly";
 
@@ -25,21 +25,4 @@ export interface GameConfig {
   opponentId?: string;
   opponentUsername?: string;
   opponentAvatar?: string;
-}
-
-export interface RuntimeQuestion {
-  id: string;
-  prompt: string;
-  options: string[];
-  correctIndex: number;
-  categoryId?: string;
-  categoryName?: string;
-  difficulty?: string;
-}
-
-export interface RuntimeAnswer {
-  questionId: string;
-  selectedIndex: number | null;
-  isCorrect?: boolean;
-  timeMs?: number;
 }

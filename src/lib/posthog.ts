@@ -88,21 +88,3 @@ export function getFeatureFlag(flagKey: string): boolean | string | undefined {
   }
 }
 
-export function isFeatureEnabled(flagKey: string): boolean {
-  if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_POSTHOG_KEY) {
-    return false;
-  }
-
-  // In development, return false (no feature flags)
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('[Dev] PostHog Feature Enabled:', flagKey, '(disabled in dev)');
-    return false;
-  }
-
-  try {
-    return posthog.isFeatureEnabled(flagKey) ?? false;
-  } catch (error) {
-    console.error('PostHog isFeatureEnabled error:', error);
-    return false;
-  }
-}

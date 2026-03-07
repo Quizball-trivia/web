@@ -28,7 +28,7 @@ export default function OnboardingPage() {
       await updateMe({
         nickname: data.username?.trim() || undefined,
         avatar_url: data.avatar
-          ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.avatar}&backgroundColor=22c55e`
+          ? `https://api.dicebear.com/7.x/big-smile/svg?seed=${data.avatar}&backgroundColor=b6e3f4,c0aede,d1d4f9&size=128`
           : undefined,
         favorite_club: data.favoriteClub === undefined ? undefined : data.favoriteClub,
         preferred_language: data.preferredLanguage === undefined ? undefined : data.preferredLanguage,

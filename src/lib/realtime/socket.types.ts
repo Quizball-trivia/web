@@ -17,16 +17,7 @@ export type MatchPhaseKind =
   | 'penalty';
 export type TacticalCard = 'press-high' | 'play-safe' | 'all-in';
 
-export type GameStage =
-  | 'idle'
-  | 'matchmaking'
-  | 'categoryBlocking'
-  | 'showdown'
-  | 'roundIntro'
-  | 'playing'
-  | 'roundResult'
-  | 'roundTransition'
-  | 'finalResults';
+export type { GameStage } from '@/types/game.runtime';
 
 export interface LobbyMember {
   userId: string;

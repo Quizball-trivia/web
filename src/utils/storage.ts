@@ -15,6 +15,7 @@ export const STORAGE_KEYS = {
   DAILY_CHALLENGE_STATE: 'quizball_daily_challenge',
   WHEEL_SPIN_TIMESTAMP: 'quizball_wheel_spin',
 
+  TRAINING_COMPLETE: 'quizball_training_complete',
   DEV_MODE: 'quizball_dev_mode',
 } as const;
 
@@ -28,24 +29,29 @@ const MIGRATIONS: Partial<Record<string, StorageKey>> = {
   'lastWheelSpin': STORAGE_KEYS.WHEEL_SPIN_TIMESTAMP,
 };
 
+// Run migrations once eagerly rather than on every get() call
+let _migrated = false;
+function runMigrations() {
+  if (_migrated) return;
+  _migrated = true;
+  try {
+    for (const [legacyKey, newKey] of Object.entries(MIGRATIONS)) {
+      if (!newKey) continue;
+      const val = localStorage.getItem(legacyKey);
+      if (val) {
+        localStorage.setItem(newKey, val);
+        localStorage.removeItem(legacyKey);
+      }
+    }
+  } catch {
+    // Storage unavailable
+  }
+}
+
 export const storage = {
   get<T>(key: StorageKey, defaultValue: T): T {
     try {
-      // Check for legacy key and migrate
-      const legacyKey = Object.entries(MIGRATIONS).find(([, newKey]) => newKey === key)?.[0];
-      if (legacyKey) {
-        const legacyValue = localStorage.getItem(legacyKey);
-        if (legacyValue) {
-          localStorage.setItem(key, legacyValue);
-          localStorage.removeItem(legacyKey);
-          try {
-            return JSON.parse(legacyValue);
-          } catch {
-            return legacyValue as T; // Raw string fallback
-          }
-        }
-      }
-
+      runMigrations();
       const item = localStorage.getItem(key);
       if (!item) return defaultValue;
       try {
