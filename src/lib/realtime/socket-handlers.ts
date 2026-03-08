@@ -13,6 +13,7 @@ import type {
   LobbyState,
   MatchAnswerAckPayload,
   MatchFinalResultsPayload,
+  MatchPartyStatePayload,
   MatchStatePayload,
   MatchOpponentAnsweredPayload,
   MatchOpponentDisconnectedPayload,
@@ -48,6 +49,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   socket.off('match:start');
   socket.off('match:countdown');
   socket.off('match:state');
+  socket.off('match:party_state');
   socket.off('match:question');
   socket.off('match:chance_card_applied');
   socket.off('match:opponent_answered');
@@ -192,6 +194,17 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     store.setMatchState(data);
   });
 
+  socket.on('match:party_state', (data: MatchPartyStatePayload) => {
+    logger.info('Socket event match:party_state', {
+      matchId: data.matchId,
+      currentQuestionIndex: data.currentQuestionIndex,
+      leaderUserId: data.leaderUserId,
+      playerCount: data.players.length,
+      stateVersion: data.stateVersion,
+    });
+    store.setPartyState(data);
+  });
+
   socket.on('match:question', (data: MatchQuestionPayload) => {
     logger.debug('Inspecting match:question correctIndex payload type', {
       correctIndex: data.correctIndex,
@@ -205,8 +218,12 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       correctIndex: data.correctIndex,
     });
 
-    // Resolve i18n fields to the user's preferred locale
-    const locale = storage.get(STORAGE_KEYS.LOCALE, 'en');
+    // Resolve i18n fields to the user's preferred locale.
+    // Use the question prompt's available locale to keep category name consistent —
+    // if the question isn't translated, show the category name in English too.
+    const preferredLocale = storage.get(STORAGE_KEYS.LOCALE, 'en');
+    const questionHasLocale = data.question.prompt && data.question.prompt[preferredLocale];
+    const locale = questionHasLocale ? preferredLocale : 'en';
     const resolvedData = {
       ...data,
       question: {

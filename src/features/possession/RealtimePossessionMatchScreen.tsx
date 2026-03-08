@@ -250,6 +250,7 @@ export function RealtimePossessionMatchScreen({
   }, [match?.matchId, possessionState]);
 
   const mySeat = match?.mySeat;
+  const duelMySeat = mySeat === 1 || mySeat === 2 ? mySeat : null;
   const shooterSeat = possessionState?.shooterSeat ?? null;
   const phaseKind = match?.currentQuestion?.phaseKind ?? possessionState?.phaseKind ?? 'normal';
   const isPenaltyQuestion = phaseKind === 'penalty';
@@ -1324,7 +1325,7 @@ export function RealtimePossessionMatchScreen({
               playerPosition={myPossessionPct}
               deadlineAt={possessionState.halftime.deadlineAt}
               categoryOptions={possessionState.halftime.categoryOptions}
-              mySeat={mySeat}
+              mySeat={duelMySeat}
               firstBanSeat={possessionState.halftime.firstBanSeat}
               myBan={mySeat === 2 ? possessionState.halftime.bans.seat2 : mySeat === 1 ? possessionState.halftime.bans.seat1 : null}
               opponentBan={mySeat === 2 ? possessionState.halftime.bans.seat1 : mySeat === 1 ? possessionState.halftime.bans.seat2 : null}

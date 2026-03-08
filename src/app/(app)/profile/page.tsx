@@ -135,6 +135,7 @@ export default function ProfilePage() {
     <ProfileScreen
       player={player}
       avatarUrl={authUser?.avatar_url ?? null}
+      country={authUser?.country ?? null}
       favoriteClub={authUser?.favorite_club ?? null}
       preferredLanguage={authUser?.preferred_language ?? null}
       matchStatsSummary={matchStatsSummary}

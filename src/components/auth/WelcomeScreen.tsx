@@ -121,13 +121,19 @@ export function WelcomeScreen() {
 
   return (
     <div className="min-h-screen w-full bg-[#131F24] font-sans text-foreground flex flex-col">
+      {/* Background Spotlight */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-green-500/10 blur-[120px] rounded-full" />
+        <div className="absolute top-[20%] -right-[10%] w-[30%] h-[30%] bg-blue-500/5 blur-[100px] rounded-full" />
+      </div>
+
       {/* Navbar */}
-      <header className="flex h-20 items-center px-6 md:px-12 lg:px-20 shrink-0 border-b border-border/30 bg-[#131F24] sticky top-0 z-50">
+      <header className="flex h-16 md:h-20 items-center px-6 md:px-12 lg:px-20 shrink-0 border-b border-border/30 bg-[#131F24]/80 backdrop-blur-md sticky top-0 z-50">
         <AppLogo size="md" className="!justify-start" />
       </header>
 
       {/* Hero - Split layout */}
-      <main className="flex-1 flex flex-col lg:flex-row items-center container mx-auto px-6 py-12 lg:py-0 gap-12 lg:gap-16">
+      <main className="flex-1 flex flex-col lg:flex-row items-center container mx-auto px-6 py-8 md:py-12 lg:py-0 gap-10 md:gap-12 lg:gap-16">
 
         {/* Left: Copy */}
         <motion.div
@@ -145,14 +151,14 @@ export function WelcomeScreen() {
             <span className="text-[#56707A] font-bold text-sm">{duelsCount.toLocaleString()}+ duels played</span>
           </div>
 
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] mb-6 text-foreground">
+          <h1 className="text-4xl md:text-5xl lg:text-7xl font-black tracking-tighter leading-[1.05] mb-6 text-foreground drop-shadow-2xl">
             Answer trivia.<br />
             Score goals.<br />
-            <span className="text-green-500">Win the match.</span>
+            <span className="bg-gradient-to-r from-green-400 to-emerald-600 bg-clip-text text-transparent">Win the match.</span>
           </h1>
 
-          <p className="text-lg text-[#56707A] font-medium mb-4 max-w-md">
-            The football trivia game where your knowledge powers real-time pitch action. Battle opponents, climb divisions, become a legend.
+          <p className="text-base md:text-lg text-[#56707A] font-medium mb-4 max-w-md">
+            The football trivia game where your knowledge powers real-time pitch action. Battle opponents, climb divisions, and become a legend.
           </p>
 
           <div className="h-8 mb-8 flex items-center justify-center lg:justify-start">
@@ -199,10 +205,10 @@ export function WelcomeScreen() {
 
         {/* Right: Stacked cards */}
         <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="flex-1 flex items-center justify-center w-full max-w-xl lg:max-w-none"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="flex-1 flex items-center justify-center w-full max-w-lg lg:max-w-none relative"
         >
           <div className="relative w-full max-w-[520px] aspect-[4/3] perspective-1000">
             {/* Stack background elements for depth */}
@@ -234,8 +240,8 @@ export function WelcomeScreen() {
                   className="absolute inset-0 cursor-pointer"
                   onClick={() => paginate(1)}
                 >
-                  <div className="w-full h-full bg-[#1B2F36] rounded-2xl md:rounded-3xl p-2 md:p-3 border-2 border-white/5 border-b-[6px] border-b-black/40 shadow-[0_20px_50px_rgba(0,0,0,0.5)] active:translate-y-1 active:border-b-[2px] transition-all">
-                    <div className="relative rounded-xl md:rounded-2xl overflow-hidden h-[calc(100%-32px)] group">
+                  <div className="w-full h-full bg-[#1B2F36] rounded-2xl md:rounded-3xl p-1.5 md:p-3 border-2 border-white/5 border-b-[4px] md:border-b-[6px] border-b-black/40 shadow-[0_20px_50px_rgba(0,0,0,0.5)] active:translate-y-1 active:border-b-[2px] transition-all">
+                    <div className="relative rounded-xl md:rounded-2xl overflow-hidden h-[calc(100%-24px)] md:h-[calc(100%-32px)] group">
                       <Image
                         src={cards[activeCard].src}
                         alt={cards[activeCard].alt}
@@ -246,9 +252,9 @@ export function WelcomeScreen() {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
-                    <div className="mt-2 px-1 flex items-center justify-between">
-                      <span className="font-bold text-[10px] md:text-xs uppercase tracking-[0.15em] text-white/40">{cards[activeCard].label}</span>
-                      <div className="flex gap-1.5 z-10">
+                    <div className="mt-1 md:mt-2 px-1 flex items-center justify-between">
+                      <span className="font-bold text-[8px] md:text-xs uppercase tracking-[0.15em] text-white/40">{cards[activeCard].label}</span>
+                      <div className="flex gap-1 md:gap-1.5 z-10">
                         {cards.map((_, di) => (
                           <button
                             key={di}
@@ -256,7 +262,7 @@ export function WelcomeScreen() {
                               e.stopPropagation();
                               jumpToPage(di);
                             }}
-                            className={`size-1 md:size-1.5 rounded-full transition-all duration-500 hover:bg-white/30 ${di === activeCard ? 'bg-green-500 w-4 md:w-6' : 'bg-white/10'}`}
+                            className={`size-1 md:size-1.5 rounded-full transition-all duration-500 hover:bg-white/30 ${di === activeCard ? 'bg-green-500 w-3 md:w-6' : 'bg-white/10'}`}
                             aria-label={`Go to slide ${di + 1}`}
                           />
                         ))}

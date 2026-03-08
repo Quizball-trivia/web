@@ -15,9 +15,9 @@ interface FriendLobbyScreenProps {
 export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) {
   const {
     lobby,
+    members,
     lobbyCode,
     me,
-    opponent,
     h2hSummary,
     allCategories,
     settingsErrorVersion,
@@ -27,23 +27,36 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
 
   const settings = lobby?.settings;
   const isCurrentHost = Boolean(me?.isHost) || isHost;
-  const bothReady = Boolean(me?.isReady && opponent?.isReady);
+  const allReady = members.length > 0 && members.every((member) => member.isReady);
+  const isPartyMode = settings?.gameMode === "friendly_party_quiz" || members.length > 2;
   const hasFriendlyCategories =
     settings?.friendlyRandom ||
     Boolean(settings?.friendlyCategoryAId);
   const readyCopy =
-    settings?.gameMode === "friendly"
-      ? "When both players are ready, the host can start the match."
-      : "When both players are ready, the match will begin.";
+    settings?.gameMode === "ranked_sim"
+      ? "When both players are ready, ranked sim begins automatically."
+      : isPartyMode
+        ? "When everyone is ready, the host can start the party quiz."
+        : "When both players are ready, the host can start the match.";
   const canStartMatch =
     Boolean(
       isCurrentHost &&
-        bothReady &&
+        allReady &&
         lobby?.status === "waiting" &&
-        settings?.gameMode === "friendly" &&
+        (settings?.gameMode === "friendly_possession" || settings?.gameMode === "friendly_party_quiz") &&
         hasFriendlyCategories &&
         !isStartingMatch
     );
+  const startLabel = isPartyMode ? "Start Party Quiz" : "Start Match";
+  const statusCopy = allReady
+    ? isPartyMode
+      ? "Everyone is ready."
+      : "Both players ready."
+    : members.length <= 1
+      ? "Waiting for more players..."
+      : isPartyMode
+        ? "Waiting for everyone to ready up..."
+        : "Waiting for both players to ready up...";
 
   return (
     <div className="container mx-auto max-w-5xl py-6 animate-in fade-in space-y-6 font-fun">
@@ -53,7 +66,7 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
         lobbyName={lobby?.displayName}
         lobbyCode={lobbyCode}
         me={me}
-        opponent={opponent}
+        members={members}
         h2hSummary={h2hSummary}
       />
 
@@ -101,7 +114,7 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
               </button>
 
               {/* Start Match */}
-              {settings?.gameMode === "friendly" && (
+              {(settings?.gameMode === "friendly_possession" || settings?.gameMode === "friendly_party_quiz") && (
                 <button
                   onClick={actions.handleStartMatch}
                   disabled={!canStartMatch}
@@ -119,7 +132,7 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
                       Starting Match...
                     </span>
                   ) : (
-                    "Start Match"
+                    startLabel
                   )}
                 </button>
               )}
@@ -146,9 +159,9 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
               <div className="bg-[#131F24] rounded-xl border-b-[3px] border-[#0D1B21] py-2.5 px-3 text-center">
                 <span className={cn(
                   "text-xs font-black uppercase tracking-wider",
-                  bothReady ? "text-[#58CC02]" : "text-[#56707A]"
+                  allReady ? "text-[#58CC02]" : "text-[#56707A]"
                 )}>
-                  {bothReady ? "Both players ready!" : opponent ? "Waiting for both players to ready up..." : "Waiting for opponent..."}
+                  {statusCopy}
                 </span>
               </div>
             </div>

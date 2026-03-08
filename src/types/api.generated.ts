@@ -431,7 +431,7 @@ export interface paths {
                                 opponentGoals: number;
                                 opponentPenaltyGoals: number;
                                 /** @enum {string|null} */
-                                winnerDecisionMethod: "goals" | "penalty_goals" | "total_points_fallback" | "forfeit" | null;
+                                winnerDecisionMethod: "goals" | "penalty_goals" | "total_points" | "total_points_fallback" | "forfeit" | null;
                                 rpDelta: number | null;
                                 opponent: {
                                     /** Format: uuid */
@@ -564,7 +564,7 @@ export interface paths {
                                 inviteCode: string;
                                 displayName: string;
                                 /** @enum {string} */
-                                gameMode: "friendly" | "ranked_sim";
+                                gameMode: "friendly_possession" | "friendly_party_quiz" | "ranked_sim";
                                 isPublic: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -697,7 +697,9 @@ export interface paths {
                                 };
                                 priceCents: number;
                                 currency: string;
-                                metadata?: unknown;
+                                metadata: {
+                                    [key: string]: unknown;
+                                } | null;
                             }[];
                         };
                     };
@@ -946,7 +948,9 @@ export interface paths {
                                 description: {
                                     [key: string]: string;
                                 };
-                                metadata?: unknown;
+                                metadata: {
+                                    [key: string]: unknown;
+                                } | null;
                                 quantity: number;
                                 /** Format: date-time */
                                 acquiredAt: string;
@@ -1190,12 +1194,16 @@ export interface paths {
                                 stripePaymentIntent: string | null;
                                 coinsDelta: number;
                                 ticketsDelta: number;
-                                inventoryDelta?: unknown;
+                                inventoryDelta: {
+                                    [key: string]: unknown;
+                                } | null;
                                 reason: string | null;
                                 errorCode: string | null;
                                 errorMessage: string | null;
                                 requestId: string | null;
-                                metadata?: unknown;
+                                metadata: {
+                                    [key: string]: unknown;
+                                } | null;
                                 idempotencyKey: string | null;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -2706,7 +2714,7 @@ export interface components {
                 opponentGoals: number;
                 opponentPenaltyGoals: number;
                 /** @enum {string|null} */
-                winnerDecisionMethod: "goals" | "penalty_goals" | "total_points_fallback" | "forfeit" | null;
+                winnerDecisionMethod: "goals" | "penalty_goals" | "total_points" | "total_points_fallback" | "forfeit" | null;
                 rpDelta: number | null;
                 opponent: {
                     /** Format: uuid */
@@ -2771,7 +2779,9 @@ export interface components {
                 };
                 priceCents: number;
                 currency: string;
-                metadata?: unknown;
+                metadata: {
+                    [key: string]: unknown;
+                } | null;
             }[];
         };
         StoreWalletResponse: {
@@ -2795,7 +2805,9 @@ export interface components {
                 description: {
                     [key: string]: string;
                 };
-                metadata?: unknown;
+                metadata: {
+                    [key: string]: unknown;
+                } | null;
                 quantity: number;
                 /** Format: date-time */
                 acquiredAt: string;
@@ -2842,12 +2854,16 @@ export interface components {
             stripePaymentIntent: string | null;
             coinsDelta: number;
             ticketsDelta: number;
-            inventoryDelta?: unknown;
+            inventoryDelta: {
+                [key: string]: unknown;
+            } | null;
             reason: string | null;
             errorCode: string | null;
             errorMessage: string | null;
             requestId: string | null;
-            metadata?: unknown;
+            metadata: {
+                [key: string]: unknown;
+            } | null;
             idempotencyKey: string | null;
             /** Format: date-time */
             createdAt: string;
@@ -2872,12 +2888,16 @@ export interface components {
                 stripePaymentIntent: string | null;
                 coinsDelta: number;
                 ticketsDelta: number;
-                inventoryDelta?: unknown;
+                inventoryDelta: {
+                    [key: string]: unknown;
+                } | null;
                 reason: string | null;
                 errorCode: string | null;
                 errorMessage: string | null;
                 requestId: string | null;
-                metadata?: unknown;
+                metadata: {
+                    [key: string]: unknown;
+                } | null;
                 idempotencyKey: string | null;
                 /** Format: date-time */
                 createdAt: string;

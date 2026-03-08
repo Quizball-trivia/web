@@ -104,7 +104,7 @@ interface RealtimeResultsScreenProps {
   totalQuestions: number;
   selfUserId: string;
   finalWinnerId?: string | null;
-  winnerDecisionMethod?: 'goals' | 'penalty_goals' | 'total_points_fallback' | 'forfeit' | null;
+  winnerDecisionMethod?: 'goals' | 'penalty_goals' | 'total_points' | 'total_points_fallback' | 'forfeit' | null;
   preMatchRp?: number;
   opponentId: string;
   opponentRp?: number;

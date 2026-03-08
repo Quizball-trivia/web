@@ -11,6 +11,22 @@ import {
 import { COLLAPSED_MATCHES_COUNT, MAX_MATCHES_COUNT } from '@/lib/constants/matches';
 import type { FormattedMatchScore } from '@/utils/matchScore';
 
+function countryCodeToFlag(code: string): string {
+  return code
+    .toUpperCase()
+    .split('')
+    .map(c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65))
+    .join('');
+}
+
+function countryCodeToName(code: string): string {
+  try {
+    return new Intl.DisplayNames(['en'], { type: 'region' }).of(code.toUpperCase()) ?? code;
+  } catch {
+    return code;
+  }
+}
+
 const achievementIconMap: Record<string, LucideIcon> = {
   Trophy, Target, Flame, Star, Award, Check, MapPin, Globe, Users, Clock, Zap, Medal, Crown,
 };
@@ -43,6 +59,7 @@ export interface ProfileRecentMatch {
 interface ProfileWebProps {
   player: PlayerStats;
   avatarUrl?: string | null;
+  country?: string | null;
   favoriteClub?: string | null;
   preferredLanguage?: string | null;
   countryRank?: number | string | null;
@@ -62,7 +79,7 @@ interface ProfileWebProps {
 }
 
 export function ProfileWeb({
-  player, avatarUrl, favoriteClub, preferredLanguage,
+  player, avatarUrl, country = null, favoriteClub, preferredLanguage,
   countryRank = null, friendsRank = null,
   matchStatsSummary = null,
   rankedProfile = null, rankedProfileLoading = false,
@@ -563,6 +580,16 @@ export function ProfileWeb({
                 Preferences
               </h3>
               <div className="space-y-3">
+                {/* Country */}
+                {country && (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-muted-foreground uppercase tracking-wide">Country</span>
+                      <span className="text-sm font-bold text-foreground">{countryCodeToFlag(country)} {countryCodeToName(country)}</span>
+                    </div>
+                    <div className="h-px bg-border/50" />
+                  </>
+                )}
                 {/* Club */}
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black text-muted-foreground uppercase tracking-wide">Club</span>

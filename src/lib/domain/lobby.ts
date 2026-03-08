@@ -10,6 +10,6 @@ export interface PublicLobby {
   memberCount: number;
   maxMembers: number;
   createdAt: string;
-  gameMode: 'friendly' | 'ranked_sim';
+  gameMode: 'friendly_possession' | 'friendly_party_quiz' | 'ranked_sim';
   isPublic: boolean;
 }

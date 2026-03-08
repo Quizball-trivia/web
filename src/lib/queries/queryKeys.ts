@@ -28,7 +28,7 @@ export const queryKeys = {
     all: ["leaderboard"] as const,
     list: (type: LeaderboardType) =>
       [...queryKeys.leaderboard.all, "list", type] as const,
-    user: (userId: string) => [...queryKeys.leaderboard.all, "user", userId] as const,
+    user: (userId: string, type?: string) => [...queryKeys.leaderboard.all, "user", userId, type ?? "global"] as const,
   },
   ranked: {
     all: ["ranked"] as const,

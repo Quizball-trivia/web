@@ -8,8 +8,9 @@ interface LeaderboardPodiumProps {
 
 const podiumConfig = {
   1: {
-    height: 'h-36',
-    avatarSize: 'lg' as const,
+    height: 'h-28 sm:h-36',
+    avatarSize: 'sm' as const,
+    avatarDesktopSize: 'lg' as const,
     borderColor: 'border-yellow-400',
     bgGlow: 'shadow-[0_0_24px_rgba(250,204,21,0.25)]',
     barBg: 'bg-gradient-to-t from-yellow-500/25 to-yellow-400/5 border-yellow-500/30',
@@ -19,8 +20,9 @@ const podiumConfig = {
     z: 'z-20',
   },
   2: {
-    height: 'h-28',
-    avatarSize: 'md' as const,
+    height: 'h-20 sm:h-28',
+    avatarSize: 'xs' as const,
+    avatarDesktopSize: 'md' as const,
     borderColor: 'border-slate-300',
     bgGlow: '',
     barBg: 'bg-gradient-to-t from-slate-400/15 to-slate-300/5 border-slate-400/30',
@@ -30,8 +32,9 @@ const podiumConfig = {
     z: 'z-10',
   },
   3: {
-    height: 'h-20',
-    avatarSize: 'md' as const,
+    height: 'h-16 sm:h-20',
+    avatarSize: 'xs' as const,
+    avatarDesktopSize: 'md' as const,
     borderColor: 'border-orange-600/60',
     bgGlow: '',
     barBg: 'bg-gradient-to-t from-orange-700/15 to-orange-600/5 border-orange-700/30',
@@ -58,36 +61,48 @@ export function LeaderboardPodium({ topThree }: LeaderboardPodiumProps) {
   ];
 
   return (
-    <div className="rounded-2xl bg-card border-2 border-border border-b-4 p-4 pt-10 pb-0">
-      <div className="flex items-end justify-center gap-3 w-full max-w-md mx-auto">
+    <div className="rounded-2xl bg-card border-2 border-border border-b-4 p-2 pt-6 sm:p-4 sm:pt-10 pb-0 overflow-hidden">
+      <div className="flex items-end justify-center gap-1 sm:gap-3 w-full max-w-sm sm:max-w-md mx-auto">
         {players.map(({ entry, rank }) => {
           const config = podiumConfig[rank];
           if (!entry) return <div key={rank} className={`flex-1 ${config.order}`} />;
 
           return (
-            <div key={entry.id} className={`flex flex-col items-center flex-1 ${config.z} ${config.order}`}>
+            <div key={entry.id} className={`flex flex-col items-center flex-1 min-w-0 ${config.z} ${config.order}`}>
               {/* Avatar */}
-              <div className="relative mb-3">
+              <div className="relative mb-1.5 sm:mb-3 shrink-0">
                 {rank === 1 && (
-                  <Crown className="absolute -top-7 left-1/2 -translate-x-1/2 text-yellow-400 size-7 drop-shadow-lg animate-bounce" />
+                  <Crown className="absolute -top-4 sm:-top-7 left-1/2 -translate-x-1/2 text-yellow-400 size-4 sm:size-7 drop-shadow-lg animate-bounce" />
                 )}
-                <AvatarDisplay
-                  customization={{ base: entry.avatar || `avatar-${rank}` }}
-                  size={config.avatarSize}
-                  className={`border-4 ${config.borderColor} ${config.bgGlow}`}
-                />
-                <div className={`absolute -bottom-2.5 left-1/2 -translate-x-1/2 ${config.badgeBg} text-xs font-black px-2.5 py-0.5 rounded-full shadow border-2 border-background`}>
+                <div className="hidden sm:block">
+                  <AvatarDisplay
+                    customization={{ base: entry.avatar || `avatar-${rank}` }}
+                    size={config.avatarDesktopSize}
+                    className={`border-4 ${config.borderColor} ${config.bgGlow}`}
+                  />
+                </div>
+                <div className="block sm:hidden">
+                  <AvatarDisplay
+                    customization={{ base: entry.avatar || `avatar-${rank}` }}
+                    size={config.avatarSize}
+                    className={`border-[1.5px] ${config.borderColor} ${config.bgGlow}`}
+                  />
+                </div>
+                <div className={`absolute -bottom-1.5 sm:-bottom-2.5 left-1/2 -translate-x-1/2 ${config.badgeBg} text-[8px] sm:text-xs font-black px-1 sm:px-2.5 py-0 rounded-full shadow border-2 border-background`}>
                   #{rank}
                 </div>
               </div>
 
               {/* Pedestal */}
-              <div className={`w-full ${config.height} rounded-t-xl border-t-2 border-x-2 ${config.barBg} flex flex-col items-center justify-start pt-5`}>
-                <span className="font-fun font-black text-sm text-center truncate w-full px-2" title={entry.username}>
+              <div className={`w-full ${config.height} rounded-t-lg sm:rounded-t-xl border-t-2 border-x-2 ${config.barBg} flex flex-col items-center justify-start pt-2 sm:pt-5 min-w-0`}>
+                <span 
+                  className="font-fun font-black text-[9px] sm:text-sm text-center line-clamp-2 leading-tight w-full px-1 sm:px-2 break-words whitespace-normal" 
+                  title={entry.username}
+                >
                   {entry.username}
                 </span>
-                <span className={`text-xs font-bold ${config.rpColor} mt-1`}>
-                  {entry.rankPoints.toLocaleString()} RP
+                <span className={`text-[8px] sm:text-[10px] sm:text-xs font-bold ${config.rpColor} mt-0 sm:mt-1`}>
+                  {entry.rankPoints.toLocaleString()} <span className="hidden xs:inline">RP</span>
                 </span>
               </div>
             </div>

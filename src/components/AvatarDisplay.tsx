@@ -4,7 +4,7 @@ import { getDiceBearAvatarUrl } from '@/lib/avatars';
 
 interface AvatarDisplayProps {
   customization: AvatarCustomization;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
 }
 
@@ -13,8 +13,17 @@ export function AvatarDisplay({
   size = 'md',
   className = '' 
 }: AvatarDisplayProps) {
+  const sizeClasses = {
+    xs: 'size-8',
+    sm: 'size-10 sm:size-12',
+    md: 'size-16',
+    lg: 'size-24',
+    xl: 'size-32',
+  };
+
   const getSizeInPixels = () => {
     switch (size) {
+      case 'xs': return 32;
       case 'sm': return 48;
       case 'md': return 64;
       case 'lg': return 96;
@@ -32,8 +41,7 @@ export function AvatarDisplay({
 
   return (
     <div 
-      className={`relative flex items-center justify-center rounded-full ${className}`}
-      style={{ width: sizeInPx, height: sizeInPx }}
+      className={`relative flex items-center justify-center rounded-full shrink-0 ${sizeClasses[size || 'md']} ${className}`}
     >
       <Image
         src={avatarUrl}
@@ -41,20 +49,19 @@ export function AvatarDisplay({
         width={sizeInPx}
         height={sizeInPx}
         unoptimized
-        className="w-full h-full rounded-full"
-        style={{ width: sizeInPx, height: sizeInPx }}
+        className="w-full h-full rounded-full object-cover"
       />
       
       {/* Jersey/Hat overlay (positioned above) */}
       {customization.hat && (
-        <div className="absolute -top-2 left-1/2 -translate-x-1/2 text-xl">
+        <div className="absolute -top-[15%] left-1/2 -translate-x-1/2 text-[100%] leading-none z-10">
           {customization.hat}
         </div>
       )}
       
       {/* Accessory overlay (positioned to the side) */}
       {customization.accessory && (
-        <div className="absolute -right-1 top-1/2 -translate-y-1/2 text-sm">
+        <div className="absolute -right-[5%] top-1/2 -translate-y-1/2 text-[50%] leading-none z-10">
           {customization.accessory}
         </div>
       )}

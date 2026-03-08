@@ -7,8 +7,11 @@ import type {
   MatchAnswerAckPayload,
   MatchChanceCardAppliedPayload,
   MatchFinalResultsPayload,
+  MatchPartyStatePayload,
   MatchRejoinAvailablePayload,
+  MatchParticipant,
   MatchStatePayload,
+  MatchVariant,
   ResolvedMatchQuestionPayload,
   MatchRoundResultPayload,
   MatchCountdownPayload,
@@ -43,8 +46,10 @@ export interface MatchQuestionState {
 export interface MatchStatus {
   matchId: string;
   mode: 'friendly' | 'ranked';
-  mySeat: 1 | 2 | null;
+  variant: MatchVariant;
+  mySeat: number | null;
   opponent: OpponentInfo;
+  participants: MatchParticipant[];
   countdownEndsAt: number | null;
   currentQuestion: ResolvedMatchQuestionPayload | null;
   pendingQuestion: ResolvedMatchQuestionPayload | null;
@@ -60,6 +65,7 @@ export interface MatchStatus {
   currentQuestionPhase: 'reveal' | 'playing';
   opponentAnsweredCorrectly: boolean | null;
   possessionState: MatchStatePayload | null;
+  partyState: MatchPartyStatePayload | null;
   stateVersion: number;
   optimisticChanceCard: OptimisticChanceCardState | null;
 }
@@ -95,7 +101,9 @@ export interface WarmupStatus {
 export interface RejoinMatchStatus {
   matchId: string;
   mode: 'friendly' | 'ranked';
+  variant: MatchVariant;
   opponent: OpponentInfo;
+  participants: MatchParticipant[];
   graceMs: number;
   createdAt: number;
 }
@@ -133,6 +141,7 @@ interface RealtimeState {
   setMatchQuestion: (payload: ResolvedMatchQuestionPayload) => void;
   promotePendingQuestion: () => void;
   setMatchState: (payload: MatchStatePayload) => void;
+  setPartyState: (payload: MatchPartyStatePayload) => void;
   setAnswerAck: (payload: MatchAnswerAckPayload) => void;
   setOpponentAnswered: (payload?: {
     matchId?: string;
@@ -173,6 +182,7 @@ interface RealtimeState {
   revertDraftBan: (actorId: string) => void;
   triggerDevPossessionAnimation: (payload: { result: 'goal' | 'saved' | 'miss'; attackerSeat: 1 | 2 }) => void;
   clearDevPossessionAnimation: () => void;
+  exitCompletedMatchToLobby: () => void;
   setError: (error: ErrorPayload) => void;
   clearError: () => void;
   reset: () => void;
@@ -255,6 +265,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
   setMatchStart: (payload) => {
     logger.info('Realtime store set match start', { matchId: payload.matchId, opponentId: payload.opponent.id });
     set({
+      lobby: null,
       draft: null,
       warmup: null,
       matchPaused: false,
@@ -266,8 +277,10 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
       match: {
         matchId: payload.matchId,
         mode: payload.mode,
+        variant: payload.variant,
         mySeat: payload.mySeat ?? null,
         opponent: payload.opponent,
+        participants: payload.participants,
         countdownEndsAt: Date.now() + DEFAULT_COUNTDOWN_MS,
         currentQuestion: null,
         pendingQuestion: null,
@@ -283,6 +296,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
         currentQuestionPhase: 'reveal',
         opponentAnsweredCorrectly: null,
         possessionState: null,
+        partyState: null,
         stateVersion: 0,
         optimisticChanceCard: null,
       },
@@ -352,6 +366,43 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
           opponentAnsweredCorrectly: shouldClearQuestion ? null : state.match.opponentAnsweredCorrectly,
           currentQuestionPhase: shouldClearQuestion ? 'reveal' : state.match.currentQuestionPhase,
           optimisticChanceCard: shouldClearQuestion ? null : state.match.optimisticChanceCard,
+        },
+      };
+    });
+  },
+  setPartyState: (payload) => {
+    logger.info('Realtime store set party state', {
+      matchId: payload.matchId,
+      currentQuestionIndex: payload.currentQuestionIndex,
+      leaderUserId: payload.leaderUserId,
+      stateVersion: payload.stateVersion,
+    });
+    set((state) => {
+      if (!state.match || state.match.matchId !== payload.matchId) return state;
+      if (payload.stateVersion <= state.match.stateVersion) {
+        logger.warn('Ignoring stale match:party_state event', {
+          incoming: payload.stateVersion,
+          current: state.match.stateVersion,
+        });
+        return state;
+      }
+
+      const selfUserId = state.selfUserId;
+      const myPlayer = selfUserId
+        ? payload.players.find((player) => player.userId === selfUserId)
+        : undefined;
+      const firstOpponent = selfUserId
+        ? payload.players.find((player) => player.userId !== selfUserId)
+        : payload.players[0];
+
+      return {
+        ...state,
+        match: {
+          ...state.match,
+          partyState: payload,
+          stateVersion: payload.stateVersion,
+          myTotalPoints: myPlayer?.totalPoints ?? state.match.myTotalPoints,
+          oppTotalPoints: firstOpponent?.totalPoints ?? state.match.oppTotalPoints,
         },
       };
     });
@@ -773,7 +824,9 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
       rejoinMatch: {
         matchId: payload.matchId,
         mode: payload.mode,
+        variant: payload.variant,
         opponent: payload.opponent,
+        participants: payload.participants,
         graceMs: payload.graceMs,
         createdAt: Date.now(),
       },
@@ -937,6 +990,20 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
   },
   clearDevPossessionAnimation: () => {
     set({ devPossessionAnimation: null });
+  },
+  exitCompletedMatchToLobby: () => {
+    logger.info('Realtime store exit completed match to lobby');
+    set((state) => ({
+      ...state,
+      draft: null,
+      match: null,
+      warmup: null,
+      matchPaused: false,
+      pauseUntil: null,
+      rejoinMatch: null,
+      devPossessionAnimation: null,
+      error: null,
+    }));
   },
   setError: (error) => {
     const snapshot = (error.meta as { stateSnapshot?: SessionStatePayload } | undefined)?.stateSnapshot;

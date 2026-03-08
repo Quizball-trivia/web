@@ -10,6 +10,7 @@ import { logger } from '@/utils/logger';
 interface ProfileScreenProps {
   player: PlayerStats;
   avatarUrl?: string | null;
+  country?: string | null;
   favoriteClub?: string | null;
   preferredLanguage?: string | null;
   countryRank?: number | string | null;
@@ -44,6 +45,7 @@ export function ProfileScreen(props: ProfileScreenProps) {
       <ProfileWeb
         player={props.player}
         avatarUrl={props.avatarUrl}
+        country={props.country}
         favoriteClub={props.favoriteClub}
         preferredLanguage={props.preferredLanguage}
         countryRank={props.countryRank}

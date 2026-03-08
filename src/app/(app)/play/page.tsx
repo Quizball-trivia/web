@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+// import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ModeSelectionScreen } from "@/features/play/ModeSelectionScreen";
 import { usePlayer } from "@/contexts/PlayerContext";
@@ -17,8 +17,8 @@ import type { CategorySummary, GameQuestion } from "@/lib/domain";
 import type { ListQuestionsQuery } from "@/lib/repositories/questions.repo";
 import { QUESTION_COUNT } from "@/lib/constants/game";
 import { queryKeys } from "@/lib/queries/queryKeys";
-import { useTrainingCompletion } from "@/features/training/hooks/useTrainingCompletion";
-import { TrainingOfferModal } from "@/features/training/components/TrainingOfferModal";
+// import { useTrainingCompletion } from "@/features/training/hooks/useTrainingCompletion";
+// import { TrainingOfferModal } from "@/features/training/components/TrainingOfferModal";
 import { shuffleArray } from "@/lib/utils";
 
 export default function PlayPage() {
@@ -30,8 +30,9 @@ export default function PlayPage() {
   const { data: featuredData } = useFeaturedCategories();
   const { data: matchStatsSummary = null } = useMatchStatsSummary();
   const { data: rankedProfile, isLoading: rankedProfileLoading } = useRankedProfile();
-  const { isComplete: isTrainingComplete, markComplete: markTrainingComplete } = useTrainingCompletion();
-  const [showTrainingModal, setShowTrainingModal] = useState(false);
+  // Training gate is intentionally disabled for now.
+  // const { isComplete: isTrainingComplete, markComplete: markTrainingComplete } = useTrainingCompletion();
+  // const [showTrainingModal, setShowTrainingModal] = useState(false);
   const { data: categoriesData } = useCategoriesList({
     limit: 100,
     page: 1,
@@ -119,18 +120,18 @@ export default function PlayPage() {
     router.push("/game");
   };
 
-  const handlePlayTraining = () => {
-    setShowTrainingModal(false);
-    resetRealtime();
-    startSession({ mode: "training", matchType: "ranked" });
-    router.push("/game");
-  };
-
-  const handleSkipTraining = () => {
-    setShowTrainingModal(false);
-    markTrainingComplete();
-    void startMatch({ mode: "ranked", matchType: "ranked" });
-  };
+  // const handlePlayTraining = () => {
+  //   setShowTrainingModal(false);
+  //   resetRealtime();
+  //   startSession({ mode: "training", matchType: "ranked" });
+  //   router.push("/game");
+  // };
+  //
+  // const handleSkipTraining = () => {
+  //   setShowTrainingModal(false);
+  //   markTrainingComplete();
+  //   void startMatch({ mode: "ranked", matchType: "ranked" });
+  // };
 
   return (
     <>
@@ -146,25 +147,25 @@ export default function PlayPage() {
           }
           void startMatch({ mode: "quizball", matchType: "friendly" });
         }}
-        onRankedIntercept={() => {
-          if (!isTrainingComplete()) {
-            setShowTrainingModal(true);
-            return true;
-          }
-          return false;
-        }}
+        // onRankedIntercept={() => {
+        //   if (!isTrainingComplete()) {
+        //     setShowTrainingModal(true);
+        //     return true;
+        //   }
+        //   return false;
+        // }}
         ticketsRemaining={player.tickets || 0}
         matchStatsSummary={matchStatsSummary}
         rankedProfile={rankedProfile ?? null}
         rankedProfileLoading={rankedProfileLoading}
       />
 
-      {showTrainingModal && (
+      {/* {showTrainingModal && (
         <TrainingOfferModal
           onPlayTraining={handlePlayTraining}
           onSkip={handleSkipTraining}
         />
-      )}
+      )} */}
     </>
   );
 }
