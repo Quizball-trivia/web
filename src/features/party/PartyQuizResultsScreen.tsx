@@ -7,13 +7,15 @@ import { motion } from 'motion/react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { resolveAvatarUrl } from '@/lib/avatars';
-import type { MatchFinalResultsPayload, MatchParticipant, MatchStandingPayload } from '@/lib/realtime/socket.types';
+import type { AchievementUnlockPayload, MatchFinalResultsPayload, MatchParticipant, MatchStandingPayload } from '@/lib/realtime/socket.types';
 import { cn } from '@/lib/utils';
+import { AchievementUnlockStrip } from '@/features/game/components/AchievementUnlockStrip';
 
 interface PartyQuizResultsScreenProps {
   finalResults: MatchFinalResultsPayload;
   participants: MatchParticipant[];
   selfUserId: string;
+  unlockedAchievements?: AchievementUnlockPayload[];
   onPlayAgain: () => void;
   onMainMenu: () => void;
 }
@@ -39,6 +41,7 @@ export function PartyQuizResultsScreen({
   finalResults,
   participants,
   selfUserId,
+  unlockedAchievements = [],
   onPlayAgain,
   onMainMenu,
 }: PartyQuizResultsScreenProps) {
@@ -234,6 +237,11 @@ export function PartyQuizResultsScreen({
               ))}
             </div>
           </div>
+
+          <AchievementUnlockStrip
+            achievements={unlockedAchievements}
+            className="mt-6"
+          />
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <button

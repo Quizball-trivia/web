@@ -9,7 +9,8 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { COLLAPSED_MATCHES_COUNT, MAX_MATCHES_COUNT } from '@/lib/constants/matches';
-import type { FormattedMatchScore } from '@/utils/matchScore';
+import { formatMatchScore, type FormattedMatchScore } from '@/utils/matchScore';
+import type { RecentMatchSummary } from '@/lib/domain/recentMatch';
 
 function countryCodeToFlag(code: string): string {
   return code
@@ -37,9 +38,10 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
 import type { PlayerStats } from '@/types/game';
-import type { MatchStatsSummary } from '@/lib/domain';
+import type { MatchStatsSummary, HeadToHeadSummary, RankPosition } from '@/lib/domain';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import { useAvatarUrl } from './hooks/useAvatarUrl';
+import { useStoreWallet } from '@/lib/queries/store.queries';
 
 import { getTierVisual } from '@/utils/tierVisuals';
 
@@ -56,20 +58,35 @@ export interface ProfileRecentMatch {
   scoreFormatted: FormattedMatchScore;
 }
 
+export function toProfileRecentMatch(match: RecentMatchSummary): ProfileRecentMatch {
+  return {
+    id: match.matchId,
+    mode: match.mode === "ranked" ? "Ranked" : "Friendly",
+    competition: match.competition,
+    result: match.result === "win" ? "Win" : match.result === "loss" ? "Loss" : "Draw",
+    time: match.timeLabel,
+    rpDelta: match.rpDelta,
+    opponent: match.opponent.username,
+    scoreFormatted: formatMatchScore(match),
+  };
+}
+
 interface ProfileWebProps {
+  viewMode?: 'self' | 'other';
   player: PlayerStats;
   avatarUrl?: string | null;
   country?: string | null;
   favoriteClub?: string | null;
   preferredLanguage?: string | null;
-  countryRank?: number | string | null;
-  friendsRank?: number | string | null;
+  globalRank?: RankPosition | null;
+  countryRank?: RankPosition | null;
   matchStatsSummary?: MatchStatsSummary | null;
   rankedProfile?: RankedProfileResponse | null;
   rankedProfileLoading?: boolean;
   recentMatches?: ProfileRecentMatch[];
   recentMatchesLoading?: boolean;
   recentMatchesError?: string | null;
+  headToHead?: HeadToHeadSummary | null;
   onNameChange?: (newName: string) => Promise<void> | void;
   onAvatarChange?: (avatarUrl: string) => Promise<void> | void;
   onClubChange?: (club: string) => Promise<void> | void;
@@ -79,14 +96,18 @@ interface ProfileWebProps {
 }
 
 export function ProfileWeb({
+  viewMode = 'self',
   player, avatarUrl, country = null, favoriteClub, preferredLanguage,
-  countryRank = null, friendsRank = null,
+  globalRank = null, countryRank = null,
   matchStatsSummary = null,
   rankedProfile = null, rankedProfileLoading = false,
   recentMatches = [], recentMatchesLoading = false, recentMatchesError = null,
+  headToHead = null,
   onNameChange, onAvatarChange, onClubChange, onLanguageChange,
   onSignOut, isUpdating = false,
 }: ProfileWebProps) {
+  const isSelf = viewMode === 'self';
+  const { data: storeWallet } = useStoreWallet();
   const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
   const placementPlayed = rankedProfile?.placementPlayed ?? 0;
   const placementRequired = Math.max(1, rankedProfile?.placementRequired ?? 3);
@@ -124,6 +145,7 @@ export function ProfileWeb({
   const overallStats = matchStatsSummary?.overall;
   const rankedStats = matchStatsSummary?.ranked;
   const friendlyStats = matchStatsSummary?.friendly;
+  const displayedCoins = isSelf ? (storeWallet?.coins ?? 0) : player.coins;
   const winRate = Math.round(overallStats?.winRate ?? 0);
   const gamesPlayed = overallStats?.gamesPlayed ?? 0;
   const wins = overallStats?.wins ?? 0;
@@ -134,18 +156,9 @@ export function ProfileWeb({
   const lossPct = wldTotal > 0 ? (losses / wldTotal) * 100 : 0;
   const drawPct = wldTotal > 0 ? (draws / wldTotal) * 100 : 0;
 
-  const xpProgress = player.xpToNextLevel > 0
-    ? Math.min(100, (player.xp / player.xpToNextLevel) * 100)
-    : 0;
+  const displayedTickets = isSelf ? (storeWallet?.tickets ?? 0) : player.tickets;
 
-  const formatRank = (rankValue: number | string | null | undefined): string => {
-    if (rankValue === null || rankValue === undefined || rankValue === '') return '#--';
-    const normalizedRank = String(rankValue).trim();
-    if (normalizedRank.length === 0) return '#--';
-    return normalizedRank.startsWith('#') ? normalizedRank : `#${normalizedRank}`;
-  };
-  const countryRankDisplay = formatRank(countryRank);
-  const friendsRankDisplay = formatRank(friendsRank);
+
 
   const handleNameChange = async () => {
     try {
@@ -193,25 +206,41 @@ export function ProfileWeb({
 
         <div className="relative flex flex-col lg:flex-row items-center lg:items-start gap-6 lg:gap-8">
           {/* Avatar with tier-colored ring */}
-          <button
-            type="button"
-            onClick={() => setIsAvatarPickerOpen(true)}
-            className={`group relative size-28 lg:size-32 rounded-2xl border-4 bg-background shadow-lg flex items-center justify-center overflow-hidden shrink-0 active:scale-95 transition-transform ${
-              showRankTier ? `${tierVisual.glow} shadow-lg` : ''
-            }`}
-            style={{
-              borderColor: showRankTier ? undefined : 'rgba(28, 176, 246, 0.3)',
-            }}
-            aria-label="Change avatar"
-          >
-            <AvatarDisplay
-              customization={{ ...(player.avatarCustomization ?? { base: player.avatar }), base: avatarBase }}
-              size="xl"
-            />
-            <span className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-xs font-black uppercase opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl">
-              Edit
-            </span>
-          </button>
+          {isSelf ? (
+            <button
+              type="button"
+              onClick={() => setIsAvatarPickerOpen(true)}
+              className={`group relative size-28 lg:size-32 rounded-2xl border-4 bg-background shadow-lg flex items-center justify-center overflow-hidden shrink-0 active:scale-95 transition-transform ${
+                showRankTier ? `${tierVisual.glow} shadow-lg` : ''
+              }`}
+              style={{
+                borderColor: showRankTier ? undefined : 'rgba(28, 176, 246, 0.3)',
+              }}
+              aria-label="Change avatar"
+            >
+              <AvatarDisplay
+                customization={{ ...(player.avatarCustomization ?? { base: player.avatar }), base: avatarBase }}
+                size="xl"
+              />
+              <span className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-xs font-black uppercase opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl">
+                Edit
+              </span>
+            </button>
+          ) : (
+            <div
+              className={`relative size-28 lg:size-32 rounded-2xl border-4 bg-background shadow-lg flex items-center justify-center overflow-hidden shrink-0 ${
+                showRankTier ? `${tierVisual.glow} shadow-lg` : ''
+              }`}
+              style={{
+                borderColor: showRankTier ? undefined : 'rgba(28, 176, 246, 0.3)',
+              }}
+            >
+              <AvatarDisplay
+                customization={{ ...(player.avatarCustomization ?? { base: player.avatar }), base: avatarBase }}
+                size="xl"
+              />
+            </div>
+          )}
 
           {/* Info Column */}
           <div className="flex-1 min-w-0 text-center lg:text-left space-y-3">
@@ -237,23 +266,22 @@ export function ProfileWeb({
               ) : (
                 <>
                   <h1 className="text-3xl lg:text-4xl font-black text-foreground truncate max-w-[220px] lg:max-w-md">{player.username}</h1>
-                  <button
-                    onClick={() => setIsEditingName(true)}
-                    className="text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors"
-                    aria-label="Edit nickname"
-                    disabled={isUpdating}
-                  >
-                    <Pencil className="size-4" />
-                  </button>
+                  {isSelf && (
+                    <button
+                      onClick={() => setIsEditingName(true)}
+                      className="text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors"
+                      aria-label="Edit nickname"
+                      disabled={isUpdating}
+                    >
+                      <Pencil className="size-4" />
+                    </button>
+                  )}
                 </>
               )}
             </div>
 
-            {/* Level + Tier badge */}
+            {/* Tier badge */}
             <div className="flex items-center justify-center lg:justify-start gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1 text-xs font-black px-3 py-1.5 rounded-full bg-primary/15 border border-primary/25 text-primary uppercase tracking-wide">
-                Level {player.level}
-              </span>
               {showRankTier && (
                 <span className={`inline-flex items-center gap-1 text-xs font-black px-3 py-1.5 rounded-full bg-gradient-to-r ${tierVisual.gradient} bg-opacity-15 border border-white/10 text-white uppercase tracking-wide`}>
                   {tierVisual.emoji} {rankedProfile!.tier}
@@ -271,40 +299,24 @@ export function ProfileWeb({
               )}
             </div>
 
-            {/* XP Progress Bar */}
-            <div className="max-w-sm mx-auto lg:mx-0">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">XP Progress</span>
-                <span className="text-[10px] font-black text-primary">{player.xp} / {player.xpToNextLevel}</span>
+            {/* Economy: Coins & Tickets (self only) */}
+            {isSelf && (
+              <div className="flex items-center justify-center lg:justify-start gap-3">
+                <span className="inline-flex items-center gap-1.5 text-sm font-black text-yellow-400">
+                  <Coins className="size-4" />
+                  {displayedCoins.toLocaleString()}
+                </span>
+                {displayedTickets !== undefined && (
+                  <>
+                    <div className="w-px h-4 bg-border" />
+                    <span className="inline-flex items-center gap-1.5 text-sm font-black text-purple-400">
+                      <Ticket className="size-4" />
+                      {displayedTickets}
+                    </span>
+                  </>
+                )}
               </div>
-              <div className="relative h-3 bg-muted rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${xpProgress}%` }}
-                  transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
-                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-primary to-[#85E0FF]"
-                >
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/25 to-transparent h-1/2" />
-                </motion.div>
-              </div>
-            </div>
-
-            {/* Economy: Coins & Tickets */}
-            <div className="flex items-center justify-center lg:justify-start gap-3">
-              <span className="inline-flex items-center gap-1.5 text-sm font-black text-yellow-400">
-                <Coins className="size-4" />
-                {player.coins.toLocaleString()}
-              </span>
-              {player.tickets !== undefined && (
-                <>
-                  <div className="w-px h-4 bg-border" />
-                  <span className="inline-flex items-center gap-1.5 text-sm font-black text-purple-400">
-                    <Ticket className="size-4" />
-                    {player.tickets}
-                  </span>
-                </>
-              )}
-            </div>
+            )}
           </div>
 
           {/* RP Progress Card */}
@@ -386,8 +398,8 @@ export function ProfileWeb({
           transition={{ delay: 0.1 }}
           className="rounded-2xl bg-card border-b-4 border-orange-500/30 p-4 text-center"
         >
-          <div className="text-3xl lg:text-4xl font-black text-orange-400">{player.bestStreak}</div>
-          <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">Best Streak</div>
+          <div className="text-3xl lg:text-4xl font-black text-orange-400">{rankedProfile?.currentWinStreak ?? 0}</div>
+          <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">Win Streak</div>
         </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -441,21 +453,14 @@ export function ProfileWeb({
                           <Globe className="size-4 text-blue-400" />
                           <span className="text-sm font-bold">World Rank</span>
                         </div>
-                        <span className="text-sm font-black text-blue-400">#{player.rank}</span>
+                        <span className="text-sm font-black text-blue-400">{globalRank ? `#${globalRank.rank}` : '#--'}</span>
                       </div>
                       <div className="flex justify-between items-center px-4 py-3 bg-background/60 rounded-xl border-b-2 border-border/50">
                         <div className="flex items-center gap-2.5">
                           <MapPin className="size-4 text-red-400" />
                           <span className="text-sm font-bold">Country</span>
                         </div>
-                        <span className="text-sm font-black text-red-400">{countryRankDisplay}</span>
-                      </div>
-                      <div className="flex justify-between items-center px-4 py-3 bg-background/60 rounded-xl border-b-2 border-border/50">
-                        <div className="flex items-center gap-2.5">
-                          <Users className="size-4 text-green-400" />
-                          <span className="text-sm font-bold">Friends</span>
-                        </div>
-                        <span className="text-sm font-black text-green-400">{friendsRankDisplay}</span>
+                        <span className="text-sm font-black text-red-400">{countryRank ? `#${countryRank.rank}` : '#--'}</span>
                       </div>
                     </div>
                   </>
@@ -532,135 +537,135 @@ export function ProfileWeb({
               )}
             </motion.div>
 
-            {/* Badges */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.16 }}
-              className="rounded-2xl bg-card border-b-4 border-border p-5"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
-                  <Medal className="size-4 text-yellow-500" />
-                  Badges
+            {/* Preferences (self only) */}
+            {isSelf && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="rounded-2xl bg-card border-b-4 border-border p-5"
+              >
+                <h3 className="text-sm font-black uppercase tracking-widest flex items-center gap-2 mb-4">
+                  <Settings2 className="size-4 text-muted-foreground" />
+                  Preferences
                 </h3>
-                <button className="text-xs font-bold text-primary hover:text-primary/80 transition-colors uppercase tracking-wide">
-                  View All →
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {player.badges.slice(0, 5).map(badge => (
-                  <span
-                    key={badge.id}
-                    className="text-xs font-black px-3 py-1.5 rounded-full bg-background/80 border border-border/80 text-foreground/80"
-                  >
-                    {badge.name}
-                  </span>
-                ))}
-                {player.badges.length > 5 && (
-                  <span className="text-xs font-black px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary">
-                    +{player.badges.length - 5}
-                  </span>
-                )}
-                {player.badges.length === 0 && (
-                  <span className="text-xs font-bold text-muted-foreground">No badges earned yet.</span>
-                )}
-              </div>
-            </motion.div>
-
-            {/* Preferences */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="rounded-2xl bg-card border-b-4 border-border p-5"
-            >
-              <h3 className="text-sm font-black uppercase tracking-widest flex items-center gap-2 mb-4">
-                <Settings2 className="size-4 text-muted-foreground" />
-                Preferences
-              </h3>
-              <div className="space-y-3">
-                {/* Country */}
-                {country && (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-black text-muted-foreground uppercase tracking-wide">Country</span>
-                      <span className="text-sm font-bold text-foreground">{countryCodeToFlag(country)} {countryCodeToName(country)}</span>
-                    </div>
-                    <div className="h-px bg-border/50" />
-                  </>
-                )}
-                {/* Club */}
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-muted-foreground uppercase tracking-wide">Club</span>
-                  <div className="flex items-center gap-2">
-                    {isEditingClub ? (
-                      <div className="w-48">
-                        <ClubSelect
-                          value={favoriteClub ?? ''}
-                          onChange={async (val) => {
-                            try {
-                              await onClubChange?.(val);
-                              setIsEditingClub(false);
-                            } catch {
-                              toast.error('Failed to update club');
-                            }
-                          }}
-                        />
+                <div className="space-y-3">
+                  {/* Country */}
+                  {country && (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-muted-foreground uppercase tracking-wide">Country</span>
+                        <span className="text-sm font-bold text-foreground">{countryCodeToFlag(country)} {countryCodeToName(country)}</span>
                       </div>
-                    ) : (
-                      <>
-                        <span className="text-sm font-bold text-foreground">
-                          {favoriteClub || 'Not set'}
-                        </span>
-                        <button
-                          onClick={() => setIsEditingClub(true)}
-                          className="text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors"
-                          aria-label="Edit favorite club"
-                          disabled={isUpdating}
-                        >
-                          <Pencil className="size-3" />
-                        </button>
-                      </>
-                    )}
+                      <div className="h-px bg-border/50" />
+                    </>
+                  )}
+                  {/* Club */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-muted-foreground uppercase tracking-wide">Club</span>
+                    <div className="flex items-center gap-2">
+                      {isEditingClub ? (
+                        <div className="w-48">
+                          <ClubSelect
+                            value={favoriteClub ?? ''}
+                            onChange={async (val) => {
+                              try {
+                                await onClubChange?.(val);
+                                setIsEditingClub(false);
+                              } catch {
+                                toast.error('Failed to update club');
+                              }
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <>
+                          <span className="text-sm font-bold text-foreground">
+                            {favoriteClub || 'Not set'}
+                          </span>
+                          <button
+                            onClick={() => setIsEditingClub(true)}
+                            className="text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors"
+                            aria-label="Edit favorite club"
+                            disabled={isUpdating}
+                          >
+                            <Pencil className="size-3" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-border/50" />
+
+                  {/* Language */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-muted-foreground uppercase tracking-wide">Language</span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => onLanguageChange?.('en')}
+                        disabled={isUpdating}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wide transition-all border-b-2 active:translate-y-[1px] active:border-b-0 ${
+                          preferredLanguage === 'en'
+                            ? 'bg-primary/15 text-primary border-primary/30'
+                            : 'text-muted-foreground hover:text-foreground border-transparent hover:border-border'
+                        }`}
+                      >
+                        🇬🇧 EN
+                      </button>
+                      <button
+                        onClick={() => onLanguageChange?.('ka')}
+                        disabled={isUpdating}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wide transition-all border-b-2 active:translate-y-[1px] active:border-b-0 ${
+                          preferredLanguage === 'ka'
+                            ? 'bg-primary/15 text-primary border-primary/30'
+                            : 'text-muted-foreground hover:text-foreground border-transparent hover:border-border'
+                        }`}
+                      >
+                        🇬🇪 GE
+                      </button>
+                    </div>
                   </div>
                 </div>
+              </motion.div>
+            )}
 
-                <div className="h-px bg-border/50" />
-
-                {/* Language */}
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-muted-foreground uppercase tracking-wide">Language</span>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => onLanguageChange?.('en')}
-                      disabled={isUpdating}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wide transition-all border-b-2 active:translate-y-[1px] active:border-b-0 ${
-                        preferredLanguage === 'en'
-                          ? 'bg-primary/15 text-primary border-primary/30'
-                          : 'text-muted-foreground hover:text-foreground border-transparent hover:border-border'
-                      }`}
-                    >
-                      🇬🇧 EN
-                    </button>
-                    <button
-                      onClick={() => onLanguageChange?.('ka')}
-                      disabled={isUpdating}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wide transition-all border-b-2 active:translate-y-[1px] active:border-b-0 ${
-                        preferredLanguage === 'ka'
-                          ? 'bg-primary/15 text-primary border-primary/30'
-                          : 'text-muted-foreground hover:text-foreground border-transparent hover:border-border'
-                      }`}
-                    >
-                      🇬🇪 GE
-                    </button>
+            {/* Head-to-Head card (other user only) */}
+            {!isSelf && headToHead && headToHead.total > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="rounded-2xl bg-card border-b-4 border-border p-5"
+              >
+                <h3 className="text-sm font-black uppercase tracking-widest flex items-center gap-2 mb-4">
+                  <Zap className="size-4 text-yellow-500" />
+                  Head to Head
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-bold text-green-400">Your Wins</span>
+                    <span className="text-xl font-black text-green-400">{headToHead.winsA}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-bold text-red-400">Their Wins</span>
+                    <span className="text-xl font-black text-red-400">{headToHead.winsB}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-bold text-muted-foreground">Draws</span>
+                    <span className="text-xl font-black text-muted-foreground">{headToHead.draws}</span>
+                  </div>
+                  <div className="h-px bg-border/50" />
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-black text-muted-foreground uppercase">Total Matches</span>
+                    <span className="text-sm font-black text-foreground">{headToHead.total}</span>
                   </div>
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            )}
 
-            {/* Sign Out */}
-            {onSignOut && (
+            {/* Sign Out (self only) */}
+            {isSelf && onSignOut && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.24 }}>
                 <button
                   onClick={onSignOut}
@@ -883,14 +888,16 @@ export function ProfileWeb({
         </div>
       </div>
 
-      <AvatarPicker
-        open={isAvatarPickerOpen}
-        onOpenChange={setIsAvatarPickerOpen}
-        currentAvatarUrl={resolvedAvatarUrl}
-        googleAvatarUrl={googleAvatarUrl}
-        onSelect={handleAvatarSelect}
-        isSaving={isSavingAvatar}
-      />
+      {isSelf && (
+        <AvatarPicker
+          open={isAvatarPickerOpen}
+          onOpenChange={setIsAvatarPickerOpen}
+          currentAvatarUrl={resolvedAvatarUrl}
+          googleAvatarUrl={googleAvatarUrl}
+          onSelect={handleAvatarSelect}
+          isSaving={isSavingAvatar}
+        />
+      )}
     </div>
   );
 }

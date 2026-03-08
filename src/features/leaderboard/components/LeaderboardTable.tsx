@@ -7,6 +7,7 @@ import { TrendingUp, TrendingDown, Minus, Trophy } from "lucide-react";
 interface LeaderboardTableProps {
   entries: LeaderboardEntry[];
   currentUserId?: string;
+  onEntryClick?: (userId: string) => void;
 }
 
 const TIER_COLORS: Record<string, string> = {
@@ -23,7 +24,7 @@ const TIER_COLORS: Record<string, string> = {
   Academy: "bg-stone-200/20 text-stone-400 border-stone-200/40",
 };
 
-export function LeaderboardTable({ entries, currentUserId }: LeaderboardTableProps) {
+export function LeaderboardTable({ entries, currentUserId, onEntryClick }: LeaderboardTableProps) {
   return (
     <div className="w-full overflow-hidden rounded-2xl border-2 border-border border-b-4 bg-card">
       {/* Header */}
@@ -44,9 +45,14 @@ export function LeaderboardTable({ entries, currentUserId }: LeaderboardTablePro
           return (
             <div
               key={entry.id}
+              onClick={() => onEntryClick?.(entry.id)}
+              role={onEntryClick ? "button" : undefined}
+              tabIndex={onEntryClick ? 0 : undefined}
+              onKeyDown={onEntryClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onEntryClick(entry.id); } } : undefined}
               className={cn(
                 "grid grid-cols-12 gap-1 sm:gap-4 items-center px-2 sm:px-4 py-2.5 sm:py-3 transition-colors hover:bg-muted/30",
-                isCurrentUser && "bg-primary/5 hover:bg-primary/10 border-l-4 border-l-primary"
+                isCurrentUser && "bg-primary/5 hover:bg-primary/10 border-l-4 border-l-primary",
+                onEntryClick && "cursor-pointer"
               )}
             >
               {/* Rank */}
@@ -74,12 +80,14 @@ export function LeaderboardTable({ entries, currentUserId }: LeaderboardTablePro
                     <AvatarDisplay
                       customization={{ base: entry.avatar || 'avatar-1' }}
                       size="xs"
+                      countryCode={entry.country}
                     />
                   </div>
                   <div className="hidden sm:block">
                     <AvatarDisplay
                       customization={{ base: entry.avatar || 'avatar-1' }}
                       size="sm"
+                      countryCode={entry.country}
                     />
                   </div>
                   {entry.rank <= 3 && (

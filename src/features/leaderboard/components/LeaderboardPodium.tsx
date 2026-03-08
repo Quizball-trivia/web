@@ -4,6 +4,7 @@ import { Crown } from "lucide-react";
 
 interface LeaderboardPodiumProps {
   topThree: LeaderboardEntry[];
+  onEntryClick?: (userId: string) => void;
 }
 
 const podiumConfig = {
@@ -45,7 +46,7 @@ const podiumConfig = {
   },
 };
 
-export function LeaderboardPodium({ topThree }: LeaderboardPodiumProps) {
+export function LeaderboardPodium({ topThree, onEntryClick }: LeaderboardPodiumProps) {
   const [first, second, third] = [
     topThree.find(p => p.rank === 1),
     topThree.find(p => p.rank === 2),
@@ -68,7 +69,14 @@ export function LeaderboardPodium({ topThree }: LeaderboardPodiumProps) {
           if (!entry) return <div key={rank} className={`flex-1 ${config.order}`} />;
 
           return (
-            <div key={entry.id} className={`flex flex-col items-center flex-1 min-w-0 ${config.z} ${config.order}`}>
+            <div
+              key={entry.id}
+              onClick={() => onEntryClick?.(entry.id)}
+              role={onEntryClick ? "button" : undefined}
+              tabIndex={onEntryClick ? 0 : undefined}
+              onKeyDown={onEntryClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onEntryClick(entry.id); } } : undefined}
+              className={`flex flex-col items-center flex-1 min-w-0 ${config.z} ${config.order} ${onEntryClick ? 'cursor-pointer' : ''}`}
+            >
               {/* Avatar */}
               <div className="relative mb-1.5 sm:mb-3 shrink-0">
                 {rank === 1 && (
@@ -79,6 +87,7 @@ export function LeaderboardPodium({ topThree }: LeaderboardPodiumProps) {
                     customization={{ base: entry.avatar || `avatar-${rank}` }}
                     size={config.avatarDesktopSize}
                     className={`border-4 ${config.borderColor} ${config.bgGlow}`}
+                    countryCode={entry.country}
                   />
                 </div>
                 <div className="block sm:hidden">
@@ -86,6 +95,7 @@ export function LeaderboardPodium({ topThree }: LeaderboardPodiumProps) {
                     customization={{ base: entry.avatar || `avatar-${rank}` }}
                     size={config.avatarSize}
                     className={`border-[1.5px] ${config.borderColor} ${config.bgGlow}`}
+                    countryCode={entry.country}
                   />
                 </div>
                 <div className={`absolute -bottom-1.5 sm:-bottom-2.5 left-1/2 -translate-x-1/2 ${config.badgeBg} text-[8px] sm:text-xs font-black px-1 sm:px-2.5 py-0 rounded-full shadow border-2 border-background`}>

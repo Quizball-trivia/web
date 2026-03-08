@@ -81,9 +81,7 @@ export function ModeConfirmModal({
   }[mode];
 
   const isRanked = mode === 'ranked';
-  // TODO: Re-enable ticket check when ticket system is implemented
-  // const hasTickets = ticketsRemaining >= (config.entryCost || 0);
-  const hasTickets = true; // Temporarily always enabled until tickets are implemented
+  const hasTickets = ticketsRemaining >= (config.entryCost || 0);
 
   const Content = (
     <div className="space-y-5 font-fun">
@@ -168,10 +166,19 @@ export function ModeConfirmModal({
           Cancel
         </button>
         <button
-          onClick={onConfirm}
-          className="py-3.5 rounded-2xl bg-[#58CC02] border-b-4 border-[#46A302] text-base font-black text-white uppercase tracking-wide hover:bg-[#4CB801] active:translate-y-[2px] active:border-b-2 transition-all"
+          onClick={() => {
+            if (!hasTickets) return;
+            onConfirm();
+          }}
+          disabled={!hasTickets}
+          className={cn(
+            "py-3.5 rounded-2xl text-base font-black uppercase tracking-wide transition-all",
+            hasTickets
+              ? "bg-[#58CC02] border-b-4 border-[#46A302] text-white hover:bg-[#4CB801] active:translate-y-[2px] active:border-b-2"
+              : "bg-[#56707A] border-b-4 border-[#3C4F57] text-white/70 cursor-not-allowed"
+          )}
         >
-          Start Match
+          {hasTickets ? "Start Match" : "No Tickets"}
         </button>
       </div>
     </div>

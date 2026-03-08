@@ -10,6 +10,7 @@ export const STORAGE_KEYS = {
   WALKTHROUGH_COMPLETE: 'quizball_walkthrough_complete',
   PLAYER_STATE: 'quizball_player_state',
   USER_PREFERENCES: 'quizball_user_preferences',
+  STORE_WALLET: 'quizball_store_wallet',
 
   // Game state
   DAILY_CHALLENGE_STATE: 'quizball_daily_challenge',
@@ -33,7 +34,6 @@ const MIGRATIONS: Partial<Record<string, StorageKey>> = {
 let _migrated = false;
 function runMigrations() {
   if (_migrated) return;
-  _migrated = true;
   try {
     for (const [legacyKey, newKey] of Object.entries(MIGRATIONS)) {
       if (!newKey) continue;
@@ -43,8 +43,9 @@ function runMigrations() {
         localStorage.removeItem(legacyKey);
       }
     }
+    _migrated = true;
   } catch {
-    // Storage unavailable
+    // Storage unavailable — will retry next call
   }
 }
 

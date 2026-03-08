@@ -10,6 +10,8 @@ export interface LeaderboardEntryResponse {
   rp: number;
   tier: string;
   country: string | null;
+  trend: 'up' | 'down' | 'same';
+  trendValue: number;
 }
 
 export interface LeaderboardApiResponse {
@@ -20,10 +22,13 @@ export interface UserRankResponse {
   userId: string;
   username: string;
   avatarUrl: string | null;
+  country: string | null;
   rp: number;
   tier: string;
   rank: number;
   total: number;
+  trend: 'up' | 'down' | 'same';
+  trendValue: number;
 }
 
 async function authFetch<T>(path: string): Promise<T> {
@@ -49,7 +54,7 @@ export async function getLeaderboard(type: LeaderboardType = "global", limit = 5
   return { data: data.entries, error: null };
 }
 
-export async function getUserRank(userId: string, type: LeaderboardType = "global") {
+export async function getUserRank(type: LeaderboardType = "global") {
   const scope = scopeFromType(type);
   const data = await authFetch<UserRankResponse | null>(
     `/api/v1/ranked/leaderboard/me?scope=${scope}`

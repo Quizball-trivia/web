@@ -379,10 +379,12 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
     });
     set((state) => {
       if (!state.match || state.match.matchId !== payload.matchId) return state;
-      if (payload.stateVersion <= state.match.stateVersion) {
+      const incomingVersion = payload.stateVersion ?? 0;
+      const currentVersion = state.match.stateVersion;
+      if (currentVersion > 0 && incomingVersion > 0 && incomingVersion <= currentVersion) {
         logger.warn('Ignoring stale match:party_state event', {
-          incoming: payload.stateVersion,
-          current: state.match.stateVersion,
+          incoming: incomingVersion,
+          current: currentVersion,
         });
         return state;
       }
@@ -400,7 +402,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
         match: {
           ...state.match,
           partyState: payload,
-          stateVersion: payload.stateVersion,
+          stateVersion: incomingVersion > 0 ? incomingVersion : state.match.stateVersion,
           myTotalPoints: myPlayer?.totalPoints ?? state.match.myTotalPoints,
           oppTotalPoints: firstOpponent?.totalPoints ?? state.match.oppTotalPoints,
         },

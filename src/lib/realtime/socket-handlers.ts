@@ -104,7 +104,8 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     if (
       data.code === 'RANKED_QUEUE_BLOCKED' ||
       data.code === 'RANKED_QUEUE_UNAVAILABLE' ||
-      data.code === 'RANKED_QUEUE_BUSY'
+      data.code === 'RANKED_QUEUE_BUSY' ||
+      data.code === 'INSUFFICIENT_TICKETS'
     ) {
       store.setRankedQueueLeft();
     }
@@ -139,6 +140,12 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       toast.error(data.message);
       if (queryClient) {
         void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
+      }
+    }
+    if (data.code === 'INSUFFICIENT_TICKETS') {
+      toast.error(data.message);
+      if (queryClient) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
       }
     }
     store.setError(data);
@@ -288,6 +295,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       void queryClient.invalidateQueries({ queryKey: queryKeys.stats.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
     }
   });
 

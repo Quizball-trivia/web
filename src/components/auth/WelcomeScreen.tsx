@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FcGoogle } from 'react-icons/fc';
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Shield, Swords, Brain, Goal, Trophy, ChevronRight } from 'lucide-react';
 import { AppLogo } from '@/components/AppLogo';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
-import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { socialLogin } from '@/lib/auth/auth.service';
 
 const SUBHEADING_PHRASES = [
@@ -26,11 +26,10 @@ const SUBHEADING_PHRASES = [
 
 // Deterministic pseudo-random duels count based on days since launch
 function getDuelsCount(): number {
-  const LAUNCH_DATE = new Date('2026-03-01');
+  const LAUNCH_DATE = Date.UTC(2026, 2, 1); // March 1, 2026 UTC
   const BASE_COUNT = 1000;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const daysSinceLaunch = Math.max(0, Math.floor((today.getTime() - LAUNCH_DATE.getTime()) / (1000 * 60 * 60 * 24)));
+  const now = Date.now();
+  const daysSinceLaunch = Math.max(0, Math.floor((now - LAUNCH_DATE) / (1000 * 60 * 60 * 24)));
 
   let total = BASE_COUNT;
   for (let d = 0; d < daysSinceLaunch; d++) {
@@ -44,8 +43,8 @@ function getDuelsCount(): number {
 export function WelcomeScreen() {
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [loginOpen, setLoginOpen] = useState(false);
-  const shouldReduceMotion = useReducedMotion();
-  const duelsCount = useMemo(() => getDuelsCount(), []);
+  const [duelsCount, setDuelsCount] = useState(1000);
+  useEffect(() => setDuelsCount(getDuelsCount()), []);
 
   const cards = [
     { src: "/assets/screenshot-gameplay.png", label: "Live Match", alt: "QuizBall gameplay", width: 1200, height: 700 },

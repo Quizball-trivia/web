@@ -183,7 +183,7 @@ export function useTrainingMatch(isPaused: boolean) {
 
   // Watch for pending next question
   useEffect(() => {
-    if (state.phase === ("transitioning" as Phase) && pendingNextQuestionRef.current !== null) {
+    if (state.phase === "transitioning" && pendingNextQuestionRef.current !== null) {
       const nextIdx = pendingNextQuestionRef.current;
       pendingNextQuestionRef.current = null;
       startQuestion(nextIdx);
@@ -254,7 +254,7 @@ export function useTrainingMatch(isPaused: boolean) {
           ...prev,
           selectedAnswer: selectedIndex,
           answerStates: newAnswerStates,
-          phase: "reveal" as Phase,
+          phase: "reveal",
           possessionDiff: newDiff,
           playerPosition: newPosition,
           zone: newZone.zone,
@@ -320,7 +320,7 @@ export function useTrainingMatch(isPaused: boolean) {
         ...prev,
         selectedAnswer: -1,
         answerStates: newAnswerStates,
-        phase: "reveal" as Phase,
+        phase: "reveal",
         possessionDiff: newDiff,
         playerPosition: newPosition,
         zone: newZone.zone,
@@ -353,7 +353,7 @@ export function useTrainingMatch(isPaused: boolean) {
         const variant = prev.questionIndex % 5;
         return {
           ...prev,
-          phase: "shot" as Phase,
+          phase: "shot",
           shotMode: {
             result: "pending" as const,
             ballOriginX,
@@ -371,7 +371,7 @@ export function useTrainingMatch(isPaused: boolean) {
         const variant = prev.questionIndex % 5;
         return {
           ...prev,
-          phase: "shot" as Phase,
+          phase: "shot",
           shotMode: {
             result: "pending" as const,
             ballOriginX,
@@ -389,8 +389,8 @@ export function useTrainingMatch(isPaused: boolean) {
       if (nextIdx === QUESTIONS_PER_HALF && prev.half === 1) {
         return {
           ...prev,
-          stage: "halftime" as TrainingStage,
-          phase: "halftime" as Phase,
+          stage: "halftime",
+          phase: "halftime",
           showGoalCelebration: false,
           showPlayerSplash: false,
           showOpponentSplash: false,
@@ -401,8 +401,8 @@ export function useTrainingMatch(isPaused: boolean) {
       if (nextIdx >= TRAINING_QUESTIONS.length) {
         return {
           ...prev,
-          stage: "results" as TrainingStage,
-          phase: "fulltime" as Phase,
+          stage: "results",
+          phase: "fulltime",
           showGoalCelebration: false,
           showPlayerSplash: false,
           showOpponentSplash: false,
@@ -413,7 +413,7 @@ export function useTrainingMatch(isPaused: boolean) {
       pendingNextQuestionRef.current = nextIdx;
       return {
         ...prev,
-        phase: "transitioning" as Phase,
+        phase: "transitioning",
         showPlayerSplash: false,
         showOpponentSplash: false,
       };
@@ -429,7 +429,7 @@ export function useTrainingMatch(isPaused: boolean) {
         // GOAL
         return {
           ...prev,
-          phase: "goal" as Phase,
+          phase: "goal",
           playerGoals: isPlayerAttacker ? prev.playerGoals + 1 : prev.playerGoals,
           opponentGoals: isPlayerAttacker ? prev.opponentGoals : prev.opponentGoals + 1,
           showGoalCelebration: true,
@@ -447,7 +447,7 @@ export function useTrainingMatch(isPaused: boolean) {
         // SAVED
         return {
           ...prev,
-          phase: "saved" as Phase,
+          phase: "saved",
           shotMode: prev.shotMode ? { ...prev.shotMode, result: "saved" as const } : null,
           // Push back toward midfield after save
           possessionDiff: isPlayerAttacker ? Math.max(prev.possessionDiff - 30, 0) : Math.min(prev.possessionDiff + 30, 0),
@@ -460,7 +460,7 @@ export function useTrainingMatch(isPaused: boolean) {
       // MISS
       return {
         ...prev,
-        phase: "saved" as Phase,
+        phase: "saved",
         shotMode: prev.shotMode ? { ...prev.shotMode, result: "miss" as const } : null,
         possessionDiff: isPlayerAttacker ? Math.max(prev.possessionDiff - 30, 0) : Math.min(prev.possessionDiff + 30, 0),
         playerPosition: positionFromDiff(isPlayerAttacker ? Math.max(prev.possessionDiff - 30, 0) : Math.min(prev.possessionDiff + 30, 0)),
@@ -478,8 +478,8 @@ export function useTrainingMatch(isPaused: boolean) {
       if (nextIdx === QUESTIONS_PER_HALF && prev.half === 1) {
         return {
           ...prev,
-          stage: "halftime" as TrainingStage,
-          phase: "halftime" as Phase,
+          stage: "halftime",
+          phase: "halftime",
           showGoalCelebration: false,
           shotMode: null,
         };
@@ -488,8 +488,8 @@ export function useTrainingMatch(isPaused: boolean) {
       if (nextIdx >= TRAINING_QUESTIONS.length) {
         return {
           ...prev,
-          stage: "results" as TrainingStage,
-          phase: "fulltime" as Phase,
+          stage: "results",
+          phase: "fulltime",
           showGoalCelebration: false,
           shotMode: null,
         };
@@ -498,7 +498,7 @@ export function useTrainingMatch(isPaused: boolean) {
       pendingNextQuestionRef.current = nextIdx;
       return {
         ...prev,
-        phase: "transitioning" as Phase,
+        phase: "transitioning",
         showGoalCelebration: false,
         shotMode: null,
       };

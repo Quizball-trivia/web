@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Trophy, Globe, Flag, Loader2, Target, Zap } from 'lucide-react';
 import { useLeaderboard, useUserRank } from '@/lib/queries/leaderboard.queries';
@@ -15,7 +16,12 @@ interface LeaderboardScreenProps {
 }
 
 export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<LeaderboardType>('global');
+
+  const handleEntryClick = (userId: string) => {
+    router.push(`/profile/${userId}`);
+  };
 
   const { data: entries, isLoading, isError } = useLeaderboard(activeTab, currentPlayerId);
   const { data: userRank } = useUserRank(currentPlayerId ?? '', activeTab);
@@ -106,7 +112,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.5, delay: 0.15 }}
                     >
-                      <LeaderboardPodium topThree={topThree} />
+                      <LeaderboardPodium topThree={topThree} onEntryClick={handleEntryClick} />
                     </motion.div>
                   )}
 
@@ -121,7 +127,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
                       <h3 className="font-fun font-black text-lg uppercase tracking-wide">Rankings</h3>
                     </div>
 
-                    <LeaderboardTable entries={entries} currentUserId={currentPlayerId} />
+                    <LeaderboardTable entries={entries} currentUserId={currentPlayerId} onEntryClick={handleEntryClick} />
 
                   </motion.div>
                 </>

@@ -19,7 +19,7 @@ export function useUserRank(userId: string, type: LeaderboardType = 'global') {
   return useQuery({
     queryKey: queryKeys.leaderboard.user(userId, type),
     queryFn: async () => {
-      const { data, error } = await leaderboardRepo.getUserRank(userId, type);
+      const { data, error } = await leaderboardRepo.getUserRank(type);
       if (error) throw new Error('Failed to fetch user rank');
       return data ? toUserRank(data) : null;
     },

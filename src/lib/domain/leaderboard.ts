@@ -3,6 +3,7 @@ export interface LeaderboardEntry {
   rank: number;
   username: string;
   avatar?: string;
+  country?: string | null;
   tier: string;
   rankPoints: number;
   isCurrentUser: boolean;

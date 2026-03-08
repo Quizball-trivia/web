@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
@@ -32,6 +32,21 @@ export function TrainingBanningStage() {
   const tooltipFired = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const autoBanForActor = useCallback((actor: "player" | "opponent") => {
+    const available = banCategories.filter((category) => (
+      category.id !== playerBan && category.id !== botBan
+    ));
+    const pick = available[0];
+    if (!pick) return;
+
+    if (actor === "player") {
+      setPlayerBan((current) => current ?? pick.id);
+      return;
+    }
+
+    setBotBan((current) => current ?? pick.id);
+  }, [banCategories, botBan, playerBan]);
+
   useEffect(() => {
     if (!tooltipFired.current) {
       tooltipFired.current = true;
@@ -44,10 +59,25 @@ export function TrainingBanningStage() {
     if (tooltips.isPaused) return;
     if (playerBan && botBan) return; // both bans done, no need for timer
     const interval = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setTimeout(() => {
+            if (currentActor === "player" && !playerBan) {
+              autoBanForActor("player");
+              return;
+            }
+            if (currentActor === "opponent" && !botBan) {
+              autoBanForActor("opponent");
+            }
+          }, 0);
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
     return () => clearInterval(interval);
-  }, [tooltips.isPaused, playerBan, botBan]);
+  }, [tooltips.isPaused, playerBan, botBan, currentActor, autoBanForActor]);
 
   // Bot bans after player bans (switch turns) — waits for tooltip to be dismissed
   useEffect(() => {
@@ -56,13 +86,11 @@ export function TrainingBanningStage() {
     setCurrentActor("opponent");
     setTimeLeft(15);
     const timer = setTimeout(() => {
-      // Bot bans a random category that isn't already banned
-      const available = banCategories.filter((c) => c.id !== playerBan);
-      const pick = available[Math.floor(Math.random() * available.length)];
-      if (pick) setBotBan(pick.id);
+      // Bot bans the first remaining category unless the timeout already resolved it.
+      autoBanForActor("opponent");
     }, 2500);
     return () => clearTimeout(timer);
-  }, [playerBan, botBan, banCategories, tooltips.isPaused]);
+  }, [playerBan, botBan, autoBanForActor, tooltips.isPaused]);
 
   // After both bans, advance to playing
   useEffect(() => {
@@ -75,7 +103,7 @@ export function TrainingBanningStage() {
   }, [playerBan, botBan, match]);
 
   const handleBan = (categoryId: string) => {
-    if (playerBan || currentActor !== "player") return;
+    if (playerBan || botBan || currentActor !== "player") return;
     setPlayerBan(categoryId);
   };
 

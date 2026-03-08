@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { Trophy, Swords, Shield, Star } from 'lucide-react';
-import { isAvatarUrl } from '@/lib/avatars';
+import { AvatarDisplay } from '@/components/AvatarDisplay';
 
 interface ShowdownPlayerInfo {
   username: string;
@@ -34,11 +34,6 @@ interface ShowdownScreenProps {
   opponentInfo?: ShowdownPlayerInfo;
 }
 
-function getFlagEmoji(countryCode: string): string {
-  const code = countryCode.toUpperCase();
-  return String.fromCodePoint(...[...code].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
-}
-
 function PlayerCard({
   info,
   side,
@@ -54,7 +49,7 @@ function PlayerCard({
   accentGlow: string;
   label: string;
 }) {
-  const flagEmoji = info.countryCode ? getFlagEmoji(info.countryCode) : info.flag ?? null;
+  const countryCode = info.countryCode ?? (info.country?.length === 2 ? info.country : null);
 
   return (
     <motion.div
@@ -71,16 +66,13 @@ function PlayerCard({
           initial={{ scale: 0.5 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.5, type: 'spring', stiffness: 200 }}
-          className={cn(
-            "relative size-28 sm:size-32 md:size-36 rounded-full border-[5px] border-b-[7px] flex items-center justify-center overflow-hidden shadow-2xl",
-            accentBorder, "bg-[#131F24]"
-          )}
         >
-          {isAvatarUrl(info.avatar) ? (
-            <Image src={info.avatar} alt={info.username} width={144} height={144} unoptimized className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-6xl sm:text-7xl">{info.avatar || '🧑'}</span>
-          )}
+          <AvatarDisplay
+            customization={{ base: info.avatar || 'avatar-1' }}
+            size="xxl"
+            countryCode={countryCode}
+            className={cn("border-[5px] border-b-[7px] shadow-2xl bg-[#131F24]", accentBorder)}
+          />
         </motion.div>
 
         {/* Label badge */}
@@ -89,24 +81,12 @@ function PlayerCard({
           animate={{ scale: 1, y: 0 }}
           transition={{ delay: 0.7, type: 'spring', stiffness: 300 }}
           className={cn(
-            "absolute -bottom-3 left-1/2 -translate-x-1/2 text-[11px] font-black uppercase tracking-widest px-4 py-1 rounded-full border-b-[3px] shadow-lg text-white",
+            "absolute -bottom-3 left-1/2 -translate-x-1/2 text-[11px] font-black uppercase tracking-widest px-4 py-1 rounded-full border-b-[3px] shadow-lg text-white z-30",
             accentColor, accentBorder
           )}
         >
           {label}
         </motion.div>
-
-        {/* Country flag */}
-        {(info.countryCode || info.country) && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.8, type: 'spring', stiffness: 300 }}
-            className="absolute -top-1 -right-1 text-2xl drop-shadow-lg"
-          >
-            {flagEmoji ?? '🌍'}
-          </motion.div>
-        )}
       </div>
 
       {/* Info */}
@@ -116,16 +96,15 @@ function PlayerCard({
         transition={{ delay: 0.6 }}
         className="text-center space-y-2 mt-2"
       >
-        {/* Username + flag */}
+        {/* Username */}
         <div className="flex items-center justify-center gap-2">
-          {flagEmoji && <span className="text-2xl sm:text-3xl">{flagEmoji}</span>}
           <div className="text-xl sm:text-2xl md:text-3xl font-black font-fun text-white leading-none drop-shadow-lg">
             {info.username}
           </div>
         </div>
 
         {/* Country name */}
-        {info.country && (
+        {info.country && !countryCode && (
           <div className="text-[11px] font-bold text-[#56707A] uppercase tracking-wider">
             {info.country}
           </div>

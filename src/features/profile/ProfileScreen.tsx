@@ -1,7 +1,7 @@
 'use client';
 
 import type { PlayerStats } from '@/types/game';
-import type { MatchStatsSummary } from '@/lib/domain';
+import type { MatchStatsSummary, RankPosition } from '@/lib/domain';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import { ProfileWeb, type ProfileRecentMatch } from './ProfileWeb';
 import { useAuthStore } from '@/stores/auth.store';
@@ -13,8 +13,8 @@ interface ProfileScreenProps {
   country?: string | null;
   favoriteClub?: string | null;
   preferredLanguage?: string | null;
-  countryRank?: number | string | null;
-  friendsRank?: number | string | null;
+  globalRank?: RankPosition | null;
+  countryRank?: RankPosition | null;
   matchStatsSummary?: MatchStatsSummary | null;
   rankedProfile?: RankedProfileResponse | null;
   rankedProfileLoading?: boolean;
@@ -48,8 +48,8 @@ export function ProfileScreen(props: ProfileScreenProps) {
         country={props.country}
         favoriteClub={props.favoriteClub}
         preferredLanguage={props.preferredLanguage}
+        globalRank={props.globalRank}
         countryRank={props.countryRank}
-        friendsRank={props.friendsRank}
         matchStatsSummary={props.matchStatsSummary}
         rankedProfile={props.rankedProfile}
         rankedProfileLoading={props.rankedProfileLoading}

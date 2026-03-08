@@ -61,7 +61,7 @@ export const mockCurrentPlayer: PlayerStats = {
   xp: 450,
   xpToNextLevel: 1000,
   coins: 2500,
-  tickets: 10,
+  tickets: 0,
   lastTicketReset: new Date().toISOString(),
   profileBackground: 'bronze',
   ownedBackgrounds: ['bronze'],

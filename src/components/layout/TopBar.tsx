@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { PlayerStats } from '@/types/game';
 import type { Screen } from '@/types/screens';
+import { useStoreWallet } from '@/lib/queries/store.queries';
 
 interface TopBarProps {
   playerStats: PlayerStats;
@@ -19,6 +20,10 @@ interface TopBarProps {
 }
 
 export function TopBar({ playerStats, onNavigate, onNavigateToStore }: TopBarProps) {
+  const { data: storeWallet } = useStoreWallet();
+  const coins = storeWallet?.coins ?? 0;
+  const tickets = storeWallet?.tickets ?? 0;
+
   return (
     <div className="h-16 border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between px-6">
       {/* Left items - Breadcrumbs or Context Title could go here */}
@@ -41,13 +46,13 @@ export function TopBar({ playerStats, onNavigate, onNavigateToStore }: TopBarPro
             className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 hover:bg-yellow-500/20 transition-all active:scale-95"
           >
             <Coins className="size-4 text-yellow-500" />
-            <span className="text-sm font-bold text-yellow-500">{playerStats.coins.toLocaleString()}</span>
+            <span className="text-sm font-bold text-yellow-500">{coins.toLocaleString()}</span>
           </button>
 
           {/* Tickets */}
           <button className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all active:scale-95">
             <Ticket className="size-4 text-primary" />
-            <span className="text-sm font-bold text-primary">{playerStats.tickets ?? 10}</span>
+            <span className="text-sm font-bold text-primary">{tickets}</span>
           </button>
         </div>
 

@@ -88,7 +88,7 @@ const PLACEHOLDER_OBJECTIVES = [
 export function ModeSelectionScreen({
   onSelectMode,
   onRankedIntercept,
-  ticketsRemaining = 10,
+  ticketsRemaining = 0,
   matchStatsSummary = null,
   rankedProfile,
   rankedProfileLoading = false,

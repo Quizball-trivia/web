@@ -24,7 +24,12 @@ export function UserRankStrip({ userEntry }: UserRankStripProps) {
       </div>
 
       {/* Avatar */}
-      <AvatarDisplay customization={{ base: 'avatar-1' }} size="sm" className="hidden xs:block border-2 border-primary/20" />
+      <AvatarDisplay
+        customization={{ base: userEntry.avatar || 'avatar-1' }}
+        countryCode={userEntry.country}
+        size="sm"
+        className="hidden xs:block border-2 border-primary/20"
+      />
 
       {/* Info */}
       <div className="flex-1 min-w-0">

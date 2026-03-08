@@ -132,8 +132,8 @@ export function AppShell({ children }: AppShellProps) {
   const sessionWaitingLobbyId = sessionState?.waitingLobbyId ?? null;
   const lobbyDebugMismatch = localWaitingLobbyId !== sessionWaitingLobbyId;
   const sessionStateLabel = sessionState?.state ?? "NO_SESSION";
-  const navbarCoins = storeWallet?.coins ?? playerStats.coins;
-  const navbarTickets = storeWallet?.tickets ?? (playerStats.tickets ?? 0);
+  const navbarCoins = storeWallet?.coins ?? 0;
+  const navbarTickets = storeWallet?.tickets ?? 0;
 
   useEffect(() => {
     const socket = getSocket();

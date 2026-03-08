@@ -69,7 +69,7 @@ export function RankedCategoryBlockingScreen() {
   }, [opponentMember]);
   const h2h = useHeadToHead(selfUserId ?? undefined, opponent.id !== 'opponent' ? opponent.id : undefined);
   useEffect(() => {
-    if (!draft) return;
+    if (!draft || showShowdown) return;
     setTimeLeft(15);
     autoBanFired.current = false;
     const interval = setInterval(() => {
@@ -77,7 +77,7 @@ export function RankedCategoryBlockingScreen() {
     }, 1000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft?.turnUserId, draft?.halfOneCategoryId, draft?.categories]);
+  }, [draft?.turnUserId, draft?.halfOneCategoryId, draft?.categories, showShowdown]);
 
   // Auto-ban a random category when timer expires on player's turn
   useEffect(() => {

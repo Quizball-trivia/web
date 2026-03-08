@@ -101,6 +101,7 @@ export function GameStageRouter() {
   const socket = useRealtimeConnection({ enabled: isMultiplayer, selfUserId });
   const [socketConnected, setSocketConnected] = useState(() => socket.connected);
   const [socketId, setSocketId] = useState<string | null>(() => socket.id ?? null);
+  const [returningToLobby, setReturningToLobby] = useState(false);
 
   useEffect(() => {
     const handleConnect = () => {
@@ -190,6 +191,7 @@ export function GameStageRouter() {
       return;
     }
 
+    setReturningToLobby(true);
     exitCompletedMatchToLobby();
     reset();
     router.push(`/friend/room/${inviteCode}`);
@@ -205,10 +207,10 @@ export function GameStageRouter() {
   ]);
 
   useEffect(() => {
-    if (stage === "idle") {
+    if (stage === "idle" && !returningToLobby) {
       router.replace("/play");
     }
-  }, [stage, router]);
+  }, [returningToLobby, stage, router]);
 
   const matchmakingDebugInfo = useMemo(
     () => ({
@@ -355,12 +357,16 @@ export function GameStageRouter() {
 
     if (stage === "finalResults") {
       const final = realtimeMatch?.finalResults;
+      const unlockedAchievements = selfUserId
+        ? final?.unlockedAchievements?.[selfUserId] ?? []
+        : [];
       if (isPartyQuizMatch && final) {
         return (
           <PartyQuizResultsScreen
             finalResults={final}
             participants={realtimeMatch?.participants ?? []}
             selfUserId={selfUserId}
+            unlockedAchievements={unlockedAchievements}
             onPlayAgain={() => {
               if (!realtimeMatch?.matchId) {
                 logger.warn("Play Again clicked for friendly party quiz without an active match id");
@@ -414,6 +420,7 @@ export function GameStageRouter() {
           opponentRp={realtimeMatch?.opponent?.rp != null ? Number(realtimeMatch.opponent.rp) : undefined}
           rankedOutcome={final?.rankedOutcome ?? null}
           preMatchRankedProfile={rankedProfile ?? null}
+          unlockedAchievements={unlockedAchievements}
           onPlayAgain={() => {
             if (matchType === "ranked") {
               resetRealtime();
@@ -465,6 +472,7 @@ export function GameStageRouter() {
           level: player.level,
           tier: playerRankPoints != null ? tierFromRp(playerRankPoints) : undefined,
           country: authUser?.country ?? undefined,
+          countryCode: authUser?.country ?? undefined,
           favoriteClub: authUser?.favorite_club ?? undefined,
         }}
         opponentInfo={oppInfo ? {

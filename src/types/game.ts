@@ -9,6 +9,7 @@ export interface Achievement {
   unlocked: boolean;
   progress?: number;
   target?: number;
+  unlockedAt?: string | null;
 }
 
 export interface Badge {

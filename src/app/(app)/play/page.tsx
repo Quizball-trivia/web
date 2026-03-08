@@ -12,6 +12,7 @@ import { useCategoriesList } from "@/lib/queries/categories.queries";
 import { useFeaturedCategories } from "@/lib/queries/featuredCategories.queries";
 import { useMatchStatsSummary } from "@/lib/queries/stats.queries";
 import { useRankedProfile } from "@/lib/queries/ranked.queries";
+import { useStoreWallet } from "@/lib/queries/store.queries";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import type { CategorySummary, GameQuestion } from "@/lib/domain";
 import type { ListQuestionsQuery } from "@/lib/repositories/questions.repo";
@@ -30,6 +31,7 @@ export default function PlayPage() {
   const { data: featuredData } = useFeaturedCategories();
   const { data: matchStatsSummary = null } = useMatchStatsSummary();
   const { data: rankedProfile, isLoading: rankedProfileLoading } = useRankedProfile();
+  const { data: storeWallet } = useStoreWallet();
   // Training gate is intentionally disabled for now.
   // const { isComplete: isTrainingComplete, markComplete: markTrainingComplete } = useTrainingCompletion();
   // const [showTrainingModal, setShowTrainingModal] = useState(false);
@@ -154,7 +156,7 @@ export default function PlayPage() {
         //   }
         //   return false;
         // }}
-        ticketsRemaining={player.tickets || 0}
+        ticketsRemaining={storeWallet?.tickets ?? 0}
         matchStatsSummary={matchStatsSummary}
         rankedProfile={rankedProfile ?? null}
         rankedProfileLoading={rankedProfileLoading}
