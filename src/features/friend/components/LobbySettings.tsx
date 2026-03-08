@@ -26,14 +26,14 @@ export function LobbySettings({
   settingsErrorVersion = 0,
 }: LobbySettingsProps) {
   const settings = lobby?.settings;
-  const mode = settings?.gameMode ?? 'friendly_possession';
+  const serverMode = settings?.gameMode ?? 'friendly_possession';
   const memberCount = lobby?.members.length ?? 0;
   const isPartyLocked = memberCount > 2;
-  const isFriendlyMode = mode === 'friendly_possession' || mode === 'friendly_party_quiz';
   const serverIsPublic = lobby?.isPublic ?? false;
   const serverIsRandom = settings?.friendlyRandom ?? true;
 
   // --- Optimistic local state for instant toggle feedback ---
+  const [optimisticMode, setOptimisticMode] = useState<LobbyGameMode | null>(null);
   const [optimisticPublic, setOptimisticPublic] = useState<boolean | null>(null);
   const [optimisticRandom, setOptimisticRandom] = useState<boolean | null>(null);
 
@@ -45,6 +45,19 @@ export function LobbySettings({
   const inFlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // --- Sync optimistic state when server confirms ---
+  useEffect(() => {
+    if (optimisticMode === null) return;
+    const hasPendingMode =
+      pendingChangesRef.current.gameMode !== undefined ||
+      inFlightChangesRef.current?.gameMode !== undefined;
+    if (hasPendingMode) {
+      return;
+    }
+
+    const timer = setTimeout(() => setOptimisticMode(null), 0);
+    return () => clearTimeout(timer);
+  }, [optimisticMode, serverMode]);
+
   useEffect(() => {
     if (optimisticPublic === null) return;
     const hasPendingPublic =
@@ -71,6 +84,8 @@ export function LobbySettings({
     return () => clearTimeout(timer);
   }, [optimisticRandom, serverIsRandom]);
 
+  const mode = optimisticMode ?? serverMode;
+  const isFriendlyMode = mode === 'friendly_possession' || mode === 'friendly_party_quiz';
   const isPublic = optimisticPublic ?? serverIsPublic;
   const isRandom = optimisticRandom ?? serverIsRandom;
 
@@ -178,7 +193,7 @@ export function LobbySettings({
 
     const applied =
       (inFlight.isPublic === undefined || inFlight.isPublic === serverIsPublic) &&
-      (inFlight.gameMode === undefined || inFlight.gameMode === mode) &&
+      (inFlight.gameMode === undefined || inFlight.gameMode === serverMode) &&
       (inFlight.friendlyRandom === undefined || inFlight.friendlyRandom === serverIsRandom) &&
       (inFlight.friendlyCategoryAId === undefined ||
         inFlight.friendlyCategoryAId === (settings?.friendlyCategoryAId ?? null));
@@ -198,7 +213,7 @@ export function LobbySettings({
     clearInFlightTimeout,
     flushPendingChanges,
     lobby,
-    mode,
+    serverMode,
     serverIsPublic,
     serverIsRandom,
     settings?.friendlyCategoryAId,
@@ -217,6 +232,7 @@ export function LobbySettings({
     lastSentCategoryIdRef.current = null;
 
     const resetTimer = setTimeout(() => {
+      setOptimisticMode(null);
       setOptimisticPublic(null);
       setOptimisticRandom(null);
       setSelectedCategoryId(serverSelectedCategoryId);
@@ -258,6 +274,7 @@ export function LobbySettings({
     lastSentCategoryIdRef.current = null;
 
     const rollbackTimer = setTimeout(() => {
+      setOptimisticMode(null);
       setOptimisticPublic(null);
       setOptimisticRandom(null);
       if (!serverIsRandom && isFriendlyMode) {
@@ -279,7 +296,19 @@ export function LobbySettings({
   // --- Handlers ---
   const handleModeChange = (newMode: LobbyGameMode) => {
     if (!canEdit) return;
-    onUpdateSettings({ gameMode: newMode });
+    const targetMode =
+      pendingChangesRef.current.gameMode ??
+      inFlightChangesRef.current?.gameMode ??
+      serverMode;
+    setOptimisticMode(newMode);
+    if (newMode !== targetMode) {
+      queueChange({ gameMode: newMode });
+    } else {
+      clearPendingKeys(["gameMode"]);
+      if (newMode === serverMode) {
+        setOptimisticMode(null);
+      }
+    }
   };
 
   const toggleCategory = (catId: string) => {
