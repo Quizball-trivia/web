@@ -26,7 +26,10 @@ export function LobbySettings({
   settingsErrorVersion = 0,
 }: LobbySettingsProps) {
   const settings = lobby?.settings;
-  const mode = settings?.gameMode ?? 'friendly';
+  const mode = settings?.gameMode ?? 'friendly_possession';
+  const memberCount = lobby?.members.length ?? 0;
+  const isPartyLocked = memberCount > 2;
+  const isFriendlyMode = mode === 'friendly_possession' || mode === 'friendly_party_quiz';
   const serverIsPublic = lobby?.isPublic ?? false;
   const serverIsRandom = settings?.friendlyRandom ?? true;
 
@@ -224,7 +227,7 @@ export function LobbySettings({
 
   // Sync server category → local (only when server confirms random is off)
   useEffect(() => {
-    if (serverIsRandom || mode !== "friendly") {
+    if (serverIsRandom || !isFriendlyMode) {
       // Don't clear selectedCategoryId — it's hidden behind {!isRandom && ...}
       // and preserving it prevents a 1-frame gray flash when toggling random back off.
       lastSentCategoryIdRef.current = null;
@@ -241,7 +244,7 @@ export function LobbySettings({
     }, 0);
     lastSentCategoryIdRef.current = serverSelectedCategoryId;
     return () => clearTimeout(syncTimer);
-  }, [hasCategoryTransitionInProgress, mode, serverIsRandom, serverSelectedCategoryId]);
+  }, [hasCategoryTransitionInProgress, isFriendlyMode, serverIsRandom, serverSelectedCategoryId]);
 
   useEffect(() => {
     if (!settingsErrorVersion) return;
@@ -257,13 +260,13 @@ export function LobbySettings({
     const rollbackTimer = setTimeout(() => {
       setOptimisticPublic(null);
       setOptimisticRandom(null);
-      if (!serverIsRandom && mode === "friendly") {
+      if (!serverIsRandom && isFriendlyMode) {
         setSelectedCategoryId(serverSelectedCategoryId);
       }
     }, 0);
 
     return () => clearTimeout(rollbackTimer);
-  }, [clearFlushTimer, clearInFlightTimeout, mode, serverIsRandom, serverSelectedCategoryId, settingsErrorVersion]);
+  }, [clearFlushTimer, clearInFlightTimeout, isFriendlyMode, serverIsRandom, serverSelectedCategoryId, settingsErrorVersion]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -380,36 +383,68 @@ export function LobbySettings({
         {/* Mode Selector */}
         <div className="space-y-3">
           <span className="text-[10px] font-black text-[#56707A] uppercase tracking-wider">Match Mode</span>
-          <div className="flex bg-[#131F24] rounded-xl border-b-[3px] border-[#0D1B21] p-1">
-            <button
-              onClick={() => handleModeChange('friendly')}
-              disabled={!canEdit}
-              className={cn(
-                "flex-1 py-2.5 rounded-lg text-sm font-black uppercase tracking-wide transition-all",
-                mode === 'friendly'
-                  ? "bg-[#1CB0F6] text-white border-b-[3px] border-[#1899D6]"
-                  : "text-[#56707A] hover:text-white"
-              )}
-            >
-              Friendly
-            </button>
-            <button
-              onClick={() => handleModeChange('ranked_sim')}
-              disabled={!canEdit}
-              className={cn(
-                "flex-1 py-2.5 rounded-lg text-sm font-black uppercase tracking-wide transition-all",
-                mode === 'ranked_sim'
-                  ? "bg-[#FF9600] text-white border-b-[3px] border-[#DB8200]"
-                  : "text-[#56707A] hover:text-white"
-              )}
-            >
-              Ranked Sim
-            </button>
-          </div>
+          {isPartyLocked ? (
+            <div className="rounded-xl border-b-[3px] border-[#0D1B21] bg-[#131F24] p-1.5">
+              <div className="flex items-center justify-between rounded-lg bg-[#CE82FF]/15 px-4 py-3 text-white border-b-[3px] border-[#B066E0]">
+                <div>
+                  <div className="text-sm font-black uppercase tracking-wide">Party Quiz</div>
+                  <div className="text-[10px] font-bold text-[#B9C7CD]">
+                    Multiplayer friendly lobbies automatically use standings mode.
+                  </div>
+                </div>
+                <span className="rounded-full bg-[#CE82FF] px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white">
+                  {memberCount}/6
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex bg-[#131F24] rounded-xl border-b-[3px] border-[#0D1B21] p-1">
+              <button
+                onClick={() => handleModeChange('friendly_possession')}
+                disabled={!canEdit}
+                className={cn(
+                  "flex-1 py-2.5 rounded-lg text-sm font-black uppercase tracking-wide transition-all",
+                  mode === 'friendly_possession'
+                    ? "bg-[#1CB0F6] text-white border-b-[3px] border-[#1899D6]"
+                    : "text-[#56707A] hover:text-white"
+                )}
+              >
+                Classic
+              </button>
+              <button
+                onClick={() => handleModeChange('friendly_party_quiz')}
+                disabled={!canEdit}
+                className={cn(
+                  "flex-1 py-2.5 rounded-lg text-sm font-black uppercase tracking-wide transition-all",
+                  mode === 'friendly_party_quiz'
+                    ? "bg-[#CE82FF] text-white border-b-[3px] border-[#B066E0]"
+                    : "text-[#56707A] hover:text-white"
+                )}
+              >
+                Party Quiz
+              </button>
+              <button
+                onClick={() => handleModeChange('ranked_sim')}
+                disabled={!canEdit}
+                className={cn(
+                  "flex-1 py-2.5 rounded-lg text-sm font-black uppercase tracking-wide transition-all",
+                  mode === 'ranked_sim'
+                    ? "bg-[#FF9600] text-white border-b-[3px] border-[#DB8200]"
+                    : "text-[#56707A] hover:text-white"
+                )}
+              >
+                Ranked Sim
+              </button>
+            </div>
+          )}
           <p className="text-xs font-bold text-[#56707A]">
-            {mode === 'friendly'
-              ? "Play for fun. Pick categories or go random. No RP at stake."
-              : "Simulate a Competitive match. Ban/Pick phase enabled."}
+            {isPartyLocked
+              ? "Party quiz keeps the same question pacing, but swaps the pitch for a live leaderboard."
+              : mode === 'friendly_possession'
+                ? "Play for fun. Pick categories or go random. No RP at stake."
+                : mode === 'friendly_party_quiz'
+                  ? "Use the shared-question party quiz flow in a 1v1 or bigger lobby. No RP at stake."
+                : "Simulate a Competitive match. Ban/Pick phase enabled."}
           </p>
         </div>
 
@@ -460,7 +495,7 @@ export function LobbySettings({
         </div>
 
         {/* Categories (Friendly Only) */}
-        {mode === 'friendly' && (
+        {isFriendlyMode && (
           <div className="space-y-3">
             <span className="text-[10px] font-black text-[#56707A] uppercase tracking-wider">Categories</span>
             <button
@@ -506,7 +541,9 @@ export function LobbySettings({
             {!isRandom && (
               <>
                 <p className="text-[10px] font-bold text-[#56707A]">
-                  Pick one category for the first half. The second half category is chosen at halftime.
+                  {mode === 'friendly_party_quiz'
+                    ? 'Pick the category pool for the party quiz. Questions stay shared across the full lobby.'
+                    : 'Pick one category for the first half. The second half category is chosen at halftime.'}
                 </p>
                 <div className="max-h-72 overflow-y-auto space-y-1.5 pr-1 scrollbar-thin scrollbar-thumb-[#243B44] scrollbar-track-transparent">
                   {categories.map(cat => {

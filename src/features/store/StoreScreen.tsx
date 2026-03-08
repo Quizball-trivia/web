@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { ApiError } from "@/lib/api/api";
 import { createStoreCheckout, purchaseStoreWithCoins } from "@/lib/repositories/store.repo";
 import { queryKeys } from "@/lib/queries/queryKeys";
-import { useStoreProducts } from "@/lib/queries/store.queries";
+import { useStoreProducts, useStoreWallet } from "@/lib/queries/store.queries";
 
 function formatUsd(priceCents: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -32,6 +32,7 @@ interface BoosterItem {
   borderBottomColor: string;
   glowColor: string;
   productSlug?: string;
+  disabled?: boolean;
 }
 
 interface AvatarItem {
@@ -107,10 +108,11 @@ function BoosterCard({ booster, onBuy }: { booster: BoosterItem; onBuy: (b: Boos
         <Button
           type="button"
           onClick={() => onBuy(booster)}
+          disabled={booster.disabled}
           className="w-full font-black text-sm rounded-xl border-b-4 active:border-b-0 active:mt-1 transition-all bg-[#FF9600] hover:bg-[#FF9600]/90 border-[#CC7800] text-white"
         >
           <Coins className="size-3.5 mr-1 fill-current" />
-          {booster.price}
+          {booster.disabled ? "Full" : booster.price}
         </Button>
       </div>
     </motion.div>
@@ -217,7 +219,9 @@ export function StoreScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: productsData } = useStoreProducts();
+  const { data: wallet } = useStoreWallet();
   const [buyModal, setBuyModal] = useState<BuyModalState | null>(null);
+  const ticketsFull = (wallet?.tickets ?? 0) >= 10;
 
   const productsBySlug = useMemo(() => {
     return new Map((productsData?.items ?? []).map((item) => [item.slug, item]));
@@ -240,6 +244,19 @@ export function StoreScreen() {
         toast.error("Session expired. Please sign in again.");
         return;
       }
+      if (error instanceof ApiError && error.status === 400) {
+        const errorCode =
+          typeof error.data === "object" &&
+          error.data !== null &&
+          "code" in error.data &&
+          typeof (error.data as { code?: unknown }).code === "string"
+            ? (error.data as { code: string }).code
+            : null;
+        if (errorCode === "TICKETS_FULL") {
+          toast.error("Tickets are already full.");
+          return;
+        }
+      }
       toast.error("Unable to start checkout.");
     },
   });
@@ -257,6 +274,17 @@ export function StoreScreen() {
         return;
       }
       if (error instanceof ApiError && error.status === 400) {
+        const errorCode =
+          typeof error.data === "object" &&
+          error.data !== null &&
+          "code" in error.data &&
+          typeof (error.data as { code?: unknown }).code === "string"
+            ? (error.data as { code: string }).code
+            : null;
+        if (errorCode === "TICKETS_FULL") {
+          toast.error("Tickets are already full.");
+          return;
+        }
         toast.error("Not enough coins.");
         return;
       }
@@ -311,7 +339,8 @@ export function StoreScreen() {
   }, [productsBySlug]);
 
   const boosters = useMemo<BoosterItem[]>(() => {
-    const ticketPrice = productsBySlug.get("ticket_pack_10")?.priceCents ?? 300;
+    const ticketProduct = productsBySlug.get("ticket_pack_3");
+    const ticketPrice = ticketProduct ? formatUsd(ticketProduct.priceCents) : "$1.99";
     const fiftyPrice = productsBySlug.get("chance_card_5050")?.priceCents ?? 200;
     return [
       {
@@ -354,18 +383,19 @@ export function StoreScreen() {
       {
         id: "tickets",
         title: "Extra Tickets",
-        description: "+5 daily match tickets",
-        price: `${ticketPrice}`,
-        productSlug: "ticket_pack_10",
+        description: "Top up ranked tickets up to the 10-ticket cap",
+        price: ticketPrice,
+        productSlug: "ticket_pack_3",
         icon: <Ticket className="size-7 fill-current" />,
         color: "text-[#58CC02]",
         bgColor: "bg-[#58CC02]/10",
         borderColor: "border-[#58CC02]/30",
         borderBottomColor: "border-b-[#58CC02]/50",
         glowColor: "bg-[#58CC02]",
+        disabled: ticketsFull,
       },
     ];
-  }, [productsBySlug]);
+  }, [productsBySlug, ticketsFull]);
 
   const avatars = useMemo<AvatarItem[]>(() => {
     const getPrice = (slug: string, fallback: number) => productsBySlug.get(slug)?.priceCents ?? fallback;
@@ -470,12 +500,22 @@ export function StoreScreen() {
                 >
                   <BoosterCard
                     booster={booster}
-                    onBuy={(b) => setBuyModal({
-                      name: b.title,
-                      price: `${b.price} coins`,
-                      productSlug: b.productSlug,
-                      mode: b.productSlug ? "coins" : "none",
-                    })}
+                    onBuy={(b) => {
+                      if (b.productSlug === "ticket_pack_10" && ticketsFull) {
+                        toast.message("Tickets are already full.");
+                        return;
+                      }
+                      if (b.productSlug === "ticket_pack_3" && ticketsFull) {
+                        toast.message("Tickets are already full.");
+                        return;
+                      }
+                      setBuyModal({
+                        name: b.title,
+                        price: b.price,
+                        productSlug: b.productSlug,
+                        mode: b.productSlug === "ticket_pack_3" ? "stripe" : (b.productSlug ? "coins" : "none"),
+                      });
+                    }}
                   />
                 </motion.div>
               ))}

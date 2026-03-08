@@ -4,25 +4,25 @@ import type { LeaderboardType } from '@/lib/domain/leaderboard';
 import { toLeaderboardEntry, toUserRank } from '@/lib/mappers/leaderboard.mapper';
 import { queryKeys } from '@/lib/queries/queryKeys';
 
-export function useLeaderboard(type: LeaderboardType) {
+export function useLeaderboard(type: LeaderboardType, currentUserId?: string) {
   return useQuery({
     queryKey: queryKeys.leaderboard.list(type),
     queryFn: async () => {
       const { data, error } = await leaderboardRepo.getLeaderboard(type);
       if (error) throw new Error('Failed to fetch leaderboard');
-      return data.map((entry) => toLeaderboardEntry(entry));
+      return data.map((entry) => toLeaderboardEntry(entry, currentUserId));
     },
   });
 }
 
-export function useUserRank(userId: string) {
-    return useQuery({
-        queryKey: queryKeys.leaderboard.user(userId),
-        queryFn: async () => {
-            const { data, error } = await leaderboardRepo.getUserRank(userId);
-            if (error) throw new Error('Failed to fetch user rank');
-            return data ? toUserRank(data) : data;
-        },
-        enabled: !!userId,
-    });
+export function useUserRank(userId: string, type: LeaderboardType = 'global') {
+  return useQuery({
+    queryKey: queryKeys.leaderboard.user(userId, type),
+    queryFn: async () => {
+      const { data, error } = await leaderboardRepo.getUserRank(type);
+      if (error) throw new Error('Failed to fetch user rank');
+      return data ? toUserRank(data) : null;
+    },
+    enabled: !!userId,
+  });
 }

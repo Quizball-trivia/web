@@ -9,7 +9,8 @@ import { cn } from '@/lib/utils';
 import { useHeadToHead } from '@/lib/queries/stats.queries';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import { StatCard, WinIllustration, DrawIllustration, LossIllustration } from './components/ResultsShared';
-import type { RankedMatchOutcomePayload } from '@/lib/realtime/socket.types';
+import type { AchievementUnlockPayload, RankedMatchOutcomePayload } from '@/lib/realtime/socket.types';
+import { AchievementUnlockStrip } from './components/AchievementUnlockStrip';
 
 import { getTierVisual } from '@/utils/tierVisuals';
 import { getRankedTierProgress, tierFromRp } from '@/utils/rankedTier';
@@ -104,12 +105,13 @@ interface RealtimeResultsScreenProps {
   totalQuestions: number;
   selfUserId: string;
   finalWinnerId?: string | null;
-  winnerDecisionMethod?: 'goals' | 'penalty_goals' | 'total_points_fallback' | 'forfeit' | null;
+  winnerDecisionMethod?: 'goals' | 'penalty_goals' | 'total_points' | 'total_points_fallback' | 'forfeit' | null;
   preMatchRp?: number;
   opponentId: string;
   opponentRp?: number;
   rankedOutcome?: RankedMatchOutcomePayload | null;
   preMatchRankedProfile?: RankedProfileResponse | null;
+  unlockedAchievements?: AchievementUnlockPayload[];
   onPlayAgain: () => void;
   onMainMenu: () => void;
 }
@@ -132,6 +134,7 @@ export function RealtimeResultsScreen({
   opponentRp,
   rankedOutcome,
   preMatchRankedProfile,
+  unlockedAchievements = [],
   onPlayAgain,
   onMainMenu,
 }: RealtimeResultsScreenProps) {
@@ -538,6 +541,8 @@ export function RealtimeResultsScreen({
           <StatCard label="Correct" value={`${playerCorrect}/${totalQuestions}`} color="text-yellow-400" />
           <StatCard label="Coins" value={`+${coinsEarned}`} color="text-emerald-400" />
         </div>
+
+        <AchievementUnlockStrip achievements={unlockedAchievements} />
 
         {/* Action buttons */}
         <div className="flex flex-col gap-2 pt-2">

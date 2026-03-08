@@ -1,4 +1,4 @@
-export type WinnerDecisionMethod = "goals" | "penalty_goals" | "total_points_fallback" | "forfeit";
+export type WinnerDecisionMethod = "goals" | "penalty_goals" | "total_points" | "total_points_fallback" | "forfeit";
 
 export interface RecentMatchSummary {
   matchId: string;

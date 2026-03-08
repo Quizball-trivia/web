@@ -155,6 +155,7 @@ const CITY_DATA: { lon: number; lat: number; city: string; country: string; flag
   { lon: 133.88, lat: -23.7, city: "Alice Springs", country: "Australia", flag: "🇦🇺", name: "Liam" },
   { lon: 36.82, lat: -1.29, city: "Nairobi", country: "Kenya", flag: "🇰🇪", name: "Kofi" },
   { lon: 7.49, lat: 9.06, city: "Abuja", country: "Nigeria", flag: "🇳🇬", name: "Chidi" },
+  { lon: 44.79, lat: 41.72, city: "Tbilisi", country: "Georgia", flag: "🇬🇪", name: "Giorgi" },
 ];
 
 const COUNTRY_LOCATION_FALLBACKS: Record<string, OpponentLocationCandidate> = {
@@ -180,6 +181,7 @@ const COUNTRY_LOCATION_FALLBACKS: Record<string, OpponentLocationCandidate> = {
   netherlands: { lon: 5.12, lat: 52.09, city: "Utrecht", country: "Netherlands", flag: "🇳🇱" },
   russia: { lon: 37.62, lat: 55.75, city: "Moscow", country: "Russia", flag: "🇷🇺" },
   canada: { lon: -113.49, lat: 53.55, city: "Edmonton", country: "Canada", flag: "🇨🇦" },
+  georgia: { lon: 44.79, lat: 41.72, city: "Tbilisi", country: "Georgia", flag: "🇬🇪" },
 };
 
 const COUNTRY_CODE_TO_KEY: Record<string, string> = {
@@ -206,6 +208,7 @@ const COUNTRY_CODE_TO_KEY: Record<string, string> = {
   NL: "netherlands",
   RU: "russia",
   CA: "canada",
+  GE: "georgia",
 };
 
 const COUNTRY_ALIASES: Record<string, string[]> = {
@@ -231,6 +234,7 @@ const COUNTRY_ALIASES: Record<string, string[]> = {
   netherlands: ["netherlands", "dutch", "holland", "🇳🇱"],
   russia: ["russia", "russian", "🇷🇺"],
   canada: ["canada", "canadian", "🇨🇦"],
+  georgia: ["georgia", "georgian", "sakartvelo", "🇬🇪"],
 };
 
 const CITY_ALIASES: Record<string, string[]> = {
@@ -256,6 +260,7 @@ const CITY_ALIASES: Record<string, string[]> = {
   netherlands: ["utrecht", "amsterdam", "rotterdam"],
   russia: ["moscow", "saint petersburg"],
   canada: ["edmonton", "toronto", "vancouver", "montreal"],
+  georgia: ["tbilisi", "batumi", "kutaisi"],
 };
 
 const CITY_LOCATION_OVERRIDES: Record<string, OpponentLocationCandidate> = {
@@ -277,6 +282,9 @@ const CITY_LOCATION_OVERRIDES: Record<string, OpponentLocationCandidate> = {
   nairobi: { lon: 36.82, lat: -1.29, city: "Nairobi", country: "Kenya", flag: "🇰🇪" },
   abuja: { lon: 7.49, lat: 9.06, city: "Abuja", country: "Nigeria", flag: "🇳🇬" },
   moscow: { lon: 37.62, lat: 55.75, city: "Moscow", country: "Russia", flag: "🇷🇺" },
+  tbilisi: { lon: 44.79, lat: 41.72, city: "Tbilisi", country: "Georgia", flag: "🇬🇪" },
+  batumi: { lon: 41.64, lat: 41.65, city: "Batumi", country: "Georgia", flag: "🇬🇪" },
+  kutaisi: { lon: 42.70, lat: 42.27, city: "Kutaisi", country: "Georgia", flag: "🇬🇪" },
 };
 
 function getGeoObject(

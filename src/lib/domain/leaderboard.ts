@@ -3,7 +3,8 @@ export interface LeaderboardEntry {
   rank: number;
   username: string;
   avatar?: string;
-  level: number;
+  country?: string | null;
+  tier: string;
   rankPoints: number;
   isCurrentUser: boolean;
   trend: 'up' | 'down' | 'same';
@@ -15,4 +16,4 @@ export interface UserRank extends Omit<LeaderboardEntry, 'isCurrentUser'> {
   isCurrentUser: true;
 }
 
-export type LeaderboardType = 'global' | 'country' | 'friends';
+export type LeaderboardType = 'global' | 'country';

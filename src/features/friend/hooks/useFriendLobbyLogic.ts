@@ -63,11 +63,12 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   const lobbyCode = lobby?.inviteCode ?? (roomCode === "new" ? "" : roomCode);
   const members = lobby?.members ?? [];
   const me = members.find((member) => member.userId === selfUserId);
-  const opponent = members.find((member) => member.userId !== selfUserId);
+  const otherMembers = members.filter((member) => member.userId !== selfUserId);
+  const opponent = otherMembers[0];
 
   const { data: h2hSummary } = useHeadToHead(
     me?.userId ?? selfUserId,
-    opponent?.userId
+    otherMembers.length === 1 ? opponent?.userId : undefined
   );
 
   // 1. Reset local guards after leaving a lobby/match
@@ -291,6 +292,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
 
   return {
     lobby,
+    members,
     lobbyCode,
     me,
     opponent,

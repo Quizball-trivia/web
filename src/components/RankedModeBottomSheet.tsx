@@ -105,7 +105,7 @@ export function RankedModeBottomSheet({
             </div>
             <div className="mt-2 pt-2 border-t border-amber-500/20">
               <p className="text-xs text-muted-foreground">
-                💡 Tickets reset daily. Play strategically to maximize your climbs!
+                Tickets refill 1 per hour up to 10. Ranked costs 1 ticket.
               </p>
             </div>
           </div>
@@ -132,7 +132,7 @@ export function RankedModeBottomSheet({
 
           {ticketsRemaining <= 0 && (
             <p className="text-xs text-center text-muted-foreground mt-2">
-              Come back tomorrow for fresh tickets!
+              Tickets refill automatically while you are below 10.
             </p>
           )}
         </div>

@@ -10,6 +10,7 @@ import { QUESTION_COUNT } from '@/lib/constants/game';
 import { ModeConfirmModal } from '@/features/play/components/ModeConfirmModal';
 import { FriendPlayModal } from '@/features/friend/components/FriendPlayModal';
 import { useMatchStatsSummary } from '@/lib/queries/stats.queries';
+import { useStoreWallet } from '@/lib/queries/store.queries';
 
 interface HomeDashboardProps {
   playerStats: PlayerStats;
@@ -23,6 +24,7 @@ export function HomeDashboard({
   const router = useRouter();
   const startSession = useGameSessionStore((state) => state.startSession);
   const { data: matchStatsSummary = null } = useMatchStatsSummary();
+  const { data: storeWallet } = useStoreWallet();
   
   const [showRankedModal, setShowRankedModal] = useState(false);
   const [showFriendModal, setShowFriendModal] = useState(false);
@@ -87,7 +89,7 @@ export function HomeDashboard({
           setShowRankedModal(false);
           handleStartRanked();
         }}
-        ticketsRemaining={playerStats.tickets ?? 10}
+        ticketsRemaining={storeWallet?.tickets ?? 0}
       />
 
       {/* Friend Play Modal */}

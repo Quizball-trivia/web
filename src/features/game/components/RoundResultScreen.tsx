@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Trophy, Clock, Check, Loader2, Award, TrendingUp } from 'lucide-react';
+import { Trophy, Clock, Check, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { GameMode } from '@/types/game';
 import { InlineAvatar as AvatarDisplay } from '@/components/InlineAvatar';
@@ -24,8 +24,6 @@ interface RoundResultScreenProps {
   opponentRoundsWon: number;
   isRanked: boolean;
   onReady: () => void;
-  opponentLeft?: boolean;
-  rankPointsGained?: number;
 }
 
 const getModeDisplayName = (mode: GameMode): string => {
@@ -91,8 +89,6 @@ export function RoundResultScreen({
   opponentRoundsWon,
   isRanked,
   onReady,
-  opponentLeft = false,
-  rankPointsGained,
 }: RoundResultScreenProps) {
   const [isPlayerReady, setIsPlayerReady] = useState(false);
   const [isOpponentReady, setIsOpponentReady] = useState(false);
@@ -103,10 +99,6 @@ export function RoundResultScreen({
   const isAutoStarting = (isPlayerReady || isOpponentReady) && !(isPlayerReady && isOpponentReady);
 
   useEffect(() => {
-    if (opponentLeft) {
-      return;
-    }
-
     let innerTimer: ReturnType<typeof setTimeout> | undefined;
 
     // Simulate opponent ready state (in real app, this would come from backend)
@@ -123,13 +115,9 @@ export function RoundResultScreen({
         clearTimeout(innerTimer);
       }
     };
-  }, [opponentLeft]);
+  }, []);
 
   useEffect(() => {
-    if (opponentLeft) {
-      return;
-    }
-
     if (isPlayerReady && isOpponentReady) {
       // Both ready, proceed immediately
       const timer = setTimeout(() => {
@@ -137,10 +125,10 @@ export function RoundResultScreen({
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [isPlayerReady, isOpponentReady, onReady, opponentLeft]);
+  }, [isPlayerReady, isOpponentReady, onReady]);
 
   useEffect(() => {
-    if (opponentLeft || (isPlayerReady && isOpponentReady)) {
+    if (isPlayerReady && isOpponentReady) {
       return;
     }
 
@@ -157,71 +145,18 @@ export function RoundResultScreen({
 
       return () => clearInterval(interval);
     }
-  }, [isAutoStarting, opponentLeft, isPlayerReady, isOpponentReady]);
+  }, [isAutoStarting, isPlayerReady, isOpponentReady]);
 
   // Separate effect to trigger onReady when countdown reaches 0
   useEffect(() => {
-    if (countdown === 0 && isAutoStarting && !opponentLeft) {
+    if (countdown === 0 && isAutoStarting) {
       onReady();
     }
-  }, [countdown, isAutoStarting, opponentLeft, onReady]);
+  }, [countdown, isAutoStarting, onReady]);
 
   const handlePlayerReady = () => {
     setIsPlayerReady(true);
   };
-
-  if (opponentLeft) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="max-w-md w-full"
-        >
-          <Card className="border-2 border-yellow-500/20 bg-gradient-to-br from-yellow-500/5 to-orange-500/5">
-            <CardContent className="pt-6 pb-6 text-center">
-              <div className="mb-6">
-                <Trophy className="size-20 text-yellow-500 mx-auto mb-4" />
-                <h2 className="mb-2">Victory!</h2>
-                <p className="text-muted-foreground">
-                  Your opponent left the match
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div className="bg-secondary rounded-lg p-4">
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <AvatarDisplay avatar={playerAvatar} alt={playerUsername} size="lg" />
-                    <h3>{playerUsername}</h3>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Rounds Won: {playerRoundsWon} - {opponentRoundsWon}
-                  </div>
-                </div>
-
-                {isRanked && rankPointsGained !== undefined && (
-                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
-                    <div className="flex items-center justify-center gap-2 text-primary mb-2">
-                      <Award className="size-5" />
-                      <span>Rank Points</span>
-                    </div>
-                    <div className="text-2xl flex items-center justify-center gap-2">
-                      <TrendingUp className="size-6 text-green-500" />
-                      <span className="text-green-500">+{rankPointsGained}</span>
-                    </div>
-                  </div>
-                )}
-
-                <Button onClick={onReady} size="lg" className="w-full">
-                  Continue
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">

@@ -9,12 +9,13 @@ import { updateMe } from "@/lib/api/endpoints";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth.store";
 import { useMatchStatsSummary, useRecentMatches } from "@/lib/queries/stats.queries";
-import { useRankedProfile } from "@/lib/queries/ranked.queries";
+import { useRankedProfile, useUserRanks } from "@/lib/queries/ranked.queries";
 import { queryKeys } from "@/lib/queries/queryKeys";
 import { useLocale } from "@/contexts/LocaleContext";
 import { LOCALES, type Locale } from "@/data/locales";
-import { formatMatchScore } from "@/utils/matchScore";
+import { toProfileRecentMatch } from "@/features/profile/ProfileWeb";
 import { useEffect } from "react";
+import { useMyAchievements } from "@/lib/queries/users.queries";
 
 export default function ProfilePage() {
   const searchParams = useSearchParams();
@@ -30,6 +31,8 @@ export default function ProfilePage() {
   } = useRecentMatches(20);
   const { data: matchStatsSummary = null } = useMatchStatsSummary();
   const { data: rankedProfile, isLoading: rankedProfileLoading } = useRankedProfile();
+  const { data: userRanks } = useUserRanks();
+  const { data: achievements = [] } = useMyAchievements();
 
   const { setLocale } = useLocale();
   const [isUpdating, setIsUpdating] = useState(false);
@@ -133,28 +136,21 @@ export default function ProfilePage() {
 
   return (
     <ProfileScreen
-      player={player}
+      player={{
+        ...player,
+        achievements,
+        badges: [],
+      }}
       avatarUrl={authUser?.avatar_url ?? null}
+      country={authUser?.country ?? null}
       favoriteClub={authUser?.favorite_club ?? null}
       preferredLanguage={authUser?.preferred_language ?? null}
+      globalRank={userRanks?.globalRank ?? null}
+      countryRank={userRanks?.countryRank ?? null}
       matchStatsSummary={matchStatsSummary}
       rankedProfile={rankedProfile ?? null}
       rankedProfileLoading={rankedProfileLoading}
-      recentMatches={recentMatches.map((match) => ({
-        id: match.matchId,
-        mode: match.mode === "ranked" ? "Ranked" : "Friendly",
-        competition: match.competition,
-        result:
-          match.result === "win"
-            ? "Win"
-            : match.result === "loss"
-              ? "Loss"
-              : "Draw",
-        time: match.timeLabel,
-        rpDelta: match.rpDelta,
-        opponent: match.opponent.username,
-        scoreFormatted: formatMatchScore(match),
-      }))}
+      recentMatches={recentMatches.map(toProfileRecentMatch)}
       recentMatchesLoading={recentMatchesLoading}
       recentMatchesError={
         recentMatchesError instanceof Error && recentMatches.length === 0

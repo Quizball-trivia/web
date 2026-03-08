@@ -15,8 +15,6 @@ interface AnswerCardProps {
   isSelected?: boolean;
   opponentPicked?: boolean;
   opponentPickCorrect?: boolean;
-  /** @deprecated kept for backward compatibility; not used/rendered */
-  opponentAvatarUrl?: string;
   state?: 'default' | 'correct' | 'wrong' | 'disabled';
   fadeOut?: boolean;
   onClick?: () => void;
@@ -30,14 +28,11 @@ export function AnswerCard({
   isSelected,
   opponentPicked = false,
   opponentPickCorrect,
-  /** @deprecated kept for backward compatibility; not used/rendered */
-  opponentAvatarUrl: _opponentAvatarUrl,
   state = 'default',
   fadeOut = false,
   onClick,
   disabled,
 }: AnswerCardProps) {
-  void _opponentAvatarUrl;
   const color = ANSWER_COLORS[index % ANSWER_COLORS.length];
 
   const getButtonClasses = () => {

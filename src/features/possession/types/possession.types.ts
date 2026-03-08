@@ -18,7 +18,8 @@ export type Phase =
   | 'penalty-question'
   | 'penalty-playing'
   | 'penalty-reveal'
-  | 'penalty-result';
+  | 'penalty-result'
+  | 'transitioning';
 
 // ─── State shapes ───────────────────────────────────────────────
 export interface PossessionState {

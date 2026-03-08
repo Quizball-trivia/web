@@ -4,15 +4,19 @@ import type {
   UserRankResponse,
 } from "@/lib/repositories/leaderboard.repo";
 
-export function toLeaderboardEntry(entry: LeaderboardEntryResponse): LeaderboardEntry {
+export function toLeaderboardEntry(
+  entry: LeaderboardEntryResponse,
+  currentUserId?: string,
+): LeaderboardEntry {
   return {
-    id: entry.id,
+    id: entry.userId,
     rank: entry.rank,
     username: entry.username,
-    avatar: entry.avatar,
-    level: entry.level,
-    rankPoints: entry.rankPoints,
-    isCurrentUser: entry.isCurrentUser,
+    avatar: entry.avatarUrl || entry.userId,
+    country: entry.country,
+    tier: entry.tier,
+    rankPoints: entry.rp,
+    isCurrentUser: entry.userId === currentUserId,
     trend: entry.trend,
     trendValue: entry.trendValue,
   };
@@ -20,13 +24,15 @@ export function toLeaderboardEntry(entry: LeaderboardEntryResponse): Leaderboard
 
 export function toUserRank(entry: UserRankResponse): UserRank {
   return {
-    id: entry.id,
+    id: entry.userId,
     rank: entry.rank,
-    rankPoints: entry.rankPoints,
+    rankPoints: entry.rp,
     username: entry.username,
-    level: entry.level,
+    avatar: entry.avatarUrl || entry.userId,
+    country: entry.country,
+    tier: entry.tier,
     isCurrentUser: true,
-    trend: 'same',
-    trendValue: 0,
+    trend: entry.trend,
+    trendValue: entry.trendValue,
   };
 }

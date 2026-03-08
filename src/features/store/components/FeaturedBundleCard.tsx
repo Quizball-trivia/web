@@ -34,7 +34,7 @@ export function FeaturedBundleCard({ onBuy }: FeaturedBundleCardProps) {
               Unlock the Arena
             </h2>
             <p className="text-muted-foreground mt-2 max-w-sm">
-              Get <span className="text-foreground font-bold">10 Arena Tickets</span> + <span className="text-yellow-500 font-bold">5,000 Bonus Coins</span> to jumpstart your ranked career.
+              Get <span className="text-foreground font-bold">10 Arena Tickets</span> + <span className="text-yellow-500 font-bold">5,000 Bonus Coins</span> to jumpstart your ranked climb. Tickets refill hourly while you are below the cap.
             </p>
           </div>
 

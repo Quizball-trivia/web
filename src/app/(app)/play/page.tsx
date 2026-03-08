@@ -1,5 +1,6 @@
 "use client";
 
+// import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ModeSelectionScreen } from "@/features/play/ModeSelectionScreen";
 import { usePlayer } from "@/contexts/PlayerContext";
@@ -11,20 +12,15 @@ import { useCategoriesList } from "@/lib/queries/categories.queries";
 import { useFeaturedCategories } from "@/lib/queries/featuredCategories.queries";
 import { useMatchStatsSummary } from "@/lib/queries/stats.queries";
 import { useRankedProfile } from "@/lib/queries/ranked.queries";
+import { useStoreWallet } from "@/lib/queries/store.queries";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import type { CategorySummary, GameQuestion } from "@/lib/domain";
 import type { ListQuestionsQuery } from "@/lib/repositories/questions.repo";
 import { QUESTION_COUNT } from "@/lib/constants/game";
 import { queryKeys } from "@/lib/queries/queryKeys";
-
-function shuffleArray<T>(array: T[]): T[] {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
+// import { useTrainingCompletion } from "@/features/training/hooks/useTrainingCompletion";
+// import { TrainingOfferModal } from "@/features/training/components/TrainingOfferModal";
+import { shuffleArray } from "@/lib/utils";
 
 export default function PlayPage() {
   const router = useRouter();
@@ -35,6 +31,10 @@ export default function PlayPage() {
   const { data: featuredData } = useFeaturedCategories();
   const { data: matchStatsSummary = null } = useMatchStatsSummary();
   const { data: rankedProfile, isLoading: rankedProfileLoading } = useRankedProfile();
+  const { data: storeWallet } = useStoreWallet();
+  // Training gate is intentionally disabled for now.
+  // const { isComplete: isTrainingComplete, markComplete: markTrainingComplete } = useTrainingCompletion();
+  // const [showTrainingModal, setShowTrainingModal] = useState(false);
   const { data: categoriesData } = useCategoriesList({
     limit: 100,
     page: 1,
@@ -122,23 +122,52 @@ export default function PlayPage() {
     router.push("/game");
   };
 
+  // const handlePlayTraining = () => {
+  //   setShowTrainingModal(false);
+  //   resetRealtime();
+  //   startSession({ mode: "training", matchType: "ranked" });
+  //   router.push("/game");
+  // };
+  //
+  // const handleSkipTraining = () => {
+  //   setShowTrainingModal(false);
+  //   markTrainingComplete();
+  //   void startMatch({ mode: "ranked", matchType: "ranked" });
+  // };
+
   return (
-    <ModeSelectionScreen
-      onSelectMode={(mode) => {
-        if (mode === "solo") {
-          void startMatch({ mode: "solo" });
-          return;
-        }
-        if (mode === "ranked") {
-          void startMatch({ mode: "ranked", matchType: "ranked" });
-          return;
-        }
-        void startMatch({ mode: "quizball", matchType: "friendly" });
-      }}
-      ticketsRemaining={player.tickets || 0}
-      matchStatsSummary={matchStatsSummary}
-      rankedProfile={rankedProfile ?? null}
-      rankedProfileLoading={rankedProfileLoading}
-    />
+    <>
+      <ModeSelectionScreen
+        onSelectMode={(mode) => {
+          if (mode === "solo") {
+            void startMatch({ mode: "solo" });
+            return;
+          }
+          if (mode === "ranked") {
+            void startMatch({ mode: "ranked", matchType: "ranked" });
+            return;
+          }
+          void startMatch({ mode: "quizball", matchType: "friendly" });
+        }}
+        // onRankedIntercept={() => {
+        //   if (!isTrainingComplete()) {
+        //     setShowTrainingModal(true);
+        //     return true;
+        //   }
+        //   return false;
+        // }}
+        ticketsRemaining={storeWallet?.tickets ?? 0}
+        matchStatsSummary={matchStatsSummary}
+        rankedProfile={rankedProfile ?? null}
+        rankedProfileLoading={rankedProfileLoading}
+      />
+
+      {/* {showTrainingModal && (
+        <TrainingOfferModal
+          onPlayTraining={handlePlayTraining}
+          onSkip={handleSkipTraining}
+        />
+      )} */}
+    </>
   );
 }

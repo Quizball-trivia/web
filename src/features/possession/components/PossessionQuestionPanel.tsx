@@ -26,7 +26,6 @@ interface PossessionQuestionPanelProps {
   answerStates: AnswerStateArray;
   eliminatedIndices?: number[];
   opponentAnswer: number | null;
-  opponentAvatarUrl?: string;
   chanceCardCount?: number;
   chanceCardPending?: boolean;
   chanceCardPendingSync?: boolean;
@@ -55,7 +54,6 @@ export function PossessionQuestionPanel({
   answerStates,
   eliminatedIndices = [],
   opponentAnswer,
-  opponentAvatarUrl,
   chanceCardCount = 0,
   chanceCardPending = false,
   chanceCardPendingSync = false,
@@ -180,7 +178,6 @@ export function PossessionQuestionPanel({
               fadeOut={false}
               opponentPicked={!isPenaltyPhase && opponentAnswer === i}
               opponentPickCorrect={!isPenaltyPhase && opponentAnswer !== null ? opponentAnswer === question.correctIndex : undefined}
-              opponentAvatarUrl={opponentAvatarUrl}
               onClick={() => {
                 if (!showOptions || !isPlaying) return;
                 if (isEliminated) return;

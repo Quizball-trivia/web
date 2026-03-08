@@ -6,6 +6,7 @@ import type { User } from "@/lib/types";
 import { logger } from "@/utils/logger";
 import { identifyUser, resetUser } from "@/lib/posthog";
 import { setNewRelicUser } from "@/lib/newrelic-browser";
+import { storage, STORAGE_KEYS } from "@/utils/storage";
 
 type AuthStatus = "loading" | "anonymous" | "authenticated";
 
@@ -88,6 +89,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       }
       clearTokens();
+      storage.remove(STORAGE_KEYS.STORE_WALLET);
       set({ status: "anonymous", user: null, hasBootstrapped: true });
     }
   },
@@ -98,6 +100,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Best-effort; store state still resets.
     }
     clearTokens();
+    storage.remove(STORAGE_KEYS.STORE_WALLET);
     resetUser(); // Reset PostHog user
     set({ status: "anonymous", user: null, hasBootstrapped: true });
   },

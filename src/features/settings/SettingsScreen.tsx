@@ -85,7 +85,12 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const handleResetOnboarding = () => {
     storage.remove(STORAGE_KEYS.ONBOARDING_COMPLETE);
     storage.remove(STORAGE_KEYS.WALKTHROUGH_COMPLETE);
-    window.location.href = "/";
+    window.location.href = "/onboarding";
+  };
+
+  const handleResetTraining = () => {
+    storage.remove(STORAGE_KEYS.TRAINING_COMPLETE);
+    toast.success("Training match reset — you'll see the offer next time you click Ranked");
   };
 
   const toggleLanguage = () => {
@@ -179,14 +184,26 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                <ChevronLeft className="size-4 rotate-180 text-muted-foreground" />
             </div>
 
-             <div className="group flex items-center justify-between p-3 hover:bg-muted/30 transition-colors cursor-pointer" onClick={handleResetOnboarding}>
-               <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                     <RotateCcw className="size-4" />
-                  </div>
-                  <div className="font-medium text-sm">Reset Onboarding</div>
-               </div>
-            </div>
+             {process.env.NODE_ENV !== "production" && (
+               <>
+                 <div className="group flex items-center justify-between p-3 hover:bg-muted/30 transition-colors cursor-pointer" onClick={handleResetOnboarding}>
+                   <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                         <RotateCcw className="size-4" />
+                      </div>
+                      <div className="font-medium text-sm">Reset Onboarding <span className="text-xs text-muted-foreground">(dev)</span></div>
+                   </div>
+                 </div>
+                 <div className="group flex items-center justify-between p-3 hover:bg-muted/30 transition-colors cursor-pointer" onClick={handleResetTraining}>
+                   <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                         <RotateCcw className="size-4" />
+                      </div>
+                      <div className="font-medium text-sm">Reset Training Match <span className="text-xs text-muted-foreground">(dev)</span></div>
+                   </div>
+                 </div>
+               </>
+             )}
 
             <div className="p-3 border-t border-border/40">
                <Button

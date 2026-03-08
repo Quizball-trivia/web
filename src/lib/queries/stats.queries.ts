@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queries/queryKeys";
-import { getHeadToHead, getRecentMatches, getStatsSummary } from "@/lib/repositories/stats.repo";
+import { getHeadToHead, getRecentMatches, getStatsSummary, type RecentMatchesQuery } from "@/lib/repositories/stats.repo";
 import {
   toHeadToHeadSummary,
   toMatchStatsSummary,
@@ -18,11 +18,14 @@ export function useHeadToHead(userAId?: string, userBId?: string) {
   });
 }
 
-export function useRecentMatches(limit = 10) {
+export function useRecentMatches(limit = 10, userId?: string) {
   return useQuery({
-    queryKey: queryKeys.stats.recentMatches(limit),
+    queryKey: queryKeys.stats.recentMatches(limit, userId),
     queryFn: async () => {
-      const data = await getRecentMatches({ limit });
+      const query = userId
+        ? { limit, userId } as RecentMatchesQuery & { userId: string }
+        : { limit } as RecentMatchesQuery;
+      const data = await getRecentMatches(query);
       return toRecentMatchSummaries(data);
     },
     retry: 2,
