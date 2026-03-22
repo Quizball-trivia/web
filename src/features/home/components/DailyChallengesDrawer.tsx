@@ -17,19 +17,22 @@ import {
   DollarSign,
   Brain,
   Lightbulb,
-  Target,
   ListOrdered,
   type LucideIcon,
 } from 'lucide-react';
-import { ALL_CHALLENGES, type ChallengeConfig, type IconToken, type DailyChallengeId } from '../challenges';
+import { useDailyChallenges } from '@/lib/queries/dailyChallenges.queries';
+import {
+  toChallengeCard,
+  type ChallengeCard,
+  type IconToken,
+  type DailyChallengeId,
+} from '../challenges';
 
 // Map icon tokens to Lucide components
 const ICON_MAP: Record<IconToken, LucideIcon> = {
   dollarSign: DollarSign,
   brain: Brain,
-  sparkles: Sparkles,
   lightbulb: Lightbulb,
-  target: Target,
   timer: Timer,
   list: ListOrdered,
 };
@@ -37,7 +40,6 @@ const ICON_MAP: Record<IconToken, LucideIcon> = {
 interface DailyChallengesDrawerProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  dailyChallengesCompleted: Map<string, number>;
   rankedEntriesResetTimestamp: number | null;
   onSelectChallenge: (challengeId: DailyChallengeId) => void;
 }
@@ -45,12 +47,10 @@ interface DailyChallengesDrawerProps {
 function ChallengeCard({
   challenge,
   isCompleted,
-  completedTimestamp,
   onClick,
 }: {
-  challenge: ChallengeConfig;
+  challenge: ChallengeCard;
   isCompleted: boolean;
-  completedTimestamp?: number;
   onClick: () => void;
 }) {
   const IconComponent = ICON_MAP[challenge.iconToken];
@@ -77,12 +77,12 @@ function ChallengeCard({
                 ? 'Completed! Great job!'
                 : challenge.description}
             </p>
-            {isCompleted && completedTimestamp && (
+            {isCompleted ? (
               <div className="flex items-center gap-1 mt-2 text-xs text-green-600">
                 <Timer className="size-3" />
-                <span>Resets in {formatTimeRemaining(completedTimestamp)}</span>
+                <span>Available again after the UTC reset</span>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
         {!isCompleted && (
@@ -105,13 +105,13 @@ function ChallengeCard({
 export function DailyChallengesDrawer({
   isOpen,
   onOpenChange,
-  dailyChallengesCompleted,
   rankedEntriesResetTimestamp,
   onSelectChallenge,
 }: DailyChallengesDrawerProps) {
-  // Count completed challenges
-  const completedCount = dailyChallengesCompleted.size;
-  const totalCount = ALL_CHALLENGES.length;
+  const { data: dailyChallenges = [] } = useDailyChallenges();
+  const completedCount = dailyChallenges.filter((challenge) => challenge.completedToday).length;
+  const totalCount = dailyChallenges.length;
+  const challengeCards = dailyChallenges.map(toChallengeCard);
 
   return (
     <Drawer open={isOpen} onOpenChange={onOpenChange}>
@@ -150,12 +150,11 @@ export function DailyChallengesDrawer({
 
           {/* Challenge list */}
           <div className="space-y-3">
-            {ALL_CHALLENGES.map((challenge) => (
+            {challengeCards.map((challenge) => (
               <ChallengeCard
                 key={challenge.id}
                 challenge={challenge}
-                isCompleted={dailyChallengesCompleted.has(challenge.id)}
-                completedTimestamp={dailyChallengesCompleted.get(challenge.id)}
+                isCompleted={challenge.completedToday}
                 onClick={() => onSelectChallenge(challenge.id)}
               />
             ))}

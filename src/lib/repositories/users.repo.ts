@@ -2,6 +2,7 @@ import { API_BASE_URL } from "@/lib/config";
 import { getAccessToken } from "@/lib/auth/tokenStorage";
 import { ApiError } from "@/lib/api/api";
 import type { MatchStatsSummary, HeadToHeadSummary, RankPosition } from "@/lib/domain";
+import type { RankedProfileResponse } from "@/lib/repositories/ranked.repo";
 import type { Achievement } from "@/types/game";
 
 export interface PublicProfileResponse {
@@ -12,8 +13,8 @@ export interface PublicProfileResponse {
   favoriteClub: string | null;
   ranked: {
     rp: number;
-    tier: string;
-    placementStatus: string;
+    tier: RankedProfileResponse["tier"];
+    placementStatus: RankedProfileResponse["placementStatus"];
     placementPlayed: number;
     placementRequired: number;
     placementWins: number;

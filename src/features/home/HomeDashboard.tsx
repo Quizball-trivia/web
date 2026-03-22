@@ -14,12 +14,10 @@ import { useStoreWallet } from '@/lib/queries/store.queries';
 
 interface HomeDashboardProps {
   playerStats: PlayerStats;
-  dailyChallengesCompleted: Map<string, number>;
 }
 
 export function HomeDashboard({
   playerStats,
-  dailyChallengesCompleted,
 }: HomeDashboardProps) {
   const router = useRouter();
   const startSession = useGameSessionStore((state) => state.startSession);
@@ -74,7 +72,6 @@ export function HomeDashboard({
         {/* RIGHT COLUMN: Status Rail (Desktop Only) */}
         <aside className="hidden lg:block space-y-6 pt-2">
            <HomeRightRail 
-             dailyChallengesCompleted={dailyChallengesCompleted}
              onOpenFriend={() => setShowFriendModal(true)} 
            />
         </aside>

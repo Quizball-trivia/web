@@ -14,6 +14,7 @@ import {
   Star,
 } from "lucide-react";
 import { QuitGameDialog } from "./QuitGameDialog";
+import type { CluesSession } from "@/lib/domain/dailyChallenge";
 
 interface Clue {
   type: "text" | "emoji";
@@ -30,6 +31,7 @@ interface ClueQuestion {
 }
 
 interface ClueGameProps {
+  session: CluesSession;
   onBack: () => void;
   onComplete: (score: number) => void;
 }
@@ -93,82 +95,9 @@ function getPoints(revealedClues: number): number {
   return POINTS_BY_CLUE[revealedClues] ?? 25;
 }
 
-// Mock questions for testing
-const MOCK_QUESTIONS: ClueQuestion[] = [
-  {
-    id: "cg-1",
-    category: "Players",
-    difficulty: "easy",
-    clues: [
-      { type: "emoji", content: "🇦🇷⚽" },
-      { type: "text", content: "Plays for Inter Miami" },
-      { type: "text", content: "8 Ballon d'Or awards" },
-      { type: "text", content: "Barcelona legend" },
-      { type: "text", content: "Won 2022 World Cup" },
-    ],
-    acceptedAnswers: ["messi", "lionel messi", "leo messi"],
-    displayAnswer: "Lionel Messi",
-  },
-  {
-    id: "cg-2",
-    category: "Players",
-    difficulty: "medium",
-    clues: [
-      { type: "emoji", content: "🇫🇷⚽🐢" },
-      { type: "text", content: "Known for incredible speed" },
-      { type: "text", content: "PSG to Real Madrid" },
-      { type: "text", content: "World Cup winner at 19" },
-      { type: "text", content: "Jersey number 7" },
-    ],
-    acceptedAnswers: ["mbappe", "kylian mbappe"],
-    displayAnswer: "Kylian Mbappé",
-  },
-  {
-    id: "cg-3",
-    category: "Clubs",
-    difficulty: "easy",
-    clues: [
-      { type: "emoji", content: "🔴⚪🏟️" },
-      { type: "text", content: "North London club" },
-      { type: "text", content: "Emirates Stadium" },
-      { type: "text", content: "The Gunners" },
-      { type: "text", content: "Invincibles 2003-04" },
-    ],
-    acceptedAnswers: ["arsenal", "arsenal fc"],
-    displayAnswer: "Arsenal",
-  },
-  {
-    id: "cg-4",
-    category: "Players",
-    difficulty: "hard",
-    clues: [
-      { type: "emoji", content: "🇳🇴⚽💪" },
-      { type: "text", content: "Manchester City striker" },
-      { type: "text", content: "Son of a Premier League player" },
-      { type: "text", content: "36 goals in a single PL season" },
-      { type: "text", content: "Treble winner 2022-23" },
-    ],
-    acceptedAnswers: ["haaland", "erling haaland"],
-    displayAnswer: "Erling Haaland",
-  },
-  {
-    id: "cg-5",
-    category: "Managers",
-    difficulty: "medium",
-    clues: [
-      { type: "emoji", content: "🇮🇹👔" },
-      { type: "text", content: "Won Champions League with 3 clubs" },
-      { type: "text", content: "Known for calmness" },
-      { type: "text", content: "Real Madrid legend" },
-      { type: "text", content: "AC Milan, Chelsea, Real Madrid" },
-    ],
-    acceptedAnswers: ["ancelotti", "carlo ancelotti"],
-    displayAnswer: "Carlo Ancelotti",
-  },
-];
-
-export function ClueGame({ onBack, onComplete }: ClueGameProps) {
-  const [questions] = useState<ClueQuestion[]>(MOCK_QUESTIONS);
+export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
+  const secondsPerClueStep = session.secondsPerClueStep;
+  const questions = session.questions;
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState("");
   const [score, setScore] = useState(0);
@@ -176,7 +105,7 @@ export function ClueGame({ onBack, onComplete }: ClueGameProps) {
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [revealedClues, setRevealedClues] = useState(1);
-  const [timeRemaining, setTimeRemaining] = useState(15);
+  const [timeRemaining, setTimeRemaining] = useState(secondsPerClueStep);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [showQuitDialog, setShowQuitDialog] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -223,7 +152,7 @@ export function ClueGame({ onBack, onComplete }: ClueGameProps) {
           if (revealedClues < currentQuestion.clues.length) {
             setRevealedClues((r) => r + 1);
             setHasSubmitted(false);
-            return 15;
+            return secondsPerClueStep;
           } else {
             handleTimeOut();
             return 0;
@@ -262,7 +191,7 @@ export function ClueGame({ onBack, onComplete }: ClueGameProps) {
         setHasSubmitted(true);
         setRevealedClues((prev) => prev + 1);
         setUserAnswer("");
-        setTimeRemaining(15);
+        setTimeRemaining(secondsPerClueStep);
         setTimeout(() => {
           setHasSubmitted(false);
         }, 100);
@@ -298,7 +227,7 @@ export function ClueGame({ onBack, onComplete }: ClueGameProps) {
       setUserAnswer("");
       setShowResult(false);
       setIsCorrect(false);
-      setTimeRemaining(15);
+      setTimeRemaining(secondsPerClueStep);
       setHasSubmitted(false);
       setCurrentQuestionIndex((prev) => prev + 1);
     }
@@ -528,7 +457,7 @@ export function ClueGame({ onBack, onComplete }: ClueGameProps) {
 
         {/* Hints */}
         <div className="text-center text-xs text-[#56707A] space-y-1">
-          <p className="flex items-center justify-center gap-1"><Clock className="size-3.5 text-[#1CB0F6]" /> 15 seconds per clue - answer quickly!</p>
+          <p className="flex items-center justify-center gap-1"><Clock className="size-3.5 text-[#1CB0F6]" /> {secondsPerClueStep} seconds per clue - answer quickly!</p>
           <p className="flex items-center justify-center gap-1"><Lightbulb className="size-3.5 text-[#FF9600]" /> Fewer clues = more points</p>
         </div>
         </div>
