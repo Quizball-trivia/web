@@ -1,5 +1,6 @@
 import type { MatchStatsSummary } from "./matchStatsSummary";
 import type { HeadToHeadSummary } from "./headToHead";
+import type { UserProgression } from "./progression";
 
 export interface RankPosition {
   rank: number;
@@ -12,6 +13,7 @@ export interface PublicProfile {
   avatarUrl: string | null;
   country: string | null;
   favoriteClub: string | null;
+  progression: UserProgression;
   ranked: {
     rp: number;
     tier: string;

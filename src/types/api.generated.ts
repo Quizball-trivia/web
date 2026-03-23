@@ -2164,7 +2164,7 @@ export interface paths {
                         status?: "draft" | "published" | "archived";
                         prompt: components["schemas"]["I18nField"];
                         explanation?: components["schemas"]["I18nField"] & unknown;
-                        payload?: components["schemas"]["QuestionPayload"];
+                        payload: components["schemas"]["QuestionPayload"];
                     };
                 };
             };
@@ -3022,6 +3022,7 @@ export interface paths {
                                     /** @enum {string} */
                                     challengeType: "moneyDrop";
                                 } | {
+                                    /** @default [] */
                                     categoryIds: string[];
                                     pickCount: number;
                                     /** @enum {string} */
@@ -3279,6 +3280,13 @@ export interface components {
             favorite_club: string | null;
             preferred_language: string | null;
             onboarding_complete: boolean;
+            progression: {
+                level: number;
+                totalXp: number;
+                currentLevelXp: number;
+                xpForNextLevel: number;
+                progressPct: number;
+            };
             /** Format: date-time */
             created_at: string;
         };
@@ -3362,6 +3370,32 @@ export interface components {
             currentWinStreak: number;
             /** Format: date-time */
             lastRankedMatchAt: string | null;
+        };
+        PublicProfileResponse: {
+            /** Format: uuid */
+            id: string;
+            nickname: string | null;
+            avatarUrl: string | null;
+            country: string | null;
+            favoriteClub: string | null;
+            progression: {
+                level: number;
+                totalXp: number;
+                currentLevelXp: number;
+                xpForNextLevel: number;
+                progressPct: number;
+            };
+            ranked: components["schemas"]["RankedProfileResponse"] | null;
+            stats: components["schemas"]["StatsSummaryResponse"];
+            headToHead: components["schemas"]["HeadToHeadResponse"] | null;
+            globalRank: {
+                rank: number;
+                total: number;
+            } | null;
+            countryRank: {
+                rank: number;
+                total: number;
+            } | null;
         };
         StoreProductsResponse: {
             items: {
@@ -3508,25 +3542,6 @@ export interface components {
             total: number;
             totalPages: number;
         };
-        PublicProfileResponse: {
-            /** Format: uuid */
-            id: string;
-            nickname: string | null;
-            avatarUrl: string | null;
-            country: string | null;
-            favoriteClub: string | null;
-            ranked: components["schemas"]["RankedProfileResponse"] & unknown;
-            stats: components["schemas"]["StatsSummaryResponse"];
-            headToHead: components["schemas"]["HeadToHeadResponse"] & unknown;
-            globalRank: {
-                rank: number;
-                total: number;
-            } | null;
-            countryRank: {
-                rank: number;
-                total: number;
-            } | null;
-        };
         I18nField: {
             [key: string]: string;
         };
@@ -3607,7 +3622,7 @@ export interface components {
             type: "put_in_order";
             prompt: components["schemas"]["I18nField"];
             /** @enum {string} */
-            direction: "asc";
+            direction: "asc" | "desc";
             items: {
                 id: string;
                 label: components["schemas"]["I18nField"];
@@ -3719,6 +3734,7 @@ export interface components {
             /** @enum {string} */
             challengeType: "moneyDrop";
         } | {
+            /** @default [] */
             categoryIds: string[];
             pickCount: number;
             /** @enum {string} */

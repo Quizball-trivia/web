@@ -42,13 +42,7 @@ type RoundItem = PutInOrderSession["rounds"][number]["items"][number];
 type Round = PutInOrderSession["rounds"][number];
 
 function getRoundInstruction(round: Round): string {
-  const instruction = round.instruction?.trim();
-  if (instruction) {
-    return instruction;
-  }
-
-  const direction = (round.direction as string | undefined)?.toLowerCase();
-  return direction === "desc" ? "highest to lowest" : "lowest to highest";
+  return round.instruction ?? "lowest to highest";
 }
 
 function SortableItem({
@@ -137,7 +131,9 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
 
   const round = session.rounds[currentRound];
   const roundInstruction = round ? getRoundInstruction(round) : "lowest to highest";
-  const correctOrder = [...(round?.items ?? [])].sort((a, b) => a.sortValue - b.sortValue);
+  const correctOrder = [...(round?.items ?? [])].sort((a, b) =>
+    round?.direction === "desc" ? b.sortValue - a.sortValue : a.sortValue - b.sortValue
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),

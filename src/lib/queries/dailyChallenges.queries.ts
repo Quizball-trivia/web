@@ -6,6 +6,7 @@ import {
   getDailyChallenges,
   resetDailyChallengeDev,
 } from "@/lib/repositories/dailyChallenges.repo";
+import { toDailyChallengeSession } from "@/lib/mappers/dailyChallenge.mapper";
 import type { DailyChallengeType } from "@/lib/domain/dailyChallenge";
 
 export function useDailyChallenges() {
@@ -22,7 +23,7 @@ export function useDailyChallenges() {
 
 export function useDailyChallengeSession(challengeType?: DailyChallengeType) {
   return useMutation({
-    mutationFn: () => createDailyChallengeSession(challengeType!),
+    mutationFn: () => createDailyChallengeSession(challengeType!).then(toDailyChallengeSession),
     retry: 0,
   });
 }

@@ -14,13 +14,13 @@ export function HomeRightRail({ onOpenFriend }: HomeRightRailProps) {
   const { data: dailyChallenges = [] } = useDailyChallenges();
 
   const challenge = dailyChallenges.find((item) => item.showOnHome && item.availableToday)
-    ?? dailyChallenges.find((item) => item.showOnHome)
+    ?? dailyChallenges.find((item) => item.availableToday)
     ?? dailyChallenges[0];
-  const isChallengeCompleted = challenge?.completedToday ?? false;
+  const isActionable = challenge?.availableToday === true && !challenge.completedToday;
 
   // Auto-start handler
   const handleStartChallenge = () => {
-    if (!challenge || isChallengeCompleted) return;
+    if (!challenge || !isActionable) return;
     router.push(`/daily/challenges/${challenge.challengeType}`);
   };
 
@@ -50,8 +50,8 @@ export function HomeRightRail({ onOpenFriend }: HomeRightRailProps) {
         <CardContent className="p-0">
            {/* Featured / Top Objective (Daily Challenge) */}
            <div
-             className={`p-4 border-b border-border/40 transition-colors ${challenge && !isChallengeCompleted ? 'hover:bg-card/40 cursor-pointer group' : 'opacity-70'}`}
-             onClick={challenge && !isChallengeCompleted ? handleStartChallenge : undefined}
+             className={`p-4 border-b border-border/40 transition-colors ${isActionable ? 'hover:bg-card/40 cursor-pointer group' : 'opacity-70'}`}
+             onClick={isActionable ? handleStartChallenge : undefined}
            >
               <div className="flex justify-between items-start mb-2">
                  <div className="space-y-1">
@@ -64,14 +64,14 @@ export function HomeRightRail({ onOpenFriend }: HomeRightRailProps) {
               </div>
               <div className="space-y-1.5">
                  <div className="flex justify-between text-[11px] font-medium text-muted-foreground">
-                    <span>{isChallengeCompleted ? 'Completed' : 'Ready to start'}</span>
-                    <span className={`font-bold ${isChallengeCompleted ? 'text-green-500' : 'text-primary'}`}>
-                        {isChallengeCompleted ? '1/1' : '0/1'}
+                    <span>{challenge?.completedToday ? 'Completed' : 'Ready to start'}</span>
+                    <span className={`font-bold ${challenge?.completedToday ? 'text-green-500' : 'text-primary'}`}>
+                        {challenge?.completedToday ? '1/1' : '0/1'}
                     </span>
                  </div>
                  <div className="h-1.5 w-full bg-secondary/50 rounded-full overflow-hidden">
                     <div 
-                        className={`h-full rounded-full shadow-[0_0_8px_hsl(var(--green-500)/0.5)] transition-all duration-500 ${isChallengeCompleted ? 'bg-green-500 w-full' : 'bg-primary w-[5%]'}`} 
+                        className={`h-full rounded-full shadow-[0_0_8px_hsl(var(--green-500)/0.5)] transition-all duration-500 ${challenge?.completedToday ? 'bg-green-500 w-full' : 'bg-primary w-[5%]'}`} 
                     />
                  </div>
               </div>

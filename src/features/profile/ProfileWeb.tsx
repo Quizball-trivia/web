@@ -38,7 +38,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
 import type { PlayerStats } from '@/types/game';
-import type { MatchStatsSummary, HeadToHeadSummary, RankPosition } from '@/lib/domain';
+import type { MatchStatsSummary, HeadToHeadSummary, RankPosition, UserProgression } from '@/lib/domain';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import { useAvatarUrl } from './hooks/useAvatarUrl';
 import { useStoreWallet } from '@/lib/queries/store.queries';
@@ -78,6 +78,7 @@ interface ProfileWebProps {
   country?: string | null;
   favoriteClub?: string | null;
   preferredLanguage?: string | null;
+  progression?: UserProgression | null;
   globalRank?: RankPosition | null;
   countryRank?: RankPosition | null;
   matchStatsSummary?: MatchStatsSummary | null;
@@ -98,6 +99,7 @@ interface ProfileWebProps {
 export function ProfileWeb({
   viewMode = 'self',
   player, avatarUrl, country = null, favoriteClub, preferredLanguage,
+  progression = null,
   globalRank = null, countryRank = null,
   matchStatsSummary = null,
   rankedProfile = null, rankedProfileLoading = false,
@@ -146,6 +148,11 @@ export function ProfileWeb({
   const rankedStats = matchStatsSummary?.ranked;
   const friendlyStats = matchStatsSummary?.friendly;
   const displayedCoins = isSelf ? (storeWallet?.coins ?? 0) : player.coins;
+  const progressionLevel = progression?.level ?? 1;
+  const progressionTotalXp = progression?.totalXp ?? 0;
+  const progressionCurrentLevelXp = progression?.currentLevelXp ?? 0;
+  const progressionXpForNextLevel = progression?.xpForNextLevel ?? 100;
+  const progressionPct = Math.max(0, Math.min(100, progression?.progressPct ?? 0));
   const winRate = Math.round(overallStats?.winRate ?? 0);
   const gamesPlayed = overallStats?.gamesPlayed ?? 0;
   const wins = overallStats?.wins ?? 0;
@@ -377,6 +384,43 @@ export function ProfileWeb({
                 </div>
               </>
             )}
+
+            <div className="mt-4 pt-4 border-t border-border/60">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">XP Progress</span>
+                <span className="inline-flex items-center gap-1 text-xs font-black text-primary">
+                  <Zap className="size-3.5" />
+                  Level {progressionLevel}
+                </span>
+              </div>
+              <div className="flex items-end justify-between gap-3 mb-2">
+                <div className="min-w-0">
+                  <div className="text-lg font-black text-foreground">
+                    {progressionCurrentLevelXp.toLocaleString()} / {progressionXpForNextLevel.toLocaleString()}
+                  </div>
+                  <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                    Current level XP
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Total XP</div>
+                  <div className="text-sm font-black text-foreground">{progressionTotalXp.toLocaleString()}</div>
+                </div>
+              </div>
+              <div className="relative h-3 bg-muted rounded-full overflow-hidden mb-2">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progressionPct}%` }}
+                  transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-500"
+                >
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/25 to-transparent h-1/2" />
+                </motion.div>
+              </div>
+              <div className="text-xs font-bold text-muted-foreground">
+                {progressionPct}% to level {progressionLevel + 1}
+              </div>
+            </div>
           </div>
         </div>
       </motion.div>

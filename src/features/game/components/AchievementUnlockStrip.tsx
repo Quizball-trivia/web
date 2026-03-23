@@ -31,10 +31,10 @@ export function AchievementUnlockStrip({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="text-[10px] font-black uppercase tracking-[0.28em] text-[#FCD200]">
-            Achievement Unlock{achievements.length > 1 ? 's' : ''}
+            New Badge{achievements.length > 1 ? 's' : ''}
           </div>
           <div className="mt-1 text-sm font-black text-white">
-            Freshly earned in this match
+            Unlocked after this match
           </div>
         </div>
         <div className="rounded-full border border-[#FCD200]/25 bg-[#FCD200]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#FFE98A]">

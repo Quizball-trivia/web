@@ -7,7 +7,7 @@ import { motion } from "motion/react";
 import { toast } from "sonner";
 import { useDailyChallenges, useResetDailyChallengeDev } from "@/lib/queries/dailyChallenges.queries";
 import { queryKeys } from "@/lib/queries/queryKeys";
-import { toChallengeCard, type IconToken } from "@/features/home/challenges";
+import { toChallengeCard, type IconToken } from "@/lib/domain/dailyChallengeVisuals";
 import type { DailyChallengeSummary } from "@/lib/domain/dailyChallenge";
 import { useAuthStore } from "@/stores/auth.store";
 import { useQueryClient } from "@tanstack/react-query";

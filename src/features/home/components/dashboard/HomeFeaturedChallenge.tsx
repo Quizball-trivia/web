@@ -1,6 +1,5 @@
 import type { KeyboardEvent } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Coins, ArrowRight } from 'lucide-react';
 import { useDailyChallenges } from '@/lib/queries/dailyChallenges.queries';
@@ -21,13 +20,13 @@ export function HomeFeaturedChallenge({ onSelectChallenge }: HomeFeaturedChallen
   const isAvailable = challenge.availableToday;
   const isCompleted = challenge.completedToday;
   const handleStartChallenge = () => {
-    if (!isAvailable) return;
+    if (!isAvailable || isCompleted) return;
 
     onSelectChallenge(challenge.challengeType);
   };
 
   const handleCardKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (!isAvailable) return;
+    if (!isAvailable || isCompleted) return;
 
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
@@ -44,7 +43,7 @@ export function HomeFeaturedChallenge({ onSelectChallenge }: HomeFeaturedChallen
            isAvailable ? 'cursor-pointer hover:border-yellow-500/30' : 'cursor-not-allowed opacity-60'
          } ${isCompleted && isAvailable ? 'opacity-70' : ''}`} 
          role={isAvailable ? 'button' : undefined}
-         aria-disabled={!isAvailable}
+         aria-disabled={!isAvailable || undefined}
          tabIndex={isAvailable ? 0 : -1}
          onClick={isAvailable ? handleStartChallenge : undefined}
          onKeyDown={isAvailable ? handleCardKeyDown : undefined}
@@ -75,24 +74,20 @@ export function HomeFeaturedChallenge({ onSelectChallenge }: HomeFeaturedChallen
                </Badge>
                
                {isAvailable ? (
-                 <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className={`h-8 text-xs font-bold border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 hover:text-indigo-300 hover:border-indigo-500/50 transition-all ${isCompleted ? 'opacity-0 pointer-events-none' : ''}`}
-                    disabled={isCompleted}
+                 <span 
+                    role="presentation"
+                    className={`inline-flex items-center justify-center rounded-md border border-indigo-500/30 text-indigo-400 h-8 px-3 text-xs font-bold transition-all group-hover:bg-indigo-500/10 group-hover:text-indigo-300 group-hover:border-indigo-500/50 ${isCompleted ? 'opacity-0 pointer-events-none' : ''}`}
                  >
                     Start Run
                     <ArrowRight className="ml-1.5 size-3" />
-                 </Button>
+                 </span>
                ) : (
-                 <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 text-xs font-bold border-slate-500/30 text-slate-400 bg-slate-500/5"
-                    disabled
+                 <span
+                    role="presentation"
+                    className="inline-flex items-center justify-center rounded-md border border-slate-500/30 text-slate-400 bg-slate-500/5 h-8 px-3 text-xs font-bold"
                  >
                     Not available today
-                 </Button>
+                 </span>
                )}
             </div>
          </CardContent>

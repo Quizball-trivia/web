@@ -163,7 +163,7 @@ function HelpButtons({
         className={cn(btnBase, changeQuestionUsed || changeQuestionDisabled ? btnUsed : btnActive)}
       >
         <RefreshCw className="size-3.5 lg:size-4" />
-        <span className={cn((changeQuestionUsed || changeQuestionDisabled) && "line-through")}>Skip</span>
+        <span className={cn(changeQuestionUsed && "line-through")}>Skip</span>
       </button>
     </div>
   );
@@ -329,6 +329,8 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
 
   const handleChangeQuestion = () => {
     if (changeQuestionUsed || showResult || hasConfirmed || isLastQuestion) return;
+    timeoutHandledRef.current = true;
+    deadlineRef.current = null;
     setChangeQuestionUsed(true);
     setCurrentQuestionIndex((prev) => prev + 1);
     setBets([0, 0, 0, 0]);
@@ -339,7 +341,6 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
     setHasConfirmed(false);
     setIsAnimating(false);
     setTimeLeft(QUESTION_TIME);
-    timeoutHandledRef.current = false;
   };
 
   const formatMoney = (amount: number) => `${amount.toLocaleString()} coins`;

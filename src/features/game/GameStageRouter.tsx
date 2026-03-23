@@ -24,6 +24,7 @@ import { useGameStageTransitions } from "@/features/game/hooks/useGameStageTrans
 import type { GameMode as LegacyGameMode } from "@/types/game";
 import { resolveAvatarUrl } from "@/lib/avatars";
 import { useRankedProfile } from "@/lib/queries/ranked.queries";
+import type { RankedProfileResponse } from "@/lib/repositories/ranked.repo";
 import { usePossessionMatchStore } from "@/stores/possessionMatch.store";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { tierFromRp } from "@/utils/rankedTier";
@@ -94,6 +95,10 @@ export function GameStageRouter() {
     correctAnswers: 0,
     playerAnswers: [],
   });
+  const [rankedProfileSnapshot, setRankedProfileSnapshot] = useState<{
+    matchId: string;
+    profile: RankedProfileResponse;
+  } | null>(null);
   const [roundNumber, setRoundNumber] = useState(1);
   const totalRounds = 3;
   const isMultiplayer = config?.mode !== "solo" && !!config;
@@ -157,6 +162,7 @@ export function GameStageRouter() {
   const matchType = config?.matchType || "friendly";
   const showdownType = matchType === "ranked" ? "ranked" : "friendly";
   const matchVariant = realtimeMatch?.variant ?? null;
+  const activeRankedMatchId = matchType === "ranked" ? realtimeMatch?.matchId ?? null : null;
   const isPartyQuizMatch = matchVariant === "friendly_party_quiz";
   const legacyMode = toLegacyMode(config?.mode);
   const playerGameAvatar = useMemo(
@@ -172,6 +178,27 @@ export function GameStageRouter() {
     () => resolveAvatarUrl(opponent.avatar, "opponent", 256),
     [opponent.avatar]
   );
+  const stableRankedProfile = rankedProfileSnapshot?.matchId === activeRankedMatchId
+    ? rankedProfileSnapshot.profile
+    : rankedProfile ?? null;
+
+  useEffect(() => {
+    if (!activeRankedMatchId) {
+      setRankedProfileSnapshot(null);
+      return;
+    }
+    if (!rankedProfile) return;
+
+    setRankedProfileSnapshot((current) => {
+      if (current?.matchId === activeRankedMatchId) {
+        return current;
+      }
+      return {
+        matchId: activeRankedMatchId,
+        profile: { ...rankedProfile },
+      };
+    });
+  }, [activeRankedMatchId, rankedProfile]);
 
   const exitToPlay = useCallback(() => {
     resetRealtime();
@@ -415,11 +442,11 @@ export function GameStageRouter() {
           selfUserId={selfUserId}
           finalWinnerId={final?.winnerId}
           winnerDecisionMethod={final?.winnerDecisionMethod ?? null}
-          preMatchRp={rankedProfile?.placementStatus === 'placed' ? (rankedProfile?.rp ?? player.rankPoints) : undefined}
+          preMatchRp={stableRankedProfile?.placementStatus === 'placed' ? (stableRankedProfile.rp ?? player.rankPoints) : undefined}
           opponentId={opponent.id}
           opponentRp={realtimeMatch?.opponent?.rp != null ? Number(realtimeMatch.opponent.rp) : undefined}
           rankedOutcome={final?.rankedOutcome ?? null}
-          preMatchRankedProfile={rankedProfile ?? null}
+          preMatchRankedProfile={stableRankedProfile}
           unlockedAchievements={unlockedAchievements}
           onPlayAgain={() => {
             if (matchType === "ranked") {

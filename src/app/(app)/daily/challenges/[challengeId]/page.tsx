@@ -9,7 +9,7 @@ import { ClueGame } from "@/features/daily/ClueGame";
 import { CountdownGame } from "@/features/daily/CountdownGame";
 import { PutInOrderGame } from "@/features/daily/PutInOrderGame";
 import { QuitGameDialog } from "@/features/daily/QuitGameDialog";
-import { DAILY_CHALLENGE_VISUALS } from "@/features/home/challenges";
+import { DAILY_CHALLENGE_VISUALS } from "@/lib/domain/dailyChallengeVisuals";
 import { useCompleteDailyChallenge, useDailyChallengeSession } from "@/lib/queries/dailyChallenges.queries";
 import { queryKeys } from "@/lib/queries/queryKeys";
 import { usePlayer } from "@/contexts/PlayerContext";
@@ -42,7 +42,7 @@ export default function ChallengePage() {
   }, [queryClient]);
 
   const handleBack = useCallback(() => {
-    router.push("/daily/challenges");
+    router.replace("/daily/challenges");
   }, [router]);
 
   const handleComplete = useCallback(
@@ -56,10 +56,9 @@ export default function ChallengePage() {
           addXP(result.xpAwarded);
         }
         await invalidateAfterComplete();
-        router.push("/daily/challenges");
-      } catch (error) {
+        router.replace("/daily/challenges");
+      } catch {
         completeOnceRef.current = false;
-        throw error;
       }
     },
     [addXP, challengeType, completeMutation, invalidateAfterComplete, router]
@@ -105,7 +104,7 @@ export default function ChallengePage() {
 
   const handleBrowserBackConfirm = useCallback(() => {
     setShowBrowserBackDialog(false);
-    router.push("/daily/challenges");
+    router.replace("/daily/challenges");
   }, [router]);
 
   useEffect(() => {
