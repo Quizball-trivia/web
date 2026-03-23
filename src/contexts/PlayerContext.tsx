@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useCallback, useMemo, useEffect, t
 import { mockCurrentPlayer } from '@/data/mockData';
 import type { PlayerProfile } from '@/lib/domain';
 import { useAuthStore } from '@/stores/auth.store';
+import { useRankedProfile } from '@/lib/queries/ranked.queries';
 
 interface PlayerContextValue {
   player: PlayerProfile;
@@ -18,6 +19,7 @@ const PlayerContext = createContext<PlayerContextValue | null>(null);
 export function PlayerProvider({ children }: { children: ReactNode }) {
   const [player, setPlayer] = useState<PlayerProfile>(mockCurrentPlayer);
   const authUser = useAuthStore((state) => state.user);
+  const { data: rankedProfile } = useRankedProfile({ enabled: Boolean(authUser) });
 
   useEffect(() => {
     if (!authUser) return;
@@ -78,15 +80,23 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     setPlayer(p => ({ ...p, ...updates }));
   }, []);
 
+  const resolvedPlayer = useMemo<PlayerProfile>(() => {
+    if (!rankedProfile) return player;
+    return {
+      ...player,
+      rankPoints: rankedProfile.placementStatus === 'placed' ? rankedProfile.rp : 0,
+    };
+  }, [player, rankedProfile]);
+
   // Memoize context value to prevent unnecessary re-renders
   const contextValue = useMemo<PlayerContextValue>(() => ({
-    player,
+    player: resolvedPlayer,
     setPlayer,
     updateCoins,
     addXP,
     unlockItem,
     updateStats,
-  }), [player, updateCoins, addXP, unlockItem, updateStats]);
+  }), [resolvedPlayer, updateCoins, addXP, unlockItem, updateStats]);
 
   return (
     <PlayerContext.Provider value={contextValue}>

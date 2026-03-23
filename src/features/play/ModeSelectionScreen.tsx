@@ -12,7 +12,7 @@ import { useDailyChallenges } from '@/lib/queries/dailyChallenges.queries';
 import { logger } from '@/utils/logger';
 
 import { getTierVisual } from '@/utils/tierVisuals';
-import { getRankedTierProgress } from '@/utils/rankedTier';
+import { getNextTierBand, getRankedTierBandsAscending, getRankedTierProgress, type RankedTier } from '@/utils/rankedTier';
 
 // ── Soccer SVG Icons ──
 function SoccerBall({ className }: { className?: string }) {
@@ -103,6 +103,13 @@ export function ModeSelectionScreen({
   const rankedWinRate = Math.round(matchStatsSummary?.ranked.winRate ?? 0);
   const rankedGamesPlayed = matchStatsSummary?.ranked.gamesPlayed ?? 0;
   const tierProgress = getRankedTierProgress(displayRp);
+  const nextTierBand = getNextTierBand(displayRp);
+  const nextTierTargetRp = nextTierBand?.minRp ?? null;
+  const nextTierFill = nextTierTargetRp ? Math.max(0, Math.min(100, Math.round((displayRp / nextTierTargetRp) * 100))) : 100;
+  const tierBandsAscending = getRankedTierBandsAscending();
+  const activeTier = (rankedProfile?.tier ?? tierProgress.tier) as RankedTier;
+  const currentTierIndex = tierBandsAscending.findIndex((band) => band.tier === activeTier);
+  const tiersLeftToMax = currentTierIndex === -1 ? 0 : Math.max(0, tierBandsAscending.length - currentTierIndex - 1);
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
   const { data: dailyChallenges = [] } = useDailyChallenges();
@@ -231,7 +238,7 @@ export function ModeSelectionScreen({
             <div className="relative h-3 md:h-4 bg-[#243B44] rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
-                animate={{ width: `${isPlacementInProgress ? (placementPlayed / placementRequired) * 100 : tierProgress.progress}%` }}
+                animate={{ width: `${isPlacementInProgress ? (placementPlayed / placementRequired) * 100 : nextTierFill}%` }}
                 transition={{ duration: 1, ease: 'easeOut', delay: 0.3 }}
                 className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#58CC02] to-[#85E000]"
               >
@@ -248,6 +255,68 @@ export function ModeSelectionScreen({
                 <span className="text-xs md:text-sm font-bold text-[#56707A] ml-1">RP</span>
               </div>
             </div>
+            {!isPlacementInProgress && (
+              <>
+                <div className="mt-2 flex items-center justify-between gap-3 text-[10px] md:text-xs font-black uppercase tracking-wide">
+                  <span className="text-[#85E000]">
+                    {nextTierTargetRp ? `${displayRp} / ${nextTierTargetRp} RP` : `${displayRp} / MAX RP`}
+                  </span>
+                  <span className="text-[#9EDB72] text-right">
+                    {nextTierBand
+                      ? `${Math.max(0, nextTierTargetRp! - displayRp)} RP to ${nextTierBand.tier}`
+                      : 'Max rank reached'}
+                  </span>
+                </div>
+                <div className="mt-3 rounded-xl border border-[#58CC02]/15 bg-[#102329]/70 px-3 py-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[#56707A]">Rank Road</div>
+                      <div className="text-xs md:text-sm font-black text-white">
+                        {tierVisual.emoji} {activeTier}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[#56707A]">To GOAT</div>
+                      <div className="text-xs md:text-sm font-black text-[#85E000]">
+                        {tiersLeftToMax === 0 ? 'At max rank' : `${tiersLeftToMax} tier${tiersLeftToMax === 1 ? '' : 's'} left`}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-2 flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                    {tierBandsAscending.map((band) => {
+                      const isCurrent = band.tier === activeTier;
+                      const isUnlocked = displayRp >= band.minRp;
+                      return (
+                        <div
+                          key={band.tier}
+                          className={cn(
+                            'shrink-0 rounded-xl border px-2.5 py-2 min-w-[102px] transition-colors',
+                            isCurrent
+                              ? 'bg-[#58CC02]/18 border-[#85E000]/50 shadow-[0_0_16px_rgba(88,204,2,0.18)]'
+                              : isUnlocked
+                                ? 'bg-white/[0.04] border-white/10'
+                                : 'bg-black/10 border-white/5 opacity-65'
+                          )}
+                        >
+                          <div className={cn(
+                            'text-[10px] font-black uppercase tracking-wide',
+                            isCurrent ? 'text-[#C8FF9A]' : isUnlocked ? 'text-white/80' : 'text-[#56707A]'
+                          )}>
+                            {band.tier}
+                          </div>
+                          <div className={cn(
+                            'mt-1 text-[10px] font-bold',
+                            isCurrent ? 'text-[#85E000]' : 'text-[#56707A]'
+                          )}>
+                            {band.minRp} RP
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
             </>
             )}
           </div>

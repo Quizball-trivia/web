@@ -369,15 +369,15 @@ export function ProfileWeb({
                   ) : null}
                 </div>
                 <div className="flex items-baseline gap-1 mb-2">
-                  <span className="text-3xl font-black text-foreground">{displayRp}</span>
-                  <span className="text-sm font-bold text-muted-foreground">RP</span>
+                  <span className="text-3xl font-black text-[#58CC02]">{displayRp}</span>
+                  <span className="text-sm font-bold text-[#85E000]">RP</span>
                 </div>
                 <div className="relative h-3 bg-muted rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: '100%' }}
                     transition={{ duration: 1, ease: 'easeOut', delay: 0.3 }}
-                    className={`absolute inset-y-0 left-0 rounded-full bg-gradient-to-r ${tierVisual.gradient}`}
+                    className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#58CC02] to-[#85E000]"
                   >
                     <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/25 to-transparent h-1/2" />
                   </motion.div>
@@ -713,7 +713,7 @@ export function ProfileWeb({
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.24 }}>
                 <button
                   onClick={onSignOut}
-                  className="w-full py-3 rounded-2xl bg-card border-b-4 border-border text-sm font-black text-muted-foreground uppercase tracking-wide hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 active:translate-y-[2px] active:border-b-0 transition-all flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-2xl bg-gradient-to-b from-[#4A171A] to-[#341114] border border-[#FF6B6B]/25 border-b-4 border-b-[#7A1F25] text-sm font-black text-[#FF8D8D] uppercase tracking-wide shadow-[0_10px_25px_rgba(122,31,37,0.2)] hover:from-[#5B1B20] hover:to-[#421419] hover:text-[#FFD0D0] hover:border-[#FF6B6B]/45 hover:border-b-[#A32931] active:translate-y-[2px] active:border-b-2 transition-all flex items-center justify-center gap-2"
                 >
                   <LogOut className="size-4" />
                   Sign Out
