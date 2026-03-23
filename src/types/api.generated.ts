@@ -1430,6 +1430,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search users by nickname */
+        get: {
+            parameters: {
+                query: {
+                    q: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Search results */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            results: {
+                                /** Format: uuid */
+                                id: string;
+                                nickname: string | null;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                rp: number;
+                                level: number;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/categories": {
         parameters: {
             query?: never;
@@ -3266,6 +3323,13 @@ export interface components {
             /** Format: uri */
             url: string;
         };
+        ProgressionResponse: {
+            level: number;
+            totalXp: number;
+            currentLevelXp: number;
+            xpForNextLevel: number;
+            progressPct: number;
+        };
         UserResponse: {
             /** Format: uuid */
             id: string;
@@ -3280,13 +3344,7 @@ export interface components {
             favorite_club: string | null;
             preferred_language: string | null;
             onboarding_complete: boolean;
-            progression: {
-                level: number;
-                totalXp: number;
-                currentLevelXp: number;
-                xpForNextLevel: number;
-                progressPct: number;
-            };
+            progression: components["schemas"]["ProgressionResponse"];
             /** Format: date-time */
             created_at: string;
         };
@@ -3375,16 +3433,11 @@ export interface components {
             /** Format: uuid */
             id: string;
             nickname: string | null;
+            /** Format: uri */
             avatarUrl: string | null;
             country: string | null;
             favoriteClub: string | null;
-            progression: {
-                level: number;
-                totalXp: number;
-                currentLevelXp: number;
-                xpForNextLevel: number;
-                progressPct: number;
-            };
+            progression: components["schemas"]["ProgressionResponse"];
             ranked: components["schemas"]["RankedProfileResponse"] | null;
             stats: components["schemas"]["StatsSummaryResponse"];
             headToHead: components["schemas"]["HeadToHeadResponse"] | null;

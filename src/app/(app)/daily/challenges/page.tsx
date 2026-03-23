@@ -194,8 +194,8 @@ export default function DailyChallengesPage() {
   const progressPct = challenges.length > 0 ? (completedCount / challenges.length) * 100 : 0;
 
   return (
-    <div className="min-h-screen bg-[#131F24] font-fun">
-      <div className="sticky top-0 z-20 bg-[#131F24]/95 backdrop-blur-sm border-b-2 border-[#1B2F36]">
+    <div className="min-h-screen  font-fun">
+      <div className="sticky top-0 z-20 backdrop-blur-sm border-b-2 border-[#1B2F36]">
         <div className="max-w-2xl lg:max-w-4xl mx-auto px-3 md:px-4 py-3 md:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

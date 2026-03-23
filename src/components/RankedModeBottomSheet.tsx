@@ -55,7 +55,7 @@ export function RankedModeBottomSheet({
               <div className="flex-1 min-w-0">
                 <div className="text-sm mb-0.5">Strategic Category Blocking</div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  4 random categories appear - each player blocks 1, then compete in the remaining 2
+                  3 random categories appear - each player blocks 1, then compete in the remaining one
                 </p>
               </div>
             </div>

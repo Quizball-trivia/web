@@ -42,7 +42,7 @@ export function ModeConfirmModal({
 
       accentColor: "#FF9600",
       accentDark: "#DB8200",
-      description: "4 Random categories appear - each player blocks 1, then compete in the remaining 2",
+      description: "3 Random categories appear - each player blocks 1, then compete in the remaining one",
       entryCost: 1,
       stats: [
         { label: "FORMAT", value: "1v1 Duel" },

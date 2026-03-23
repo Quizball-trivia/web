@@ -35,6 +35,7 @@ import {
   ArrowRight,
   X,
   Users,
+  UserRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getSocket } from "@/lib/realtime/socket-client";
@@ -42,6 +43,7 @@ import { getSocket } from "@/lib/realtime/socket-client";
 const NAV_ITEMS = [
   { path: "/play", label: "Play", icon: Gamepad2 },
   { path: "/leaderboard", label: "Leaderboard", icon: Medal },
+  { path: "/social", label: "Social", icon: UserRound },
   { path: "/play/friend?tab=browse", label: "Lobbies", icon: Users, exact: true },
   { path: "/events", label: "Events", icon: Trophy },
   { path: "/store", label: "Store", icon: Gem },
@@ -52,13 +54,13 @@ const NAV_ITEMS = [
 const MOBILE_NAV_ITEMS = [
   { path: "/", label: "Home", icon: Home },
   { path: "/leaderboard", label: "Leaderboard", icon: Medal },
-  { path: "/play/friend?tab=browse", label: "Lobbies", icon: Users, exact: true },
+  { path: "/social", label: "Social", icon: UserRound },
   { path: "/store", label: "Store", icon: Gem },
   { path: "/profile", label: "Profile", icon: User },
 ] as const;
 
 const HIDE_NAV_PATHS = ["/game", "/onboarding"];
-const HEADER_PATHS = ["/", "/play", "/events", "/leaderboard", "/profile", "/store", "/career"];
+const HEADER_PATHS = ["/", "/play", "/events", "/leaderboard", "/social", "/profile", "/store", "/career"];
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -669,7 +671,7 @@ export function AppShell({ children }: AppShellProps) {
           <div className="fixed bottom-0 left-0 right-0 z-20 bg-background border-t border-border/50">
             <nav className="flex justify-around px-2 py-2">
               {MOBILE_NAV_ITEMS.map((item) => {
-                const isActive = isPathActive(item.path, 'exact' in item ? item.exact : undefined);
+                const isActive = isPathActive(item.path, undefined);
                 return (
                   <Link
                     key={item.path}

@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -8,51 +8,13 @@ import { FriendPlayModal } from '@/features/friend/components/FriendPlayModal';
 import { HomeRecentMatches } from '@/features/home/components/dashboard/HomeRecentMatches';
 import type { MatchStatsSummary } from '@/lib/domain';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
-import { useDailyChallenges } from '@/lib/queries/dailyChallenges.queries';
+
 import { logger } from '@/utils/logger';
 
 import { getTierVisual } from '@/utils/tierVisuals';
 import { getNextTierBand, getRankedTierBandsAscending, getRankedTierProgress, type RankedTier } from '@/utils/rankedTier';
+import { Trophy, Users, Flame, ClipboardList } from 'lucide-react';
 
-// ── Soccer SVG Icons ──
-function SoccerBall({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 2 L14 8 L20 8 L15 12.5 L17 19 L12 15 L7 19 L9 12.5 L4 8 L10 8 Z" strokeWidth="1" opacity="0.5" />
-    </svg>
-  );
-}
-
-function Whistle({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <ellipse cx="15" cy="14" rx="7" ry="5" />
-      <path d="M8 12 L4 6" strokeWidth="2.5" />
-      <circle cx="3" cy="5" r="2" fill="currentColor" opacity="0.4" />
-    </svg>
-  );
-}
-
-function Jersey({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M6 3 L2 7 L5 9 L5 20 L19 20 L19 9 L22 7 L18 3 L15 5 Q12 7 9 5 Z" />
-      <line x1="12" y1="10" x2="12" y2="16" opacity="0.4" />
-    </svg>
-  );
-}
-
-function Boot({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 8 L4 16 L8 18 L20 18 L22 14 L18 12 L16 8 L10 6 Z" />
-      <line x1="8" y1="18" x2="8" y2="14" opacity="0.4" />
-      <line x1="12" y1="18" x2="12" y2="13" opacity="0.4" />
-      <line x1="16" y1="18" x2="16" y2="12" opacity="0.4" />
-    </svg>
-  );
-}
 
 function StadiumSilhouette() {
   return (
@@ -111,8 +73,6 @@ export function ModeSelectionScreen({
   const currentTierIndex = tierBandsAscending.findIndex((band) => band.tier === activeTier);
   const tiersLeftToMax = currentTierIndex === -1 ? 0 : Math.max(0, tierBandsAscending.length - currentTierIndex - 1);
   const router = useRouter();
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const { data: dailyChallenges = [] } = useDailyChallenges();
 
   const handleConfirm = () => {
     if (!selectedMode) return;
@@ -142,22 +102,14 @@ export function ModeSelectionScreen({
         }}
         role="button"
         tabIndex={0}
-        className="relative rounded-3xl bg-gradient-to-br from-[#1B3A25] via-[#1B2F36] to-[#1B2F36] border-b-4 border-[#58CC02] overflow-hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#58CC02] active:border-b-2 active:translate-y-[2px] transition-all"
+        className="relative rounded-3xl bg-gradient-to-br from-[#1B3A25] via-[#1B2F36] to-[#1B2F36] border-b-4 border-[#0D1B21] overflow-hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#58CC02] active:border-b-2 active:translate-y-[2px] transition-all"
       >
-        {/* Soccer Field Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-white" />
-          <div className="absolute top-0 bottom-0 left-1/2 w-1 bg-white -translate-x-1/2" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full border-2 border-white" />
-        </div>
-
-        <StadiumSilhouette />
-
+  
         <div className="relative z-10 p-4 md:p-6">
           <div className="flex items-center justify-between mb-2 md:mb-4">
             <div className="flex items-center gap-2 md:gap-3">
               <div className="size-10 md:size-16 rounded-xl md:rounded-2xl bg-[#58CC02]/20 border-2 border-[#58CC02]/40 flex items-center justify-center">
-                <SoccerBall className="size-5 md:size-9 text-[#58CC02]" />
+                <Trophy className="size-5 md:size-9 text-[#58CC02]" strokeWidth={2.5} />
               </div>
               <div>
                 <h1 className="text-lg md:text-3xl font-black text-white uppercase leading-tight">Ranked Match</h1>
@@ -179,7 +131,7 @@ export function ModeSelectionScreen({
           </div>
 
           <p className="hidden md:block text-base text-white/80 font-semibold mb-4 max-w-xl">
-            🏆 Compete for Rank Points (RP) and climb the global leaderboards. Win to promote to higher divisions!
+            Compete for Rank Points (RP) and climb the global leaderboards. Win to promote to higher divisions!
           </p>
 
           {!rankedProfileLoading && isPlacementInProgress && (
@@ -267,50 +219,31 @@ export function ModeSelectionScreen({
                       : 'Max rank reached'}
                   </span>
                 </div>
-                <div className="mt-3 rounded-xl border border-[#58CC02]/15 bg-[#102329]/70 px-3 py-2">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[#56707A]">Rank Road</div>
-                      <div className="text-xs md:text-sm font-black text-white">
-                        {tierVisual.emoji} {activeTier}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[#56707A]">To GOAT</div>
-                      <div className="text-xs md:text-sm font-black text-[#85E000]">
-                        {tiersLeftToMax === 0 ? 'At max rank' : `${tiersLeftToMax} tier${tiersLeftToMax === 1 ? '' : 's'} left`}
-                      </div>
-                    </div>
+                <div className="mt-2 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-[#56707A]">Rank Road</span>
+                    <span className="text-[10px] font-black text-[#85E000]">
+                      {tiersLeftToMax === 0 ? '🐐 Max rank' : `${tiersLeftToMax} tier${tiersLeftToMax === 1 ? '' : 's'} to GOAT`}
+                    </span>
                   </div>
-                  <div className="mt-2 flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                  <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-0.5">
                     {tierBandsAscending.map((band) => {
                       const isCurrent = band.tier === activeTier;
                       const isUnlocked = displayRp >= band.minRp;
                       return (
-                        <div
+                        <span
                           key={band.tier}
                           className={cn(
-                            'shrink-0 rounded-xl border px-2.5 py-2 min-w-[102px] transition-colors',
+                            'shrink-0 text-[9px] font-black px-2 py-1 rounded-lg border transition-colors whitespace-nowrap',
                             isCurrent
-                              ? 'bg-[#58CC02]/18 border-[#85E000]/50 shadow-[0_0_16px_rgba(88,204,2,0.18)]'
+                              ? 'bg-[#58CC02]/20 border-[#85E000]/60 text-[#C8FF9A] shadow-[0_0_8px_rgba(133,224,0,0.25)]'
                               : isUnlocked
-                                ? 'bg-white/[0.04] border-white/10'
-                                : 'bg-black/10 border-white/5 opacity-65'
+                                ? 'bg-white/[0.04] border-white/10 text-white/50'
+                                : 'bg-transparent border-[#243B44] text-[#56707A]'
                           )}
                         >
-                          <div className={cn(
-                            'text-[10px] font-black uppercase tracking-wide',
-                            isCurrent ? 'text-[#C8FF9A]' : isUnlocked ? 'text-white/80' : 'text-[#56707A]'
-                          )}>
-                            {band.tier}
-                          </div>
-                          <div className={cn(
-                            'mt-1 text-[10px] font-bold',
-                            isCurrent ? 'text-[#85E000]' : 'text-[#56707A]'
-                          )}>
-                            {band.minRp} RP
-                          </div>
-                        </div>
+                          {band.tier}
+                        </span>
                       );
                     })}
                   </div>
@@ -350,18 +283,12 @@ export function ModeSelectionScreen({
           }}
           role="button"
           tabIndex={0}
-          className="relative text-left bg-[#1B2F36] rounded-2xl border-b-4 border-[#1CB0F6] p-4 md:p-6 hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1CB0F6] overflow-hidden"
+          className="relative text-left bg-[#1B2F36] rounded-2xl border-b-4 border-[#0D1B21] p-4 md:p-6 hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1CB0F6] overflow-hidden"
         >
-          {/* Soccer lines decoration */}
-          <div className="absolute top-0 right-0 w-32 h-32 opacity-5">
-            <div className="absolute top-4 left-0 right-0 h-0.5 bg-white" />
-            <div className="absolute top-8 left-0 right-0 h-0.5 bg-white" />
-            <div className="absolute top-12 left-0 right-0 h-0.5 bg-white" />
-          </div>
-
+       
           <div className="relative z-10">
             <div className="size-11 md:size-14 rounded-xl bg-[#1CB0F6]/20 border-2 border-[#1CB0F6]/40 flex items-center justify-center mb-2 md:mb-3">
-              <Jersey className="size-6 md:size-7 text-[#1CB0F6]" />
+              <Users className="size-6 md:size-7 text-[#1CB0F6]" strokeWidth={2.5} />
             </div>
             <h3 className="text-xl md:text-2xl font-black text-white mb-1 md:mb-2 uppercase">Friendly Match</h3>
             <p className="text-xs md:text-sm text-[#56707A] font-semibold mb-3 md:mb-4">
@@ -373,103 +300,35 @@ export function ModeSelectionScreen({
           </div>
         </div>
 
-        {/* Solo */}
+        {/* Daily Challenges */}
         <div
-          onClick={() => router.push('/career')}
+          onClick={() => router.push('/daily/challenges')}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
-              router.push('/career');
+              router.push('/daily/challenges');
             }
           }}
           role="button"
           tabIndex={0}
-          className="relative text-left bg-[#1B2F36] rounded-2xl border-b-4 border-[#FF9600] p-4 md:p-6 hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF9600] overflow-hidden"
+          className="relative text-left bg-[#1B2F36] rounded-2xl border-b-4 border-[#0D1B21] p-4 md:p-6 hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] overflow-hidden"
         >
-          {/* Boot prints decoration */}
-          <div className="absolute bottom-0 right-4 opacity-5">
-            <Boot className="w-24 h-24 text-white" />
-          </div>
-
           <div className="relative z-10">
-            <div className="size-11 md:size-14 rounded-xl bg-[#FF9600]/20 border-2 border-[#FF9600]/40 flex items-center justify-center mb-2 md:mb-3">
-              <Boot className="size-6 md:size-7 text-[#FF9600]" />
+            <div className="size-11 md:size-14 rounded-xl bg-[#FFD700]/20 border-2 border-[#FFD700]/40 flex items-center justify-center mb-2 md:mb-3">
+              <Flame className="size-6 md:size-7 text-[#FFD700]" strokeWidth={2.5} />
             </div>
-            <h3 className="text-xl md:text-2xl font-black text-white mb-1 md:mb-2 uppercase">Solo Practice</h3>
+            <h3 className="text-xl md:text-2xl font-black text-white mb-1 md:mb-2 uppercase">Daily Challenges</h3>
             <p className="text-xs md:text-sm text-[#56707A] font-semibold mb-3 md:mb-4">
-              ⚽ Start your journey from benchwarmer to legend.
+              🔥 Complete daily tasks to earn coins and XP. Resets every day.
             </p>
-            <span className="px-5 py-2.5 md:px-6 md:py-3 rounded-2xl bg-[#C47400] border-b-4 border-[#9A5B00] text-white font-black text-xs md:text-sm inline-block pointer-events-none uppercase">
-              Start Practice
+            <span className="px-5 py-2.5 md:px-6 md:py-3 rounded-2xl bg-[#C9A800] border-b-4 border-[#9A8000] text-white font-black text-xs md:text-sm inline-block pointer-events-none uppercase">
+              View Challenges
             </span>
           </div>
         </div>
       </motion.div>
 
-      {/* ─── 3. Daily Challenges (Horizontal Scroll) ─── */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-      >
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-black text-white flex items-center gap-2 uppercase">
-            <Whistle className="size-5 text-[#FFD700]" />
-            Daily Challenges
-          </h2>
-          {/* TODO: Replace hardcoded "Resets in 12h" with a live countdown computed from the daily reset timestamp */}
-          <span className="text-xs font-bold text-[#56707A] bg-[#1B2F36] px-3 py-1.5 rounded-full border-b-2 border-[#0D1B21]">Resets in 12h</span>
-        </div>
-        <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
-          {dailyChallenges.map((c, index) => {
-            const tier = (["bronze", "silver", "gold", "platinum", "bronze"] as const)[index] ?? "bronze";
-            const tierColor = { bronze: 'border-b-[#FF9600]', silver: 'border-b-slate-400', gold: 'border-b-[#FFD700]', platinum: 'border-b-[#1CB0F6]' }[tier];
-            const tierBg = { bronze: 'bg-[#FF9600]/20 text-[#FF9600]', silver: 'bg-slate-400/20 text-slate-300', gold: 'bg-[#FFD700]/20 text-[#FFD700]', platinum: 'bg-[#1CB0F6]/20 text-[#1CB0F6]' }[tier];
-            const tierIcon = { bronze: '🥉', silver: '🥈', gold: '🥇', platinum: '💎' }[tier];
-            const handleChallengeClick = () => {
-              if (!c.availableToday) return;
-              logger.info('Challenge enter', { id: c.challengeType });
-              router.push(`/daily/challenges/${c.challengeType}`);
-            };
-
-            return (
-              <div
-                key={c.challengeType}
-                onClick={handleChallengeClick}
-                onKeyDown={(e) => {
-                  if (c.availableToday && (e.key === 'Enter' || e.key === ' ')) {
-                    e.preventDefault();
-                    handleChallengeClick();
-                  }
-                }}
-                role="button"
-                tabIndex={c.availableToday ? 0 : -1}
-                className={cn(
-                  'shrink-0 w-[180px] bg-[#1B2F36] rounded-2xl border-b-4 p-4',
-                  !c.availableToday
-                    ? 'opacity-60 cursor-default border-b-[#243B44]'
-                    : 'cursor-pointer hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-                  tierColor
-                )}
-              >
-                <div className={cn('size-10 rounded-xl flex items-center justify-center mb-2 text-xl border-2', tierBg, !c.availableToday && 'border-[#243B44]')}>
-                  {c.availableToday ? tierIcon : '✓'}
-                </div>
-                <h4 className="text-sm font-black text-white mb-1">{c.title}</h4>
-                <p className="text-xs font-semibold text-[#56707A]">{c.availableToday ? `+${c.coinReward} coins · ${c.xpReward} XP` : 'Completed today'}</p>
-              </div>
-            );
-          })}
-        </div>
-        <Link
-          href="/daily/challenges"
-          className="mt-2 inline-block text-xs font-bold text-[#1CB0F6] hover:text-[#1CB0F6]/80 transition-colors uppercase tracking-wide"
-        >
-          View All Challenges →
-        </Link>
-      </motion.div>
-
-      {/* ─── 4. Objectives ─── */}
+      {/* ─── 3. Objectives ─── */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -477,7 +336,7 @@ export function ModeSelectionScreen({
       >
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-black text-white flex items-center gap-2 uppercase">
-            <Boot className="size-5 text-[#CE82FF]" />
+            <ClipboardList className="size-5 text-[#CE82FF]" />
             Objectives
           </h2>
           {/* TODO: Replace hardcoded "1/4 complete" with dynamic values from objectives API/hook */}
@@ -487,7 +346,7 @@ export function ModeSelectionScreen({
           {/* TODO: Replace hardcoded progress (33%, "1/3", "+100 coins") with dynamic values from objectives API/hook */}
           <Link
             href="/objectives"
-            className="shrink-0 w-[220px] bg-[#1B2F36] rounded-2xl border-b-4 border-b-[#CE82FF] p-4 hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all"
+            className="shrink-0 w-[220px] bg-[#1B2F36] rounded-2xl border-b-4 border-[#0D1B21] p-4 hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all"
           >
             <div className="flex items-center gap-2.5 mb-3">
               <div className="size-10 rounded-xl bg-[#CE82FF]/20 border-2 border-[#CE82FF]/40 flex items-center justify-center text-lg">
@@ -519,8 +378,8 @@ export function ModeSelectionScreen({
                 className={cn(
                   'shrink-0 w-[220px] bg-[#1B2F36] rounded-2xl border-b-4 p-4',
                   isLocked
-                    ? 'border-b-[#243B44] opacity-50 cursor-default'
-                    : 'border-b-[#CE82FF] hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all'
+                    ? 'border-[#0D1B21] opacity-50 cursor-default'
+                    : 'border-[#0D1B21] hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all'
                 )}
               >
                 <div className="flex items-center gap-2.5 mb-3">
