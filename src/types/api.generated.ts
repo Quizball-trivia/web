@@ -397,6 +397,7 @@ export interface paths {
             parameters: {
                 query?: {
                     limit?: number;
+                    userId?: string;
                 };
                 header?: never;
                 path?: never;
@@ -1373,6 +1374,62 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/{userId}/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get public profile for a user */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Public profile data */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicProfileResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description User not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/categories": {
         parameters: {
             query?: never;
@@ -2060,7 +2117,7 @@ export interface paths {
                     category_id?: string;
                     status?: "draft" | "published" | "archived";
                     difficulty?: "easy" | "medium" | "hard";
-                    type?: "mcq_single" | "input_text";
+                    type?: "mcq_single" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order";
                     search?: string;
                     page?: string;
                     limit?: string;
@@ -2100,14 +2157,14 @@ export interface paths {
                         /** Format: uuid */
                         category_id: string;
                         /** @enum {string} */
-                        type: "mcq_single" | "input_text";
+                        type: "mcq_single" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order";
                         /** @enum {string} */
                         difficulty: "easy" | "medium" | "hard";
                         /** @enum {string} */
                         status?: "draft" | "published" | "archived";
                         prompt: components["schemas"]["I18nField"];
                         explanation?: components["schemas"]["I18nField"] & unknown;
-                        payload?: unknown;
+                        payload: components["schemas"]["QuestionPayload"];
                     };
                 };
             };
@@ -2214,14 +2271,14 @@ export interface paths {
                         /** Format: uuid */
                         category_id?: string;
                         /** @enum {string} */
-                        type?: "mcq_single" | "input_text";
+                        type?: "mcq_single" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order";
                         /** @enum {string} */
                         difficulty?: "easy" | "medium" | "hard";
                         /** @enum {string} */
                         status?: "draft" | "published" | "archived";
                         prompt?: components["schemas"]["I18nField"];
                         explanation?: components["schemas"]["I18nField"] & unknown;
-                        payload?: unknown;
+                        payload?: components["schemas"]["QuestionPayload"];
                     };
                 };
             };
@@ -2357,14 +2414,14 @@ export interface paths {
                         category_id: string;
                         questions: {
                             /** @enum {string} */
-                            type: "mcq_single" | "input_text";
+                            type: "mcq_single" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order";
                             /** @enum {string} */
                             difficulty: "easy" | "medium" | "hard";
                             /** @enum {string} */
                             status?: "draft" | "published" | "archived";
                             prompt: components["schemas"]["I18nField"];
                             explanation?: components["schemas"]["I18nField"] & unknown;
-                            payload?: unknown;
+                            payload: components["schemas"]["QuestionPayload"];
                         }[];
                     };
                 };
@@ -2550,6 +2607,549 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/daily-challenges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List active daily challenges for the current user */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Active daily challenge lineup */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** @enum {string} */
+                                challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+                                title: string;
+                                description: string;
+                                /** @enum {string} */
+                                iconToken: "dollarSign" | "brain" | "lightbulb" | "timer" | "list";
+                                coinReward: number;
+                                xpReward: number;
+                                showOnHome: boolean;
+                                completedToday: boolean;
+                                availableToday: boolean;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/daily-challenges/{challengeType}/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a playable daily challenge session */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Daily challenge session payload */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            challengeType: "moneyDrop";
+                            title: string;
+                            description: string;
+                            questionCount: number;
+                            secondsPerQuestion: number;
+                            startingMoney: number;
+                            questions: {
+                                /** Format: uuid */
+                                id: string;
+                                category: string;
+                                /** @enum {string} */
+                                difficulty: "easy" | "medium" | "hard";
+                                prompt: string;
+                                options: string[];
+                                correctAnswerIndex: number;
+                                clue: string | null;
+                            }[];
+                        } | {
+                            /** @enum {string} */
+                            challengeType: "footballJeopardy";
+                            title: string;
+                            description: string;
+                            pickCount: number;
+                            categories: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                                questions: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    value: 100 | 200 | 300;
+                                    /** @enum {string} */
+                                    difficulty: "easy" | "medium" | "hard";
+                                    prompt: string;
+                                    options: string[];
+                                    correctAnswerIndex: number;
+                                    clue: string | null;
+                                }[];
+                            }[];
+                        } | {
+                            /** @enum {string} */
+                            challengeType: "countdown";
+                            title: string;
+                            description: string;
+                            roundCount: number;
+                            secondsPerRound: number;
+                            rounds: {
+                                /** Format: uuid */
+                                id: string;
+                                category: string;
+                                prompt: string;
+                                answerGroups: {
+                                    id: string;
+                                    display: string;
+                                    acceptedAnswers: string[];
+                                }[];
+                            }[];
+                        } | {
+                            /** @enum {string} */
+                            challengeType: "clues";
+                            title: string;
+                            description: string;
+                            questionCount: number;
+                            secondsPerClueStep: number;
+                            questions: {
+                                /** Format: uuid */
+                                id: string;
+                                category: string;
+                                /** @enum {string} */
+                                difficulty: "easy" | "medium" | "hard";
+                                displayAnswer: string;
+                                acceptedAnswers: string[];
+                                clues: {
+                                    /** @enum {string} */
+                                    type: "text" | "emoji";
+                                    content: string;
+                                }[];
+                            }[];
+                        } | {
+                            /** @enum {string} */
+                            challengeType: "putInOrder";
+                            title: string;
+                            description: string;
+                            roundCount: number;
+                            itemsPerRound: number;
+                            rounds: {
+                                /** Format: uuid */
+                                id: string;
+                                category: string;
+                                prompt: string;
+                                /** @enum {string} */
+                                direction: "asc" | "desc";
+                                items: {
+                                    id: string;
+                                    label: string;
+                                    details: string | null;
+                                    emoji: string | null;
+                                    sortValue: number;
+                                }[];
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Challenge not available */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Already completed or content unavailable */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/daily-challenges/{challengeType}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete a daily challenge for the day */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @default 0 */
+                        score?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Completion recorded and rewards granted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+                            /** @enum {boolean} */
+                            completedToday: true;
+                            coinsAwarded: number;
+                            xpAwarded: number;
+                            wallet?: {
+                                coins: number;
+                                tickets: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Challenge not available */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Already completed today */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/daily-challenges/dev/{challengeType}/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Reset today completion for a daily challenge (dev-only) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Today completion reset */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+                            /** @enum {boolean} */
+                            reset: true;
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not allowed to use dev reset */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/daily-challenges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List daily challenge CMS configs */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Admin daily challenge configs */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** @enum {string} */
+                                challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+                                title: string;
+                                description: string;
+                                /** @enum {string} */
+                                iconToken: "dollarSign" | "brain" | "lightbulb" | "timer" | "list";
+                                coinReward: number;
+                                xpReward: number;
+                                showOnHome: boolean;
+                                completedToday: boolean;
+                                availableToday: boolean;
+                                settings: {
+                                    /** @default [] */
+                                    categoryIds: string[];
+                                    questionCount: number;
+                                    secondsPerQuestion: number;
+                                    startingMoney: number;
+                                    /** @enum {string} */
+                                    challengeType: "moneyDrop";
+                                } | {
+                                    /** @default [] */
+                                    categoryIds: string[];
+                                    pickCount: number;
+                                    /** @enum {string} */
+                                    challengeType: "footballJeopardy";
+                                } | {
+                                    /** @default [] */
+                                    categoryIds: string[];
+                                    roundCount: number;
+                                    secondsPerRound: number;
+                                    /** @enum {string} */
+                                    challengeType: "countdown";
+                                } | {
+                                    /** @default [] */
+                                    categoryIds: string[];
+                                    questionCount: number;
+                                    secondsPerClueStep: number;
+                                    /** @enum {string} */
+                                    challengeType: "clues";
+                                } | {
+                                    /** @default [] */
+                                    categoryIds: string[];
+                                    roundCount: number;
+                                    itemsPerRound: number;
+                                    /** @enum {string} */
+                                    challengeType: "putInOrder";
+                                };
+                                sortOrder: number;
+                                isActive: boolean;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/daily-challenges/{challengeType}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update one daily challenge CMS config */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        isActive: boolean;
+                        sortOrder: number;
+                        showOnHome: boolean;
+                        coinReward: number;
+                        xpReward: number;
+                        settings: components["schemas"]["DailyChallengeSettings"];
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated admin daily challenge config */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminDailyChallengeConfigResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/questions/check-duplicates": {
         parameters: {
             query?: never;
@@ -2671,6 +3271,8 @@ export interface components {
             id: string;
             /** Format: email */
             email: string | null;
+            /** @enum {string} */
+            role: "admin" | "user";
             nickname: string | null;
             country: string | null;
             /** Format: uri */
@@ -2678,6 +3280,13 @@ export interface components {
             favorite_club: string | null;
             preferred_language: string | null;
             onboarding_complete: boolean;
+            progression: {
+                level: number;
+                totalXp: number;
+                currentLevelXp: number;
+                xpForNextLevel: number;
+                progressPct: number;
+            };
             /** Format: date-time */
             created_at: string;
         };
@@ -2761,6 +3370,32 @@ export interface components {
             currentWinStreak: number;
             /** Format: date-time */
             lastRankedMatchAt: string | null;
+        };
+        PublicProfileResponse: {
+            /** Format: uuid */
+            id: string;
+            nickname: string | null;
+            avatarUrl: string | null;
+            country: string | null;
+            favoriteClub: string | null;
+            progression: {
+                level: number;
+                totalXp: number;
+                currentLevelXp: number;
+                xpForNextLevel: number;
+                progressPct: number;
+            };
+            ranked: components["schemas"]["RankedProfileResponse"] | null;
+            stats: components["schemas"]["StatsSummaryResponse"];
+            headToHead: components["schemas"]["HeadToHeadResponse"] | null;
+            globalRank: {
+                rank: number;
+                total: number;
+            } | null;
+            countryRank: {
+                rank: number;
+                total: number;
+            } | null;
         };
         StoreProductsResponse: {
             items: {
@@ -2950,20 +3585,66 @@ export interface components {
             }[];
             featured: boolean;
         };
+        QuestionPayload: {
+            /** @enum {string} */
+            type: "mcq_single";
+            options: {
+                id: string;
+                text: components["schemas"]["I18nField"];
+                is_correct: boolean;
+            }[];
+        } | {
+            /** @enum {string} */
+            type: "input_text";
+            accepted_answers: components["schemas"]["I18nField"][];
+            case_sensitive: boolean;
+        } | {
+            /** @enum {string} */
+            type: "countdown_list";
+            prompt: components["schemas"]["I18nField"];
+            answer_groups: {
+                id: string;
+                display: components["schemas"]["I18nField"];
+                accepted_answers: string[];
+            }[];
+        } | {
+            /** @enum {string} */
+            type: "clue_chain";
+            display_answer: components["schemas"]["I18nField"];
+            accepted_answers: string[];
+            clues: {
+                /** @enum {string} */
+                type: "text" | "emoji";
+                content: components["schemas"]["I18nField"];
+            }[];
+        } | {
+            /** @enum {string} */
+            type: "put_in_order";
+            prompt: components["schemas"]["I18nField"];
+            /** @enum {string} */
+            direction: "asc" | "desc";
+            items: {
+                id: string;
+                label: components["schemas"]["I18nField"];
+                details?: components["schemas"]["I18nField"] & unknown;
+                emoji?: string | null;
+                sort_value: number;
+            }[];
+        };
         QuestionResponse: {
             /** Format: uuid */
             id: string;
             /** Format: uuid */
             category_id: string;
             /** @enum {string} */
-            type: "mcq_single" | "input_text";
+            type: "mcq_single" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order";
             /** @enum {string} */
             difficulty: "easy" | "medium" | "hard";
             /** @enum {string} */
             status: "draft" | "published" | "archived";
             prompt: components["schemas"]["I18nField"];
             explanation: components["schemas"]["I18nField"] & unknown;
-            payload?: unknown;
+            payload: components["schemas"]["QuestionPayload"] | null;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -3030,6 +3711,192 @@ export interface components {
                 prompt: components["schemas"]["I18nField"];
                 existingQuestions: components["schemas"]["DuplicateQuestionInfo"][];
             }[];
+        };
+        DailyChallengeMetadata: {
+            /** @enum {string} */
+            challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+            title: string;
+            description: string;
+            /** @enum {string} */
+            iconToken: "dollarSign" | "brain" | "lightbulb" | "timer" | "list";
+            coinReward: number;
+            xpReward: number;
+            showOnHome: boolean;
+            completedToday: boolean;
+            availableToday: boolean;
+        };
+        DailyChallengeSettings: {
+            /** @default [] */
+            categoryIds: string[];
+            questionCount: number;
+            secondsPerQuestion: number;
+            startingMoney: number;
+            /** @enum {string} */
+            challengeType: "moneyDrop";
+        } | {
+            /** @default [] */
+            categoryIds: string[];
+            pickCount: number;
+            /** @enum {string} */
+            challengeType: "footballJeopardy";
+        } | {
+            /** @default [] */
+            categoryIds: string[];
+            roundCount: number;
+            secondsPerRound: number;
+            /** @enum {string} */
+            challengeType: "countdown";
+        } | {
+            /** @default [] */
+            categoryIds: string[];
+            questionCount: number;
+            secondsPerClueStep: number;
+            /** @enum {string} */
+            challengeType: "clues";
+        } | {
+            /** @default [] */
+            categoryIds: string[];
+            roundCount: number;
+            itemsPerRound: number;
+            /** @enum {string} */
+            challengeType: "putInOrder";
+        };
+        DailyChallengeSessionResponse: {
+            /** @enum {string} */
+            challengeType: "moneyDrop";
+            title: string;
+            description: string;
+            questionCount: number;
+            secondsPerQuestion: number;
+            startingMoney: number;
+            questions: {
+                /** Format: uuid */
+                id: string;
+                category: string;
+                /** @enum {string} */
+                difficulty: "easy" | "medium" | "hard";
+                prompt: string;
+                options: string[];
+                correctAnswerIndex: number;
+                clue: string | null;
+            }[];
+        } | {
+            /** @enum {string} */
+            challengeType: "footballJeopardy";
+            title: string;
+            description: string;
+            pickCount: number;
+            categories: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                questions: {
+                    /** Format: uuid */
+                    id: string;
+                    value: 100 | 200 | 300;
+                    /** @enum {string} */
+                    difficulty: "easy" | "medium" | "hard";
+                    prompt: string;
+                    options: string[];
+                    correctAnswerIndex: number;
+                    clue: string | null;
+                }[];
+            }[];
+        } | {
+            /** @enum {string} */
+            challengeType: "countdown";
+            title: string;
+            description: string;
+            roundCount: number;
+            secondsPerRound: number;
+            rounds: {
+                /** Format: uuid */
+                id: string;
+                category: string;
+                prompt: string;
+                answerGroups: {
+                    id: string;
+                    display: string;
+                    acceptedAnswers: string[];
+                }[];
+            }[];
+        } | {
+            /** @enum {string} */
+            challengeType: "clues";
+            title: string;
+            description: string;
+            questionCount: number;
+            secondsPerClueStep: number;
+            questions: {
+                /** Format: uuid */
+                id: string;
+                category: string;
+                /** @enum {string} */
+                difficulty: "easy" | "medium" | "hard";
+                displayAnswer: string;
+                acceptedAnswers: string[];
+                clues: {
+                    /** @enum {string} */
+                    type: "text" | "emoji";
+                    content: string;
+                }[];
+            }[];
+        } | {
+            /** @enum {string} */
+            challengeType: "putInOrder";
+            title: string;
+            description: string;
+            roundCount: number;
+            itemsPerRound: number;
+            rounds: {
+                /** Format: uuid */
+                id: string;
+                category: string;
+                prompt: string;
+                /** @enum {string} */
+                direction: "asc" | "desc";
+                items: {
+                    id: string;
+                    label: string;
+                    details: string | null;
+                    emoji: string | null;
+                    sortValue: number;
+                }[];
+            }[];
+        };
+        CompleteDailyChallengeResponse: {
+            /** @enum {string} */
+            challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+            /** @enum {boolean} */
+            completedToday: true;
+            coinsAwarded: number;
+            xpAwarded: number;
+            wallet?: {
+                coins: number;
+                tickets: number;
+            };
+        };
+        ResetDailyChallengeResponse: {
+            /** @enum {string} */
+            challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+            /** @enum {boolean} */
+            reset: true;
+        };
+        AdminDailyChallengeConfigResponse: {
+            /** @enum {string} */
+            challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+            title: string;
+            description: string;
+            /** @enum {string} */
+            iconToken: "dollarSign" | "brain" | "lightbulb" | "timer" | "list";
+            coinReward: number;
+            xpReward: number;
+            showOnHome: boolean;
+            completedToday: boolean;
+            availableToday: boolean;
+            sortOrder: number;
+            isActive: boolean;
+            settings: components["schemas"]["DailyChallengeSettings"];
         };
     };
     responses: never;

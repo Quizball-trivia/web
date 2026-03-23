@@ -59,4 +59,10 @@ export const queryKeys = {
     wallet: () => [...queryKeys.store.all, "wallet"] as const,
     inventory: () => [...queryKeys.store.all, "inventory"] as const,
   },
+  dailyChallenges: {
+    all: ["dailyChallenges"] as const,
+    list: () => [...queryKeys.dailyChallenges.all, "list"] as const,
+    session: (challengeType: string) =>
+      [...queryKeys.dailyChallenges.all, "session", challengeType] as const,
+  },
 };

@@ -1,7 +1,7 @@
 'use client';
 
 import type { PlayerStats } from '@/types/game';
-import type { MatchStatsSummary, RankPosition } from '@/lib/domain';
+import type { MatchStatsSummary, RankPosition, UserProgression } from '@/lib/domain';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import { ProfileWeb, type ProfileRecentMatch } from './ProfileWeb';
 import { useAuthStore } from '@/stores/auth.store';
@@ -13,6 +13,7 @@ interface ProfileScreenProps {
   country?: string | null;
   favoriteClub?: string | null;
   preferredLanguage?: string | null;
+  progression?: UserProgression | null;
   globalRank?: RankPosition | null;
   countryRank?: RankPosition | null;
   matchStatsSummary?: MatchStatsSummary | null;
@@ -48,6 +49,7 @@ export function ProfileScreen(props: ProfileScreenProps) {
         country={props.country}
         favoriteClub={props.favoriteClub}
         preferredLanguage={props.preferredLanguage}
+        progression={props.progression}
         globalRank={props.globalRank}
         countryRank={props.countryRank}
         matchStatsSummary={props.matchStatsSummary}

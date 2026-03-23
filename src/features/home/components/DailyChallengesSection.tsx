@@ -1,17 +1,23 @@
+import { useMemo } from 'react';
 import { DailyChallengeCard } from './DailyChallengeCard';
-import { HOME_CHALLENGES, type DailyChallengeId } from '../challenges';
+import { useDailyChallenges } from '@/lib/queries/dailyChallenges.queries';
+import { toChallengeCard, type DailyChallengeId } from '../challenges';
 
 interface DailyChallengesSectionProps {
-  dailyChallengesCompleted: Map<string, number>;
   onViewAll: () => void;
   onSelectChallenge: (challengeId: DailyChallengeId) => void;
 }
 
 export function DailyChallengesSection({
-  dailyChallengesCompleted,
   onViewAll,
   onSelectChallenge,
 }: DailyChallengesSectionProps) {
+  const { data: dailyChallenges = [] } = useDailyChallenges();
+  const homeChallenges = useMemo(
+    () => dailyChallenges.filter((challenge) => challenge.showOnHome).map(toChallengeCard),
+    [dailyChallenges]
+  );
+
   return (
     <div className="px-4 pt-4">
       <div className="flex items-center justify-between mb-3">
@@ -25,7 +31,7 @@ export function DailyChallengesSection({
       </div>
 
       <div className="space-y-3">
-        {HOME_CHALLENGES.map((challenge) => (
+        {homeChallenges.map((challenge) => (
           <DailyChallengeCard
             key={challenge.id}
             id={challenge.id}
@@ -34,7 +40,7 @@ export function DailyChallengesSection({
             icon={challenge.icon}
             iconBgColor={challenge.iconBgColor}
             coinReward={challenge.coinReward}
-            isCompleted={dailyChallengesCompleted.has(challenge.id)}
+            isCompleted={challenge.completedToday}
             onClick={() => onSelectChallenge(challenge.id)}
           />
         ))}

@@ -87,9 +87,9 @@ function PublicProfileContent({ userId }: { userId: string }) {
       ? { base: profile.avatarUrl }
       : undefined,
     coins: 0,
-    level: 0,
-    xp: 0,
-    xpToNextLevel: 1,
+    level: profile.progression.level,
+    xp: profile.progression.currentLevelXp,
+    xpToNextLevel: profile.progression.xpForNextLevel,
     totalScore: 0,
     gamesPlayed: profile.stats.overall.gamesPlayed,
     correctAnswers: 0,
@@ -139,6 +139,7 @@ function PublicProfileContent({ userId }: { userId: string }) {
         avatarUrl={profile.avatarUrl}
         country={profile.country}
         favoriteClub={profile.favoriteClub}
+        progression={profile.progression}
         globalRank={profile.globalRank}
         countryRank={profile.countryRank}
         matchStatsSummary={matchStatsSummary}

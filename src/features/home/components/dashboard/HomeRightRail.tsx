@@ -3,24 +3,25 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Users, User, ArrowRight, Trophy, Gamepad2, Zap, Timer } from 'lucide-react';
-import { ALL_CHALLENGES } from '@/features/home/challenges';
+import { useDailyChallenges } from '@/lib/queries/dailyChallenges.queries';
 
 interface HomeRightRailProps {
-  dailyChallengesCompleted: Map<string, number>;
   onOpenFriend: () => void;
 }
 
-export function HomeRightRail({ dailyChallengesCompleted, onOpenFriend }: HomeRightRailProps) {
+export function HomeRightRail({ onOpenFriend }: HomeRightRailProps) {
   const router = useRouter();
+  const { data: dailyChallenges = [] } = useDailyChallenges();
 
-  // Pick the first incomplete challenge, or the first one if all done
-  const challenge = ALL_CHALLENGES.find(c => !dailyChallengesCompleted.has(c.id)) || ALL_CHALLENGES[0];
-  const isChallengeCompleted = dailyChallengesCompleted.has(challenge.id);
+  const challenge = dailyChallenges.find((item) => item.showOnHome && item.availableToday)
+    ?? dailyChallenges.find((item) => item.availableToday)
+    ?? dailyChallenges[0];
+  const isActionable = challenge?.availableToday === true && !challenge.completedToday;
 
   // Auto-start handler
   const handleStartChallenge = () => {
-    if (isChallengeCompleted) return;
-    router.push(`/daily/challenges/${challenge.id}`);
+    if (!challenge || !isActionable) return;
+    router.push(`/daily/challenges/${challenge.challengeType}`);
   };
 
   // Mock last match
@@ -48,29 +49,29 @@ export function HomeRightRail({ dailyChallengesCompleted, onOpenFriend }: HomeRi
         
         <CardContent className="p-0">
            {/* Featured / Top Objective (Daily Challenge) */}
-           <div 
-             className={`p-4 border-b border-border/40 hover:bg-card/40 transition-colors cursor-pointer group ${isChallengeCompleted ? 'opacity-70' : ''}`}
-             onClick={handleStartChallenge}
+           <div
+             className={`p-4 border-b border-border/40 transition-colors ${isActionable ? 'hover:bg-card/40 cursor-pointer group' : 'opacity-70'}`}
+             onClick={isActionable ? handleStartChallenge : undefined}
            >
               <div className="flex justify-between items-start mb-2">
                  <div className="space-y-1">
                     <span className="text-[10px] font-bold text-green-500 uppercase tracking-wider">Daily Focus</span>
-                    <h4 className="font-bold text-sm group-hover:text-primary transition-colors">{challenge.title}</h4>
+                    <h4 className="font-bold text-sm group-hover:text-primary transition-colors">{challenge?.title ?? "Daily challenge"}</h4>
                  </div>
                  <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20 shadow-[0_0_10px_-3px_hsl(var(--yellow-500)/0.3)]">
-                    +{challenge.coinReward}
+                    +{challenge?.coinReward ?? 0}
                  </Badge>
               </div>
               <div className="space-y-1.5">
                  <div className="flex justify-between text-[11px] font-medium text-muted-foreground">
-                    <span>{isChallengeCompleted ? 'Completed' : 'Ready to start'}</span>
-                    <span className={`font-bold ${isChallengeCompleted ? 'text-green-500' : 'text-primary'}`}>
-                        {isChallengeCompleted ? '1/1' : '0/1'}
+                    <span>{challenge?.completedToday ? 'Completed' : 'Ready to start'}</span>
+                    <span className={`font-bold ${challenge?.completedToday ? 'text-green-500' : 'text-primary'}`}>
+                        {challenge?.completedToday ? '1/1' : '0/1'}
                     </span>
                  </div>
                  <div className="h-1.5 w-full bg-secondary/50 rounded-full overflow-hidden">
                     <div 
-                        className={`h-full rounded-full shadow-[0_0_8px_hsl(var(--green-500)/0.5)] transition-all duration-500 ${isChallengeCompleted ? 'bg-green-500 w-full' : 'bg-primary w-[5%]'}`} 
+                        className={`h-full rounded-full shadow-[0_0_8px_hsl(var(--green-500)/0.5)] transition-all duration-500 ${challenge?.completedToday ? 'bg-green-500 w-full' : 'bg-primary w-[5%]'}`} 
                     />
                  </div>
               </div>

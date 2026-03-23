@@ -1,30 +1,10 @@
 import { API_BASE_URL } from "@/lib/config";
 import { getAccessToken } from "@/lib/auth/tokenStorage";
 import { ApiError } from "@/lib/api/api";
-import type { MatchStatsSummary, HeadToHeadSummary, RankPosition } from "@/lib/domain";
+import type { components } from "@/types/api.generated";
 import type { Achievement } from "@/types/game";
 
-export interface PublicProfileResponse {
-  id: string;
-  nickname: string | null;
-  avatarUrl: string | null;
-  country: string | null;
-  favoriteClub: string | null;
-  ranked: {
-    rp: number;
-    tier: string;
-    placementStatus: string;
-    placementPlayed: number;
-    placementRequired: number;
-    placementWins: number;
-    currentWinStreak: number;
-    lastRankedMatchAt: string | null;
-  } | null;
-  stats: MatchStatsSummary;
-  headToHead: HeadToHeadSummary | null;
-  globalRank: RankPosition | null;
-  countryRank: RankPosition | null;
-}
+export type PublicProfileResponse = components["schemas"]["PublicProfileResponse"];
 
 export interface AchievementsResponse {
   achievements: Achievement[];

@@ -8,7 +8,7 @@ import { FriendPlayModal } from '@/features/friend/components/FriendPlayModal';
 import { HomeRecentMatches } from '@/features/home/components/dashboard/HomeRecentMatches';
 import type { MatchStatsSummary } from '@/lib/domain';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
-import { CHALLENGES } from '../tournaments/GameHubScreen';
+import { useDailyChallenges } from '@/lib/queries/dailyChallenges.queries';
 import { logger } from '@/utils/logger';
 
 import { getTierVisual } from '@/utils/tierVisuals';
@@ -105,6 +105,7 @@ export function ModeSelectionScreen({
   const tierProgress = getRankedTierProgress(displayRp);
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { data: dailyChallenges = [] } = useDailyChallenges();
 
   const handleConfirm = () => {
     if (!selectedMode) return;
@@ -351,42 +352,42 @@ export function ModeSelectionScreen({
           <span className="text-xs font-bold text-[#56707A] bg-[#1B2F36] px-3 py-1.5 rounded-full border-b-2 border-[#0D1B21]">Resets in 12h</span>
         </div>
         <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
-          {CHALLENGES.map((c) => {
-            const isLocked = c.status === 'locked';
-            const tierColor = { bronze: 'border-b-[#FF9600]', silver: 'border-b-slate-400', gold: 'border-b-[#FFD700]', platinum: 'border-b-[#1CB0F6]' }[c.tier];
-            const tierBg = { bronze: 'bg-[#FF9600]/20 text-[#FF9600]', silver: 'bg-slate-400/20 text-slate-300', gold: 'bg-[#FFD700]/20 text-[#FFD700]', platinum: 'bg-[#1CB0F6]/20 text-[#1CB0F6]' }[c.tier];
-            const tierIcon = { bronze: '🥉', silver: '🥈', gold: '🥇', platinum: '💎' }[c.tier];
+          {dailyChallenges.map((c, index) => {
+            const tier = (["bronze", "silver", "gold", "platinum", "bronze"] as const)[index] ?? "bronze";
+            const tierColor = { bronze: 'border-b-[#FF9600]', silver: 'border-b-slate-400', gold: 'border-b-[#FFD700]', platinum: 'border-b-[#1CB0F6]' }[tier];
+            const tierBg = { bronze: 'bg-[#FF9600]/20 text-[#FF9600]', silver: 'bg-slate-400/20 text-slate-300', gold: 'bg-[#FFD700]/20 text-[#FFD700]', platinum: 'bg-[#1CB0F6]/20 text-[#1CB0F6]' }[tier];
+            const tierIcon = { bronze: '🥉', silver: '🥈', gold: '🥇', platinum: '💎' }[tier];
             const handleChallengeClick = () => {
-              if (isLocked) return;
-              logger.info('Challenge enter', { id: c.id });
-              router.push(`/daily/challenges/${c.id}`);
+              if (!c.availableToday) return;
+              logger.info('Challenge enter', { id: c.challengeType });
+              router.push(`/daily/challenges/${c.challengeType}`);
             };
 
             return (
               <div
-                key={c.id}
+                key={c.challengeType}
                 onClick={handleChallengeClick}
                 onKeyDown={(e) => {
-                  if (!isLocked && (e.key === 'Enter' || e.key === ' ')) {
+                  if (c.availableToday && (e.key === 'Enter' || e.key === ' ')) {
                     e.preventDefault();
                     handleChallengeClick();
                   }
                 }}
                 role="button"
-                tabIndex={isLocked ? -1 : 0}
+                tabIndex={c.availableToday ? 0 : -1}
                 className={cn(
                   'shrink-0 w-[180px] bg-[#1B2F36] rounded-2xl border-b-4 p-4',
-                  isLocked
-                    ? 'opacity-50 cursor-default border-b-[#243B44]'
+                  !c.availableToday
+                    ? 'opacity-60 cursor-default border-b-[#243B44]'
                     : 'cursor-pointer hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                   tierColor
                 )}
               >
-                <div className={cn('size-10 rounded-xl flex items-center justify-center mb-2 text-xl border-2', tierBg, isLocked && 'border-[#243B44]')}>
-                  {isLocked ? '🔒' : tierIcon}
+                <div className={cn('size-10 rounded-xl flex items-center justify-center mb-2 text-xl border-2', tierBg, !c.availableToday && 'border-[#243B44]')}>
+                  {c.availableToday ? tierIcon : '✓'}
                 </div>
                 <h4 className="text-sm font-black text-white mb-1">{c.title}</h4>
-                <p className="text-xs font-semibold text-[#56707A]">{isLocked ? c.requirement : c.rewards}</p>
+                <p className="text-xs font-semibold text-[#56707A]">{c.availableToday ? `+${c.coinReward} coins · ${c.xpReward} XP` : 'Completed today'}</p>
               </div>
             );
           })}

@@ -1,111 +1,142 @@
 "use client";
 
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ComponentType, useEffect, useCallback, useState, useRef } from "react";
-
-import { storage, STORAGE_KEYS } from "@/utils/storage";
+import { useQueryClient } from "@tanstack/react-query";
 import { MoneyDropGame } from "@/features/daily/MoneyDropGame";
 import { FootballJeopardyGame } from "@/features/daily/FootballJeopardyGame";
 import { ClueGame } from "@/features/daily/ClueGame";
-import { TrueFalseGame } from "@/features/daily/TrueFalseGame";
-import { EmojiGuessGame } from "@/features/daily/EmojiGuessGame";
 import { CountdownGame } from "@/features/daily/CountdownGame";
 import { PutInOrderGame } from "@/features/daily/PutInOrderGame";
 import { QuitGameDialog } from "@/features/daily/QuitGameDialog";
-import type { DailyChallengeId } from "@/features/home/challenges";
+import { DAILY_CHALLENGE_VISUALS } from "@/lib/domain/dailyChallengeVisuals";
+import { useCompleteDailyChallenge, useDailyChallengeSession } from "@/lib/queries/dailyChallenges.queries";
+import { queryKeys } from "@/lib/queries/queryKeys";
+import { usePlayer } from "@/contexts/PlayerContext";
+import type { DailyChallengeType } from "@/lib/domain/dailyChallenge";
 
-interface DailyChallengeState {
-  completedChallenges: Record<string, number>;
+function isDailyChallengeType(value: string): value is DailyChallengeType {
+  return value in DAILY_CHALLENGE_VISUALS;
 }
-
-interface GameScreenProps {
-  onBack: () => void;
-  onComplete: (score: number) => void;
-}
-
-const GAME_COMPONENTS: Record<
-  DailyChallengeId,
-  ComponentType<GameScreenProps>
-> = {
-  moneyDrop: MoneyDropGame,
-  footballJeopardy: FootballJeopardyGame,
-  clues: ClueGame,
-  trueFalse: TrueFalseGame,
-  emojiGuess: EmojiGuessGame,
-  countdown: CountdownGame,
-  putInOrder: PutInOrderGame,
-  hairstyle: ClueGame, // Fallback to ClueGame for hairstyle challenge
-};
 
 export default function ChallengePage() {
   const params = useParams();
   const router = useRouter();
-  const challengeId = params.challengeId as DailyChallengeId;
+  const queryClient = useQueryClient();
+  const { addXP } = usePlayer();
   const [showBrowserBackDialog, setShowBrowserBackDialog] = useState(false);
   const guardPushed = useRef(false);
+  const completeOnceRef = useRef(false);
+  const sessionRequestedForRef = useRef<string | null>(null);
 
-  const GameComponent = GAME_COMPONENTS[challengeId];
+  const challengeId = String(params.challengeId ?? "");
+  const challengeType = isDailyChallengeType(challengeId) ? challengeId : undefined;
+  const sessionMutation = useDailyChallengeSession(challengeType);
+  const completeMutation = useCompleteDailyChallenge(challengeType ?? "moneyDrop");
 
-  // Redirect to challenges list if invalid challengeId (must be in an effect, not during render)
+  const invalidateAfterComplete = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.dailyChallenges.list() }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() }),
+    ]);
+  }, [queryClient]);
+
+  const handleBack = useCallback(() => {
+    router.replace("/daily/challenges");
+  }, [router]);
+
+  const handleComplete = useCallback(
+    async (score: number) => {
+      if (!challengeType || completeOnceRef.current) return;
+      completeOnceRef.current = true;
+
+      try {
+        const result = await completeMutation.mutateAsync(score);
+        if (result.xpAwarded > 0) {
+          addXP(result.xpAwarded);
+        }
+        await invalidateAfterComplete();
+        router.replace("/daily/challenges");
+      } catch {
+        completeOnceRef.current = false;
+      }
+    },
+    [addXP, challengeType, completeMutation, invalidateAfterComplete, router]
+  );
+
+  const session = challengeType && sessionMutation.data?.challengeType === challengeType
+    ? sessionMutation.data
+    : undefined;
+  const requestSession = sessionMutation.mutate;
+
   useEffect(() => {
-    if (!GameComponent) {
+    if (!challengeType || sessionRequestedForRef.current === challengeType) {
+      return;
+    }
+    sessionRequestedForRef.current = challengeType;
+    requestSession();
+  }, [challengeType, requestSession]);
+
+  useEffect(() => {
+    if (!challengeType || sessionMutation.isError) {
       router.replace("/daily/challenges");
     }
-  }, [GameComponent, router]);
+  }, [challengeType, router, sessionMutation.isError]);
 
-  // Intercept browser back button / mouse back button
-  useEffect(() => {
-    // Push a guard history entry so pressing back doesn't leave the page
-    if (!guardPushed.current) {
-      window.history.pushState({ gameGuard: true }, "");
-      guardPushed.current = true;
+  const gameContent = useMemo(() => {
+    if (!session) return null;
+
+    switch (session.challengeType) {
+      case "moneyDrop":
+        return <MoneyDropGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
+      case "footballJeopardy":
+        return <FootballJeopardyGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
+      case "clues":
+        return <ClueGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
+      case "countdown":
+        return <CountdownGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
+      case "putInOrder":
+        return <PutInOrderGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
+      default:
+        return null;
     }
+  }, [handleBack, handleComplete, session]);
 
+  const handleBrowserBackConfirm = useCallback(() => {
+    setShowBrowserBackDialog(false);
+    router.replace("/daily/challenges");
+  }, [router]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || guardPushed.current) return undefined;
+    window.history.pushState({ gameGuard: true }, "");
+    guardPushed.current = true;
     const handlePopState = () => {
-      // Re-push the guard to stay on the page and show quit dialog
       window.history.pushState({ gameGuard: true }, "");
       setShowBrowserBackDialog(true);
     };
-
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  const handleBack = useCallback(() => {
-    router.push("/daily/challenges");
-  }, [router]);
-
-  const handleBrowserBackConfirm = useCallback(() => {
-    setShowBrowserBackDialog(false);
-    router.push("/daily/challenges");
-  }, [router]);
-
-  // TODO: score parameter intentionally unused — score persistence is not yet implemented
-  const handleComplete: GameScreenProps["onComplete"] = useCallback(() => {
-    // Mark challenge as completed
-    const state = storage.get<DailyChallengeState | null>(
-      STORAGE_KEYS.DAILY_CHALLENGE_STATE,
-      null
-    );
-
-    const completedChallenges = state?.completedChallenges || {};
-    completedChallenges[challengeId] = Date.now();
-
-    storage.set(STORAGE_KEYS.DAILY_CHALLENGE_STATE, {
-      completedChallenges,
-    });
-
-    // Navigate back to challenges list
-    router.push("/daily/challenges");
-  }, [challengeId, router]);
-
-  if (!GameComponent) {
+  if (!challengeType || sessionMutation.isError) {
     return null;
+  }
+
+  if (sessionMutation.isPending || !session) {
+    return (
+      <div className="fixed inset-0 z-40 bg-[#131F24] font-fun flex items-center justify-center">
+        <div className="bg-[#1B2F36] rounded-xl border-b-4 border-[#0F1F26] p-6 text-center">
+          <p className="text-white font-black uppercase">Loading challenge</p>
+          <p className="text-sm text-[#56707A] mt-2">Fetching today&apos;s live challenge session.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <>
-      <GameComponent onBack={handleBack} onComplete={handleComplete} />
+      {gameContent}
       <QuitGameDialog
         open={showBrowserBackDialog}
         onOpenChange={setShowBrowserBackDialog}

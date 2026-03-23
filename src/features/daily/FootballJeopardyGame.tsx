@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from 'motion/react';
 
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ import {
   Star,
 } from "lucide-react";
 import { QuitGameDialog } from "./QuitGameDialog";
+import type { FootballJeopardySession } from "@/lib/domain/dailyChallenge";
 
 interface Question {
   id: string;
@@ -54,6 +55,7 @@ interface JeopardyCategory {
 }
 
 interface FootballJeopardyGameProps {
+  session: FootballJeopardySession;
   onBack: () => void;
   onComplete: (score: number) => void;
 }
@@ -64,131 +66,6 @@ function isCareerPathQuestion(
   return "teams" in q && "acceptedAnswers" in q;
 }
 
-const createJeopardyCategories = (): JeopardyCategory[] => {
-  return [
-    {
-      id: "career-paths",
-      name: "Career Paths",
-      emoji: "🛣️",
-      accentColor: "#CE82FF",
-      isCareerPath: true,
-      questions: {
-        100: {
-          id: "cp-100",
-          teams: [
-            { name: "Man United", emoji: "🔴" },
-            { name: "Real Madrid", emoji: "⚪" },
-            { name: "Juventus", emoji: "⚫" },
-            { name: "Al Nassr", emoji: "🟡" },
-          ],
-          correctAnswer: "Cristiano Ronaldo",
-          acceptedAnswers: ["ronaldo", "cristiano ronaldo", "cr7", "cristiano"],
-          difficulty: "easy",
-        } as CareerPathQuestion,
-        200: {
-          id: "cp-200",
-          teams: [
-            { name: "Barcelona", emoji: "🔵" },
-            { name: "PSG", emoji: "🔴" },
-            { name: "Inter Miami", emoji: "🩷" },
-          ],
-          correctAnswer: "Lionel Messi",
-          acceptedAnswers: ["messi", "lionel messi", "leo messi"],
-          difficulty: "medium",
-        } as CareerPathQuestion,
-        300: {
-          id: "cp-300",
-          teams: [
-            { name: "Everton", emoji: "🔵" },
-            { name: "Man City", emoji: "🩵" },
-            { name: "Chelsea", emoji: "🔵" },
-            { name: "NY City FC", emoji: "🩵" },
-          ],
-          correctAnswer: "Frank Lampard",
-          acceptedAnswers: ["lampard", "frank lampard"],
-          difficulty: "hard",
-        } as CareerPathQuestion,
-      },
-    },
-    {
-      id: "transfer-records",
-      name: "Transfer Records",
-      emoji: "💰",
-      accentColor: "#FF9600",
-      questions: {
-        100: {
-          id: "tr-100",
-          question:
-            "Which player became the world's most expensive footballer when he joined PSG in 2017?",
-          options: ["Cristiano Ronaldo", "Kylian Mbappé", "Neymar Jr", "Paul Pogba"],
-          correctAnswer: 2,
-          category: "Transfer Records",
-          difficulty: "easy",
-          clue: "Brazilian forward who left Barcelona",
-        },
-        200: {
-          id: "tr-200",
-          question:
-            "Which club paid a world record £100 million for Jack Grealish in 2021?",
-          options: ["Manchester United", "Chelsea", "Manchester City", "Liverpool"],
-          correctAnswer: 2,
-          category: "Transfer Records",
-          difficulty: "medium",
-          clue: "Premier League club managed by Pep Guardiola",
-        },
-        300: {
-          id: "tr-300",
-          question:
-            "Who holds the record as the most expensive goalkeeper in history after his 2018 move to Chelsea?",
-          options: ["Alisson Becker", "Kepa Arrizabalaga", "Ederson", "Jan Oblak"],
-          correctAnswer: 1,
-          category: "Transfer Records",
-          difficulty: "hard",
-          clue: "Spanish goalkeeper from Athletic Bilbao",
-        },
-      },
-    },
-    {
-      id: "iconic-moments",
-      name: "Iconic Moments",
-      emoji: "⚡",
-      accentColor: "#1CB0F6",
-      questions: {
-        100: {
-          id: "im-100",
-          question:
-            "Which player scored a famous overhead kick goal in the 2018 Champions League against Juventus?",
-          options: ["Lionel Messi", "Cristiano Ronaldo", "Karim Benzema", "Gareth Bale"],
-          correctAnswer: 1,
-          category: "Iconic Moments",
-          difficulty: "easy",
-          clue: "Portuguese legend who later joined Juventus",
-        },
-        200: {
-          id: "im-200",
-          question:
-            'In which year did Sergio Agüero score the famous "93:20" title-winning goal for Manchester City?',
-          options: ["2010", "2011", "2012", "2013"],
-          correctAnswer: 2,
-          category: "Iconic Moments",
-          difficulty: "medium",
-          clue: "Year of the London Olympics",
-        },
-        300: {
-          id: "im-300",
-          question:
-            'Which team completed the "Remontada" by overturning a 4-0 deficit against PSG in 2017?',
-          options: ["Real Madrid", "Barcelona", "Bayern Munich", "Manchester United"],
-          correctAnswer: 1,
-          category: "Iconic Moments",
-          difficulty: "hard",
-          clue: "Catalan club at Camp Nou",
-        },
-      },
-    },
-  ];
-};
-
 type PickedQuestion = {
   categoryId: string;
   value: 100 | 200 | 300;
@@ -196,10 +73,59 @@ type PickedQuestion = {
 };
 
 export function FootballJeopardyGame({
+  session,
   onBack,
   onComplete,
 }: FootballJeopardyGameProps) {
-  const [categories] = useState<JeopardyCategory[]>(createJeopardyCategories());
+  const categories = useMemo<JeopardyCategory[]>(
+    () =>
+      session.categories.map((category, index) => {
+        const q100 = category.questions.find((q) => q.value === 100);
+        const q200 = category.questions.find((q) => q.value === 200);
+        const q300 = category.questions.find((q) => q.value === 300);
+
+        if (!q100 || !q200 || !q300) {
+          throw new Error(`Category "${category.name}" is missing a question for value ${!q100 ? 100 : !q200 ? 200 : 300}`);
+        }
+
+        return {
+          id: category.id,
+          name: category.name,
+          emoji: ["🧠", "⚽", "🏆"][index] ?? "⚽",
+          accentColor: ["#CE82FF", "#FF9600", "#1CB0F6"][index] ?? "#1CB0F6",
+          questions: {
+            100: {
+              id: q100.id,
+              question: q100.prompt,
+              options: q100.options,
+              correctAnswer: q100.correctAnswerIndex,
+              category: category.name,
+              difficulty: q100.difficulty,
+              clue: q100.clue ?? "",
+            },
+            200: {
+              id: q200.id,
+              question: q200.prompt,
+              options: q200.options,
+              correctAnswer: q200.correctAnswerIndex,
+              category: category.name,
+              difficulty: q200.difficulty,
+              clue: q200.clue ?? "",
+            },
+            300: {
+              id: q300.id,
+              question: q300.prompt,
+              options: q300.options,
+              correctAnswer: q300.correctAnswerIndex,
+              category: category.name,
+              difficulty: q300.difficulty,
+              clue: q300.clue ?? "",
+            },
+          },
+        };
+      }),
+    [session.categories]
+  );
   const [pickedQuestions, setPickedQuestions] = useState<PickedQuestion[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<
     Question | CareerPathQuestion | null
@@ -217,7 +143,7 @@ export function FootballJeopardyGame({
   const [timerActive, setTimerActive] = useState(false);
   const [showQuitDialog, setShowQuitDialog] = useState(false);
 
-  const MAX_PICKS = 5;
+  const MAX_PICKS = session.pickCount;
   const MAX_TIME = 10;
   const remainingPicks = MAX_PICKS - pickedQuestions.length;
 

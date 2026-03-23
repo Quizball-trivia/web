@@ -5,10 +5,11 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { QuitGameDialog } from "./QuitGameDialog";
 import { Check, CheckCircle2, Clock, Timer, Lightbulb, Trophy, ArrowRight, ArrowLeft } from "lucide-react";
+import type { CountdownSession } from "@/lib/domain/dailyChallenge";
 
 interface AnswerGroup {
   display: string;
-  accepted: string[];
+  acceptedAnswers: string[];
 }
 
 interface CountdownQuestion {
@@ -19,11 +20,10 @@ interface CountdownQuestion {
 }
 
 interface CountdownGameProps {
+  session: CountdownSession;
   onBack: () => void;
   onComplete: (score: number) => void;
 }
-
-const TIME_PER_ROUND = 30;
 
 function calculateSimilarity(str1: string, str2: string): number {
   const s1 = str1.toLowerCase().trim();
@@ -62,54 +62,17 @@ function calculateSimilarity(str1: string, str2: string): number {
   return 1 - distance / maxLength;
 }
 
-// Mock questions for testing
-const MOCK_QUESTIONS: CountdownQuestion[] = [
-  {
-    id: "cd-1",
-    category: "Premier League",
-    prompt: "Name the current Premier League clubs (20)",
-    answerGroups: [
-      { display: "Arsenal", accepted: ["arsenal", "arsenal fc"] },
-      { display: "Aston Villa", accepted: ["aston villa", "villa"] },
-      { display: "Bournemouth", accepted: ["bournemouth", "afc bournemouth"] },
-      { display: "Brentford", accepted: ["brentford", "brentford fc"] },
-      { display: "Brighton", accepted: ["brighton", "brighton and hove albion"] },
-      { display: "Chelsea", accepted: ["chelsea", "chelsea fc"] },
-      { display: "Crystal Palace", accepted: ["crystal palace", "palace"] },
-      { display: "Everton", accepted: ["everton", "everton fc"] },
-      { display: "Fulham", accepted: ["fulham", "fulham fc"] },
-      { display: "Ipswich Town", accepted: ["ipswich", "ipswich town"] },
-      { display: "Leicester City", accepted: ["leicester", "leicester city"] },
-      { display: "Liverpool", accepted: ["liverpool", "liverpool fc"] },
-      { display: "Manchester City", accepted: ["man city", "manchester city"] },
-      { display: "Manchester United", accepted: ["man united", "manchester united", "man utd"] },
-      { display: "Newcastle United", accepted: ["newcastle", "newcastle united"] },
-      { display: "Nottingham Forest", accepted: ["nottingham forest", "forest"] },
-      { display: "Southampton", accepted: ["southampton", "saints"] },
-      { display: "Tottenham", accepted: ["tottenham", "spurs", "tottenham hotspur"] },
-      { display: "West Ham", accepted: ["west ham", "west ham united"] },
-      { display: "Wolves", accepted: ["wolves", "wolverhampton", "wolverhampton wanderers"] },
-    ],
-  },
-  {
-    id: "cd-2",
-    category: "World Cup Winners",
-    prompt: "Name the countries that have won the FIFA World Cup",
-    answerGroups: [
-      { display: "Brazil", accepted: ["brazil"] },
-      { display: "Germany", accepted: ["germany", "west germany"] },
-      { display: "Italy", accepted: ["italy"] },
-      { display: "Argentina", accepted: ["argentina"] },
-      { display: "France", accepted: ["france"] },
-      { display: "Uruguay", accepted: ["uruguay"] },
-      { display: "England", accepted: ["england"] },
-      { display: "Spain", accepted: ["spain"] },
-    ],
-  },
-];
-
-export function CountdownGame({ onBack, onComplete }: CountdownGameProps) {
-  const [questions] = useState<CountdownQuestion[]>(MOCK_QUESTIONS);
+export function CountdownGame({ session, onBack, onComplete }: CountdownGameProps) {
+  const TIME_PER_ROUND = session.secondsPerRound;
+  const [questions] = useState<CountdownQuestion[]>(() =>
+    session.rounds.map((round) => ({
+      ...round,
+      answerGroups: round.answerGroups.map((group) => ({
+        display: group.display,
+        acceptedAnswers: group.acceptedAnswers,
+      })),
+    }))
+  );
   const [currentRound, setCurrentRound] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(TIME_PER_ROUND);
   const [inputValue, setInputValue] = useState("");
@@ -186,7 +149,7 @@ export function CountdownGame({ onBack, onComplete }: CountdownGameProps) {
           continue;
         }
 
-        for (const acceptedAnswer of answerGroup.accepted) {
+        for (const acceptedAnswer of answerGroup.acceptedAnswers) {
           const similarity = calculateSimilarity(normalizedInput, acceptedAnswer);
 
           if (similarity >= 0.85) {

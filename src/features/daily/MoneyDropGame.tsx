@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 
 import { Slider } from "@/components/ui/slider";
@@ -16,18 +16,10 @@ import {
   XOctagon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface Question {
-  id: string;
-  question: string;
-  options: string[];
-  correctAnswer: number;
-  difficulty: "easy" | "medium" | "hard";
-  category: string;
-  clue: string;
-}
+import type { MoneyDropSession } from "@/lib/domain/dailyChallenge";
 
 interface MoneyDropGameProps {
+  session: MoneyDropSession;
   onBack: () => void;
   onComplete: (finalMoney: number) => void;
 }
@@ -48,55 +40,6 @@ const OptionRow = ({ index, option, color, textClass = "text-white" }: { index: 
     <span className={cn("text-sm md:text-base lg:text-lg font-bold truncate", textClass)} title={option}>{option}</span>
   </div>
 );
-
-// Mock questions for testing
-const MOCK_QUESTIONS: Question[] = [
-  {
-    id: "md-1",
-    question: "Which player has won the most Ballon d'Or awards?",
-    options: ["Cristiano Ronaldo", "Lionel Messi", "Michel Platini", "Johan Cruyff"],
-    correctAnswer: 1,
-    difficulty: "easy",
-    category: "Awards",
-    clue: "This Argentine forward has won 8 Ballon d'Or awards",
-  },
-  {
-    id: "md-2",
-    question: "In which year did England win the FIFA World Cup?",
-    options: ["1962", "1966", "1970", "1974"],
-    correctAnswer: 1,
-    difficulty: "medium",
-    category: "World Cup",
-    clue: "The tournament was hosted in England",
-  },
-  {
-    id: "md-3",
-    question: "Which club has won the most Champions League/European Cup titles?",
-    options: ["AC Milan", "Barcelona", "Real Madrid", "Bayern Munich"],
-    correctAnswer: 2,
-    difficulty: "easy",
-    category: "Champions League",
-    clue: "The Spanish giants have won 15 titles",
-  },
-  {
-    id: "md-4",
-    question: "Who is the all-time top scorer in Premier League history?",
-    options: ["Wayne Rooney", "Thierry Henry", "Alan Shearer", "Harry Kane"],
-    correctAnswer: 2,
-    difficulty: "medium",
-    category: "Premier League",
-    clue: "Newcastle United legend with 260 goals",
-  },
-  {
-    id: "md-5",
-    question: "Which country has won the most FIFA World Cups?",
-    options: ["Germany", "Italy", "Argentina", "Brazil"],
-    correctAnswer: 3,
-    difficulty: "easy",
-    category: "World Cup",
-    clue: "The Seleção have won 5 World Cups",
-  },
-];
 
 /* ── Dollar Bill Sub-components (unchanged animation) ── */
 
@@ -181,7 +124,9 @@ function FallingBills({ amount }: { amount: number }) {
 function HelpButtons({
   fiftyFiftyUsed,
   clueUsed,
+  clueDisabled = false,
   changeQuestionUsed,
+  changeQuestionDisabled = false,
   onFiftyFifty,
   onClue,
   onChangeQuestion,
@@ -189,7 +134,9 @@ function HelpButtons({
 }: {
   fiftyFiftyUsed: boolean;
   clueUsed: boolean;
+  clueDisabled?: boolean;
   changeQuestionUsed: boolean;
+  changeQuestionDisabled?: boolean;
   onFiftyFifty: () => void;
   onClue: () => void;
   onChangeQuestion: () => void;
@@ -206,11 +153,15 @@ function HelpButtons({
         <Split className="size-3.5 lg:size-4" />
         <span className={cn(fiftyFiftyUsed && "line-through")}>50/50</span>
       </button>
-      <button onClick={onClue} disabled={clueUsed || disabled} className={cn(btnBase, clueUsed ? btnUsed : btnActive)}>
+      <button onClick={onClue} disabled={clueUsed || clueDisabled || disabled} className={cn(btnBase, clueUsed || clueDisabled ? btnUsed : btnActive)}>
         <Lightbulb className="size-3.5 lg:size-4" />
         <span className={cn(clueUsed && "line-through")}>Clue</span>
       </button>
-      <button onClick={onChangeQuestion} disabled={changeQuestionUsed || disabled} className={cn(btnBase, changeQuestionUsed ? btnUsed : btnActive)}>
+      <button
+        onClick={onChangeQuestion}
+        disabled={changeQuestionUsed || changeQuestionDisabled || disabled}
+        className={cn(btnBase, changeQuestionUsed || changeQuestionDisabled ? btnUsed : btnActive)}
+      >
         <RefreshCw className="size-3.5 lg:size-4" />
         <span className={cn(changeQuestionUsed && "line-through")}>Skip</span>
       </button>
@@ -220,11 +171,11 @@ function HelpButtons({
 
 /* ── Main Component ── */
 
-export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
-  const STARTING_MONEY = 1000;
-  const QUESTION_TIME = 40;
+export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProps) {
+  const STARTING_MONEY = session.startingMoney;
+  const QUESTION_TIME = session.secondsPerQuestion;
 
-  const [questions] = useState<Question[]>(MOCK_QUESTIONS);
+  const questions = session.questions;
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [currentMoney, setCurrentMoney] = useState(STARTING_MONEY);
   const [bets, setBets] = useState<number[]>([0, 0, 0, 0]);
@@ -240,8 +191,14 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
   const [changeQuestionUsed, setChangeQuestionUsed] = useState(false);
   const [hiddenAnswers, setHiddenAnswers] = useState<number[]>([]);
   const [showClue, setShowClue] = useState(false);
+  const timeoutHandledRef = useRef(false);
+  const deadlineRef = useRef<number | null>(null);
+  const totalAllocatedRef = useRef(0);
+  const handleConfirmBetsRef = useRef<(() => void) | null>(null);
 
   const currentQuestion = questions[currentQuestionIndex];
+  const isLastQuestion = currentQuestionIndex >= questions.length - 1;
+  const hasClue = typeof currentQuestion.clue === "string" && currentQuestion.clue.trim().length > 0;
   const totalAllocated = bets.reduce((sum, bet) => sum + bet, 0);
   const remaining = currentMoney - totalAllocated;
   const isFullyAllocated = totalAllocated === currentMoney && currentMoney > 0;
@@ -261,12 +218,13 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
   };
 
   const handleConfirmBets = useCallback(() => {
+    if (timeoutHandledRef.current) return;
     setHasConfirmed(true);
     setIsAnimating(true);
     setShowClue(false);
     const wrongAnswers = currentQuestion.options
       .map((_, index) => index)
-      .filter((index) => index !== currentQuestion.correctAnswer && bets[index] > 0);
+      .filter((index) => index !== currentQuestion.correctAnswerIndex && bets[index] > 0);
     wrongAnswers.forEach((answerIndex, i) => {
       setTimeout(() => {
         setDroppedAnswers((prev) => [...prev, answerIndex]);
@@ -279,29 +237,55 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
   }, [bets, currentQuestion]);
 
   useEffect(() => {
+    totalAllocatedRef.current = totalAllocated;
+  }, [totalAllocated]);
+
+  useEffect(() => {
+    handleConfirmBetsRef.current = handleConfirmBets;
+  }, [handleConfirmBets]);
+
+  useEffect(() => {
+    timeoutHandledRef.current = false;
+    deadlineRef.current = Date.now() + QUESTION_TIME * 1000;
+    setTimeLeft(QUESTION_TIME);
+  }, [QUESTION_TIME, currentQuestionIndex]);
+
+  useEffect(() => {
     if (showResult || isAnimating || hasConfirmed) return;
+    if (deadlineRef.current === null) {
+      deadlineRef.current = Date.now() + QUESTION_TIME * 1000;
+    }
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          // Defer side-effects out of the state updater to avoid
-          // "Cannot update a component while rendering a different component"
-          queueMicrotask(() => {
-            if (totalAllocated === 0) {
-              onComplete(0);
-            } else {
-              handleConfirmBets();
-            }
-          });
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+      const remainingSeconds = Math.max(0, Math.ceil((deadlineRef.current! - Date.now()) / 1000));
+      setTimeLeft(remainingSeconds);
+
+      if (remainingSeconds > 0 || timeoutHandledRef.current) {
+        return;
+      }
+
+      timeoutHandledRef.current = true;
+      clearInterval(timer);
+
+      if (totalAllocatedRef.current === 0) {
+        onComplete(0);
+        return;
+      }
+
+      handleConfirmBetsRef.current?.();
+    }, 250);
+
     return () => clearInterval(timer);
-  }, [showResult, isAnimating, hasConfirmed, totalAllocated, handleConfirmBets, onComplete]);
+  }, [
+    QUESTION_TIME,
+    currentQuestionIndex,
+    hasConfirmed,
+    isAnimating,
+    onComplete,
+    showResult,
+  ]);
 
   const handleNextQuestion = () => {
-    const correctBet = bets[currentQuestion.correctAnswer];
+    const correctBet = bets[currentQuestion.correctAnswerIndex];
     const newMoney = correctBet;
     setCurrentMoney(newMoney);
     if (newMoney === 0 || currentQuestionIndex >= questions.length - 1) {
@@ -317,6 +301,7 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
     setHiddenAnswers([]);
     setShowClue(false);
     setTimeLeft(QUESTION_TIME);
+    timeoutHandledRef.current = false;
   };
 
   const handleFiftyFifty = () => {
@@ -324,7 +309,7 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
     setFiftyFiftyUsed(true);
     const wrongAnswers = currentQuestion.options
       .map((_, idx) => idx)
-      .filter((idx) => idx !== currentQuestion.correctAnswer);
+      .filter((idx) => idx !== currentQuestion.correctAnswerIndex);
     const shuffled = wrongAnswers.sort(() => Math.random() - 0.5);
     const toHide = shuffled.slice(0, 2);
     setHiddenAnswers(toHide);
@@ -335,16 +320,26 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
 
   const handleClue = () => {
     if (clueUsed || showResult || hasConfirmed) return;
-    setClueUsed(true);
+    // Only consume the lifeline when this question actually has clue content.
+    if (hasClue) {
+      setClueUsed(true);
+    }
     setShowClue(true);
   };
 
   const handleChangeQuestion = () => {
-    if (changeQuestionUsed || showResult || hasConfirmed) return;
+    if (changeQuestionUsed || showResult || hasConfirmed || isLastQuestion) return;
+    timeoutHandledRef.current = true;
+    deadlineRef.current = null;
     setChangeQuestionUsed(true);
+    setCurrentQuestionIndex((prev) => prev + 1);
     setBets([0, 0, 0, 0]);
     setHiddenAnswers([]);
     setShowClue(false);
+    setDroppedAnswers([]);
+    setShowResult(false);
+    setHasConfirmed(false);
+    setIsAnimating(false);
     setTimeLeft(QUESTION_TIME);
   };
 
@@ -435,7 +430,9 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
               <HelpButtons
                 fiftyFiftyUsed={fiftyFiftyUsed}
                 clueUsed={clueUsed}
+                clueDisabled={!hasClue}
                 changeQuestionUsed={changeQuestionUsed}
+                changeQuestionDisabled={isLastQuestion}
                 onFiftyFifty={handleFiftyFifty}
                 onClue={handleClue}
                 onChangeQuestion={handleChangeQuestion}
@@ -443,7 +440,7 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
               />
             </div>
             <p className="text-white text-lg md:text-xl lg:text-2xl font-bold leading-snug">
-              {currentQuestion.question}
+              {currentQuestion.prompt}
             </p>
           </motion.div>
 
@@ -457,7 +454,12 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
                 className="bg-[#FF9600]/10 border border-[#FF9600]/30 rounded-xl px-4 py-3 lg:px-5 lg:py-4 flex items-start gap-2 lg:gap-3"
               >
                 <Lightbulb className="size-4 shrink-0 text-[#FF9600]" />
-                <p className="text-sm lg:text-base text-[#56707A]"><span className="text-[#FF9600] font-bold">Clue: </span>{currentQuestion.clue}</p>
+                <p className="text-sm lg:text-base text-[#56707A]">
+                  <span className="text-[#FF9600] font-bold">Clue: </span>
+                  {hasClue
+                    ? currentQuestion.clue
+                    : "No clue for this round. You can use Clue on the next question."}
+                </p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -565,7 +567,7 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
                 {currentQuestion.options.map((option, index) => {
-                  const isCorrect = index === currentQuestion.correctAnswer;
+                  const isCorrect = index === currentQuestion.correctAnswerIndex;
                   const betAmount = bets[index];
                   const hasDropped = droppedAnswers.includes(index);
                   const color = OPTION_COLORS[index % OPTION_COLORS.length];
@@ -632,7 +634,7 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
             <div className="space-y-4 lg:space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
                 {currentQuestion.options.map((option, index) => {
-                  const isCorrect = index === currentQuestion.correctAnswer;
+                  const isCorrect = index === currentQuestion.correctAnswerIndex;
                   const betAmount = bets[index];
                   const color = OPTION_COLORS[index % OPTION_COLORS.length];
 
@@ -667,7 +669,7 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
               </div>
 
               {/* Result summary */}
-              {bets[currentQuestion.correctAnswer] > 0 ? (
+              {bets[currentQuestion.correctAnswerIndex] > 0 ? (
                 <motion.div
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
@@ -676,10 +678,10 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
                 >
                   <div className="mb-2"><Trophy className="size-10 lg:size-12 text-[#58CC02] mx-auto" /></div>
                   <div className="text-[#58CC02] font-black text-base md:text-lg lg:text-xl">
-                    You saved {formatMoney(bets[currentQuestion.correctAnswer])}!
+                    You saved {formatMoney(bets[currentQuestion.correctAnswerIndex])}!
                   </div>
                   <div className="text-[#56707A] text-sm lg:text-base font-bold mt-1">
-                    Lost {formatMoney(currentMoney - bets[currentQuestion.correctAnswer])}
+                    Lost {formatMoney(currentMoney - bets[currentQuestion.correctAnswerIndex])}
                   </div>
                 </motion.div>
               ) : (
@@ -703,7 +705,7 @@ export function MoneyDropGame({ onBack, onComplete }: MoneyDropGameProps) {
                 onClick={handleNextQuestion}
                 className="w-full py-4 lg:py-5 rounded-2xl bg-[#58CC02] border-b-4 border-b-[#46A302] font-black uppercase tracking-wide text-white text-base lg:text-lg hover:bg-[#61D806] active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-2"
               >
-                {bets[currentQuestion.correctAnswer] === 0 || currentQuestionIndex >= questions.length - 1
+                {bets[currentQuestion.correctAnswerIndex] === 0 || currentQuestionIndex >= questions.length - 1
                   ? "View Results"
                   : "Next Question"}
                 <ArrowRight className="size-4 lg:size-5" />

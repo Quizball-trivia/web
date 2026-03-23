@@ -138,6 +138,9 @@ export default function ProfilePage() {
     <ProfileScreen
       player={{
         ...player,
+        level: authUser?.progression?.level ?? player.level,
+        xp: authUser?.progression?.currentLevelXp ?? player.xp,
+        xpToNextLevel: authUser?.progression?.xpForNextLevel ?? player.xpToNextLevel,
         achievements,
         badges: [],
       }}
@@ -145,6 +148,7 @@ export default function ProfilePage() {
       country={authUser?.country ?? null}
       favoriteClub={authUser?.favorite_club ?? null}
       preferredLanguage={authUser?.preferred_language ?? null}
+      progression={authUser?.progression ?? null}
       globalRank={userRanks?.globalRank ?? null}
       countryRank={userRanks?.countryRank ?? null}
       matchStatsSummary={matchStatsSummary}
