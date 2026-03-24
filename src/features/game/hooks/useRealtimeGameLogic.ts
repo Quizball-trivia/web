@@ -40,6 +40,18 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
   const isLastAttackQuestion = currentQuestion?.phaseKind === 'last_attack';
   const currentQuestionIndex = currentQuestion?.qIndex;
   const questionPhase = match?.currentQuestionPhase ?? 'reveal';
+  const playableAtMs = currentQuestion?.playableAt
+    ? new Date(currentQuestion.playableAt).getTime()
+    : null;
+  const normalizedPlayableAtMs = playableAtMs !== null && Number.isFinite(playableAtMs)
+    ? playableAtMs
+    : null;
+  const questionDeadlineAtMs = currentQuestion?.deadlineAt
+    ? new Date(currentQuestion.deadlineAt).getTime()
+    : null;
+  const normalizedQuestionDeadlineAtMs = questionDeadlineAtMs !== null && Number.isFinite(questionDeadlineAtMs)
+    ? questionDeadlineAtMs
+    : null;
   const countdownEndsAt = match?.countdownEndsAt ?? null;
   const countdownRemainingMs = useMemo(() => {
     if (!countdownEndsAt) return 0;
@@ -94,28 +106,48 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
   useEffect(() => {
     if (currentQuestionIndex === undefined || matchPausedRef.current || startCountdownActive || blockReveal) return;
 
+    const revealDelayMs = normalizedPlayableAtMs !== null
+      ? Math.max(0, normalizedPlayableAtMs - Date.now())
+      : QUESTION_REVEAL_MS;
     const revealTimer = setTimeout(() => {
       if (matchPausedRef.current) return;
       setShowOptions(true);
       setQuestionPhase('playing');
-    }, QUESTION_REVEAL_MS);
+    }, revealDelayMs);
 
     return () => clearTimeout(revealTimer);
-  }, [currentQuestionIndex, setQuestionPhase, startCountdownActive, blockReveal]);
+  }, [blockReveal, currentQuestionIndex, matchPaused, normalizedPlayableAtMs, setQuestionPhase, startCountdownActive]);
 
   // Timer countdown effect — purely client-driven from when options appear
   const optionsShownAtRef = useRef<number | null>(null);
   useEffect(() => {
     if (showOptions) {
-      optionsShownAtRef.current = Date.now();
+      optionsShownAtRef.current = normalizedPlayableAtMs ?? Date.now();
     } else {
       optionsShownAtRef.current = null;
     }
-  }, [showOptions]);
+  }, [normalizedPlayableAtMs, showOptions]);
 
   useEffect(() => {
     if (!showOptions || !currentQuestion) return;
     if (matchPaused || startCountdownActive) return;
+
+    if (normalizedQuestionDeadlineAtMs !== null) {
+      const tick = () => {
+        const now = Date.now();
+        const effectiveNow = normalizedPlayableAtMs !== null ? Math.max(now, normalizedPlayableAtMs) : now;
+        const remainingMs = normalizedQuestionDeadlineAtMs - effectiveNow;
+        if (remainingMs > 0) {
+          setTimeRemaining(Math.ceil(remainingMs / 1000));
+        } else {
+          setTimeRemaining(0);
+        }
+      };
+
+      tick();
+      const interval = setInterval(tick, 100);
+      return () => clearInterval(interval);
+    }
 
     const startedAt = optionsShownAtRef.current ?? Date.now();
 
@@ -130,7 +162,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     }, 100);
 
     return () => clearInterval(interval);
-  }, [showOptions, currentQuestion, matchPaused, startCountdownActive]);
+  }, [currentQuestion, matchPaused, normalizedPlayableAtMs, normalizedQuestionDeadlineAtMs, showOptions, startCountdownActive]);
 
   const answerAck = match?.answerAck && match.currentQuestion?.qIndex === match.answerAck.qIndex
     ? match.answerAck
@@ -242,8 +274,14 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     setSelectedAnswer(index);
     setSelectedAnswerQIndex(currentQuestion.qIndex);
 
-    const startedAt = optionsShownAtRef.current ?? Date.now();
-    const elapsed = Math.min(QUESTION_PLAYING_MS, Math.max(0, Date.now() - startedAt));
+    const startedAt = normalizedPlayableAtMs ?? optionsShownAtRef.current ?? Date.now();
+    const now = normalizedQuestionDeadlineAtMs != null
+      ? Math.min(Date.now(), normalizedQuestionDeadlineAtMs)
+      : Date.now();
+    const maxWindowMs = normalizedQuestionDeadlineAtMs != null
+      ? Math.max(0, normalizedQuestionDeadlineAtMs - startedAt)
+      : QUESTION_PLAYING_MS;
+    const elapsed = Math.min(maxWindowMs, Math.max(0, now - startedAt));
 
     getSocket().emit('match:answer', {
       matchId: match.matchId,
