@@ -81,12 +81,15 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const resolvedPlayer = useMemo<PlayerProfile>(() => {
-    if (!rankedProfile) return player;
+    const progression = authUser?.progression ?? null;
     return {
       ...player,
-      rankPoints: rankedProfile.placementStatus === 'placed' ? rankedProfile.rp : 0,
+      rankPoints: rankedProfile?.placementStatus === 'placed' ? rankedProfile.rp : player.rankPoints,
+      level: progression?.level ?? player.level,
+      xp: progression?.currentLevelXp ?? player.xp,
+      xpToNextLevel: progression?.xpForNextLevel ?? player.xpToNextLevel,
     };
-  }, [player, rankedProfile]);
+  }, [authUser?.progression, player, rankedProfile]);
 
   // Memoize context value to prevent unnecessary re-renders
   const contextValue = useMemo<PlayerContextValue>(() => ({

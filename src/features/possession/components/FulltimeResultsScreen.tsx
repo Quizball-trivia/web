@@ -35,7 +35,6 @@ export default function FulltimeResultsScreen({
   const playerWon = playerGoals > opponentGoals;
   const isDraw = playerGoals === opponentGoals;
   const accuracy = totalQuestions === 0 ? 0 : Math.round((totalCorrect / totalQuestions) * 100);
-  const coinsEarned = playerWon ? 25 : isDraw ? 10 : 5;
 
   const rpChange = isDraw ? 0 : playerWon ? 15 : -15;
   const newRP = MOCK_OLD_RP + rpChange;
@@ -173,10 +172,9 @@ export default function FulltimeResultsScreen({
         </motion.div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <StatCard label="Accuracy" value={`${accuracy}%`} color="text-blue-400" />
           <StatCard label="Shots" value={`${totalShots}`} color="text-yellow-400" />
-          <StatCard label="Coins" value={`+${coinsEarned}`} color="text-emerald-400" />
         </div>
 
         {/* Match stats detail */}

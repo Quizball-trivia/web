@@ -153,6 +153,7 @@ export interface MatchQuestionPayload {
   qIndex: number;
   total: number;
   question: GameQuestionDTO;
+  playableAt?: string;
   deadlineAt: string;
   correctIndex: number;
   phaseKind?: MatchPhaseKind;

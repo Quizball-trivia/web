@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useGameSessionStore } from "@/stores/gameSession.store";
 import { usePlayer } from "@/contexts/PlayerContext";
@@ -30,6 +30,7 @@ import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { tierFromRp } from "@/utils/rankedTier";
 import { parseRp } from "@/lib/utils";
 import { TrainingMatchScreen } from "@/features/training/TrainingMatchScreen";
+import type { UserProgression } from "@/lib/domain";
 
 type OpponentInfo = {
   id: string;
@@ -99,6 +100,10 @@ export function GameStageRouter() {
     matchId: string;
     profile: RankedProfileResponse;
   } | null>(null);
+  const [progressionSnapshot, setProgressionSnapshot] = useState<{
+    matchId: string;
+    progression: UserProgression;
+  } | null>(null);
   const [roundNumber, setRoundNumber] = useState(1);
   const totalRounds = 3;
   const isMultiplayer = config?.mode !== "solo" && !!config;
@@ -106,7 +111,7 @@ export function GameStageRouter() {
   const socket = useRealtimeConnection({ enabled: isMultiplayer, selfUserId });
   const [socketConnected, setSocketConnected] = useState(() => socket.connected);
   const [socketId, setSocketId] = useState<string | null>(() => socket.id ?? null);
-  const [returningToLobby, setReturningToLobby] = useState(false);
+  const returningToLobbyRef = useRef(false);
 
   useEffect(() => {
     const handleConnect = () => {
@@ -178,12 +183,17 @@ export function GameStageRouter() {
     () => resolveAvatarUrl(opponent.avatar, "opponent", 256),
     [opponent.avatar]
   );
+  const activeMatchId = realtimeMatch?.matchId ?? null;
   const stableRankedProfile = rankedProfileSnapshot?.matchId === activeRankedMatchId
     ? rankedProfileSnapshot.profile
     : rankedProfile ?? null;
+  const stableProgression = progressionSnapshot?.matchId === activeMatchId
+    ? progressionSnapshot.progression
+    : authUser?.progression ?? null;
 
   useEffect(() => {
     if (!activeRankedMatchId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRankedProfileSnapshot(null);
       return;
     }
@@ -199,6 +209,25 @@ export function GameStageRouter() {
       };
     });
   }, [activeRankedMatchId, rankedProfile]);
+
+  useEffect(() => {
+    if (!activeMatchId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setProgressionSnapshot(null);
+      return;
+    }
+    if (!authUser?.progression) return;
+
+    setProgressionSnapshot((current) => {
+      if (current?.matchId === activeMatchId) {
+        return current;
+      }
+      return {
+        matchId: activeMatchId,
+        progression: { ...authUser.progression },
+      };
+    });
+  }, [activeMatchId, authUser?.progression]);
 
   const exitToPlay = useCallback(() => {
     resetRealtime();
@@ -218,7 +247,7 @@ export function GameStageRouter() {
       return;
     }
 
-    setReturningToLobby(true);
+    returningToLobbyRef.current = true;
     exitCompletedMatchToLobby();
     reset();
     router.push(`/friend/room/${inviteCode}`);
@@ -234,10 +263,10 @@ export function GameStageRouter() {
   ]);
 
   useEffect(() => {
-    if (stage === "idle" && !returningToLobby) {
+    if (stage === "idle" && !returningToLobbyRef.current) {
       router.replace("/play");
     }
-  }, [returningToLobby, stage, router]);
+  }, [stage, router]);
 
   const matchmakingDebugInfo = useMemo(
     () => ({
@@ -447,6 +476,7 @@ export function GameStageRouter() {
           opponentRp={realtimeMatch?.opponent?.rp != null ? Number(realtimeMatch.opponent.rp) : undefined}
           rankedOutcome={final?.rankedOutcome ?? null}
           preMatchRankedProfile={stableRankedProfile}
+          preMatchProgression={stableProgression}
           unlockedAchievements={unlockedAchievements}
           onPlayAgain={() => {
             if (matchType === "ranked") {

@@ -11,6 +11,8 @@ import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import { StatCard, WinIllustration, DrawIllustration, LossIllustration } from './components/ResultsShared';
 import type { AchievementUnlockPayload, RankedMatchOutcomePayload } from '@/lib/realtime/socket.types';
 import { AchievementUnlockStrip } from './components/AchievementUnlockStrip';
+import type { UserProgression } from '@/lib/domain';
+import { applyXpReward, getMatchXpReward } from '@/lib/domain/matchXp';
 
 import { getTierVisual } from '@/utils/tierVisuals';
 import { getRankedTierProgress, tierFromRp } from '@/utils/rankedTier';
@@ -111,6 +113,7 @@ interface RealtimeResultsScreenProps {
   opponentRp?: number;
   rankedOutcome?: RankedMatchOutcomePayload | null;
   preMatchRankedProfile?: RankedProfileResponse | null;
+  preMatchProgression?: UserProgression | null;
   unlockedAchievements?: AchievementUnlockPayload[];
   onPlayAgain: () => void;
   onMainMenu: () => void;
@@ -134,6 +137,7 @@ export function RealtimeResultsScreen({
   opponentRp,
   rankedOutcome,
   preMatchRankedProfile,
+  preMatchProgression,
   unlockedAchievements = [],
   onPlayAgain,
   onMainMenu,
@@ -190,6 +194,30 @@ export function RealtimeResultsScreen({
 
   const isSelfWinner = playerWon;
   const isForfeitLoss = winnerDecisionMethod === 'forfeit' && !isSelfWinner;
+  const matchResult: 'win' | 'loss' | 'draw' = isDraw ? 'draw' : isSelfWinner ? 'win' : 'loss';
+  const xpEarned = getMatchXpReward({
+    mode: matchType,
+    result: matchResult,
+    isForfeitLoss,
+  });
+  const projectedProgression = preMatchProgression
+    ? applyXpReward(preMatchProgression, xpEarned)
+    : null;
+  const showXpCard = Boolean(preMatchProgression && xpEarned > 0);
+  const xpBarInitialProgress = preMatchProgression && projectedProgression
+    ? projectedProgression.level > preMatchProgression.level
+      ? 0
+      : preMatchProgression.progressPct
+    : 0;
+  const leveledUp = Boolean(
+    preMatchProgression && projectedProgression && projectedProgression.level > preMatchProgression.level
+  );
+  const levelsGained = preMatchProgression && projectedProgression
+    ? Math.max(0, projectedProgression.level - preMatchProgression.level)
+    : 0;
+  const xpToNextLevelAfterMatch = projectedProgression
+    ? Math.max(0, projectedProgression.xpForNextLevel - projectedProgression.currentLevelXp)
+    : 0;
 
   // Use server data if available, otherwise optimistic
   const rpChange = myOutcome?.deltaRp
@@ -205,7 +233,6 @@ export function RealtimeResultsScreen({
     && (myOutcome != null || canOptimistic);
 
   const accuracy = totalQuestions === 0 ? 0 : Math.round((playerCorrect / totalQuestions) * 100);
-  const coinsEarned = playerWon ? 25 : isDraw ? 10 : 5;
 
   const rpTierInfo = getRankedTierProgress(newRP);
   const oldRpTierInfo = getRankedTierProgress(oldRP);
@@ -216,6 +243,7 @@ export function RealtimeResultsScreen({
   const [animatedRP, setAnimatedRP] = useState(0);
   const [showRankReveal, setShowRankReveal] = useState(false);
   const [tierTransitionPhase, setTierTransitionPhase] = useState<'fill' | 'settled'>('fill');
+  const [animatedXp, setAnimatedXp] = useState(0);
 
   useEffect(() => {
     if (rpChange === 0) {
@@ -240,6 +268,30 @@ export function RealtimeResultsScreen({
 
     return () => clearInterval(timer);
   }, [rpChange]);
+
+  useEffect(() => {
+    if (!showXpCard) {
+      setAnimatedXp(0);
+      return;
+    }
+
+    const duration = 1000;
+    const steps = 25;
+    const increment = xpEarned / steps;
+    let currentStep = 0;
+
+    const timer = setInterval(() => {
+      currentStep += 1;
+      if (currentStep >= steps) {
+        setAnimatedXp(xpEarned);
+        clearInterval(timer);
+      } else {
+        setAnimatedXp(Math.round(increment * currentStep));
+      }
+    }, duration / steps);
+
+    return () => clearInterval(timer);
+  }, [showXpCard, xpEarned]);
 
   // Tier change: fill to boundary first, then settle to new progress after a pause
   useEffect(() => {
@@ -536,11 +588,61 @@ export function RealtimeResultsScreen({
         )}
 
         {/* Stats row */}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <StatCard label="Accuracy" value={`${accuracy}%`} color="text-blue-400" />
           <StatCard label="Correct" value={`${playerCorrect}/${totalQuestions}`} color="text-yellow-400" />
-          <StatCard label="Coins" value={`+${coinsEarned}`} color="text-emerald-400" />
         </div>
+
+        {showXpCard && preMatchProgression && projectedProgression && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+            className="bg-[#1a1f2e] rounded-3xl border-b-4 border-b-white/10 p-4"
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <div className="text-xs font-black uppercase tracking-wide text-sky-300">XP Progress</div>
+                <div className="text-sm font-bold text-white">
+                  Level {projectedProgression.level}
+                  {leveledUp ? (
+                    <span className="ml-2 rounded-full bg-sky-400/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-sky-300">
+                      +{levelsGained} Level{levelsGained === 1 ? "" : "s"}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+              <div className="text-sm font-black text-sky-300">+{animatedXp} XP</div>
+            </div>
+
+            <div className="relative mb-2 h-4 overflow-hidden rounded-full bg-white/10">
+              <motion.div
+                initial={{ width: `${xpBarInitialProgress}%` }}
+                animate={{ width: `${projectedProgression.progressPct}%` }}
+                transition={{ duration: 1.1, ease: 'easeOut', delay: 0.45 }}
+                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-sky-500 to-cyan-300"
+              >
+                <div className="absolute inset-0 h-1/2 rounded-full bg-gradient-to-b from-white/25 to-transparent" />
+              </motion.div>
+            </div>
+
+            <div className="flex items-center justify-between text-xs font-semibold text-white/45">
+              {leveledUp ? (
+                <>
+                  <span>
+                    {projectedProgression.currentLevelXp} XP carried into level {projectedProgression.level}
+                  </span>
+                  <span>{xpToNextLevelAfterMatch} to level {projectedProgression.level + 1}</span>
+                </>
+              ) : (
+                <>
+                  <span>{projectedProgression.currentLevelXp} / {projectedProgression.xpForNextLevel} XP</span>
+                  <span>{projectedProgression.progressPct}% to level {projectedProgression.level + 1}</span>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
 
         <AchievementUnlockStrip achievements={unlockedAchievements} />
 

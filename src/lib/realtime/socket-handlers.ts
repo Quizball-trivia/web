@@ -6,6 +6,8 @@ import { logger } from '@/utils/logger';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 import { getI18nText } from '@/lib/utils/i18n';
 import { toast } from 'sonner';
+import { getMe } from '@/lib/api/endpoints';
+import { useAuthStore } from '@/stores/auth.store';
 import type {
   DraftState,
   ErrorPayload,
@@ -297,6 +299,13 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
     }
+    void getMe()
+      .then((user) => {
+        useAuthStore.getState().setAuthenticated(user);
+      })
+      .catch((error) => {
+        logger.warn('Failed to refresh auth user after match:final_results', { error });
+      });
   });
 
   socket.on('match:opponent_disconnected', (data: MatchOpponentDisconnectedPayload) => {
