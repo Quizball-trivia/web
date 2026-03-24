@@ -275,7 +275,13 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     setSelectedAnswerQIndex(currentQuestion.qIndex);
 
     const startedAt = normalizedPlayableAtMs ?? optionsShownAtRef.current ?? Date.now();
-    const elapsed = Math.min(QUESTION_PLAYING_MS, Math.max(0, Date.now() - startedAt));
+    const now = normalizedQuestionDeadlineAtMs != null
+      ? Math.min(Date.now(), normalizedQuestionDeadlineAtMs)
+      : Date.now();
+    const maxWindowMs = normalizedQuestionDeadlineAtMs != null
+      ? Math.max(0, normalizedQuestionDeadlineAtMs - startedAt)
+      : QUESTION_PLAYING_MS;
+    const elapsed = Math.min(maxWindowMs, Math.max(0, now - startedAt));
 
     getSocket().emit('match:answer', {
       matchId: match.matchId,

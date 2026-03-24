@@ -726,7 +726,8 @@ export function ProfileWeb({
         {/* Right Column */}
         <div className="col-span-12 lg:col-span-8 space-y-5">
 
-          {/* Recent Matches */}
+          {/* Recent Matches — hidden on other profiles when there are no matches */}
+          {(isSelf || recentMatchesLoading || recentMatches.length > 0) && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -858,6 +859,7 @@ export function ProfileWeb({
               )}
             </div>
           </motion.div>
+          )}
 
           {/* Achievements */}
           <motion.div

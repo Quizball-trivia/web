@@ -301,7 +301,10 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     }
     void getMe()
       .then((user) => {
-        useAuthStore.getState().setAuthenticated(user);
+        const current = useAuthStore.getState().user;
+        if (current?.id === user.id) {
+          useAuthStore.getState().setAuthenticated(user);
+        }
       })
       .catch((error) => {
         logger.warn('Failed to refresh auth user after match:final_results', { error });

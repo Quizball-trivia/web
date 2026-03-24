@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useMemo, useEffect, type ReactNode } from 'react';
 import { mockCurrentPlayer } from '@/data/mockData';
 import type { PlayerProfile } from '@/lib/domain';
+import { applyXpReward } from '@/lib/domain/matchXp';
 import { useAuthStore } from '@/stores/auth.store';
 import { useRankedProfile } from '@/lib/queries/ranked.queries';
 
@@ -53,21 +54,32 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     setPlayer(p => ({ ...p, coins: Math.max(0, p.coins + delta) }));
   }, []);
 
+  const patchProgression = useAuthStore((s) => s.patchProgression);
+
   const addXP = useCallback((amount: number) => {
-    setPlayer(p => {
-      let newXP = p.xp + amount;
-      let newLevel = p.level;
-      let xpToNext = p.xpToNextLevel;
+    const currentUser = useAuthStore.getState().user;
+    if (currentUser?.progression) {
+      // Authenticated: use domain formula and write back to auth store
+      // so resolvedPlayer picks up the optimistic update immediately
+      const updated = applyXpReward(currentUser.progression, amount);
+      patchProgression(updated);
+    } else {
+      // Guest fallback: local state only
+      setPlayer(p => {
+        let newXP = p.xp + amount;
+        let newLevel = p.level;
+        let xpToNext = p.xpToNextLevel;
 
-      while (newXP >= xpToNext) {
-        newXP -= xpToNext;
-        newLevel++;
-        xpToNext = Math.floor(xpToNext * 1.2);
-      }
+        while (newXP >= xpToNext) {
+          newXP -= xpToNext;
+          newLevel++;
+          xpToNext = Math.floor(xpToNext * 1.2);
+        }
 
-      return { ...p, xp: newXP, level: newLevel, xpToNextLevel: xpToNext };
-    });
-  }, []);
+        return { ...p, xp: newXP, level: newLevel, xpToNextLevel: xpToNext };
+      });
+    }
+  }, [patchProgression]);
 
   const unlockItem = useCallback((itemId: string) => {
     setPlayer(p => ({

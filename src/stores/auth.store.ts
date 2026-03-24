@@ -16,6 +16,7 @@ type AuthState = {
   hasBootstrapped: boolean;
   bootstrap: (options?: { force?: boolean }) => Promise<void>;
   setAuthenticated: (user: User) => void;
+  patchProgression: (progression: User["progression"]) => void;
   logout: () => Promise<void>;
 };
 
@@ -43,6 +44,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setAuthenticated: (user) => {
     set({ status: "authenticated", user, hasBootstrapped: true });
     syncAnalyticsUser(user);
+  },
+  patchProgression: (progression) => {
+    const { user } = get();
+    if (!user) return;
+    set({ user: { ...user, progression } });
   },
   bootstrap: async (options) => {
     const force = options?.force ?? false;
