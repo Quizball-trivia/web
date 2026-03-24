@@ -116,7 +116,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     }, revealDelayMs);
 
     return () => clearTimeout(revealTimer);
-  }, [blockReveal, currentQuestionIndex, normalizedPlayableAtMs, setQuestionPhase, startCountdownActive]);
+  }, [blockReveal, currentQuestionIndex, matchPaused, normalizedPlayableAtMs, setQuestionPhase, startCountdownActive]);
 
   // Timer countdown effect — purely client-driven from when options appear
   const optionsShownAtRef = useRef<number | null>(null);
