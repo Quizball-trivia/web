@@ -18,6 +18,7 @@ import type { CategorySummary, GameQuestion } from "@/lib/domain";
 import type { ListQuestionsQuery } from "@/lib/repositories/questions.repo";
 import { QUESTION_COUNT } from "@/lib/constants/game";
 import { queryKeys } from "@/lib/queries/queryKeys";
+import { trackModeSelected } from "@/lib/analytics/game-events";
 // import { useTrainingCompletion } from "@/features/training/hooks/useTrainingCompletion";
 // import { TrainingOfferModal } from "@/features/training/components/TrainingOfferModal";
 import { shuffleArray } from "@/lib/utils";
@@ -139,6 +140,7 @@ export default function PlayPage() {
     <>
       <ModeSelectionScreen
         onSelectMode={(mode) => {
+          trackModeSelected(mode);
           if (mode === "solo") {
             void startMatch({ mode: "solo" });
             return;

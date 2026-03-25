@@ -3,6 +3,7 @@ import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { getSocket } from '@/lib/realtime/socket-client';
 import { logger } from '@/utils/logger';
 import { QUESTION_REVEAL_MS } from '@/features/possession/types/possession.types';
+import { trackAnswerSubmitted } from '@/lib/analytics/game-events';
 
 const QUESTION_PLAYING_MS = 10000; // 10 second playing phase
 const ROUND_RESULT_HOLD_MS = 2500; // hold result for 2.5s before transitioning to next question
@@ -282,6 +283,13 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
       ? Math.max(0, normalizedQuestionDeadlineAtMs - startedAt)
       : QUESTION_PLAYING_MS;
     const elapsed = Math.min(maxWindowMs, Math.max(0, now - startedAt));
+
+    trackAnswerSubmitted(
+      String(currentQuestion.qIndex),
+      index === correctIndex,
+      Math.round(elapsed),
+      currentQuestion.qIndex,
+    );
 
     getSocket().emit('match:answer', {
       matchId: match.matchId,

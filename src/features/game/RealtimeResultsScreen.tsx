@@ -16,6 +16,7 @@ import { applyXpReward, getMatchXpReward } from '@/lib/domain/matchXp';
 
 import { getTierVisual } from '@/utils/tierVisuals';
 import { getRankedTierProgress, tierFromRp } from '@/utils/rankedTier';
+import { trackMatchCompleted, trackDivisionPromoted, trackLevelUp } from '@/lib/analytics/game-events';
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
@@ -239,6 +240,21 @@ export function RealtimeResultsScreen({
   const tierChanged = rpTierInfo.tier !== oldRpTierInfo.tier;
   const tierPromoted = tierChanged && newRP > oldRP;
   const rpTierVisual = getTierVisual(rpTierInfo.tier);
+
+  // --- Analytics: track match outcome once on mount ---
+  const [trackedMatch, setTrackedMatch] = useState(false);
+  useEffect(() => {
+    if (trackedMatch) return;
+    setTrackedMatch(true);
+    trackMatchCompleted(matchType, playerWon, playerScore, opponentScore, rpChange ?? undefined);
+    if (leveledUp && projectedProgression) {
+      trackLevelUp(projectedProgression.level);
+    }
+    if (tierPromoted) {
+      trackDivisionPromoted(rpTierInfo.tier, newRP);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [animatedRP, setAnimatedRP] = useState(0);
   const [showRankReveal, setShowRankReveal] = useState(false);

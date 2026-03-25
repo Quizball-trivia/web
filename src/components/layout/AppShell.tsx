@@ -8,6 +8,7 @@ import { useAuthStore } from "@/stores/auth.store";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { useGameSessionStore } from "@/stores/gameSession.store";
 import { useStoreWallet } from "@/lib/queries/store.queries";
+import { useIncomingFriendRequestCount } from "@/lib/queries/social.queries";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
@@ -109,6 +110,7 @@ export function AppShell({ children }: AppShellProps) {
   const router = useRouter();
   const { player: playerStats } = usePlayer();
   const { data: storeWallet } = useStoreWallet();
+  const { data: incomingFriendRequestCount = 0 } = useIncomingFriendRequestCount();
   const logout = useAuthStore((state) => state.logout);
   const lobby = useRealtimeMatchStore((state) => state.lobby);
   const sessionState = useRealtimeMatchStore((state) => state.sessionState);
@@ -136,6 +138,7 @@ export function AppShell({ children }: AppShellProps) {
   const sessionStateLabel = sessionState?.state ?? "NO_SESSION";
   const navbarCoins = storeWallet?.coins ?? 0;
   const navbarTickets = storeWallet?.tickets ?? 0;
+  const socialBadgeCount = incomingFriendRequestCount;
 
   useEffect(() => {
     const socket = getSocket();
@@ -240,6 +243,7 @@ export function AppShell({ children }: AppShellProps) {
             <nav className="space-y-2 px-3">
               {NAV_ITEMS.map((item) => {
                 const isActive = isPathActive(item.path, 'exact' in item ? item.exact : undefined);
+                const showSocialBadge = item.path === "/social" && socialBadgeCount > 0;
                 return (
                   <Link
                     key={item.path}
@@ -254,6 +258,11 @@ export function AppShell({ children }: AppShellProps) {
                   >
                     <item.icon className="size-5 shrink-0" />
                     <span className="font-medium truncate">{item.label}</span>
+                    {showSocialBadge && (
+                      <span className="ml-auto min-w-5 rounded-full bg-red-500 px-1.5 py-0.5 text-center text-[10px] font-black text-white">
+                        {socialBadgeCount}
+                      </span>
+                    )}
                   </Link>
                 );
               })}
@@ -329,9 +338,16 @@ export function AppShell({ children }: AppShellProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-full text-muted-foreground hover:text-foreground"
+                aria-label={socialBadgeCount > 0 ? `Notifications, ${socialBadgeCount} unread` : "Notifications"}
+                className="relative rounded-full text-muted-foreground hover:text-foreground"
+                onClick={() => router.push("/social")}
               >
                 <Bell className="size-5" />
+                {socialBadgeCount > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 min-w-5 rounded-full bg-red-500 px-1 py-0.5 text-center text-[10px] font-black text-white">
+                    {socialBadgeCount}
+                  </span>
+                )}
               </Button>
 
               {/* User Menu */}
@@ -672,17 +688,23 @@ export function AppShell({ children }: AppShellProps) {
             <nav className="flex justify-around px-2 py-2">
               {MOBILE_NAV_ITEMS.map((item) => {
                 const isActive = isPathActive(item.path, undefined);
+                const showSocialBadge = item.path === "/social" && socialBadgeCount > 0;
                 return (
                   <Link
                     key={item.path}
                     href={item.path}
                     className={cn(
-                      "flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors",
+                      "relative flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors",
                       isActive ? "text-primary bg-secondary" : "text-muted-foreground",
                     )}
                   >
                     <item.icon className="size-5" />
                     <span className="text-xs">{item.label}</span>
+                    {showSocialBadge && (
+                      <span className="absolute right-1 top-1 min-w-4 rounded-full bg-red-500 px-1 py-0.5 text-center text-[9px] font-black text-white">
+                        {socialBadgeCount}
+                      </span>
+                    )}
                   </Link>
                 );
               })}

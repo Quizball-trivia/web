@@ -43,6 +43,12 @@ export const queryKeys = {
     achievements: (userId?: string) =>
       [...queryKeys.users.all, "achievements", userId ?? "me"] as const,
   },
+  social: {
+    all: ["social"] as const,
+    friends: () => [...queryKeys.social.all, "friends"] as const,
+    requests: () => [...queryKeys.social.all, "requests"] as const,
+    search: (query: string) => [...queryKeys.social.all, "search", query] as const,
+  },
   stats: {
     all: ["stats"] as const,
     summary: () => [...queryKeys.stats.all, "summary"] as const,

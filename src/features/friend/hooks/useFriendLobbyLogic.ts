@@ -12,6 +12,7 @@ import type { LobbySettings as LobbySettingsState } from "@/lib/realtime/socket.
 import { useCategoriesList } from "@/lib/queries/categories.queries";
 import { copyToClipboard } from "@/utils/clipboard";
 import { useHeadToHead } from "@/lib/queries/stats.queries";
+import { trackLobbyCreated, trackLobbyJoined } from "@/lib/analytics/game-events";
 
 interface UseFriendLobbyLogicProps {
   roomCode: string;
@@ -99,6 +100,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
       createdRef.current = true;
       socket.emit("lobby:create", { mode: "friendly" });
       logger.info("Socket emit lobby:create", { mode: "friendly" });
+      trackLobbyCreated("friendly");
       return;
     }
 
@@ -113,6 +115,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     logger.info("Socket emit lobby:join_by_code", {
       inviteCode: `${roomCode.slice(0, 2)}***`,
     });
+    trackLobbyJoined("", roomCode);
   }, [isHost, roomCode, lobby?.inviteCode, lobby]);
 
   // 3. Navigation & Session Logic

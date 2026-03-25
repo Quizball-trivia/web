@@ -1464,6 +1464,8 @@ export interface paths {
                                 avatarUrl: string | null;
                                 rp: number;
                                 level: number;
+                                /** @enum {string} */
+                                friendStatus: "none" | "pending_sent" | "pending_received" | "friends";
                             }[];
                         };
                     };
@@ -1482,6 +1484,398 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/friends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List accepted friends for the authenticated user */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Friends list */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            friends: {
+                                /** Format: uuid */
+                                id: string;
+                                nickname: string | null;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                rp: number;
+                                level: number;
+                                /** @enum {string} */
+                                friendStatus: "friends";
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/friends/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List incoming and outgoing friend requests */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Friend request lists */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            incoming: {
+                                /** Format: uuid */
+                                requestId: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                                user: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    nickname: string | null;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    rp: number;
+                                    level: number;
+                                    /** @enum {string} */
+                                    friendStatus: "pending_sent" | "pending_received";
+                                };
+                            }[];
+                            outgoing: {
+                                /** Format: uuid */
+                                requestId: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                                user: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    nickname: string | null;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    rp: number;
+                                    level: number;
+                                    /** @enum {string} */
+                                    friendStatus: "pending_sent" | "pending_received";
+                                };
+                            }[];
+                            incomingCount: number;
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Send a friend request */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        targetUserId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Friend request created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            requestId: string;
+                            /** @enum {string} */
+                            status: "pending";
+                        };
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Target user not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Friend request conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/friends/requests/{requestId}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept a received friend request */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    requestId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Friend request accepted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Friend request not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/friends/requests/{requestId}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decline a received friend request */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    requestId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Friend request declined */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Friend request not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/friends/{friendUserId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove an existing friend */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    friendUserId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Friend removed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                        };
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Friendship not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -3594,6 +3988,66 @@ export interface components {
             limit: number;
             total: number;
             totalPages: number;
+        };
+        FriendsResponse: {
+            friends: {
+                /** Format: uuid */
+                id: string;
+                nickname: string | null;
+                /** Format: uri */
+                avatarUrl: string | null;
+                rp: number;
+                level: number;
+                /** @enum {string} */
+                friendStatus: "friends";
+            }[];
+        };
+        FriendRequestsResponse: {
+            incoming: {
+                /** Format: uuid */
+                requestId: string;
+                /** Format: date-time */
+                createdAt: string;
+                user: {
+                    /** Format: uuid */
+                    id: string;
+                    nickname: string | null;
+                    /** Format: uri */
+                    avatarUrl: string | null;
+                    rp: number;
+                    level: number;
+                    /** @enum {string} */
+                    friendStatus: "pending_sent" | "pending_received";
+                };
+            }[];
+            outgoing: {
+                /** Format: uuid */
+                requestId: string;
+                /** Format: date-time */
+                createdAt: string;
+                user: {
+                    /** Format: uuid */
+                    id: string;
+                    nickname: string | null;
+                    /** Format: uri */
+                    avatarUrl: string | null;
+                    rp: number;
+                    level: number;
+                    /** @enum {string} */
+                    friendStatus: "pending_sent" | "pending_received";
+                };
+            }[];
+            incomingCount: number;
+        };
+        CreateFriendRequestResponse: {
+            /** Format: uuid */
+            requestId: string;
+            /** @enum {string} */
+            status: "pending";
+        };
+        FriendActionResponse: {
+            /** @enum {boolean} */
+            success: true;
         };
         I18nField: {
             [key: string]: string;
