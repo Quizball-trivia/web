@@ -1462,8 +1462,20 @@ export interface paths {
                                 nickname: string | null;
                                 /** Format: uri */
                                 avatarUrl: string | null;
-                                rp: number;
                                 level: number;
+                                ranked: {
+                                    rp: number;
+                                    /** @enum {string} */
+                                    tier: "Academy" | "Youth Prospect" | "Reserve" | "Bench" | "Rotation" | "Starting11" | "Key Player" | "Captain" | "World-Class" | "Legend" | "GOAT";
+                                    /** @enum {string} */
+                                    placementStatus: "unplaced" | "in_progress" | "placed";
+                                    placementPlayed: number;
+                                    placementRequired: number;
+                                    placementWins: number;
+                                    currentWinStreak: number;
+                                    /** Format: date-time */
+                                    lastRankedMatchAt: string | null;
+                                } | null;
                                 /** @enum {string} */
                                 friendStatus: "none" | "pending_sent" | "pending_received" | "friends";
                             }[];
@@ -1519,8 +1531,20 @@ export interface paths {
                                 nickname: string | null;
                                 /** Format: uri */
                                 avatarUrl: string | null;
-                                rp: number;
                                 level: number;
+                                ranked: {
+                                    rp: number;
+                                    /** @enum {string} */
+                                    tier: "Academy" | "Youth Prospect" | "Reserve" | "Bench" | "Rotation" | "Starting11" | "Key Player" | "Captain" | "World-Class" | "Legend" | "GOAT";
+                                    /** @enum {string} */
+                                    placementStatus: "unplaced" | "in_progress" | "placed";
+                                    placementPlayed: number;
+                                    placementRequired: number;
+                                    placementWins: number;
+                                    currentWinStreak: number;
+                                    /** Format: date-time */
+                                    lastRankedMatchAt: string | null;
+                                } | null;
                                 /** @enum {string} */
                                 friendStatus: "friends";
                             }[];
@@ -1581,8 +1605,20 @@ export interface paths {
                                     nickname: string | null;
                                     /** Format: uri */
                                     avatarUrl: string | null;
-                                    rp: number;
                                     level: number;
+                                    ranked: {
+                                        rp: number;
+                                        /** @enum {string} */
+                                        tier: "Academy" | "Youth Prospect" | "Reserve" | "Bench" | "Rotation" | "Starting11" | "Key Player" | "Captain" | "World-Class" | "Legend" | "GOAT";
+                                        /** @enum {string} */
+                                        placementStatus: "unplaced" | "in_progress" | "placed";
+                                        placementPlayed: number;
+                                        placementRequired: number;
+                                        placementWins: number;
+                                        currentWinStreak: number;
+                                        /** Format: date-time */
+                                        lastRankedMatchAt: string | null;
+                                    } | null;
                                     /** @enum {string} */
                                     friendStatus: "pending_sent" | "pending_received";
                                 };
@@ -1598,8 +1634,20 @@ export interface paths {
                                     nickname: string | null;
                                     /** Format: uri */
                                     avatarUrl: string | null;
-                                    rp: number;
                                     level: number;
+                                    ranked: {
+                                        rp: number;
+                                        /** @enum {string} */
+                                        tier: "Academy" | "Youth Prospect" | "Reserve" | "Bench" | "Rotation" | "Starting11" | "Key Player" | "Captain" | "World-Class" | "Legend" | "GOAT";
+                                        /** @enum {string} */
+                                        placementStatus: "unplaced" | "in_progress" | "placed";
+                                        placementPlayed: number;
+                                        placementRequired: number;
+                                        placementWins: number;
+                                        currentWinStreak: number;
+                                        /** Format: date-time */
+                                        lastRankedMatchAt: string | null;
+                                    } | null;
                                     /** @enum {string} */
                                     friendStatus: "pending_sent" | "pending_received";
                                 };
@@ -3996,8 +4044,20 @@ export interface components {
                 nickname: string | null;
                 /** Format: uri */
                 avatarUrl: string | null;
-                rp: number;
                 level: number;
+                ranked: {
+                    rp: number;
+                    /** @enum {string} */
+                    tier: "Academy" | "Youth Prospect" | "Reserve" | "Bench" | "Rotation" | "Starting11" | "Key Player" | "Captain" | "World-Class" | "Legend" | "GOAT";
+                    /** @enum {string} */
+                    placementStatus: "unplaced" | "in_progress" | "placed";
+                    placementPlayed: number;
+                    placementRequired: number;
+                    placementWins: number;
+                    currentWinStreak: number;
+                    /** Format: date-time */
+                    lastRankedMatchAt: string | null;
+                } | null;
                 /** @enum {string} */
                 friendStatus: "friends";
             }[];
@@ -4014,8 +4074,20 @@ export interface components {
                     nickname: string | null;
                     /** Format: uri */
                     avatarUrl: string | null;
-                    rp: number;
                     level: number;
+                    ranked: {
+                        rp: number;
+                        /** @enum {string} */
+                        tier: "Academy" | "Youth Prospect" | "Reserve" | "Bench" | "Rotation" | "Starting11" | "Key Player" | "Captain" | "World-Class" | "Legend" | "GOAT";
+                        /** @enum {string} */
+                        placementStatus: "unplaced" | "in_progress" | "placed";
+                        placementPlayed: number;
+                        placementRequired: number;
+                        placementWins: number;
+                        currentWinStreak: number;
+                        /** Format: date-time */
+                        lastRankedMatchAt: string | null;
+                    } | null;
                     /** @enum {string} */
                     friendStatus: "pending_sent" | "pending_received";
                 };
@@ -4031,8 +4103,20 @@ export interface components {
                     nickname: string | null;
                     /** Format: uri */
                     avatarUrl: string | null;
-                    rp: number;
                     level: number;
+                    ranked: {
+                        rp: number;
+                        /** @enum {string} */
+                        tier: "Academy" | "Youth Prospect" | "Reserve" | "Bench" | "Rotation" | "Starting11" | "Key Player" | "Captain" | "World-Class" | "Legend" | "GOAT";
+                        /** @enum {string} */
+                        placementStatus: "unplaced" | "in_progress" | "placed";
+                        placementPlayed: number;
+                        placementRequired: number;
+                        placementWins: number;
+                        currentWinStreak: number;
+                        /** Format: date-time */
+                        lastRankedMatchAt: string | null;
+                    } | null;
                     /** @enum {string} */
                     friendStatus: "pending_sent" | "pending_received";
                 };

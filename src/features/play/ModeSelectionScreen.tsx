@@ -220,13 +220,14 @@ export function ModeSelectionScreen({
                   </span>
                 </div>
                 <div className="mt-2 space-y-1.5">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                     <span className="text-[10px] font-black uppercase tracking-wider text-[#56707A]">Rank Road</span>
-                    <span className="text-[10px] font-black text-[#85E000]">
+                    <span className="text-[10px] font-black text-[#85E000] sm:text-right">
                       {tiersLeftToMax === 0 ? '🐐 Max rank' : `${tiersLeftToMax} tier${tiersLeftToMax === 1 ? '' : 's'} to GOAT`}
                     </span>
                   </div>
-                  <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-0.5">
+                  <div className="-mx-1 overflow-x-auto pb-1 scrollbar-hide">
+                    <div className="flex min-w-max gap-1 px-1">
                     {tierBandsAscending.map((band) => {
                       const isCurrent = band.tier === activeTier;
                       const isUnlocked = displayRp >= band.minRp;
@@ -234,7 +235,7 @@ export function ModeSelectionScreen({
                         <span
                           key={band.tier}
                           className={cn(
-                            'shrink-0 text-[9px] font-black px-2 py-1 rounded-lg border transition-colors whitespace-nowrap',
+                            'shrink-0 whitespace-nowrap rounded-lg border px-1.5 py-1 text-[8px] font-black transition-colors sm:px-2 sm:text-[9px]',
                             isCurrent
                               ? 'bg-[#58CC02]/20 border-[#85E000]/60 text-[#C8FF9A] shadow-[0_0_8px_rgba(133,224,0,0.25)]'
                               : isUnlocked
@@ -246,6 +247,7 @@ export function ModeSelectionScreen({
                         </span>
                       );
                     })}
+                    </div>
                   </div>
                 </div>
               </>

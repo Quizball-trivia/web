@@ -30,9 +30,38 @@ import {
   createFriendRequest,
   declineFriendRequest,
 } from "@/lib/repositories/social.repo";
-import { tierFromRp } from "@/utils/rankedTier";
 
 type Tab = "friends" | "find";
+
+function getRankedDisplay(player: SocialPlayer) {
+  const level = Number.isFinite(player.level) ? player.level : 1;
+  const ranked = player.ranked;
+
+  if (!ranked) {
+    return {
+      level,
+      tierLabel: "Unranked",
+      rpLabel: "0 RP",
+      highlightClass: "text-[#56707A]",
+    };
+  }
+
+  if (ranked.placementStatus !== "placed") {
+    return {
+      level,
+      tierLabel: `Placement ${ranked.placementPlayed}/${ranked.placementRequired}`,
+      rpLabel: "0 RP",
+      highlightClass: "text-[#58CC02]",
+    };
+  }
+
+  return {
+    level,
+    tierLabel: ranked.tier,
+    rpLabel: `${ranked.rp} RP`,
+    highlightClass: "text-[#CE82FF]",
+  };
+}
 
 function getApiErrorMessage(error: unknown, fallback: string) {
   if (error instanceof ApiError) {
@@ -69,7 +98,7 @@ function PlayerCard({
   onChallenge?: (id: string) => void;
   isPending?: boolean;
 }) {
-  const tier = tierFromRp(player.rp);
+  const rankedDisplay = getRankedDisplay(player);
 
   return (
     <motion.div
@@ -89,11 +118,11 @@ function PlayerCard({
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-black text-white">{player.nickname ?? "Unknown"}</p>
         <div className="mt-0.5 flex items-center gap-2">
-          <span className="text-[11px] font-bold text-[#56707A]">Lvl {player.level}</span>
+          <span className="text-[11px] font-bold text-[#56707A]">Lvl {rankedDisplay.level}</span>
           <span className="text-[11px] font-bold text-[#56707A]">·</span>
-          <span className="text-[11px] font-bold text-[#CE82FF]">{tier}</span>
+          <span className={`text-[11px] font-bold ${rankedDisplay.highlightClass}`}>{rankedDisplay.tierLabel}</span>
           <span className="text-[11px] font-bold text-[#56707A]">·</span>
-          <span className="text-[11px] font-bold text-[#FFD700]">{player.rp} RP</span>
+          <span className="text-[11px] font-bold text-[#FFD700]">{rankedDisplay.rpLabel}</span>
         </div>
       </div>
 
@@ -166,7 +195,7 @@ function RequestCard({
   onDecline?: (requestId: string) => void;
   isPending?: boolean;
 }) {
-  const tier = tierFromRp(item.user.rp);
+  const rankedDisplay = getRankedDisplay(item.user);
   const isIncoming = type === "incoming";
 
   return (
@@ -198,11 +227,11 @@ function RequestCard({
           </span>
         </div>
         <div className="mt-0.5 flex items-center gap-2">
-          <span className="text-[11px] font-bold text-[#56707A]">Lvl {item.user.level}</span>
+          <span className="text-[11px] font-bold text-[#56707A]">Lvl {rankedDisplay.level}</span>
           <span className="text-[11px] font-bold text-[#56707A]">·</span>
-          <span className="text-[11px] font-bold text-[#CE82FF]">{tier}</span>
+          <span className={`text-[11px] font-bold ${rankedDisplay.highlightClass}`}>{rankedDisplay.tierLabel}</span>
           <span className="text-[11px] font-bold text-[#56707A]">·</span>
-          <span className="text-[11px] font-bold text-[#FFD700]">{item.user.rp} RP</span>
+          <span className="text-[11px] font-bold text-[#FFD700]">{rankedDisplay.rpLabel}</span>
         </div>
       </div>
 

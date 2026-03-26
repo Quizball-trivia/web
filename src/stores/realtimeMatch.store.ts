@@ -343,8 +343,10 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
         });
         return state;
       }
-      const shouldClearQuestion = payload.phase === 'COMPLETED'
-        || (payload.phase === 'HALFTIME' && !state.match.lastRoundResult);
+      
+      const shouldClearQuestion =
+        (payload.phase === 'COMPLETED' || payload.phase === 'HALFTIME')
+        && !state.match.lastRoundResult;
       const shouldClearCountdown =
         payload.phase !== 'NORMAL_PLAY' ||
         payload.normalQuestionsAnsweredInHalf > 0 ||

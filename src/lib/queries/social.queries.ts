@@ -12,8 +12,8 @@ export interface SocialPlayer {
   id: string;
   nickname: string | null;
   avatarUrl: string | null;
-  rp: number;
   level: number;
+  ranked: SocialPlayerResponse["ranked"];
   friendStatus: SocialPlayerResponse["friendStatus"];
 }
 
@@ -34,8 +34,8 @@ function toSocialPlayer(player: SocialPlayerResponse): SocialPlayer {
     id: player.id,
     nickname: player.nickname,
     avatarUrl: player.avatarUrl,
-    rp: player.rp,
     level: player.level,
+    ranked: player.ranked,
     friendStatus: player.friendStatus,
   };
 }

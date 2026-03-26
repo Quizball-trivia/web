@@ -185,18 +185,20 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
 
   // Hold timer — hide options after result display, then either signal transition
   // (normal phases with delay) or let the gate effect promote directly (non-normal).
+  // Also set roundResultHoldDone for goal rounds so the GoalCelebrationOverlay fires
+  // (it triggers on roundResultHoldDone, not effectiveDelay).
   useEffect(() => {
     if (!roundResolved || !showOptions || matchPaused || startCountdownActive) return;
 
     const holdTimer = setTimeout(() => {
       setShowOptions(false);
-      if (effectiveDelay > 0) {
+      if (effectiveDelay > 0 || isGoalRound) {
         setRoundResultHoldDone(true);
       }
     }, roundResultHoldMs);
 
     return () => clearTimeout(holdTimer);
-  }, [roundResolved, showOptions, matchPaused, currentQuestionIndex, roundResultHoldMs, startCountdownActive, effectiveDelay]);
+  }, [roundResolved, showOptions, matchPaused, currentQuestionIndex, roundResultHoldMs, startCountdownActive, effectiveDelay, isGoalRound]);
 
   // Transition delay timer — when the overlay is showing, count down the delay.
   // Sets transitionElapsed=true which opens the gate for promotion.
