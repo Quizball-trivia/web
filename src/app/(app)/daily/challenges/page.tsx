@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle2, Clock, ListOrdered, Brain, Lightbulb, DollarSign, Timer, Trophy, RotateCcw } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, ListOrdered, Brain, Lightbulb, DollarSign, Timer, Trophy, RotateCcw, CircleCheckBig } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { useDailyChallenges, useResetDailyChallengeDev } from "@/lib/queries/dailyChallenges.queries";
@@ -15,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 const ICON_MAP = {
   dollarSign: DollarSign,
   brain: Brain,
+  checkCircle: CircleCheckBig,
   lightbulb: Lightbulb,
   timer: Timer,
   list: ListOrdered,
@@ -23,6 +24,7 @@ const ICON_MAP = {
 const CHALLENGE_ACCENT = {
   moneyDrop: { border: "border-b-[#FFD700]", btnBg: "bg-[#D4A800]", btnBorder: "border-[#A68500]", iconBorder: "border-[#FFD700]/40" },
   footballJeopardy: { border: "border-b-[#1CB0F6]", btnBg: "bg-[#1A7FA8]", btnBorder: "border-[#14627F]", iconBorder: "border-[#1CB0F6]/40" },
+  trueFalse: { border: "border-b-[#58CC02]", btnBg: "bg-[#46A302]", btnBorder: "border-[#378200]", iconBorder: "border-[#58CC02]/40" },
   clues: { border: "border-b-[#58CC02]", btnBg: "bg-[#46A302]", btnBorder: "border-[#378200]", iconBorder: "border-[#58CC02]/40" },
   countdown: { border: "border-b-[#FF9600]", btnBg: "bg-[#C47400]", btnBorder: "border-[#9A5B00]", iconBorder: "border-[#FF9600]/40" },
   putInOrder: { border: "border-b-[#1CB0F6]", btnBg: "bg-[#1A7FA8]", btnBorder: "border-[#14627F]", iconBorder: "border-[#1CB0F6]/40" },
