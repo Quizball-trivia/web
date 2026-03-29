@@ -6,8 +6,8 @@ import { AnswerCard } from '@/features/game/components/AnswerCard';
 import { ArenaScoreSplash } from '@/features/game/components/ArenaScoreSplash';
 import { QuestionArena } from '@/features/game/components/QuestionArena';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
-import type { AnswerStateArray, Phase } from '@/features/possession/types/possession.types';
-import { ANSWER_LABELS } from '@/features/possession/types/possession.types';
+import type { AnswerStateArray, Phase } from '@/lib/types/game.types';
+import { ANSWER_LABELS } from '@/lib/types/game.types';
 
 function getDifficultyLabel(difficulty?: string): string {
   const normalizedDifficulty = difficulty?.trim().toLowerCase();

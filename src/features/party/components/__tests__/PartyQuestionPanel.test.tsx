@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartyQuestionPanel } from '../PartyQuestionPanel';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
-import type { AnswerStateArray } from '@/features/possession/types/possession.types';
+import type { AnswerStateArray } from '@/lib/types/game.types';
 
 const question: GameQuestion = {
   id: 'question-1',

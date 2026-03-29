@@ -11,7 +11,7 @@ import { QuitMatchModal } from '@/features/game/components/QuitMatchModal';
 import { useRealtimeGameLogic } from '@/features/game/hooks/useRealtimeGameLogic';
 import { PartyQuestionPanel } from '@/features/party/components/PartyQuestionPanel';
 import { PartyRoundTransitionOverlay } from '@/features/party/components/PartyRoundTransitionOverlay';
-import type { AnswerStateArray, Phase } from '@/features/possession/types/possession.types';
+import type { AnswerStateArray, Phase } from '@/lib/types/game.types';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import type { MatchParticipant } from '@/lib/realtime/socket.types';
 import { resolveAvatarUrl } from '@/lib/avatars';
@@ -131,7 +131,7 @@ export function RealtimePartyQuizScreen({
   // Snapshot the ranking order before each round for rank-shift calculation
   useEffect(() => {
     if (!partyState?.rankingOrder.length) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- snapshot the last settled ranking order before the next reveal
+    // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps -- Intentional stale closure: we capture the settled ranking order before each question change, not after. partyState.rankingOrder must not be a dependency to preserve the previous round's ranking.
     setPreRoundRankingOrder(partyState.rankingOrder);
   }, [currentQuestion?.qIndex]);
 
