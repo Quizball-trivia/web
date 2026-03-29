@@ -1,7 +1,9 @@
 export type { TacticalCard } from '@/lib/realtime/socket.types';
 
+import type { Phase, AnswerState, AnswerStateArray } from '@/lib/types/game.types';
+
 // ─── Shared game types (re-exported for backward compatibility) ─
-export type { Phase, AnswerState, AnswerStateArray } from '@/lib/types/game.types';
+export type { Phase, AnswerState, AnswerStateArray };
 export { QUESTION_REVEAL_MS, QUESTIONS_PER_HALF, TIMER_SECONDS, ANSWER_LABELS } from '@/lib/types/game.types';
 
 // ─── State shapes ───────────────────────────────────────────────
@@ -37,4 +39,3 @@ export const INITIAL_POSSESSION: PossessionState = {
   goals: 0,
   isShooting: false,
 };
-
