@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
-import { useRealtimeGameLogic } from '../useRealtimeGameLogic';
+import { ROUND_RESULT_HOLD_MS, useRealtimeGameLogic } from '../useRealtimeGameLogic';
 import type {
   MatchRoundResultPayload,
   MatchStatePayload,
@@ -23,8 +23,6 @@ vi.mock('@/lib/analytics/game-events', () => ({
 // ---------------------------------------------------------------------------
 // Constants (mirroring the hook)
 // ---------------------------------------------------------------------------
-
-const ROUND_RESULT_HOLD_MS = 2500;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -61,16 +59,18 @@ function makeQuestion(
   qIndex: number,
   phaseKind: 'normal' | 'last_attack' = 'normal'
 ): ResolvedMatchQuestionPayload {
+  const question: ResolvedMatchQuestionPayload['question'] = {
+    id: `q-${qIndex}`,
+    prompt: `Question ${qIndex}`,
+    options: ['A', 'B', 'C', 'D'],
+    categoryName: 'General',
+  };
+
   return {
     matchId: MATCH_ID,
     qIndex,
     total: 12,
-    question: {
-      id: `q-${qIndex}`,
-      prompt: `Question ${qIndex}`,
-      options: ['A', 'B', 'C', 'D'],
-      categoryName: 'General',
-    } as ResolvedMatchQuestionPayload['question'],
+    question,
     deadlineAt: new Date(Date.now() + 10_000).toISOString(),
     correctIndex: 0,
     phaseKind,

@@ -44,6 +44,11 @@ export async function declineFriendRequest(requestId: string) {
   });
 }
 
+/**
+ * TODO: Remove friend feature — planned for future implementation.
+ * Endpoint exists in backend but UI/feature not yet implemented.
+ * When implementing, ensure proper confirmation flow and state updates.
+ */
 export async function removeFriend(friendUserId: string) {
   return apiFetch("delete", "/api/v1/friends/{friendUserId}", {
     params: { friendUserId },

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
   Check,
   Clock3,
@@ -300,24 +301,17 @@ export function SocialScreen() {
 
   const [activeTab, setActiveTab] = useState<Tab>("friends");
   const [query, setQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [pendingTargetId, setPendingTargetId] = useState<string | null>(null);
   const [pendingRequestAction, setPendingRequestAction] = useState<{
     requestId: string;
     action: "accept" | "decline";
   } | null>(null);
 
+  const debouncedQuery = useDebounce(query.trim(), 400);
+
   const friendsQuery = useSocialFriends();
   const requestsQuery = useFriendRequests();
   const searchQuery = useSocialSearch(debouncedQuery);
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      setDebouncedQuery(query.trim());
-    }, 400);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [query]);
 
   const invalidateSocialQueries = async () => {
     await queryClient.invalidateQueries({ queryKey: queryKeys.social.all });

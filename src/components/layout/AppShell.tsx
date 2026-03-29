@@ -335,20 +335,30 @@ export function AppShell({ children }: AppShellProps) {
               <div className="h-6 w-px bg-border/50" />
 
               {/* Notifications */}
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label={socialBadgeCount > 0 ? `Notifications, ${socialBadgeCount} unread` : "Notifications"}
-                className="relative rounded-full text-muted-foreground hover:text-foreground"
-                onClick={() => router.push("/social")}
-              >
-                <Bell className="size-5" />
-                {socialBadgeCount > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 min-w-5 rounded-full bg-red-500 px-1 py-0.5 text-center text-[10px] font-black text-white">
-                    {socialBadgeCount}
-                  </span>
-                )}
-              </Button>
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={socialBadgeCount > 0 ? `Notifications, ${socialBadgeCount} unread` : "Notifications"}
+                  className="relative rounded-full text-muted-foreground hover:text-foreground"
+                  onClick={() => router.push("/social")}
+                >
+                  <Bell className="size-5" />
+                  {socialBadgeCount > 0 && (
+                    <span className="absolute -right-0.5 -top-0.5 min-w-5 rounded-full bg-red-500 px-1 py-0.5 text-center text-[10px] font-black text-white">
+                      {socialBadgeCount}
+                    </span>
+                  )}
+                </Button>
+                {/* Screen reader announcement for badge count changes */}
+                <span
+                  aria-live="polite"
+                  aria-atomic="true"
+                  className="sr-only"
+                >
+                  {socialBadgeCount > 0 ? `You have ${socialBadgeCount} new notification${socialBadgeCount === 1 ? "" : "s"}` : ""}
+                </span>
+              </div>
 
               {/* User Menu */}
               <DropdownMenu>

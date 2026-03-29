@@ -6,7 +6,7 @@ import { QUESTION_REVEAL_MS } from '@/features/possession/types/possession.types
 import { trackAnswerSubmitted } from '@/lib/analytics/game-events';
 
 const QUESTION_PLAYING_MS = 10000; // 10 second playing phase
-const ROUND_RESULT_HOLD_MS = 2500; // hold result for 2.5s before transitioning to next question
+export const ROUND_RESULT_HOLD_MS = 2500; // hold result for 2.5s before transitioning to next question
 const GOAL_CELEBRATION_EXTRA_MS = 2500; // extra delay for GOOOL overlay before round transition
 
 interface UseRealtimeGameLogicOptions {
