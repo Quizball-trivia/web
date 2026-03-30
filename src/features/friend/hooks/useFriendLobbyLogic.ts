@@ -126,7 +126,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     if (isHost) {
       trackLobbyCreated("friendly");
     } else {
-      trackLobbyJoined(lobby.lobbyId, lobby.inviteCode ?? "");
+      trackLobbyJoined(lobby.lobbyId, lobby.inviteCode ?? roomCode);
     }
   }, [lobby, isHost]);
 

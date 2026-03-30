@@ -1,9 +1,9 @@
 'use client';
 
 import { motion, AnimatePresence } from 'motion/react';
-import { QuestionArena } from '@/features/game/components/QuestionArena';
-import { AnswerCard } from '@/features/game/components/AnswerCard';
-import { ArenaScoreSplash } from '@/features/game/components/ArenaScoreSplash';
+import { QuestionArena } from '@/components/game/QuestionArena';
+import { AnswerCard } from '@/components/game/AnswerCard';
+import { ArenaScoreSplash } from '@/components/game/ArenaScoreSplash';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import type { AnswerStateArray, Phase } from '../types/possession.types';
 import { ANSWER_LABELS } from '../types/possession.types';

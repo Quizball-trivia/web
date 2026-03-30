@@ -234,7 +234,15 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
   };
 
   const submitSuggestion = useCallback((display: string) => {
-    setFoundAnswers((prev) => [...prev, display]);
+    let isDuplicate = false;
+    setFoundAnswers((prev) => {
+      if (prev.includes(display)) {
+        isDuplicate = true;
+        return prev;
+      }
+      return [...prev, display];
+    });
+    if (isDuplicate) return;
     setRecentAnswer(display);
     setTimeout(() => setRecentAnswer(null), 1500);
     setInputValue("");

@@ -30,6 +30,7 @@ import {
   acceptFriendRequest,
   createFriendRequest,
   declineFriendRequest,
+  removeFriend,
 } from "@/lib/repositories/social.repo";
 
 type Tab = "friends" | "find";
@@ -90,14 +91,18 @@ function PlayerCard({
   onSendRequest,
   onRespond,
   onChallenge,
+  onRemove,
   isPending,
+  isRemoving,
 }: {
   player: SocialPlayer;
   index: number;
   onSendRequest?: (id: string) => void;
   onRespond?: () => void;
   onChallenge?: (id: string) => void;
+  onRemove?: (id: string) => void;
   isPending?: boolean;
+  isRemoving?: boolean;
 }) {
   const rankedDisplay = getRankedDisplay(player);
 
@@ -136,6 +141,22 @@ function PlayerCard({
           >
             <Swords className="size-3.5" />
             Challenge
+          </button>
+        )}
+
+        {onRemove && player.friendStatus === "friends" && (
+          <button
+            type="button"
+            onClick={() => onRemove(player.id)}
+            disabled={isRemoving}
+            className="flex items-center justify-center rounded-xl border border-[#FF4B4B]/25 bg-[#FF4B4B]/15 px-2.5 py-2 text-[11px] font-black uppercase tracking-wide text-[#FF9999] transition-colors hover:bg-[#FF4B4B]/25 disabled:opacity-50"
+            title="Remove friend"
+          >
+            {isRemoving ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <X className="size-3.5" />
+            )}
           </button>
         )}
 
@@ -350,6 +371,17 @@ export function SocialScreen() {
     },
   });
 
+  const removeFriendMutation = useMutation({
+    mutationFn: (friendUserId: string) => removeFriend(friendUserId),
+    onSuccess: async () => {
+      await invalidateSocialQueries();
+      toast.success("Friend removed");
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Failed to remove friend"));
+    },
+  });
+
   const handleSendRequest = async (targetUserId: string) => {
     if (pendingTargetId || sendRequestMutation.isPending) return;
     setPendingTargetId(targetUserId);
@@ -386,9 +418,18 @@ export function SocialScreen() {
   const incomingCount = requestsQuery.data?.incomingCount ?? 0;
   const searchResults = searchQuery.data ?? [];
   const friendsLoading = friendsQuery.isLoading || requestsQuery.isLoading;
+  const friendsError =
+    friendsQuery.isError || requestsQuery.isError
+      ? "Failed to load friends. Please try again."
+      : null;
   const isSearching = debouncedQuery.length > 0 && searchQuery.isLoading;
   const searchError = searchQuery.isError ? "Search failed. Please try again." : null;
-  const hasNoSocialData = friends.length === 0 && incomingRequests.length === 0 && outgoingRequests.length === 0;
+  const hasNoSocialData =
+    friendsQuery.isSuccess &&
+    requestsQuery.isSuccess &&
+    friends.length === 0 &&
+    incomingRequests.length === 0 &&
+    outgoingRequests.length === 0;
 
   return (
     <div className="min-h-screen font-fun">
@@ -462,6 +503,10 @@ export function SocialScreen() {
                 <div className="flex items-center justify-center py-16">
                   <Loader2 className="size-8 animate-spin text-[#1CB0F6]" />
                 </div>
+              ) : friendsError ? (
+                <div className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] p-6 text-center">
+                  <p className="text-sm font-bold text-[#FF4B4B]">{friendsError}</p>
+                </div>
               ) : hasNoSocialData ? (
                 <div className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] p-8 text-center">
                   <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl border-2 border-[#56707A]/20 bg-[#243B44]">
@@ -518,6 +563,8 @@ export function SocialScreen() {
                           player={friend}
                           index={index}
                           onChallenge={(id) => router.push(`/profile/${id}`)}
+                          onRemove={(id) => removeFriendMutation.mutate(id)}
+                          isRemoving={removeFriendMutation.isPending}
                         />
                       ))}
                     </SocialSection>
@@ -562,7 +609,7 @@ export function SocialScreen() {
                 <div className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] p-6 text-center">
                   <p className="text-sm font-bold text-[#FF4B4B]">{searchError}</p>
                 </div>
-              ) : query && debouncedQuery && searchResults.length === 0 ? (
+              ) : debouncedQuery && searchResults.length === 0 ? (
                 <div className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] p-8 text-center">
                   <div className="mx-auto mb-3 flex size-14 items-center justify-center rounded-2xl border-2 border-[#56707A]/20 bg-[#243B44]">
                     <UserRound className="size-7 text-[#56707A]" />
@@ -570,7 +617,7 @@ export function SocialScreen() {
                   <p className="mb-1 text-sm font-black uppercase text-white">No players found</p>
                   <p className="text-xs font-semibold text-[#56707A]">Try a different username</p>
                 </div>
-              ) : !query ? (
+              ) : !debouncedQuery ? (
                 <div className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] p-8 text-center">
                   <div className="mx-auto mb-3 flex size-14 items-center justify-center rounded-2xl border-2 border-[#1CB0F6]/25 bg-[#1CB0F6]/15">
                     <Search className="size-7 text-[#1CB0F6]" />

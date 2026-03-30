@@ -1,8 +1,8 @@
 'use client';
 
 import { motion, AnimatePresence } from 'motion/react';
-import { QuestionArena } from '@/features/game/components/QuestionArena';
-import { AnswerCard } from '@/features/game/components/AnswerCard';
+import { QuestionArena } from '@/components/game/QuestionArena';
+import { AnswerCard } from '@/components/game/AnswerCard';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import { PenaltyCameraView } from './PenaltyCameraView';
 

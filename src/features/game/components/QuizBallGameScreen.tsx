@@ -4,8 +4,8 @@ import type { GameQuestion } from '@/lib/domain';
 import { motion } from 'motion/react';
 
 import { MatchScoreHUD } from '@/features/game/components/MatchScoreHUD';
-import { QuestionArena } from '@/features/game/components/QuestionArena';
-import { AnswerCard } from '@/features/game/components/AnswerCard';
+import { QuestionArena } from '@/components/game/QuestionArena';
+import { AnswerCard } from '@/components/game/AnswerCard';
 import { MatchToastContainer } from '@/features/game/components/MatchToast';
 import { QuitMatchModal } from '@/features/game/components/QuitMatchModal';
 import { useGameLogic } from '@/features/game/hooks/useGameLogic';

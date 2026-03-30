@@ -286,12 +286,14 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
       : QUESTION_PLAYING_MS;
     const elapsed = Math.min(maxWindowMs, Math.max(0, now - startedAt));
 
-    trackAnswerSubmitted(
-      String(currentQuestion.qIndex),
-      index === correctIndex,
-      Math.round(elapsed),
-      currentQuestion.qIndex,
-    );
+    if (correctIndex !== undefined) {
+      trackAnswerSubmitted(
+        String(currentQuestion.qIndex),
+        index === correctIndex,
+        Math.round(elapsed),
+        currentQuestion.qIndex,
+      );
+    }
 
     getSocket().emit('match:answer', {
       matchId: match.matchId,
