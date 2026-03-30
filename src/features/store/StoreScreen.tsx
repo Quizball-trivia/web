@@ -12,6 +12,7 @@ import { ApiError } from "@/lib/api/api";
 import { createStoreCheckout, purchaseStoreWithCoins } from "@/lib/repositories/store.repo";
 import { queryKeys } from "@/lib/queries/queryKeys";
 import { useStoreProducts, useStoreWallet } from "@/lib/queries/store.queries";
+import { trackItemPurchased } from "@/lib/analytics/game-events";
 
 function formatUsd(priceCents: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -263,7 +264,10 @@ export function StoreScreen() {
 
   const coinPurchaseMutation = useMutation({
     mutationFn: async (productSlug: string) => purchaseStoreWithCoins({ productSlug }),
-    onSuccess: () => {
+    onSuccess: (_data, productSlug) => {
+      const product = productsBySlug.get(productSlug);
+      const productName = product?.name?.en ?? product?.slug ?? productSlug;
+      trackItemPurchased(productSlug, productName, product?.priceCents ?? 0);
       toast.success("Purchase completed.");
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });

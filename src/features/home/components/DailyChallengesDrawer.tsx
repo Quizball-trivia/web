@@ -18,6 +18,7 @@ import {
   Brain,
   Lightbulb,
   ListOrdered,
+  CircleCheckBig,
   type LucideIcon,
 } from 'lucide-react';
 import { useDailyChallenges } from '@/lib/queries/dailyChallenges.queries';
@@ -32,6 +33,7 @@ import {
 const ICON_MAP: Record<IconToken, LucideIcon> = {
   dollarSign: DollarSign,
   brain: Brain,
+  checkCircle: CircleCheckBig,
   lightbulb: Lightbulb,
   timer: Timer,
   list: ListOrdered,

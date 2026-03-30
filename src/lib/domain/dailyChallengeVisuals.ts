@@ -32,6 +32,12 @@ export const DAILY_CHALLENGE_VISUALS: Record<DailyChallengeType, ChallengeVisual
     iconColorClass: "text-blue-400",
     iconBgColor: "bg-blue-500/20",
   },
+  trueFalse: {
+    icon: "\u{2705}",
+    iconToken: "checkCircle",
+    iconColorClass: "text-emerald-400",
+    iconBgColor: "bg-emerald-500/20",
+  },
   clues: {
     icon: "\u{1F4A1}",
     iconToken: "lightbulb",

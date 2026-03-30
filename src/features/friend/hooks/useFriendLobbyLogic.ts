@@ -12,6 +12,7 @@ import type { LobbySettings as LobbySettingsState } from "@/lib/realtime/socket.
 import { useCategoriesList } from "@/lib/queries/categories.queries";
 import { copyToClipboard } from "@/utils/clipboard";
 import { useHeadToHead } from "@/lib/queries/stats.queries";
+import { trackLobbyCreated, trackLobbyJoined } from "@/lib/analytics/game-events";
 
 interface UseFriendLobbyLogicProps {
   roomCode: string;
@@ -51,6 +52,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   const initActionRef = useRef<string | null>(null);
   const startMatchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // visibilityRetryRef and related state removed — coalesced debounce in LobbySettings handles this
+  const analyticsTrackedRef = useRef(false);
   const [settingsErrorVersion, setSettingsErrorVersion] = useState(0);
   const [isStartingMatch, setIsStartingMatch] = useState(false);
 
@@ -77,6 +79,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     if (leavingRef.current) return;
     startedRef.current = false;
     createdRef.current = false;
+    analyticsTrackedRef.current = false;
     initActionRef.current = null;
     clearStartMatchTimeout();
     const stopTimer = setTimeout(() => {
@@ -114,6 +117,18 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
       inviteCode: `${roomCode.slice(0, 2)}***`,
     });
   }, [isHost, roomCode, lobby?.inviteCode, lobby]);
+
+  // 2.5. Track lobby creation/join success when lobby is confirmed
+  useEffect(() => {
+    if (!lobby || analyticsTrackedRef.current) return;
+    analyticsTrackedRef.current = true;
+
+    if (isHost) {
+      trackLobbyCreated("friendly");
+    } else {
+      trackLobbyJoined(lobby.lobbyId, lobby.inviteCode ?? roomCode);
+    }
+  }, [lobby, isHost]);
 
   // 3. Navigation & Session Logic
   useEffect(() => {

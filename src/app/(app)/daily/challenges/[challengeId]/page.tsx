@@ -14,6 +14,7 @@ import { useCompleteDailyChallenge, useDailyChallengeSession } from "@/lib/queri
 import { queryKeys } from "@/lib/queries/queryKeys";
 import { usePlayer } from "@/contexts/PlayerContext";
 import type { DailyChallengeType } from "@/lib/domain/dailyChallenge";
+import { trackDailyChallengeCompleted } from "@/lib/analytics/game-events";
 
 function isDailyChallengeType(value: string): value is DailyChallengeType {
   return value in DAILY_CHALLENGE_VISUALS;
@@ -52,6 +53,7 @@ export default function ChallengePage() {
 
       try {
         const result = await completeMutation.mutateAsync(score);
+        trackDailyChallengeCompleted(challengeType);
         if (result.xpAwarded > 0) {
           addXP(result.xpAwarded);
         }

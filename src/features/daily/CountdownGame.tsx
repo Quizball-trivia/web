@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 
 import { Input } from "@/components/ui/input";
 import { QuitGameDialog } from "./QuitGameDialog";
@@ -62,6 +62,50 @@ function calculateSimilarity(str1: string, str2: string): number {
   return 1 - distance / maxLength;
 }
 
+function normalizeAnswer(value: string): string {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+interface RankedAnswerMatch {
+  display: string;
+  score: number;
+}
+
+function rankAnswerMatches(input: string, answerGroups: AnswerGroup[], foundAnswers: string[]): RankedAnswerMatch[] {
+  const normalizedInput = normalizeAnswer(input);
+  if (!normalizedInput) return [];
+
+  const ranked = answerGroups
+    .filter((group) => !foundAnswers.includes(group.display))
+    .map((group) => {
+      const bestScore = group.acceptedAnswers.reduce((best, alias) => {
+        const normalizedAlias = normalizeAnswer(alias);
+        if (!normalizedAlias) return best;
+        if (normalizedInput === normalizedAlias) return Math.max(best, 1);
+        if (normalizedAlias.startsWith(normalizedInput)) return Math.max(best, 0.96);
+        if (normalizedAlias.split(" ").some((token) => token.startsWith(normalizedInput))) return Math.max(best, 0.93);
+        if (normalizedInput.length >= 4) return Math.max(best, calculateSimilarity(normalizedInput, normalizedAlias));
+        return best;
+      }, 0);
+
+      return {
+        display: group.display,
+        score: bestScore,
+      };
+    })
+    .filter((entry) => entry.score >= 0.55)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3);
+
+  return ranked;
+}
+
 export function CountdownGame({ session, onBack, onComplete }: CountdownGameProps) {
   const TIME_PER_ROUND = session.secondsPerRound;
   const [questions] = useState<CountdownQuestion[]>(() =>
@@ -81,12 +125,17 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
   const [showQuitDialog, setShowQuitDialog] = useState(false);
   const [showRoundTransition, setShowRoundTransition] = useState(false);
   const [allRoundAnswers, setAllRoundAnswers] = useState<string[][]>([]);
+  const [highlightedSuggestion, setHighlightedSuggestion] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const currentQuestion = questions[currentRound];
   const isGameActive =
     questions.length > 0 && currentRound < questions.length && timeRemaining > 0;
   const totalRounds = questions.length;
+  const suggestions = useMemo(
+    () => rankAnswerMatches(inputValue, currentQuestion?.answerGroups ?? [], foundAnswers),
+    [currentQuestion, foundAnswers, inputValue]
+  );
 
   const handleRoundEnd = useCallback(() => {
     if (questions.length === 0) return;
@@ -150,15 +199,28 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
         }
 
         for (const acceptedAnswer of answerGroup.acceptedAnswers) {
-          const similarity = calculateSimilarity(normalizedInput, acceptedAnswer);
-
-          if (similarity >= 0.85) {
+          const normalizedAcceptedAnswer = normalizeAnswer(acceptedAnswer);
+          const similarity = calculateSimilarity(normalizedInput, normalizedAcceptedAnswer);
+          if (normalizedInput === normalizedAcceptedAnswer || similarity >= 0.9) {
             setFoundAnswers((prev) => [...prev, answerGroup.display]);
             setRecentAnswer(answerGroup.display);
             setTimeout(() => setRecentAnswer(null), 1500);
             return true;
           }
         }
+      }
+
+      const [bestSuggestion, secondSuggestion] = rankAnswerMatches(answer, currentQuestion.answerGroups, foundAnswers);
+      if (
+        bestSuggestion &&
+        bestSuggestion.score >= 0.9 &&
+        (normalizeAnswer(answer).length >= 4 || bestSuggestion.score === 1) &&
+        (!secondSuggestion || bestSuggestion.score - secondSuggestion.score >= 0.08)
+      ) {
+        setFoundAnswers((prev) => [...prev, bestSuggestion.display]);
+        setRecentAnswer(bestSuggestion.display);
+        setTimeout(() => setRecentAnswer(null), 1500);
+        return true;
       }
 
       return false;
@@ -168,12 +230,52 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
+    setHighlightedSuggestion(0);
   };
 
+  const submitSuggestion = useCallback((display: string) => {
+    let isDuplicate = false;
+    setFoundAnswers((prev) => {
+      if (prev.includes(display)) {
+        isDuplicate = true;
+        return prev;
+      }
+      return [...prev, display];
+    });
+    if (isDuplicate) return;
+    setRecentAnswer(display);
+    setTimeout(() => setRecentAnswer(null), 1500);
+    setInputValue("");
+    setHighlightedSuggestion(0);
+    inputRef.current?.focus();
+  }, []);
+
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowDown" && suggestions.length > 0) {
+      e.preventDefault();
+      setHighlightedSuggestion((prev) => (prev + 1) % suggestions.length);
+      return;
+    }
+
+    if (e.key === "ArrowUp" && suggestions.length > 0) {
+      e.preventDefault();
+      setHighlightedSuggestion((prev) => (prev - 1 + suggestions.length) % suggestions.length);
+      return;
+    }
+
     if (e.key === "Enter" && inputValue.trim()) {
+      if (suggestions.length > 0 && normalizeAnswer(inputValue).length < 4) {
+        e.preventDefault();
+        const idx = Math.min(highlightedSuggestion, suggestions.length - 1);
+        const suggestion = suggestions[idx];
+        if (suggestion) {
+          submitSuggestion(suggestion.display);
+        }
+        return;
+      }
       checkAnswer(inputValue);
       setInputValue("");
+      setHighlightedSuggestion(0);
     }
   };
 
@@ -307,6 +409,24 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
             <p className="text-xs text-[#56707A]">
               <Lightbulb className="size-3.5 inline-block align-text-bottom mr-1 text-[#FF9600]" />Tip: Don&apos;t worry about exact spelling - close matches count!
             </p>
+            {suggestions.length > 0 && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {suggestions.map((suggestion, index) => (
+                  <button
+                    key={suggestion.display}
+                    type="button"
+                    onClick={() => submitSuggestion(suggestion.display)}
+                    className={`rounded-full border px-3 py-1 text-xs font-bold transition-all ${
+                      index === highlightedSuggestion
+                        ? "border-[#1CB0F6] bg-[#1CB0F6]/15 text-[#1CB0F6]"
+                        : "border-white/10 bg-white/5 text-white/80 hover:border-[#1CB0F6]/50"
+                    }`}
+                  >
+                    {suggestion.display}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

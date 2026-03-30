@@ -1462,8 +1462,22 @@ export interface paths {
                                 nickname: string | null;
                                 /** Format: uri */
                                 avatarUrl: string | null;
-                                rp: number;
                                 level: number;
+                                ranked: {
+                                    rp: number;
+                                    /** @enum {string} */
+                                    tier: "Academy" | "Youth Prospect" | "Reserve" | "Bench" | "Rotation" | "Starting11" | "Key Player" | "Captain" | "World-Class" | "Legend" | "GOAT";
+                                    /** @enum {string} */
+                                    placementStatus: "unplaced" | "in_progress" | "placed";
+                                    placementPlayed: number;
+                                    placementRequired: number;
+                                    placementWins: number;
+                                    currentWinStreak: number;
+                                    /** Format: date-time */
+                                    lastRankedMatchAt: string | null;
+                                } | null;
+                                /** @enum {string} */
+                                friendStatus: "none" | "pending_sent" | "pending_received" | "friends";
                             }[];
                         };
                     };
@@ -1482,6 +1496,470 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/friends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List accepted friends for the authenticated user */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Friends list */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            friends: {
+                                /** Format: uuid */
+                                id: string;
+                                nickname: string | null;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                level: number;
+                                ranked: {
+                                    rp: number;
+                                    /** @enum {string} */
+                                    tier: "Academy" | "Youth Prospect" | "Reserve" | "Bench" | "Rotation" | "Starting11" | "Key Player" | "Captain" | "World-Class" | "Legend" | "GOAT";
+                                    /** @enum {string} */
+                                    placementStatus: "unplaced" | "in_progress" | "placed";
+                                    placementPlayed: number;
+                                    placementRequired: number;
+                                    placementWins: number;
+                                    currentWinStreak: number;
+                                    /** Format: date-time */
+                                    lastRankedMatchAt: string | null;
+                                } | null;
+                                /** @enum {string} */
+                                friendStatus: "friends";
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/friends/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List incoming and outgoing friend requests */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Friend request lists */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            incoming: {
+                                /** Format: uuid */
+                                requestId: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                                user: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    nickname: string | null;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    level: number;
+                                    ranked: {
+                                        rp: number;
+                                        /** @enum {string} */
+                                        tier: "Academy" | "Youth Prospect" | "Reserve" | "Bench" | "Rotation" | "Starting11" | "Key Player" | "Captain" | "World-Class" | "Legend" | "GOAT";
+                                        /** @enum {string} */
+                                        placementStatus: "unplaced" | "in_progress" | "placed";
+                                        placementPlayed: number;
+                                        placementRequired: number;
+                                        placementWins: number;
+                                        currentWinStreak: number;
+                                        /** Format: date-time */
+                                        lastRankedMatchAt: string | null;
+                                    } | null;
+                                    /** @enum {string} */
+                                    friendStatus: "pending_sent" | "pending_received";
+                                };
+                            }[];
+                            outgoing: {
+                                /** Format: uuid */
+                                requestId: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                                user: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    nickname: string | null;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    level: number;
+                                    ranked: {
+                                        rp: number;
+                                        /** @enum {string} */
+                                        tier: "Academy" | "Youth Prospect" | "Reserve" | "Bench" | "Rotation" | "Starting11" | "Key Player" | "Captain" | "World-Class" | "Legend" | "GOAT";
+                                        /** @enum {string} */
+                                        placementStatus: "unplaced" | "in_progress" | "placed";
+                                        placementPlayed: number;
+                                        placementRequired: number;
+                                        placementWins: number;
+                                        currentWinStreak: number;
+                                        /** Format: date-time */
+                                        lastRankedMatchAt: string | null;
+                                    } | null;
+                                    /** @enum {string} */
+                                    friendStatus: "pending_sent" | "pending_received";
+                                };
+                            }[];
+                            incomingCount: number;
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Send a friend request */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        targetUserId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Friend request created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            requestId: string;
+                            /** @enum {string} */
+                            status: "pending";
+                        };
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Target user not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Friend request conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Validation error */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/friends/requests/{requestId}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept a received friend request */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    requestId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Friend request accepted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Friend request not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Validation error */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/friends/requests/{requestId}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decline a received friend request */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    requestId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Friend request declined */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Friend request not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Validation error */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/friends/{friendUserId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove an existing friend */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    friendUserId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Friend removed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                        };
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Friendship not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Validation error */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -2174,7 +2652,7 @@ export interface paths {
                     category_id?: string;
                     status?: "draft" | "published" | "archived";
                     difficulty?: "easy" | "medium" | "hard";
-                    type?: "mcq_single" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order";
+                    type?: "mcq_single" | "true_false" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order";
                     search?: string;
                     page?: string;
                     limit?: string;
@@ -2214,7 +2692,7 @@ export interface paths {
                         /** Format: uuid */
                         category_id: string;
                         /** @enum {string} */
-                        type: "mcq_single" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order";
+                        type: "mcq_single" | "true_false" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order";
                         /** @enum {string} */
                         difficulty: "easy" | "medium" | "hard";
                         /** @enum {string} */
@@ -2328,7 +2806,7 @@ export interface paths {
                         /** Format: uuid */
                         category_id?: string;
                         /** @enum {string} */
-                        type?: "mcq_single" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order";
+                        type?: "mcq_single" | "true_false" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order";
                         /** @enum {string} */
                         difficulty?: "easy" | "medium" | "hard";
                         /** @enum {string} */
@@ -2471,7 +2949,7 @@ export interface paths {
                         category_id: string;
                         questions: {
                             /** @enum {string} */
-                            type: "mcq_single" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order";
+                            type: "mcq_single" | "true_false" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order";
                             /** @enum {string} */
                             difficulty: "easy" | "medium" | "hard";
                             /** @enum {string} */
@@ -2690,11 +3168,11 @@ export interface paths {
                         "application/json": {
                             items: {
                                 /** @enum {string} */
-                                challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+                                challengeType: "moneyDrop" | "footballJeopardy" | "trueFalse" | "clues" | "countdown" | "putInOrder";
                                 title: string;
                                 description: string;
                                 /** @enum {string} */
-                                iconToken: "dollarSign" | "brain" | "lightbulb" | "timer" | "list";
+                                iconToken: "dollarSign" | "brain" | "checkCircle" | "lightbulb" | "timer" | "list";
                                 coinReward: number;
                                 xpReward: number;
                                 showOnHome: boolean;
@@ -2738,7 +3216,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+                    challengeType: "moneyDrop" | "footballJeopardy" | "trueFalse" | "clues" | "countdown" | "putInOrder";
                 };
                 cookie?: never;
             };
@@ -2905,7 +3383,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+                    challengeType: "moneyDrop" | "footballJeopardy" | "trueFalse" | "clues" | "countdown" | "putInOrder";
                 };
                 cookie?: never;
             };
@@ -2926,7 +3404,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @enum {string} */
-                            challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+                            challengeType: "moneyDrop" | "footballJeopardy" | "trueFalse" | "clues" | "countdown" | "putInOrder";
                             /** @enum {boolean} */
                             completedToday: true;
                             coinsAwarded: number;
@@ -2989,7 +3467,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+                    challengeType: "moneyDrop" | "footballJeopardy" | "trueFalse" | "clues" | "countdown" | "putInOrder";
                 };
                 cookie?: never;
             };
@@ -3003,7 +3481,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @enum {string} */
-                            challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+                            challengeType: "moneyDrop" | "footballJeopardy" | "trueFalse" | "clues" | "countdown" | "putInOrder";
                             /** @enum {boolean} */
                             reset: true;
                         };
@@ -3060,11 +3538,11 @@ export interface paths {
                         "application/json": {
                             items: {
                                 /** @enum {string} */
-                                challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+                                challengeType: "moneyDrop" | "footballJeopardy" | "trueFalse" | "clues" | "countdown" | "putInOrder";
                                 title: string;
                                 description: string;
                                 /** @enum {string} */
-                                iconToken: "dollarSign" | "brain" | "lightbulb" | "timer" | "list";
+                                iconToken: "dollarSign" | "brain" | "checkCircle" | "lightbulb" | "timer" | "list";
                                 coinReward: number;
                                 xpReward: number;
                                 showOnHome: boolean;
@@ -3084,6 +3562,13 @@ export interface paths {
                                     pickCount: number;
                                     /** @enum {string} */
                                     challengeType: "footballJeopardy";
+                                } | {
+                                    /** @default [] */
+                                    categoryIds: string[];
+                                    questionCount: number;
+                                    secondsPerQuestion: number;
+                                    /** @enum {string} */
+                                    challengeType: "trueFalse";
                                 } | {
                                     /** @default [] */
                                     categoryIds: string[];
@@ -3154,7 +3639,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+                    challengeType: "moneyDrop" | "footballJeopardy" | "trueFalse" | "clues" | "countdown" | "putInOrder";
                 };
                 cookie?: never;
             };
@@ -3595,6 +4080,102 @@ export interface components {
             total: number;
             totalPages: number;
         };
+        FriendsResponse: {
+            friends: {
+                /** Format: uuid */
+                id: string;
+                nickname: string | null;
+                /** Format: uri */
+                avatarUrl: string | null;
+                level: number;
+                ranked: {
+                    rp: number;
+                    /** @enum {string} */
+                    tier: "Academy" | "Youth Prospect" | "Reserve" | "Bench" | "Rotation" | "Starting11" | "Key Player" | "Captain" | "World-Class" | "Legend" | "GOAT";
+                    /** @enum {string} */
+                    placementStatus: "unplaced" | "in_progress" | "placed";
+                    placementPlayed: number;
+                    placementRequired: number;
+                    placementWins: number;
+                    currentWinStreak: number;
+                    /** Format: date-time */
+                    lastRankedMatchAt: string | null;
+                } | null;
+                /** @enum {string} */
+                friendStatus: "friends";
+            }[];
+        };
+        FriendRequestsResponse: {
+            incoming: {
+                /** Format: uuid */
+                requestId: string;
+                /** Format: date-time */
+                createdAt: string;
+                user: {
+                    /** Format: uuid */
+                    id: string;
+                    nickname: string | null;
+                    /** Format: uri */
+                    avatarUrl: string | null;
+                    level: number;
+                    ranked: {
+                        rp: number;
+                        /** @enum {string} */
+                        tier: "Academy" | "Youth Prospect" | "Reserve" | "Bench" | "Rotation" | "Starting11" | "Key Player" | "Captain" | "World-Class" | "Legend" | "GOAT";
+                        /** @enum {string} */
+                        placementStatus: "unplaced" | "in_progress" | "placed";
+                        placementPlayed: number;
+                        placementRequired: number;
+                        placementWins: number;
+                        currentWinStreak: number;
+                        /** Format: date-time */
+                        lastRankedMatchAt: string | null;
+                    } | null;
+                    /** @enum {string} */
+                    friendStatus: "pending_sent" | "pending_received";
+                };
+            }[];
+            outgoing: {
+                /** Format: uuid */
+                requestId: string;
+                /** Format: date-time */
+                createdAt: string;
+                user: {
+                    /** Format: uuid */
+                    id: string;
+                    nickname: string | null;
+                    /** Format: uri */
+                    avatarUrl: string | null;
+                    level: number;
+                    ranked: {
+                        rp: number;
+                        /** @enum {string} */
+                        tier: "Academy" | "Youth Prospect" | "Reserve" | "Bench" | "Rotation" | "Starting11" | "Key Player" | "Captain" | "World-Class" | "Legend" | "GOAT";
+                        /** @enum {string} */
+                        placementStatus: "unplaced" | "in_progress" | "placed";
+                        placementPlayed: number;
+                        placementRequired: number;
+                        placementWins: number;
+                        currentWinStreak: number;
+                        /** Format: date-time */
+                        lastRankedMatchAt: string | null;
+                    } | null;
+                    /** @enum {string} */
+                    friendStatus: "pending_sent" | "pending_received";
+                };
+            }[];
+            incomingCount: number;
+        };
+        CreateFriendRequestResponse: {
+            /** Format: uuid */
+            requestId: string;
+            /** @enum {string} */
+            status: "pending";
+        };
+        FriendActionResponse: {
+            /** @enum {boolean} */
+            success: true;
+        };
         I18nField: {
             [key: string]: string;
         };
@@ -3648,6 +4229,20 @@ export interface components {
             }[];
         } | {
             /** @enum {string} */
+            type: "true_false";
+            options: ({
+                /** @enum {string} */
+                id: "true";
+                text: components["schemas"]["I18nField"];
+                is_correct: boolean;
+            } | {
+                /** @enum {string} */
+                id: "false";
+                text: components["schemas"]["I18nField"];
+                is_correct: boolean;
+            })[];
+        } | {
+            /** @enum {string} */
             type: "input_text";
             accepted_answers: components["schemas"]["I18nField"][];
             case_sensitive: boolean;
@@ -3690,7 +4285,7 @@ export interface components {
             /** Format: uuid */
             category_id: string;
             /** @enum {string} */
-            type: "mcq_single" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order";
+            type: "mcq_single" | "true_false" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order";
             /** @enum {string} */
             difficulty: "easy" | "medium" | "hard";
             /** @enum {string} */
@@ -3767,11 +4362,11 @@ export interface components {
         };
         DailyChallengeMetadata: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+            challengeType: "moneyDrop" | "footballJeopardy" | "trueFalse" | "clues" | "countdown" | "putInOrder";
             title: string;
             description: string;
             /** @enum {string} */
-            iconToken: "dollarSign" | "brain" | "lightbulb" | "timer" | "list";
+            iconToken: "dollarSign" | "brain" | "checkCircle" | "lightbulb" | "timer" | "list";
             coinReward: number;
             xpReward: number;
             showOnHome: boolean;
@@ -3792,6 +4387,13 @@ export interface components {
             pickCount: number;
             /** @enum {string} */
             challengeType: "footballJeopardy";
+        } | {
+            /** @default [] */
+            categoryIds: string[];
+            questionCount: number;
+            secondsPerQuestion: number;
+            /** @enum {string} */
+            challengeType: "trueFalse";
         } | {
             /** @default [] */
             categoryIds: string[];
@@ -3919,7 +4521,7 @@ export interface components {
         };
         CompleteDailyChallengeResponse: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+            challengeType: "moneyDrop" | "footballJeopardy" | "trueFalse" | "clues" | "countdown" | "putInOrder";
             /** @enum {boolean} */
             completedToday: true;
             coinsAwarded: number;
@@ -3931,17 +4533,17 @@ export interface components {
         };
         ResetDailyChallengeResponse: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+            challengeType: "moneyDrop" | "footballJeopardy" | "trueFalse" | "clues" | "countdown" | "putInOrder";
             /** @enum {boolean} */
             reset: true;
         };
         AdminDailyChallengeConfigResponse: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "footballJeopardy" | "clues" | "countdown" | "putInOrder";
+            challengeType: "moneyDrop" | "footballJeopardy" | "trueFalse" | "clues" | "countdown" | "putInOrder";
             title: string;
             description: string;
             /** @enum {string} */
-            iconToken: "dollarSign" | "brain" | "lightbulb" | "timer" | "list";
+            iconToken: "dollarSign" | "brain" | "checkCircle" | "lightbulb" | "timer" | "list";
             coinReward: number;
             xpReward: number;
             showOnHome: boolean;

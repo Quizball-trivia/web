@@ -3,9 +3,10 @@ import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { getSocket } from '@/lib/realtime/socket-client';
 import { logger } from '@/utils/logger';
 import { QUESTION_REVEAL_MS } from '@/features/possession/types/possession.types';
+import { trackAnswerSubmitted } from '@/lib/analytics/game-events';
 
 const QUESTION_PLAYING_MS = 10000; // 10 second playing phase
-const ROUND_RESULT_HOLD_MS = 2500; // hold result for 2.5s before transitioning to next question
+export const ROUND_RESULT_HOLD_MS = 2500; // hold result for 2.5s before transitioning to next question
 const GOAL_CELEBRATION_EXTRA_MS = 2500; // extra delay for GOOOL overlay before round transition
 
 interface UseRealtimeGameLogicOptions {
@@ -184,18 +185,20 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
 
   // Hold timer — hide options after result display, then either signal transition
   // (normal phases with delay) or let the gate effect promote directly (non-normal).
+  // Also set roundResultHoldDone for goal rounds so the GoalCelebrationOverlay fires
+  // (it triggers on roundResultHoldDone, not effectiveDelay).
   useEffect(() => {
     if (!roundResolved || !showOptions || matchPaused || startCountdownActive) return;
 
     const holdTimer = setTimeout(() => {
       setShowOptions(false);
-      if (effectiveDelay > 0) {
+      if (effectiveDelay > 0 || isGoalRound) {
         setRoundResultHoldDone(true);
       }
     }, roundResultHoldMs);
 
     return () => clearTimeout(holdTimer);
-  }, [roundResolved, showOptions, matchPaused, currentQuestionIndex, roundResultHoldMs, startCountdownActive, effectiveDelay]);
+  }, [roundResolved, showOptions, matchPaused, currentQuestionIndex, roundResultHoldMs, startCountdownActive, effectiveDelay, isGoalRound]);
 
   // Transition delay timer — when the overlay is showing, count down the delay.
   // Sets transitionElapsed=true which opens the gate for promotion.
@@ -282,6 +285,15 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
       ? Math.max(0, normalizedQuestionDeadlineAtMs - startedAt)
       : QUESTION_PLAYING_MS;
     const elapsed = Math.min(maxWindowMs, Math.max(0, now - startedAt));
+
+    if (correctIndex !== undefined) {
+      trackAnswerSubmitted(
+        String(currentQuestion.qIndex),
+        index === correctIndex,
+        Math.round(elapsed),
+        currentQuestion.qIndex,
+      );
+    }
 
     getSocket().emit('match:answer', {
       matchId: match.matchId,

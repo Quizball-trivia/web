@@ -38,9 +38,6 @@ export interface PlayerStats {
   coins: number;
   tickets?: number; // Daily tickets for ranked play (10 per day)
   lastTicketReset?: string; // ISO date string for daily reset
-  // TODO: lastSpinDate is a stopgap. Preferred fix:
-  // - Pass as separate prop from wheel/storage state (not embedded in PlayerStats)
-  // - Or derive from actual spin tracking if stored elsewhere
   lastSpinDate?: string; // ISO date string for last rewards wheel spin
   level: number;
   xp: number;

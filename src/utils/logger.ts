@@ -26,7 +26,6 @@ function normalizeMeta(meta: unknown): LogMeta {
   return { value: meta };
 }
 
-// In production, this could send to Sentry, backend logging endpoint, etc.
 async function reportError(entry: LogEntry): Promise<void> {
   void entry;
   if (isDev) return;
