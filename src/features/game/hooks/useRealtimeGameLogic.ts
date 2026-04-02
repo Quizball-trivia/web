@@ -292,6 +292,8 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
         index === correctIndex,
         Math.round(elapsed),
         currentQuestion.qIndex,
+        currentQuestion.question.difficulty,
+        currentQuestion.question.categoryName,
       );
     }
 

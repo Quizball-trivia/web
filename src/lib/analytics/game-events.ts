@@ -24,13 +24,17 @@ export function trackAnswerSubmitted(
   questionId: string,
   isCorrect: boolean,
   timeMs: number,
-  questionIndex: number
+  questionIndex: number,
+  difficulty?: string,
+  categoryName?: string
 ) {
   trackEvent('answer_submitted', {
     question_id: questionId,
     is_correct: isCorrect,
     time_ms: timeMs,
     question_index: questionIndex,
+    difficulty,
+    category_name: categoryName,
   });
 }
 
@@ -49,7 +53,7 @@ export function trackMatchCompleted(
   opponentScore: number,
   rpChange?: number
 ) {
-  trackEvent('match_completed', {
+  trackEvent('match_results_viewed', {
     match_type: matchType,
     won,
     score,
