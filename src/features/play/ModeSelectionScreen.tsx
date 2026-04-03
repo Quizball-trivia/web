@@ -256,13 +256,22 @@ export function ModeSelectionScreen({
             )}
           </div>
           {process.env.NODE_ENV === 'development' && (
-            <Link
-              href="/dev/match"
-              onClick={(e) => e.stopPropagation()}
-              className="mt-3 inline-block text-[10px] font-bold text-yellow-500/60 hover:text-yellow-400 transition-colors uppercase tracking-widest"
-            >
-              Dev Quick Match →
-            </Link>
+            <div className="flex flex-col items-start gap-1">
+              <Link
+                href="/dev/match"
+                onClick={(e) => e.stopPropagation()}
+                className="mt-3 inline-block text-[10px] font-bold text-yellow-500/60 hover:text-yellow-400 transition-colors uppercase tracking-widest"
+              >
+                Dev Quick Match →
+              </Link>
+              <Link
+                href="/dev/mock-match"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-block text-[10px] font-bold text-yellow-500/60 hover:text-yellow-400 transition-colors uppercase tracking-widest"
+              >
+                New Ranked Dev →
+              </Link>
+            </div>
           )}
         </div>
       </motion.div>
