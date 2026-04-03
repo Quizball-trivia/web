@@ -154,7 +154,7 @@ vi.mock('@/features/play/RankedCategoryBlockingScreen', () => ({
 }));
 
 vi.mock('@/features/game/RealtimeResultsScreen', () => ({
-  RealtimeResultsScreen: () => <div>Realtime Results</div>,
+  RealtimeResultsScreen: (props: { finalWinnerId?: string | null }) => <div>Realtime Results {String(props.finalWinnerId)}</div>,
 }));
 
 vi.mock('@/features/possession/RealtimePossessionMatchScreen', () => ({
@@ -213,5 +213,58 @@ describe('GameStageRouter', () => {
     render(<GameStageRouter />);
 
     expect(screen.getByText('Realtime Possession Match')).toBeInTheDocument();
+  });
+
+  it('shows loading instead of possession final results until authoritative final payload arrives', () => {
+    gameSessionState.stage = 'finalResults';
+    realtimeMatchState.match = {
+      ...realtimeMatchState.match,
+      variant: 'friendly_possession',
+      possessionState: {
+        phase: 'COMPLETED',
+        goals: { seat1: 1, seat2: 1 },
+      },
+      finalResults: null,
+    } as typeof realtimeMatchState.match & {
+      possessionState: { phase: string; goals: { seat1: number; seat2: number } };
+      finalResults: null;
+    };
+
+    render(<GameStageRouter />);
+
+    expect(screen.getByText('Loading Screen')).toBeInTheDocument();
+    expect(screen.queryByText(/Realtime Results/)).not.toBeInTheDocument();
+  });
+
+  it('renders possession final results once authoritative final payload exists', () => {
+    gameSessionState.stage = 'finalResults';
+    realtimeMatchState.match = {
+      ...realtimeMatchState.match,
+      variant: 'friendly_possession',
+      finalResults: {
+        matchId: 'match-1',
+        winnerId: 'self-1',
+        winnerDecisionMethod: 'penalty_goals',
+        players: {
+          'self-1': { userId: 'self-1', goals: 1, correctAnswers: 12 },
+          'opp-1': { userId: 'opp-1', goals: 1, correctAnswers: 10 },
+        },
+        unlockedAchievements: {},
+        rankedOutcome: null,
+      },
+    } as typeof realtimeMatchState.match & {
+      finalResults: {
+        matchId: string;
+        winnerId: string;
+        winnerDecisionMethod: string;
+        players: Record<string, { userId: string; goals: number; correctAnswers: number }>;
+        unlockedAchievements: Record<string, unknown>;
+        rankedOutcome: null;
+      };
+    };
+
+    render(<GameStageRouter />);
+
+    expect(screen.getByText('Realtime Results self-1')).toBeInTheDocument();
   });
 });

@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from 'motion/react';
 
 interface ArenaScoreSplashProps {
   show: boolean;
-  points: number;
+  points: number | null;
   side: 'left' | 'right';
+  variant?: 'pending' | 'points';
   onComplete?: () => void;
 }
 
@@ -25,9 +26,20 @@ function seededRandom(seed: number): number {
   return value - Math.floor(value);
 }
 
-export function ArenaScoreSplash({ show, points, side, onComplete }: ArenaScoreSplashProps) {
+export function ArenaScoreSplash({
+  show,
+  points,
+  side,
+  variant = 'points',
+  onComplete,
+}: ArenaScoreSplashProps) {
+  const isPointsVariant = variant === 'points';
+  const confettiSeed = isPointsVariant ? (points ?? 0) : (side === 'left' ? 101 : 257);
   const confetti = useMemo<Confetti[]>(() => {
-    if (!show || points <= 0) {
+    if (!show) {
+      return [];
+    }
+    if (isPointsVariant && (points == null || points <= 0)) {
       return [];
     }
 
@@ -38,17 +50,20 @@ export function ArenaScoreSplash({ show, points, side, onComplete }: ArenaScoreS
 
     return Array.from({ length: 20 }, (_, i) => ({
       id: i,
-      x: seededRandom(points + sideSeedOffset + i * 13) * 200 - 100,
-      y: seededRandom(points + sideSeedOffset + i * 29) * -150 - 50,
-      rotation: seededRandom(points + sideSeedOffset + i * 47) * 720 - 360,
-      scale: seededRandom(points + sideSeedOffset + i * 61) * 0.5 + 0.5,
-      color: colors[Math.floor(seededRandom(points + sideSeedOffset + i * 79) * colors.length)],
-      delay: seededRandom(points + sideSeedOffset + i * 97) * 0.15,
+      x: seededRandom(confettiSeed + sideSeedOffset + i * 13) * 200 - 100,
+      y: seededRandom(confettiSeed + sideSeedOffset + i * 29) * -150 - 50,
+      rotation: seededRandom(confettiSeed + sideSeedOffset + i * 47) * 720 - 360,
+      scale: seededRandom(confettiSeed + sideSeedOffset + i * 61) * 0.5 + 0.5,
+      color: colors[Math.floor(seededRandom(confettiSeed + sideSeedOffset + i * 79) * colors.length)],
+      delay: seededRandom(confettiSeed + sideSeedOffset + i * 97) * 0.15,
     }));
-  }, [show, points, side]);
+  }, [confettiSeed, isPointsVariant, points, show, side]);
 
   useEffect(() => {
-    if (!show || points <= 0) {
+    if (!show) {
+      return;
+    }
+    if (isPointsVariant && (points == null || points <= 0)) {
       return;
     }
 
@@ -57,17 +72,18 @@ export function ArenaScoreSplash({ show, points, side, onComplete }: ArenaScoreS
     }, 1100);
 
     return () => clearTimeout(timer);
-  }, [show, points, onComplete]);
+  }, [isPointsVariant, onComplete, points, show]);
 
-  if (!show || points <= 0) return null;
+  if (!show) return null;
+  if (isPointsVariant && (points == null || points <= 0)) return null;
 
   const isLeft = side === 'left';
   const baseColor = isLeft ? '#58CC02' : '#FF9600';
   const glowColor = isLeft ? '#85E000' : '#FFB800';
   const starParticles = Array.from({ length: 6 }, (_, i) => {
     const angle = (i * 60 + (isLeft ? 0 : 180)) * (Math.PI / 180);
-    const distance = 50 + ((i * 17 + points * 7) % 30);
-    const delay = 0.15 + ((i * 13 + points * 5) % 15) / 100;
+    const distance = 50 + ((i * 17 + confettiSeed * 7) % 30);
+    const delay = 0.15 + ((i * 13 + confettiSeed * 5) % 15) / 100;
 
     return {
       id: i,
@@ -113,11 +129,11 @@ export function ArenaScoreSplash({ show, points, side, onComplete }: ArenaScoreS
               transition={{ duration: 0.9 }}
             />
 
-            {/* Score text with chunky border */}
+            {/* Score text / success text with chunky border */}
             <motion.div
               className="relative font-fun font-black text-white select-none"
               style={{
-                fontSize: '48px',
+                fontSize: isPointsVariant ? '48px' : '32px',
                 textShadow: `
                   2px 2px 0 ${baseColor}dd,
                   4px 4px 0 ${baseColor}99,
@@ -132,7 +148,7 @@ export function ArenaScoreSplash({ show, points, side, onComplete }: ArenaScoreS
               }}
               transition={{ duration: 0.7, ease: 'easeOut' }}
             >
-              +{points}
+              {isPointsVariant ? `+${points}` : 'Correct!'}
             </motion.div>
 
             {/* Radial burst lines */}

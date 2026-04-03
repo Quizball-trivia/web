@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import { AnimatePresence } from "motion/react";
 import { PitchVisualization } from "@/features/possession/components/PitchVisualization";
 import { PossessionHUD } from "@/features/possession/components/PossessionHUD";
@@ -124,14 +124,6 @@ export function TrainingPlayingStage() {
     }
   }, [state.timeRemaining, state.phase, state.selectedAnswer, match]);
 
-  const handlePlayerSplashComplete = useCallback(() => {
-    match.dismissPlayerSplash();
-  }, [match]);
-
-  const handleOpponentSplashComplete = useCallback(() => {
-    match.dismissOpponentSplash();
-  }, [match]);
-
   // Use feed message from state (calculated by real possession formula)
   const feedMessage = state.phase === "shot"
     ? "SHOT!"
@@ -221,12 +213,6 @@ export function TrainingPlayingStage() {
               selectedAnswer={state.selectedAnswer}
               answerStates={state.answerStates}
               opponentAnswer={state.opponentAnswer}
-              showPlayerSplash={state.showPlayerSplash}
-              showOpponentSplash={state.showOpponentSplash}
-              playerSplashPoints={state.playerSplashPoints}
-              opponentSplashPoints={state.opponentSplashPoints}
-              onPlayerSplashComplete={handlePlayerSplashComplete}
-              onOpponentSplashComplete={handleOpponentSplashComplete}
               onAnswer={match.handleAnswer}
             />
           </div>

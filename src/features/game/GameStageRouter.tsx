@@ -230,6 +230,9 @@ export function GameStageRouter() {
 
     if (stage === "finalResults") {
       const final = realtimeMatch?.finalResults;
+      if (!isPartyQuizMatch && !final) {
+        return <LoadingScreen />;
+      }
       const unlockedAchievements = selfUserId
         ? final?.unlockedAchievements?.[selfUserId] ?? []
         : [];
@@ -260,15 +263,8 @@ export function GameStageRouter() {
         ? Object.entries(final.players).find(([userId]) => userId !== selfUserId)?.[1]
         : undefined;
 
-      // Use finalResults if available, otherwise derive scores from possessionState
-      const poss = realtimeMatch?.possessionState;
-      const mySeat = realtimeMatch?.mySeat;
-      const playerDisplayScore = myStats?.goals
-        ?? (mySeat === 2 ? poss?.goals.seat2 : poss?.goals.seat1)
-        ?? 0;
-      const opponentDisplayScore = opponentStats?.goals
-        ?? (mySeat === 2 ? poss?.goals.seat1 : poss?.goals.seat2)
-        ?? 0;
+      const playerDisplayScore = myStats?.goals ?? 0;
+      const opponentDisplayScore = opponentStats?.goals ?? 0;
       const totalQuestionsPlayed = realtimeMatch?.currentQuestion?.total
         ?? clientTotalQuestions
         ?? POSSESSION_TOTAL_QUESTIONS_FALLBACK;
