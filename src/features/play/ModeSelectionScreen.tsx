@@ -3,9 +3,9 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ModeConfirmModal } from '@/features/play/components/ModeConfirmModal';
-import { FriendPlayModal } from '@/features/friend/components/FriendPlayModal';
-import { HomeRecentMatches } from '@/features/home/components/dashboard/HomeRecentMatches';
+import { ModeConfirmModal } from '@/components/shared/ModeConfirmModal';
+import { FriendPlayModal } from '@/components/shared/FriendPlayModal';
+import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
 import type { MatchStatsSummary } from '@/lib/domain';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 

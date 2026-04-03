@@ -6,6 +6,7 @@ import { usePlayer } from '@/contexts/PlayerContext';
 import { useAuthStore } from '@/stores/auth.store';
 import { useRealtimeConnection } from '@/lib/realtime/useRealtimeConnection';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
+import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
 import { getSocket } from '@/lib/realtime/socket-client';
 import { RealtimePossessionMatchScreen } from '@/features/possession/RealtimePossessionMatchScreen';
 import { DevOverlay } from '@/features/dev/DevOverlay';
@@ -71,6 +72,7 @@ function DevMatchContent() {
 
   const playAgain = useCallback(() => {
     useRealtimeMatchStore.getState().reset();
+    useRankedMatchmakingStore.getState().clearRankedMatchmaking();
     resetStarting();
   }, [resetStarting]);
 
@@ -150,6 +152,7 @@ function DevMatchContent() {
             getSocket().emit('match:leave', { matchId: match.matchId });
           }
           useRealtimeMatchStore.getState().reset();
+          useRankedMatchmakingStore.getState().clearRankedMatchmaking();
           resetStarting();
         }}
         onForfeit={() => {

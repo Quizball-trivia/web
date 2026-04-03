@@ -14,6 +14,7 @@ import { useMatchStatsSummary } from "@/lib/queries/stats.queries";
 import { useRankedProfile } from "@/lib/queries/ranked.queries";
 import { useStoreWallet } from "@/lib/queries/store.queries";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
+import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
 import type { CategorySummary, GameQuestion } from "@/lib/domain";
 import type { ListQuestionsQuery } from "@/lib/repositories/questions.repo";
 import { QUESTION_COUNT } from "@/lib/constants/game";
@@ -67,6 +68,7 @@ export default function PlayPage() {
   }) => {
     // Always clear stale realtime state before opening a new game flow.
     resetRealtime();
+    useRankedMatchmakingStore.getState().clearRankedMatchmaking();
 
     // For ranked mode, start matchmaking without pre-fetching questions
     // Questions will be fetched after category blocking

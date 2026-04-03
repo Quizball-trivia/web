@@ -42,18 +42,25 @@ function createInitialRealtimeMatchState() {
     error: null,
     sessionState: { state: 'READY' },
     selfUserId: 'self-1',
+    exitCompletedMatchToLobby: vi.fn(),
+    reset: vi.fn(),
+  };
+}
+
+function createInitialRankedMatchmakingState() {
+  return {
     rankedSearching: false,
     rankedSearchDurationMs: 0,
     rankedSearchStartedAt: null,
     rankedFoundOpponent: null,
-    exitCompletedMatchToLobby: vi.fn(),
-    reset: vi.fn(),
   };
 }
 
 const gameSessionState = createInitialGameSessionState();
 
 const realtimeMatchState = createInitialRealtimeMatchState();
+
+const rankedMatchmakingState = createInitialRankedMatchmakingState();
 
 const playerState = {
   player: {
@@ -106,6 +113,10 @@ vi.mock('@/stores/realtimeMatch.store', () => ({
   useRealtimeMatchStore: (selector: (state: typeof realtimeMatchState) => unknown) => selector(realtimeMatchState),
 }));
 
+vi.mock('@/stores/rankedMatchmaking.store', () => ({
+  useRankedMatchmakingStore: (selector: (state: typeof rankedMatchmakingState) => unknown) => selector(rankedMatchmakingState),
+}));
+
 vi.mock('@/lib/realtime/useRealtimeConnection', () => ({
   useRealtimeConnection: () => socket,
 }));
@@ -142,22 +153,6 @@ vi.mock('@/features/play/RankedCategoryBlockingScreen', () => ({
   RankedCategoryBlockingScreen: () => <div>Ranked Category Blocking</div>,
 }));
 
-vi.mock('@/features/game/components/RoundIntroScreen', () => ({
-  RoundIntroScreen: () => <div>Round Intro</div>,
-}));
-
-vi.mock('@/features/game/components/RoundResultScreen', () => ({
-  RoundResultScreen: () => <div>Round Result</div>,
-}));
-
-vi.mock('@/features/game/components/QuizBallGameScreen', () => ({
-  QuizBallGameScreen: () => <div>Quiz Ball Game</div>,
-}));
-
-vi.mock('@/features/game/components/QuizBallResultsScreen', () => ({
-  QuizBallResultsScreen: () => <div>Quiz Ball Results</div>,
-}));
-
 vi.mock('@/features/game/RealtimeResultsScreen', () => ({
   RealtimeResultsScreen: () => <div>Realtime Results</div>,
 }));
@@ -187,6 +182,7 @@ describe('GameStageRouter', () => {
     vi.clearAllMocks();
     Object.assign(gameSessionState, createInitialGameSessionState());
     Object.assign(realtimeMatchState, createInitialRealtimeMatchState());
+    Object.assign(rankedMatchmakingState, createInitialRankedMatchmakingState());
   });
 
   it('keeps party showdown flow in the centralized router', () => {

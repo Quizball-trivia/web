@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useRealtimeConnection } from "@/lib/realtime/useRealtimeConnection";
 import { getSocket } from "@/lib/realtime/socket-client";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
+import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
 import { useGameSessionStore } from "@/stores/gameSession.store";
@@ -295,6 +296,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     router.replace("/play");
     window.setTimeout(() => {
       useRealtimeMatchStore.getState().reset();
+      useRankedMatchmakingStore.getState().clearRankedMatchmaking();
       leavingRef.current = false;
     }, 150);
   };

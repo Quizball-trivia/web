@@ -5,6 +5,7 @@ import { LogOut, ArrowRight, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getSocket } from "@/lib/realtime/socket-client";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
+import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
 import { toast } from "sonner";
 import { logger } from "@/utils/logger";
 
@@ -58,6 +59,7 @@ export function AlreadyInLobbyModal({
   const handleLeaveAndRetry = () => {
     getSocket().emit("lobby:leave");
     resetRealtime();
+    useRankedMatchmakingStore.getState().clearRankedMatchmaking();
     clearError();
     toast.info("Left previous lobby. Try joining again.");
     if (onClose) onClose();

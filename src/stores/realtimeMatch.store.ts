@@ -18,11 +18,6 @@ import type {
   MatchStartPayload,
   OpponentInfo,
   ErrorPayload,
-  WarmupStatePayload,
-  WarmupTappedPayload,
-  WarmupOverPayload,
-  WarmupRestartedPayload,
-  WarmupScoresPayload,
   PresenceOnlineCountPayload,
   SessionStatePayload,
 } from '@/lib/realtime/socket.types';
@@ -83,21 +78,6 @@ export interface OptimisticChanceCardState {
   remainingQuantityAfter: number | null;
 }
 
-export interface WarmupStatus {
-  bounceCount: number;
-  nextTurnUserId: string;
-  active: boolean;
-  lastTapperId: string | null;
-  lastTapX: number | null;
-  lastTapY: number | null;
-  playerBest: number;
-  pairBest: number;
-  gameOver: boolean;
-  finalScore: number | null;
-  isNewPlayerBest: boolean;
-  isNewPairBest: boolean;
-}
-
 export interface RejoinMatchStatus {
   matchId: string;
   mode: 'friendly' | 'ranked';
@@ -118,16 +98,11 @@ interface RealtimeState {
   lobby: LobbyState | null;
   draft: DraftStatus | null;
   match: MatchStatus | null;
-  warmup: WarmupStatus | null;
   onlineUsers: number | null;
   sessionState: SessionStatePayload | null;
   selfUserId: string | null;
   matchPaused: boolean;
   pauseUntil: number | null;
-  rankedSearchDurationMs: number | null;
-  rankedSearchStartedAt: number | null;
-  rankedFoundOpponent: OpponentInfo | null;
-  rankedSearching: boolean;
   rejoinMatch: RejoinMatchStatus | null;
   devPossessionAnimation: DevPossessionAnimation | null;
   error: ErrorPayload | null;
@@ -165,19 +140,9 @@ interface RealtimeState {
   setFinalResults: (payload: MatchFinalResultsPayload) => void;
   setMatchPaused: (payload: { graceMs: number }) => void;
   clearMatchPaused: () => void;
-  setRankedSearchStarted: (payload: { durationMs: number }) => void;
-  setRankedMatchFound: (payload: { opponent: OpponentInfo }) => void;
-  setRankedQueueLeft: () => void;
-  clearRankedMatchmaking: () => void;
   setRejoinAvailable: (payload: MatchRejoinAvailablePayload) => void;
   clearRejoinAvailable: () => void;
-  setWarmupState: (data: WarmupStatePayload) => void;
-  setWarmupTapped: (data: WarmupTappedPayload) => void;
-  setWarmupOver: (data: WarmupOverPayload) => void;
-  setWarmupRestarted: (data: WarmupRestartedPayload) => void;
-  setWarmupScores: (data: WarmupScoresPayload) => void;
   setOnlineUsers: (data: PresenceOnlineCountPayload) => void;
-  clearWarmup: () => void;
   setSessionState: (payload: SessionStatePayload) => void;
   revertDraftBan: (actorId: string) => void;
   triggerDevPossessionAnimation: (payload: { result: 'goal' | 'saved' | 'miss'; attackerSeat: 1 | 2 }) => void;
@@ -192,22 +157,17 @@ const initialState = {
   lobby: null,
   draft: null,
   match: null,
-  warmup: null,
   onlineUsers: null,
   sessionState: null,
   selfUserId: null,
   matchPaused: false,
   pauseUntil: null,
-  rankedSearchDurationMs: null,
-  rankedSearchStartedAt: null,
-  rankedFoundOpponent: null,
-  rankedSearching: false,
   rejoinMatch: null,
   devPossessionAnimation: null,
   error: null,
 };
 
-export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
+export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
   ...initialState,
   setSelfUserId: (userId) => {
     logger.info('Realtime store set self user id', { selfUserId: userId });
@@ -267,12 +227,8 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
     set({
       lobby: null,
       draft: null,
-      warmup: null,
       matchPaused: false,
       pauseUntil: null,
-      rankedSearchDurationMs: null,
-      rankedSearchStartedAt: null,
-      rankedFoundOpponent: null,
       rejoinMatch: null,
       match: {
         matchId: payload.matchId,
@@ -781,43 +737,6 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
       pauseUntil: null,
     });
   },
-  setRankedSearchStarted: ({ durationMs }) => {
-    logger.info('Realtime store set ranked search started', { durationMs });
-    set((state) => {
-      const keepExistingStart = state.rankedSearching && state.rankedSearchStartedAt !== null;
-      return {
-        rankedSearchDurationMs: durationMs,
-        rankedSearchStartedAt: keepExistingStart ? state.rankedSearchStartedAt : Date.now(),
-        rankedFoundOpponent: null,
-        rankedSearching: true,
-      };
-    });
-  },
-  setRankedMatchFound: ({ opponent }) => {
-    logger.info('Realtime store set ranked match found', { opponentId: opponent.id });
-    set({
-      rankedFoundOpponent: opponent,
-      rankedSearching: false,
-    });
-  },
-  setRankedQueueLeft: () => {
-    logger.info('Realtime store set ranked queue left');
-    set({
-      rankedSearchDurationMs: null,
-      rankedSearchStartedAt: null,
-      rankedFoundOpponent: null,
-      rankedSearching: false,
-    });
-  },
-  clearRankedMatchmaking: () => {
-    logger.info('Realtime store clear ranked matchmaking');
-    set({
-      rankedSearchDurationMs: null,
-      rankedSearchStartedAt: null,
-      rankedFoundOpponent: null,
-      rankedSearching: false,
-    });
-  },
   setRejoinAvailable: (payload) => {
     logger.info('Realtime store set rejoin available', {
       matchId: payload.matchId,
@@ -840,138 +759,9 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
     logger.info('Realtime store clear rejoin available');
     set({ rejoinMatch: null });
   },
-  setWarmupState: (data) => {
-    logger.info('Realtime store set warmup state', { bounceCount: data.bounceCount, active: data.active });
-    const existing = get().warmup;
-    set({
-      warmup: {
-        bounceCount: data.bounceCount,
-        nextTurnUserId: data.nextTurnUserId,
-        active: data.active,
-        lastTapperId: data.lastTapperId,
-        lastTapX: null,
-        lastTapY: null,
-        playerBest: existing?.playerBest ?? 0,
-        pairBest: existing?.pairBest ?? 0,
-        gameOver: false,
-        finalScore: null,
-        isNewPlayerBest: false,
-        isNewPairBest: false,
-      },
-    });
-  },
-  setWarmupTapped: (data) => {
-    logger.info('Realtime store set warmup tapped', { tapperId: data.tapperId, bounceCount: data.bounceCount });
-    set((state) => ({
-      warmup: {
-        ...(state.warmup ?? {
-          playerBest: 0,
-          pairBest: 0,
-          gameOver: false,
-          finalScore: null,
-          isNewPlayerBest: false,
-          isNewPairBest: false,
-        }),
-        bounceCount: data.bounceCount,
-        nextTurnUserId: data.nextTurnUserId,
-        lastTapperId: data.tapperId,
-        lastTapX: data.tapX,
-        lastTapY: data.tapY,
-        active: true,
-      },
-    }));
-  },
-  setWarmupOver: (data) => {
-    logger.info('Realtime store set warmup over', { finalScore: data.finalScore });
-    set((state) => {
-      const selfId = state.selfUserId;
-      const fallbackWarmup = {
-        bounceCount: 0,
-        nextTurnUserId: '',
-        lastTapperId: null,
-        lastTapX: null,
-        lastTapY: null,
-        active: false,
-        gameOver: true,
-        finalScore: data.finalScore,
-        playerBest: data.playerBests[selfId ?? ''] ?? 0,
-        pairBest: data.pairBest,
-        isNewPlayerBest: data.isNewPlayerBest[selfId ?? ''] ?? false,
-        isNewPairBest: data.isNewPairBest,
-      };
-      if (!state.warmup) {
-        return { warmup: fallbackWarmup };
-      }
-      return {
-        warmup: {
-          ...state.warmup,
-          active: false,
-          gameOver: true,
-          finalScore: data.finalScore,
-          playerBest: data.playerBests[selfId ?? ''] ?? state.warmup.playerBest,
-          pairBest: data.pairBest,
-          isNewPlayerBest: data.isNewPlayerBest[selfId ?? ''] ?? false,
-          isNewPairBest: data.isNewPairBest,
-        },
-      };
-    });
-  },
-  setWarmupRestarted: (data) => {
-    logger.info('Realtime store set warmup restarted', { firstTurnUserId: data.firstTurnUserId });
-    set((state) => ({
-      warmup: {
-        bounceCount: 0,
-        nextTurnUserId: data.firstTurnUserId,
-        active: true,
-        lastTapperId: null,
-        lastTapX: null,
-        lastTapY: null,
-        playerBest: state.warmup?.playerBest ?? 0,
-        pairBest: state.warmup?.pairBest ?? 0,
-        gameOver: false,
-        finalScore: null,
-        isNewPlayerBest: false,
-        isNewPairBest: false,
-      },
-    }));
-  },
-  setWarmupScores: (data) => {
-    logger.info('Realtime store set warmup scores', data);
-    set((state) => {
-      if (!state.warmup) {
-        return {
-          warmup: {
-            bounceCount: 0,
-            nextTurnUserId: '',
-            active: false,
-            lastTapperId: null,
-            lastTapX: null,
-            lastTapY: null,
-            playerBest: data.playerBest,
-            pairBest: data.pairBest,
-            gameOver: false,
-            finalScore: null,
-            isNewPlayerBest: false,
-            isNewPairBest: false,
-          },
-        };
-      }
-      return {
-        warmup: {
-          ...state.warmup,
-          playerBest: data.playerBest,
-          pairBest: data.pairBest,
-        },
-      };
-    });
-  },
   setOnlineUsers: (data) => {
     logger.info('Realtime store set online users', { onlineUsers: data.onlineUsers });
     set({ onlineUsers: data.onlineUsers });
-  },
-  clearWarmup: () => {
-    logger.info('Realtime store clear warmup');
-    set({ warmup: null });
   },
   setSessionState: (payload) => {
     logger.info('Realtime store set session state', payload);
@@ -1001,7 +791,6 @@ export const useRealtimeMatchStore = create<RealtimeState>((set, get) => ({
       ...state,
       draft: null,
       match: null,
-      warmup: null,
       matchPaused: false,
       pauseUntil: null,
       rejoinMatch: null,

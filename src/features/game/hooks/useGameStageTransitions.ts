@@ -8,6 +8,7 @@ import type {
   SessionStatePayload,
 } from "@/lib/realtime/socket.types";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
+import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
 import type { DraftStatus, MatchStatus } from "@/stores/realtimeMatch.store";
 import type { GameConfig, GameStage } from "@/types/game.runtime";
 import { logger } from "@/utils/logger";
@@ -212,8 +213,8 @@ export function useGameStageTransitions({
   const rankedRetryCountRef = useRef(0);
   const lastRoundResolvedAtRef = useRef<number | null>(null);
   const lastRoundResolvedQRef = useRef<number | null>(null);
-  const rankedSearchStartedAt = useRealtimeMatchStore((state) => state.rankedSearchStartedAt);
-  const rankedFoundOpponent = useRealtimeMatchStore((state) => state.rankedFoundOpponent);
+  const rankedSearchStartedAt = useRankedMatchmakingStore((state) => state.rankedSearchStartedAt);
+  const rankedFoundOpponent = useRankedMatchmakingStore((state) => state.rankedFoundOpponent);
   const sessionState = useRealtimeMatchStore((state) => state.sessionState);
   const realtimeErrorCode = useRealtimeMatchStore((state) => state.error?.code ?? null);
 
@@ -344,7 +345,7 @@ export function useGameStageTransitions({
         queueSearchId: snapshot.sessionState?.queueSearchId ?? null,
         waitingLobbyId: snapshot.sessionState?.waitingLobbyId ?? null,
         activeMatchId: snapshot.sessionState?.activeMatchId ?? null,
-        rankedSearching: snapshot.rankedSearching,
+        rankedSearching: useRankedMatchmakingStore.getState().rankedSearching,
       });
     },
     [socket]
@@ -393,9 +394,10 @@ export function useGameStageTransitions({
       rankedSearchAckTimerRef.current = null;
       if (!rankedRequestRef.current) return;
       const latest = useRealtimeMatchStore.getState();
+      const latestRanked = useRankedMatchmakingStore.getState();
       const hasAck = computeHasSearchAck(
-        latest.rankedSearchStartedAt,
-        latest.rankedFoundOpponent,
+        latestRanked.rankedSearchStartedAt,
+        latestRanked.rankedFoundOpponent,
         latest.sessionState,
       );
       if (hasAck) return;
@@ -406,7 +408,7 @@ export function useGameStageTransitions({
           queueSearchId: latest.sessionState?.queueSearchId ?? null,
           waitingLobbyId: latest.sessionState?.waitingLobbyId ?? null,
           activeMatchId: latest.sessionState?.activeMatchId ?? null,
-          rankedSearching: latest.rankedSearching,
+          rankedSearching: latestRanked.rankedSearching,
           errorCode: latest.error?.code ?? null,
         });
         return;

@@ -1,5 +1,6 @@
 import { getSocket } from './socket-client';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
+import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
 import { QueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { logger } from '@/utils/logger';
@@ -27,11 +28,6 @@ import type {
   MatchRejoinAvailablePayload,
   MatchResumePayload,
   MatchStartPayload,
-  WarmupStatePayload,
-  WarmupTappedPayload,
-  WarmupOverPayload,
-  WarmupRestartedPayload,
-  WarmupScoresPayload,
   PresenceOnlineCountPayload,
   SessionStatePayload,
   SessionBlockedPayload,
@@ -65,11 +61,6 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   socket.off('ranked:match_found');
   socket.off('ranked:queue_left');
   socket.off('presence:online_count');
-  socket.off('warmup:state');
-  socket.off('warmup:tapped');
-  socket.off('warmup:over');
-  socket.off('warmup:restarted');
-  socket.off('warmup:scores');
 
   socket.on('session:state', (data: SessionStatePayload) => {
     logger.info('Socket event session:state', data);
@@ -109,7 +100,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       data.code === 'RANKED_QUEUE_BUSY' ||
       data.code === 'INSUFFICIENT_TICKETS'
     ) {
-      store.setRankedQueueLeft();
+      useRankedMatchmakingStore.getState().setRankedQueueLeft();
     }
     // Rollback optimistic draft ban on server rejection
     if (
@@ -117,9 +108,9 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       data.code === 'INVALID_CATEGORY' ||
       data.code === 'BAN_FAILED'
     ) {
-      const selfUserId = store.selfUserId;
+      const { selfUserId, revertDraftBan } = useRealtimeMatchStore.getState();
       if (selfUserId) {
-        store.revertDraftBan(selfUserId);
+        revertDraftBan(selfUserId);
       }
     }
 
@@ -337,17 +328,17 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
 
   socket.on('ranked:search_started', (data: RankedSearchStartedPayload) => {
     logger.info('Socket event ranked:search_started', { durationMs: data.durationMs });
-    store.setRankedSearchStarted({ durationMs: data.durationMs });
+    useRankedMatchmakingStore.getState().setRankedSearchStarted({ durationMs: data.durationMs });
   });
 
   socket.on('ranked:match_found', (data: RankedMatchFoundPayload) => {
     logger.info('Socket event ranked:match_found', { lobbyId: data.lobbyId, opponentId: data.opponent.id });
-    store.setRankedMatchFound({ opponent: data.opponent });
+    useRankedMatchmakingStore.getState().setRankedMatchFound({ opponent: data.opponent });
   });
 
   socket.on('ranked:queue_left', () => {
     logger.info('Socket event ranked:queue_left');
-    store.setRankedQueueLeft();
+    useRankedMatchmakingStore.getState().setRankedQueueLeft();
   });
 
   socket.on('presence:online_count', (data: PresenceOnlineCountPayload) => {
@@ -355,28 +346,4 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     store.setOnlineUsers(data);
   });
 
-  socket.on('warmup:state', (data: WarmupStatePayload) => {
-    logger.info('Socket event warmup:state', { bounceCount: data.bounceCount, active: data.active });
-    store.setWarmupState(data);
-  });
-
-  socket.on('warmup:tapped', (data: WarmupTappedPayload) => {
-    logger.info('Socket event warmup:tapped', { tapperId: data.tapperId, bounceCount: data.bounceCount });
-    store.setWarmupTapped(data);
-  });
-
-  socket.on('warmup:over', (data: WarmupOverPayload) => {
-    logger.info('Socket event warmup:over', { finalScore: data.finalScore });
-    store.setWarmupOver(data);
-  });
-
-  socket.on('warmup:restarted', (data: WarmupRestartedPayload) => {
-    logger.info('Socket event warmup:restarted', { firstTurnUserId: data.firstTurnUserId });
-    store.setWarmupRestarted(data);
-  });
-
-  socket.on('warmup:scores', (data: WarmupScoresPayload) => {
-    logger.info('Socket event warmup:scores', data);
-    store.setWarmupScores(data);
-  });
 }
