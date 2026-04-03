@@ -113,7 +113,10 @@ export function RealtimePartyQuizScreen({
   onForfeit,
 }: RealtimePartyQuizScreenProps) {
   const { state, actions } = useRealtimeGameLogic({ transitionDelayMs: 950 });
-  const match = useRealtimeMatchStore((store) => store.match);
+  const partyState = useRealtimeMatchStore((store) => store.match?.partyState ?? null);
+  const participants = useRealtimeMatchStore((store) => store.match?.participants);
+  const currentQuestion = useRealtimeMatchStore((store) => store.match?.currentQuestion ?? null);
+  const answerAck = useRealtimeMatchStore((store) => store.match?.answerAck ?? null);
   const selfUserId = useRealtimeMatchStore((store) => store.selfUserId);
   const [showQuitModal, setShowQuitModal] = useState(false);
   const [showPlayerSplash, setShowPlayerSplash] = useState(false);
@@ -121,11 +124,6 @@ export function RealtimePartyQuizScreen({
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [preRoundRankingOrder, setPreRoundRankingOrder] = useState<string[]>([]);
   const splashQuestionRef = useRef<number | null>(null);
-
-  const partyState = match?.partyState ?? null;
-  const participants = match?.participants;
-  const currentQuestion = match?.currentQuestion ?? null;
-  const answerAck = match?.answerAck ?? null;
   const participantMap = useMemo(() => buildParticipantMap(participants ?? []), [participants]);
 
   // Snapshot the ranking order before each round for rank-shift calculation
@@ -267,7 +265,7 @@ export function RealtimePartyQuizScreen({
   // Pre-match / loading
   // ---------------------------------------------------------------------------
 
-  if (!match || !partyState) {
+  if (!partyState) {
     return (
       <div className="flex min-h-dvh w-full items-center justify-center bg-[#0f1420]">
         {state.startCountdownActive ? (

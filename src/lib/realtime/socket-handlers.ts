@@ -33,34 +33,27 @@ import type {
   SessionBlockedPayload,
 } from './socket.types';
 
+// Module-level ref so handlers always read the latest queryClient
+// without needing to tear down and re-register all listeners.
+let _queryClient: QueryClient | null = null;
+let _handlersRegistered = false;
+
+function getQueryClient(): QueryClient | null {
+  return _queryClient;
+}
+
 export function registerSocketHandlers(queryClient?: QueryClient): void {
+  // Update the module-level ref so existing handlers pick up the new client
+  if (queryClient) {
+    _queryClient = queryClient;
+  }
+
+  // If handlers are already registered on this socket, skip re-registration
+  if (_handlersRegistered) return;
+  _handlersRegistered = true;
+
   const socket = getSocket();
   const store = useRealtimeMatchStore.getState();
-
-  socket.off('lobby:state');
-  socket.off('session:state');
-  socket.off('session:blocked');
-  socket.off('error');
-  socket.off('draft:start');
-  socket.off('draft:banned');
-  socket.off('draft:complete');
-  socket.off('match:start');
-  socket.off('match:countdown');
-  socket.off('match:state');
-  socket.off('match:party_state');
-  socket.off('match:question');
-  socket.off('match:chance_card_applied');
-  socket.off('match:opponent_answered');
-  socket.off('match:answer_ack');
-  socket.off('match:round_result');
-  socket.off('match:final_results');
-  socket.off('match:opponent_disconnected');
-  socket.off('match:resume');
-  socket.off('match:rejoin_available');
-  socket.off('ranked:search_started');
-  socket.off('ranked:match_found');
-  socket.off('ranked:queue_left');
-  socket.off('presence:online_count');
 
   socket.on('session:state', (data: SessionStatePayload) => {
     logger.info('Socket event session:state', data);
@@ -131,14 +124,16 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
         clientActionId: typeof meta?.clientActionId === 'string' ? meta.clientActionId : undefined,
       });
       toast.error(data.message);
-      if (queryClient) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
+      const qc = getQueryClient();
+      if (qc) {
+        void qc.invalidateQueries({ queryKey: queryKeys.store.inventory() });
       }
     }
     if (data.code === 'INSUFFICIENT_TICKETS') {
       toast.error(data.message);
-      if (queryClient) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+      const qc = getQueryClient();
+      if (qc) {
+        void qc.invalidateQueries({ queryKey: queryKeys.store.wallet() });
       }
     }
     store.setError(data);
@@ -168,8 +163,9 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   socket.on('match:start', (data: MatchStartPayload) => {
     logger.info('Socket event match:start', { matchId: data.matchId, opponentId: data.opponent.id });
     store.setMatchStart(data);
-    if (queryClient) {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+    const qc = getQueryClient();
+    if (qc) {
+      void qc.invalidateQueries({ queryKey: queryKeys.store.wallet() });
     }
   });
 
@@ -241,8 +237,9 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   socket.on('match:chance_card_applied', (data: MatchChanceCardAppliedPayload) => {
     logger.info('Socket event match:chance_card_applied', data);
     store.confirmOptimisticChanceCard(data);
-    if (queryClient) {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
+    const qc = getQueryClient();
+    if (qc) {
+      void qc.invalidateQueries({ queryKey: queryKeys.store.inventory() });
     }
   });
 
@@ -283,12 +280,13 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       matchId: data.matchId,
       resultVersion: data.resultVersion,
     });
-    if (queryClient) {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.ranked.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.stats.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
+    const qc = getQueryClient();
+    if (qc) {
+      void qc.invalidateQueries({ queryKey: queryKeys.ranked.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.stats.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+      void qc.invalidateQueries({ queryKey: queryKeys.store.inventory() });
+      void qc.invalidateQueries({ queryKey: queryKeys.users.all });
     }
     void getMe()
       .then((user) => {
@@ -345,5 +343,10 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     logger.info('Socket event presence:online_count', { onlineUsers: data.onlineUsers });
     store.setOnlineUsers(data);
   });
+}
 
+/** Reset registration state (for testing or socket reconnect). */
+export function resetSocketHandlers(): void {
+  _handlersRegistered = false;
+  _queryClient = null;
 }

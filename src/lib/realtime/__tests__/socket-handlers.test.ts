@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
-import { registerSocketHandlers } from '../socket-handlers';
+import { registerSocketHandlers, resetSocketHandlers } from '../socket-handlers';
 import { __setSocketOverride } from '../socket-client';
 import type { Socket } from 'socket.io-client';
 import type { ServerToClientEvents, ClientToServerEvents } from '../socket.types';
@@ -55,6 +55,9 @@ describe('registerSocketHandlers', () => {
     // Reset store to clean state
     useRealtimeMatchStore.getState().reset();
     useRealtimeMatchStore.setState({ selfUserId: null });
+
+    // Reset handler registration so each test gets fresh handlers
+    resetSocketHandlers();
 
     // Create fresh mock socket and install as override
     mockSocket = createMockSocket();
