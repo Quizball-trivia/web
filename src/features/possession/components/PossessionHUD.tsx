@@ -4,10 +4,13 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { X } from 'lucide-react';
+import { AnimatedPointsCounter } from './AnimatedPointsCounter';
 
 interface PossessionHUDProps {
   playerGoals: number;
   opponentGoals: number;
+  playerPoints?: number;
+  opponentPoints?: number;
   playerName: string;
   opponentName: string;
   playerAvatarUrl: string;
@@ -25,6 +28,8 @@ interface PossessionHUDProps {
 export function PossessionHUD({
   playerGoals,
   opponentGoals,
+  playerPoints = 0,
+  opponentPoints = 0,
   playerName,
   opponentName,
   playerAvatarUrl,
@@ -58,6 +63,7 @@ export function PossessionHUD({
             <div className="text-3xl leading-7 font-black text-white tabular-nums">
               {playerGoals}
             </div>
+            <AnimatedPointsCounter value={playerPoints} accentClassName="text-[#1CB0F6]" />
           </div>
         </div>
 
@@ -116,6 +122,11 @@ export function PossessionHUD({
                 </motion.div>
               )}
             </AnimatePresence>
+            <AnimatedPointsCounter
+              value={opponentPoints}
+              align="right"
+              accentClassName="text-[#FF4B4B]"
+            />
           </div>
           <Avatar className={cn(
             "size-11 border-2 transition-colors duration-300",

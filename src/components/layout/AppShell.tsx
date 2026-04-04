@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
+import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
 import { useGameSessionStore } from "@/stores/gameSession.store";
 import { useStoreWallet } from "@/lib/queries/store.queries";
 import { useIncomingFriendRequestCount } from "@/lib/queries/social.queries";
@@ -182,6 +183,7 @@ export function AppShell({ children }: AppShellProps) {
   const handleLeaveLobby = () => {
     getSocket().emit("lobby:leave");
     resetRealtime();
+    useRankedMatchmakingStore.getState().clearRankedMatchmaking();
   };
 
   const handleRejoinMatch = () => {

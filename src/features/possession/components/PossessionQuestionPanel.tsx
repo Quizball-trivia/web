@@ -32,12 +32,14 @@ interface PossessionQuestionPanelProps {
   onUseChanceCard?: () => void;
 
   // Splashes
-  showPlayerSplash: boolean;
-  showOpponentSplash: boolean;
-  playerSplashPoints: number;
-  opponentSplashPoints: number;
-  onPlayerSplashComplete: () => void;
-  onOpponentSplashComplete: () => void;
+  showPlayerSplash?: boolean;
+  showOpponentSplash?: boolean;
+  playerSplashPoints?: number | null;
+  opponentSplashPoints?: number | null;
+  playerSplashVariant?: 'pending' | 'points';
+  opponentSplashVariant?: 'pending' | 'points';
+  onPlayerSplashComplete?: () => void;
+  onOpponentSplashComplete?: () => void;
 
   // Handlers
   onAnswer: (index: number) => void;
@@ -58,10 +60,12 @@ export function PossessionQuestionPanel({
   chanceCardPending = false,
   chanceCardPendingSync = false,
   onUseChanceCard,
-  showPlayerSplash,
-  showOpponentSplash,
-  playerSplashPoints,
-  opponentSplashPoints,
+  showPlayerSplash = false,
+  showOpponentSplash = false,
+  playerSplashPoints = null,
+  opponentSplashPoints = null,
+  playerSplashVariant = 'points',
+  opponentSplashVariant = 'points',
   onPlayerSplashComplete,
   onOpponentSplashComplete,
   onAnswer,
@@ -118,19 +122,18 @@ export function PossessionQuestionPanel({
         </motion.div>
       </AnimatePresence>
 
-
-
-      {/* Arena score splashes */}
       <div className="relative h-0">
         <ArenaScoreSplash
           show={showPlayerSplash}
           points={playerSplashPoints}
+          variant={playerSplashVariant}
           side="left"
           onComplete={onPlayerSplashComplete}
         />
         <ArenaScoreSplash
           show={showOpponentSplash}
           points={opponentSplashPoints}
+          variant={opponentSplashVariant}
           side="right"
           onComplete={onOpponentSplashComplete}
         />

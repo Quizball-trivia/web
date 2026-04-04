@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useRealtimeConnection } from "@/lib/realtime/useRealtimeConnection";
 import { getSocket } from "@/lib/realtime/socket-client";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
+import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
 import { useGameSessionStore } from "@/stores/gameSession.store";
@@ -293,6 +294,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     logger.info("Socket emit lobby:leave");
     // Leave room route immediately to avoid URL-driven auto-rejoin.
     router.replace("/play");
+    useRankedMatchmakingStore.getState().clearRankedMatchmaking();
     window.setTimeout(() => {
       useRealtimeMatchStore.getState().reset();
       leavingRef.current = false;

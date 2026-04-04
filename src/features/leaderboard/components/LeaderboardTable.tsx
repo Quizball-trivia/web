@@ -11,25 +11,25 @@ interface LeaderboardTableProps {
 }
 
 const TIER_COLORS: Record<string, string> = {
-  GOAT: "bg-yellow-500/20 text-yellow-600 border-yellow-500/40",
-  Legend: "bg-purple-500/20 text-purple-600 border-purple-500/40",
-  "World-Class": "bg-blue-500/20 text-blue-600 border-blue-500/40",
-  Captain: "bg-cyan-500/20 text-cyan-600 border-cyan-500/40",
-  "Key Player": "bg-green-500/20 text-green-600 border-green-500/40",
-  Starting11: "bg-emerald-500/20 text-emerald-600 border-emerald-500/40",
-  Rotation: "bg-slate-400/20 text-slate-500 border-slate-400/40",
-  Bench: "bg-orange-400/20 text-orange-500 border-orange-400/40",
-  Reserve: "bg-stone-400/20 text-stone-500 border-stone-400/40",
-  "Youth Prospect": "bg-stone-300/20 text-stone-400 border-stone-300/40",
-  Academy: "bg-stone-200/20 text-stone-400 border-stone-200/40",
+  GOAT: "border-[#FFD84D]/40 bg-[#FFD84D]/10 text-[#FFE37A]",
+  Legend: "border-[#F68A1F]/40 bg-[#F68A1F]/10 text-[#FFB45C]",
+  "World-Class": "border-[#2E78FF]/45 bg-[#2E78FF]/12 text-[#77A8FF]",
+  Captain: "border-[#18B6D9]/40 bg-[#18B6D9]/10 text-[#67D6F2]",
+  "Key Player": "border-[#38B60E]/40 bg-[#38B60E]/10 text-[#73EA4E]",
+  Starting11: "border-[#15A36D]/40 bg-[#15A36D]/10 text-[#57D89F]",
+  Rotation: "border-white/15 bg-white/[0.05] text-white/60",
+  Bench: "border-[#D4811F]/35 bg-[#D4811F]/10 text-[#F1A852]",
+  Reserve: "border-[#8B95A7]/25 bg-[#8B95A7]/10 text-[#B7C0D0]",
+  "Youth Prospect": "border-[#A0D639]/35 bg-[#A0D639]/10 text-[#C4EB6C]",
+  Academy: "border-white/12 bg-white/[0.04] text-white/50",
 };
 
 export function LeaderboardTable({ entries, currentUserId, onEntryClick }: LeaderboardTableProps) {
   return (
-    <div className="w-full overflow-hidden rounded-2xl border-2 border-border border-b-4 bg-card">
+    <div className="w-full overflow-hidden rounded-[28px] border border-white/10 bg-[#071013] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
       {/* Header */}
       {/* Header */}
-      <div className="grid grid-cols-12 gap-1 sm:gap-4 border-b-2 border-border/50 bg-muted/30 px-2 sm:px-4 py-3 text-[9px] sm:text-[10px] font-fun font-black uppercase tracking-widest text-muted-foreground">
+      <div className="grid grid-cols-12 gap-1 sm:gap-4 border-b border-white/8 bg-white/[0.03] px-2 sm:px-4 py-3 text-[9px] sm:text-[10px] font-fun font-black uppercase tracking-widest text-white/45">
         <div className="col-span-2 sm:col-span-1 text-center">Rank</div>
         <div className="col-span-6 sm:col-span-5 px-1 sm:px-0">Player</div>
         <div className="col-span-4 sm:col-span-2 text-center">Tier</div>
@@ -37,7 +37,7 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
       </div>
 
       {/* Rows */}
-      <div className="divide-y divide-border/30">
+      <div className="divide-y divide-white/6">
         {entries.map((entry) => {
           const isCurrentUser = entry.isCurrentUser || entry.id === currentUserId;
           const tierColor = TIER_COLORS[entry.tier] ?? TIER_COLORS.Rotation;
@@ -50,8 +50,8 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
               tabIndex={onEntryClick ? 0 : undefined}
               onKeyDown={onEntryClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onEntryClick(entry.id); } } : undefined}
               className={cn(
-                "grid grid-cols-12 gap-1 sm:gap-4 items-center px-2 sm:px-4 py-2.5 sm:py-3 transition-colors hover:bg-muted/30",
-                isCurrentUser && "bg-primary/5 hover:bg-primary/10 border-l-4 border-l-primary",
+                "grid grid-cols-12 gap-1 sm:gap-4 items-center px-2 sm:px-4 py-2.5 sm:py-3 transition-colors hover:bg-white/[0.025]",
+                isCurrentUser && "bg-[#38B60E]/[0.04] hover:bg-[#38B60E]/[0.07] border-l-4 border-l-[#38B60E]",
                 onEntryClick && "cursor-pointer"
               )}
             >
@@ -69,7 +69,7 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
                 <div className="flex items-center gap-0.5 mt-0.5">
                   {entry.trend === 'up' && <TrendingUp className="size-2.5 sm:size-3 text-[#58CC02]" />}
                   {entry.trend === 'down' && <TrendingDown className="size-2.5 sm:size-3 text-[#FF4B4B]" />}
-                  {entry.trend === 'same' && <Minus className="size-2.5 sm:size-3 text-muted-foreground" />}
+                  {entry.trend === 'same' && <Minus className="size-2.5 sm:size-3 text-white/35" />}
                 </div>
               </div>
 
@@ -100,17 +100,17 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
                   <div className="flex items-center gap-1 sm:gap-1.5">
                     <span className={cn(
                       "font-fun font-bold text-[11px] sm:text-base leading-tight whitespace-normal break-words line-clamp-2 flex-1",
-                      isCurrentUser && "text-primary"
+                      isCurrentUser && "text-[#73EA4E]"
                     )}>
                       {entry.username}
                     </span>
                     {isCurrentUser && (
-                      <Badge className="text-[7px] sm:text-[10px] h-3 sm:h-4 px-1 sm:px-1.5 font-fun font-black bg-primary text-primary-foreground rounded-md shrink-0">
+                      <Badge className="text-[7px] sm:text-[10px] h-3 sm:h-4 px-1 sm:px-1.5 font-fun font-black rounded-md shrink-0 bg-[#38B60E] text-white">
                         YOU
                       </Badge>
                     )}
                   </div>
-                  <div className="block sm:hidden text-[9px] font-bold text-primary/80 mt-0.5">
+                  <div className="block sm:hidden text-[9px] font-bold text-[#52D77A] mt-0.5">
                     {entry.rankPoints.toLocaleString()} RP
                   </div>
                 </div>
@@ -125,7 +125,7 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
 
               {/* RP (Desktop) */}
               <div className="col-span-4 text-right hidden sm:block">
-                <span className="font-fun font-black text-primary tabular-nums">
+                <span className="font-fun font-black text-[#52D77A] tabular-nums">
                   {entry.rankPoints.toLocaleString()} RP
                 </span>
               </div>

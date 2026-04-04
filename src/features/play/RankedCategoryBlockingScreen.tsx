@@ -5,6 +5,7 @@ import { ShowdownScreen } from './ShowdownScreen';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
+import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
 import { getSocket } from '@/lib/realtime/socket-client';
 import { usePlayer } from '@/contexts/PlayerContext';
 import { useAuthStore } from '@/stores/auth.store';
@@ -36,7 +37,7 @@ export function RankedCategoryBlockingScreen() {
   const selfUserId = connectedSelfUserId ?? authUser?.id ?? null;
   const lobby = useRealtimeMatchStore((state) => state.lobby);
   const draft = useRealtimeMatchStore((state) => state.draft);
-  const rankedFoundOpponent = useRealtimeMatchStore((state) => state.rankedFoundOpponent);
+  const rankedFoundOpponent = useRankedMatchmakingStore((state) => state.rankedFoundOpponent);
   const matchOpponent = useRealtimeMatchStore((state) => state.match?.opponent);
   const { data: rankedProfile } = useRankedProfile();
   const [timeLeft, setTimeLeft] = useState(15);

@@ -6,6 +6,8 @@ import { usePlayer } from '@/contexts/PlayerContext';
 import { useAuthStore } from '@/stores/auth.store';
 import { useRealtimeConnection } from '@/lib/realtime/useRealtimeConnection';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
+import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
+import { useGameSessionStore } from '@/stores/gameSession.store';
 import { getSocket } from '@/lib/realtime/socket-client';
 import { RealtimePossessionMatchScreen } from '@/features/possession/RealtimePossessionMatchScreen';
 import { DevOverlay } from '@/features/dev/DevOverlay';
@@ -26,6 +28,7 @@ function DevMatchContent() {
   const router = useRouter();
   const { player } = usePlayer();
   const authUser = useAuthStore((s) => s.user);
+  const resetGameSession = useGameSessionStore((s) => s.reset);
   const selfUserId = authUser?.id ?? null;
 
   useRealtimeConnection({ enabled: true, selfUserId });
@@ -71,8 +74,18 @@ function DevMatchContent() {
 
   const playAgain = useCallback(() => {
     useRealtimeMatchStore.getState().reset();
+    useRankedMatchmakingStore.getState().clearRankedMatchmaking();
+    resetGameSession();
     resetStarting();
-  }, [resetStarting]);
+  }, [resetGameSession, resetStarting]);
+
+  const exitToPlay = useCallback(() => {
+    useRealtimeMatchStore.getState().reset();
+    useRankedMatchmakingStore.getState().clearRankedMatchmaking();
+    resetGameSession();
+    resetStarting();
+    router.push('/play');
+  }, [resetGameSession, resetStarting, router]);
 
   const playerAvatar = resolveAvatarUrl(authUser?.avatar_url ?? player.avatarCustomization?.base ?? player.avatar, player.id);
   const opponentAvatar = resolveAvatarUrl(match?.opponent?.avatarUrl, match?.opponent?.id ?? 'ai');
@@ -93,7 +106,7 @@ function DevMatchContent() {
           {starting ? 'Starting...' : 'Start Match'}
         </button>
         <button
-          onClick={() => router.push('/play')}
+          onClick={exitToPlay}
           className="text-sm font-bold text-[#56707A] hover:text-white/80 transition-colors"
         >
           Back to Play
@@ -126,7 +139,7 @@ function DevMatchContent() {
             Play Again
           </button>
           <button
-            onClick={() => router.push('/play')}
+            onClick={exitToPlay}
             className="px-8 py-3 rounded-2xl bg-[#1B2F36] border-b-4 border-[#131F24] text-white font-black text-lg uppercase hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all"
           >
             Back
@@ -149,13 +162,13 @@ function DevMatchContent() {
           if (match.matchId) {
             getSocket().emit('match:leave', { matchId: match.matchId });
           }
-          useRealtimeMatchStore.getState().reset();
-          resetStarting();
+          exitToPlay();
         }}
         onForfeit={() => {
           if (match.matchId) {
             getSocket().emit('match:forfeit', { matchId: match.matchId });
           }
+          exitToPlay();
         }}
       />
       <DevOverlay />

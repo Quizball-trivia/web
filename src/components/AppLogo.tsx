@@ -16,34 +16,14 @@ type LogoContentProps = {
 
 function LogoContent({ config, className, iconOnly }: LogoContentProps) {
   return (
-    <div className={`flex items-center justify-center ${iconOnly ? '' : config.gap} ${className}`}>
-      {/* Logo Image */}
+    <div className={`flex items-center justify-center ${className}`}>
       <Image
-        src="/assets/logo.png"
+        src="/assets/brand/quizball-logo.webp"
         alt="QuizBall Logo"
-        width={config.imgSize}
+        width={iconOnly ? config.imgSize : config.imgSize * 4}
         height={config.imgSize}
-        className={`${config.img} w-auto object-contain drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]`}
+        className={`${config.img} w-auto object-contain`}
       />
-
-      {/* QUIZBALL Text Logo */}
-      {!iconOnly && (
-        <div
-          className={`${config.text} tracking-wider`}
-          style={{
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            fontWeight: 900,
-            background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            letterSpacing: '0.1em',
-            textShadow: '0 0 30px rgba(34, 197, 94, 0.3)',
-          }}
-        >
-          QUIZBALL
-        </div>
-      )}
     </div>
   );
 }
@@ -58,9 +38,9 @@ export function AppLogo({ size = 'md', animated = false, className = "", iconOnl
     },
     md: {
       text: 'text-3xl',
-      img: 'h-12',
+      img: 'h-16',
       gap: 'gap-3',
-      imgSize: 48,
+      imgSize: 64,
     },
     lg: {
       text: 'text-5xl',

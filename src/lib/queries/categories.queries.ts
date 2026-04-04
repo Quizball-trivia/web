@@ -35,6 +35,36 @@ export function useCategoriesList(filters?: ListCategoriesQuery) {
   return useQuery(getCategoriesListQuery(filters));
 }
 
+export const getAllCategoriesListQuery = (filters?: ListCategoriesQuery) => ({
+  queryKey: [...queryKeys.categories.list(filters), "all-pages"],
+  queryFn: async (): Promise<CategoriesListDTO> => {
+    const baseFilters = { ...filters };
+    const requestedLimit = Number(baseFilters.limit ?? 100);
+    const firstPage = await listCategories({ ...baseFilters, page: 1, limit: requestedLimit });
+    const items = firstPage.data.map((category) => toCategorySummary(category));
+    const totalPages = firstPage.total_pages ?? 1;
+
+    if (totalPages > 1) {
+      for (let page = 2; page <= totalPages; page += 1) {
+        const data = await listCategories({ ...baseFilters, page, limit: requestedLimit });
+        items.push(...data.data.map((category) => toCategorySummary(category)));
+      }
+    }
+
+    return {
+      items,
+      page: 1,
+      limit: requestedLimit,
+      total: firstPage.total,
+      totalPages,
+    };
+  },
+});
+
+export function useAllCategoriesList(filters?: ListCategoriesQuery) {
+  return useQuery(getAllCategoriesListQuery(filters));
+}
+
 export const getCategoryQuery = (id: string) => ({
   queryKey: queryKeys.categories.detail(id),
   queryFn: async (): Promise<CategorySummary> => {

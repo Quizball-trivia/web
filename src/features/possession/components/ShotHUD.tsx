@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { X } from 'lucide-react';
 import type { Phase } from '../types/possession.types';
+import { AnimatedPointsCounter } from './AnimatedPointsCounter';
 
 function getInitials(name: string, fallback: string): string {
   const trimmed = name.trim();
@@ -14,6 +15,8 @@ function getInitials(name: string, fallback: string): string {
 interface ShotHUDProps {
   playerGoals: number;
   opponentGoals: number;
+  playerPoints?: number;
+  opponentPoints?: number;
   playerAvatarUrl: string;
   opponentAvatarUrl: string;
   timeRemaining: number;
@@ -27,6 +30,8 @@ interface ShotHUDProps {
 export function ShotHUD({
   playerGoals,
   opponentGoals,
+  playerPoints = 0,
+  opponentPoints = 0,
   playerAvatarUrl,
   opponentAvatarUrl,
   timeRemaining,
@@ -59,6 +64,7 @@ export function ShotHUD({
             <div className="min-w-0">
               <div className="text-xs font-bold text-white/85 truncate">{playerName}</div>
               <div className="text-3xl leading-7 font-black text-white tabular-nums">{playerGoals}</div>
+              <AnimatedPointsCounter value={playerPoints} accentClassName="text-[#1CB0F6]" />
             </div>
           </div>
         <div className="shrink-0 flex flex-col items-center justify-center min-w-[100px]">
@@ -88,6 +94,11 @@ export function ShotHUD({
           <div className="min-w-0 text-right">
             <div className="text-xs font-bold text-white/85 truncate ml-auto">{opponentName}</div>
             <div className="text-3xl leading-7 font-black text-white tabular-nums">{opponentGoals}</div>
+            <AnimatedPointsCounter
+              value={opponentPoints}
+              align="right"
+              accentClassName="text-[#FF4B4B]"
+            />
           </div>
           <Avatar className="size-11 border-2 border-[#FF4B4B] shrink-0">
             <AvatarImage src={opponentAvatarUrl} />

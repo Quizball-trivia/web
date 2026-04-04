@@ -1,5 +1,6 @@
 import { getSocket } from './socket-client';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
+import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
 import { QueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { logger } from '@/utils/logger';
@@ -27,49 +28,32 @@ import type {
   MatchRejoinAvailablePayload,
   MatchResumePayload,
   MatchStartPayload,
-  WarmupStatePayload,
-  WarmupTappedPayload,
-  WarmupOverPayload,
-  WarmupRestartedPayload,
-  WarmupScoresPayload,
   PresenceOnlineCountPayload,
   SessionStatePayload,
   SessionBlockedPayload,
 } from './socket.types';
 
+// Module-level ref so handlers always read the latest queryClient
+// without needing to tear down and re-register all listeners.
+let _queryClient: QueryClient | null = null;
+let _handlersRegistered = false;
+
+function getQueryClient(): QueryClient | null {
+  return _queryClient;
+}
+
 export function registerSocketHandlers(queryClient?: QueryClient): void {
+  // Update the module-level ref so existing handlers pick up the new client
+  if (queryClient) {
+    _queryClient = queryClient;
+  }
+
+  // If handlers are already registered on this socket, skip re-registration
+  if (_handlersRegistered) return;
+  _handlersRegistered = true;
+
   const socket = getSocket();
   const store = useRealtimeMatchStore.getState();
-
-  socket.off('lobby:state');
-  socket.off('session:state');
-  socket.off('session:blocked');
-  socket.off('error');
-  socket.off('draft:start');
-  socket.off('draft:banned');
-  socket.off('draft:complete');
-  socket.off('match:start');
-  socket.off('match:countdown');
-  socket.off('match:state');
-  socket.off('match:party_state');
-  socket.off('match:question');
-  socket.off('match:chance_card_applied');
-  socket.off('match:opponent_answered');
-  socket.off('match:answer_ack');
-  socket.off('match:round_result');
-  socket.off('match:final_results');
-  socket.off('match:opponent_disconnected');
-  socket.off('match:resume');
-  socket.off('match:rejoin_available');
-  socket.off('ranked:search_started');
-  socket.off('ranked:match_found');
-  socket.off('ranked:queue_left');
-  socket.off('presence:online_count');
-  socket.off('warmup:state');
-  socket.off('warmup:tapped');
-  socket.off('warmup:over');
-  socket.off('warmup:restarted');
-  socket.off('warmup:scores');
 
   socket.on('session:state', (data: SessionStatePayload) => {
     logger.info('Socket event session:state', data);
@@ -109,7 +93,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       data.code === 'RANKED_QUEUE_BUSY' ||
       data.code === 'INSUFFICIENT_TICKETS'
     ) {
-      store.setRankedQueueLeft();
+      useRankedMatchmakingStore.getState().setRankedQueueLeft();
     }
     // Rollback optimistic draft ban on server rejection
     if (
@@ -117,9 +101,9 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       data.code === 'INVALID_CATEGORY' ||
       data.code === 'BAN_FAILED'
     ) {
-      const selfUserId = store.selfUserId;
+      const { selfUserId, revertDraftBan } = useRealtimeMatchStore.getState();
       if (selfUserId) {
-        store.revertDraftBan(selfUserId);
+        revertDraftBan(selfUserId);
       }
     }
 
@@ -140,14 +124,16 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
         clientActionId: typeof meta?.clientActionId === 'string' ? meta.clientActionId : undefined,
       });
       toast.error(data.message);
-      if (queryClient) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
+      const qc = getQueryClient();
+      if (qc) {
+        void qc.invalidateQueries({ queryKey: queryKeys.store.inventory() });
       }
     }
     if (data.code === 'INSUFFICIENT_TICKETS') {
       toast.error(data.message);
-      if (queryClient) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+      const qc = getQueryClient();
+      if (qc) {
+        void qc.invalidateQueries({ queryKey: queryKeys.store.wallet() });
       }
     }
     store.setError(data);
@@ -177,8 +163,9 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   socket.on('match:start', (data: MatchStartPayload) => {
     logger.info('Socket event match:start', { matchId: data.matchId, opponentId: data.opponent.id });
     store.setMatchStart(data);
-    if (queryClient) {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+    const qc = getQueryClient();
+    if (qc) {
+      void qc.invalidateQueries({ queryKey: queryKeys.store.wallet() });
     }
   });
 
@@ -250,8 +237,9 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   socket.on('match:chance_card_applied', (data: MatchChanceCardAppliedPayload) => {
     logger.info('Socket event match:chance_card_applied', data);
     store.confirmOptimisticChanceCard(data);
-    if (queryClient) {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
+    const qc = getQueryClient();
+    if (qc) {
+      void qc.invalidateQueries({ queryKey: queryKeys.store.inventory() });
     }
   });
 
@@ -292,12 +280,13 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       matchId: data.matchId,
       resultVersion: data.resultVersion,
     });
-    if (queryClient) {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.ranked.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.stats.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
+    const qc = getQueryClient();
+    if (qc) {
+      void qc.invalidateQueries({ queryKey: queryKeys.ranked.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.stats.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+      void qc.invalidateQueries({ queryKey: queryKeys.store.inventory() });
+      void qc.invalidateQueries({ queryKey: queryKeys.users.all });
     }
     void getMe()
       .then((user) => {
@@ -337,46 +326,27 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
 
   socket.on('ranked:search_started', (data: RankedSearchStartedPayload) => {
     logger.info('Socket event ranked:search_started', { durationMs: data.durationMs });
-    store.setRankedSearchStarted({ durationMs: data.durationMs });
+    useRankedMatchmakingStore.getState().setRankedSearchStarted({ durationMs: data.durationMs });
   });
 
   socket.on('ranked:match_found', (data: RankedMatchFoundPayload) => {
     logger.info('Socket event ranked:match_found', { lobbyId: data.lobbyId, opponentId: data.opponent.id });
-    store.setRankedMatchFound({ opponent: data.opponent });
+    useRankedMatchmakingStore.getState().setRankedMatchFound({ opponent: data.opponent });
   });
 
   socket.on('ranked:queue_left', () => {
     logger.info('Socket event ranked:queue_left');
-    store.setRankedQueueLeft();
+    useRankedMatchmakingStore.getState().setRankedQueueLeft();
   });
 
   socket.on('presence:online_count', (data: PresenceOnlineCountPayload) => {
     logger.info('Socket event presence:online_count', { onlineUsers: data.onlineUsers });
     store.setOnlineUsers(data);
   });
+}
 
-  socket.on('warmup:state', (data: WarmupStatePayload) => {
-    logger.info('Socket event warmup:state', { bounceCount: data.bounceCount, active: data.active });
-    store.setWarmupState(data);
-  });
-
-  socket.on('warmup:tapped', (data: WarmupTappedPayload) => {
-    logger.info('Socket event warmup:tapped', { tapperId: data.tapperId, bounceCount: data.bounceCount });
-    store.setWarmupTapped(data);
-  });
-
-  socket.on('warmup:over', (data: WarmupOverPayload) => {
-    logger.info('Socket event warmup:over', { finalScore: data.finalScore });
-    store.setWarmupOver(data);
-  });
-
-  socket.on('warmup:restarted', (data: WarmupRestartedPayload) => {
-    logger.info('Socket event warmup:restarted', { firstTurnUserId: data.firstTurnUserId });
-    store.setWarmupRestarted(data);
-  });
-
-  socket.on('warmup:scores', (data: WarmupScoresPayload) => {
-    logger.info('Socket event warmup:scores', data);
-    store.setWarmupScores(data);
-  });
+/** Reset registration state (for testing or socket reconnect). */
+export function resetSocketHandlers(): void {
+  _handlersRegistered = false;
+  _queryClient = null;
 }

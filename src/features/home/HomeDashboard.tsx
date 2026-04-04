@@ -7,8 +7,8 @@ import { HomeRightRail } from './components/dashboard/HomeRightRail';
 import { HomeEventTeaser } from './components/dashboard/HomeEventTeaser';
 import { useGameSessionStore } from '@/stores/gameSession.store';
 import { QUESTION_COUNT } from '@/lib/constants/game';
-import { ModeConfirmModal } from '@/features/play/components/ModeConfirmModal';
-import { FriendPlayModal } from '@/features/friend/components/FriendPlayModal';
+import { ModeConfirmModal } from '@/components/shared/ModeConfirmModal';
+import { FriendPlayModal } from '@/components/shared/FriendPlayModal';
 import { useMatchStatsSummary } from '@/lib/queries/stats.queries';
 import { useStoreWallet } from '@/lib/queries/store.queries';
 

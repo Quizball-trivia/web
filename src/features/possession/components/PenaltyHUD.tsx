@@ -5,10 +5,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { X } from 'lucide-react';
 import { MAX_PENALTY_ROUNDS } from '../types/possession.types';
 import type { Phase } from '../types/possession.types';
+import { AnimatedPointsCounter } from './AnimatedPointsCounter';
 
 interface PenaltyHUDProps {
   penaltyPlayerScore: number;
   penaltyOpponentScore: number;
+  playerPoints?: number;
+  opponentPoints?: number;
   penaltyRound: number;
   isPenaltySuddenDeath: boolean;
   isPlayerShooter: boolean;
@@ -24,6 +27,8 @@ interface PenaltyHUDProps {
 export function PenaltyHUD({
   penaltyPlayerScore,
   penaltyOpponentScore,
+  playerPoints = 0,
+  opponentPoints = 0,
   penaltyRound,
   isPenaltySuddenDeath,
   isPlayerShooter,
@@ -71,6 +76,7 @@ export function PenaltyHUD({
           <div className="min-w-0">
             <div className="text-xs font-bold text-white/85 truncate">{playerName}</div>
             <div className="text-3xl leading-7 font-black text-white tabular-nums">{penaltyPlayerScore}</div>
+            <AnimatedPointsCounter value={playerPoints} accentClassName="text-[#1CB0F6]" />
           </div>
         </div>
         <div className="shrink-0 flex flex-col items-center justify-center min-w-[100px]">
@@ -96,6 +102,11 @@ export function PenaltyHUD({
           <div className="min-w-0 text-right">
             <div className="text-xs font-bold text-white/85 truncate ml-auto">{opponentName}</div>
             <div className="text-3xl leading-7 font-black text-white tabular-nums">{penaltyOpponentScore}</div>
+            <AnimatedPointsCounter
+              value={opponentPoints}
+              align="right"
+              accentClassName="text-[#FF4B4B]"
+            />
           </div>
           <Avatar className="size-11 border-2 border-[#FF4B4B] shrink-0">
             <AvatarImage src={opponentAvatarUrl} />
