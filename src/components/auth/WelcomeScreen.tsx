@@ -5,11 +5,16 @@ import Image from 'next/image';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FcGoogle } from 'react-icons/fc';
 import { Button } from '@/components/ui/button';
-import { Shield, Swords, Brain, Goal, Trophy, ChevronRight } from 'lucide-react';
+import { Brain, Goal, Trophy, Crown, Star, Globe, Flame, Shield, Repeat, Award, Flag, Swords, type LucideIcon } from 'lucide-react';
+import { useCategoriesList } from '@/lib/queries/categories.queries';
 import { AppLogo } from '@/components/AppLogo';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { motion, AnimatePresence } from 'motion/react';
 import { socialLogin } from '@/lib/auth/auth.service';
+import { LeaderboardPodium } from '@/features/leaderboard/components/LeaderboardPodium';
+import { LeaderboardTable } from '@/features/leaderboard/components/LeaderboardTable';
+import type { LeaderboardEntry } from '@/lib/domain/leaderboard';
+import { useLeaderboard } from '@/lib/queries/leaderboard.queries';
 
 const SUBHEADING_PHRASES = [
   "Climb the ranks.",
@@ -24,13 +29,142 @@ const SUBHEADING_PHRASES = [
   "Show your skills.",
 ];
 
+// Style mapping for known categories (matched by slug or lowercased name)
+const CATEGORY_STYLES: Record<string, { color: string; icon: LucideIcon; flag?: string; watermarkImg?: string }> = {
+  "premier-league": { color: "#3D195B", icon: Crown, flag: "gb-eng" },
+  "champions-league": { color: "#1A71B8", icon: Star },
+  "world-cup": { color: "#D4AF37", icon: Globe, watermarkImg: "/assets/brand/world-cup-trophy.webp" },
+  "la-liga": { color: "#FF4B44", icon: Flame, flag: "es" },
+  "serie-a": { color: "#024494", icon: Shield, flag: "it" },
+  "bundesliga": { color: "#D20515", icon: Goal, flag: "de" },
+  "ligue-1": { color: "#DFE512", icon: Award, flag: "fr" },
+  "league-1": { color: "#DFE512", icon: Award, flag: "fr" },
+  "transfer-history": { color: "#1CB0F6", icon: Repeat },
+  "transfers": { color: "#1CB0F6", icon: Repeat },
+  "legends": { color: "#FFD700", icon: Trophy, watermarkImg: "/assets/brand/ball.webp" },
+  "national-teams": { color: "#38B60E", icon: Flag },
+  "club-rivalries": { color: "#FF4B4B", icon: Swords },
+  "rivalries": { color: "#FF4B4B", icon: Swords },
+  "europa-league": { color: "#F68E1F", icon: Star },
+  "euro": { color: "#004B87", icon: Globe, flag: "eu" },
+  "copa-america": { color: "#1B75BB", icon: Globe },
+  "african-cup": { color: "#009639", icon: Globe },
+  "mls": { color: "#472D8C", icon: Shield, flag: "us" },
+  "eredivisie": { color: "#E4002B", icon: Shield, flag: "nl" },
+  "liga-portugal": { color: "#00543E", icon: Shield, flag: "pt" },
+  "scottish-premiership": { color: "#1D1D8F", icon: Shield, flag: "gb-sct" },
+  "rules": { color: "#6B7280", icon: Brain },
+  "stadiums": { color: "#059669", icon: Goal },
+  "managers": { color: "#7C3AED", icon: Crown },
+  "ballon-dor": { color: "#D4AF37", icon: Award, watermarkImg: "/assets/brand/ball.webp" },
+};
+
+// Categories to exclude (game modes, not real trivia categories)
+const EXCLUDED_SLUGS = new Set([
+  "daily-challenges", "daily-challenge", "countdown", "jeopardy",
+  "daily", "daily-quiz", "count-down", "football-jeopardy", "clues",
+  "true-or-false", "put-in-order", "money-drop",
+]);
+
+// Main categories to feature on the landing page (matched by slug or name substring)
+const FEATURED_NAMES = [
+  "champions league", "world cup", "premier league", "la liga",
+  "bundesliga", "serie a", "ligue 1", "league 1",
+  "uefa euro", "euro",
+  "serie a", "legends", "national team",
+  "transfer",
+];
+
+// Fallback colors for categories not in the mapping
+const FALLBACK_COLORS = ["#E74C3C", "#3498DB", "#2ECC71", "#9B59B6", "#F39C12", "#1ABC9C", "#E67E22", "#2980B9"];
+
+function getCategoryStyle(slug: string, name: string, index: number) {
+  // Try exact slug match, then name-based slug, then substring match
+  const nameSlug = name.toLowerCase().replace(/\s+/g, '-');
+  const style = CATEGORY_STYLES[slug] ?? CATEGORY_STYLES[nameSlug];
+  if (style) return style;
+  // Substring match on name (e.g. "League 1" matches "ligue-1" style)
+  const lowerName = name.toLowerCase();
+  for (const [key, val] of Object.entries(CATEGORY_STYLES)) {
+    const keyWords = key.replace(/-/g, ' ');
+    if (lowerName.includes(keyWords) || keyWords.includes(lowerName)) return val;
+  }
+  return { color: FALLBACK_COLORS[index % FALLBACK_COLORS.length], icon: Star as LucideIcon };
+}
+
+const DEMO_PLAYER_NAMES = ["Mason", "Thiago", "Santi", "Jamal", "Enzo", "Rafa", "Nico", "Jude"];
+
+const DEMO_LEADERBOARD: LeaderboardEntry[] = [
+  { id: "1", rank: 1, username: "CR7_GOAT", avatar: "avatar-1", country: "pt", tier: "GOAT", rankPoints: 4820, isCurrentUser: false, trend: "same", trendValue: 0 },
+  { id: "2", rank: 2, username: "Messianic10", avatar: "avatar-2", country: "ar", tier: "Legend", rankPoints: 4615, isCurrentUser: false, trend: "up", trendValue: 2 },
+  { id: "3", rank: 3, username: "ZizouMagic", avatar: "avatar-3", country: "fr", tier: "Legend", rankPoints: 4490, isCurrentUser: false, trend: "down", trendValue: 1 },
+  { id: "4", rank: 4, username: "TotalFootball14", avatar: "avatar-4", country: "nl", tier: "World-Class", rankPoints: 4210, isCurrentUser: false, trend: "up", trendValue: 3 },
+  { id: "5", rank: 5, username: "KloppHeavyMetal", avatar: "avatar-5", country: "de", tier: "World-Class", rankPoints: 3980, isCurrentUser: false, trend: "down", trendValue: 2 },
+  { id: "6", rank: 6, username: "TikiTakaMaster", avatar: "avatar-6", country: "es", tier: "Captain", rankPoints: 3755, isCurrentUser: false, trend: "up", trendValue: 1 },
+  { id: "7", rank: 7, username: "Azzurri_Fan", avatar: "avatar-7", country: "it", tier: "Captain", rankPoints: 3640, isCurrentUser: false, trend: "same", trendValue: 0 },
+  { id: "8", rank: 8, username: "ThreeLions_", avatar: "avatar-8", country: "gb-eng", tier: "Key Player", rankPoints: 3510, isCurrentUser: false, trend: "up", trendValue: 4 },
+];
+
+const STADIUM_SCENES = [
+  {
+    leftX: '20%',
+    leftY: '56%',
+    rightX: '79%',
+    rightY: '45%',
+    ballX: '35%',
+    ballY: '53%',
+    rightScore: 0,
+    showGoal: false,
+    progress: 2,
+  },
+  {
+    leftX: '34%',
+    leftY: '54%',
+    rightX: '73%',
+    rightY: '48%',
+    ballX: '50%',
+    ballY: '52%',
+    rightScore: 0,
+    showGoal: false,
+    progress: 4,
+  },
+  {
+    leftX: '49%',
+    leftY: '52%',
+    rightX: '86%',
+    rightY: '43%',
+    ballX: '81%',
+    ballY: '47%',
+    rightScore: 1,
+    showGoal: true,
+    progress: 6,
+  },
+  {
+    leftX: '22%',
+    leftY: '56%',
+    rightX: '79%',
+    rightY: '45%',
+    ballX: '50%',
+    ballY: '50%',
+    rightScore: 1,
+    showGoal: false,
+    progress: 1,
+  },
+] as const;
+
+function getDaysUntilWorldCup(): number {
+  const WC_START = new Date(2026, 5, 11); // June 11, 2026
+  const now = new Date();
+  const diff = WC_START.getTime() - now.getTime();
+  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+}
+
 // Deterministic pseudo-random duels count based on days since launch
 function getDuelsCount(): number {
-  const LAUNCH_DATE = Date.UTC(2026, 2, 1); // March 1, 2026 UTC
+  const LAUNCH_DATE = Date.UTC(2026, 2, 1);
   const BASE_COUNT = 1000;
   const now = Date.now();
   const daysSinceLaunch = Math.max(0, Math.floor((now - LAUNCH_DATE) / (1000 * 60 * 60 * 24)));
-
   let total = BASE_COUNT;
   for (let d = 0; d < daysSinceLaunch; d++) {
     const seed = d * 2654435761;
@@ -43,32 +177,43 @@ function getDuelsCount(): number {
 export function WelcomeScreen() {
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [duelsCount, setDuelsCount] = useState(1000);
+  const [wcDaysLeft, setWcDaysLeft] = useState(getDaysUntilWorldCup);
+  const [stadiumPhase, setStadiumPhase] = useState(0);
+  const [demoPlayers] = useState(() => {
+    const shuffled = [...DEMO_PLAYER_NAMES].sort(() => Math.random() - 0.5);
+    return {
+      left: shuffled[0] ?? "Mason",
+      right: shuffled[1] ?? "Thiago",
+    };
+  });
   useEffect(() => setDuelsCount(getDuelsCount()), []);
+  useEffect(() => setWcDaysLeft(getDaysUntilWorldCup()), []);
 
-  const cards = [
-    { src: "/assets/screenshot-gameplay.png", label: "Live Match", alt: "QuizBall gameplay", width: 1200, height: 700 },
-    { src: "/assets/screenshot-play-modes.png", label: "Game Modes", alt: "QuizBall play modes", width: 1200, height: 900 },
-    { src: "/assets/screenshot-daily-challenges.png", label: "Daily Challenges", alt: "QuizBall daily challenges", width: 1100, height: 900 },
-    { src: "/assets/screenshot-leaderboard.png", label: "Leaderboard", alt: "QuizBall leaderboard", width: 900, height: 700 },
-    { src: "/assets/screenshot-solo-practice.png", label: "Solo Practice", alt: "QuizBall solo practice", width: 1000, height: 800 },
-    { src: "/assets/screenshot-store.png", label: "Store", alt: "QuizBall store", width: 1200, height: 900 },
-  ];
+  // Fetch real leaderboard
+  const { data: leaderboardData } = useLeaderboard('global');
+  const leaderboardEntries = leaderboardData ?? DEMO_LEADERBOARD;
 
-  const [[page, direction], setPage] = useState([0, 0]);
-  const activeCard = page;
+  // Fetch real categories — filter out game modes, split into featured + rest
+  const { data: categoriesData } = useCategoriesList({ limit: 100, page: 1, is_active: "true" });
+  const allCategories = (categoriesData?.items ?? []).filter(
+    (c) => !EXCLUDED_SLUGS.has(c.slug) && !EXCLUDED_SLUGS.has(c.name.toLowerCase().replace(/\s+/g, '-'))
+  );
+  const featuredCategories: typeof allCategories = [];
+  const used = new Set<string>();
+  for (const search of FEATURED_NAMES) {
+    const match = allCategories.find(
+      (c) => !used.has(c.id) && c.name.toLowerCase().includes(search)
+    );
+    if (match && !used.has(match.id)) {
+      featuredCategories.push(match);
+      used.add(match.id);
+    }
+  }
+  const remainingCategories = allCategories.filter((c) => !used.has(c.id));
 
-  const paginate = (newDirection: number) => {
-    const nextPage = (page + newDirection + cards.length) % cards.length;
-    setPage([nextPage, newDirection]);
-  };
-
-  const jumpToPage = (index: number) => {
-    if (index === page) return;
-    const newDirection = index > page ? 1 : -1;
-    setPage([index, newDirection]);
-  };
-
+  // Subheading rotation
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentPhraseIndex((prev) => (prev + 1) % SUBHEADING_PHRASES.length);
@@ -76,14 +221,22 @@ export function WelcomeScreen() {
     return () => clearInterval(timer);
   }, []);
 
-  // Auto-rotate
   useEffect(() => {
-    const timer = setInterval(() => {
-      paginate(1);
-    }, 4500);
-    return () => clearInterval(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const scheduleNext = (phase: number) => {
+      const currentScene = STADIUM_SCENES[phase];
+      const delay = currentScene.showGoal ? 3000 : 2600;
+      timeoutId = setTimeout(() => {
+        setStadiumPhase((prev) => (prev + 1) % STADIUM_SCENES.length);
+      }, delay);
+    };
+
+    scheduleNext(stadiumPhase);
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [stadiumPhase]);
 
   const handleKickOff = () => setLoginOpen(true);
   const handleGoogleLogin = async () => {
@@ -95,70 +248,263 @@ export function WelcomeScreen() {
     }
   };
 
-  const variants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? 100 : -100,
-      opacity: 0,
-      scale: 0.9,
-      rotate: direction > 0 ? 5 : -5,
-    }),
-    center: {
-      zIndex: 1,
-      x: 0,
-      opacity: 1,
-      scale: 1,
-      rotate: -1,
-    },
-    exit: (direction: number) => ({
-      zIndex: 0,
-      x: direction < 0 ? 100 : -100,
-      opacity: 0,
-      scale: 0.9,
-      rotate: direction < 0 ? 5 : -5,
-    })
-  };
+  const stadiumScene = STADIUM_SCENES[stadiumPhase];
 
   return (
-    <div className="min-h-screen w-full bg-[#131F24] font-sans text-foreground flex flex-col">
-      {/* Background Spotlight */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-green-500/10 blur-[120px] rounded-full" />
-        <div className="absolute top-[20%] -right-[10%] w-[30%] h-[30%] bg-blue-500/5 blur-[100px] rounded-full" />
-      </div>
+    <div className="min-h-screen w-full bg-[#071013] font-sans text-foreground flex flex-col overflow-x-hidden">
 
-      {/* Navbar */}
-      <header className="flex h-16 md:h-20 items-center px-6 md:px-12 lg:px-20 shrink-0 border-b border-border/30 bg-[#131F24]/80 backdrop-blur-md sticky top-0 z-50">
+      {/* ── Navbar ── */}
+      <header className="flex h-16 md:h-20 items-center justify-between px-6 md:px-12 lg:px-20 shrink-0 bg-[#071013]/80 backdrop-blur-md sticky top-0 z-50">
         <AppLogo size="md" className="!justify-start" />
+        <div className="flex items-center gap-2.5">
+          <Image src="/assets/brand/world-cup-trophy.webp" alt="Trophy" width={96} height={96} className="h-10 md:h-12 w-auto object-contain" />
+          {wcDaysLeft > 0 && (
+            <div className="flex flex-col leading-none">
+              <span className="text-lg md:text-xl font-black tabular-nums text-white">
+                {wcDaysLeft}
+              </span>
+              <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-[#FFE500]">
+                days left
+              </span>
+            </div>
+          )}
+        </div>
       </header>
 
-      {/* Hero - Split layout */}
-      <main className="flex-1 flex flex-col lg:flex-row items-center container mx-auto px-6 py-8 md:py-12 lg:py-0 gap-10 md:gap-12 lg:gap-16">
+      {/* ── Hero — Split layout ── */}
+      <main className="flex-1 flex flex-col lg:flex-row items-center max-w-7xl mx-auto w-full px-6 py-8 md:py-12 lg:py-0 gap-10 md:gap-12 lg:gap-16">
 
-        {/* Left: Copy */}
+        {/* LEFT: Stadium sim */}
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-          className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left max-w-xl"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6 }}
+          className="order-2 lg:order-1 flex-1 flex items-center justify-center w-full max-w-3xl lg:max-w-none relative"
         >
+          <div className="w-full max-w-3xl">
+            <div className="mb-4 flex items-center justify-between gap-3 px-1 md:px-2">
+              <div className="flex items-center gap-3 flex-1 min-w-0 rounded-2xl bg-[#071013] px-3 py-2.5">
+                <div className="rounded-full bg-[#1CB0F6] p-[3px] shadow-[0_0_16px_rgba(28,176,246,0.3)]">
+                  <AvatarDisplay customization={{ base: "avatar-1", background: "transparent" }} size="sm" className="rounded-full" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-white/85 truncate">{demoPlayers.left}</div>
+                  <div className="text-3xl leading-7 font-black text-white tabular-nums">0</div>
+                </div>
+              </div>
+
+              <div className="shrink-0 text-xl font-black text-white/90 min-w-[44px] text-center">VS</div>
+
+              <div className="flex items-center gap-3 flex-1 min-w-0 justify-end rounded-2xl bg-[#071013] px-3 py-2.5">
+                <div className="min-w-0 text-right">
+                  <div className="text-xs font-bold text-white/85 truncate">{demoPlayers.right}</div>
+                  <motion.div
+                    key={stadiumScene.rightScore}
+                    initial={{ scale: stadiumScene.showGoal ? 1.4 : 1, opacity: 0.8 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 260, damping: 18 }}
+                    className="text-3xl leading-7 font-black text-white tabular-nums"
+                  >
+                    {stadiumScene.rightScore}
+                  </motion.div>
+                </div>
+                <div className="rounded-full bg-[#FF4B4B] p-[3px] shadow-[0_0_16px_rgba(255,75,75,0.3)]">
+                  <AvatarDisplay customization={{ base: "avatar-8", background: "transparent" }} size="sm" className="rounded-full" />
+                </div>
+              </div>
+            </div>
+
+            <div className="relative w-full max-w-3xl">
+              <AnimatePresence>
+                {stadiumScene.showGoal && (
+                  <>
+                    <motion.div
+                      key={`hero-celebration-hand-left-${stadiumPhase}`}
+                      className="pointer-events-none absolute -left-[14%] bottom-[6%] z-30 w-[24%] min-w-[104px]"
+                      initial={{ opacity: 0, x: -28, rotate: -10 }}
+                      animate={{ opacity: 1, x: 0, rotate: -3 }}
+                      exit={{ opacity: 0, x: -18 }}
+                      transition={{ duration: 0.28 }}
+                    >
+                      <Image src="/assets/brand/hand-left.webp" alt="" width={120} height={200} className="w-full h-auto object-contain" />
+                    </motion.div>
+
+                    <motion.div
+                      key={`hero-celebration-hand-right-${stadiumPhase}`}
+                      className="pointer-events-none absolute -right-[14%] bottom-[6%] z-30 w-[24%] min-w-[104px]"
+                      initial={{ opacity: 0, x: 28, rotate: 10 }}
+                      animate={{ opacity: 1, x: 0, rotate: 3 }}
+                      exit={{ opacity: 0, x: 18 }}
+                      transition={{ duration: 0.28 }}
+                    >
+                      <Image src="/assets/brand/hand-right.webp" alt="" width={120} height={200} className="w-full h-auto object-contain" />
+                    </motion.div>
+
+                    <motion.div
+                      key={`hero-celebration-plus-left-${stadiumPhase}`}
+                      className="pointer-events-none absolute -left-[3%] top-[10%] z-30 w-[14%] min-w-[60px]"
+                      initial={{ opacity: 0, x: -14, y: 8, rotate: -10 }}
+                      animate={{ opacity: 1, x: 0, y: 0, rotate: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      transition={{ duration: 0.35, delay: 0.12 }}
+                    >
+                      <Image src="/assets/brand/+35.png" alt="" width={117} height={96} className="w-full h-auto object-contain" />
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+
+              <div className="relative overflow-hidden rounded-[28px] border border-white/8 bg-[#0B1417] p-2 md:rounded-[34px] md:p-3">
+                <div className="absolute inset-x-10 bottom-2 h-16 rounded-full bg-[#38B60E]/18 blur-3xl" />
+                <Image
+                  src="/assets/stadium-green.png"
+                  alt="QuizBall stadium"
+                  width={1400}
+                  height={520}
+                  className="relative w-full h-auto rounded-[22px] object-contain md:rounded-[28px]"
+                />
+
+                <motion.div
+                  className="pointer-events-none absolute"
+                  animate={{ left: stadiumScene.leftX, top: stadiumScene.leftY }}
+                  transition={{ type: 'spring', stiffness: 120, damping: 18 }}
+                >
+                  <motion.div
+                    animate={{ y: [0, -4, 0], scale: [1, 1.04, 1] }}
+                    transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+                    className="rounded-full bg-[#FF4B4B] p-[3px] shadow-[0_0_18px_rgba(255,75,75,0.35)]"
+                  >
+                    <AvatarDisplay customization={{ base: "avatar-1", background: "transparent" }} size="sm" className="rounded-full" />
+                  </motion.div>
+                </motion.div>
+
+                <motion.div
+                  className="pointer-events-none absolute"
+                  animate={{ left: stadiumScene.rightX, top: stadiumScene.rightY }}
+                  transition={{ type: 'spring', stiffness: 120, damping: 18 }}
+                >
+                  <motion.div
+                    animate={{ y: [0, 4, 0], scale: [1, 1.04, 1] }}
+                    transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut', delay: 0.25 }}
+                    className="rounded-full bg-[#38B60E] p-[3px] shadow-[0_0_18px_rgba(56,182,14,0.35)]"
+                  >
+                    <AvatarDisplay customization={{ base: "avatar-8", background: "transparent" }} size="sm" className="rounded-full" />
+                  </motion.div>
+                </motion.div>
+
+                <motion.div
+                  className="pointer-events-none absolute flex size-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center md:size-12"
+                  animate={{
+                    left: stadiumScene.ballX,
+                    top: stadiumScene.ballY,
+                    rotate: stadiumScene.showGoal ? 120 : 0,
+                    scale: stadiumScene.showGoal ? 1.12 : 1,
+                    y: [0, -3, 0],
+                    opacity: stadiumScene.showGoal ? 0 : 1,
+                  }}
+                  transition={{
+                    left: { type: 'spring', stiffness: 120, damping: 16 },
+                    top: { type: 'spring', stiffness: 120, damping: 16 },
+                    rotate: { type: 'spring', stiffness: 120, damping: 16 },
+                    scale: { type: 'spring', stiffness: 120, damping: 16 },
+                    opacity: { duration: 0.2 },
+                    y: { duration: 1.1, repeat: Infinity, ease: 'easeInOut' },
+                  }}
+                >
+                  <Image src="/assets/brand/ball-icon.webp" alt="" width={40} height={40} className="size-8 object-contain drop-shadow-[0_0_14px_rgba(255,255,255,0.32)] md:size-9" />
+                </motion.div>
+
+                <AnimatePresence>
+                  {stadiumScene.showGoal && (
+                    <motion.div
+                      key={`hero-goal-celebration-${stadiumPhase}`}
+                      initial={{ opacity: 0, scale: 0.96 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="pointer-events-none absolute inset-0 flex items-center justify-center"
+                    >
+                      <motion.div
+                        initial={{ opacity: 0, y: 14, scale: 0.94 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.3 }}
+                        className="relative w-[78%] max-w-[520px]"
+                      >
+                        <Image src="/assets/goal.png" alt="Goal celebration" width={760} height={538} className="w-full h-auto object-contain" />
+                        <motion.div
+                          className="absolute left-1/2 top-[44%] flex size-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center md:size-24"
+                          initial={{ scale: 1, y: 30, opacity: 0.94 }}
+                          animate={{ scale: [1, 5, 0.9], y: [30, -42, 20], opacity: [0.94, 1, 0.98] }}
+                          transition={{ duration: 1.45, times: [0, 0.38, 1], ease: 'easeInOut' }}
+                        >
+                          <Image src="/assets/brand/large-ball.png" alt="" width={256} height={256} className="size-12 object-contain drop-shadow-[0_0_14px_rgba(255,255,255,0.32)] md:size-14" />
+                        </motion.div>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* RIGHT: Copy & CTA */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="order-1 lg:order-2 flex-1 flex flex-col items-center lg:items-start text-center lg:text-left max-w-xl relative lg:pl-8 xl:pl-12"
+        >
+          {/* Left hand — keep original motion, soften the edge where it enters */}
+          <div className="absolute -left-11 md:-left-22 top-10 md:top-14 w-16 md:w-24 h-32 md:h-48 overflow-hidden pointer-events-none md:hidden">
+            <motion.div
+              className="origin-bottom"
+              style={{
+                maskImage: 'linear-gradient(to top, black 60%, transparent 100%), linear-gradient(to right, transparent 0%, black 22%, black 100%)',
+                WebkitMaskImage: 'linear-gradient(to top, black 60%, transparent 100%), linear-gradient(to right, transparent 0%, black 22%, black 100%)',
+              }}
+              animate={{ rotate: [-8, 8, -8] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <Image src="/assets/brand/hand-left.webp" alt="" width={120} height={200} className="w-14 md:w-24 h-auto" />
+            </motion.div>
+          </div>
+
+          {/* Right hand — keep original motion, soften the edge where it enters */}
+          <div className="absolute -right-11 md:-right-22 top-10 md:top-14 w-16 md:w-24 h-32 md:h-48 overflow-hidden pointer-events-none md:hidden">
+            <motion.div
+              className="origin-bottom"
+              style={{
+                maskImage: 'linear-gradient(to top, black 60%, transparent 100%), linear-gradient(to left, transparent 0%, black 22%, black 100%)',
+                WebkitMaskImage: 'linear-gradient(to top, black 60%, transparent 100%), linear-gradient(to left, transparent 0%, black 22%, black 100%)',
+              }}
+              animate={{ rotate: [8, -8, 8] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+            >
+              <Image src="/assets/brand/hand-right.webp" alt="" width={120} height={200} className="w-14 md:w-24 h-auto" />
+            </motion.div>
+          </div>
+
+          {/* Social proof */}
           <div className="flex items-center gap-3 mb-6">
             <div className="flex -space-x-2">
-              <AvatarDisplay customization={{ base: "avatar-1", background: "b6e3f4" }} size="sm" className="rounded-full ring-2 ring-[#131F24]" />
-              <AvatarDisplay customization={{ base: "avatar-8", background: "ffdfbf" }} size="sm" className="rounded-full ring-2 ring-[#131F24]" />
-              <AvatarDisplay customization={{ base: "avatar-3", background: "c0aede" }} size="sm" className="rounded-full ring-2 ring-[#131F24]" />
+              <div className="rounded-full bg-[#FF4B4B] p-[3px] ring-2 ring-[#071013]">
+                <AvatarDisplay customization={{ base: "avatar-1", background: "transparent" }} size="sm" className="rounded-full" />
+              </div>
+              <div className="rounded-full bg-[#38B60E] p-[3px] ring-2 ring-[#071013]">
+                <AvatarDisplay customization={{ base: "avatar-8", background: "transparent" }} size="sm" className="rounded-full" />
+              </div>
+              <div className="rounded-full bg-[#FFD700] p-[3px] ring-2 ring-[#071013]">
+                <AvatarDisplay customization={{ base: "avatar-3", background: "transparent" }} size="sm" className="rounded-full" />
+              </div>
             </div>
             <span className="text-[#56707A] font-bold text-sm">{duelsCount.toLocaleString()}+ duels played</span>
           </div>
 
-          <h1 className="text-4xl md:text-5xl lg:text-7xl font-black tracking-tighter leading-[1.05] mb-6 text-foreground drop-shadow-2xl">
-            Answer trivia.<br />
-            Score goals.<br />
-            <span className="bg-gradient-to-r from-green-400 to-emerald-600 bg-clip-text text-transparent">Win the match.</span>
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-[1.1] mb-4 text-white">
+            The football trivia game where you score real goals.
           </h1>
-
-          <p className="text-base md:text-lg text-[#56707A] font-medium mb-4 max-w-md">
-            The football trivia game where your knowledge powers real-time pitch action. Battle opponents, climb divisions, and become a legend.
-          </p>
 
           <div className="h-8 mb-8 flex items-center justify-center lg:justify-start">
             <AnimatePresence mode="wait">
@@ -167,7 +513,7 @@ export function WelcomeScreen() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="text-lg font-bold text-green-600"
+                className="text-lg font-bold text-[#38B60E]"
               >
                 {SUBHEADING_PHRASES[currentPhraseIndex]}
               </motion.p>
@@ -175,161 +521,212 @@ export function WelcomeScreen() {
           </div>
 
           <Button
-            size="lg"
             onClick={handleKickOff}
-            className="
-              h-14 px-12 rounded-2xl text-lg font-black uppercase tracking-wide
-              bg-green-500 text-[#131F24] hover:bg-green-400
-              border-b-[5px] border-green-700 active:border-b-0 active:translate-y-[5px]
-              transition-all shadow-xl hover:shadow-green-500/20
-            "
+            className="w-full sm:w-auto min-w-[280px] h-14 rounded-2xl text-lg font-black uppercase tracking-wide bg-[#38B60E] text-white hover:bg-[#42c814] border-b-[5px] border-[#2D950B] active:border-b-0 active:translate-y-[5px] transition-all shadow-none hover:shadow-none"
           >
             Kick off
           </Button>
-
-          {/* How it works — compact */}
-          <div className="mt-10 flex items-center gap-2 text-sm">
-            {[
-              { label: "Answer", color: "text-[#1CB0F6]" },
-              { label: "Advance", color: "text-green-500" },
-              { label: "Score", color: "text-[#FF9600]" },
-            ].map((s, i) => (
-              <React.Fragment key={s.label}>
-                {i > 0 && <ChevronRight className="size-4 text-[#56707A]/50" />}
-                <span className={`font-black uppercase tracking-wide ${s.color}`}>{s.label}</span>
-              </React.Fragment>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Right: Stacked cards */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="flex-1 flex items-center justify-center w-full max-w-lg lg:max-w-none relative"
-        >
-          <div className="relative w-full max-w-[520px] aspect-[4/3] perspective-1000">
-            {/* Stack background elements for depth */}
-            <div className="absolute inset-0 scale-[0.92] translate-y-6 rotate-3 opacity-10 bg-green-500/20 blur-2xl rounded-3xl" />
-            
-            {/* Secondary card in stack */}
-            <div className="absolute inset-0 scale-[0.96] translate-y-4 rotate-2 opacity-40">
-              <div className="w-full h-full bg-[#1B2F36] rounded-2xl md:rounded-3xl p-2 md:p-3 border-2 border-border/20 border-b-4 shadow-xl">
-                <div className="rounded-xl md:rounded-2xl overflow-hidden h-[calc(100%-32px)] bg-[#0D1B21]" />
-              </div>
-            </div>
-
-            {/* Active card container with AnimatePresence */}
-            <div className="relative w-full h-full overflow-visible">
-              <AnimatePresence initial={false} custom={direction} mode="popLayout">
-                <motion.div
-                  key={page}
-                  custom={direction}
-                  variants={variants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{
-                    x: { type: "spring", stiffness: 300, damping: 30 },
-                    opacity: { duration: 0.4 },
-                    rotate: { duration: 0.5 },
-                    scale: { duration: 0.5 },
-                  }}
-                  className="absolute inset-0 cursor-pointer"
-                  onClick={() => paginate(1)}
-                >
-                  <div className="w-full h-full bg-[#1B2F36] rounded-2xl md:rounded-3xl p-1.5 md:p-3 border-2 border-white/5 border-b-[4px] md:border-b-[6px] border-b-black/40 shadow-[0_20px_50px_rgba(0,0,0,0.5)] active:translate-y-1 active:border-b-[2px] transition-all">
-                    <div className="relative rounded-xl md:rounded-2xl overflow-hidden h-[calc(100%-24px)] md:h-[calc(100%-32px)] group">
-                      <Image
-                        src={cards[activeCard].src}
-                        alt={cards[activeCard].alt}
-                        width={cards[activeCard].width}
-                        height={cards[activeCard].height}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                        priority={activeCard === 0}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                    <div className="mt-1 md:mt-2 px-1 flex items-center justify-between">
-                      <span className="font-bold text-[8px] md:text-xs uppercase tracking-[0.15em] text-white/40">{cards[activeCard].label}</span>
-                      <div className="flex gap-1 md:gap-1.5 z-10">
-                        {cards.map((_, di) => (
-                          <button
-                            key={di}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              jumpToPage(di);
-                            }}
-                            className={`size-1 md:size-1.5 rounded-full transition-all duration-500 hover:bg-white/30 ${di === activeCard ? 'bg-green-500 w-3 md:w-6' : 'bg-white/10'}`}
-                            aria-label={`Go to slide ${di + 1}`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          </div>
         </motion.div>
       </main>
 
-      {/* Features Section */}
-      <section className="px-6 py-16 bg-[#0D1B21] border-t border-border/30">
-        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-5">
-          {[
-            { icon: Brain, title: "Answer Trivia", desc: "10k+ questions across clubs, players, history & more.", color: "text-[#1CB0F6]", bg: "bg-[#1CB0F6]/10", border: "border-[#1CB0F6]/30" },
-            { icon: Goal, title: "Move Up the Pitch", desc: "Every correct answer advances your position — DEF to BOX.", color: "text-green-500", bg: "bg-green-500/10", border: "border-green-500/30" },
-            { icon: Trophy, title: "Score & Win", desc: "Outscore opponents across two halves to climb divisions.", color: "text-[#FF9600]", bg: "bg-[#FF9600]/10", border: "border-[#FF9600]/30" },
-          ].map((step, i) => (
-            <motion.div
-              key={step.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className={`bg-[#1B2F36] rounded-2xl p-6 border-2 ${step.border} border-b-4`}
-            >
-              <div className="flex items-start gap-4">
-                <div className={`${step.bg} rounded-xl p-3 shrink-0`}>
-                  <step.icon className={`size-6 ${step.color}`} />
-                </div>
-                <div>
-                  <div className={`font-black text-sm uppercase tracking-wide ${step.color} mb-1`}>{step.title}</div>
-                  <p className="text-xs text-[#56707A] leading-relaxed font-medium">{step.desc}</p>
-                </div>
+      {/* ── Categories ── */}
+      {featuredCategories.length > 0 && (
+        <section className="px-6 py-12 md:py-20">
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-center text-2xl md:text-3xl font-black text-white mb-3">
+              What do you want to play?
+            </h2>
+            <p className="text-center text-sm md:text-base text-white/60 font-medium mb-10">
+              {allCategories.length} categories across world football
+            </p>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+              {featuredCategories.map((cat, i) => {
+                const style = getCategoryStyle(cat.slug, cat.name, i);
+                const IconComponent = style.icon;
+                return (
+                  <motion.div
+                    key={cat.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.04 }}
+                    className="group relative cursor-pointer overflow-hidden rounded-2xl border border-white/10 p-4 md:p-5 transition-all duration-200 hover:scale-[1.04] hover:-translate-y-1 hover:brightness-110 hover:border-white/20 hover:shadow-[0_8px_32px_rgba(0,0,0,0.35)]"
+                    style={{ backgroundColor: style.color }}
+                    onClick={() => setLoginOpen(true)}
+                  >
+                    {/* Watermark: flag, image, or icon */}
+                    {style.flag ? (
+                      <Image
+                        src={`https://flagcdn.com/w160/${style.flag}.png`}
+                        alt=""
+                        width={160}
+                        height={120}
+                        className="absolute -bottom-2 -right-2 w-20 md:w-24 opacity-[0.18] pointer-events-none rounded-sm"
+                      />
+                    ) : style.watermarkImg ? (
+                      <Image
+                        src={style.watermarkImg}
+                        alt=""
+                        width={120}
+                        height={120}
+                        className="absolute -bottom-2 -right-2 size-20 md:size-24 opacity-[0.18] pointer-events-none object-contain"
+                      />
+                    ) : (
+                      <IconComponent className="absolute -bottom-3 -right-3 size-24 md:size-28 opacity-[0.12] text-white pointer-events-none" />
+                    )}
+
+                    {/* Small icon */}
+                    <div className="relative flex size-11 md:size-12 items-center justify-center rounded-xl mb-3 bg-white/20 text-white transition-transform duration-200 group-hover:scale-110">
+                      <IconComponent className="size-5 md:size-6" />
+                    </div>
+
+                    {/* Name */}
+                    <div className="relative text-sm md:text-base font-black uppercase tracking-wide leading-tight text-white">
+                      {cat.name}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {remainingCategories.length > 0 && (
+              <div className="mt-8 text-center">
+                <Button
+                  variant="outline"
+                  onClick={() => setCategoriesOpen(true)}
+                  className="h-12 px-8 rounded-2xl text-sm font-black uppercase tracking-wide border-2 border-white/20 bg-transparent text-white hover:bg-white/10 hover:border-white/30 shadow-none hover:shadow-none"
+                >
+                  See all {allCategories.length} categories
+                </Button>
               </div>
-            </motion.div>
-          ))}
+            )}
+          </div>
+        </section>
+      )}
+
+
+      {/* ── Leaderboard ── */}
+      <section className="px-6 py-12 md:py-20">
+        <div className="max-w-2xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-10"
+          >
+            <h2 className="text-2xl md:text-3xl font-black text-white mb-3">
+              How do you compare?
+            </h2>
+            <p className="text-sm md:text-base text-white/60 font-medium">
+              Climb the global rankings and prove you&apos;re the ultimate football brain.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="mb-4"
+          >
+            <LeaderboardPodium
+              topThree={leaderboardEntries.slice(0, 3)}
+              onEntryClick={() => setLoginOpen(true)}
+            />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="mb-8"
+          >
+            <LeaderboardTable
+              entries={leaderboardEntries.slice(3, 8)}
+              onEntryClick={() => setLoginOpen(true)}
+            />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+            className="text-center"
+          >
+            <Button
+              onClick={() => setLoginOpen(true)}
+              className="h-14 px-10 rounded-2xl text-lg font-black uppercase tracking-wide bg-[#38B60E] hover:bg-[#2ea00b] text-white border-b-[5px] border-[#2c8a0a] active:border-b-0 active:translate-y-[5px] transition-all shadow-none hover:shadow-none"
+            >
+              See where you stand
+            </Button>
+          </motion.div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-8 border-t border-border/30 bg-[#131F24]">
-        <div className="container mx-auto px-6 flex flex-wrap justify-center gap-8 md:gap-16">
-          <div className="flex items-center gap-2 font-bold text-foreground/60">
-            <Shield className="size-5" /> 10k+ Verified Questions
+      {/* ── Footer ── */}
+      <footer className="py-8 bg-[#071013]">
+        <div className="max-w-4xl mx-auto px-6 flex flex-wrap justify-center gap-8 md:gap-16">
+          <div className="flex items-center gap-2 font-bold text-[#FFE500]">
+            <Brain className="size-4" />
+            <span className="text-sm">10k+ Verified Questions</span>
           </div>
-          <div className="flex items-center gap-2 font-bold text-foreground/60">
-            <Swords className="size-5" /> {duelsCount.toLocaleString()} Duels Played
+          <div className="flex items-center gap-2 font-bold text-[#FFE500]">
+            <Swords className="size-4" />
+            <span className="text-sm">{duelsCount.toLocaleString()}+ Duels Played</span>
           </div>
         </div>
       </footer>
 
-      {/* Login Dialog — Google only */}
-      <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
-        <DialogContent className="max-w-md w-full rounded-2xl p-8">
+      {/* ── All Categories Modal ── */}
+      <Dialog open={categoriesOpen} onOpenChange={setCategoriesOpen}>
+        <DialogContent className="max-w-2xl w-[95vw] rounded-2xl p-5 md:p-8 bg-[#071013] border-[#071013] max-h-[85vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold mb-4 text-center">Sign in to QuizBall</DialogTitle>
-            <DialogDescription className="text-center">
+            <DialogTitle className="text-2xl font-black text-center text-white">All Categories</DialogTitle>
+            <DialogDescription className="text-center text-white/50">
+              {allCategories.length} categories across world football
+            </DialogDescription>
+          </DialogHeader>
+          <div className="overflow-y-auto flex-1 -mx-1 px-1 mt-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 md:gap-3">
+              {allCategories.map((cat, i) => {
+                const style = getCategoryStyle(cat.slug, cat.name, i);
+                const IconComponent = style.icon;
+                return (
+                  <div
+                    key={cat.id}
+                    className="group cursor-pointer overflow-hidden rounded-xl border border-white/10 px-3 py-2.5 flex items-center gap-2.5 transition-all duration-200 hover:brightness-110 hover:border-white/20"
+                    style={{ backgroundColor: style.color }}
+                    onClick={() => { setCategoriesOpen(false); setLoginOpen(true); }}
+                  >
+                    <div className="flex size-8 items-center justify-center rounded-lg bg-white/20 text-white shrink-0">
+                      <IconComponent className="size-4" />
+                    </div>
+                    <span className="text-xs md:text-sm font-bold text-white leading-tight">
+                      {cat.name}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Login Dialog ── */}
+      <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
+        <DialogContent className="max-w-md w-full rounded-2xl p-8 bg-[#071013] border-[#071013]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold mb-4 text-center text-white">Sign in to QuizBall</DialogTitle>
+            <DialogDescription className="text-center text-white/50">
               Continue with your Google account.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 mt-2">
             <Button
-              variant="outline"
-              className="flex items-center justify-center gap-3 py-4 text-lg font-semibold border-2 border-zinc-300 hover:bg-zinc-100"
+              className="flex items-center justify-center gap-3 h-14 rounded-2xl text-lg font-black uppercase tracking-wide bg-[#FFE500] text-black hover:bg-[#FFD700] border-b-[5px] border-[#CCB800] active:border-b-0 active:translate-y-[5px] transition-all shadow-none hover:shadow-none"
               onClick={handleGoogleLogin}
             >
               <FcGoogle className="size-6" /> Continue with Google
