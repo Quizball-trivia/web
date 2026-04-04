@@ -19,16 +19,16 @@ import { RANKED_TIER_BANDS } from '@/utils/rankedTier';
 import { tierConfig, type TierName } from '@/utils/tierVisuals';
 
 const SUBHEADING_PHRASES = [
-  "Climb the ranks.",
-  "Outsmart rivals.",
-  "Prove your ball knowledge.",
-  "Build up your status.",
-  "Win tournaments.",
-  "Earn rewards.",
-  "Become a legend.",
-  "Challenge friends.",
-  "Rise to the top.",
-  "Show your skills.",
+  "Back your football knowledge.",
+  "Beat your mates and climb.",
+  "Turn answers into goals.",
+  "Move up the table.",
+  "Take on leagues, legends, and rivalries.",
+  "Play quick matches. Build your rank.",
+  "From trivia wins to real bragging rights.",
+  "Know the game. Win the duel.",
+  "Start strong. Finish top.",
+  "Every right answer moves you on.",
 ];
 
 // Style mapping for known categories (matched by slug or lowercased name)
@@ -267,7 +267,7 @@ export function WelcomeScreen() {
                 {wcDaysLeft}
               </span>
               <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-[#FFE500]">
-                days left
+                until kickoff
               </span>
             </div>
           )}
@@ -502,11 +502,11 @@ export function WelcomeScreen() {
                 <AvatarDisplay customization={{ base: "avatar-3", background: "transparent" }} size="sm" className="rounded-full" />
               </div>
             </div>
-            <span className="text-[#56707A] font-bold text-sm">{duelsCount.toLocaleString()}+ duels played</span>
+            <span className="text-[#56707A] font-bold text-sm">{duelsCount.toLocaleString()}+ duels played so far</span>
           </div>
 
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-[1.1] mb-4 text-white">
-            The football trivia game where you score real goals.
+            Football trivia that feels like matchday.
           </h1>
 
           <div className="h-8 mb-8 flex items-center justify-center lg:justify-start">
@@ -528,7 +528,7 @@ export function WelcomeScreen() {
             className="w-full sm:w-auto min-w-[280px] h-14 rounded-2xl text-lg font-black uppercase tracking-wide bg-[#38B60E] text-white hover:bg-[#42c814] border-b-[5px] border-[#2D950B] active:border-b-0 active:translate-y-[5px] transition-all shadow-none hover:shadow-none"
           >
             Kick off
-          </Button>
+            </Button>
         </motion.div>
       </main>
 
@@ -537,10 +537,10 @@ export function WelcomeScreen() {
         <section className="px-6 py-12 md:py-20">
           <div className="max-w-5xl mx-auto">
             <h2 className="text-center text-2xl md:text-3xl font-black text-white mb-3">
-              What do you want to play?
+              Pick your football lane
             </h2>
             <p className="text-center text-sm md:text-base text-white/60 font-medium mb-10">
-              {allCategories.length} categories across world football
+              {allCategories.length} ways to test your football brain, from elite leagues to cult storylines.
             </p>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
@@ -602,7 +602,7 @@ export function WelcomeScreen() {
                   onClick={() => setCategoriesOpen(true)}
                   className="h-12 px-8 rounded-2xl text-sm font-black uppercase tracking-wide border-2 border-white/20 bg-transparent text-white hover:bg-white/10 hover:border-white/30 shadow-none hover:shadow-none"
                 >
-                  See all {allCategories.length} categories
+                  Browse all {allCategories.length} categories
                 </Button>
               </div>
             )}
@@ -621,10 +621,10 @@ export function WelcomeScreen() {
             className="text-center mb-10"
           >
             <h2 className="text-2xl md:text-3xl font-black text-white mb-3">
-              Climb the ranks
+              Rise through the tiers
             </h2>
             <p className="text-sm md:text-base text-white/60 font-medium">
-              Start at Academy. Rise to GOAT.
+              Begin at Academy and work your way to GOAT.
             </p>
           </motion.div>
 
@@ -689,7 +689,7 @@ export function WelcomeScreen() {
               onClick={() => setLoginOpen(true)}
               className="h-14 px-10 rounded-2xl text-lg font-black uppercase tracking-wide bg-[#38B60E] hover:bg-[#2ea00b] text-white border-b-[5px] border-[#2c8a0a] active:border-b-0 active:translate-y-[5px] transition-all shadow-none hover:shadow-none"
             >
-              Start your climb
+              Start climbing
             </Button>
           </motion.div>
         </div>
@@ -705,10 +705,10 @@ export function WelcomeScreen() {
             className="text-center mb-10"
           >
             <h2 className="text-2xl md:text-3xl font-black text-white mb-3">
-              How do you compare?
+              See where you stack up
             </h2>
             <p className="text-sm md:text-base text-white/60 font-medium">
-              Climb the global rankings and prove you&apos;re the ultimate football brain.
+              Join the table, earn rank points, and chase the top spots.
             </p>
           </motion.div>
 
@@ -749,22 +749,32 @@ export function WelcomeScreen() {
               onClick={() => setLoginOpen(true)}
               className="h-14 px-10 rounded-2xl text-lg font-black uppercase tracking-wide bg-[#38B60E] hover:bg-[#2ea00b] text-white border-b-[5px] border-[#2c8a0a] active:border-b-0 active:translate-y-[5px] transition-all shadow-none hover:shadow-none"
             >
-              See where you stand
+              View the full table
             </Button>
           </motion.div>
         </div>
       </section>
 
       {/* ── Footer ── */}
-      <footer className="py-8 bg-[#071013]">
-        <div className="max-w-4xl mx-auto px-6 flex flex-wrap justify-center gap-8 md:gap-16">
-          <div className="flex items-center gap-2 font-bold text-[#FFE500]">
-            <Brain className="size-4" />
-            <span className="text-sm">10k+ Verified Questions</span>
+      <footer className="border-t border-white/6 bg-[#071013] py-8">
+        <div className="mx-auto max-w-4xl px-6">
+          <div className="flex flex-wrap justify-center gap-8 md:gap-16">
+            <div className="flex items-center gap-2 font-bold text-[#FFE500]">
+              <Brain className="size-4" />
+              <span className="text-sm">10k+ verified questions</span>
+            </div>
+            <div className="flex items-center gap-2 font-bold text-[#FFE500]">
+              <Swords className="size-4" />
+              <span className="text-sm">{duelsCount.toLocaleString()}+ duels played</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2 font-bold text-[#FFE500]">
-            <Swords className="size-4" />
-            <span className="text-sm">{duelsCount.toLocaleString()}+ Duels Played</span>
+          <div className="mt-6 space-y-2 text-center">
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-white/35">
+              © 2026 QuizBall
+            </p>
+            <p className="mx-auto max-w-2xl text-[11px] leading-relaxed text-white/30 md:text-xs">
+              QuizBall is an independent football trivia game. Club, league, tournament, and player references are used for editorial identification only. QuizBall is not affiliated with, endorsed by, or sponsored by any club, league, federation, or competition organizer.
+            </p>
           </div>
         </div>
       </footer>
@@ -773,9 +783,9 @@ export function WelcomeScreen() {
       <Dialog open={categoriesOpen} onOpenChange={setCategoriesOpen}>
         <DialogContent className="max-w-2xl w-[95vw] rounded-2xl p-5 md:p-8 bg-[#071013] border-[#071013] max-h-[85vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black text-center text-white">All Categories</DialogTitle>
+            <DialogTitle className="text-2xl font-black text-center text-white">All categories</DialogTitle>
             <DialogDescription className="text-center text-white/50">
-              {allCategories.length} categories across world football
+              Explore the full QuizBall category list.
             </DialogDescription>
           </DialogHeader>
           <div className="overflow-y-auto flex-1 -mx-1 px-1 mt-2">
@@ -812,7 +822,7 @@ export function WelcomeScreen() {
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold mb-4 text-center text-white">Sign in to QuizBall</DialogTitle>
             <DialogDescription className="text-center text-white/50">
-              Continue with your Google account.
+              Use your Google account to save progress, rank up, and play online.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 mt-2">
