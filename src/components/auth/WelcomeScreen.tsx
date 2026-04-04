@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { FcGoogle } from 'react-icons/fc';
 import { Button } from '@/components/ui/button';
 import { Brain, Goal, Trophy, Crown, Star, Globe, Flame, Shield, Repeat, Award, Flag, Swords, type LucideIcon } from 'lucide-react';
-import { useCategoriesList } from '@/lib/queries/categories.queries';
+import { useAllCategoriesList } from '@/lib/queries/categories.queries';
 import { AppLogo } from '@/components/AppLogo';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { motion, AnimatePresence } from 'motion/react';
@@ -15,6 +15,8 @@ import { LeaderboardPodium } from '@/features/leaderboard/components/Leaderboard
 import { LeaderboardTable } from '@/features/leaderboard/components/LeaderboardTable';
 import type { LeaderboardEntry } from '@/lib/domain/leaderboard';
 import { useLeaderboard } from '@/lib/queries/leaderboard.queries';
+import { RANKED_TIER_BANDS } from '@/utils/rankedTier';
+import { tierConfig, type TierName } from '@/utils/tierVisuals';
 
 const SUBHEADING_PHRASES = [
   "Climb the ranks.",
@@ -179,24 +181,25 @@ export function WelcomeScreen() {
   const [loginOpen, setLoginOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [duelsCount, setDuelsCount] = useState(1000);
-  const [wcDaysLeft, setWcDaysLeft] = useState(getDaysUntilWorldCup);
+  const [wcDaysLeft, setWcDaysLeft] = useState(0);
   const [stadiumPhase, setStadiumPhase] = useState(0);
-  const [demoPlayers] = useState(() => {
+  const [demoPlayers, setDemoPlayers] = useState({ left: "Mason", right: "Thiago" });
+  useEffect(() => setDuelsCount(getDuelsCount()), []);
+  useEffect(() => {
+    setWcDaysLeft(getDaysUntilWorldCup());
     const shuffled = [...DEMO_PLAYER_NAMES].sort(() => Math.random() - 0.5);
-    return {
+    setDemoPlayers({
       left: shuffled[0] ?? "Mason",
       right: shuffled[1] ?? "Thiago",
-    };
-  });
-  useEffect(() => setDuelsCount(getDuelsCount()), []);
-  useEffect(() => setWcDaysLeft(getDaysUntilWorldCup()), []);
+    });
+  }, []);
 
   // Fetch real leaderboard
   const { data: leaderboardData } = useLeaderboard('global');
   const leaderboardEntries = leaderboardData ?? DEMO_LEADERBOARD;
 
   // Fetch real categories — filter out game modes, split into featured + rest
-  const { data: categoriesData } = useCategoriesList({ limit: 100, page: 1, is_active: "true" });
+  const { data: categoriesData } = useAllCategoriesList({ limit: 100, is_active: "true" });
   const allCategories = (categoriesData?.items ?? []).filter(
     (c) => !EXCLUDED_SLUGS.has(c.slug) && !EXCLUDED_SLUGS.has(c.name.toLowerCase().replace(/\s+/g, '-'))
   );
@@ -545,8 +548,10 @@ export function WelcomeScreen() {
                 const style = getCategoryStyle(cat.slug, cat.name, i);
                 const IconComponent = style.icon;
                 return (
-                  <motion.div
+                  <motion.button
                     key={cat.id}
+                    type="button"
+                    aria-label={`Open ${cat.name}`}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -585,7 +590,7 @@ export function WelcomeScreen() {
                     <div className="relative text-sm md:text-base font-black uppercase tracking-wide leading-tight text-white">
                       {cat.name}
                     </div>
-                  </motion.div>
+                  </motion.button>
                 );
               })}
             </div>
@@ -605,6 +610,90 @@ export function WelcomeScreen() {
         </section>
       )}
 
+
+      {/* ── Tier Road (Horizontal) ── */}
+      <section className="py-12 md:py-20 overflow-hidden">
+        <div className="max-w-6xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-10"
+          >
+            <h2 className="text-2xl md:text-3xl font-black text-white mb-3">
+              Climb the ranks
+            </h2>
+            <p className="text-sm md:text-base text-white/60 font-medium">
+              Start at Academy. Rise to GOAT.
+            </p>
+          </motion.div>
+
+          {/* Horizontal scrollable road */}
+          <div className="overflow-x-auto pb-4 -mx-6 px-6 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="relative flex items-center min-w-max mx-auto" style={{ width: 'fit-content' }}>
+              {/* Horizontal connecting line */}
+              <div className="absolute left-6 right-6 top-1/2 -translate-y-[14px] h-0.5 bg-gradient-to-r from-slate-600/40 via-white/15 to-fuchsia-500/40" />
+
+              {[...RANKED_TIER_BANDS].reverse().map((band, i) => {
+                const visual = tierConfig[band.tier as TierName];
+                const isTop = band.tier === 'GOAT';
+                const totalTiers = RANKED_TIER_BANDS.length;
+                return (
+                  <motion.div
+                    key={band.tier}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.06 }}
+                    className="flex flex-col items-center px-2 md:px-3 relative"
+                    style={{ minWidth: i === totalTiers - 1 ? '90px' : '76px' }}
+                  >
+                    {/* Emoji node */}
+                    <div
+                      className={`relative z-10 flex items-center justify-center shrink-0 rounded-full border-2 mb-2 ${
+                        isTop
+                          ? 'size-14 md:size-16 text-2xl md:text-3xl bg-gradient-to-br from-fuchsia-500/30 to-fuchsia-400/10 border-fuchsia-400/50 shadow-[0_0_20px_rgba(217,70,239,0.3)]'
+                          : 'size-10 md:size-12 text-lg md:text-xl border-white/15 bg-[#0d1a1f]'
+                      }`}
+                    >
+                      {visual?.emoji}
+                    </div>
+
+                    {/* Tier name */}
+                    <div className={`text-center font-black text-[10px] md:text-xs uppercase tracking-wide leading-tight ${
+                      isTop ? 'text-fuchsia-300' : visual?.color ?? 'text-white'
+                    }`}>
+                      {band.tier}
+                    </div>
+
+                    {/* RP range */}
+                    <div className="text-[9px] md:text-[10px] text-white/60 font-semibold text-center mt-0.5 whitespace-nowrap">
+                      {band.maxRpExclusive === null
+                        ? `${band.minRp.toLocaleString()}+`
+                        : `${band.minRp.toLocaleString()}`}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.6 }}
+            className="mt-10 text-center"
+          >
+            <Button
+              onClick={() => setLoginOpen(true)}
+              className="h-14 px-10 rounded-2xl text-lg font-black uppercase tracking-wide bg-[#38B60E] hover:bg-[#2ea00b] text-white border-b-[5px] border-[#2c8a0a] active:border-b-0 active:translate-y-[5px] transition-all shadow-none hover:shadow-none"
+            >
+              Start your climb
+            </Button>
+          </motion.div>
+        </div>
+      </section>
 
       {/* ── Leaderboard ── */}
       <section className="px-6 py-12 md:py-20">
@@ -695,8 +784,10 @@ export function WelcomeScreen() {
                 const style = getCategoryStyle(cat.slug, cat.name, i);
                 const IconComponent = style.icon;
                 return (
-                  <div
+                  <motion.button
                     key={cat.id}
+                    type="button"
+                    aria-label={`Open ${cat.name}`}
                     className="group cursor-pointer overflow-hidden rounded-xl border border-white/10 px-3 py-2.5 flex items-center gap-2.5 transition-all duration-200 hover:brightness-110 hover:border-white/20"
                     style={{ backgroundColor: style.color }}
                     onClick={() => { setCategoriesOpen(false); setLoginOpen(true); }}
@@ -707,7 +798,7 @@ export function WelcomeScreen() {
                     <span className="text-xs md:text-sm font-bold text-white leading-tight">
                       {cat.name}
                     </span>
-                  </div>
+                  </motion.button>
                 );
               })}
             </div>

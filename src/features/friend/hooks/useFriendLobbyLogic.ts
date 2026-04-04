@@ -294,9 +294,9 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     logger.info("Socket emit lobby:leave");
     // Leave room route immediately to avoid URL-driven auto-rejoin.
     router.replace("/play");
+    useRankedMatchmakingStore.getState().clearRankedMatchmaking();
     window.setTimeout(() => {
       useRealtimeMatchStore.getState().reset();
-      useRankedMatchmakingStore.getState().clearRankedMatchmaking();
       leavingRef.current = false;
     }, 150);
   };

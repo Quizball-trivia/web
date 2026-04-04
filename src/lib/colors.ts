@@ -4,10 +4,14 @@
  * Usage in components:
  *   import { colors } from '@/lib/colors';
  *   <div style={{ background: colors.surface.base }} />
- *   <div className={`bg-[${colors.green.base}]`} />  // Tailwind arbitrary
+ *   <div style={{ backgroundColor: colors.green.base }} />
  *
  * Button pattern:  bg + border-b-4 shadow + hover glow
- *   bg-[${colors.green.base}] border-b-4 border-[${colors.green.shadow}]
+ *   style={{ backgroundColor: colors.green.base, borderColor: colors.green.shadow }}
+ *
+ * NOTE: Do NOT use template interpolation in className (e.g. `bg-[${colors.green.base}]`)
+ * — Tailwind cannot statically scan dynamic class names. Use inline styles or
+ * static Tailwind classes like `bg-[#38B60E]` instead.
  */
 
 export const colors = {

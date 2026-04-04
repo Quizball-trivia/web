@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { registerSocketHandlers, resetSocketHandlers } from '../socket-handlers';
 import { __setSocketOverride } from '../socket-client';
@@ -62,6 +62,10 @@ describe('registerSocketHandlers', () => {
     // Create fresh mock socket and install as override
     mockSocket = createMockSocket();
     __setSocketOverride(mockSocket.socket);
+  });
+
+  afterEach(() => {
+    __setSocketOverride(null);
   });
 
   // Regression: the error handler must read selfUserId fresh via getState(),
