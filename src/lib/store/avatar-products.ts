@@ -27,9 +27,10 @@ export function isKnownPremiumAvatarSeed(seed: string): boolean {
   return KNOWN_PREMIUM_AVATAR_SEEDS.has(seed.toLowerCase());
 }
 
-export function readAvatarMetadata(
-  metadata: unknown
-): { avatarKey?: string; assetUrl?: string } {
+export function readAvatarMetadata(metadata: unknown): {
+  avatarKey?: string;
+  assetUrl?: string;
+} {
   if (!metadata || typeof metadata !== "object") return {};
   const raw = metadata as Record<string, unknown>;
   return {
@@ -46,10 +47,12 @@ export function getAvatarSeed(product: AvatarStoreProductLike): string {
 export function getAvatarLabel(product: AvatarStoreProductLike): string {
   const seed = getAvatarSeed(product);
   const rawLabel = product.name.en ?? seed.replace(/[_-]/g, " ");
-  return rawLabel.replace(/\s+avatar$/i, "");
+  return rawLabel.replace(/^avatar\s+|\s+avatar$/gi, "").trim() || rawLabel;
 }
 
-export function isJerseyAvatarProduct(product: AvatarStoreProductLike): boolean {
+export function isJerseyAvatarProduct(
+  product: AvatarStoreProductLike,
+): boolean {
   const seed = getAvatarSeed(product).toLowerCase();
   const slug = product.slug.toLowerCase();
   const name = (product.name.en ?? "").toLowerCase();
@@ -66,12 +69,14 @@ export function isJerseyAvatarProduct(product: AvatarStoreProductLike): boolean 
 
 export function getAvatarImage(
   product: AvatarStoreProductLike,
-  size = 256
+  size = 256,
 ): string {
   const parsed = readAvatarMetadata(product.metadata);
   const seed = parsed.avatarKey ?? product.slug;
   const assetUrl = parsed.assetUrl;
-  const localAsset = LOCAL_PREMIUM_AVATAR_ASSETS[product.slug] ?? LOCAL_PREMIUM_AVATAR_ASSETS[seed];
+  const localAsset =
+    LOCAL_PREMIUM_AVATAR_ASSETS[product.slug] ??
+    LOCAL_PREMIUM_AVATAR_ASSETS[seed];
 
   if (localAsset) {
     return localAsset;

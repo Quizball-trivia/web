@@ -156,7 +156,15 @@ export function AppShell({ children }: AppShellProps) {
     if (path === "/") return currentPath === "/";
     const basePath = path.split("?")[0];
     if (exact) return currentPath === basePath;
-    return currentPath === basePath || currentPath.startsWith(`${basePath}/`);
+    if (currentPath !== basePath && !currentPath.startsWith(`${basePath}/`)) return false;
+    // Don't match if another nav item is a more-specific prefix match
+    // e.g. "/play" should not match when on "/play/friend" because Lobbies owns that path
+    const hasMoreSpecificMatch = NAV_ITEMS.some((other) => {
+      const otherBase = other.path.split("?")[0];
+      return otherBase !== basePath && otherBase.startsWith(`${basePath}/`) &&
+        (currentPath === otherBase || currentPath.startsWith(`${otherBase}/`));
+    });
+    return !hasMoreSpecificMatch;
   };
 
   const handleReturnToLobby = () => {
