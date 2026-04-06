@@ -139,32 +139,46 @@ export default function PlayPage() {
   // };
 
   return (
-    <>
-      <ModeSelectionScreen
-        onSelectMode={(mode) => {
-          trackModeSelected(mode);
-          if (mode === "solo") {
-            void startMatch({ mode: "solo" });
-            return;
-          }
-          if (mode === "ranked") {
-            void startMatch({ mode: "ranked", matchType: "ranked" });
-            return;
-          }
-          void startMatch({ mode: "quizball", matchType: "friendly" });
+    <div className="relative min-h-full overflow-hidden">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.24]"
+        style={{
+          backgroundImage: "url('/assets/maracana.png')",
+          backgroundPosition: "center top",
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "cover",
         }}
-        // onRankedIntercept={() => {
-        //   if (!isTrainingComplete()) {
-        //     setShowTrainingModal(true);
-        //     return true;
-        //   }
-        //   return false;
-        // }}
-        ticketsRemaining={storeWallet?.tickets ?? 0}
-        matchStatsSummary={matchStatsSummary}
-        rankedProfile={rankedProfile ?? null}
-        rankedProfileLoading={rankedProfileLoading}
       />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#071013]/78 via-[#071013]/72 to-[#071013]/90" />
+
+      <div className="relative z-10">
+        <ModeSelectionScreen
+          onSelectMode={(mode) => {
+            trackModeSelected(mode);
+            if (mode === "solo") {
+              void startMatch({ mode: "solo" });
+              return;
+            }
+            if (mode === "ranked") {
+              void startMatch({ mode: "ranked", matchType: "ranked" });
+              return;
+            }
+            void startMatch({ mode: "quizball", matchType: "friendly" });
+          }}
+          // onRankedIntercept={() => {
+          //   if (!isTrainingComplete()) {
+          //     setShowTrainingModal(true);
+          //     return true;
+          //   }
+          //   return false;
+          // }}
+          ticketsRemaining={storeWallet?.tickets ?? 0}
+          matchStatsSummary={matchStatsSummary}
+          rankedProfile={rankedProfile ?? null}
+          rankedProfileLoading={rankedProfileLoading}
+        />
+      </div>
 
       {/* {showTrainingModal && (
         <TrainingOfferModal
@@ -172,6 +186,6 @@ export default function PlayPage() {
           onSkip={handleSkipTraining}
         />
       )} */}
-    </>
+    </div>
   );
 }

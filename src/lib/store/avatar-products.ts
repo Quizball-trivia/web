@@ -9,9 +9,19 @@ export interface AvatarStoreProductLike {
 const KNOWN_PREMIUM_AVATAR_SEEDS = new Set<string>([
   "ronaldo",
   "messi",
+  "ronaldinho",
   "neymar",
   "mbappe",
 ]);
+
+const LOCAL_PREMIUM_AVATAR_ASSETS: Record<string, string> = {
+  avatar_ronaldo: "/assets/store/avatars/ronaldo.png",
+  avatar_messi: "/assets/store/avatars/messi.png",
+  avatar_ronaldinho: "/assets/store/avatars/ronaldinho.png",
+  ronaldo: "/assets/store/avatars/ronaldo.png",
+  messi: "/assets/store/avatars/messi.png",
+  ronaldinho: "/assets/store/avatars/ronaldinho.png",
+};
 
 export function isKnownPremiumAvatarSeed(seed: string): boolean {
   return KNOWN_PREMIUM_AVATAR_SEEDS.has(seed.toLowerCase());
@@ -35,7 +45,8 @@ export function getAvatarSeed(product: AvatarStoreProductLike): string {
 
 export function getAvatarLabel(product: AvatarStoreProductLike): string {
   const seed = getAvatarSeed(product);
-  return product.name.en ?? seed.replace(/[_-]/g, " ");
+  const rawLabel = product.name.en ?? seed.replace(/[_-]/g, " ");
+  return rawLabel.replace(/\s+avatar$/i, "");
 }
 
 export function isJerseyAvatarProduct(product: AvatarStoreProductLike): boolean {
@@ -60,6 +71,11 @@ export function getAvatarImage(
   const parsed = readAvatarMetadata(product.metadata);
   const seed = parsed.avatarKey ?? product.slug;
   const assetUrl = parsed.assetUrl;
+  const localAsset = LOCAL_PREMIUM_AVATAR_ASSETS[product.slug] ?? LOCAL_PREMIUM_AVATAR_ASSETS[seed];
+
+  if (localAsset) {
+    return localAsset;
+  }
 
   // Legacy seed data used /avatars/* paths that no longer exist.
   if (assetUrl && !assetUrl.startsWith("/avatars/")) {

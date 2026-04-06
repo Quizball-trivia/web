@@ -1,96 +1,87 @@
-import { Trophy, BarChart3, Gem, User, Settings, Gamepad2, Menu, ShoppingBag } from 'lucide-react';
-import { AppLogo } from '@/components/AppLogo';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import type { Screen } from '@/types/screens';
-import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import Link from "next/link";
+import Image from "next/image";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { AppLogo } from "@/components/AppLogo";
+import { cn } from "@/lib/utils";
+import { colors } from "@/lib/colors";
+
+const NAV_ITEMS = [
+  { path: "/play", label: "Play" },
+  { path: "/leaderboard", label: "Leaderboard" },
+  { path: "/social", label: "Social" },
+  { path: "/play/friend?tab=browse", label: "Lobbies", exact: true },
+  { path: "/events", label: "Events" },
+  { path: "/store", label: "Store" },
+  { path: "/profile", label: "Profile" },
+  { path: "/settings", label: "Settings" },
+] as const;
 
 interface SidebarProps {
-  currentScreen: Screen;
-  onNavigate: (screen: Screen) => void;
+  currentPath: string;
+  socialBadgeCount?: number;
   className?: string;
 }
 
-const NAV_ITEMS = [
-  { id: 'modeSelection', label: 'Play', icon: Gamepad2 },
-  { id: 'tournaments', label: 'Events', icon: Trophy },
-  { id: 'leaderboard', label: 'Leaderboard', icon: BarChart3 },
-  { id: 'store', label: 'Store', icon: ShoppingBag },
-  { id: 'profile', label: 'Profile', icon: User },
-  { id: 'settings', label: 'Settings', icon: Settings },
-] as const;
+function isPathActive(currentPath: string, path: string, exact?: boolean) {
+  if (path === "/") return currentPath === "/";
+  const basePath = path.split("?")[0];
+  if (exact) return currentPath === basePath;
+  return currentPath === basePath || currentPath.startsWith(`${basePath}/`);
+}
 
-export function Sidebar({ currentScreen, onNavigate, className }: SidebarProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
+export function Sidebar({ currentPath, socialBadgeCount = 0, className }: SidebarProps) {
   return (
-    <div 
-      className={cn(
-        "flex flex-col bg-card border-r border-border transition-all duration-300 h-screen sticky top-0",
-        isCollapsed ? "w-20" : "w-64",
-        className
-      )}
+    <aside
+      className={cn("sticky top-0 flex h-screen w-64 flex-col transition-all duration-300", className)}
+      style={{ backgroundColor: "#000000" }}
     >
-      {/* Header */}
-      <div className="h-16 flex items-center px-4 border-b border-border/50">
-        <div className={cn("flex items-center gap-3 overflow-hidden", isCollapsed && "justify-center w-full")}>
-           <button onClick={() => onNavigate('home')} className="hover:opacity-80 transition-opacity">
-               {isCollapsed ? (
-                 <AppLogo size="sm" iconOnly />
-               ) : (
-                 <AppLogo size="sm" />
-               )}
-           </button>
+      <div className="flex items-center justify-center px-6 pt-8 pb-6">
+        <div className="flex w-full items-center justify-center overflow-hidden">
+          <Link href="/" className="transition-opacity hover:opacity-80">
+            <AppLogo size="xl" />
+          </Link>
         </div>
       </div>
 
-      {/* Navigation */}
-      <ScrollArea className="flex-1 py-6">
-        <nav className="space-y-2 px-3">
+      <ScrollArea className="flex-1 py-2">
+        <nav className="flex flex-col items-center space-y-3 px-5">
           {NAV_ITEMS.map((item) => {
-            const isActive = currentScreen === item.id || 
-              (item.id === 'modeSelection' && ['home', 'game', 'matchmaking', 'quizBall', 'matchType', 'friendMatch', 'rankedMatchmaking'].includes(currentScreen));
+            const isActive = isPathActive(currentPath, item.path, "exact" in item ? item.exact : undefined);
+            const showSocialBadge = item.path === "/social" && socialBadgeCount > 0;
 
             return (
-              <Button
-                key={item.id}
-                variant="ghost"
-                onClick={() => onNavigate(item.id as Screen)}
+              <Link
+                key={item.path}
+                href={item.path}
                 className={cn(
-                  "w-full flex items-center gap-3 transition-all",
-                  isCollapsed ? "justify-center px-0" : "justify-start px-4",
-                  isActive 
-                    ? "bg-primary/10 text-primary hover:bg-primary/20" 
-                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                  "relative inline-flex items-center justify-center py-2.5 px-4 text-sm font-black uppercase tracking-wide transition-all",
+                  isActive
+                    ? "rounded-full text-black min-w-[132px]"
+                    : "text-center text-white/62 hover:text-white",
                 )}
-                title={isCollapsed ? item.label : undefined}
+                style={isActive ? { backgroundColor: "#38B60E" } : undefined}
               >
-                <item.icon className="size-5 shrink-0" />
-                {!isCollapsed && (
-                  <span className="font-medium truncate">{item.label}</span>
+                <span className="truncate">{item.label}</span>
+                {showSocialBadge && (
+                  <span className="absolute -right-6 top-1/2 min-w-5 -translate-y-1/2 rounded-full bg-red-500 px-1.5 py-0.5 text-center text-[10px] font-black text-white">
+                    {socialBadgeCount}
+                  </span>
                 )}
-              </Button>
+              </Link>
             );
           })}
         </nav>
       </ScrollArea>
 
-      {/* Footer / Collapse Toggle */}
-      <div className="p-3 border-t border-border/50">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className={cn(
-            "w-full h-10 bg-primary/10 border-primary/30 text-primary hover:bg-primary/20 hover:text-primary",
-            isCollapsed ? "justify-center" : "justify-start gap-3"
-          )}
-        >
-          <Menu className="size-5" />
-          {!isCollapsed && <span className="font-semibold">Collapse</span>}
-        </Button>
+      <div className="flex items-center justify-center px-6 pb-8 pt-4">
+        <Image
+          src="/assets/brand/world-cup-trophy.webp"
+          alt="World Cup Trophy"
+          width={96}
+          height={96}
+          className="h-16 w-auto object-contain opacity-95"
+        />
       </div>
-    </div>
+    </aside>
   );
 }

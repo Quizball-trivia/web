@@ -25,13 +25,15 @@ import {
 /** Show only 8 free avatars (2 rows of 4) */
 const FREE_AVATAR_LIMIT = 8;
 const HIDDEN_PREMIUM_PROFILE_SLUGS = new Set<string>([
-  "avatar_ronaldo",
-  "avatar_messi",
   "avatar_neymar",
   "avatar_mbappe",
   "avatar_lion",
 ]);
-
+const VISIBLE_PREMIUM_PROFILE_SLUGS = new Set<string>([
+  "avatar_ronaldo",
+  "avatar_messi",
+  "avatar_ronaldinho",
+]);
 function formatCoins(value: number): string {
   return `${value.toLocaleString()} coins`;
 }
@@ -79,6 +81,7 @@ export function AvatarPicker({
       if (item.type !== "avatar") continue;
       if (isJerseyAvatarProduct(item)) continue;
       if (HIDDEN_PREMIUM_PROFILE_SLUGS.has(item.slug)) continue;
+      if (!VISIBLE_PREMIUM_PROFILE_SLUGS.has(item.slug)) continue;
       const avatarKey = getAvatarSeed(item);
       const avatarUrl = getAvatarImage(item, 96);
       const label = getAvatarLabel(item);
@@ -215,10 +218,10 @@ export function AvatarPicker({
                 onClick={() => onSelect(toPersistedAvatarUrl(url))}
                 disabled={isSaving}
               >
-                <div className="relative mx-auto size-12 rounded-full overflow-hidden border border-border bg-background">
-                  <Image src={url} alt={seed} fill sizes="48px" className="object-cover" unoptimized />
+                <div className="relative mx-auto size-16 rounded-full overflow-hidden border border-border bg-background">
+                  <Image src={url} alt={seed} fill sizes="64px" className="object-cover" unoptimized />
                 </div>
-                <div className="mt-1 text-[9px] font-medium text-muted-foreground capitalize truncate">
+                <div className="mt-1.5 text-[10px] font-medium text-muted-foreground capitalize truncate">
                   {seed.replace(/-/g, " ")}
                 </div>
                 {isSelected && (
@@ -258,15 +261,15 @@ export function AvatarPicker({
                 onClick={() => handlePremiumAvatarClick(premium.product.slug, avatarUrl)}
                 disabled={isSaving || checkoutMutation.isPending}
               >
-                <div className="relative mx-auto size-12 rounded-full overflow-hidden border border-border bg-background">
-                  <Image src={avatarUrl} alt={premium.label} fill sizes="48px" className="object-cover" unoptimized />
+                <div className="relative mx-auto size-16 rounded-full overflow-hidden border border-border bg-background">
+                  <Image src={avatarUrl} alt={premium.label} fill sizes="64px" className="object-cover" unoptimized />
                   {!isOwned ? (
                     <div className="absolute inset-0 bg-black/45 flex items-center justify-center">
                       <Lock className="size-3.5 text-white" />
                     </div>
                   ) : null}
                 </div>
-                <div className="mt-1 text-[9px] font-medium text-muted-foreground">
+                <div className="mt-1.5 text-[10px] font-medium text-muted-foreground">
                   {premium.label}
                 </div>
                 {isOwned && isSelected ? (
@@ -354,7 +357,7 @@ export function AvatarPicker({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[85dvh] overflow-y-auto border-border/50">
+      <DialogContent className="sm:max-w-2xl max-h-[85dvh] overflow-y-auto border-border/50">
         <DialogHeader>
           <DialogTitle className="text-lg font-bold">Profile Avatar</DialogTitle>
           <DialogDescription>Choose an avatar for your profile.</DialogDescription>

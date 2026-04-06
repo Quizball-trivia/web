@@ -10,10 +10,10 @@ import type { MatchStatsSummary } from '@/lib/domain';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 
 import { logger } from '@/utils/logger';
+import { colors } from '@/lib/colors';
 
-import { getTierVisual } from '@/utils/tierVisuals';
-import { getNextTierBand, getRankedTierBandsAscending, getRankedTierProgress, type RankedTier } from '@/utils/rankedTier';
-import { Trophy, Users, Flame, ClipboardList } from 'lucide-react';
+import { getNextTierBand } from '@/utils/rankedTier';
+import { ClipboardList } from 'lucide-react';
 
 
 function StadiumSilhouette() {
@@ -61,17 +61,10 @@ export function ModeSelectionScreen({
   const placementRequired = Math.max(1, rankedProfile?.placementRequired ?? 3);
   const placementMatchesLeft = Math.max(0, placementRequired - placementPlayed);
   const displayRp = isPlacementInProgress ? 0 : (rankedProfile?.rp ?? 0);
-  const tierVisual = rankedProfile ? getTierVisual(rankedProfile.tier) : getTierVisual('Academy');
   const rankedWinRate = Math.round(matchStatsSummary?.ranked.winRate ?? 0);
   const rankedGamesPlayed = matchStatsSummary?.ranked.gamesPlayed ?? 0;
-  const tierProgress = getRankedTierProgress(displayRp);
   const nextTierBand = getNextTierBand(displayRp);
   const nextTierTargetRp = nextTierBand?.minRp ?? null;
-  const nextTierFill = nextTierTargetRp ? Math.max(0, Math.min(100, Math.round((displayRp / nextTierTargetRp) * 100))) : 100;
-  const tierBandsAscending = getRankedTierBandsAscending();
-  const activeTier = (rankedProfile?.tier ?? tierProgress.tier) as RankedTier;
-  const currentTierIndex = tierBandsAscending.findIndex((band) => band.tier === activeTier);
-  const tiersLeftToMax = currentTierIndex === -1 ? 0 : Math.max(0, tierBandsAscending.length - currentTierIndex - 1);
   const router = useRouter();
 
   const handleConfirm = () => {
@@ -102,172 +95,68 @@ export function ModeSelectionScreen({
         }}
         role="button"
         tabIndex={0}
-        className="relative rounded-3xl bg-gradient-to-br from-[#1B3A25] via-[#1B2F36] to-[#1B2F36] border-b-4 border-[#0D1B21] overflow-hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#58CC02] active:border-b-2 active:translate-y-[2px] transition-all"
+        className="relative overflow-hidden rounded-[28px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 active:translate-y-[2px] transition-all"
+        style={{ backgroundColor: colors.green.base }}
       >
-  
-        <div className="relative z-10 p-4 md:p-6">
-          <div className="flex items-center justify-between mb-2 md:mb-4">
-            <div className="flex items-center gap-2 md:gap-3">
-              <div className="size-10 md:size-16 rounded-xl md:rounded-2xl bg-[#58CC02]/20 border-2 border-[#58CC02]/40 flex items-center justify-center">
-                <Trophy className="size-5 md:size-9 text-[#58CC02]" strokeWidth={2.5} />
-              </div>
-              <div>
-                <h1 className="text-lg md:text-3xl font-black text-white uppercase leading-tight">Ranked Match</h1>
-                <span className="text-[10px] md:text-sm font-bold text-[#58CC02] uppercase tracking-wider">
-                  {!rankedProfileLoading && isPlacementInProgress ? `Placement ${placementPlayed}/${placementRequired}` : '1v1 Competitive'}
-                </span>
+        <div className="relative z-10 p-5 md:p-7">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <h1 className="text-3xl md:text-5xl font-black uppercase leading-none text-white">Ranked Match</h1>
+              <div className="mt-2 inline-flex items-center px-2 py-1 text-sm md:text-lg font-black uppercase tracking-wide text-white/95">
+                {rankedProfileLoading
+                  ? '1v1 Competitive'
+                  : isPlacementInProgress
+                    ? `Placement ${placementPlayed}/${placementRequired}`
+                    : '1v1 Competitive'}
               </div>
             </div>
-            <div>
-              <span
-                className={cn(
-                  "px-8 py-3.5 md:px-14 md:py-5 rounded-2xl bg-[#58CC02] border-b-4 border-[#46A302] text-white font-black text-base md:text-xl inline-block pointer-events-none uppercase tracking-wide transition-all",
-                  isPlacementInProgress && "shadow-[0_0_12px_rgba(88,204,2,0.28)] animate-[pulse_4.5s_ease-in-out_infinite]"
-                )}
-              >
-                Play
-              </span>
+            <div className="hidden md:flex items-end">
+              <div className="text-3xl md:text-5xl font-black text-[#FFE500] drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]">
+                {displayRp}/{nextTierTargetRp ?? 600} RP
+              </div>
             </div>
           </div>
 
-          <p className="hidden md:block text-base text-white/80 font-semibold mb-4 max-w-xl">
-            Compete for Rank Points (RP) and climb the global leaderboards. Win to promote to higher divisions!
-          </p>
+          <div className="mt-5 md:mt-7 flex items-end justify-between gap-4">
+            <span
+              className="inline-flex min-w-[160px] justify-center rounded-2xl bg-black px-8 py-3 text-xl font-black uppercase tracking-wide text-white"
+            >
+              Play
+            </span>
+            <div className="text-right">
+              <div className="md:hidden text-xl font-black text-[#FFE500] drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]">
+                {displayRp}/{nextTierTargetRp ?? 600} RP
+              </div>
+              <div className="mt-1 text-[11px] md:text-sm font-black uppercase tracking-wide text-white">
+                {isPlacementInProgress
+                  ? `${placementMatchesLeft} match${placementMatchesLeft === 1 ? "" : "es"} to rank reveal`
+                  : nextTierBand
+                    ? `${Math.max(0, nextTierTargetRp! - displayRp)} RP to ${nextTierBand.tier}`
+                    : "Max rank reached"}
+              </div>
+            </div>
+          </div>
 
-          {!rankedProfileLoading && isPlacementInProgress && (
-            <div className="mb-2 rounded-lg border border-[#B483FF]/45 bg-[#B483FF]/10 px-3 py-1.5 shadow-[0_0_10px_rgba(180,131,255,0.22)] inline-flex">
-              <p className="text-[11px] md:text-xs font-black uppercase tracking-wide text-[#D8B8FF]">
-                Finish placements to unlock your rank
-              </p>
+          {!rankedProfileLoading && (
+            <div className="mt-4 text-right">
+              <div className="mt-1 text-[11px] md:text-xs font-black uppercase tracking-wide text-white/80">
+                {rankedWinRate}% win rate • {rankedGamesPlayed} ranked games
+              </div>
             </div>
           )}
-
-          <div className="flex gap-1.5 md:gap-3 mb-2 md:mb-4">
-            <span className="text-[10px] md:text-xs font-black px-2.5 md:px-4 py-1 md:py-2 rounded-full bg-white/10 border border-white/20 md:border-2 text-white/90">
-              ⚡ 1v1 Duel
-            </span>
-            <span className="text-[10px] md:text-xs font-black px-2.5 md:px-4 py-1 md:py-2 rounded-full bg-[#FFD700]/15 border border-[#FFD700]/30 md:border-2 text-[#FFD700]">
-              +10–45 RP / Win
-            </span>
-          </div>
-
-          {/* RP Progress + Stats */}
-          <div className="bg-[#131F24] rounded-xl md:rounded-2xl border-b-[3px] md:border-b-4 border-[#0D1B21] p-2.5 md:p-4">
-            {rankedProfileLoading ? (
-              <div className="space-y-2.5 animate-pulse">
-                <div className="flex items-center justify-between">
-                  <div className="h-4 w-36 bg-[#243B44] rounded" />
-                  <div className="h-3 w-20 bg-[#243B44] rounded" />
-                </div>
-                <div className="h-3 md:h-4 bg-[#243B44] rounded-full" />
-                <div className="flex items-center justify-between">
-                  <div className="flex gap-3">
-                    <div className="h-3 w-16 bg-[#243B44] rounded" />
-                    <div className="h-3 w-16 bg-[#243B44] rounded" />
-                  </div>
-                  <div className="h-6 w-12 bg-[#243B44] rounded" />
-                </div>
-              </div>
-            ) : (
-            <>
-            <div className="flex items-center justify-between mb-1.5 md:mb-2">
-              <div className="flex items-center gap-1.5 md:gap-2">
-                <span className={cn("text-sm md:text-base font-black", isPlacementInProgress ? "text-[#85E000]" : tierVisual.color)}>
-                  {isPlacementInProgress ? "UNRANKED (PLACEMENT)" : `${tierVisual.emoji} ${rankedProfile?.tier ?? 'Academy'}`}
-                </span>
-              </div>
-              <span className={cn(
-                "font-black",
-                isPlacementInProgress
-                  ? "text-sm md:text-base text-[#D8B8FF]"
-                  : "text-[10px] md:text-xs text-[#56707A]"
-              )}>
-                {isPlacementInProgress
-                  ? `${placementMatchesLeft} to rank reveal`
-                  : 'Competitive'}
-              </span>
-            </div>
-            <div className="relative h-3 md:h-4 bg-[#243B44] rounded-full overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${isPlacementInProgress ? (placementPlayed / placementRequired) * 100 : nextTierFill}%` }}
-                transition={{ duration: 1, ease: 'easeOut', delay: 0.3 }}
-                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#58CC02] to-[#85E000]"
-              >
-                <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/30 to-transparent h-1/2" />
-              </motion.div>
-            </div>
-            <div className="flex items-center justify-between mt-1.5 md:mt-2">
-              <div className="flex items-center gap-3 md:gap-4">
-                <span className="text-[10px] md:text-xs font-bold text-[#56707A]">🏆 <span className="text-[#2D8CBA] font-black">{rankedWinRate}%</span> win</span>
-                <span className="text-[10px] md:text-xs font-bold text-[#56707A]">🎯 <span className="text-[#9B7EC8] font-black">{rankedGamesPlayed}</span> games</span>
-              </div>
-              <div>
-                <span className="text-xl md:text-2xl font-black text-white">{displayRp}</span>
-                <span className="text-xs md:text-sm font-bold text-[#56707A] ml-1">RP</span>
-              </div>
-            </div>
-            {!isPlacementInProgress && (
-              <>
-                <div className="mt-2 flex items-center justify-between gap-3 text-[10px] md:text-xs font-black uppercase tracking-wide">
-                  <span className="text-[#85E000]">
-                    {nextTierTargetRp ? `${displayRp} / ${nextTierTargetRp} RP` : `${displayRp} / MAX RP`}
-                  </span>
-                  <span className="text-[#9EDB72] text-right">
-                    {nextTierBand
-                      ? `${Math.max(0, nextTierTargetRp! - displayRp)} RP to ${nextTierBand.tier}`
-                      : 'Max rank reached'}
-                  </span>
-                </div>
-                <div className="mt-2 space-y-1.5">
-                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-[#56707A]">Rank Road</span>
-                    <span className="text-[10px] font-black text-[#85E000] sm:text-right">
-                      {tiersLeftToMax === 0 ? '🐐 Max rank' : `${tiersLeftToMax} tier${tiersLeftToMax === 1 ? '' : 's'} to GOAT`}
-                    </span>
-                  </div>
-                  <div className="-mx-1 overflow-x-auto pb-1 scrollbar-hide">
-                    <div className="flex min-w-max gap-1 px-1">
-                    {tierBandsAscending.map((band) => {
-                      const isCurrent = band.tier === activeTier;
-                      const isUnlocked = displayRp >= band.minRp;
-                      return (
-                        <span
-                          key={band.tier}
-                          className={cn(
-                            'shrink-0 whitespace-nowrap rounded-lg border px-1.5 py-1 text-[8px] font-black transition-colors sm:px-2 sm:text-[9px]',
-                            isCurrent
-                              ? 'bg-[#58CC02]/20 border-[#85E000]/60 text-[#C8FF9A] shadow-[0_0_8px_rgba(133,224,0,0.25)]'
-                              : isUnlocked
-                                ? 'bg-white/[0.04] border-white/10 text-white/50'
-                                : 'bg-transparent border-[#243B44] text-[#56707A]'
-                          )}
-                        >
-                          {band.tier}
-                        </span>
-                      );
-                    })}
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-            </>
-            )}
-          </div>
           {process.env.NODE_ENV === 'development' && (
             <div className="flex flex-col items-start gap-1">
               <Link
                 href="/dev/match"
                 onClick={(e) => e.stopPropagation()}
-                className="mt-3 inline-block text-[10px] font-bold text-yellow-500/60 hover:text-yellow-400 transition-colors uppercase tracking-widest"
+                className="mt-3 inline-block text-[10px] font-bold text-[#0F3A00]/75 hover:text-[#0F3A00] transition-colors uppercase tracking-widest"
               >
                 Dev Quick Match →
               </Link>
               <Link
                 href="/dev/mock-match"
                 onClick={(e) => e.stopPropagation()}
-                className="inline-block text-[10px] font-bold text-yellow-500/60 hover:text-yellow-400 transition-colors uppercase tracking-widest"
+                className="inline-block text-[10px] font-bold text-[#0F3A00]/75 hover:text-[#0F3A00] transition-colors uppercase tracking-widest"
               >
                 New Ranked Dev →
               </Link>
@@ -292,24 +181,21 @@ export function ModeSelectionScreen({
               setSelectedMode('friendly');
             }
           }}
-          role="button"
-          tabIndex={0}
-          className="relative text-left bg-[#1B2F36] rounded-2xl border-b-4 border-[#0D1B21] p-4 md:p-6 hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1CB0F6] overflow-hidden"
-        >
-       
-          <div className="relative z-10">
-            <div className="size-11 md:size-14 rounded-xl bg-[#1CB0F6]/20 border-2 border-[#1CB0F6]/40 flex items-center justify-center mb-2 md:mb-3">
-              <Users className="size-6 md:size-7 text-[#1CB0F6]" strokeWidth={2.5} />
-            </div>
-            <h3 className="text-xl md:text-2xl font-black text-white mb-1 md:mb-2 uppercase">Friendly Match</h3>
-            <p className="text-xs md:text-sm text-[#56707A] font-semibold mb-3 md:mb-4">
-              👥 Create a private room or join a friend&apos;s game. No RP at stake.
-            </p>
-            <span className="px-5 py-2.5 md:px-6 md:py-3 rounded-2xl bg-[#1A7FA8] border-b-4 border-[#14627F] text-white font-black text-xs md:text-sm inline-block pointer-events-none uppercase">
-              Create / Join Room
+        role="button"
+        tabIndex={0}
+        className="relative cursor-pointer overflow-hidden rounded-[28px] p-5 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
+        style={{ backgroundColor: colors.yellow.base, color: "#000000" }}
+      >
+        <div className="relative z-10">
+          <h3 className="text-2xl md:text-4xl font-black uppercase leading-none text-black">Friendly Match</h3>
+          <p className="mt-2 text-sm md:text-lg font-black uppercase text-black">Create/Join Room</p>
+          <div className="mt-8">
+            <span className="inline-flex min-w-[160px] justify-center rounded-2xl bg-black px-8 py-3 text-xl font-black uppercase tracking-wide text-white pointer-events-none">
+              Play
             </span>
           </div>
         </div>
+      </div>
 
         {/* Daily Challenges */}
         <div
@@ -320,23 +206,21 @@ export function ModeSelectionScreen({
               router.push('/daily/challenges');
             }
           }}
-          role="button"
-          tabIndex={0}
-          className="relative text-left bg-[#1B2F36] rounded-2xl border-b-4 border-[#0D1B21] p-4 md:p-6 hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] overflow-hidden"
-        >
-          <div className="relative z-10">
-            <div className="size-11 md:size-14 rounded-xl bg-[#FFD700]/20 border-2 border-[#FFD700]/40 flex items-center justify-center mb-2 md:mb-3">
-              <Flame className="size-6 md:size-7 text-[#FFD700]" strokeWidth={2.5} />
-            </div>
-            <h3 className="text-xl md:text-2xl font-black text-white mb-1 md:mb-2 uppercase">Daily Challenges</h3>
-            <p className="text-xs md:text-sm text-[#56707A] font-semibold mb-3 md:mb-4">
-              🔥 Complete daily tasks to earn coins and XP. Resets every day.
-            </p>
-            <span className="px-5 py-2.5 md:px-6 md:py-3 rounded-2xl bg-[#C9A800] border-b-4 border-[#9A8000] text-white font-black text-xs md:text-sm inline-block pointer-events-none uppercase">
-              View Challenges
+        role="button"
+        tabIndex={0}
+        className="relative cursor-pointer overflow-hidden rounded-[28px] p-5 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
+        style={{ backgroundColor: colors.blue.brand }}
+      >
+        <div className="relative z-10">
+          <h3 className="text-2xl md:text-4xl font-black uppercase leading-none text-white">Daily Challenge</h3>
+          <p className="mt-2 text-sm md:text-lg font-black uppercase text-white">View Challenges</p>
+          <div className="mt-8">
+            <span className="inline-flex min-w-[160px] justify-center rounded-2xl bg-black px-8 py-3 text-xl font-black uppercase tracking-wide text-white pointer-events-none">
+              Play
             </span>
           </div>
         </div>
+      </div>
       </motion.div>
 
       {/* ─── 3. Objectives ─── */}

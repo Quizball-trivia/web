@@ -8,6 +8,11 @@ export const metadata: Metadata = {
   title: "QuizBall",
   description: "QuizBall",
   robots: "noindex, nofollow",
+  icons: {
+    icon: "/assets/brand/quziball-logo-2.png",
+    shortcut: "/assets/brand/quziball-logo-2.png",
+    apple: "/assets/brand/quziball-logo-2.png",
+  },
 };
 
 export default function RootLayout({

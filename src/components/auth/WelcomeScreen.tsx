@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FcGoogle } from 'react-icons/fc';
@@ -70,11 +70,13 @@ const EXCLUDED_SLUGS = new Set([
 
 // Main categories to feature on the landing page (matched by slug or name substring)
 const FEATURED_NAMES = [
-  "champions league", "world cup", "premier league", "la liga",
-  "bundesliga", "serie a", "ligue 1", "league 1",
-  "uefa euro", "euro",
-  "serie a", "legends", "national team",
-  "transfer",
+  "champions league",
+  "world cup",
+  "premier league",
+  "la liga",
+  "bundesliga",
+  "league 1",
+  "uefa euro",
 ];
 
 // Fallback colors for categories not in the mapping
@@ -206,8 +208,12 @@ export function WelcomeScreen() {
   const featuredCategories: typeof allCategories = [];
   const used = new Set<string>();
   for (const search of FEATURED_NAMES) {
-    const match = allCategories.find(
-      (c) => !used.has(c.id) && c.name.toLowerCase().includes(search)
+    const normalizedSearch = search.toLowerCase();
+    const exactMatch = allCategories.find(
+      (c) => !used.has(c.id) && c.name.toLowerCase() === normalizedSearch
+    );
+    const match = exactMatch ?? allCategories.find(
+      (c) => !used.has(c.id) && c.name.toLowerCase().includes(normalizedSearch)
     );
     if (match && !used.has(match.id)) {
       featuredCategories.push(match);
@@ -255,7 +261,6 @@ export function WelcomeScreen() {
 
   return (
     <div className="min-h-screen w-full bg-[#071013] font-sans text-foreground flex flex-col overflow-x-hidden">
-
       {/* ── Navbar ── */}
       <header className="flex h-16 md:h-20 items-center justify-between px-6 md:px-12 lg:px-20 shrink-0 bg-[#071013]/80 backdrop-blur-md sticky top-0 z-50">
         <AppLogo size="md" className="!justify-start" />
@@ -556,38 +561,46 @@ export function WelcomeScreen() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.04 }}
-                    className="group relative cursor-pointer overflow-hidden rounded-2xl border border-white/10 p-4 md:p-5 transition-all duration-200 hover:scale-[1.04] hover:-translate-y-1 hover:brightness-110 hover:border-white/20 hover:shadow-[0_8px_32px_rgba(0,0,0,0.35)]"
+                    className="group relative min-h-[124px] md:min-h-[138px] cursor-pointer overflow-hidden rounded-2xl border border-white/10 p-4 md:p-5 transition-all duration-200 hover:scale-[1.04] hover:-translate-y-1 hover:brightness-110 hover:border-white/20 hover:shadow-[0_8px_32px_rgba(0,0,0,0.35)]"
                     style={{ backgroundColor: style.color }}
                     onClick={() => setLoginOpen(true)}
                   >
+                    {cat.imageUrl ? (
+                      <>
+                        <Image
+                          src={cat.imageUrl}
+                          alt=""
+                          fill
+                          unoptimized
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/30 to-transparent" />
+                      </>
+                    ) : null}
+
                     {/* Watermark: flag, image, or icon */}
-                    {style.flag ? (
+                    {!cat.imageUrl && style.flag ? (
                       <Image
                         src={`https://flagcdn.com/w160/${style.flag}.png`}
                         alt=""
                         width={160}
                         height={120}
-                        className="absolute -bottom-2 -right-2 w-20 md:w-24 opacity-[0.18] pointer-events-none rounded-sm"
+                        className="absolute -bottom-2 -right-2 w-20 md:w-24 opacity-[0.14] pointer-events-none rounded-sm"
                       />
-                    ) : style.watermarkImg ? (
+                    ) : !cat.imageUrl && style.watermarkImg ? (
                       <Image
                         src={style.watermarkImg}
                         alt=""
                         width={120}
                         height={120}
-                        className="absolute -bottom-2 -right-2 size-20 md:size-24 opacity-[0.18] pointer-events-none object-contain"
+                        className="absolute -bottom-2 -right-2 size-20 md:size-24 opacity-[0.14] pointer-events-none object-contain"
                       />
-                    ) : (
-                      <IconComponent className="absolute -bottom-3 -right-3 size-24 md:size-28 opacity-[0.12] text-white pointer-events-none" />
-                    )}
-
-                    {/* Small icon */}
-                    <div className="relative flex size-11 md:size-12 items-center justify-center rounded-xl mb-3 bg-white/20 text-white transition-transform duration-200 group-hover:scale-110">
-                      <IconComponent className="size-5 md:size-6" />
-                    </div>
+                    ) : !cat.imageUrl ? (
+                      <IconComponent className="absolute -bottom-3 -right-3 size-24 md:size-28 opacity-[0.1] text-white pointer-events-none" />
+                    ) : null}
 
                     {/* Name */}
-                    <div className="relative text-sm md:text-base font-black uppercase tracking-wide leading-tight text-white">
+                    <div className="relative z-10 mt-auto text-left text-sm md:text-base font-black uppercase tracking-wide leading-tight text-white drop-shadow-[0_2px_14px_rgba(0,0,0,0.45)]">
                       {cat.name}
                     </div>
                   </motion.button>
@@ -798,14 +811,27 @@ export function WelcomeScreen() {
                     key={cat.id}
                     type="button"
                     aria-label={`Open ${cat.name}`}
-                    className="group cursor-pointer overflow-hidden rounded-xl border border-white/10 px-3 py-2.5 flex items-center gap-2.5 transition-all duration-200 hover:brightness-110 hover:border-white/20"
+                    className="group relative cursor-pointer overflow-hidden rounded-xl border border-white/10 px-3 py-2.5 flex items-center gap-2.5 transition-all duration-200 hover:brightness-110 hover:border-white/20"
                     style={{ backgroundColor: style.color }}
                     onClick={() => { setCategoriesOpen(false); setLoginOpen(true); }}
                   >
-                    <div className="flex size-8 items-center justify-center rounded-lg bg-white/20 text-white shrink-0">
+                    {cat.imageUrl ? (
+                      <>
+                        <Image
+                          src={cat.imageUrl}
+                          alt=""
+                          fill
+                          unoptimized
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-black/42 via-black/28 to-black/55" />
+                      </>
+                    ) : null}
+
+                    <div className="relative z-10 flex size-8 items-center justify-center rounded-lg border border-white/20 bg-white/12 text-white shrink-0 backdrop-blur-md">
                       <IconComponent className="size-4" />
                     </div>
-                    <span className="text-xs md:text-sm font-bold text-white leading-tight">
+                    <span className="relative z-10 text-xs md:text-sm font-bold text-white leading-tight">
                       {cat.name}
                     </span>
                   </motion.button>
