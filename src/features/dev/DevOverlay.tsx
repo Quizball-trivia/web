@@ -76,12 +76,20 @@ export function DevOverlay() {
         <SkipBtn label="New Ranked Dev" onClick={() => router.push('/dev/mock-match')} color="bg-[#CE82FF]" />
       </div>
 
+      {/* Goal Sequence — full celebration test */}
+      <div className="p-3 border-t border-[#2a4a55]">
+        <div className="mb-2 text-[10px] font-black text-[#8FB7C5] uppercase tracking-wider">Goal Sequence</div>
+        <div className="grid grid-cols-2 gap-2">
+          <SkipBtn label="⚽ My Goal" onClick={() => triggerAnim('goal', 'me')} color="bg-[#FFE500] !text-black" />
+          <SkipBtn label="⚽ Opp Goal" onClick={() => triggerAnim('goal', 'opp')} color="bg-[#FFE500] !text-black" />
+        </div>
+        <p className="mt-1.5 text-[9px] text-[#56707A]">Triggers full shot → celebration → sound (7s)</p>
+      </div>
+
       {/* Animation Triggers */}
       <div className="p-3 border-t border-[#2a4a55]">
         <div className="mb-2 text-[10px] font-black text-[#8FB7C5] uppercase tracking-wider">Animations</div>
         <div className="grid grid-cols-2 gap-2">
-          <SkipBtn label="My Goal" onClick={() => triggerAnim('goal', 'me')} color="bg-[#58CC02]" />
-          <SkipBtn label="Opp Goal" onClick={() => triggerAnim('goal', 'opp')} color="bg-[#3A8A11]" />
           <SkipBtn label="My Saved" onClick={() => triggerAnim('saved', 'me')} color="bg-[#1CB0F6]" />
           <SkipBtn label="Opp Saved" onClick={() => triggerAnim('saved', 'opp')} color="bg-[#0A8BC5]" />
           <SkipBtn label="My Miss" onClick={() => triggerAnim('miss', 'me')} color="bg-[#FF9600]" />

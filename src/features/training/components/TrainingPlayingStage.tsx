@@ -99,7 +99,7 @@ export function TrainingPlayingStage() {
     if (state.showGoalCelebration && !tooltips.isPaused) {
       const timer = setTimeout(() => {
         match.continueAfterPhase();
-      }, 3000);
+      }, 7000);
       return () => clearTimeout(timer);
     }
   }, [state.showGoalCelebration, tooltips.isPaused, match]);
@@ -143,7 +143,7 @@ export function TrainingPlayingStage() {
 
         {/* LEFT: Portrait pitch — desktop only */}
         <div className="hidden lg:flex lg:w-[42%] lg:items-center lg:py-4 relative">
-          <div className="h-full w-full max-h-[calc(100dvh-2rem)]">
+          <div className="h-full w-full max-h-[calc(100dvh-2rem)] relative">
             <PitchVisualization
               playerPosition={state.playerPosition}
               playerAvatarUrl={playerAvatar}
@@ -156,6 +156,14 @@ export function TrainingPlayingStage() {
               mirrored={state.half === 2}
               orientation="portrait"
             />
+            <AnimatePresence>
+              {state.showGoalCelebration && (
+                <GoalCelebrationOverlay
+                  scorerName={state.goalScorerIsPlayer ? playerName : BOT_NAME}
+                  isMeScorer={state.goalScorerIsPlayer}
+                />
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
@@ -180,7 +188,7 @@ export function TrainingPlayingStage() {
           />
 
           {/* Mobile landscape pitch — hidden on desktop */}
-          <div className="lg:hidden">
+          <div className="lg:hidden relative">
             <PitchVisualization
               playerPosition={state.playerPosition}
               playerAvatarUrl={playerAvatar}
@@ -193,6 +201,14 @@ export function TrainingPlayingStage() {
               mirrored={state.half === 2}
               orientation="landscape"
             />
+            <AnimatePresence>
+              {state.showGoalCelebration && (
+                <GoalCelebrationOverlay
+                  scorerName={state.goalScorerIsPlayer ? playerName : BOT_NAME}
+                  isMeScorer={state.goalScorerIsPlayer}
+                />
+              )}
+            </AnimatePresence>
           </div>
 
           <PossessionFeed
@@ -219,15 +235,7 @@ export function TrainingPlayingStage() {
         </div>
       </div>
 
-      {/* Goal celebration overlay */}
-      <AnimatePresence>
-        {state.showGoalCelebration && (
-          <GoalCelebrationOverlay
-            scorerName={state.goalScorerIsPlayer ? playerName : BOT_NAME}
-            isMeScorer={state.goalScorerIsPlayer}
-          />
-        )}
-      </AnimatePresence>
+      {/* Goal celebration overlay — rendered inside pitch containers above */}
     </div>
   );
 }

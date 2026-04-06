@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { motion } from 'motion/react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ModeConfirmModal } from '@/components/shared/ModeConfirmModal';
@@ -76,7 +77,7 @@ export function ModeSelectionScreen({
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-3 py-4 space-y-4 md:px-4 md:py-6 md:space-y-5 font-fun">
+    <div className="max-w-5xl mx-auto px-4 py-4 space-y-4 md:py-6 md:space-y-5 font-fun">
 
       {/* ─── 1. Ranked Hero Card ─── */}
       <motion.div
@@ -98,11 +99,20 @@ export function ModeSelectionScreen({
         className="relative overflow-hidden rounded-[28px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 active:translate-y-[2px] transition-all"
         style={{ backgroundColor: colors.green.base }}
       >
+        {/* Cup icon */}
+        <Image
+          src="/assets/brand/cup.png"
+          alt=""
+          width={160}
+          height={160}
+          className="absolute right-2 bottom-2 w-16 h-16 md:w-40 md:h-40 object-contain opacity-90 pointer-events-none"
+        />
         <div className="relative z-10 p-5 md:p-7">
-          <div className="flex items-start justify-between gap-4">
+          {/* Desktop top row */}
+          <div className="hidden md:flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <h1 className="text-3xl md:text-5xl font-black uppercase leading-none text-white">Ranked Match</h1>
-              <div className="mt-2 inline-flex items-center px-2 py-1 text-sm md:text-lg font-black uppercase tracking-wide text-white/95">
+              <h1 className="text-5xl font-black uppercase leading-none text-white">Ranked Match</h1>
+              <div className="mt-2 text-lg font-black uppercase tracking-wide text-white/95">
                 {rankedProfileLoading
                   ? '1v1 Competitive'
                   : isPlacementInProgress
@@ -110,46 +120,59 @@ export function ModeSelectionScreen({
                     : '1v1 Competitive'}
               </div>
             </div>
-            <div className="hidden md:flex items-end">
-              <div className="text-3xl md:text-5xl font-black text-[#FFE500] drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]">
-                {displayRp}/{nextTierTargetRp ?? 600} RP
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-5 md:mt-7 flex items-end justify-between gap-4">
-            <span
-              className="inline-flex min-w-[160px] justify-center rounded-2xl bg-black px-8 py-3 text-xl font-black uppercase tracking-wide text-white"
-            >
-              Play
-            </span>
             <div className="text-right">
-              <div className="md:hidden text-xl font-black text-[#FFE500] drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]">
+              <div className="text-5xl font-black text-[#FFE500] drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]">
                 {displayRp}/{nextTierTargetRp ?? 600} RP
               </div>
-              <div className="mt-1 text-[11px] md:text-sm font-black uppercase tracking-wide text-white">
+              <div className="mt-0.5 text-sm font-black uppercase tracking-wide text-white">
                 {isPlacementInProgress
                   ? `${placementMatchesLeft} match${placementMatchesLeft === 1 ? "" : "es"} to rank reveal`
                   : nextTierBand
                     ? `${Math.max(0, nextTierTargetRp! - displayRp)} RP to ${nextTierBand.tier}`
                     : "Max rank reached"}
               </div>
+              {!rankedProfileLoading && (
+                <div className="mt-0.5 text-xs font-black uppercase tracking-wide text-white/80">
+                  {rankedWinRate}% win rate • {rankedGamesPlayed} ranked games
+                </div>
+              )}
             </div>
           </div>
 
-          {!rankedProfileLoading && (
-            <div className="mt-4 text-right">
-              <div className="mt-1 text-[11px] md:text-xs font-black uppercase tracking-wide text-white/80">
+          {/* Mobile top section */}
+          <div className="md:hidden">
+            <h1 className="text-2xl font-black uppercase leading-none text-white">Ranked Match</h1>
+            <div className="mt-1 text-xs font-black uppercase tracking-wide text-white/95">
+              {rankedProfileLoading
+                ? '1v1 Competitive'
+                : isPlacementInProgress
+                  ? `Placement ${placementPlayed}/${placementRequired}`
+                  : '1v1 Competitive'}
+            </div>
+            <div className="mt-1.5 text-lg font-black text-[#FFE500] drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]">
+              {displayRp}/{nextTierTargetRp ?? 600} RP
+            </div>
+            <div className="mt-0.5 text-[10px] font-black uppercase tracking-wide text-white">
+              {isPlacementInProgress
+                ? `${placementMatchesLeft} match${placementMatchesLeft === 1 ? "" : "es"} to rank reveal`
+                : nextTierBand
+                  ? `${Math.max(0, nextTierTargetRp! - displayRp)} RP to ${nextTierBand.tier}`
+                  : "Max rank reached"}
+            </div>
+            {!rankedProfileLoading && (
+              <div className="mt-0.5 text-[10px] font-black uppercase tracking-wide text-white/80">
                 {rankedWinRate}% win rate • {rankedGamesPlayed} ranked games
               </div>
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* Desktop: dev links */}
           {process.env.NODE_ENV === 'development' && (
-            <div className="flex flex-col items-start gap-1">
+            <div className="hidden md:flex flex-col items-start gap-1 mt-3">
               <Link
                 href="/dev/match"
                 onClick={(e) => e.stopPropagation()}
-                className="mt-3 inline-block text-[10px] font-bold text-[#0F3A00]/75 hover:text-[#0F3A00] transition-colors uppercase tracking-widest"
+                className="inline-block text-[10px] font-bold text-[#0F3A00]/75 hover:text-[#0F3A00] transition-colors uppercase tracking-widest"
               >
                 Dev Quick Match →
               </Link>
@@ -162,6 +185,14 @@ export function ModeSelectionScreen({
               </Link>
             </div>
           )}
+
+          <div className="mt-3 md:mt-7">
+            <div
+              className="flex w-[calc(50%-8px)] items-center justify-center rounded-2xl md:rounded-3xl bg-black h-[48px] md:h-[112px] text-sm md:text-2xl font-black uppercase tracking-wide text-white"
+            >
+              Play
+            </div>
+          </div>
         </div>
       </motion.div>
 
@@ -170,7 +201,7 @@ export function ModeSelectionScreen({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="grid grid-cols-1 md:grid-cols-2 gap-3"
+        className="grid grid-cols-2 gap-4"
       >
         {/* Friendly */}
         <div
@@ -183,16 +214,29 @@ export function ModeSelectionScreen({
           }}
         role="button"
         tabIndex={0}
-        className="relative cursor-pointer overflow-hidden rounded-[28px] p-5 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
-        style={{ backgroundColor: colors.yellow.base, color: "#000000" }}
+        className="relative cursor-pointer overflow-hidden rounded-[20px] md:rounded-[28px] p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
+        style={{ backgroundColor: colors.blue.brand }}
       >
-        <div className="relative z-10">
-          <h3 className="text-2xl md:text-4xl font-black uppercase leading-none text-black">Friendly Match</h3>
-          <p className="mt-2 text-sm md:text-lg font-black uppercase text-black">Create/Join Room</p>
-          <div className="mt-8">
-            <span className="inline-flex min-w-[160px] justify-center rounded-2xl bg-black px-8 py-3 text-xl font-black uppercase tracking-wide text-white pointer-events-none">
-              Play
-            </span>
+        <div className="relative z-10 flex flex-col h-full">
+          <h3 className="text-base md:text-4xl font-black uppercase leading-tight text-white">Friendly Match</h3>
+          <p className="mt-0.5 md:mt-2 text-[10px] md:text-lg font-black uppercase text-white/70">Create/Join Room</p>
+          <div className="mt-auto pt-2 md:pt-6">
+            <div className="flex items-center justify-between rounded-xl md:rounded-3xl bg-black border-[3px] border-blue-400 px-2.5 py-1.5 md:px-5 md:py-4">
+              <Image
+                src="/assets/brand/friend.png"
+                alt=""
+                width={120}
+                height={120}
+                className="w-9 h-9 md:w-20 md:h-20 object-contain"
+              />
+              <Image
+                src="/assets/brand/play-blue.png"
+                alt="Play"
+                width={56}
+                height={56}
+                className="w-7 h-7 md:w-14 md:h-14 object-contain"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -208,16 +252,29 @@ export function ModeSelectionScreen({
           }}
         role="button"
         tabIndex={0}
-        className="relative cursor-pointer overflow-hidden rounded-[28px] p-5 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
-        style={{ backgroundColor: colors.blue.brand }}
+        className="relative cursor-pointer overflow-hidden rounded-[20px] md:rounded-[28px] p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
+        style={{ backgroundColor: colors.yellow.base, color: "#000000" }}
       >
-        <div className="relative z-10">
-          <h3 className="text-2xl md:text-4xl font-black uppercase leading-none text-white">Daily Challenge</h3>
-          <p className="mt-2 text-sm md:text-lg font-black uppercase text-white">View Challenges</p>
-          <div className="mt-8">
-            <span className="inline-flex min-w-[160px] justify-center rounded-2xl bg-black px-8 py-3 text-xl font-black uppercase tracking-wide text-white pointer-events-none">
-              Play
-            </span>
+        <div className="relative z-10 flex flex-col h-full">
+          <h3 className="text-base md:text-4xl font-black uppercase leading-tight text-black">Daily Challenge</h3>
+          <p className="mt-0.5 md:mt-2 text-[10px] md:text-lg font-black uppercase text-black/70">View Challenges</p>
+          <div className="mt-auto pt-2 md:pt-6">
+            <div className="flex items-center justify-between rounded-xl md:rounded-3xl bg-black border-[3px] border-yellow-400 px-2.5 py-1.5 md:px-5 md:py-4">
+              <Image
+                src="/assets/brand/daily-challenge.png"
+                alt=""
+                width={120}
+                height={120}
+                className="w-9 h-9 md:w-20 md:h-20 object-contain"
+              />
+              <Image
+                src="/assets/brand/play-yellow.png"
+                alt="Play"
+                width={56}
+                height={56}
+                className="w-7 h-7 md:w-14 md:h-14 object-contain"
+              />
+            </div>
           </div>
         </div>
       </div>

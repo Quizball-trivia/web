@@ -259,7 +259,20 @@ export function RealtimePossessionMatchScreen({
   useEffect(() => {
     if (!devPossessionAnimation) return;
     playSfx('kick');
-  }, [devPossessionAnimation, playSfx]);
+
+    // Dev goal: trigger the full GoalCelebrationOverlay after a short delay (let ball animate first)
+    if (devPossessionAnimation.result === 'goal') {
+      const seat = match?.mySeat;
+      const celebrationTimer = setTimeout(() => {
+        const isMeScorer = devPossessionAnimation.attackerSeat === seat;
+        setGoalCelebration({
+          scorerName: isMeScorer ? playerUsername : opponentUsername,
+          isMeScorer,
+        });
+      }, 800);
+      return () => clearTimeout(celebrationTimer);
+    }
+  }, [devPossessionAnimation, playSfx, match?.mySeat, playerUsername, opponentUsername]);
 
   useEffect(() => {
     if (!match?.matchId || !possessionState) return;
@@ -322,7 +335,8 @@ export function RealtimePossessionMatchScreen({
 
   useEffect(() => {
     if (!devPossessionAnimation) return;
-    const holdMs = devPossessionAnimation.result === 'goal' ? 2000 : 1500;
+    // For goals, keep the shot visual active for the full celebration duration
+    const holdMs = devPossessionAnimation.result === 'goal' ? 7500 : 1500;
     const timer = setTimeout(() => clearDevPossessionAnimation(), holdMs);
     return () => clearTimeout(timer);
   }, [clearDevPossessionAnimation, devPossessionAnimation]);
@@ -382,7 +396,7 @@ export function RealtimePossessionMatchScreen({
     goalCelebrationHideTimerRef.current = setTimeout(() => {
       setGoalCelebration(null);
       goalCelebrationHideTimerRef.current = null;
-    }, 2500);
+    }, 7000);
 
     return () => {
       if (goalCelebrationHideTimerRef.current) {
@@ -1242,8 +1256,17 @@ export function RealtimePossessionMatchScreen({
         {/* LEFT: Portrait pitch — desktop only */}
         {showMainUI && (
           <div className="hidden lg:flex lg:w-[42%] lg:items-center lg:py-4 relative">
-            <div className="h-full w-full max-h-[calc(100dvh-2rem)]">
+            <div className="h-full w-full max-h-[calc(100dvh-2rem)] relative">
               <PitchVisualization {...pitchProps} orientation="portrait" />
+              <AnimatePresence>
+                {goalCelebration && (
+                  <GoalCelebrationOverlay
+                    scorerName={goalCelebration.scorerName}
+                    isMeScorer={goalCelebration.isMeScorer}
+                    muted={muted}
+                  />
+                )}
+              </AnimatePresence>
             </div>
             {/* Penalty splash overlay — desktop (inside pitch panel) */}
             <AnimatePresence>{penaltySplash}</AnimatePresence>
@@ -1308,8 +1331,17 @@ export function RealtimePossessionMatchScreen({
               )}
 
               {/* Mobile landscape pitch — hidden on desktop */}
-              <div className="lg:hidden">
+              <div className="lg:hidden relative">
                 <PitchVisualization {...pitchProps} orientation="landscape" />
+                <AnimatePresence>
+                  {goalCelebration && (
+                    <GoalCelebrationOverlay
+                      scorerName={goalCelebration.scorerName}
+                      isMeScorer={goalCelebration.isMeScorer}
+                      muted={muted}
+                    />
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Penalty result splash overlay — mobile only (absolute over column) */}
@@ -1400,15 +1432,7 @@ export function RealtimePossessionMatchScreen({
 
       </div>
 
-      {/* Goal celebration overlay */}
-      <AnimatePresence>
-        {goalCelebration && (
-          <GoalCelebrationOverlay
-            scorerName={goalCelebration.scorerName}
-            isMeScorer={goalCelebration.isMeScorer}
-          />
-        )}
-      </AnimatePresence>
+      {/* Goal celebration overlay — rendered inside pitch containers above */}
 
       <QuitMatchModal
         open={showQuitModal}

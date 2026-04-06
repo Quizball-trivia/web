@@ -392,14 +392,9 @@ export function PitchVisualization({
           className={isPortrait ? 'w-full h-full' : 'w-full h-auto'}
         >
           <defs>
-            <linearGradient id={uid('pitchGrad')} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#1e5c32" />
-              <stop offset="50%" stopColor="#1a472a" />
-              <stop offset="100%" stopColor="#143820" />
-            </linearGradient>
-            <pattern id={uid('grassStripes')} x="0" y="0" width="60" height="230" patternUnits="userSpaceOnUse">
-              <rect x="0" y="0" width="30" height="230" fill="rgba(255,255,255,0.015)" />
-            </pattern>
+            <clipPath id={uid('fieldClip')}>
+              <rect x="0" y="0" width="500" height="230" rx="12" />
+            </clipPath>
             <filter id={uid('blueGlow')} x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="4" result="blur" />
               <feFlood floodColor="#1CB0F6" floodOpacity="0.5" result="color" />
@@ -436,9 +431,8 @@ export function PitchVisualization({
               Animations operate in local coord space, parent transform maps to viewport. */}
           <g transform={isPortrait ? 'matrix(0,-1,1,0,0,500)' : undefined}>
 
-          {/* Field background */}
-          <rect x="0" y="0" width="500" height="230" rx="12" fill={`url(#${uid('pitchGrad')})`} />
-          <rect x="0" y="0" width="500" height="230" rx="12" fill={`url(#${uid('grassStripes')})`} />
+          {/* Field background — stadium image */}
+          <image href="/assets/stadium-green.png" x="0" y="0" width="500" height="230" preserveAspectRatio="none" clipPath={`url(#${uid('fieldClip')})`} />
 
           {/* Zone bands — hidden during penalties */}
           {!isPenalty && (
@@ -449,25 +443,7 @@ export function PitchVisualization({
             </>
           )}
 
-          {/* Pitch markings */}
-          <rect x="15" y="15" width="470" height="200" rx="4" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
-          <line x1="250" y1="15" x2="250" y2="215" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
-          <circle cx="250" cy="115" r="35" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
-          <circle cx="250" cy="115" r="3" fill="rgba(255,255,255,0.2)" />
-
-          {/* Left penalty box */}
-          <rect x="15" y="50" width="65" height="130" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1.2" rx="2" />
-          <rect x="15" y="75" width="28" height="80" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1.2" rx="2" />
-          <rect x="6" y="92" width="9" height="46" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2" rx="2" />
-
-          {/* Right penalty box */}
-          <rect x="420" y="50" width="65" height="130" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1.2" rx="2" />
-          <rect x="457" y="75" width="28" height="80" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1.2" rx="2" />
-          <rect x="485" y="92" width="9" height="46" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2" rx="2" />
-
-          {/* Penalty spots */}
-          <circle cx="60" cy="115" r="2" fill="rgba(255,255,255,0.15)" />
-          <circle cx="440" cy="115" r="2" fill="rgba(255,255,255,0.15)" />
+          {/* Pitch markings removed — stadium-green.png has its own lines */}
 
 
           {/* === Player avatars — ONLY shown during shots and penalties === */}

@@ -450,37 +450,8 @@ export function AppShell({ children }: AppShellProps) {
       <div className="flex flex-col min-h-screen md:hidden">
         {/* Header */}
         {showHeader && (
-          <div className="border-b bg-card">
+          <div>
             <div className="px-4 py-4 bg-background">
-              {showLobbyDebug && (
-                <div
-                  className={cn(
-                    "mb-3 flex items-center gap-2 rounded-lg border px-3 py-2 text-[10px] font-semibold",
-                    lobbyDebugMismatch
-                      ? "border-amber-500/40 bg-amber-500/15 text-amber-300"
-                      : "border-slate-500/40 bg-slate-500/15 text-slate-200"
-                  )}
-                >
-                  <span>LobbyDbg</span>
-                  <span>local:{localWaitingLobbyId ? localWaitingLobbyId.slice(0, 6) : "-"}</span>
-                  <span>session:{sessionWaitingLobbyId ? sessionWaitingLobbyId.slice(0, 6) : "-"}</span>
-                  <span>state:{sessionStateLabel}</span>
-                  <span>
-                    loc:{rankedGeoHintDebug?.city ?? "-"},
-                    {rankedGeoHintDebug?.countryCode ?? rankedGeoHintDebug?.country ?? "-"}
-                  </span>
-                  <span>
-                    ll:
-                    {typeof rankedGeoHintDebug?.latitude === "number"
-                      ? rankedGeoHintDebug.latitude.toFixed(2)
-                      : "-"},
-                    {typeof rankedGeoHintDebug?.longitude === "number"
-                      ? rankedGeoHintDebug.longitude.toFixed(2)
-                      : "-"}
-                  </span>
-                  <span>src:{rankedGeoHintDebug?.source ?? "-"}</span>
-                </div>
-              )}
               <div className="flex items-center justify-between mb-3 relative">
                 <div className="flex items-center gap-2 z-10">
                   {currentPath === "/" ? (
@@ -503,7 +474,7 @@ export function AppShell({ children }: AppShellProps) {
                       </div>
                     </Link>
                   ) : (
-                    <AppLogo size="sm" iconOnly />
+                    <AppLogo size="md" iconOnly />
                   )}
                 </div>
 

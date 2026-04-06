@@ -51,9 +51,9 @@ export function PossessionHUD({
       {/* Player strip — matching MatchScoreHUD style */}
       <div className="flex items-center justify-between gap-3 px-3">
         {/* Player side */}
-        <div className="flex items-center gap-3 flex-1 min-w-0 rounded-2xl bg-[#172333]/85 border border-white/10 px-3 py-2.5">
-          <Avatar className="size-11 border-2 border-[#1CB0F6] shrink-0">
-            <AvatarImage src={playerAvatarUrl} />
+        <div className="flex items-center gap-3 flex-1 min-w-0 rounded-2xl px-3 py-2.5">
+          <Avatar className="size-12 shrink-0">
+            <AvatarImage src={playerAvatarUrl} className="object-cover" />
             <AvatarFallback className="text-xs font-bold bg-[#1CB0F6]/20 text-[#1CB0F6]">
               {playerName.slice(0, 2).toUpperCase()}
             </AvatarFallback>
@@ -86,12 +86,7 @@ export function PossessionHUD({
         </div>
 
         {/* Opponent side */}
-        <div className={cn(
-          "flex items-center gap-3 flex-1 min-w-0 justify-end rounded-2xl bg-[#172333]/85 border px-3 py-2.5 transition-colors duration-300",
-          opponentAnswered && opponentAnsweredCorrectly === true ? 'border-[#58CC02]/60' :
-          opponentAnswered && opponentAnsweredCorrectly === false ? 'border-[#FF4B4B]/60' :
-          'border-white/10'
-        )}>
+        <div className="flex items-center gap-3 flex-1 min-w-0 justify-end rounded-2xl px-3 py-2.5">
           <div className="min-w-0 text-right">
             <div className="text-xs font-bold text-white/85 truncate max-w-[100px] ml-auto">{opponentName}</div>
             <AnimatePresence mode="wait">
@@ -128,13 +123,8 @@ export function PossessionHUD({
               accentClassName="text-[#FF4B4B]"
             />
           </div>
-          <Avatar className={cn(
-            "size-11 border-2 transition-colors duration-300",
-            opponentAnswered && opponentAnsweredCorrectly === true ? 'border-[#58CC02]' :
-            opponentAnswered && opponentAnsweredCorrectly === false ? 'border-[#FF4B4B]' :
-            'border-[#FF4B4B]'
-          )}>
-            <AvatarImage src={opponentAvatarUrl} />
+          <Avatar className="size-12">
+            <AvatarImage src={opponentAvatarUrl} className="object-cover" />
             <AvatarFallback className="text-xs font-bold bg-[#FF4B4B]/20 text-[#FF4B4B]">
               {opponentName.slice(0, 2).toUpperCase()}
             </AvatarFallback>
