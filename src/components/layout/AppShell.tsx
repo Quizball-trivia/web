@@ -11,9 +11,9 @@ import { useGameSessionStore } from "@/stores/gameSession.store";
 import { useStoreWallet } from "@/lib/queries/store.queries";
 import { useIncomingFriendRequestCount } from "@/lib/queries/social.queries";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { AppLogo } from "@/components/AppLogo";
+import { Sidebar } from "@/components/layout/Sidebar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,12 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Trophy,
-  Medal,
-  Gem,
-  User,
   Settings,
-  Gamepad2,
   Home,
   Coins,
   Ticket,
@@ -36,22 +31,10 @@ import {
   LogOut,
   ArrowRight,
   X,
-  Users,
-  UserRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getSocket } from "@/lib/realtime/socket-client";
-
-const NAV_ITEMS = [
-  { path: "/play", label: "Play", icon: Gamepad2 },
-  { path: "/leaderboard", label: "Leaderboard", icon: Medal },
-  { path: "/social", label: "Social", icon: UserRound },
-  { path: "/play/friend?tab=browse", label: "Lobbies", icon: Users, exact: true },
-  { path: "/events", label: "Events", icon: Trophy },
-  { path: "/store", label: "Store", icon: Gem },
-  { path: "/profile", label: "Profile", icon: User },
-  { path: "/settings", label: "Settings", icon: Settings },
-] as const;
+import { Medal, Gem, User, Gamepad2, Trophy, Users, UserRound } from "lucide-react";
 
 const MOBILE_NAV_ITEMS = [
   { path: "/", label: "Home", icon: Home },
@@ -112,6 +95,7 @@ export function AppShell({ children }: AppShellProps) {
   const { player: playerStats } = usePlayer();
   const { data: storeWallet } = useStoreWallet();
   const { data: incomingFriendRequestCount = 0 } = useIncomingFriendRequestCount();
+  const authUser = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const lobby = useRealtimeMatchStore((state) => state.lobby);
   const sessionState = useRealtimeMatchStore((state) => state.sessionState);
@@ -172,7 +156,15 @@ export function AppShell({ children }: AppShellProps) {
     if (path === "/") return currentPath === "/";
     const basePath = path.split("?")[0];
     if (exact) return currentPath === basePath;
-    return currentPath === basePath || currentPath.startsWith(`${basePath}/`);
+    if (currentPath !== basePath && !currentPath.startsWith(`${basePath}/`)) return false;
+    // Don't match if another nav item is a more-specific prefix match
+    // e.g. "/play" should not match when on "/play/friend" because Lobbies owns that path
+    const hasMoreSpecificMatch = NAV_ITEMS.some((other) => {
+      const otherBase = other.path.split("?")[0];
+      return otherBase !== basePath && otherBase.startsWith(`${basePath}/`) &&
+        (currentPath === otherBase || currentPath.startsWith(`${otherBase}/`));
+    });
+    return !hasMoreSpecificMatch;
   };
 
   const handleReturnToLobby = () => {
@@ -224,58 +216,12 @@ export function AppShell({ children }: AppShellProps) {
     <div className="min-h-screen bg-background text-foreground">
       {/* DESKTOP LAYOUT (>= md) */}
       <div className="hidden md:flex min-h-screen">
-        {/* Sidebar */}
-        <aside
-          className={cn(
-            "flex flex-col bg-card border-r border-border transition-all duration-300 h-screen sticky top-0",
-            "w-64",
-          )}
-        >
-          {/* Sidebar Header */}
-          <div className="h-16 flex items-center px-4 border-b border-border/50">
-            <div className="flex items-center gap-3 overflow-hidden">
-              <Link href="/" className="hover:opacity-80 transition-opacity">
-                <AppLogo size="sm" />
-              </Link>
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <ScrollArea className="flex-1 py-6">
-            <nav className="space-y-2 px-3">
-              {NAV_ITEMS.map((item) => {
-                const isActive = isPathActive(item.path, 'exact' in item ? item.exact : undefined);
-                const showSocialBadge = item.path === "/social" && socialBadgeCount > 0;
-                return (
-                  <Link
-                    key={item.path}
-                    href={item.path}
-                    className={cn(
-                      "w-full flex items-center gap-3 py-2 px-4 rounded-lg transition-all",
-                      "justify-start",
-                      isActive
-                        ? "bg-primary/10 text-primary hover:bg-primary/20"
-                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
-                    )}
-                  >
-                    <item.icon className="size-5 shrink-0" />
-                    <span className="font-medium truncate">{item.label}</span>
-                    {showSocialBadge && (
-                      <span className="ml-auto min-w-5 rounded-full bg-red-500 px-1.5 py-0.5 text-center text-[10px] font-black text-white">
-                        {socialBadgeCount}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
-            </nav>
-          </ScrollArea>
-        </aside>
+        <Sidebar currentPath={currentPath} socialBadgeCount={socialBadgeCount} />
 
         {/* Main Wrapper */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* TopBar */}
-          <header className="h-16 border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between px-6">
+          <header className="h-16 bg-background/80 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between px-6">
             <div className="flex-1" />
 
             <div className="flex items-center gap-4">
@@ -362,18 +308,24 @@ export function AppShell({ children }: AppShellProps) {
                 </span>
               </div>
 
-              {/* User Menu */}
+              {/* User Profile + Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="relative h-10 w-10 rounded-full p-0 overflow-hidden ring-2 ring-transparent hover:ring-primary/20 transition-all"
-                  >
+                  <button className="flex items-center gap-3 rounded-2xl px-1 py-1 hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
                     <AvatarDisplay
                       customization={playerStats.avatarCustomization || { base: playerStats.avatar }}
                       size="sm"
+                      countryCode={authUser?.country}
                     />
-                  </Button>
+                    <div className="text-left">
+                      <div className="text-sm font-black uppercase tracking-wide text-white">
+                        {playerStats.username}
+                      </div>
+                      <div className="mt-0.5 inline-flex items-center rounded-full bg-[#FFE500] px-2.5 py-0.5 text-xs font-black text-black">
+                        {playerStats.rankPoints ?? 0}RP
+                      </div>
+                    </div>
+                  </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">

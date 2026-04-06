@@ -13,6 +13,7 @@ import { createStoreCheckout, purchaseStoreWithCoins } from "@/lib/repositories/
 import { queryKeys } from "@/lib/queries/queryKeys";
 import { useStoreProducts, useStoreWallet } from "@/lib/queries/store.queries";
 import { trackItemPurchased } from "@/lib/analytics/game-events";
+import { getAvatarImage, getAvatarLabel, isJerseyAvatarProduct, type AvatarStoreProductLike } from "@/lib/store/avatar-products";
 
 function formatUsd(priceCents: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -44,6 +45,26 @@ interface AvatarItem {
   rarity: "common" | "rare" | "epic";
   productSlug?: string;
 }
+
+const STORE_AVATAR_ORDER: readonly string[] = [
+  "avatar_striker",
+  "avatar_captain",
+  "avatar_goalkeeper",
+  "avatar_legend",
+  "avatar_ronaldo",
+  "avatar_messi",
+  "avatar_ronaldinho",
+] as const;
+
+const STORE_AVATAR_RARITY: Record<string, AvatarItem["rarity"]> = {
+  avatar_striker: "common",
+  avatar_captain: "rare",
+  avatar_goalkeeper: "rare",
+  avatar_legend: "epic",
+  avatar_ronaldo: "epic",
+  avatar_messi: "epic",
+  avatar_ronaldinho: "epic",
+};
 
 interface CosmeticItem {
   id: string;
@@ -139,7 +160,7 @@ function AvatarCard({ avatar, onBuy }: { avatar: AvatarItem; onBuy: (a: AvatarIt
           {avatar.rarity}
         </div>
 
-        <div className="size-28 flex items-center justify-center mb-2">
+        <div className="size-32 md:size-36 flex items-center justify-center mb-2">
           <img src={avatar.image} alt={avatar.name} className="size-full object-contain drop-shadow-lg" />
         </div>
 
@@ -402,14 +423,22 @@ export function StoreScreen() {
   }, [productsBySlug, ticketsFull]);
 
   const avatars = useMemo<AvatarItem[]>(() => {
-    const getPrice = (slug: string, fallback: number) => productsBySlug.get(slug)?.priceCents ?? fallback;
-    return [
-      { id: "av1", name: "Striker", image: "/assets/store/avatars/striker.svg", price: getPrice("avatar_striker", 1000), rarity: "common", productSlug: "avatar_striker" },
-      { id: "av2", name: "Captain", image: "/assets/store/avatars/captain.svg", price: getPrice("avatar_captain", 1500), rarity: "rare", productSlug: "avatar_captain" },
-      { id: "av3", name: "Keeper", image: "/assets/store/avatars/keeper.svg", price: getPrice("avatar_goalkeeper", 1200), rarity: "rare", productSlug: "avatar_goalkeeper" },
-      { id: "av4", name: "Legend", image: "/assets/store/avatars/legend.svg", price: getPrice("avatar_legend", 2500), rarity: "epic", productSlug: "avatar_legend" },
-    ];
-  }, [productsBySlug]);
+    const orderMap = new Map(STORE_AVATAR_ORDER.map((slug, index) => [slug, index]));
+
+    return (productsData?.items ?? [])
+      .filter((item) => item.type === "avatar")
+      .filter((item) => !isJerseyAvatarProduct(item as AvatarStoreProductLike))
+      .filter((item) => orderMap.has(item.slug))
+      .sort((a, b) => (orderMap.get(a.slug) ?? 999) - (orderMap.get(b.slug) ?? 999))
+      .map((item) => ({
+        id: item.id,
+        name: getAvatarLabel(item),
+        image: getAvatarImage(item, 160),
+        price: item.priceCents,
+        rarity: STORE_AVATAR_RARITY[item.slug] ?? "epic",
+        productSlug: item.slug,
+      }));
+  }, [productsData]);
 
   const cosmetics = useMemo<CosmeticItem[]>(() => {
     const getPrice = (slug: string, fallback: number) => productsBySlug.get(slug)?.priceCents ?? fallback;
