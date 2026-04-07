@@ -1168,7 +1168,7 @@ export function RealtimePossessionMatchScreen({
   ) : null;
 
   return (
-    <div className="min-h-dvh bg-[#0f1420] flex flex-col items-center justify-center relative">
+    <div className="min-h-dvh bg-[#0f1420] bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat flex flex-col items-center justify-center relative">
       <button
         onClick={() => {
           const next = toggleMute();

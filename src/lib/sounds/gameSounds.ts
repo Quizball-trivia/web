@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import { Howl, Howler } from 'howler';
+import { Howl, Howler } from "howler";
 
 // ─── Sound file paths (place MP3s in /public/sounds/) ────────────
 const SOUND_FILES = {
-  whistle: '/sounds/whistle.mp3',
-  kick: '/sounds/kick.mp3',
-  pass: '/sounds/pass.mp3',
+  whistle: "/sounds/whistle.mp3",
+  kick: "/sounds/kick.mp3",
+  pass: "/sounds/pass.mp3",
 } as const;
 
 type SoundName = keyof typeof SOUND_FILES;
 
 // ─── Volume defaults ─────────────────────────────────────────────
-const SFX_VOLUME = 0.6;
+const SFX_VOLUME = 0.0;
 
 // ─── Howl instances (lazy-loaded) ────────────────────────────────
 const sounds: Partial<Record<SoundName, Howl>> = {};
@@ -71,6 +71,6 @@ export function preloadAll() {
 
 /** Unload all sounds (cleanup) */
 export function unloadAll() {
-  Object.values(sounds).forEach(s => s?.unload());
-  Object.keys(sounds).forEach(k => delete sounds[k as SoundName]);
+  Object.values(sounds).forEach((s) => s?.unload());
+  Object.keys(sounds).forEach((k) => delete sounds[k as SoundName]);
 }

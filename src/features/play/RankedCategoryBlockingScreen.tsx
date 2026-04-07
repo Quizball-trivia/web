@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ShowdownScreen } from './ShowdownScreen';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
+import { Volume2, VolumeX } from 'lucide-react';
+import { isMuted as getIsMuted, toggleMute } from '@/lib/sounds/gameSounds';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
 import { getSocket } from '@/lib/realtime/socket-client';
@@ -47,6 +49,7 @@ export function RankedCategoryBlockingScreen() {
   });
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoBanFired = useRef(false);
+  const [soundMuted, setSoundMuted] = useState(() => getIsMuted());
 
   const opponentMember = useMemo(
     () => lobby?.members.find((member) => member.userId !== selfUserId),
@@ -156,7 +159,7 @@ export function RankedCategoryBlockingScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-[#131F24] flex flex-col font-fun">
+    <div className="min-h-screen bg-[#131F24] flex flex-col font-fun relative">
 
       {/* ─── Chunky Header Bar ─── */}
       <div className="w-full bg-[#1B2F36] border-b-[3px] border-[#0D1B21]">
@@ -229,20 +232,7 @@ export function RankedCategoryBlockingScreen() {
           </div>
         </div>
 
-        {/* Chunky progress bar — 3 steps: player ban, opponent ban, ready */}
-        <div className="flex gap-1.5 px-5 pb-3 max-w-5xl mx-auto">
-          {steps.map((done, i) => (
-            <div
-              key={i}
-              className={cn(
-                "h-[10px] flex-1 rounded-full border-b-2 transition-colors duration-300",
-                done
-                  ? "bg-[#FF4B4B] border-[#E04242]"
-                  : "bg-[#243B44] border-[#1B2F36]"
-              )}
-            />
-          ))}
-        </div>
+        {/* Progress bars removed per design */}
       </div>
 
       {/* ─── Content (vertically centered) ─── */}
@@ -262,7 +252,7 @@ export function RankedCategoryBlockingScreen() {
 
         {/* Horizontal Scrolling Cards */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="w-full">
-          <div ref={scrollRef} className="flex gap-5 overflow-x-auto scrollbar-hide pb-8 px-6 snap-x snap-mandatory justify-center">
+          <div ref={scrollRef} className="grid grid-cols-3 gap-2.5 sm:gap-5 pb-8 px-4 sm:px-6 max-w-2xl mx-auto">
             {poolCategories.map((category, i) => {
               const isPlayerBanned = category.id === playerBannedId;
               const isOpponentBanned = category.id === opponentBannedId;
@@ -288,7 +278,7 @@ export function RankedCategoryBlockingScreen() {
                     logger.info('Socket emit draft:ban (optimistic)', { categoryId: category.id });
                   }}
                   className={cn(
-                    'group shrink-0 w-[220px] snap-center rounded-3xl overflow-hidden transition-all duration-200',
+                    'group w-full rounded-2xl sm:rounded-3xl overflow-hidden transition-all duration-200',
                     !disabled && !isBanned && 'cursor-pointer active:scale-[0.95] active:translate-y-[2px]',
                     disabled && !isBanned && 'cursor-default',
                     playerBannedId && !isPlayerBanned && !isOpponentBanned && 'opacity-25 pointer-events-none scale-95',
@@ -296,7 +286,7 @@ export function RankedCategoryBlockingScreen() {
                 >
                   {/* Artwork area */}
                   <div
-                    className="aspect-[4/5] relative overflow-hidden"
+                    className="aspect-square sm:aspect-[4/5] relative overflow-hidden"
                     style={{ backgroundColor: category.imageUrl ? '#15242D' : (isBanned ? '#243B44' : color.bg) }}
                   >
                     {category.imageUrl ? (
@@ -337,9 +327,9 @@ export function RankedCategoryBlockingScreen() {
                             initial={{ scale: 0, rotate: -30 }}
                             animate={{ scale: 1, rotate: -12 }}
                             transition={{ type: 'spring', stiffness: 400, damping: 14 }}
-                            className="bg-[#FF4B4B] px-5 py-2.5 rounded-2xl border-b-4 border-[#CC3E3E] shadow-lg"
+                            className="bg-[#FF4B4B] px-3 py-1.5 sm:px-5 sm:py-2.5 rounded-xl sm:rounded-2xl border-b-4 border-[#CC3E3E] shadow-lg"
                           >
-                            <span className="text-base font-black text-white uppercase tracking-wide">BANNED</span>
+                            <span className="text-xs sm:text-base font-black text-white uppercase tracking-wide">BANNED</span>
                           </motion.div>
                         </motion.div>
                       )}
@@ -348,10 +338,10 @@ export function RankedCategoryBlockingScreen() {
 
                   {/* Info area — dark bottom with thick 3D border */}
                   <div
-                    className="p-4 bg-[#1B2F36]"
+                    className="p-2.5 sm:p-4 bg-[#1B2F36]"
                     style={{ borderBottom: `5px solid ${isBanned ? '#1B2F36' : color.dark}` }}
                   >
-                    <h3 className="text-base font-black text-white leading-tight truncate">{category.name}</h3>
+                    <h3 className="text-xs sm:text-base font-black text-white leading-tight truncate">{category.name}</h3>
                   </div>
                 </motion.div>
               );
@@ -359,10 +349,7 @@ export function RankedCategoryBlockingScreen() {
           </div>
         </motion.div>
 
-        {/* Swipe hint */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="text-center mt-1">
-          <span className="text-[10px] text-[#56707A] font-bold">← Swipe to see all categories →</span>
-        </motion.div>
+        {/* Swipe hint removed — using grid layout */}
       </div>
     </div>
   );

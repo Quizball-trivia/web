@@ -64,7 +64,7 @@ export function ShotHUD({
             <div className="min-w-0">
               <div className="text-xs font-bold text-white/85 truncate">{playerName}</div>
               <div className="text-3xl leading-7 font-black text-white tabular-nums">{playerGoals}</div>
-              <AnimatedPointsCounter value={playerPoints} accentClassName="text-[#1CB0F6]" />
+              <AnimatedPointsCounter value={playerPoints} accentClassName="text-[#FFE500]" />
             </div>
           </div>
         <div className="shrink-0 flex flex-col items-center justify-center min-w-[100px]">

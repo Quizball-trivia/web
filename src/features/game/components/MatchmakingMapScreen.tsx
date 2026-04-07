@@ -1,17 +1,35 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence, useMotionValue, useSpring, animate } from "motion/react";
-import { X } from "lucide-react";
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useSpring,
+  animate,
+} from "motion/react";
+import { X, Volume2, VolumeX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
-import type { OpponentInfo, OpponentGeoPayload } from "@/lib/realtime/socket.types";
+import type {
+  OpponentInfo,
+  OpponentGeoPayload,
+} from "@/lib/realtime/socket.types";
 import type { AvatarCustomization } from "@/types/game";
 import { avatarSeeds, getDiceBearAvatarUrl } from "@/lib/avatars";
 import { logger } from "@/utils/logger";
-import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
+import { isMuted } from "@/lib/sounds/gameSounds";
+import {
+  ComposableMap,
+  Geographies,
+  Geography,
+  Marker,
+} from "react-simple-maps";
 import { geoNaturalEarth1 } from "d3-geo";
 import worldTopo from "world-atlas/land-110m.json";
+
+const MATCHMAKING_MUSIC_URL =
+  "/sounds/Ronaldo V-Football Soundtrack - Track 0 (Belo Horizonti).mp3";
 
 // ── Types ──
 
@@ -57,8 +75,10 @@ interface CachedGeoHint {
 function isCachedGeoHint(value: unknown): value is CachedGeoHint {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<CachedGeoHint>;
-  const isMaybeNumber = (v: unknown) => v === undefined || typeof v === "number";
-  const isMaybeString = (v: unknown) => v === undefined || typeof v === "string";
+  const isMaybeNumber = (v: unknown) =>
+    v === undefined || typeof v === "number";
+  const isMaybeString = (v: unknown) =>
+    v === undefined || typeof v === "string";
   return (
     isMaybeString(candidate.city) &&
     isMaybeString(candidate.region) &&
@@ -103,9 +123,21 @@ function projectPoint(lon: number, lat: number): [number, number] {
 // ── Pin colors ──
 
 const PIN_COLORS = [
-  "#58CC02", "#1CB0F6", "#FF4B4B", "#FF9600", "#CE82FF",
-  "#FFD700", "#FF6B9D", "#00D4AA", "#FF8C42", "#7B68EE",
-  "#20B2AA", "#FF69B4", "#4ECDC4", "#FF6347", "#9370DB",
+  "#58CC02",
+  "#1CB0F6",
+  "#FF4B4B",
+  "#FF9600",
+  "#CE82FF",
+  "#FFD700",
+  "#FF6B9D",
+  "#00D4AA",
+  "#FF8C42",
+  "#7B68EE",
+  "#20B2AA",
+  "#FF69B4",
+  "#4ECDC4",
+  "#FF6347",
+  "#9370DB",
 ] as const;
 
 // ── Fake online players with real-world lat/lon + country ──
@@ -139,49 +171,288 @@ interface OpponentLocationCandidate {
   countryCodeHint?: string;
 }
 
-const CITY_DATA: { lon: number; lat: number; city: string; country: string; flag: string; name: string }[] = [
-  { lon: -104.99, lat: 39.74, city: "Denver", country: "USA", flag: "🇺🇸", name: "Alex" },
-  { lon: -99.1, lat: 19.4, city: "Mexico City", country: "Mexico", flag: "🇲🇽", name: "Carlos" },
-  { lon: -47.88, lat: -15.79, city: "Brasilia", country: "Brazil", flag: "🇧🇷", name: "Lucas" },
-  { lon: -1.9, lat: 52.5, city: "Birmingham", country: "UK", flag: "🇬🇧", name: "James" },
-  { lon: 4.83, lat: 45.76, city: "Lyon", country: "France", flag: "🇫🇷", name: "Louis" },
-  { lon: 11.58, lat: 48.14, city: "Munich", country: "Germany", flag: "🇩🇪", name: "Max" },
-  { lon: 32.86, lat: 39.93, city: "Ankara", country: "Turkey", flag: "🇹🇷", name: "Emre" },
-  { lon: 46.71, lat: 24.71, city: "Riyadh", country: "Saudi Arabia", flag: "🇸🇦", name: "Omar" },
-  { lon: 77.21, lat: 28.61, city: "Delhi", country: "India", flag: "🇮🇳", name: "Arjun" },
-  { lon: 98.98, lat: 18.79, city: "Chiang Mai", country: "Thailand", flag: "🇹🇭", name: "Niran" },
-  { lon: 104.06, lat: 30.67, city: "Chengdu", country: "China", flag: "🇨🇳", name: "Wei" },
-  { lon: 141.35, lat: 43.06, city: "Sapporo", country: "Japan", flag: "🇯🇵", name: "Yuki" },
-  { lon: 133.88, lat: -23.7, city: "Alice Springs", country: "Australia", flag: "🇦🇺", name: "Liam" },
-  { lon: 36.82, lat: -1.29, city: "Nairobi", country: "Kenya", flag: "🇰🇪", name: "Kofi" },
-  { lon: 7.49, lat: 9.06, city: "Abuja", country: "Nigeria", flag: "🇳🇬", name: "Chidi" },
-  { lon: 44.79, lat: 41.72, city: "Tbilisi", country: "Georgia", flag: "🇬🇪", name: "Giorgi" },
+const CITY_DATA: {
+  lon: number;
+  lat: number;
+  city: string;
+  country: string;
+  flag: string;
+  name: string;
+}[] = [
+  {
+    lon: -104.99,
+    lat: 39.74,
+    city: "Denver",
+    country: "USA",
+    flag: "🇺🇸",
+    name: "Alex",
+  },
+  {
+    lon: -99.1,
+    lat: 19.4,
+    city: "Mexico City",
+    country: "Mexico",
+    flag: "🇲🇽",
+    name: "Carlos",
+  },
+  {
+    lon: -47.88,
+    lat: -15.79,
+    city: "Brasilia",
+    country: "Brazil",
+    flag: "🇧🇷",
+    name: "Lucas",
+  },
+  {
+    lon: -1.9,
+    lat: 52.5,
+    city: "Birmingham",
+    country: "UK",
+    flag: "🇬🇧",
+    name: "James",
+  },
+  {
+    lon: 4.83,
+    lat: 45.76,
+    city: "Lyon",
+    country: "France",
+    flag: "🇫🇷",
+    name: "Louis",
+  },
+  {
+    lon: 11.58,
+    lat: 48.14,
+    city: "Munich",
+    country: "Germany",
+    flag: "🇩🇪",
+    name: "Max",
+  },
+  {
+    lon: 32.86,
+    lat: 39.93,
+    city: "Ankara",
+    country: "Turkey",
+    flag: "🇹🇷",
+    name: "Emre",
+  },
+  {
+    lon: 46.71,
+    lat: 24.71,
+    city: "Riyadh",
+    country: "Saudi Arabia",
+    flag: "🇸🇦",
+    name: "Omar",
+  },
+  {
+    lon: 77.21,
+    lat: 28.61,
+    city: "Delhi",
+    country: "India",
+    flag: "🇮🇳",
+    name: "Arjun",
+  },
+  {
+    lon: 98.98,
+    lat: 18.79,
+    city: "Chiang Mai",
+    country: "Thailand",
+    flag: "🇹🇭",
+    name: "Niran",
+  },
+  {
+    lon: 104.06,
+    lat: 30.67,
+    city: "Chengdu",
+    country: "China",
+    flag: "🇨🇳",
+    name: "Wei",
+  },
+  {
+    lon: 141.35,
+    lat: 43.06,
+    city: "Sapporo",
+    country: "Japan",
+    flag: "🇯🇵",
+    name: "Yuki",
+  },
+  {
+    lon: 133.88,
+    lat: -23.7,
+    city: "Alice Springs",
+    country: "Australia",
+    flag: "🇦🇺",
+    name: "Liam",
+  },
+  {
+    lon: 36.82,
+    lat: -1.29,
+    city: "Nairobi",
+    country: "Kenya",
+    flag: "🇰🇪",
+    name: "Kofi",
+  },
+  {
+    lon: 7.49,
+    lat: 9.06,
+    city: "Abuja",
+    country: "Nigeria",
+    flag: "🇳🇬",
+    name: "Chidi",
+  },
+  {
+    lon: 44.79,
+    lat: 41.72,
+    city: "Tbilisi",
+    country: "Georgia",
+    flag: "🇬🇪",
+    name: "Giorgi",
+  },
 ];
 
 const COUNTRY_LOCATION_FALLBACKS: Record<string, OpponentLocationCandidate> = {
   usa: { lon: -104.99, lat: 39.74, city: "Denver", country: "USA", flag: "🇺🇸" },
-  mexico: { lon: -99.1, lat: 19.4, city: "Mexico City", country: "Mexico", flag: "🇲🇽" },
-  brazil: { lon: -47.88, lat: -15.79, city: "Brasilia", country: "Brazil", flag: "🇧🇷" },
+  mexico: {
+    lon: -99.1,
+    lat: 19.4,
+    city: "Mexico City",
+    country: "Mexico",
+    flag: "🇲🇽",
+  },
+  brazil: {
+    lon: -47.88,
+    lat: -15.79,
+    city: "Brasilia",
+    country: "Brazil",
+    flag: "🇧🇷",
+  },
   uk: { lon: -1.9, lat: 52.5, city: "Birmingham", country: "UK", flag: "🇬🇧" },
-  france: { lon: 4.83, lat: 45.76, city: "Lyon", country: "France", flag: "🇫🇷" },
-  germany: { lon: 11.58, lat: 48.14, city: "Munich", country: "Germany", flag: "🇩🇪" },
-  turkey: { lon: 32.86, lat: 39.93, city: "Ankara", country: "Turkey", flag: "🇹🇷" },
-  saudi_arabia: { lon: 46.71, lat: 24.71, city: "Riyadh", country: "Saudi Arabia", flag: "🇸🇦" },
-  india: { lon: 77.21, lat: 28.61, city: "Delhi", country: "India", flag: "🇮🇳" },
-  thailand: { lon: 98.98, lat: 18.79, city: "Chiang Mai", country: "Thailand", flag: "🇹🇭" },
-  china: { lon: 104.06, lat: 30.67, city: "Chengdu", country: "China", flag: "🇨🇳" },
-  japan: { lon: 141.35, lat: 43.06, city: "Sapporo", country: "Japan", flag: "🇯🇵" },
-  australia: { lon: 133.88, lat: -23.7, city: "Alice Springs", country: "Australia", flag: "🇦🇺" },
-  kenya: { lon: 36.82, lat: -1.29, city: "Nairobi", country: "Kenya", flag: "🇰🇪" },
-  nigeria: { lon: 7.49, lat: 9.06, city: "Abuja", country: "Nigeria", flag: "🇳🇬" },
-  argentina: { lon: -64.19, lat: -31.42, city: "Cordoba", country: "Argentina", flag: "🇦🇷" },
-  spain: { lon: -3.7, lat: 40.42, city: "Madrid", country: "Spain", flag: "🇪🇸" },
+  france: {
+    lon: 4.83,
+    lat: 45.76,
+    city: "Lyon",
+    country: "France",
+    flag: "🇫🇷",
+  },
+  germany: {
+    lon: 11.58,
+    lat: 48.14,
+    city: "Munich",
+    country: "Germany",
+    flag: "🇩🇪",
+  },
+  turkey: {
+    lon: 32.86,
+    lat: 39.93,
+    city: "Ankara",
+    country: "Turkey",
+    flag: "🇹🇷",
+  },
+  saudi_arabia: {
+    lon: 46.71,
+    lat: 24.71,
+    city: "Riyadh",
+    country: "Saudi Arabia",
+    flag: "🇸🇦",
+  },
+  india: {
+    lon: 77.21,
+    lat: 28.61,
+    city: "Delhi",
+    country: "India",
+    flag: "🇮🇳",
+  },
+  thailand: {
+    lon: 98.98,
+    lat: 18.79,
+    city: "Chiang Mai",
+    country: "Thailand",
+    flag: "🇹🇭",
+  },
+  china: {
+    lon: 104.06,
+    lat: 30.67,
+    city: "Chengdu",
+    country: "China",
+    flag: "🇨🇳",
+  },
+  japan: {
+    lon: 141.35,
+    lat: 43.06,
+    city: "Sapporo",
+    country: "Japan",
+    flag: "🇯🇵",
+  },
+  australia: {
+    lon: 133.88,
+    lat: -23.7,
+    city: "Alice Springs",
+    country: "Australia",
+    flag: "🇦🇺",
+  },
+  kenya: {
+    lon: 36.82,
+    lat: -1.29,
+    city: "Nairobi",
+    country: "Kenya",
+    flag: "🇰🇪",
+  },
+  nigeria: {
+    lon: 7.49,
+    lat: 9.06,
+    city: "Abuja",
+    country: "Nigeria",
+    flag: "🇳🇬",
+  },
+  argentina: {
+    lon: -64.19,
+    lat: -31.42,
+    city: "Cordoba",
+    country: "Argentina",
+    flag: "🇦🇷",
+  },
+  spain: {
+    lon: -3.7,
+    lat: 40.42,
+    city: "Madrid",
+    country: "Spain",
+    flag: "🇪🇸",
+  },
   italy: { lon: 12.5, lat: 41.9, city: "Rome", country: "Italy", flag: "🇮🇹" },
-  portugal: { lon: -8.62, lat: 41.16, city: "Porto", country: "Portugal", flag: "🇵🇹" },
-  netherlands: { lon: 5.12, lat: 52.09, city: "Utrecht", country: "Netherlands", flag: "🇳🇱" },
-  russia: { lon: 37.62, lat: 55.75, city: "Moscow", country: "Russia", flag: "🇷🇺" },
-  canada: { lon: -113.49, lat: 53.55, city: "Edmonton", country: "Canada", flag: "🇨🇦" },
-  georgia: { lon: 44.79, lat: 41.72, city: "Tbilisi", country: "Georgia", flag: "🇬🇪" },
+  portugal: {
+    lon: -8.62,
+    lat: 41.16,
+    city: "Porto",
+    country: "Portugal",
+    flag: "🇵🇹",
+  },
+  netherlands: {
+    lon: 5.12,
+    lat: 52.09,
+    city: "Utrecht",
+    country: "Netherlands",
+    flag: "🇳🇱",
+  },
+  russia: {
+    lon: 37.62,
+    lat: 55.75,
+    city: "Moscow",
+    country: "Russia",
+    flag: "🇷🇺",
+  },
+  canada: {
+    lon: -113.49,
+    lat: 53.55,
+    city: "Edmonton",
+    country: "Canada",
+    flag: "🇨🇦",
+  },
+  georgia: {
+    lon: 44.79,
+    lat: 41.72,
+    city: "Tbilisi",
+    country: "Georgia",
+    flag: "🇬🇪",
+  },
 };
 
 const COUNTRY_CODE_TO_KEY: Record<string, string> = {
@@ -212,7 +483,14 @@ const COUNTRY_CODE_TO_KEY: Record<string, string> = {
 };
 
 const COUNTRY_ALIASES: Record<string, string[]> = {
-  usa: ["usa", "united states", "united states of america", "america", "u s a", "🇺🇸"],
+  usa: [
+    "usa",
+    "united states",
+    "united states of america",
+    "america",
+    "u s a",
+    "🇺🇸",
+  ],
   mexico: ["mexico", "mexican", "🇲🇽"],
   brazil: ["brazil", "brasil", "🇧🇷"],
   uk: ["uk", "united kingdom", "britain", "england", "🇬🇧"],
@@ -238,7 +516,20 @@ const COUNTRY_ALIASES: Record<string, string[]> = {
 };
 
 const CITY_ALIASES: Record<string, string[]> = {
-  usa: ["new york", "nyc", "denver", "chicago", "los angeles", "miami", "seattle", "dallas", "houston", "phoenix", "atlanta", "boston"],
+  usa: [
+    "new york",
+    "nyc",
+    "denver",
+    "chicago",
+    "los angeles",
+    "miami",
+    "seattle",
+    "dallas",
+    "houston",
+    "phoenix",
+    "atlanta",
+    "boston",
+  ],
   mexico: ["mexico city", "guadalajara", "monterrey"],
   brazil: ["brasilia", "sao paulo", "rio de janeiro", "rio"],
   uk: ["london", "birmingham", "manchester", "liverpool"],
@@ -264,38 +555,162 @@ const CITY_ALIASES: Record<string, string[]> = {
 };
 
 const CITY_LOCATION_OVERRIDES: Record<string, OpponentLocationCandidate> = {
-  "new york": { lon: -74.0, lat: 40.71, city: "New York", country: "USA", flag: "🇺🇸" },
-  denver: { lon: -104.99, lat: 39.74, city: "Denver", country: "USA", flag: "🇺🇸" },
-  chicago: { lon: -87.63, lat: 41.88, city: "Chicago", country: "USA", flag: "🇺🇸" },
-  "los angeles": { lon: -118.24, lat: 34.05, city: "Los Angeles", country: "USA", flag: "🇺🇸" },
-  "mexico city": { lon: -99.1, lat: 19.4, city: "Mexico City", country: "Mexico", flag: "🇲🇽" },
-  brasilia: { lon: -47.88, lat: -15.79, city: "Brasilia", country: "Brazil", flag: "🇧🇷" },
-  birmingham: { lon: -1.9, lat: 52.5, city: "Birmingham", country: "UK", flag: "🇬🇧" },
+  "new york": {
+    lon: -74.0,
+    lat: 40.71,
+    city: "New York",
+    country: "USA",
+    flag: "🇺🇸",
+  },
+  denver: {
+    lon: -104.99,
+    lat: 39.74,
+    city: "Denver",
+    country: "USA",
+    flag: "🇺🇸",
+  },
+  chicago: {
+    lon: -87.63,
+    lat: 41.88,
+    city: "Chicago",
+    country: "USA",
+    flag: "🇺🇸",
+  },
+  "los angeles": {
+    lon: -118.24,
+    lat: 34.05,
+    city: "Los Angeles",
+    country: "USA",
+    flag: "🇺🇸",
+  },
+  "mexico city": {
+    lon: -99.1,
+    lat: 19.4,
+    city: "Mexico City",
+    country: "Mexico",
+    flag: "🇲🇽",
+  },
+  brasilia: {
+    lon: -47.88,
+    lat: -15.79,
+    city: "Brasilia",
+    country: "Brazil",
+    flag: "🇧🇷",
+  },
+  birmingham: {
+    lon: -1.9,
+    lat: 52.5,
+    city: "Birmingham",
+    country: "UK",
+    flag: "🇬🇧",
+  },
   lyon: { lon: 4.83, lat: 45.76, city: "Lyon", country: "France", flag: "🇫🇷" },
-  munich: { lon: 11.58, lat: 48.14, city: "Munich", country: "Germany", flag: "🇩🇪" },
-  ankara: { lon: 32.86, lat: 39.93, city: "Ankara", country: "Turkey", flag: "🇹🇷" },
-  riyadh: { lon: 46.71, lat: 24.71, city: "Riyadh", country: "Saudi Arabia", flag: "🇸🇦" },
-  delhi: { lon: 77.21, lat: 28.61, city: "Delhi", country: "India", flag: "🇮🇳" },
-  "chiang mai": { lon: 98.98, lat: 18.79, city: "Chiang Mai", country: "Thailand", flag: "🇹🇭" },
-  chengdu: { lon: 104.06, lat: 30.67, city: "Chengdu", country: "China", flag: "🇨🇳" },
-  sapporo: { lon: 141.35, lat: 43.06, city: "Sapporo", country: "Japan", flag: "🇯🇵" },
-  nairobi: { lon: 36.82, lat: -1.29, city: "Nairobi", country: "Kenya", flag: "🇰🇪" },
-  abuja: { lon: 7.49, lat: 9.06, city: "Abuja", country: "Nigeria", flag: "🇳🇬" },
-  moscow: { lon: 37.62, lat: 55.75, city: "Moscow", country: "Russia", flag: "🇷🇺" },
-  tbilisi: { lon: 44.79, lat: 41.72, city: "Tbilisi", country: "Georgia", flag: "🇬🇪" },
-  batumi: { lon: 41.64, lat: 41.65, city: "Batumi", country: "Georgia", flag: "🇬🇪" },
-  kutaisi: { lon: 42.70, lat: 42.27, city: "Kutaisi", country: "Georgia", flag: "🇬🇪" },
+  munich: {
+    lon: 11.58,
+    lat: 48.14,
+    city: "Munich",
+    country: "Germany",
+    flag: "🇩🇪",
+  },
+  ankara: {
+    lon: 32.86,
+    lat: 39.93,
+    city: "Ankara",
+    country: "Turkey",
+    flag: "🇹🇷",
+  },
+  riyadh: {
+    lon: 46.71,
+    lat: 24.71,
+    city: "Riyadh",
+    country: "Saudi Arabia",
+    flag: "🇸🇦",
+  },
+  delhi: {
+    lon: 77.21,
+    lat: 28.61,
+    city: "Delhi",
+    country: "India",
+    flag: "🇮🇳",
+  },
+  "chiang mai": {
+    lon: 98.98,
+    lat: 18.79,
+    city: "Chiang Mai",
+    country: "Thailand",
+    flag: "🇹🇭",
+  },
+  chengdu: {
+    lon: 104.06,
+    lat: 30.67,
+    city: "Chengdu",
+    country: "China",
+    flag: "🇨🇳",
+  },
+  sapporo: {
+    lon: 141.35,
+    lat: 43.06,
+    city: "Sapporo",
+    country: "Japan",
+    flag: "🇯🇵",
+  },
+  nairobi: {
+    lon: 36.82,
+    lat: -1.29,
+    city: "Nairobi",
+    country: "Kenya",
+    flag: "🇰🇪",
+  },
+  abuja: {
+    lon: 7.49,
+    lat: 9.06,
+    city: "Abuja",
+    country: "Nigeria",
+    flag: "🇳🇬",
+  },
+  moscow: {
+    lon: 37.62,
+    lat: 55.75,
+    city: "Moscow",
+    country: "Russia",
+    flag: "🇷🇺",
+  },
+  tbilisi: {
+    lon: 44.79,
+    lat: 41.72,
+    city: "Tbilisi",
+    country: "Georgia",
+    flag: "🇬🇪",
+  },
+  batumi: {
+    lon: 41.64,
+    lat: 41.65,
+    city: "Batumi",
+    country: "Georgia",
+    flag: "🇬🇪",
+  },
+  kutaisi: {
+    lon: 42.7,
+    lat: 42.27,
+    city: "Kutaisi",
+    country: "Georgia",
+    flag: "🇬🇪",
+  },
 };
 
 function getGeoObject(
-  value: OpponentInfo["location"] | OpponentInfo["geo"]
+  value: OpponentInfo["location"] | OpponentInfo["geo"],
 ): OpponentGeoPayload | null {
   if (!value || typeof value !== "object") return null;
   return value;
 }
 
 function normalizeGeoText(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function parseNumber(value: unknown): number | null {
@@ -308,7 +723,14 @@ function parseNumber(value: unknown): number | null {
 }
 
 function isValidGeoPoint(lon: number | null, lat: number | null): boolean {
-  return lon !== null && lat !== null && lon >= -180 && lon <= 180 && lat >= -85 && lat <= 85;
+  return (
+    lon !== null &&
+    lat !== null &&
+    lon >= -180 &&
+    lon <= 180 &&
+    lat >= -85 &&
+    lat <= 85
+  );
 }
 
 function hashString(input: string): number {
@@ -332,7 +754,9 @@ function detectCountryFromCity(raw: string | null | undefined): string | null {
   return null;
 }
 
-function resolveLocationFromCity(raw: string | null | undefined): OpponentLocationCandidate | null {
+function resolveLocationFromCity(
+  raw: string | null | undefined,
+): OpponentLocationCandidate | null {
   if (!raw) return null;
   const normalized = normalizeGeoText(raw);
   if (!normalized) return null;
@@ -376,27 +800,31 @@ function detectCountryKey(raw: string | null | undefined): string | null {
   return null;
 }
 
-function resolveCountryFallback(countryKey: string | null): OpponentLocationCandidate | null {
+function resolveCountryFallback(
+  countryKey: string | null,
+): OpponentLocationCandidate | null {
   if (!countryKey) return null;
   return COUNTRY_LOCATION_FALLBACKS[countryKey] ?? null;
 }
 
 function resolveOpponentLocation(
-  opponent: OpponentInfo
+  opponent: OpponentInfo,
 ): OpponentLocationCandidate {
-  const geoObj = getGeoObject(opponent.geo) ?? getGeoObject(opponent.location) ?? null;
-  const locationText = typeof opponent.location === "string"
-    ? opponent.location
-    : typeof opponent.geo === "string"
-      ? opponent.geo
-      : "";
+  const geoObj =
+    getGeoObject(opponent.geo) ?? getGeoObject(opponent.location) ?? null;
+  const locationText =
+    typeof opponent.location === "string"
+      ? opponent.location
+      : typeof opponent.geo === "string"
+        ? opponent.geo
+        : "";
 
   const lat = parseNumber(
     opponent.lat ??
       opponent.latitude ??
       geoObj?.lat ??
       geoObj?.latitude ??
-      geoObj?.y
+      geoObj?.y,
   );
   const lon = parseNumber(
     opponent.lon ??
@@ -407,7 +835,7 @@ function resolveOpponentLocation(
       geoObj?.lng ??
       geoObj?.long ??
       geoObj?.longitude ??
-      geoObj?.x
+      geoObj?.x,
   );
   const cityHint =
     opponent.city?.trim() ||
@@ -435,11 +863,23 @@ function resolveOpponentLocation(
     detectCountryKey(opponent.username) ??
     detectCountryKey(opponent.id);
   const countryFallback = resolveCountryFallback(countryKey);
-  const cityFallback = resolveLocationFromCity(`${cityHint} ${locationText}`.trim());
+  const cityFallback = resolveLocationFromCity(
+    `${cityHint} ${locationText}`.trim(),
+  );
   const geoFlag = geoObj?.flag?.trim() ?? "";
-  const resolvedCity = cityHint || cityFallback?.city || countryFallback?.city || "Unknown city";
-  const resolvedCountry = countryHint || cityFallback?.country || countryFallback?.country || "Unknown country";
-  const resolvedFlag = opponent.flag?.trim() || geoFlag || cityFallback?.flag || countryFallback?.flag || "🏳️";
+  const resolvedCity =
+    cityHint || cityFallback?.city || countryFallback?.city || "Unknown city";
+  const resolvedCountry =
+    countryHint ||
+    cityFallback?.country ||
+    countryFallback?.country ||
+    "Unknown country";
+  const resolvedFlag =
+    opponent.flag?.trim() ||
+    geoFlag ||
+    cityFallback?.flag ||
+    countryFallback?.flag ||
+    "🏳️";
 
   if (lon !== null && lat !== null && isValidGeoPoint(lon, lat)) {
     if (cityFallback) {
@@ -520,20 +960,23 @@ function generateFakePlayers(): FakePlayer[] {
   return CITY_DATA.map((c, i) => {
     const [px, py] = projectPoint(c.lon, c.lat);
     return {
-    id: i,
-    lon: c.lon,
-    lat: c.lat,
-    x: px,
-    y: py,
-    color: PIN_COLORS[i % PIN_COLORS.length],
-    avatarUrl: getDiceBearAvatarUrl(avatarSeeds[i % avatarSeeds.length] ?? `player-${i + 1}`, 64),
-    name: c.name,
-    flag: c.flag,
-    city: c.city,
-    country: c.country,
-    delay: 0.6 + i * 0.15,
-    source: "seeded_city",
-  };
+      id: i,
+      lon: c.lon,
+      lat: c.lat,
+      x: px,
+      y: py,
+      color: PIN_COLORS[i % PIN_COLORS.length],
+      avatarUrl: getDiceBearAvatarUrl(
+        avatarSeeds[i % avatarSeeds.length] ?? `player-${i + 1}`,
+        64,
+      ),
+      name: c.name,
+      flag: c.flag,
+      city: c.city,
+      country: c.country,
+      delay: 0.6 + i * 0.15,
+      source: "seeded_city",
+    };
   });
 }
 
@@ -544,8 +987,20 @@ const SELF_LAT = 51.5;
 
 // ── Pan constants ──
 // The map starts showing Americas and pans right across Europe, Asia
-const DESKTOP_CAMERA = { startX: -50, panRange: 350, panSpeed: 18, searchScale: 1.1, searchY: 0 };
-const MOBILE_CAMERA = { startX: -120, panRange: 230, panSpeed: 12, searchScale: 1.45, searchY: -28 };
+const DESKTOP_CAMERA = {
+  startX: -50,
+  panRange: 350,
+  panSpeed: 18,
+  searchScale: 1.1,
+  searchY: 0,
+};
+const MOBILE_CAMERA = {
+  startX: -120,
+  panRange: 230,
+  panSpeed: 12,
+  searchScale: 1.45,
+  searchY: -28,
+};
 
 // ── Component ──
 
@@ -564,10 +1019,40 @@ export function MatchmakingMapScreen({
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined"
       ? window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`).matches
-      : false
+      : false,
   );
   const showFoundState = matchType === "ranked" && rankedFoundOpponent !== null;
+  const matchmakingAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [musicMuted, setMusicMuted] = useState(() => isMuted());
   const scanRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Play matchmaking music while searching
+  useEffect(() => {
+    if (musicMuted || showFoundState) return;
+
+    const audio = new Audio(MATCHMAKING_MUSIC_URL);
+    audio.currentTime = 10;
+    audio.volume = 0.0;
+    audio.loop = true;
+    matchmakingAudioRef.current = audio;
+
+    const playPromise = audio.play();
+    if (playPromise) {
+      playPromise.catch(() => {
+        // Autoplay blocked — silently ignore
+      });
+    }
+
+    return () => {
+      audio.pause();
+      audio.src = "";
+      matchmakingAudioRef.current = null;
+    };
+  }, [musicMuted, showFoundState]);
+
+  const handleToggleMusicMute = () => {
+    setMusicMuted((prev) => !prev);
+  };
   const panAnimRef = useRef<ReturnType<typeof animate> | null>(null);
   const fallbackSearchStartedAtRef = useRef<number | null>(null);
 
@@ -585,7 +1070,12 @@ export function MatchmakingMapScreen({
     const resolved = resolveOpponentLocation(rankedFoundOpponent);
     const [oppX, oppY] = projectPoint(resolved.lon, resolved.lat);
     return {
-      id: 10000 + (hashString(rankedFoundOpponent.id ?? rankedFoundOpponent.username ?? "opponent") % 1000),
+      id:
+        10000 +
+        (hashString(
+          rankedFoundOpponent.id ?? rankedFoundOpponent.username ?? "opponent",
+        ) %
+          1000),
       lon: resolved.lon,
       lat: resolved.lat,
       x: oppX,
@@ -604,14 +1094,31 @@ export function MatchmakingMapScreen({
   }, [rankedFoundOpponent]);
   const opponentRawGeo = useMemo(() => {
     if (!rankedFoundOpponent) return null;
-    const geoObj = getGeoObject(rankedFoundOpponent.geo) ??
+    const geoObj =
+      getGeoObject(rankedFoundOpponent.geo) ??
       getGeoObject(rankedFoundOpponent.location) ??
       null;
     return {
-      city: rankedFoundOpponent.city ?? geoObj?.city ?? geoObj?.cityName ?? null,
-      country: rankedFoundOpponent.country ?? geoObj?.country ?? geoObj?.countryName ?? geoObj?.country_name ?? null,
-      countryCode: rankedFoundOpponent.countryCode ?? geoObj?.countryCode ?? geoObj?.country_code ?? null,
-      lat: rankedFoundOpponent.lat ?? rankedFoundOpponent.latitude ?? geoObj?.lat ?? geoObj?.latitude ?? geoObj?.y ?? null,
+      city:
+        rankedFoundOpponent.city ?? geoObj?.city ?? geoObj?.cityName ?? null,
+      country:
+        rankedFoundOpponent.country ??
+        geoObj?.country ??
+        geoObj?.countryName ??
+        geoObj?.country_name ??
+        null,
+      countryCode:
+        rankedFoundOpponent.countryCode ??
+        geoObj?.countryCode ??
+        geoObj?.country_code ??
+        null,
+      lat:
+        rankedFoundOpponent.lat ??
+        rankedFoundOpponent.latitude ??
+        geoObj?.lat ??
+        geoObj?.latitude ??
+        geoObj?.y ??
+        null,
       lon:
         rankedFoundOpponent.lon ??
         rankedFoundOpponent.longitude ??
@@ -624,8 +1131,10 @@ export function MatchmakingMapScreen({
         geoObj?.x ??
         null,
       locationText:
-        (typeof rankedFoundOpponent.location === "string" && rankedFoundOpponent.location) ||
-        (typeof rankedFoundOpponent.geo === "string" && rankedFoundOpponent.geo) ||
+        (typeof rankedFoundOpponent.location === "string" &&
+          rankedFoundOpponent.location) ||
+        (typeof rankedFoundOpponent.geo === "string" &&
+          rankedFoundOpponent.geo) ||
         "",
     };
   }, [rankedFoundOpponent]);
@@ -649,7 +1158,7 @@ export function MatchmakingMapScreen({
   const opponentPinId = opponentPin?.id ?? null;
   const mapPlayers = useMemo(
     () => (opponentPin ? [...fakePlayers, opponentPin] : fakePlayers),
-    [fakePlayers, opponentPin]
+    [fakePlayers, opponentPin],
   );
 
   // Sync mobile camera defaults with viewport.
@@ -668,12 +1177,16 @@ export function MatchmakingMapScreen({
     mapY.set(searchCamera.searchY);
     mapScale.set(searchCamera.searchScale);
 
-    panAnimRef.current = animate(mapX, searchCamera.startX - searchCamera.panRange, {
-      duration: searchCamera.panRange / searchCamera.panSpeed,
-      ease: "linear",
-      repeat: Infinity,
-      repeatType: "mirror",
-    });
+    panAnimRef.current = animate(
+      mapX,
+      searchCamera.startX - searchCamera.panRange,
+      {
+        duration: searchCamera.panRange / searchCamera.panSpeed,
+        ease: "linear",
+        repeat: Infinity,
+        repeatType: "mirror",
+      },
+    );
 
     return () => {
       panAnimRef.current?.stop();
@@ -699,9 +1212,18 @@ export function MatchmakingMapScreen({
 
     // Animate to target
     const zoomDuration = 1.4;
-    animate(mapScale, targetScale, { duration: zoomDuration, ease: [0.32, 0.72, 0, 1] });
-    animate(mapX, clampedTargetX, { duration: zoomDuration, ease: [0.32, 0.72, 0, 1] });
-    animate(mapY, clampedTargetY, { duration: zoomDuration, ease: [0.32, 0.72, 0, 1] });
+    animate(mapScale, targetScale, {
+      duration: zoomDuration,
+      ease: [0.32, 0.72, 0, 1],
+    });
+    animate(mapX, clampedTargetX, {
+      duration: zoomDuration,
+      ease: [0.32, 0.72, 0, 1],
+    });
+    animate(mapY, clampedTargetY, {
+      duration: zoomDuration,
+      ease: [0.32, 0.72, 0, 1],
+    });
   }, [showFoundState, opponentPin, isMobile, mapScale, mapX, mapY]);
 
   // Stagger pin appearances
@@ -712,8 +1234,8 @@ export function MatchmakingMapScreen({
       timers.push(
         setTimeout(
           () => setVisiblePins((prev) => new Set(prev).add(p.id)),
-          p.delay * 1000
-        )
+          p.delay * 1000,
+        ),
       );
     });
     return () => timers.forEach(clearTimeout);
@@ -725,11 +1247,10 @@ export function MatchmakingMapScreen({
     if (fallbackSearchStartedAtRef.current == null) {
       fallbackSearchStartedAtRef.current = Date.now();
     }
-    const startedAt = rankedSearchStartedAt ?? fallbackSearchStartedAtRef.current;
+    const startedAt =
+      rankedSearchStartedAt ?? fallbackSearchStartedAtRef.current;
     const tick = () =>
-      setSearchTime(
-        Math.floor(Math.max(0, Date.now() - startedAt) / 1000)
-      );
+      setSearchTime(Math.floor(Math.max(0, Date.now() - startedAt) / 1000));
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
@@ -752,14 +1273,20 @@ export function MatchmakingMapScreen({
   }, [showFoundState, fakePlayers, opponentPinId]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#0D1117] overflow-hidden font-fun select-none">
+    <div className="fixed inset-0 z-50 bg-[#0D1117] bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat overflow-hidden font-fun select-none">
       {/* ── Map ── */}
       <ComposableMap
         width={MAP_W}
         height={MAP_H}
         projection="geoNaturalEarth1"
         projectionConfig={{ scale: PROJ_SCALE, center: PROJ_CENTER }}
-        style={{ width: "100%", height: "100%", position: "absolute", inset: 0, background: "#0D1117" }}
+        style={{
+          width: "100%",
+          height: "100%",
+          position: "absolute",
+          inset: 0,
+          background: "#0D1117",
+        }}
       >
         <motion.g
           style={{
@@ -781,7 +1308,11 @@ export function MatchmakingMapScreen({
                   fill="#1C2733"
                   stroke="#2D3F4E"
                   strokeWidth={0.5}
-                  style={{ default: { outline: "none" }, hover: { outline: "none" }, pressed: { outline: "none" } }}
+                  style={{
+                    default: { outline: "none" },
+                    hover: { outline: "none" },
+                    pressed: { outline: "none" },
+                  }}
                 />
               ))
             }
@@ -806,11 +1337,35 @@ export function MatchmakingMapScreen({
           {/* Self marker */}
           <Marker coordinates={[SELF_LON, SELF_LAT]}>
             <circle cx={0} cy={0} r="5" fill="#58CC02" opacity="0.15">
-              <animate attributeName="r" values="5;14;5" dur="2s" repeatCount="indefinite" />
-              <animate attributeName="opacity" values="0.25;0;0.25" dur="2s" repeatCount="indefinite" />
+              <animate
+                attributeName="r"
+                values="5;14;5"
+                dur="2s"
+                repeatCount="indefinite"
+              />
+              <animate
+                attributeName="opacity"
+                values="0.25;0;0.25"
+                dur="2s"
+                repeatCount="indefinite"
+              />
             </circle>
-            <circle cx={0} cy={0} r="4" fill="#58CC02" stroke="#46A302" strokeWidth="1.2" />
-            <text x={0} y={-8} textAnchor="middle" fill="#58CC02" fontSize="5" fontWeight="900">
+            <circle
+              cx={0}
+              cy={0}
+              r="4"
+              fill="#58CC02"
+              stroke="#46A302"
+              strokeWidth="1.2"
+            />
+            <text
+              x={0}
+              y={-8}
+              textAnchor="middle"
+              fill="#58CC02"
+              fontSize="5"
+              fontWeight="900"
+            >
               YOU
             </text>
           </Marker>
@@ -818,7 +1373,9 @@ export function MatchmakingMapScreen({
           {/* Player pins */}
           {mapPlayers.map((p) => {
             const visible = visiblePins.has(p.id);
-            const highlighted = showFoundState ? p.id === opponentPinId : highlightedPin === p.id;
+            const highlighted = showFoundState
+              ? p.id === opponentPinId
+              : highlightedPin === p.id;
             const isOpp = showFoundState && p.id === opponentPinId;
             if (!visible && !showFoundState) return null;
 
@@ -827,17 +1384,36 @@ export function MatchmakingMapScreen({
                 {/* Pulse ring */}
                 {(highlighted || isOpp) && (
                   <circle
-                    cx={0} cy={0} r="5"
-                    fill={p.color} opacity="0.2"
+                    cx={0}
+                    cy={0}
+                    r="5"
+                    fill={p.color}
+                    opacity="0.2"
                     filter="url(#glow)"
                   >
-                    <animate attributeName="r" values="5;18;5" dur={isOpp ? "1.5s" : "0.7s"} repeatCount="indefinite" />
-                    <animate attributeName="opacity" values="0.35;0;0.35" dur={isOpp ? "1.5s" : "0.7s"} repeatCount="indefinite" />
+                    <animate
+                      attributeName="r"
+                      values="5;18;5"
+                      dur={isOpp ? "1.5s" : "0.7s"}
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="opacity"
+                      values="0.35;0;0.35"
+                      dur={isOpp ? "1.5s" : "0.7s"}
+                      repeatCount="indefinite"
+                    />
                   </circle>
                 )}
 
                 {/* Drop shadow */}
-                <ellipse cx="0" cy="1" rx="3.5" ry="1.2" fill="rgba(0,0,0,0.35)" />
+                <ellipse
+                  cx="0"
+                  cy="1"
+                  rx="3.5"
+                  ry="1.2"
+                  fill="rgba(0,0,0,0.35)"
+                />
 
                 {/* Pin body */}
                 <path
@@ -859,7 +1435,14 @@ export function MatchmakingMapScreen({
                 </path>
 
                 {/* Avatar circle with profile-style image */}
-                <circle cx="0" cy="-7.5" r="5.5" fill="#0D1117" stroke={p.color} strokeWidth="0.8" />
+                <circle
+                  cx="0"
+                  cy="-7.5"
+                  r="5.5"
+                  fill="#0D1117"
+                  stroke={p.color}
+                  strokeWidth="0.8"
+                />
                 <image
                   href={p.avatarUrl}
                   x="-5.1"
@@ -882,7 +1465,8 @@ export function MatchmakingMapScreen({
                       fill="rgba(0,0,0,0.7)"
                     />
                     <text
-                      x="0" y="-20.5"
+                      x="0"
+                      y="-20.5"
                       textAnchor="middle"
                       fill="white"
                       fontSize="5.5"
@@ -923,41 +1507,32 @@ export function MatchmakingMapScreen({
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse at center, transparent 25%, rgba(13,17,23,0.7) 100%)",
+          background:
+            "radial-gradient(ellipse at center, transparent 25%, rgba(13,17,23,0.7) 100%)",
         }}
       />
       <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-[#0D1117] to-transparent pointer-events-none" />
       <div className="absolute bottom-0 left-0 right-0 h-52 bg-gradient-to-t from-[#0D1117] via-[#0D1117]/90 to-transparent pointer-events-none" />
 
-      {/* ── Cancel (top-right) ── */}
+      {/* ── Mute (top-left) ── */}
       <motion.button
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        onClick={onCancel}
-        className="absolute top-12 right-4 z-20 size-10 rounded-full bg-[#1C2733]/80 border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-[#FF4B4B]/80 active:scale-95 transition-all backdrop-blur-sm"
+        onClick={handleToggleMusicMute}
+        className="absolute top-12 left-4 z-20 size-10 rounded-full bg-[#1C2733]/80 border border-white/10 flex items-center justify-center text-white/60 hover:text-white active:scale-95 transition-all backdrop-blur-sm"
+        title={musicMuted ? "Unmute music" : "Mute music"}
       >
-        <X className="size-5" />
+        {musicMuted ? (
+          <VolumeX className="size-5" />
+        ) : (
+          <Volume2 className="size-5" />
+        )}
       </motion.button>
 
-      {/* ── Badge (top-left) ── */}
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.3 }}
-        className="absolute top-12 left-4 z-20"
-      >
-        <div
-          className={cn(
-            "px-3.5 py-1.5 rounded-full border-b-[3px] text-[11px] font-black uppercase tracking-wider text-white backdrop-blur-sm",
-            matchType === "ranked"
-              ? "bg-[#FF9600]/90 border-[#DB8200]"
-              : "bg-[#1CB0F6]/90 border-[#1899D6]"
-          )}
-        >
-          {matchType === "ranked" ? "⚽ Ranked" : "👥 Friendly"}
-        </div>
-      </motion.div>
+      {/* Cancel X button removed — using bottom Cancel button instead */}
+
+      {/* Badge removed — overlapped with mute button */}
 
       {/* ── Bottom UI ── */}
       <div
@@ -965,9 +1540,13 @@ export function MatchmakingMapScreen({
           "absolute left-0 right-0 z-20 px-4 sm:px-5",
           showFoundState
             ? "top-0 bottom-0 flex items-center justify-center"
-            : "bottom-0 pb-8 pt-4"
+            : "bottom-0 pb-8 pt-4",
         )}
-        style={showFoundState ? { paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" } : undefined}
+        style={
+          showFoundState
+            ? { paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }
+            : undefined
+        }
       >
         <AnimatePresence mode="wait">
           {!showFoundState ? (
@@ -984,7 +1563,12 @@ export function MatchmakingMapScreen({
                   <motion.div
                     key={i}
                     animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }}
-                    transition={{ duration: 1, repeat: Infinity, delay: i * 0.2, ease: "easeInOut" }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      delay: i * 0.2,
+                      ease: "easeInOut",
+                    }}
                     className="size-2 rounded-full bg-[#1CB0F6]"
                   />
                 ))}
@@ -995,7 +1579,9 @@ export function MatchmakingMapScreen({
               </h2>
 
               <p className="text-sm font-bold text-[#56707A]">
-                {searchTime > 0 ? `${searchTime}s` : "Finding a worthy opponent..."}
+                {searchTime > 0
+                  ? `${searchTime}s`
+                  : "Finding a worthy opponent..."}
               </p>
 
               <button
@@ -1010,7 +1596,11 @@ export function MatchmakingMapScreen({
               key="found"
               initial={{ opacity: 0, y: 30, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.6, ease: [0.32, 0.72, 0, 1] }}
+              transition={{
+                duration: 0.5,
+                delay: 0.6,
+                ease: [0.32, 0.72, 0, 1],
+              }}
               className="w-full flex flex-col items-center justify-center gap-3"
             >
               {/* Opponent card */}
@@ -1058,7 +1648,9 @@ export function MatchmakingMapScreen({
                       transition={{ delay: 1.35, duration: 0.35 }}
                       className="flex items-center justify-center gap-1.5 mt-1"
                     >
-                      <span className="text-2xl leading-none">{opponentPin.flag}</span>
+                      <span className="text-2xl leading-none">
+                        {opponentPin.flag}
+                      </span>
                       <span className="text-xs font-bold text-[#56707A]">
                         {opponentPin.city}, {opponentPin.country}
                       </span>
@@ -1110,20 +1702,28 @@ export function MatchmakingMapScreen({
           </div>
           <div>
             local-ll:
-            {typeof localGeoHint?.latitude === "number" ? localGeoHint.latitude.toFixed(2) : "-"},
-            {typeof localGeoHint?.longitude === "number" ? localGeoHint.longitude.toFixed(2) : "-"} | src:
+            {typeof localGeoHint?.latitude === "number"
+              ? localGeoHint.latitude.toFixed(2)
+              : "-"}
+            ,
+            {typeof localGeoHint?.longitude === "number"
+              ? localGeoHint.longitude.toFixed(2)
+              : "-"}{" "}
+            | src:
             {localGeoHint?.source ?? "-"}
           </div>
           {opponentPin ? (
             <>
               <div>
-                raw:{opponentRawGeo?.city || "-"}, {opponentRawGeo?.countryCode || opponentRawGeo?.country || "-"}
+                raw:{opponentRawGeo?.city || "-"},{" "}
+                {opponentRawGeo?.countryCode || opponentRawGeo?.country || "-"}
               </div>
               <div>
                 map:{opponentPin.city}, {opponentPin.country}
               </div>
               <div>
-                ll:{opponentPin.lat.toFixed(2)},{opponentPin.lon.toFixed(2)} | src:{opponentPin.source ?? "-"}
+                ll:{opponentPin.lat.toFixed(2)},{opponentPin.lon.toFixed(2)} |
+                src:{opponentPin.source ?? "-"}
               </div>
             </>
           ) : null}

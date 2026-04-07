@@ -47,7 +47,18 @@ export function PossessionHUD({
   const showTimer = timeRemaining !== null;
 
   return (
-    <div className="w-full font-fun space-y-3 mb-3">
+    <div className="w-full font-fun space-y-3 mb-3 relative">
+      {/* Quit button — fixed top right corner of screen */}
+      {onQuit && (
+        <button
+          onClick={onQuit}
+          className="fixed top-3 right-3 z-50 p-2 rounded-full text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+          title="Leave match"
+        >
+          <X className="size-5" />
+        </button>
+      )}
+
       {/* Player strip — matching MatchScoreHUD style */}
       <div className="flex items-center justify-between gap-3 px-3">
         {/* Player side */}
@@ -63,7 +74,7 @@ export function PossessionHUD({
             <div className="text-3xl leading-7 font-black text-white tabular-nums">
               {playerGoals}
             </div>
-            <AnimatedPointsCounter value={playerPoints} accentClassName="text-[#1CB0F6]" />
+            <AnimatedPointsCounter value={playerPoints} accentClassName="text-[#FFE500]" />
           </div>
         </div>
 
@@ -132,41 +143,8 @@ export function PossessionHUD({
         </div>
       </div>
 
-      {/* Progress bar + zone pill */}
+      {/* Zone pill */}
       <div className="px-3 flex items-center gap-3">
-        {onQuit && (
-          <button
-            onClick={onQuit}
-            className="shrink-0 p-1.5 rounded-full text-white/40 hover:text-white/70 hover:bg-white/5 transition-colors"
-            title="Leave match"
-          >
-            <X className="size-5" />
-          </button>
-        )}
-
-        {/* Half progress — green gradient segments like MatchScoreHUD */}
-        <div className="flex gap-1.5 flex-1">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-2.5 flex-1 rounded-full overflow-hidden bg-white/10"
-            >
-              <div
-                className={cn(
-                  'h-full rounded-full transition-all duration-500',
-                  i < questionInHalf ? 'w-full' : 'w-0'
-                )}
-                style={i < questionInHalf ? {
-                  background: 'linear-gradient(180deg, #4ade80 0%, #22c55e 100%)',
-                } : undefined}
-              >
-                {i < questionInHalf && (
-                  <div className="h-1/2 rounded-full bg-gradient-to-b from-white/30 to-transparent" />
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
 
         {/* Zone pill */}
         <AnimatePresence mode="wait">

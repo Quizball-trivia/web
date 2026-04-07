@@ -205,9 +205,14 @@ export function AppShell({ children }: AppShellProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen text-foreground relative" style={{ backgroundColor: 'hsl(var(--background))' }}>
+      {/* Background pattern overlay */}
+      <div
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat pointer-events-none z-0 opacity-60"
+        style={{ backgroundImage: "url('/assets/bg-pattern.png')" }}
+      />
       {/* DESKTOP LAYOUT (>= md) */}
-      <div className="hidden md:flex min-h-screen">
+      <div className="hidden md:flex min-h-screen relative z-10">
         <Sidebar currentPath={currentPath} socialBadgeCount={socialBadgeCount} />
 
         {/* Main Wrapper */}
@@ -447,11 +452,11 @@ export function AppShell({ children }: AppShellProps) {
       </div>
 
       {/* MOBILE LAYOUT (< md) */}
-      <div className="flex flex-col min-h-screen md:hidden">
+      <div className="flex flex-col min-h-screen md:hidden relative z-10">
         {/* Header */}
         {showHeader && (
           <div>
-            <div className="px-4 py-4 bg-background">
+            <div className="px-4 py-4">
               <div className="flex items-center justify-between mb-3 relative">
                 <div className="flex items-center gap-2 z-10">
                   {currentPath === "/" ? (

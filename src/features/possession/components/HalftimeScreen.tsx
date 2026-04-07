@@ -313,18 +313,17 @@ export function HalftimeScreen({
                             </div>
                           )}
 
-                          {/* Status icon */}
+                          {/* BANNED stamp overlay */}
                           {(isMyBan || isOpponentBan) && (
                             <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                              className={cn(
-                                'absolute -top-2 -right-2 size-7 rounded-full flex items-center justify-center text-xs font-black',
-                                isMyBan ? 'bg-[#1CB0F6] text-white' : 'bg-[#FF4B4B] text-white'
-                              )}
+                              initial={{ scale: 0, rotate: -12 }}
+                              animate={{ scale: 1, rotate: -6 }}
+                              transition={{ type: 'spring', stiffness: 400, damping: 18 }}
+                              className="absolute inset-0 z-20 flex items-center justify-center"
                             >
-                              <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                              <div className="bg-[#FF4B4B] text-white font-black text-sm sm:text-base uppercase tracking-wider px-4 py-1.5 rounded-lg shadow-lg">
+                                Banned
+                              </div>
                             </motion.div>
                           )}
 

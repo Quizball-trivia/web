@@ -371,8 +371,8 @@ export function PitchVisualization({
   const ballOpacity = isShotMiss ? 0.3 : 1;
 
   return (
-    <div className={isPortrait ? 'h-full flex justify-center' : 'w-full px-3'}>
-      <div className={`relative rounded-2xl overflow-hidden border-2 border-emerald-900/60 border-b-4 border-b-emerald-950/80 ${isPortrait ? 'h-full aspect-[23/50]' : ''}`}>
+    <div className={isPortrait ? 'h-full w-full' : 'w-full'}>
+      <div className={`relative overflow-hidden ${isPortrait ? 'h-full w-full' : 'rounded-2xl'}`}>
         {/* Camera zoom wrapper — field container stays anchored, SVG zooms inside */}
         <motion.div
           animate={zoomToGoal ? {
