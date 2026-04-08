@@ -19,6 +19,19 @@ export function OAuthCallbackScreen() {
       try {
         const hash = window.location.hash || "";
         const query = window.location.search || "";
+
+        // Mobile app redirect: if source=mobile, forward tokens via deep link
+        const searchParams = new URLSearchParams(query.replace(/^\?/, ""));
+        const mobileRedirect = searchParams.get("mobile_redirect");
+        if (mobileRedirect) {
+          const tokens = parseOAuthHash(hash);
+          if (tokens) {
+            const deepLink = `${mobileRedirect}?access_token=${encodeURIComponent(tokens.accessToken)}&refresh_token=${encodeURIComponent(tokens.refreshToken)}`;
+            logger.info("OAuth callback: redirecting to mobile app");
+            window.location.href = deepLink;
+            return;
+          }
+        }
         const lastHash = window.sessionStorage.getItem("quizball_oauth_hash");
         const lastQuery = window.sessionStorage.getItem("quizball_oauth_query");
 
