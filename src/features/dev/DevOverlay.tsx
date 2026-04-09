@@ -5,7 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { getSocket } from '@/lib/realtime/socket-client';
 
-export function DevOverlay() {
+interface DevOverlayProps {
+  onQuit?: () => void;
+  onRestart?: () => void;
+}
+
+export function DevOverlay({ onQuit, onRestart }: DevOverlayProps) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const match = useRealtimeMatchStore((s) => s.match);
@@ -75,6 +80,28 @@ export function DevOverlay() {
         <div className="mb-2 text-[10px] font-black text-[#8FB7C5] uppercase tracking-wider">Navigate</div>
         <SkipBtn label="New Ranked Dev" onClick={() => router.push('/dev/mock-match')} color="bg-[#CE82FF]" />
       </div>
+
+      {(onQuit || onRestart) ? (
+        <div className="p-3 border-t border-[#2a4a55]">
+          <div className="mb-2 text-[10px] font-black text-[#8FB7C5] uppercase tracking-wider">Match</div>
+          <div className="grid grid-cols-2 gap-2">
+            {onRestart && (
+              <SkipBtn
+                label="Restart"
+                onClick={onRestart}
+                color="bg-[#58CC02]"
+              />
+            )}
+            {onQuit && (
+              <SkipBtn
+                label="Quit"
+                onClick={onQuit}
+                color="bg-[#FF4B4B]"
+              />
+            )}
+          </div>
+        </div>
+      ) : null}
 
       {/* Goal Sequence — full celebration test */}
       <div className="p-3 border-t border-[#2a4a55]">

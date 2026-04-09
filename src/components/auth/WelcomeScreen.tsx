@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FcGoogle } from 'react-icons/fc';
 import { Button } from '@/components/ui/button';
@@ -781,9 +782,24 @@ export function WelcomeScreen() {
               <span className="text-sm">{duelsCount.toLocaleString()}+ duels played</span>
             </div>
           </div>
-          <div className="mt-6 space-y-2 text-center">
+          <div className="mt-6 flex items-center justify-center gap-4 text-sm">
+            <Link
+              href="/terms"
+              className="font-bold text-white/40 hover:text-[#1CB0F6] transition-colors"
+            >
+              Terms of Service
+            </Link>
+            <span className="text-white/20">|</span>
+            <Link
+              href="/privacy"
+              className="font-bold text-white/40 hover:text-[#1CB0F6] transition-colors"
+            >
+              Privacy Policy
+            </Link>
+          </div>
+          <div className="mt-4 space-y-2 text-center">
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-white/35">
-              © 2026 QuizBall
+              &copy; 2026 QuizBall
             </p>
             <p className="mx-auto max-w-2xl text-[11px] leading-relaxed text-white/30 md:text-xs">
               QuizBall is an independent football trivia game. Club, league, tournament, and player references are used for editorial identification only. QuizBall is not affiliated with, endorsed by, or sponsored by any club, league, federation, or competition organizer.

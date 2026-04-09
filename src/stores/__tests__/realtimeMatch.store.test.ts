@@ -35,13 +35,13 @@ function makeQuestion(qIndex: number, phaseKind: 'normal' | 'last_attack' = 'nor
     qIndex,
     total: 12,
     question: {
+      kind: 'multipleChoice',
       id: `q-${qIndex}`,
       prompt: `Question ${qIndex}`,
       options: ['A', 'B', 'C', 'D'],
       categoryName: 'General',
     } as ResolvedMatchQuestionPayload['question'],
     deadlineAt: new Date(Date.now() + 10_000).toISOString(),
-    correctIndex: 0,
     phaseKind,
   };
 }
@@ -57,7 +57,11 @@ function makeRoundResult(
   return {
     matchId: MATCH_ID,
     qIndex,
-    correctIndex: 0,
+    questionKind: 'multipleChoice',
+    reveal: {
+      kind: 'multipleChoice',
+      correctIndex: 0,
+    },
     players: {
       [USER_A]: { totalPoints: 100, pointsEarned: 10, isCorrect: true, timeMs: 3000, selectedIndex: 0 },
       [USER_B]: { totalPoints: 80, pointsEarned: 0, isCorrect: false, timeMs: 5000, selectedIndex: 1 },

@@ -1,7 +1,5 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Clock, CheckCircle2, XCircle, ArrowRight, Trophy, Zap, ChevronDown, ChevronUp } from 'lucide-react';
 import { useRecentMatches } from '@/lib/queries/stats.queries';
 import { COLLAPSED_MATCHES_COUNT, MAX_MATCHES_COUNT } from '@/lib/constants/matches';
@@ -51,24 +49,28 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
   }, [matches, isExpanded, collapsedOnly]);
 
   return (
-    <Card className="h-full border-border/40 bg-card/40 backdrop-blur-sm relative overflow-hidden">
-      <div className="p-6 h-full flex flex-col justify-between relative z-10">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-bold flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20">
-               <Clock className="size-4" />
-            </div>
+    <div className="rounded-2xl bg-[#1B2F36] border-b-4 border-[#0D1B21]">
+      <div className="p-4 md:p-5">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base font-black text-white flex items-center gap-2 uppercase font-fun">
+            <Clock className="size-5 text-[#1CB0F6]" />
             Recent Matches
           </h3>
-          <Button variant="ghost" size="sm" className="h-8 shrink-0 text-muted-foreground hover:text-foreground font-semibold -mr-2" onClick={() => router.push('/profile')}>
+          <button
+            type="button"
+            onClick={() => router.push('/profile')}
+            className="flex items-center gap-1 text-xs font-bold text-[#56707A] hover:text-white transition-colors uppercase tracking-wide"
+          >
             View All
-            <ArrowRight className="ml-1 size-3.5" />
-          </Button>
+            <ArrowRight className="size-3.5" />
+          </button>
         </div>
 
-        <div className="flex-1 flex flex-col justify-center space-y-3 mt-4">
+        {/* Match rows */}
+        <div className="space-y-2">
           {isLoading && (
-            <div className="p-3.5 rounded-xl bg-background/40 border border-border/40 text-sm font-semibold text-muted-foreground">
+            <div className="p-4 rounded-xl bg-[#243B44] text-sm font-bold text-[#56707A]">
               Loading recent matches...
             </div>
           )}
@@ -76,78 +78,81 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
             <div
               role="alert"
               aria-live="polite"
-              className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-sm font-semibold text-red-500"
+              className="p-4 rounded-xl bg-[#FF4B4B]/10 border border-[#FF4B4B]/20 text-sm font-bold text-[#FF4B4B]"
             >
               Failed to load recent matches. Please try again later.
             </div>
           )}
           {!isLoading && !error && matches.length === 0 && (
-            <div className="p-3.5 rounded-xl bg-background/40 border border-border/40 text-sm font-semibold text-muted-foreground">
+            <div className="p-4 rounded-xl bg-[#243B44] text-sm font-bold text-[#56707A]">
               No recent matches yet.
             </div>
           )}
           {!isLoading && !error && visibleMatches.map((match) => (
-              <div key={match.id} className="flex items-center justify-between p-3.5 rounded-xl bg-background/40 border border-border/40 hover:bg-background/60 hover:border-border/60 transition-all duration-300 cursor-pointer group shadow-sm hover:shadow-md">
-                <div className="flex items-center gap-3.5">
-                    {match.result === 'win' ? (
-                      <div className="p-1.5 rounded-full bg-green-500/10 text-green-500 ring-1 ring-green-500/20">
-                         <CheckCircle2 className="size-4 shrink-0" />
-                      </div>
-                    ) : match.result === 'loss' ? (
-                      <div className="p-1.5 rounded-full bg-red-500/10 text-red-500 ring-1 ring-red-500/20">
-                         <XCircle className="size-4 shrink-0" />
-                      </div>
-                    ) : (
-                      <div className="p-1.5 rounded-full bg-muted text-muted-foreground ring-1 ring-border">
-                         <Clock className="size-4 shrink-0" />
-                      </div>
-                    )}
-                    <div>
-                      <div className="font-bold text-sm truncate max-w-[140px] leading-tight">
-                         vs {match.opponent}
-                      </div>
-                      <div className="text-[11px] text-muted-foreground font-medium flex items-center gap-1.5 mt-0.5">
-                         {match.mode === 'Ranked' ? <Trophy className="size-3" /> : <Zap className="size-3" />}
-                         {match.mode} · {match.time}
-                      </div>
-                    </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                    {match.competition !== 'friendly' && match.rpDelta !== null && (
-                      <span className={`text-[10px] font-black px-1.5 py-0.5 rounded border ${
-                        match.rpDelta > 0
-                          ? 'bg-green-500/15 text-green-500 ring-1 ring-green-500/25 border-green-500/30'
-                          : match.rpDelta < 0
-                            ? 'bg-red-500/15 text-red-500 ring-1 ring-red-500/25 border-red-500/30'
-                            : 'bg-muted text-muted-foreground ring-1 ring-border border-border'
-                      }`}>
-                        {`${match.rpDelta >= 0 ? '+' : ''}${match.rpDelta} RP`}
-                      </span>
-                    )}
-                    <span className={`text-base font-black tracking-tight ${
-                      match.result === 'win'
-                        ? 'text-green-500'
-                        : match.result === 'loss'
-                          ? 'text-red-500'
-                          : 'text-muted-foreground'
-                    }`}>
-                      {match.score}
-                      {match.scoreSuffix && (
-                        <span className="text-xs font-bold ml-1 opacity-80">{match.scoreSuffix}</span>
-                      )}
-                    </span>
-                    {match.scoreBadge && (
-                      <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${
-                        match.scoreBadgeVariant === 'red'
-                          ? 'bg-red-500/15 text-red-500 ring-1 ring-red-500/25'
-                          : 'bg-muted text-muted-foreground ring-1 ring-border'
-                      }`}>
-                        {match.scoreBadge}
-                      </span>
-                    )}
+            <div
+              key={match.id}
+              className="flex items-center justify-between p-3 md:p-3.5 rounded-xl bg-[#0D1B21]/60 border border-white/5 hover:bg-[#243B44] transition-all cursor-pointer group"
+            >
+              <div className="flex items-center gap-3">
+                {match.result === 'win' ? (
+                  <div className="size-8 rounded-xl bg-[#58CC02]/15 border border-[#58CC02]/30 flex items-center justify-center">
+                    <CheckCircle2 className="size-4 text-[#58CC02]" />
+                  </div>
+                ) : match.result === 'loss' ? (
+                  <div className="size-8 rounded-xl bg-[#FF4B4B]/15 border border-[#FF4B4B]/30 flex items-center justify-center">
+                    <XCircle className="size-4 text-[#FF4B4B]" />
+                  </div>
+                ) : (
+                  <div className="size-8 rounded-xl bg-[#56707A]/15 border border-[#56707A]/30 flex items-center justify-center">
+                    <Clock className="size-4 text-[#56707A]" />
+                  </div>
+                )}
+                <div>
+                  <div className="font-black text-sm text-white truncate max-w-[140px] leading-tight">
+                    vs {match.opponent}
+                  </div>
+                  <div className="text-[11px] font-semibold text-[#56707A] flex items-center gap-1.5 mt-0.5">
+                    {match.mode === 'Ranked' ? <Trophy className="size-3" /> : <Zap className="size-3" />}
+                    {match.mode} · {match.time}
+                  </div>
                 </div>
               </div>
+
+              <div className="flex items-center gap-2">
+                {match.competition !== 'friendly' && match.rpDelta !== null && (
+                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg ${
+                    match.rpDelta > 0
+                      ? 'bg-[#58CC02]/15 text-[#58CC02] border border-[#58CC02]/25'
+                      : match.rpDelta < 0
+                        ? 'bg-[#FF4B4B]/15 text-[#FF4B4B] border border-[#FF4B4B]/25'
+                        : 'bg-[#56707A]/15 text-[#56707A] border border-[#56707A]/25'
+                  }`}>
+                    {`${match.rpDelta >= 0 ? '+' : ''}${match.rpDelta} RP`}
+                  </span>
+                )}
+                <span className={`text-base font-black tracking-tight ${
+                  match.result === 'win'
+                    ? 'text-[#58CC02]'
+                    : match.result === 'loss'
+                      ? 'text-[#FF4B4B]'
+                      : 'text-[#56707A]'
+                }`}>
+                  {match.score}
+                  {match.scoreSuffix && (
+                    <span className="text-xs font-bold ml-1 opacity-80">{match.scoreSuffix}</span>
+                  )}
+                </span>
+                {match.scoreBadge && (
+                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-lg ${
+                    match.scoreBadgeVariant === 'red'
+                      ? 'bg-[#FF4B4B]/15 text-[#FF4B4B] border border-[#FF4B4B]/25'
+                      : 'bg-[#56707A]/15 text-[#56707A] border border-[#56707A]/25'
+                  }`}>
+                    {match.scoreBadge}
+                  </span>
+                )}
+              </div>
+            </div>
           ))}
 
           {/* Expand/Collapse button */}
@@ -155,7 +160,7 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
             <button
               type="button"
               onClick={() => setIsExpanded((prev) => !prev)}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-background/30 border border-border/40 hover:bg-background/50 hover:border-border/60 transition-all text-sm font-semibold text-muted-foreground hover:text-foreground"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#0D1B21]/60 border border-white/5 border-b-4 border-b-[#0A1416] hover:bg-[#243B44] transition-all text-sm font-bold text-[#56707A] hover:text-white"
             >
               {isExpanded ? (
                 <>
@@ -172,6 +177,6 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
           )}
         </div>
       </div>
-    </Card>
+    </div>
   );
 }

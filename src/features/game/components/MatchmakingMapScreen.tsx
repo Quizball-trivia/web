@@ -8,7 +8,7 @@ import {
   useSpring,
   animate,
 } from "motion/react";
-import { X, Volume2, VolumeX } from "lucide-react";
+import { Volume2, VolumeX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import type {
@@ -1053,6 +1053,7 @@ export function MatchmakingMapScreen({
   const handleToggleMusicMute = () => {
     setMusicMuted((prev) => !prev);
   };
+
   const panAnimRef = useRef<ReturnType<typeof animate> | null>(null);
   const fallbackSearchStartedAtRef = useRef<number | null>(null);
 

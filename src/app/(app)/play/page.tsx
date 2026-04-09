@@ -140,18 +140,6 @@ export default function PlayPage() {
 
   return (
     <div className="relative min-h-full overflow-hidden">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-[0.24]"
-        style={{
-          backgroundImage: "url('/assets/maracana.png')",
-          backgroundPosition: "center top",
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "cover",
-        }}
-      />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#071013]/78 via-[#071013]/72 to-[#071013]/90" />
-
       <div className="relative z-10">
         <ModeSelectionScreen
           onSelectMode={(mode) => {

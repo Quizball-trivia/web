@@ -179,7 +179,7 @@ export function RealtimePartyQuizScreen({
     : 0;
 
   const question: GameQuestion | null = useMemo(() => {
-    if (!currentQuestion) return null;
+    if (!currentQuestion || currentQuestion.question.kind !== 'multipleChoice') return null;
     return {
       id: currentQuestion.question.id,
       prompt: currentQuestion.question.prompt,

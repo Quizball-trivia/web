@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GameStageRouter } from '../GameStageRouter';
@@ -158,7 +158,12 @@ vi.mock('@/features/game/RealtimeResultsScreen', () => ({
 }));
 
 vi.mock('@/features/possession/RealtimePossessionMatchScreen', () => ({
-  RealtimePossessionMatchScreen: () => <div>Realtime Possession Match</div>,
+  RealtimePossessionMatchScreen: (props: { onForfeit: () => void }) => (
+    <div>
+      <div>Realtime Possession Match</div>
+      <button type="button" onClick={props.onForfeit}>Forfeit Match</button>
+    </div>
+  ),
 }));
 
 vi.mock('@/features/party/RealtimePartyQuizScreen', () => ({
@@ -213,6 +218,24 @@ describe('GameStageRouter', () => {
     render(<GameStageRouter />);
 
     expect(screen.getByText('Realtime Possession Match')).toBeInTheDocument();
+  });
+
+  it('forfeit emits match:forfeit without leaving the screen immediately', () => {
+    gameSessionState.stage = 'playing';
+    realtimeMatchState.match = {
+      ...realtimeMatchState.match,
+      matchId: 'match-forfeit-1',
+      variant: 'friendly_possession',
+    };
+
+    render(<GameStageRouter />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Forfeit Match' }));
+
+    expect(socket.emit).toHaveBeenCalledWith('match:forfeit', { matchId: 'match-forfeit-1' });
+    expect(realtimeMatchState.reset).not.toHaveBeenCalled();
+    expect(gameSessionState.reset).not.toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalledWith('/play');
   });
 
   it('shows loading instead of possession final results until authoritative final payload arrives', () => {

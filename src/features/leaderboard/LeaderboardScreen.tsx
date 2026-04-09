@@ -35,7 +35,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
   const seasonEndsLabel = "14 Days";
 
   return (
-    <div className="flex flex-col bg-background relative" style={{ minHeight: 'calc(100vh - 4rem)' }}>
+    <div className="relative flex flex-col bg-transparent" style={{ minHeight: 'calc(100vh - 4rem)' }}>
       <div className="flex-1 container max-w-2xl mx-auto px-3 sm:px-4 pt-2 sm:pt-4 pb-0 space-y-4 sm:space-y-6">
 
         {/* Header */}
