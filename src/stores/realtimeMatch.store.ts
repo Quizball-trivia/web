@@ -89,6 +89,7 @@ export interface RejoinMatchStatus {
   opponent: OpponentInfo;
   participants: MatchParticipant[];
   graceMs: number;
+  remainingReconnects: number;
   createdAt: number;
 }
 
@@ -107,6 +108,7 @@ interface RealtimeState {
   selfUserId: string | null;
   matchPaused: boolean;
   pauseUntil: number | null;
+  remainingReconnects: number | null;
   rejoinMatch: RejoinMatchStatus | null;
   devPossessionAnimation: DevPossessionAnimation | null;
   error: ErrorPayload | null;
@@ -144,7 +146,7 @@ interface RealtimeState {
   rollbackOptimisticChanceCard: (payload?: { qIndex?: number; clientActionId?: string }) => void;
   setRoundResult: (payload: MatchRoundResultPayload) => void;
   setFinalResults: (payload: MatchFinalResultsPayload) => void;
-  setMatchPaused: (payload: { graceMs: number }) => void;
+  setMatchPaused: (payload: { graceMs: number; remainingReconnects: number }) => void;
   clearMatchPaused: () => void;
   setRejoinAvailable: (payload: MatchRejoinAvailablePayload) => void;
   clearRejoinAvailable: () => void;
@@ -168,6 +170,7 @@ const initialState = {
   selfUserId: null,
   matchPaused: false,
   pauseUntil: null,
+  remainingReconnects: null,
   rejoinMatch: null,
   devPossessionAnimation: null,
   error: null,
@@ -235,6 +238,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       draft: null,
       matchPaused: false,
       pauseUntil: null,
+      remainingReconnects: null,
       rejoinMatch: null,
       match: {
         matchId: payload.matchId,
@@ -396,12 +400,43 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       }
       // Guard: ignore stale/out-of-order question events
       const currentQIndex = state.match.currentQuestion?.qIndex ?? -1;
-      if (payload.qIndex <= currentQIndex) {
+      if (payload.qIndex < currentQIndex) {
         logger.warn('Ignoring stale match:question event', {
           received: payload.qIndex,
           current: currentQIndex,
         });
         return state;
+      }
+
+      if (payload.qIndex === currentQIndex) {
+        if (!state.matchPaused || !state.match.currentQuestion) {
+          logger.warn('Ignoring duplicate match:question event for active question', {
+            qIndex: payload.qIndex,
+            matchPaused: state.matchPaused,
+          });
+          return state;
+        }
+
+        logger.info('Refreshing current question after pause/rejoin', {
+          qIndex: payload.qIndex,
+          questionKind: payload.question.kind,
+        });
+
+        return {
+          ...state,
+          match: {
+            ...state.match,
+            currentQuestion: payload,
+            pendingQuestion: null,
+            questions: {
+              ...state.match.questions,
+              [payload.qIndex]: {
+                payload,
+                correctIndex: state.match.questions[payload.qIndex]?.correctIndex,
+              },
+            },
+          },
+        };
       }
 
       // Buffer question if we're still showing the last round result.
@@ -810,11 +845,12 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       };
     });
   },
-  setMatchPaused: ({ graceMs }) => {
-    logger.info('Realtime store set match paused', { graceMs });
+  setMatchPaused: ({ graceMs, remainingReconnects }) => {
+    logger.info('Realtime store set match paused', { graceMs, remainingReconnects });
     set({
       matchPaused: true,
       pauseUntil: Date.now() + graceMs,
+      remainingReconnects,
     });
   },
   clearMatchPaused: () => {
@@ -822,6 +858,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
     set({
       matchPaused: false,
       pauseUntil: null,
+      remainingReconnects: null,
     });
   },
   setRejoinAvailable: (payload) => {
@@ -829,6 +866,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       matchId: payload.matchId,
       mode: payload.mode,
       graceMs: payload.graceMs,
+      remainingReconnects: payload.remainingReconnects,
     });
     set({
       rejoinMatch: {
@@ -838,6 +876,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         opponent: payload.opponent,
         participants: payload.participants,
         graceMs: payload.graceMs,
+        remainingReconnects: payload.remainingReconnects,
         createdAt: Date.now(),
       },
     });
@@ -880,6 +919,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       match: null,
       matchPaused: false,
       pauseUntil: null,
+      remainingReconnects: null,
       rejoinMatch: null,
       devPossessionAnimation: null,
       error: null,

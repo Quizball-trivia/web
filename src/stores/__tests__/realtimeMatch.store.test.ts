@@ -285,4 +285,53 @@ describe('realtimeMatch.store — setMatchState shouldClearQuestion', () => {
       expect(useRealtimeMatchStore.getState().match?.possessionState?.phase).toBe('NORMAL_PLAY');
     });
   });
+
+  describe('pause/rejoin question refresh', () => {
+    it('accepts same-qIndex question payload when the match is paused', () => {
+      seedMatch();
+      const store = useRealtimeMatchStore.getState();
+
+      const initialQuestion = makeQuestion(4);
+      const refreshedQuestion: ResolvedMatchQuestionPayload = {
+        ...initialQuestion,
+        deadlineAt: new Date(Date.now() + 20_000).toISOString(),
+      };
+
+      store.setMatchQuestion(initialQuestion);
+      store.setMatchPaused({ graceMs: 60_000, remainingReconnects: 2 });
+      store.setMatchQuestion(refreshedQuestion);
+
+      const state = useRealtimeMatchStore.getState();
+      expect(state.match?.currentQuestion?.qIndex).toBe(4);
+      expect(state.match?.currentQuestion?.deadlineAt).toBe(refreshedQuestion.deadlineAt);
+      expect(state.matchPaused).toBe(true);
+      expect(state.remainingReconnects).toBe(2);
+    });
+
+    it('stores remaining reconnect metadata for rejoin availability', () => {
+      seedMatch();
+      const store = useRealtimeMatchStore.getState();
+
+      store.setRejoinAvailable({
+        matchId: MATCH_ID,
+        mode: 'ranked',
+        variant: 'ranked_sim',
+        opponent: { id: USER_B, username: 'opponent', avatarUrl: null },
+        participants: [
+          { userId: USER_A, username: 'me', avatarUrl: null, seat: 1 },
+          { userId: USER_B, username: 'opponent', avatarUrl: null, seat: 2 },
+        ],
+        graceMs: 60_000,
+        remainingReconnects: 1,
+      });
+
+      const state = useRealtimeMatchStore.getState();
+      expect(state.rejoinMatch).not.toBeNull();
+      expect(state.rejoinMatch?.remainingReconnects).toBe(1);
+      expect(state.rejoinMatch?.graceMs).toBe(60_000);
+
+      store.clearMatchPaused();
+      expect(useRealtimeMatchStore.getState().remainingReconnects).toBeNull();
+    });
+  });
 });

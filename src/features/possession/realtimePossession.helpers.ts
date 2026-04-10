@@ -2,7 +2,7 @@
 
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import type { ResolvedMatchQuestionPayload } from '@/lib/realtime/socket.types';
-import type { AnswerStateArray } from './types/possession.types';
+import type { AnswerState, AnswerStateArray } from './types/possession.types';
 
 export const TRANSITION_DELAY_MS = 1600;
 export const FIELD_RESULT_COMPARE_MS = 900;
@@ -32,30 +32,38 @@ export interface GoalCelebrationState {
   isMeScorer: boolean;
 }
 
+function toAnswerStateTuple(states: AnswerState[], optionsCount: number): AnswerStateArray {
+  if (optionsCount !== 4 || states.length !== 4) {
+    throw new Error(`Expected exactly 4 multiple-choice options, received ${optionsCount}`);
+  }
+
+  return [states[0], states[1], states[2], states[3]];
+}
+
 export function toAnswerStates(
   optionsCount: number,
   selectedAnswer: number | null,
   selfAnsweredCorrectly: boolean | null
 ): AnswerStateArray {
   if (selectedAnswer === null) {
-    return Array.from({ length: optionsCount }, () => 'default') as AnswerStateArray;
+    return toAnswerStateTuple(Array.from({ length: optionsCount }, () => 'default' as const), optionsCount);
   }
 
   if (selfAnsweredCorrectly === true) {
-    return Array.from({ length: optionsCount }, (_, index) => (
+    return toAnswerStateTuple(Array.from({ length: optionsCount }, (_, index) => (
       index === selectedAnswer ? 'correct' : 'disabled'
-    )) as AnswerStateArray;
+    )), optionsCount);
   }
 
   if (selfAnsweredCorrectly === false) {
-    return Array.from({ length: optionsCount }, (_, index) => (
+    return toAnswerStateTuple(Array.from({ length: optionsCount }, (_, index) => (
       index === selectedAnswer ? 'wrong' : 'disabled'
-    )) as AnswerStateArray;
+    )), optionsCount);
   }
 
-  return Array.from({ length: optionsCount }, (_, index) => (
+  return toAnswerStateTuple(Array.from({ length: optionsCount }, (_, index) => (
     index === selectedAnswer ? 'default' : 'disabled'
-  )) as AnswerStateArray;
+  )), optionsCount);
 }
 
 export function toRevealAnswerStates(
@@ -63,11 +71,11 @@ export function toRevealAnswerStates(
   correctIndex: number | undefined,
   selectedAnswer: number | null
 ): AnswerStateArray {
-  return Array.from({ length: optionsCount }, (_, index) => {
+  return toAnswerStateTuple(Array.from({ length: optionsCount }, (_, index) => {
     if (index === correctIndex) return 'correct';
     if (selectedAnswer === index) return 'wrong';
     return 'disabled';
-  }) as AnswerStateArray;
+  }), optionsCount);
 }
 
 export function createClientActionId(): string {

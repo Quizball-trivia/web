@@ -49,6 +49,8 @@ export function PossessionQuestionArea({ model }: PossessionQuestionAreaProps) {
           animate={{ opacity: hideQuestionContent ? 0 : 1 }}
           transition={{ duration: hideQuestionContent ? 0 : 0.8 }}
           initial={false}
+          aria-hidden={hideQuestionContent}
+          className={hideQuestionContent ? 'pointer-events-none' : ''}
         >
           {content.kind === 'multipleChoice' ? (
             <PossessionQuestionPanel {...content.props} />

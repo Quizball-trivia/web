@@ -121,9 +121,6 @@ export function PossessionMatchViewport({ model, children }: PossessionMatchView
                   />
                 )}
               </AnimatePresence>
-            </div>
-
-            <div className="lg:hidden relative">
               <AnimatePresence>
                 <PenaltySplash model={penaltySplash} />
               </AnimatePresence>

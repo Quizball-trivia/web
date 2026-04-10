@@ -357,8 +357,12 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       matchId: data.matchId,
       opponentId: data.opponentId,
       graceMs: data.graceMs,
+      remainingReconnects: data.remainingReconnects,
     });
-    store.setMatchPaused({ graceMs: data.graceMs });
+    store.setMatchPaused({
+      graceMs: data.graceMs,
+      remainingReconnects: data.remainingReconnects,
+    });
   });
 
   socket.on('match:resume', (data: MatchResumePayload) => {
@@ -372,6 +376,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       mode: data.mode,
       opponentId: data.opponent.id,
       graceMs: data.graceMs,
+      remainingReconnects: data.remainingReconnects,
     });
     store.setRejoinAvailable(data);
   });

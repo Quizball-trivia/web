@@ -4,6 +4,8 @@ import { Clock, CheckCircle2, XCircle, ArrowRight, Trophy, Zap, ChevronDown, Che
 import { useRecentMatches } from '@/lib/queries/stats.queries';
 import { COLLAPSED_MATCHES_COUNT, MAX_MATCHES_COUNT } from '@/lib/constants/matches';
 import { formatMatchScore } from '@/utils/matchScore';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface HomeRecentMatchesProps {
   /** If true, only show collapsed count without expand option */
@@ -49,28 +51,27 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
   }, [matches, isExpanded, collapsedOnly]);
 
   return (
-    <div className="rounded-2xl bg-[#1B2F36] border-b-4 border-[#0D1B21]">
-      <div className="p-4 md:p-5">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-black text-white flex items-center gap-2 uppercase font-fun">
+    <Card className="rounded-2xl bg-[#1B2F36] border-0 border-b-4 border-[#0D1B21] shadow-none">
+      <CardHeader className="flex flex-row items-center justify-between p-4 pb-4 md:p-5 md:pb-4 space-y-0">
+        <CardTitle className="text-base font-black text-white flex items-center gap-2 uppercase font-fun">
             <Clock className="size-5 text-[#1CB0F6]" />
             Recent Matches
-          </h3>
-          <button
+        </CardTitle>
+        <Button
             type="button"
+            variant="ghost"
             onClick={() => router.push('/profile')}
-            className="flex items-center gap-1 text-xs font-bold text-[#56707A] hover:text-white transition-colors uppercase tracking-wide"
+            className="h-auto px-0 py-0 flex items-center gap-1 text-xs font-bold text-[#56707A] hover:text-white transition-colors uppercase tracking-wide hover:bg-transparent"
           >
             View All
             <ArrowRight className="size-3.5" />
-          </button>
-        </div>
+        </Button>
+      </CardHeader>
 
-        {/* Match rows */}
+      <CardContent className="p-4 pt-0 md:p-5 md:pt-0">
         <div className="space-y-2">
           {isLoading && (
-            <div className="p-4 rounded-xl bg-[#243B44] text-sm font-bold text-[#56707A]">
+            <div className="p-4 rounded-2xl bg-[#243B44] border border-[#2F4751] border-b-4 border-b-[#16242A] text-sm font-bold text-[#56707A]">
               Loading recent matches...
             </div>
           )}
@@ -84,14 +85,14 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
             </div>
           )}
           {!isLoading && !error && matches.length === 0 && (
-            <div className="p-4 rounded-xl bg-[#243B44] text-sm font-bold text-[#56707A]">
+            <div className="p-4 rounded-2xl bg-[#243B44] border border-[#2F4751] border-b-4 border-b-[#16242A] text-sm font-bold text-[#56707A]">
               No recent matches yet.
             </div>
           )}
           {!isLoading && !error && visibleMatches.map((match) => (
             <div
               key={match.id}
-              className="flex items-center justify-between p-3 md:p-3.5 rounded-xl bg-[#0D1B21]/60 border border-white/5 hover:bg-[#243B44] transition-all cursor-pointer group"
+              className="flex items-center justify-between p-3 md:p-3.5 rounded-2xl bg-[#0D1B21]/60 border border-[#2A3B42] border-b-4 border-b-[#081115] transition-all"
             >
               <div className="flex items-center gap-3">
                 {match.result === 'win' ? (
@@ -120,12 +121,12 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
 
               <div className="flex items-center gap-2">
                 {match.competition !== 'friendly' && match.rpDelta !== null && (
-                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg ${
+                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-2xl border-b-4 ${
                     match.rpDelta > 0
-                      ? 'bg-[#58CC02]/15 text-[#58CC02] border border-[#58CC02]/25'
+                      ? 'bg-[#58CC02]/15 text-[#58CC02] border border-[#58CC02]/25 border-b-[#2E6C01]'
                       : match.rpDelta < 0
-                        ? 'bg-[#FF4B4B]/15 text-[#FF4B4B] border border-[#FF4B4B]/25'
-                        : 'bg-[#56707A]/15 text-[#56707A] border border-[#56707A]/25'
+                        ? 'bg-[#FF4B4B]/15 text-[#FF4B4B] border border-[#FF4B4B]/25 border-b-[#8C1F1F]'
+                        : 'bg-[#56707A]/15 text-[#56707A] border border-[#56707A]/25 border-b-[#2F3E45]'
                   }`}>
                     {`${match.rpDelta >= 0 ? '+' : ''}${match.rpDelta} RP`}
                   </span>
@@ -143,10 +144,10 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
                   )}
                 </span>
                 {match.scoreBadge && (
-                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-lg ${
+                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-2xl border-b-4 ${
                     match.scoreBadgeVariant === 'red'
-                      ? 'bg-[#FF4B4B]/15 text-[#FF4B4B] border border-[#FF4B4B]/25'
-                      : 'bg-[#56707A]/15 text-[#56707A] border border-[#56707A]/25'
+                      ? 'bg-[#FF4B4B]/15 text-[#FF4B4B] border border-[#FF4B4B]/25 border-b-[#8C1F1F]'
+                      : 'bg-[#56707A]/15 text-[#56707A] border border-[#56707A]/25 border-b-[#2F3E45]'
                   }`}>
                     {match.scoreBadge}
                   </span>
@@ -176,7 +177,7 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
             </button>
           )}
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

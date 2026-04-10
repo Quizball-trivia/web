@@ -642,6 +642,26 @@ export interface ErrorPayload {
   meta?: Record<string, unknown>;
 }
 
+export interface MatchCluesAnswerGuessPayload {
+  kind: 'guess';
+  matchId: string;
+  qIndex: number;
+  guess: string;
+  timeMs: number;
+}
+
+export interface MatchCluesAnswerGiveUpPayload {
+  kind: 'giveUp';
+  matchId: string;
+  qIndex: number;
+  giveUp: true;
+  timeMs: number;
+}
+
+export type MatchCluesAnswerPayload =
+  | MatchCluesAnswerGuessPayload
+  | MatchCluesAnswerGiveUpPayload;
+
 export interface ClientToServerEvents {
   'lobby:create': (data: { mode: MatchMode; isPublic?: boolean }) => void;
   'lobby:join_by_code': (data: { inviteCode: string }) => void;
@@ -662,7 +682,7 @@ export interface ClientToServerEvents {
   'match:answer': (data: { matchId: string; qIndex: number; selectedIndex: number | null; timeMs: number }) => void;
   'match:countdown_guess': (data: { matchId: string; qIndex: number; guess: string }) => void;
   'match:put_in_order_answer': (data: { matchId: string; qIndex: number; orderedItemIds: string[]; timeMs: number }) => void;
-  'match:clues_answer': (data: { matchId: string; qIndex: number; guess?: string; giveUp?: boolean; timeMs: number }) => void;
+  'match:clues_answer': (data: MatchCluesAnswerPayload) => void;
   'match:chance_card_use': (data: MatchChanceCardUsePayload) => void;
   'match:halftime_ban': (data: { matchId: string; categoryId: string }) => void;
   'match:leave': (data?: { matchId?: string }) => void;

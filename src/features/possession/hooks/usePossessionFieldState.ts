@@ -322,7 +322,7 @@ export function usePossessionFieldState({
   const attackerIsMe = attackerSeat !== null && attackerSeat === mySeat;
   const shooterIsMe = shooterSeat !== null && shooterSeat === mySeat;
   const visualMyPossessionPct = suppressCarryoverAttackVisual ? 50 : myPossessionPct;
-  const mirrored = false;
+  const mirrored = possessionState?.half === 2;
   const ballOnPlayer = visualMyPossessionPct > 50 || (
     visualMyPossessionPct === 50 && possessionState?.kickOffSeat === mySeat
   );
@@ -386,7 +386,7 @@ export function usePossessionFieldState({
     if (!isShotVisualPhase && !isPenaltyQuestion) return undefined;
     if (isPenaltyQuestion) return mirrored ? 'left' : 'right';
     return attackerIsMe !== mirrored ? 'right' : 'left';
-  }, [attackerIsMe, isPenaltyQuestion, isShotVisualPhase]);
+  }, [attackerIsMe, isPenaltyQuestion, isShotVisualPhase, mirrored]);
 
   const optimisticShotResult: ShotResult = useMemo(() => {
     if (!isShotQuestion) return 'pending';
@@ -510,6 +510,7 @@ export function usePossessionFieldState({
     shotAnimationVariant,
     shotBallOriginX,
     shotResult,
+    mirrored,
     targetGoal,
     visualMyPossessionPct,
   ]);

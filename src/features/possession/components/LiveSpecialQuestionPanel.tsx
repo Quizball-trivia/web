@@ -24,6 +24,7 @@ import { Input } from '@/components/ui/input';
 import { getSocket } from '@/lib/realtime/socket-client';
 import type {
   MatchAnswerAckPayload,
+  MatchCluesAnswerPayload,
   MatchCluesGuessAckPayload,
   MatchCountdownGuessAckPayload,
   MatchRoundResultPayload,
@@ -76,6 +77,7 @@ function CountdownPanel({
   matchId,
   qIndex,
   question,
+  showOptions,
   roundResolved,
   countdownGuessAck,
   roundResult,
@@ -83,6 +85,7 @@ function CountdownPanel({
   matchId: string;
   qIndex: number;
   question: ResolvedCountdownQuestion;
+  showOptions: boolean;
   roundResolved: boolean;
   countdownGuessAck: MatchCountdownGuessAckPayload | null;
   roundResult: MatchRoundResultPayload | null;
@@ -107,6 +110,13 @@ function CountdownPanel({
     if (!roundResolved || !roundResult || roundResult.reveal.kind !== 'countdown') return [];
     return roundResult.reveal.answerGroups.map((group) => resolveI18nText(group.display, resolvedLocale));
   }, [resolvedLocale, roundResolved, roundResult]);
+
+  const inputLocked = !showOptions || roundResolved;
+
+  const submitGuess = useCallback(() => {
+    if (inputLocked || !guess.trim()) return;
+    getSocket().emit('match:countdown_guess', { matchId, qIndex, guess: guess.trim() });
+  }, [guess, inputLocked, matchId, qIndex]);
 
   return (
     <div className="space-y-3">
@@ -133,19 +143,18 @@ function CountdownPanel({
               value={guess}
               onChange={(event) => setGuess(event.target.value)}
               onKeyDown={(event) => {
-                if (event.key === 'Enter' && guess.trim()) {
-                  getSocket().emit('match:countdown_guess', { matchId, qIndex, guess: guess.trim() });
+                if (event.key === 'Enter') {
+                  submitGuess();
                 }
               }}
               placeholder="Press Enter to submit..."
+              disabled={inputLocked}
               className="h-12 rounded-xl border-2 border-[#243B44] bg-[#243B44] text-lg text-white placeholder:text-[#56707A] focus:border-[#1CB0F6]"
             />
             <button
               type="button"
-              onClick={() => {
-                if (!guess.trim()) return;
-                getSocket().emit('match:countdown_guess', { matchId, qIndex, guess: guess.trim() });
-              }}
+              onClick={submitGuess}
+              disabled={inputLocked || !guess.trim()}
               className="inline-flex items-center justify-center rounded-xl border-b-4 border-[#C47400] bg-[#FF9600] px-4 text-white transition-all active:translate-y-[2px] active:border-b-2"
             >
               <Send className="size-4" />
@@ -275,6 +284,7 @@ function PutInOrderPanel({
   matchId,
   qIndex,
   question,
+  showOptions,
   timeRemaining,
   questionDurationSeconds,
   answerAck,
@@ -284,6 +294,7 @@ function PutInOrderPanel({
   matchId: string;
   qIndex: number;
   question: ResolvedPutInOrderQuestion;
+  showOptions: boolean;
   timeRemaining: number;
   questionDurationSeconds: number;
   answerAck: MatchAnswerAckPayload | null;
@@ -291,11 +302,14 @@ function PutInOrderPanel({
   roundResult: MatchRoundResultPayload | null;
 }) {
   const [userOrder, setUserOrder] = useState<ResolvedPutInOrderQuestionItem[]>(() => [...question.items]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const resolvedLocale = question.resolvedLocale ?? 'en';
-  const submitted = Boolean(answerAck?.questionKind === 'putInOrder');
+  const submitted = isSubmitting || Boolean(answerAck?.questionKind === 'putInOrder' && answerAck?.qIndex === qIndex);
+  const inputLocked = !showOptions || roundResolved || submitted;
 
   useEffect(() => {
     setUserOrder([...question.items]);
+    setIsSubmitting(false);
   }, [question.items]);
 
   const sensors = useSensors(
@@ -321,7 +335,7 @@ function PutInOrderPanel({
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (!over || active.id === over.id || submitted || roundResolved) return;
+    if (!over || active.id === over.id || inputLocked) return;
     setUserOrder((items) => {
       const oldIndex = items.findIndex((item) => item.id === active.id);
       const newIndex = items.findIndex((item) => item.id === over.id);
@@ -330,13 +344,15 @@ function PutInOrderPanel({
   };
 
   const handleSubmit = useCallback(() => {
+    if (inputLocked) return;
+    setIsSubmitting(true);
     getSocket().emit('match:put_in_order_answer', {
       matchId,
       qIndex,
       orderedItemIds: userOrder.map((item) => item.id),
       timeMs: Math.max(0, Math.round((questionDurationSeconds - timeRemaining) * 1000)),
     });
-  }, [matchId, qIndex, questionDurationSeconds, timeRemaining, userOrder]);
+  }, [inputLocked, matchId, qIndex, questionDurationSeconds, timeRemaining, userOrder]);
 
   return (
     <div className="space-y-3">
@@ -407,7 +423,7 @@ function PutInOrderPanel({
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={submitted}
+          disabled={inputLocked}
           className="w-full rounded-2xl border-b-4 border-[#46A302] bg-[#58CC02] py-3.5 font-black uppercase tracking-wide text-white transition-all active:translate-y-[2px] active:border-b-2 hover:bg-[#4DB800] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {submitted ? 'Submitted' : 'Submit Order'}
@@ -421,6 +437,7 @@ function CluesPanel({
   matchId,
   qIndex,
   question,
+  showOptions,
   timeRemaining,
   questionDurationSeconds,
   answerAck,
@@ -431,6 +448,7 @@ function CluesPanel({
   matchId: string;
   qIndex: number;
   question: ResolvedCluesQuestion;
+  showOptions: boolean;
   timeRemaining: number;
   questionDurationSeconds: number;
   answerAck: MatchAnswerAckPayload | null;
@@ -442,7 +460,7 @@ function CluesPanel({
   const [pendingGuess, setPendingGuess] = useState(false);
   const [manualRevealCount, setManualRevealCount] = useState(1);
   const resolvedLocale = question.resolvedLocale ?? 'en';
-  const submitted = Boolean(answerAck?.questionKind === 'clues');
+  const submitted = Boolean(answerAck?.questionKind === 'clues' && answerAck?.qIndex === qIndex);
   const clueCount = question.clues.length;
   const secondsPerClue = clueCount > 0 ? Math.max(1, Math.floor(questionDurationSeconds / clueCount)) : questionDurationSeconds;
   const timedRevealCount = roundResolved
@@ -453,6 +471,7 @@ function CluesPanel({
     ? resolveI18nText(roundResult.reveal.displayAnswer, resolvedLocale)
     : null;
   const currentPoints = [200, 150, 100, 50, 25][Math.max(0, revealedClues - 1)] ?? 25;
+  const inputLocked = !showOptions || submitted || pendingGuess || roundResolved;
 
   useEffect(() => {
     setGuess('');
@@ -474,16 +493,26 @@ function CluesPanel({
   }, [roundResolved, submitted]);
 
   const emitGuess = useCallback((options?: { giveUp?: boolean }) => {
-    if (pendingGuess || submitted) return;
+    if (inputLocked) return;
     if (!options?.giveUp && !guess.trim()) return;
     setPendingGuess(true);
-    getSocket().emit('match:clues_answer', {
-      matchId,
-      qIndex,
-      ...(options?.giveUp ? { giveUp: true } : { guess: guess.trim() }),
-      timeMs: Math.max(0, Math.round((questionDurationSeconds - timeRemaining) * 1000)),
-    });
-  }, [guess, matchId, pendingGuess, qIndex, questionDurationSeconds, submitted, timeRemaining]);
+    const payload: MatchCluesAnswerPayload = options?.giveUp
+      ? {
+          kind: 'giveUp',
+          matchId,
+          qIndex,
+          giveUp: true,
+          timeMs: Math.max(0, Math.round((questionDurationSeconds - timeRemaining) * 1000)),
+        }
+      : {
+          kind: 'guess',
+          matchId,
+          qIndex,
+          guess: guess.trim(),
+          timeMs: Math.max(0, Math.round((questionDurationSeconds - timeRemaining) * 1000)),
+        };
+    getSocket().emit('match:clues_answer', payload);
+  }, [guess, inputLocked, matchId, qIndex, questionDurationSeconds, timeRemaining]);
 
   return (
     <div className="space-y-3">
@@ -555,7 +584,7 @@ function CluesPanel({
                 emitGuess();
               }
             }}
-            disabled={submitted || pendingGuess}
+            disabled={inputLocked}
             autoFocus
             className="h-12 rounded-xl border-2 border-[#243B44] bg-[#243B44] text-center text-lg text-white placeholder:text-[#56707A] focus:border-[#FF9600]"
           />
@@ -563,7 +592,7 @@ function CluesPanel({
             <button
               type="button"
               onClick={() => emitGuess()}
-              disabled={!guess.trim() || submitted || pendingGuess}
+              disabled={!guess.trim() || inputLocked}
               className="rounded-xl border-b-4 border-[#46A302] bg-[#58CC02] py-3 font-black text-white transition-all active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Submit
@@ -571,7 +600,7 @@ function CluesPanel({
             <button
               type="button"
               onClick={() => emitGuess({ giveUp: true })}
-              disabled={submitted || pendingGuess}
+              disabled={inputLocked}
               className="rounded-xl border-b-4 border-[#0D1B21] bg-[#1B2F36] py-3 font-black text-white transition-all active:translate-y-[2px] active:border-b-2 disabled:opacity-50 hover:bg-[#243B44]"
             >
               Give Up
@@ -609,7 +638,7 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
     matchId,
     qIndex,
     question,
-    showOptions: _showOptions,
+    showOptions,
     timeRemaining,
     questionDurationSeconds,
     answerAck,
@@ -625,6 +654,7 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
         matchId={matchId}
         qIndex={qIndex}
         question={question}
+        showOptions={showOptions}
         roundResolved={roundResolved}
         countdownGuessAck={countdownGuessAck}
         roundResult={roundResult}
@@ -638,6 +668,7 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
         matchId={matchId}
         qIndex={qIndex}
         question={question}
+        showOptions={showOptions}
         timeRemaining={timeRemaining}
         questionDurationSeconds={questionDurationSeconds}
         answerAck={answerAck}
@@ -652,6 +683,7 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
       matchId={matchId}
       qIndex={qIndex}
       question={question}
+      showOptions={showOptions}
       timeRemaining={timeRemaining}
       questionDurationSeconds={questionDurationSeconds}
       answerAck={answerAck}

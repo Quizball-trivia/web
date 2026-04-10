@@ -235,4 +235,67 @@ describe('usePossessionFieldState', () => {
 
     expect(result.current.pitchProps.shotMode?.ballOriginX).toBe(352);
   });
+
+  it('mirrors the pitch and target goal in the second half', () => {
+    const { result, rerender } = renderHook((props: {
+      match: MatchStatus;
+      localQuestion: ResolvedMatchQuestionPayload;
+    }) => usePossessionFieldState({
+      match: props.match,
+      localQuestion: props.localQuestion,
+      roundResult: null,
+      questionPhase: 'playing',
+      roundResolved: false,
+      answerAck: null,
+      opponentAnsweredCorrectly: null,
+      myRound: null,
+      opponentRound: null,
+      devPossessionAnimation: null,
+      clearDevPossessionAnimation: vi.fn(),
+      playerAvatar: '/me.png',
+      opponentAvatar: '/opp.png',
+      playerUsername: 'me',
+      opponentUsername: 'opp',
+      isHalftime: false,
+    }), {
+      initialProps: {
+        match: makeMatch(40, { half: 1, attackerSeat: 1 }),
+        localQuestion: makeQuestion(6, 'normal', 1),
+      },
+    });
+
+    expect(result.current.pitchProps.mirrored).toBe(false);
+    expect(result.current.pitchProps.targetGoal).toBeUndefined();
+
+    rerender({
+      match: makeMatch(40, { half: 2, attackerSeat: 1 }),
+      localQuestion: makeQuestion(6, 'normal', 1),
+    });
+
+    expect(result.current.pitchProps.mirrored).toBe(true);
+    expect(result.current.pitchProps.targetGoal).toBeUndefined();
+
+    rerender({
+      match: makeMatch(40, { half: 1, phaseKind: 'shot', attackerSeat: 1 }),
+      localQuestion: makeQuestion(6, 'shot', 1),
+    });
+
+    expect(result.current.pitchProps.mirrored).toBe(false);
+    expect(result.current.pitchProps.targetGoal).toBe('right');
+
+    rerender({
+      match: makeMatch(40, { half: 2, phaseKind: 'shot', attackerSeat: 1 }),
+      localQuestion: makeQuestion(6, 'shot', 1),
+    });
+
+    expect(result.current.pitchProps.mirrored).toBe(true);
+    expect(result.current.pitchProps.targetGoal).toBe('left');
+
+    rerender({
+      match: makeMatch(40, { half: 2, phaseKind: 'penalty' }),
+      localQuestion: makeQuestion(6, 'penalty', 1),
+    });
+
+    expect(result.current.pitchProps.targetGoal).toBe('left');
+  });
 });

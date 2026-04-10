@@ -13,6 +13,7 @@ import { RealtimePossessionMatchScreen } from '@/features/possession/RealtimePos
 import { DevOverlay } from '@/features/dev/DevOverlay';
 import { resolveAvatarUrl } from '@/lib/avatars';
 import { logger } from '@/utils/logger';
+import { waitForMatchLeaveConfirmation } from './restartMatch';
 
 const START_TIMEOUT_MS = 8_000;
 
@@ -88,15 +89,26 @@ function DevMatchContent() {
 
   const restartMatch = useCallback(() => {
     const currentMatchId = useRealtimeMatchStore.getState().match?.matchId;
-    if (currentMatchId) {
-      getSocket().emit('match:leave', { matchId: currentMatchId });
+    const completeRestart = () => {
+      useRealtimeMatchStore.getState().reset();
+      useRankedMatchmakingStore.getState().clearRankedMatchmaking();
+      resetGameSession();
+      resetStarting();
+      hasAutoStartedRef.current = false;
+    };
+
+    if (!currentMatchId) {
+      completeRestart();
+      return;
     }
 
-    useRealtimeMatchStore.getState().reset();
-    useRankedMatchmakingStore.getState().clearRankedMatchmaking();
-    resetGameSession();
-    resetStarting();
-    hasAutoStartedRef.current = false;
+    void waitForMatchLeaveConfirmation(currentMatchId)
+      .then(() => {
+        completeRestart();
+      })
+      .catch((error) => {
+        logger.warn('Dev restart failed waiting for match leave confirmation', { error, matchId: currentMatchId });
+      });
   }, [resetGameSession, resetStarting]);
 
   const exitToPlay = useCallback(() => {
@@ -106,6 +118,13 @@ function DevMatchContent() {
     resetStarting();
     router.push('/play');
   }, [resetGameSession, resetStarting, router]);
+
+  const quitMatch = useCallback(() => {
+    if (match?.matchId) {
+      getSocket().emit('match:leave', { matchId: match.matchId });
+    }
+    exitToPlay();
+  }, [exitToPlay, match?.matchId]);
 
   const playerAvatar = resolveAvatarUrl(authUser?.avatar_url ?? player.avatarCustomization?.base ?? player.avatar, player.id);
   const opponentAvatar = resolveAvatarUrl(match?.opponent?.avatarUrl, match?.opponent?.id ?? 'ai');
@@ -169,7 +188,7 @@ function DevMatchContent() {
             Back
           </button>
         </div>
-        <DevOverlay onQuit={exitToPlay} onRestart={restartMatch} />
+        <DevOverlay onQuit={quitMatch} onRestart={restartMatch} />
       </div>
     );
   }
@@ -182,12 +201,7 @@ function DevMatchContent() {
         playerUsername={player.username}
         opponentAvatar={opponentAvatar}
         opponentUsername={match.opponent?.username ?? 'AI'}
-        onQuit={() => {
-          if (match.matchId) {
-            getSocket().emit('match:leave', { matchId: match.matchId });
-          }
-          exitToPlay();
-        }}
+        onQuit={quitMatch}
         onForfeit={() => {
           if (match.matchId) {
             getSocket().emit('match:forfeit', { matchId: match.matchId });
@@ -195,7 +209,7 @@ function DevMatchContent() {
           exitToPlay();
         }}
       />
-      <DevOverlay onQuit={exitToPlay} onRestart={restartMatch} />
+      <DevOverlay onQuit={quitMatch} onRestart={restartMatch} />
     </>
   );
 }
