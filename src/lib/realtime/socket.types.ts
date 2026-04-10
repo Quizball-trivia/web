@@ -112,7 +112,14 @@ export interface OpponentGeoPayload {
 }
 
 /** Wire format — i18n objects sent from backend. Resolved to strings in socket-handlers. */
-export interface GameQuestionDTO {
+export type MatchQuestionKind =
+  | 'multipleChoice'
+  | 'countdown'
+  | 'putInOrder'
+  | 'clues';
+
+export interface MultipleChoiceQuestionDTO {
+  kind: 'multipleChoice';
   id: string;
   prompt: Record<string, string>;
   options: Array<Record<string, string>>;
@@ -122,9 +129,61 @@ export interface GameQuestionDTO {
   explanation?: string | null;
 }
 
-/** Locale-resolved question stored in the Zustand store and consumed by components. */
-export interface ResolvedGameQuestion {
+export interface CountdownQuestionDTO {
+  kind: 'countdown';
   id: string;
+  prompt: Record<string, string>;
+  answerSlotCount: number;
+  categoryId?: string;
+  categoryName?: Record<string, string>;
+  difficulty?: string;
+}
+
+export interface PutInOrderQuestionItemDTO {
+  id: string;
+  label: Record<string, string>;
+  details?: Record<string, string> | null;
+  emoji?: string | null;
+}
+
+export interface PutInOrderQuestionDTO {
+  kind: 'putInOrder';
+  id: string;
+  prompt: Record<string, string>;
+  instruction: Record<string, string>;
+  direction: 'asc' | 'desc';
+  items: PutInOrderQuestionItemDTO[];
+  categoryId?: string;
+  categoryName?: Record<string, string>;
+  difficulty?: string;
+}
+
+export interface ClueItemDTO {
+  type: 'text' | 'emoji';
+  content: Record<string, string>;
+}
+
+export interface CluesQuestionDTO {
+  kind: 'clues';
+  id: string;
+  prompt: Record<string, string>;
+  clues: ClueItemDTO[];
+  categoryId?: string;
+  categoryName?: Record<string, string>;
+  difficulty?: string;
+}
+
+export type GameQuestionDTO =
+  | MultipleChoiceQuestionDTO
+  | CountdownQuestionDTO
+  | PutInOrderQuestionDTO
+  | CluesQuestionDTO;
+
+/** Locale-resolved question stored in the Zustand store and consumed by components. */
+export interface ResolvedMultipleChoiceQuestion {
+  kind: 'multipleChoice';
+  id: string;
+  resolvedLocale?: string;
   prompt: string;
   options: string[];
   categoryId?: string;
@@ -132,6 +191,59 @@ export interface ResolvedGameQuestion {
   difficulty?: string;
   explanation?: string | null;
 }
+
+export interface ResolvedCountdownQuestion {
+  kind: 'countdown';
+  id: string;
+  resolvedLocale?: string;
+  prompt: string;
+  answerSlotCount: number;
+  categoryId?: string;
+  categoryName?: string;
+  difficulty?: string;
+}
+
+export interface ResolvedPutInOrderQuestionItem {
+  id: string;
+  label: string;
+  details?: string | null;
+  emoji?: string | null;
+}
+
+export interface ResolvedPutInOrderQuestion {
+  kind: 'putInOrder';
+  id: string;
+  resolvedLocale?: string;
+  prompt: string;
+  instruction: string;
+  direction: 'asc' | 'desc';
+  items: ResolvedPutInOrderQuestionItem[];
+  categoryId?: string;
+  categoryName?: string;
+  difficulty?: string;
+}
+
+export interface ResolvedClueItem {
+  type: 'text' | 'emoji';
+  content: string;
+}
+
+export interface ResolvedCluesQuestion {
+  kind: 'clues';
+  id: string;
+  resolvedLocale?: string;
+  prompt: string;
+  clues: ResolvedClueItem[];
+  categoryId?: string;
+  categoryName?: string;
+  difficulty?: string;
+}
+
+export type ResolvedGameQuestion =
+  | ResolvedMultipleChoiceQuestion
+  | ResolvedCountdownQuestion
+  | ResolvedPutInOrderQuestion
+  | ResolvedCluesQuestion;
 
 export interface MatchStartPayload {
   matchId: string;
@@ -155,7 +267,6 @@ export interface MatchQuestionPayload {
   question: GameQuestionDTO;
   playableAt?: string;
   deadlineAt: string;
-  correctIndex: number;
   phaseKind?: MatchPhaseKind;
   phaseRound?: number | null;
   shooterSeat?: 1 | 2 | null;
@@ -188,6 +299,7 @@ export type ResolvedMatchQuestionPayload = Omit<MatchQuestionPayload, 'question'
 export interface MatchOpponentAnsweredPayload {
   matchId: string;
   qIndex: number;
+  questionKind: MatchQuestionKind;
   opponentTotalPoints: number;
   pointsEarned: number;
   isCorrect: boolean;
@@ -197,15 +309,34 @@ export interface MatchOpponentAnsweredPayload {
 export interface MatchAnswerAckPayload {
   matchId: string;
   qIndex: number;
+  questionKind: MatchQuestionKind;
   selectedIndex: number | null;
   isCorrect: boolean;
-  correctIndex: number;
+  correctIndex?: number;
   myTotalPoints: number;
   oppAnswered: boolean;
   pointsEarned: number;
   phaseKind?: MatchPhaseKind;
   phaseRound?: number | null;
   shooterSeat?: 1 | 2 | null;
+  foundCount?: number;
+  clueIndex?: number | null;
+}
+
+export interface MatchCountdownGuessAckPayload {
+  matchId: string;
+  qIndex: number;
+  accepted: boolean;
+  duplicate: boolean;
+  foundCount: number;
+  acceptedDisplay?: Record<string, string>;
+}
+
+export interface MatchCluesGuessAckPayload {
+  matchId: string;
+  qIndex: number;
+  clueIndex: number;
+  revealCount: number;
 }
 
 export interface MatchRoundResultPlayer {
@@ -214,6 +345,8 @@ export interface MatchRoundResultPlayer {
   timeMs: number;
   pointsEarned: number;
   totalPoints: number;
+  foundCount?: number;
+  clueIndex?: number | null;
 }
 
 export interface MatchRoundResultDeltas {
@@ -222,10 +355,46 @@ export interface MatchRoundResultDeltas {
   goalScoredBySeat: 1 | 2 | null;
 }
 
+export interface MultipleChoiceRoundReveal {
+  kind: 'multipleChoice';
+  correctIndex: number;
+}
+
+export interface CountdownRoundReveal {
+  kind: 'countdown';
+  answerGroups: Array<{
+    id: string;
+    display: Record<string, string>;
+  }>;
+}
+
+export interface PutInOrderRoundReveal {
+  kind: 'putInOrder';
+  correctOrder: Array<{
+    id: string;
+    label: Record<string, string>;
+    details?: Record<string, string> | null;
+    emoji?: string | null;
+    sortValue: number;
+  }>;
+}
+
+export interface CluesRoundReveal {
+  kind: 'clues';
+  displayAnswer: Record<string, string>;
+}
+
+export type MatchRoundReveal =
+  | MultipleChoiceRoundReveal
+  | CountdownRoundReveal
+  | PutInOrderRoundReveal
+  | CluesRoundReveal;
+
 export interface MatchRoundResultPayload {
   matchId: string;
   qIndex: number;
-  correctIndex: number;
+  questionKind: MatchQuestionKind;
+  reveal: MatchRoundReveal;
   players: Record<string, MatchRoundResultPlayer>;
   rankingOrder?: string[];
   phaseKind?: MatchPhaseKind;
@@ -348,6 +517,7 @@ export interface MatchOpponentDisconnectedPayload {
   matchId: string;
   opponentId: string;
   graceMs: number;
+  remainingReconnects: number;
 }
 
 export interface MatchResumePayload {
@@ -362,6 +532,7 @@ export interface MatchRejoinAvailablePayload {
   opponent: OpponentInfo;
   participants: MatchParticipant[];
   graceMs: number;
+  remainingReconnects: number;
 }
 
 export interface RankedSearchStartedPayload {
@@ -471,6 +642,26 @@ export interface ErrorPayload {
   meta?: Record<string, unknown>;
 }
 
+export interface MatchCluesAnswerGuessPayload {
+  kind: 'guess';
+  matchId: string;
+  qIndex: number;
+  guess: string;
+  timeMs: number;
+}
+
+export interface MatchCluesAnswerGiveUpPayload {
+  kind: 'giveUp';
+  matchId: string;
+  qIndex: number;
+  giveUp: true;
+  timeMs: number;
+}
+
+export type MatchCluesAnswerPayload =
+  | MatchCluesAnswerGuessPayload
+  | MatchCluesAnswerGiveUpPayload;
+
 export interface ClientToServerEvents {
   'lobby:create': (data: { mode: MatchMode; isPublic?: boolean }) => void;
   'lobby:join_by_code': (data: { inviteCode: string }) => void;
@@ -489,6 +680,9 @@ export interface ClientToServerEvents {
   'ranked:queue_leave': () => void;
   'draft:ban': (data: { categoryId: string }) => void;
   'match:answer': (data: { matchId: string; qIndex: number; selectedIndex: number | null; timeMs: number }) => void;
+  'match:countdown_guess': (data: { matchId: string; qIndex: number; guess: string }) => void;
+  'match:put_in_order_answer': (data: { matchId: string; qIndex: number; orderedItemIds: string[]; timeMs: number }) => void;
+  'match:clues_answer': (data: MatchCluesAnswerPayload) => void;
   'match:chance_card_use': (data: MatchChanceCardUsePayload) => void;
   'match:halftime_ban': (data: { matchId: string; categoryId: string }) => void;
   'match:leave': (data?: { matchId?: string }) => void;
@@ -521,6 +715,8 @@ export interface ServerToClientEvents {
   'match:chance_card_applied': (data: MatchChanceCardAppliedPayload) => void;
   'match:opponent_answered': (data: MatchOpponentAnsweredPayload) => void;
   'match:answer_ack': (data: MatchAnswerAckPayload) => void;
+  'match:countdown_guess_ack': (data: MatchCountdownGuessAckPayload) => void;
+  'match:clues_guess_ack': (data: MatchCluesGuessAckPayload) => void;
   'match:round_result': (data: MatchRoundResultPayload) => void;
   'match:final_results': (data: MatchFinalResultsPayload) => void;
   'match:opponent_disconnected': (data: MatchOpponentDisconnectedPayload) => void;

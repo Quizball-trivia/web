@@ -40,7 +40,7 @@ function isPathActive(currentPath: string, path: string, exact?: boolean) {
 export function Sidebar({ currentPath, socialBadgeCount = 0, className }: SidebarProps) {
   return (
     <aside
-      className={cn("sticky top-0 flex h-screen w-64 flex-col transition-all duration-300", className)}
+      className={cn("sticky top-0 z-20 flex h-screen w-64 shrink-0 flex-col self-start transition-all duration-300", className)}
       style={{ backgroundColor: "#000000" }}
     >
       <div className="flex items-center justify-center px-6 pt-8 pb-6">

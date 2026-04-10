@@ -166,22 +166,25 @@ export function ModeSelectionScreen({
             )}
           </div>
 
-          {/* Desktop: dev links */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="hidden md:flex flex-col items-start gap-1 mt-3">
+          {IS_DEV && (
+            <div className="mt-3 flex flex-wrap items-center gap-2 md:gap-3">
               <Link
                 href="/dev/match"
                 onClick={(e) => e.stopPropagation()}
-                className="inline-block text-[10px] font-bold text-[#0F3A00]/75 hover:text-[#0F3A00] transition-colors uppercase tracking-widest"
+                onKeyDown={(e) => e.stopPropagation()}
+                onKeyUp={(e) => e.stopPropagation()}
+                className="inline-flex items-center justify-center rounded-xl bg-black/90 px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white transition-colors hover:bg-black"
               >
-                Dev Quick Match →
+                Dev Quick Ranked
               </Link>
               <Link
                 href="/dev/mock-match"
                 onClick={(e) => e.stopPropagation()}
-                className="inline-block text-[10px] font-bold text-[#0F3A00]/75 hover:text-[#0F3A00] transition-colors uppercase tracking-widest"
+                onKeyDown={(e) => e.stopPropagation()}
+                onKeyUp={(e) => e.stopPropagation()}
+                className="inline-flex items-center justify-center rounded-xl border border-[#0F3A00]/20 bg-[#E6F8C9] px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#0F3A00] transition-colors hover:bg-[#DCF4B6]"
               >
-                New Ranked Dev →
+                New Ranked Dev
               </Link>
             </div>
           )}

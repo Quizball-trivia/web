@@ -8,6 +8,7 @@ import { parseOAuthHash, refreshWithToken } from '@/lib/auth/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
 import { logger } from '@/utils/logger';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
+import { getAuthenticatedEntryRoute } from '@/lib/auth/onboarding';
 
 export function OAuthCallbackScreen() {
   const router = useRouter();
@@ -77,8 +78,9 @@ export function OAuthCallbackScreen() {
         }
 
         await bootstrap({ force: true });
+        const authenticatedUser = useAuthStore.getState().user;
         logger.info('OAuth callback bootstrap success');
-        router.replace('/play');
+        router.replace(getAuthenticatedEntryRoute(authenticatedUser));
       } catch (err) {
         logger.error('OAuth callback failed', err);
         setError(err instanceof Error ? err.message : 'Authentication failed');

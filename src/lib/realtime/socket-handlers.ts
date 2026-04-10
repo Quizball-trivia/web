@@ -13,6 +13,8 @@ import type {
   DraftState,
   ErrorPayload,
   MatchChanceCardAppliedPayload,
+  MatchCluesGuessAckPayload,
+  MatchCountdownGuessAckPayload,
   LobbyState,
   MatchAnswerAckPayload,
   MatchFinalResultsPayload,
@@ -202,16 +204,12 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   });
 
   socket.on('match:question', (data: MatchQuestionPayload) => {
-    logger.debug('Inspecting match:question correctIndex payload type', {
-      correctIndex: data.correctIndex,
-      correctIndexType: typeof data.correctIndex,
-    });
     logger.info('Socket event match:question', {
       matchId: data.matchId,
       qIndex: data.qIndex,
       total: data.total,
       deadlineAt: data.deadlineAt,
-      correctIndex: data.correctIndex,
+      questionKind: data.question.kind,
     });
 
     // Resolve i18n fields to the user's preferred locale.
@@ -220,16 +218,50 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     const preferredLocale = storage.get(STORAGE_KEYS.LOCALE, 'en');
     const questionHasLocale = data.question.prompt && data.question.prompt[preferredLocale];
     const locale = questionHasLocale ? preferredLocale : 'en';
+    const categoryName = data.question.categoryName
+      ? getI18nText(data.question.categoryName, locale)
+      : undefined;
     const resolvedData = {
       ...data,
-      question: {
-        ...data.question,
-        prompt: getI18nText(data.question.prompt, locale),
-        options: data.question.options.map((opt) => getI18nText(opt, locale)),
-        categoryName: data.question.categoryName
-          ? getI18nText(data.question.categoryName, locale)
-          : undefined,
-      },
+      question:
+        data.question.kind === 'multipleChoice'
+          ? {
+              ...data.question,
+              resolvedLocale: locale,
+              prompt: getI18nText(data.question.prompt, locale),
+              options: data.question.options.map((opt) => getI18nText(opt, locale)),
+              categoryName,
+            }
+          : data.question.kind === 'countdown'
+            ? {
+                ...data.question,
+                resolvedLocale: locale,
+                prompt: getI18nText(data.question.prompt, locale),
+                categoryName,
+              }
+            : data.question.kind === 'putInOrder'
+              ? {
+                  ...data.question,
+                  resolvedLocale: locale,
+                  prompt: getI18nText(data.question.prompt, locale),
+                  instruction: getI18nText(data.question.instruction, locale),
+                  items: data.question.items.map((item) => ({
+                    ...item,
+                    label: getI18nText(item.label, locale),
+                    details: item.details ? getI18nText(item.details, locale) : null,
+                  })),
+                  categoryName,
+                }
+              : {
+                  ...data.question,
+                  resolvedLocale: locale,
+                  prompt: getI18nText(data.question.prompt, locale),
+                  clues: data.question.clues.map((clue) => ({
+                    ...clue,
+                    content: getI18nText(clue.content, locale),
+                  })),
+                  categoryName,
+                },
     };
     store.setMatchQuestion(resolvedData);
   });
@@ -266,6 +298,26 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       isCorrect: data.isCorrect,
     });
     store.setAnswerAck(data);
+  });
+
+  socket.on('match:countdown_guess_ack', (data: MatchCountdownGuessAckPayload) => {
+    logger.info('Socket event match:countdown_guess_ack', {
+      matchId: data.matchId,
+      qIndex: data.qIndex,
+      accepted: data.accepted,
+      foundCount: data.foundCount,
+    });
+    store.setCountdownGuessAck(data);
+  });
+
+  socket.on('match:clues_guess_ack', (data: MatchCluesGuessAckPayload) => {
+    logger.info('Socket event match:clues_guess_ack', {
+      matchId: data.matchId,
+      qIndex: data.qIndex,
+      clueIndex: data.clueIndex,
+      revealCount: data.revealCount,
+    });
+    store.setCluesGuessAck(data);
   });
 
   socket.on('match:round_result', (data: MatchRoundResultPayload) => {
@@ -305,8 +357,12 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       matchId: data.matchId,
       opponentId: data.opponentId,
       graceMs: data.graceMs,
+      remainingReconnects: data.remainingReconnects,
     });
-    store.setMatchPaused({ graceMs: data.graceMs });
+    store.setMatchPaused({
+      graceMs: data.graceMs,
+      remainingReconnects: data.remainingReconnects,
+    });
   });
 
   socket.on('match:resume', (data: MatchResumePayload) => {
@@ -320,6 +376,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       mode: data.mode,
       opponentId: data.opponent.id,
       graceMs: data.graceMs,
+      remainingReconnects: data.remainingReconnects,
     });
     store.setRejoinAvailable(data);
   });

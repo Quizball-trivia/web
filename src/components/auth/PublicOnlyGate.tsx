@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth.store";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
+import { getAuthenticatedEntryRoute } from "@/lib/auth/onboarding";
 
 type PublicOnlyGateProps = {
   children: React.ReactNode;
@@ -12,6 +13,7 @@ type PublicOnlyGateProps = {
 export default function PublicOnlyGate({ children }: PublicOnlyGateProps) {
   const router = useRouter();
   const status = useAuthStore((state) => state.status);
+  const user = useAuthStore((state) => state.user);
   const bootstrap = useAuthStore((state) => state.bootstrap);
   const hasBootstrapped = useRef(false);
 
@@ -23,9 +25,9 @@ export default function PublicOnlyGate({ children }: PublicOnlyGateProps) {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.replace("/play");
+      router.replace(getAuthenticatedEntryRoute(user));
     }
-  }, [status, router]);
+  }, [status, user, router]);
 
   if (status === "loading") {
     return <LoadingScreen fullScreen />;

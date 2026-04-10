@@ -7,7 +7,7 @@ import { trackAnswerSubmitted } from '@/lib/analytics/game-events';
 
 const QUESTION_PLAYING_MS = 10000; // 10 second playing phase
 export const ROUND_RESULT_HOLD_MS = 2500; // hold result for 2.5s before transitioning to next question
-const GOAL_CELEBRATION_EXTRA_MS = 2500; // extra delay for GOOOL overlay before round transition
+const GOAL_CELEBRATION_EXTRA_MS = 7000; // keep promotion blocked until the goal celebration overlay finishes
 
 interface UseRealtimeGameLogicOptions {
   /** Extra delay (ms) between hiding options and promoting the next question. Used for round transition overlay. */
@@ -76,13 +76,16 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
   }, [countdownEndsAt]);
 
   useEffect(() => {
+    const initialTimeRemaining = normalizedPlayableAtMs !== null && normalizedQuestionDeadlineAtMs !== null
+      ? Math.max(0, Math.ceil((normalizedQuestionDeadlineAtMs - normalizedPlayableAtMs) / 1000))
+      : QUESTION_PLAYING_MS / 1000;
     // Reset UI state synchronously when question changes — prevents one-frame flash
     // where new question mounts with stale showOptions=true from previous question.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedAnswer(null);
     setSelectedAnswerQIndex(undefined);
     setShowOptions(false);
-    setTimeRemaining(QUESTION_PLAYING_MS / 1000);
+    setTimeRemaining(initialTimeRemaining);
 
     // If the transition overlay was showing, keep roundResultHoldDone=true briefly
     // so the overlay lingers while the question panel swaps underneath. This prevents
@@ -97,7 +100,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
 
     setRoundResultHoldDone(false);
     setTransitionElapsed(false);
-  }, [currentQuestionIndex]); // eslint-disable-line react-hooks/exhaustive-deps -- roundResultHoldDone read intentionally without dep
+  }, [currentQuestionIndex, normalizedPlayableAtMs, normalizedQuestionDeadlineAtMs]); // eslint-disable-line react-hooks/exhaustive-deps -- roundResultHoldDone read intentionally without dep
 
   // Phase transition effect: reveal → playing
   // showOptions is already reset synchronously in the question-change effect above,
@@ -179,9 +182,13 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
 
   const currentPhaseKind = currentQuestion?.phaseKind ?? 'normal';
   const isGoalRound = Boolean(roundResult?.deltas?.goalScoredBySeat);
-  const isFinalGoalRound = isGoalRound && match?.possessionState?.phase === 'COMPLETED';
-  const goalExtra = isFinalGoalRound ? GOAL_CELEBRATION_EXTRA_MS : 0;
-  const effectiveDelay = currentPhaseKind === 'normal' ? transitionDelayMs + goalExtra : 0;
+  const goalExtra = isGoalRound ? GOAL_CELEBRATION_EXTRA_MS : 0;
+  const effectiveDelay =
+    currentPhaseKind === 'normal'
+      ? transitionDelayMs + goalExtra
+      : currentPhaseKind === 'last_attack' && isGoalRound
+        ? goalExtra
+        : 0;
 
   // Hold timer — hide options after result display, then either signal transition
   // (normal phases with delay) or let the gate effect promote directly (non-normal).
@@ -251,11 +258,12 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
 
   const correctIndex = useMemo(() => {
     if (!match || !currentQuestion) return undefined;
-    // Primary: read directly from the question payload (sent with question for instant feedback)
-    if (currentQuestion.correctIndex !== undefined) return currentQuestion.correctIndex;
     const stored = match.questions[currentQuestion.qIndex]?.correctIndex;
-    return stored ?? answerAck?.correctIndex ?? roundResult?.correctIndex;
-  }, [answerAck?.correctIndex, roundResult?.correctIndex, match, currentQuestion]);
+    const revealCorrectIndex = roundResult?.reveal?.kind === 'multipleChoice'
+      ? roundResult.reveal.correctIndex
+      : undefined;
+    return stored ?? answerAck?.correctIndex ?? revealCorrectIndex;
+  }, [answerAck?.correctIndex, roundResult, match, currentQuestion]);
 
   const playerScore = match?.myTotalPoints ?? 0;
   const opponentScore = match?.oppTotalPoints ?? 0;
@@ -270,7 +278,6 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
 
     logger.info('Submitting answer with resolved correct index sources', {
       correctIndex,
-      currentQuestionCorrectIndex: currentQuestion.correctIndex,
       storedQuestionCorrectIndex: match.questions[currentQuestion.qIndex]?.correctIndex,
     });
 

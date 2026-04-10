@@ -129,8 +129,8 @@ export function GameStageRouter() {
       logger.info("Socket emit match:forfeit", { matchId: realtimeMatch.matchId });
     } else {
       logger.info("Socket emit match:forfeit skipped (missing matchId)");
+      exitToPlay();
     }
-    exitToPlay();
   }, [realtimeMatch?.matchId, exitToPlay]);
 
   const matchmakingDebugInfo = useMemo(

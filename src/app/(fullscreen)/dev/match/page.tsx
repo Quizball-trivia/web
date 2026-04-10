@@ -13,6 +13,7 @@ import { RealtimePossessionMatchScreen } from '@/features/possession/RealtimePos
 import { DevOverlay } from '@/features/dev/DevOverlay';
 import { resolveAvatarUrl } from '@/lib/avatars';
 import { logger } from '@/utils/logger';
+import { waitForMatchLeaveConfirmation } from './restartMatch';
 
 const START_TIMEOUT_MS = 8_000;
 
@@ -36,6 +37,7 @@ function DevMatchContent() {
   const match = useRealtimeMatchStore((s) => s.match);
   const finalResults = match?.finalResults ?? null;
   const [starting, setStarting] = useState(false);
+  const hasAutoStartedRef = useRef(false);
   const startTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resetStarting = useCallback(() => {
     setStarting(false);
@@ -72,11 +74,41 @@ function DevMatchContent() {
     }, START_TIMEOUT_MS);
   }, [resetStarting]);
 
+  useEffect(() => {
+    if (match || starting || hasAutoStartedRef.current) return;
+    hasAutoStartedRef.current = true;
+    startMatch();
+  }, [match, startMatch, starting]);
+
   const playAgain = useCallback(() => {
     useRealtimeMatchStore.getState().reset();
     useRankedMatchmakingStore.getState().clearRankedMatchmaking();
     resetGameSession();
     resetStarting();
+  }, [resetGameSession, resetStarting]);
+
+  const restartMatch = useCallback(() => {
+    const currentMatchId = useRealtimeMatchStore.getState().match?.matchId;
+    const completeRestart = () => {
+      useRealtimeMatchStore.getState().reset();
+      useRankedMatchmakingStore.getState().clearRankedMatchmaking();
+      resetGameSession();
+      resetStarting();
+      hasAutoStartedRef.current = false;
+    };
+
+    if (!currentMatchId) {
+      completeRestart();
+      return;
+    }
+
+    void waitForMatchLeaveConfirmation(currentMatchId)
+      .then(() => {
+        completeRestart();
+      })
+      .catch((error) => {
+        logger.warn('Dev restart failed waiting for match leave confirmation', { error, matchId: currentMatchId });
+      });
   }, [resetGameSession, resetStarting]);
 
   const exitToPlay = useCallback(() => {
@@ -87,6 +119,13 @@ function DevMatchContent() {
     router.push('/play');
   }, [resetGameSession, resetStarting, router]);
 
+  const quitMatch = useCallback(() => {
+    if (match?.matchId) {
+      getSocket().emit('match:leave', { matchId: match.matchId });
+    }
+    exitToPlay();
+  }, [exitToPlay, match?.matchId]);
+
   const playerAvatar = resolveAvatarUrl(authUser?.avatar_url ?? player.avatarCustomization?.base ?? player.avatar, player.id);
   const opponentAvatar = resolveAvatarUrl(match?.opponent?.avatarUrl, match?.opponent?.id ?? 'ai');
 
@@ -94,17 +133,21 @@ function DevMatchContent() {
   if (!match) {
     return (
       <div className="min-h-dvh bg-[#131F24] flex flex-col items-center justify-center gap-6 font-fun">
-        <h1 className="text-3xl font-black text-white uppercase">Dev Quick Match</h1>
+        <h1 className="text-3xl font-black text-white uppercase">Dev Quick Ranked</h1>
         <p className="text-sm text-[#56707A] font-semibold max-w-sm text-center">
-          Instantly start a possession match against AI. Same gameplay as ranked.
+          Launching a real ranked possession match against AI.
         </p>
-        <button
-          onClick={startMatch}
-          disabled={starting}
-          className="px-10 py-4 rounded-2xl bg-[#FF9600] border-b-4 border-[#C47400] text-white font-black text-xl uppercase tracking-wide hover:bg-[#FFa620] active:border-b-2 active:translate-y-[2px] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {starting ? 'Starting...' : 'Start Match'}
-        </button>
+        <div className="text-sm font-bold text-white/80 uppercase tracking-wider">
+          {starting ? 'Starting…' : 'Waiting for match…'}
+        </div>
+        {!starting ? (
+          <button
+            onClick={startMatch}
+            className="px-10 py-4 rounded-2xl bg-[#FF9600] border-b-4 border-[#C47400] text-white font-black text-xl uppercase tracking-wide hover:bg-[#FFa620] active:border-b-2 active:translate-y-[2px] transition-all"
+          >
+            Retry
+          </button>
+        ) : null}
         <button
           onClick={exitToPlay}
           className="text-sm font-bold text-[#56707A] hover:text-white/80 transition-colors"
@@ -145,7 +188,7 @@ function DevMatchContent() {
             Back
           </button>
         </div>
-        <DevOverlay />
+        <DevOverlay onQuit={quitMatch} onRestart={restartMatch} />
       </div>
     );
   }
@@ -158,12 +201,7 @@ function DevMatchContent() {
         playerUsername={player.username}
         opponentAvatar={opponentAvatar}
         opponentUsername={match.opponent?.username ?? 'AI'}
-        onQuit={() => {
-          if (match.matchId) {
-            getSocket().emit('match:leave', { matchId: match.matchId });
-          }
-          exitToPlay();
-        }}
+        onQuit={quitMatch}
         onForfeit={() => {
           if (match.matchId) {
             getSocket().emit('match:forfeit', { matchId: match.matchId });
@@ -171,7 +209,7 @@ function DevMatchContent() {
           exitToPlay();
         }}
       />
-      <DevOverlay />
+      <DevOverlay onQuit={quitMatch} onRestart={restartMatch} />
     </>
   );
 }

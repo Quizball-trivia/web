@@ -98,6 +98,7 @@ export function AppShell({ children }: AppShellProps) {
   const authUser = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const lobby = useRealtimeMatchStore((state) => state.lobby);
+  const match = useRealtimeMatchStore((state) => state.match);
   const sessionState = useRealtimeMatchStore((state) => state.sessionState);
   const rejoinMatch = useRealtimeMatchStore((state) => state.rejoinMatch);
   const clearRejoinAvailable = useRealtimeMatchStore((state) => state.clearRejoinAvailable);
@@ -114,7 +115,22 @@ export function AppShell({ children }: AppShellProps) {
   const showNav = !HIDE_NAV_PATHS.some((path) => currentPath.startsWith(path));
   const inLobbyRoom = currentPath.startsWith("/friend/room");
   const showLobbyBanner = !!lobby && lobby.status === "waiting" && !inLobbyRoom;
-  const showRejoinBanner = !!rejoinMatch && !currentPath.startsWith("/game");
+  const activeMatchBanner = rejoinMatch
+    ? {
+        matchId: rejoinMatch.matchId,
+        mode: rejoinMatch.mode,
+        opponent: rejoinMatch.opponent,
+        source: "rejoin" as const,
+      }
+    : match && !match.finalResults
+      ? {
+          matchId: match.matchId,
+          mode: match.mode,
+          opponent: match.opponent,
+          source: "active" as const,
+        }
+      : null;
+  const showRejoinBanner = !!activeMatchBanner && !currentPath.startsWith("/game");
   const lobbyCode = lobby?.inviteCode ?? "";
   const showLobbyDebug = process.env.NODE_ENV !== "production";
   const localWaitingLobbyId = lobby?.status === "waiting" ? lobby.lobbyId : null;
@@ -171,54 +187,60 @@ export function AppShell({ children }: AppShellProps) {
   };
 
   const handleRejoinMatch = () => {
-    if (!rejoinMatch) return;
+    if (!activeMatchBanner) return;
 
-    const matchId = rejoinMatch.matchId;
+    const matchId = activeMatchBanner.matchId;
 
     startSession({
-      mode: rejoinMatch.mode === "ranked" ? "ranked" : "quizball",
-      matchType: rejoinMatch.mode === "ranked" ? "ranked" : "friendly",
+      mode: activeMatchBanner.mode === "ranked" ? "ranked" : "quizball",
+      matchType: activeMatchBanner.mode === "ranked" ? "ranked" : "friendly",
       questionCount: 10,
-      opponentId: rejoinMatch.opponent.id,
-      opponentUsername: rejoinMatch.opponent.username,
-      opponentAvatar: rejoinMatch.opponent.avatarUrl ?? undefined,
+      opponentId: activeMatchBanner.opponent.id,
+      opponentUsername: activeMatchBanner.opponent.username,
+      opponentAvatar: activeMatchBanner.opponent.avatarUrl ?? undefined,
     });
     // Avoid re-entering matchmaking queue on rejoin.
     setGameStage("playing");
 
-    // Emit rejoin request to server
-    getSocket().emit("match:rejoin", { matchId });
-
-    // Immediately clear rejoin state to prevent duplicate emissions and banner reappearance
-    clearRejoinAvailable();
+    if (activeMatchBanner.source === "rejoin") {
+      getSocket().emit("match:rejoin", { matchId });
+      clearRejoinAvailable();
+    }
 
     router.push("/game");
   };
 
   const handleForfeitRejoin = () => {
-    if (!rejoinMatch) {
+    if (!activeMatchBanner) {
       clearRejoinAvailable();
       return;
     }
-    getSocket().emit("match:forfeit", { matchId: rejoinMatch.matchId });
+    getSocket().emit("match:forfeit", { matchId: activeMatchBanner.matchId });
     clearRejoinAvailable();
   };
 
   return (
-    <div className="min-h-screen text-foreground relative" style={{ backgroundColor: 'hsl(var(--background))' }}>
-      {/* Background pattern overlay */}
+    <div className="relative min-h-screen text-foreground">
       <div
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat pointer-events-none z-0 opacity-60"
-        style={{ backgroundImage: "url('/assets/bg-pattern.png')" }}
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 bg-[#0f1420] bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0"
+        style={{
+          background:
+            "radial-gradient(circle at top center, rgba(28,176,246,0.08), transparent 32%), radial-gradient(circle at bottom left, rgba(88,204,2,0.06), transparent 28%)",
+        }}
       />
       {/* DESKTOP LAYOUT (>= md) */}
-      <div className="hidden md:flex min-h-screen relative z-10">
+      <div className="relative z-10 hidden min-h-screen md:flex">
         <Sidebar currentPath={currentPath} socialBadgeCount={socialBadgeCount} />
 
         {/* Main Wrapper */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* TopBar */}
-          <header className="h-16 bg-background/80 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between px-6">
+          <header className="h-16 bg-background/60 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between px-6">
             <div className="flex-1" />
 
             <div className="flex items-center gap-4">
@@ -370,10 +392,12 @@ export function AppShell({ children }: AppShellProps) {
                       <div>
                         <p className="text-sm font-semibold text-blue-100">
                           Match still active against{" "}
-                          <span className="text-foreground">{rejoinMatch?.opponent.username ?? "Opponent"}</span>
+                          <span className="text-foreground">{activeMatchBanner?.opponent.username ?? "Opponent"}</span>
                         </p>
                         <p className="text-xs text-blue-200/80">
-                          Rejoin now to continue the game
+                          {activeMatchBanner?.source === "rejoin"
+                            ? "Rejoin now to continue the game"
+                            : "Return to the live match"}
                         </p>
                       </div>
                     </div>
@@ -452,7 +476,7 @@ export function AppShell({ children }: AppShellProps) {
       </div>
 
       {/* MOBILE LAYOUT (< md) */}
-      <div className="flex flex-col min-h-screen md:hidden relative z-10">
+      <div className="relative z-10 flex min-h-screen flex-col md:hidden">
         {/* Header */}
         {showHeader && (
           <div>
@@ -522,10 +546,12 @@ export function AppShell({ children }: AppShellProps) {
                     <div>
                       <p className="text-sm font-semibold text-blue-100">
                         Match active vs{" "}
-                        <span className="text-foreground">{rejoinMatch?.opponent.username ?? "Opponent"}</span>
+                        <span className="text-foreground">{activeMatchBanner?.opponent.username ?? "Opponent"}</span>
                       </p>
                       <p className="text-xs text-blue-200/80">
-                        Rejoin to continue
+                        {activeMatchBanner?.source === "rejoin"
+                          ? "Rejoin to continue"
+                          : "Return to continue"}
                       </p>
                     </div>
                   </div>
