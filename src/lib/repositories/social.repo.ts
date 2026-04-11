@@ -44,6 +44,12 @@ export async function declineFriendRequest(requestId: string) {
   });
 }
 
+export async function cancelFriendRequest(requestId: string) {
+  return apiFetch("post", "/api/v1/friends/requests/{requestId}/cancel", {
+    params: { requestId },
+  });
+}
+
 /**
  * TODO: Remove friend feature — planned for future implementation.
  * Endpoint exists in backend but UI/feature not yet implemented.

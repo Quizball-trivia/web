@@ -1888,6 +1888,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/friends/requests/{requestId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel a sent friend request */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    requestId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Friend request cancelled */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Friend request not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Validation error */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/friends/{friendUserId}": {
         parameters: {
             query?: never;
@@ -2204,12 +2272,23 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Category deleted */
-                204: {
+                /** @description Category deleted or archived */
+                200: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            action: "deleted" | "archived";
+                            /** @enum {string} */
+                            entity_type: "category";
+                            /** Format: uuid */
+                            entity_id: string;
+                            message: string;
+                            archived_questions?: number;
+                        };
+                    };
                 };
                 /** @description Not authenticated */
                 401: {
@@ -2881,12 +2960,22 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Question deleted */
-                204: {
+                /** @description Question deleted or archived */
+                200: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            action: "deleted" | "archived";
+                            /** @enum {string} */
+                            entity_type: "question";
+                            /** Format: uuid */
+                            entity_id: string;
+                            message: string;
+                        };
+                    };
                 };
                 /** @description Not authenticated */
                 401: {
@@ -3593,6 +3682,18 @@ export interface paths {
                                 };
                                 sortOrder: number;
                                 isActive: boolean;
+                                availableCategories: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    slug: string;
+                                    name: {
+                                        [key: string]: string;
+                                    };
+                                    questionCount: number;
+                                    easyCount: number;
+                                    mediumCount: number;
+                                    hardCount: number;
+                                }[];
                             }[];
                         };
                     };
@@ -4196,6 +4297,16 @@ export interface components {
             /** Format: date-time */
             updated_at: string;
         };
+        DeleteCategoryResult: {
+            /** @enum {string} */
+            action: "deleted" | "archived";
+            /** @enum {string} */
+            entity_type: "category";
+            /** Format: uuid */
+            entity_id: string;
+            message: string;
+            archived_questions?: number;
+        };
         PaginatedCategoriesResponse: {
             data: components["schemas"]["CategoryResponse"][];
             page: number;
@@ -4297,6 +4408,15 @@ export interface components {
             created_at: string;
             /** Format: date-time */
             updated_at: string;
+        };
+        DeleteQuestionResult: {
+            /** @enum {string} */
+            action: "deleted" | "archived";
+            /** @enum {string} */
+            entity_type: "question";
+            /** Format: uuid */
+            entity_id: string;
+            message: string;
         };
         PaginatedQuestionsResponse: {
             data: components["schemas"]["QuestionResponse"][];
@@ -4415,6 +4535,18 @@ export interface components {
             itemsPerRound: number;
             /** @enum {string} */
             challengeType: "putInOrder";
+        };
+        AdminDailyChallengeCategoryOption: {
+            /** Format: uuid */
+            id: string;
+            slug: string;
+            name: {
+                [key: string]: string;
+            };
+            questionCount: number;
+            easyCount: number;
+            mediumCount: number;
+            hardCount: number;
         };
         DailyChallengeSessionResponse: {
             /** @enum {string} */
@@ -4549,9 +4681,63 @@ export interface components {
             showOnHome: boolean;
             completedToday: boolean;
             availableToday: boolean;
+            settings: {
+                /** @default [] */
+                categoryIds: string[];
+                questionCount: number;
+                secondsPerQuestion: number;
+                startingMoney: number;
+                /** @enum {string} */
+                challengeType: "moneyDrop";
+            } | {
+                /** @default [] */
+                categoryIds: string[];
+                pickCount: number;
+                /** @enum {string} */
+                challengeType: "footballJeopardy";
+            } | {
+                /** @default [] */
+                categoryIds: string[];
+                questionCount: number;
+                secondsPerQuestion: number;
+                /** @enum {string} */
+                challengeType: "trueFalse";
+            } | {
+                /** @default [] */
+                categoryIds: string[];
+                roundCount: number;
+                secondsPerRound: number;
+                /** @enum {string} */
+                challengeType: "countdown";
+            } | {
+                /** @default [] */
+                categoryIds: string[];
+                questionCount: number;
+                secondsPerClueStep: number;
+                /** @enum {string} */
+                challengeType: "clues";
+            } | {
+                /** @default [] */
+                categoryIds: string[];
+                roundCount: number;
+                itemsPerRound: number;
+                /** @enum {string} */
+                challengeType: "putInOrder";
+            };
             sortOrder: number;
             isActive: boolean;
-            settings: components["schemas"]["DailyChallengeSettings"];
+            availableCategories: {
+                /** Format: uuid */
+                id: string;
+                slug: string;
+                name: {
+                    [key: string]: string;
+                };
+                questionCount: number;
+                easyCount: number;
+                mediumCount: number;
+                hardCount: number;
+            }[];
         };
     };
     responses: never;
