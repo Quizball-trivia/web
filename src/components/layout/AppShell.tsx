@@ -14,6 +14,17 @@ import { Button } from "@/components/ui/button";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { AppLogo } from "@/components/AppLogo";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { NotificationsDropdown } from "@/components/layout/NotificationsDropdown";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +38,6 @@ import {
   Home,
   Coins,
   Ticket,
-  Bell,
   LogOut,
   ArrowRight,
   X,
@@ -109,6 +119,7 @@ export function AppShell({ children }: AppShellProps) {
   const [rankedGeoHintDebug, setRankedGeoHintDebug] = useState<RankedGeoHintDebug | null>(
     () => readRankedGeoHintDebug()
   );
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const currentPath = pathname ?? "/";
   const showHeader = HEADER_PATHS.some((p) => p === "/" ? currentPath === "/" : currentPath.startsWith(p));
@@ -302,30 +313,7 @@ export function AppShell({ children }: AppShellProps) {
               <div className="h-6 w-px bg-border/50" />
 
               {/* Notifications */}
-              <div className="relative">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={socialBadgeCount > 0 ? `Notifications, ${socialBadgeCount} unread` : "Notifications"}
-                  className="relative rounded-full text-muted-foreground hover:text-foreground"
-                  onClick={() => router.push("/social")}
-                >
-                  <Bell className="size-5" />
-                  {socialBadgeCount > 0 && (
-                    <span className="absolute -right-0.5 -top-0.5 min-w-5 rounded-full bg-red-500 px-1 py-0.5 text-center text-[10px] font-black text-white">
-                      {socialBadgeCount}
-                    </span>
-                  )}
-                </Button>
-                {/* Screen reader announcement for badge count changes */}
-                <span
-                  aria-live="polite"
-                  aria-atomic="true"
-                  className="sr-only"
-                >
-                  {socialBadgeCount > 0 ? `You have ${socialBadgeCount} new notification${socialBadgeCount === 1 ? "" : "s"}` : ""}
-                </span>
-              </div>
+              <NotificationsDropdown badgeCount={socialBadgeCount} />
 
               {/* User Profile + Menu */}
               <DropdownMenu>
@@ -368,7 +356,7 @@ export function AppShell({ children }: AppShellProps) {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={handleLogout}
+                    onClick={() => setShowLogoutConfirm(true)}
                     className="text-red-500 focus:text-red-500 dark:focus:text-red-400"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
@@ -670,6 +658,29 @@ export function AppShell({ children }: AppShellProps) {
           </div>
         )}
       </div>
+
+      {/* Logout Confirmation Dialog */}
+      <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <AlertDialogContent className="border-border bg-[var(--overlay-bg)]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">Log out?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to log out of your account?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-border bg-card text-foreground hover:bg-muted">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleLogout}
+              className="border-destructive/25 bg-destructive/15 text-red-400 hover:bg-destructive/25"
+            >
+              Log out
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
