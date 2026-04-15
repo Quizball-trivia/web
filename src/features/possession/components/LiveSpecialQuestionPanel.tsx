@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowUpDown, CheckCircle2, Clock, GripVertical, Lightbulb, Send, Star, XCircle } from 'lucide-react';
 import {
   DndContext,
@@ -93,10 +93,13 @@ function CountdownPanel({
   const [guess, setGuess] = useState('');
   const [foundAnswers, setFoundAnswers] = useState<string[]>([]);
   const resolvedLocale = question.resolvedLocale ?? 'en';
+  const lastSubmittedRef = useRef('');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setGuess('');
     setFoundAnswers([]);
+    lastSubmittedRef.current = '';
   }, [qIndex]);
 
   useEffect(() => {
@@ -104,6 +107,7 @@ function CountdownPanel({
     const display = resolveI18nText(countdownGuessAck.acceptedDisplay, resolvedLocale);
     setFoundAnswers((current) => (current.includes(display) ? current : [...current, display]));
     setGuess('');
+    lastSubmittedRef.current = '';
   }, [countdownGuessAck, qIndex, resolvedLocale]);
 
   const revealedAnswers = useMemo(() => {
@@ -116,6 +120,27 @@ function CountdownPanel({
   const submitGuess = useCallback(() => {
     if (inputLocked || !guess.trim()) return;
     getSocket().emit('match:countdown_guess', { matchId, qIndex, guess: guess.trim() });
+    lastSubmittedRef.current = guess.trim().toLowerCase();
+  }, [guess, inputLocked, matchId, qIndex]);
+
+  // Auto-submit on keystroke with 200ms debounce (3+ characters).
+  // The server handles matching (prefix, fuzzy, exact) — if accepted, the ACK clears the input.
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const trimmed = guess.trim();
+    if (inputLocked || trimmed.length < 3 || trimmed.toLowerCase() === lastSubmittedRef.current) return;
+
+    debounceRef.current = setTimeout(() => {
+      debounceRef.current = null;
+      const normalized = trimmed.toLowerCase();
+      if (normalized === lastSubmittedRef.current) return;
+      getSocket().emit('match:countdown_guess', { matchId, qIndex, guess: trimmed });
+      lastSubmittedRef.current = normalized;
+    }, 200);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [guess, inputLocked, matchId, qIndex]);
 
   return (
@@ -147,7 +172,7 @@ function CountdownPanel({
                   submitGuess();
                 }
               }}
-              placeholder="Press Enter to submit..."
+              placeholder="Start typing to find answers..."
               disabled={inputLocked}
               className="h-12 rounded-xl border-2 border-[#243B44] bg-[#243B44] text-lg text-white placeholder:text-[#56707A] focus:border-[#1CB0F6]"
             />
@@ -162,7 +187,7 @@ function CountdownPanel({
           </div>
           <p className="mt-2 flex items-center gap-1 text-xs text-[#56707A]">
             <Lightbulb className="size-3.5 text-[#FF9600]" />
-            Server checks each guess. Found answers lock in immediately.
+            Answers auto-match as you type. Press Enter for short answers.
           </p>
         </div>
       )}

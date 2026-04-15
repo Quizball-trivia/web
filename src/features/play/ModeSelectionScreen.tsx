@@ -14,18 +14,32 @@ import { logger } from '@/utils/logger';
 import { colors } from '@/lib/colors';
 
 import { getNextTierBand } from '@/utils/rankedTier';
-import { ClipboardList } from 'lucide-react';
+import type { RankedTier } from '@/utils/rankedTier';
+
+const TIER_COLORS: Record<RankedTier, string> = {
+  Academy: '#8B9DA4',
+  'Youth Prospect': '#58CC02',
+  Reserve: '#1CB0F6',
+  Bench: '#1CB0F6',
+  Rotation: '#CE82FF',
+  Starting11: '#CE82FF',
+  'Key Player': '#FF9600',
+  Captain: '#FF9600',
+  'World-Class': '#FF4B4B',
+  Legend: '#FFD700',
+  GOAT: '#FFD700',
+};
 
 
-function StadiumSilhouette() {
+function RpProgressBar({ current, target }: { current: number; target: number }) {
+  const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
   return (
-    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 800 300" fill="none" preserveAspectRatio="xMidYMid slice">
-      <path d="M0 300 L0 180 Q100 80 200 120 Q300 60 400 100 Q500 60 600 120 Q700 80 800 180 L800 300 Z" fill="rgba(34,197,94,0.04)" />
-      <path d="M0 300 L0 200 Q200 120 400 160 Q600 120 800 200 L800 300 Z" fill="rgba(34,197,94,0.03)" />
-      <line x1="100" y1="80" x2="200" y2="250" stroke="rgba(255,255,255,0.02)" strokeWidth="60" />
-      <line x1="700" y1="80" x2="600" y2="250" stroke="rgba(255,255,255,0.02)" strokeWidth="60" />
-      <ellipse cx="400" cy="280" rx="120" ry="40" stroke="rgba(34,197,94,0.06)" strokeWidth="1.5" fill="none" />
-    </svg>
+    <div className="h-3 md:h-4 w-full rounded-full bg-[#2D950B] overflow-hidden">
+      <div
+        className="h-full rounded-full bg-[#FFE500] transition-all duration-500"
+        style={{ width: `${pct}%` }}
+      />
+    </div>
   );
 }
 
@@ -66,6 +80,7 @@ export function ModeSelectionScreen({
   const rankedGamesPlayed = matchStatsSummary?.ranked.gamesPlayed ?? 0;
   const nextTierBand = getNextTierBand(displayRp);
   const nextTierTargetRp = nextTierBand?.minRp ?? null;
+  const nextTierColor = nextTierBand ? TIER_COLORS[nextTierBand.tier] : '#FFD700';
   const router = useRouter();
 
   const handleConfirm = () => {
@@ -96,104 +111,148 @@ export function ModeSelectionScreen({
         }}
         role="button"
         tabIndex={0}
-        className="relative overflow-hidden rounded-[28px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 active:translate-y-[2px] transition-all"
+        className="relative overflow-hidden rounded-2xl md:rounded-[28px] border-t-[3px] border-[#1CB0F6] cursor-pointer focus-visible:outline-none focus-visible:ring-2 active:translate-y-[2px] transition-all"
         style={{ backgroundColor: colors.green.base }}
       >
-        {/* Cup icon */}
+        {/* Ranked icon — centered background watermark */}
         <Image
-          src="/assets/brand/cup.png"
+          src="/assets/ranked-icon.webp"
           alt=""
-          width={160}
-          height={160}
-          className="absolute right-2 bottom-2 w-16 h-16 md:w-40 md:h-40 object-contain opacity-90 pointer-events-none"
+          width={200}
+          height={200}
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 md:w-36 md:h-36 object-contain opacity-80 pointer-events-none"
         />
-        <div className="relative z-10 p-5 md:p-7">
-          {/* Desktop top row */}
-          <div className="hidden md:flex items-start justify-between gap-4">
-            <div className="min-w-0">
+
+        <div className="relative z-10 p-4 md:p-7">
+          {/* ── Desktop layout ── */}
+          <div className="hidden md:flex items-center gap-6">
+            {/* Left: Title + Play */}
+            <div className="flex-1 min-w-0">
               <h1 className="text-5xl font-black uppercase leading-none text-white">Ranked Match</h1>
-              <div className="mt-2 text-lg font-black uppercase tracking-wide text-white/95">
+              <div className="mt-1.5 text-lg font-black uppercase tracking-wide text-white/90">
                 {rankedProfileLoading
                   ? '1v1 Competitive'
                   : isPlacementInProgress
                     ? `Placement ${placementPlayed}/${placementRequired}`
                     : '1v1 Competitive'}
               </div>
+
+              {IS_DEV && (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Link
+                    href="/dev/match"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    onKeyUp={(e) => e.stopPropagation()}
+                    className="inline-flex items-center justify-center rounded-xl bg-black/90 px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white transition-colors hover:bg-black"
+                  >
+                    Dev Quick Ranked
+                  </Link>
+                  <Link
+                    href="/dev/mock-match"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    onKeyUp={(e) => e.stopPropagation()}
+                    className="inline-flex items-center justify-center rounded-xl border border-[#0F3A00]/20 bg-[#E6F8C9] px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#0F3A00] transition-colors hover:bg-[#DCF4B6]"
+                  >
+                    New Ranked Dev
+                  </Link>
+                </div>
+              )}
+
+              <div className="mt-5">
+                <div className="flex w-[180px] items-center justify-center rounded-2xl bg-black h-[56px] text-xl font-black uppercase tracking-wide text-white">
+                  Play
+                </div>
+              </div>
             </div>
-            <div className="text-right">
-              <div className="text-5xl font-black text-[#FFE500] drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]">
+
+            {/* Right: RP stats */}
+            <div className="text-right shrink-0 w-[280px]">
+              <div className="text-4xl font-black text-[#FFE500] drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]">
                 {displayRp}/{nextTierTargetRp ?? 600} RP
               </div>
-              <div className="mt-0.5 text-sm font-black uppercase tracking-wide text-white">
+              <div className="mt-2">
+                <RpProgressBar current={displayRp} target={nextTierTargetRp ?? 600} />
+              </div>
+              {!rankedProfileLoading && (
+                <div className="mt-2 text-[11px] font-black uppercase tracking-wide text-white/70">
+                  {rankedWinRate}% win rate · {rankedGamesPlayed} ranked games
+                </div>
+              )}
+              <div className="mt-1 text-sm font-black uppercase tracking-wide text-white">
                 {isPlacementInProgress
                   ? `${placementMatchesLeft} match${placementMatchesLeft === 1 ? "" : "es"} to rank reveal`
                   : nextTierBand
-                    ? `${Math.max(0, nextTierTargetRp! - displayRp)} RP to ${nextTierBand.tier}`
+                    ? <>{Math.max(0, (nextTierTargetRp ?? 0) - displayRp)} RP to <span className="text-black">{nextTierBand.tier}</span></>
                     : "Max rank reached"}
               </div>
-              {!rankedProfileLoading && (
-                <div className="mt-0.5 text-xs font-black uppercase tracking-wide text-white/80">
-                  {rankedWinRate}% win rate • {rankedGamesPlayed} ranked games
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Mobile top section */}
+          {/* ── Mobile layout ── */}
           <div className="md:hidden">
-            <h1 className="text-2xl font-black uppercase leading-none text-white">Ranked Match</h1>
-            <div className="mt-1 text-xs font-black uppercase tracking-wide text-white/95">
-              {rankedProfileLoading
-                ? '1v1 Competitive'
-                : isPlacementInProgress
-                  ? `Placement ${placementPlayed}/${placementRequired}`
-                  : '1v1 Competitive'}
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h1 className="text-2xl font-black uppercase leading-none text-white">Ranked Match</h1>
+                <div className="mt-1 text-xs font-black uppercase tracking-wide text-white/90">
+                  {rankedProfileLoading
+                    ? '1v1 Competitive'
+                    : isPlacementInProgress
+                      ? `Placement ${placementPlayed}/${placementRequired}`
+                      : '1v1 Competitive'}
+                </div>
+              </div>
+              <div className="text-right shrink-0">
+                <div className="text-lg font-black text-[#FFE500] drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]">
+                  {displayRp}/{nextTierTargetRp ?? 600} RP
+                </div>
+              </div>
             </div>
-            <div className="mt-1.5 text-lg font-black text-[#FFE500] drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]">
-              {displayRp}/{nextTierTargetRp ?? 600} RP
+
+            <div className="mt-2">
+              <RpProgressBar current={displayRp} target={nextTierTargetRp ?? 600} />
             </div>
-            <div className="mt-0.5 text-[10px] font-black uppercase tracking-wide text-white">
+            {!rankedProfileLoading && (
+              <div className="mt-1.5 text-[10px] font-black uppercase tracking-wide text-white/70">
+                {rankedWinRate}% win rate · {rankedGamesPlayed} ranked games
+              </div>
+            )}
+            <div className="mt-0.5 text-[11px] font-black uppercase tracking-wide text-white">
               {isPlacementInProgress
                 ? `${placementMatchesLeft} match${placementMatchesLeft === 1 ? "" : "es"} to rank reveal`
                 : nextTierBand
-                  ? `${Math.max(0, nextTierTargetRp! - displayRp)} RP to ${nextTierBand.tier}`
+                  ? <>{Math.max(0, (nextTierTargetRp ?? 0) - displayRp)} RP to <span className="text-black">{nextTierBand.tier}</span></>
                   : "Max rank reached"}
             </div>
-            {!rankedProfileLoading && (
-              <div className="mt-0.5 text-[10px] font-black uppercase tracking-wide text-white/80">
-                {rankedWinRate}% win rate • {rankedGamesPlayed} ranked games
+
+            {IS_DEV && (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <Link
+                  href="/dev/match"
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
+                  onKeyUp={(e) => e.stopPropagation()}
+                  className="inline-flex items-center justify-center rounded-xl bg-black/90 px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white transition-colors hover:bg-black"
+                >
+                  Dev Quick Ranked
+                </Link>
+                <Link
+                  href="/dev/mock-match"
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
+                  onKeyUp={(e) => e.stopPropagation()}
+                  className="inline-flex items-center justify-center rounded-xl border border-[#0F3A00]/20 bg-[#E6F8C9] px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#0F3A00] transition-colors hover:bg-[#DCF4B6]"
+                >
+                  New Ranked Dev
+                </Link>
               </div>
             )}
-          </div>
 
-          {IS_DEV && (
-            <div className="mt-3 flex flex-wrap items-center gap-2 md:gap-3">
-              <Link
-                href="/dev/match"
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-                onKeyUp={(e) => e.stopPropagation()}
-                className="inline-flex items-center justify-center rounded-xl bg-black/90 px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white transition-colors hover:bg-black"
-              >
-                Dev Quick Ranked
-              </Link>
-              <Link
-                href="/dev/mock-match"
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-                onKeyUp={(e) => e.stopPropagation()}
-                className="inline-flex items-center justify-center rounded-xl border border-[#0F3A00]/20 bg-[#E6F8C9] px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#0F3A00] transition-colors hover:bg-[#DCF4B6]"
-              >
-                New Ranked Dev
-              </Link>
-            </div>
-          )}
-
-          <div className="mt-3 md:mt-7">
-            <div
-              className="flex w-[calc(50%-8px)] items-center justify-center rounded-2xl md:rounded-3xl bg-black h-[48px] md:h-[112px] text-sm md:text-2xl font-black uppercase tracking-wide text-white"
-            >
-              Play
+            <div className="mt-3">
+              <div className="flex w-[140px] items-center justify-center rounded-2xl bg-black h-[44px] text-sm font-black uppercase tracking-wide text-white">
+                Play
+              </div>
             </div>
           </div>
         </div>
@@ -206,7 +265,7 @@ export function ModeSelectionScreen({
         transition={{ delay: 0.2 }}
         className="grid grid-cols-2 gap-4"
       >
-        {/* Friendly */}
+        {/* Friendly Match */}
         <div
           onClick={() => setSelectedMode('friendly')}
           onKeyDown={(e) => {
@@ -215,36 +274,31 @@ export function ModeSelectionScreen({
               setSelectedMode('friendly');
             }
           }}
-        role="button"
-        tabIndex={0}
-        className="relative cursor-pointer overflow-hidden rounded-[20px] md:rounded-[28px] p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
-        style={{ backgroundColor: colors.blue.brand }}
-      >
-        <div className="relative z-10 flex flex-col h-full">
-          <h3 className="text-base md:text-4xl font-black uppercase leading-tight text-white">Friendly Match</h3>
-          <p className="mt-0.5 md:mt-2 text-[10px] md:text-lg font-black uppercase text-white/70">Create/Join Room</p>
-          <div className="mt-auto pt-2 md:pt-6">
-            <div className="flex items-center justify-between rounded-xl md:rounded-3xl bg-black border-[3px] border-blue-400 px-2.5 py-1.5 md:px-5 md:py-4">
-              <Image
-                src="/assets/brand/friend.png"
-                alt=""
-                width={120}
-                height={120}
-                className="w-9 h-9 md:w-20 md:h-20 object-contain"
-              />
-              <Image
-                src="/assets/brand/play-blue.png"
-                alt="Play"
-                width={56}
-                height={56}
-                className="w-7 h-7 md:w-14 md:h-14 object-contain"
-              />
+          role="button"
+          tabIndex={0}
+          className="relative cursor-pointer overflow-hidden rounded-2xl md:rounded-[28px] border-[3px] border-[#1CB0F6] p-4 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
+          style={{ backgroundColor: colors.yellow.base }}
+        >
+          {/* Watermark icon */}
+          <Image
+            src="/assets/friendly_match-icon.webp"
+            alt=""
+            width={160}
+            height={160}
+            className="absolute right-2 bottom-2 w-20 h-20 md:right-4 md:bottom-4 md:w-36 md:h-36 object-contain opacity-90 pointer-events-none"
+          />
+          <div className="relative z-10 flex flex-col h-full">
+            <h3 className="text-xl md:text-4xl font-black uppercase leading-tight text-black">Friendly Match</h3>
+            <p className="mt-0.5 md:mt-1.5 text-[10px] md:text-base font-black uppercase text-black">Create/Join Room</p>
+            <div className="mt-auto pt-4 md:pt-8">
+              <div className="flex w-[140px] md:w-[180px] items-center justify-center rounded-2xl bg-black h-[44px] md:h-[56px] text-sm md:text-xl font-black uppercase tracking-wide text-white">
+                Play
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-        {/* Daily Challenges */}
+        {/* Daily Challenge */}
         <div
           onClick={() => router.push('/daily/challenges')}
           onKeyDown={(e) => {
@@ -253,34 +307,29 @@ export function ModeSelectionScreen({
               router.push('/daily/challenges');
             }
           }}
-        role="button"
-        tabIndex={0}
-        className="relative cursor-pointer overflow-hidden rounded-[20px] md:rounded-[28px] p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
-        style={{ backgroundColor: colors.yellow.base, color: "#000000" }}
-      >
-        <div className="relative z-10 flex flex-col h-full">
-          <h3 className="text-base md:text-4xl font-black uppercase leading-tight text-black">Daily Challenge</h3>
-          <p className="mt-0.5 md:mt-2 text-[10px] md:text-lg font-black uppercase text-black/70">View Challenges</p>
-          <div className="mt-auto pt-2 md:pt-6">
-            <div className="flex items-center justify-between rounded-xl md:rounded-3xl bg-black border-[3px] border-yellow-400 px-2.5 py-1.5 md:px-5 md:py-4">
-              <Image
-                src="/assets/brand/daily-challenge.png"
-                alt=""
-                width={120}
-                height={120}
-                className="w-9 h-9 md:w-20 md:h-20 object-contain"
-              />
-              <Image
-                src="/assets/brand/play-yellow.png"
-                alt="Play"
-                width={56}
-                height={56}
-                className="w-7 h-7 md:w-14 md:h-14 object-contain"
-              />
+          role="button"
+          tabIndex={0}
+          className="relative cursor-pointer overflow-hidden rounded-2xl md:rounded-[28px] border-[3px] border-[#1CB0F6] p-4 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
+          style={{ backgroundColor: colors.blue.brand }}
+        >
+          {/* Watermark icon */}
+          <Image
+            src="/assets/daily_chllangeicon.webp"
+            alt=""
+            width={160}
+            height={160}
+            className="absolute right-0 bottom-0 w-24 h-24 md:right-2 md:bottom-2 md:w-40 md:h-40 object-contain opacity-90 pointer-events-none"
+          />
+          <div className="relative z-10 flex flex-col h-full">
+            <h3 className="text-xl md:text-4xl font-black uppercase leading-tight text-white">Daily Challenge</h3>
+            <p className="mt-0.5 md:mt-1.5 text-[10px] md:text-base font-black uppercase text-white/60">View Challenges</p>
+            <div className="mt-auto pt-4 md:pt-8">
+              <div className="flex w-[140px] md:w-[180px] items-center justify-center rounded-2xl bg-black h-[44px] md:h-[56px] text-sm md:text-xl font-black uppercase tracking-wide text-white">
+                Play
+              </div>
             </div>
           </div>
         </div>
-      </div>
       </motion.div>
 
       {/* ─── 3. Objectives ─── */}
@@ -290,34 +339,35 @@ export function ModeSelectionScreen({
         transition={{ delay: 0.35 }}
       >
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-black text-white flex items-center gap-2 uppercase">
-            <ClipboardList className="size-5 text-[#CE82FF]" />
+          <h2 className="text-base font-black text-white uppercase">
             Objectives
           </h2>
-          {/* TODO: Replace hardcoded "1/4 complete" with dynamic values from objectives API/hook */}
-          <span className="text-xs font-bold text-[#56707A] bg-[#1B2F36] px-3 py-1.5 rounded-full border-b-2 border-[#0D1B21]">1/4 complete</span>
+          <Link
+            href="/objectives"
+            className="flex items-center justify-center w-[120px] h-[40px] rounded-xl border-2 border-[#58CC02] text-xs font-black text-white uppercase tracking-wide hover:bg-[#58CC02]/10 transition-colors"
+          >
+            View All
+          </Link>
         </div>
         <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
           {/* TODO: Replace hardcoded progress (33%, "1/3", "+100 coins") with dynamic values from objectives API/hook */}
           <Link
             href="/objectives"
-            className="shrink-0 w-[220px] bg-[#1B2F36] rounded-2xl border-b-4 border-[#0D1B21] p-4 hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all"
+            className="shrink-0 w-[260px] md:w-[300px] bg-[#1A3A1A] rounded-2xl p-4 hover:bg-[#224422] transition-all"
           >
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="size-10 rounded-xl bg-[#CE82FF]/20 border-2 border-[#CE82FF]/40 flex items-center justify-center text-lg">
-                ⚡
-              </div>
+            <div className="flex items-center gap-3 mb-3">
+              <Image src="/assets/obj_icon.png" alt="" width={45} height={44} className="size-12 object-contain" />
               <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-black text-white truncate">Morning Kickoff</h4>
-                <p className="text-[11px] font-semibold text-[#56707A] truncate">Play 3 matches</p>
+                <h4 className="text-sm font-black text-white uppercase truncate">Morning Kickoff</h4>
+                <p className="text-[11px] font-bold text-white/60 uppercase truncate">Play a match before 9 AM</p>
               </div>
             </div>
-            <div className="h-2 bg-[#243B44] rounded-full overflow-hidden mb-2">
-              <div className="h-full bg-gradient-to-r from-[#CE82FF] to-[#E0A8FF] rounded-full" style={{ width: '33%' }} />
+            <div className="h-3 bg-[#0F260F] rounded-full overflow-hidden mb-2.5">
+              <div className="h-full bg-[#58CC02] rounded-full" style={{ width: '33%' }} />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-black text-[#CE82FF]">1/3</span>
-              <span className="text-[10px] font-bold text-[#56707A] bg-[#243B44] px-2 py-0.5 rounded-full">+100 coins</span>
+              <span className="text-xs font-black text-white">1/3</span>
+              <span className="text-xs font-black text-white uppercase">+100 Coins</span>
             </div>
           </Link>
 
@@ -331,41 +381,30 @@ export function ModeSelectionScreen({
                 key={obj.title}
                 {...wrapperProps}
                 className={cn(
-                  'shrink-0 w-[220px] bg-[#1B2F36] rounded-2xl border-b-4 p-4',
+                  'shrink-0 w-[260px] md:w-[300px] bg-[#1A3A1A] rounded-2xl p-4',
                   isLocked
-                    ? 'border-[#0D1B21] opacity-50 cursor-default'
-                    : 'border-[#0D1B21] hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all'
+                    ? 'opacity-50 cursor-default'
+                    : 'hover:bg-[#224422] transition-all'
                 )}
               >
-                <div className="flex items-center gap-2.5 mb-3">
-                  <div className={cn(
-                    'size-10 rounded-xl border-2 flex items-center justify-center text-lg',
-                    isLocked ? 'bg-[#243B44] border-[#243B44]' : 'bg-[#CE82FF]/20 border-[#CE82FF]/40'
-                  )}>
-                    {isLocked ? '🔒' : obj.icon}
-                  </div>
+                <div className="flex items-center gap-3 mb-3">
+                  <Image src="/assets/obj_icon.png" alt="" width={45} height={44} className={cn('size-12 object-contain', isLocked && 'opacity-40')} />
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-black text-white truncate">{obj.title}</h4>
-                    <p className="text-[11px] font-semibold text-[#56707A] truncate">{obj.desc}</p>
+                    <h4 className="text-sm font-black text-white uppercase truncate">{obj.title}</h4>
+                    <p className="text-[11px] font-bold text-white/60 uppercase truncate">{obj.desc}</p>
                   </div>
                 </div>
-                <div className="h-2 bg-[#243B44] rounded-full overflow-hidden mb-2">
-                  <div className="h-full bg-[#56707A] rounded-full" style={{ width: '0%' }} />
+                <div className="h-3 bg-[#0F260F] rounded-full overflow-hidden mb-2.5">
+                  <div className="h-full bg-[#58CC02] rounded-full" style={{ width: '0%' }} />
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-black text-[#56707A]">0/1</span>
-                  <span className="text-[10px] font-bold text-[#56707A] bg-[#243B44] px-2 py-0.5 rounded-full">{obj.reward}</span>
+                  <span className="text-xs font-black text-white">0/1</span>
+                  <span className="text-xs font-black text-white uppercase">{obj.reward}</span>
                 </div>
               </Wrapper>
             );
           })}
         </div>
-        <Link
-          href="/objectives"
-          className="mt-2 inline-block text-xs font-bold text-[#CE82FF] hover:text-[#CE82FF]/80 transition-colors uppercase tracking-wide"
-        >
-          View All Objectives →
-        </Link>
       </motion.div>
 
       {/* ─── 5. Recent Matches ─── */}

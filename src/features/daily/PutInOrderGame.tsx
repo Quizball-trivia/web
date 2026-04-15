@@ -131,9 +131,8 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
 
   const round = session.rounds[currentRound];
   const roundInstruction = round ? getRoundInstruction(round) : "lowest to highest";
-  const correctOrder = [...(round?.items ?? [])].sort((a, b) =>
-    round?.direction === "desc" ? b.sortValue - a.sortValue : a.sortValue - b.sortValue
-  );
+  // sort_value represents rank/position (1 = first in correct order).
+  const correctOrder = [...(round?.items ?? [])].sort((a, b) => a.sortValue - b.sortValue);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),

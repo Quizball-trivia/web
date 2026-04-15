@@ -7,7 +7,9 @@ import { trackAnswerSubmitted } from '@/lib/analytics/game-events';
 
 const QUESTION_PLAYING_MS = 10000; // 10 second playing phase
 export const ROUND_RESULT_HOLD_MS = 2500; // hold result for 2.5s before transitioning to next question
+const SPECIAL_RESULT_EXTRA_MS = 3000; // extra hold for special question reveals (countdown answers, correct order, clues answer)
 const GOAL_CELEBRATION_EXTRA_MS = 7000; // keep promotion blocked until the goal celebration overlay finishes
+const SPECIAL_QUESTION_KINDS = new Set(['countdown', 'putInOrder', 'clues']);
 
 interface UseRealtimeGameLogicOptions {
   /** Extra delay (ms) between hiding options and promoting the next question. Used for round transition overlay. */
@@ -175,7 +177,10 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
   const roundResult = match?.lastRoundResult && match.currentQuestion?.qIndex === match.lastRoundResult.qIndex
     ? match.lastRoundResult
     : null;
-  const roundResultHoldMs = ROUND_RESULT_HOLD_MS;
+  const isSpecialRound = roundResult?.questionKind
+    ? SPECIAL_QUESTION_KINDS.has(roundResult.questionKind)
+    : false;
+  const roundResultHoldMs = ROUND_RESULT_HOLD_MS + (isSpecialRound ? SPECIAL_RESULT_EXTRA_MS : 0);
   const opponentAnswered = match?.opponentAnswered ?? false;
 
   const roundResolved = Boolean(roundResult);
