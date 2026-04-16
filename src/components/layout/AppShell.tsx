@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -36,8 +37,6 @@ import {
 import {
   Settings,
   Home,
-  Coins,
-  Ticket,
   LogOut,
   ArrowRight,
   X,
@@ -290,10 +289,16 @@ export function AppShell({ children }: AppShellProps) {
                 {/* Coins */}
                 <Link
                   href="/store"
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 hover:bg-yellow-500/20 transition-all active:scale-95"
+                  className="flex items-center gap-1 pl-1.5 pr-3.5 py-1 rounded-full bg-[#FFE500] hover:bg-[#FFD000] transition-all active:scale-95"
                 >
-                  <Coins className="size-4 text-yellow-500" />
-                  <span className="text-sm font-bold text-yellow-500">
+                  <Image
+                    src="/assets/coin-1.png"
+                    alt="Coins"
+                    width={24}
+                    height={24}
+                    className="size-6"
+                  />
+                  <span className="text-sm font-black text-black">
                     {navbarCoins.toLocaleString()}
                   </span>
                 </Link>
@@ -301,10 +306,16 @@ export function AppShell({ children }: AppShellProps) {
                 {/* Tickets */}
                 <Link
                   href="/store"
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all active:scale-95"
+                  className="flex items-center gap-1.5 pl-2 pr-3.5 py-1 rounded-full bg-[#58CC02] hover:bg-[#4CAF00] transition-all active:scale-95"
                 >
-                  <Ticket className="size-4 text-primary" />
-                  <span className="text-sm font-bold text-primary">
+                  <Image
+                    src="/assets/ticket-1.png"
+                    alt="Tickets"
+                    width={20}
+                    height={20}
+                    className="size-5"
+                  />
+                  <span className="text-sm font-black text-white">
                     {navbarTickets}
                   </span>
                 </Link>
@@ -499,10 +510,10 @@ export function AppShell({ children }: AppShellProps) {
                   {/* Coins */}
                   <Link
                     href="/store"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/30 hover:bg-yellow-500/20 transition-colors active:scale-95"
+                    className="flex items-center gap-1 pl-1 pr-3 py-0.5 rounded-full bg-[#FFE500] hover:bg-[#FFD000] transition-colors active:scale-95"
                   >
-                    <Coins className="size-4 text-yellow-500" />
-                    <span className="text-sm">
+                    <img src="/assets/coin-1.png" alt="Coins" className="size-6" />
+                    <span className="text-sm font-black text-black">
                       {navbarCoins.toLocaleString()}
                     </span>
                   </Link>
@@ -510,10 +521,10 @@ export function AppShell({ children }: AppShellProps) {
                   {/* Tickets */}
                   <Link
                     href="/store"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/30 hover:bg-primary/20 transition-colors active:scale-95"
+                    className="flex items-center gap-1 pl-1.5 pr-3 py-0.5 rounded-full bg-[#58CC02] hover:bg-[#4CAF00] transition-colors active:scale-95"
                   >
-                    <Ticket className="size-4 text-primary" />
-                    <span className="text-sm">{navbarTickets}</span>
+                    <img src="/assets/ticket-1.png" alt="Tickets" className="size-5" />
+                    <span className="text-sm font-black text-white">{navbarTickets}</span>
                   </Link>
                 </div>
               </div>

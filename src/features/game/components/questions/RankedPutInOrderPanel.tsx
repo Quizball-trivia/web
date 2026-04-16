@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { ArrowUpDown, CheckCircle2, GripVertical, XCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import {
@@ -119,8 +119,10 @@ export function RankedPutInOrderPanel({ question, onComplete }: RankedPutInOrder
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const correctOrder = [...question.items].sort((a, b) =>
-    question.direction === 'desc' ? b.sortValue - a.sortValue : a.sortValue - b.sortValue,
+  // sort_value represents rank/position (1 = first in correct order).
+  const correctOrder = useMemo(
+    () => [...question.items].sort((a, b) => a.sortValue - b.sortValue),
+    [question.items],
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -138,11 +140,20 @@ export function RankedPutInOrderPanel({ question, onComplete }: RankedPutInOrder
     [correctOrder],
   );
 
+  const revealResultRef = useRef<boolean | null>(null);
+
   const handleSubmit = () => {
-    const allCorrect = userOrder.every((item, idx) => isItemCorrect(item.id, idx));
+    revealResultRef.current = userOrder.every((item, idx) => isItemCorrect(item.id, idx));
     setIsRevealed(true);
-    setTimeout(() => onComplete(allCorrect), 1400);
   };
+
+  // Delayed onComplete call after reveal — cleaned up on unmount.
+  useEffect(() => {
+    if (!isRevealed || revealResultRef.current === null) return;
+    const result = revealResultRef.current;
+    const timer = setTimeout(() => onComplete(result), 1400);
+    return () => clearTimeout(timer);
+  }, [isRevealed, onComplete]);
 
   const allCorrect = isRevealed && userOrder.every((item, idx) => isItemCorrect(item.id, idx));
 

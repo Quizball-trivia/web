@@ -4,7 +4,7 @@ import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import type { ResolvedMatchQuestionPayload } from '@/lib/realtime/socket.types';
 import type { AnswerState, AnswerStateArray } from './types/possession.types';
 
-export const TRANSITION_DELAY_MS = 1600;
+export const TRANSITION_DELAY_MS = 2500;
 export const FIELD_RESULT_COMPARE_MS = 900;
 export const FIELD_POSSESSION_CUE_MS = 300;
 export const QUESTION_PLAYING_MS = 10000;

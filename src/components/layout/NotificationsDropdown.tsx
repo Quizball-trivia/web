@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Bell, Check, Loader2, UserRound, X } from "lucide-react";
@@ -185,9 +186,15 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
               ? `Notifications, ${badgeCount} unread`
               : "Notifications"
           }
-          className="relative rounded-full text-muted-foreground hover:text-foreground"
+          className="relative rounded-full hover:bg-white/5"
         >
-          <Bell className="size-5" />
+          <Image
+            src="/assets/bell.png"
+            alt=""
+            width={24}
+            height={24}
+            className="size-6"
+          />
           {badgeCount > 0 && (
             <span className="absolute -right-0.5 -top-0.5 min-w-5 rounded-full bg-red-500 px-1 py-0.5 text-center text-[10px] font-black text-white">
               {badgeDisplay}
