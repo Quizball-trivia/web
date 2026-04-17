@@ -196,8 +196,8 @@ export default function DailyChallengesPage() {
         {/* Bottom stats */}
         {!isLoading && challenges.length > 0 && (
           <div className="mt-8 md:mt-10 flex flex-wrap items-end gap-8">
-            <div>
-              <p className="font-poppins text-xs uppercase tracking-wider text-white/60 mb-2">
+            <div className="flex flex-col items-center">
+              <p className="font-poppins text-xs uppercase tracking-wider text-white mb-2">
                 Play For
               </p>
               <span className="inline-flex items-center gap-2 rounded-full bg-[#FFE500]/15 px-4 py-1.5 text-sm font-black text-[#FFE500]">
@@ -205,11 +205,11 @@ export default function DailyChallengesPage() {
                 <Image src="/assets/coin-1.png" alt="" width={20} height={20} className="size-5 object-contain" />
               </span>
             </div>
-            <div>
-              <p className="font-poppins text-xs uppercase tracking-wider text-white/60 mb-2">
+            <div className="flex flex-col items-center">
+              <p className="font-poppins text-xs uppercase tracking-wider text-white mb-2">
                 Earn
               </p>
-              <span className="inline-flex items-center rounded-full bg-[#58CC02]/15 px-4 py-1.5 text-sm font-black text-[#58CC02]">
+              <span className="inline-flex items-center rounded-full bg-[#58CC02] px-4 py-1.5 text-sm font-black text-white">
                 {totalXp} XP
               </span>
             </div>
