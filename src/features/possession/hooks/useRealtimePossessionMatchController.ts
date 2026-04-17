@@ -103,7 +103,9 @@ export function useRealtimePossessionMatchController({
   const isLastAttackQuestion = phaseKind === 'last_attack';
   const isShotQuestion = phaseKind === 'shot';
   const pendingQuestion = match?.pendingQuestion ?? null;
-  const answerAck = match?.answerAck ?? null;
+  const answerAck = match?.answerAck && match.answerAck.qIndex === localQuestionIndex
+    ? match.answerAck
+    : null;
   const countdownGuessAck = match?.countdownGuessAck ?? null;
   const cluesGuessAck = match?.cluesGuessAck ?? null;
   const opponentAnsweredCorrectly = match?.opponentAnsweredCorrectly ?? null;
@@ -248,7 +250,6 @@ export function useRealtimePossessionMatchController({
     localQuestion,
     phaseKind,
     selectedAnswer: state.selectedAnswer,
-    correctIndex: state.correctIndex,
     selectedAnswerQIndex: state.selectedAnswerQIndex ?? null,
     opponentAnswered: state.opponentAnswered,
     opponentAnsweredCorrectly,
@@ -278,9 +279,10 @@ export function useRealtimePossessionMatchController({
   const opponentPoints = state.opponentScore;
   const questionInHalf = possessionState?.normalQuestionsAnsweredInHalf ?? 0;
 
+  const resolvedCorrectIndex = state.roundResolved ? state.correctIndex : undefined;
   const question = useMemo(() => (
-    toMultipleChoiceGameQuestion(localQuestion, state.correctIndex)
-  ), [localQuestion, state.correctIndex]);
+    toMultipleChoiceGameQuestion(localQuestion, resolvedCorrectIndex)
+  ), [localQuestion, resolvedCorrectIndex]);
 
   const isMultipleChoiceQuestion = localQuestion?.question.kind === 'multipleChoice';
   const specialQuestion = localQuestion && localQuestion.question.kind !== 'multipleChoice'
@@ -293,9 +295,7 @@ export function useRealtimePossessionMatchController({
       return toRevealAnswerStates(optionsCount, state.correctIndex, state.selectedAnswer);
     }
 
-    const selfAnsweredCorrectly = state.selectedAnswer !== null && typeof state.correctIndex === 'number'
-      ? state.selectedAnswer === state.correctIndex
-      : answerAck?.isCorrect ?? null;
+    const selfAnsweredCorrectly = answerAck?.isCorrect ?? null;
 
     return toAnswerStates(optionsCount, state.selectedAnswer, selfAnsweredCorrectly);
   }, [answerAck?.isCorrect, question?.options.length, state.correctIndex, state.roundResolved, state.selectedAnswer]);
@@ -616,6 +616,7 @@ export function useRealtimePossessionMatchController({
               roundResolved: state.roundResolved,
               answerAck,
               roundResult: state.roundResult,
+              opponentRound,
               countdownGuessAck,
               cluesGuessAck,
             },

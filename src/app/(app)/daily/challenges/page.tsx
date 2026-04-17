@@ -1,34 +1,16 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle2, Clock, ListOrdered, Brain, Lightbulb, DollarSign, Timer, Trophy, RotateCcw, CircleCheckBig } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { useDailyChallenges, useResetDailyChallengeDev } from "@/lib/queries/dailyChallenges.queries";
 import { queryKeys } from "@/lib/queries/queryKeys";
-import { toChallengeCard, type IconToken } from "@/lib/domain/dailyChallengeVisuals";
 import type { DailyChallengeSummary } from "@/lib/domain/dailyChallenge";
 import { useAuthStore } from "@/stores/auth.store";
 import { useQueryClient } from "@tanstack/react-query";
-
-const ICON_MAP = {
-  dollarSign: DollarSign,
-  brain: Brain,
-  checkCircle: CircleCheckBig,
-  lightbulb: Lightbulb,
-  timer: Timer,
-  list: ListOrdered,
-} satisfies Record<IconToken, React.ComponentType<{ className?: string }>>;
-
-const CHALLENGE_ACCENT = {
-  moneyDrop: { border: "border-b-[#FFD700]", btnBg: "bg-[#D4A800]", btnBorder: "border-[#A68500]", iconBorder: "border-[#FFD700]/40" },
-  footballJeopardy: { border: "border-b-[#1CB0F6]", btnBg: "bg-[#1A7FA8]", btnBorder: "border-[#14627F]", iconBorder: "border-[#1CB0F6]/40" },
-  trueFalse: { border: "border-b-[#58CC02]", btnBg: "bg-[#46A302]", btnBorder: "border-[#378200]", iconBorder: "border-[#58CC02]/40" },
-  clues: { border: "border-b-[#58CC02]", btnBg: "bg-[#46A302]", btnBorder: "border-[#378200]", iconBorder: "border-[#58CC02]/40" },
-  countdown: { border: "border-b-[#FF9600]", btnBg: "bg-[#C47400]", btnBorder: "border-[#9A5B00]", iconBorder: "border-[#FF9600]/40" },
-  putInOrder: { border: "border-b-[#1CB0F6]", btnBg: "bg-[#1A7FA8]", btnBorder: "border-[#14627F]", iconBorder: "border-[#1CB0F6]/40" },
-} as const;
 
 function getTimeUntilUtcReset() {
   const now = new Date();
@@ -52,16 +34,13 @@ function ChallengeCard({
   onClick: () => void;
   showDevReset: boolean;
 }) {
-  const card = toChallengeCard(challenge);
-  const accent = CHALLENGE_ACCENT[card.id];
-  const Icon = ICON_MAP[card.iconToken];
   const queryClient = useQueryClient();
   const resetMutation = useResetDailyChallengeDev(challenge.challengeType);
+  const disabled = !challenge.availableToday;
 
   const handleReset = async (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
-
     try {
       await resetMutation.mutateAsync();
       await queryClient.invalidateQueries({ queryKey: queryKeys.dailyChallenges.all });
@@ -76,92 +55,41 @@ function ChallengeCard({
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay: 0.1 + index * 0.05, ease: "easeOut" }}
-      className="h-full"
+      transition={{ duration: 0.35, delay: 0.05 + index * 0.04, ease: "easeOut" }}
+      className="relative"
     >
-      <div
-        role="button"
-        aria-disabled={!challenge.availableToday}
-        tabIndex={challenge.availableToday ? 0 : -1}
-        onClick={() => {
-          if (!challenge.availableToday) return;
-          onClick();
-        }}
-        onKeyDown={(event) => {
-          if (!challenge.availableToday) return;
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            onClick();
-          }
-        }}
-        className={`w-full h-full text-left rounded-2xl border-b-4 transition-all overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#58CC02] ${
-          challenge.availableToday
-            ? `bg-[#1B2F36] ${accent.border} hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px]`
-            : "bg-[#1B2F36]/80 border-b-[#58CC02]/40 opacity-80 cursor-default"
-        }`}
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={onClick}
+        className="w-full rounded-[20px] bg-[#FFE500] p-5 md:p-6 text-center transition-all hover:brightness-105 active:translate-y-[2px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFE500] disabled:cursor-default disabled:brightness-95"
       >
-        <div className="p-4 md:p-6">
-          <div className="flex items-center gap-4">
-            <div
-              className={`size-14 rounded-2xl flex items-center justify-center shrink-0 border-2 ${
-                challenge.availableToday
-                  ? `${card.iconBgColor} ${accent.iconBorder}`
-                  : "bg-[#58CC02]/20 border-[#58CC02]/40"
-              }`}
-            >
-              {challenge.availableToday ? (
-                <Icon className={`size-8 ${card.iconColorClass}`} />
-              ) : (
-                <CheckCircle2 className="size-8 text-[#58CC02]" />
-              )}
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <h3 className={`text-base md:text-lg font-black uppercase ${challenge.availableToday ? "text-white" : "text-[#58CC02]"}`}>
-                {challenge.title}
-              </h3>
-              <p className="text-xs md:text-sm text-[#56707A] font-semibold mt-1">
-                {challenge.availableToday ? challenge.description : "Completed today. Come back after the UTC reset."}
-              </p>
-
-              <div className="flex items-center gap-2 mt-2">
-                <span className="text-[11px] md:text-xs font-black px-2.5 py-0.5 rounded-full bg-[#FFD700]/15 border border-[#FFD700]/30 text-[#FFD700]">
-                  {challenge.coinReward} coins
-                </span>
-                <span className="text-[11px] md:text-xs font-black px-2.5 py-0.5 rounded-full bg-[#CE82FF]/15 border border-[#CE82FF]/30 text-[#CE82FF]">
-                  {challenge.xpReward} XP
-                </span>
-              </div>
-            </div>
-
-            <div
-              className={`px-5 py-2.5 rounded-xl border-b-[3px] shrink-0 ${
-                challenge.availableToday
-                  ? `${accent.btnBg} ${accent.btnBorder}`
-                  : "bg-[#58CC02]/20 border-[#58CC02]/30"
-              }`}
-            >
-              <span className={`text-sm font-black uppercase tracking-wide ${challenge.availableToday ? "text-white" : "text-[#58CC02]"}`}>
-                {challenge.availableToday ? "Play" : "Done"}
-              </span>
-            </div>
-          </div>
-
-          {showDevReset ? (
-            <div className="mt-3 flex justify-end">
-              <button
-                type="button"
-                onClick={handleReset}
-                disabled={resetMutation.isPending}
-                className="inline-flex items-center gap-2 rounded-xl border border-[#1CB0F6]/25 bg-[#1CB0F6]/10 px-3 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-[#7FD8FF] transition-colors hover:bg-[#1CB0F6]/15 disabled:opacity-50"
-              >
-                <RotateCcw className="size-3.5" />
-                {resetMutation.isPending ? "Resetting" : "Dev Reset"}
-              </button>
-            </div>
-          ) : null}
+        <h3 className="font-poppins text-xl md:text-2xl uppercase leading-none text-black text-center">
+          {challenge.title}
+        </h3>
+        <p className="mt-3 text-sm md:text-base font-bold text-black/70 leading-snug text-center">
+          {challenge.availableToday
+            ? challenge.description
+            : "Completed today. Come back after the UTC reset."}
+        </p>
+        <div className="mt-5 flex justify-center">
+          <span className="font-poppins inline-flex h-11 min-w-[140px] items-center justify-center rounded-xl bg-black px-8 text-lg uppercase tracking-wide text-white">
+            {disabled ? "Done" : "Play"}
+          </span>
         </div>
-      </div>
+      </button>
+
+      {showDevReset && (
+        <button
+          type="button"
+          onClick={handleReset}
+          disabled={resetMutation.isPending}
+          className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-lg bg-black/60 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white hover:bg-black/80 disabled:opacity-50"
+        >
+          <RotateCcw className="size-3" />
+          {resetMutation.isPending ? "…" : "Reset"}
+        </button>
+      )}
     </motion.div>
   );
 }
@@ -177,80 +105,82 @@ export default function DailyChallengesPage() {
     const intervalId = window.setInterval(() => {
       setTimeUntilReset(getTimeUntilUtcReset());
     }, 60_000);
-
     return () => window.clearInterval(intervalId);
   }, []);
 
   const completedCount = useMemo(
-    () => challenges.filter((challenge) => challenge.completedToday).length,
-    [challenges]
+    () => challenges.filter((c) => c.completedToday).length,
+    [challenges],
   );
   const totalCoins = useMemo(
-    () => challenges.reduce((sum, challenge) => sum + challenge.coinReward, 0),
-    [challenges]
+    () => challenges.reduce((sum, c) => sum + c.coinReward, 0),
+    [challenges],
   );
   const earnedCoins = useMemo(
-    () => challenges.filter((challenge) => challenge.completedToday).reduce((sum, challenge) => sum + challenge.coinReward, 0),
-    [challenges]
+    () => challenges.filter((c) => c.completedToday).reduce((sum, c) => sum + c.coinReward, 0),
+    [challenges],
+  );
+  const totalXp = useMemo(
+    () => challenges.reduce((sum, c) => sum + c.xpReward, 0),
+    [challenges],
+  );
+  const totalPlayCost = useMemo(
+    () => challenges.reduce((sum, c) => sum + (c.coinReward ?? 0), 0),
+    [challenges],
   );
   const progressPct = challenges.length > 0 ? (completedCount / challenges.length) * 100 : 0;
 
   return (
-    <div className="min-h-screen  font-fun">
-      <div className="sticky top-0 z-20 backdrop-blur-sm border-b-2 border-[#1B2F36]">
-        <div className="max-w-2xl lg:max-w-4xl mx-auto px-3 md:px-4 py-3 md:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button
-                aria-label="Back to home"
-                onClick={() => router.push("/")}
-                className="flex items-center justify-center size-9 md:size-10 rounded-xl bg-[#1B2F36] border-b-[3px] border-[#0D1B21] hover:bg-[#243B44] active:border-b-[1px] active:translate-y-[2px] transition-all"
-              >
-                <ArrowLeft className="size-4 md:size-5 text-white" />
-              </button>
-              <div className="flex items-center gap-2">
-                <Trophy className="size-5 md:size-6 text-[#FFD700]" />
-                <h1 className="text-base md:text-xl font-black text-white uppercase tracking-wide">
-                  Daily Challenges
-                </h1>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 text-xs md:text-sm font-bold text-[#56707A]">
-              <Clock className="size-4 text-[#1CB0F6]" />
-              <span>UTC reset in {timeUntilReset}</span>
-            </div>
+    <div className="min-h-screen font-fun">
+      <div className="max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-10">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-8 md:mb-10">
+          <div>
+            <h1 className="font-poppins text-4xl md:text-6xl uppercase leading-none text-white">
+              Daily Challenges
+            </h1>
+            <p className="mt-2 text-xs md:text-sm font-black uppercase tracking-[0.2em] text-white/40">
+              UTC Reset in {timeUntilReset}
+            </p>
           </div>
-        </div>
-      </div>
 
-      <div className="max-w-2xl lg:max-w-4xl mx-auto px-3 md:px-4 py-4 md:py-6 space-y-4 md:space-y-6">
-        <div className="bg-[#1B2F36] rounded-2xl border-b-4 border-[#0D1B21] p-4 md:p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[#56707A]">Today&apos;s Progress</p>
-              <div className="flex items-end gap-2 mt-1">
-                <span className="text-3xl font-black text-white">{completedCount}</span>
-                <span className="text-base md:text-xl font-black text-[#56707A]">/{challenges.length}</span>
+          <div className="flex items-start gap-10 md:gap-14">
+            <div className="min-w-[140px]">
+              <p className="font-poppins text-[10px] md:text-xs uppercase tracking-wider text-white/60">
+                Today&apos;s Progress
+              </p>
+              <div className="mt-2 h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-[#FFE500] rounded-full transition-all duration-500"
+                  style={{ width: `${progressPct}%` }}
+                />
               </div>
+              <p className="mt-1.5 text-xs font-black text-white/60 text-center">
+                {completedCount}/{challenges.length}
+              </p>
             </div>
+
             <div className="text-right">
-              <p className="text-xs text-[#56707A] font-bold uppercase">Coins earned</p>
-              <p className="text-2xl font-black text-[#FFD700]">{earnedCoins}</p>
-              <p className="text-xs text-[#56707A] font-bold">of {totalCoins}</p>
+              <p className="font-poppins text-[10px] md:text-xs uppercase tracking-wider text-white/60">
+                Coins Earned
+              </p>
+              <p className="font-poppins mt-1 text-3xl md:text-4xl uppercase leading-none text-[#FFE500]">
+                {earnedCoins}
+              </p>
+              <p className="mt-1 text-[11px] font-black uppercase tracking-wide text-white/40">
+                of {totalCoins}
+              </p>
             </div>
-          </div>
-          <div className="h-3 bg-[#131F24] rounded-full overflow-hidden">
-            <div className="h-full bg-[#58CC02] rounded-full transition-all duration-500" style={{ width: `${progressPct}%` }} />
           </div>
         </div>
 
+        {/* Grid of challenge cards */}
         {isLoading ? (
-          <div className="bg-[#1B2F36] rounded-2xl border-b-4 border-[#0D1B21] p-6 text-center text-[#56707A] font-bold">
+          <div className="rounded-2xl bg-[#1B2F36] p-6 text-center text-[#56707A] font-bold">
             Loading today&apos;s challenge lineup...
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {challenges.map((challenge, index) => (
               <ChallengeCard
                 key={challenge.challengeType}
@@ -260,6 +190,29 @@ export default function DailyChallengesPage() {
                 showDevReset={canUseDevReset}
               />
             ))}
+          </div>
+        )}
+
+        {/* Bottom stats */}
+        {!isLoading && challenges.length > 0 && (
+          <div className="mt-8 md:mt-10 flex flex-wrap items-end gap-8">
+            <div>
+              <p className="font-poppins text-xs uppercase tracking-wider text-white/60 mb-2">
+                Play For
+              </p>
+              <span className="inline-flex items-center gap-2 rounded-full bg-[#FFE500]/15 px-4 py-1.5 text-sm font-black text-[#FFE500]">
+                {totalPlayCost}
+                <Image src="/assets/coin-1.png" alt="" width={20} height={20} className="size-5 object-contain" />
+              </span>
+            </div>
+            <div>
+              <p className="font-poppins text-xs uppercase tracking-wider text-white/60 mb-2">
+                Earn
+              </p>
+              <span className="inline-flex items-center rounded-full bg-[#58CC02]/15 px-4 py-1.5 text-sm font-black text-[#58CC02]">
+                {totalXp} XP
+              </span>
+            </div>
           </div>
         )}
       </div>

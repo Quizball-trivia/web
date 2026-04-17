@@ -105,17 +105,8 @@ export function GoalCelebrationOverlay({ scorerName, isMeScorer }: GoalCelebrati
         </div>
       </motion.div>
 
-      {/* Content — scorer name on top */}
+      {/* Content */}
       <div className="relative z-40 flex flex-col items-center">
-        <motion.div
-          initial={{ y: 8, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.3 }}
-          className="mt-2 text-[10px] font-bold font-fun uppercase tracking-[0.2em] text-white/70"
-        >
-          {isMeScorer ? 'You scored!' : `${scorerName} scored`}
-        </motion.div>
-
         {/* Expanding ring */}
         <motion.div
           initial={{ scale: 0.2, opacity: 0.8 }}

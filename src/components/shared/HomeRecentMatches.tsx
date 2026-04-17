@@ -6,10 +6,10 @@ import { useRecentMatches } from '@/lib/queries/stats.queries';
 import { COLLAPSED_MATCHES_COUNT, MAX_MATCHES_COUNT } from '@/lib/constants/matches';
 import { formatMatchScore } from '@/utils/matchScore';
 
-const rowBg = (result: string) => {
-  if (result === 'win') return 'bg-[#38B60E]';
-  if (result === 'loss') return 'bg-[#FB3101]';
-  return 'bg-[#3A4F56]';
+const rowBorder = (result: string) => {
+  if (result === 'win') return 'border-[#38B60E]';
+  if (result === 'loss') return 'border-[#E04B3A]';
+  return 'border-[#3A4F56]';
 };
 
 interface HomeRecentMatchesProps {
@@ -60,13 +60,13 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
     <div className="font-fun">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-base font-black text-white uppercase">
+        <h2 className="font-poppins text-base text-white uppercase">
           Recent Matches
         </h2>
         <button
           type="button"
           onClick={() => router.push('/profile')}
-          className="flex items-center justify-center w-[120px] h-[40px] rounded-xl border-2 border-[#58CC02] text-xs font-black text-white uppercase tracking-wide hover:bg-[#58CC02]/10 transition-colors"
+          className="font-poppins flex items-center justify-center w-[120px] h-[40px] rounded-xl border-2 border-[#58CC02] text-xs text-white uppercase tracking-wide hover:bg-[#58CC02]/10 transition-colors"
         >
           View All
         </button>
@@ -96,7 +96,7 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
         {!isLoading && !error && visibleMatches.map((match) => (
           <div
             key={match.id}
-            className={`flex items-center rounded-[20px] h-[72px] md:h-[100px] px-3 md:px-5 ${rowBg(match.result)}`}
+            className={`flex items-center rounded-[20px] h-[72px] md:h-[100px] px-3 md:px-5 border-2 ${rowBorder(match.result)}`}
           >
             {/* Avatar */}
             <div className="relative size-10 md:size-14 shrink-0 rounded-full bg-white/20 overflow-hidden flex items-center justify-center">
@@ -111,20 +111,25 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
 
             {/* Info */}
             <div className="ml-3 min-w-0 flex-1">
-              <div className="text-sm md:text-lg font-black text-white uppercase truncate">
+              <div className="font-poppins text-sm md:text-lg text-white uppercase truncate">
                 vs {match.opponent}
               </div>
-              <div className="text-[10px] md:text-sm font-bold text-white/70 uppercase">
+              <div className="font-poppins text-[10px] md:text-sm text-white/70 uppercase">
                 {match.mode} · {match.time}
               </div>
             </div>
 
-            {/* Result + Score */}
+            {/* Result + RP + Score */}
             <div className="flex items-center gap-2 md:gap-3 shrink-0">
-              <span className="text-base md:text-2xl font-black text-white uppercase italic">
+              <span className="font-poppins text-base md:text-2xl text-white uppercase italic">
                 {match.result === 'win' ? 'Win' : match.result === 'loss' ? 'Lose' : 'Draw'}
               </span>
-              <span className="text-base md:text-2xl font-black text-white">
+              {match.competition !== 'friendly' && match.rpDelta !== null && (
+                <span className="font-poppins text-xs md:text-sm text-white/90 tabular-nums">
+                  {match.rpDelta >= 0 ? '+' : ''}{match.rpDelta} RP
+                </span>
+              )}
+              <span className="font-poppins text-base md:text-2xl text-white">
                 {match.score}
               </span>
             </div>

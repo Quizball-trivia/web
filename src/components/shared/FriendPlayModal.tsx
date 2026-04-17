@@ -1,20 +1,19 @@
 "use client";
 
+import Image from "next/image";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
-  SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Users, Plus, LogIn, Globe } from "lucide-react";
+import { X } from "lucide-react";
 import { useIsMobile } from "@/hooks/useMobile";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -51,93 +50,117 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
     router.push(`/friend/room/${roomCode.toUpperCase()}`);
   };
 
-  const Content = (
-    <div className="space-y-5 font-fun">
-      {/* Header Icon */}
-      <div className="flex flex-col items-center text-center gap-3">
-        <div className="size-20 rounded-full bg-[#1CB0F6] border-4 border-b-[6px] border-[#1899D6] flex items-center justify-center">
-          <Users className="size-9 text-white" strokeWidth={2.5} />
-        </div>
-        <p className="text-sm font-bold text-[#56707A] max-w-xs">
-          Create a private room to host a match, or enter a code to join a friend&apos;s lobby.
-        </p>
-      </div>
+  const Body = (
+    <div className="relative font-fun">
+      {/* Close button */}
+      <button
+        type="button"
+        onClick={() => onOpenChange(false)}
+        aria-label="Close"
+        className="absolute -top-2 -right-6 z-20 flex size-9 items-center justify-center rounded-lg bg-[#FB3101] text-white transition-colors hover:bg-[#E02B00]"
+      >
+        <X className="size-5" strokeWidth={3} />
+      </button>
 
-      {/* Create Room */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-[10px] font-black text-[#56707A] uppercase tracking-wider">
-          <Plus className="size-3.5" /> Create
+      {/* Title */}
+      <h2
+        className="font-poppins mt-12 text-center uppercase text-white whitespace-nowrap leading-none"
+        style={{ fontSize: "clamp(26px, 4.2vw, 44px)" }}
+      >
+        Play with <span className="text-[#FFE500]">a Friend</span>
+      </h2>
+
+      {/* Aligned content column — all rows share the same width */}
+      <div className="mx-auto mt-6 w-full max-w-[430px] md:mt-8">
+        {/* Description + icon */}
+        <div className="flex items-center justify-between gap-4">
+          <p className="flex-1 text-sm leading-snug font-bold text-white/80 md:text-base">
+            Create a private room to host a match, or enter a code to join a friend&apos;s lobby.
+          </p>
+          <Image
+            src="/assets/friendly_match-icon.webp"
+            alt=""
+            width={140}
+            height={140}
+            className="h-24 w-24 shrink-0 object-contain md:h-28 md:w-28"
+            style={{ filter: "brightness(0) invert(1)" }}
+          />
         </div>
+
+        {/* Create Room */}
         <button
+          type="button"
           onClick={handleCreateRoom}
-          className="w-full py-4 rounded-2xl bg-[#1CB0F6] border-b-4 border-[#1899D6] text-base font-black text-white uppercase tracking-wide hover:bg-[#18A0E0] active:translate-y-[2px] active:border-b-2 transition-all"
+          className="font-poppins mt-6 flex h-16 w-full items-center justify-center gap-4 rounded-2xl bg-black uppercase leading-none text-white transition-all hover:bg-black/90 active:translate-y-[2px] md:h-20"
+          style={{ fontSize: "clamp(20px, 2.6vw, 28px)" }}
         >
+          <span
+            aria-hidden
+            className="font-poppins text-[#FFE500] leading-none"
+            style={{ fontSize: "clamp(36px, 4.5vw, 52px)" }}
+          >
+            +
+          </span>
           Create New Room
         </button>
-      </div>
 
-      {/* Divider */}
-      <div className="flex items-center gap-3">
-        <div className="h-[3px] flex-1 rounded-full bg-[#1B2F36]" />
-        <span className="text-[10px] font-black text-[#56707A] uppercase tracking-wider">Or Join</span>
-        <div className="h-[3px] flex-1 rounded-full bg-[#1B2F36]" />
-      </div>
-
-      {/* Join Room */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-[10px] font-black text-[#56707A] uppercase tracking-wider">
-          <LogIn className="size-3.5" /> Join
+        {/* Or Join */}
+        <div className="mt-5 text-center text-[11px] font-black uppercase tracking-wider text-white/70 md:text-xs">
+          Or Join
         </div>
-        <div className="flex gap-2">
+
+        {/* Room code + Join — 2:1 ratio via grid */}
+        <div className="mt-3 grid w-full grid-cols-3 gap-3">
           <input
-            placeholder="ROOM CODE"
-            className="flex-1 h-12 rounded-xl bg-[#1B2F36] border-b-[3px] border-[#0D1B21] text-base font-black text-white text-center uppercase tracking-[0.2em] placeholder:text-[#56707A]/50 placeholder:font-bold placeholder:tracking-[0.2em] focus:outline-none focus:ring-2 focus:ring-[#1CB0F6] transition-all font-mono"
+            placeholder="Room Code"
+            className="col-span-2 h-14 rounded-2xl bg-[#4058FF] px-5 text-center text-base font-black uppercase tracking-[0.15em] text-white placeholder:text-white/60 transition-all focus:ring-2 focus:ring-white/40 focus:outline-none md:h-16 md:text-lg"
             value={roomCode}
             onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
             maxLength={8}
           />
           <button
+            type="button"
             disabled={!roomCode.trim() || isJoining}
             onClick={handleJoinRoom}
             className={cn(
-              "h-12 px-6 rounded-xl border-b-[3px] text-sm font-black text-white uppercase tracking-wide active:translate-y-[2px] active:border-b-0 transition-all",
+              "col-span-1 h-14 rounded-2xl text-base font-black uppercase tracking-wide text-white transition-all md:h-16 md:text-lg",
               roomCode.trim()
-                ? "bg-[#58CC02] border-[#46A302] hover:bg-[#4CB801]"
-                : "bg-[#243B44] border-[#1B2F36] opacity-50 pointer-events-none"
+                ? "bg-[#4058FF] hover:bg-[#3348E5] active:translate-y-[2px]"
+                : "bg-[#4058FF]/60 opacity-60 cursor-not-allowed"
             )}
           >
             Join
           </button>
         </div>
-      </div>
 
-      {/* Browse Public */}
-      <button
-        onClick={() => {
-          onOpenChange(false);
-          router.push("/play/friend?tab=browse");
-        }}
-        className="w-full py-3.5 rounded-2xl bg-[#1B2F36] border-b-4 border-[#0D1B21] border-dashed text-sm font-black text-[#56707A] uppercase tracking-wide hover:bg-[#243B44] hover:text-white active:translate-y-[2px] active:border-b-2 transition-all flex items-center justify-center gap-2"
-      >
-        <Globe className="size-4" />
-        Browse Public Lobbies
-      </button>
+        {/* Browse Public */}
+        <button
+          type="button"
+          onClick={() => {
+            onOpenChange(false);
+            router.push("/play/friend?tab=browse");
+          }}
+          className="mt-3 h-14 w-full rounded-2xl bg-[#4058FF] text-sm font-black uppercase tracking-wide text-white transition-all hover:bg-[#3348E5] active:translate-y-[2px] md:h-16 md:text-lg"
+        >
+          Browse Public Lobbies
+        </button>
+      </div>
     </div>
   );
 
   if (isMobile) {
     return (
       <Sheet open={isOpen} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="rounded-t-3xl border-t border-white/5 bg-[#131F24] px-5 pb-8">
-          <SheetHeader className="mb-4 text-left">
-            <SheetTitle className="text-xl font-black text-white font-fun">
-              Play with a Friend
-            </SheetTitle>
-            <SheetDescription className="sr-only">
-              Create a room or join an existing room with an invite code.
-            </SheetDescription>
-          </SheetHeader>
-          {Content}
+        <SheetContent
+          side="bottom"
+          className="rounded-t-3xl border-0 px-6 pt-6 pb-8 [&>button]:hidden"
+          style={{ backgroundColor: "#1645FF" }}
+        >
+          <SheetTitle className="sr-only">Play with a Friend</SheetTitle>
+          <SheetDescription className="sr-only">
+            Create a room or join an existing room with an invite code.
+          </SheetDescription>
+          {Body}
         </SheetContent>
       </Sheet>
     );
@@ -145,15 +168,15 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-[#131F24] border-[#1B2F36] shadow-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-xl text-center hidden">Play with a Friend</DialogTitle>
-          <DialogDescription className="sr-only">
-            Create a room or join an existing room with an invite code.
-          </DialogDescription>
-          <div className="text-center text-xl font-black text-white font-fun">Play with a Friend</div>
-        </DialogHeader>
-        {Content}
+      <DialogContent
+        className="w-[560px] max-h-[95vh] rounded-[20px] border-0 px-10 pt-4 pb-8 sm:max-w-[560px] [&>button]:hidden"
+        style={{ backgroundColor: "#1645FF" }}
+      >
+        <DialogTitle className="sr-only">Play with a Friend</DialogTitle>
+        <DialogDescription className="sr-only">
+          Create a room or join an existing room with an invite code.
+        </DialogDescription>
+        {Body}
       </DialogContent>
     </Dialog>
   );

@@ -204,6 +204,12 @@
   .font-fun {
     font-family: 'Nunito Variable', sans-serif;
   }
+
+  .font-poppins {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
 }
 
 @keyframes ticker-scroll {

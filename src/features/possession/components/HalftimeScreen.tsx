@@ -27,6 +27,17 @@ interface HalftimeScreenProps {
 
 const FALLBACK_HALFTIME_SECONDS = 20;
 
+// Dark-tinted category card colors — mirrored from RankedCategoryBlockingScreen
+// so the halftime ban cards match the pre-match draft card design.
+const CARD_COLORS = [
+  { bg: '#162A3A', dark: '#1CB0F6' },  // blue
+  { bg: '#2A2118', dark: '#FF9600' },  // orange
+  { bg: '#241A2E', dark: '#CE82FF' },  // purple
+  { bg: '#1A2A18', dark: '#58CC02' },  // green
+  { bg: '#2A1A1A', dark: '#FF4B4B' },  // red
+  { bg: '#2A2618', dark: '#FFC800' },  // gold
+];
+
 function CircularTimer({ timeLeft, totalDuration, isUrgent }: { timeLeft: number; totalDuration: number; isUrgent: boolean }) {
   const radius = 26;
   const circumference = 2 * Math.PI * radius;
@@ -256,29 +267,22 @@ export function HalftimeScreen({
                     Ban 1 Category Each
                   </motion.div>
 
-                  {/* Category / tactic cards */}
-                  <div className="flex flex-col sm:flex-row gap-3 w-full">
+                  {/* Category / tactic cards — matches pre-match draft card design */}
+                  <div className="grid grid-cols-3 gap-2.5 sm:gap-5 w-full">
                     {categoryOptions.map((category, index) => {
                       const isMyBan = myBan === category.id;
                       const isOpponentBan = opponentBan === category.id;
+                      const isBanned = isMyBan || isOpponentBan;
                       const isRemaining = bothBansSubmitted && !isMyBan && !isOpponentBan && remainingCategory?.id === category.id;
-                      const disabled = isMyBan || isOpponentBan || !canBan;
+                      const disabled = isBanned || !canBan;
 
-                      const borderColor = isMyBan
-                        ? '#1CB0F6'
-                        : isOpponentBan
-                          ? '#FF4B4B'
-                          : isRemaining
-                            ? '#58CC02'
-                            : '#2a3a42';
-                      const borderBottomColor = isMyBan
+                      const accentDark = isMyBan
                         ? '#1a8ac4'
                         : isOpponentBan
                           ? '#c93a3a'
                           : isRemaining
                             ? '#46a302'
-                            : '#1a2a30';
-                      const bgColor = isRemaining ? '#1f3324' : '#1B2F36';
+                            : CARD_COLORS[index % CARD_COLORS.length].dark;
 
                       return (
                         <motion.button
@@ -289,76 +293,81 @@ export function HalftimeScreen({
                           disabled={disabled}
                           onClick={() => onBanCategory?.(category.id)}
                           className={cn(
-                            'relative flex-1 flex flex-col justify-end rounded-2xl overflow-hidden px-4 py-5 sm:py-6 border-2 border-b-4 transition-all duration-200 min-h-[150px] sm:min-h-[180px]',
-                            disabled ? 'cursor-default' : 'cursor-pointer hover:scale-[1.03] active:translate-y-[2px] active:border-b-2'
+                            'group relative w-full rounded-2xl sm:rounded-3xl overflow-hidden transition-all duration-200 text-left',
+                            !disabled && 'cursor-pointer active:scale-[0.95] active:translate-y-[2px]',
+                            disabled && 'cursor-default',
+                            !canBan && !isBanned && !isRemaining && 'opacity-60',
                           )}
-                          style={{
-                            backgroundColor: category.imageUrl ? '#15242D' : bgColor,
-                            borderColor,
-                            borderBottomColor,
-                            opacity: (isMyBan || isOpponentBan) ? 0.75 : 1,
-                          }}
                         >
-                          {category.imageUrl ? (
-                            <>
-                              <div
-                                className="absolute inset-0 bg-cover bg-center"
-                                style={{ backgroundImage: `url("${category.imageUrl}")` }}
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-black/25 to-black/85" />
-                            </>
-                          ) : (
-                            <div className="absolute inset-0 flex items-center justify-center text-6xl sm:text-7xl opacity-90">
-                              {category.icon || '⚽'}
-                            </div>
-                          )}
-
-                          {/* BANNED stamp overlay */}
-                          {(isMyBan || isOpponentBan) && (
-                            <motion.div
-                              initial={{ scale: 0, rotate: -12 }}
-                              animate={{ scale: 1, rotate: -6 }}
-                              transition={{ type: 'spring', stiffness: 400, damping: 18 }}
-                              className="absolute inset-0 z-20 flex items-center justify-center"
-                            >
-                              <div className="bg-[#FF4B4B] text-white font-black text-sm sm:text-base uppercase tracking-wider px-4 py-1.5 rounded-lg shadow-lg">
-                                Banned
+                          {/* Artwork area */}
+                          <div
+                            className="aspect-square sm:aspect-[4/5] relative overflow-hidden"
+                            style={{ backgroundColor: category.imageUrl ? '#15242D' : (isBanned ? '#243B44' : CARD_COLORS[index % CARD_COLORS.length].bg) }}
+                          >
+                            {category.imageUrl ? (
+                              <>
+                                <div
+                                  className={cn(
+                                    'absolute inset-0 bg-cover bg-center transition-transform duration-500',
+                                    !disabled && 'group-hover:scale-105',
+                                    isBanned && 'grayscale'
+                                  )}
+                                  style={{ backgroundImage: `url("${category.imageUrl}")` }}
+                                />
+                                <div className={cn(
+                                  'absolute inset-0 bg-gradient-to-b from-black/10 via-black/15 to-black/70',
+                                  isBanned && 'bg-black/55'
+                                )} />
+                              </>
+                            ) : (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <span className={cn(
+                                  'text-8xl transition-all duration-300 drop-shadow-lg',
+                                  isBanned && 'grayscale opacity-40 scale-90'
+                                )}>
+                                  {category.icon || '⚽'}
+                                </span>
                               </div>
-                            </motion.div>
-                          )}
+                            )}
 
-                          {isRemaining && (
-                            <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                              className="absolute -top-2 -right-2 size-7 rounded-full flex items-center justify-center bg-[#58CC02] text-white"
-                            >
-                              <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M20 6 9 17l-5-5" /></svg>
-                            </motion.div>
-                          )}
+                            {/* BANNED stamp overlay */}
+                            <AnimatePresence>
+                              {isBanned && (
+                                <motion.div
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  className="absolute inset-0 bg-black/40 flex items-center justify-center"
+                                >
+                                  <motion.div
+                                    initial={{ scale: 0, rotate: -30 }}
+                                    animate={{ scale: 1, rotate: -12 }}
+                                    transition={{ type: 'spring', stiffness: 400, damping: 14 }}
+                                    className="bg-[#FF4B4B] px-3 py-1.5 sm:px-5 sm:py-2.5 rounded-xl sm:rounded-2xl border-b-4 border-[#CC3E3E] shadow-lg"
+                                  >
+                                    <span className="text-xs sm:text-base font-black text-white uppercase tracking-wide">BANNED</span>
+                                  </motion.div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
 
-                          <div className="relative z-10 w-full">
-                            <div className="text-sm sm:text-base font-black text-white text-left leading-snug uppercase tracking-wide drop-shadow-md">
-                              {category.name}
-                            </div>
-                            <div className={cn(
-                              'mt-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-left',
-                              isMyBan ? 'text-[#1CB0F6]'
-                                : isOpponentBan ? 'text-[#FF4B4B]'
-                                  : isRemaining ? 'text-[#58CC02]'
-                                    : 'text-white/70'
-                            )}>
-                              {isMyBan
-                                ? 'Your Ban'
-                                : isOpponentBan
-                                  ? 'Their Ban'
-                                  : isRemaining
-                                    ? '2nd Half'
-                                    : canBan
-                                      ? 'Tap To Ban'
-                                      : 'Opponent Turn'}
-                            </div>
+                            {isRemaining && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                                className="absolute top-2 right-2 size-7 rounded-full flex items-center justify-center bg-[#58CC02] text-white shadow-lg"
+                              >
+                                <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M20 6 9 17l-5-5" /></svg>
+                              </motion.div>
+                            )}
+                          </div>
+
+                          {/* Info area — dark bottom with thick 3D border */}
+                          <div
+                            className="p-2.5 sm:p-4 bg-[#1B2F36]"
+                            style={{ borderBottom: `5px solid ${isBanned ? '#1B2F36' : accentDark}` }}
+                          >
+                            <h3 className="text-xs sm:text-base font-black text-white leading-tight truncate">{category.name}</h3>
                           </div>
                         </motion.button>
                       );

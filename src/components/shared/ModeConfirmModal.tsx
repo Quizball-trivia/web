@@ -1,18 +1,17 @@
+import Image from "next/image";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
-  SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Trophy, Users, User, Crown, Ticket, Ban } from "lucide-react";
+import { X } from "lucide-react";
 import { useIsMobile } from "@/hooks/useMobile";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +22,33 @@ interface ModeConfirmModalProps {
   onConfirm: () => void;
   ticketsRemaining?: number;
 }
+
+const CONFIG = {
+  ranked: {
+    titlePrefix: "1V1",
+    titleRest: "Ranked Match",
+    description: "3 Random categories appear - each player blocks 1, then compete in the remaining one",
+    icon: "/assets/ranked-icon.webp",
+    stats: ["12–18 Questions", "Duration 5 Min"],
+    entryCost: 1,
+  },
+  friendly: {
+    titlePrefix: "1V1",
+    titleRest: "Friendly Match",
+    description: "Play against a friend. No RP at stake.",
+    icon: "/assets/friendly_match-icon.webp",
+    stats: ["Custom Rules", "Variable Length"],
+    entryCost: 0,
+  },
+  solo: {
+    titlePrefix: "Solo",
+    titleRest: "Practice",
+    description: "Practice your skills against the AI.",
+    icon: "/assets/ranked-icon.webp",
+    stats: ["Self-Paced", "XP Earned"],
+    entryCost: 0,
+  },
+} as const;
 
 export function ModeConfirmModal({
   mode,
@@ -35,168 +61,100 @@ export function ModeConfirmModal({
 
   if (!mode) return null;
 
-  const config = {
-    ranked: {
-      title: "Ranked Match",
-      icon: Trophy,
+  const config = CONFIG[mode];
+  const hasTickets = ticketsRemaining >= config.entryCost;
 
-      accentColor: "#FF9600",
-      accentDark: "#DB8200",
-      description: "3 Random categories appear - each player blocks 1, then compete in the remaining one",
-      entryCost: 1,
-      stats: [
-        { label: "FORMAT", value: "1v1 Duel" },
-        { label: "DURATION", value: "~5 min" },
-        { label: "QUESTIONS", value: "12–18" },
-      ],
-    },
-    friendly: {
-      title: "Friendly Match",
-      icon: Users,
-
-      accentColor: "#1CB0F6",
-      accentDark: "#1899D6",
-      description: "Play against a friend. No RP at stake.",
-      entryCost: 0,
-      stats: [
-        { label: "FORMAT", value: "1v1" },
-        { label: "DURATION", value: "Variable" },
-        { label: "CUSTOM", value: "Yes" },
-      ],
-    },
-    solo: {
-      title: "Solo Practice",
-      icon: User,
-
-      accentColor: "#58CC02",
-      accentDark: "#46A302",
-      description: "Practice your skills against the AI.",
-      entryCost: 0,
-      stats: [
-        { label: "FORMAT", value: "Solo" },
-        { label: "SPEED", value: "Self-paced" },
-        { label: "XP", value: "Earned" },
-      ],
-    },
-  }[mode];
-
-  const isRanked = mode === 'ranked';
-  const hasTickets = ticketsRemaining >= (config.entryCost || 0);
-
-  const Content = (
-    <div className="space-y-5 font-fun">
-      {/* Header Icon */}
-      <div className="flex flex-col items-center text-center gap-3">
-        <div
-          className="size-20 rounded-full flex items-center justify-center border-4 border-b-[6px]"
-          style={{ backgroundColor: config.accentColor, borderColor: config.accentDark }}
+  const Body = (
+    <div className="relative font-fun">
+      <div className="mb-3 flex justify-end md:mb-2">
+        <button
+          type="button"
+          onClick={() => onOpenChange(false)}
+          aria-label="Close"
+          className="z-10 flex size-11 items-center justify-center rounded-xl bg-[#FB3101] text-white transition-colors hover:bg-[#E02B00]"
         >
-          <config.icon className="size-9 text-white" strokeWidth={2.5} />
-        </div>
+          <X className="size-5" strokeWidth={3} />
+        </button>
+      </div>
 
-        {isRanked && (
-          <div
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full border-b-[3px] text-[11px] font-black text-white uppercase tracking-wider"
-            style={{ backgroundColor: config.accentColor, borderColor: config.accentDark }}
-          >
-            <Crown className="size-3.5" />
-            Competitive
+      {/* Title */}
+      <h2
+        className="font-poppins mx-auto text-center uppercase text-white leading-none"
+        style={{ fontSize: "clamp(26px, 4.2vw, 52px)" }}
+      >
+        <span className="text-[#FFE500]">{config.titlePrefix}</span> {config.titleRest}
+      </h2>
+
+      {/* Description */}
+      <p className="mx-auto mt-3 max-w-[28rem] text-center text-sm leading-snug font-bold text-white/80 md:mt-2 md:text-base">
+        {config.description}
+      </p>
+
+      {/* Trophy watermark with stat pills */}
+      <div className="relative my-6 md:my-8 h-40 md:h-52">
+        <Image
+          src={config.icon}
+          alt=""
+          fill
+          className="object-contain"
+        />
+        {config.stats[0] && (
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 px-4 py-2 rounded-full bg-[#FFE500] text-black text-xs md:text-sm font-black uppercase whitespace-nowrap">
+            {config.stats[0]}
           </div>
         )}
-
-        <p className="text-sm font-bold text-[#56707A] max-w-xs">{config.description}</p>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-3 gap-2">
-        {config.stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="bg-[#1B2F36] rounded-xl p-3 text-center border-b-[3px] border-[#0D1B21]"
-          >
-            <div className="text-[9px] font-black text-[#56707A] uppercase tracking-wider">{stat.label}</div>
-            <div className="text-sm font-black text-white mt-0.5">{stat.value}</div>
+        {config.stats[1] && (
+          <div className="absolute right-0 top-[30%] px-4 py-2 rounded-full bg-[#FFE500] text-black text-xs md:text-sm font-black uppercase whitespace-nowrap">
+            {config.stats[1]}
           </div>
-        ))}
+        )}
       </div>
 
-      {/* Entry Cost */}
-      {config.entryCost > 0 && (
-        <div className={cn(
-          "rounded-2xl p-4 flex items-center justify-between border-b-[3px]",
+      {/* Play button */}
+      <button
+        type="button"
+        onClick={() => {
+          if (!hasTickets) return;
+          onConfirm();
+        }}
+        disabled={!hasTickets}
+        className={cn(
+          "w-full h-14 md:h-16 rounded-2xl text-lg md:text-xl font-black uppercase tracking-wide transition-all",
           hasTickets
-            ? "bg-[#1B2F36] border-[#0D1B21]"
-            : "bg-[#FF4B4B]/10 border-[#FF4B4B]/20"
-        )}>
-          <div className="flex items-center gap-3">
-            <div
-              className={cn(
-                "size-11 rounded-full flex items-center justify-center border-[3px] border-b-4",
-                hasTickets
-                  ? "bg-[#58CC02] border-[#46A302]"
-                  : "bg-[#FF4B4B] border-[#E04242]"
-              )}
-            >
-              <Ticket className="size-5 text-white" />
-            </div>
-            <div>
-              <div className="text-sm font-black text-white">Entry Cost</div>
-              <div className="text-xs font-bold text-[#56707A] flex items-center gap-1">
-                {config.entryCost} Ticket
-                <span className="text-[#56707A]/50">|</span>
-                You have: <span className={cn("font-black", hasTickets ? "text-[#58CC02]" : "text-[#FF4B4B]")}>{ticketsRemaining}</span>
-              </div>
-            </div>
-          </div>
-          {!hasTickets && (
-            <div className="flex items-center gap-1 bg-[#FF4B4B] text-white text-[10px] font-black uppercase px-2.5 py-1 rounded-full border-b-2 border-[#E04242]">
-              <Ban className="size-3" />
-              No Tickets
-            </div>
-          )}
+            ? "bg-black text-white hover:bg-black/90 active:translate-y-[2px]"
+            : "bg-black/60 text-white/50 cursor-not-allowed"
+        )}
+      >
+        {config.entryCost > 0 ? (
+          <>
+            Play for <span className="text-[#FFE500]">{config.entryCost} Ticket{config.entryCost === 1 ? "" : "s"}</span>
+          </>
+        ) : (
+          "Play"
+        )}
+      </button>
+
+      {/* Tickets footer */}
+      {config.entryCost > 0 && (
+        <div className="mt-4 mb-0 flex items-center justify-center gap-2 text-[11px] font-black uppercase text-white/80 md:mt-4 md:text-xs">
+          <span>You have {ticketsRemaining} Ticket{ticketsRemaining === 1 ? "" : "s"}</span>
+          <Image src="/assets/ticket-1.png" alt="" width={20} height={20} className="size-5 object-contain" />
         </div>
       )}
-
-      {/* Actions */}
-      <div className="grid grid-cols-2 gap-3 pt-1">
-        <button
-          onClick={() => onOpenChange(false)}
-          className="py-3.5 rounded-2xl bg-[#1B2F36] border-b-4 border-[#0D1B21] text-base font-black text-[#56707A] uppercase tracking-wide hover:bg-[#FF4B4B] hover:border-[#E04242] hover:text-white active:translate-y-[2px] active:border-b-2 transition-all"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={() => {
-            if (!hasTickets) return;
-            onConfirm();
-          }}
-          disabled={!hasTickets}
-          className={cn(
-            "py-3.5 rounded-2xl text-base font-black uppercase tracking-wide transition-all",
-            hasTickets
-              ? "bg-[#58CC02] border-b-4 border-[#46A302] text-white hover:bg-[#4CB801] active:translate-y-[2px] active:border-b-2"
-              : "bg-[#56707A] border-b-4 border-[#3C4F57] text-white/70 cursor-not-allowed"
-          )}
-        >
-          {hasTickets ? "Start Match" : "No Tickets"}
-        </button>
-      </div>
     </div>
   );
 
   if (isMobile) {
     return (
       <Sheet open={isOpen} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="rounded-t-3xl border-t border-white/5 bg-[#131F24] px-5 pb-8">
-          <SheetHeader className="mb-4 text-left">
-            <SheetTitle className="text-xl font-black text-white font-fun">
-              {config.title}
-            </SheetTitle>
-            <SheetDescription className="sr-only">
-              Confirm your selected game mode before starting.
-            </SheetDescription>
-          </SheetHeader>
-          {Content}
+        <SheetContent
+          side="bottom"
+          className="rounded-t-3xl border-0 px-6 pt-6 pb-6 [&>button]:hidden"
+          style={{ backgroundColor: "#38B60E" }}
+        >
+          <SheetTitle className="sr-only">{config.titleRest}</SheetTitle>
+          <SheetDescription className="sr-only">{config.description}</SheetDescription>
+          {Body}
         </SheetContent>
       </Sheet>
     );
@@ -204,15 +162,13 @@ export function ModeConfirmModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-[#131F24] border-[#1B2F36] shadow-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-xl text-center hidden">Confirm {config.title}</DialogTitle>
-          <DialogDescription className="sr-only">
-            Confirm your selected game mode before starting.
-          </DialogDescription>
-          <div className="text-center text-xl font-black text-white font-fun">{config.title}</div>
-        </DialogHeader>
-        {Content}
+      <DialogContent
+        className="w-[560px] max-h-[95vh] rounded-[20px] border-0 px-10 pt-4 pb-8 sm:max-w-[560px] [&>button]:hidden"
+        style={{ backgroundColor: "#38B60E" }}
+      >
+        <DialogTitle className="sr-only">{config.titleRest}</DialogTitle>
+        <DialogDescription className="sr-only">{config.description}</DialogDescription>
+        {Body}
       </DialogContent>
     </Dialog>
   );

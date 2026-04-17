@@ -28,6 +28,7 @@ import type {
   MatchCluesGuessAckPayload,
   MatchCountdownGuessAckPayload,
   MatchRoundResultPayload,
+  MatchRoundResultPlayer,
   ResolvedCluesQuestion,
   ResolvedCountdownQuestion,
   ResolvedPutInOrderQuestion,
@@ -50,6 +51,7 @@ interface LiveSpecialQuestionPanelProps {
   roundResolved: boolean;
   answerAck: MatchAnswerAckPayload | null;
   roundResult: MatchRoundResultPayload | null;
+  opponentRound: MatchRoundResultPlayer | null;
   countdownGuessAck: MatchCountdownGuessAckPayload | null;
   cluesGuessAck: MatchCluesGuessAckPayload | null;
 }
@@ -81,6 +83,7 @@ function CountdownPanel({
   roundResolved,
   countdownGuessAck,
   roundResult,
+  opponentRound,
 }: {
   matchId: string;
   qIndex: number;
@@ -89,6 +92,7 @@ function CountdownPanel({
   roundResolved: boolean;
   countdownGuessAck: MatchCountdownGuessAckPayload | null;
   roundResult: MatchRoundResultPayload | null;
+  opponentRound: MatchRoundResultPlayer | null;
 }) {
   const [guess, setGuess] = useState('');
   const [foundAnswers, setFoundAnswers] = useState<string[]>([]);
@@ -193,13 +197,20 @@ function CountdownPanel({
       )}
 
       <div className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] px-5 py-4">
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-3 flex items-center justify-between gap-2">
           <h3 className="text-sm font-black uppercase tracking-wide text-white">
             {roundResolved ? 'All Answers' : 'Answers Found'}
           </h3>
-          <span className="rounded-lg bg-[#1CB0F6]/15 px-2.5 py-1 text-xs font-black text-[#1CB0F6]">
-            {(roundResolved ? revealedAnswers.length : foundAnswers.length)} / {question.answerSlotCount}
-          </span>
+          <div className="flex items-center gap-2">
+            {roundResolved && opponentRound && typeof opponentRound.foundCount === 'number' && (
+              <span className="rounded-lg bg-[#FF4B4B]/15 px-2.5 py-1 text-xs font-black text-[#FF4B4B]">
+                Opp {opponentRound.foundCount} / {question.answerSlotCount}
+              </span>
+            )}
+            <span className="rounded-lg bg-[#1CB0F6]/15 px-2.5 py-1 text-xs font-black text-[#1CB0F6]">
+              {roundResolved ? 'You' : ''} {(roundResolved ? foundAnswers.length : foundAnswers.length)} / {question.answerSlotCount}
+            </span>
+          </div>
         </div>
         {(roundResolved ? revealedAnswers : foundAnswers).length === 0 ? (
           <p className="py-4 text-center text-sm text-[#56707A]">
@@ -315,6 +326,7 @@ function PutInOrderPanel({
   answerAck,
   roundResolved,
   roundResult,
+  opponentRound,
 }: {
   matchId: string;
   qIndex: number;
@@ -325,6 +337,7 @@ function PutInOrderPanel({
   answerAck: MatchAnswerAckPayload | null;
   roundResolved: boolean;
   roundResult: MatchRoundResultPayload | null;
+  opponentRound: MatchRoundResultPlayer | null;
 }) {
   const [userOrder, setUserOrder] = useState<ResolvedPutInOrderQuestionItem[]>(() => [...question.items]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -443,6 +456,13 @@ function PutInOrderPanel({
               <p className="font-black text-[#FF4B4B]">Not quite — correct order revealed above</p>
             </>
           )}
+          {opponentRound && (
+            <p className="mt-2 text-xs font-black uppercase tracking-wider text-white/70">
+              {opponentRound.isCorrect
+                ? <>Opponent: <span className="text-[#58CC02]">Correct</span></>
+                : <>Opponent: <span className="text-[#FF4B4B]">Wrong</span></>}
+            </p>
+          )}
         </motion.div>
       ) : (
         <button
@@ -468,6 +488,7 @@ function CluesPanel({
   answerAck,
   roundResolved,
   roundResult,
+  opponentRound,
   cluesGuessAck,
 }: {
   matchId: string;
@@ -479,6 +500,7 @@ function CluesPanel({
   answerAck: MatchAnswerAckPayload | null;
   roundResolved: boolean;
   roundResult: MatchRoundResultPayload | null;
+  opponentRound: MatchRoundResultPlayer | null;
   cluesGuessAck: MatchCluesGuessAckPayload | null;
 }) {
   const [guess, setGuess] = useState('');
@@ -652,6 +674,13 @@ function CluesPanel({
               <p className="text-xl font-black text-white">{displayAnswer}</p>
             </>
           )}
+          {opponentRound && (
+            <p className="mt-2 text-xs font-black uppercase tracking-wider text-white/70">
+              {opponentRound.isCorrect && typeof opponentRound.clueIndex === 'number'
+                ? <>Opponent: <span className="text-[#58CC02]">Got it on clue {opponentRound.clueIndex + 1}</span></>
+                : <>Opponent: <span className="text-[#FF4B4B]">Didn&apos;t get it</span></>}
+            </p>
+          )}
         </motion.div>
       )}
     </div>
@@ -669,6 +698,7 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
     answerAck,
     roundResolved,
     roundResult,
+    opponentRound,
     countdownGuessAck,
     cluesGuessAck,
   } = props;
@@ -683,6 +713,7 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
         roundResolved={roundResolved}
         countdownGuessAck={countdownGuessAck}
         roundResult={roundResult}
+        opponentRound={opponentRound}
       />
     );
   }
@@ -699,6 +730,7 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
         answerAck={answerAck}
         roundResolved={roundResolved}
         roundResult={roundResult}
+        opponentRound={opponentRound}
       />
     );
   }
@@ -714,6 +746,7 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
       answerAck={answerAck}
       roundResolved={roundResolved}
       roundResult={roundResult}
+      opponentRound={opponentRound}
       cluesGuessAck={cluesGuessAck}
     />
   );

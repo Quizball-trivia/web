@@ -32,26 +32,28 @@ const mockQuestion: ResolvedMatchQuestionPayload = {
   },
 };
 
+const mockGameLogicState = {
+  currentQuestion: mockQuestion,
+  roundResult: null,
+  roundResultHoldDone: false,
+  roundResolved: false,
+  questionPhase: 'playing',
+  selectedAnswer: null as number | null,
+  selectedAnswerQIndex: null as number | null,
+  correctIndex: 0 as number | undefined,
+  opponentAnswered: false,
+  showOptions: true,
+  startCountdownActive: false,
+  countdownSeconds: 0,
+  playerScore: 120,
+  opponentScore: 90,
+  matchPaused: false,
+  timeRemaining: 8,
+};
+
 vi.mock('@/features/game/hooks/useRealtimeGameLogic', () => ({
   useRealtimeGameLogic: () => ({
-    state: {
-      currentQuestion: mockQuestion,
-      roundResult: null,
-      roundResultHoldDone: false,
-      roundResolved: false,
-      questionPhase: 'playing',
-      selectedAnswer: null,
-      selectedAnswerQIndex: null,
-      correctIndex: 0,
-      opponentAnswered: false,
-      showOptions: true,
-      startCountdownActive: false,
-      countdownSeconds: 0,
-      playerScore: 120,
-      opponentScore: 90,
-      matchPaused: false,
-      timeRemaining: 8,
-    },
+    state: mockGameLogicState,
     actions: {
       submitAnswer: vi.fn(),
     },
@@ -179,7 +181,24 @@ describe('useRealtimePossessionMatchController', () => {
   beforeEach(() => {
     useRealtimeMatchStore.getState().reset();
     mockOverlayState.isHalftime = false;
+    mockGameLogicState.currentQuestion = mockQuestion;
+    mockGameLogicState.roundResult = null;
+    mockGameLogicState.roundResultHoldDone = false;
+    mockGameLogicState.roundResolved = false;
+    mockGameLogicState.questionPhase = 'playing';
+    mockGameLogicState.selectedAnswer = null;
+    mockGameLogicState.selectedAnswerQIndex = null;
+    mockGameLogicState.correctIndex = 0;
+    mockGameLogicState.opponentAnswered = false;
+    mockGameLogicState.showOptions = true;
+    mockGameLogicState.startCountdownActive = false;
+    mockGameLogicState.countdownSeconds = 0;
+    mockGameLogicState.playerScore = 120;
+    mockGameLogicState.opponentScore = 90;
+    mockGameLogicState.matchPaused = false;
+    mockGameLogicState.timeRemaining = 8;
     seedMatchState();
+    useRealtimeMatchStore.getState().setMatchQuestion(mockQuestion);
   });
 
   it('builds a multiple-choice question area model and viewport model for a live normal round', () => {
@@ -215,5 +234,32 @@ describe('useRealtimePossessionMatchController', () => {
     expect(result.current.showQuestionArea).toBe(false);
     expect(result.current.halftimeModel?.visible).toBe(true);
     expect(result.current.halftimeModel?.playerGoals).toBe(1);
+  });
+
+  it('keeps the selected answer unresolved until the current question ack arrives', () => {
+    mockGameLogicState.selectedAnswer = 1;
+    mockGameLogicState.selectedAnswerQIndex = 0;
+    mockGameLogicState.correctIndex = 1;
+
+    const { result } = renderHook(() => useRealtimePossessionMatchController({
+      playerAvatar: '/me.png',
+      playerUsername: 'me',
+      opponentAvatar: '/opp.png',
+      opponentUsername: 'opp',
+      onQuit: vi.fn(),
+      onForfeit: vi.fn(),
+    }));
+
+    expect(result.current.questionAreaModel?.content.kind).toBe('multipleChoice');
+    if (result.current.questionAreaModel?.content.kind !== 'multipleChoice') {
+      throw new Error('Expected multipleChoice question area model');
+    }
+
+    expect(result.current.questionAreaModel.content.props.answerStates).toEqual([
+      'disabled',
+      'default',
+      'disabled',
+      'disabled',
+    ]);
   });
 });

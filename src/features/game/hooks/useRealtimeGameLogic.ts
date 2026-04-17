@@ -220,6 +220,28 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     return () => clearTimeout(timer);
   }, [roundResultHoldDone, effectiveDelay]);
 
+  // Ready-ack: once the client finishes its post-round overlay sequence, tell
+  // the server it's safe to send the next question. Server uses this to avoid
+  // scheduling playableAt before our goal-celebration/transition is done.
+  // Guarded by ref so we only emit once per resolved qIndex.
+  const lastReadyAckQIndexRef = useRef<number | null>(null);
+  const resolvedQIndexForAck = roundResult?.qIndex ?? null;
+  const matchIdForAck = match?.matchId ?? null;
+  useEffect(() => {
+    if (!transitionElapsed) return;
+    if (matchIdForAck === null || resolvedQIndexForAck === null) return;
+    if (lastReadyAckQIndexRef.current === resolvedQIndexForAck) return;
+    lastReadyAckQIndexRef.current = resolvedQIndexForAck;
+    try {
+      getSocket().emit('match:ready_for_next_question', {
+        matchId: matchIdForAck,
+        qIndex: resolvedQIndexForAck,
+      });
+    } catch (error) {
+      logger.warn('Failed to emit match:ready_for_next_question', { error });
+    }
+  }, [transitionElapsed, matchIdForAck, resolvedQIndexForAck]);
+
   // Unified promote gate — advances to the next question when conditions are met.
   // Handles: (a) non-transition promotes (effectiveDelay=0), (b) post-transition promotes,
   // and (c) late-arriving questions in both cases. The gate stays open (transitionElapsed=true)

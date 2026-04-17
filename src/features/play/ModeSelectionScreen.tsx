@@ -82,6 +82,24 @@ export function ModeSelectionScreen({
   const nextTierTargetRp = nextTierBand?.minRp ?? null;
   const nextTierColor = nextTierBand ? TIER_COLORS[nextTierBand.tier] : '#FFD700';
   const router = useRouter();
+  const rankedTitleStyle = {
+    fontFamily: "'Poppins', sans-serif",
+    fontWeight: 600,
+    letterSpacing: "0",
+    lineHeight: 1,
+  } as const;
+  const friendlyTitleStyle = {
+    fontFamily: "'Poppins', sans-serif",
+    fontWeight: 600,
+    letterSpacing: "0",
+    lineHeight: 1,
+  } as const;
+  const dailyTitleStyle = {
+    fontFamily: "'Poppins', sans-serif",
+    fontWeight: 600,
+    letterSpacing: "0",
+    lineHeight: 1,
+  } as const;
 
   const handleConfirm = () => {
     if (!selectedMode) return;
@@ -111,7 +129,7 @@ export function ModeSelectionScreen({
         }}
         role="button"
         tabIndex={0}
-        className="relative overflow-hidden rounded-2xl md:rounded-[28px] border-t-[3px] border-[#1CB0F6] cursor-pointer focus-visible:outline-none focus-visible:ring-2 active:translate-y-[2px] transition-all"
+        className="relative overflow-hidden rounded-2xl md:rounded-[28px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 active:translate-y-[2px] transition-all"
         style={{ backgroundColor: colors.green.base }}
       >
         {/* Ranked icon — centered background watermark */}
@@ -128,7 +146,12 @@ export function ModeSelectionScreen({
           <div className="hidden md:flex items-center gap-6">
             {/* Left: Title + Play */}
             <div className="flex-1 min-w-0">
-              <h1 className="text-5xl font-black uppercase leading-none text-white">Ranked Match</h1>
+              <h1
+                className="text-[3.25rem] uppercase text-white"
+                style={rankedTitleStyle}
+              >
+                Ranked Match
+              </h1>
               <div className="mt-1.5 text-lg font-black uppercase tracking-wide text-white/90">
                 {rankedProfileLoading
                   ? '1v1 Competitive'
@@ -194,7 +217,12 @@ export function ModeSelectionScreen({
           <div className="md:hidden">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h1 className="text-2xl font-black uppercase leading-none text-white">Ranked Match</h1>
+                <h1
+                  className="text-[1.7rem] uppercase text-white"
+                  style={rankedTitleStyle}
+                >
+                  Ranked Match
+                </h1>
                 <div className="mt-1 text-xs font-black uppercase tracking-wide text-white/90">
                   {rankedProfileLoading
                     ? '1v1 Competitive'
@@ -276,8 +304,8 @@ export function ModeSelectionScreen({
           }}
           role="button"
           tabIndex={0}
-          className="relative cursor-pointer overflow-hidden rounded-2xl md:rounded-[28px] border-[3px] border-[#1CB0F6] p-4 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
-          style={{ backgroundColor: colors.yellow.base }}
+          className="relative cursor-pointer overflow-hidden rounded-2xl md:rounded-[28px] p-4 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
+          style={{ backgroundColor: colors.blue.brand }}
         >
           {/* Watermark icon */}
           <Image
@@ -288,8 +316,13 @@ export function ModeSelectionScreen({
             className="absolute right-2 bottom-2 w-20 h-20 md:right-4 md:bottom-4 md:w-36 md:h-36 object-contain opacity-90 pointer-events-none"
           />
           <div className="relative z-10 flex flex-col h-full">
-            <h3 className="text-xl md:text-4xl font-black uppercase leading-tight text-black">Friendly Match</h3>
-            <p className="mt-0.5 md:mt-1.5 text-[10px] md:text-base font-black uppercase text-black">Create/Join Room</p>
+            <h3
+              className="text-xl uppercase text-white md:text-4xl"
+              style={friendlyTitleStyle}
+            >
+              Friendly Match
+            </h3>
+            <p className="mt-0.5 md:mt-1.5 text-[10px] md:text-base font-black uppercase text-white">Create/Join Room</p>
             <div className="mt-auto pt-4 md:pt-8">
               <div className="flex w-[140px] md:w-[180px] items-center justify-center rounded-2xl bg-black h-[44px] md:h-[56px] text-sm md:text-xl font-black uppercase tracking-wide text-white">
                 Play
@@ -309,8 +342,8 @@ export function ModeSelectionScreen({
           }}
           role="button"
           tabIndex={0}
-          className="relative cursor-pointer overflow-hidden rounded-2xl md:rounded-[28px] border-[3px] border-[#1CB0F6] p-4 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
-          style={{ backgroundColor: colors.blue.brand }}
+          className="relative cursor-pointer overflow-hidden rounded-2xl md:rounded-[28px] p-4 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
+          style={{ backgroundColor: colors.yellow.base }}
         >
           {/* Watermark icon */}
           <Image
@@ -321,8 +354,13 @@ export function ModeSelectionScreen({
             className="absolute right-0 bottom-0 w-24 h-24 md:right-2 md:bottom-2 md:w-40 md:h-40 object-contain opacity-90 pointer-events-none"
           />
           <div className="relative z-10 flex flex-col h-full">
-            <h3 className="text-xl md:text-4xl font-black uppercase leading-tight text-white">Daily Challenge</h3>
-            <p className="mt-0.5 md:mt-1.5 text-[10px] md:text-base font-black uppercase text-white/60">View Challenges</p>
+            <h3
+              className="text-xl uppercase text-black md:text-4xl"
+              style={dailyTitleStyle}
+            >
+              Daily Challenge
+            </h3>
+            <p className="mt-0.5 md:mt-1.5 text-[10px] md:text-base font-black uppercase text-black">View Challenges</p>
             <div className="mt-auto pt-4 md:pt-8">
               <div className="flex w-[140px] md:w-[180px] items-center justify-center rounded-2xl bg-black h-[44px] md:h-[56px] text-sm md:text-xl font-black uppercase tracking-wide text-white">
                 Play

@@ -16,7 +16,6 @@ interface UsePossessionScoreSplashesParams {
   localQuestion: ResolvedMatchQuestionPayload | null;
   phaseKind: string;
   selectedAnswer: number | null;
-  correctIndex: number | undefined;
   selectedAnswerQIndex: number | null;
   opponentAnswered: boolean;
   opponentAnsweredCorrectly: boolean | null;
@@ -29,7 +28,6 @@ export function usePossessionScoreSplashes({
   localQuestion,
   phaseKind,
   selectedAnswer,
-  correctIndex,
   selectedAnswerQIndex,
   opponentAnswered,
   opponentAnsweredCorrectly,
@@ -49,33 +47,24 @@ export function usePossessionScoreSplashes({
   });
 
   useEffect(() => {
-    if (selectedAnswer === null || typeof correctIndex !== 'number') return;
-    if (selectedAnswerQIndex == null) return;
+    if (!answerAck || !answerAck.isCorrect) return;
+    if (selectedAnswer === null || selectedAnswerQIndex == null) return;
     if (phaseKind !== 'normal' && phaseKind !== 'last_attack') return;
+    if (selectedAnswerQIndex !== answerAck.qIndex) return;
+    if (shownSplashQRef.current.player === answerAck.qIndex) return;
 
-    const activeQIndex = localQuestion?.qIndex ?? null;
-    if (activeQIndex === null || selectedAnswerQIndex !== activeQIndex) return;
-    if (shownSplashQRef.current.player === activeQIndex) return;
-    if (selectedAnswer !== correctIndex) return;
+    const activeQIndex = localQuestion?.qIndex ?? answerAck.qIndex;
+    if (activeQIndex !== answerAck.qIndex) return;
 
     const startedAtMs = localQuestion?.playableAt ? new Date(localQuestion.playableAt).getTime() : null;
     const deadlineAtMs = localQuestion?.deadlineAt ? new Date(localQuestion.deadlineAt).getTime() : null;
     const optimistic = getOptimisticSplashOutcome({ startedAtMs, deadlineAtMs });
 
-    setPlayerSplashVariant(optimistic.variant);
-    setPlayerSplashPoints(optimistic.points);
+    setPlayerSplashVariant(optimistic.variant === 'pending' ? 'pending' : 'points');
+    setPlayerSplashPoints(optimistic.variant === 'pending' ? null : answerAck.pointsEarned);
     setShowPlayerSplash(true);
-    shownSplashQRef.current.player = activeQIndex;
-  }, [correctIndex, localQuestion?.deadlineAt, localQuestion?.playableAt, localQuestion?.qIndex, phaseKind, selectedAnswer, selectedAnswerQIndex]);
-
-  useEffect(() => {
-    if (!answerAck || !answerAck.isCorrect) return;
-    if (shownSplashQRef.current.player !== answerAck.qIndex) return;
-
-    setPlayerSplashVariant('points');
-    setPlayerSplashPoints(answerAck.pointsEarned);
-    setShowPlayerSplash(true);
-  }, [answerAck]);
+    shownSplashQRef.current.player = answerAck.qIndex;
+  }, [answerAck, localQuestion?.deadlineAt, localQuestion?.playableAt, localQuestion?.qIndex, phaseKind, selectedAnswer, selectedAnswerQIndex]);
 
   useEffect(() => {
     if (!opponentAnswered && !roundResult) return;
