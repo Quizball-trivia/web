@@ -144,30 +144,30 @@ export default function DailyChallengesPage() {
             </p>
           </div>
 
-          <div className="flex items-start gap-10 md:gap-14">
-            <div className="min-w-[140px]">
-              <p className="font-poppins text-[10px] md:text-xs uppercase tracking-wider text-white/60">
+          <div className="flex items-start gap-3 md:gap-4">
+            <div className="w-[250px]">
+              <p className="inline-block whitespace-nowrap font-poppins text-sm md:text-[0.95rem] font-semibold uppercase leading-none tracking-[-0.02em] text-white">
                 Today&apos;s Progress
               </p>
-              <div className="mt-2 h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+              <div className="mt-3 h-[18px] w-[15ch] max-w-full overflow-hidden rounded-[5px] bg-[#A18F00]">
                 <div
-                  className="h-full bg-[#FFE500] rounded-full transition-all duration-500"
+                  className="h-full rounded-[5px] bg-[#FFE500] transition-all duration-500"
                   style={{ width: `${progressPct}%` }}
                 />
               </div>
-              <p className="mt-1.5 text-xs font-black text-white/60 text-center">
+              <p className="mt-3 text-center font-poppins text-[18px] font-semibold leading-none text-white/55">
                 {completedCount}/{challenges.length}
               </p>
             </div>
 
-            <div className="text-right">
-              <p className="font-poppins text-[10px] md:text-xs uppercase tracking-wider text-white/60">
+            <div className="w-[165px] text-right">
+              <p className="font-poppins text-sm md:text-[0.95rem] font-semibold uppercase leading-none tracking-[-0.02em] text-white">
                 Coins Earned
               </p>
-              <p className="font-poppins mt-1 text-3xl md:text-4xl uppercase leading-none text-[#FFE500]">
+              <p className="font-poppins mt-2 text-[40px] font-semibold uppercase leading-none text-[#FFE500] md:text-[44px]">
                 {earnedCoins}
               </p>
-              <p className="mt-1 text-[11px] font-black uppercase tracking-wide text-white/40">
+              <p className="mt-1 font-poppins text-[14px] font-semibold uppercase leading-none text-white/45 md:text-[16px]">
                 of {totalCoins}
               </p>
             </div>

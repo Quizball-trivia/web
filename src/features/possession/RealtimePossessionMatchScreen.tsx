@@ -13,6 +13,9 @@ interface RealtimePossessionMatchScreenProps {
   playerUsername: string;
   opponentAvatar: string;
   opponentUsername: string;
+  /** ISO country code — enables the flag badge on halftime avatars. */
+  playerCountryCode?: string | null;
+  opponentCountryCode?: string | null;
   onQuit: () => void;
   onForfeit: () => void;
 }

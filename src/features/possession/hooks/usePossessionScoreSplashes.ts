@@ -15,6 +15,7 @@ import {
 interface UsePossessionScoreSplashesParams {
   localQuestion: ResolvedMatchQuestionPayload | null;
   phaseKind: string;
+  isHalftime: boolean;
   selectedAnswer: number | null;
   selectedAnswerQIndex: number | null;
   opponentAnswered: boolean;
@@ -27,6 +28,7 @@ interface UsePossessionScoreSplashesParams {
 export function usePossessionScoreSplashes({
   localQuestion,
   phaseKind,
+  isHalftime,
   selectedAnswer,
   selectedAnswerQIndex,
   opponentAnswered,
@@ -45,6 +47,22 @@ export function usePossessionScoreSplashes({
     player: null,
     opponent: null,
   });
+
+  useEffect(() => {
+    if (!isHalftime && localQuestion?.qIndex == null) return;
+
+    setShowPlayerSplash(false);
+    setShowOpponentSplash(false);
+    setPlayerSplashPoints(null);
+    setOpponentSplashPoints(null);
+    setPlayerSplashVariant('points');
+    setOpponentSplashVariant('points');
+
+    if (isHalftime) {
+      shownSplashQRef.current = { player: null, opponent: null };
+      return;
+    }
+  }, [isHalftime, localQuestion?.qIndex]);
 
   useEffect(() => {
     if (!answerAck || !answerAck.isCorrect) return;

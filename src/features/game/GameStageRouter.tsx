@@ -216,12 +216,25 @@ export function GameStageRouter() {
         );
       }
 
+      // Resolve opponent country from match/matchmaking data so the halftime
+      // avatars can show the flag badge (same derivation as showdown).
+      const playingOppInfo = realtimeMatch?.opponent ?? rankedFoundOpponent;
+      const playingOppGeo = playingOppInfo?.geo && typeof playingOppInfo.geo === 'object' ? playingOppInfo.geo : null;
+      const playingOppCountryCode =
+        playingOppInfo?.countryCode
+        ?? playingOppInfo?.country
+        ?? playingOppGeo?.countryCode
+        ?? playingOppGeo?.country_code
+        ?? null;
+
       return (
         <RealtimePossessionMatchScreen
           playerAvatar={playerGameAvatar}
           playerUsername={player.username}
           opponentAvatar={opponentGameAvatar}
           opponentUsername={opponent.username}
+          playerCountryCode={authUser?.country ?? null}
+          opponentCountryCode={playingOppCountryCode}
           onQuit={handleQuit}
           onForfeit={handleForfeit}
         />

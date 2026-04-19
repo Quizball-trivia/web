@@ -2,8 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ShowdownScreen } from './ShowdownScreen';
-import Image from 'next/image';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { Volume2, VolumeX } from 'lucide-react';
 import { isMuted as getIsMuted, toggleMute } from '@/lib/sounds/gameSounds';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
@@ -16,23 +15,264 @@ import { useRankedProfile } from '@/lib/queries/ranked.queries';
 import { useCategoriesList } from '@/lib/queries/categories.queries';
 import { logger } from '@/utils/logger';
 import { cn, parseRp } from '@/lib/utils';
-import { isAvatarUrl, resolveAvatarUrl } from '@/lib/avatars';
+import { resolveAvatarUrl } from '@/lib/avatars';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
-import { tierFromRp } from '@/utils/rankedTier';
+import { tierFromRp, type RankedTier } from '@/utils/rankedTier';
+import { AvatarDisplay } from '@/components/AvatarDisplay';
+import { BanCategoryCard } from '@/components/shared/BanCategoryCard';
 
-// Dark-tinted category card colors (subtle accent on dark bg)
-const CARD_COLORS = [
-  { bg: '#162A3A', dark: '#1CB0F6' },  // blue tint
-  { bg: '#2A2118', dark: '#FF9600' },  // orange tint
-  { bg: '#241A2E', dark: '#CE82FF' },  // purple tint
-  { bg: '#1A2A18', dark: '#58CC02' },  // green tint
-  { bg: '#2A1A1A', dark: '#FF4B4B' },  // red tint
-  { bg: '#2A2618', dark: '#FFC800' },  // gold tint
-];
+// Tier accent colors (mirrors ModeSelectionScreen)
+const TIER_COLORS: Record<RankedTier, string> = {
+  Academy: '#8B9DA4',
+  'Youth Prospect': '#58CC02',
+  Reserve: '#1CB0F6',
+  Bench: '#1CB0F6',
+  Rotation: '#CE82FF',
+  Starting11: '#CE82FF',
+  'Key Player': '#FF9600',
+  Captain: '#FF9600',
+  'World-Class': '#FF4B4B',
+  Legend: '#FFD700',
+  GOAT: '#FFD700',
+};
 
+export interface BanCategoryViewCategory {
+  id: string;
+  name: string;
+  icon?: string | null;
+  imageUrl?: string | null;
+}
 
+export interface BanCategoryViewPlayer {
+  id: string;
+  username: string;
+  avatar: string;
+  countryCode?: string | null;
+  rankPoints?: number | null;
+  tier?: RankedTier;
+}
+
+export interface BanCategoryViewProps {
+  player: BanCategoryViewPlayer;
+  opponent: BanCategoryViewPlayer;
+  categories: BanCategoryViewCategory[];
+  playerBannedId: string | null;
+  opponentBannedId: string | null;
+  phase: 'ban' | 'ready';
+  currentActor: 'player' | 'opponent';
+  timeLeft: number;
+  h2h?: { winsA: number; winsB: number; total: number } | null;
+  soundMuted: boolean;
+  onToggleSound: () => void;
+  onBanCategory: (categoryId: string) => void;
+}
+
+/**
+ * Pure presentational ban-category view. Accepts all data via props so it can
+ * be rendered both in a live match (via `RankedCategoryBlockingScreen`) and in
+ * preview routes like `/ban-page` without real socket/store wiring.
+ */
+export function BanCategoryView({
+  player,
+  opponent,
+  categories,
+  playerBannedId,
+  opponentBannedId,
+  phase,
+  currentActor,
+  timeLeft,
+  h2h,
+  soundMuted,
+  onToggleSound,
+  onBanCategory,
+}: BanCategoryViewProps) {
+  const playerTierColor = player.tier ? TIER_COLORS[player.tier] : '#56707A';
+  const opponentTierColor = opponent.tier ? TIER_COLORS[opponent.tier] : '#56707A';
+
+  return (
+    <div className="relative min-h-dvh flex flex-col font-poppins">
+      {/* ── Shared AppShell-style background ── */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 bg-[#0f1420] bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0"
+        style={{
+          background:
+            "radial-gradient(circle at top center, rgba(28,176,246,0.08), transparent 32%), radial-gradient(circle at bottom left, rgba(88,204,2,0.06), transparent 28%)",
+        }}
+      />
+
+      {/* ── Header (no separator, blends into page bg) ── */}
+      <div className="relative z-10 w-full">
+        <div className="max-w-5xl mx-auto px-5 py-4 flex items-center justify-between">
+          {/* Player (Left) */}
+          <div className={cn(
+            "flex items-center gap-3 transition-opacity duration-300",
+            currentActor === 'opponent' && "opacity-50"
+          )}>
+            <div className="relative">
+              <AvatarDisplay
+                customization={{ base: player.avatar }}
+                size="sm"
+                countryCode={player.countryCode ?? null}
+                className="ring-[3px] ring-[#1CB0F6] shadow-[0_3px_0_0_#1899D6]"
+              />
+              <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[7px] font-black bg-[#1CB0F6] text-white px-1.5 py-px rounded-full border-b border-[#1899D6] uppercase tracking-wider z-30">
+                YOU
+              </span>
+            </div>
+            <div className="hidden sm:block">
+              <div className="text-[15px] font-black text-white leading-none truncate max-w-[140px]">
+                {player.username}
+              </div>
+              <div className="text-xs font-extrabold text-[#56707A] mt-1">
+                {player.rankPoints != null ? `${player.rankPoints} RP` : '— RP'}
+              </div>
+              {player.tier && (
+                <div
+                  className="mt-0.5 text-[10px] font-black uppercase tracking-wider"
+                  style={{ color: playerTierColor }}
+                >
+                  {player.tier}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Center: H2H + Timer + Phase */}
+          <div className="flex flex-col items-center">
+            {h2h && h2h.total > 0 && (
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg font-black text-[#1CB0F6] tabular-nums">{h2h.winsA}</span>
+                <span className="text-[10px] font-black text-[#56707A]">vs</span>
+                <span className="text-lg font-black text-[#FF4B4B] tabular-nums">{h2h.winsB}</span>
+              </div>
+            )}
+
+            <div className={cn(
+              'text-5xl font-black tabular-nums leading-none transition-colors',
+              timeLeft <= 5 ? 'text-[#FF4B4B] animate-pulse' : 'text-[#58CC02]'
+            )}>
+              {timeLeft}
+            </div>
+
+            <div className="mt-2 bg-[#FF4B4B] px-3 py-1 rounded-full border-b-[3px] border-[#E04242]">
+              <span className="text-[10px] font-black text-white uppercase tracking-wider">Ban Phase</span>
+            </div>
+
+            <span className="text-[10px] font-extrabold text-[#56707A] mt-1.5 uppercase">
+              {currentActor === 'player' ? "Your Turn" : "Opponent's Turn"}
+            </span>
+          </div>
+
+          {/* Opponent (Right) */}
+          <div className={cn(
+            "flex items-center gap-3 flex-row-reverse transition-opacity duration-300",
+            currentActor === 'player' && "opacity-50"
+          )}>
+            <div className="relative">
+              <AvatarDisplay
+                customization={{ base: opponent.avatar }}
+                size="sm"
+                countryCode={opponent.countryCode ?? null}
+                className="ring-[3px] ring-[#FF4B4B] shadow-[0_3px_0_0_#E04242]"
+              />
+              <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[7px] font-black bg-[#FF4B4B] text-white px-1.5 py-px rounded-full border-b border-[#E04242] uppercase tracking-wider z-30">
+                FOE
+              </span>
+            </div>
+            <div className="hidden sm:block text-right">
+              <div className="text-[15px] font-black text-white leading-none truncate max-w-[140px]">
+                {opponent.username}
+              </div>
+              <div className="text-xs font-extrabold text-[#56707A] mt-1">
+                {opponent.rankPoints != null ? `${opponent.rankPoints} RP` : '— RP'}
+              </div>
+              {opponent.tier && (
+                <div
+                  className="mt-0.5 text-[10px] font-black uppercase tracking-wider"
+                  style={{ color: opponentTierColor }}
+                >
+                  {opponent.tier}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Sound toggle (top-right floating) */}
+        <button
+          onClick={onToggleSound}
+          aria-label={soundMuted ? 'Unmute' : 'Mute'}
+          className="absolute top-4 right-4 sm:top-5 sm:right-6 size-9 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition"
+        >
+          {soundMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+        </button>
+      </div>
+
+      {/* ── Content ── */}
+      <div className="relative z-10 flex flex-col items-center pt-4 sm:pt-6">
+        {/* Heading */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="text-center mb-6 sm:mb-8 px-6"
+        >
+          <h2 className="text-3xl font-black text-white uppercase tracking-tight">
+            {phase === 'ban' ? "Ban a Category" : "Get Ready!"}
+          </h2>
+          <p className="text-sm text-[#56707A] font-bold mt-1.5">
+            {phase === 'ban'
+              ? "Tap a card to remove it. One category remains for Half 1."
+              : "Match starting with selected Half 1 category..."}
+          </p>
+        </motion.div>
+
+        {/* Category Cards — shared BanCategoryCard matches /play mode-selection style */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="w-full">
+          <div className="grid grid-cols-3 gap-3 sm:gap-5 pb-8 px-4 sm:px-6 max-w-2xl mx-auto">
+            {categories.map((category, i) => {
+              const isPlayerBanned = category.id === playerBannedId;
+              const isOpponentBanned = category.id === opponentBannedId;
+              const isBanned = isPlayerBanned || isOpponentBanned;
+
+              const disabled =
+                (!!playerBannedId && !isPlayerBanned && phase === 'ban') ||
+                isOpponentBanned ||
+                currentActor !== 'player' ||
+                phase !== 'ban';
+
+              const fadedOut = Boolean(playerBannedId && !isPlayerBanned && !isOpponentBanned);
+
+              return (
+                <BanCategoryCard
+                  key={category.id}
+                  category={category}
+                  colorIndex={i}
+                  animationIndex={i}
+                  isBanned={isBanned}
+                  disabled={disabled}
+                  fadedOut={fadedOut}
+                  onClick={() => onBanCategory(category.id)}
+                />
+              );
+            })}
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Store-connected ranked category banning screen used during a real match.
+ * Delegates rendering to the pure {@link BanCategoryView} component.
+ */
 export function RankedCategoryBlockingScreen() {
-  // All hooks must be called before any conditional return
   const { player } = usePlayer();
   const authUser = useAuthStore((state) => state.user);
   const connectedSelfUserId = useRealtimeMatchStore((state) => state.selfUserId);
@@ -43,11 +283,7 @@ export function RankedCategoryBlockingScreen() {
   const matchOpponent = useRealtimeMatchStore((state) => state.match?.opponent);
   const { data: rankedProfile } = useRankedProfile();
   const [timeLeft, setTimeLeft] = useState(15);
-  const [showShowdown, setShowShowdown] = useState(() => {
-    // Show showdown only on first mount, not after banning
-    return true;
-  });
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [showShowdown, setShowShowdown] = useState(true);
   const autoBanFired = useRef(false);
   const [soundMuted, setSoundMuted] = useState(() => getIsMuted());
 
@@ -64,14 +300,18 @@ export function RankedCategoryBlockingScreen() {
       ),
     [authUser?.avatar_url, player.avatarCustomization?.base, player.avatar, selfUserId]
   );
-  const opponent = useMemo(() => {
-    return {
-      id: opponentMember?.userId ?? 'opponent',
-      username: opponentMember?.username ?? 'Opponent',
-      avatar: resolveAvatarUrl(opponentMember?.avatarUrl, opponentMember?.userId ?? 'opponent', 256),
-    };
-  }, [opponentMember]);
-  const h2h = useHeadToHead(selfUserId ?? undefined, opponent.id !== 'opponent' ? opponent.id : undefined);
+  const opponentResolvedAvatar = useMemo(
+    () => resolveAvatarUrl(opponentMember?.avatarUrl, opponentMember?.userId ?? 'opponent', 256),
+    [opponentMember?.avatarUrl, opponentMember?.userId]
+  );
+  const opponentId = opponentMember?.userId ?? 'opponent';
+  const opponentUsername = opponentMember?.username ?? 'Opponent';
+
+  const h2h = useHeadToHead(
+    selfUserId ?? undefined,
+    opponentId !== 'opponent' ? opponentId : undefined
+  );
+
   useEffect(() => {
     if (!draft || showShowdown) return;
     setTimeLeft(15);
@@ -87,10 +327,10 @@ export function RankedCategoryBlockingScreen() {
   useEffect(() => {
     if (timeLeft !== 0 || autoBanFired.current) return;
     if (!selfUserId) return;
-    if (!draft || draft.halfOneCategoryId) return; // already done
-    if (draft.turnUserId !== selfUserId) return; // not our turn
+    if (!draft || draft.halfOneCategoryId) return;
+    if (draft.turnUserId !== selfUserId) return;
     const playerBan = draft.bans[selfUserId] ?? null;
-    if (playerBan) return; // already banned
+    if (playerBan) return;
 
     const bannedIds = new Set(Object.values(draft.bans));
     const available = draft.categories.filter((c) => !bannedIds.has(c.id));
@@ -102,41 +342,42 @@ export function RankedCategoryBlockingScreen() {
     logger.info('Auto-ban on timer expiry', { categoryId: randomCategory.id });
   }, [timeLeft, draft, selfUserId]);
 
-  // Show showdown screen for 7 seconds before banning starts, only once
   useEffect(() => {
     if (showShowdown) {
-      const timer = setTimeout(() => {
-        setShowShowdown(false);
-      }, 7000);
+      const timer = setTimeout(() => setShowShowdown(false), 7000);
       return () => clearTimeout(timer);
     }
   }, [showShowdown]);
+
   const phase = draft?.halfOneCategoryId ? 'ready' : 'ban';
   const currentActor = draft?.turnUserId === selfUserId ? 'player' : 'opponent';
   const playerBannedId = draft?.bans[selfUserId ?? ''] ?? null;
-  const opponentBannedId = draft ? Object.entries(draft.bans).find(([userId]) => userId !== selfUserId)?.[1] ?? null : null;
+  const opponentBannedId = draft
+    ? Object.entries(draft.bans).find(([userId]) => userId !== selfUserId)?.[1] ?? null
+    : null;
+
   const { data: categoriesData } = useCategoriesList({ limit: 100, is_active: 'true' });
   const poolCategories = useMemo(() => {
     const draftCats = draft?.categories ?? [];
     const imageUrlMap = new Map(categoriesData?.items?.map(c => [c.id, c.imageUrl]) ?? []);
     return draftCats.map(c => ({ ...c, imageUrl: imageUrlMap.get(c.id) ?? null }));
   }, [draft?.categories, categoriesData?.items]);
+
   const playerRp = rankedProfile?.rp ?? player.rankPoints;
   const opponentRp = parseRp(matchOpponent?.rp ?? rankedFoundOpponent?.rp) ?? opponentMember?.rankPoints;
   const playerTier = playerRp != null ? tierFromRp(playerRp) : undefined;
   const opponentTier = opponentRp != null ? tierFromRp(opponentRp) : undefined;
+  const opponentCountryCode =
+    matchOpponent?.countryCode
+    ?? matchOpponent?.country
+    ?? rankedFoundOpponent?.countryCode
+    ?? rankedFoundOpponent?.country
+    ?? null;
 
-  // Memoized progress state for the 3-step indicator
-  const { steps } = useMemo(() => {
-    const banCount = Object.keys(draft?.bans ?? {}).length;
-    const isReady = !!draft?.halfOneCategoryId;
-    return { banCount, isReady, steps: [banCount >= 1, banCount >= 2, isReady] };
-  }, [draft?.bans, draft?.halfOneCategoryId]);
-
-  // Early return after all hooks
   if (!draft || !lobby) {
     return <LoadingScreen text="Preparing Match..." />;
   }
+
   if (showShowdown) {
     return (
       <ShowdownScreen
@@ -148,8 +389,8 @@ export function RankedCategoryBlockingScreen() {
           tier: playerTier,
         }}
         opponent={{
-          avatar: opponent.avatar,
-          username: opponent.username,
+          avatar: opponentResolvedAvatar,
+          username: opponentUsername,
           rankPoints: opponentRp,
           tier: opponentTier,
         }}
@@ -159,198 +400,38 @@ export function RankedCategoryBlockingScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-[#131F24] flex flex-col font-fun relative">
-
-      {/* ─── Chunky Header Bar ─── */}
-      <div className="w-full bg-[#1B2F36] border-b-[3px] border-[#0D1B21]">
-        <div className="max-w-5xl mx-auto px-5 py-4 flex items-center justify-between">
-
-          {/* Player (Left) */}
-          <div className={cn("flex items-center gap-3 transition-opacity duration-300", currentActor === 'opponent' && "opacity-50")}>
-            <div className="relative">
-              <div className="size-14 rounded-full bg-[#131F24] border-[4px] border-[#1CB0F6] flex items-center justify-center text-3xl overflow-hidden shadow-[0_3px_0_0_#1899D6]">
-                {isAvatarUrl(playerResolvedAvatar) ? (
-                  <Image src={playerResolvedAvatar} alt="You" width={56} height={56} unoptimized className="w-full h-full object-cover" />
-                ) : (
-                  <span>{playerResolvedAvatar || '🧑'}</span>
-                )}
-              </div>
-              <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[9px] font-black bg-[#1CB0F6] text-white px-2 py-[2px] rounded-full border-b-2 border-[#1899D6] uppercase tracking-wide">YOU</span>
-            </div>
-            <div className="hidden sm:block">
-              <div className="text-[15px] font-black text-white leading-none">{player.username}</div>
-              <div className="text-xs font-extrabold text-[#56707A] mt-0.5">{playerRp != null ? `${playerRp} RP` : '— RP'}</div>
-            </div>
-          </div>
-
-          {/* Center: H2H Score + Timer + Phase */}
-          <div className="flex flex-col items-center">
-            {/* Head-to-head score */}
-            {h2h.data && h2h.data.total > 0 && (
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-lg font-black text-[#1CB0F6] tabular-nums">{h2h.data.winsA}</span>
-                <span className="text-[10px] font-black text-[#56707A]">vs</span>
-                <span className="text-lg font-black text-[#FF4B4B] tabular-nums">{h2h.data.winsB}</span>
-              </div>
-            )}
-
-            {/* Timer */}
-            <div className={cn(
-              'text-5xl font-black tabular-nums leading-none transition-colors',
-              timeLeft <= 5 ? 'text-[#FF4B4B] animate-pulse' : 'text-[#58CC02]'
-            )}>
-              {timeLeft}
-            </div>
-
-            {/* Phase pill */}
-            <div className="mt-2 bg-[#FF4B4B] px-3 py-1 rounded-full border-b-[3px] border-[#E04242]">
-              <span className="text-[10px] font-black text-white uppercase tracking-wider">Ban Phase</span>
-            </div>
-
-            {/* Turn */}
-            <span className="text-[10px] font-extrabold text-[#56707A] mt-1.5 uppercase">
-              {currentActor === 'player' ? "Your Turn" : "Opponent's Turn"}
-            </span>
-          </div>
-
-          {/* Opponent (Right) */}
-          <div className={cn("flex items-center gap-3 flex-row-reverse transition-opacity duration-300", currentActor === 'player' && "opacity-50")}>
-            <div className="relative">
-              <div className="size-14 rounded-full bg-[#131F24] border-[4px] border-[#FF4B4B] flex items-center justify-center text-3xl overflow-hidden shadow-[0_3px_0_0_#E04242]">
-                {isAvatarUrl(opponent.avatar) ? (
-                  <Image src={opponent.avatar} alt="Opponent" width={56} height={56} unoptimized className="w-full h-full object-cover" />
-                ) : (
-                  <span>{opponent.avatar || '😈'}</span>
-                )}
-              </div>
-              <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[9px] font-black bg-[#FF4B4B] text-white px-2 py-[2px] rounded-full border-b-2 border-[#E04242] uppercase tracking-wide">FOE</span>
-            </div>
-            <div className="hidden sm:block text-right">
-              <div className="text-[15px] font-black text-white leading-none">{opponent.username}</div>
-              <div className="text-xs font-extrabold text-[#56707A] mt-0.5">{opponentRp != null ? `${opponentRp} RP` : '— RP'}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Progress bars removed per design */}
-      </div>
-
-      {/* ─── Content (vertically centered) ─── */}
-      <div className="flex-1 flex flex-col items-center justify-center py-6">
-
-        {/* Heading */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-center mb-8 px-6">
-          <h2 className="text-3xl font-black text-white uppercase tracking-tight">
-            {phase === 'ban' ? "Ban a Category" : "Get Ready!"}
-          </h2>
-          <p className="text-sm text-[#56707A] font-bold mt-1.5">
-            {phase === 'ban'
-              ? "Tap a card to remove it. One category remains for Half 1."
-              : "Match starting with selected Half 1 category..."}
-          </p>
-        </motion.div>
-
-        {/* Horizontal Scrolling Cards */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="w-full">
-          <div ref={scrollRef} className="grid grid-cols-3 gap-2.5 sm:gap-5 pb-8 px-4 sm:px-6 max-w-2xl mx-auto">
-            {poolCategories.map((category, i) => {
-              const isPlayerBanned = category.id === playerBannedId;
-              const isOpponentBanned = category.id === opponentBannedId;
-              const isBanned = isPlayerBanned || isOpponentBanned;
-              const color = CARD_COLORS[i % CARD_COLORS.length];
-
-              const disabled =
-                (!!playerBannedId && !isPlayerBanned && phase === 'ban') ||
-                isOpponentBanned ||
-                currentActor !== 'player' ||
-                phase !== 'ban';
-
-              return (
-                <motion.div
-                  key={category.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 + i * 0.08, type: 'spring', stiffness: 200, damping: 20 }}
-                  onClick={() => {
-                    if (disabled || isBanned || !selfUserId) return;
-                    useRealtimeMatchStore.getState().setDraftBan(selfUserId, category.id);
-                    getSocket().emit('draft:ban', { categoryId: category.id });
-                    logger.info('Socket emit draft:ban (optimistic)', { categoryId: category.id });
-                  }}
-                  className={cn(
-                    'group w-full rounded-2xl sm:rounded-3xl overflow-hidden transition-all duration-200',
-                    !disabled && !isBanned && 'cursor-pointer active:scale-[0.95] active:translate-y-[2px]',
-                    disabled && !isBanned && 'cursor-default',
-                    playerBannedId && !isPlayerBanned && !isOpponentBanned && 'opacity-25 pointer-events-none scale-95',
-                  )}
-                >
-                  {/* Artwork area */}
-                  <div
-                    className="aspect-square sm:aspect-[4/5] relative overflow-hidden"
-                    style={{ backgroundColor: category.imageUrl ? '#15242D' : (isBanned ? '#243B44' : color.bg) }}
-                  >
-                    {category.imageUrl ? (
-                      <>
-                        <div
-                          className={cn(
-                            'absolute inset-0 bg-cover bg-center transition-transform duration-500',
-                            !isBanned && 'group-hover:scale-105',
-                            isBanned && 'grayscale'
-                          )}
-                          style={{ backgroundImage: `url("${category.imageUrl}")` }}
-                        />
-                        <div className={cn(
-                          'absolute inset-0 bg-gradient-to-b from-black/10 via-black/15 to-black/70',
-                          isBanned && 'bg-black/55'
-                        )} />
-                      </>
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className={cn(
-                          'text-8xl transition-all duration-300 drop-shadow-lg',
-                          isBanned && 'grayscale opacity-40 scale-90'
-                        )}>
-                          {category.icon || '⚽'}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Banned overlay */}
-                    <AnimatePresence>
-                      {isBanned && (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="absolute inset-0 bg-black/40 flex items-center justify-center"
-                        >
-                          <motion.div
-                            initial={{ scale: 0, rotate: -30 }}
-                            animate={{ scale: 1, rotate: -12 }}
-                            transition={{ type: 'spring', stiffness: 400, damping: 14 }}
-                            className="bg-[#FF4B4B] px-3 py-1.5 sm:px-5 sm:py-2.5 rounded-xl sm:rounded-2xl border-b-4 border-[#CC3E3E] shadow-lg"
-                          >
-                            <span className="text-xs sm:text-base font-black text-white uppercase tracking-wide">BANNED</span>
-                          </motion.div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-
-                  {/* Info area — dark bottom with thick 3D border */}
-                  <div
-                    className="p-2.5 sm:p-4 bg-[#1B2F36]"
-                    style={{ borderBottom: `5px solid ${isBanned ? '#1B2F36' : color.dark}` }}
-                  >
-                    <h3 className="text-xs sm:text-base font-black text-white leading-tight truncate">{category.name}</h3>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </motion.div>
-
-        {/* Swipe hint removed — using grid layout */}
-      </div>
-    </div>
+    <BanCategoryView
+      player={{
+        id: selfUserId ?? 'player',
+        username: player.username,
+        avatar: playerResolvedAvatar,
+        countryCode: authUser?.country ?? null,
+        rankPoints: playerRp ?? null,
+        tier: playerTier,
+      }}
+      opponent={{
+        id: opponentId,
+        username: opponentUsername,
+        avatar: opponentResolvedAvatar,
+        countryCode: opponentCountryCode,
+        rankPoints: opponentRp ?? null,
+        tier: opponentTier,
+      }}
+      categories={poolCategories}
+      playerBannedId={playerBannedId}
+      opponentBannedId={opponentBannedId}
+      phase={phase}
+      currentActor={currentActor}
+      timeLeft={timeLeft}
+      h2h={h2h.data ?? null}
+      soundMuted={soundMuted}
+      onToggleSound={() => setSoundMuted(toggleMute())}
+      onBanCategory={(categoryId) => {
+        if (!selfUserId) return;
+        useRealtimeMatchStore.getState().setDraftBan(selfUserId, categoryId);
+        getSocket().emit('draft:ban', { categoryId });
+        logger.info('Socket emit draft:ban (optimistic)', { categoryId });
+      }}
+    />
   );
 }

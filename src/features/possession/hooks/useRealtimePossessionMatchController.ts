@@ -36,6 +36,9 @@ interface UseRealtimePossessionMatchControllerParams {
   playerUsername: string;
   opponentAvatar: string;
   opponentUsername: string;
+  /** ISO country code for the flag badge shown on the halftime avatar. */
+  playerCountryCode?: string | null;
+  opponentCountryCode?: string | null;
   onQuit: () => void;
   onForfeit: () => void;
 }
@@ -64,6 +67,8 @@ export function useRealtimePossessionMatchController({
   playerUsername,
   opponentAvatar,
   opponentUsername,
+  playerCountryCode = null,
+  opponentCountryCode = null,
   onQuit,
   onForfeit,
 }: UseRealtimePossessionMatchControllerParams): RealtimePossessionMatchControllerResult {
@@ -80,6 +85,7 @@ export function useRealtimePossessionMatchController({
   const [muted, setMuted] = useState(false);
   const [quitModalOpen, setQuitModalOpen] = useState(false);
   const halftimeBanSentRef = useRef(false);
+  const halftimeUiReadySentRef = useRef<string | null>(null);
   const prevPhaseRef = useRef<string | null>(null);
 
   const firstQuestionIntro = usePossessionFirstQuestionIntro({
@@ -99,6 +105,7 @@ export function useRealtimePossessionMatchController({
   const localQuestion = state.currentQuestion;
   const localQuestionIndex = localQuestion?.qIndex ?? null;
   const phaseKind = localQuestion?.phaseKind ?? possessionState?.phaseKind ?? 'normal';
+  const halftimeActive = phase === 'HALFTIME';
   const isPenaltyQuestion = phaseKind === 'penalty';
   const isLastAttackQuestion = phaseKind === 'last_attack';
   const isShotQuestion = phaseKind === 'shot';
@@ -206,6 +213,7 @@ export function useRealtimePossessionMatchController({
     roundResult: state.roundResult,
     roundResultHoldDone: state.roundResultHoldDone,
     currentQuestionIndex: localQuestionIndex,
+    isHalftime: halftimeActive,
     mySeat: mySeat ?? undefined,
     playerUsername,
     opponentUsername,
@@ -249,6 +257,7 @@ export function useRealtimePossessionMatchController({
   const splashState = usePossessionScoreSplashes({
     localQuestion,
     phaseKind,
+    isHalftime: halftimeActive,
     selectedAnswer: state.selectedAnswer,
     selectedAnswerQIndex: state.selectedAnswerQIndex ?? null,
     opponentAnswered: state.opponentAnswered,
@@ -364,6 +373,20 @@ export function useRealtimePossessionMatchController({
       categoryId,
     });
   }, [match?.matchId]);
+
+  const handleHalftimeBanPhaseShown = useCallback(() => {
+    if (!match?.matchId || !halftimeActive) return;
+    const halftimeKey = possessionState?.halftime.deadlineAt ?? `${match.matchId}:halftime`;
+    if (halftimeUiReadySentRef.current === halftimeKey) return;
+    halftimeUiReadySentRef.current = halftimeKey;
+    try {
+      getSocket().emit('match:halftime_ui_ready', {
+        matchId: match.matchId,
+      });
+    } catch (error) {
+      logger.warn('Failed to emit match:halftime_ui_ready', { error });
+    }
+  }, [halftimeActive, match?.matchId, possessionState?.halftime.deadlineAt]);
 
   const handleUseChanceCard = useCallback(() => {
     if (!match || !localQuestion) return;
@@ -638,6 +661,8 @@ export function useRealtimePossessionMatchController({
       playerAvatarUrl: playerAvatar,
       opponentAvatarUrl: opponentAvatar,
       playerPosition: fieldState.visualMyPossessionPct,
+      playerCountryCode,
+      opponentCountryCode,
       deadlineAt: possessionState.halftime.deadlineAt,
       categoryOptions: possessionState.halftime.categoryOptions,
       mySeat: duelMySeat,
@@ -653,6 +678,7 @@ export function useRealtimePossessionMatchController({
           ? possessionState.halftime.bans.seat2
           : null,
       onBanCategory: handleHalftimeBan,
+      onBanPhaseShown: handleHalftimeBanPhaseShown,
     };
 
   const handleTemporaryQuit = useCallback(() => {

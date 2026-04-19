@@ -49,6 +49,7 @@ describe('usePossessionGoalCelebration', () => {
       roundResult: MatchRoundResultPayload | null;
       roundResultHoldDone: boolean;
       currentQuestionIndex: number | null;
+      isHalftime: boolean;
     }) => usePossessionGoalCelebration({
       ...props,
       mySeat: 1,
@@ -60,6 +61,7 @@ describe('usePossessionGoalCelebration', () => {
         roundResult: null as MatchRoundResultPayload | null,
         roundResultHoldDone: false,
         currentQuestionIndex: 5,
+        isHalftime: false,
       },
     });
 
@@ -67,6 +69,7 @@ describe('usePossessionGoalCelebration', () => {
       roundResult: makeRoundResult(5, 'normal', 1),
       roundResultHoldDone: false,
       currentQuestionIndex: 5,
+      isHalftime: false,
     });
 
     expect(result.current.goalCelebration).toBeNull();
@@ -75,6 +78,7 @@ describe('usePossessionGoalCelebration', () => {
       roundResult: makeRoundResult(5, 'normal', 1),
       roundResultHoldDone: true,
       currentQuestionIndex: 5,
+      isHalftime: false,
     });
 
     expect(result.current.goalCelebration).toEqual({
@@ -94,6 +98,7 @@ describe('usePossessionGoalCelebration', () => {
       roundResult: null,
       roundResultHoldDone: false,
       currentQuestionIndex: 9,
+      isHalftime: false,
       mySeat: 1,
       playerUsername: 'me',
       opponentUsername: 'opponent',
@@ -107,6 +112,7 @@ describe('usePossessionGoalCelebration', () => {
       roundResult: makeRoundResult(9, 'penalty', 1),
       roundResultHoldDone: true,
       currentQuestionIndex: 9,
+      isHalftime: false,
       mySeat: 1,
       playerUsername: 'me',
       opponentUsername: 'opponent',
@@ -114,5 +120,48 @@ describe('usePossessionGoalCelebration', () => {
     }));
 
     expect(penaltyResult.current.goalCelebration).toBeNull();
+  });
+
+  it('clears an active goal celebration when halftime begins', () => {
+    const { result, rerender } = renderHook((props: {
+      roundResult: MatchRoundResultPayload | null;
+      roundResultHoldDone: boolean;
+      currentQuestionIndex: number | null;
+      isHalftime: boolean;
+    }) => usePossessionGoalCelebration({
+      ...props,
+      mySeat: 1,
+      playerUsername: 'me',
+      opponentUsername: 'opponent',
+      devPossessionAnimation: null,
+    }), {
+      initialProps: {
+        roundResult: null as MatchRoundResultPayload | null,
+        roundResultHoldDone: false,
+        currentQuestionIndex: 5,
+        isHalftime: false,
+      },
+    });
+
+    rerender({
+      roundResult: makeRoundResult(5, 'normal', 1),
+      roundResultHoldDone: true,
+      currentQuestionIndex: 5,
+      isHalftime: false,
+    });
+
+    expect(result.current.goalCelebration).toEqual({
+      scorerName: 'me',
+      isMeScorer: true,
+    });
+
+    rerender({
+      roundResult: makeRoundResult(5, 'normal', 1),
+      roundResultHoldDone: true,
+      currentQuestionIndex: 5,
+      isHalftime: true,
+    });
+
+    expect(result.current.goalCelebration).toBeNull();
   });
 });

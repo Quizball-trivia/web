@@ -3,6 +3,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import type { MatchStatePayload, ResolvedMatchQuestionPayload } from '@/lib/realtime/socket.types';
 
+const emitMock = vi.fn();
+
+vi.mock('@/lib/realtime/socket-client', () => ({
+  getSocket: () => ({
+    emit: emitMock,
+  }),
+}));
+
 const mockOverlayState = {
   isHalftime: false,
   penaltyCountdownActive: false,
@@ -179,6 +187,7 @@ function seedMatchState(phase: MatchStatePayload['phase'] = 'NORMAL_PLAY') {
 
 describe('useRealtimePossessionMatchController', () => {
   beforeEach(() => {
+    emitMock.mockReset();
     useRealtimeMatchStore.getState().reset();
     mockOverlayState.isHalftime = false;
     mockGameLogicState.currentQuestion = mockQuestion;
@@ -261,5 +270,49 @@ describe('useRealtimePossessionMatchController', () => {
       'disabled',
       'disabled',
     ]);
+  });
+
+  it('emits halftime ui ready only once per halftime instance', () => {
+    mockOverlayState.isHalftime = true;
+    useRealtimeMatchStore.getState().setMatchState({
+      matchId: MATCH_ID,
+      phase: 'HALFTIME',
+      half: 1,
+      possessionDiff: 30,
+      normalQuestionsAnsweredInHalf: 1,
+      attackerSeat: 1,
+      kickOffSeat: 1,
+      goals: { seat1: 1, seat2: 0 },
+      penaltyGoals: { seat1: 0, seat2: 0 },
+      phaseKind: 'normal',
+      phaseRound: 1,
+      shooterSeat: null,
+      halftime: {
+        deadlineAt: '2026-04-18T12:00:00.000Z',
+        categoryOptions: [],
+        firstBanSeat: 2,
+        bans: { seat1: null, seat2: null },
+      },
+      stateVersion: 2,
+    });
+
+    const { result, rerender } = renderHook(() => useRealtimePossessionMatchController({
+      playerAvatar: '/me.png',
+      playerUsername: 'me',
+      opponentAvatar: '/opp.png',
+      opponentUsername: 'opp',
+      onQuit: vi.fn(),
+      onForfeit: vi.fn(),
+    }));
+
+    result.current.halftimeModel?.onBanPhaseShown?.();
+    result.current.halftimeModel?.onBanPhaseShown?.();
+    rerender();
+    result.current.halftimeModel?.onBanPhaseShown?.();
+
+    expect(emitMock).toHaveBeenCalledTimes(1);
+    expect(emitMock).toHaveBeenCalledWith('match:halftime_ui_ready', {
+      matchId: MATCH_ID,
+    });
   });
 });

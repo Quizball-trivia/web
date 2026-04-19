@@ -18,6 +18,7 @@ interface UsePossessionGoalCelebrationParams {
   roundResult: MatchRoundResultPayload | null;
   roundResultHoldDone: boolean;
   currentQuestionIndex: number | null;
+  isHalftime: boolean;
   mySeat: number | undefined;
   playerUsername: string;
   opponentUsername: string;
@@ -28,6 +29,7 @@ export function usePossessionGoalCelebration({
   roundResult,
   roundResultHoldDone,
   currentQuestionIndex,
+  isHalftime,
   mySeat,
   playerUsername,
   opponentUsername,
@@ -66,6 +68,16 @@ export function usePossessionGoalCelebration({
       pendingGoalRef.current = null;
     }
   }, [currentQuestionIndex]);
+
+  useEffect(() => {
+    if (!isHalftime) return;
+    pendingGoalRef.current = null;
+    setGoalCelebration(null);
+    if (goalCelebrationHideTimerRef.current) {
+      clearTimeout(goalCelebrationHideTimerRef.current);
+      goalCelebrationHideTimerRef.current = null;
+    }
+  }, [isHalftime]);
 
   useEffect(() => {
     if (!roundResultHoldDone || !pendingGoalRef.current) return;
