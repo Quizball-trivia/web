@@ -334,6 +334,21 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     });
     const qc = getQueryClient();
     if (qc) {
+      const selfUserId = useRealtimeMatchStore.getState().selfUserId;
+      const myRankedOutcome = selfUserId ? data.rankedOutcome?.byUserId[selfUserId] : null;
+      if (myRankedOutcome) {
+        qc.setQueryData(queryKeys.ranked.profile(), (current: unknown) => {
+          if (!current || typeof current !== 'object') return current;
+          return {
+            ...current,
+            rp: myRankedOutcome.newRp,
+            tier: myRankedOutcome.newTier,
+            placementStatus: myRankedOutcome.placementStatus,
+            placementPlayed: myRankedOutcome.placementPlayed,
+            placementRequired: myRankedOutcome.placementRequired,
+          };
+        });
+      }
       void qc.invalidateQueries({ queryKey: queryKeys.ranked.all });
       void qc.invalidateQueries({ queryKey: queryKeys.stats.all });
       void qc.invalidateQueries({ queryKey: queryKeys.store.wallet() });

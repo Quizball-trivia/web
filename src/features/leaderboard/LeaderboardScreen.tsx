@@ -1,142 +1,181 @@
 "use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Trophy, Globe, Flag, Loader2, Target, Zap } from 'lucide-react';
-import { useLeaderboard, useUserRank } from '@/lib/queries/leaderboard.queries';
-import { LeaderboardTable } from './components/LeaderboardTable';
-import { LeaderboardPodium } from './components/LeaderboardPodium';
-import { UserRankStrip } from './components/UserRankStrip';
-import type { LeaderboardType } from '@/lib/domain/leaderboard';
-import { motion } from 'motion/react';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { motion } from "motion/react";
+
+import { useLeaderboard, useUserRank } from "@/lib/queries/leaderboard.queries";
+import type { LeaderboardType } from "@/lib/domain/leaderboard";
+
+import { LeaderboardTable } from "./components/LeaderboardTable";
+import { LeaderboardPodium } from "./components/LeaderboardPodium";
+import { UserRankStrip } from "./components/UserRankStrip";
 
 interface LeaderboardScreenProps {
   currentPlayerId?: string;
 }
 
+const poppinsTitle = {
+  fontFamily: "'Poppins', sans-serif",
+  fontWeight: 600,
+  letterSpacing: "0",
+  lineHeight: 1,
+} as const;
+
+const TABS: { value: LeaderboardType; label: string }[] = [
+  { value: "global", label: "Global" },
+  { value: "country", label: "Country" },
+];
+
 export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<LeaderboardType>('global');
+  const [activeTab, setActiveTab] = useState<LeaderboardType>("global");
+
+  const { data: entries, isLoading, isError } = useLeaderboard(activeTab, currentPlayerId);
+  const { data: userRank } = useUserRank(currentPlayerId ?? "", activeTab);
 
   const handleEntryClick = (userId: string) => {
     router.push(`/profile/${userId}`);
   };
 
-  const { data: entries, isLoading, isError } = useLeaderboard(activeTab, currentPlayerId);
-  const { data: userRank } = useUserRank(currentPlayerId ?? '', activeTab);
-
   const topThree = entries ? entries.slice(0, 3) : [];
-  const userEntryFromList = entries?.find(e => e.isCurrentUser || e.id === currentPlayerId);
+  const userEntryFromList = entries?.find(
+    (e) => e.isCurrentUser || e.id === currentPlayerId,
+  );
   const userEntry = userEntryFromList ?? userRank;
 
-  // Placeholder labels for season info
-  const nextRewardLabel = "100 Gems";
-  const seasonEndsLabel = "14 Days";
-
   return (
-    <div className="relative flex flex-col bg-transparent" style={{ minHeight: 'calc(100vh - 4rem)' }}>
-      <div className="flex-1 container max-w-2xl mx-auto px-3 sm:px-4 pt-2 sm:pt-4 pb-0 space-y-4 sm:space-y-6">
-
-        {/* Header */}
+    <div
+      className="relative flex flex-col bg-transparent font-fun"
+      style={{ minHeight: "calc(100vh - 4rem)" }}
+    >
+      <div className="flex-1 container max-w-3xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6 pb-6 space-y-5 sm:space-y-6">
+        {/* ─── Header ─── */}
         <motion.div
-          initial={{ opacity: 0, y: -12 }}
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="flex items-center gap-3 sm:gap-4 py-3 sm:py-5"
+          transition={{ duration: 0.35 }}
+          className="flex items-end justify-between gap-4"
         >
-          <div className="size-10 sm:size-14 rounded-2xl bg-yellow-500/15 border-2 border-yellow-500/30 flex items-center justify-center">
-            <Trophy className="size-5 sm:size-7 text-yellow-500" />
+          <div className="min-w-0">
+            <h1
+              className="text-4xl sm:text-5xl md:text-6xl uppercase text-white"
+              style={poppinsTitle}
+            >
+              Leaderboard
+            </h1>
+            <p className="mt-2 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-white/40">
+              Compete for glory and prizes
+            </p>
           </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-fun font-black uppercase tracking-tight">Leaderboard</h1>
-            <p className="text-xs sm:text-sm font-bold text-muted-foreground">Compete for glory and prizes</p>
-          </div>
+
+          {userEntry && (
+            <div
+              className="shrink-0 text-right text-2xl sm:text-3xl md:text-4xl tabular-nums text-[#FFE500] drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]"
+              style={poppinsTitle}
+            >
+              {userEntry.rankPoints.toLocaleString()} RP
+            </div>
+          )}
         </motion.div>
 
-        {/* Tabs */}
+        {/* ─── User Rank Strip ─── */}
+        {!isLoading && userEntry && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.05 }}
+          >
+            <UserRankStrip userEntry={userEntry} />
+          </motion.div>
+        )}
+
+        {/* ─── Segmented Tabs (pill style) ─── */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
+          transition={{ duration: 0.35, delay: 0.1 }}
+          className="flex items-center justify-center gap-3 pt-1"
+          role="tablist"
+          aria-label="Leaderboard scope"
         >
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as LeaderboardType)} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6 bg-card border-2 border-border p-1 sm:p-1.5 rounded-2xl h-auto">
-              {([
-                { value: 'global', label: 'Global', icon: Globe },
-                { value: 'country', label: 'Country', icon: Flag },
-              ] as const).map((tab) => (
-                <TabsTrigger
-                  key={tab.value}
-                  value={tab.value}
-                  className="rounded-xl py-2 sm:py-2.5 font-fun font-black uppercase tracking-wide text-[11px] sm:text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=active]:border-b-[3px] data-[state=active]:border-primary/60 transition-all duration-200"
-                >
-                  <tab.icon className="size-4 mr-1.5" />
-                  {tab.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-
-            {/* User Rank Strip */}
-            {!isLoading && userEntry && (
-              <UserRankStrip userEntry={userEntry} />
-            )}
-
-            <TabsContent value={activeTab} className="space-y-6 focus-visible:outline-none">
-
-              {/* Loading */}
-              {isLoading && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex flex-col items-center justify-center py-20 gap-4 rounded-2xl bg-card border-2 border-border border-b-4"
-                >
-                  <Loader2 className="size-10 text-primary animate-spin" />
-                  <p className="text-muted-foreground font-fun font-bold animate-pulse">Loading rankings...</p>
-                </motion.div>
-              )}
-
-              {/* Error */}
-              {isError && (
-                <div className="text-center py-20 rounded-2xl bg-red-500/10 border-2 border-red-500/20 border-b-4 border-b-red-500/30">
-                  <p className="font-fun font-bold text-red-400">Failed to load leaderboard data.</p>
-                </div>
-              )}
-
-              {/* Data */}
-              {!isLoading && !isError && entries && (
-                <>
-                  {entries.length >= 3 && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.5, delay: 0.15 }}
-                    >
-                      <LeaderboardPodium topThree={topThree} onEntryClick={handleEntryClick} />
-                    </motion.div>
-                  )}
-
-                  <motion.div
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.25 }}
-                    className="space-y-4"
-                  >
-                    <div className="flex items-center gap-2 px-1">
-                      <span className="text-lg">🏅</span>
-                      <h3 className="font-fun font-black text-lg uppercase tracking-wide">Rankings</h3>
-                    </div>
-
-                    <LeaderboardTable entries={entries} currentUserId={currentPlayerId} onEntryClick={handleEntryClick} />
-
-                  </motion.div>
-                </>
-              )}
-            </TabsContent>
-          </Tabs>
+          {TABS.map((tab) => {
+            const isActive = activeTab === tab.value;
+            return (
+              <button
+                key={tab.value}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => setActiveTab(tab.value)}
+                className={`inline-flex h-10 min-w-[130px] items-center justify-center rounded-full px-6 text-xs sm:text-sm font-fun font-black uppercase tracking-wide transition-all active:translate-y-[1px] ${
+                  isActive
+                    ? "bg-[#38B60E] text-white"
+                    : "border-2 border-[#38B60E] text-white hover:bg-[#38B60E]/10"
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </motion.div>
 
+        {/* ─── Content ─── */}
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center justify-center py-20 gap-3"
+          >
+            <Loader2 className="size-8 text-[#FFE500] animate-spin" />
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-white/40">
+              Loading rankings…
+            </p>
+          </motion.div>
+        )}
 
+        {isError && (
+          <div className="rounded-2xl border-2 border-[#FF4B4B]/40 bg-[#FF4B4B]/10 px-4 py-6 text-center">
+            <p className="text-sm font-fun font-black uppercase tracking-wide text-[#FF4B4B]">
+              Failed to load leaderboard data.
+            </p>
+          </div>
+        )}
+
+        {!isLoading && !isError && entries && (
+          <div className="space-y-5 sm:space-y-6">
+            {entries.length >= 3 && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.15 }}
+              >
+                <LeaderboardPodium topThree={topThree} onEntryClick={handleEntryClick} />
+              </motion.div>
+            )}
+
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.25 }}
+              className="space-y-3"
+            >
+              <h2
+                className="text-2xl sm:text-3xl uppercase text-white"
+                style={poppinsTitle}
+              >
+                Rankings
+              </h2>
+
+              <LeaderboardTable
+                entries={entries}
+                currentUserId={currentPlayerId}
+                onEntryClick={handleEntryClick}
+              />
+            </motion.div>
+          </div>
+        )}
       </div>
     </div>
   );

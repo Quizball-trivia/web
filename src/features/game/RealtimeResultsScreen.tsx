@@ -18,18 +18,6 @@ import { getTierVisual } from '@/utils/tierVisuals';
 import { getRankedTierProgress, tierFromRp } from '@/utils/rankedTier';
 import { trackMatchCompleted, trackDivisionPromoted, trackLevelUp } from '@/lib/analytics/game-events';
 
-function clamp(value: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, value));
-}
-
-function computeOptimisticDelta(playerRp: number, opponentRp: number, isWin: boolean, isForfeitLoss = false): number {
-  const rankDiff = opponentRp - playerRp;
-  if (isWin) return Math.round(25 + clamp(rankDiff / 50, -15, 20));
-  const lossDelta = Math.round(-25 + clamp(rankDiff / 50, -25, 10));
-  if (isForfeitLoss) return lossDelta - 10;
-  return lossDelta;
-}
-
 /** Animated number that ticks from `from` → `to` after a delay, with a pop + glow */
 function AnimatedCounter({
   from,
@@ -111,7 +99,6 @@ interface RealtimeResultsScreenProps {
   winnerDecisionMethod?: 'goals' | 'penalty_goals' | 'total_points' | 'total_points_fallback' | 'forfeit' | null;
   preMatchRp?: number;
   opponentId: string;
-  opponentRp?: number;
   rankedOutcome?: RankedMatchOutcomePayload | null;
   preMatchRankedProfile?: RankedProfileResponse | null;
   preMatchProgression?: UserProgression | null;
@@ -135,7 +122,6 @@ export function RealtimeResultsScreen({
   winnerDecisionMethod,
   preMatchRp,
   opponentId,
-  opponentRp,
   rankedOutcome,
   preMatchRankedProfile,
   preMatchProgression,
@@ -182,16 +168,7 @@ export function RealtimeResultsScreen({
   const optimisticJustPlaced = preIsPlacement && placementPlayed >= placementRequired;
   const justPlaced = myOutcome ? (myOutcome.isPlacement && myOutcome.placementStatus === 'placed') : optimisticJustPlaced;
 
-  // Optimistic RP for post-placement ranked matches (show immediately, don't wait for server)
   const oldRpBase = preMatchRankedProfile?.rp ?? preMatchRp ?? 0;
-  const opponentRpValue = typeof opponentRp === 'number' && Number.isFinite(opponentRp)
-    ? opponentRp
-    : null;
-  const canOptimistic = matchType === 'ranked'
-    && !isPlacementMatch
-    && Number.isFinite(oldRpBase)
-    && hasAuthoritativeWinner
-    && !isDraw;
 
   const isSelfWinner = playerWon;
   const isForfeitLoss = winnerDecisionMethod === 'forfeit' && !isSelfWinner;
@@ -220,18 +197,15 @@ export function RealtimeResultsScreen({
     ? Math.max(0, projectedProgression.xpForNextLevel - projectedProgression.currentLevelXp)
     : 0;
 
-  // Use server data if available, otherwise optimistic
-  const rpChange = myOutcome?.deltaRp
-    ?? (canOptimistic
-      ? computeOptimisticDelta(oldRpBase, opponentRpValue ?? oldRpBase, isSelfWinner, isForfeitLoss)
-      : 0);
+  // Ranked RP is persisted by the backend. Only render the RP card from
+  // authoritative settlement data so profile and result screens cannot diverge.
+  const rpChange = myOutcome?.deltaRp ?? 0;
   const oldRP = myOutcome?.oldRp ?? oldRpBase;
-  const newRP = myOutcome?.newRp ?? (canOptimistic ? Math.max(0, oldRP + rpChange) : 0);
+  const newRP = myOutcome?.newRp ?? oldRP;
 
-  // Show RP card immediately for optimistic OR when server confirms
   const showRankedRpCard = matchType === 'ranked'
     && !isPlacementMatch
-    && (myOutcome != null || canOptimistic);
+    && myOutcome != null;
 
   const accuracy = totalQuestions === 0 ? 0 : Math.round((playerCorrect / totalQuestions) * 100);
 

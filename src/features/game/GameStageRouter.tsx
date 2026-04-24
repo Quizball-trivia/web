@@ -299,7 +299,6 @@ export function GameStageRouter() {
           winnerDecisionMethod={final?.winnerDecisionMethod ?? null}
           preMatchRp={stableRankedProfile?.placementStatus === 'placed' ? stableRankedProfile.rp : undefined}
           opponentId={opponent.id}
-          opponentRp={realtimeMatch?.opponent?.rp != null ? Number(realtimeMatch.opponent.rp) : undefined}
           rankedOutcome={final?.rankedOutcome ?? null}
           preMatchRankedProfile={stableRankedProfile}
           preMatchProgression={stableProgression}
