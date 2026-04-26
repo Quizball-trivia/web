@@ -16,7 +16,7 @@ const poppins = {
 export function UserRankStrip({ userEntry }: UserRankStripProps) {
   return (
     <div
-      className="relative flex items-center gap-3 sm:gap-4 rounded-2xl border-2 px-3 sm:px-4 py-3 sm:py-3.5"
+      className="relative flex items-center gap-3 sm:gap-4 rounded-[10px] border-2 px-3 sm:px-4 py-3 sm:py-3.5"
       style={{ borderColor: "#38B60E", backgroundColor: "transparent" }}
     >
       {/* Avatar + trophy badge */}

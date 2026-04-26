@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils';
 
 export function StatCard({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div className="bg-[#1a1f2e] rounded-2xl border-b-4 border-b-white/10 p-3 text-center">
+    <div className="rounded-2xl border border-white/8 bg-[#1a1f2e] p-3 text-center">
       <div className="text-[10px] uppercase tracking-wider text-white/40 font-bold mb-1">{label}</div>
       <div className={cn('text-lg font-black', color)}>{value}</div>
     </div>

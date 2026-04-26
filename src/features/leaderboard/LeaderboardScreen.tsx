@@ -136,7 +136,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
         )}
 
         {isError && (
-          <div className="rounded-2xl border-2 border-[#FF4B4B]/40 bg-[#FF4B4B]/10 px-4 py-6 text-center">
+          <div className="rounded-[10px] border-2 border-[#FF4B4B]/40 bg-[#FF4B4B]/10 px-4 py-6 text-center">
             <p className="text-sm font-fun font-black uppercase tracking-wide text-[#FF4B4B]">
               Failed to load leaderboard data.
             </p>

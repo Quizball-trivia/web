@@ -68,7 +68,7 @@ export function LeaderboardPodium({ topThree, onEntryClick }: LeaderboardPodiumP
   ];
 
   return (
-    <div className="overflow-hidden rounded-2xl md:rounded-[28px] bg-[#071013] p-4 pt-10 sm:p-6 sm:pt-14 pb-0">
+    <div className="overflow-hidden rounded-[10px] bg-[#071013] p-4 pt-10 sm:p-6 sm:pt-14 pb-0">
       <div className="flex items-end justify-center gap-2 sm:gap-4 w-full max-w-md mx-auto">
         {players.map(({ entry, rank }) => {
           const config = podiumConfig[rank];
@@ -123,7 +123,7 @@ export function LeaderboardPodium({ topThree, onEntryClick }: LeaderboardPodiumP
 
               {/* Bar */}
               <div
-                className={`relative w-full ${config.height} flex flex-col items-center justify-center gap-2 rounded-2xl px-2 sm:px-3 overflow-hidden`}
+                className={`relative w-full ${config.height} flex flex-col items-center justify-center gap-2 rounded-[10px] px-2 sm:px-3 overflow-hidden`}
                 style={{ backgroundColor: config.bg }}
               >
                 <span

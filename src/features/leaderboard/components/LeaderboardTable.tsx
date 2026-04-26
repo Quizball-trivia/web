@@ -29,7 +29,7 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
 
       {/* Rows container with green outline */}
       <div
-        className="overflow-hidden rounded-2xl border-2"
+        className="overflow-hidden rounded-[10px] border-2"
         style={{ borderColor: "#38B60E" }}
       >
         <div className="divide-y divide-[#38B60E]/25">

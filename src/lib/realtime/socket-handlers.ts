@@ -147,6 +147,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       categoryCount: data.categories.length,
       turnUserId: data.turnUserId,
     });
+    store.clearError();
     store.setDraftStart(data);
   });
 
@@ -326,7 +327,27 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   });
 
   socket.on('match:final_results', (data: MatchFinalResultsPayload) => {
-    logger.info('Socket event match:final_results', { matchId: data.matchId, winnerId: data.winnerId });
+    const selfUserId = useRealtimeMatchStore.getState().selfUserId;
+    const myRankedOutcome = selfUserId ? data.rankedOutcome?.byUserId[selfUserId] : null;
+    logger.info('Socket event match:final_results', {
+      matchId: data.matchId,
+      winnerId: data.winnerId,
+      resultVersion: data.resultVersion,
+      selfUserId,
+      hasRankedOutcome: data.rankedOutcome != null,
+      rankedOutcomeUserIds: data.rankedOutcome ? Object.keys(data.rankedOutcome.byUserId) : [],
+      myRankedOutcome: myRankedOutcome
+        ? {
+          oldRp: myRankedOutcome.oldRp,
+          newRp: myRankedOutcome.newRp,
+          deltaRp: myRankedOutcome.deltaRp,
+          placementStatus: myRankedOutcome.placementStatus,
+          placementPlayed: myRankedOutcome.placementPlayed,
+          placementRequired: myRankedOutcome.placementRequired,
+          isPlacement: myRankedOutcome.isPlacement,
+        }
+        : null,
+    });
     store.setFinalResults(data);
     socket.emit('match:final_results_ack', {
       matchId: data.matchId,
@@ -334,11 +355,25 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     });
     const qc = getQueryClient();
     if (qc) {
-      const selfUserId = useRealtimeMatchStore.getState().selfUserId;
-      const myRankedOutcome = selfUserId ? data.rankedOutcome?.byUserId[selfUserId] : null;
       if (myRankedOutcome) {
         qc.setQueryData(queryKeys.ranked.profile(), (current: unknown) => {
           if (!current || typeof current !== 'object') return current;
+          const currentProfile = current as {
+            rp?: number;
+            tier?: string;
+            placementStatus?: string;
+            placementPlayed?: number;
+            placementRequired?: number;
+          };
+          logger.info('Patching ranked profile cache from match:final_results', {
+            matchId: data.matchId,
+            currentRp: currentProfile.rp ?? null,
+            nextRp: myRankedOutcome.newRp,
+            currentTier: currentProfile.tier ?? null,
+            nextTier: myRankedOutcome.newTier,
+            currentPlacementStatus: currentProfile.placementStatus ?? null,
+            nextPlacementStatus: myRankedOutcome.placementStatus,
+          });
           return {
             ...current,
             rp: myRankedOutcome.newRp,
@@ -348,18 +383,32 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
             placementRequired: myRankedOutcome.placementRequired,
           };
         });
+      } else {
+        logger.warn('match:final_results arrived without rankedOutcome for current user', {
+          matchId: data.matchId,
+          selfUserId,
+          rankedOutcomeUserIds: data.rankedOutcome ? Object.keys(data.rankedOutcome.byUserId) : [],
+        });
       }
       void qc.invalidateQueries({ queryKey: queryKeys.ranked.all });
       void qc.invalidateQueries({ queryKey: queryKeys.stats.all });
       void qc.invalidateQueries({ queryKey: queryKeys.store.wallet() });
       void qc.invalidateQueries({ queryKey: queryKeys.store.inventory() });
       void qc.invalidateQueries({ queryKey: queryKeys.users.all });
+      logger.info('Invalidated post-match queries after match:final_results', {
+        matchId: data.matchId,
+        invalidated: ['ranked.all', 'stats.all', 'store.wallet', 'store.inventory', 'users.all'],
+      });
     }
     void getMe()
       .then((user) => {
         const current = useAuthStore.getState().user;
         if (current?.id === user.id) {
           useAuthStore.getState().setAuthenticated(user);
+          logger.info('Refreshed auth user after match:final_results', {
+            matchId: data.matchId,
+            userId: user.id,
+          });
         }
       })
       .catch((error) => {
@@ -398,11 +447,13 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
 
   socket.on('ranked:search_started', (data: RankedSearchStartedPayload) => {
     logger.info('Socket event ranked:search_started', { durationMs: data.durationMs });
+    store.clearError();
     useRankedMatchmakingStore.getState().setRankedSearchStarted({ durationMs: data.durationMs });
   });
 
   socket.on('ranked:match_found', (data: RankedMatchFoundPayload) => {
     logger.info('Socket event ranked:match_found', { lobbyId: data.lobbyId, opponentId: data.opponent.id });
+    store.clearError();
     useRankedMatchmakingStore.getState().setRankedMatchFound({ opponent: data.opponent });
   });
 

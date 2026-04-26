@@ -62,7 +62,7 @@ function ChallengeCard({
         type="button"
         disabled={disabled}
         onClick={onClick}
-        className="w-full rounded-[20px] bg-[#FFE500] p-5 md:p-6 text-center transition-all hover:brightness-105 active:translate-y-[2px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFE500] disabled:cursor-default disabled:brightness-95"
+        className="w-full rounded-[10px] bg-[#FFE500] p-5 md:p-6 text-center transition-all hover:brightness-105 active:translate-y-[2px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFE500] disabled:cursor-default disabled:brightness-95"
       >
         <h3 className="font-poppins text-xl md:text-2xl uppercase leading-none text-black text-center">
           {challenge.title}
@@ -176,7 +176,7 @@ export default function DailyChallengesPage() {
 
         {/* Grid of challenge cards */}
         {isLoading ? (
-          <div className="rounded-2xl bg-[#1B2F36] p-6 text-center text-[#56707A] font-bold">
+          <div className="rounded-[10px] bg-[#1B2F36] p-6 text-center text-[#56707A] font-bold">
             Loading today&apos;s challenge lineup...
           </div>
         ) : (

@@ -1,9 +1,27 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { queryKeys } from '@/lib/queries/queryKeys';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
-import { registerSocketHandlers, resetSocketHandlers } from '../socket-handlers';
 import { __setSocketOverride } from '../socket-client';
 import type { Socket } from 'socket.io-client';
 import type { ServerToClientEvents, ClientToServerEvents } from '../socket.types';
+
+const getMeMock = vi.fn().mockResolvedValue({ id: 'self-1' });
+const authState = {
+  user: { id: 'self-1' },
+  setAuthenticated: vi.fn(),
+};
+
+vi.mock('@/lib/api/endpoints', () => ({
+  getMe: (...args: unknown[]) => getMeMock(...args),
+}));
+
+vi.mock('@/stores/auth.store', () => ({
+  useAuthStore: {
+    getState: () => authState,
+  },
+}));
+
+import { registerSocketHandlers, resetSocketHandlers } from '../socket-handlers';
 
 // ---------------------------------------------------------------------------
 // Minimal mock socket that tracks .on() listeners so we can fire them
@@ -55,6 +73,8 @@ describe('registerSocketHandlers', () => {
     // Reset store to clean state
     useRealtimeMatchStore.getState().reset();
     useRealtimeMatchStore.setState({ selfUserId: null });
+    getMeMock.mockClear();
+    authState.setAuthenticated.mockClear();
 
     // Reset handler registration so each test gets fresh handlers
     resetSocketHandlers();
@@ -132,5 +152,115 @@ describe('registerSocketHandlers', () => {
     const draft = useRealtimeMatchStore.getState().draft;
     expect(draft).not.toBeNull();
     expect(draft!.bans).toHaveProperty('user-456');
+  });
+
+  it('patches ranked profile cache from match:final_results when rankedOutcome exists for self', () => {
+    const profileKey = queryKeys.ranked.profile();
+    let cachedProfile: Record<string, unknown> = {
+      rp: 7,
+      tier: 'Academy',
+      placementStatus: 'placed',
+      placementPlayed: 3,
+      placementRequired: 3,
+    };
+    const queryClient = {
+      setQueryData: vi.fn((queryKey: unknown, updater: unknown) => {
+        expect(queryKey).toEqual(profileKey);
+        expect(typeof updater).toBe('function');
+        cachedProfile = (updater as (current: unknown) => unknown)(cachedProfile) as Record<string, unknown>;
+      }),
+      invalidateQueries: vi.fn(),
+    };
+
+    useRealtimeMatchStore.setState({ selfUserId: 'self-1' });
+    registerSocketHandlers(queryClient as never);
+
+    mockSocket.fire('match:final_results', {
+      matchId: 'match-1',
+      winnerId: 'opp-1',
+      players: {
+        'self-1': { totalPoints: 400, correctAnswers: 2, avgTimeMs: 1200, goals: 0, penaltyGoals: 0 },
+        'opp-1': { totalPoints: 700, correctAnswers: 6, avgTimeMs: 1000, goals: 1, penaltyGoals: 0 },
+      },
+      unlockedAchievements: {},
+      durationMs: 60000,
+      resultVersion: 123,
+      winnerDecisionMethod: 'goals',
+      totalPointsFallbackUsed: false,
+      rankedOutcome: {
+        isPlacement: false,
+        byUserId: {
+          'self-1': {
+            userId: 'self-1',
+            oldRp: 7,
+            newRp: 0,
+            deltaRp: -7,
+            oldTier: 'Academy',
+            newTier: 'Academy',
+            placementStatus: 'placed',
+            placementPlayed: 3,
+            placementRequired: 3,
+            isPlacement: false,
+          },
+          'opp-1': {
+            userId: 'opp-1',
+            oldRp: 900,
+            newRp: 915,
+            deltaRp: 15,
+            oldTier: 'Bench',
+            newTier: 'Bench',
+            placementStatus: 'placed',
+            placementPlayed: 3,
+            placementRequired: 3,
+            isPlacement: false,
+          },
+        },
+      },
+    });
+
+    expect(queryClient.setQueryData).toHaveBeenCalledTimes(1);
+    expect(cachedProfile).toMatchObject({
+      rp: 0,
+      tier: 'Academy',
+      placementStatus: 'placed',
+      placementPlayed: 3,
+      placementRequired: 3,
+    });
+    expect(queryClient.invalidateQueries).toHaveBeenCalled();
+    expect(mockSocket.socket.emit).toHaveBeenCalledWith('match:final_results_ack', {
+      matchId: 'match-1',
+      resultVersion: 123,
+    });
+  });
+
+  it('does not patch ranked profile cache when match:final_results has no rankedOutcome for self', () => {
+    const queryClient = {
+      setQueryData: vi.fn(),
+      invalidateQueries: vi.fn(),
+    };
+
+    useRealtimeMatchStore.setState({ selfUserId: 'self-1' });
+    registerSocketHandlers(queryClient as never);
+
+    mockSocket.fire('match:final_results', {
+      matchId: 'match-2',
+      winnerId: 'opp-1',
+      players: {
+        'self-1': { totalPoints: 400, correctAnswers: 2, avgTimeMs: 1200, goals: 0, penaltyGoals: 0 },
+        'opp-1': { totalPoints: 700, correctAnswers: 6, avgTimeMs: 1000, goals: 1, penaltyGoals: 0 },
+      },
+      unlockedAchievements: {},
+      durationMs: 60000,
+      resultVersion: 456,
+      winnerDecisionMethod: 'goals',
+      totalPointsFallbackUsed: false,
+    });
+
+    expect(queryClient.setQueryData).not.toHaveBeenCalled();
+    expect(queryClient.invalidateQueries).toHaveBeenCalled();
+    expect(mockSocket.socket.emit).toHaveBeenCalledWith('match:final_results_ack', {
+      matchId: 'match-2',
+      resultVersion: 456,
+    });
   });
 });

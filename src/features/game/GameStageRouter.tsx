@@ -133,6 +133,19 @@ export function GameStageRouter() {
     exitToPlay();
   }, [realtimeMatch?.matchId, exitToPlay]);
 
+  const handleMatchmakingExit = useCallback(() => {
+    if (matchType === "ranked") {
+      getSocket().emit("ranked:queue_leave");
+      logger.info("Socket emit ranked:queue_leave");
+      getSocket().emit("lobby:leave");
+      logger.info("Socket emit lobby:leave during ranked matchmaking cleanup");
+    } else {
+      getSocket().emit("lobby:leave");
+      logger.info("Socket emit lobby:leave");
+    }
+    exitToPlay();
+  }, [exitToPlay, matchType]);
+
   const matchmakingDebugInfo = useMemo(
     () => ({
       socketConnected,
@@ -188,16 +201,8 @@ export function GameStageRouter() {
           selfUsername={player.username}
           selfAvatarCustomization={player.avatarCustomization}
           debugInfo={matchmakingDebugInfo}
-          onCancel={() => {
-            if (matchType === "ranked") {
-              getSocket().emit("ranked:queue_leave");
-              logger.info("Socket emit ranked:queue_leave");
-            } else {
-              getSocket().emit("lobby:leave");
-              logger.info("Socket emit lobby:leave");
-            }
-            exitToPlay();
-          }}
+          onCancel={handleMatchmakingExit}
+          onRestart={handleMatchmakingExit}
         />
       );
     }

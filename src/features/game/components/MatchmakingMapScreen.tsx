@@ -8,7 +8,7 @@ import {
   useSpring,
   animate,
 } from "motion/react";
-import { Volume2, VolumeX } from "lucide-react";
+import { RotateCcw, TriangleAlert, Volume2, VolumeX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import type {
@@ -57,7 +57,10 @@ interface MatchmakingMapScreenProps {
   selfAvatarCustomization?: AvatarCustomization | null;
   debugInfo?: MatchmakingDebugInfo;
   onCancel: () => void;
+  onRestart?: () => void;
 }
+
+const PREPARING_MATCH_STUCK_TIMEOUT_MS = 20000;
 
 const MOBILE_BREAKPOINT = 768;
 const GEO_HINT_CACHE_KEY = "ranked_geo_hint_v1";
@@ -1010,11 +1013,13 @@ export function MatchmakingMapScreen({
   rankedFoundOpponent = null,
   debugInfo,
   onCancel,
+  onRestart,
 }: MatchmakingMapScreenProps) {
   const fakePlayers = useMemo(() => generateFakePlayers(), []);
   const localGeoHint = readCachedGeoHint();
   const [visiblePins, setVisiblePins] = useState<Set<number>>(new Set());
   const [searchTime, setSearchTime] = useState(0);
+  const [preparingMatchStuck, setPreparingMatchStuck] = useState(false);
   const [highlightedPin, setHighlightedPin] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined"
@@ -1022,6 +1027,10 @@ export function MatchmakingMapScreen({
       : false,
   );
   const showFoundState = matchType === "ranked" && rankedFoundOpponent !== null;
+  const showPreparationFailure =
+    showFoundState &&
+    (preparingMatchStuck ||
+      debugInfo?.errorCode === "MATCH_PREPARATION_FAILED");
   const matchmakingAudioRef = useRef<HTMLAudioElement | null>(null);
   const [musicMuted, setMusicMuted] = useState(() => isMuted());
   const scanRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -1155,6 +1164,40 @@ export function MatchmakingMapScreen({
       },
     });
   }, [showFoundState, rankedFoundOpponent, opponentRawGeo, opponentPin]);
+
+  useEffect(() => {
+    if (!showFoundState) {
+      setPreparingMatchStuck(false);
+      return;
+    }
+
+    if (debugInfo?.errorCode === "MATCH_PREPARATION_FAILED") {
+      setPreparingMatchStuck(true);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      logger.warn("Matchmaking screen detected stuck preparing-match state", {
+        sessionState: debugInfo?.sessionState ?? "NO_SESSION",
+        queueSearchId: debugInfo?.queueSearchId ?? null,
+        waitingLobbyId: debugInfo?.waitingLobbyId ?? null,
+        activeMatchId: debugInfo?.activeMatchId ?? null,
+        errorCode: debugInfo?.errorCode ?? null,
+        opponentId: rankedFoundOpponent?.id ?? null,
+      });
+      setPreparingMatchStuck(true);
+    }, PREPARING_MATCH_STUCK_TIMEOUT_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [
+    debugInfo?.activeMatchId,
+    debugInfo?.errorCode,
+    debugInfo?.queueSearchId,
+    debugInfo?.sessionState,
+    debugInfo?.waitingLobbyId,
+    rankedFoundOpponent?.id,
+    showFoundState,
+  ]);
 
   const opponentPinId = opponentPin?.id ?? null;
   const mapPlayers = useMemo(
@@ -1678,6 +1721,40 @@ export function MatchmakingMapScreen({
               >
                 Preparing match...
               </motion.p>
+
+              {showPreparationFailure ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15, duration: 0.25 }}
+                  className="w-full max-w-[24rem] rounded-2xl border border-[#FF4B4B]/25 bg-[#131C27]/92 p-4 text-center shadow-[0_16px_40px_rgba(0,0,0,0.32)]"
+                >
+                  <div className="mx-auto mb-2 flex size-10 items-center justify-center rounded-full bg-[#FF4B4B]/16 text-[#FF7B7B]">
+                    <TriangleAlert className="size-5" />
+                  </div>
+                  <p className="text-sm font-black uppercase tracking-wide text-white">
+                    Match setup got stuck
+                  </p>
+                  <p className="mt-2 text-xs font-bold leading-5 text-[#8FA3B8]">
+                    Restart matchmaking and try again. If it keeps happening, the backend is still failing while preparing the draft.
+                  </p>
+                  <div className="mt-4 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
+                    <button
+                      onClick={onRestart ?? onCancel}
+                      className="inline-flex min-w-[10rem] items-center justify-center gap-2 rounded-xl bg-[#FF4B4B] px-4 py-2.5 text-xs font-black uppercase tracking-wide text-white transition-all hover:bg-[#ff5f5f] active:scale-95"
+                    >
+                      <RotateCcw className="size-4" />
+                      Restart Search
+                    </button>
+                    <button
+                      onClick={onCancel}
+                      className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-black uppercase tracking-wide text-[#9FB1C3] transition-all hover:border-white/20 hover:bg-white/8 hover:text-white active:scale-95"
+                    >
+                      Back to Play
+                    </button>
+                  </div>
+                </motion.div>
+              ) : null}
             </motion.div>
           )}
         </AnimatePresence>

@@ -34,9 +34,9 @@ const TIER_COLORS: Record<RankedTier, string> = {
 function RpProgressBar({ current, target }: { current: number; target: number }) {
   const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
   return (
-    <div className="h-3 md:h-4 w-full rounded-full bg-[#2D950B] overflow-hidden">
+    <div className="h-3 md:h-4 w-full rounded-[4px] bg-[#2D950B] overflow-hidden">
       <div
-        className="h-full rounded-full bg-[#FFE500] transition-all duration-500"
+        className="h-full rounded-[4px] bg-[#FFE500] transition-all duration-500"
         style={{ width: `${pct}%` }}
       />
     </div>
@@ -109,8 +109,13 @@ export function ModeSelectionScreen({
     setSelectedMode(null);
   };
 
+  const mobileObjectives = [
+    { title: 'Morning Kickoff', desc: 'Play a match before 9 am', reward: '+100 coins', progress: 33 },
+    ...PLACEHOLDER_OBJECTIVES.map((obj) => ({ title: obj.title, desc: obj.desc, reward: obj.reward, progress: 0 })),
+  ];
+
   return (
-    <div className="max-w-5xl mx-auto px-4 py-4 space-y-4 md:py-6 md:space-y-5 font-fun">
+    <div className="max-w-5xl mx-auto px-4 py-3 space-y-4 md:py-6 md:space-y-5 font-fun">
 
       {/* ─── 1. Ranked Hero Card ─── */}
       <motion.div
@@ -129,21 +134,21 @@ export function ModeSelectionScreen({
         }}
         role="button"
         tabIndex={0}
-        className="relative overflow-hidden rounded-2xl md:rounded-[28px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 active:translate-y-[2px] transition-all"
+        className="relative overflow-hidden rounded-[10px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 active:translate-y-[2px] transition-all"
         style={{ backgroundColor: colors.green.base }}
       >
-        {/* Ranked icon — centered background watermark */}
+        {/* Ranked icon — centered background watermark (desktop only; mobile uses inline icon below) */}
         <Image
           src="/assets/ranked-icon.webp"
           alt=""
           width={200}
           height={200}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 md:w-36 md:h-36 object-contain opacity-80 pointer-events-none"
+          className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 object-contain opacity-80 pointer-events-none"
         />
 
         <div className="relative z-10 p-4 md:p-7">
           {/* ── Desktop layout ── */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-start gap-6">
             {/* Left: Title + Play */}
             <div className="flex-1 min-w-0">
               <h1
@@ -184,7 +189,7 @@ export function ModeSelectionScreen({
               )}
 
               <div className="mt-5">
-                <div className="flex w-[180px] items-center justify-center rounded-2xl bg-black h-[56px] text-xl font-black uppercase tracking-wide text-white">
+                <div className="flex w-[180px] items-center justify-center rounded-[8px] bg-black h-[56px] text-xl font-black uppercase tracking-wide text-white">
                   Play
                 </div>
               </div>
@@ -192,22 +197,24 @@ export function ModeSelectionScreen({
 
             {/* Right: RP stats */}
             <div className="text-right shrink-0 w-[280px]">
-              <div className="text-4xl font-black text-[#FFE500] drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]">
-                {displayRp}/{nextTierTargetRp ?? 600} RP
-              </div>
-              <div className="mt-2">
-                <RpProgressBar current={displayRp} target={nextTierTargetRp ?? 600} />
+              <div className="inline-flex flex-col items-stretch">
+                <div className="text-4xl font-black text-[#FFE500] drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)] whitespace-nowrap">
+                  {displayRp}/{nextTierTargetRp ?? 600} RP
+                </div>
+                <div className="mt-2">
+                  <RpProgressBar current={displayRp} target={nextTierTargetRp ?? 600} />
+                </div>
               </div>
               {!rankedProfileLoading && (
-                <div className="mt-2 text-[11px] font-black uppercase tracking-wide text-white/70">
+                <div className="mt-1.5 text-[11px] font-black uppercase tracking-wide text-white/70">
                   {rankedWinRate}% win rate · {rankedGamesPlayed} ranked games
                 </div>
               )}
-              <div className="mt-1 text-sm font-black uppercase tracking-wide text-white">
+              <div className="mt-0.5 text-sm font-black uppercase tracking-wide text-white">
                 {isPlacementInProgress
                   ? `${placementMatchesLeft} match${placementMatchesLeft === 1 ? "" : "es"} to rank reveal`
                   : nextTierBand
-                    ? <>{Math.max(0, (nextTierTargetRp ?? 0) - displayRp)} RP to <span className="text-black">{nextTierBand.tier}</span></>
+                    ? <>{Math.max(0, (nextTierTargetRp ?? 0) - displayRp)} RP to <span className="text-white">{nextTierBand.tier}</span></>
                     : "Max rank reached"}
               </div>
             </div>
@@ -215,15 +222,16 @@ export function ModeSelectionScreen({
 
           {/* ── Mobile layout ── */}
           <div className="md:hidden">
+            {/* Top row: title (left) | RP block (right) */}
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <h1
-                  className="text-[1.7rem] uppercase text-white"
+                  className="text-[1.55rem] leading-none uppercase text-white whitespace-nowrap"
                   style={rankedTitleStyle}
                 >
                   Ranked Match
                 </h1>
-                <div className="mt-1 text-xs font-black uppercase tracking-wide text-white/90">
+                <div className="mt-1.5 text-[11px] font-black uppercase tracking-wide text-white/90">
                   {rankedProfileLoading
                     ? '1v1 Competitive'
                     : isPlacementInProgress
@@ -231,54 +239,40 @@ export function ModeSelectionScreen({
                       : '1v1 Competitive'}
                 </div>
               </div>
-              <div className="text-right shrink-0">
-                <div className="text-lg font-black text-[#FFE500] drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]">
+              <div className="shrink-0 text-right w-[125px]">
+                <div className="text-[1.4rem] font-black leading-none text-[#FFE500] drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]">
                   {displayRp}/{nextTierTargetRp ?? 600} RP
+                </div>
+                <div className="mt-2">
+                  <RpProgressBar current={displayRp} target={nextTierTargetRp ?? 600} />
+                </div>
+                <div className="mt-1 text-[9px] font-black uppercase tracking-wide text-white/85">
+                  {isPlacementInProgress
+                    ? `${placementMatchesLeft} match${placementMatchesLeft === 1 ? "" : "es"} left`
+                    : nextTierBand
+                      ? <>{Math.max(0, (nextTierTargetRp ?? 0) - displayRp)} RP to <span className="text-white">{nextTierBand.tier}</span></>
+                      : "Max rank reached"}
                 </div>
               </div>
             </div>
 
-            <div className="mt-2">
-              <RpProgressBar current={displayRp} target={nextTierTargetRp ?? 600} />
-            </div>
-            {!rankedProfileLoading && (
-              <div className="mt-1.5 text-[10px] font-black uppercase tracking-wide text-white/70">
-                {rankedWinRate}% win rate · {rankedGamesPlayed} ranked games
+            {/* Bottom row: trophy icon + win rate (left) | PLAY (right) */}
+            <div className="mt-3 flex items-end justify-between gap-3">
+              <div className="flex flex-col items-start gap-2">
+                <Image
+                  src="/assets/ranked-icon.webp"
+                  alt=""
+                  width={160}
+                  height={160}
+                  className="h-[88px] w-[88px] object-contain pointer-events-none"
+                />
+                {!rankedProfileLoading && (
+                  <div className="text-[10px] font-black uppercase tracking-wide text-white/80">
+                    {rankedWinRate}% win rate · {rankedGamesPlayed} ranked games
+                  </div>
+                )}
               </div>
-            )}
-            <div className="mt-0.5 text-[11px] font-black uppercase tracking-wide text-white">
-              {isPlacementInProgress
-                ? `${placementMatchesLeft} match${placementMatchesLeft === 1 ? "" : "es"} to rank reveal`
-                : nextTierBand
-                  ? <>{Math.max(0, (nextTierTargetRp ?? 0) - displayRp)} RP to <span className="text-black">{nextTierBand.tier}</span></>
-                  : "Max rank reached"}
-            </div>
-
-            {IS_DEV && (
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <Link
-                  href="/dev/match"
-                  onClick={(e) => e.stopPropagation()}
-                  onKeyDown={(e) => e.stopPropagation()}
-                  onKeyUp={(e) => e.stopPropagation()}
-                  className="inline-flex items-center justify-center rounded-xl bg-black/90 px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white transition-colors hover:bg-black"
-                >
-                  Dev Quick Ranked
-                </Link>
-                <Link
-                  href="/dev/mock-match"
-                  onClick={(e) => e.stopPropagation()}
-                  onKeyDown={(e) => e.stopPropagation()}
-                  onKeyUp={(e) => e.stopPropagation()}
-                  className="inline-flex items-center justify-center rounded-xl border border-[#0F3A00]/20 bg-[#E6F8C9] px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#0F3A00] transition-colors hover:bg-[#DCF4B6]"
-                >
-                  New Ranked Dev
-                </Link>
-              </div>
-            )}
-
-            <div className="mt-3">
-              <div className="flex w-[140px] items-center justify-center rounded-2xl bg-black h-[44px] text-sm font-black uppercase tracking-wide text-white">
+              <div className="mb-1 flex h-[44px] w-[120px] items-center justify-center rounded-[8px] bg-black text-[15px] font-black uppercase tracking-wide text-white">
                 Play
               </div>
             </div>
@@ -291,7 +285,7 @@ export function ModeSelectionScreen({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="grid grid-cols-2 gap-4"
+        className="grid grid-cols-2 gap-3 md:gap-4"
       >
         {/* Friendly Match */}
         <div
@@ -304,27 +298,43 @@ export function ModeSelectionScreen({
           }}
           role="button"
           tabIndex={0}
-          className="relative cursor-pointer overflow-hidden rounded-2xl md:rounded-[28px] p-4 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
+          className="relative min-h-[200px] cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-4 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
           style={{ backgroundColor: colors.blue.brand }}
         >
-          {/* Watermark icon */}
+          {/* Desktop watermark icon (mobile uses inline icon below) */}
           <Image
             src="/assets/friendly_match-icon.webp"
             alt=""
             width={160}
             height={160}
-            className="absolute right-2 bottom-2 w-20 h-20 md:right-4 md:bottom-4 md:w-36 md:h-36 object-contain opacity-90 pointer-events-none"
+            className="hidden md:block absolute right-4 bottom-4 h-36 w-36 object-contain opacity-90 pointer-events-none"
           />
-          <div className="relative z-10 flex flex-col h-full">
+          <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
             <h3
-              className="text-xl uppercase text-white md:text-4xl"
+              className="whitespace-nowrap text-[0.95rem] leading-[1] uppercase text-white md:text-4xl"
               style={friendlyTitleStyle}
             >
               Friendly Match
             </h3>
-            <p className="mt-0.5 md:mt-1.5 text-[10px] md:text-base font-black uppercase text-white">Create/Join Room</p>
-            <div className="mt-auto pt-4 md:pt-8">
-              <div className="flex w-[140px] md:w-[180px] items-center justify-center rounded-2xl bg-black h-[44px] md:h-[56px] text-sm md:text-xl font-black uppercase tracking-wide text-white">
+            <p className="mt-1 text-[10px] md:mt-1.5 md:text-base font-black uppercase text-white">Create/Join Room</p>
+
+            {/* Mobile: icon (centered, right under subtitle) + PLAY (bottom, full width) */}
+            <div className="mt-2 flex flex-1 items-center justify-center md:hidden">
+              <Image
+                src="/assets/friendly_match-icon.webp"
+                alt=""
+                width={500}
+                height={500}
+                className="h-[200x] w-[200px] object-contain pointer-events-none"
+              />
+            </div>
+            <div className="mt-1 flex h-[44px] w-full items-center justify-center rounded-[8px] bg-black text-[14px] font-black uppercase tracking-wide text-white md:hidden">
+              Play
+            </div>
+
+            {/* Desktop: bottom-left PLAY */}
+            <div className="mt-auto hidden pt-8 md:block">
+              <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-black text-xl font-black uppercase tracking-wide text-white">
                 Play
               </div>
             </div>
@@ -342,27 +352,43 @@ export function ModeSelectionScreen({
           }}
           role="button"
           tabIndex={0}
-          className="relative cursor-pointer overflow-hidden rounded-2xl md:rounded-[28px] p-4 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
+          className="relative min-h-[200px] cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-4 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
           style={{ backgroundColor: colors.yellow.base }}
         >
-          {/* Watermark icon */}
+          {/* Desktop watermark icon (mobile uses inline icon below) */}
           <Image
             src="/assets/daily_chllangeicon.webp"
             alt=""
             width={160}
             height={160}
-            className="absolute right-0 bottom-0 w-24 h-24 md:right-2 md:bottom-2 md:w-40 md:h-40 object-contain opacity-90 pointer-events-none"
+            className="hidden md:block absolute right-2 bottom-2 h-40 w-40 object-contain opacity-90 pointer-events-none"
           />
-          <div className="relative z-10 flex flex-col h-full">
+          <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
             <h3
-              className="text-xl uppercase text-black md:text-4xl"
+              className="whitespace-nowrap text-[0.95rem] leading-[1] uppercase text-black md:text-4xl"
               style={dailyTitleStyle}
             >
               Daily Challenge
             </h3>
-            <p className="mt-0.5 md:mt-1.5 text-[10px] md:text-base font-black uppercase text-black">View Challenges</p>
-            <div className="mt-auto pt-4 md:pt-8">
-              <div className="flex w-[140px] md:w-[180px] items-center justify-center rounded-2xl bg-black h-[44px] md:h-[56px] text-sm md:text-xl font-black uppercase tracking-wide text-white">
+            <p className="mt-1 text-[10px] md:mt-1.5 md:text-base font-black uppercase text-black">View Challenges</p>
+
+            {/* Mobile: icon (centered, right under subtitle) + PLAY (bottom, full width) */}
+            <div className="mt-2 flex flex-1 items-center justify-center md:hidden">
+              <Image
+                src="/assets/daily_challenge_mobile.webp"
+                alt=""
+                width={528}
+                height={528}
+                className="h-[150px] w-[150px] object-contain pointer-events-none"
+              />
+            </div>
+            <div className="mt-1 flex h-[44px] w-full items-center justify-center rounded-[8px] bg-black text-[14px] font-black uppercase tracking-wide text-white md:hidden">
+              Play
+            </div>
+
+            {/* Desktop: bottom-left PLAY */}
+            <div className="mt-auto hidden pt-8 md:block">
+              <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-black text-xl font-black uppercase tracking-wide text-white">
                 Play
               </div>
             </div>
@@ -387,11 +413,33 @@ export function ModeSelectionScreen({
             View All
           </Link>
         </div>
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
+        <div className="grid grid-cols-2 gap-3 md:hidden">
+          {mobileObjectives.map((obj, index) => (
+            <Link
+              key={`${obj.title}-${index}`}
+              href="/objectives"
+              className="rounded-xl bg-[#2E8C16] p-3 transition-all hover:bg-[#369F19]"
+            >
+              <div className="mb-2 flex items-center justify-center">
+                <Image src="/assets/obj_icon.png" alt="" width={45} height={44} className="size-12 object-contain opacity-90" />
+              </div>
+              <h4 className="text-[10px] font-black leading-tight text-white uppercase truncate">{obj.title}</h4>
+              <p className="mt-0.5 text-[9px] leading-tight text-white/80">{obj.desc}</p>
+              <div className="mt-4 h-3 rounded-full bg-[#07200C] overflow-hidden">
+                <div className="h-full rounded-full bg-[#58CC02]" style={{ width: `${obj.progress}%` }} />
+              </div>
+              <div className="mt-2 flex items-center justify-between text-[9px] font-black uppercase">
+                <span className="text-white">{obj.progress > 0 ? '1/3' : '0/1'}</span>
+                <span className="text-white/65">{obj.reward}</span>
+              </div>
+            </Link>
+          ))}
+        </div>
+        <div className="hidden md:flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
           {/* TODO: Replace hardcoded progress (33%, "1/3", "+100 coins") with dynamic values from objectives API/hook */}
           <Link
             href="/objectives"
-            className="shrink-0 w-[260px] md:w-[300px] bg-[#1A3A1A] rounded-2xl p-4 hover:bg-[#224422] transition-all"
+            className="shrink-0 w-[260px] md:w-[300px] bg-[#1A3A1A] rounded-[10px] p-4 hover:bg-[#224422] transition-all"
           >
             <div className="flex items-center gap-3 mb-3">
               <Image src="/assets/obj_icon.png" alt="" width={45} height={44} className="size-12 object-contain" />
@@ -419,7 +467,7 @@ export function ModeSelectionScreen({
                 key={obj.title}
                 {...wrapperProps}
                 className={cn(
-                  'shrink-0 w-[260px] md:w-[300px] bg-[#1A3A1A] rounded-2xl p-4',
+                  'shrink-0 w-[260px] md:w-[300px] bg-[#1A3A1A] rounded-[10px] p-4',
                   isLocked
                     ? 'opacity-50 cursor-default'
                     : 'hover:bg-[#224422] transition-all'

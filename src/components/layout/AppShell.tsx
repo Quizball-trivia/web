@@ -13,7 +13,6 @@ import { useStoreWallet } from "@/lib/queries/store.queries";
 import { useIncomingFriendRequestCount } from "@/lib/queries/social.queries";
 import { Button } from "@/components/ui/button";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
-import { AppLogo } from "@/components/AppLogo";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { NotificationsDropdown } from "@/components/layout/NotificationsDropdown";
 import {
@@ -43,7 +42,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getSocket } from "@/lib/realtime/socket-client";
-import { Medal, Gem, User, Gamepad2, Trophy, Users, UserRound } from "lucide-react";
+import { Medal, Gem, User, Gamepad2, Users, UserRound } from "lucide-react";
 
 const MOBILE_NAV_ITEMS = [
   { path: "/", label: "Home", icon: Home },
@@ -121,6 +120,7 @@ export function AppShell({ children }: AppShellProps) {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const currentPath = pathname ?? "/";
+  const isPlayPath = currentPath.startsWith("/play");
   const showHeader = HEADER_PATHS.some((p) => p === "/" ? currentPath === "/" : currentPath.startsWith(p));
   const showNav = !HIDE_NAV_PATHS.some((path) => currentPath.startsWith(path));
   const inLobbyRoom = currentPath.startsWith("/friend/room");
@@ -479,41 +479,38 @@ export function AppShell({ children }: AppShellProps) {
         {/* Header */}
         {showHeader && (
           <div>
-            <div className="px-4 py-4">
+            <div className="px-4 pt-6 pb-5">
               <div className="flex items-center justify-between mb-3 relative">
                 <div className="flex items-center gap-2 z-10">
-                  {currentPath === "/" ? (
-                    <Link href="/profile" className="flex items-center gap-2">
-                      <div className="size-10 rounded-full bg-gradient-to-br from-primary/20 to-transparent border-2 border-primary/30 flex items-center justify-center overflow-hidden">
-                        <div className="text-xl">
-                          <AvatarDisplay
-                            customization={playerStats.avatarCustomization || { base: playerStats.avatar }}
-                            size="sm"
-                          />
-                        </div>
+                  <Link href="/profile" className="flex items-center gap-2">
+                    <div className="size-12 rounded-full overflow-hidden">
+                      <AvatarDisplay
+                        customization={playerStats.avatarCustomization || { base: playerStats.avatar }}
+                        size="sm"
+                        countryCode={authUser?.country}
+                      />
+                    </div>
+                    <div className="text-left">
+                      <div className="text-sm font-black uppercase tracking-[0.03em] text-white">
+                        {playerStats.username}
                       </div>
-                      <div className="text-left">
-                        <div className="text-sm font-semibold">
-                          {playerStats.username}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Level {playerStats.level}
-                        </div>
+                      <div className="mt-1 inline-flex items-center rounded-full bg-[#FFE500] px-2.5 py-0.5 text-[11px] font-black uppercase leading-none text-black">
+                        {playerStats.rankPoints ?? 0} RP
                       </div>
-                    </Link>
-                  ) : (
-                    <AppLogo size="md" iconOnly />
-                  )}
+                    </div>
+                  </Link>
                 </div>
 
                 <div className="flex items-center gap-2 z-10">
                   {/* Coins */}
                   <Link
                     href="/store"
-                    className="flex items-center gap-1 pl-1 pr-3 py-0.5 rounded-full bg-[#FFE500] hover:bg-[#FFD000] transition-colors active:scale-95"
+                    className="flex h-8 min-w-[72px] items-center gap-1.5 rounded-full bg-[#FFE500] pl-1 pr-3 transition-colors hover:bg-[#FFD000] active:scale-95"
                   >
-                    <img src="/assets/coin-1.png" alt="Coins" className="size-6" />
-                    <span className="text-sm font-black text-black">
+                    <span className="flex size-6 shrink-0 items-center justify-center">
+                      <img src="/assets/coin-1.png" alt="Coins" className="size-6 object-contain" />
+                    </span>
+                    <span className="text-sm font-black text-black tabular-nums">
                       {navbarCoins.toLocaleString()}
                     </span>
                   </Link>
@@ -521,11 +518,15 @@ export function AppShell({ children }: AppShellProps) {
                   {/* Tickets */}
                   <Link
                     href="/store"
-                    className="flex items-center gap-1 pl-1.5 pr-3 py-0.5 rounded-full bg-[#58CC02] hover:bg-[#4CAF00] transition-colors active:scale-95"
+                    className="flex h-8 min-w-[72px] items-center gap-1.5 rounded-full bg-[#58CC02] pl-1 pr-3 transition-colors hover:bg-[#4CAF00] active:scale-95"
                   >
-                    <img src="/assets/ticket-1.png" alt="Tickets" className="size-5" />
-                    <span className="text-sm font-black text-white">{navbarTickets}</span>
+                    <span className="flex size-6 shrink-0 items-center justify-center">
+                      <img src="/assets/ticket-1.png" alt="Tickets" className="size-5 object-contain" />
+                    </span>
+                    <span className="text-sm font-black text-white tabular-nums">{navbarTickets}</span>
                   </Link>
+
+                  <NotificationsDropdown badgeCount={socialBadgeCount} />
                 </div>
               </div>
             </div>

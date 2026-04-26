@@ -12,6 +12,12 @@ const rowBorder = (result: string) => {
   return 'border-[#3A4F56]';
 };
 
+const rpPillTone = (result: string) => {
+  if (result === 'win') return 'bg-[#348A1A] text-white';
+  if (result === 'loss') return 'bg-[#B8401D] text-white';
+  return 'bg-[#3A4F56] text-white';
+};
+
 interface HomeRecentMatchesProps {
   /** If true, only show collapsed count without expand option */
   collapsedOnly?: boolean;
@@ -96,42 +102,55 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
         {!isLoading && !error && visibleMatches.map((match) => (
           <div
             key={match.id}
-            className={`flex items-center rounded-[20px] h-[72px] md:h-[100px] px-3 md:px-5 border-2 ${rowBorder(match.result)}`}
+            className={`flex items-center gap-3 rounded-[16px] min-h-[58px] md:min-h-[62px] px-4 md:px-5 border-2 bg-[#041217] ${rowBorder(match.result)}`}
           >
             {/* Avatar */}
-            <div className="relative size-10 md:size-14 shrink-0 rounded-full bg-white/20 overflow-hidden flex items-center justify-center">
+            <div className="relative size-8 md:size-10 shrink-0 rounded-full bg-white/20 overflow-hidden flex items-center justify-center">
               {match.avatarUrl ? (
                 <Image src={match.avatarUrl} alt="" fill className="object-cover" unoptimized />
               ) : (
-                <span className="text-lg font-black text-white/80">
+                <span className="text-sm font-black text-white/80">
                   {match.opponent.charAt(0).toUpperCase()}
                 </span>
               )}
             </div>
 
             {/* Info */}
-            <div className="ml-3 min-w-0 flex-1">
-              <div className="font-poppins text-sm md:text-lg text-white uppercase truncate">
+            <div className="min-w-0 flex-1">
+              <div className="font-poppins text-[12px] md:text-[14px] font-semibold leading-none text-white uppercase truncate">
                 vs {match.opponent}
               </div>
-              <div className="font-poppins text-[10px] md:text-sm text-white/70 uppercase">
+              <div className="mt-1 font-poppins text-[8px] md:text-[9px] font-medium leading-none tracking-[0.08em] text-white/70 uppercase">
                 {match.mode} · {match.time}
               </div>
             </div>
 
-            {/* Result + RP + Score */}
-            <div className="flex items-center gap-2 md:gap-3 shrink-0">
-              <span className="font-poppins text-base md:text-2xl text-white uppercase italic">
-                {match.result === 'win' ? 'Win' : match.result === 'loss' ? 'Lose' : 'Draw'}
-              </span>
+            {/* RP + Score */}
+            <div className="ml-auto flex items-center justify-end gap-3 md:gap-5 shrink-0 whitespace-nowrap">
               {match.competition !== 'friendly' && match.rpDelta !== null && (
-                <span className="font-poppins text-xs md:text-sm text-white/90 tabular-nums">
+                <span className={`rounded-[8px] px-3 py-2 font-poppins text-[10px] md:text-[11px] font-semibold leading-none tabular-nums ${rpPillTone(match.result)}`}>
                   {match.rpDelta >= 0 ? '+' : ''}{match.rpDelta} RP
                 </span>
               )}
-              <span className="font-poppins text-base md:text-2xl text-white">
-                {match.score}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="font-poppins text-[20px] md:text-[22px] font-semibold leading-none text-white tabular-nums">
+                  {match.score}
+                </span>
+                {match.scoreSuffix && (
+                  <span className="font-poppins text-[10px] md:text-[11px] font-medium text-white/70">
+                    {match.scoreSuffix}
+                  </span>
+                )}
+                {match.scoreBadge && (
+                  <span className={`rounded-[8px] px-2 py-1 font-poppins text-[9px] md:text-[10px] font-semibold uppercase ${
+                    match.scoreBadgeVariant === 'red'
+                      ? 'bg-[#4D1C1B] text-[#FF8B7D]'
+                      : 'bg-white/10 text-white/70'
+                  }`}>
+                    {match.scoreBadge}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         ))}

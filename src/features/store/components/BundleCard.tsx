@@ -1,5 +1,3 @@
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { Coins, Ticket } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -15,71 +13,97 @@ export interface BundleProps {
   onBuy?: () => void;
 }
 
-export function BundleCard({ title, amount, bonus, price, currencyType, isPopular, onBuy }: BundleProps) {
+const poppins = {
+  fontFamily: "'Poppins', sans-serif",
+  fontWeight: 600,
+  letterSpacing: "0",
+  lineHeight: 1,
+} as const;
+
+const CARD_BG = "#0B1619";
+const ACCENT_YELLOW = "#FFE500";
+const ACCENT_GREEN = "#38B60E";
+const ACCENT_ORANGE = "#FF9600";
+const ACCENT_PURPLE = "#CE82FF";
+
+export function BundleCard({
+  title,
+  amount,
+  bonus,
+  price,
+  currencyType,
+  isPopular,
+  onBuy,
+}: BundleProps) {
   const isCoin = currencyType === "coins";
+  const accentColor = isPopular ? ACCENT_ORANGE : isCoin ? ACCENT_YELLOW : ACCENT_PURPLE;
 
   return (
     <motion.div
-      whileHover={{ scale: 1.04, y: -4 }}
-      whileTap={{ scale: 0.97 }}
+      whileHover={{ scale: 1.04, y: -4, rotate: -1.5 }}
+      whileTap={{ scale: 0.97, rotate: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      className="relative"
+      className="relative flex flex-col"
     >
+      {/* Most Popular ribbon */}
       {isPopular && (
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-black uppercase px-3 py-0.5 rounded-full shadow-md shadow-orange-500/30 z-10 tracking-wider">
+        <div
+          className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full px-3 py-1 text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white"
+          style={{ backgroundColor: ACCENT_ORANGE }}
+        >
           Most Popular
         </div>
       )}
 
-      <div className={cn(
-        "relative flex flex-col items-center rounded-2xl border-2 border-b-4 bg-[#1B2F36] p-5 h-full overflow-hidden transition-colors",
-        isPopular
-          ? "border-orange-500/60 border-b-orange-600"
-          : isCoin
-            ? "border-yellow-500/20 border-b-yellow-500/40 hover:border-yellow-500/40"
-            : "border-purple-500/20 border-b-purple-500/40 hover:border-purple-500/40"
-      )}>
-        <div className={cn(
-          "absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 size-32 rounded-full blur-[60px] opacity-30",
-          isPopular ? "bg-orange-500" : isCoin ? "bg-yellow-500" : "bg-purple-500"
-        )} />
-
+      {/* Card — preserves the original rectangular proportions */}
+      <div
+        className="relative flex flex-col items-center rounded-[10px] p-4"
+        style={{ backgroundColor: CARD_BG }}
+      >
+        {/* Icon */}
         <div className="relative mb-3">
-          <div className={cn(
-            "size-16 rounded-2xl flex items-center justify-center border-2 border-b-4 transition-colors",
-            isCoin
-              ? "bg-yellow-500/10 border-yellow-500/30 border-b-yellow-600/30"
-              : "bg-purple-500/10 border-purple-500/30 border-b-purple-600/30"
-          )}>
-            {isCoin
-              ? <Coins className="size-8 text-yellow-400 drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]" />
-              : <Ticket className="size-8 text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
-            }
+          <div
+            className="flex size-16 items-center justify-center rounded-[8px]"
+            style={{ backgroundColor: `${accentColor}20` }}
+          >
+            {isCoin ? (
+              <Coins className="size-8" style={{ color: accentColor }} />
+            ) : (
+              <Ticket className="size-8" style={{ color: accentColor }} />
+            )}
           </div>
           {bonus && (
-            <div className="absolute -bottom-1.5 -right-1.5 bg-[#58CC02] text-white text-[10px] font-black px-1.5 py-0.5 rounded-full border-2 border-[#1B2F36] shadow-md">
+            <div
+              className="absolute -bottom-1.5 -right-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-fun font-black uppercase text-white"
+              style={{ backgroundColor: ACCENT_GREEN }}
+            >
               +{bonus}%
             </div>
           )}
         </div>
 
-        <div className="text-center mb-4">
-          <div className="text-2xl font-black font-fun tabular-nums tracking-tight">{amount.toLocaleString()}</div>
-          <div className="text-[11px] font-bold uppercase text-[#56707A] tracking-wider mt-0.5">{title}</div>
+        {/* Amount + label */}
+        <div className="mb-4 text-center">
+          <div
+            className="text-2xl tabular-nums text-white"
+            style={poppins}
+          >
+            {amount.toLocaleString()}
+          </div>
+          <div className="mt-1 text-[11px] font-fun font-black uppercase tracking-[0.22em] text-white/40">
+            {title}
+          </div>
         </div>
 
-        <Button
+        {/* CTA */}
+        <button
           type="button"
           onClick={onBuy}
-          className={cn(
-            "w-full font-black text-sm rounded-xl border-b-4 active:border-b-0 active:mt-1 transition-all",
-            isPopular
-              ? "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400 border-orange-700 text-white"
-              : "bg-[#1CB0F6] hover:bg-[#1CB0F6]/90 border-[#1890CC] text-white"
-          )}
+          className="flex h-[40px] w-full items-center justify-center rounded-[8px] text-sm font-fun font-black uppercase tracking-wide text-white transition-transform active:translate-y-[2px]"
+          style={{ backgroundColor: isPopular ? ACCENT_ORANGE : "#1CB0F6" }}
         >
           {price}
-        </Button>
+        </button>
       </div>
     </motion.div>
   );

@@ -1,67 +1,114 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Ticket, Check } from "lucide-react";
+import { Ticket, Star } from "lucide-react";
+import { motion } from "motion/react";
 
 interface FeaturedBundleCardProps {
   onBuy?: () => void;
 }
 
+const poppins = {
+  fontFamily: "'Poppins', sans-serif",
+  fontWeight: 600,
+  letterSpacing: "0",
+  lineHeight: 1,
+} as const;
+
+const MAGENTA = "#C61FCD";
+const ACCENT_YELLOW = "#FFE500";
+
 export function FeaturedBundleCard({ onBuy }: FeaturedBundleCardProps) {
   return (
-    <div className="relative w-full overflow-hidden rounded-3xl border-2 border-purple-500/30 bg-gradient-to-br from-purple-950/40 to-background shadow-2xl group cursor-pointer hover:border-purple-500/50 transition-all">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.08),transparent_45%)] opacity-80" />
-      <div className="absolute right-0 top-0 size-64 bg-purple-500/20 blur-[100px] animate-pulse" />
-
-      <div className="relative p-6 md:p-8 flex flex-col md:flex-row items-center gap-8">
-        <div className="shrink-0 relative">
-          <div className="size-40 md:size-48 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-400 rotate-3 shadow-lg flex items-center justify-center relative z-10 group-hover:rotate-6 transition-transform duration-500">
-            <Ticket className="size-20 text-white drop-shadow-md" />
-            <div className="absolute -bottom-4 -right-4 bg-yellow-400 text-black font-black text-xs px-3 py-1 rounded-full shadow-lg border-2 border-white -rotate-6">
-              BEST VALUE
-            </div>
-          </div>
-          <div className="absolute inset-0 bg-purple-500/50 blur-xl scale-90 translate-y-4 -z-10" />
-        </div>
-
-        <div className="flex-1 space-y-4 text-center md:text-left">
-          <div>
-            <div className="flex items-center gap-2 justify-center md:justify-start mb-2">
-              <Badge className="bg-purple-500 hover:bg-purple-600 border-none uppercase tracking-widest text-[10px]">
-                Pro Starter Pack
-              </Badge>
-            </div>
-            <h2 className="text-3xl md:text-4xl font-black italic uppercase text-transparent bg-clip-text bg-gradient-to-r from-white to-purple-200">
-              Unlock the Arena
-            </h2>
-            <p className="text-muted-foreground mt-2 max-w-sm">
-              Get <span className="text-foreground font-bold">10 Arena Tickets</span> + <span className="text-yellow-500 font-bold">5,000 Bonus Coins</span> to jumpstart your ranked climb. Tickets refill hourly while you are below the cap.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm font-medium">
-            <div className="flex items-center gap-1.5">
-              <div className="bg-green-500/20 text-green-400 p-0.5 rounded-full"><Check className="size-3" /></div>
-              <span>No Ads / 7 Days</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="bg-green-500/20 text-green-400 p-0.5 rounded-full"><Check className="size-3" /></div>
-              <span>2x XP Boost</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="shrink-0 flex flex-col gap-2 w-full md:w-auto">
-          <Button
-            type="button"
-            onClick={onBuy}
-            size="lg"
-            className="h-14 px-8 text-lg font-black uppercase tracking-wide bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 border-0 shadow-lg shadow-purple-900/20 transition-all hover:scale-105"
+    <motion.div
+      whileHover={{ scale: 1.02, y: -4, rotate: -0.5 }}
+      whileTap={{ scale: 0.99, rotate: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      className="relative w-full overflow-hidden rounded-[10px] cursor-pointer"
+      style={{ backgroundColor: MAGENTA }}
+      onClick={onBuy}
+    >
+      <div className="flex flex-col items-center gap-5 p-6 md:flex-row md:items-center md:gap-8 md:p-8">
+        {/* ── Ticket icon block (left) ── */}
+        <div className="relative shrink-0">
+          <motion.div
+            whileHover={{ rotate: 6 }}
+            transition={{ type: "spring", stiffness: 200, damping: 15 }}
+            className="relative flex h-[150px] w-[200px] items-center justify-center"
           >
-            Unlock Bundle <span className="ml-2 opacity-80 font-medium text-xs line-through">$19.99</span> <span className="ml-2">$9.99</span>
-          </Button>
-          <p className="text-xs text-center text-muted-foreground">Limited time offer</p>
+            <Ticket
+              className="size-[180px]"
+              style={{ color: ACCENT_YELLOW }}
+              strokeWidth={1.5}
+              fill={ACCENT_YELLOW}
+            />
+            <Star
+              className="absolute size-12 text-[#FF9600]"
+              strokeWidth={2}
+              fill="#FF9600"
+            />
+          </motion.div>
+          <span className="absolute -bottom-1 left-1/2 inline-flex -translate-x-1/2 items-center rounded-full bg-black px-3 py-1.5 text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white">
+            Best Value
+          </span>
+        </div>
+
+        {/* ── Text content (middle) ── */}
+        <div className="min-w-0 flex-1 text-center md:text-left">
+          {/* PRO STARTER PACK pill */}
+          <div className="flex justify-center md:justify-start">
+            <span className="inline-flex items-center rounded-full bg-black px-3 py-1.5 text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white">
+              Pro Starter Pack
+            </span>
+          </div>
+
+          {/* Title */}
+          <h2
+            className="mt-3 text-3xl uppercase text-white sm:text-4xl md:text-[2.75rem]"
+            style={poppins}
+          >
+            Unlock <span style={{ color: ACCENT_YELLOW }}>the Arena</span>
+          </h2>
+
+          {/* Description */}
+          <p className="mx-auto mt-2 max-w-md text-xs font-fun font-black uppercase tracking-wide text-white/85 sm:text-sm md:mx-0">
+            Get <span style={{ color: ACCENT_YELLOW }}>10 Arena Tickets</span>
+            {" "}+ <span style={{ color: ACCENT_YELLOW }}>5,000 Bonus Coins</span>
+            {" "}to jumpstart your ranked climb.
+          </p>
+
+          {/* Stats row */}
+          <div className="mt-3 flex items-center justify-center gap-5 text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white sm:text-xs md:justify-start md:gap-6">
+            <span>No Ads / 7 Days</span>
+            <span>2x XP Boost</span>
+          </div>
+        </div>
+
+        {/* ── CTA button (right) ── */}
+        <div className="flex w-full shrink-0 flex-col items-center gap-2 md:w-auto">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onBuy?.();
+            }}
+            className="flex h-[56px] w-full items-center justify-center gap-3 rounded-[8px] bg-black px-6 text-white transition-transform active:translate-y-[2px] md:w-[260px]"
+          >
+            <span className="text-base uppercase sm:text-lg" style={poppins}>
+              Unlock Bundle
+            </span>
+            <span
+              className="text-base tabular-nums sm:text-lg"
+              style={{ ...poppins, color: ACCENT_YELLOW }}
+            >
+              $9.99
+            </span>
+            <span className="text-xs tabular-nums text-white/40 line-through sm:text-sm">
+              $19.99
+            </span>
+          </button>
+          <p className="text-[10px] font-fun font-black uppercase tracking-[0.22em] text-white/60">
+            Limited time offer
+          </p>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
