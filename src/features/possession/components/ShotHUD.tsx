@@ -56,22 +56,22 @@ export function ShotHUD({
       )}
 
       <div className="flex items-center justify-between gap-3 px-3">
-        <div className="flex items-center gap-3 flex-1 min-w-0 rounded-2xl bg-[#172333]/85 border border-white/10 px-3 py-2.5">
-            <Avatar className="size-11 border-2 border-[#1CB0F6] shrink-0">
-              <AvatarImage src={playerAvatarUrl} />
-              <AvatarFallback className="text-xs font-bold bg-[#1CB0F6]/20 text-[#1CB0F6]">{getInitials(playerName, 'YO')}</AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <div className="text-xs font-bold text-white/85 truncate">{playerName}</div>
-              <div className="text-3xl leading-7 font-black text-white tabular-nums">{playerGoals}</div>
-              <AnimatedPointsCounter value={playerPoints} accentClassName="text-[#FFE500]" />
-            </div>
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <Avatar className="size-11 shrink-0">
+            <AvatarImage src={playerAvatarUrl} />
+            <AvatarFallback className="text-xs font-bold bg-[#1CB0F6]/20 text-[#1CB0F6]">{getInitials(playerName, 'YO')}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <div className="truncate text-xs font-bold text-white/85">{playerName}</div>
+            <div className="text-3xl font-black leading-7 tabular-nums text-white">{playerGoals}</div>
+            <AnimatedPointsCounter value={playerPoints} accentClassName="text-[#FFE500]" />
           </div>
-        <div className="shrink-0 flex flex-col items-center justify-center min-w-[100px]">
+        </div>
+        <div className="flex min-w-[100px] shrink-0 flex-col items-center justify-center">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="px-2.5 py-0.5 rounded-full bg-[#FF9600]/20 border border-[#FF9600]/40 text-[10px] font-black uppercase tracking-[0.12em] text-[#FF9600] mb-1"
+            className="mb-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#FF9600]"
           >
             Shot on Goal
           </motion.div>
@@ -86,21 +86,21 @@ export function ShotHUD({
           >
             {phase === 'shot' ? timeRemaining : '\u2014'}
           </motion.div>
-          <div className="text-[10px] font-black tracking-[0.18em] text-[#FF9600]/70 -mt-0.5">
+          <div className="-mt-0.5 text-[10px] font-black tracking-[0.18em] text-[#FF9600]/70">
             {isPlayerAttacker ? 'YOU SHOOT' : 'YOU SAVE'}
           </div>
         </div>
-        <div className="flex items-center gap-3 flex-1 min-w-0 justify-end rounded-2xl bg-[#172333]/85 border border-white/10 px-3 py-2.5">
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
           <div className="min-w-0 text-right">
-            <div className="text-xs font-bold text-white/85 truncate ml-auto">{opponentName}</div>
-            <div className="text-3xl leading-7 font-black text-white tabular-nums">{opponentGoals}</div>
+            <div className="ml-auto truncate text-xs font-bold text-white/85">{opponentName}</div>
+            <div className="text-3xl font-black leading-7 tabular-nums text-white">{opponentGoals}</div>
             <AnimatedPointsCounter
               value={opponentPoints}
               align="right"
               accentClassName="text-[#FF4B4B]"
             />
           </div>
-          <Avatar className="size-11 border-2 border-[#FF4B4B] shrink-0">
+          <Avatar className="size-11 shrink-0">
             <AvatarImage src={opponentAvatarUrl} />
             <AvatarFallback className="text-xs font-bold bg-[#FF4B4B]/20 text-[#FF4B4B]">{getInitials(opponentName, 'OP')}</AvatarFallback>
           </Avatar>

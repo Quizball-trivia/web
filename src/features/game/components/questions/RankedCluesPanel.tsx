@@ -125,15 +125,15 @@ export function RankedCluesPanel({ question, secondsPerClue = 15, onComplete }: 
   return (
     <div className="space-y-3">
       {/* Prompt + timer */}
-      <div className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] px-5 py-4">
+      <div className="rounded-[16px] border border-[#243B44] bg-[#1B2F36] px-5 py-4 font-poppins">
         {question.categoryName && (
-          <span className="mb-2 inline-flex items-center rounded-lg bg-[#FF9600]/15 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-[#FF9600]">
+          <span className="mb-2 inline-flex items-center rounded-md bg-[#FF9600]/15 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-[#FF9600]">
             <Lightbulb className="mr-1 size-3" />
             {question.categoryName}
           </span>
         )}
         <div className="mt-2 flex items-center justify-between">
-          <p className="text-base font-black text-white">Who Am I?</p>
+          <p className="text-base font-semibold text-white">Who Am I?</p>
           {!showResult && (
             <div className={`flex items-center gap-1.5 ${isLow ? 'text-[#FF4B4B]' : 'text-[#1CB0F6]'}`}>
               <Clock className="size-4" />
@@ -159,7 +159,7 @@ export function RankedCluesPanel({ question, secondsPerClue = 15, onComplete }: 
               initial={{ opacity: 0, y: 10, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ type: 'spring', stiffness: 280, damping: 22 }}
-              className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#243B44] px-5 py-4 text-center"
+              className="rounded-[16px] border border-[#31444D] bg-[#243B44] px-5 py-4 text-center"
             >
               {clue.type === 'emoji' ? (
                 <span className="text-4xl">{clue.content}</span>
@@ -203,7 +203,7 @@ export function RankedCluesPanel({ question, secondsPerClue = 15, onComplete }: 
               type="button"
               onClick={handleSubmit}
               disabled={!userAnswer.trim() || submitted}
-              className="rounded-xl border-b-4 border-[#46A302] bg-[#58CC02] py-3 font-black text-white transition-all active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-[14px] bg-[#58CC02] py-3 font-black text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50 hover:bg-[#62d70f]"
             >
               Submit
             </button>
@@ -211,7 +211,7 @@ export function RankedCluesPanel({ question, secondsPerClue = 15, onComplete }: 
               type="button"
               onClick={handleGiveUp}
               disabled={submitted}
-              className="rounded-xl border-b-4 border-[#0D1B21] bg-[#1B2F36] py-3 font-black text-white transition-all active:translate-y-[2px] active:border-b-2 disabled:opacity-50 hover:bg-[#243B44]"
+              className="rounded-[14px] border border-[#243B44] bg-[#1B2F36] py-3 font-black text-white transition-colors disabled:opacity-50 hover:bg-[#243B44]"
             >
               Give Up
             </button>
@@ -221,8 +221,8 @@ export function RankedCluesPanel({ question, secondsPerClue = 15, onComplete }: 
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`rounded-2xl border-b-4 p-4 text-center ${
-            isCorrect ? 'border-[#46A302] bg-[#58CC02]/10' : 'border-[#CC3C3C] bg-[#FF4B4B]/10'
+          className={`rounded-[16px] border p-4 text-center ${
+            isCorrect ? 'border-[#46A302]/40 bg-[#58CC02]/10' : 'border-[#CC3C3C]/40 bg-[#FF4B4B]/10'
           }`}
         >
           {isCorrect ? (

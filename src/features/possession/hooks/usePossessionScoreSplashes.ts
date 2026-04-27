@@ -7,10 +7,7 @@ import type {
   MatchRoundResultPlayer,
   ResolvedMatchQuestionPayload,
 } from '@/lib/realtime/socket.types';
-import {
-  getOptimisticSplashOutcome,
-  type SplashVariant,
-} from '../realtimePossession.helpers';
+import { type SplashVariant } from '../realtimePossession.helpers';
 
 interface UsePossessionScoreSplashesParams {
   localQuestion: ResolvedMatchQuestionPayload | null;
@@ -20,6 +17,7 @@ interface UsePossessionScoreSplashesParams {
   selectedAnswerQIndex: number | null;
   opponentAnswered: boolean;
   opponentAnsweredCorrectly: boolean | null;
+  opponentRecentPoints: number | null;
   answerAck: MatchAnswerAckPayload | null;
   roundResult: MatchRoundResultPayload | null;
   opponentRound: MatchRoundResultPlayer | null;
@@ -33,6 +31,7 @@ export function usePossessionScoreSplashes({
   selectedAnswerQIndex,
   opponentAnswered,
   opponentAnsweredCorrectly,
+  opponentRecentPoints,
   answerAck,
   roundResult,
   opponentRound,
@@ -74,15 +73,11 @@ export function usePossessionScoreSplashes({
     const activeQIndex = localQuestion?.qIndex ?? answerAck.qIndex;
     if (activeQIndex !== answerAck.qIndex) return;
 
-    const startedAtMs = localQuestion?.playableAt ? new Date(localQuestion.playableAt).getTime() : null;
-    const deadlineAtMs = localQuestion?.deadlineAt ? new Date(localQuestion.deadlineAt).getTime() : null;
-    const optimistic = getOptimisticSplashOutcome({ startedAtMs, deadlineAtMs });
-
-    setPlayerSplashVariant(optimistic.variant === 'pending' ? 'pending' : 'points');
-    setPlayerSplashPoints(optimistic.variant === 'pending' ? null : answerAck.pointsEarned);
+    setPlayerSplashVariant('points');
+    setPlayerSplashPoints(answerAck.pointsEarned);
     setShowPlayerSplash(true);
     shownSplashQRef.current.player = answerAck.qIndex;
-  }, [answerAck, localQuestion?.deadlineAt, localQuestion?.playableAt, localQuestion?.qIndex, phaseKind, selectedAnswer, selectedAnswerQIndex]);
+  }, [answerAck, localQuestion?.qIndex, phaseKind, selectedAnswer, selectedAnswerQIndex]);
 
   useEffect(() => {
     if (!opponentAnswered && !roundResult) return;
@@ -94,13 +89,17 @@ export function usePossessionScoreSplashes({
 
     const opponentCorrectImmediate = opponentAnswered && opponentAnsweredCorrectly === true;
     const opponentCorrectResolved = opponentRound?.isCorrect === true;
-    if (opponentCorrectImmediate || opponentCorrectResolved) {
-      setOpponentSplashVariant(opponentCorrectResolved ? 'points' : 'pending');
-      setOpponentSplashPoints(opponentCorrectResolved ? (opponentRound?.pointsEarned ?? null) : null);
+    const immediatePoints = opponentCorrectImmediate ? opponentRecentPoints : null;
+    const resolvedPoints = opponentCorrectResolved ? (opponentRound?.pointsEarned ?? null) : null;
+    const splashPoints = resolvedPoints ?? immediatePoints;
+
+    if ((opponentCorrectImmediate || opponentCorrectResolved) && splashPoints != null && splashPoints > 0) {
+      setOpponentSplashVariant('points');
+      setOpponentSplashPoints(splashPoints);
       setShowOpponentSplash(true);
       shownSplashQRef.current.opponent = activeQIndex;
     }
-  }, [localQuestion?.qIndex, opponentAnswered, opponentAnsweredCorrectly, opponentRound, phaseKind, roundResult]);
+  }, [localQuestion?.qIndex, opponentAnswered, opponentAnsweredCorrectly, opponentRecentPoints, opponentRound, phaseKind, roundResult]);
 
   useEffect(() => {
     if (!roundResult || !opponentRound?.isCorrect) return;

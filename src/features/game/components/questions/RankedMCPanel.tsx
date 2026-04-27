@@ -36,13 +36,13 @@ export function RankedMCPanel({ question, onComplete }: RankedMCPanelProps) {
   return (
     <div className="space-y-4">
       {/* Prompt */}
-      <div className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] px-5 py-4">
+      <div className="rounded-[16px] border border-[#243B44] bg-[#1B2F36] px-5 py-4 font-poppins">
         {question.categoryName && (
-          <span className="mb-2 inline-flex items-center rounded-lg bg-[#1CB0F6]/15 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-[#1CB0F6]">
+          <span className="mb-2 inline-flex items-center rounded-md bg-[#1CB0F6]/15 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-[#1CB0F6]">
             ⚽ {question.categoryName}
           </span>
         )}
-        <p className="mt-2 text-lg font-black leading-snug text-white md:text-xl">
+        <p className="mt-2 text-lg font-semibold leading-snug text-white md:text-xl">
           {question.prompt}
         </p>
       </div>

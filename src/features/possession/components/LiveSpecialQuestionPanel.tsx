@@ -153,18 +153,20 @@ function CountdownPanel({
         <QuestionKindBadge kind="countdown" />
       </div>
 
-      <div className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] px-5 py-4">
+      {/* Prompt — plain text, no card chrome */}
+      <div className="px-1">
         {question.categoryName && (
-          <span className="mb-2 inline-flex items-center rounded-lg bg-[#1CB0F6]/15 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-[#1CB0F6]">
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-[#1CB0F6]">
             ⚽ {question.categoryName}
           </span>
         )}
         <p className="mt-2 text-lg font-black font-fun leading-snug text-white">{question.prompt}</p>
       </div>
 
+      {/* Input row — flat */}
       {!roundResolved && (
-        <div className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] px-5 py-4">
-          <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-[#56707A]">
+        <div>
+          <label className="mb-1.5 block text-[10px] font-fun font-black uppercase tracking-[0.22em] text-white/45">
             Type your answer
           </label>
           <div className="flex gap-2">
@@ -178,55 +180,56 @@ function CountdownPanel({
               }}
               placeholder="Start typing to find answers..."
               disabled={inputLocked}
-              className="h-12 rounded-xl border-2 border-[#243B44] bg-[#243B44] text-lg text-white placeholder:text-[#56707A] focus:border-[#1CB0F6]"
+              className="h-11 rounded-[8px] border border-white/10 bg-white/[0.04] text-base text-white placeholder:text-white/30 focus:border-[#1CB0F6] focus:bg-white/[0.06]"
             />
             <button
               type="button"
               onClick={submitGuess}
               disabled={inputLocked || !guess.trim()}
-              className="inline-flex items-center justify-center rounded-xl border-b-4 border-[#C47400] bg-[#FF9600] px-4 text-white transition-all active:translate-y-[2px] active:border-b-2"
+              className="inline-flex items-center justify-center rounded-[8px] bg-[#FF9600] px-4 text-white transition-transform active:translate-y-[2px] disabled:opacity-40"
             >
               <Send className="size-4" />
             </button>
           </div>
-          <p className="mt-2 flex items-center gap-1 text-xs text-[#56707A]">
-            <Lightbulb className="size-3.5 text-[#FF9600]" />
-            Answers auto-match as you type. Press Enter for short answers.
+          <p className="mt-1.5 flex items-center gap-1 text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white/40">
+            <Lightbulb className="size-3 text-[#FF9600]" />
+            Auto-matches as you type · Enter for short answers
           </p>
         </div>
       )}
 
-      <div className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] px-5 py-4">
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <h3 className="text-sm font-black uppercase tracking-wide text-white">
+      {/* Answers found list — single soft container */}
+      <div>
+        <div className="mb-2 flex items-center justify-between gap-2 px-1">
+          <h3 className="text-[11px] font-fun font-black uppercase tracking-[0.22em] text-white/55">
             {roundResolved ? 'All Answers' : 'Answers Found'}
           </h3>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 text-[10px] font-fun font-black uppercase tracking-[0.18em]">
             {roundResolved && opponentRound && typeof opponentRound.foundCount === 'number' && (
-              <span className="rounded-lg bg-[#FF4B4B]/15 px-2.5 py-1 text-xs font-black text-[#FF4B4B]">
-                Opp {opponentRound.foundCount} / {question.answerSlotCount}
+              <span className="text-[#FF4B4B]">
+                Opp {opponentRound.foundCount}/{question.answerSlotCount}
               </span>
             )}
-            <span className="rounded-lg bg-[#1CB0F6]/15 px-2.5 py-1 text-xs font-black text-[#1CB0F6]">
-              {roundResolved ? 'You' : ''} {(roundResolved ? foundAnswers.length : foundAnswers.length)} / {question.answerSlotCount}
+            <span className="text-[#1CB0F6]">
+              {roundResolved ? 'You ' : ''}{foundAnswers.length}/{question.answerSlotCount}
             </span>
           </div>
         </div>
         {(roundResolved ? revealedAnswers : foundAnswers).length === 0 ? (
-          <p className="py-4 text-center text-sm text-[#56707A]">
+          <p className="py-6 text-center text-xs font-fun font-black uppercase tracking-[0.18em] text-white/30">
             {roundResolved ? 'No answers found this round.' : 'Start typing to find answers!'}
           </p>
         ) : (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-1.5">
             {(roundResolved ? revealedAnswers : foundAnswers).map((answer) => (
               <motion.div
                 key={answer}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className={`rounded-xl border px-3 py-2 text-sm font-bold ${
+                className={`rounded-[8px] px-3 py-2 text-sm font-fun font-black ${
                   foundAnswers.includes(answer)
-                    ? 'border-[#58CC02]/30 bg-[#58CC02]/15 text-[#58CC02]'
-                    : 'border-white/10 bg-white/5 text-white/70'
+                    ? 'bg-[#38B60E]/15 text-[#7BDA1A]'
+                    : 'bg-white/[0.04] text-white/65'
                 }`}
               >
                 {answer}
@@ -261,27 +264,27 @@ function SortableItem({
       className={isDragging ? 'z-50' : 'z-0'}
     >
       <div
-        className={`flex items-center gap-3 rounded-2xl border-b-4 p-3.5 transition-all ${
+        className={`flex items-center gap-3 rounded-[10px] p-3 transition-all ${
           !isRevealed
-            ? 'cursor-grab border-[#0D1B21] bg-[#1B2F36] hover:bg-[#243B44] active:cursor-grabbing'
+            ? 'cursor-grab bg-white/[0.04] hover:bg-white/[0.07] active:cursor-grabbing'
             : isCorrect
-              ? 'border-[#46A302] bg-[#58CC02]/10'
-              : 'border-[#CC3C3C] bg-[#FF4B4B]/10'
-        } ${isDragging ? 'scale-105 shadow-xl' : ''}`}
+              ? 'bg-[#38B60E]/12'
+              : 'bg-[#FF4B4B]/12'
+        } ${isDragging ? 'scale-[1.02] shadow-xl' : ''}`}
       >
         {!isRevealed && (
           <div {...attributes} {...listeners} className="shrink-0 touch-none cursor-grab active:cursor-grabbing">
-            <GripVertical className="size-5 text-[#56707A]" />
+            <GripVertical className="size-5 text-white/35" />
           </div>
         )}
 
         <div
-          className={`flex size-8 shrink-0 items-center justify-center rounded-lg text-sm font-black ${
+          className={`flex size-8 shrink-0 items-center justify-center rounded-[6px] text-sm font-black ${
             isRevealed && isCorrect
-              ? 'bg-[#58CC02]/20 text-[#58CC02]'
+              ? 'bg-[#38B60E] text-white'
               : isRevealed
-                ? 'bg-[#FF4B4B]/20 text-[#FF4B4B]'
-                : 'bg-[#243B44] text-white'
+                ? 'bg-[#FF4B4B] text-white'
+                : 'bg-white/10 text-white'
           }`}
         >
           {index + 1}
@@ -290,26 +293,32 @@ function SortableItem({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             {item.emoji && <span className="text-xl">{item.emoji}</span>}
-            <span className="truncate text-sm font-bold text-white">{item.label}</span>
+            <span className="truncate text-sm font-fun font-black uppercase tracking-wide text-white">
+              {item.label}
+            </span>
           </div>
-          {item.details && <p className="truncate text-xs text-[#56707A]">{item.details}</p>}
+          {item.details && (
+            <p className="truncate text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white/40">
+              {item.details}
+            </p>
+          )}
         </div>
 
         {isRevealed ? (
           <div className="flex shrink-0 items-center gap-2">
             {typeof revealSortValue === 'number' && (
-              <span className="rounded-lg bg-[#243B44] px-2 py-0.5 text-xs font-bold text-white">
+              <span className="rounded-[6px] bg-white/10 px-2 py-0.5 text-[10px] font-fun font-black tabular-nums text-white">
                 {revealSortValue}
               </span>
             )}
             {isCorrect ? (
-              <CheckCircle2 className="size-5 text-[#58CC02]" />
+              <CheckCircle2 className="size-5 text-[#38B60E]" />
             ) : (
               <XCircle className="size-5 text-[#FF4B4B]" />
             )}
           </div>
         ) : (
-          <ArrowUpDown className="size-4 shrink-0 text-[#56707A]" />
+          <ArrowUpDown className="size-4 shrink-0 text-white/35" />
         )}
       </div>
     </div>
@@ -398,23 +407,22 @@ function PutInOrderPanel({
         <QuestionKindBadge kind="putInOrder" />
       </div>
 
-      <div className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] px-5 py-4">
+      {/* Prompt — plain text */}
+      <div className="px-1">
         {question.categoryName && (
-          <span className="mb-2 inline-flex items-center rounded-lg bg-[#1CB0F6]/15 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-[#1CB0F6]">
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-[#1CB0F6]">
             ⚽ {question.categoryName}
           </span>
         )}
         <p className="mt-2 text-base font-black font-fun leading-snug text-white">{question.prompt}</p>
       </div>
 
-      <div className="flex items-start gap-2.5 rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] px-5 py-3">
-        <div className="mt-0.5 shrink-0 rounded-lg bg-[#1CB0F6]/15 p-1.5">
-          <ArrowUpDown className="size-4 text-[#1CB0F6]" />
-        </div>
-        <p className="text-sm text-white">
-          <span className="font-bold">Drag to arrange</span> from{' '}
-          <span className="font-bold text-[#1CB0F6]">{question.instruction}</span>.
-        </p>
+      {/* Instruction — single inline line, no card */}
+      <div className="flex items-center gap-2 px-1 text-[11px] font-fun font-black uppercase tracking-[0.18em] text-white/55">
+        <ArrowUpDown className="size-3.5 text-[#1CB0F6]" />
+        <span>
+          Drag to arrange from <span className="text-[#1CB0F6]">{question.instruction}</span>
+        </span>
       </div>
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -441,25 +449,25 @@ function PutInOrderPanel({
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`rounded-2xl border-b-4 p-4 text-center ${
-            answerAck?.isCorrect ? 'border-[#46A302] bg-[#58CC02]/10' : 'border-[#CC3C3C] bg-[#FF4B4B]/10'
+          className={`rounded-[10px] p-4 text-center ${
+            answerAck?.isCorrect ? 'bg-[#38B60E]/15' : 'bg-[#FF4B4B]/15'
           }`}
         >
           {answerAck?.isCorrect ? (
             <>
-              <CheckCircle2 className="mx-auto mb-1.5 size-8 text-[#58CC02]" />
-              <p className="font-black text-[#58CC02]">Perfect order!</p>
+              <CheckCircle2 className="mx-auto mb-1.5 size-7 text-[#38B60E]" />
+              <p className="text-sm font-fun font-black uppercase tracking-wide text-[#38B60E]">Perfect order!</p>
             </>
           ) : (
             <>
-              <XCircle className="mx-auto mb-1.5 size-8 text-[#FF4B4B]" />
-              <p className="font-black text-[#FF4B4B]">Not quite — correct order revealed above</p>
+              <XCircle className="mx-auto mb-1.5 size-7 text-[#FF4B4B]" />
+              <p className="text-sm font-fun font-black uppercase tracking-wide text-[#FF4B4B]">Not quite — correct order revealed above</p>
             </>
           )}
           {opponentRound && (
-            <p className="mt-2 text-xs font-black uppercase tracking-wider text-white/70">
+            <p className="mt-2 text-[10px] font-fun font-black uppercase tracking-[0.22em] text-white/55">
               {opponentRound.isCorrect
-                ? <>Opponent: <span className="text-[#58CC02]">Correct</span></>
+                ? <>Opponent: <span className="text-[#38B60E]">Correct</span></>
                 : <>Opponent: <span className="text-[#FF4B4B]">Wrong</span></>}
             </p>
           )}
@@ -469,7 +477,7 @@ function PutInOrderPanel({
           type="button"
           onClick={handleSubmit}
           disabled={inputLocked}
-          className="w-full rounded-2xl border-b-4 border-[#46A302] bg-[#58CC02] py-3.5 font-black uppercase tracking-wide text-white transition-all active:translate-y-[2px] active:border-b-2 hover:bg-[#4DB800] disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full rounded-[10px] bg-[#38B60E] py-3 text-sm font-fun font-black uppercase tracking-wide text-white transition-transform hover:bg-[#2D950B] active:translate-y-[2px] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {submitted ? 'Submitted' : 'Submit Order'}
         </button>
@@ -567,39 +575,41 @@ function CluesPanel({
         <QuestionKindBadge kind="clues" />
       </div>
 
-      <div className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] px-5 py-4">
+      {/* Prompt — plain text */}
+      <div className="px-1">
         {question.categoryName && (
-          <span className="mb-2 inline-flex items-center rounded-lg bg-[#FF9600]/15 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-[#FF9600]">
-            <Lightbulb className="mr-1 size-3" />
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-[#FF9600]">
+            <Lightbulb className="size-3" />
             {question.categoryName}
           </span>
         )}
-        <div className="mt-2 flex items-center justify-between">
-          <p className="text-base font-black font-fun text-white">Who Am I?</p>
-        </div>
+        <p className="mt-2 text-base font-black font-fun text-white">Who Am I?</p>
       </div>
 
       {!roundResolved && (
-        <div className="flex items-center justify-center gap-1.5 text-sm text-[#56707A]">
-          <Star className="size-4 text-[#FFD700]" />
-          <span className="font-bold">Answer now: <span className="text-white">{currentPoints} pts</span></span>
+        <div className="flex items-center justify-center gap-1.5 text-[11px] font-fun font-black uppercase tracking-[0.18em] text-white/55">
+          <Star className="size-3.5 text-[#FFD700]" />
+          <span>
+            Answer now <span className="text-white">{currentPoints} pts</span>
+          </span>
         </div>
       )}
 
+      {/* Clue rows — flat */}
       <AnimatePresence>
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {question.clues.slice(0, revealedClues).map((clue, index) => (
             <motion.div
               key={`${index}-${clue.content}`}
               initial={{ opacity: 0, y: 10, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ type: 'spring', stiffness: 280, damping: 22 }}
-              className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#243B44] px-5 py-4 text-center"
+              className="rounded-[10px] bg-white/[0.04] px-5 py-4 text-center"
             >
               {clue.type === 'emoji' ? (
                 <span className="text-4xl">{clue.content}</span>
               ) : (
-                <p className="text-base font-bold text-white">{clue.content}</p>
+                <p className="text-base font-fun font-black uppercase tracking-wide text-white">{clue.content}</p>
               )}
             </motion.div>
           ))}
@@ -633,14 +643,14 @@ function CluesPanel({
             }}
             disabled={inputLocked}
             autoFocus
-            className="h-12 rounded-xl border-2 border-[#243B44] bg-[#243B44] text-center text-lg text-white placeholder:text-[#56707A] focus:border-[#FF9600]"
+            className="h-11 rounded-[8px] border border-white/10 bg-white/[0.04] text-center text-base text-white placeholder:text-white/30 focus:border-[#FF9600] focus:bg-white/[0.06]"
           />
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={() => emitGuess()}
               disabled={!guess.trim() || inputLocked}
-              className="rounded-xl border-b-4 border-[#46A302] bg-[#58CC02] py-3 font-black text-white transition-all active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-[8px] bg-[#38B60E] py-3 text-sm font-fun font-black uppercase tracking-wide text-white transition-transform hover:bg-[#2D950B] active:translate-y-[2px] disabled:cursor-not-allowed disabled:opacity-40"
             >
               Submit
             </button>
@@ -648,7 +658,7 @@ function CluesPanel({
               type="button"
               onClick={() => emitGuess({ giveUp: true })}
               disabled={inputLocked}
-              className="rounded-xl border-b-4 border-[#0D1B21] bg-[#1B2F36] py-3 font-black text-white transition-all active:translate-y-[2px] active:border-b-2 disabled:opacity-50 hover:bg-[#243B44]"
+              className="rounded-[8px] bg-white/[0.06] py-3 text-sm font-fun font-black uppercase tracking-wide text-white/70 transition-colors hover:bg-white/[0.10] hover:text-white active:translate-y-[2px] disabled:opacity-40"
             >
               Give Up
             </button>
@@ -658,26 +668,30 @@ function CluesPanel({
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`rounded-2xl border-b-4 p-4 text-center ${
-            answerAck?.isCorrect ? 'border-[#46A302] bg-[#58CC02]/10' : 'border-[#CC3C3C] bg-[#FF4B4B]/10'
+          className={`rounded-[10px] p-4 text-center ${
+            answerAck?.isCorrect ? 'bg-[#38B60E]/15' : 'bg-[#FF4B4B]/15'
           }`}
         >
           {answerAck?.isCorrect ? (
             <>
-              <CheckCircle2 className="mx-auto mb-2 size-8 text-[#58CC02]" />
-              <p className="font-black text-[#58CC02]">Correct! +{answerAck.pointsEarned} pts</p>
+              <CheckCircle2 className="mx-auto mb-2 size-7 text-[#38B60E]" />
+              <p className="text-sm font-fun font-black uppercase tracking-wide text-[#38B60E]">
+                Correct! +{answerAck.pointsEarned} pts
+              </p>
             </>
           ) : (
             <>
-              <XCircle className="mx-auto mb-2 size-8 text-[#FF4B4B]" />
-              <p className="mb-1 font-black text-[#FF4B4B]">The answer was:</p>
-              <p className="text-xl font-black text-white">{displayAnswer}</p>
+              <XCircle className="mx-auto mb-2 size-7 text-[#FF4B4B]" />
+              <p className="mb-1 text-xs font-fun font-black uppercase tracking-[0.18em] text-[#FF4B4B]">
+                The answer was
+              </p>
+              <p className="text-xl font-fun font-black uppercase tracking-wide text-white">{displayAnswer}</p>
             </>
           )}
           {opponentRound && (
-            <p className="mt-2 text-xs font-black uppercase tracking-wider text-white/70">
+            <p className="mt-2 text-[10px] font-fun font-black uppercase tracking-[0.22em] text-white/55">
               {opponentRound.isCorrect && typeof opponentRound.clueIndex === 'number'
-                ? <>Opponent: <span className="text-[#58CC02]">Got it on clue {opponentRound.clueIndex + 1}</span></>
+                ? <>Opponent: <span className="text-[#38B60E]">Got it on clue {opponentRound.clueIndex + 1}</span></>
                 : <>Opponent: <span className="text-[#FF4B4B]">Didn&apos;t get it</span></>}
             </p>
           )}

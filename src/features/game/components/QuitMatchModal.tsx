@@ -28,7 +28,7 @@ export function QuitMatchModal({
 }: QuitMatchModalProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="max-w-xs bg-[#1a1f2e] border-0 border-b-4 border-b-white/10 rounded-3xl p-6 font-fun text-center">
+      <AlertDialogContent className="max-w-xs rounded-[24px] border border-white/10 bg-[#1a1f2e] p-6 font-poppins text-center">
         {/* Game-themed illustration: exit door with ball */}
         <div className="flex justify-center mb-2">
           <svg width="80" height="80" viewBox="0 0 80 80" fill="none" className="text-white/60">
@@ -58,21 +58,21 @@ export function QuitMatchModal({
         <div className="flex flex-col gap-2 mt-4">
           <button
             onClick={() => onOpenChange(false)}
-            className="w-full py-3 rounded-2xl bg-emerald-500 border-b-4 border-b-emerald-600 text-white font-extrabold text-sm hover:bg-emerald-400 active:border-b-2 active:translate-y-[2px] transition-all"
+            className="w-full rounded-[16px] bg-emerald-500 py-3 text-sm font-extrabold text-white transition-colors hover:bg-emerald-400"
           >
             Keep Playing
           </button>
           {onSecondaryConfirm ? (
             <button
               onClick={onSecondaryConfirm}
-              className="w-full py-3 rounded-2xl bg-transparent border-2 border-amber-500/40 text-amber-300 font-extrabold text-sm hover:bg-amber-500/10 active:translate-y-[1px] transition-all"
+              className="w-full rounded-[16px] border border-amber-500/40 bg-transparent py-3 text-sm font-extrabold text-amber-300 transition-colors hover:bg-amber-500/10"
             >
               {secondaryConfirmLabel}
             </button>
           ) : null}
           <button
             onClick={onConfirm}
-            className="w-full py-3 rounded-2xl bg-transparent border-2 border-red-500/40 text-red-400 font-extrabold text-sm hover:bg-red-500/10 active:translate-y-[1px] transition-all"
+            className="w-full rounded-[16px] border border-red-500/40 bg-transparent py-3 text-sm font-extrabold text-red-400 transition-colors hover:bg-red-500/10"
           >
             {confirmLabel}
           </button>

@@ -2,11 +2,14 @@ import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 
 const ANSWER_COLORS = [
-  { bg: 'bg-emerald-500', borderSide: 'border-emerald-500', borderBottom: 'border-b-emerald-600', light: 'bg-emerald-500/15', text: 'text-emerald-400' },
-  { bg: 'bg-blue-500', borderSide: 'border-blue-500', borderBottom: 'border-b-blue-600', light: 'bg-blue-500/15', text: 'text-blue-400' },
-  { bg: 'bg-yellow-500', borderSide: 'border-yellow-500', borderBottom: 'border-b-yellow-600', light: 'bg-yellow-500/15', text: 'text-yellow-400' },
-  { bg: 'bg-purple-500', borderSide: 'border-purple-500', borderBottom: 'border-b-purple-600', light: 'bg-purple-500/15', text: 'text-purple-400' },
+  { solid: '#38B60E', soft: 'rgba(56,182,14,0.12)', text: '#7BDA1A' },
+  { solid: '#1CB0F6', soft: 'rgba(28,176,246,0.12)', text: '#5DC9FF' },
+  { solid: '#FFE500', soft: 'rgba(255,229,0,0.12)', text: '#FFE500' },
+  { solid: '#CE82FF', soft: 'rgba(206,130,255,0.14)', text: '#D8B8FF' },
 ] as const;
+
+const CORRECT = '#38B60E';
+const WRONG = '#FF4B4B';
 
 interface AnswerCardProps {
   label: string;
@@ -35,31 +38,30 @@ export function AnswerCard({
 }: AnswerCardProps) {
   const color = ANSWER_COLORS[index % ANSWER_COLORS.length];
 
-  const getButtonClasses = () => {
-    if (state === 'correct') {
-      return 'bg-emerald-500/15 border-2 border-emerald-500 border-b-4 border-b-emerald-600 shadow-[0_0_30px_rgba(88,204,2,0.4)]';
-    }
-    if (state === 'wrong') {
-      return 'bg-red-500/15 border-2 border-red-500 border-b-4 border-b-red-600 animate-[shake_0.4s_ease-in-out]';
-    }
-    if (state === 'disabled') {
-      return 'bg-white/[0.02] border-2 border-white/5 border-b-4 border-b-white/5 opacity-40';
-    }
-    if (isSelected) {
-      return cn('border-2 border-b-4', color.light, color.borderSide, color.borderBottom);
-    }
-    return 'bg-white/[0.04] border-2 border-white/10 border-b-4 border-b-white/15 hover:bg-white/[0.07] active:border-b-2 active:translate-y-[2px]';
-  };
+  // Compute button background + label background using inline styles
+  // (no chunky border-b-4, no nested borders — flat solid surfaces).
+  let buttonStyle: React.CSSProperties;
+  let labelStyle: React.CSSProperties;
+  let textColorClass = 'text-white';
 
-  const getLabelClasses = () => {
-    if (state === 'correct') return 'bg-emerald-500 text-white';
-    if (state === 'wrong') return 'bg-red-500 text-white';
-    if (state === 'disabled') return 'bg-white/10 text-white/30';
-    if (isSelected) return cn(color.bg, 'text-white');
-    return cn(color.light, color.text);
-  };
+  if (state === 'correct') {
+    buttonStyle = { backgroundColor: CORRECT, boxShadow: '0 0 32px rgba(56,182,14,0.35)' };
+    labelStyle = { backgroundColor: '#FFFFFF', color: CORRECT };
+  } else if (state === 'wrong') {
+    buttonStyle = { backgroundColor: WRONG };
+    labelStyle = { backgroundColor: '#FFFFFF', color: WRONG };
+  } else if (state === 'disabled') {
+    buttonStyle = { backgroundColor: 'rgba(255,255,255,0.03)' };
+    labelStyle = { backgroundColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.3)' };
+    textColorClass = 'text-white/40';
+  } else if (isSelected) {
+    buttonStyle = { backgroundColor: color.solid };
+    labelStyle = { backgroundColor: '#FFFFFF', color: color.solid };
+  } else {
+    buttonStyle = { backgroundColor: 'rgba(255,255,255,0.04)' };
+    labelStyle = { backgroundColor: color.soft, color: color.text };
+  }
 
-  // Fade away only when parent explicitly enables result-phase fade behavior.
   const shouldFadeAway = fadeOut && state !== 'correct';
 
   return (
@@ -72,70 +74,56 @@ export function AnswerCard({
               filter: ['blur(0px)', 'blur(2px)', 'blur(4px)'],
               scale: [1, 0.96, 0.88],
             }
-          : {
-              opacity: 1,
-              filter: 'blur(0px)',
-              scale: 1,
-            }
+          : { opacity: 1, filter: 'blur(0px)', scale: 1 }
       }
       transition={shouldFadeAway ? { duration: 0.3, ease: 'easeOut' } : { duration: 0.2 }}
       className={cn(
-        'relative w-full h-full text-left rounded-2xl p-4 min-h-[100px] transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary font-fun overflow-hidden',
-        getButtonClasses(),
-        disabled && 'cursor-not-allowed'
+        'relative h-full w-full overflow-hidden rounded-[10px] p-4 text-left font-fun outline-none transition-[background-color,box-shadow,transform] duration-150 active:translate-y-[2px] focus-visible:ring-2 focus-visible:ring-white/40 min-h-[88px]',
+        disabled && 'cursor-not-allowed',
       )}
+      style={buttonStyle}
       onClick={onClick}
       disabled={disabled}
     >
-      {/* Left notch — player's pick */}
+      {/* Player's pick notch */}
       {isSelected && (state === 'correct' || state === 'wrong') && (
         <motion.div
           initial={{ x: -14, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 400, damping: 22 }}
-          className={cn(
-            'absolute left-0 top-1/2 -translate-y-1/2 w-[10px] h-10 rounded-r-lg flex items-center justify-center',
-            state === 'correct'
-              ? 'bg-[#58CC02] shadow-[0_0_12px_rgba(88,204,2,0.7)]'
-              : 'bg-[#FF4B4B] shadow-[0_0_12px_rgba(255,75,75,0.7)]'
-          )}
-        >
-          <div className="w-[3px] h-5 rounded-full bg-white/60" />
-        </motion.div>
+          className="absolute left-0 top-1/2 flex h-10 w-[6px] -translate-y-1/2 items-center justify-center rounded-r-md"
+          style={{ backgroundColor: '#FFFFFF' }}
+        />
       )}
-      {/* Right notch — opponent's pick */}
+      {/* Opponent's pick notch */}
       {opponentPicked && opponentPickCorrect !== undefined && (
         <motion.div
           initial={{ x: 14, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 400, damping: 22 }}
-          className={cn(
-            'absolute right-0 top-1/2 -translate-y-1/2 w-[10px] h-10 rounded-l-lg flex items-center justify-center',
-            opponentPickCorrect
-              ? 'bg-[#58CC02] shadow-[0_0_12px_rgba(88,204,2,0.7)]'
-              : 'bg-[#FF4B4B] shadow-[0_0_12px_rgba(255,75,75,0.7)]'
-          )}
-        >
-          <div className="w-[3px] h-5 rounded-full bg-white/60" />
-        </motion.div>
+          className="absolute right-0 top-1/2 flex h-10 w-[6px] -translate-y-1/2 items-center justify-center rounded-l-md"
+          style={{
+            backgroundColor: opponentPickCorrect ? CORRECT : WRONG,
+          }}
+        />
       )}
 
-      <div className="flex items-start gap-3 h-full">
+      <div className="flex h-full items-center gap-3">
         {/* Label badge */}
-        <div className={cn(
-          'flex size-12 shrink-0 items-center justify-center rounded-xl text-base font-black transition-colors',
-          getLabelClasses()
-        )}>
+        <div
+          className="flex size-10 shrink-0 items-center justify-center rounded-[8px] text-base font-black"
+          style={labelStyle}
+        >
           {label}
         </div>
 
         {/* Text */}
-        <span className={cn(
-          'text-base font-bold flex-1 text-white leading-tight py-1',
-          state === 'disabled' && 'text-white/40',
-          state === 'correct' && 'text-emerald-300',
-          state === 'wrong' && 'text-red-300',
-        )}>
+        <span
+          className={cn(
+            'flex-1 text-sm font-black uppercase leading-tight tracking-wide md:text-base',
+            textColorClass,
+          )}
+        >
           {text}
         </span>
       </div>

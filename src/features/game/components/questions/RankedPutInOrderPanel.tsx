@@ -44,12 +44,12 @@ function SortableItem({
       className={isDragging ? 'z-50' : 'z-0'}
     >
       <div
-        className={`flex items-center gap-3 rounded-2xl border-b-4 p-3.5 transition-all ${
+        className={`flex items-center gap-3 rounded-[16px] border p-3.5 transition-all ${
           !isRevealed
-            ? 'cursor-grab border-[#0D1B21] bg-[#1B2F36] hover:bg-[#243B44] active:cursor-grabbing'
+            ? 'cursor-grab border-[#243B44] bg-[#1B2F36] hover:bg-[#243B44] active:cursor-grabbing'
             : isCorrect
-            ? 'border-[#46A302] bg-[#58CC02]/10'
-            : 'border-[#CC3C3C] bg-[#FF4B4B]/10'
+            ? 'border-[#46A302]/40 bg-[#58CC02]/10'
+            : 'border-[#CC3C3C]/40 bg-[#FF4B4B]/10'
         } ${isDragging ? 'scale-105 shadow-xl' : ''}`}
       >
         {/* Drag handle */}
@@ -160,7 +160,7 @@ export function RankedPutInOrderPanel({ question, onComplete }: RankedPutInOrder
   return (
     <div className="space-y-3">
       {/* Prompt */}
-      <div className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] px-5 py-4">
+      <div className="rounded-[16px] border border-[#243B44] bg-[#1B2F36] px-5 py-4 font-poppins">
         {question.categoryName && (
           <span className="mb-2 inline-flex items-center rounded-lg bg-[#1CB0F6]/15 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-[#1CB0F6]">
             ⚽ {question.categoryName}
@@ -170,7 +170,7 @@ export function RankedPutInOrderPanel({ question, onComplete }: RankedPutInOrder
       </div>
 
       {/* Instruction */}
-      <div className="flex items-start gap-2.5 rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] px-5 py-3">
+      <div className="flex items-start gap-2.5 rounded-[16px] border border-[#243B44] bg-[#1B2F36] px-5 py-3">
         <div className="mt-0.5 shrink-0 rounded-lg bg-[#1CB0F6]/15 p-1.5">
           <ArrowUpDown className="size-4 text-[#1CB0F6]" />
         </div>
@@ -202,8 +202,8 @@ export function RankedPutInOrderPanel({ question, onComplete }: RankedPutInOrder
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`rounded-2xl border-b-4 p-4 text-center ${
-            allCorrect ? 'border-[#46A302] bg-[#58CC02]/10' : 'border-[#CC3C3C] bg-[#FF4B4B]/10'
+          className={`rounded-[16px] border p-4 text-center ${
+            allCorrect ? 'border-[#46A302]/40 bg-[#58CC02]/10' : 'border-[#CC3C3C]/40 bg-[#FF4B4B]/10'
           }`}
         >
           {allCorrect ? (
@@ -222,7 +222,7 @@ export function RankedPutInOrderPanel({ question, onComplete }: RankedPutInOrder
         <button
           type="button"
           onClick={handleSubmit}
-          className="w-full rounded-2xl border-b-4 border-[#46A302] bg-[#58CC02] py-3.5 font-black uppercase tracking-wide text-white transition-all active:translate-y-[2px] active:border-b-2 hover:bg-[#4DB800]"
+          className="w-full rounded-[16px] bg-[#58CC02] py-3.5 font-black uppercase tracking-wide text-white transition-colors hover:bg-[#4DB800]"
         >
           Submit Order
         </button>

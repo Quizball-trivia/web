@@ -178,7 +178,7 @@ export function RankedCountdownPanel({ question, secondsTotal, onComplete }: Ran
   return (
     <div className="space-y-3">
       {/* Prompt card */}
-      <div className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] px-5 py-4">
+      <div className="rounded-[16px] border border-[#243B44] bg-[#1B2F36] px-5 py-4 font-poppins">
         {question.categoryName && (
           <span className="mb-2 inline-flex items-center rounded-lg bg-[#1CB0F6]/15 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-[#1CB0F6]">
             ⚽ {question.categoryName}
@@ -188,8 +188,8 @@ export function RankedCountdownPanel({ question, secondsTotal, onComplete }: Ran
       </div>
 
       {/* Timer */}
-      <div className={`flex items-center justify-between rounded-2xl border-b-4 px-5 py-3 ${
-        isLow ? 'border-[#CC3C3C] bg-[#FF4B4B]/10 animate-pulse' : 'border-[#0D1B21] bg-[#1B2F36]'
+      <div className={`flex items-center justify-between rounded-[16px] border px-5 py-3 ${
+        isLow ? 'border-[#CC3C3C]/40 bg-[#FF4B4B]/10 animate-pulse' : 'border-[#243B44] bg-[#1B2F36]'
       }`}>
         <div className="flex items-center gap-2">
           <Clock className={`size-4 ${isLow ? 'text-[#FF4B4B]' : 'text-[#1CB0F6]'}`} />
@@ -201,7 +201,7 @@ export function RankedCountdownPanel({ question, secondsTotal, onComplete }: Ran
       </div>
 
       {/* Input */}
-      <div className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] px-5 py-4">
+      <div className="rounded-[16px] border border-[#243B44] bg-[#1B2F36] px-5 py-4">
         <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-[#56707A]">
           Type your answer
         </label>
@@ -241,7 +241,7 @@ export function RankedCountdownPanel({ question, secondsTotal, onComplete }: Ran
       </div>
 
       {/* Found answers */}
-      <div className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] px-5 py-4">
+      <div className="rounded-[16px] border border-[#243B44] bg-[#1B2F36] px-5 py-4">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-black uppercase tracking-wide text-white">Answers Found</h3>
           <span className="rounded-lg bg-[#1CB0F6]/15 px-2.5 py-1 text-xs font-black text-[#1CB0F6]">
@@ -276,7 +276,7 @@ export function RankedCountdownPanel({ question, secondsTotal, onComplete }: Ran
             exit={{ opacity: 0, scale: 0.8, y: -10 }}
             className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2"
           >
-            <div className="flex items-center gap-3 rounded-2xl border-b-4 border-[#46A302] bg-[#1B2F36] px-6 py-3 shadow-xl">
+            <div className="flex items-center gap-3 rounded-[16px] border border-[#46A302]/40 bg-[#1B2F36] px-6 py-3 shadow-xl">
               <div className="flex size-9 items-center justify-center rounded-full bg-[#58CC02]">
                 <Check className="size-5 text-white" />
               </div>

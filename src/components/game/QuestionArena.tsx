@@ -8,6 +8,13 @@ interface QuestionArenaProps {
   difficulty: string;
 }
 
+const poppins = {
+  fontFamily: "'Poppins', sans-serif",
+  fontWeight: 600,
+  letterSpacing: '0',
+  lineHeight: 1.2,
+} as const;
+
 export function QuestionArena({
   question,
   category,
@@ -21,46 +28,34 @@ export function QuestionArena({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full max-w-2xl mx-auto text-center font-fun"
+      className="mx-auto w-full max-w-2xl text-center font-fun"
     >
-      {/* Category pill */}
-      <div className="flex justify-center mb-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
-          <span className="text-base">{categoryIcon}</span>
-          <span className="text-[11px] uppercase font-extrabold tracking-widest text-white/60">
-            {category}
-          </span>
-          <div className="flex gap-0.5 ml-1">
-            {[1, 2, 3].map((lvl) => (
-              <div
-                key={lvl}
-                className={cn(
-                  'size-1.5 rounded-full',
-                  lvl <= difficultyLevel ? 'bg-emerald-400' : 'bg-white/15'
-                )}
-              />
-            ))}
-          </div>
+      {/* Category meta — flat inline label, no pill chrome */}
+      <div className="mb-5 flex items-center justify-center gap-2.5">
+        <span className="text-base">{categoryIcon}</span>
+        <span className="text-[11px] font-black uppercase tracking-[0.22em] text-white/45">
+          {category}
+        </span>
+        <div className="ml-1 flex gap-1">
+          {[1, 2, 3].map((lvl) => (
+            <div
+              key={lvl}
+              className={cn(
+                'size-1.5 rounded-full',
+                lvl <= difficultyLevel ? 'bg-[#38B60E]' : 'bg-white/15',
+              )}
+            />
+          ))}
         </div>
       </div>
 
-      {/* Question card */}
-      <div className="relative rounded-3xl bg-[#1a1f2e] border-b-4 border-white/10 overflow-hidden">
-        {/* Dot pattern overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
-            backgroundSize: '16px 16px',
-          }}
-        />
-
-        <div className="relative px-8 py-10 md:px-12 md:py-12 flex items-center justify-center min-h-[160px]">
-          <h2 className="text-xl md:text-2xl font-extrabold leading-relaxed text-white max-w-lg mx-auto">
-            {question}
-          </h2>
-        </div>
-      </div>
+      {/* Question text — no card chrome at all */}
+      <h2
+        className="mx-auto max-w-xl px-4 text-2xl text-white md:text-3xl"
+        style={poppins}
+      >
+        {question}
+      </h2>
     </motion.div>
   );
 }

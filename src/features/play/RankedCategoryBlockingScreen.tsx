@@ -113,32 +113,25 @@ export function BanCategoryView({
             "flex items-center gap-3 transition-opacity duration-300",
             currentActor === 'opponent' && "opacity-50"
           )}>
-            <div className="relative">
-              <AvatarDisplay
-                customization={{ base: player.avatar }}
-                size="sm"
-                countryCode={player.countryCode ?? null}
-                className="ring-[3px] ring-[#1CB0F6] shadow-[0_3px_0_0_#1899D6]"
-              />
-              <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[7px] font-black bg-[#1CB0F6] text-white px-1.5 py-px rounded-full border-b border-[#1899D6] uppercase tracking-wider z-30">
-                YOU
-              </span>
-            </div>
+            <AvatarDisplay
+              customization={{ base: player.avatar }}
+              size="sm"
+              countryCode={player.countryCode ?? null}
+              className="ring-2 ring-[#1CB0F6]"
+            />
             <div className="hidden sm:block">
-              <div className="text-[15px] font-black text-white leading-none truncate max-w-[140px]">
+              <div className="max-w-[140px] truncate text-[15px] font-black uppercase leading-none text-white">
                 {player.username}
               </div>
-              <div className="text-xs font-extrabold text-[#56707A] mt-1">
-                {player.rankPoints != null ? `${player.rankPoints} RP` : '— RP'}
+              <div className="mt-1 flex items-center gap-1.5 text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white/45">
+                <span>{player.rankPoints != null ? `${player.rankPoints} RP` : '— RP'}</span>
+                {player.tier && (
+                  <>
+                    <span className="text-white/25">·</span>
+                    <span style={{ color: playerTierColor }}>{player.tier}</span>
+                  </>
+                )}
               </div>
-              {player.tier && (
-                <div
-                  className="mt-0.5 text-[10px] font-black uppercase tracking-wider"
-                  style={{ color: playerTierColor }}
-                >
-                  {player.tier}
-                </div>
-              )}
             </div>
           </div>
 
@@ -159,46 +152,39 @@ export function BanCategoryView({
               {timeLeft}
             </div>
 
-            <div className="mt-2 bg-[#FF4B4B] px-3 py-1 rounded-full border-b-[3px] border-[#E04242]">
-              <span className="text-[10px] font-black text-white uppercase tracking-wider">Ban Phase</span>
+            <div className="mt-2 rounded-full bg-[#FF4B4B] px-3 py-1">
+              <span className="text-[10px] font-black uppercase tracking-[0.18em] text-white">Ban Phase</span>
             </div>
 
-            <span className="text-[10px] font-extrabold text-[#56707A] mt-1.5 uppercase">
+            <span className="mt-1.5 text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white/45">
               {currentActor === 'player' ? "Your Turn" : "Opponent's Turn"}
             </span>
           </div>
 
           {/* Opponent (Right) */}
           <div className={cn(
-            "flex items-center gap-3 flex-row-reverse transition-opacity duration-300",
+            "flex flex-row-reverse items-center gap-3 transition-opacity duration-300",
             currentActor === 'player' && "opacity-50"
           )}>
-            <div className="relative">
-              <AvatarDisplay
-                customization={{ base: opponent.avatar }}
-                size="sm"
-                countryCode={opponent.countryCode ?? null}
-                className="ring-[3px] ring-[#FF4B4B] shadow-[0_3px_0_0_#E04242]"
-              />
-              <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[7px] font-black bg-[#FF4B4B] text-white px-1.5 py-px rounded-full border-b border-[#E04242] uppercase tracking-wider z-30">
-                FOE
-              </span>
-            </div>
-            <div className="hidden sm:block text-right">
-              <div className="text-[15px] font-black text-white leading-none truncate max-w-[140px]">
+            <AvatarDisplay
+              customization={{ base: opponent.avatar }}
+              size="sm"
+              countryCode={opponent.countryCode ?? null}
+              className="ring-2 ring-[#FF4B4B]"
+            />
+            <div className="hidden text-right sm:block">
+              <div className="max-w-[140px] truncate text-[15px] font-black uppercase leading-none text-white">
                 {opponent.username}
               </div>
-              <div className="text-xs font-extrabold text-[#56707A] mt-1">
-                {opponent.rankPoints != null ? `${opponent.rankPoints} RP` : '— RP'}
+              <div className="mt-1 flex items-center justify-end gap-1.5 text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white/45">
+                <span>{opponent.rankPoints != null ? `${opponent.rankPoints} RP` : '— RP'}</span>
+                {opponent.tier && (
+                  <>
+                    <span className="text-white/25">·</span>
+                    <span style={{ color: opponentTierColor }}>{opponent.tier}</span>
+                  </>
+                )}
               </div>
-              {opponent.tier && (
-                <div
-                  className="mt-0.5 text-[10px] font-black uppercase tracking-wider"
-                  style={{ color: opponentTierColor }}
-                >
-                  {opponent.tier}
-                </div>
-              )}
             </div>
           </div>
         </div>

@@ -20,6 +20,15 @@ interface AchievementUnlockStripProps {
   className?: string;
 }
 
+const poppins = {
+  fontFamily: "'Poppins', sans-serif",
+  fontWeight: 600,
+  letterSpacing: '0',
+  lineHeight: 1,
+} as const;
+
+const YELLOW = '#FFE500';
+
 export function AchievementUnlockStrip({
   achievements,
   className,
@@ -27,59 +36,57 @@ export function AchievementUnlockStrip({
   if (achievements.length === 0) return null;
 
   return (
-    <div className={cn('rounded-[30px] border border-[#FCD200]/24 bg-[#17140B]/88 p-4 shadow-[0_24px_60px_rgba(0,0,0,0.28)] backdrop-blur sm:p-5', className)}>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <div className="text-[10px] font-black uppercase tracking-[0.28em] text-[#FCD200]">
+    <div className={cn('w-full', className)}>
+      {/* Header — flat, no card chrome */}
+      <div className="flex items-center justify-between gap-3 px-1">
+        <div className="flex items-baseline gap-2">
+          <h3
+            className="text-lg uppercase text-white sm:text-xl"
+            style={poppins}
+          >
             New Badge{achievements.length > 1 ? 's' : ''}
-          </div>
-          <div className="mt-1 text-sm font-black text-white">
-            Unlocked after this match
-          </div>
+          </h3>
+          <span className="text-[10px] font-fun font-black uppercase tracking-[0.22em] text-white/40">
+            unlocked
+          </span>
         </div>
-        <div className="rounded-full border border-[#FCD200]/25 bg-[#FCD200]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#FFE98A]">
+        <span
+          className="text-[10px] font-fun font-black uppercase tracking-[0.22em]"
+          style={{ color: YELLOW }}
+        >
           {achievements.length} new
-        </div>
+        </span>
       </div>
 
-      <div className="mt-4 grid gap-3 lg:grid-cols-2">
+      {/* Grid — single flat card per achievement, no nested chrome */}
+      <div className="mt-3 grid gap-2 lg:grid-cols-2">
         {achievements.map((achievement, index) => {
           const Icon = iconMap[achievement.icon] ?? Trophy;
 
           return (
             <motion.div
               key={achievement.id}
-              initial={{ opacity: 0, y: 12, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: 0.12 + (index * 0.07), duration: 0.35, ease: 'easeOut' }}
-              className="relative overflow-hidden rounded-[24px] border border-[#FCD200]/18 bg-[linear-gradient(135deg,rgba(252,208,0,0.14),rgba(252,208,0,0.04)_45%,rgba(255,255,255,0.02))] p-4"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.12 + index * 0.07, duration: 0.35, ease: 'easeOut' }}
+              className="flex items-center gap-3 rounded-[10px] p-3"
+              style={{ backgroundColor: 'rgba(255,229,0,0.06)' }}
             >
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(252,208,0,0.2),transparent_36%)] opacity-90" />
-              <div className="absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-[#FFE98A]/70 to-transparent" />
+              {/* Icon — single flat tile */}
+              <div
+                className="flex size-11 shrink-0 items-center justify-center rounded-[8px]"
+                style={{ backgroundColor: YELLOW, color: '#000' }}
+              >
+                <Icon className="size-5" strokeWidth={2.5} />
+              </div>
 
-              <div className="relative z-10 flex items-start gap-4">
-                <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-[#FCD200]/24 bg-[#FCD200]/12 text-[#FFE98A] shadow-[0_0_28px_rgba(252,208,0,0.08)]">
-                  <Icon className="size-5" />
+              {/* Text */}
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-fun font-black uppercase tracking-wide text-white">
+                  {achievement.title}
                 </div>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <div className="text-sm font-black text-white">{achievement.title}</div>
-                    <span className="rounded-full bg-[#58CC02]/16 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.22em] text-[#A8FF8A]">
-                      Unlocked
-                    </span>
-                  </div>
-                  <div className="mt-1 text-xs font-bold leading-relaxed text-white/68">
-                    {achievement.description}
-                  </div>
-                  <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/8">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: '100%' }}
-                      transition={{ delay: 0.18 + (index * 0.07), duration: 0.45, ease: 'easeOut' }}
-                      className="h-full rounded-full bg-[linear-gradient(90deg,#FCD200,#FFE98A)]"
-                    />
-                  </div>
+                <div className="mt-0.5 truncate text-[11px] font-fun font-black uppercase tracking-wide text-white/50">
+                  {achievement.description}
                 </div>
               </div>
             </motion.div>

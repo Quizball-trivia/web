@@ -262,6 +262,7 @@ export function useRealtimePossessionMatchController({
     selectedAnswerQIndex: state.selectedAnswerQIndex ?? null,
     opponentAnswered: state.opponentAnswered,
     opponentAnsweredCorrectly,
+    opponentRecentPoints: match?.opponentRecentPoints ?? null,
     answerAck,
     roundResult: state.roundResult,
     opponentRound,

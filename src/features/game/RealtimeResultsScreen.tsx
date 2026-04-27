@@ -532,22 +532,25 @@ export function RealtimeResultsScreen({
                 className="mx-auto w-full max-w-[760px] border-t border-white/10 pt-4 md:pt-5"
               >
                 <div className={cn(
-                  'grid gap-4 md:gap-5',
+                  'grid gap-x-5 gap-y-3 text-center md:gap-y-3.5',
                   showRankedRpCard && showXpCard
-                    ? 'grid-cols-1 md:grid-cols-[minmax(0,1fr)_1px_minmax(0,1fr)] md:items-stretch'
-                    : 'grid-cols-1'
+                    ? 'grid-cols-1 grid-rows-[auto_auto_auto_auto] md:grid-cols-[minmax(0,1fr)_1px_minmax(0,1fr)]'
+                    : 'grid-cols-1 grid-rows-[auto_auto_auto_auto]'
                 )}>
                   {showRankedRpCard && (
-                    <div className="grid h-full grid-rows-[auto_auto_auto_auto] gap-3">
-                      <div className="text-[1.15rem] font-semibold uppercase tracking-wide text-white md:text-[1.5rem]">
+                    <div className="grid grid-rows-subgrid gap-y-3 md:row-span-4 md:row-start-1 md:gap-y-3.5">
+                      {/* Row 1: Tier label */}
+                      <div className="self-end text-sm font-bold uppercase tracking-[0.18em] text-white/70 md:text-base">
                         {rpTierInfo.tier}
                       </div>
 
-                      <div className="text-[2rem] font-black leading-none text-[#FFD126] md:text-[2.4rem]">
-                        {newRP} RP
+                      {/* Row 2: Big RP value */}
+                      <div className="self-end text-[2.2rem] font-black leading-none text-[#FFD126] md:text-[2.6rem]">
+                        {newRP} <span className="text-[1.5rem] md:text-[1.8rem]">RP</span>
                       </div>
 
-                      <div className="relative h-3 overflow-hidden rounded-full bg-white/12 md:h-4">
+                      {/* Row 3: Progress bar (auto-aligned via subgrid) */}
+                      <div className="relative h-3 self-center overflow-hidden rounded-full bg-white/12 md:h-4">
                         <motion.div
                           initial={{ width: `${oldRpTierInfo.progress}%` }}
                           animate={{
@@ -563,6 +566,7 @@ export function RealtimeResultsScreen({
                         />
                       </div>
 
+                      {/* Row 4: Caption */}
                       <div className="flex items-center justify-between text-[11px] font-medium text-white/60 md:text-sm">
                         <span>{newRP} RP</span>
                         {rpTierInfo.pointsToNext !== null && (
@@ -573,25 +577,24 @@ export function RealtimeResultsScreen({
                   )}
 
                   {showRankedRpCard && showXpCard && (
-                    <div className="hidden w-px bg-white/12 md:block" />
+                    <div className="hidden w-px bg-white/12 md:row-span-4 md:row-start-1 md:block" />
                   )}
 
                   {showXpCard && preMatchProgression && projectedProgression && (
-                    <div className="grid h-full grid-rows-[auto_auto_auto_auto] gap-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="text-[1.05rem] font-semibold uppercase tracking-wide text-[#48C7FF] md:text-[1.35rem]">
-                            XP Progress
-                          </div>
-                        </div>
-                        <div className="text-[1.35rem] font-black text-[#48C7FF] md:text-[1.65rem]">+{animatedXp} XP</div>
+                    <div className="grid grid-rows-subgrid gap-y-3 md:row-span-4 md:row-start-1 md:gap-y-3.5">
+                      {/* Row 1: Title + +XP gain inline */}
+                      <div className="flex items-baseline justify-center gap-2 self-end text-sm font-bold uppercase tracking-[0.18em] text-[#48C7FF] md:text-base">
+                        <span>XP Progress</span>
+                        <span className="text-base font-black md:text-lg">+{animatedXp} XP</span>
                       </div>
 
-                      <div className="mt-0.5 text-[1.35rem] font-bold text-white md:text-[1.65rem]">
-                            Level {projectedProgression.level}
+                      {/* Row 2: Big level value */}
+                      <div className="self-end text-[2.2rem] font-black leading-none text-white md:text-[2.6rem]">
+                        Level {projectedProgression.level}
                       </div>
 
-                      <div className="relative h-3 overflow-hidden rounded-full bg-white/12 md:h-4">
+                      {/* Row 3: Progress bar */}
+                      <div className="relative h-3 self-center overflow-hidden rounded-full bg-white/12 md:h-4">
                         <motion.div
                           initial={{ width: `${xpBarInitialProgress}%` }}
                           animate={{ width: `${projectedProgression.progressPct}%` }}
@@ -600,10 +603,11 @@ export function RealtimeResultsScreen({
                         />
                       </div>
 
-                      <div className="flex flex-col gap-1 text-[11px] font-medium text-white/60 md:flex-row md:items-center md:justify-between md:text-sm">
+                      {/* Row 4: Caption */}
+                      <div className="flex flex-col items-center gap-1 text-[11px] font-medium text-white/60 md:flex-row md:items-center md:justify-between md:text-sm">
                         {leveledUp ? (
                           <>
-                            <span>{projectedProgression.currentLevelXp} XP carried into level {projectedProgression.level}</span>
+                            <span>{projectedProgression.currentLevelXp} XP into level {projectedProgression.level}</span>
                             <span>{xpToNextLevelAfterMatch} to level {projectedProgression.level + 1}</span>
                           </>
                         ) : (

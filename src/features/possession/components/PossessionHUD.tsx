@@ -59,10 +59,10 @@ export function PossessionHUD({
         </button>
       )}
 
-      {/* Player strip — matching MatchScoreHUD style */}
+      {/* Player strip — flat, no card chrome */}
       <div className="flex items-center justify-between gap-3 px-3">
         {/* Player side */}
-        <div className="flex items-center gap-3 flex-1 min-w-0 rounded-2xl px-3 py-2.5">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           <Avatar className="size-12 shrink-0">
             <AvatarImage src={playerAvatarUrl} className="object-cover" />
             <AvatarFallback className="text-xs font-bold bg-[#1CB0F6]/20 text-[#1CB0F6]">
@@ -70,8 +70,8 @@ export function PossessionHUD({
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <div className="text-xs font-bold text-white/85 truncate max-w-[100px]">{playerName}</div>
-            <div className="text-3xl leading-7 font-black text-white tabular-nums">
+            <div className="max-w-[100px] truncate text-xs font-bold text-white/85">{playerName}</div>
+            <div className="text-3xl font-black leading-7 tabular-nums text-white">
               {playerGoals}
             </div>
             <AnimatedPointsCounter value={playerPoints} accentClassName="text-[#FFE500]" />
@@ -79,8 +79,8 @@ export function PossessionHUD({
         </div>
 
         {/* Center timer + half */}
-        <div className="shrink-0 flex flex-col items-center justify-center min-w-[100px]">
-          <div className="px-2.5 py-0.5 rounded-full bg-white/10 text-[10px] font-black uppercase tracking-[0.15em] text-white/60 mb-1">
+        <div className="flex min-w-[100px] shrink-0 flex-col items-center justify-center">
+          <div className="mb-1 text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
             {half === 1 ? '1st Half' : '2nd Half'}
           </div>
           <div
@@ -93,41 +93,22 @@ export function PossessionHUD({
           >
             {showTimer ? timeRemaining : '\u00B7'}
           </div>
-          <div className="text-[10px] font-black tracking-[0.18em] text-white/35 -mt-0.5">VS</div>
+          <div className="-mt-0.5 text-[10px] font-black tracking-[0.18em] text-white/35">VS</div>
         </div>
 
         {/* Opponent side */}
-        <div className="flex items-center gap-3 flex-1 min-w-0 justify-end rounded-2xl px-3 py-2.5">
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
           <div className="min-w-0 text-right">
             <div className="text-xs font-bold text-white/85 truncate max-w-[100px] ml-auto">{opponentName}</div>
-            <AnimatePresence mode="wait">
-              {opponentAnswered && opponentAnsweredCorrectly !== null && opponentAnsweredCorrectly !== undefined ? (
-                <motion.div
-                  key="opp-result"
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  transition={{ duration: 0.2 }}
-                  className={cn(
-                    "text-xs font-black uppercase tracking-wide",
-                    opponentAnsweredCorrectly ? 'text-[#58CC02]' : 'text-[#FF4B4B]'
-                  )}
-                >
-                  {opponentAnsweredCorrectly ? 'Correct' : 'Wrong'}
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="opp-goals"
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  transition={{ duration: 0.2 }}
-                  className="text-3xl leading-7 font-black text-white tabular-nums"
-                >
-                  {opponentGoals}
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <motion.div
+              key="opp-goals"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+              className="text-3xl leading-7 font-black text-white tabular-nums"
+            >
+              {opponentGoals}
+            </motion.div>
             <AnimatedPointsCounter
               value={opponentPoints}
               align="right"
@@ -154,11 +135,10 @@ export function PossessionHUD({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest border-b-2"
+            className="rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em]"
             style={{
-              backgroundColor: zoneColor + '20',
+              backgroundColor: zoneColor + '18',
               color: zoneColor,
-              borderBottomColor: zoneColor + '40',
             }}
           >
             {zone}
