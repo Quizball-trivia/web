@@ -9,6 +9,8 @@ import { SettingsToggle } from "./components/SettingsToggle";
 import { toast } from "sonner";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { useLocale } from "@/contexts/LocaleContext";
+import { updateMe } from "@/lib/api/endpoints";
+import { type Locale } from "@/lib/i18n/messages";
 
 interface UserPreferences {
   soundEnabled: boolean;
@@ -33,8 +35,8 @@ interface SettingsScreenProps {
 }
 
 export function SettingsScreen({ onBack }: SettingsScreenProps) {
-  const { logout, user } = useAuthStore();
-  const { locale, setLocale } = useLocale();
+  const { logout, user, setAuthenticated } = useAuthStore();
+  const { locale, setLocale, t } = useLocale();
 
   // Preferences state - initialized from storage
   const [soundEnabled, setSoundEnabled] = useState(DEFAULT_PREFERENCES.soundEnabled);
@@ -43,6 +45,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const [invitesEnabled, setInvitesEnabled] = useState(DEFAULT_PREFERENCES.invitesEnabled);
   const [questAlertsEnabled, setQuestAlertsEnabled] = useState(DEFAULT_PREFERENCES.questAlertsEnabled);
   const [streakAlertsEnabled, setStreakAlertsEnabled] = useState(DEFAULT_PREFERENCES.streakAlertsEnabled);
+  const [isLanguageSaving, setIsLanguageSaving] = useState(false);
 
   const isInitialMount = useRef(true);
 
@@ -90,13 +93,34 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
 
   const handleResetTraining = () => {
     storage.remove(STORAGE_KEYS.TRAINING_COMPLETE);
-    toast.success("Training match reset — you'll see the offer next time you click Ranked");
+    toast.success(t("settings.resetTrainingSuccess"));
   };
 
-  const toggleLanguage = () => {
+  const toggleLanguage = async () => {
+    if (isLanguageSaving) {
+      return;
+    }
+
     const newLocale = locale === 'en' ? 'ka' : 'en';
     setLocale(newLocale);
-    toast.success(newLocale === 'en' ? 'Language switched to English 🇺🇸' : 'Language switched to Georgian 🇬🇪');
+    setIsLanguageSaving(true);
+
+    try {
+      if (user) {
+        const updated = await updateMe({ preferred_language: newLocale });
+        setAuthenticated({ ...user, preferred_language: updated.preferred_language ?? newLocale });
+      }
+      toast.success(
+        newLocale === 'en'
+          ? t("settings.languageSwitchedEnglish")
+          : t("settings.languageSwitchedGeorgian")
+      );
+    } catch {
+      setLocale(locale as Locale);
+      toast.error(t("settings.languageUpdateFailed"));
+    } finally {
+      setIsLanguageSaving(false);
+    }
   };
 
   return (
@@ -106,80 +130,86 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
         <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full hover:bg-muted/50">
           <ChevronLeft className="size-6" />
         </Button>
-        <span className="text-xl font-bold">Settings</span>
+        <span className="text-xl font-bold">{t("settings.title")}</span>
       </div>
 
       <div className="space-y-8">
          {/* Language & Experience */}
-         <SettingsSection title="Language & Experience" icon={<Globe className="size-5" />}>
+         <SettingsSection title={t("settings.languageAndExperience")} icon={<Globe className="size-5" />}>
             <div className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors cursor-pointer" onClick={toggleLanguage}>
                <div className="flex items-center gap-4">
                   <div className="size-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-xl shadow-sm border border-blue-500/20">
                      {locale === 'en' ? '🇺🇸' : '🇬🇪'}
                   </div>
                   <div>
-                     <div className="font-medium">{locale === 'en' ? 'English (US)' : 'Georgian'}</div>
-                     <div className="text-xs text-muted-foreground">{locale === 'en' ? 'Switch to Georgian' : 'გადართე ინგლისურზე'}</div>
+                     <div className="font-medium">
+                       {locale === 'en' ? t("settings.languageCurrentEnglish") : t("settings.languageCurrentGeorgian")}
+                     </div>
+                     <div className="text-xs text-muted-foreground">
+                       {locale === 'en' ? t("settings.switchToGeorgian") : t("settings.switchToEnglish")}
+                     </div>
                   </div>
                </div>
-               <Button variant="ghost" size="sm" className="font-semibold text-primary">Change</Button>
+               <Button variant="ghost" size="sm" className="font-semibold text-primary" disabled={isLanguageSaving}>
+                 {t("common.change")}
+               </Button>
             </div>
          </SettingsSection>
 
          {/* Match Atmosphere */}
-         <SettingsSection title="Match Atmosphere" icon={<Volume2 className="size-5" />}>
+         <SettingsSection title={t("settings.matchAtmosphere")} icon={<Volume2 className="size-5" />}>
             <SettingsToggle
-               label="Match Sounds"
-               description="Crowd reactions, kick effects, and whistles"
+               label={t("settings.matchSounds")}
+               description={t("settings.matchSoundsDescription")}
                checked={soundEnabled}
                onCheckedChange={setSoundEnabled}
-               toastMessage={soundEnabled ? "Match sounds muted 🔇" : "Match sounds enabled 🔊"}
+               toastMessage={soundEnabled ? t("settings.matchSoundsMuted") : t("settings.matchSoundsEnabled")}
             />
             <SettingsToggle
-               label="Stadium Music"
-               description="Background anthems and lobby tracks"
+               label={t("settings.stadiumMusic")}
+               description={t("settings.stadiumMusicDescription")}
                checked={musicEnabled}
                onCheckedChange={setMusicEnabled}
-               toastMessage={musicEnabled ? "Music muted 🔇" : "Stadium music enabled 🎵"}
+               toastMessage={musicEnabled ? t("settings.stadiumMusicMuted") : t("settings.stadiumMusicEnabled")}
             />
              <SettingsToggle
-               label="Haptics"
-               description="Vibrations for goals and wrong answers"
+               label={t("settings.haptics")}
+               description={t("settings.hapticsDescription")}
                checked={hapticsEnabled}
                onCheckedChange={setHapticsEnabled}
             />
          </SettingsSection>
 
          {/* Game Alerts */}
-         <SettingsSection title="Game Alerts" icon={<Bell className="size-5" />}>
+         <SettingsSection title={t("settings.gameAlerts")} icon={<Bell className="size-5" />}>
             <SettingsToggle
-               label="Match Invites"
-               description="Get notified when friends challenge you"
+               label={t("settings.matchInvites")}
+               description={t("settings.matchInvitesDescription")}
                checked={invitesEnabled}
                onCheckedChange={setInvitesEnabled}
             />
             <SettingsToggle
-               label="Daily Quest Reminders"
-               description="Don't miss out on daily XP bonuses"
+               label={t("settings.dailyQuestReminders")}
+               description={t("settings.dailyQuestRemindersDescription")}
                checked={questAlertsEnabled}
                onCheckedChange={setQuestAlertsEnabled}
             />
             <SettingsToggle
-               label="Streak Protection"
-               description="Alerts before you lose your streak 🔥"
+               label={t("settings.streakProtection")}
+               description={t("settings.streakProtectionDescription")}
                checked={streakAlertsEnabled}
                onCheckedChange={setStreakAlertsEnabled}
             />
          </SettingsSection>
 
          {/* Account & Safety */}
-         <SettingsSection title="Account & Safety" icon={<Shield className="size-5" />}>
+         <SettingsSection title={t("settings.accountAndSafety")} icon={<Shield className="size-5" />}>
             <div className="group flex items-center justify-between p-3 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border/40 last:border-0">
                <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                      <User className="size-4" />
                   </div>
-                  <div className="font-medium text-sm">Manage Account</div>
+                  <div className="font-medium text-sm">{t("settings.manageAccount")}</div>
                </div>
                <ChevronLeft className="size-4 rotate-180 text-muted-foreground" />
             </div>
@@ -191,7 +221,9 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                       <div className="p-2 rounded-lg bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                          <RotateCcw className="size-4" />
                       </div>
-                      <div className="font-medium text-sm">Reset Onboarding <span className="text-xs text-muted-foreground">(dev)</span></div>
+                      <div className="font-medium text-sm">
+                        {t("settings.resetOnboarding")} <span className="text-xs text-muted-foreground">({t("settings.dev")})</span>
+                      </div>
                    </div>
                  </div>
                  <div className="group flex items-center justify-between p-3 hover:bg-muted/30 transition-colors cursor-pointer" onClick={handleResetTraining}>
@@ -199,7 +231,9 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                       <div className="p-2 rounded-lg bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                          <RotateCcw className="size-4" />
                       </div>
-                      <div className="font-medium text-sm">Reset Training Match <span className="text-xs text-muted-foreground">(dev)</span></div>
+                      <div className="font-medium text-sm">
+                        {t("settings.resetTrainingMatch")} <span className="text-xs text-muted-foreground">({t("settings.dev")})</span>
+                      </div>
                    </div>
                  </div>
                </>
@@ -213,17 +247,17 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                   onClick={handleLogout}
                >
                   <LogOut className="size-3" />
-                  Log Out
+                  {t("settings.logOut")}
                </Button>
             </div>
          </SettingsSection>
 
          {/* About */}
-         <SettingsSection title="About" icon={<HelpCircle className="size-5" />}>
+         <SettingsSection title={t("settings.about")} icon={<HelpCircle className="size-5" />}>
              <div className="p-4 text-center">
                 <p className="font-bold text-lg">QuizBall</p>
-                <p className="text-sm text-muted-foreground">Version 1.0.0 (Beta)</p>
-                <p className="text-xs text-muted-foreground mt-1">ID: {user?.id?.slice(0, 8) ?? "Guest"}</p>
+                <p className="text-sm text-muted-foreground">{t("settings.version")}</p>
+                <p className="text-xs text-muted-foreground mt-1">ID: {user?.id?.slice(0, 8) ?? t("settings.guest")}</p>
              </div>
          </SettingsSection>
       </div>

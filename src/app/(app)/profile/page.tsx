@@ -12,7 +12,7 @@ import { useMatchStatsSummary, useRecentMatches } from "@/lib/queries/stats.quer
 import { useRankedProfile, useUserRanks } from "@/lib/queries/ranked.queries";
 import { queryKeys } from "@/lib/queries/queryKeys";
 import { useLocale } from "@/contexts/LocaleContext";
-import { LOCALES, type Locale } from "@/data/locales";
+import { LOCALES, type Locale } from "@/lib/i18n/messages";
 import { toProfileRecentMatch } from "@/features/profile/ProfileWeb";
 import { useEffect } from "react";
 import { useMyAchievements } from "@/lib/queries/users.queries";
@@ -34,26 +34,26 @@ export default function ProfilePage() {
   const { data: userRanks } = useUserRanks();
   const { data: achievements = [] } = useMyAchievements();
 
-  const { setLocale } = useLocale();
+  const { setLocale, t } = useLocale();
   const [isUpdating, setIsUpdating] = useState(false);
   const purchaseStatus = searchParams.get("purchase");
 
   useEffect(() => {
     if (!purchaseStatus) return;
     if (purchaseStatus === "success") {
-      toast.success("Purchase completed. Refreshing your unlocks.");
+      toast.success(t("profile.purchaseCompleted"));
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
     }
     if (purchaseStatus === "cancelled") {
-      toast.message("Purchase cancelled.");
+      toast.message(t("profile.purchaseCancelled"));
     }
     // Clear the query param so the toast doesn't re-fire on remount/navigation
     const params = new URLSearchParams(searchParams.toString());
     params.delete("purchase");
     const cleaned = params.toString();
     router.replace(cleaned ? `?${cleaned}` : window.location.pathname, { scroll: false });
-  }, [purchaseStatus, queryClient, router, searchParams]);
+  }, [purchaseStatus, queryClient, router, searchParams, t]);
 
   const handleNameChange = async (name: string) => {
     if (isUpdating) return;
@@ -64,10 +64,10 @@ export default function ProfilePage() {
       if (authUser) {
         setAuthenticated({ ...authUser, nickname: updated.nickname ?? name });
       }
-      toast.success("Nickname updated");
+      toast.success(t("profile.nicknameUpdated"));
     } catch (error) {
-      toast.error("Failed to update nickname", {
-        description: error instanceof Error ? error.message : "Please try again.",
+      toast.error(t("profile.nicknameUpdateFailed"), {
+        description: error instanceof Error ? error.message : t("profile.pleaseTryAgain"),
       });
     } finally {
       setIsUpdating(false);
@@ -83,10 +83,10 @@ export default function ProfilePage() {
       if (authUser) {
         setAuthenticated({ ...authUser, avatar_url: updated.avatar_url ?? avatarUrl });
       }
-      toast.success("Avatar updated");
+      toast.success(t("profile.avatarUpdated"));
     } catch (error) {
-      toast.error("Failed to update avatar", {
-        description: error instanceof Error ? error.message : "Please try again.",
+      toast.error(t("profile.avatarUpdateFailed"), {
+        description: error instanceof Error ? error.message : t("profile.pleaseTryAgain"),
       });
     } finally {
       setIsUpdating(false);
@@ -101,10 +101,10 @@ export default function ProfilePage() {
       if (authUser) {
         setAuthenticated({ ...authUser, favorite_club: updated.favorite_club });
       }
-      toast.success("Favorite club updated");
+      toast.success(t("profile.favoriteClubUpdated"));
     } catch (error) {
-      toast.error("Failed to update favorite club", {
-        description: error instanceof Error ? error.message : "Please try again.",
+      toast.error(t("profile.favoriteClubUpdateFailed"), {
+        description: error instanceof Error ? error.message : t("profile.pleaseTryAgain"),
       });
     } finally {
       setIsUpdating(false);
@@ -114,7 +114,7 @@ export default function ProfilePage() {
   const handleLanguageChange = async (language: string) => {
     if (isUpdating) return;
     if (!LOCALES.some((l) => l.code === language)) {
-      toast.error("Invalid language selected");
+      toast.error(t("profile.invalidLanguage"));
       return;
     }
     setIsUpdating(true);
@@ -124,10 +124,10 @@ export default function ProfilePage() {
         setAuthenticated({ ...authUser, preferred_language: updated.preferred_language });
       }
       setLocale(language as Locale);
-      toast.success("Language updated");
+      toast.success(t("profile.languageUpdated"));
     } catch (error) {
-      toast.error("Failed to update language", {
-        description: error instanceof Error ? error.message : "Please try again.",
+      toast.error(t("profile.languageUpdateFailed"), {
+        description: error instanceof Error ? error.message : t("profile.pleaseTryAgain"),
       });
     } finally {
       setIsUpdating(false);

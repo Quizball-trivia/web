@@ -1,404 +1,245 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from 'motion/react';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ArrowLeft, CheckCircle2, Clock, XCircle } from "lucide-react";
 
-import {
-  Clock,
-  CheckCircle2,
-  XCircle,
-  Coins,
-  X,
-  Flame,
-  ArrowLeft,
-} from "lucide-react";
+import type { TrueFalseSession } from "@/lib/domain/dailyChallenge";
+import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
 import { QuitGameDialog } from "./QuitGameDialog";
 
-interface Question {
-  id: string;
-  question: string;
-  options: string[];
-  correctAnswer: number;
-  category: string;
-  difficulty: "easy" | "medium" | "hard";
-}
-
 interface TrueFalseGameProps {
+  session: TrueFalseSession;
   onBack: () => void;
-  onComplete: (coinsEarned: number) => void;
+  onComplete: (score: number) => void;
 }
 
-// Mock questions for testing
-const MOCK_QUESTIONS: Question[] = [
-  {
-    id: "tf-1",
-    question: "Lionel Messi has won more Ballon d'Or awards than Cristiano Ronaldo.",
-    options: ["True", "False"],
-    correctAnswer: 0,
-    category: "Awards",
-    difficulty: "easy",
-  },
-  {
-    id: "tf-2",
-    question: "The FIFA World Cup has been held every 4 years without interruption since 1930.",
-    options: ["True", "False"],
-    correctAnswer: 1,
-    category: "World Cup",
-    difficulty: "medium",
-  },
-  {
-    id: "tf-3",
-    question: "Manchester United has won more Premier League titles than Liverpool.",
-    options: ["True", "False"],
-    correctAnswer: 0,
-    category: "Premier League",
-    difficulty: "easy",
-  },
-  {
-    id: "tf-4",
-    question: "Pelé scored over 1000 career goals.",
-    options: ["True", "False"],
-    correctAnswer: 0,
-    category: "Legends",
-    difficulty: "medium",
-  },
-  {
-    id: "tf-5",
-    question: "The Champions League was originally called the European Cup.",
-    options: ["True", "False"],
-    correctAnswer: 0,
-    category: "History",
-    difficulty: "easy",
-  },
-  {
-    id: "tf-6",
-    question: "Germany has won more World Cups than Brazil.",
-    options: ["True", "False"],
-    correctAnswer: 1,
-    category: "World Cup",
-    difficulty: "easy",
-  },
-  {
-    id: "tf-7",
-    question: "The offside rule was introduced in the 1990s.",
-    options: ["True", "False"],
-    correctAnswer: 1,
-    category: "Rules",
-    difficulty: "medium",
-  },
-  {
-    id: "tf-8",
-    question: "Barcelona and Real Madrid share the same city.",
-    options: ["True", "False"],
-    correctAnswer: 1,
-    category: "Clubs",
-    difficulty: "easy",
-  },
-  {
-    id: "tf-9",
-    question: "VAR (Video Assistant Referee) was first used at a World Cup in 2018.",
-    options: ["True", "False"],
-    correctAnswer: 0,
-    category: "Technology",
-    difficulty: "medium",
-  },
-  {
-    id: "tf-10",
-    question: "The English Premier League has 22 teams.",
-    options: ["True", "False"],
-    correctAnswer: 1,
-    category: "Premier League",
-    difficulty: "easy",
-  },
-];
-
-export function TrueFalseGame({ onBack, onComplete }: TrueFalseGameProps) {
-  const QUESTION_TIME = 10;
-  const COINS_PER_ANSWER = 10;
-
-  const [questions] = useState<Question[]>(MOCK_QUESTIONS);
+export function TrueFalseGame({
+  session,
+  onBack,
+  onComplete,
+}: TrueFalseGameProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(QUESTION_TIME);
-  const [showResult, setShowResult] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
-  const [totalCoins, setTotalCoins] = useState(0);
-  const [correctStreak, setCorrectStreak] = useState(0);
-  const [currentMultiplier, setCurrentMultiplier] = useState(1);
+  const [timeLeft, setTimeLeft] = useState(session.secondsPerQuestion);
   const [selectedAnswer, setSelectedAnswer] = useState<boolean | null>(null);
+  const [showResult, setShowResult] = useState(false);
+  const [correctCount, setCorrectCount] = useState(0);
   const [showQuitDialog, setShowQuitDialog] = useState(false);
+  const copy = getDailyChallengeCopy();
 
-  const currentQuestion = questions[currentQuestionIndex];
-  const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+  const currentQuestion = session.questions[currentQuestionIndex];
+  const isAnswerCorrect = useMemo(
+    () =>
+      selectedAnswer !== null && currentQuestion
+        ? selectedAnswer === currentQuestion.correctAnswer
+        : false,
+    [currentQuestion, selectedAnswer]
+  );
+  const resultTone = showResult
+    ? selectedAnswer === null
+      ? "timeout"
+      : isAnswerCorrect
+        ? "correct"
+        : "wrong"
+    : null;
 
-  const getMultiplier = (streak: number): number => {
-    if (streak < 3) return 1;
-    return Math.floor(streak / 3) + 1;
-  };
-
-  const handleAnswer = useCallback((answer: boolean | null) => {
-    if (showResult) return;
-
-    setSelectedAnswer(answer);
-
-    const correctAnswer = currentQuestion.correctAnswer === 0;
-    const correct = answer === correctAnswer;
-
-    setIsCorrect(correct);
-    setShowResult(true);
-
-    if (correct) {
-      const newStreak = correctStreak + 1;
-      setCorrectStreak(newStreak);
-
-      const multiplier = getMultiplier(newStreak);
-      setCurrentMultiplier(multiplier);
-
-      const coinsEarned = COINS_PER_ANSWER * multiplier;
-      setTotalCoins((prev) => prev + coinsEarned);
-    } else {
-      setCorrectStreak(0);
-      setCurrentMultiplier(1);
+  const goToNextQuestion = useCallback(() => {
+    if (currentQuestionIndex >= session.questions.length - 1) {
+      onComplete(correctCount);
+      return;
     }
 
-    setTimeout(() => {
-      if (currentQuestionIndex < questions.length - 1) {
-        setTimeLeft(QUESTION_TIME);
-        setShowResult(false);
-        setSelectedAnswer(null);
-        setCurrentQuestionIndex((prev) => prev + 1);
-      } else {
-        const finalCoins = correct
-          ? totalCoins + COINS_PER_ANSWER * getMultiplier(correctStreak + 1)
-          : totalCoins;
-        setTimeout(() => onComplete(finalCoins), 500);
-      }
-    }, 1500);
+    setCurrentQuestionIndex((previous) => previous + 1);
+    setSelectedAnswer(null);
+    setShowResult(false);
+    setTimeLeft(session.secondsPerQuestion);
   }, [
-    showResult,
-    currentQuestion,
-    correctStreak,
+    correctCount,
     currentQuestionIndex,
-    questions.length,
-    totalCoins,
     onComplete,
+    session.questions.length,
+    session.secondsPerQuestion,
   ]);
 
-  useEffect(() => {
-    if (showResult) return;
+  const handleAnswer = useCallback(
+    (answer: boolean | null) => {
+      if (!currentQuestion || showResult) {
+        return;
+      }
 
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          setTimeout(() => handleAnswer(null), 0);
+      setSelectedAnswer(answer);
+      if (answer !== null && answer === currentQuestion.correctAnswer) {
+        setCorrectCount((previous) => previous + 1);
+      }
+      setShowResult(true);
+    },
+    [currentQuestion, showResult]
+  );
+
+  useEffect(() => {
+    if (showResult || !currentQuestion) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setTimeLeft((previous) => {
+        if (previous <= 1) {
+          window.clearInterval(timer);
+          window.setTimeout(() => handleAnswer(null), 0);
           return 0;
         }
-        return prev - 1;
+        return previous - 1;
       });
     }, 1000);
 
-    return () => clearInterval(timer);
-  }, [showResult, handleAnswer]);
+    return () => window.clearInterval(timer);
+  }, [currentQuestion, handleAnswer, showResult]);
+
+  useEffect(() => {
+    if (!showResult) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      goToNextQuestion();
+    }, 1200);
+
+    return () => window.clearTimeout(timeout);
+  }, [goToNextQuestion, showResult]);
+
+  if (!currentQuestion) {
+    return null;
+  }
 
   return (
-    <div className="fixed inset-0 z-40 bg-[#131F24] font-fun flex flex-col">
-      {/* Header */}
-      <div className="bg-[#1B2F36] border-b-[3px] border-[#131F24]">
-        <div className="max-w-2xl mx-auto px-3 md:px-4 py-2.5 md:py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowQuitDialog(true)}
-                className="flex items-center justify-center size-9 rounded-xl hover:bg-[#243B44] active:scale-95 transition-all text-white"
-              >
-                <ArrowLeft className="size-5" />
-              </button>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="size-6 text-[#58CC02]" />
-                <h1 className="text-lg md:text-xl font-black uppercase text-white">True or False</h1>
-              </div>
-            </div>
-
-            {!showResult && (
-              <motion.div
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border-2 font-bold transition-colors ${
-                  timeLeft <= 2
-                    ? "bg-[#FF4B4B]/20 border-[#FF4B4B] text-[#FF4B4B]"
-                    : timeLeft <= 3
-                      ? "bg-[#FF9600]/20 border-[#FF9600] text-[#FF9600]"
-                      : "bg-[#1CB0F6]/20 border-[#1CB0F6] text-[#1CB0F6]"
-                }`}
-                animate={
-                  timeLeft <= 2
-                    ? {
-                        scale: [1, 1.1, 1],
-                      }
-                    : {}
-                }
-                transition={{
-                  duration: 0.5,
-                  repeat: timeLeft <= 2 ? Infinity : 0,
-                }}
-              >
-                <Clock className="size-4" />
-                <span className="text-sm font-mono tabular-nums">
-                  {timeLeft}s
-                </span>
-              </motion.div>
-            )}
-
-            <div className="flex items-center gap-2">
-              <Coins className="size-5 text-[#FFD700]" />
-              <div>
-                <div className="text-xs text-[#56707A]">Coins</div>
-                <div className="text-lg font-black text-white">{totalCoins}</div>
-              </div>
-            </div>
-
-            <div className="text-sm text-[#56707A] font-bold">
-              {currentQuestionIndex + 1}/10
-            </div>
+    <div className="fixed inset-0 z-40 flex flex-col bg-[#101820] font-poppins text-white">
+      <div className="border-b border-white/10 bg-black/15">
+        <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-3">
+          <button
+            onClick={() => setShowQuitDialog(true)}
+            className="flex size-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 transition hover:bg-white/10"
+          >
+            <ArrowLeft className="size-5" />
+          </button>
+          <div className="text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/45">
+              {session.title}
+            </p>
+            <p className="text-sm font-semibold text-white/80">
+              {currentQuestionIndex + 1} / {session.questionCount}
+            </p>
           </div>
-
-          {correctStreak >= 3 && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-center justify-center gap-2 bg-[#FF9600]/15 border border-[#FF9600]/30 rounded-xl p-2 mt-3"
-            >
-              <Flame className="size-4 text-[#FF9600]" />
-              <span className="text-sm text-white font-bold">
-                {currentMultiplier}x Streak! {correctStreak} correct in a row
-              </span>
-              <Flame className="size-4 text-[#FF9600]" />
-            </motion.div>
-          )}
-
-          <div className="h-2 bg-white/10 rounded-full overflow-hidden mt-3">
-            <div
-              className="h-full bg-[#58CC02] rounded-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
+          <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-center">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <Clock className="size-4 text-[#F8D34A]" />
+              <span>{timeLeft}s</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="min-h-full p-3 md:p-4 lg:flex lg:flex-col lg:justify-center">
-        <div className="max-w-2xl mx-auto space-y-4 w-full">
-        <div className="bg-[#1B2F36] rounded-xl border-b-4 border-[#0F1F26] p-4 md:p-5 flex flex-col">
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-[#243B44] text-[#1CB0F6]">
-                Question {currentQuestionIndex + 1}
-              </span>
-              <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-[#243B44] text-white">
-                {currentQuestion.category}
-              </span>
-            </div>
-            <h2 className="text-lg md:text-xl font-bold leading-relaxed text-center text-white">
-              {currentQuestion.question}
-            </h2>
+      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 py-6">
+        <div className="mb-6 h-2 overflow-hidden rounded-full bg-white/10">
+          <div
+            className="h-full rounded-full bg-[#58CC02] transition-all"
+            style={{ width: `${((currentQuestionIndex + 1) / session.questionCount) * 100}%` }}
+          />
+        </div>
+
+        <div
+          className={[
+            "rounded-[28px] border bg-[#17222A]/90 p-6 shadow-[0_24px_60px_rgba(0,0,0,0.28)] transition",
+            resultTone === "correct"
+              ? "border-[#58CC02]/70 shadow-[0_24px_70px_rgba(88,204,2,0.18)]"
+              : resultTone === "wrong"
+                ? "border-[#FF6B6B]/70 shadow-[0_24px_70px_rgba(255,107,107,0.16)]"
+                : resultTone === "timeout"
+                  ? "border-[#F8D34A]/60"
+                  : "border-white/10",
+          ].join(" ")}
+        >
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-white/55">
+              {currentQuestion.category}
+            </span>
+            <span className="text-sm font-semibold capitalize text-white/55">
+              {currentQuestion.difficulty}
+            </span>
           </div>
 
-          <AnimatePresence mode="wait">
-            {showResult && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className={`mb-3 p-3 rounded-xl border-b-4 ${
-                  isCorrect
-                    ? "bg-[#58CC02]/15 border-b-[#46A302]"
-                    : "bg-[#FF4B4B]/10 border-b-[#CC3C3C]"
-                }`}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  {isCorrect ? (
-                    <>
-                      <CheckCircle2 className="size-5 text-[#58CC02]" />
-                      <div className="text-center">
-                        <div className="text-sm font-bold text-[#58CC02]">
-                          Correct!
-                        </div>
-                        <div className="text-xs text-[#56707A]">
-                          +{COINS_PER_ANSWER * currentMultiplier} coins
-                          {currentMultiplier > 1 &&
-                            ` (${currentMultiplier}x)`}
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <XCircle className="size-5 text-[#FF4B4B]" />
-                      <div className="text-center">
-                        <div className="text-sm font-bold text-[#FF4B4B]">
-                          {selectedAnswer === null
-                            ? "Time's Up!"
-                            : "Incorrect"}
-                        </div>
-                        <div className="text-xs text-[#56707A]">
-                          Streak reset
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <h1 className="mb-8 text-2xl font-semibold leading-tight md:text-3xl">
+            {currentQuestion.prompt}
+          </h1>
 
-          <div className="grid grid-cols-2 gap-4 flex-1">
-            <button
-              onClick={() => handleAnswer(true)}
-              disabled={showResult}
-              className={`h-28 rounded-xl text-xl font-black uppercase text-white transition-all flex items-center justify-center ${
-                showResult
-                  ? selectedAnswer === true
-                    ? isCorrect
-                      ? "bg-[#58CC02] border-b-4 border-b-[#46A302]"
-                      : "bg-[#FF4B4B] border-b-4 border-b-[#CC3C3C]"
-                    : currentQuestion.correctAnswer === 0
-                      ? "bg-[#58CC02]/50 border-b-4 border-b-[#46A302]/50"
-                      : "bg-[#243B44] border-b-4 border-b-[#1B2F36]"
-                  : "bg-[#58CC02] border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px]"
-              } disabled:opacity-60`}
+          {showResult ? (
+            <div
+              className={[
+                "mb-5 flex items-center justify-between gap-4 rounded-2xl border px-4 py-3 text-sm font-semibold",
+                resultTone === "correct"
+                  ? "border-[#58CC02]/60 bg-[#58CC02]/15 text-[#8BF15B]"
+                  : resultTone === "wrong"
+                    ? "border-[#FF6B6B]/60 bg-[#FF6B6B]/15 text-[#FF8A8A]"
+                    : "border-[#F8D34A]/50 bg-[#F8D34A]/12 text-[#F8D34A]",
+              ].join(" ")}
             >
-              <div className="flex flex-col items-center gap-2">
-                <CheckCircle2 className="size-10" />
-                <span>TRUE</span>
-              </div>
-            </button>
-
-            <button
-              onClick={() => handleAnswer(false)}
-              disabled={showResult}
-              className={`h-28 rounded-xl text-xl font-black uppercase text-white transition-all flex items-center justify-center ${
-                showResult
-                  ? selectedAnswer === false
-                    ? isCorrect
-                      ? "bg-[#58CC02] border-b-4 border-b-[#46A302]"
-                      : "bg-[#FF4B4B] border-b-4 border-b-[#CC3C3C]"
-                    : currentQuestion.correctAnswer === 1
-                      ? "bg-[#58CC02]/50 border-b-4 border-b-[#46A302]/50"
-                      : "bg-[#243B44] border-b-4 border-b-[#1B2F36]"
-                  : "bg-[#FF4B4B] border-b-4 border-b-[#CC3C3C] active:border-b-2 active:translate-y-[2px]"
-              } disabled:opacity-60`}
-            >
-              <div className="flex flex-col items-center gap-2">
-                <X className="size-10" />
-                <span>FALSE</span>
-              </div>
-            </button>
-          </div>
-
-          {!showResult && correctStreak < 3 && (
-            <div className="text-center text-xs text-[#56707A] mt-3">
-              Get 3 correct in a row for 2x coins!
+              <span>
+                {resultTone === "correct"
+                  ? "Correct"
+                  : resultTone === "wrong"
+                    ? "Wrong"
+                    : "Time's up"}
+              </span>
+              <span className="text-white/70">
+                Answer: {currentQuestion.correctAnswer ? currentQuestion.trueLabel : currentQuestion.falseLabel}
+              </span>
             </div>
-          )}
+          ) : null}
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {[
+              { value: true, label: currentQuestion.trueLabel },
+              { value: false, label: currentQuestion.falseLabel },
+            ].map((option) => {
+              const isSelected = selectedAnswer === option.value;
+              const shouldShowCorrect = showResult && option.value === currentQuestion.correctAnswer;
+              const shouldShowWrong = showResult && isSelected && option.value !== currentQuestion.correctAnswer;
+
+              return (
+                <button
+                  key={String(option.value)}
+                  type="button"
+                  disabled={showResult}
+                  onClick={() => handleAnswer(option.value)}
+                  className={[
+                    "rounded-[24px] border px-5 py-6 text-left text-xl font-semibold transition",
+                    shouldShowCorrect
+                      ? "border-[#58CC02] bg-[#58CC02] text-black shadow-[0_14px_35px_rgba(88,204,2,0.28)]"
+                      : shouldShowWrong
+                        ? "border-[#FF6B6B] bg-[#FF6B6B] text-black shadow-[0_14px_35px_rgba(255,107,107,0.22)]"
+                        : isSelected
+                          ? "border-[#1CB0F6] bg-[#1CB0F6]/15 text-white"
+                          : showResult
+                            ? "border-white/10 bg-white/[0.02] text-white/35"
+                            : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]",
+                  ].join(" ")}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <span>{option.label}</span>
+                    {showResult && shouldShowCorrect ? (
+                      <CheckCircle2 className="size-7 text-black" />
+                    ) : null}
+                    {showResult && shouldShowWrong ? (
+                      <XCircle className="size-7 text-black" />
+                    ) : null}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
-        </div>
+
+        <div className="mt-5 flex items-center justify-between text-sm text-white/55">
+          <span>{copy.correctAnswers}</span>
+          <span className="font-semibold text-white">{correctCount}</span>
         </div>
       </div>
 

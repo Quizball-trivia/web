@@ -26,12 +26,6 @@ export const DAILY_CHALLENGE_VISUALS: Record<DailyChallengeType, ChallengeVisual
     iconColorClass: "text-yellow-400",
     iconBgColor: "bg-yellow-500/20",
   },
-  footballJeopardy: {
-    icon: "\u{1F9E0}",
-    iconToken: "brain",
-    iconColorClass: "text-blue-400",
-    iconBgColor: "bg-blue-500/20",
-  },
   trueFalse: {
     icon: "\u{2705}",
     iconToken: "checkCircle",
@@ -55,6 +49,30 @@ export const DAILY_CHALLENGE_VISUALS: Record<DailyChallengeType, ChallengeVisual
     iconToken: "list",
     iconColorClass: "text-indigo-400",
     iconBgColor: "bg-indigo-500/20",
+  },
+  imposter: {
+    icon: "\u{1F465}",
+    iconToken: "users",
+    iconColorClass: "text-cyan-400",
+    iconBgColor: "bg-cyan-500/20",
+  },
+  careerPath: {
+    icon: "\u{1F6E3}\u{FE0F}",
+    iconToken: "route",
+    iconColorClass: "text-sky-400",
+    iconBgColor: "bg-sky-500/20",
+  },
+  highLow: {
+    icon: "\u{1F4C8}",
+    iconToken: "trendingUp",
+    iconColorClass: "text-amber-400",
+    iconBgColor: "bg-amber-500/20",
+  },
+  footballLogic: {
+    icon: "\u{1F5BC}\u{FE0F}",
+    iconToken: "image",
+    iconColorClass: "text-pink-400",
+    iconBgColor: "bg-pink-500/20",
   },
 };
 

@@ -7,9 +7,13 @@ import type {
   ResetDailyChallengeResult,
   DailyChallengeType,
 } from "@/lib/domain/dailyChallenge";
+import { getDailyChallengeLocale } from "@/lib/i18n/dailyChallenge";
+import { type Locale } from "@/lib/i18n/messages";
 
-export async function getDailyChallenges(): Promise<ListDailyChallengesResponse> {
-  return apiFetch("get", "/api/v1/daily-challenges");
+export async function getDailyChallenges(locale: Locale = getDailyChallengeLocale()): Promise<ListDailyChallengesResponse> {
+  return apiFetch("get", "/api/v1/daily-challenges", {
+    query: { locale },
+  });
 }
 
 export async function getAdminDailyChallenges(): Promise<ListAdminDailyChallengesResponse> {
@@ -17,10 +21,12 @@ export async function getAdminDailyChallenges(): Promise<ListAdminDailyChallenge
 }
 
 export async function createDailyChallengeSession(
-  challengeType: DailyChallengeType
+  challengeType: DailyChallengeType,
+  locale: Locale = getDailyChallengeLocale()
 ) {
   return apiFetch("post", "/api/v1/daily-challenges/{challengeType}/session", {
     params: { challengeType },
+    query: { locale },
   });
 }
 

@@ -1,18 +1,16 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
-  Locale,
-  getTranslation,
   getCategoryTranslation,
   getQuestionTranslation,
   getCountdownTranslation,
   getClueTranslation,
-  translations,
 } from '../data/locales';
+import { useAuthStore } from '@/stores/auth.store';
+import { type Locale, type MessageKey, isSupportedLocale, normalizeLocale, translate } from '@/lib/i18n/messages';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 
-type TranslationKey = keyof typeof translations.en;
 type CategoryTranslation = ReturnType<typeof getCategoryTranslation>;
 type QuestionTranslation = ReturnType<typeof getQuestionTranslation>;
 type CountdownTranslation = ReturnType<typeof getCountdownTranslation>;
@@ -21,7 +19,7 @@ type ClueTranslation = ReturnType<typeof getClueTranslation>;
 interface LocaleContextType {
   locale: Locale;
   setLocale: (locale: Locale) => void;
-  t: (key: TranslationKey) => string;
+  t: (key: MessageKey, params?: Record<string, string | number>) => string;
   tCategory: (categoryId: string) => CategoryTranslation;
   tQuestion: (questionId: string) => QuestionTranslation;
   tCountdown: (countdownId: string) => CountdownTranslation;
@@ -31,19 +29,32 @@ interface LocaleContextType {
 const LocaleContext = createContext<LocaleContextType | undefined>(undefined);
 
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
+  const preferredLanguage = useAuthStore((state) => state.user?.preferred_language);
+  const lastSyncedPreferredLanguage = useRef<string | null | undefined>(undefined);
   const [locale, setLocaleState] = useState<Locale>(() => {
-    return storage.get(STORAGE_KEYS.LOCALE, 'en') as Locale;
+    return normalizeLocale(storage.get(STORAGE_KEYS.LOCALE, 'en'));
   });
 
   useEffect(() => {
     storage.set(STORAGE_KEYS.LOCALE, locale);
   }, [locale]);
 
+  useEffect(() => {
+    if (
+      preferredLanguage !== lastSyncedPreferredLanguage.current &&
+      isSupportedLocale(preferredLanguage) &&
+      preferredLanguage !== locale
+    ) {
+      setLocaleState(preferredLanguage);
+    }
+    lastSyncedPreferredLanguage.current = preferredLanguage;
+  }, [locale, preferredLanguage]);
+
   const setLocale = useCallback((newLocale: Locale) => {
     setLocaleState(newLocale);
   }, []);
 
-  const t = useCallback((key: TranslationKey) => getTranslation(locale, key), [locale]);
+  const t = useCallback((key: MessageKey, params?: Record<string, string | number>) => translate(locale, key, params), [locale]);
   const tCategory = useCallback((categoryId: string) => getCategoryTranslation(locale, categoryId), [locale]);
   const tQuestion = useCallback((questionId: string) => getQuestionTranslation(locale, questionId), [locale]);
   const tCountdown = useCallback((countdownId: string) => getCountdownTranslation(locale, countdownId), [locale]);

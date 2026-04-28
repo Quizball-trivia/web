@@ -2,14 +2,14 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Check, Globe } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
-import { LOCALES } from '../data/locales';
+import { LOCALES } from '@/lib/i18n/messages';
 
 interface LanguageSelectorProps {
   compact?: boolean;
 }
 
 export function LanguageSelector({ compact = false }: LanguageSelectorProps) {
-  const { locale, setLocale } = useLocale();
+  const { locale, setLocale, t } = useLocale();
 
   if (compact) {
     return (
@@ -36,7 +36,7 @@ export function LanguageSelector({ compact = false }: LanguageSelectorProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Globe className="size-5 text-primary" />
-          {locale === 'en' ? 'Language / ენა' : 'ენა / Language'}
+          {t("languageSelector.title")}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -69,10 +69,7 @@ export function LanguageSelector({ compact = false }: LanguageSelectorProps) {
         
         <div className="mt-4 p-3 bg-secondary/50 rounded-lg">
           <p className="text-xs text-muted-foreground text-center">
-            {locale === 'en' 
-              ? 'Questions and interface will be displayed in the selected language'
-              : 'კითხვები და ინტერფეისი გამოჩნდება არჩეულ ენაზე'
-            }
+            {t("languageSelector.helper")}
           </p>
         </div>
       </CardContent>

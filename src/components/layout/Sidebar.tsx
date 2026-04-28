@@ -1,19 +1,22 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AppLogo } from "@/components/AppLogo";
 import { cn } from "@/lib/utils";
-import { colors } from "@/lib/colors";
+import { useLocale } from "@/contexts/LocaleContext";
+import type { MessageKey } from "@/lib/i18n/messages";
 
 const NAV_ITEMS = [
-  { path: "/play", label: "Play" },
-  { path: "/leaderboard", label: "Leaderboard" },
-  { path: "/social", label: "Social" },
-  { path: "/play/friend?tab=browse", label: "Lobbies", exact: true },
-  { path: "/events", label: "Events" },
-  { path: "/store", label: "Store" },
-  { path: "/profile", label: "Profile" },
-  { path: "/settings", label: "Settings" },
+  { path: "/play", labelKey: "navigation.play" },
+  { path: "/leaderboard", labelKey: "navigation.leaderboard" },
+  { path: "/social", labelKey: "navigation.social" },
+  { path: "/play/friend?tab=browse", labelKey: "navigation.lobbies", exact: true },
+  { path: "/events", labelKey: "navigation.events" },
+  { path: "/store", labelKey: "navigation.store" },
+  { path: "/profile", labelKey: "navigation.profile" },
+  { path: "/settings", labelKey: "navigation.settings" },
 ] as const;
 
 interface SidebarProps {
@@ -38,6 +41,8 @@ function isPathActive(currentPath: string, path: string, exact?: boolean) {
 }
 
 export function Sidebar({ currentPath, socialBadgeCount = 0, className }: SidebarProps) {
+  const { t } = useLocale();
+
   return (
     <aside
       className={cn("sticky top-0 z-20 flex h-screen w-64 shrink-0 flex-col self-start transition-all duration-300", className)}
@@ -69,7 +74,7 @@ export function Sidebar({ currentPath, socialBadgeCount = 0, className }: Sideba
                 )}
                 style={isActive ? { backgroundColor: "#38B60E" } : undefined}
               >
-                <span className="truncate">{item.label}</span>
+                <span className="truncate">{t(item.labelKey as MessageKey)}</span>
                 {showSocialBadge && (
                   <span className="absolute -right-6 top-1/2 min-w-5 -translate-y-1/2 rounded-full bg-red-500 px-1.5 py-0.5 text-center text-[10px] font-black text-white">
                     {socialBadgeCount}

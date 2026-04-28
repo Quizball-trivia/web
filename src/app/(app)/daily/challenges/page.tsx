@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
-import { RotateCcw } from "lucide-react";
+import { CheckCircle2, RotateCcw } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { useDailyChallenges, useResetDailyChallengeDev } from "@/lib/queries/dailyChallenges.queries";
@@ -37,6 +37,7 @@ function ChallengeCard({
   const queryClient = useQueryClient();
   const resetMutation = useResetDailyChallengeDev(challenge.challengeType);
   const disabled = !challenge.availableToday;
+  const isCompleted = challenge.completedToday;
 
   const handleReset = async (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -62,19 +63,32 @@ function ChallengeCard({
         type="button"
         disabled={disabled}
         onClick={onClick}
-        className="w-full rounded-[10px] bg-[#FFE500] p-5 md:p-6 text-center transition-all hover:brightness-105 active:translate-y-[2px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFE500] disabled:cursor-default disabled:brightness-95"
+        className={`relative min-h-[212px] w-full overflow-hidden rounded-[10px] p-5 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFE500] md:p-6 ${
+          isCompleted
+            ? "border-2 border-[#58CC02] bg-[#164314] text-white shadow-[0_0_0_4px_rgba(88,204,2,0.16)] disabled:cursor-default"
+            : "bg-[#FFE500] text-black hover:brightness-105 active:translate-y-[2px]"
+        }`}
       >
-        <h3 className="font-poppins text-xl md:text-2xl uppercase leading-none text-black text-center">
+        {isCompleted ? (
+          <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-[#58CC02] px-3 py-1 text-[11px] font-black uppercase tracking-wide text-white">
+            <CheckCircle2 className="size-3.5" />
+            Completed
+          </div>
+        ) : null}
+
+        <h3 className={`font-poppins text-center text-xl uppercase leading-none md:text-2xl ${isCompleted ? "mt-8 text-white" : "text-black"}`}>
           {challenge.title}
         </h3>
-        <p className="mt-3 text-sm md:text-base font-bold text-black/70 leading-snug text-center">
+        <p className={`mt-3 text-center text-sm font-bold leading-snug md:text-base ${isCompleted ? "text-white/75" : "text-black/70"}`}>
           {challenge.availableToday
             ? challenge.description
             : "Completed today. Come back after the UTC reset."}
         </p>
         <div className="mt-5 flex justify-center">
-          <span className="font-poppins inline-flex h-11 min-w-[140px] items-center justify-center rounded-xl bg-black px-8 text-lg uppercase tracking-wide text-white">
-            {disabled ? "Done" : "Play"}
+          <span className={`font-poppins inline-flex h-11 min-w-[140px] items-center justify-center rounded-xl px-8 text-lg uppercase tracking-wide ${
+            isCompleted ? "bg-white text-[#164314]" : "bg-black text-white"
+          }`}>
+            {isCompleted ? "Done" : "Play"}
           </span>
         </div>
       </button>

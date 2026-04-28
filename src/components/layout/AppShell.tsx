@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { usePlayer } from "@/contexts/PlayerContext";
+import { useLocale } from "@/contexts/LocaleContext";
 import { useAuthStore } from "@/stores/auth.store";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
@@ -43,13 +44,14 @@ import {
 import { cn } from "@/lib/utils";
 import { getSocket } from "@/lib/realtime/socket-client";
 import { Medal, Gem, User, Gamepad2, Users, UserRound } from "lucide-react";
+import type { MessageKey } from "@/lib/i18n/messages";
 
 const MOBILE_NAV_ITEMS = [
-  { path: "/", label: "Home", icon: Home },
-  { path: "/leaderboard", label: "Leaderboard", icon: Medal },
-  { path: "/social", label: "Social", icon: UserRound },
-  { path: "/store", label: "Store", icon: Gem },
-  { path: "/profile", label: "Profile", icon: User },
+  { path: "/", labelKey: "navigation.home", icon: Home },
+  { path: "/leaderboard", labelKey: "navigation.leaderboard", icon: Medal },
+  { path: "/social", labelKey: "navigation.social", icon: UserRound },
+  { path: "/store", labelKey: "navigation.store", icon: Gem },
+  { path: "/profile", labelKey: "navigation.profile", icon: User },
 ] as const;
 
 const HIDE_NAV_PATHS = ["/game", "/onboarding"];
@@ -100,6 +102,7 @@ function readRankedGeoHintDebug(): RankedGeoHintDebug | null {
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { t } = useLocale();
   const { player: playerStats } = usePlayer();
   const { data: storeWallet } = useStoreWallet();
   const { data: incomingFriendRequestCount = 0 } = useIncomingFriendRequestCount();
@@ -352,18 +355,21 @@ export function AppShell({ children }: AppShellProps) {
                         {playerStats.username}
                       </p>
                       <p className="text-xs leading-none text-muted-foreground">
-                        Level {playerStats.level} · {playerStats.rankPoints} RP
+                        {t("accountMenu.levelAndRp", {
+                          level: playerStats.level,
+                          rp: playerStats.rankPoints ?? 0,
+                        })}
                       </p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => router.push("/profile")}>
                     <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
+                    <span>{t("navigation.profile")}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => router.push("/settings")}>
                     <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
+                    <span>{t("navigation.settings")}</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -371,7 +377,7 @@ export function AppShell({ children }: AppShellProps) {
                     className="text-red-500 focus:text-red-500 dark:focus:text-red-400"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
+                    <span>{t("accountMenu.logOut")}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -657,7 +663,7 @@ export function AppShell({ children }: AppShellProps) {
                     )}
                   >
                     <item.icon className="size-5" />
-                    <span className="text-xs">{item.label}</span>
+                    <span className="text-xs">{t(item.labelKey as MessageKey)}</span>
                     {showSocialBadge && (
                       <span className="absolute right-1 top-1 min-w-4 rounded-full bg-red-500 px-1 py-0.5 text-center text-[9px] font-black text-white">
                         {socialBadgeCount}
@@ -675,20 +681,20 @@ export function AppShell({ children }: AppShellProps) {
       <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
         <AlertDialogContent className="border-border bg-[var(--overlay-bg)]">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-foreground">Log out?</AlertDialogTitle>
+            <AlertDialogTitle className="text-foreground">{t("accountMenu.logOutQuestion")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to log out of your account?
+              {t("accountMenu.logOutDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="border-border bg-card text-foreground hover:bg-muted">
-              Cancel
+              {t("common.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleLogout}
               className="border-destructive/25 bg-destructive/15 text-red-400 hover:bg-destructive/25"
             >
-              Log out
+              {t("accountMenu.logOut")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

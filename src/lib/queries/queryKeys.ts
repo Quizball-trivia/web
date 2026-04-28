@@ -67,7 +67,7 @@ export const queryKeys = {
   },
   dailyChallenges: {
     all: ["dailyChallenges"] as const,
-    list: () => [...queryKeys.dailyChallenges.all, "list"] as const,
+    list: (locale?: string) => [...queryKeys.dailyChallenges.all, "list", locale ?? "en"] as const,
     session: (challengeType: string) =>
       [...queryKeys.dailyChallenges.all, "session", challengeType] as const,
   },

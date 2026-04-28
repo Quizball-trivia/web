@@ -15,10 +15,13 @@ import {
   CheckCircle2,
   Timer,
   DollarSign,
-  Brain,
   Lightbulb,
   ListOrdered,
   CircleCheckBig,
+  Users,
+  Route,
+  TrendingUp,
+  ImageIcon,
   type LucideIcon,
 } from 'lucide-react';
 import { useDailyChallenges } from '@/lib/queries/dailyChallenges.queries';
@@ -32,11 +35,14 @@ import {
 // Map icon tokens to Lucide components
 const ICON_MAP: Record<IconToken, LucideIcon> = {
   dollarSign: DollarSign,
-  brain: Brain,
   checkCircle: CircleCheckBig,
   lightbulb: Lightbulb,
   timer: Timer,
   list: ListOrdered,
+  users: Users,
+  route: Route,
+  trendingUp: TrendingUp,
+  image: ImageIcon,
 };
 
 interface DailyChallengesDrawerProps {

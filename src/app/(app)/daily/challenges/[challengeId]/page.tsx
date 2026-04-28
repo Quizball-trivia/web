@@ -4,20 +4,56 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { MoneyDropGame } from "@/features/daily/MoneyDropGame";
-import { FootballJeopardyGame } from "@/features/daily/FootballJeopardyGame";
 import { ClueGame } from "@/features/daily/ClueGame";
 import { CountdownGame } from "@/features/daily/CountdownGame";
 import { PutInOrderGame } from "@/features/daily/PutInOrderGame";
+import { TrueFalseGame } from "@/features/daily/TrueFalseGame";
+import { ImposterGame } from "@/features/daily/ImposterGame";
+import { CareerPathGame } from "@/features/daily/CareerPathGame";
+import { HighLowGame } from "@/features/daily/HighLowGame";
+import { FootballLogicGame } from "@/features/daily/FootballLogicGame";
 import { QuitGameDialog } from "@/features/daily/QuitGameDialog";
 import { DAILY_CHALLENGE_VISUALS } from "@/lib/domain/dailyChallengeVisuals";
-import { useCompleteDailyChallenge, useDailyChallengeSession } from "@/lib/queries/dailyChallenges.queries";
+import { useCompleteDailyChallenge } from "@/lib/queries/dailyChallenges.queries";
 import { queryKeys } from "@/lib/queries/queryKeys";
 import { usePlayer } from "@/contexts/PlayerContext";
-import type { DailyChallengeType } from "@/lib/domain/dailyChallenge";
+import type { DailyChallengeSession, DailyChallengeType } from "@/lib/domain/dailyChallenge";
 import { trackDailyChallengeCompleted } from "@/lib/analytics/game-events";
+import { ApiError } from "@/lib/api/api";
+import { createDailyChallengeSession } from "@/lib/repositories/dailyChallenges.repo";
+import { toDailyChallengeSession } from "@/lib/mappers/dailyChallenge.mapper";
+import { useLocale } from "@/contexts/LocaleContext";
 
 function isDailyChallengeType(value: string): value is DailyChallengeType {
   return value in DAILY_CHALLENGE_VISUALS;
+}
+
+function getSessionErrorMessage(error: unknown): string {
+  if (error instanceof ApiError && error.data && typeof error.data === "object") {
+    const data = error.data as {
+      code?: string;
+      message?: string;
+      details?: {
+        needed?: number;
+        available?: number;
+      };
+    };
+
+    if (data.code === "DAILY_CHALLENGE_CONTENT_UNAVAILABLE") {
+      const needed = data.details?.needed;
+      const available = data.details?.available;
+      if (typeof needed === "number" && typeof available === "number") {
+        return `This challenge needs ${needed} published questions, but only ${available} are available. Lower the question count in CMS or publish more questions.`;
+      }
+      return "This challenge does not have enough published questions yet. Update the CMS config or publish more questions.";
+    }
+
+    if (data.message) {
+      return data.message;
+    }
+  }
+
+  return "Could not start this daily challenge. Check the CMS setup and try again.";
 }
 
 export default function ChallengePage() {
@@ -25,14 +61,17 @@ export default function ChallengePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { addXP } = usePlayer();
+  const { locale } = useLocale();
   const [showBrowserBackDialog, setShowBrowserBackDialog] = useState(false);
+  const [session, setSession] = useState<DailyChallengeSession | undefined>();
+  const [sessionError, setSessionError] = useState<unknown>(null);
+  const [isSessionLoading, setIsSessionLoading] = useState(false);
+  const [sessionAttempt, setSessionAttempt] = useState(0);
   const guardPushed = useRef(false);
   const completeOnceRef = useRef(false);
-  const sessionRequestedForRef = useRef<string | null>(null);
 
   const challengeId = String(params.challengeId ?? "");
   const challengeType = isDailyChallengeType(challengeId) ? challengeId : undefined;
-  const sessionMutation = useDailyChallengeSession(challengeType);
   const completeMutation = useCompleteDailyChallenge(challengeType ?? "moneyDrop");
 
   const invalidateAfterComplete = useCallback(async () => {
@@ -66,24 +105,47 @@ export default function ChallengePage() {
     [addXP, challengeType, completeMutation, invalidateAfterComplete, router]
   );
 
-  const session = challengeType && sessionMutation.data?.challengeType === challengeType
-    ? sessionMutation.data
-    : undefined;
-  const requestSession = sessionMutation.mutate;
-
   useEffect(() => {
-    if (!challengeType || sessionRequestedForRef.current === challengeType) {
+    if (!challengeType) {
       return;
     }
-    sessionRequestedForRef.current = challengeType;
-    requestSession();
-  }, [challengeType, requestSession]);
+
+    let cancelled = false;
+    setIsSessionLoading(true);
+    setSessionError(null);
+    setSession(undefined);
+
+    createDailyChallengeSession(challengeType, locale)
+      .then(toDailyChallengeSession)
+      .then((nextSession) => {
+        if (cancelled) return;
+        setSession(nextSession);
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setSessionError(error);
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setIsSessionLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [challengeType, locale, sessionAttempt]);
+
+  const sessionTypeMismatch = Boolean(
+    challengeType
+    && session
+    && session.challengeType !== challengeType
+  );
 
   useEffect(() => {
-    if (!challengeType || sessionMutation.isError) {
+    if (!challengeType) {
       router.replace("/daily/challenges");
     }
-  }, [challengeType, router, sessionMutation.isError]);
+  }, [challengeType, router]);
 
   const gameContent = useMemo(() => {
     if (!session) return null;
@@ -91,14 +153,22 @@ export default function ChallengePage() {
     switch (session.challengeType) {
       case "moneyDrop":
         return <MoneyDropGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
-      case "footballJeopardy":
-        return <FootballJeopardyGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
+      case "trueFalse":
+        return <TrueFalseGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
       case "clues":
         return <ClueGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
       case "countdown":
         return <CountdownGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
       case "putInOrder":
         return <PutInOrderGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
+      case "imposter":
+        return <ImposterGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
+      case "careerPath":
+        return <CareerPathGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
+      case "highLow":
+        return <HighLowGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
+      case "footballLogic":
+        return <FootballLogicGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
       default:
         return null;
     }
@@ -121,11 +191,44 @@ export default function ChallengePage() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  if (!challengeType || sessionMutation.isError) {
+  if (!challengeType) {
     return null;
   }
 
-  if (sessionMutation.isPending || !session) {
+  if (sessionError || sessionTypeMismatch) {
+    return (
+      <div className="fixed inset-0 z-40 flex items-center justify-center bg-[#131F24] px-4 font-fun text-white">
+        <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#1B2F36] p-6 text-center shadow-2xl">
+          <p className="text-lg font-black uppercase">Challenge unavailable</p>
+          <p className="mt-3 text-sm leading-6 text-[#9EB3BC]">
+            {sessionTypeMismatch
+              ? `Received a ${session?.challengeType} session while opening ${challengeType}. Refresh and try again.`
+              : getSessionErrorMessage(sessionError)}
+          </p>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => {
+                setSessionAttempt((attempt) => attempt + 1);
+              }}
+              className="flex-1 rounded-xl bg-[#38B60E] px-4 py-3 text-sm font-black uppercase text-white"
+            >
+              Try again
+            </button>
+            <button
+              type="button"
+              onClick={handleBack}
+              className="flex-1 rounded-xl border border-white/15 px-4 py-3 text-sm font-black uppercase text-white/80"
+            >
+              Back
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isSessionLoading || !session) {
     return (
       <div className="fixed inset-0 z-40 bg-[#131F24] font-fun flex items-center justify-center">
         <div className="bg-[#1B2F36] rounded-xl border-b-4 border-[#0F1F26] p-6 text-center">

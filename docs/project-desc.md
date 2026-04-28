@@ -74,7 +74,8 @@ Each challenge resets 24 hours after completion with coin rewards.
 ### 2. Gamification & Progression
 
 #### Tickets System
-- 10 tickets per day (resets every 24 hours)
+- Up to 10 tickets total
+- 1 ticket refills every hour while below 10
 - 1 ticket required for ranked QuizBall or Buzzer Battle
 - Daily challenges and career mode don't require tickets
 - Purchase additional tickets via in-app purchases
@@ -646,4 +647,3 @@ Each challenge resets 24 hours after completion with coin rewards.
 - Official league partnerships (Premier League QuizBall, UEFA QuizBall)
 - Club-specific versions (Real Madrid Quiz, Liverpool Quiz)
 - International versions (World Cup QuizBall)
-

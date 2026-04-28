@@ -25,9 +25,9 @@ export type MoneyDropSession = Extract<
   { challengeType: "moneyDrop" }
 >;
 
-export type FootballJeopardySession = Extract<
+export type TrueFalseSession = Extract<
   DailyChallengeSession,
-  { challengeType: "footballJeopardy" }
+  { challengeType: "trueFalse" }
 >;
 
 export type CountdownSession = Extract<
@@ -38,6 +38,31 @@ export type CountdownSession = Extract<
 export type CluesSession = Extract<
   DailyChallengeSession,
   { challengeType: "clues" }
+>;
+
+export type PutInOrderTypedSession = Extract<
+  DailyChallengeSession,
+  { challengeType: "putInOrder" }
+>;
+
+export type ImposterSession = Extract<
+  DailyChallengeSession,
+  { challengeType: "imposter" }
+>;
+
+export type CareerPathSession = Extract<
+  DailyChallengeSession,
+  { challengeType: "careerPath" }
+>;
+
+export type HighLowSession = Extract<
+  DailyChallengeSession,
+  { challengeType: "highLow" }
+>;
+
+export type FootballLogicSession = Extract<
+  DailyChallengeSession,
+  { challengeType: "footballLogic" }
 >;
 
 export type DailyChallengeCompletionResult =
