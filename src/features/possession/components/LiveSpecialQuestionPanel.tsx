@@ -401,6 +401,13 @@ function PutInOrderPanel({
     });
   }, [inputLocked, matchId, qIndex, questionDurationSeconds, timeRemaining, userOrder]);
 
+  // Auto-submit when timer expires so a no-click run still sends the player's current order to the server.
+  useEffect(() => {
+    if (inputLocked) return;
+    if (timeRemaining > 0) return;
+    handleSubmit();
+  }, [timeRemaining, inputLocked, handleSubmit]);
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">

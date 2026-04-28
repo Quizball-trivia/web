@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { getSocket } from '@/lib/realtime/socket-client';
 
@@ -12,7 +11,6 @@ interface DevOverlayProps {
 
 export function DevOverlay({ onQuit, onRestart }: DevOverlayProps) {
   const [open, setOpen] = useState(false);
-  const router = useRouter();
   const match = useRealtimeMatchStore((s) => s.match);
   const triggerDevPossessionAnimation = useRealtimeMatchStore((s) => s.triggerDevPossessionAnimation);
   const ps = match?.possessionState;
@@ -76,11 +74,6 @@ export function DevOverlay({ onQuit, onRestart }: DevOverlayProps) {
       </div>
 
       {/* Navigation */}
-      <div className="p-3 border-t border-[#2a4a55]">
-        <div className="mb-2 text-[10px] font-black text-[#8FB7C5] uppercase tracking-wider">Navigate</div>
-        <SkipBtn label="New Ranked Dev" onClick={() => router.push('/dev/mock-match')} color="bg-[#CE82FF]" />
-      </div>
-
       {(onQuit || onRestart) ? (
         <div className="p-3 border-t border-[#2a4a55]">
           <div className="mb-2 text-[10px] font-black text-[#8FB7C5] uppercase tracking-wider">Match</div>

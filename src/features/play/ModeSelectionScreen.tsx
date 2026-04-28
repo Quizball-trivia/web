@@ -176,15 +176,6 @@ export function ModeSelectionScreen({
                   >
                     Dev Quick Ranked
                   </Link>
-                  <Link
-                    href="/dev/mock-match"
-                    onClick={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => e.stopPropagation()}
-                    onKeyUp={(e) => e.stopPropagation()}
-                    className="inline-flex items-center justify-center rounded-xl border border-[#0F3A00]/20 bg-[#E6F8C9] px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#0F3A00] transition-colors hover:bg-[#DCF4B6]"
-                  >
-                    New Ranked Dev
-                  </Link>
                 </div>
               )}
 
@@ -298,7 +289,7 @@ export function ModeSelectionScreen({
           }}
           role="button"
           tabIndex={0}
-          className="relative min-h-[200px] cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-4 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
+          className="relative cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
           style={{ backgroundColor: colors.blue.brand }}
         >
           {/* Desktop watermark icon (mobile uses inline icon below) */}
@@ -319,16 +310,16 @@ export function ModeSelectionScreen({
             <p className="mt-1 text-[10px] md:mt-1.5 md:text-base font-black uppercase text-white">Create/Join Room</p>
 
             {/* Mobile: icon (centered, right under subtitle) + PLAY (bottom, full width) */}
-            <div className="mt-2 flex flex-1 items-center justify-center md:hidden">
+            <div className="mt-1.5 flex flex-1 items-center justify-center md:hidden">
               <Image
                 src="/assets/friendly_match-icon.webp"
                 alt=""
                 width={500}
                 height={500}
-                className="h-[200x] w-[200px] object-contain pointer-events-none"
+                className="h-[110px] w-[110px] object-contain pointer-events-none"
               />
             </div>
-            <div className="mt-1 flex h-[44px] w-full items-center justify-center rounded-[8px] bg-black text-[14px] font-black uppercase tracking-wide text-white md:hidden">
+            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] font-black uppercase tracking-wide text-white md:hidden">
               Play
             </div>
 
@@ -352,7 +343,7 @@ export function ModeSelectionScreen({
           }}
           role="button"
           tabIndex={0}
-          className="relative min-h-[200px] cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-4 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
+          className="relative cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
           style={{ backgroundColor: colors.yellow.base }}
         >
           {/* Desktop watermark icon (mobile uses inline icon below) */}
@@ -373,16 +364,16 @@ export function ModeSelectionScreen({
             <p className="mt-1 text-[10px] md:mt-1.5 md:text-base font-black uppercase text-black">View Challenges</p>
 
             {/* Mobile: icon (centered, right under subtitle) + PLAY (bottom, full width) */}
-            <div className="mt-2 flex flex-1 items-center justify-center md:hidden">
+            <div className="mt-1.5 flex flex-1 items-center justify-center md:hidden">
               <Image
                 src="/assets/daily_challenge_mobile.webp"
                 alt=""
                 width={528}
                 height={528}
-                className="h-[150px] w-[150px] object-contain pointer-events-none"
+                className="h-[150px] w-full object-contain pointer-events-none"
               />
             </div>
-            <div className="mt-1 flex h-[44px] w-full items-center justify-center rounded-[8px] bg-black text-[14px] font-black uppercase tracking-wide text-white md:hidden">
+            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] font-black uppercase tracking-wide text-white md:hidden">
               Play
             </div>
 
