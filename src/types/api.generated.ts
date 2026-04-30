@@ -440,6 +440,18 @@ export interface paths {
                                     username: string;
                                     /** Format: uri */
                                     avatarUrl: string | null;
+                                    avatarCustomization: {
+                                        /** @enum {string} */
+                                        skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
+                                        /** @enum {string} */
+                                        jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                                        /** @enum {string} */
+                                        hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
+                                        /** @enum {string} */
+                                        glasses?: "glasses_wayfarer" | "glasses_round" | "glasses_aviator";
+                                        /** @enum {string} */
+                                        facialHair?: "stache" | "beard";
+                                    } | null;
                                     isAi: boolean;
                                 };
                             }[];
@@ -577,6 +589,18 @@ export interface paths {
                                     username: string | null;
                                     /** Format: uri */
                                     avatarUrl: string | null;
+                                    avatarCustomization: {
+                                        /** @enum {string} */
+                                        skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
+                                        /** @enum {string} */
+                                        jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                                        /** @enum {string} */
+                                        hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
+                                        /** @enum {string} */
+                                        glasses?: "glasses_wayfarer" | "glasses_round" | "glasses_aviator";
+                                        /** @enum {string} */
+                                        facialHair?: "stache" | "beard";
+                                    } | null;
                                 };
                             }[];
                         };
@@ -1295,7 +1319,19 @@ export interface paths {
                         nickname?: string;
                         country?: string;
                         /** Format: uri */
-                        avatar_url?: string;
+                        avatar_url?: string | null;
+                        avatar_customization?: {
+                            /** @enum {string} */
+                            skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
+                            /** @enum {string} */
+                            jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                            /** @enum {string} */
+                            hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
+                            /** @enum {string} */
+                            glasses?: "glasses_wayfarer" | "glasses_round" | "glasses_aviator";
+                            /** @enum {string} */
+                            facialHair?: "stache" | "beard";
+                        } | null;
                         favorite_club?: string;
                         preferred_language?: string;
                     };
@@ -1462,6 +1498,18 @@ export interface paths {
                                 nickname: string | null;
                                 /** Format: uri */
                                 avatarUrl: string | null;
+                                avatarCustomization: {
+                                    /** @enum {string} */
+                                    skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
+                                    /** @enum {string} */
+                                    jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                                    /** @enum {string} */
+                                    hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
+                                    /** @enum {string} */
+                                    glasses?: "glasses_wayfarer" | "glasses_round" | "glasses_aviator";
+                                    /** @enum {string} */
+                                    facialHair?: "stache" | "beard";
+                                } | null;
                                 level: number;
                                 ranked: {
                                     rp: number;
@@ -1531,6 +1579,18 @@ export interface paths {
                                 nickname: string | null;
                                 /** Format: uri */
                                 avatarUrl: string | null;
+                                avatarCustomization: {
+                                    /** @enum {string} */
+                                    skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
+                                    /** @enum {string} */
+                                    jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                                    /** @enum {string} */
+                                    hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
+                                    /** @enum {string} */
+                                    glasses?: "glasses_wayfarer" | "glasses_round" | "glasses_aviator";
+                                    /** @enum {string} */
+                                    facialHair?: "stache" | "beard";
+                                } | null;
                                 level: number;
                                 ranked: {
                                     rp: number;
@@ -1605,6 +1665,18 @@ export interface paths {
                                     nickname: string | null;
                                     /** Format: uri */
                                     avatarUrl: string | null;
+                                    avatarCustomization: {
+                                        /** @enum {string} */
+                                        skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
+                                        /** @enum {string} */
+                                        jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                                        /** @enum {string} */
+                                        hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
+                                        /** @enum {string} */
+                                        glasses?: "glasses_wayfarer" | "glasses_round" | "glasses_aviator";
+                                        /** @enum {string} */
+                                        facialHair?: "stache" | "beard";
+                                    } | null;
                                     level: number;
                                     ranked: {
                                         rp: number;
@@ -1634,6 +1706,18 @@ export interface paths {
                                     nickname: string | null;
                                     /** Format: uri */
                                     avatarUrl: string | null;
+                                    avatarCustomization: {
+                                        /** @enum {string} */
+                                        skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
+                                        /** @enum {string} */
+                                        jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                                        /** @enum {string} */
+                                        hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
+                                        /** @enum {string} */
+                                        glasses?: "glasses_wayfarer" | "glasses_round" | "glasses_aviator";
+                                        /** @enum {string} */
+                                        facialHair?: "stache" | "beard";
+                                    } | null;
                                     level: number;
                                     ranked: {
                                         rp: number;
@@ -4032,6 +4116,18 @@ export interface components {
             country: string | null;
             /** Format: uri */
             avatar_url: string | null;
+            avatar_customization: {
+                /** @enum {string} */
+                skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
+                /** @enum {string} */
+                jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                /** @enum {string} */
+                hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
+                /** @enum {string} */
+                glasses?: "glasses_wayfarer" | "glasses_round" | "glasses_aviator";
+                /** @enum {string} */
+                facialHair?: "stache" | "beard";
+            } | null;
             favorite_club: string | null;
             preferred_language: string | null;
             onboarding_complete: boolean;
@@ -4080,6 +4176,18 @@ export interface components {
                     username: string;
                     /** Format: uri */
                     avatarUrl: string | null;
+                    avatarCustomization: {
+                        /** @enum {string} */
+                        skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
+                        /** @enum {string} */
+                        jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                        /** @enum {string} */
+                        hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
+                        /** @enum {string} */
+                        glasses?: "glasses_wayfarer" | "glasses_round" | "glasses_aviator";
+                        /** @enum {string} */
+                        facialHair?: "stache" | "beard";
+                    } | null;
                     isAi: boolean;
                 };
             }[];
@@ -4126,6 +4234,18 @@ export interface components {
             nickname: string | null;
             /** Format: uri */
             avatarUrl: string | null;
+            avatarCustomization: {
+                /** @enum {string} */
+                skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
+                /** @enum {string} */
+                jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                /** @enum {string} */
+                hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
+                /** @enum {string} */
+                glasses?: "glasses_wayfarer" | "glasses_round" | "glasses_aviator";
+                /** @enum {string} */
+                facialHair?: "stache" | "beard";
+            } | null;
             country: string | null;
             favoriteClub: string | null;
             progression: components["schemas"]["ProgressionResponse"];
@@ -4293,6 +4413,18 @@ export interface components {
                 nickname: string | null;
                 /** Format: uri */
                 avatarUrl: string | null;
+                avatarCustomization: {
+                    /** @enum {string} */
+                    skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
+                    /** @enum {string} */
+                    jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                    /** @enum {string} */
+                    hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
+                    /** @enum {string} */
+                    glasses?: "glasses_wayfarer" | "glasses_round" | "glasses_aviator";
+                    /** @enum {string} */
+                    facialHair?: "stache" | "beard";
+                } | null;
                 level: number;
                 ranked: {
                     rp: number;
@@ -4323,6 +4455,18 @@ export interface components {
                     nickname: string | null;
                     /** Format: uri */
                     avatarUrl: string | null;
+                    avatarCustomization: {
+                        /** @enum {string} */
+                        skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
+                        /** @enum {string} */
+                        jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                        /** @enum {string} */
+                        hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
+                        /** @enum {string} */
+                        glasses?: "glasses_wayfarer" | "glasses_round" | "glasses_aviator";
+                        /** @enum {string} */
+                        facialHair?: "stache" | "beard";
+                    } | null;
                     level: number;
                     ranked: {
                         rp: number;
@@ -4352,6 +4496,18 @@ export interface components {
                     nickname: string | null;
                     /** Format: uri */
                     avatarUrl: string | null;
+                    avatarCustomization: {
+                        /** @enum {string} */
+                        skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
+                        /** @enum {string} */
+                        jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                        /** @enum {string} */
+                        hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
+                        /** @enum {string} */
+                        glasses?: "glasses_wayfarer" | "glasses_round" | "glasses_aviator";
+                        /** @enum {string} */
+                        facialHair?: "stache" | "beard";
+                    } | null;
                     level: number;
                     ranked: {
                         rp: number;

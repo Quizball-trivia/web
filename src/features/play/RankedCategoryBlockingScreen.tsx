@@ -20,6 +20,7 @@ import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { tierFromRp, type RankedTier } from '@/utils/rankedTier';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { BanCategoryCard } from '@/components/shared/BanCategoryCard';
+import type { AvatarCustomization } from '@/types/game';
 
 // Tier accent colors (mirrors ModeSelectionScreen)
 const TIER_COLORS: Record<RankedTier, string> = {
@@ -47,6 +48,7 @@ export interface BanCategoryViewPlayer {
   id: string;
   username: string;
   avatar: string;
+  avatarCustomization?: AvatarCustomization | null;
   countryCode?: string | null;
   rankPoints?: number | null;
   tier?: RankedTier;
@@ -114,7 +116,7 @@ export function BanCategoryView({
             currentActor === 'opponent' && "opacity-50"
           )}>
             <AvatarDisplay
-              customization={{ base: player.avatar }}
+              customization={player.avatarCustomization ?? { base: player.avatar }}
               size="sm"
               countryCode={player.countryCode ?? null}
               className="ring-2 ring-[#1CB0F6]"
@@ -167,7 +169,7 @@ export function BanCategoryView({
             currentActor === 'player' && "opacity-50"
           )}>
             <AvatarDisplay
-              customization={{ base: opponent.avatar }}
+              customization={opponent.avatarCustomization ?? { base: opponent.avatar }}
               size="sm"
               countryCode={opponent.countryCode ?? null}
               className="ring-2 ring-[#FF4B4B]"
@@ -366,6 +368,7 @@ export function RankedCategoryBlockingScreen() {
       <ShowdownScreen
         player={{
           avatar: playerResolvedAvatar,
+          avatarCustomization: authUser?.avatar_customization ?? player.avatarCustomization,
           username: player.username,
           rankPoints: playerRp,
           level: player.level,
@@ -373,6 +376,7 @@ export function RankedCategoryBlockingScreen() {
         }}
         opponent={{
           avatar: opponentResolvedAvatar,
+          avatarCustomization: opponentMember?.avatarCustomization ?? matchOpponent?.avatarCustomization ?? rankedFoundOpponent?.avatarCustomization,
           username: opponentUsername,
           rankPoints: opponentRp,
           tier: opponentTier,
@@ -388,6 +392,7 @@ export function RankedCategoryBlockingScreen() {
         id: selfUserId ?? 'player',
         username: player.username,
         avatar: playerResolvedAvatar,
+        avatarCustomization: authUser?.avatar_customization ?? player.avatarCustomization,
         countryCode: authUser?.country ?? null,
         rankPoints: playerRp ?? null,
         tier: playerTier,
@@ -396,6 +401,7 @@ export function RankedCategoryBlockingScreen() {
         id: opponentId,
         username: opponentUsername,
         avatar: opponentResolvedAvatar,
+        avatarCustomization: opponentMember?.avatarCustomization ?? matchOpponent?.avatarCustomization ?? rankedFoundOpponent?.avatarCustomization,
         countryCode: opponentCountryCode,
         rankPoints: opponentRp ?? null,
         tier: opponentTier,

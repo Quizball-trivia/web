@@ -14,7 +14,7 @@ import { BOT_AVATAR, BOT_NAME } from "../constants";
 
 export function TrainingPlayingStage() {
   const { match, tooltips, onSkip } = useTraining();
-  const { avatarUrl: playerAvatar, username: playerName } = usePlayerAvatar();
+  const { avatarUrl: playerAvatar, avatarCustomization, username: playerName } = usePlayerAvatar();
 
   const { state } = match;
   const prevQuestionIndex = useRef(state.questionIndex);
@@ -147,6 +147,7 @@ export function TrainingPlayingStage() {
             <PitchVisualization
               playerPosition={state.playerPosition}
               playerAvatarUrl={playerAvatar}
+              playerAvatarCustomization={avatarCustomization}
               opponentAvatarUrl={BOT_AVATAR}
               playerName={playerName}
               opponentName={BOT_NAME}
@@ -192,6 +193,7 @@ export function TrainingPlayingStage() {
             <PitchVisualization
               playerPosition={state.playerPosition}
               playerAvatarUrl={playerAvatar}
+              playerAvatarCustomization={avatarCustomization}
               opponentAvatarUrl={BOT_AVATAR}
               playerName={playerName}
               opponentName={BOT_NAME}

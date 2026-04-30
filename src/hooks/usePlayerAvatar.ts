@@ -11,6 +11,7 @@ export function usePlayerAvatar() {
     () => resolveAvatarUrl(authUser?.avatar_url ?? player.avatarCustomization?.base ?? player.avatar),
     [authUser?.avatar_url, player.avatarCustomization?.base, player.avatar],
   );
+  const avatarCustomization = authUser?.avatar_customization ?? player.avatarCustomization ?? null;
 
-  return { avatarUrl, username: player.username };
+  return { avatarUrl, avatarCustomization, username: player.username };
 }

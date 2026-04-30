@@ -22,7 +22,7 @@ export function UserRankStrip({ userEntry }: UserRankStripProps) {
       {/* Avatar + trophy badge */}
       <div className="relative shrink-0">
         <AvatarDisplay
-          customization={{ base: userEntry.avatar || "avatar-1" }}
+          customization={userEntry.avatarCustomization ?? { base: userEntry.avatar || "avatar-1" }}
           countryCode={userEntry.country}
           size="sm"
         />

@@ -64,6 +64,7 @@ export function toRecentMatchSummaries(response: RecentMatchesResponse): RecentM
       id: item.opponent.id,
       username: item.opponent.username,
       avatarUrl: item.opponent.avatarUrl,
+      avatarCustomization: item.opponent.avatarCustomization,
       isAi: item.opponent.isAi,
     },
   }));

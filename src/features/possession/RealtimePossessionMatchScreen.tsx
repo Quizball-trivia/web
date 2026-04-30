@@ -7,11 +7,14 @@ import { HalftimeScreen } from './components/HalftimeScreen';
 import { PossessionMatchViewport } from './components/PossessionMatchViewport';
 import { PossessionQuestionArea } from './components/PossessionQuestionArea';
 import { useRealtimePossessionMatchController } from './hooks/useRealtimePossessionMatchController';
+import type { AvatarCustomization } from '@/types/game';
 
 interface RealtimePossessionMatchScreenProps {
   playerAvatar: string;
+  playerAvatarCustomization?: AvatarCustomization | null;
   playerUsername: string;
   opponentAvatar: string;
+  opponentAvatarCustomization?: AvatarCustomization | null;
   opponentUsername: string;
   /** ISO country code — enables the flag badge on halftime avatars. */
   playerCountryCode?: string | null;

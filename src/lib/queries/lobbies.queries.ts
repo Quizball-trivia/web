@@ -25,6 +25,7 @@ export function usePublicLobbies() {
           ...item.host,
           username: item.host.username ?? "Unknown Player",
           avatarUrl: item.host.avatarUrl ?? undefined,
+          avatarCustomization: item.host.avatarCustomization,
         }
       }));
     },

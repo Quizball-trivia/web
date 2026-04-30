@@ -1,11 +1,10 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { PublicLobby } from "@/lib/domain/lobby";
-import { resolveAvatarUrl } from "@/lib/avatars";
 import { ArrowRight, Trophy, Users } from "lucide-react";
+import { AvatarDisplay } from "@/components/AvatarDisplay";
 
 interface LobbyCardProps {
   lobby: PublicLobby;
@@ -15,17 +14,17 @@ interface LobbyCardProps {
 
 export function LobbyCard({ lobby, onJoin, isJoining }: LobbyCardProps) {
   const isFull = lobby.memberCount >= lobby.maxMembers;
-  const hostAvatarSrc = resolveAvatarUrl(lobby.host.avatarUrl);
   
   return (
     <Card className="group relative overflow-hidden border-border transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5">
       <div className="flex items-center gap-4 p-4">
         {/* Host Avatar */}
         <div className="relative shrink-0">
-          <Avatar className="size-12 border-2 border-border group-hover:border-primary/50 transition-colors">
-            <AvatarImage src={hostAvatarSrc} alt={lobby.host.username} />
-            <AvatarFallback>{lobby.host.username.slice(0, 2).toUpperCase()}</AvatarFallback>
-          </Avatar>
+          <AvatarDisplay
+            customization={lobby.host.avatarCustomization ?? { base: lobby.host.avatarUrl }}
+            size="sm"
+            className="border-2 border-border group-hover:border-primary/50 transition-colors"
+          />
           <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-background border border-border shadow-sm">
             <Users className="size-3 text-muted-foreground" />
           </div>

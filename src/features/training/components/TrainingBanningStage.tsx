@@ -9,6 +9,7 @@ import { usePlayer } from "@/contexts/PlayerContext";
 import { usePlayerAvatar } from "@/hooks/usePlayerAvatar";
 import { useTraining } from "../TrainingMatchProvider";
 import { BOT_AVATAR, BOT_NAME } from "../constants";
+import { AvatarDisplay } from "@/components/AvatarDisplay";
 
 // Same card colors as RankedCategoryBlockingScreen
 const CARD_COLORS = [
@@ -23,7 +24,7 @@ const CARD_COLORS = [
 export function TrainingBanningStage() {
   const { match, tooltips, banCategories } = useTraining();
   const { player } = usePlayer();
-  const { avatarUrl: playerResolvedAvatar } = usePlayerAvatar();
+  const { avatarUrl: playerResolvedAvatar, avatarCustomization } = usePlayerAvatar();
 
   const [playerBan, setPlayerBan] = useState<string | null>(null);
   const [botBan, setBotBan] = useState<string | null>(null);
@@ -125,7 +126,9 @@ export function TrainingBanningStage() {
           >
             <div className="relative">
               <div className="size-14 rounded-full bg-[#131F24] border-[4px] border-[#1CB0F6] flex items-center justify-center text-3xl overflow-hidden shadow-[0_3px_0_0_#1899D6]">
-                {isAvatarUrl(playerResolvedAvatar) ? (
+                {avatarCustomization ? (
+                  <AvatarDisplay customization={avatarCustomization} size="sm" className="size-full" />
+                ) : isAvatarUrl(playerResolvedAvatar) ? (
                   <Image
                     src={playerResolvedAvatar}
                     alt="You"

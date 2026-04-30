@@ -5,10 +5,12 @@ import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { Trophy } from 'lucide-react';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
+import type { AvatarCustomization } from '@/types/game';
 
 interface ShowdownPlayerInfo {
   username: string;
   avatar: string;
+  avatarCustomization?: AvatarCustomization | null;
   rankPoints?: number;
   level?: number;
   tier?: string;
@@ -79,7 +81,7 @@ function PlayerSide({
           className="relative"
         >
           <AvatarDisplay
-            customization={{ base: info.avatar || 'avatar-1' }}
+            customization={info.avatarCustomization ?? { base: info.avatar || 'avatar-1' }}
             size="xxl"
             countryCode={countryCode}
           />

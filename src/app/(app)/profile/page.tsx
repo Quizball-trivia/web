@@ -16,6 +16,7 @@ import { LOCALES, type Locale } from "@/lib/i18n/messages";
 import { toProfileRecentMatch } from "@/features/profile/ProfileWeb";
 import { useEffect } from "react";
 import { useMyAchievements } from "@/lib/queries/users.queries";
+import { decodeAvatarCustomization } from "@/lib/avatars";
 
 export default function ProfilePage() {
   const searchParams = useSearchParams();
@@ -78,10 +79,17 @@ export default function ProfilePage() {
     if (isUpdating) return;
     setIsUpdating(true);
     try {
-      const updated = await updateMe({ avatar_url: avatarUrl });
-      updateStats({ avatarCustomization: { base: avatarUrl } });
+      const avatarCustomization = decodeAvatarCustomization(avatarUrl);
+      const updated = avatarCustomization
+        ? await updateMe({ avatar_url: null, avatar_customization: avatarCustomization })
+        : await updateMe({ avatar_url: avatarUrl, avatar_customization: null });
+      updateStats({ avatarCustomization: avatarCustomization ?? { base: avatarUrl } });
       if (authUser) {
-        setAuthenticated({ ...authUser, avatar_url: updated.avatar_url ?? avatarUrl });
+        setAuthenticated({
+          ...authUser,
+          avatar_url: updated.avatar_url,
+          avatar_customization: updated.avatar_customization ?? avatarCustomization,
+        });
       }
       toast.success(t("profile.avatarUpdated"));
     } catch (error) {

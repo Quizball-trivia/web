@@ -1,3 +1,5 @@
+import type { AvatarCustomization } from "@/types/game";
+
 /**
  * Avatar parts registry — items that can be equipped on top of the base avatar.
  *
@@ -17,6 +19,11 @@
  */
 
 export type AvatarSlot = "jersey" | "facialHair" | "glasses" | "hair";
+type AvatarSkinId = NonNullable<AvatarCustomization["skin"]>;
+type AvatarJerseyId = NonNullable<AvatarCustomization["jersey"]>;
+type AvatarHairId = NonNullable<AvatarCustomization["hair"]>;
+type AvatarGlassesId = NonNullable<AvatarCustomization["glasses"]>;
+type AvatarFacialHairId = NonNullable<AvatarCustomization["facialHair"]>;
 
 /** Render order (bottom → top). Jersey covers the chest first; hair sits on top. */
 export const AVATAR_SLOTS: readonly AvatarSlot[] = ["jersey", "facialHair", "glasses", "hair"];
@@ -47,7 +54,7 @@ export const AVATAR_CANVAS_HEIGHT = 543.03;
 
 /* ─────────────── Skin tones (base bodies) ─────────────── */
 export interface SkinPart {
-  id: string;
+  id: AvatarSkinId;
   name: string;
   asset: string;
   free?: boolean;
@@ -84,6 +91,8 @@ export const SKIN_PARTS: SkinPart[] = [
     productSlug: "avatar_skin_dark_alt",
   },
 ];
+
+export const SKIN_IDS = SKIN_PARTS.map((part) => part.id) as readonly AvatarSkinId[];
 
 const SKIN_BY_ID: Record<string, SkinPart> = Object.fromEntries(
   SKIN_PARTS.map((s) => [s.id, s]),
@@ -162,6 +171,8 @@ export const HAIR_PARTS: AvatarPart[] = [
   },
 ];
 
+export const HAIR_IDS = HAIR_PARTS.map((part) => part.id) as readonly AvatarHairId[];
+
 /* ─────────────── Glasses ─────────────── */
 // Eyes at canvas y ≈ 163 / 543 = 30%. Glasses centered vertically on eyes:
 //   top% = (eye_center%) − (glasses_height/2 in canvas %)
@@ -199,6 +210,8 @@ export const GLASSES_PARTS: AvatarPart[] = [
   },
 ];
 
+export const GLASSES_IDS = GLASSES_PARTS.map((part) => part.id) as readonly AvatarGlassesId[];
+
 /* ─────────────── Facial Hair ─────────────── */
 // Mouth at canvas y ≈ 183 / 543 = 33.7% (top), 38.3% (bottom).
 // Stache covers upper lip (slightly above mouth top). Beard covers chin/jaw.
@@ -224,6 +237,8 @@ export const FACIAL_HAIR_PARTS: AvatarPart[] = [
     position: { top: 32, left: 31, width: 38 },
   },
 ];
+
+export const FACIAL_HAIR_IDS = FACIAL_HAIR_PARTS.map((part) => part.id) as readonly AvatarFacialHairId[];
 
 /* ─────────────── Jerseys ─────────────── */
 // Figma anchor: jersey at y=116.07 of 232-tall card slot (50% raw), content height 214.54.
@@ -376,6 +391,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
 ];
 
 export const JERSEY_PARTS: AvatarPart[] = [...JERSEY_COLOR_PARTS, ...JERSEY_DESIGN_PARTS];
+export const JERSEY_IDS = JERSEY_PARTS.map((part) => part.id) as readonly AvatarJerseyId[];
 
 /** Default ids used when nothing's been configured yet. */
 export const DEFAULT_JERSEY_ID = "jersey_green";

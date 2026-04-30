@@ -1,3 +1,5 @@
+import type { AvatarCustomization } from "@/types/game";
+
 export type WinnerDecisionMethod = "goals" | "penalty_goals" | "total_points" | "total_points_fallback" | "forfeit";
 
 export interface RecentMatchSummary {
@@ -20,6 +22,7 @@ export interface RecentMatchSummary {
     id: string | null;
     username: string;
     avatarUrl: string | null;
+    avatarCustomization: AvatarCustomization | null;
     isAi: boolean;
   };
 }

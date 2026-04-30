@@ -13,11 +13,13 @@ import type { RankedProfileResponse } from "@/lib/repositories/ranked.repo";
 import { usePossessionMatchStore } from "@/stores/possessionMatch.store";
 import { tierFromRp } from "@/utils/rankedTier";
 import type { UserProgression } from "@/lib/domain";
+import type { AvatarCustomization } from "@/types/game";
 
 type OpponentInfo = {
   id: string;
   username: string;
   avatar: string;
+  avatarCustomization?: AvatarCustomization | null;
   tier?: string;
 };
 
@@ -95,6 +97,7 @@ export function useGameStageState() {
         id: realtimeMatch.opponent.id,
         username: realtimeMatch.opponent.username,
         avatar: realtimeMatch.opponent.avatarUrl ?? "👑",
+        avatarCustomization: realtimeMatch.opponent.avatarCustomization,
       };
     }
     if (isMultiplayer && realtimeLobby) {
@@ -106,6 +109,7 @@ export function useGameStageState() {
           id: opp.userId,
           username: opp.username,
           avatar: opp.avatarUrl ?? "👑",
+          avatarCustomization: opp.avatarCustomization,
         };
       }
     }

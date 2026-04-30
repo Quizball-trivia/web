@@ -1,5 +1,15 @@
 import type { AvatarCustomization } from "@/types/game";
-import { DEFAULT_HAIR_ID, DEFAULT_JERSEY_ID, DEFAULT_SKIN_ID, getSkinPart } from "@/lib/avatars/parts";
+import {
+  DEFAULT_HAIR_ID,
+  DEFAULT_JERSEY_ID,
+  DEFAULT_SKIN_ID,
+  FACIAL_HAIR_IDS,
+  GLASSES_IDS,
+  HAIR_IDS,
+  JERSEY_IDS,
+  SKIN_IDS,
+  getSkinPart,
+} from "@/lib/avatars/parts";
 
 /** Available avatar color keys (kept for legacy callers — used only by the picker swatch hint). */
 export const AVATAR_COLORS = ["green", "blue", "yellow", "red", "violet", "pink"] as const;
@@ -19,8 +29,15 @@ export const AVATAR_COLOR_SWATCHES: Record<AvatarColor, string> = {
 export const DEFAULT_AVATAR_PRIMARY = DEFAULT_SKIN_ID;
 export const DEFAULT_AVATAR_SECONDARY = DEFAULT_SKIN_ID;
 
-/** Custom URI scheme used to round-trip layered avatar customizations through `avatar_url`. */
+/** Legacy custom URI scheme kept for older rows and picker callbacks. */
 const AVATAR_URI_PREFIX = "qb-avatar:";
+
+function readKnownParam<T extends string>(
+  value: string | null,
+  allowedValues: readonly T[],
+): T | undefined {
+  return value && (allowedValues as readonly string[]).includes(value) ? value as T : undefined;
+}
 
 /** Whether a value is a known free avatar color key. */
 export function isAvatarColor(value: string | null | undefined): value is AvatarColor {
@@ -72,7 +89,8 @@ export function isGoogleAvatarUrl(url: string | null | undefined) {
 /* ───────── Customization encoding (qb-avatar URI) ───────── */
 
 /**
- * Encode a customization to a `qb-avatar:` URI for storage in `avatar_url`.
+ * Encode a customization to a legacy `qb-avatar:` URI.
+ * New persistence should decode this and write `avatar_customization` instead of storing the URI.
  *   { skin: 'skin_male_white', jersey: 'jersey_green', hair: 'hair_boy_basic' }
  *   → 'qb-avatar:skin_male_white?jersey=jersey_green&hair=hair_boy_basic'
  */
@@ -96,11 +114,11 @@ export function decodeAvatarCustomization(value: string | null | undefined): Ava
   const [skin, query] = tail.split("?", 2);
   const params = new URLSearchParams(query ?? "");
   return {
-    skin: skin || DEFAULT_SKIN_ID,
-    jersey: params.get("jersey") ?? undefined,
-    hair: params.get("hair") ?? undefined,
-    glasses: params.get("glasses") ?? undefined,
-    facialHair: params.get("facial") ?? undefined,
+    skin: readKnownParam(skin || DEFAULT_SKIN_ID, SKIN_IDS) ?? DEFAULT_SKIN_ID,
+    jersey: readKnownParam(params.get("jersey"), JERSEY_IDS),
+    hair: readKnownParam(params.get("hair"), HAIR_IDS),
+    glasses: readKnownParam(params.get("glasses"), GLASSES_IDS),
+    facialHair: readKnownParam(params.get("facial"), FACIAL_HAIR_IDS),
   };
 }
 

@@ -16,7 +16,7 @@ interface HalftimeDraftCategory {
 export function TrainingHalftimeStage() {
   const { match, tooltips, banCategories } = useTraining();
   const { state } = match;
-  const { avatarUrl: playerResolvedAvatar, username: playerName } = usePlayerAvatar();
+  const { avatarUrl: playerResolvedAvatar, avatarCustomization, username: playerName } = usePlayerAvatar();
   const [myBan, setMyBan] = useState<string | null>(null);
   const [opponentBan, setOpponentBan] = useState<string | null>(null);
   const tooltipFired = useRef(false);
@@ -64,6 +64,7 @@ export function TrainingHalftimeStage() {
       playerName={playerName}
       opponentName={BOT_NAME}
       playerAvatarUrl={playerResolvedAvatar}
+      playerAvatarCustomization={avatarCustomization}
       opponentAvatarUrl={BOT_AVATAR}
       playerPosition={state.playerPosition}
       categoryOptions={categoryOptions}

@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { queryKeys } from "@/lib/queries/queryKeys";
 import {
   useFriendRequests,
@@ -61,19 +62,15 @@ function RequestRow({
       className="flex items-center gap-2.5 rounded-xl border-b-[3px] border-[#0D1B21] bg-[#1B2F36] px-3 py-2.5"
     >
       {/* Avatar */}
-      <div className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 border-[#1CB0F6]/20 bg-[#243B44]">
-        {item.user.avatarUrl ? (
-          <img
-            src={item.user.avatarUrl}
-            alt={item.user.nickname ?? ""}
-            className="size-full object-cover"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-              e.currentTarget.nextElementSibling?.classList.remove("hidden");
-            }}
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border-2 border-[#1CB0F6]/20 bg-[#243B44]">
+        {item.user.avatarCustomization || item.user.avatarUrl ? (
+          <AvatarDisplay
+            customization={item.user.avatarCustomization ?? { base: item.user.avatarUrl ?? undefined }}
+            size="xs"
           />
-        ) : null}
-        <UserRound className={`size-4 text-[#56707A]${item.user.avatarUrl ? " hidden" : ""}`} />
+        ) : (
+          <UserRound className="size-4 text-[#56707A]" />
+        )}
       </div>
 
       {/* Info */}

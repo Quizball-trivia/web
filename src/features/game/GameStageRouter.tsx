@@ -235,8 +235,10 @@ export function GameStageRouter() {
       return (
         <RealtimePossessionMatchScreen
           playerAvatar={playerGameAvatar}
+          playerAvatarCustomization={authUser?.avatar_customization ?? player.avatarCustomization}
           playerUsername={player.username}
           opponentAvatar={opponentGameAvatar}
+          opponentAvatarCustomization={opponent.avatarCustomization}
           opponentUsername={opponent.username}
           playerCountryCode={authUser?.country ?? null}
           opponentCountryCode={playingOppCountryCode}
@@ -292,8 +294,10 @@ export function GameStageRouter() {
           matchType={matchType}
           playerUsername={player.username}
           playerAvatar={playerGameAvatar}
+          playerAvatarCustomization={authUser?.avatar_customization ?? player.avatarCustomization}
           opponentUsername={opponent.username}
           opponentAvatar={opponentGameAvatar}
+          opponentAvatarCustomization={opponent.avatarCustomization}
           playerScore={playerDisplayScore}
           opponentScore={opponentDisplayScore}
           playerCorrect={myStats?.correctAnswers ?? clientTotalCorrect}
@@ -353,6 +357,7 @@ export function GameStageRouter() {
         playerInfo={{
           username: player.username,
           avatar: playerGameAvatar,
+          avatarCustomization: authUser?.avatar_customization ?? player.avatarCustomization,
           rankPoints: playerRankPoints,
           level: player.level,
           tier: playerRankPoints != null ? tierFromRp(playerRankPoints) : undefined,
@@ -363,6 +368,7 @@ export function GameStageRouter() {
         opponentInfo={oppInfo ? {
           username: oppInfo.username,
           avatar: showdownOpponentAvatar,
+          avatarCustomization: oppInfo.avatarCustomization,
           rankPoints: opponentRankPoints,
           tier: opponentRankPoints != null ? tierFromRp(opponentRankPoints) : undefined,
           country: oppCountry,

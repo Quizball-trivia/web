@@ -1,3 +1,5 @@
+import type { components } from "@/types/api.generated";
+
 export type GameMode = 'timeAttack' | 'moneyDrop' | 'categories' | 'survival' | 'countdown' | 'clues' | 'buzzer' | 'trueFalse' | 'emojiGuess' | 'putInOrder';
 
 
@@ -20,17 +22,9 @@ export interface Badge {
   earned: boolean;
 }
 
-export interface AvatarCustomization {
-  /** Skin tone id (the base body asset). Missing = default skin. */
-  skin?: string;
-  /** Equipped jersey item id (chest overlay). */
-  jersey?: string;
-  /** Equipped hair item id. */
-  hair?: string;
-  /** Equipped glasses item id. */
-  glasses?: string;
-  /** Equipped facial hair item id. */
-  facialHair?: string;
+type StoredAvatarCustomization = NonNullable<components["schemas"]["UserResponse"]["avatar_customization"]>;
+
+export interface AvatarCustomization extends StoredAvatarCustomization {
   /**
    * Legacy field kept so external URLs (Google avatar) and qb-avatar URIs can pass through.
    * AvatarDisplay decodes this when present.

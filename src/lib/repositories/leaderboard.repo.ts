@@ -1,12 +1,14 @@
 import { API_BASE_URL } from "@/lib/config";
 import { getAccessToken } from "@/lib/auth/tokenStorage";
 import type { LeaderboardType } from "@/lib/domain/leaderboard";
+import type { AvatarCustomization } from "@/types/game";
 
 export interface LeaderboardEntryResponse {
   userId: string;
   rank: number;
   username: string;
   avatarUrl: string | null;
+  avatarCustomization: AvatarCustomization | null;
   rp: number;
   tier: string;
   country: string | null;
@@ -22,6 +24,7 @@ export interface UserRankResponse {
   userId: string;
   username: string;
   avatarUrl: string | null;
+  avatarCustomization: AvatarCustomization | null;
   country: string | null;
   rp: number;
   tier: string;

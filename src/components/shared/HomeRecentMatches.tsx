@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useRecentMatches } from '@/lib/queries/stats.queries';
 import { COLLAPSED_MATCHES_COUNT, MAX_MATCHES_COUNT } from '@/lib/constants/matches';
 import { formatMatchScore } from '@/utils/matchScore';
+import { AvatarDisplay } from '@/components/AvatarDisplay';
 
 const rowBorder = (result: string) => {
   if (result === 'win') return 'border-[#38B60E]';
@@ -37,6 +37,7 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
         result: match.result,
         opponent: match.opponent.username,
         avatarUrl: match.opponent.avatarUrl,
+        avatarCustomization: match.opponent.avatarCustomization,
         mode: match.mode === 'ranked' ? 'Ranked' : 'Friendly',
         competition: match.competition,
         rpDelta: match.rpDelta,
@@ -105,9 +106,12 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
             className={`flex items-center gap-3 rounded-[16px] min-h-[58px] md:min-h-[62px] px-4 md:px-5 border-2 bg-[#041217] ${rowBorder(match.result)}`}
           >
             {/* Avatar */}
-            <div className="relative size-8 md:size-10 shrink-0 rounded-full bg-white/20 overflow-hidden flex items-center justify-center">
-              {match.avatarUrl ? (
-                <Image src={match.avatarUrl} alt="" fill className="object-cover" unoptimized />
+            <div className="relative size-8 md:size-10 shrink-0 rounded-full bg-white/20 flex items-center justify-center">
+              {match.avatarCustomization || match.avatarUrl ? (
+                <AvatarDisplay
+                  customization={match.avatarCustomization ?? { base: match.avatarUrl ?? undefined }}
+                  size="xs"
+                />
               ) : (
                 <span className="text-sm font-black text-white/80">
                   {match.opponent.charAt(0).toUpperCase()}

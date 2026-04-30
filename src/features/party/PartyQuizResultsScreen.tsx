@@ -5,11 +5,11 @@ import { useMemo } from 'react';
 import { Crown, Medal, Target, Timer, Trophy } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { resolveAvatarUrl } from '@/lib/avatars';
+import { AvatarDisplay } from '@/components/AvatarDisplay';
 import type { AchievementUnlockPayload, MatchFinalResultsPayload, MatchParticipant, MatchStandingPayload } from '@/lib/realtime/socket.types';
 import { cn } from '@/lib/utils';
 import { AchievementUnlockStrip } from '@/features/game/components/AchievementUnlockStrip';
+import type { AvatarCustomization } from '@/types/game';
 
 interface PartyQuizResultsScreenProps {
   finalResults: MatchFinalResultsPayload;
@@ -23,6 +23,7 @@ interface PartyQuizResultsScreenProps {
 interface StandingRow extends MatchStandingPayload {
   username: string;
   avatarUrl: string | null;
+  avatarCustomization?: AvatarCustomization | null;
   isSelf: boolean;
   isWinner: boolean;
 }
@@ -30,11 +31,6 @@ interface StandingRow extends MatchStandingPayload {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function avatarFallback(name: string): string {
-  const trimmed = name.trim();
-  return trimmed.slice(0, 2).toUpperCase() || 'QB';
-}
 
 function formatAverageMs(value: number | null): string {
   if (typeof value !== 'number' || !Number.isFinite(value)) return '--';
@@ -198,15 +194,11 @@ function PodiumCard({ standing, index, className }: { standing: StandingRow; ind
               damping: 18,
             }}
           >
-            <Avatar className={cn('size-16 border-2 shadow-xl', config.avatarRing)}>
-              <AvatarImage
-                src={resolveAvatarUrl(standing.avatarUrl)}
-                alt={standing.username}
-              />
-              <AvatarFallback className="bg-[#243B44] text-base font-black text-white">
-                {avatarFallback(standing.username)}
-              </AvatarFallback>
-            </Avatar>
+            <AvatarDisplay
+              customization={standing.avatarCustomization ?? { base: standing.avatarUrl ?? undefined }}
+              size="md"
+              className={cn('border-2 shadow-xl', config.avatarRing)}
+            />
           </motion.div>
 
           <div className="mt-2.5 max-w-full truncate text-base font-black text-white">
@@ -295,6 +287,7 @@ export function PartyQuizResultsScreen({
         ...standing,
         username: participant?.username ?? 'Player',
         avatarUrl: participant?.avatarUrl ?? null,
+        avatarCustomization: participant?.avatarCustomization ?? null,
         isSelf: standing.userId === selfUserId,
         isWinner: finalResults.winnerId === standing.userId,
       };
@@ -432,12 +425,11 @@ export function PartyQuizResultsScreen({
                     #{standing.rank}
                   </span>
 
-                  <Avatar className="size-9 border border-white/12 shrink-0">
-                    <AvatarImage src={resolveAvatarUrl(standing.avatarUrl)} alt={standing.username} />
-                    <AvatarFallback className="bg-[#243B44] text-[10px] font-black text-white">
-                      {avatarFallback(standing.username)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <AvatarDisplay
+                    customization={standing.avatarCustomization ?? { base: standing.avatarUrl ?? undefined }}
+                    size="xs"
+                    className="size-9 border border-white/12 shrink-0"
+                  />
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">

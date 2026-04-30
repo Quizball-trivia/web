@@ -103,14 +103,14 @@ export function LeaderboardPodium({ topThree, onEntryClick }: LeaderboardPodiumP
               <div className="relative mb-3 sm:mb-4 z-10 shrink-0">
                 <div className="hidden sm:block">
                   <AvatarDisplay
-                    customization={{ base: entry.avatar || `avatar-${rank}` }}
+                    customization={entry.avatarCustomization ?? { base: entry.avatar || `avatar-${rank}` }}
                     size="md"
                     countryCode={entry.country}
                   />
                 </div>
                 <div className="block sm:hidden">
                   <AvatarDisplay
-                    customization={{ base: entry.avatar || `avatar-${rank}` }}
+                    customization={entry.avatarCustomization ?? { base: entry.avatar || `avatar-${rank}` }}
                     size="sm"
                     countryCode={entry.country}
                   />

@@ -18,6 +18,7 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api/api";
+import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { queryKeys } from "@/lib/queries/queryKeys";
 import {
   useFriendRequests,
@@ -113,9 +114,12 @@ function PlayerCard({
       transition={{ duration: 0.3, delay: index * 0.04, ease: "easeOut" }}
       className="flex items-center gap-3 rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] px-4 py-3"
     >
-      <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-[#1CB0F6]/20 bg-[#243B44]">
-        {player.avatarUrl ? (
-          <img src={player.avatarUrl} alt={player.nickname ?? ""} className="size-full object-cover" />
+      <div className="flex size-12 shrink-0 items-center justify-center rounded-xl border-2 border-[#1CB0F6]/20 bg-[#243B44]">
+        {player.avatarCustomization || player.avatarUrl ? (
+          <AvatarDisplay
+            customization={player.avatarCustomization ?? { base: player.avatarUrl ?? undefined }}
+            size="sm"
+          />
         ) : (
           <UserRound className="size-6 text-[#56707A]" />
         )}

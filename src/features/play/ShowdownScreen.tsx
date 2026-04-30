@@ -3,9 +3,11 @@ import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { Trophy } from 'lucide-react';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
+import type { AvatarCustomization } from '@/types/game';
 
 interface PlayerShowdownInfo {
   avatar: string;
+  avatarCustomization?: AvatarCustomization | null;
   username: string;
   rankPoints?: number;
   level?: number;
@@ -71,7 +73,7 @@ function PlayerSide({
           className="relative"
         >
           <AvatarDisplay
-            customization={{ base: info.avatar || 'avatar-1' }}
+            customization={info.avatarCustomization ?? { base: info.avatar || 'avatar-1' }}
             size="xxl"
             countryCode={countryCode}
           />

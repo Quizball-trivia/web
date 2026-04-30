@@ -7,11 +7,13 @@ import {
   type FriendRequestListItemResponse,
   type SocialPlayerResponse,
 } from "@/lib/repositories/social.repo";
+import type { AvatarCustomization } from "@/types/game";
 
 export interface SocialPlayer {
   id: string;
   nickname: string | null;
   avatarUrl: string | null;
+  avatarCustomization: AvatarCustomization | null;
   level: number;
   ranked: SocialPlayerResponse["ranked"];
   friendStatus: SocialPlayerResponse["friendStatus"];
@@ -34,6 +36,7 @@ function toSocialPlayer(player: SocialPlayerResponse): SocialPlayer {
     id: player.id,
     nickname: player.nickname,
     avatarUrl: player.avatarUrl,
+    avatarCustomization: player.avatarCustomization,
     level: player.level,
     ranked: player.ranked,
     friendStatus: player.friendStatus,

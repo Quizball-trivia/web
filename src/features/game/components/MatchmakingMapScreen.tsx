@@ -153,6 +153,7 @@ interface FakePlayer {
   y: number;
   color: string;
   avatarUrl: string;
+  avatarCustomization?: AvatarCustomization | null;
   name: string;
   flag: string;
   city: string;
@@ -1090,6 +1091,7 @@ export function MatchmakingMapScreen({
       color: "#FF4B4B",
       avatarUrl:
         rankedFoundOpponent.avatarUrl ?? getAvatarAsset("blue"),
+      avatarCustomization: rankedFoundOpponent.avatarCustomization ?? null,
       name: rankedFoundOpponent.username || "Opponent",
       flag: resolved.flag,
       city: resolved.city,
@@ -1483,15 +1485,21 @@ export function MatchmakingMapScreen({
                   stroke={p.color}
                   strokeWidth="0.8"
                 />
-                <image
-                  href={p.avatarUrl}
-                  x="-5.1"
-                  y="-12.6"
-                  width="10.2"
-                  height="10.2"
-                  preserveAspectRatio="xMidYMid slice"
-                  clipPath={`url(#pin-avatar-${p.id})`}
-                />
+                {p.avatarCustomization ? (
+                  <foreignObject x="-5.1" y="-12.6" width="10.2" height="10.2" clipPath={`url(#pin-avatar-${p.id})`}>
+                    <AvatarDisplay customization={p.avatarCustomization} size="xs" className="size-full" />
+                  </foreignObject>
+                ) : (
+                  <image
+                    href={p.avatarUrl}
+                    x="-5.1"
+                    y="-12.6"
+                    width="10.2"
+                    height="10.2"
+                    preserveAspectRatio="xMidYMid slice"
+                    clipPath={`url(#pin-avatar-${p.id})`}
+                  />
+                )}
 
                 {/* Name label (only when highlighted or opponent) */}
                 {(isOpp || (highlighted && !showFoundState)) && (
@@ -1658,9 +1666,9 @@ export function MatchmakingMapScreen({
                     transition={{ delay: 1.2, type: "spring", stiffness: 200 }}
                     className="size-16 rounded-full bg-[#243B44] border-[3px] border-[#FF9600] flex items-center justify-center overflow-hidden"
                   >
-                    {rankedFoundOpponent?.avatarUrl ? (
+                    {rankedFoundOpponent?.avatarCustomization || rankedFoundOpponent?.avatarUrl ? (
                       <AvatarDisplay
-                        customization={{ base: rankedFoundOpponent.avatarUrl }}
+                        customization={rankedFoundOpponent.avatarCustomization ?? { base: rankedFoundOpponent.avatarUrl ?? undefined }}
                         size="sm"
                       />
                     ) : (

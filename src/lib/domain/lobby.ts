@@ -1,3 +1,5 @@
+import type { AvatarCustomization } from "@/types/game";
+
 export interface PublicLobby {
   lobbyId: string;
   inviteCode: string;
@@ -6,6 +8,7 @@ export interface PublicLobby {
     id: string;
     username: string;
     avatarUrl?: string;
+    avatarCustomization?: AvatarCustomization | null;
   };
   memberCount: number;
   maxMembers: number;

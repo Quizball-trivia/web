@@ -7,6 +7,7 @@ import { PitchVisualization } from './PitchVisualization';
 import { BanCategoryCard } from '@/components/shared/BanCategoryCard';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import type { DraftCategory } from '@/lib/realtime/socket.types';
+import type { AvatarCustomization } from '@/types/game';
 
 interface HalftimeScreenProps {
   visible: boolean;
@@ -16,6 +17,8 @@ interface HalftimeScreenProps {
   opponentName: string;
   playerAvatarUrl: string;
   opponentAvatarUrl: string;
+  playerAvatarCustomization?: AvatarCustomization | null;
+  opponentAvatarCustomization?: AvatarCustomization | null;
   playerPosition: number;
   /** ISO-country code (e.g. "ge", "us") — renders a flag badge on the avatar. */
   playerCountryCode?: string | null;
@@ -79,6 +82,8 @@ export function HalftimeScreen({
   opponentName,
   playerAvatarUrl,
   opponentAvatarUrl,
+  playerAvatarCustomization = null,
+  opponentAvatarCustomization = null,
   playerPosition,
   playerCountryCode = null,
   opponentCountryCode = null,
@@ -176,6 +181,8 @@ export function HalftimeScreen({
                   playerPosition={playerPosition}
                   playerAvatarUrl={playerAvatarUrl}
                   opponentAvatarUrl={opponentAvatarUrl}
+                  playerAvatarCustomization={playerAvatarCustomization}
+                  opponentAvatarCustomization={opponentAvatarCustomization}
                   playerName={playerName}
                   opponentName={opponentName}
                   myMomentum={0}
@@ -219,7 +226,7 @@ export function HalftimeScreen({
                 {/* Player */}
                 <div className="flex flex-col items-center gap-1.5 min-w-0 flex-1">
                   <AvatarDisplay
-                    customization={{ base: playerAvatarUrl }}
+                    customization={playerAvatarCustomization ?? { base: playerAvatarUrl }}
                     size="sm"
                     countryCode={playerCountryCode}
                     className="ring-[3px] ring-[#1CB0F6]"
@@ -243,7 +250,7 @@ export function HalftimeScreen({
                 {/* Opponent */}
                 <div className="flex flex-col items-center gap-1.5 min-w-0 flex-1">
                   <AvatarDisplay
-                    customization={{ base: opponentAvatarUrl }}
+                    customization={opponentAvatarCustomization ?? { base: opponentAvatarUrl }}
                     size="sm"
                     countryCode={opponentCountryCode}
                     className="ring-[3px] ring-[#FF4B4B]"

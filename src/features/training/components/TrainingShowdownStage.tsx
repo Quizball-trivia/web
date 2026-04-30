@@ -10,7 +10,7 @@ import { BOT_AVATAR, BOT_NAME } from "../constants";
 export function TrainingShowdownStage() {
   const { match, tooltips } = useTraining();
   const { player } = usePlayer();
-  const { avatarUrl: playerResolvedAvatar } = usePlayerAvatar();
+  const { avatarUrl: playerResolvedAvatar, avatarCustomization } = usePlayerAvatar();
   const tooltipFired = useRef(false);
 
   useEffect(() => {
@@ -24,6 +24,7 @@ export function TrainingShowdownStage() {
     <ShowdownScreen
       player={{
         avatar: playerResolvedAvatar,
+        avatarCustomization,
         username: player.username,
         rankPoints: 0,
         level: player.level,

@@ -1,8 +1,11 @@
+import type { AvatarCustomization } from "@/types/game";
+
 export interface LeaderboardEntry {
   id: string;
   rank: number;
   username: string;
   avatar?: string;
+  avatarCustomization?: AvatarCustomization | null;
   country?: string | null;
   tier: string;
   rankPoints: number;

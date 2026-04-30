@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { AnimatePresence, motion } from 'motion/react';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useHeadToHead } from '@/lib/queries/stats.queries';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
@@ -16,6 +15,8 @@ import { applyXpReward, getMatchXpReward } from '@/lib/domain/matchXp';
 import { getTierVisual } from '@/utils/tierVisuals';
 import { getRankedTierProgress, tierFromRp } from '@/utils/rankedTier';
 import { trackMatchCompleted, trackDivisionPromoted, trackLevelUp } from '@/lib/analytics/game-events';
+import { AvatarDisplay } from '@/components/AvatarDisplay';
+import type { AvatarCustomization } from '@/types/game';
 import { logger } from '@/utils/logger';
 
 /** Animated number that ticks from `from` → `to` after a delay, with a pop + glow */
@@ -87,8 +88,10 @@ interface RealtimeResultsScreenProps {
   matchType: 'ranked' | 'friendly';
   playerUsername: string;
   playerAvatar: string;
+  playerAvatarCustomization?: AvatarCustomization | null;
   opponentUsername: string;
   opponentAvatar: string;
+  opponentAvatarCustomization?: AvatarCustomization | null;
   playerScore: number;
   opponentScore: number;
   playerCorrect: number;
@@ -111,8 +114,10 @@ export function RealtimeResultsScreen({
   matchType,
   playerUsername,
   playerAvatar,
+  playerAvatarCustomization = null,
   opponentUsername,
   opponentAvatar,
+  opponentAvatarCustomization = null,
   playerScore,
   opponentScore,
   playerCorrect,
@@ -336,12 +341,11 @@ export function RealtimeResultsScreen({
           <div className="md:hidden space-y-3">
             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
               <div className="flex flex-col items-center text-center">
-                <Avatar className="size-12 shrink-0 border border-white/15 bg-white/[0.03] shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
-                  <AvatarImage src={playerAvatar} />
-                  <AvatarFallback className="bg-white/10 text-sm font-bold">
-                    {playerUsername.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <AvatarDisplay
+                  customization={playerAvatarCustomization ?? { base: playerAvatar }}
+                  size="sm"
+                  className="border border-white/15 bg-white/[0.03] shadow-[0_0_0_1px_rgba(255,255,255,0.04)]"
+                />
                 <div className="mt-2 max-w-full truncate text-[1.15rem] font-bold text-white">{playerUsername}</div>
                 <div className="text-[0.8rem] font-black uppercase tracking-wide text-[#38D66B]">You</div>
               </div>
@@ -365,12 +369,11 @@ export function RealtimeResultsScreen({
               </div>
 
               <div className="flex flex-col items-center text-center">
-                <Avatar className="size-12 shrink-0 border border-[#F36A6A]/70 bg-white/[0.03] shadow-[0_0_16px_rgba(243,106,106,0.24)]">
-                  <AvatarImage src={opponentAvatar} />
-                  <AvatarFallback className="bg-white/10 text-sm font-bold">
-                    {opponentUsername.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <AvatarDisplay
+                  customization={opponentAvatarCustomization ?? { base: opponentAvatar }}
+                  size="sm"
+                  className="border border-[#F36A6A]/70 bg-white/[0.03] shadow-[0_0_16px_rgba(243,106,106,0.24)]"
+                />
                 <div className="mt-2 max-w-full truncate text-[1.15rem] font-bold text-white">{opponentUsername}</div>
                 <div className="text-[0.8rem] font-black uppercase tracking-wide text-[#F36A6A]">Opponent</div>
               </div>
@@ -379,12 +382,11 @@ export function RealtimeResultsScreen({
 
           <div className="hidden md:grid items-center gap-6 md:grid-cols-[1fr_auto_auto_auto_1fr]">
             <div className="flex items-center gap-4 justify-self-start">
-              <Avatar className="h-[4.5rem] w-[4.5rem] shrink-0 border-2 border-white/15 bg-white/[0.03] shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
-                <AvatarImage src={playerAvatar} />
-                <AvatarFallback className="bg-white/10 text-lg font-bold">
-                  {playerUsername.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <AvatarDisplay
+                customization={playerAvatarCustomization ?? { base: playerAvatar }}
+                size="lg"
+                className="h-[4.5rem] w-[4.5rem] border-2 border-white/15 bg-white/[0.03] shadow-[0_0_0_1px_rgba(255,255,255,0.04)]"
+              />
               <div className="min-w-0">
                 <div className="truncate text-[2.1rem] font-bold text-white">{playerUsername}</div>
                 <div className="text-lg font-black uppercase tracking-wide text-[#38D66B]">You</div>
@@ -418,12 +420,11 @@ export function RealtimeResultsScreen({
                 <div className="truncate text-[2.1rem] font-bold text-white">{opponentUsername}</div>
                 <div className="text-lg font-black uppercase tracking-wide text-[#F36A6A]">Opponent</div>
               </div>
-              <Avatar className="h-[4.5rem] w-[4.5rem] shrink-0 border-2 border-[#F36A6A]/70 bg-white/[0.03] shadow-[0_0_24px_rgba(243,106,106,0.32)]">
-                <AvatarImage src={opponentAvatar} />
-                <AvatarFallback className="bg-white/10 text-lg font-bold">
-                  {opponentUsername.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <AvatarDisplay
+                customization={opponentAvatarCustomization ?? { base: opponentAvatar }}
+                size="lg"
+                className="h-[4.5rem] w-[4.5rem] border-2 border-[#F36A6A]/70 bg-white/[0.03] shadow-[0_0_24px_rgba(243,106,106,0.32)]"
+              />
             </div>
           </div>
 

@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Crown, X } from 'lucide-react';
 
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { QuitMatchModal } from '@/features/game/components/QuitMatchModal';
 import { useRealtimeGameLogic } from '@/features/game/hooks/useRealtimeGameLogic';
 import { PartyQuestionPanel } from '@/features/party/components/PartyQuestionPanel';
@@ -14,9 +14,9 @@ import { PartyRoundTransitionOverlay } from '@/features/party/components/PartyRo
 import type { AnswerStateArray, Phase } from '@/lib/types/game.types';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import type { MatchParticipant } from '@/lib/realtime/socket.types';
-import { resolveAvatarUrl } from '@/lib/avatars';
 import { cn } from '@/lib/utils';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
+import type { AvatarCustomization } from '@/types/game';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -31,6 +31,7 @@ interface PartyStandingViewModel {
   userId: string;
   username: string;
   avatarUrl: string | null;
+  avatarCustomization?: AvatarCustomization | null;
   rank: number;
   totalPoints: number;
   answered: boolean;
@@ -80,11 +81,6 @@ function toRevealAnswerStates(
     if (selectedAnswer === index) return 'wrong';
     return 'disabled';
   }) as AnswerStateArray;
-}
-
-function avatarFallback(name: string): string {
-  const trimmed = name.trim();
-  return trimmed.slice(0, 2).toUpperCase() || 'QB';
 }
 
 function buildParticipantMap(participants: MatchParticipant[]): Map<string, MatchParticipant> {
@@ -240,6 +236,7 @@ export function RealtimePartyQuizScreen({
           rank: player.rank,
           username: participant?.username ?? 'Player',
           avatarUrl: participant?.avatarUrl ?? null,
+          avatarCustomization: participant?.avatarCustomization ?? null,
           isSelf: player.userId === selfUserId,
           isLeader: player.userId === partyState.leaderUserId,
           rankShift,
@@ -496,15 +493,11 @@ export function RealtimePartyQuizScreen({
                     </span>
 
                     {/* Avatar */}
-                    <Avatar className="size-8 border border-white/15 shrink-0">
-                      <AvatarImage
-                        src={resolveAvatarUrl(player.avatarUrl)}
-                        alt={player.username}
-                      />
-                      <AvatarFallback className="bg-[#243B44] text-[10px] font-black text-white">
-                        {avatarFallback(player.username)}
-                      </AvatarFallback>
-                    </Avatar>
+                    <AvatarDisplay
+                      customization={player.avatarCustomization ?? { base: player.avatarUrl ?? undefined }}
+                      size="xs"
+                      className="border border-white/15 shrink-0"
+                    />
 
                     {/* Name + badges */}
                     <div className="min-w-0 flex-1">
@@ -586,15 +579,11 @@ export function RealtimePartyQuizScreen({
                   #{player.rank}
                 </span>
                 <div className="relative">
-                  <Avatar className="size-6 border border-white/15 shrink-0">
-                    <AvatarImage
-                      src={resolveAvatarUrl(player.avatarUrl)}
-                      alt={player.username}
-                    />
-                    <AvatarFallback className="bg-[#243B44] text-[8px] font-black text-white">
-                      {avatarFallback(player.username)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <AvatarDisplay
+                    customization={player.avatarCustomization ?? { base: player.avatarUrl ?? undefined }}
+                    size="xs"
+                    className="size-6 border border-white/15 shrink-0"
+                  />
                   {/* Answered check overlay on avatar */}
                   {hasAnswered && !player.isSelf && (
                     <motion.div

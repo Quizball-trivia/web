@@ -83,7 +83,9 @@ function PublicProfileContent({ userId }: { userId: string }) {
     id: profile.id,
     username: profile.nickname ?? "Unknown",
     avatar: profile.avatarUrl ?? "avatar-1",
-    avatarCustomization: profile.avatarUrl
+    avatarCustomization: profile.avatarCustomization
+      ? profile.avatarCustomization
+      : profile.avatarUrl
       ? { base: profile.avatarUrl }
       : undefined,
     coins: 0,

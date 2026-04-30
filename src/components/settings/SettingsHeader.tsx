@@ -1,9 +1,9 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
 import { Flame, Trophy } from "lucide-react";
+import { AvatarDisplay } from "@/components/AvatarDisplay";
 
 interface SettingsHeaderProps {
   /** Year/date when the user joined (e.g., 2024 or "Jan 2024") */
@@ -25,6 +25,7 @@ export function SettingsHeader({
   // Use auth user data if available, fallback to player context
   const displayName = user?.nickname ?? player.username;
   const avatarUrl = user?.avatar_url ?? player.avatar;
+  const avatarCustomization = user?.avatar_customization ?? player.avatarCustomization;
 
   // Use XP from player context
   const playerXp = player.xp ?? 0;
@@ -47,12 +48,11 @@ export function SettingsHeader({
       
       {/* Avatar */}
       <div className="relative shrink-0">
-         <Avatar className="size-24 border-4 border-background shadow-xl">
-            <AvatarImage src={avatarUrl} alt={displayName} />
-            <AvatarFallback className="text-2xl font-bold bg-primary/20 text-primary">
-               {displayName.charAt(0).toUpperCase()}
-            </AvatarFallback>
-         </Avatar>
+         <AvatarDisplay
+           customization={avatarCustomization ?? { base: avatarUrl }}
+           size="lg"
+           className="size-24 border-4 border-background shadow-xl"
+         />
          <Badge className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-background border border-primary text-primary shadow-sm whitespace-nowrap">
             Lvl {level}
          </Badge>

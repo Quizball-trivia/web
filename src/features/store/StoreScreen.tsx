@@ -26,7 +26,6 @@ import {
 } from "@/lib/avatars/parts";
 import {
   customizationFromAvatarValue,
-  encodeAvatarCustomization,
 } from "@/lib/avatars";
 import { useAuthStore } from "@/stores/auth.store";
 import { usePlayer } from "@/contexts/PlayerContext";
@@ -163,8 +162,8 @@ export function StoreScreen() {
 
   /** Currently saved customization (decoded from avatar_url). */
   const currentCustomization = useMemo<AvatarCustomization>(() => {
-    return customizationFromAvatarValue(authUser?.avatar_url ?? player.avatarCustomization?.base);
-  }, [authUser?.avatar_url, player.avatarCustomization?.base]);
+    return authUser?.avatar_customization ?? customizationFromAvatarValue(authUser?.avatar_url ?? player.avatarCustomization?.base);
+  }, [authUser?.avatar_customization, authUser?.avatar_url, player.avatarCustomization?.base]);
 
   /** Set of part ids the user already owns (free defaults + purchased). */
   const ownedPartIds = useMemo(() => {
@@ -323,14 +322,13 @@ export function StoreScreen() {
 
   const purchasePending = checkoutMutation.isPending || coinPurchaseMutation.isPending;
 
-  /** Persist a customization change: encode → save to backend + local state. */
+  /** Persist structured customization to the backend. */
   const persistCustomization = async (next: AvatarCustomization) => {
-    const encoded = encodeAvatarCustomization(next);
     try {
-      const updated = await updateMe({ avatar_url: encoded });
+      const updated = await updateMe({ avatar_customization: next });
       updateStats({ avatarCustomization: next });
       if (authUser) {
-        setAuthenticated({ ...authUser, avatar_url: updated.avatar_url ?? encoded });
+        setAuthenticated({ ...authUser, avatar_customization: updated.avatar_customization ?? next });
       }
     } catch {
       toast.error("Could not save avatar.");

@@ -115,7 +115,7 @@ export function LobbyHeader({
                     )}
                   >
                     <AvatarDisplay
-                      customization={{ base: avatarBase }}
+                      customization={member.avatarCustomization ?? { base: avatarBase }}
                       size="md"
                       className="rounded-full"
                     />

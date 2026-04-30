@@ -2,6 +2,8 @@
 
 import { useId, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { AvatarDisplay } from '@/components/AvatarDisplay';
+import type { AvatarCustomization } from '@/types/game';
 
 type GoalSide = 'left' | 'right';
 
@@ -10,6 +12,7 @@ interface PitchMarkerProps {
   x: number;
   y: number;
   avatarUrl: string;
+  avatarCustomization?: AvatarCustomization | null;
   avatarAlt: string;
   color: string;
   glowFilter: string;
@@ -24,7 +27,7 @@ interface PitchMarkerProps {
 }
 
 function PitchMarker({
-  x, y, avatarUrl, avatarAlt, color, glowFilter,
+  x, y, avatarUrl, avatarCustomization, avatarAlt, color, glowFilter,
   isShooter, isKeeper, isSave, isGoal, showPenResult, keeperJolt,
   isPortrait = false,
   size = 40,
@@ -58,8 +61,12 @@ function PitchMarker({
           <circle cx="0" cy="0" r={size * 0.55} fill="none" stroke={color} strokeWidth={isKeeper ? 3.5 : 2.5} />
           <foreignObject x={-size/2} y={-size/2} width={size} height={size}>
             <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden' }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={avatarUrl} alt={avatarAlt} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              {avatarCustomization ? (
+                <AvatarDisplay customization={avatarCustomization} size="xs" className="size-full" />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarUrl} alt={avatarAlt} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              )}
             </div>
           </foreignObject>
         </g>
@@ -122,6 +129,8 @@ interface PitchVisualizationProps {
   playerPosition: number; // 0–100
   playerAvatarUrl: string;
   opponentAvatarUrl: string;
+  playerAvatarCustomization?: AvatarCustomization | null;
+  opponentAvatarCustomization?: AvatarCustomization | null;
   playerName?: string;
   opponentName?: string;
   myMomentum?: number; // 0-6
@@ -150,6 +159,8 @@ export function PitchVisualization({
   playerPosition,
   playerAvatarUrl,
   opponentAvatarUrl,
+  playerAvatarCustomization = null,
+  opponentAvatarCustomization = null,
   playerName,
   opponentName,
   myMomentum: _myMomentum = 0,
@@ -453,6 +464,7 @@ export function PitchVisualization({
               <PitchMarker
                 x={opponentX} y={goal.penY}
                 avatarUrl={opponentAvatarUrl}
+                avatarCustomization={opponentAvatarCustomization}
                 avatarAlt={opponentAvatarAlt}
                 color="#FF4B4B" glowFilter={uid('redGlow')}
                 isShooter={isPenalty ? !penaltyMode.isPlayerShooter : (isShot && shotMode ? !shotMode.isPlayerAttacker : false)}
@@ -467,6 +479,7 @@ export function PitchVisualization({
               <PitchMarker
                 x={playerX} y={goal.penY}
                 avatarUrl={playerAvatarUrl}
+                avatarCustomization={playerAvatarCustomization}
                 avatarAlt={playerAvatarAlt}
                 color="#1CB0F6" glowFilter={uid('blueGlow')}
                 isShooter={isPenalty ? penaltyMode.isPlayerShooter : (isShot && shotMode ? shotMode.isPlayerAttacker : false)}

@@ -99,14 +99,14 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
                   <div className="relative shrink-0">
                     <div className="block sm:hidden">
                       <AvatarDisplay
-                        customization={{ base: entry.avatar || "avatar-1" }}
+                        customization={entry.avatarCustomization ?? { base: entry.avatar || "avatar-1" }}
                         size="xs"
                         countryCode={entry.country}
                       />
                     </div>
                     <div className="hidden sm:block">
                       <AvatarDisplay
-                        customization={{ base: entry.avatar || "avatar-1" }}
+                        customization={entry.avatarCustomization ?? { base: entry.avatar || "avatar-1" }}
                         size="sm"
                         countryCode={entry.country}
                       />

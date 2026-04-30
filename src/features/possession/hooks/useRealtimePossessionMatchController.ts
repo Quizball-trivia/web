@@ -28,13 +28,16 @@ import {
   type FeedResult,
 } from '../realtimePossession.helpers';
 import type { FeedDirection } from '../types/possession.types';
+import type { AvatarCustomization } from '@/types/game';
 
 type HalftimeModel = ComponentProps<typeof HalftimeScreen>;
 
 interface UseRealtimePossessionMatchControllerParams {
   playerAvatar: string;
+  playerAvatarCustomization?: AvatarCustomization | null;
   playerUsername: string;
   opponentAvatar: string;
+  opponentAvatarCustomization?: AvatarCustomization | null;
   opponentUsername: string;
   /** ISO country code for the flag badge shown on the halftime avatar. */
   playerCountryCode?: string | null;
@@ -64,8 +67,10 @@ interface RealtimePossessionMatchControllerResult {
 
 export function useRealtimePossessionMatchController({
   playerAvatar,
+  playerAvatarCustomization = null,
   playerUsername,
   opponentAvatar,
+  opponentAvatarCustomization = null,
   opponentUsername,
   playerCountryCode = null,
   opponentCountryCode = null,
@@ -575,7 +580,11 @@ export function useRealtimePossessionMatchController({
               opponentAnsweredCorrectly,
             },
           },
-      pitchProps: fieldState.pitchProps,
+      pitchProps: {
+        ...fieldState.pitchProps,
+        playerAvatarCustomization,
+        opponentAvatarCustomization,
+      },
       goalCelebration,
       penaltySplash: fieldState.isPenaltyQuestion
         && state.roundResolved
@@ -661,6 +670,8 @@ export function useRealtimePossessionMatchController({
       opponentName: opponentUsername,
       playerAvatarUrl: playerAvatar,
       opponentAvatarUrl: opponentAvatar,
+      playerAvatarCustomization,
+      opponentAvatarCustomization,
       playerPosition: fieldState.visualMyPossessionPct,
       playerCountryCode,
       opponentCountryCode,
