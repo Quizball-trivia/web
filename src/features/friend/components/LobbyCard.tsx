@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { PublicLobby } from "@/lib/domain/lobby";
-import { DEFAULT_AVATAR_SECONDARY, getDiceBearAvatarUrl } from "@/lib/avatars";
+import { resolveAvatarUrl } from "@/lib/avatars";
 import { ArrowRight, Trophy, Users } from "lucide-react";
 
 interface LobbyCardProps {
@@ -15,23 +15,7 @@ interface LobbyCardProps {
 
 export function LobbyCard({ lobby, onJoin, isJoining }: LobbyCardProps) {
   const isFull = lobby.memberCount >= lobby.maxMembers;
-  const rawHostAvatar = lobby.host.avatarUrl?.trim();
-  const hostAvatarSrc = (() => {
-    if (!rawHostAvatar) {
-      return getDiceBearAvatarUrl(DEFAULT_AVATAR_SECONDARY, 96);
-    }
-
-    if (
-      rawHostAvatar.startsWith("http://") ||
-      rawHostAvatar.startsWith("https://") ||
-      rawHostAvatar.startsWith("data:image/") ||
-      rawHostAvatar.startsWith("/")
-    ) {
-      return rawHostAvatar;
-    }
-
-    return getDiceBearAvatarUrl(rawHostAvatar, 96);
-  })();
+  const hostAvatarSrc = resolveAvatarUrl(lobby.host.avatarUrl);
   
   return (
     <Card className="group relative overflow-hidden border-border transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5">

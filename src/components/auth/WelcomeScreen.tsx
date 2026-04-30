@@ -294,7 +294,7 @@ export function WelcomeScreen() {
             <div className="mb-4 flex items-center justify-between gap-3 px-1 md:px-2">
               <div className="flex items-center gap-3 flex-1 min-w-0 rounded-2xl bg-[#071013] px-3 py-2.5">
                 <div className="rounded-full bg-[#1CB0F6] p-[3px] shadow-[0_0_16px_rgba(28,176,246,0.3)]">
-                  <AvatarDisplay customization={{ base: "avatar-1", background: "transparent" }} size="sm" className="rounded-full" />
+                  <AvatarDisplay customization={{ base: "avatar-1" }} size="sm" className="rounded-full" />
                 </div>
                 <div className="min-w-0">
                   <div className="text-xs font-bold text-white/85 truncate">{demoPlayers.left}</div>
@@ -318,7 +318,7 @@ export function WelcomeScreen() {
                   </motion.div>
                 </div>
                 <div className="rounded-full bg-[#FF4B4B] p-[3px] shadow-[0_0_16px_rgba(255,75,75,0.3)]">
-                  <AvatarDisplay customization={{ base: "avatar-8", background: "transparent" }} size="sm" className="rounded-full" />
+                  <AvatarDisplay customization={{ base: "avatar-8" }} size="sm" className="rounded-full" />
                 </div>
               </div>
             </div>
@@ -383,7 +383,7 @@ export function WelcomeScreen() {
                     transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
                     className="rounded-full bg-[#FF4B4B] p-[3px] shadow-[0_0_18px_rgba(255,75,75,0.35)]"
                   >
-                    <AvatarDisplay customization={{ base: "avatar-1", background: "transparent" }} size="sm" className="rounded-full" />
+                    <AvatarDisplay customization={{ base: "avatar-1" }} size="sm" className="rounded-full" />
                   </motion.div>
                 </motion.div>
 
@@ -397,7 +397,7 @@ export function WelcomeScreen() {
                     transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut', delay: 0.25 }}
                     className="rounded-full bg-[#38B60E] p-[3px] shadow-[0_0_18px_rgba(56,182,14,0.35)]"
                   >
-                    <AvatarDisplay customization={{ base: "avatar-8", background: "transparent" }} size="sm" className="rounded-full" />
+                    <AvatarDisplay customization={{ base: "avatar-8" }} size="sm" className="rounded-full" />
                   </motion.div>
                 </motion.div>
 
@@ -499,13 +499,13 @@ export function WelcomeScreen() {
           <div className="flex items-center gap-3 mb-6">
             <div className="flex -space-x-2">
               <div className="rounded-full bg-[#FF4B4B] p-[3px] ring-2 ring-[#071013]">
-                <AvatarDisplay customization={{ base: "avatar-1", background: "transparent" }} size="sm" className="rounded-full" />
+                <AvatarDisplay customization={{ base: "avatar-1" }} size="sm" className="rounded-full" />
               </div>
               <div className="rounded-full bg-[#38B60E] p-[3px] ring-2 ring-[#071013]">
-                <AvatarDisplay customization={{ base: "avatar-8", background: "transparent" }} size="sm" className="rounded-full" />
+                <AvatarDisplay customization={{ base: "avatar-8" }} size="sm" className="rounded-full" />
               </div>
               <div className="rounded-full bg-[#FFD700] p-[3px] ring-2 ring-[#071013]">
-                <AvatarDisplay customization={{ base: "avatar-3", background: "transparent" }} size="sm" className="rounded-full" />
+                <AvatarDisplay customization={{ base: "avatar-3" }} size="sm" className="rounded-full" />
               </div>
             </div>
             <span className="text-[#56707A] font-bold text-sm">{duelsCount.toLocaleString()}+ duels played so far</span>

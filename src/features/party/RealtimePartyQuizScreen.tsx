@@ -498,7 +498,7 @@ export function RealtimePartyQuizScreen({
                     {/* Avatar */}
                     <Avatar className="size-8 border border-white/15 shrink-0">
                       <AvatarImage
-                        src={resolveAvatarUrl(player.avatarUrl, `party-${player.userId}`, 64)}
+                        src={resolveAvatarUrl(player.avatarUrl)}
                         alt={player.username}
                       />
                       <AvatarFallback className="bg-[#243B44] text-[10px] font-black text-white">
@@ -588,7 +588,7 @@ export function RealtimePartyQuizScreen({
                 <div className="relative">
                   <Avatar className="size-6 border border-white/15 shrink-0">
                     <AvatarImage
-                      src={resolveAvatarUrl(player.avatarUrl, `party-${player.userId}`, 48)}
+                      src={resolveAvatarUrl(player.avatarUrl)}
                       alt={player.username}
                     />
                     <AvatarFallback className="bg-[#243B44] text-[8px] font-black text-white">

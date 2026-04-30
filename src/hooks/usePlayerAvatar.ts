@@ -8,12 +8,7 @@ export function usePlayerAvatar() {
   const authUser = useAuthStore((state) => state.user);
 
   const avatarUrl = useMemo(
-    () =>
-      resolveAvatarUrl(
-        authUser?.avatar_url ?? player.avatarCustomization?.base ?? player.avatar,
-        "player",
-        256,
-      ),
+    () => resolveAvatarUrl(authUser?.avatar_url ?? player.avatarCustomization?.base ?? player.avatar),
     [authUser?.avatar_url, player.avatarCustomization?.base, player.avatar],
   );
 

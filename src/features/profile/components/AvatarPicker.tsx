@@ -1,48 +1,49 @@
+"use client";
+
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useMobile";
-import { avatarSeeds, getDiceBearAvatarUrl } from "@/lib/avatars";
-import { purchaseStoreWithCoins } from "@/lib/repositories/store.repo";
-import { useStoreInventory, useStoreProducts, type StoreProductDTO } from "@/lib/queries/store.queries";
-import { queryKeys } from "@/lib/queries/queryKeys";
-import { Check, Loader2, Lock, Sparkles } from "lucide-react";
-import { toast } from "sonner";
-import { ApiError } from "@/lib/api/api";
 import {
-  getAvatarImage,
-  getAvatarLabel,
-  getAvatarSeed,
-  isJerseyAvatarProduct,
-  isKnownPremiumAvatarSeed,
-} from "@/lib/store/avatar-products";
+  customizationFromAvatarValue,
+  encodeAvatarCustomization,
+} from "@/lib/avatars";
+import {
+  ALL_AVATAR_PARTS,
+  HAIR_PARTS,
+  GLASSES_PARTS,
+  FACIAL_HAIR_PARTS,
+  JERSEY_PARTS,
+  SKIN_PARTS,
+  type AvatarPart,
+  type SkinPart,
+} from "@/lib/avatars/parts";
+import { useStoreInventory } from "@/lib/queries/store.queries";
+import { AvatarPreview } from "@/components/AvatarPreview";
+import { Check, Loader2, Lock, X } from "lucide-react";
+import { purchaseStoreWithCoins } from "@/lib/repositories/store.repo";
+import { queryKeys } from "@/lib/queries/queryKeys";
+import { ApiError } from "@/lib/api/api";
+import type { AvatarCustomization } from "@/types/game";
 
-/** Show only 8 free avatars (2 rows of 4) */
-const FREE_AVATAR_LIMIT = 8;
-const HIDDEN_PREMIUM_PROFILE_SLUGS = new Set<string>([
-  "avatar_neymar",
-  "avatar_mbappe",
-  "avatar_lion",
-]);
-const VISIBLE_PREMIUM_PROFILE_SLUGS = new Set<string>([
-  "avatar_ronaldo",
-  "avatar_messi",
-  "avatar_ronaldinho",
-]);
-function formatCoins(value: number): string {
-  return `${value.toLocaleString()} coins`;
-}
+type SlotTab = "skin" | "jersey" | "hair" | "glasses" | "facialHair";
 
-function toPersistedAvatarUrl(url: string): string {
-  if (!url.startsWith("/")) return url;
-  if (typeof window === "undefined") return url;
-  return `${window.location.origin}${url}`;
-}
+const TAB_LABELS: Record<SlotTab, string> = {
+  skin: "Skin",
+  jersey: "Jersey",
+  hair: "Hair",
+  glasses: "Glasses",
+  facialHair: "Facial Hair",
+};
+
+const TAB_ORDER: SlotTab[] = ["skin", "jersey", "hair", "glasses", "facialHair"];
+
+const PURPLE = "#BA02E8";
 
 interface AvatarPickerProps {
   open: boolean;
@@ -62,121 +63,282 @@ export function AvatarPicker({
   isSaving = false,
 }: AvatarPickerProps) {
   const isMobile = useIsMobile();
-  const router = useRouter();
   const queryClient = useQueryClient();
-  const [lockedAvatarSlug, setLockedAvatarSlug] = useState<string | null>(null);
-  const [optimisticOwnedSlugs, setOptimisticOwnedSlugs] = useState<Set<string>>(new Set());
-  const { data: productsData } = useStoreProducts();
   const { data: inventoryData } = useStoreInventory();
+  const [activeTab, setActiveTab] = useState<SlotTab>("skin");
+  const [pendingPurchase, setPendingPurchase] = useState<{
+    type: "skin" | "part";
+    skin?: SkinPart;
+    part?: AvatarPart;
+  } | null>(null);
 
-  const premiumProducts = useMemo(() => {
-    const items: Array<{
-      product: StoreProductDTO;
-      label: string;
-      avatarUrl: string;
-      avatarKey: string;
-    }> = [];
+  /** Current full customization decoded from the saved avatar URL. */
+  const current = useMemo<AvatarCustomization>(
+    () => customizationFromAvatarValue(currentAvatarUrl),
+    [currentAvatarUrl],
+  );
 
-    for (const item of productsData?.items ?? []) {
-      if (item.type !== "avatar") continue;
-      if (isJerseyAvatarProduct(item)) continue;
-      if (HIDDEN_PREMIUM_PROFILE_SLUGS.has(item.slug)) continue;
-      if (!VISIBLE_PREMIUM_PROFILE_SLUGS.has(item.slug)) continue;
-      const avatarKey = getAvatarSeed(item);
-      const avatarUrl = getAvatarImage(item, 96);
-      const label = getAvatarLabel(item);
-
-      items.push({
-        product: item,
-        label,
-        avatarUrl,
-        avatarKey,
-      });
+  /** Set of part ids the user owns (free + purchased). In dev mode, everything is unlocked
+   *  so designers/devs can preview all items in the picker. */
+  const ownedPartIds = useMemo(() => {
+    const set = new Set<string>();
+    if (process.env.NODE_ENV === "development") {
+      for (const part of ALL_AVATAR_PARTS) set.add(part.id);
+      for (const skin of SKIN_PARTS) set.add(skin.id);
+      return set;
     }
-
-    return items;
-  }, [productsData]);
-
-  const premiumAvatarKeys = useMemo(
-    () => new Set(premiumProducts.map((item) => item.avatarKey)),
-    [premiumProducts]
-  );
-
-  const seedUrls = useMemo(
-    () =>
-      avatarSeeds
-        .filter((seed) => {
-          const normalized = seed.toLowerCase();
-          if (isKnownPremiumAvatarSeed(normalized)) return false;
-          return !premiumAvatarKeys.has(normalized);
-        })
-        .slice(0, FREE_AVATAR_LIMIT)
-        .map((seed) => ({ seed, url: getDiceBearAvatarUrl(seed, 96) })),
-    [premiumAvatarKeys]
-  );
-
-  const ownedAvatarSlugs = useMemo(() => {
-    const set = new Set<string>(optimisticOwnedSlugs);
-    for (const item of inventoryData?.items ?? []) {
-      if (item.type === "avatar") set.add(item.slug);
+    for (const part of ALL_AVATAR_PARTS) {
+      if (part.free) set.add(part.id);
+    }
+    for (const skin of SKIN_PARTS) {
+      if (skin.free) set.add(skin.id);
+    }
+    for (const entry of inventoryData?.items ?? []) {
+      const part = ALL_AVATAR_PARTS.find((p) => p.productSlug === entry.slug);
+      if (part) set.add(part.id);
+      const skin = SKIN_PARTS.find((s) => s.productSlug === entry.slug);
+      if (skin) set.add(skin.id);
     }
     return set;
-  }, [inventoryData, optimisticOwnedSlugs]);
+  }, [inventoryData]);
 
-  const checkoutMutation = useMutation({
+  const persist = (next: AvatarCustomization) => {
+    onSelect(encodeAvatarCustomization(next));
+  };
+
+  const purchaseMutation = useMutation({
     mutationFn: async (productSlug: string) => purchaseStoreWithCoins({ productSlug }),
-    onSuccess: (_response, productSlug) => {
-      setOptimisticOwnedSlugs((previous) => {
-        const next = new Set(previous);
-        next.add(productSlug);
-        return next;
-      });
-      toast.success("Avatar unlocked.");
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
-      setLockedAvatarSlug(null);
-
-      const unlockedAvatar = premiumProducts.find((item) => item.product.slug === productSlug);
-      if (unlockedAvatar) {
-        onSelect(toPersistedAvatarUrl(unlockedAvatar.avatarUrl));
+      const p = pendingPurchase;
+      if (p?.type === "skin" && p.skin) {
+        persist({ ...current, skin: p.skin.id });
+        toast.success(`${p.skin.name} skin equipped.`);
+      } else if (p?.type === "part" && p.part) {
+        persist({ ...current, [p.part.slot]: p.part.id });
+        toast.success(`${p.part.name} equipped.`);
       }
+      setPendingPurchase(null);
     },
     onError: (error) => {
       if (error instanceof ApiError && error.status === 400) {
-        toast.error("Not enough coins for this avatar.");
+        toast.error("Not enough coins.");
         return;
       }
-      if (error instanceof ApiError && error.status === 401) {
-        toast.error("Session expired. Please sign in again.");
-        return;
-      }
-      toast.error("Unable to complete purchase. Try again.");
+      toast.error("Purchase failed. Try again.");
     },
   });
 
-  const selectedLockedProduct = premiumProducts.find((item) => item.product.slug === lockedAvatarSlug);
-  const selectedLockedPrice = selectedLockedProduct?.product.priceCents ?? null;
-
-  const handlePremiumAvatarClick = (slug: string, avatarUrl: string) => {
-    const isOwned = ownedAvatarSlugs.has(slug);
-    if (isOwned) {
-      onSelect(toPersistedAvatarUrl(avatarUrl));
+  const handleSelectSkin = (skin: SkinPart) => {
+    if (skin.free || ownedPartIds.has(skin.id)) {
+      persist({ ...current, skin: skin.id });
       return;
     }
-    setLockedAvatarSlug(slug);
+    if (skin.productSlug) {
+      setPendingPurchase({ type: "skin", skin });
+    }
+  };
+
+  const handleSelectPart = (
+    slot: "jersey" | "hair" | "glasses" | "facialHair",
+    part: AvatarPart | null,
+  ) => {
+    if (part === null) {
+      persist({ ...current, [slot]: undefined });
+      return;
+    }
+    if (part.free || ownedPartIds.has(part.id)) {
+      persist({ ...current, [slot]: part.id });
+      return;
+    }
+    if (part.productSlug) {
+      setPendingPurchase({ type: "part", part });
+    }
+  };
+
+  const TabBar = (
+    <div className="flex flex-wrap gap-2 border-b border-white/10 pb-3">
+      {TAB_ORDER.map((tab) => {
+        const isActive = activeTab === tab;
+        return (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setActiveTab(tab)}
+            className={cn(
+              "rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.04em] transition-colors",
+              isActive ? "text-white" : "text-white/55 hover:text-white/80",
+            )}
+            style={{
+              backgroundColor: isActive ? PURPLE : "transparent",
+              border: `1.5px solid ${isActive ? PURPLE : "rgba(255,255,255,0.1)"}`,
+            }}
+          >
+            {TAB_LABELS[tab]}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  /** Skin tab — shows 4 skins; locked ones open the buy modal. */
+  const SkinTab = (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {SKIN_PARTS.map((skin) => {
+        const owned = ownedPartIds.has(skin.id);
+        const selected = current.skin === skin.id;
+        const previewCustomization: AvatarCustomization = { ...current, skin: skin.id };
+        return (
+          <button
+            key={skin.id}
+            type="button"
+            disabled={isSaving}
+            onClick={() => handleSelectSkin(skin)}
+            className="group relative flex flex-col items-center gap-2 rounded-2xl py-3 transition-all active:translate-y-[1px]"
+            style={{
+              border: `2px solid ${selected ? PURPLE : "transparent"}`,
+              backgroundColor: selected ? `${PURPLE}14` : "rgba(255,255,255,0.02)",
+            }}
+          >
+            <div className="relative flex h-32 sm:h-36 items-center justify-center">
+              <AvatarPreview customization={previewCustomization} width={isMobile ? 100 : 120} />
+              {!owned && (
+                <div className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center">
+                  <Lock className="size-5 text-white/80" />
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-black uppercase tracking-wider text-white/70">
+                {skin.name}
+              </span>
+              {!owned && skin.priceCoins && (
+                <span className="text-[9px] font-black uppercase tracking-wider text-[#FFE500]">
+                  {skin.priceCoins}
+                </span>
+              )}
+            </div>
+            {selected && (
+              <div
+                className="absolute top-2 right-2 size-5 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: PURPLE }}
+              >
+                <Check className="size-3 text-white" strokeWidth={3} />
+              </div>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  /** Generic owned-parts grid for jersey/hair/glasses/facialHair. */
+  const renderSlotGrid = (
+    slot: "jersey" | "hair" | "glasses" | "facialHair",
+    parts: AvatarPart[],
+  ) => {
+    const currentValue = current[slot];
+
+    return (
+      <div className="space-y-3">
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+          {/* "None" option */}
+          <button
+            type="button"
+            disabled={isSaving}
+            onClick={() => handleSelectPart(slot, null)}
+            className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl py-3 transition-all active:translate-y-[1px]"
+            style={{
+              border: `2px solid ${!currentValue ? PURPLE : "transparent"}`,
+              backgroundColor: !currentValue ? `${PURPLE}14` : "rgba(255,255,255,0.02)",
+            }}
+          >
+            <div className="flex size-20 sm:size-24 items-center justify-center rounded-full border-2 border-dashed border-white/15">
+              <X className="size-8 text-white/40" strokeWidth={2.5} />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-wider text-white/70">
+              None
+            </span>
+            {!currentValue && (
+              <div
+                className="absolute top-2 right-2 size-5 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: PURPLE }}
+              >
+                <Check className="size-3 text-white" strokeWidth={3} />
+              </div>
+            )}
+          </button>
+
+          {parts.map((part) => {
+            const owned = ownedPartIds.has(part.id);
+            const selected = currentValue === part.id;
+            return (
+              <button
+                key={part.id}
+                type="button"
+                disabled={isSaving}
+                onClick={() => handleSelectPart(slot, part)}
+                className="group relative flex flex-col items-center gap-2 rounded-2xl py-3 transition-all active:translate-y-[1px]"
+                style={{
+                  border: `2px solid ${selected ? PURPLE : "transparent"}`,
+                  backgroundColor: selected ? `${PURPLE}14` : "rgba(255,255,255,0.02)",
+                }}
+              >
+                <div className="relative flex size-20 sm:size-24 items-center justify-center">
+                  <Image
+                    src={part.asset}
+                    alt={part.name}
+                    width={96}
+                    height={96}
+                    unoptimized
+                    className="max-h-full w-auto object-contain"
+                  />
+                  {!owned && (
+                    <div className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center">
+                      <Lock className="size-4 text-white/80" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-white/70 truncate max-w-[80px]">
+                    {part.name}
+                  </span>
+                  {!owned && part.priceCoins && (
+                    <span className="text-[9px] font-black uppercase tracking-wider text-[#FFE500]">
+                      {part.priceCoins}
+                    </span>
+                  )}
+                </div>
+                {selected && (
+                  <div
+                    className="absolute top-2 right-2 size-5 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: PURPLE }}
+                  >
+                    <Check className="size-3 text-white" strokeWidth={3} />
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   const Content = (
     <div className="space-y-4">
       {googleAvatarUrl && (
         <div className="space-y-2">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Google Photo</span>
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Google Photo
+          </span>
           <button
             className={cn(
               "w-full flex items-center gap-3 rounded-xl border p-2.5 transition-all",
               currentAvatarUrl === googleAvatarUrl
                 ? "border-primary bg-primary/5"
-                : "border-border hover:border-primary/60 hover:bg-muted/30"
+                : "border-border hover:border-primary/60 hover:bg-muted/30",
             )}
             onClick={() => onSelect(googleAvatarUrl)}
             disabled={isSaving}
@@ -194,93 +356,24 @@ export function AvatarPicker({
             <div className="flex-1 text-left">
               <div className="text-sm font-semibold">Use Google photo</div>
             </div>
-            {currentAvatarUrl === googleAvatarUrl && (
-              <Check className="size-4 text-primary" />
-            )}
+            {currentAvatarUrl === googleAvatarUrl && <Check className="size-4 text-primary" />}
           </button>
         </div>
       )}
 
-      <div className="space-y-2">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Free Avatars</span>
-        <div className="grid grid-cols-4 gap-2">
-          {seedUrls.map(({ seed, url }) => {
-            const isSelected = currentAvatarUrl === url;
-            return (
-              <button
-                key={seed}
-                className={cn(
-                  "group relative rounded-xl border p-1.5 transition-all",
-                  isSelected
-                    ? "border-primary bg-primary/10"
-                    : "border-border hover:border-primary/60 hover:bg-muted/30"
-                )}
-                onClick={() => onSelect(toPersistedAvatarUrl(url))}
-                disabled={isSaving}
-              >
-                <div className="relative mx-auto size-16 rounded-full overflow-hidden border border-border bg-background">
-                  <Image src={url} alt={seed} fill sizes="64px" className="object-cover" unoptimized />
-                </div>
-                <div className="mt-1.5 text-[10px] font-medium text-muted-foreground capitalize truncate">
-                  {seed.replace(/-/g, " ")}
-                </div>
-                {isSelected && (
-                  <div className="absolute top-1 right-1 size-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-                    <Check className="size-2.5" />
-                  </div>
-                )}
-              </button>
-            );
-          })}
-        </div>
+      {/* Live preview of the avatar with current selection */}
+      <div className="flex justify-center pt-1 pb-2">
+        <AvatarPreview customization={current} width={isMobile ? 140 : 160} />
       </div>
 
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Premium</span>
-          <Sparkles className="size-3 text-amber-400" />
-        </div>
-        <div className="grid grid-cols-4 gap-2">
-          {premiumProducts.map((premium) => {
-            const isOwned = ownedAvatarSlugs.has(premium.product.slug);
-            const avatarUrl = premium.avatarUrl;
-            const isSelected = currentAvatarUrl === avatarUrl;
+      {TabBar}
 
-            return (
-              <button
-                key={premium.product.slug}
-                type="button"
-                className={cn(
-                  "group relative rounded-xl border p-1.5 text-left transition-all",
-                  isOwned
-                    ? isSelected
-                      ? "border-primary bg-primary/10"
-                      : "border-border hover:border-primary/60 hover:bg-muted/30"
-                    : "border-border/70 bg-muted/20 hover:border-amber-500/60"
-                )}
-                onClick={() => handlePremiumAvatarClick(premium.product.slug, avatarUrl)}
-                disabled={isSaving || checkoutMutation.isPending}
-              >
-                <div className="relative mx-auto size-16 rounded-full overflow-hidden border border-border bg-background">
-                  <Image src={avatarUrl} alt={premium.label} fill sizes="64px" className="object-cover" unoptimized />
-                  {!isOwned ? (
-                    <div className="absolute inset-0 bg-black/45 flex items-center justify-center">
-                      <Lock className="size-3.5 text-white" />
-                    </div>
-                  ) : null}
-                </div>
-                <div className="mt-1.5 text-[10px] font-medium text-muted-foreground">
-                  {premium.label}
-                </div>
-                {isOwned && isSelected ? (
-                  <div className="absolute top-1 right-1 size-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-                    <Check className="size-2.5" />
-                  </div>
-                ) : null}
-              </button>
-            );
-          })}
-        </div>
+      <div className="pt-1">
+        {activeTab === "skin" && SkinTab}
+        {activeTab === "jersey" && renderSlotGrid("jersey", JERSEY_PARTS)}
+        {activeTab === "hair" && renderSlotGrid("hair", HAIR_PARTS)}
+        {activeTab === "glasses" && renderSlotGrid("glasses", GLASSES_PARTS)}
+        {activeTab === "facialHair" && renderSlotGrid("facialHair", FACIAL_HAIR_PARTS)}
       </div>
 
       <div className="flex justify-end pt-1">
@@ -289,63 +382,83 @@ export function AvatarPicker({
         </Button>
       </div>
 
-      <Dialog open={open && lockedAvatarSlug !== null} onOpenChange={(next) => !next && setLockedAvatarSlug(null)}>
-        <DialogContent className="sm:max-w-md border-border/60">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-black">Premium avatar locked</DialogTitle>
-            <DialogDescription>
-              {selectedLockedProduct
-                ? `${selectedLockedProduct.label} is a premium avatar. Buy it to unlock and use it in your profile.`
-                : "This premium avatar is locked."}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="flex items-center justify-between rounded-xl border border-border bg-muted/30 px-3 py-2">
-            <span className="text-sm font-semibold">
-              {selectedLockedProduct?.label ?? "Premium Avatar"}
-            </span>
-            <span className="text-sm font-black text-amber-300">
-              {selectedLockedPrice !== null ? formatCoins(selectedLockedPrice) : "Unavailable"}
-            </span>
-          </div>
-
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setLockedAvatarSlug(null);
-                onOpenChange(false);
-                router.push("/store");
-              }}
-            >
-              Open Store
-            </Button>
-            <Button
-              onClick={() => {
-                if (!lockedAvatarSlug || !selectedLockedProduct) return;
-                checkoutMutation.mutate(lockedAvatarSlug);
-              }}
-              disabled={!selectedLockedProduct || checkoutMutation.isPending}
-            >
-              {checkoutMutation.isPending ? (
-                <span className="inline-flex items-center gap-2">
-                  <Loader2 className="size-4 animate-spin" />
-                  Processing
+      {/* In-picker buy confirmation for locked items */}
+      {pendingPurchase && (
+        <Dialog open onOpenChange={() => setPendingPurchase(null)}>
+          <DialogContent className="sm:max-w-md border-border/60">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-black uppercase tracking-wide">
+                Confirm Purchase
+              </DialogTitle>
+              <DialogDescription>
+                {pendingPurchase.type === "skin"
+                  ? `Unlock ${pendingPurchase.skin?.name} skin`
+                  : `Unlock ${pendingPurchase.part?.name}`}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col items-center gap-4 py-2">
+              <AvatarPreview
+                customization={
+                  pendingPurchase.type === "skin"
+                    ? { ...current, skin: pendingPurchase.skin!.id }
+                    : { ...current, [pendingPurchase.part!.slot]: pendingPurchase.part!.id }
+                }
+                width={140}
+              />
+              <div className="flex items-baseline gap-2">
+                <span className="text-[10px] uppercase tracking-[0.04em] text-white/50">Price</span>
+                <span className="text-[24px]" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, color: PURPLE }}>
+                  {pendingPurchase.type === "skin"
+                    ? pendingPurchase.skin?.priceCoins
+                    : pendingPurchase.part?.priceCoins}
                 </span>
-              ) : (
-                "Buy with coins"
-              )}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+                <span className="text-[10px] uppercase tracking-[0.04em] text-white/50">coins</span>
+              </div>
+              <div className="flex w-full gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setPendingPurchase(null)}
+                  disabled={purchaseMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1"
+                  style={{ backgroundColor: PURPLE }}
+                  disabled={purchaseMutation.isPending}
+                  onClick={() => {
+                    const slug =
+                      pendingPurchase.type === "skin"
+                        ? pendingPurchase.skin?.productSlug
+                        : pendingPurchase.part?.productSlug;
+                    if (slug) purchaseMutation.mutate(slug);
+                  }}
+                >
+                  {purchaseMutation.isPending ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="size-4 animate-spin" />
+                      Processing
+                    </span>
+                  ) : (
+                    "Confirm"
+                  )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 
   if (isMobile) {
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="max-h-[85dvh] overflow-y-auto rounded-t-3xl border-t border-border/50">
+        <SheetContent
+          side="bottom"
+          className="max-h-[92dvh] overflow-y-auto rounded-t-3xl border-t border-border/50"
+        >
           <SheetHeader className="mb-3 text-left">
             <SheetTitle className="text-lg font-bold">Profile Avatar</SheetTitle>
           </SheetHeader>
@@ -357,10 +470,12 @@ export function AvatarPicker({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[85dvh] overflow-y-auto border-border/50">
+      <DialogContent className="sm:max-w-3xl max-h-[90dvh] overflow-y-auto border-border/50">
         <DialogHeader>
           <DialogTitle className="text-lg font-bold">Profile Avatar</DialogTitle>
-          <DialogDescription>Choose an avatar for your profile.</DialogDescription>
+          <DialogDescription>
+            Customize your skin, jersey, hair, glasses, and facial hair.
+          </DialogDescription>
         </DialogHeader>
         {Content}
       </DialogContent>

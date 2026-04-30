@@ -9,6 +9,7 @@ import { logger } from "@/utils/logger";
 import { updateMe } from "@/lib/api/endpoints";
 import { apiFetch } from "@/lib/api/client";
 import { useAuthStore } from "@/stores/auth.store";
+import { getAvatarAsset } from "@/lib/avatars";
 
 export default function OnboardingPage() {
   const router = useRouter();

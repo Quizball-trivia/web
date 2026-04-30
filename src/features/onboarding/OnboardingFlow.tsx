@@ -28,16 +28,11 @@ const languages = [
   { code: 'ka', name: 'Georgian', nativeName: 'ქართული', flag: '🇬🇪' },
 ];
 
-const avatarSeeds = [
-  'striker', 'goalkeeper', 'defender', 'midfielder', 'captain', 'coach',
-  'ronaldo', 'messi', 'neymar', 'mbappe', 'haaland', 'benzema',
-  'liverpool', 'barcelona', 'madrid', 'bayern', 'arsenal', 'chelsea',
-  'legend', 'rookie', 'veteran', 'champion', 'winner', 'pro',
-];
+import { AVATAR_COLORS, AVATAR_COLOR_SWATCHES, getAvatarAsset } from '@/lib/avatars';
 
-const getAvatarUrl = (seed: string) => {
-  return `https://api.dicebear.com/7.x/big-smile/svg?seed=${encodeURIComponent(seed)}&backgroundColor=b6e3f4,c0aede,d1d4f9&size=128`;
-};
+const avatarSeeds = AVATAR_COLORS;
+
+const getAvatarUrl = (color: string) => getAvatarAsset(color);
 
 const CONTINUE_BUTTON_CLASS = "w-full h-14 rounded-2xl text-lg font-black uppercase tracking-wide bg-green-500 text-[#131F24] hover:bg-green-400 border-b-[5px] border-green-700 active:border-b-0 active:translate-y-[5px] transition-all disabled:opacity-40 disabled:pointer-events-none";
 const SKIP_BUTTON_CLASS = "w-full mt-4 text-sm font-bold text-[#56707A] hover:text-foreground transition-colors uppercase tracking-wide";
@@ -334,17 +329,18 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 <div className="grid grid-cols-6 gap-2">
                   {avatarSeeds.map((seed) => {
                     const isSelected = avatar === seed;
+                    const swatch = AVATAR_COLOR_SWATCHES[seed];
                     return (
                       <button
                         key={seed}
                         onClick={() => setAvatar(seed)}
-                        className={`
-                          relative aspect-square rounded-xl border-2 border-b-4 transition-all flex items-center justify-center overflow-hidden
-                          ${isSelected
-                            ? 'border-green-500 bg-green-500/10 scale-110 z-10'
-                            : 'border-[#0D1B21] hover:border-[#56707A] bg-[#131F24]'
-                          }
-                        `}
+                        className="relative aspect-square rounded-xl border-2 border-b-4 transition-all flex items-center justify-center overflow-hidden"
+                        style={{
+                          borderColor: isSelected ? swatch : '#0D1B21',
+                          backgroundColor: isSelected ? `${swatch}1A` : '#131F24',
+                          transform: isSelected ? 'scale(1.1)' : undefined,
+                          zIndex: isSelected ? 10 : undefined,
+                        }}
                       >
                         <Image
                           src={getAvatarUrl(seed)}
@@ -353,7 +349,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                           loading="lazy"
                           sizes="80px"
                           unoptimized
-                          className="object-cover"
+                          className="object-contain"
                         />
                       </button>
                     );

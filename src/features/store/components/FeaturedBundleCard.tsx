@@ -9,127 +9,244 @@ const poppins = {
   fontFamily: "'Poppins', sans-serif",
   fontWeight: 600,
   letterSpacing: "0",
-  lineHeight: 1,
+  lineHeight: 1.5,
 } as const;
 
 const ACCENT_YELLOW = "#FFE500";
+const BORDER_YELLOW = "#FFE600";
+const PILL_BLACK = "#071013";
 
 export function FeaturedBundleCard({ onBuy }: FeaturedBundleCardProps) {
   return (
     <motion.div
-      whileHover={{ scale: 1.01, y: -2 }}
+      whileHover={{ scale: 1.005, y: -2 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      className="relative w-full cursor-pointer overflow-visible rounded-[20px]"
-      style={{ backgroundColor: "#BA02E8" }}
+      className="relative w-full cursor-pointer"
       onClick={onBuy}
     >
-      {/* Subtle radial highlight */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-60"
-        style={{
-          background:
-            "radial-gradient(ellipse at 25% 30%, rgba(255,255,255,0.18) 0%, transparent 55%)",
-        }}
-      />
+      {/* ─────────────────────────────────────── DESKTOP (md+) ─── */}
+      <div className="hidden md:block">
+        {/* Card body with vertical gradient */}
+        <div
+          className="relative w-full rounded-[20px]"
+          style={{
+            backgroundImage: "linear-gradient(180deg, #BA02E8 0%, #790E94 100%)",
+          }}
+        >
+          {/* Flex row: ticket-spacer | middle | right */}
+          <div className="flex items-center gap-6 py-7 pl-[300px] pr-6 lg:gap-8 lg:pl-[340px] lg:pr-8">
+            {/* ── Middle column: title, description, feature pills ── */}
+            <div className="min-w-0 flex-1">
+              <h2
+                className="text-center text-[26px] uppercase leading-[1.2] text-white lg:text-[30px]"
+                style={poppins}
+              >
+                Unlock <span style={{ color: ACCENT_YELLOW }}>the Arena</span>
+              </h2>
+              <p
+                className="mx-auto mt-2.5 max-w-[440px] text-center text-[13px] leading-[1.45] text-white/60 lg:text-[14px]"
+                style={poppins}
+              >
+                Get <span className="text-white">10 Arena Tickets</span>
+                {" + "}
+                <span className="text-white">5,000 Bonus Coins</span>
+                {" "}to jumpstart your ranked climb. Tickets refill hourly while
+                you are below the cap.
+              </p>
 
-      <div className="relative flex flex-col items-stretch gap-5 overflow-visible px-5 py-5 md:flex-row md:items-center md:gap-6 md:px-7 md:py-7">
-        {/* ── Ticket icon block (left, overflows card) ── */}
-        <div className="relative flex h-[250px] w-full shrink-0 items-center justify-center overflow-visible md:h-[245px] md:w-[335px]">
-          {/* Tilted oversized ticket — bleeds outside the card */}
+              {/* Feature pills */}
+              <div className="mt-4 flex items-center justify-center gap-3 lg:gap-4">
+                <span
+                  className="inline-flex h-[44px] items-center justify-center rounded-[20px] border-[3px] px-4 text-[13px] uppercase text-white lg:text-[14px]"
+                  style={{ ...poppins, borderColor: BORDER_YELLOW }}
+                >
+                  No Ads/7 Days
+                </span>
+                <span
+                  className="inline-flex h-[44px] items-center justify-center rounded-[20px] border-[3px] px-4 text-[13px] uppercase text-white lg:text-[14px]"
+                  style={{ ...poppins, borderColor: BORDER_YELLOW }}
+                >
+                  2x XP Boost
+                </span>
+              </div>
+            </div>
+
+            {/* ── Right column: limited time, button, price ── */}
+            <div className="w-[260px] shrink-0 lg:w-[300px]">
+              <p
+                className="text-center text-[13px] uppercase text-white/55 lg:text-[14px]"
+                style={poppins}
+              >
+                Limited Time Offer
+              </p>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onBuy?.();
+                }}
+                className="mt-2.5 flex h-[60px] w-full items-center justify-center rounded-[20px] text-[20px] uppercase text-white transition-transform active:translate-y-[2px] lg:text-[22px]"
+                style={{ ...poppins, backgroundColor: PILL_BLACK }}
+              >
+                Unlock Bundle
+              </button>
+
+              <div className="mt-3 flex items-baseline justify-center gap-2">
+                <span
+                  className="text-[12px] uppercase text-white/55 lg:text-[13px]"
+                  style={poppins}
+                >
+                  Only for
+                </span>
+                <span
+                  className="text-[24px] uppercase tabular-nums lg:text-[26px]"
+                  style={{ ...poppins, color: ACCENT_YELLOW }}
+                >
+                  $9.99
+                </span>
+                <span
+                  className="text-[13px] uppercase tabular-nums text-white/50 line-through lg:text-[14px]"
+                  style={poppins}
+                >
+                  $19.99
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Ticket: anchored top-left of card, overflows ── */}
           <motion.div
-            whileHover={{ scale: 1.06, rotate: -60, x: -6, y: -8 }}
-            initial={{ rotate: 4, x: -10, y: -2 }}
-            animate={{ rotate: 4, x: -10, y: -2 }}
-            transition={{ type: "spring", stiffness: 220, damping: 14 }}
-            className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-[58%] -translate-y-[55%] md:left-[-24px] md:top-1/2 md:-translate-x-0 md:-translate-y-[52%]"
+            whileHover={{ scale: 1.04 }}
+            transition={{ type: "spring", stiffness: 200, damping: 15 }}
+            className="pointer-events-none absolute -top-[55px] -left-[10px]"
           >
             <Image
               src="/assets/ticket_icon.webp"
               alt=""
-              width={600}
-              height={600}
-              className="h-[320px] w-[320px] object-contain drop-shadow-[0_18px_38px_rgba(0,0,0,0.48)] md:h-[540px] md:w-[540px]"
+              width={400}
+              height={400}
+              className="h-[360px] w-[360px] object-contain drop-shadow-[0_14px_32px_rgba(0,0,0,0.45)] lg:h-[380px] lg:w-[380px]"
               priority
             />
           </motion.div>
 
-          {/* PRO STARTER PACK pill — sits on top of the ticket */}
-          <span className="absolute left-1/2 top-3 z-20 inline-flex -translate-x-1/2 items-center rounded-full bg-black px-4 py-2 text-[11px] font-fun font-black uppercase tracking-[0.18em] text-white shadow-[0_4px_14px_rgba(0,0,0,0.5)] md:left-[10px] md:top-[18px] md:translate-x-0">
+          {/* PRO STARTER PACK pill */}
+          <span
+            className="absolute left-[26px] top-[20px] inline-flex h-[44px] items-center justify-center rounded-[20px] px-4 text-[13px] uppercase text-white lg:text-[14px]"
+            style={{ ...poppins, backgroundColor: PILL_BLACK }}
+          >
             Pro Starter Pack
           </span>
 
-          {/* BEST VALUE pill — sits on bottom of the ticket */}
-          <span className="absolute bottom-3 left-[35%] z-20 inline-flex items-center rounded-full bg-black px-4 py-2 text-[11px] font-fun font-black uppercase tracking-[0.18em] text-white shadow-[0_4px_14px_rgba(0,0,0,0.5)] md:bottom-[0px] md:left-[132px] md:translate-x-0">
+          {/* BEST VALUE pill */}
+          <span
+            className="absolute bottom-[20px] left-[140px] inline-flex h-[44px] items-center justify-center rounded-[20px] px-4 text-[13px] uppercase text-white lg:text-[14px]"
+            style={{ ...poppins, backgroundColor: PILL_BLACK }}
+          >
             Best Value
           </span>
         </div>
+      </div>
 
-        {/* ── Text content (middle) ── */}
-        <div className="min-w-0 flex-1 text-center md:-translate-y-3 md:text-left">
-          {/* Title */}
+      {/* ─────────────────────────────────────── MOBILE ─── */}
+      <div className="md:hidden">
+        <div
+          className="relative w-full rounded-[20px] px-5 py-6"
+          style={{
+            backgroundImage: "linear-gradient(180deg, #BA02E8 0%, #790E94 100%)",
+          }}
+        >
+          {/* Ticket area */}
+          <div className="relative mx-auto flex h-[230px] w-full max-w-[300px] items-center justify-center">
+            <Image
+              src="/assets/ticket_icon.webp"
+              alt=""
+              width={400}
+              height={400}
+              className="h-[260px] w-[260px] object-contain drop-shadow-[0_12px_28px_rgba(0,0,0,0.4)]"
+              priority
+            />
+            <span
+              className="absolute left-0 top-2 inline-flex h-9 items-center rounded-full px-3 text-[11px] uppercase text-white shadow-md"
+              style={{ ...poppins, backgroundColor: PILL_BLACK }}
+            >
+              Pro Starter Pack
+            </span>
+            <span
+              className="absolute bottom-2 left-12 inline-flex h-9 items-center rounded-full px-3 text-[11px] uppercase text-white shadow-md"
+              style={{ ...poppins, backgroundColor: PILL_BLACK }}
+            >
+              Best Value
+            </span>
+          </div>
+
+          {/* Text */}
           <h2
-            className="text-2xl uppercase text-white sm:text-3xl md:text-[2rem]"
+            className="mt-2 text-center text-[26px] uppercase text-white"
             style={poppins}
           >
             Unlock <span style={{ color: ACCENT_YELLOW }}>the Arena</span>
           </h2>
-
-          {/* Description */}
-          <p className="mx-auto mt-2.5 max-w-md text-[12px] font-fun font-black tracking-wide text-white/85 sm:text-[13px] md:mx-0">
-            Get <span className="text-white" style={{ color: ACCENT_YELLOW }}>10 Arena Tickets</span>
+          <p
+            className="mt-2 text-center text-[13px] leading-[1.5] text-white/60"
+            style={poppins}
+          >
+            Get <span className="text-white">10 Arena Tickets</span>
             {" + "}
-            <span style={{ color: ACCENT_YELLOW }}>5,000 Bonus Coins</span>
-            {" "}to jumpstart your ranked climb. Tickets refill hourly while you are below the cap.
+            <span className="text-white">5,000 Bonus Coins</span>
+            {" "}to jumpstart your ranked climb. Tickets refill hourly while you
+            are below the cap.
           </p>
 
-          {/* Pills row */}
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5 md:justify-start">
+          {/* Feature pills */}
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5">
             <span
-              className="inline-flex h-9 items-center justify-center rounded-full border-2 px-4 text-[11px] font-fun font-black uppercase tracking-[0.16em] text-white"
-              style={{ borderColor: ACCENT_YELLOW }}
+              className="inline-flex h-10 items-center rounded-[20px] border-[3px] px-4 text-[12px] uppercase text-white"
+              style={{ ...poppins, borderColor: BORDER_YELLOW }}
             >
-              No Ads / 7 Days
+              No Ads/7 Days
             </span>
             <span
-              className="inline-flex h-9 items-center justify-center rounded-full border-2 px-4 text-[11px] font-fun font-black uppercase tracking-[0.16em] text-white"
-              style={{ borderColor: ACCENT_YELLOW }}
+              className="inline-flex h-10 items-center rounded-[20px] border-[3px] px-4 text-[12px] uppercase text-white"
+              style={{ ...poppins, borderColor: BORDER_YELLOW }}
             >
               2x XP Boost
             </span>
           </div>
-        </div>
 
-        {/* ── CTA block (right) ── */}
-        <div className="flex w-full shrink-0 flex-col items-center gap-3 md:w-[240px] md:-translate-y-3">
-          <p className="text-[10px] font-fun font-black uppercase tracking-[0.22em] text-white/65">
+          {/* CTA */}
+          <p
+            className="mt-5 text-center text-[12px] uppercase text-white/55"
+            style={poppins}
+          >
             Limited Time Offer
           </p>
-
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               onBuy?.();
             }}
-            className="flex h-[56px] w-full items-center justify-center rounded-[14px] bg-black px-6 text-white transition-transform active:translate-y-[2px]"
+            className="mt-2 flex h-[58px] w-full items-center justify-center rounded-[20px] text-[20px] uppercase text-white active:translate-y-[2px]"
+            style={{ ...poppins, backgroundColor: PILL_BLACK }}
           >
-            <span className="text-base uppercase sm:text-lg" style={poppins}>
-              Unlock Bundle
-            </span>
+            Unlock Bundle
           </button>
-
-          <div className="flex items-baseline justify-center gap-2">
-            <span className="text-[10px] font-fun font-black uppercase tracking-[0.22em] text-white/60">
+          <div className="mt-2 flex items-baseline justify-center gap-2">
+            <span className="text-[12px] uppercase text-white/55" style={poppins}>
               Only for
             </span>
             <span
-              className="text-2xl tabular-nums sm:text-[1.75rem]"
+              className="text-[22px] uppercase tabular-nums"
               style={{ ...poppins, color: ACCENT_YELLOW }}
             >
               $9.99
             </span>
-            <span className="text-xs tabular-nums text-white/40 line-through sm:text-sm">
+            <span
+              className="text-[12px] uppercase tabular-nums text-white/50 line-through"
+              style={poppins}
+            >
               $19.99
             </span>
           </div>

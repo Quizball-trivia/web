@@ -21,11 +21,21 @@ export interface Badge {
 }
 
 export interface AvatarCustomization {
-  base: string; // Base character emoji
-  hat?: string;
+  /** Skin tone id (the base body asset). Missing = default skin. */
+  skin?: string;
+  /** Equipped jersey item id (chest overlay). */
+  jersey?: string;
+  /** Equipped hair item id. */
+  hair?: string;
+  /** Equipped glasses item id. */
   glasses?: string;
-  accessory?: string;
-  background?: string;
+  /** Equipped facial hair item id. */
+  facialHair?: string;
+  /**
+   * Legacy field kept so external URLs (Google avatar) and qb-avatar URIs can pass through.
+   * AvatarDisplay decodes this when present.
+   */
+  base?: string;
 }
 
 export interface PlayerStats {

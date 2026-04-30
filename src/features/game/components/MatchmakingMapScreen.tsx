@@ -16,7 +16,7 @@ import type {
   OpponentGeoPayload,
 } from "@/lib/realtime/socket.types";
 import type { AvatarCustomization } from "@/types/game";
-import { avatarSeeds, getDiceBearAvatarUrl } from "@/lib/avatars";
+import { AVATAR_COLORS, getAvatarAsset } from "@/lib/avatars";
 import { logger } from "@/utils/logger";
 import { isMuted } from "@/lib/sounds/gameSounds";
 import {
@@ -969,10 +969,7 @@ function generateFakePlayers(): FakePlayer[] {
       x: px,
       y: py,
       color: PIN_COLORS[i % PIN_COLORS.length],
-      avatarUrl: getDiceBearAvatarUrl(
-        avatarSeeds[i % avatarSeeds.length] ?? `player-${i + 1}`,
-        64,
-      ),
+      avatarUrl: getAvatarAsset(AVATAR_COLORS[i % AVATAR_COLORS.length]),
       name: c.name,
       flag: c.flag,
       city: c.city,
@@ -1092,8 +1089,7 @@ export function MatchmakingMapScreen({
       y: oppY,
       color: "#FF4B4B",
       avatarUrl:
-        rankedFoundOpponent.avatarUrl ??
-        getDiceBearAvatarUrl(rankedFoundOpponent.username || "opponent", 64),
+        rankedFoundOpponent.avatarUrl ?? getAvatarAsset("blue"),
       name: rankedFoundOpponent.username || "Opponent",
       flag: resolved.flag,
       city: resolved.city,

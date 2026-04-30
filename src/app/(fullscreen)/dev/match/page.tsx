@@ -126,8 +126,8 @@ function DevMatchContent() {
     exitToPlay();
   }, [exitToPlay, match?.matchId]);
 
-  const playerAvatar = resolveAvatarUrl(authUser?.avatar_url ?? player.avatarCustomization?.base ?? player.avatar, player.id);
-  const opponentAvatar = resolveAvatarUrl(match?.opponent?.avatarUrl, match?.opponent?.id ?? 'ai');
+  const playerAvatar = resolveAvatarUrl(authUser?.avatar_url ?? player.avatarCustomization?.base ?? player.avatar);
+  const opponentAvatar = resolveAvatarUrl(match?.opponent?.avatarUrl);
 
   // Pre-match: show start button
   if (!match) {

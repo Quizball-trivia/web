@@ -280,14 +280,11 @@ export function RankedCategoryBlockingScreen() {
   const playerResolvedAvatar = useMemo(
     () =>
       resolveAvatarUrl(
-        authUser?.avatar_url ?? player.avatarCustomization?.base ?? player.avatar,
-        selfUserId || 'player',
-        256
-      ),
+        authUser?.avatar_url ?? player.avatarCustomization?.base ?? player.avatar),
     [authUser?.avatar_url, player.avatarCustomization?.base, player.avatar, selfUserId]
   );
   const opponentResolvedAvatar = useMemo(
-    () => resolveAvatarUrl(opponentMember?.avatarUrl, opponentMember?.userId ?? 'opponent', 256),
+    () => resolveAvatarUrl(opponentMember?.avatarUrl),
     [opponentMember?.avatarUrl, opponentMember?.userId]
   );
   const opponentId = opponentMember?.userId ?? 'opponent';

@@ -121,14 +121,11 @@ export function useGameStageState() {
   const playerGameAvatar = useMemo(
     () =>
       resolveAvatarUrl(
-        authUser?.avatar_url ?? player.avatarCustomization?.base ?? player.avatar,
-        "player",
-        256
-      ),
+        authUser?.avatar_url ?? player.avatarCustomization?.base ?? player.avatar),
     [authUser?.avatar_url, player.avatarCustomization?.base, player.avatar]
   );
   const opponentGameAvatar = useMemo(
-    () => resolveAvatarUrl(opponent.avatar, "opponent", 256),
+    () => resolveAvatarUrl(opponent.avatar),
     [opponent.avatar]
   );
 

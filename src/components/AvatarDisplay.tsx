@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { AvatarCustomization } from '../types/game';
-import { getDiceBearAvatarUrl } from '@/lib/avatars';
+import { customizationFromAvatarValue, isAvatarUrl } from '@/lib/avatars';
+import { AVATAR_SLOTS, getAvatarPart, getSkinPart } from '@/lib/avatars/parts';
 import { cn } from '@/lib/utils';
 
 interface AvatarDisplayProps {
@@ -20,24 +21,46 @@ const flagSizeClasses = {
 };
 
 const COUNTRY_CODE_MAP: Record<string, string> = {
-  'ka': 'ge',      // Georgian language -> Georgia (Country)
-  'georgian': 'ge',
+  ka: 'ge',
+  georgian: 'ge',
   'ka-ge': 'ge',
-  'geo': 'ge',
-  'georgia': 'ge',
-  'en': 'gb',      // English -> UK
-  'eng': 'gb',
+  geo: 'ge',
+  georgia: 'ge',
+  en: 'gb',
+  eng: 'gb',
   'en-gb': 'gb',
   'en-us': 'us',
-  'gb': 'gb',
-  'uk': 'gb',
-  'gbr': 'gb',
+  gb: 'gb',
+  uk: 'gb',
+  gbr: 'gb',
   'great britain': 'gb',
   'united kingdom': 'gb',
-  'us': 'us',
-  'usa': 'us',
+  us: 'us',
+  usa: 'us',
   'united states': 'us',
 };
+
+const sizeClasses: Record<NonNullable<AvatarDisplayProps['size']>, string> = {
+  xs: 'size-8',
+  sm: 'size-10 sm:size-12',
+  md: 'size-16',
+  lg: 'size-24',
+  xl: 'size-32',
+  xxl: 'size-28 sm:size-32 md:size-36',
+};
+
+/** Merge anything encoded in `customization.base` into the customization. */
+function resolveCustomization(c: AvatarCustomization): AvatarCustomization {
+  const merged = customizationFromAvatarValue(c.base);
+  return {
+    skin: c.skin ?? merged.skin,
+    jersey: c.jersey ?? merged.jersey,
+    hair: c.hair ?? merged.hair,
+    glasses: c.glasses ?? merged.glasses,
+    facialHair: c.facialHair ?? merged.facialHair,
+    base: c.base ?? merged.base,
+  };
+}
 
 export function AvatarDisplay({
   customization,
@@ -45,70 +68,70 @@ export function AvatarDisplay({
   className = '',
   countryCode,
 }: AvatarDisplayProps) {
-  const normalizedCountryCode = countryCode 
-    ? (COUNTRY_CODE_MAP[countryCode.trim().toLowerCase()] || countryCode.trim().toLowerCase())
+  const normalizedCountryCode = countryCode
+    ? COUNTRY_CODE_MAP[countryCode.trim().toLowerCase()] || countryCode.trim().toLowerCase()
     : null;
-  const sizeClasses = {
-    xs: 'size-8',
-    sm: 'size-10 sm:size-12',
-    md: 'size-16',
-    lg: 'size-24',
-    xl: 'size-32',
-    xxl: 'size-28 sm:size-32 md:size-36',
-  };
 
-  const getSizeInPixels = () => {
-    switch (size) {
-      case 'xs': return 32;
-      case 'sm': return 48;
-      case 'md': return 64;
-      case 'lg': return 96;
-      case 'xl': return 128;
-      case 'xxl': return 144;
-      default: return 64;
-    }
-  };
+  const merged = resolveCustomization(customization);
+  // External URL (Google avatar) — render directly without layering.
+  const isExternalUrl =
+    typeof merged.base === 'string' &&
+    isAvatarUrl(merged.base) &&
+    !merged.base.startsWith('/assets/');
 
-  const sizeInPx = getSizeInPixels();
-  const isUrl = /^https?:\/\//i.test(customization.base);
-
-  const avatarUrl = isUrl
-    ? customization.base
-    : getDiceBearAvatarUrl(customization.base, sizeInPx, customization.background);
+  const skinAsset = getSkinPart(merged.skin).asset;
 
   return (
-    <div 
-      className={`relative flex items-center justify-center rounded-full shrink-0 ${sizeClasses[size || 'md']} ${className}`}
+    <div
+      className={`relative flex items-center justify-center rounded-full shrink-0 overflow-hidden ${sizeClasses[size]} ${className}`}
     >
-      <Image
-        src={avatarUrl}
-        alt="Avatar"
-        width={sizeInPx}
-        height={sizeInPx}
-        unoptimized
-        className="w-full h-full rounded-full object-cover"
-      />
-      
-      {/* Jersey/Hat overlay (positioned above) */}
-      {customization.hat && (
-        <div className="absolute -top-[15%] left-1/2 -translate-x-1/2 text-[100%] leading-none z-10">
-          {customization.hat}
-        </div>
-      )}
-      
-      {/* Accessory overlay (positioned to the side) */}
-      {customization.accessory && (
-        <div className="absolute -right-[5%] top-1/2 -translate-y-1/2 text-[50%] leading-none z-10">
-          {customization.accessory}
+      {isExternalUrl ? (
+        <Image
+          src={merged.base!}
+          alt="Avatar"
+          fill
+          unoptimized
+          sizes="100vw"
+          className="object-cover"
+        />
+      ) : (
+        // Wrapper at canonical Figma aspect ratio so item % positions land precisely.
+        <div className="relative h-full" style={{ aspectRatio: '495.25 / 543.03' }}>
+          <Image
+            src={skinAsset}
+            alt="Avatar"
+            fill
+            unoptimized
+            className="object-contain"
+          />
+          {AVATAR_SLOTS.map((slot) => {
+            const partId = merged[slot];
+            const part = getAvatarPart(partId);
+            if (!part) return null;
+            return (
+              <img
+                key={slot}
+                src={part.asset}
+                alt=""
+                className="pointer-events-none absolute object-contain"
+                style={{
+                  top: `${part.position.top}%`,
+                  left: `${part.position.left}%`,
+                  width: `${part.position.width}%`,
+                }}
+              />
+            );
+          })}
         </div>
       )}
 
-      {/* Country flag - Premium Badge Style */}
       {normalizedCountryCode && (
-        <div className={cn(
-          "absolute -bottom-[5%] -left-[5%] z-20 rounded-full overflow-hidden border-white shadow-sm flex items-center justify-center bg-white p-[1.5px]",
-          flagSizeClasses[size || 'md']
-        )}>
+        <div
+          className={cn(
+            'absolute -bottom-[5%] -left-[5%] z-20 rounded-full overflow-hidden border-white shadow-sm flex items-center justify-center bg-white p-[1.5px]',
+            flagSizeClasses[size],
+          )}
+        >
           <Image
             src={`https://flagcdn.com/w80/${normalizedCountryCode}.png`}
             alt={normalizedCountryCode}

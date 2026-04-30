@@ -337,10 +337,7 @@ export function GameStageRouter() {
     const opponentRankPoints = parseRp(oppInfo?.rp);
     const showdownOpponentUsername = oppInfo?.username ?? opponent.username;
     const showdownOpponentAvatar = resolveAvatarUrl(
-      oppInfo?.avatarUrl ?? opponent.avatar,
-      "opponent",
-      256
-    );
+      oppInfo?.avatarUrl ?? opponent.avatar);
     // Extract opponent country from various possible fields
     const oppGeo = oppInfo?.geo && typeof oppInfo.geo === 'object' ? oppInfo.geo : null;
     const oppCountry = oppInfo?.country ?? oppGeo?.country ?? oppGeo?.countryName ?? oppGeo?.country_name;

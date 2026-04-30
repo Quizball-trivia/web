@@ -1,19 +1,37 @@
+import Image from "next/image";
 import { FeaturedBundleCard } from "./components/FeaturedBundleCard";
 import { BundleCard, type BundleProps } from "./components/BundleCard";
-import { User, Shirt, Shield, Sparkles, Zap, Target, Coins, Ticket } from "lucide-react";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { ItemCard } from "./components/ItemCard";
+import { PurchaseConfirmModal } from "./components/PurchaseConfirmModal";
+import { CoinIcon } from "./components/CoinIcon";
+import { useEffect, useMemo, useState } from "react";
+import { motion } from "motion/react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api/api";
 import { createStoreCheckout, purchaseStoreWithCoins } from "@/lib/repositories/store.repo";
 import { queryKeys } from "@/lib/queries/queryKeys";
-import { useStoreProducts, useStoreWallet } from "@/lib/queries/store.queries";
+import { useStoreProducts, useStoreWallet, useStoreInventory } from "@/lib/queries/store.queries";
 import { trackItemPurchased } from "@/lib/analytics/game-events";
-import { getAvatarImage, getAvatarLabel, isJerseyAvatarProduct, type AvatarStoreProductLike } from "@/lib/store/avatar-products";
+import {
+  HAIR_PARTS,
+  GLASSES_PARTS,
+  FACIAL_HAIR_PARTS,
+  JERSEY_DESIGN_PARTS,
+  ALL_AVATAR_PARTS,
+  SKIN_PARTS,
+  type AvatarPart,
+  type SkinPart,
+} from "@/lib/avatars/parts";
+import {
+  customizationFromAvatarValue,
+  encodeAvatarCustomization,
+} from "@/lib/avatars";
+import { useAuthStore } from "@/stores/auth.store";
+import { usePlayer } from "@/contexts/PlayerContext";
+import { updateMe } from "@/lib/api/endpoints";
+import type { AvatarCustomization } from "@/types/game";
 
 function formatUsd(priceCents: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -27,209 +45,103 @@ interface BoosterItem {
   title: string;
   description: string;
   price: string;
-  icon: ReactNode;
-  color: string;
-  bgColor: string;
-  borderColor: string;
-  borderBottomColor: string;
-  glowColor: string;
+  iconAsset: string;
   productSlug?: string;
   disabled?: boolean;
 }
-
-interface AvatarItem {
-  id: string;
-  name: string;
-  image: string;
-  price: number;
-  rarity: "common" | "rare" | "epic";
-  productSlug?: string;
-}
-
-const STORE_AVATAR_ORDER: readonly string[] = [
-  "avatar_striker",
-  "avatar_captain",
-  "avatar_goalkeeper",
-  "avatar_legend",
-  "avatar_ronaldo",
-  "avatar_messi",
-  "avatar_ronaldinho",
-] as const;
-
-const STORE_AVATAR_RARITY: Record<string, AvatarItem["rarity"]> = {
-  avatar_striker: "common",
-  avatar_captain: "rare",
-  avatar_goalkeeper: "rare",
-  avatar_legend: "epic",
-  avatar_ronaldo: "epic",
-  avatar_messi: "epic",
-  avatar_ronaldinho: "epic",
-};
-
-interface CosmeticItem {
-  id: string;
-  name: string;
-  image: string;
-  price: number;
-  type: "jersey" | "accessory";
-  productSlug?: string;
-}
-
-const RARITY_STYLES = {
-  common: { border: "border-[#56707A]/40", borderBottom: "border-b-[#56707A]/60", badge: "bg-[#56707A]/20 text-[#56707A]", glow: "bg-[#56707A]" },
-  rare: { border: "border-[#1CB0F6]/40", borderBottom: "border-b-[#1CB0F6]/60", badge: "bg-[#1CB0F6]/20 text-[#1CB0F6]", glow: "bg-[#1CB0F6]" },
-  epic: { border: "border-[#CE82FF]/40", borderBottom: "border-b-[#CE82FF]/60", badge: "bg-[#CE82FF]/20 text-[#CE82FF]", glow: "bg-[#CE82FF]" },
-} as const;
 
 interface BuyModalState {
   name: string;
   price: string;
   productSlug?: string;
   mode: "stripe" | "coins" | "none";
+  /** When set, modal renders the avatar with this part equipped + persists equip on confirm. */
+  avatarPart?: AvatarPart;
+  /** When set, modal previews the avatar with this skin + persists skin on confirm. */
+  skinPart?: SkinPart;
+  /** Avatar customization to use for the preview (built from current user). */
+  previewCustomization?: AvatarCustomization;
 }
 
-function SectionHeader({ icon, title, subtitle }: { icon: ReactNode; title: string; subtitle?: string }) {
+const POPPINS_HEADER = {
+  fontFamily: "'Poppins', sans-serif",
+  fontWeight: 600,
+  letterSpacing: "0",
+  lineHeight: 1,
+} as const;
+
+function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
-    <div className="flex items-center gap-3 mb-5">
-      <div className="size-10 rounded-xl bg-[#1CB0F6]/10 border-2 border-b-4 border-[#1CB0F6]/30 border-b-[#1CB0F6]/50 flex items-center justify-center text-[#1CB0F6]">
-        {icon}
-      </div>
-      <div>
-        <h3 className="font-black font-fun text-lg tracking-tight">{title}</h3>
-        {subtitle && <p className="text-xs text-[#56707A] font-medium">{subtitle}</p>}
-      </div>
+    <div className="mb-6">
+      <h3 className="text-[28px] sm:text-[32px] uppercase text-white" style={POPPINS_HEADER}>
+        {title}
+      </h3>
+      {subtitle && (
+        <p
+          className="mt-1.5 text-[10px] sm:text-[11px] uppercase tracking-[0.04em] text-white/50"
+          style={POPPINS_HEADER}
+        >
+          {subtitle}
+        </p>
+      )}
     </div>
   );
 }
 
 function BoosterCard({ booster, onBuy }: { booster: BoosterItem; onBuy: (b: BoosterItem) => void }) {
+  const ACCENT_PURPLE = "#BA02E8";
+  const CARD_BG = "#0B1619";
+
   return (
     <motion.div
-      whileHover={{ scale: 1.04, y: -4 }}
-      whileTap={{ scale: 0.97 }}
+      whileHover={{ scale: 1.02, y: -2 }}
+      whileTap={{ scale: 0.98 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      className="relative flex flex-col"
     >
-      <div className={cn(
-        "relative flex flex-col items-center rounded-2xl border-2 border-b-4 bg-[#1B2F36] p-5 h-full overflow-hidden transition-colors",
-        booster.borderColor, booster.borderBottomColor
-      )}>
-        <div className={cn("absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 size-28 rounded-full blur-[50px] opacity-20", booster.glowColor)} />
-
-        <div className={cn(
-          "size-14 rounded-2xl flex items-center justify-center border-2 border-b-4 mb-3",
-          booster.bgColor, booster.borderColor, booster.borderBottomColor, booster.color
-        )}>
-          {booster.icon}
+      <div
+        className="relative flex flex-col rounded-[20px] border-[3px] aspect-[320/268] px-5 pt-5 pb-5"
+        style={{ backgroundColor: CARD_BG, borderColor: ACCENT_PURPLE }}
+      >
+        {/* Top-left: title + subtitle */}
+        <div>
+          <div
+            className="text-[18px] sm:text-[20px] uppercase leading-tight text-white"
+            style={POPPINS_HEADER}
+          >
+            {booster.title}
+          </div>
+          <div
+            className="mt-1.5 text-[9px] sm:text-[10px] uppercase tracking-[0.04em] text-white/50 leading-snug"
+            style={POPPINS_HEADER}
+          >
+            {booster.description}
+          </div>
         </div>
 
-        <div className="text-center mb-4 flex-1">
-          <div className="font-black font-fun text-sm leading-tight mb-1">{booster.title}</div>
-          <div className="text-[11px] text-[#56707A] font-medium leading-tight">{booster.description}</div>
+        {/* Center icon image */}
+        <div className="relative flex flex-1 items-center justify-center py-2">
+          <Image
+            src={booster.iconAsset}
+            alt=""
+            width={120}
+            height={120}
+            unoptimized
+            className="max-h-full w-auto object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
+          />
         </div>
 
-        <Button
+        {/* Bottom: pill button with coin icon */}
+        <button
           type="button"
           onClick={() => onBuy(booster)}
           disabled={booster.disabled}
-          className="w-full font-black text-sm rounded-xl border-b-4 active:border-b-0 active:mt-1 transition-all bg-[#FF9600] hover:bg-[#FF9600]/90 border-[#CC7800] text-white"
+          className="mt-2 flex h-[44px] w-full items-center justify-center gap-2 rounded-[20px] text-[18px] uppercase text-white transition-transform active:translate-y-[2px] disabled:opacity-50 disabled:active:translate-y-0"
+          style={{ ...POPPINS_HEADER, backgroundColor: ACCENT_PURPLE }}
         >
-          <Coins className="size-3.5 mr-1 fill-current" />
-          {booster.disabled ? "Full" : booster.price}
-        </Button>
-      </div>
-    </motion.div>
-  );
-}
-
-function AvatarCard({ avatar, onBuy }: { avatar: AvatarItem; onBuy: (a: AvatarItem) => void }) {
-  const style = RARITY_STYLES[avatar.rarity];
-
-  return (
-    <motion.div
-      whileHover={{ scale: 1.04, y: -4 }}
-      whileTap={{ scale: 0.97 }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-    >
-      <div className={cn(
-        "relative flex flex-col items-center rounded-2xl border-2 border-b-4 bg-[#1B2F36] p-5 h-full overflow-hidden transition-colors",
-        style.border, style.borderBottom
-      )}>
-        <div className={cn("absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 size-28 rounded-full blur-[50px] opacity-20", style.glow)} />
-
-        <div className={cn("absolute top-3 right-3 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full", style.badge)}>
-          {avatar.rarity}
-        </div>
-
-        <div className="size-32 md:size-36 flex items-center justify-center mb-2">
-          <img src={avatar.image} alt={avatar.name} className="size-full object-contain drop-shadow-lg" />
-        </div>
-
-        <div className="text-center mb-3">
-          <div className="font-black font-fun text-base">{avatar.name}</div>
-          <div className="text-[10px] font-bold uppercase text-[#56707A] tracking-wider">Player</div>
-        </div>
-
-        <Button
-          type="button"
-          onClick={() => onBuy(avatar)}
-          className="w-full font-black text-sm rounded-xl border-b-4 active:border-b-0 active:mt-1 transition-all bg-[#FF9600] hover:bg-[#FF9600]/90 border-[#CC7800] text-white"
-        >
-          <Coins className="size-3.5 mr-1 fill-current" />
-          {avatar.price.toLocaleString()}
-        </Button>
-      </div>
-    </motion.div>
-  );
-}
-
-function CosmeticCard({ item, onBuy }: { item: CosmeticItem; onBuy: (c: CosmeticItem) => void }) {
-  const isJersey = item.type === "jersey";
-
-  return (
-    <motion.div
-      whileHover={{ scale: 1.04, y: -4 }}
-      whileTap={{ scale: 0.97 }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-    >
-      <div className={cn(
-        "relative flex flex-col items-center rounded-2xl border-2 border-b-4 bg-[#1B2F36] p-5 h-full overflow-hidden transition-colors",
-        isJersey
-          ? "border-[#1CB0F6]/30 border-b-[#1CB0F6]/50"
-          : "border-[#CE82FF]/30 border-b-[#CE82FF]/50"
-      )}>
-        <div className={cn(
-          "absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 size-28 rounded-full blur-[50px] opacity-20",
-          isJersey ? "bg-[#1CB0F6]" : "bg-[#CE82FF]"
-        )} />
-
-        <div className={cn(
-          "absolute top-3 right-3 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full",
-          isJersey ? "bg-[#1CB0F6]/20 text-[#1CB0F6]" : "bg-[#CE82FF]/20 text-[#CE82FF]"
-        )}>
-          {item.type}
-        </div>
-
-        <div className={cn(
-          "size-24 rounded-2xl border-2 border-b-4 flex items-center justify-center mb-3 overflow-hidden bg-white/5 p-2",
-          isJersey
-            ? "border-[#1CB0F6]/30 border-b-[#1CB0F6]/50"
-            : "border-[#CE82FF]/30 border-b-[#CE82FF]/50"
-        )}>
-          <img src={item.image} alt={item.name} className="size-full object-contain" />
-        </div>
-
-        <div className="text-center mb-4">
-          <div className="font-black font-fun text-sm">{item.name}</div>
-        </div>
-
-        <Button
-          type="button"
-          onClick={() => onBuy(item)}
-          className="w-full font-black text-sm rounded-xl border-b-4 active:border-b-0 active:mt-1 transition-all bg-[#FF9600] hover:bg-[#FF9600]/90 border-[#CC7800] text-white"
-        >
-          <Coins className="size-3.5 mr-1 fill-current" />
-          {item.price.toLocaleString()}
-        </Button>
+          <span className="tabular-nums">{booster.disabled ? "Full" : booster.price}</span>
+          {!booster.disabled && <CoinIcon size={26} />}
+        </button>
       </div>
     </motion.div>
   );
@@ -242,8 +154,35 @@ export function StoreScreen() {
   const queryClient = useQueryClient();
   const { data: productsData } = useStoreProducts();
   const { data: wallet } = useStoreWallet();
+  const { data: inventoryData } = useStoreInventory();
+  const authUser = useAuthStore((state) => state.user);
+  const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
+  const { player, updateStats } = usePlayer();
   const [buyModal, setBuyModal] = useState<BuyModalState | null>(null);
   const ticketsFull = (wallet?.tickets ?? 0) >= 10;
+
+  /** Currently saved customization (decoded from avatar_url). */
+  const currentCustomization = useMemo<AvatarCustomization>(() => {
+    return customizationFromAvatarValue(authUser?.avatar_url ?? player.avatarCustomization?.base);
+  }, [authUser?.avatar_url, player.avatarCustomization?.base]);
+
+  /** Set of part ids the user already owns (free defaults + purchased). */
+  const ownedPartIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const part of ALL_AVATAR_PARTS) {
+      if (part.free) set.add(part.id);
+    }
+    for (const skin of SKIN_PARTS) {
+      if (skin.free) set.add(skin.id);
+    }
+    for (const entry of inventoryData?.items ?? []) {
+      const part = ALL_AVATAR_PARTS.find((p) => p.productSlug === entry.slug);
+      if (part) set.add(part.id);
+      const skin = SKIN_PARTS.find((s) => s.productSlug === entry.slug);
+      if (skin) set.add(skin.id);
+    }
+    return set;
+  }, [inventoryData]);
 
   const productsBySlug = useMemo(() => {
     return new Map((productsData?.items ?? []).map((item) => [item.slug, item]));
@@ -335,11 +274,11 @@ export function StoreScreen() {
   }, [searchParams, pathname, queryClient, router]);
 
   const coinBundles = useMemo<BundleProps[]>(() => {
-    const config: Array<{ id: string; title: string; amount: number; bonus?: number; isPopular?: boolean; slug: string }> = [
-      { id: "1", title: "Handful", amount: 100, slug: "coin_pack_100" },
-      { id: "2", title: "Pouch", amount: 550, bonus: 10, isPopular: true, slug: "coin_pack_550" },
-      { id: "3", title: "Chest", amount: 1200, bonus: 20, slug: "coin_pack_1200" },
-      { id: "4", title: "Vault", amount: 3000, bonus: 50, slug: "coin_pack_3000" },
+    const config: Array<{ id: string; title: string; amount: number; bonus?: number; isPopular?: boolean; slug: string; imageSrc: string }> = [
+      { id: "1", title: "Handful", amount: 100, slug: "coin_pack_100", imageSrc: "/assets/store/coin_handful.webp" },
+      { id: "2", title: "Pouch", amount: 550, bonus: 10, isPopular: true, slug: "coin_pack_550", imageSrc: "/assets/store/coin_pouch.webp" },
+      { id: "3", title: "Chest", amount: 1200, bonus: 20, slug: "coin_pack_1200", imageSrc: "/assets/store/coin_chest.webp" },
+      { id: "4", title: "Vault", amount: 3000, bonus: 50, slug: "coin_pack_3000", imageSrc: "/assets/store/coin_vault.webp" },
     ];
 
     return config.map((item) => {
@@ -352,6 +291,7 @@ export function StoreScreen() {
         bonus: item.bonus,
         isPopular: item.isPopular,
         currencyType: "coins",
+        imageSrc: item.imageSrc,
         price,
         onBuy: product ? () => setBuyModal({
           name: item.title,
@@ -364,95 +304,81 @@ export function StoreScreen() {
   }, [productsBySlug]);
 
   const boosters = useMemo<BoosterItem[]>(() => {
-    const ticketProduct = productsBySlug.get("ticket_pack_3");
-    const ticketPrice = ticketProduct ? formatUsd(ticketProduct.priceCents) : "$1.99";
-    const fiftyPrice = productsBySlug.get("chance_card_5050")?.priceCents ?? 200;
+    const ticketCard: BoosterItem = {
+      id: "tickets",
+      title: "Extra Tickets",
+      description: "Top up ranked tickets up to the 10-ticket cap",
+      price: "500",
+      productSlug: "ticket_pack_3",
+      iconAsset: "/assets/ticket_icon.webp",
+      disabled: ticketsFull,
+    };
     return [
-      {
-        id: "xp",
-        title: "2x XP Boost",
-        description: "Double your XP for 1 hour",
-        price: "500",
-        icon: <Zap className="size-7" />,
-        color: "text-yellow-400",
-        bgColor: "bg-yellow-500/10",
-        borderColor: "border-yellow-500/30",
-        borderBottomColor: "border-b-yellow-600/50",
-        glowColor: "bg-yellow-500",
-      },
-      {
-        id: "rank",
-        title: "2x Rank Pts",
-        description: "Double rank points for 1 hour",
-        price: "500",
-        icon: <Shield className="size-7" />,
-        color: "text-[#1CB0F6]",
-        bgColor: "bg-[#1CB0F6]/10",
-        borderColor: "border-[#1CB0F6]/30",
-        borderBottomColor: "border-b-[#1CB0F6]/50",
-        glowColor: "bg-[#1CB0F6]",
-      },
-      {
-        id: "fifty",
-        title: "50/50 Helpline",
-        description: "Removes two wrong answers",
-        price: `${fiftyPrice}`,
-        productSlug: "chance_card_5050",
-        icon: <Target className="size-7" />,
-        color: "text-[#CE82FF]",
-        bgColor: "bg-[#CE82FF]/10",
-        borderColor: "border-[#CE82FF]/30",
-        borderBottomColor: "border-b-[#CE82FF]/50",
-        glowColor: "bg-[#CE82FF]",
-      },
-      {
-        id: "tickets",
-        title: "Extra Tickets",
-        description: "Top up ranked tickets up to the 10-ticket cap",
-        price: ticketPrice,
-        productSlug: "ticket_pack_3",
-        icon: <Ticket className="size-7 fill-current" />,
-        color: "text-[#58CC02]",
-        bgColor: "bg-[#58CC02]/10",
-        borderColor: "border-[#58CC02]/30",
-        borderBottomColor: "border-b-[#58CC02]/50",
-        glowColor: "bg-[#58CC02]",
-        disabled: ticketsFull,
-      },
+      { ...ticketCard, id: "tickets-1" },
+      { ...ticketCard, id: "tickets-2" },
+      { ...ticketCard, id: "tickets-3" },
+      { ...ticketCard, id: "tickets-4" },
     ];
-  }, [productsBySlug, ticketsFull]);
-
-  const avatars = useMemo<AvatarItem[]>(() => {
-    const orderMap = new Map(STORE_AVATAR_ORDER.map((slug, index) => [slug, index]));
-
-    return (productsData?.items ?? [])
-      .filter((item) => item.type === "avatar")
-      .filter((item) => !isJerseyAvatarProduct(item as AvatarStoreProductLike))
-      .filter((item) => orderMap.has(item.slug))
-      .sort((a, b) => (orderMap.get(a.slug) ?? 999) - (orderMap.get(b.slug) ?? 999))
-      .map((item) => ({
-        id: item.id,
-        name: getAvatarLabel(item),
-        image: getAvatarImage(item, 160),
-        price: item.priceCents,
-        rarity: STORE_AVATAR_RARITY[item.slug] ?? "epic",
-        productSlug: item.slug,
-      }));
-  }, [productsData]);
-
-  const cosmetics = useMemo<CosmeticItem[]>(() => {
-    const getPrice = (slug: string, fallback: number) => productsBySlug.get(slug)?.priceCents ?? fallback;
-    return [
-      { id: "j1", name: "Home Jersey", image: "/assets/store/jersey1.svg", type: "jersey", price: getPrice("avatar_jersey_home", 800), productSlug: "avatar_jersey_home" },
-      { id: "j2", name: "Away Jersey", image: "/assets/store/jersey2.svg", type: "jersey", price: getPrice("avatar_jersey_away", 800), productSlug: "avatar_jersey_away" },
-      { id: "j3", name: "Third Kit", image: "/assets/store/jersey3.svg", type: "jersey", price: getPrice("avatar_jersey_third", 1000), productSlug: "avatar_jersey_third" },
-      { id: "j4", name: "Retro Kit", image: "/assets/store/jersey4.svg", type: "jersey", price: getPrice("avatar_jersey_retro", 1200), productSlug: "avatar_jersey_retro" },
-      { id: "j5", name: "Special Edition", image: "/assets/store/jersey5.svg", type: "jersey", price: getPrice("avatar_jersey_special", 1500), productSlug: "avatar_jersey_special" },
-      { id: "j6", name: "Gold Kit", image: "/assets/store/jersey6.svg", type: "jersey", price: getPrice("avatar_jersey_gold", 2000), productSlug: "avatar_jersey_gold" },
-    ];
-  }, [productsBySlug]);
+  }, [ticketsFull]);
 
   const purchasePending = checkoutMutation.isPending || coinPurchaseMutation.isPending;
+
+  /** Persist a customization change: encode → save to backend + local state. */
+  const persistCustomization = async (next: AvatarCustomization) => {
+    const encoded = encodeAvatarCustomization(next);
+    try {
+      const updated = await updateMe({ avatar_url: encoded });
+      updateStats({ avatarCustomization: next });
+      if (authUser) {
+        setAuthenticated({ ...authUser, avatar_url: updated.avatar_url ?? encoded });
+      }
+    } catch {
+      toast.error("Could not save avatar.");
+    }
+  };
+
+  /** Open the buy modal for an avatar part (with preview). */
+  const openAvatarPartModal = (part: AvatarPart) => {
+    if (ownedPartIds.has(part.id)) {
+      // Already owned → equip immediately, no modal
+      void persistCustomization({ ...currentCustomization, [part.slot]: part.id });
+      toast.success(`${part.name} equipped.`);
+      return;
+    }
+    const previewCustomization: AvatarCustomization = {
+      ...currentCustomization,
+      [part.slot]: part.id,
+    };
+    setBuyModal({
+      name: part.name,
+      price: part.priceCoins ? `${part.priceCoins.toLocaleString()} coins` : "—",
+      productSlug: part.productSlug,
+      mode: part.productSlug ? "coins" : "none",
+      avatarPart: part,
+      previewCustomization,
+    });
+  };
+
+  /** Open the buy modal for a skin tone (with preview). */
+  const openSkinModal = (skin: SkinPart) => {
+    if (ownedPartIds.has(skin.id)) {
+      void persistCustomization({ ...currentCustomization, skin: skin.id });
+      toast.success(`${skin.name} skin equipped.`);
+      return;
+    }
+    const previewCustomization: AvatarCustomization = {
+      ...currentCustomization,
+      skin: skin.id,
+    };
+    setBuyModal({
+      name: `${skin.name} Skin`,
+      price: skin.priceCoins ? `${skin.priceCoins.toLocaleString()} coins` : "—",
+      productSlug: skin.productSlug,
+      mode: skin.productSlug ? "coins" : "none",
+      skinPart: skin,
+      previewCustomization,
+    });
+  };
 
   const handleConfirm = () => {
     if (!buyModal || purchasePending) return;
@@ -465,7 +391,22 @@ export function StoreScreen() {
       checkoutMutation.mutate(buyModal.productSlug);
       return;
     }
+    const partToEquip = buyModal.avatarPart;
+    const skinToEquip = buyModal.skinPart;
     coinPurchaseMutation.mutate(buyModal.productSlug, {
+      onSuccess: async () => {
+        if (skinToEquip) {
+          await persistCustomization({
+            ...currentCustomization,
+            skin: skinToEquip.id,
+          });
+        } else if (partToEquip) {
+          await persistCustomization({
+            ...currentCustomization,
+            [partToEquip.slot]: partToEquip.id,
+          });
+        }
+      },
       onSettled: () => setBuyModal(null),
     });
   };
@@ -502,7 +443,7 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.1 }}
           >
-            <SectionHeader icon={<Sparkles className="size-5" />} title="Buy Coins" subtitle="Power up your wallet" />
+            <SectionHeader title="Buy Coins" subtitle="Power up your wallet" />
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {coinBundles.map((bundle, i) => (
                 <motion.div
@@ -522,7 +463,7 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.2 }}
           >
-            <SectionHeader icon={<Zap className="size-5" />} title="Boosters & Helplines" subtitle="Gain the competitive edge" />
+            <SectionHeader title="Boosters & Helplines" subtitle="Gain the competitive edge" />
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {boosters.map((booster, i) => (
                 <motion.div
@@ -534,19 +475,15 @@ export function StoreScreen() {
                   <BoosterCard
                     booster={booster}
                     onBuy={(b) => {
-                      if (b.productSlug === "ticket_pack_10" && ticketsFull) {
-                        toast.message("Tickets are already full.");
-                        return;
-                      }
                       if (b.productSlug === "ticket_pack_3" && ticketsFull) {
                         toast.message("Tickets are already full.");
                         return;
                       }
                       setBuyModal({
                         name: b.title,
-                        price: b.price,
+                        price: `${b.price} coins`,
                         productSlug: b.productSlug,
-                        mode: b.productSlug === "ticket_pack_3" ? "stripe" : (b.productSlug ? "coins" : "none"),
+                        mode: b.productSlug ? "coins" : "none",
                       });
                     }}
                   />
@@ -558,25 +495,86 @@ export function StoreScreen() {
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.25 }}
+          >
+            <SectionHeader title="Avatars" subtitle="Show off your style" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {SKIN_PARTS.filter((s) => !s.free).map((skin, i) => {
+                // Use the user's current customization, just swap the skin so they see how
+                // each variant looks with their currently equipped hair / jersey / items.
+                const previewCustomization: AvatarCustomization = {
+                  ...currentCustomization,
+                  skin: skin.id,
+                };
+                return (
+                  <motion.div
+                    key={skin.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.25 + i * 0.04 }}
+                  >
+                    <ItemCard
+                      name={skin.name}
+                      asset={skin.asset}
+                      price={skin.priceCoins ? skin.priceCoins.toLocaleString() : "—"}
+                      previewCustomization={previewCustomization}
+                      owned={ownedPartIds.has(skin.id)}
+                      onBuy={() => openSkinModal(skin)}
+                    />
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.section>
+
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.3 }}
           >
-            <SectionHeader icon={<User className="size-5" />} title="Avatars" subtitle="Show off your style" />
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {avatars.map((avatar, i) => (
+            <SectionHeader title="Hair" subtitle="Style your character" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {HAIR_PARTS.filter((p) => !p.free).map((part, i) => (
                 <motion.div
-                  key={avatar.id}
+                  key={part.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.3 + i * 0.05 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.3 + i * 0.04 }}
                 >
-                  <AvatarCard
-                    avatar={avatar}
-                    onBuy={(a) => setBuyModal({
-                      name: a.name,
-                      price: `${a.price} coins`,
-                      productSlug: a.productSlug,
-                      mode: a.productSlug ? "coins" : "none",
-                    })}
+                  <ItemCard
+                    name={part.name}
+                    asset={part.asset}
+                    price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
+                    imageSize="lg"
+                    owned={ownedPartIds.has(part.id)}
+                    onBuy={() => openAvatarPartModal(part)}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </motion.section>
+
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.35 }}
+          >
+            <SectionHeader title="Glasses" subtitle="Look the part" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {GLASSES_PARTS.map((part, i) => (
+                <motion.div
+                  key={part.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.35 + i * 0.04 }}
+                >
+                  <ItemCard
+                    name={part.name}
+                    asset={part.asset}
+                    price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
+                    imageSize="md"
+                    owned={ownedPartIds.has(part.id)}
+                    onBuy={() => openAvatarPartModal(part)}
                   />
                 </motion.div>
               ))}
@@ -588,84 +586,65 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.4 }}
           >
-            <SectionHeader icon={<Shirt className="size-5" />} title="Jerseys" subtitle="Rep your colors" />
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {cosmetics.map((item, i) => (
+            <SectionHeader title="Facial Hair" subtitle="Add some character" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {FACIAL_HAIR_PARTS.map((part, i) => (
                 <motion.div
-                  key={item.id}
+                  key={part.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.4 + i * 0.05 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.4 + i * 0.04 }}
                 >
-                  <CosmeticCard
-                    item={item}
-                    onBuy={(c) => setBuyModal({
-                      name: c.name,
-                      price: `${c.price} coins`,
-                      productSlug: c.productSlug,
-                      mode: c.productSlug ? "coins" : "none",
-                    })}
+                  <ItemCard
+                    name={part.name}
+                    asset={part.asset}
+                    price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
+                    imageSize="sm"
+                    owned={ownedPartIds.has(part.id)}
+                    onBuy={() => openAvatarPartModal(part)}
                   />
                 </motion.div>
               ))}
             </div>
           </motion.section>
 
-          <AnimatePresence>
-            {buyModal && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
-                onClick={() => { if (!purchasePending) setBuyModal(null); }}
-              >
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.45 }}
+          >
+            <SectionHeader title="Jerseys" subtitle="Rep your colors" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {JERSEY_DESIGN_PARTS.map((part, i) => (
                 <motion.div
-                  initial={{ scale: 0.8, opacity: 0, y: 20 }}
-                  animate={{ scale: 1, opacity: 1, y: 0 }}
-                  exit={{ scale: 0.8, opacity: 0, y: 20 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                  className="bg-[#1B2F36] rounded-3xl border-2 border-b-4 border-[#1CB0F6]/30 border-b-[#1CB0F6]/50 p-8 shadow-2xl flex flex-col items-center gap-5 min-w-[320px] relative overflow-hidden"
-                  onClick={(event) => event.stopPropagation()}
+                  key={part.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.45 + i * 0.04 }}
                 >
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 size-40 rounded-full blur-[80px] opacity-20 bg-[#1CB0F6]" />
-
-                  <div className="size-16 rounded-2xl bg-[#FF9600]/10 border-2 border-b-4 border-[#FF9600]/30 border-b-[#FF9600]/50 flex items-center justify-center">
-                    <Coins className="size-8 text-[#FF9600] fill-[#FF9600]" />
-                  </div>
-
-                  <div className="text-center">
-                    <h3 className="text-xl font-black font-fun mb-1">Confirm Purchase</h3>
-                    <div className="text-sm text-[#56707A] font-medium">{buyModal.name}</div>
-                  </div>
-
-                  <div className="bg-[#FF9600]/10 border-2 border-[#FF9600]/30 rounded-xl px-6 py-2">
-                    <span className="text-[#FF9600] font-black font-fun text-lg">{buyModal.price}</span>
-                  </div>
-
-                  <div className="flex gap-3 w-full">
-                    <Button
-                      type="button"
-                      disabled={purchasePending}
-                      className="flex-1 font-black rounded-xl border-b-4 active:border-b-0 active:mt-1 transition-all bg-[#58CC02] hover:bg-[#58CC02]/90 border-[#46A302] text-white disabled:opacity-60 disabled:pointer-events-none"
-                      onClick={handleConfirm}
-                    >
-                      {purchasePending ? 'Processing...' : 'Confirm'}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      disabled={purchasePending}
-                      className="flex-1 font-black rounded-xl border-b-4 active:border-b-0 active:mt-1 transition-all border-[#2A4550] bg-[#1B2F36] hover:bg-[#243B44] text-[#56707A]"
-                      onClick={() => setBuyModal(null)}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
+                  <ItemCard
+                    name={part.name}
+                    asset={part.asset}
+                    price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
+                    imageSize="lg"
+                    owned={ownedPartIds.has(part.id)}
+                    onBuy={() => openAvatarPartModal(part)}
+                  />
                 </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              ))}
+            </div>
+          </motion.section>
+
+          <PurchaseConfirmModal
+            open={!!buyModal}
+            onClose={() => { if (!purchasePending) setBuyModal(null); }}
+            onConfirm={handleConfirm}
+            isPending={purchasePending}
+            name={buyModal?.name ?? ""}
+            price={buyModal?.price ?? ""}
+            previewCustomization={buyModal?.previewCustomization}
+          />
+
         </div>
       </div>
     </div>

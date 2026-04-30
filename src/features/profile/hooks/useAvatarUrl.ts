@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { getDiceBearAvatarUrl, isGoogleAvatarUrl } from '@/lib/avatars';
+import { getAvatarAsset, isGoogleAvatarUrl } from '@/lib/avatars';
 import type { AvatarCustomization } from '@/types/game';
 
 interface UseAvatarUrlParams {
@@ -36,9 +36,9 @@ export function useAvatarUrl({
 
     // Derive the resolved URL from customization base
     const derivedUrl = baseValue
-      ? /^https?:\/\//i.test(baseValue)
+      ? /^https?:\/\//i.test(baseValue) || baseValue.startsWith('/')
         ? baseValue
-        : getDiceBearAvatarUrl(baseValue, 96)
+        : getAvatarAsset(baseValue)
       : null;
 
     // Final resolved URL (avatarUrl takes precedence)

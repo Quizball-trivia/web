@@ -200,7 +200,7 @@ function PodiumCard({ standing, index, className }: { standing: StandingRow; ind
           >
             <Avatar className={cn('size-16 border-2 shadow-xl', config.avatarRing)}>
               <AvatarImage
-                src={resolveAvatarUrl(standing.avatarUrl, `podium-${standing.userId}`, 128)}
+                src={resolveAvatarUrl(standing.avatarUrl)}
                 alt={standing.username}
               />
               <AvatarFallback className="bg-[#243B44] text-base font-black text-white">
@@ -433,7 +433,7 @@ export function PartyQuizResultsScreen({
                   </span>
 
                   <Avatar className="size-9 border border-white/12 shrink-0">
-                    <AvatarImage src={resolveAvatarUrl(standing.avatarUrl, `results-${standing.userId}`, 72)} alt={standing.username} />
+                    <AvatarImage src={resolveAvatarUrl(standing.avatarUrl)} alt={standing.username} />
                     <AvatarFallback className="bg-[#243B44] text-[10px] font-black text-white">
                       {avatarFallback(standing.username)}
                     </AvatarFallback>

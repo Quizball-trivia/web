@@ -220,7 +220,7 @@ export function ProfileWeb({
             >
               <AvatarDisplay
                 customization={{ ...(player.avatarCustomization ?? { base: player.avatar }), base: avatarBase }}
-                size="xl"
+                size="lg"
               />
               <span className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-[10px] font-black uppercase tracking-[0.18em] opacity-0 group-hover:opacity-100 transition-opacity">
                 Edit
@@ -230,7 +230,7 @@ export function ProfileWeb({
             <div className="relative size-24 lg:size-28 rounded-[10px] bg-black/30 flex items-center justify-center overflow-hidden shrink-0">
               <AvatarDisplay
                 customization={{ ...(player.avatarCustomization ?? { base: player.avatar }), base: avatarBase }}
-                size="xl"
+                size="lg"
               />
             </div>
           )}
