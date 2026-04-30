@@ -14,6 +14,18 @@ export const metadata: Metadata = {
     shortcut: "/assets/brand/quziball-logo-2.png",
     apple: "/assets/brand/quziball-logo-2.png",
   },
+  // Google Search Console / OAuth brand verification. Next.js renders
+  // this as `<meta name="google-site-verification" content="..." />`
+  // inside <head> on every page — Search Console only checks the home
+  // page, but rendering it everywhere is harmless and keeps the tag in
+  // place if someone later moves the index route.
+  //
+  // Don't remove this even after verification succeeds — Google
+  // re-checks periodically and will revoke verification if the tag
+  // disappears.
+  verification: {
+    google: "2ELGPt8HCqKUoe3dQWvBicT93KE2GYGfrAUaTLWk2m4",
+  },
 };
 
 export default function RootLayout({

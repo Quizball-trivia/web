@@ -40,7 +40,6 @@ import { toast } from 'sonner';
 import type { PlayerStats } from '@/types/game';
 import type { MatchStatsSummary, HeadToHeadSummary, RankPosition, UserProgression } from '@/lib/domain';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
-import { useAvatarUrl } from './hooks/useAvatarUrl';
 import { useStoreWallet } from '@/lib/queries/store.queries';
 
 import { getTierVisual } from '@/utils/tierVisuals';
@@ -139,12 +138,6 @@ export function ProfileWeb({
     };
   }, [recentMatches, isMatchesExpanded]);
 
-  const { avatarBase, resolvedAvatarUrl, googleAvatarUrl } = useAvatarUrl({
-    avatarUrl,
-    avatarCustomization: player.avatarCustomization,
-    fallbackAvatar: player.avatar,
-  });
-
   const overallStats = matchStatsSummary?.overall;
   const rankedStats = matchStatsSummary?.ranked;
   const friendlyStats = matchStatsSummary?.friendly;
@@ -219,7 +212,7 @@ export function ProfileWeb({
               aria-label="Change avatar"
             >
               <AvatarDisplay
-                customization={{ ...(player.avatarCustomization ?? { base: player.avatar }), base: avatarBase }}
+                customization={player.avatarCustomization ?? {}}
                 size="lg"
               />
               <span className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-[10px] font-black uppercase tracking-[0.18em] opacity-0 group-hover:opacity-100 transition-opacity">
@@ -229,7 +222,7 @@ export function ProfileWeb({
           ) : (
             <div className="relative size-24 lg:size-28 rounded-[10px] bg-black/30 flex items-center justify-center overflow-hidden shrink-0">
               <AvatarDisplay
-                customization={{ ...(player.avatarCustomization ?? { base: player.avatar }), base: avatarBase }}
+                customization={player.avatarCustomization ?? {}}
                 size="lg"
               />
             </div>
@@ -1117,8 +1110,7 @@ export function ProfileWeb({
         <AvatarPicker
           open={isAvatarPickerOpen}
           onOpenChange={setIsAvatarPickerOpen}
-          currentAvatarUrl={resolvedAvatarUrl}
-          googleAvatarUrl={googleAvatarUrl}
+          currentCustomization={player.avatarCustomization ?? null}
           onSelect={handleAvatarSelect}
           isSaving={isSavingAvatar}
         />

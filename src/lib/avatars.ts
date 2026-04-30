@@ -81,11 +81,6 @@ export function isAvatarUrl(avatar: string): boolean {
   return avatar.startsWith("http") || avatar.startsWith("/") || avatar.startsWith("data:image/");
 }
 
-export function isGoogleAvatarUrl(url: string | null | undefined) {
-  if (!url) return false;
-  return /googleusercontent\.com/i.test(url);
-}
-
 /* ───────── Customization encoding (qb-avatar URI) ───────── */
 
 /**
@@ -128,7 +123,8 @@ export function decodeAvatarCustomization(value: string | null | undefined): Ava
  * Behavior:
  *  - If value is a `qb-avatar:` URI → decode and respect each slot literally (a missing slot stays
  *    missing, so users who explicitly removed an item keep it removed).
- *  - If value is an external URL (Google) → return defaults plus the URL via `base`.
+ *  - If value is an external URL (Google) → return fresh-user defaults. Google photos are not
+ *    used as in-game avatars.
  *  - Otherwise (no saved value at all) → fresh-user defaults: light skin + green jersey + boy hair.
  */
 export function customizationFromAvatarValue(value: string | null | undefined): AvatarCustomization {
@@ -147,7 +143,6 @@ export function customizationFromAvatarValue(value: string | null | undefined): 
       skin: DEFAULT_SKIN_ID,
       jersey: DEFAULT_JERSEY_ID,
       hair: DEFAULT_HAIR_ID,
-      base: value,
     };
   }
   return {

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { customizationFromAvatarValue, isAvatarUrl } from "@/lib/avatars";
+import { customizationFromAvatarValue } from "@/lib/avatars";
 import { AVATAR_SLOTS, getAvatarPart, getSkinPart } from "@/lib/avatars/parts";
 import type { AvatarCustomization } from "@/types/game";
 
@@ -17,26 +17,6 @@ interface AvatarPreviewProps {
  * equipped slots layered over the chosen skin.
  */
 export function AvatarPreview({ customization, width = 240, className = "" }: AvatarPreviewProps) {
-  // External URL (Google avatar) — show as-is, no layering.
-  if (
-    typeof customization.base === "string" &&
-    isAvatarUrl(customization.base) &&
-    !customization.base.startsWith("/assets/")
-  ) {
-    return (
-      <div className={`relative ${className}`} style={{ width, height: width }}>
-        <Image
-          src={customization.base}
-          alt=""
-          fill
-          unoptimized
-          sizes={`${width}px`}
-          className="object-cover rounded-full"
-        />
-      </div>
-    );
-  }
-
   const defaults = customizationFromAvatarValue(customization.base);
   const final: AvatarCustomization = {
     skin: customization.skin ?? defaults.skin,

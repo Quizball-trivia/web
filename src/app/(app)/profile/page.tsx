@@ -82,8 +82,8 @@ export default function ProfilePage() {
       const avatarCustomization = decodeAvatarCustomization(avatarUrl);
       const updated = avatarCustomization
         ? await updateMe({ avatar_url: null, avatar_customization: avatarCustomization })
-        : await updateMe({ avatar_url: avatarUrl, avatar_customization: null });
-      updateStats({ avatarCustomization: avatarCustomization ?? { base: avatarUrl } });
+        : await updateMe({ avatar_url: null, avatar_customization: null });
+      updateStats({ avatarCustomization: avatarCustomization ?? undefined });
       if (authUser) {
         setAuthenticated({
           ...authUser,

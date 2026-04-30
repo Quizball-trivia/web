@@ -27,17 +27,16 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
     const newId = authUser.id;
     const newUsername = authUser.nickname ?? authUser.email?.split('@')[0];
-    const newAvatarUrl = authUser.avatar_url;
     const newAvatarCustomization = authUser.avatar_customization;
 
     // Sync auth user changes to player context - intentional synchronization pattern
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPlayer((prev) => {
+      const currentAvatarCustomization = prev.avatarCustomization ?? null;
       const hasChanges =
         (newId && newId !== prev.id) ||
         (newUsername && newUsername !== prev.username) ||
-        Boolean(newAvatarCustomization && newAvatarCustomization !== prev.avatarCustomization) ||
-        (newAvatarUrl && newAvatarUrl !== prev.avatarCustomization?.base);
+        newAvatarCustomization !== currentAvatarCustomization;
 
       if (!hasChanges) return prev;
 
@@ -45,11 +44,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         ...prev,
         id: newId ?? prev.id,
         username: newUsername ?? prev.username,
-        avatarCustomization: newAvatarCustomization
-          ? newAvatarCustomization
-          : newAvatarUrl
-          ? { base: newAvatarUrl }
-          : prev.avatarCustomization,
+        avatarCustomization: newAvatarCustomization ?? undefined,
       };
     });
   }, [authUser]);

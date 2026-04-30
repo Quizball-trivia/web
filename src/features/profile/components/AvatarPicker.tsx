@@ -48,8 +48,7 @@ const PURPLE = "#BA02E8";
 interface AvatarPickerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  currentAvatarUrl: string | null;
-  googleAvatarUrl?: string | null;
+  currentCustomization?: AvatarCustomization | null;
   onSelect: (avatarUrl: string) => void;
   isSaving?: boolean;
 }
@@ -57,8 +56,7 @@ interface AvatarPickerProps {
 export function AvatarPicker({
   open,
   onOpenChange,
-  currentAvatarUrl,
-  googleAvatarUrl,
+  currentCustomization,
   onSelect,
   isSaving = false,
 }: AvatarPickerProps) {
@@ -72,10 +70,10 @@ export function AvatarPicker({
     part?: AvatarPart;
   } | null>(null);
 
-  /** Current full customization decoded from the saved avatar URL. */
+  /** Current full customization. Missing customization intentionally renders the default avatar. */
   const current = useMemo<AvatarCustomization>(
-    () => customizationFromAvatarValue(currentAvatarUrl),
-    [currentAvatarUrl],
+    () => currentCustomization ?? customizationFromAvatarValue(null),
+    [currentCustomization],
   );
 
   /** Set of part ids the user owns (free + purchased). In dev mode, everything is unlocked
@@ -328,39 +326,6 @@ export function AvatarPicker({
 
   const Content = (
     <div className="space-y-4">
-      {googleAvatarUrl && (
-        <div className="space-y-2">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Google Photo
-          </span>
-          <button
-            className={cn(
-              "w-full flex items-center gap-3 rounded-xl border p-2.5 transition-all",
-              currentAvatarUrl === googleAvatarUrl
-                ? "border-primary bg-primary/5"
-                : "border-border hover:border-primary/60 hover:bg-muted/30",
-            )}
-            onClick={() => onSelect(googleAvatarUrl)}
-            disabled={isSaving}
-          >
-            <div className="relative size-10 rounded-full overflow-hidden border border-border">
-              <Image
-                src={googleAvatarUrl}
-                alt="Google avatar"
-                fill
-                sizes="40px"
-                className="object-cover"
-                unoptimized
-              />
-            </div>
-            <div className="flex-1 text-left">
-              <div className="text-sm font-semibold">Use Google photo</div>
-            </div>
-            {currentAvatarUrl === googleAvatarUrl && <Check className="size-4 text-primary" />}
-          </button>
-        </div>
-      )}
-
       {/* Live preview of the avatar with current selection */}
       <div className="flex justify-center pt-1 pb-2">
         <AvatarPreview customization={current} width={isMobile ? 140 : 160} />
