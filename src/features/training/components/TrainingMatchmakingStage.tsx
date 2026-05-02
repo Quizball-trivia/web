@@ -13,7 +13,7 @@ export function TrainingMatchmakingStage() {
     avatarUrl: string;
   } | null>(null);
   const tooltipFired = useRef(false);
-  const searchStartedAt = useRef(Date.now());
+  const [searchStartedAt] = useState(() => Date.now());
 
   useEffect(() => {
     if (!tooltipFired.current) {
@@ -47,7 +47,7 @@ export function TrainingMatchmakingStage() {
   return (
     <MatchmakingMapScreen
       matchType="ranked"
-      rankedSearchStartedAt={searchStartedAt.current}
+      rankedSearchStartedAt={searchStartedAt}
       rankedFoundOpponent={foundOpponent}
       onCancel={() => match.setStage("results")}
     />

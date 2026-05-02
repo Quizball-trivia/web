@@ -77,7 +77,7 @@ function DevMatchContent() {
   useEffect(() => {
     if (match || starting || hasAutoStartedRef.current) return;
     hasAutoStartedRef.current = true;
-    startMatch();
+    queueMicrotask(startMatch);
   }, [match, startMatch, starting]);
 
   const playAgain = useCallback(() => {
@@ -119,12 +119,13 @@ function DevMatchContent() {
     router.push('/play');
   }, [resetGameSession, resetStarting, router]);
 
+  const currentMatchId = match?.matchId;
   const quitMatch = useCallback(() => {
-    if (match?.matchId) {
-      getSocket().emit('match:leave', { matchId: match.matchId });
+    if (currentMatchId) {
+      getSocket().emit('match:leave', { matchId: currentMatchId });
     }
     exitToPlay();
-  }, [exitToPlay, match?.matchId]);
+  }, [currentMatchId, exitToPlay]);
 
   const playerAvatar = resolveAvatarUrl(authUser?.avatar_url ?? player.avatarCustomization?.base ?? player.avatar);
   const opponentAvatar = resolveAvatarUrl(match?.opponent?.avatarUrl);

@@ -1,3 +1,5 @@
+/* eslint-disable @next/next/no-img-element -- Layered avatar overlays require raw img sizing and absolute positioning. */
+
 import Image from 'next/image';
 import { AvatarCustomization } from '../types/game';
 import { customizationFromAvatarValue } from '@/lib/avatars';
@@ -80,33 +82,33 @@ export function AvatarDisplay({
       className={`relative flex items-center justify-center rounded-full shrink-0 overflow-hidden ${sizeClasses[size]} ${className}`}
     >
       {/* Wrapper at canonical Figma aspect ratio so item % positions land precisely. */}
-      <div className="relative h-full" style={{ aspectRatio: '495.25 / 543.03' }}>
-        <Image
-          src={skinAsset}
-          alt="Avatar"
-          fill
-          unoptimized
-          className="object-contain"
-        />
-        {AVATAR_SLOTS.map((slot) => {
-          const partId = merged[slot];
-          const part = getAvatarPart(partId);
-          if (!part) return null;
-          return (
-            <img
-              key={slot}
-              src={part.asset}
-              alt=""
-              className="pointer-events-none absolute object-contain"
-              style={{
-                top: `${part.position.top}%`,
-                left: `${part.position.left}%`,
-                width: `${part.position.width}%`,
-              }}
-            />
-          );
-        })}
-      </div>
+        <div className="relative h-full" style={{ aspectRatio: '495.25 / 543.03' }}>
+          <Image
+            src={skinAsset}
+            alt="Avatar"
+            fill
+            unoptimized
+            className="object-contain"
+          />
+          {AVATAR_SLOTS.map((slot) => {
+            const partId = merged[slot];
+            const part = getAvatarPart(partId);
+            if (!part) return null;
+            return (
+              <img
+                key={slot}
+                src={part.asset}
+                alt=""
+                className="pointer-events-none absolute object-contain"
+                style={{
+                  top: `${part.position.top}%`,
+                  left: `${part.position.left}%`,
+                  width: `${part.position.width}%`,
+                }}
+              />
+            );
+          })}
+        </div>
 
       {normalizedCountryCode && (
         <div

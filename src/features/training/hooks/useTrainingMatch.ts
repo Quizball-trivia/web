@@ -101,7 +101,6 @@ export function useTrainingMatch(isPaused: boolean) {
   });
 
   const isPausedRef = useRef(isPaused);
-  isPausedRef.current = isPaused;
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const botTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -109,12 +108,18 @@ export function useTrainingMatch(isPaused: boolean) {
   const pendingNextQuestionRef = useRef<number | null>(null);
 
   useEffect(() => {
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      if (botTimerRef.current) clearTimeout(botTimerRef.current);
-      if (phaseTimerRef.current) clearTimeout(phaseTimerRef.current);
-    };
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
+
+  const clearLatestTimers = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (botTimerRef.current) clearTimeout(botTimerRef.current);
+    if (phaseTimerRef.current) clearTimeout(phaseTimerRef.current);
   }, []);
+
+  useEffect(() => {
+    return clearLatestTimers;
+  }, [clearLatestTimers]);
 
   // ─── Stage transitions ─────────────────────────────────────
   const setStage = useCallback((stage: TrainingStage) => {

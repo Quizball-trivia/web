@@ -160,7 +160,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
       const score = totalAnswers * 100;
       onComplete(score);
     }
-  }, [currentRound, foundAnswers, questions, allRoundAnswers, onComplete]);
+  }, [TIME_PER_ROUND, currentRound, foundAnswers, questions, allRoundAnswers, onComplete]);
 
   useEffect(() => {
     if (!isGameActive || showRoundTransition) return;

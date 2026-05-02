@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowUpDown, CheckCircle2, Clock, GripVertical, Lightbulb, Send, Star, XCircle } from 'lucide-react';
+import { ArrowUpDown, CheckCircle2, GripVertical, Lightbulb, Send, Star, XCircle } from 'lucide-react';
 import {
   DndContext,
   KeyboardSensor,
@@ -101,16 +101,20 @@ function CountdownPanel({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    setGuess('');
-    setFoundAnswers([]);
+    queueMicrotask(() => {
+      setGuess('');
+      setFoundAnswers([]);
+    });
     lastSubmittedRef.current = '';
   }, [qIndex]);
 
   useEffect(() => {
     if (!countdownGuessAck?.accepted || countdownGuessAck.qIndex !== qIndex || !countdownGuessAck.acceptedDisplay) return;
     const display = resolveI18nText(countdownGuessAck.acceptedDisplay, resolvedLocale);
-    setFoundAnswers((current) => (current.includes(display) ? current : [...current, display]));
-    setGuess('');
+    queueMicrotask(() => {
+      setFoundAnswers((current) => (current.includes(display) ? current : [...current, display]));
+      setGuess('');
+    });
     lastSubmittedRef.current = '';
   }, [countdownGuessAck, qIndex, resolvedLocale]);
 
@@ -355,8 +359,10 @@ function PutInOrderPanel({
   const inputLocked = !showOptions || roundResolved || submitted;
 
   useEffect(() => {
-    setUserOrder([...question.items]);
-    setIsSubmitting(false);
+    queueMicrotask(() => {
+      setUserOrder([...question.items]);
+      setIsSubmitting(false);
+    });
   }, [question.items]);
 
   const sensors = useSensors(
@@ -405,7 +411,7 @@ function PutInOrderPanel({
   useEffect(() => {
     if (inputLocked) return;
     if (timeRemaining > 0) return;
-    handleSubmit();
+    queueMicrotask(handleSubmit);
   }, [timeRemaining, inputLocked, handleSubmit]);
 
   return (
@@ -536,21 +542,27 @@ function CluesPanel({
   const inputLocked = !showOptions || submitted || pendingGuess || roundResolved;
 
   useEffect(() => {
-    setGuess('');
-    setPendingGuess(false);
-    setManualRevealCount(1);
+    queueMicrotask(() => {
+      setGuess('');
+      setPendingGuess(false);
+      setManualRevealCount(1);
+    });
   }, [qIndex]);
 
   useEffect(() => {
     if (!cluesGuessAck || cluesGuessAck.qIndex !== qIndex) return;
-    setManualRevealCount((current) => Math.max(current, cluesGuessAck.revealCount));
-    setPendingGuess(false);
-    setGuess('');
+    queueMicrotask(() => {
+      setManualRevealCount((current) => Math.max(current, cluesGuessAck.revealCount));
+      setPendingGuess(false);
+      setGuess('');
+    });
   }, [cluesGuessAck, qIndex]);
 
   useEffect(() => {
     if (submitted || roundResolved) {
-      setPendingGuess(false);
+      queueMicrotask(() => {
+        setPendingGuess(false);
+      });
     }
   }, [roundResolved, submitted]);
 

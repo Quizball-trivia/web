@@ -597,6 +597,7 @@ export function useGameStageTransitions({
     clearFinalStageTimer,
     isMultiplayer,
     realtimeMatch?.finalResults,
+    realtimeMatch?.lastRoundResult,
     realtimeMatch?.lastRoundResult?.deltas?.goalScoredBySeat,
     realtimeMatch?.lastRoundResult?.phaseKind,
     realtimeMatch?.lastRoundResult?.qIndex,

@@ -45,7 +45,9 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
       isSupportedLocale(preferredLanguage) &&
       preferredLanguage !== locale
     ) {
-      setLocaleState(preferredLanguage);
+      queueMicrotask(() => {
+        setLocaleState(preferredLanguage);
+      });
     }
     lastSyncedPreferredLanguage.current = preferredLanguage;
   }, [locale, preferredLanguage]);

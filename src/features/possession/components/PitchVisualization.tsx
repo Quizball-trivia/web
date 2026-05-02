@@ -11,7 +11,6 @@ type GoalSide = 'left' | 'right';
 interface PitchMarkerProps {
   x: number;
   y: number;
-  avatarUrl: string;
   avatarCustomization?: AvatarCustomization | null;
   avatarAlt: string;
   color: string;
@@ -27,7 +26,7 @@ interface PitchMarkerProps {
 }
 
 function PitchMarker({
-  x, y, avatarUrl, avatarCustomization, avatarAlt, color, glowFilter,
+  x, y, avatarCustomization, avatarAlt, color, glowFilter,
   isShooter, isKeeper, isSave, isGoal, showPenResult, keeperJolt,
   isPortrait = false,
   size = 40,
@@ -60,13 +59,11 @@ function PitchMarker({
           )}
           <circle cx="0" cy="0" r={size * 0.55} fill="none" stroke={color} strokeWidth={isKeeper ? 3.5 : 2.5} />
           <foreignObject x={-size/2} y={-size/2} width={size} height={size}>
-            <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden' }}>
-              {avatarCustomization ? (
-                <AvatarDisplay customization={avatarCustomization} size="xs" className="size-full" />
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={avatarUrl} alt={avatarAlt} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              )}
+            <div
+              aria-label={avatarAlt}
+              style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden' }}
+            >
+              <AvatarDisplay customization={avatarCustomization ?? {}} size="xs" className="size-full" />
             </div>
           </foreignObject>
         </g>
@@ -157,8 +154,6 @@ function toShotVariant(value: number | undefined): 0 | 1 | 2 | 3 | 4 {
 
 export function PitchVisualization({
   playerPosition,
-  playerAvatarUrl,
-  opponentAvatarUrl,
   playerAvatarCustomization = null,
   opponentAvatarCustomization = null,
   playerName,
@@ -463,7 +458,6 @@ export function PitchVisualization({
               {/* === Opponent marker === */}
               <PitchMarker
                 x={opponentX} y={goal.penY}
-                avatarUrl={opponentAvatarUrl}
                 avatarCustomization={opponentAvatarCustomization}
                 avatarAlt={opponentAvatarAlt}
                 color="#FF4B4B" glowFilter={uid('redGlow')}
@@ -478,7 +472,6 @@ export function PitchVisualization({
               {/* === Player marker === */}
               <PitchMarker
                 x={playerX} y={goal.penY}
-                avatarUrl={playerAvatarUrl}
                 avatarCustomization={playerAvatarCustomization}
                 avatarAlt={playerAvatarAlt}
                 color="#1CB0F6" glowFilter={uid('blueGlow')}
@@ -559,9 +552,11 @@ export function PitchVisualization({
                       width="44"
                       height="44"
                     >
-                      <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden' }}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={playerAvatarUrl} alt={playerAvatarAlt} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <div
+                        aria-label={playerAvatarAlt}
+                        style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden' }}
+                      >
+                        <AvatarDisplay customization={playerAvatarCustomization ?? {}} size="xs" className="size-full" />
                       </div>
                     </foreignObject>
                   </g>
@@ -593,9 +588,11 @@ export function PitchVisualization({
                       width="44"
                       height="44"
                     >
-                      <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden' }}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={opponentAvatarUrl} alt={opponentAvatarAlt} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <div
+                        aria-label={opponentAvatarAlt}
+                        style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden' }}
+                      >
+                        <AvatarDisplay customization={opponentAvatarCustomization ?? {}} size="xs" className="size-full" />
                       </div>
                     </foreignObject>
                   </g>

@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+/* eslint-disable @next/next/no-img-element -- Category images are runtime CMS URLs. */
+
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Check, Eye, EyeOff, Lock, Shuffle, Trophy } from "lucide-react";
 import { toast } from "sonner";

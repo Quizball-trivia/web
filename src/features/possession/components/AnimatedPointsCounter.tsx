@@ -37,14 +37,18 @@ export function AnimatedPointsCounter({
     previousValueRef.current = value;
 
     if (from === to) {
-      setDisplayValue(to);
-      setIsAnimating(false);
+      queueMicrotask(() => {
+        setDisplayValue(to);
+        setIsAnimating(false);
+      });
       return;
     }
 
     const durationMs = 450;
     const startAt = performance.now();
-    setIsAnimating(true);
+    queueMicrotask(() => {
+      setIsAnimating(true);
+    });
 
     const tick = (now: number) => {
       const progress = Math.min(1, (now - startAt) / durationMs);

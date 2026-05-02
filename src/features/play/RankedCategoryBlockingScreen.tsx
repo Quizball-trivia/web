@@ -283,11 +283,11 @@ export function RankedCategoryBlockingScreen() {
     () =>
       resolveAvatarUrl(
         authUser?.avatar_url ?? player.avatarCustomization?.base ?? player.avatar),
-    [authUser?.avatar_url, player.avatarCustomization?.base, player.avatar, selfUserId]
+    [authUser?.avatar_url, player.avatarCustomization?.base, player.avatar]
   );
   const opponentResolvedAvatar = useMemo(
     () => resolveAvatarUrl(opponentMember?.avatarUrl),
-    [opponentMember?.avatarUrl, opponentMember?.userId]
+    [opponentMember?.avatarUrl]
   );
   const opponentId = opponentMember?.userId ?? 'opponent';
   const opponentUsername = opponentMember?.username ?? 'Opponent';

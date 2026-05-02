@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- Football Logic clue images are CMS-provided runtime URLs. */
+
 import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, Clock } from "lucide-react";
 

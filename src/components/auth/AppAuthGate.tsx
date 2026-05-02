@@ -52,7 +52,7 @@ export default function AppAuthGate({ children }: AppAuthGateProps) {
   }
 
   if (status !== "authenticated") {
-    return null;
+    return <LoadingScreen text="Redirecting..." />;
   }
 
   return <>{children}</>;

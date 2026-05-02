@@ -183,19 +183,16 @@ export function WelcomeScreen() {
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [loginOpen, setLoginOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
-  const [duelsCount, setDuelsCount] = useState(1000);
-  const [wcDaysLeft, setWcDaysLeft] = useState(0);
+  const [duelsCount] = useState(() => getDuelsCount());
+  const [wcDaysLeft] = useState(() => getDaysUntilWorldCup());
   const [stadiumPhase, setStadiumPhase] = useState(0);
-  const [demoPlayers, setDemoPlayers] = useState({ left: "Mason", right: "Thiago" });
-  useEffect(() => setDuelsCount(getDuelsCount()), []);
-  useEffect(() => {
-    setWcDaysLeft(getDaysUntilWorldCup());
+  const [demoPlayers] = useState(() => {
     const shuffled = [...DEMO_PLAYER_NAMES].sort(() => Math.random() - 0.5);
-    setDemoPlayers({
+    return {
       left: shuffled[0] ?? "Mason",
       right: shuffled[1] ?? "Thiago",
-    });
-  }, []);
+    };
+  });
 
   // Fetch real leaderboard
   const { data: leaderboardData } = useLeaderboard('global');

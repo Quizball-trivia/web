@@ -4,13 +4,13 @@ import Image from 'next/image';
 import { motion } from 'motion/react';
 
 interface GoalCelebrationOverlayProps {
-  scorerName: string;
-  isMeScorer: boolean;
+  scorerName?: string;
+  isMeScorer?: boolean;
   /** When true, skip all audio playback */
   muted?: boolean;
 }
 
-export function GoalCelebrationOverlay({ scorerName, isMeScorer }: GoalCelebrationOverlayProps) {
+export function GoalCelebrationOverlay({}: GoalCelebrationOverlayProps) {
   const accentColor = '#FFE500'; // Always yellow splash
 
   return (

@@ -52,14 +52,14 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   // Load preferences from storage on mount - intentional initialization pattern
   useEffect(() => {
     const savedPrefs = storage.get<UserPreferences>(STORAGE_KEYS.USER_PREFERENCES, DEFAULT_PREFERENCES);
-    /* eslint-disable react-hooks/set-state-in-effect */
-    setSoundEnabled(savedPrefs.soundEnabled ?? DEFAULT_PREFERENCES.soundEnabled);
-    setMusicEnabled(savedPrefs.musicEnabled ?? DEFAULT_PREFERENCES.musicEnabled);
-    setHapticsEnabled(savedPrefs.hapticsEnabled ?? DEFAULT_PREFERENCES.hapticsEnabled);
-    setInvitesEnabled(savedPrefs.invitesEnabled ?? DEFAULT_PREFERENCES.invitesEnabled);
-    setQuestAlertsEnabled(savedPrefs.questAlertsEnabled ?? DEFAULT_PREFERENCES.questAlertsEnabled);
-    setStreakAlertsEnabled(savedPrefs.streakAlertsEnabled ?? DEFAULT_PREFERENCES.streakAlertsEnabled);
-    /* eslint-enable react-hooks/set-state-in-effect */
+    queueMicrotask(() => {
+      setSoundEnabled(savedPrefs.soundEnabled ?? DEFAULT_PREFERENCES.soundEnabled);
+      setMusicEnabled(savedPrefs.musicEnabled ?? DEFAULT_PREFERENCES.musicEnabled);
+      setHapticsEnabled(savedPrefs.hapticsEnabled ?? DEFAULT_PREFERENCES.hapticsEnabled);
+      setInvitesEnabled(savedPrefs.invitesEnabled ?? DEFAULT_PREFERENCES.invitesEnabled);
+      setQuestAlertsEnabled(savedPrefs.questAlertsEnabled ?? DEFAULT_PREFERENCES.questAlertsEnabled);
+      setStreakAlertsEnabled(savedPrefs.streakAlertsEnabled ?? DEFAULT_PREFERENCES.streakAlertsEnabled);
+    });
   }, []);
 
   // Save preferences to storage when any toggle changes (skip initial mount)

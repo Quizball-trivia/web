@@ -62,7 +62,9 @@ export function usePossessionFirstQuestionIntro({
 
     if (currentQuestionIndex !== null && currentQuestionIndex !== 0) {
       firstIntroExpiredRef.current = true;
-      setFirstQuestionIntro(false);
+      queueMicrotask(() => {
+        setFirstQuestionIntro(false);
+      });
       return;
     }
 
@@ -125,13 +127,17 @@ export function usePossessionRoundTransition({
       const timer = setTimeout(() => setIsHalftime(true), HALFTIME_RESULTS_DELAY_MS);
       return () => clearTimeout(timer);
     }
-    setIsHalftime(false);
+    queueMicrotask(() => {
+      setIsHalftime(false);
+    });
   }, [phase]);
 
   useEffect(() => {
     const isPenaltyPhaseServer = phase === 'PENALTY_SHOOTOUT';
     if (isPenaltyPhaseServer && !prevPenaltyPhaseRef.current) {
-      setPenaltyCountdownEndsAt(Date.now() + PENALTY_COUNTDOWN_MS);
+      queueMicrotask(() => {
+        setPenaltyCountdownEndsAt(Date.now() + PENALTY_COUNTDOWN_MS);
+      });
     }
     prevPenaltyPhaseRef.current = isPenaltyPhaseServer;
   }, [phase]);
@@ -143,7 +149,9 @@ export function usePossessionRoundTransition({
     tick();
 
     if (penaltyCountdownEndsAt <= Date.now()) {
-      setPenaltyCountdownEndsAt(null);
+      queueMicrotask(() => {
+        setPenaltyCountdownEndsAt(null);
+      });
       return;
     }
 
@@ -202,10 +210,12 @@ export function usePossessionRoundTransition({
           ?? localQuestion?.question.categoryName
           ?? 'Football');
 
-      setTransitionSnapshot({
-        title,
-        categoryName,
-        subtitle: (half ?? 1) === 1 ? '1st Half' : '2nd Half',
+      queueMicrotask(() => {
+        setTransitionSnapshot({
+          title,
+          categoryName,
+          subtitle: (half ?? 1) === 1 ? '1st Half' : '2nd Half',
+        });
       });
       return;
     }
@@ -215,10 +225,12 @@ export function usePossessionRoundTransition({
       const penaltyRound = pendingQuestion?.phaseRound
         ?? (typeof roundResult?.phaseRound === 'number' ? roundResult.phaseRound + 1 : undefined)
         ?? 1;
-      setTransitionSnapshot({
-        title: `Penalty ${penaltyRound}`,
-        categoryName: 'Penalty Shootout',
-        subtitle: penaltySuddenDeath ? 'Sudden Death' : 'Shootout',
+      queueMicrotask(() => {
+        setTransitionSnapshot({
+          title: `Penalty ${penaltyRound}`,
+          categoryName: 'Penalty Shootout',
+          subtitle: penaltySuddenDeath ? 'Sudden Death' : 'Shootout',
+        });
       });
       return;
     }

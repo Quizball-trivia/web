@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { BanCategoryView } from '@/features/play/RankedCategoryBlockingScreen';
 import { HalftimeScreen } from '@/features/possession/components/HalftimeScreen';
+import type { AvatarCustomization } from '@/types/game';
 
 type BanPhase = 'first' | 'second';
 
@@ -12,8 +13,16 @@ const MOCK_CATEGORIES = [
   { id: 'cat-00s-era', name: '00s Era', icon: '⚽', imageUrl: null },
 ];
 
-const MOCK_PLAYER_AVATAR = 'https://api.dicebear.com/7.x/avataaars/png?seed=Tazi&size=256';
-const MOCK_OPPONENT_AVATAR = 'https://api.dicebear.com/7.x/avataaars/png?seed=Rustaveli&size=256';
+const MOCK_PLAYER_AVATAR_CUSTOMIZATION = {
+  skin: 'skin_male_white',
+  jersey: 'jersey_green',
+  hair: 'hair_boy_basic',
+} satisfies AvatarCustomization;
+const MOCK_OPPONENT_AVATAR_CUSTOMIZATION = {
+  skin: 'skin_male_dark',
+  jersey: 'jersey_red',
+  hair: 'hair_boy_basic',
+} satisfies AvatarCustomization;
 
 /**
  * Preview route for the ranked banning screens.
@@ -22,6 +31,9 @@ const MOCK_OPPONENT_AVATAR = 'https://api.dicebear.com/7.x/avataaars/png?seed=Ru
  */
 export default function BanPagePreview() {
   const [phaseMode, setPhaseMode] = useState<BanPhase>('first');
+  const [halftimeDeadlineAt, setHalftimeDeadlineAt] = useState(() =>
+    new Date(Date.now() + 20_000).toISOString()
+  );
 
   // First-half state
   const [firstHalfPlayerBannedId, setFirstHalfPlayerBannedId] = useState<string | null>(null);
@@ -36,18 +48,15 @@ export default function BanPagePreview() {
   const firstHalfCurrentActor: 'player' | 'opponent' = firstHalfPlayerBannedId ? 'opponent' : 'player';
   const firstHalfPhase: 'ban' | 'ready' = firstHalfPlayerBannedId ? 'ready' : 'ban';
 
-  // Halftime deadline — 20 seconds from now, refreshed on remount
-  const halftimeDeadlineAt = useMemo(
-    () => new Date(Date.now() + 20_000).toISOString(),
-    [phaseMode]
-  );
-
   // Reset halftime state when the toggle is switched so the user sees the
   // clean initial UI (no pre-banned cards) on every switch into second-half.
   useEffect(() => {
     if (phaseMode !== 'second') return;
-    setHalftimeMyBan(null);
-    setHalftimeOppBan(null);
+    queueMicrotask(() => {
+      setHalftimeMyBan(null);
+      setHalftimeOppBan(null);
+      setHalftimeDeadlineAt(new Date(Date.now() + 20_000).toISOString());
+    });
     return () => {
       if (aiBanTimerRef.current) {
         clearTimeout(aiBanTimerRef.current);
@@ -111,7 +120,8 @@ export default function BanPagePreview() {
           player={{
             id: 'preview-player',
             username: 'Tazi',
-            avatar: MOCK_PLAYER_AVATAR,
+            avatar: '',
+            avatarCustomization: MOCK_PLAYER_AVATAR_CUSTOMIZATION,
             countryCode: 'ge',
             rankPoints: 1598,
             tier: 'Starting11',
@@ -119,7 +129,8 @@ export default function BanPagePreview() {
           opponent={{
             id: 'preview-opponent',
             username: 'rustaveli99',
-            avatar: MOCK_OPPONENT_AVATAR,
+            avatar: '',
+            avatarCustomization: MOCK_OPPONENT_AVATAR_CUSTOMIZATION,
             countryCode: 'us',
             rankPoints: 150,
             tier: 'Academy',
@@ -142,8 +153,10 @@ export default function BanPagePreview() {
           opponentGoals={1}
           playerName="Tazi"
           opponentName="nikushaa"
-          playerAvatarUrl={MOCK_PLAYER_AVATAR}
-          opponentAvatarUrl={MOCK_OPPONENT_AVATAR}
+          playerAvatarUrl=""
+          opponentAvatarUrl=""
+          playerAvatarCustomization={MOCK_PLAYER_AVATAR_CUSTOMIZATION}
+          opponentAvatarCustomization={MOCK_OPPONENT_AVATAR_CUSTOMIZATION}
           playerPosition={0}
           playerCountryCode="ge"
           opponentCountryCode="us"

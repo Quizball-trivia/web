@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Bell, Check, Loader2, UserRound, X } from "lucide-react";
+import { Bell, Check, Loader2, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -63,14 +63,10 @@ function RequestRow({
     >
       {/* Avatar */}
       <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border-2 border-[#1CB0F6]/20 bg-[#243B44]">
-        {item.user.avatarCustomization || item.user.avatarUrl ? (
-          <AvatarDisplay
-            customization={item.user.avatarCustomization ?? { base: item.user.avatarUrl ?? undefined }}
-            size="xs"
-          />
-        ) : (
-          <UserRound className="size-4 text-[#56707A]" />
-        )}
+        <AvatarDisplay
+          customization={item.user.avatarCustomization ?? { base: item.user.avatarUrl ?? undefined }}
+          size="xs"
+        />
       </div>
 
       {/* Info */}

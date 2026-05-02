@@ -1,5 +1,19 @@
 "use client";
 
+// FriendPlayModal — "Play with a Friend" dialog.
+//
+// Pinned to Figma node 620-7831. Visual spec:
+//
+//   • Royal-blue card (#1645FF), large 24px radius, generous padding.
+//   • Red X close button at top-right (shared <ModalCloseButton />).
+//   • Title: "PLAY WITH A FRIEND" — left-aligned, wraps if needed,
+//     "PLAY WITH" white + "A FRIEND" yellow. Designed to span the
+//     content width comfortably without crashing into the X.
+//   • Two-figures friends illustration to the right of the description.
+//   • Black "+ CREATE NEW ROOM" primary CTA full-width.
+//   • "OR JOIN" caption + 2:1 (Room Code | Join) row + "Browse Public
+//     Lobbies" secondary CTA — all in a lighter periwinkle blue
+//     (#5C6BFF) so they read as secondary actions against the bg.
 import Image from "next/image";
 import {
   Dialog,
@@ -13,17 +27,25 @@ import {
   SheetDescription,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { X } from "lucide-react";
 import { useIsMobile } from "@/hooks/useMobile";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { ModalCloseButton } from "./ModalCloseButton";
 
 interface FriendPlayModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+// Pinned colors from Figma. Hard-coded rather than tokenised because
+// these modals have a brand identity that's intentionally distinct
+// from the rest of the design system; centralising them in tokens
+// would muddy `bg-primary` etc. with one-off uses.
+const MODAL_BG = "#1645FF"; // royal blue
+const SECONDARY_BG = "#5C6BFF"; // periwinkle (room code + join + browse)
+const SECONDARY_BG_HOVER = "#4A5AF0";
 
 export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) {
   const isMobile = useIsMobile();
@@ -52,109 +74,132 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
 
   const Body = (
     <div className="relative font-fun">
-      {/* Close button */}
-      <button
-        type="button"
-        onClick={() => onOpenChange(false)}
-        aria-label="Close"
-        className="absolute -top-2 -right-6 z-20 flex size-9 items-center justify-center rounded-lg bg-[#FB3101] text-white transition-colors hover:bg-[#E02B00]"
-      >
-        <X className="size-5" strokeWidth={3} />
-      </button>
+      {/* Shared close button — pinned to top-right of the modal. */}
+      <ModalCloseButton onClose={() => onOpenChange(false)} />
 
-      {/* Title */}
+      {/* Title row — left-aligned, reserves a 64px right margin so the
+          text never crashes into the close button on narrower viewports. */}
       <h2
-        className="font-poppins mt-12 text-center uppercase text-white whitespace-nowrap leading-none"
-        style={{ fontSize: "clamp(26px, 4.2vw, 44px)" }}
+        className="font-poppins pr-16 text-left uppercase text-white leading-[0.95]"
+        style={{ fontSize: "clamp(28px, 4.5vw, 48px)" }}
       >
         Play with <span className="text-[#FFE500]">a Friend</span>
       </h2>
 
-      {/* Aligned content column — all rows share the same width */}
-      <div className="mx-auto mt-6 w-full max-w-[430px] md:mt-8">
-        {/* Description + icon */}
-        <div className="flex items-center justify-between gap-4">
-          <p className="flex-1 text-sm leading-snug font-bold text-white/80 md:text-base">
-            Create a private room to host a match, or enter a code to join a friend&apos;s lobby.
-          </p>
-          <Image
-            src="/assets/friendly_match-icon.webp"
-            alt=""
-            width={140}
-            height={140}
-            className="h-24 w-24 shrink-0 object-contain md:h-28 md:w-28"
-            style={{ filter: "brightness(0) invert(1)" }}
-          />
-        </div>
-
-        {/* Create Room */}
-        <button
-          type="button"
-          onClick={handleCreateRoom}
-          className="font-poppins mt-6 flex h-16 w-full items-center justify-center gap-4 rounded-2xl bg-black uppercase leading-none text-white transition-all hover:bg-black/90 active:translate-y-[2px] md:h-20"
-          style={{ fontSize: "clamp(20px, 2.6vw, 28px)" }}
+      {/* Description + friends illustration. The illustration is the
+          existing friendly_match icon recoloured to white via a CSS
+          filter — quick win until the dedicated two-figures asset
+          ships from design. */}
+      <div className="mt-6 flex items-center justify-between gap-4 md:mt-8">
+        <p
+          className="flex-1 text-sm leading-snug font-bold text-white/85 md:text-base"
         >
-          <span
-            aria-hidden
-            className="font-poppins text-[#FFE500] leading-none"
-            style={{ fontSize: "clamp(36px, 4.5vw, 52px)" }}
-          >
-            +
-          </span>
-          Create New Room
-        </button>
+          Create a private room to host a match, or enter a code to join a
+          friend&apos;s lobby.
+        </p>
+        <Image
+          src="/assets/friendly_match-icon.webp"
+          alt=""
+          width={140}
+          height={140}
+          className="h-24 w-24 shrink-0 object-contain md:h-28 md:w-28"
+          style={{ filter: "brightness(0) invert(1)" }}
+        />
+      </div>
 
-        {/* Or Join */}
-        <div className="mt-5 text-center text-[11px] font-black uppercase tracking-wider text-white/70 md:text-xs">
-          Or Join
-        </div>
+      {/* Primary CTA — black pill button with a yellow "+" glyph. */}
+      <button
+        type="button"
+        onClick={handleCreateRoom}
+        className={cn(
+          "font-poppins mt-7 flex h-16 w-full items-center justify-center gap-3",
+          "rounded-2xl bg-black uppercase leading-none text-white",
+          "transition-all hover:bg-black/90 active:translate-y-[2px]",
+          "md:mt-8 md:h-20",
+        )}
+        style={{ fontSize: "clamp(20px, 2.6vw, 28px)" }}
+      >
+        <span
+          aria-hidden
+          className="font-poppins leading-none text-[#FFE500]"
+          style={{ fontSize: "clamp(36px, 4.5vw, 52px)" }}
+        >
+          +
+        </span>
+        Create New Room
+      </button>
 
-        {/* Room code + Join — 2:1 ratio via grid */}
-        <div className="mt-3 grid w-full grid-cols-3 gap-3">
-          <input
-            placeholder="Room Code"
-            className="col-span-2 h-14 rounded-2xl bg-[#4058FF] px-5 text-center text-base font-black uppercase tracking-[0.15em] text-white placeholder:text-white/60 transition-all focus:ring-2 focus:ring-white/40 focus:outline-none md:h-16 md:text-lg"
-            value={roomCode}
-            onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-            maxLength={8}
-          />
-          <button
-            type="button"
-            disabled={!roomCode.trim() || isJoining}
-            onClick={handleJoinRoom}
-            className={cn(
-              "col-span-1 h-14 rounded-2xl text-base font-black uppercase tracking-wide text-white transition-all md:h-16 md:text-lg",
-              roomCode.trim()
-                ? "bg-[#4058FF] hover:bg-[#3348E5] active:translate-y-[2px]"
-                : "bg-[#4058FF]/60 opacity-60 cursor-not-allowed"
-            )}
-          >
-            Join
-          </button>
-        </div>
+      {/* "OR JOIN" caption */}
+      <div className="mt-5 text-center text-[11px] font-black uppercase tracking-[0.18em] text-white/70 md:text-xs">
+        Or Join
+      </div>
 
-        {/* Browse Public */}
+      {/* Room Code (input, span 2 cols) + Join (button, span 1 col) */}
+      <div className="mt-3 grid w-full grid-cols-3 gap-3">
+        <input
+          placeholder="ROOM CODE"
+          className={cn(
+            "col-span-2 h-14 rounded-2xl px-5 text-center text-base font-black uppercase",
+            "tracking-[0.15em] text-white placeholder:text-white/55",
+            "transition-all focus:ring-2 focus:ring-white/40 focus:outline-none",
+            "md:h-16 md:text-lg",
+          )}
+          style={{ backgroundColor: SECONDARY_BG }}
+          value={roomCode}
+          onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+          maxLength={8}
+        />
         <button
           type="button"
-          onClick={() => {
-            onOpenChange(false);
-            router.push("/play/friend?tab=browse");
+          disabled={!roomCode.trim() || isJoining}
+          onClick={handleJoinRoom}
+          className={cn(
+            "col-span-1 h-14 rounded-2xl text-base font-black uppercase tracking-wide text-white",
+            "transition-all md:h-16 md:text-lg",
+            roomCode.trim()
+              ? "hover:brightness-95 active:translate-y-[2px]"
+              : "opacity-60 cursor-not-allowed",
+          )}
+          style={{ backgroundColor: SECONDARY_BG }}
+          onMouseEnter={(e) => {
+            if (roomCode.trim())
+              (e.currentTarget.style.backgroundColor = SECONDARY_BG_HOVER);
           }}
-          className="mt-3 h-14 w-full rounded-2xl bg-[#4058FF] text-sm font-black uppercase tracking-wide text-white transition-all hover:bg-[#3348E5] active:translate-y-[2px] md:h-16 md:text-lg"
+          onMouseLeave={(e) => {
+            (e.currentTarget.style.backgroundColor = SECONDARY_BG);
+          }}
         >
-          Browse Public Lobbies
+          Join
         </button>
       </div>
+
+      {/* Secondary CTA — full-width Browse Public Lobbies */}
+      <button
+        type="button"
+        onClick={() => {
+          onOpenChange(false);
+          router.push("/play/friend?tab=browse");
+        }}
+        className={cn(
+          "mt-3 h-14 w-full rounded-2xl text-sm font-black uppercase tracking-wide text-white",
+          "transition-all hover:brightness-95 active:translate-y-[2px]",
+          "md:h-16 md:text-base",
+        )}
+        style={{ backgroundColor: SECONDARY_BG }}
+      >
+        Browse Public Lobbies
+      </button>
     </div>
   );
 
+  // ── Mobile = bottom sheet ────────────────────────────────────────
   if (isMobile) {
     return (
       <Sheet open={isOpen} onOpenChange={onOpenChange}>
         <SheetContent
           side="bottom"
           className="rounded-t-3xl border-0 px-6 pt-6 pb-8 [&>button]:hidden"
-          style={{ backgroundColor: "#1645FF" }}
+          style={{ backgroundColor: MODAL_BG }}
         >
           <SheetTitle className="sr-only">Play with a Friend</SheetTitle>
           <SheetDescription className="sr-only">
@@ -166,11 +211,16 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
     );
   }
 
+  // ── Desktop / tablet = centered dialog ───────────────────────────
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
-        className="w-[560px] max-h-[95vh] rounded-[20px] border-0 px-10 pt-4 pb-8 sm:max-w-[560px] [&>button]:hidden"
-        style={{ backgroundColor: "#1645FF" }}
+        className={cn(
+          "w-[600px] max-h-[95vh] rounded-3xl border-0",
+          "px-8 pt-8 pb-8 sm:max-w-[600px]",
+          "[&>button]:hidden", // hide shadcn's default close — we render our own
+        )}
+        style={{ backgroundColor: MODAL_BG }}
       >
         <DialogTitle className="sr-only">Play with a Friend</DialogTitle>
         <DialogDescription className="sr-only">

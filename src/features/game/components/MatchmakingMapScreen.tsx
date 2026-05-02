@@ -971,6 +971,7 @@ function generateFakePlayers(): FakePlayer[] {
       y: py,
       color: PIN_COLORS[i % PIN_COLORS.length],
       avatarUrl: getAvatarAsset(AVATAR_COLORS[i % AVATAR_COLORS.length]),
+      avatarCustomization: {},
       name: c.name,
       flag: c.flag,
       city: c.city,
@@ -1165,12 +1166,16 @@ export function MatchmakingMapScreen({
 
   useEffect(() => {
     if (!showFoundState) {
-      setPreparingMatchStuck(false);
+      queueMicrotask(() => {
+        setPreparingMatchStuck(false);
+      });
       return;
     }
 
     if (debugInfo?.errorCode === "MATCH_PREPARATION_FAILED") {
-      setPreparingMatchStuck(true);
+      queueMicrotask(() => {
+        setPreparingMatchStuck(true);
+      });
       return;
     }
 
@@ -1485,21 +1490,9 @@ export function MatchmakingMapScreen({
                   stroke={p.color}
                   strokeWidth="0.8"
                 />
-                {p.avatarCustomization ? (
-                  <foreignObject x="-5.1" y="-12.6" width="10.2" height="10.2" clipPath={`url(#pin-avatar-${p.id})`}>
-                    <AvatarDisplay customization={p.avatarCustomization} size="xs" className="size-full" />
-                  </foreignObject>
-                ) : (
-                  <image
-                    href={p.avatarUrl}
-                    x="-5.1"
-                    y="-12.6"
-                    width="10.2"
-                    height="10.2"
-                    preserveAspectRatio="xMidYMid slice"
-                    clipPath={`url(#pin-avatar-${p.id})`}
-                  />
-                )}
+                <foreignObject x="-5.1" y="-12.6" width="10.2" height="10.2" clipPath={`url(#pin-avatar-${p.id})`}>
+                  <AvatarDisplay customization={p.avatarCustomization ?? {}} size="xs" className="size-full" />
+                </foreignObject>
 
                 {/* Name label (only when highlighted or opponent) */}
                 {(isOpp || (highlighted && !showFoundState)) && (
@@ -1666,14 +1659,10 @@ export function MatchmakingMapScreen({
                     transition={{ delay: 1.2, type: "spring", stiffness: 200 }}
                     className="size-16 rounded-full bg-[#243B44] border-[3px] border-[#FF9600] flex items-center justify-center overflow-hidden"
                   >
-                    {rankedFoundOpponent?.avatarCustomization || rankedFoundOpponent?.avatarUrl ? (
-                      <AvatarDisplay
-                        customization={rankedFoundOpponent.avatarCustomization ?? { base: rankedFoundOpponent.avatarUrl ?? undefined }}
-                        size="sm"
-                      />
-                    ) : (
-                      <span className="text-2xl">⚽</span>
-                    )}
+                    <AvatarDisplay
+                      customization={rankedFoundOpponent?.avatarCustomization ?? { base: rankedFoundOpponent?.avatarUrl ?? undefined }}
+                      size="sm"
+                    />
                   </motion.div>
                   <div className="absolute -bottom-0.5 -right-0.5 size-5 rounded-full bg-[#58CC02] border-2 border-[#1C2733]" />
                 </div>

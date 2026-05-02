@@ -107,16 +107,10 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
           >
             {/* Avatar */}
             <div className="relative size-8 md:size-10 shrink-0 rounded-full bg-white/20 flex items-center justify-center">
-              {match.avatarCustomization || match.avatarUrl ? (
-                <AvatarDisplay
-                  customization={match.avatarCustomization ?? { base: match.avatarUrl ?? undefined }}
-                  size="xs"
-                />
-              ) : (
-                <span className="text-sm font-black text-white/80">
-                  {match.opponent.charAt(0).toUpperCase()}
-                </span>
-              )}
+              <AvatarDisplay
+                customization={match.avatarCustomization ?? { base: match.avatarUrl ?? undefined }}
+                size="xs"
+              />
             </div>
 
             {/* Info */}

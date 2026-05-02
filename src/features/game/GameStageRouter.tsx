@@ -113,25 +113,26 @@ export function GameStageRouter() {
     }
   }, [stage, router]);
 
+  const realtimeMatchId = realtimeMatch?.matchId;
   const handleQuit = useCallback(() => {
-    if (realtimeMatch?.matchId) {
-      getSocket().emit("match:leave", { matchId: realtimeMatch.matchId });
-      logger.info("Socket emit match:leave", { matchId: realtimeMatch.matchId });
+    if (realtimeMatchId) {
+      getSocket().emit("match:leave", { matchId: realtimeMatchId });
+      logger.info("Socket emit match:leave", { matchId: realtimeMatchId });
     } else {
       logger.info("Socket emit match:leave skipped (missing matchId)");
     }
     exitToPlay();
-  }, [realtimeMatch?.matchId, exitToPlay]);
+  }, [realtimeMatchId, exitToPlay]);
 
   const handleForfeit = useCallback(() => {
-    if (realtimeMatch?.matchId) {
-      getSocket().emit("match:forfeit", { matchId: realtimeMatch.matchId });
-      logger.info("Socket emit match:forfeit", { matchId: realtimeMatch.matchId });
+    if (realtimeMatchId) {
+      getSocket().emit("match:forfeit", { matchId: realtimeMatchId });
+      logger.info("Socket emit match:forfeit", { matchId: realtimeMatchId });
     } else {
       logger.info("Socket emit match:forfeit skipped (missing matchId)");
     }
     exitToPlay();
-  }, [realtimeMatch?.matchId, exitToPlay]);
+  }, [realtimeMatchId, exitToPlay]);
 
   const handleMatchmakingExit = useCallback(() => {
     if (matchType === "ranked") {

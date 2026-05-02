@@ -22,7 +22,6 @@ import {
   ALL_AVATAR_PARTS,
   SKIN_PARTS,
   type AvatarPart,
-  type SkinPart,
 } from "@/lib/avatars/parts";
 import {
   customizationFromAvatarValue,
@@ -56,8 +55,6 @@ interface BuyModalState {
   mode: "stripe" | "coins" | "none";
   /** When set, modal renders the avatar with this part equipped + persists equip on confirm. */
   avatarPart?: AvatarPart;
-  /** When set, modal previews the avatar with this skin + persists skin on confirm. */
-  skinPart?: SkinPart;
   /** Avatar customization to use for the preview (built from current user). */
   previewCustomization?: AvatarCustomization;
 }
@@ -357,27 +354,6 @@ export function StoreScreen() {
     });
   };
 
-  /** Open the buy modal for a skin tone (with preview). */
-  const openSkinModal = (skin: SkinPart) => {
-    if (ownedPartIds.has(skin.id)) {
-      void persistCustomization({ ...currentCustomization, skin: skin.id });
-      toast.success(`${skin.name} skin equipped.`);
-      return;
-    }
-    const previewCustomization: AvatarCustomization = {
-      ...currentCustomization,
-      skin: skin.id,
-    };
-    setBuyModal({
-      name: `${skin.name} Skin`,
-      price: skin.priceCoins ? `${skin.priceCoins.toLocaleString()} coins` : "—",
-      productSlug: skin.productSlug,
-      mode: skin.productSlug ? "coins" : "none",
-      skinPart: skin,
-      previewCustomization,
-    });
-  };
-
   const handleConfirm = () => {
     if (!buyModal || purchasePending) return;
     if (!buyModal.productSlug || buyModal.mode === "none") {
@@ -390,15 +366,9 @@ export function StoreScreen() {
       return;
     }
     const partToEquip = buyModal.avatarPart;
-    const skinToEquip = buyModal.skinPart;
     coinPurchaseMutation.mutate(buyModal.productSlug, {
       onSuccess: async () => {
-        if (skinToEquip) {
-          await persistCustomization({
-            ...currentCustomization,
-            skin: skinToEquip.id,
-          });
-        } else if (partToEquip) {
+        if (partToEquip) {
           await persistCustomization({
             ...currentCustomization,
             [partToEquip.slot]: partToEquip.id,
@@ -487,41 +457,6 @@ export function StoreScreen() {
                   />
                 </motion.div>
               ))}
-            </div>
-          </motion.section>
-
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.25 }}
-          >
-            <SectionHeader title="Avatars" subtitle="Show off your style" />
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {SKIN_PARTS.filter((s) => !s.free).map((skin, i) => {
-                // Use the user's current customization, just swap the skin so they see how
-                // each variant looks with their currently equipped hair / jersey / items.
-                const previewCustomization: AvatarCustomization = {
-                  ...currentCustomization,
-                  skin: skin.id,
-                };
-                return (
-                  <motion.div
-                    key={skin.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.25 + i * 0.04 }}
-                  >
-                    <ItemCard
-                      name={skin.name}
-                      asset={skin.asset}
-                      price={skin.priceCoins ? skin.priceCoins.toLocaleString() : "—"}
-                      previewCustomization={previewCustomization}
-                      owned={ownedPartIds.has(skin.id)}
-                      onBuy={() => openSkinModal(skin)}
-                    />
-                  </motion.div>
-                );
-              })}
             </div>
           </motion.section>
 

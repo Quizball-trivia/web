@@ -2,9 +2,10 @@
 
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { X } from 'lucide-react';
 import { AnimatedPointsCounter } from './AnimatedPointsCounter';
+import type { AvatarCustomization } from '@/types/game';
 
 interface PossessionHUDProps {
   playerGoals: number;
@@ -15,6 +16,8 @@ interface PossessionHUDProps {
   opponentName: string;
   playerAvatarUrl: string;
   opponentAvatarUrl: string;
+  playerAvatarCustomization?: AvatarCustomization | null;
+  opponentAvatarCustomization?: AvatarCustomization | null;
   timeRemaining: number | null;
   half: 1 | 2;
   questionInHalf: number;
@@ -32,16 +35,13 @@ export function PossessionHUD({
   opponentPoints = 0,
   playerName,
   opponentName,
-  playerAvatarUrl,
-  opponentAvatarUrl,
+  playerAvatarCustomization = null,
+  opponentAvatarCustomization = null,
   timeRemaining,
   half,
-  questionInHalf,
   zone,
   zoneColor,
   onQuit,
-  opponentAnswered,
-  opponentAnsweredCorrectly,
 }: PossessionHUDProps) {
   const isUrgent = timeRemaining !== null && timeRemaining <= 3;
   const showTimer = timeRemaining !== null;
@@ -63,12 +63,7 @@ export function PossessionHUD({
       <div className="flex items-center justify-between gap-3 px-3">
         {/* Player side */}
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <Avatar className="size-12 shrink-0">
-            <AvatarImage src={playerAvatarUrl} className="object-cover" />
-            <AvatarFallback className="text-xs font-bold bg-[#1CB0F6]/20 text-[#1CB0F6]">
-              {playerName.slice(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <AvatarDisplay customization={playerAvatarCustomization ?? {}} size="sm" className="size-12" />
           <div className="min-w-0">
             <div className="max-w-[100px] truncate text-xs font-bold text-white/85">{playerName}</div>
             <div className="text-3xl font-black leading-7 tabular-nums text-white">
@@ -115,12 +110,7 @@ export function PossessionHUD({
               accentClassName="text-[#FF4B4B]"
             />
           </div>
-          <Avatar className="size-12">
-            <AvatarImage src={opponentAvatarUrl} className="object-cover" />
-            <AvatarFallback className="text-xs font-bold bg-[#FF4B4B]/20 text-[#FF4B4B]">
-              {opponentName.slice(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <AvatarDisplay customization={opponentAvatarCustomization ?? {}} size="sm" className="size-12" />
         </div>
       </div>
 

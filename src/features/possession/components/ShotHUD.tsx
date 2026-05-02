@@ -1,16 +1,11 @@
 'use client';
 
 import { motion } from 'motion/react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { X } from 'lucide-react';
 import type { Phase } from '../types/possession.types';
 import { AnimatedPointsCounter } from './AnimatedPointsCounter';
-
-function getInitials(name: string, fallback: string): string {
-  const trimmed = name.trim();
-  if (!trimmed) return fallback;
-  return trimmed.split(/\s+/).map((s) => [...s][0]).join('').slice(0, 2).toUpperCase();
-}
+import type { AvatarCustomization } from '@/types/game';
 
 interface ShotHUDProps {
   playerGoals: number;
@@ -19,6 +14,8 @@ interface ShotHUDProps {
   opponentPoints?: number;
   playerAvatarUrl: string;
   opponentAvatarUrl: string;
+  playerAvatarCustomization?: AvatarCustomization | null;
+  opponentAvatarCustomization?: AvatarCustomization | null;
   timeRemaining: number;
   phase: Phase;
   isPlayerAttacker?: boolean;
@@ -32,8 +29,8 @@ export function ShotHUD({
   opponentGoals,
   playerPoints = 0,
   opponentPoints = 0,
-  playerAvatarUrl,
-  opponentAvatarUrl,
+  playerAvatarCustomization = null,
+  opponentAvatarCustomization = null,
   timeRemaining,
   phase,
   isPlayerAttacker = true,
@@ -57,10 +54,7 @@ export function ShotHUD({
 
       <div className="flex items-center justify-between gap-3 px-3">
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <Avatar className="size-11 shrink-0">
-            <AvatarImage src={playerAvatarUrl} />
-            <AvatarFallback className="text-xs font-bold bg-[#1CB0F6]/20 text-[#1CB0F6]">{getInitials(playerName, 'YO')}</AvatarFallback>
-          </Avatar>
+          <AvatarDisplay customization={playerAvatarCustomization ?? {}} size="sm" className="size-11 shrink-0" />
           <div className="min-w-0">
             <div className="truncate text-xs font-bold text-white/85">{playerName}</div>
             <div className="text-3xl font-black leading-7 tabular-nums text-white">{playerGoals}</div>
@@ -100,10 +94,7 @@ export function ShotHUD({
               accentClassName="text-[#FF4B4B]"
             />
           </div>
-          <Avatar className="size-11 shrink-0">
-            <AvatarImage src={opponentAvatarUrl} />
-            <AvatarFallback className="text-xs font-bold bg-[#FF4B4B]/20 text-[#FF4B4B]">{getInitials(opponentName, 'OP')}</AvatarFallback>
-          </Avatar>
+          <AvatarDisplay customization={opponentAvatarCustomization ?? {}} size="sm" className="size-11 shrink-0" />
         </div>
       </div>
     </div>

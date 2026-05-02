@@ -147,7 +147,9 @@ export function usePossessionFieldState({
 
   useEffect(() => {
     if (!isPenaltyQuestion) {
-      setDelayedIsShooter(isShooter);
+      queueMicrotask(() => {
+        setDelayedIsShooter(isShooter);
+      });
       return;
     }
 
@@ -221,16 +223,22 @@ export function usePossessionFieldState({
     const deltas = roundResult.deltas;
     if (deltas) {
       const mySignedDelta = mySeat === 2 ? -deltas.possessionDelta : deltas.possessionDelta;
-      setOptimisticOffset(mySignedDelta / 2);
+      queueMicrotask(() => {
+        setOptimisticOffset(mySignedDelta / 2);
+      });
       return;
     }
 
     const mySignedDelta = myRound.pointsEarned - opponentRound.pointsEarned;
-    setOptimisticOffset(mySignedDelta / 2);
+    queueMicrotask(() => {
+      setOptimisticOffset(mySignedDelta / 2);
+    });
   }, [mySeat, myRound, opponentRound, phaseKind, roundResult]);
 
   useEffect(() => {
-    setOptimisticOffset(0);
+    queueMicrotask(() => {
+      setOptimisticOffset(0);
+    });
   }, [possessionPct]);
 
   const immediateMyPossessionPct = Math.max(10, Math.min(90, serverMyPossessionPct + optimisticOffset));
@@ -244,29 +252,37 @@ export function usePossessionFieldState({
     prevPhaseForFieldResetRef.current = phase ?? null;
     if (prevPhase !== 'HALFTIME' || phase !== 'NORMAL_PLAY' || possessionState?.half !== 2) return;
 
-    setSecondHalfKickoffResetPending(true);
+    queueMicrotask(() => {
+      setSecondHalfKickoffResetPending(true);
+    });
     if (fieldReleaseTimerRef.current) {
       clearTimeout(fieldReleaseTimerRef.current);
       fieldReleaseTimerRef.current = null;
     }
     delayedFieldQRef.current = null;
-    setFieldMotionLocked(false);
-    setOptimisticOffset(0);
     latestPossessionRef.current = 50;
-    setMyPossessionPct(50);
+    queueMicrotask(() => {
+      setFieldMotionLocked(false);
+      setOptimisticOffset(0);
+      setMyPossessionPct(50);
+    });
   }, [phase, possessionState?.half]);
 
   useEffect(() => {
     if (!secondHalfKickoffResetPending) return;
     if (roundResult) return;
-    setSecondHalfKickoffResetPending(false);
+    queueMicrotask(() => {
+      setSecondHalfKickoffResetPending(false);
+    });
   }, [roundResult, secondHalfKickoffResetPending]);
 
   useEffect(() => {
     if (fieldMotionLocked) return;
     const activeRoundQIdx = roundResult?.qIndex ?? null;
     if (activeRoundQIdx !== null && delayedFieldQRef.current === activeRoundQIdx) return;
-    setMyPossessionPct(immediateMyPossessionPct);
+    queueMicrotask(() => {
+      setMyPossessionPct(immediateMyPossessionPct);
+    });
   }, [fieldMotionLocked, immediateMyPossessionPct, roundResult]);
 
   useLayoutEffect(() => {
@@ -279,7 +295,9 @@ export function usePossessionFieldState({
     if (delayedFieldQRef.current === qIndex) return;
 
     delayedFieldQRef.current = qIndex;
-    setFieldMotionLocked(true);
+    queueMicrotask(() => {
+      setFieldMotionLocked(true);
+    });
     if (fieldReleaseTimerRef.current) clearTimeout(fieldReleaseTimerRef.current);
     fieldReleaseTimerRef.current = setTimeout(() => {
       setFieldMotionLocked(false);
@@ -294,8 +312,10 @@ export function usePossessionFieldState({
       clearTimeout(fieldReleaseTimerRef.current);
       fieldReleaseTimerRef.current = null;
     }
-    setFieldMotionLocked(false);
-    setMyPossessionPct(latestPossessionRef.current);
+    queueMicrotask(() => {
+      setFieldMotionLocked(false);
+      setMyPossessionPct(latestPossessionRef.current);
+    });
   }, [localQuestionIndex]);
 
   useEffect(() => {
@@ -304,8 +324,10 @@ export function usePossessionFieldState({
       clearTimeout(fieldReleaseTimerRef.current);
       fieldReleaseTimerRef.current = null;
     }
-    setFieldMotionLocked(false);
-    setMyPossessionPct(latestPossessionRef.current);
+    queueMicrotask(() => {
+      setFieldMotionLocked(false);
+      setMyPossessionPct(latestPossessionRef.current);
+    });
   }, [phase]);
 
   useEffect(() => {
@@ -360,7 +382,9 @@ export function usePossessionFieldState({
     const isAttackerMe = attackerSeat === mySeat;
     const basePlayerX = 30 + (sourcePossessionPct / 100) * 440;
     const baseOpponentX = basePlayerX - 30;
-    setShotBallOriginX(isAttackerMe ? basePlayerX + 14 : baseOpponentX - 14);
+    queueMicrotask(() => {
+      setShotBallOriginX(isAttackerMe ? basePlayerX + 14 : baseOpponentX - 14);
+    });
   }, [
     attackerSeat,
     isAttackAnimationPhase,

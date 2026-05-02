@@ -1,3 +1,5 @@
+/* eslint-disable @next/next/no-img-element -- Inline avatars can be local or remote runtime URLs. */
+
 import { isAvatarUrl } from '@/lib/avatars';
 
 /**

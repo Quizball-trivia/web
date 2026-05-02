@@ -79,6 +79,9 @@ export function OAuthCallbackScreen() {
 
         await bootstrap({ force: true });
         const authenticatedUser = useAuthStore.getState().user;
+        if (!authenticatedUser) {
+          throw new Error('Authentication session could not be loaded');
+        }
         logger.info('OAuth callback bootstrap success');
         router.replace(getAuthenticatedEntryRoute(authenticatedUser));
       } catch (err) {

@@ -115,14 +115,10 @@ function PlayerCard({
       className="flex items-center gap-3 rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] px-4 py-3"
     >
       <div className="flex size-12 shrink-0 items-center justify-center rounded-xl border-2 border-[#1CB0F6]/20 bg-[#243B44]">
-        {player.avatarCustomization || player.avatarUrl ? (
-          <AvatarDisplay
-            customization={player.avatarCustomization ?? { base: player.avatarUrl ?? undefined }}
-            size="sm"
-          />
-        ) : (
-          <UserRound className="size-6 text-[#56707A]" />
-        )}
+        <AvatarDisplay
+          customization={player.avatarCustomization ?? { base: player.avatarUrl ?? undefined }}
+          size="sm"
+        />
       </div>
 
       <div className="min-w-0 flex-1">
@@ -232,11 +228,10 @@ function RequestCard({
       className="flex items-center gap-3 rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] px-4 py-3"
     >
       <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-[#1CB0F6]/20 bg-[#243B44]">
-        {item.user.avatarUrl ? (
-          <img src={item.user.avatarUrl} alt={item.user.nickname ?? ""} className="size-full object-cover" />
-        ) : (
-          <UserRound className="size-6 text-[#56707A]" />
-        )}
+        <AvatarDisplay
+          customization={item.user.avatarCustomization ?? { base: item.user.avatarUrl ?? undefined }}
+          size="sm"
+        />
       </div>
 
       <div className="min-w-0 flex-1">

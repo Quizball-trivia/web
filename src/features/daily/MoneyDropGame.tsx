@@ -247,7 +247,9 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
   useEffect(() => {
     timeoutHandledRef.current = false;
     deadlineRef.current = Date.now() + QUESTION_TIME * 1000;
-    setTimeLeft(QUESTION_TIME);
+    queueMicrotask(() => {
+      setTimeLeft(QUESTION_TIME);
+    });
   }, [QUESTION_TIME, currentQuestionIndex]);
 
   useEffect(() => {

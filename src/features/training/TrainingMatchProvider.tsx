@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useMemo, useRef, type ReactNode } from "react";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { useTrainingMatch } from "./hooks/useTrainingMatch";
 import { useTrainingTooltips } from "./hooks/useTrainingTooltips";
 import { useTrainingCompletion } from "./hooks/useTrainingCompletion";
@@ -42,15 +42,11 @@ export function TrainingMatchProvider({ children, onComplete }: TrainingMatchPro
     is_active: "true",
   });
 
-  // Pick BAN_CATEGORY_COUNT random categories — lock the first result so refetches don't reshuffle
-  const banCategoriesRef = useRef<CategorySummary[] | null>(null);
+  // Pick BAN_CATEGORY_COUNT random categories for the ban phase.
   const banCategories = useMemo(() => {
-    if (banCategoriesRef.current) return banCategoriesRef.current;
     const items = categoriesData?.items ?? [];
     if (items.length === 0) return [];
-    const result = shuffleArray(items).slice(0, BAN_CATEGORY_COUNT);
-    banCategoriesRef.current = result;
-    return result;
+    return shuffleArray(items).slice(0, BAN_CATEGORY_COUNT);
   }, [categoriesData?.items]);
 
   const onSkip = () => {

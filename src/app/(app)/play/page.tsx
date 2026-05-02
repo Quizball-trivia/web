@@ -3,7 +3,6 @@
 // import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ModeSelectionScreen } from "@/features/play/ModeSelectionScreen";
-import { usePlayer } from "@/contexts/PlayerContext";
 import { useGameSessionStore } from "@/stores/gameSession.store";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -26,7 +25,6 @@ import { shuffleArray } from "@/lib/utils";
 
 export default function PlayPage() {
   const router = useRouter();
-  const { player } = usePlayer();
   const startSession = useGameSessionStore((state) => state.startSession);
   const resetRealtime = useRealtimeMatchStore((state) => state.reset);
   const queryClient = useQueryClient();

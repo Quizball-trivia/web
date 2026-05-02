@@ -72,7 +72,9 @@ export function usePossessionGoalCelebration({
   useEffect(() => {
     if (!isHalftime) return;
     pendingGoalRef.current = null;
-    setGoalCelebration(null);
+    queueMicrotask(() => {
+      setGoalCelebration(null);
+    });
     if (goalCelebrationHideTimerRef.current) {
       clearTimeout(goalCelebrationHideTimerRef.current);
       goalCelebrationHideTimerRef.current = null;

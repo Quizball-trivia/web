@@ -84,8 +84,10 @@ export function TrainingBanningStage() {
   useEffect(() => {
     if (!playerBan || botBan) return;
     if (tooltips.isPaused) return;
-    setCurrentActor("opponent");
-    setTimeLeft(15);
+    queueMicrotask(() => {
+      setCurrentActor("opponent");
+      setTimeLeft(15);
+    });
     const timer = setTimeout(() => {
       // Bot bans the first remaining category unless the timeout already resolved it.
       autoBanForActor("opponent");

@@ -55,6 +55,8 @@ export interface ProfileRecentMatch {
   time: string;
   rpDelta: number | null;
   opponent: string;
+  opponentAvatarUrl: string | null;
+  opponentAvatarCustomization: RecentMatchSummary["opponent"]["avatarCustomization"];
   scoreFormatted: FormattedMatchScore;
 }
 
@@ -67,6 +69,8 @@ export function toProfileRecentMatch(match: RecentMatchSummary): ProfileRecentMa
     time: match.timeLabel,
     rpDelta: match.rpDelta,
     opponent: match.opponent.username,
+    opponentAvatarUrl: match.opponent.avatarUrl,
+    opponentAvatarCustomization: match.opponent.avatarCustomization,
     scoreFormatted: formatMatchScore(match),
   };
 }
@@ -955,8 +959,6 @@ export function ProfileWeb({
                 const showRpDelta = match.competition !== 'friendly' && match.rpDelta !== null;
                 const rpDelta = match.rpDelta ?? 0;
                 const formattedRpDelta = `${rpDelta >= 0 ? '+' : ''}${rpDelta} RP`;
-                const initial = match.opponent.charAt(0).toUpperCase();
-
                 return (
                   <motion.div
                     key={match.id}
@@ -965,9 +967,12 @@ export function ProfileWeb({
                     transition={{ delay: 0.05 * index, duration: 0.3 }}
                     className={`flex items-center gap-3 rounded-[16px] min-h-[58px] md:min-h-[62px] px-4 md:px-5 border-2 bg-[#041217] ${borderColor}`}
                   >
-                    {/* Avatar (initial fallback) */}
+                    {/* Avatar */}
                     <div className="relative size-8 md:size-10 shrink-0 rounded-full bg-white/20 overflow-hidden flex items-center justify-center">
-                      <span className="text-sm font-black text-white/80">{initial}</span>
+                      <AvatarDisplay
+                        customization={match.opponentAvatarCustomization ?? { base: match.opponentAvatarUrl ?? undefined }}
+                        size="xs"
+                      />
                     </div>
 
                     {/* Info */}

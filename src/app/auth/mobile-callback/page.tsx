@@ -32,7 +32,9 @@ export default function MobileCallbackPage() {
         setStatus("If the app didn't open, switch back to QuizBall manually.");
       }, 2000);
     } else {
-      setStatus("No authentication tokens found. Please try again.");
+      queueMicrotask(() => {
+        setStatus("No authentication tokens found. Please try again.");
+      });
     }
   }, []);
 

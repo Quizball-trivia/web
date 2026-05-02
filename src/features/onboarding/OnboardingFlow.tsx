@@ -1,8 +1,8 @@
-import Image from 'next/image';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Input } from '@/components/ui/input';
 import ClubSelect from './ClubSelect';
+import { AvatarPreview } from '@/components/AvatarPreview';
 import {
   Trophy,
   ChevronLeft,
@@ -10,6 +10,9 @@ import {
   Globe,
   User,
 } from 'lucide-react';
+import type { AvatarCustomization } from '@/types/game';
+import { AVATAR_COLORS, AVATAR_COLOR_SWATCHES } from '@/lib/avatars';
+import { DEFAULT_HAIR_ID, DEFAULT_JERSEY_ID, DEFAULT_SKIN_ID } from '@/lib/avatars/parts';
 
 interface OnboardingFlowProps {
   onComplete: (data: OnboardingData) => void;
@@ -28,11 +31,15 @@ const languages = [
   { code: 'ka', name: 'Georgian', nativeName: 'ქართული', flag: '🇬🇪' },
 ];
 
-import { AVATAR_COLORS, AVATAR_COLOR_SWATCHES, getAvatarAsset } from '@/lib/avatars';
-
 const avatarSeeds = AVATAR_COLORS;
 
-const getAvatarUrl = (color: string) => getAvatarAsset(color);
+function getAvatarCustomization(color: string | null | undefined): AvatarCustomization {
+  return {
+    skin: DEFAULT_SKIN_ID,
+    jersey: color ? `jersey_${color}` as AvatarCustomization["jersey"] : DEFAULT_JERSEY_ID,
+    hair: DEFAULT_HAIR_ID,
+  };
+}
 
 const CONTINUE_BUTTON_CLASS = "w-full h-14 rounded-2xl text-lg font-black uppercase tracking-wide bg-green-500 text-[#131F24] hover:bg-green-400 border-b-[5px] border-green-700 active:border-b-0 active:translate-y-[5px] transition-all disabled:opacity-40 disabled:pointer-events-none";
 const SKIP_BUTTON_CLASS = "w-full mt-4 text-sm font-bold text-[#56707A] hover:text-foreground transition-colors uppercase tracking-wide";
@@ -268,14 +275,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 <div className="relative">
                   <div className="size-28 rounded-full bg-[#131F24] border-4 border-green-500 flex items-center justify-center overflow-hidden shadow-lg shadow-green-500/20">
                     {avatar ? (
-                      <Image
-                        src={getAvatarUrl(avatar)}
-                        alt="Avatar"
-                        fill
-                        sizes="112px"
-                        unoptimized
-                        className="object-cover"
-                      />
+                      <AvatarPreview customization={getAvatarCustomization(avatar)} width={112} />
                     ) : (
                       <User className="size-14 text-[#56707A]" />
                     )}
@@ -342,15 +342,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                           zIndex: isSelected ? 10 : undefined,
                         }}
                       >
-                        <Image
-                          src={getAvatarUrl(seed)}
-                          alt={seed}
-                          fill
-                          loading="lazy"
-                          sizes="80px"
-                          unoptimized
-                          className="object-contain"
-                        />
+                        <AvatarPreview customization={getAvatarCustomization(seed)} width={64} />
                       </button>
                     );
                   })}

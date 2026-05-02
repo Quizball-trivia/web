@@ -9,7 +9,8 @@ import { logger } from "@/utils/logger";
 import { updateMe } from "@/lib/api/endpoints";
 import { apiFetch } from "@/lib/api/client";
 import { useAuthStore } from "@/stores/auth.store";
-import { getAvatarAsset } from "@/lib/avatars";
+import { DEFAULT_HAIR_ID, DEFAULT_JERSEY_ID, DEFAULT_SKIN_ID } from "@/lib/avatars/parts";
+import type { AvatarCustomization } from "@/types/game";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -24,13 +25,17 @@ export default function OnboardingPage() {
 
     try {
       logger.info("Onboarding completed", { data });
+      const selectedAvatarCustomization: AvatarCustomization = {
+        skin: DEFAULT_SKIN_ID,
+        jersey: data.avatar ? `jersey_${data.avatar}` as AvatarCustomization["jersey"] : DEFAULT_JERSEY_ID,
+        hair: DEFAULT_HAIR_ID,
+      };
 
       // Save profile data to backend
       await updateMe({
         nickname: data.username?.trim() || undefined,
-        avatar_url: data.avatar
-          ? `https://api.dicebear.com/7.x/big-smile/svg?seed=${data.avatar}&backgroundColor=b6e3f4,c0aede,d1d4f9&size=128`
-          : undefined,
+        avatar_url: null,
+        avatar_customization: selectedAvatarCustomization,
         favorite_club: data.favoriteClub === undefined ? undefined : data.favoriteClub,
         preferred_language: data.preferredLanguage === undefined ? undefined : data.preferredLanguage,
       });

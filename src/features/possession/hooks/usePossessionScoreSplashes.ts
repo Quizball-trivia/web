@@ -50,12 +50,14 @@ export function usePossessionScoreSplashes({
   useEffect(() => {
     if (!isHalftime && localQuestion?.qIndex == null) return;
 
-    setShowPlayerSplash(false);
-    setShowOpponentSplash(false);
-    setPlayerSplashPoints(null);
-    setOpponentSplashPoints(null);
-    setPlayerSplashVariant('points');
-    setOpponentSplashVariant('points');
+    queueMicrotask(() => {
+      setShowPlayerSplash(false);
+      setShowOpponentSplash(false);
+      setPlayerSplashPoints(null);
+      setOpponentSplashPoints(null);
+      setPlayerSplashVariant('points');
+      setOpponentSplashVariant('points');
+    });
 
     if (isHalftime) {
       shownSplashQRef.current = { player: null, opponent: null };
@@ -73,9 +75,11 @@ export function usePossessionScoreSplashes({
     const activeQIndex = localQuestion?.qIndex ?? answerAck.qIndex;
     if (activeQIndex !== answerAck.qIndex) return;
 
-    setPlayerSplashVariant('points');
-    setPlayerSplashPoints(answerAck.pointsEarned);
-    setShowPlayerSplash(true);
+    queueMicrotask(() => {
+      setPlayerSplashVariant('points');
+      setPlayerSplashPoints(answerAck.pointsEarned);
+      setShowPlayerSplash(true);
+    });
     shownSplashQRef.current.player = answerAck.qIndex;
   }, [answerAck, localQuestion?.qIndex, phaseKind, selectedAnswer, selectedAnswerQIndex]);
 
@@ -94,9 +98,11 @@ export function usePossessionScoreSplashes({
     const splashPoints = resolvedPoints ?? immediatePoints;
 
     if ((opponentCorrectImmediate || opponentCorrectResolved) && splashPoints != null && splashPoints > 0) {
-      setOpponentSplashVariant('points');
-      setOpponentSplashPoints(splashPoints);
-      setShowOpponentSplash(true);
+      queueMicrotask(() => {
+        setOpponentSplashVariant('points');
+        setOpponentSplashPoints(splashPoints);
+        setShowOpponentSplash(true);
+      });
       shownSplashQRef.current.opponent = activeQIndex;
     }
   }, [localQuestion?.qIndex, opponentAnswered, opponentAnsweredCorrectly, opponentRecentPoints, opponentRound, phaseKind, roundResult]);
@@ -105,9 +111,11 @@ export function usePossessionScoreSplashes({
     if (!roundResult || !opponentRound?.isCorrect) return;
     if (shownSplashQRef.current.opponent !== roundResult.qIndex) return;
 
-    setOpponentSplashVariant('points');
-    setOpponentSplashPoints(opponentRound.pointsEarned);
-    setShowOpponentSplash(true);
+    queueMicrotask(() => {
+      setOpponentSplashVariant('points');
+      setOpponentSplashPoints(opponentRound.pointsEarned);
+      setShowOpponentSplash(true);
+    });
   }, [opponentRound, roundResult]);
 
   return {

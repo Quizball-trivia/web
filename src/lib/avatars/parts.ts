@@ -20,12 +20,17 @@ import type { AvatarCustomization } from "@/types/game";
 
 export type AvatarSlot = "jersey" | "facialHair" | "glasses" | "hair";
 type AvatarSkinId = NonNullable<AvatarCustomization["skin"]>;
-type AvatarJerseyId = NonNullable<AvatarCustomization["jersey"]>;
 type AvatarHairId = NonNullable<AvatarCustomization["hair"]>;
 type AvatarGlassesId = NonNullable<AvatarCustomization["glasses"]>;
 type AvatarFacialHairId = NonNullable<AvatarCustomization["facialHair"]>;
+type AvatarJerseyId = NonNullable<AvatarCustomization["jersey"]>;
 
-/** Render order (bottom → top). Jersey covers the chest first; hair sits on top. */
+/**
+ * Render order (bottom → top). All overlays render ON TOP of the skin body.
+ * Each hair PNG should have a transparent gap where the face goes, so the body's face
+ * shows through naturally. (If a hair lacks a face cutout, it'll cover the eyes — that's
+ * an asset-level fix, not a code fix.)
+ */
 export const AVATAR_SLOTS: readonly AvatarSlot[] = ["jersey", "facialHair", "glasses", "hair"];
 
 export interface AvatarPartPosition {
@@ -73,22 +78,19 @@ export const SKIN_PARTS: SkinPart[] = [
     id: "skin_male_white_alt",
     name: "Tan",
     asset: "/assets/store/avatars/avatar_male_white_alt.webp",
-    priceCoins: 500,
-    productSlug: "avatar_skin_white_alt",
+    free: true,
   },
   {
     id: "skin_male_dark",
     name: "Brown",
     asset: "/assets/store/avatars/avatar_male_dark.webp",
-    priceCoins: 500,
-    productSlug: "avatar_skin_dark",
+    free: true,
   },
   {
     id: "skin_male_dark_alt",
     name: "Dark",
     asset: "/assets/store/avatars/avatar_male_dark_alt.webp",
-    priceCoins: 500,
-    productSlug: "avatar_skin_dark_alt",
+    free: true,
   },
 ];
 
@@ -106,10 +108,6 @@ export function getSkinPart(id: string | null | undefined): SkinPart {
 }
 
 /* ─────────────── Hair ─────────────── */
-// All hairs share the same head anchor (Figma: x=86.24, y=0, w=279.19, h=213.10).
-// Each hair PNG keeps its own aspect; positions tune slightly per shape.
-const HAIR_ANCHOR = { top: 0, left: 17.4, width: 56.4 };
-
 export const HAIR_PARTS: AvatarPart[] = [
   {
     id: "hair_boy_basic",
@@ -117,8 +115,9 @@ export const HAIR_PARTS: AvatarPart[] = [
     name: "Boy Basic",
     asset: "/assets/store/hair_boy_basic.webp",
     free: true,
-    // Tuned to keep hair on scalp without covering the eyes (the PNG is solid black so it has no
-    // face cutout — shifting up + slight shrink makes it sit like a hat)
+    // Hair renders ON TOP of the skin. The boy_basic PNG is solid black with NO face
+    // cutout — shifting up + slight shrink keeps it from covering the eyes (looks like a
+    // hat instead). Proper fix: re-export with transparent face area.
     position: { top: -8, left: 19, width: 52 },
   },
   {
@@ -128,8 +127,9 @@ export const HAIR_PARTS: AvatarPart[] = [
     asset: "/assets/store/hair_girl_basic.webp",
     priceCoins: 500,
     productSlug: "avatar_hair_girl_basic",
-    // Slightly wider hair (294×267 native) → bump width a bit
-    position: { top: -2, left: 14, width: 62 },
+    // Figma anchor (rare canvas node 824:15073): hair frame 293.44×266.8 at (29.06, 26.27)
+    // inside head specimen → -5% top, 20% left, 59% width on canonical canvas.
+    position: { top: -5, left: 20, width: 59 },
   },
   {
     id: "hair_hamsik",
@@ -138,7 +138,9 @@ export const HAIR_PARTS: AvatarPart[] = [
     asset: "/assets/store/hair_hamsik.webp",
     priceCoins: 500,
     productSlug: "avatar_hair_hamsik",
-    position: { top: 0, left: 23, width: 44 },
+    // Hamsik mohawk — shifted up so the top of the hair sits above the scalp, left-aligned
+    // to center over the head. Browser rendering needs more aggressive negative top than Pillow.
+    position: { top: -10, left: 23, width: 40 },
   },
   {
     id: "hair_ramos",
@@ -147,7 +149,9 @@ export const HAIR_PARTS: AvatarPart[] = [
     asset: "/assets/store/hair_ramos.webp",
     priceCoins: 700,
     productSlug: "avatar_hair_ramos",
-    position: { top: 0, left: 22, width: 46 },
+    // Headband + hair ponytail (209×274 native — tall). Needs aggressive top shift
+    // since browser resolves % differently from Pillow on aspect-ratio wrappers.
+    position: { top: -24, left: 22, width: 42 },
   },
   {
     id: "hair_ronaldo_brazil",
@@ -156,8 +160,8 @@ export const HAIR_PARTS: AvatarPart[] = [
     asset: "/assets/store/hair_ronaldo_brazil.webp",
     priceCoins: 1000,
     productSlug: "avatar_hair_ronaldo_brazil",
-    // Narrow strip (144×53 native — phenomeno bowl-cut)
-    position: { top: 11, left: 35, width: 30 },
+    // Phenomeno bowl-cut (144×53 native — very narrow horizontal strip).
+    position: { top: 4, left: 33, width: 34 },
   },
   {
     id: "hair_ronaldo_goat",
@@ -166,8 +170,8 @@ export const HAIR_PARTS: AvatarPart[] = [
     asset: "/assets/store/hair_ronaldo_goat.webp",
     priceCoins: 700,
     productSlug: "avatar_hair_ronaldo_goat",
-    // Curly afro (231×206)
-    position: { top: 0, left: 21, width: 50 },
+    // Curly afro (231×206 native — wide). Shifted up to sit on crown.
+    position: { top: -8, left: 23, width: 48 },
   },
 ];
 

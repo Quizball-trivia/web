@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- Layered avatar overlays require raw img sizing and absolute positioning. */
+
 import Image from "next/image";
 import { customizationFromAvatarValue } from "@/lib/avatars";
 import { AVATAR_SLOTS, getAvatarPart, getSkinPart } from "@/lib/avatars/parts";

@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- Small navbar currency icons are static decorative assets. */
+
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -43,7 +45,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getSocket } from "@/lib/realtime/socket-client";
-import { Medal, Gem, User, Gamepad2, Users, UserRound } from "lucide-react";
+import { Medal, Gem, User, Gamepad2, UserRound } from "lucide-react";
 import type { MessageKey } from "@/lib/i18n/messages";
 
 const MOBILE_NAV_ITEMS = [
@@ -123,7 +125,6 @@ export function AppShell({ children }: AppShellProps) {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const currentPath = pathname ?? "/";
-  const isPlayPath = currentPath.startsWith("/play");
   const showHeader = HEADER_PATHS.some((p) => p === "/" ? currentPath === "/" : currentPath.startsWith(p));
   const showNav = !HIDE_NAV_PATHS.some((path) => currentPath.startsWith(path));
   const inLobbyRoom = currentPath.startsWith("/friend/room");

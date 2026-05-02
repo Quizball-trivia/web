@@ -81,12 +81,6 @@ export function PossessionQuestionPanel({
         ? 'Last Attack'
         : 'Football';
 
-  const isReveal = isPenaltyPhase
-    ? phase === 'penalty-reveal' || phase === 'penalty-result'
-    : isShotPhase
-      ? phase === 'shot-result'
-      : phase === 'reveal';
-
   const isPlaying = isPenaltyPhase
     ? phase === 'penalty-playing'
     : isShotPhase

@@ -111,9 +111,12 @@ export default function ChallengePage() {
     }
 
     let cancelled = false;
-    setIsSessionLoading(true);
-    setSessionError(null);
-    setSession(undefined);
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setIsSessionLoading(true);
+      setSessionError(null);
+      setSession(undefined);
+    });
 
     createDailyChallengeSession(challengeType, locale)
       .then(toDailyChallengeSession)

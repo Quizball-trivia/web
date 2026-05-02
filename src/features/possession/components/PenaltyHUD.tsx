@@ -1,11 +1,12 @@
 'use client';
 
 import { motion } from 'motion/react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { X } from 'lucide-react';
 import { MAX_PENALTY_ROUNDS } from '../types/possession.types';
 import type { Phase } from '../types/possession.types';
 import { AnimatedPointsCounter } from './AnimatedPointsCounter';
+import type { AvatarCustomization } from '@/types/game';
 
 interface PenaltyHUDProps {
   penaltyPlayerScore: number;
@@ -19,6 +20,8 @@ interface PenaltyHUDProps {
   opponentName: string;
   playerAvatarUrl: string;
   opponentAvatarUrl: string;
+  playerAvatarCustomization?: AvatarCustomization | null;
+  opponentAvatarCustomization?: AvatarCustomization | null;
   timeRemaining: number;
   phase: Phase;
   onQuit?: () => void;
@@ -34,25 +37,12 @@ export function PenaltyHUD({
   isPlayerShooter,
   playerName,
   opponentName,
-  playerAvatarUrl,
-  opponentAvatarUrl,
+  playerAvatarCustomization = null,
+  opponentAvatarCustomization = null,
   timeRemaining,
   phase,
   onQuit,
 }: PenaltyHUDProps) {
-  // Compute initials from names
-  const getInitials = (name: string) => {
-    if (!name) return '?';
-    const words = name.trim().split(/\s+/);
-    if (words.length >= 2) {
-      return (words[0][0] + words[1][0]).toUpperCase();
-    }
-    return name.slice(0, 2).toUpperCase();
-  };
-
-  const playerInitials = getInitials(playerName);
-  const opponentInitials = getInitials(opponentName);
-
   return (
     <div className="w-full font-fun space-y-2 mb-3">
       {onQuit && (
@@ -69,10 +59,7 @@ export function PenaltyHUD({
 
       <div className="flex items-center justify-between gap-3 px-3">
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <Avatar className="size-11 shrink-0">
-            <AvatarImage src={playerAvatarUrl} />
-            <AvatarFallback className="text-xs font-bold bg-[#1CB0F6]/20 text-[#1CB0F6]">{playerInitials}</AvatarFallback>
-          </Avatar>
+          <AvatarDisplay customization={playerAvatarCustomization ?? {}} size="sm" className="size-11 shrink-0" />
           <div className="min-w-0">
             <div className="truncate text-xs font-bold text-white/85">{playerName}</div>
             <div className="text-3xl font-black leading-7 tabular-nums text-white">{penaltyPlayerScore}</div>
@@ -108,10 +95,7 @@ export function PenaltyHUD({
               accentClassName="text-[#FF4B4B]"
             />
           </div>
-          <Avatar className="size-11 shrink-0">
-            <AvatarImage src={opponentAvatarUrl} />
-            <AvatarFallback className="text-xs font-bold bg-[#FF4B4B]/20 text-[#FF4B4B]">{opponentInitials}</AvatarFallback>
-          </Avatar>
+          <AvatarDisplay customization={opponentAvatarCustomization ?? {}} size="sm" className="size-11 shrink-0" />
         </div>
       </div>
       {/* Penalty score pips */}

@@ -16,20 +16,6 @@ import {
 import { QuitGameDialog } from "./QuitGameDialog";
 import type { CluesSession } from "@/lib/domain/dailyChallenge";
 
-interface Clue {
-  type: "text" | "emoji";
-  content: string;
-}
-
-interface ClueQuestion {
-  id: string;
-  category: string;
-  difficulty: "easy" | "medium" | "hard";
-  clues: Clue[];
-  acceptedAnswers: string[];
-  displayAnswer: string;
-}
-
 interface ClueGameProps {
   session: CluesSession;
   onBack: () => void;
@@ -167,7 +153,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
         clearInterval(timerRef.current);
       }
     };
-  }, [revealedClues, showResult, hasSubmitted, currentQuestion.clues.length, handleTimeOut]);
+  }, [secondsPerClueStep, revealedClues, showResult, hasSubmitted, currentQuestion.clues.length, handleTimeOut]);
 
   const handleSubmit = () => {
     if (!userAnswer.trim() || hasSubmitted) return;

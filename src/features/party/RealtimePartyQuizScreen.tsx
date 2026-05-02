@@ -120,13 +120,19 @@ export function RealtimePartyQuizScreen({
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [preRoundRankingOrder, setPreRoundRankingOrder] = useState<string[]>([]);
   const splashQuestionRef = useRef<number | null>(null);
+  const rankingOrderRef = useRef<string[]>(partyState?.rankingOrder ?? []);
   const participantMap = useMemo(() => buildParticipantMap(participants ?? []), [participants]);
+
+  useEffect(() => {
+    rankingOrderRef.current = partyState?.rankingOrder ?? [];
+  }, [partyState?.rankingOrder]);
 
   // Snapshot the ranking order before each round for rank-shift calculation
   useEffect(() => {
-    if (!partyState?.rankingOrder.length) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps -- Intentional stale closure: we capture the settled ranking order before each question change, not after. partyState.rankingOrder must not be a dependency to preserve the previous round's ranking.
-    setPreRoundRankingOrder(partyState.rankingOrder);
+    if (!rankingOrderRef.current.length) return;
+    queueMicrotask(() => {
+      setPreRoundRankingOrder(rankingOrderRef.current);
+    });
   }, [currentQuestion?.qIndex]);
 
   // Tick timer during pause

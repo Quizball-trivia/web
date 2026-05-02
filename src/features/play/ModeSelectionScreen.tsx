@@ -10,25 +10,9 @@ import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
 import type { MatchStatsSummary } from '@/lib/domain';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 
-import { logger } from '@/utils/logger';
 import { colors } from '@/lib/colors';
 
 import { getNextTierBand } from '@/utils/rankedTier';
-import type { RankedTier } from '@/utils/rankedTier';
-
-const TIER_COLORS: Record<RankedTier, string> = {
-  Academy: '#8B9DA4',
-  'Youth Prospect': '#58CC02',
-  Reserve: '#1CB0F6',
-  Bench: '#1CB0F6',
-  Rotation: '#CE82FF',
-  Starting11: '#CE82FF',
-  'Key Player': '#FF9600',
-  Captain: '#FF9600',
-  'World-Class': '#FF4B4B',
-  Legend: '#FFD700',
-  GOAT: '#FFD700',
-};
 
 
 function RpProgressBar({ current, target }: { current: number; target: number }) {
@@ -80,7 +64,6 @@ export function ModeSelectionScreen({
   const rankedGamesPlayed = matchStatsSummary?.ranked.gamesPlayed ?? 0;
   const nextTierBand = getNextTierBand(displayRp);
   const nextTierTargetRp = nextTierBand?.minRp ?? null;
-  const nextTierColor = nextTierBand ? TIER_COLORS[nextTierBand.tier] : '#FFD700';
   const router = useRouter();
   const rankedTitleStyle = {
     fontFamily: "'Poppins', sans-serif",

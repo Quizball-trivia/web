@@ -129,7 +129,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     } else {
       trackLobbyJoined(lobby.lobbyId, lobby.inviteCode ?? roomCode);
     }
-  }, [lobby, isHost]);
+  }, [lobby, isHost, roomCode]);
 
   // 3. Navigation & Session Logic
   useEffect(() => {
