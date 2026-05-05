@@ -14,7 +14,7 @@ const poppins = {
 } as const;
 
 const PURPLE = "#BA02E8";
-const CARD_BG = "#0B1619";
+const CARD_BG = "#FFFFFF";
 
 export interface ItemCardProps {
   name: string;
@@ -67,7 +67,9 @@ export function ItemCard({
         {/* Item image (or composite avatar preview) — centered, fills available space */}
         <div className="relative flex flex-1 items-center justify-center py-2">
           {previewCustomization ? (
-            <AvatarPreview customization={previewCustomization} width={130} />
+            <div className="flex h-[142px] w-[142px] items-center justify-center">
+              <AvatarPreview customization={previewCustomization} width={130} />
+            </div>
           ) : (
             <div
               className="relative h-full"

@@ -54,12 +54,15 @@ const sizeClasses: Record<NonNullable<AvatarDisplayProps['size']>, string> = {
 /** Merge anything encoded in `customization.base` into the customization. */
 function resolveCustomization(c: AvatarCustomization): AvatarCustomization {
   const merged = customizationFromAvatarValue(c.base);
+  const hasStructuredSlots = (["skin", "jersey", "hair", "glasses", "facialHair"] as const).some((slot) =>
+    Object.prototype.hasOwnProperty.call(c, slot),
+  );
   return {
     skin: c.skin ?? merged.skin,
-    jersey: c.jersey ?? merged.jersey,
-    hair: c.hair ?? merged.hair,
-    glasses: c.glasses ?? merged.glasses,
-    facialHair: c.facialHair ?? merged.facialHair,
+    jersey: hasStructuredSlots ? c.jersey : merged.jersey,
+    hair: hasStructuredSlots ? c.hair : merged.hair,
+    glasses: hasStructuredSlots ? c.glasses : merged.glasses,
+    facialHair: hasStructuredSlots ? c.facialHair : merged.facialHair,
     base: c.base ?? merged.base,
   };
 }

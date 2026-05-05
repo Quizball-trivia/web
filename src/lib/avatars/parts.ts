@@ -31,7 +31,7 @@ type AvatarJerseyId = NonNullable<AvatarCustomization["jersey"]>;
  * shows through naturally. (If a hair lacks a face cutout, it'll cover the eyes — that's
  * an asset-level fix, not a code fix.)
  */
-export const AVATAR_SLOTS: readonly AvatarSlot[] = ["jersey", "facialHair", "glasses", "hair"];
+export const AVATAR_SLOTS: readonly AvatarSlot[] = ["jersey", "facialHair", "hair", "glasses"];
 
 export interface AvatarPartPosition {
   /** % from top of the 495.25×543.03 canvas */
@@ -115,10 +115,7 @@ export const HAIR_PARTS: AvatarPart[] = [
     name: "Boy Basic",
     asset: "/assets/store/hair_boy_basic.webp",
     free: true,
-    // Hair renders ON TOP of the skin. The boy_basic PNG is solid black with NO face
-    // cutout — shifting up + slight shrink keeps it from covering the eyes (looks like a
-    // hat instead). Proper fix: re-export with transparent face area.
-    position: { top: -8, left: 19, width: 52 },
+    position: { top: -8, left: 18, width: 56 },
   },
   {
     id: "hair_girl_basic",
@@ -127,9 +124,7 @@ export const HAIR_PARTS: AvatarPart[] = [
     asset: "/assets/store/hair_girl_basic.webp",
     priceCoins: 500,
     productSlug: "avatar_hair_girl_basic",
-    // Figma anchor (rare canvas node 824:15073): hair frame 293.44×266.8 at (29.06, 26.27)
-    // inside head specimen → -5% top, 20% left, 59% width on canonical canvas.
-    position: { top: -5, left: 20, width: 59 },
+    position: { top: -5, left: 20, width: 57 },
   },
   {
     id: "hair_hamsik",
@@ -138,9 +133,7 @@ export const HAIR_PARTS: AvatarPart[] = [
     asset: "/assets/store/hair_hamsik.webp",
     priceCoins: 500,
     productSlug: "avatar_hair_hamsik",
-    // Hamsik mohawk — shifted up so the top of the hair sits above the scalp, left-aligned
-    // to center over the head. Browser rendering needs more aggressive negative top than Pillow.
-    position: { top: -10, left: 23, width: 40 },
+    position: { top: -10, left: 23, width: 43 },
   },
   {
     id: "hair_ramos",
@@ -149,9 +142,7 @@ export const HAIR_PARTS: AvatarPart[] = [
     asset: "/assets/store/hair_ramos.webp",
     priceCoins: 700,
     productSlug: "avatar_hair_ramos",
-    // Headband + hair ponytail (209×274 native — tall). Needs aggressive top shift
-    // since browser resolves % differently from Pillow on aspect-ratio wrappers.
-    position: { top: -24, left: 22, width: 42 },
+    position: { top: -3, left: 24, width: 42 },
   },
   {
     id: "hair_ronaldo_brazil",
@@ -160,8 +151,7 @@ export const HAIR_PARTS: AvatarPart[] = [
     asset: "/assets/store/hair_ronaldo_brazil.webp",
     priceCoins: 1000,
     productSlug: "avatar_hair_ronaldo_brazil",
-    // Phenomeno bowl-cut (144×53 native — very narrow horizontal strip).
-    position: { top: 4, left: 33, width: 34 },
+    position: { top: -1, left: 36, width: 32 },
   },
   {
     id: "hair_ronaldo_goat",
@@ -171,7 +161,7 @@ export const HAIR_PARTS: AvatarPart[] = [
     priceCoins: 700,
     productSlug: "avatar_hair_ronaldo_goat",
     // Curly afro (231×206 native — wide). Shifted up to sit on crown.
-    position: { top: -8, left: 23, width: 48 },
+    position: { top: -8, left: 19, width: 48 },
   },
 ];
 
@@ -190,7 +180,7 @@ export const GLASSES_PARTS: AvatarPart[] = [
     priceCoins: 300,
     productSlug: "avatar_glasses_wayfarer",
     // 241 × 92 → width 48.5% of canvas, height ~17%; centered on eye y=30%
-    position: { top: 22, left: 26, width: 48 },
+    position: { top: 13, left: 28, width: 44 },
   },
   {
     id: "glasses_round",
@@ -200,7 +190,7 @@ export const GLASSES_PARTS: AvatarPart[] = [
     priceCoins: 400,
     productSlug: "avatar_glasses_round",
     // 203 × 77 → width 41%, height ~14%
-    position: { top: 23, left: 30, width: 40 },
+    position: { top: 14, left: 32, width: 40 },
   },
   {
     id: "glasses_aviator",
@@ -210,7 +200,7 @@ export const GLASSES_PARTS: AvatarPart[] = [
     priceCoins: 400,
     productSlug: "avatar_glasses_aviator",
     // 205 × 64 → width 41%, height ~12%
-    position: { top: 24, left: 30, width: 40 },
+    position: { top: 14, left: 30, width: 40 },
   },
 ];
 
@@ -228,7 +218,7 @@ export const FACIAL_HAIR_PARTS: AvatarPart[] = [
     priceCoins: 200,
     productSlug: "avatar_facial_stache",
     // 80 × 52 → width 16%, height ~9.6%; sits just above mouth (top of stache ≈ 28%)
-    position: { top: 29, left: 42, width: 16 },
+    position: { top: 22, left: 52, width: 16 },
   },
   {
     id: "beard",
@@ -238,7 +228,7 @@ export const FACIAL_HAIR_PARTS: AvatarPart[] = [
     priceCoins: 350,
     productSlug: "avatar_facial_beard",
     // 190 × 120 → width 38%, height ~22%; covers chin and lower jaw
-    position: { top: 32, left: 31, width: 38 },
+    position: { top: 24, left: 35, width: 38 },
   },
 ];
 
@@ -248,7 +238,7 @@ export const FACIAL_HAIR_IDS = FACIAL_HAIR_PARTS.map((part) => part.id) as reado
 // Figma anchor: jersey at y=116.07 of 232-tall card slot (50% raw), content height 214.54.
 // → jersey top = 116.07 / 214.54 = 54.1% of CHARACTER height.
 // Our bald PNG character occupies 444 of 543 canvas. 54.1% of 444 = 240 px = 44.2% of canvas.
-const JERSEY_ANCHOR = { top: 44, left: 12.2, width: 71.4 };
+const JERSEY_ANCHOR = { top: 44, left: 13, width: 70 };
 
 export const JERSEY_COLOR_PARTS: AvatarPart[] = [
   {
@@ -309,7 +299,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_real.webp",
     priceCoins: 800,
     productSlug: "avatar_jersey_real",
-    position: JERSEY_ANCHOR,
+    position: { top: 43, left: 13, width: 70 },
   },
   {
     id: "jersey_barcelona",
@@ -318,7 +308,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_barcelona.webp",
     priceCoins: 800,
     productSlug: "avatar_jersey_barcelona",
-    position: JERSEY_ANCHOR,
+    position: { top: 44, left: 13, width: 70 },
   },
   {
     id: "jersey_milan",
@@ -327,7 +317,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_milan.webp",
     priceCoins: 1500,
     productSlug: "avatar_jersey_milan",
-    position: JERSEY_ANCHOR,
+    position: { top: 42, left: 13, width: 70 },
   },
   {
     id: "jersey_liverpool",
@@ -336,7 +326,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_liverpool.webp",
     priceCoins: 1000,
     productSlug: "avatar_jersey_liverpool",
-    position: JERSEY_ANCHOR,
+    position: { top: 42, left: 13, width: 70 },
   },
   {
     id: "jersey_bayern",
@@ -345,7 +335,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_bayern.webp",
     priceCoins: 1200,
     productSlug: "avatar_jersey_bayern",
-    position: JERSEY_ANCHOR,
+    position: { top: 44, left: 13, width: 70 },
   },
   {
     id: "jersey_argentina_retro",
@@ -354,7 +344,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_argentina_retro.webp",
     priceCoins: 500,
     productSlug: "avatar_jersey_argentina_retro",
-    position: JERSEY_ANCHOR,
+    position: { top: 44, left: 13, width: 70 },
   },
   {
     id: "jersey_brazil_retro",
@@ -363,7 +353,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_brazil_retro.webp",
     priceCoins: 500,
     productSlug: "avatar_jersey_brazil_retro",
-    position: JERSEY_ANCHOR,
+    position: { top: 44, left: 13, width: 70 },
   },
   {
     id: "jersey_france_retro",
@@ -372,7 +362,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_france_retro.webp",
     priceCoins: 800,
     productSlug: "avatar_jersey_france_retro",
-    position: JERSEY_ANCHOR,
+    position: { top: 43, left: 13, width: 70 },
   },
   {
     id: "jersey_germany_retro",
@@ -381,7 +371,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_germany_retro.webp",
     priceCoins: 800,
     productSlug: "avatar_jersey_germany_retro",
-    position: JERSEY_ANCHOR,
+    position: { top: 44, left: 13, width: 70 },
   },
   {
     id: "jersey_netherlands_retro",
@@ -390,7 +380,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_netherlands_retro.webp",
     priceCoins: 800,
     productSlug: "avatar_jersey_netherlands_retro",
-    position: JERSEY_ANCHOR,
+    position: { top: 44, left: 13, width: 70 },
   },
 ];
 

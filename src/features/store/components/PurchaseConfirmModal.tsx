@@ -14,7 +14,7 @@ const poppins = {
 } as const;
 
 const PURPLE = "#BA02E8";
-const CARD_BG = "#0B1619";
+const CARD_BG = "#FFFFFF";
 const TEXT_DARK = "#071013";
 
 export interface PurchaseConfirmModalProps {
@@ -60,24 +60,18 @@ export function PurchaseConfirmModal({
             style={{ backgroundColor: CARD_BG, borderColor: PURPLE }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Top label */}
-            <div
-              className="mb-4 text-center text-[11px] uppercase tracking-[0.04em] text-white/50"
-              style={poppins}
-            >
-              Confirm Purchase
-            </div>
-
             {/* Avatar preview (when applicable) */}
             {previewCustomization && (
               <div className="mb-5 flex justify-center">
-                <AvatarPreview customization={previewCustomization} width={200} />
+                <div className="flex h-[142px] w-[142px] items-center justify-center">
+                  <AvatarPreview customization={previewCustomization} width={130} />
+                </div>
               </div>
             )}
 
             {/* Item name */}
             <div
-              className="text-center text-[24px] uppercase text-white"
+              className="text-center text-[24px] uppercase text-[#071013]"
               style={poppins}
             >
               {name}
@@ -86,7 +80,7 @@ export function PurchaseConfirmModal({
             {/* Price */}
             <div className="mt-4 flex items-center justify-center gap-2">
               <span
-                className="text-[10px] uppercase tracking-[0.04em] text-white/50"
+                className="text-[10px] uppercase tracking-[0.04em] text-[#071013]/55"
                 style={poppins}
               >
                 Price
@@ -106,7 +100,7 @@ export function PurchaseConfirmModal({
                 type="button"
                 disabled={isPending}
                 onClick={onClose}
-                className="flex h-[48px] flex-1 items-center justify-center rounded-[16px] border-2 border-white/15 bg-transparent text-[14px] uppercase text-white/70 transition-colors hover:bg-white/5 disabled:opacity-40"
+                className="flex h-[48px] flex-1 items-center justify-center rounded-[16px] border-2 border-[#071013]/20 bg-[#071013]/5 text-[14px] uppercase text-[#071013] transition-colors hover:bg-[#071013]/10 disabled:opacity-40"
                 style={poppins}
               >
                 Cancel

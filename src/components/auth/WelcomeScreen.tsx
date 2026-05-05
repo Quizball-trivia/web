@@ -78,7 +78,10 @@ const FEATURED_NAMES = [
   "bundesliga",
   "league 1",
   "uefa euro",
+  "serie a",
 ];
+
+const FEATURED_CATEGORY_LIMIT = 12;
 
 // Fallback colors for categories not in the mapping
 const FALLBACK_COLORS = ["#E74C3C", "#3498DB", "#2ECC71", "#9B59B6", "#F39C12", "#1ABC9C", "#E67E22", "#2980B9"];
@@ -207,16 +210,26 @@ export function WelcomeScreen() {
   const used = new Set<string>();
   for (const search of FEATURED_NAMES) {
     const normalizedSearch = search.toLowerCase();
+    const normalizedSlugSearch = normalizedSearch.replace(/\s+/g, '-');
     const exactMatch = allCategories.find(
-      (c) => !used.has(c.id) && c.name.toLowerCase() === normalizedSearch
+      (c) => !used.has(c.id) && (c.name.toLowerCase() === normalizedSearch || c.slug === normalizedSlugSearch)
     );
     const match = exactMatch ?? allCategories.find(
-      (c) => !used.has(c.id) && c.name.toLowerCase().includes(normalizedSearch)
+      (c) => !used.has(c.id) && (c.name.toLowerCase().includes(normalizedSearch) || c.slug.includes(normalizedSlugSearch))
     );
     if (match && !used.has(match.id)) {
       featuredCategories.push(match);
       used.add(match.id);
     }
+  }
+  const fillerCategories = [
+    ...allCategories.filter((c) => !used.has(c.id) && Boolean(c.imageUrl)),
+    ...allCategories.filter((c) => !used.has(c.id) && !c.imageUrl),
+  ];
+  for (const category of fillerCategories) {
+    if (featuredCategories.length >= FEATURED_CATEGORY_LIMIT) break;
+    featuredCategories.push(category);
+    used.add(category.id);
   }
   const remainingCategories = allCategories.filter((c) => !used.has(c.id));
 
@@ -290,7 +303,7 @@ export function WelcomeScreen() {
           <div className="w-full max-w-3xl">
             <div className="mb-4 flex items-center justify-between gap-3 px-1 md:px-2">
               <div className="flex items-center gap-3 flex-1 min-w-0 rounded-2xl bg-[#071013] px-3 py-2.5">
-                <div className="rounded-full bg-[#1CB0F6] p-[3px] shadow-[0_0_16px_rgba(28,176,246,0.3)]">
+                <div className="rounded-full bg-[#38B60E] p-[3px] shadow-[0_0_16px_rgba(56,182,14,0.35)]">
                   <AvatarDisplay customization={{ base: "avatar-1" }} size="sm" className="rounded-full" />
                 </div>
                 <div className="min-w-0">

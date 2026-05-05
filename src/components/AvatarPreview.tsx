@@ -20,12 +20,15 @@ interface AvatarPreviewProps {
  */
 export function AvatarPreview({ customization, width = 240, className = "" }: AvatarPreviewProps) {
   const defaults = customizationFromAvatarValue(customization.base);
+  const hasStructuredSlots = (["skin", "jersey", "hair", "glasses", "facialHair"] as const).some((slot) =>
+    Object.prototype.hasOwnProperty.call(customization, slot),
+  );
   const final: AvatarCustomization = {
     skin: customization.skin ?? defaults.skin,
-    jersey: customization.jersey ?? defaults.jersey,
-    hair: customization.hair ?? defaults.hair,
-    glasses: customization.glasses ?? defaults.glasses,
-    facialHair: customization.facialHair ?? defaults.facialHair,
+    jersey: hasStructuredSlots ? customization.jersey : defaults.jersey,
+    hair: hasStructuredSlots ? customization.hair : defaults.hair,
+    glasses: hasStructuredSlots ? customization.glasses : defaults.glasses,
+    facialHair: hasStructuredSlots ? customization.facialHair : defaults.facialHair,
   };
 
   const skinAsset = getSkinPart(final.skin).asset;

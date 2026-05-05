@@ -143,7 +143,9 @@ export function AvatarPicker({
     part: AvatarPart | null,
   ) => {
     if (part === null) {
-      persist({ ...current, [slot]: undefined });
+      const next = { ...current };
+      delete next[slot];
+      persist(next);
       return;
     }
     if (part.free || ownedPartIds.has(part.id)) {
@@ -196,19 +198,19 @@ export function AvatarPicker({
             className="group relative flex flex-col items-center gap-2 rounded-2xl py-3 transition-all active:translate-y-[1px]"
             style={{
               border: `2px solid ${selected ? PURPLE : "transparent"}`,
-              backgroundColor: selected ? `${PURPLE}14` : "rgba(255,255,255,0.02)",
+              backgroundColor: "#FFFFFF",
             }}
           >
             <div className="relative flex h-32 sm:h-36 items-center justify-center">
               <AvatarPreview customization={previewCustomization} width={isMobile ? 100 : 120} />
               {!owned && (
-                <div className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center">
+                <div className="absolute inset-0 rounded-2xl bg-black/25 flex items-center justify-center">
                   <Lock className="size-5 text-white/80" />
                 </div>
               )}
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-black uppercase tracking-wider text-white/70">
+              <span className="text-[10px] font-black uppercase tracking-wider text-[#071013]/70">
                 {skin.name}
               </span>
               {!owned && skin.priceCoins && (
@@ -249,13 +251,13 @@ export function AvatarPicker({
             className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl py-3 transition-all active:translate-y-[1px]"
             style={{
               border: `2px solid ${!currentValue ? PURPLE : "transparent"}`,
-              backgroundColor: !currentValue ? `${PURPLE}14` : "rgba(255,255,255,0.02)",
+              backgroundColor: "#FFFFFF",
             }}
           >
-            <div className="flex size-20 sm:size-24 items-center justify-center rounded-full border-2 border-dashed border-white/15">
-              <X className="size-8 text-white/40" strokeWidth={2.5} />
+            <div className="flex size-20 sm:size-24 items-center justify-center rounded-full border-2 border-dashed border-[#071013]/20">
+              <X className="size-8 text-[#071013]/40" strokeWidth={2.5} />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-white/70">
+            <span className="text-[10px] font-black uppercase tracking-wider text-[#071013]/70">
               None
             </span>
             {!currentValue && (
@@ -293,13 +295,13 @@ export function AvatarPicker({
                     className="max-h-full w-auto object-contain"
                   />
                   {!owned && (
-                    <div className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center">
+                    <div className="absolute inset-0 rounded-2xl bg-black/25 flex items-center justify-center">
                       <Lock className="size-4 text-white/80" />
                     </div>
                   )}
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-white/70 truncate max-w-[80px]">
+                  <span className="max-w-[96px] text-center text-[10px] font-black uppercase tracking-wider leading-tight text-[#071013]/70 line-clamp-2">
                     {part.name}
                   </span>
                   {!owned && part.priceCoins && (
@@ -327,7 +329,7 @@ export function AvatarPicker({
   const Content = (
     <div className="space-y-4">
       {/* Live preview of the avatar with current selection */}
-      <div className="flex justify-center pt-1 pb-2">
+      <div className="flex justify-center rounded-2xl bg-white pt-1 pb-2">
         <AvatarPreview customization={current} width={isMobile ? 140 : 160} />
       </div>
 
