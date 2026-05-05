@@ -282,7 +282,7 @@ export function AvatarPicker({
                 className="group relative flex flex-col items-center gap-2 rounded-2xl py-3 transition-all active:translate-y-[1px]"
                 style={{
                   border: `2px solid ${selected ? PURPLE : "transparent"}`,
-                  backgroundColor: selected ? `${PURPLE}14` : "rgba(255,255,255,0.02)",
+                  backgroundColor: "#FFFFFF",
                 }}
               >
                 <div className="relative flex size-20 sm:size-24 items-center justify-center">
