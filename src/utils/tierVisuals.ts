@@ -40,3 +40,26 @@ export function isKnownTier(value: string): value is TierName {
 export function getTierVisual(tier: string): TierVisual {
   return isKnownTier(tier) ? tierConfig[tier] : tierConfig['Academy'];
 }
+
+/**
+ * Brand-aligned accent hex for ranking surfaces (leaderboard table, rank strip).
+ * Grouped: Elite (GOAT/Legend = distinct), High (World-Class/Captain = distinct),
+ * Mid (Key Player/Starting11/Rotation = same green), Low (Bench and below = same slate).
+ */
+const tierAccent: Record<TierName, string> = {
+  'GOAT':           '#FFD700',
+  'Legend':         '#E2E8F0',
+  'World-Class':    '#00E5FF',
+  'Captain':        '#FF7A00',
+  'Key Player':     '#38B60E',
+  'Starting11':     '#38B60E',
+  'Rotation':       '#38B60E',
+  'Bench':          '#94A3B8',
+  'Reserve':        '#94A3B8',
+  'Youth Prospect': '#94A3B8',
+  'Academy':        '#94A3B8',
+};
+
+export function getTierAccent(tier: string): string {
+  return isKnownTier(tier) ? tierAccent[tier] : tierAccent['Academy'];
+}

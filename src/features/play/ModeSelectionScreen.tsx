@@ -126,12 +126,12 @@ export function ModeSelectionScreen({
           alt=""
           width={200}
           height={200}
-          className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 object-contain opacity-80 pointer-events-none"
+          className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 object-contain opacity-80 pointer-events-none"
         />
 
         <div className="relative z-10 p-4 md:p-7">
           {/* ── Desktop layout ── */}
-          <div className="hidden md:flex items-start gap-6">
+          <div className="hidden lg:flex items-start gap-6">
             {/* Left: Title + Play */}
             <div className="flex-1 min-w-0">
               <h1
@@ -195,7 +195,7 @@ export function ModeSelectionScreen({
           </div>
 
           {/* ── Mobile layout ── */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             {/* Top row: title (left) | RP block (right) */}
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
@@ -281,7 +281,7 @@ export function ModeSelectionScreen({
             alt=""
             width={160}
             height={160}
-            className="hidden md:block absolute right-4 bottom-4 h-36 w-36 object-contain opacity-90 pointer-events-none"
+            className="hidden lg:block absolute right-4 bottom-4 h-36 w-36 object-contain opacity-90 pointer-events-none"
           />
           <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
             <h3
@@ -293,7 +293,7 @@ export function ModeSelectionScreen({
             <p className="mt-1 text-[10px] md:mt-1.5 md:text-base font-black uppercase text-white">Create/Join Room</p>
 
             {/* Mobile: icon (centered, right under subtitle) + PLAY (bottom, full width) */}
-            <div className="mt-1.5 flex flex-1 items-center justify-center md:hidden">
+            <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
               <Image
                 src="/assets/friendly_match-icon.webp"
                 alt=""
@@ -302,12 +302,12 @@ export function ModeSelectionScreen({
                 className="h-[110px] w-[110px] object-contain pointer-events-none"
               />
             </div>
-            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] font-black uppercase tracking-wide text-white md:hidden">
+            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] font-black uppercase tracking-wide text-white lg:hidden">
               Play
             </div>
 
             {/* Desktop: bottom-left PLAY */}
-            <div className="mt-auto hidden pt-8 md:block">
+            <div className="mt-auto hidden pt-8 lg:block">
               <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-black text-xl font-black uppercase tracking-wide text-white">
                 Play
               </div>
@@ -335,7 +335,7 @@ export function ModeSelectionScreen({
             alt=""
             width={160}
             height={160}
-            className="hidden md:block absolute right-2 bottom-2 h-40 w-40 object-contain opacity-90 pointer-events-none"
+            className="hidden lg:block absolute right-2 bottom-2 h-40 w-40 object-contain opacity-90 pointer-events-none"
           />
           <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
             <h3
@@ -347,7 +347,7 @@ export function ModeSelectionScreen({
             <p className="mt-1 text-[10px] md:mt-1.5 md:text-base font-black uppercase text-black">View Challenges</p>
 
             {/* Mobile: icon (centered, right under subtitle) + PLAY (bottom, full width) */}
-            <div className="mt-1.5 flex flex-1 items-center justify-center md:hidden">
+            <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
               <Image
                 src="/assets/daily_challenge_mobile.webp"
                 alt=""
@@ -356,12 +356,12 @@ export function ModeSelectionScreen({
                 className="h-[150px] w-full object-contain pointer-events-none"
               />
             </div>
-            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] font-black uppercase tracking-wide text-white md:hidden">
+            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] font-black uppercase tracking-wide text-white lg:hidden">
               Play
             </div>
 
             {/* Desktop: bottom-left PLAY */}
-            <div className="mt-auto hidden pt-8 md:block">
+            <div className="mt-auto hidden pt-8 lg:block">
               <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-black text-xl font-black uppercase tracking-wide text-white">
                 Play
               </div>
@@ -387,7 +387,7 @@ export function ModeSelectionScreen({
             View All
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-3 md:hidden">
+        <div className="grid grid-cols-2 gap-3 lg:hidden">
           {mobileObjectives.map((obj, index) => (
             <Link
               key={`${obj.title}-${index}`}
@@ -409,7 +409,7 @@ export function ModeSelectionScreen({
             </Link>
           ))}
         </div>
-        <div className="hidden md:flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
+        <div className="hidden lg:flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
           {/* TODO: Replace hardcoded progress (33%, "1/3", "+100 coins") with dynamic values from objectives API/hook */}
           <Link
             href="/objectives"

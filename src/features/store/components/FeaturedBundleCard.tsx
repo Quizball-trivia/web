@@ -24,8 +24,8 @@ export function FeaturedBundleCard({ onBuy }: FeaturedBundleCardProps) {
       className="relative w-full cursor-pointer"
       onClick={onBuy}
     >
-      {/* ─────────────────────────────────────── DESKTOP (md+) ─── */}
-      <div className="hidden md:block">
+      {/* ─────────────────────────────────────── DESKTOP (xl+) — needs ~800px min for ticket spacer + right column */}
+      <div className="hidden xl:block">
         {/* Card body with vertical gradient */}
         <div
           className="relative w-full rounded-[20px]"
@@ -149,8 +149,8 @@ export function FeaturedBundleCard({ onBuy }: FeaturedBundleCardProps) {
         </div>
       </div>
 
-      {/* ─────────────────────────────────────── MOBILE ─── */}
-      <div className="md:hidden">
+      {/* ─────────────────────────────────────── MOBILE / TABLET (<xl) ─── */}
+      <div className="xl:hidden">
         <div
           className="relative w-full rounded-[20px] px-5 py-6"
           style={{
@@ -228,7 +228,7 @@ export function FeaturedBundleCard({ onBuy }: FeaturedBundleCardProps) {
               e.stopPropagation();
               onBuy?.();
             }}
-            className="mt-2 flex h-[58px] w-full items-center justify-center rounded-[20px] text-[20px] uppercase text-white active:translate-y-[2px]"
+            className="mt-2 flex h-[58px] w-full items-center justify-center rounded-[20px] text-[20px] uppercase text-white transition-transform active:translate-y-[2px]"
             style={{ ...poppins, backgroundColor: PILL_BLACK }}
           >
             Unlock Bundle

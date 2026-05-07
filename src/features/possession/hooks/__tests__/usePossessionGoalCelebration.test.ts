@@ -122,7 +122,7 @@ describe('usePossessionGoalCelebration', () => {
     expect(penaltyResult.current.goalCelebration).toBeNull();
   });
 
-  it('clears an active goal celebration when halftime begins', () => {
+  it('clears an active goal celebration when halftime begins', async () => {
     const { result, rerender } = renderHook((props: {
       roundResult: MatchRoundResultPayload | null;
       roundResultHoldDone: boolean;
@@ -161,6 +161,8 @@ describe('usePossessionGoalCelebration', () => {
       currentQuestionIndex: 5,
       isHalftime: true,
     });
+
+    await act(async () => {});
 
     expect(result.current.goalCelebration).toBeNull();
   });

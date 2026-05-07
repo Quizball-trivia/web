@@ -338,7 +338,7 @@ export function RealtimeResultsScreen({
         </div>
 
         <div className="mx-auto w-full max-w-[760px] space-y-3">
-          <div className="md:hidden space-y-3">
+          <div className="lg:hidden space-y-3">
             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
               <div className="flex flex-col items-center text-center">
                 <AvatarDisplay
@@ -380,7 +380,7 @@ export function RealtimeResultsScreen({
             </div>
           </div>
 
-          <div className="hidden md:grid items-center gap-6 md:grid-cols-[1fr_auto_auto_auto_1fr]">
+          <div className="hidden lg:grid items-center gap-6 lg:grid-cols-[1fr_auto_auto_auto_1fr]">
             <div className="flex items-center gap-4 justify-self-start">
               <AvatarDisplay
                 customization={playerAvatarCustomization ?? { base: playerAvatar }}

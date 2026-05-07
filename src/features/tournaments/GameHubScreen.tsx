@@ -210,7 +210,7 @@ export function GameHubScreen() {
                 </div>
 
                 {/* Skull Icon */}
-                <div className="hidden md:block shrink-0">
+                <div className="hidden lg:block shrink-0">
                   <svg
                     width="140"
                     height="140"

@@ -364,7 +364,6 @@ export function GameStageRouter() {
           tier: playerRankPoints != null ? tierFromRp(playerRankPoints) : undefined,
           country: authUser?.country ?? undefined,
           countryCode: authUser?.country ?? undefined,
-          favoriteClub: authUser?.favorite_club ?? undefined,
         }}
         opponentInfo={oppInfo ? {
           username: oppInfo.username,

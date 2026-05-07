@@ -80,7 +80,7 @@ describe('usePossessionRoundTransition', () => {
     expect(result.current).toBe(false);
   });
 
-  it('keeps the normal transition snapshot stable while the overlay remains visible', () => {
+  it('keeps the normal transition snapshot stable while the overlay remains visible', async () => {
     const { result, rerender } = renderHook((props: {
       pendingQuestion: ResolvedMatchQuestionPayload | null;
     }) => usePossessionRoundTransition({
@@ -102,6 +102,8 @@ describe('usePossessionRoundTransition', () => {
       },
     });
 
+    await act(async () => {});
+
     expect(result.current.showRoundTransition).toBe(true);
     expect(result.current.transitionSnapshot).toEqual({
       title: 'Question 6',
@@ -120,7 +122,7 @@ describe('usePossessionRoundTransition', () => {
     });
   });
 
-  it('starts the penalty countdown and preserves the penalty transition snapshot', () => {
+  it('starts the penalty countdown and preserves the penalty transition snapshot', async () => {
     const { result, rerender } = renderHook((props: {
       phase: MatchStatePayload['phase'];
       pendingQuestion: ResolvedMatchQuestionPayload | null;
@@ -149,11 +151,15 @@ describe('usePossessionRoundTransition', () => {
       pendingQuestion: makeQuestion(12, 1, 'penalty', 'Penalty'),
     });
 
+    await act(async () => {});
+
     expect(result.current.penaltyCountdownActive).toBe(true);
 
     act(() => {
       vi.advanceTimersByTime(PENALTY_COUNTDOWN_MS + 100);
     });
+
+    await act(async () => {});
 
     expect(result.current.penaltyCountdownActive).toBe(false);
     expect(result.current.showPenaltyTransition).toBe(true);

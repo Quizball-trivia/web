@@ -11,6 +11,8 @@ interface AvatarDisplayProps {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
   className?: string;
   countryCode?: string | null;
+  /** Frame shape — circle (default) keeps the legacy rounded look, square renders inside a rounded-square frame. */
+  shape?: 'circle' | 'square';
 }
 
 const flagSizeClasses = {
@@ -72,6 +74,7 @@ export function AvatarDisplay({
   size = 'md',
   className = '',
   countryCode,
+  shape = 'circle',
 }: AvatarDisplayProps) {
   const normalizedCountryCode = countryCode
     ? COUNTRY_CODE_MAP[countryCode.trim().toLowerCase()] || countryCode.trim().toLowerCase()
@@ -82,7 +85,12 @@ export function AvatarDisplay({
 
   return (
     <div
-      className={`relative flex items-center justify-center rounded-full shrink-0 overflow-hidden ${sizeClasses[size]} ${className}`}
+      className={cn(
+        'relative flex items-center justify-center shrink-0 overflow-hidden',
+        shape === 'circle' ? 'rounded-full' : 'rounded-2xl',
+        sizeClasses[size],
+        className,
+      )}
     >
       {/* Wrapper at canonical Figma aspect ratio so item % positions land precisely. */}
         <div className="relative h-full" style={{ aspectRatio: '495.25 / 543.03' }}>

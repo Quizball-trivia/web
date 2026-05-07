@@ -187,8 +187,9 @@ export function PossessionQuestionPanel({
         })}
       </motion.div>
 
-      {/* Power-ups bar — below answers */}
-      {!isPenaltyPhase && !isShotPhase && (
+      {/* Power-ups bar hidden — 50/50 chance card disabled in UI to avoid pay-to-win.
+          Controller logic, socket emits, store wiring, and props are preserved for future revival. */}
+      {false && !isPenaltyPhase && !isShotPhase && (
         <motion.div
           initial={false}
           animate={{ opacity: showOptions ? 1 : 0 }}

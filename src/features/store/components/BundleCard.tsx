@@ -84,7 +84,7 @@ export function BundleCard({
               alt={title}
               width={200}
               height={200}
-              className="h-full w-auto max-h-[110px] sm:max-h-[140px] object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
+              className="h-auto w-auto max-h-[110px] sm:max-h-[140px] max-w-full object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
             />
           ) : (
             <div className="size-20 rounded-2xl" style={{ backgroundColor: `${accent}20` }} />

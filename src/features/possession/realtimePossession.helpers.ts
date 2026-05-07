@@ -120,6 +120,24 @@ export function getQuestionDurationSeconds(question: ResolvedMatchQuestionPayloa
   return Math.max(1, Math.round((deadlineAtMs - playableAtMs) / 1000));
 }
 
+export function computeMyPossessionPct(
+  possessionDiff: number,
+  mySeat: 1 | 2,
+  offset = 0,
+  clampRange: 'server' | 'field' = 'server'
+): number {
+  const safeDiff = Number.isFinite(possessionDiff) ? possessionDiff : 0;
+  const possessionPct = Math.max(0, Math.min(100, 50 + (safeDiff / 2)));
+  const serverMyPossessionPct = mySeat === 2 ? 100 - possessionPct : possessionPct;
+  const value = serverMyPossessionPct + offset;
+
+  if (clampRange === 'field') {
+    return Math.max(10, Math.min(90, value));
+  }
+
+  return Math.max(0, Math.min(100, value));
+}
+
 export function getQuestionProgress(params: {
   phase: string | undefined;
   question: ResolvedMatchQuestionPayload | null;

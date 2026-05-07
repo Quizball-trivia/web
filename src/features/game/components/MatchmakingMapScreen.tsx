@@ -182,6 +182,7 @@ const CITY_DATA: {
   country: string;
   flag: string;
   name: string;
+  customization: AvatarCustomization;
 }[] = [
   {
     lon: -104.99,
@@ -190,6 +191,7 @@ const CITY_DATA: {
     country: "USA",
     flag: "🇺🇸",
     name: "Alex",
+    customization: { skin: "skin_male_white", hair: "hair_ramos", jersey: "jersey_blue", glasses: "glasses_aviator" },
   },
   {
     lon: -99.1,
@@ -198,6 +200,7 @@ const CITY_DATA: {
     country: "Mexico",
     flag: "🇲🇽",
     name: "Carlos",
+    customization: { skin: "skin_male_dark", hair: "hair_ronaldo_brazil", jersey: "jersey_green", facialHair: "stache" },
   },
   {
     lon: -47.88,
@@ -206,6 +209,7 @@ const CITY_DATA: {
     country: "Brazil",
     flag: "🇧🇷",
     name: "Lucas",
+    customization: { skin: "skin_male_dark_alt", hair: "hair_ronaldo_goat", jersey: "jersey_brazil_retro" },
   },
   {
     lon: -1.9,
@@ -214,6 +218,7 @@ const CITY_DATA: {
     country: "UK",
     flag: "🇬🇧",
     name: "James",
+    customization: { skin: "skin_male_white_alt", hair: "hair_boy_basic", jersey: "jersey_liverpool", facialHair: "beard" },
   },
   {
     lon: 4.83,
@@ -222,6 +227,7 @@ const CITY_DATA: {
     country: "France",
     flag: "🇫🇷",
     name: "Louis",
+    customization: { skin: "skin_male_white", hair: "hair_hamsik", jersey: "jersey_france_retro", glasses: "glasses_round" },
   },
   {
     lon: 11.58,
@@ -230,6 +236,7 @@ const CITY_DATA: {
     country: "Germany",
     flag: "🇩🇪",
     name: "Max",
+    customization: { skin: "skin_male_white_alt", hair: "hair_boy_basic", jersey: "jersey_germany_retro", facialHair: "beard" },
   },
   {
     lon: 32.86,
@@ -238,6 +245,7 @@ const CITY_DATA: {
     country: "Turkey",
     flag: "🇹🇷",
     name: "Emre",
+    customization: { skin: "skin_male_white", hair: "hair_hamsik", jersey: "jersey_red", facialHair: "stache" },
   },
   {
     lon: 46.71,
@@ -246,6 +254,7 @@ const CITY_DATA: {
     country: "Saudi Arabia",
     flag: "🇸🇦",
     name: "Omar",
+    customization: { skin: "skin_male_dark", hair: "hair_boy_basic", jersey: "jersey_violet", facialHair: "beard" },
   },
   {
     lon: 77.21,
@@ -254,6 +263,7 @@ const CITY_DATA: {
     country: "India",
     flag: "🇮🇳",
     name: "Arjun",
+    customization: { skin: "skin_male_dark_alt", hair: "hair_ramos", jersey: "jersey_yellow", glasses: "glasses_wayfarer" },
   },
   {
     lon: 98.98,
@@ -262,6 +272,7 @@ const CITY_DATA: {
     country: "Thailand",
     flag: "🇹🇭",
     name: "Niran",
+    customization: { skin: "skin_male_dark", hair: "hair_boy_basic", jersey: "jersey_pink" },
   },
   {
     lon: 104.06,
@@ -270,6 +281,7 @@ const CITY_DATA: {
     country: "China",
     flag: "🇨🇳",
     name: "Wei",
+    customization: { skin: "skin_male_white", hair: "hair_boy_basic", jersey: "jersey_milan", glasses: "glasses_round" },
   },
   {
     lon: 141.35,
@@ -278,6 +290,7 @@ const CITY_DATA: {
     country: "Japan",
     flag: "🇯🇵",
     name: "Yuki",
+    customization: { skin: "skin_male_white_alt", hair: "hair_boy_basic", jersey: "jersey_bayern" },
   },
   {
     lon: 133.88,
@@ -286,6 +299,7 @@ const CITY_DATA: {
     country: "Australia",
     flag: "🇦🇺",
     name: "Liam",
+    customization: { skin: "skin_male_white", hair: "hair_ronaldo_brazil", jersey: "jersey_yellow", glasses: "glasses_aviator" },
   },
   {
     lon: 36.82,
@@ -294,6 +308,7 @@ const CITY_DATA: {
     country: "Kenya",
     flag: "🇰🇪",
     name: "Kofi",
+    customization: { skin: "skin_male_dark_alt", hair: "hair_boy_basic", jersey: "jersey_argentina_retro", facialHair: "stache" },
   },
   {
     lon: 7.49,
@@ -302,6 +317,7 @@ const CITY_DATA: {
     country: "Nigeria",
     flag: "🇳🇬",
     name: "Chidi",
+    customization: { skin: "skin_male_dark", hair: "hair_ramos", jersey: "jersey_netherlands_retro" },
   },
   {
     lon: 44.79,
@@ -310,6 +326,7 @@ const CITY_DATA: {
     country: "Georgia",
     flag: "🇬🇪",
     name: "Giorgi",
+    customization: { skin: "skin_male_white", hair: "hair_hamsik", jersey: "jersey_real", facialHair: "beard" },
   },
 ];
 
@@ -971,7 +988,7 @@ function generateFakePlayers(): FakePlayer[] {
       y: py,
       color: PIN_COLORS[i % PIN_COLORS.length],
       avatarUrl: getAvatarAsset(AVATAR_COLORS[i % AVATAR_COLORS.length]),
-      avatarCustomization: {},
+      avatarCustomization: c.customization,
       name: c.name,
       flag: c.flag,
       city: c.city,

@@ -3,14 +3,105 @@
 import Image from "next/image";
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, RotateCcw } from "lucide-react";
+import {
+  Brain,
+  CheckCircle2,
+  CircleCheckBig,
+  DollarSign,
+  ImageIcon,
+  Lightbulb,
+  ListOrdered,
+  RotateCcw,
+  Route,
+  Timer,
+  TrendingUp,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { useDailyChallenges, useResetDailyChallengeDev } from "@/lib/queries/dailyChallenges.queries";
 import { queryKeys } from "@/lib/queries/queryKeys";
-import type { DailyChallengeSummary } from "@/lib/domain/dailyChallenge";
+import type { DailyChallengeIconToken, DailyChallengeSummary } from "@/lib/domain/dailyChallenge";
 import { useAuthStore } from "@/stores/auth.store";
 import { useQueryClient } from "@tanstack/react-query";
+
+const ICON_MAP: Record<DailyChallengeIconToken, LucideIcon> = {
+  dollarSign: DollarSign,
+  checkCircle: CircleCheckBig,
+  lightbulb: Lightbulb,
+  timer: Timer,
+  list: ListOrdered,
+  users: Users,
+  route: Route,
+  trendingUp: TrendingUp,
+  image: ImageIcon,
+};
+
+const ASSET_ICON_CHALLENGES = new Set<DailyChallengeSummary["challengeType"]>([
+  "trueFalse",
+  "highLow",
+  "imposter",
+]);
+
+function ChallengeIcon({
+  challenge,
+  fallback: FallbackIcon,
+}: {
+  challenge: DailyChallengeSummary;
+  fallback: LucideIcon;
+}) {
+  if (challenge.challengeType === "trueFalse") {
+    return (
+      <Image
+        src="/assets/true_or_false.webp"
+        alt=""
+        width={228}
+        height={96}
+        className="h-12 w-auto object-contain md:h-20"
+      />
+    );
+  }
+
+  if (challenge.challengeType === "highLow") {
+    return (
+      <Image
+        src="/assets/high_low.webp"
+        alt=""
+        width={220}
+        height={96}
+        className="h-12 w-auto object-contain md:h-20"
+      />
+    );
+  }
+
+  if (challenge.challengeType === "imposter") {
+    return (
+      <span className="relative block h-[32px] w-[58px] md:h-[64px] md:w-[116px]">
+        <Image
+          src="/assets/imposter_top.webp"
+          alt=""
+          width={86}
+          height={28}
+          className="absolute left-1/2 top-0 h-[17px] w-auto -translate-x-1/2 object-contain md:h-[34px]"
+        />
+        <Image
+          src="/assets/imposter_bottom.webp"
+          alt=""
+          width={76}
+          height={30}
+          className="absolute left-1/2 top-[15px] h-[18px] w-auto -translate-x-1/2 object-contain md:top-[30px] md:h-[36px]"
+        />
+      </span>
+    );
+  }
+
+  if (challenge.challengeType === "footballLogic") {
+    return <Brain className="size-7 md:size-10" strokeWidth={3} />;
+  }
+
+  return <FallbackIcon className="size-6 md:size-8" strokeWidth={3} />;
+}
 
 function getTimeUntilUtcReset() {
   const now = new Date();
@@ -38,6 +129,7 @@ function ChallengeCard({
   const resetMutation = useResetDailyChallengeDev(challenge.challengeType);
   const disabled = !challenge.availableToday;
   const isCompleted = challenge.completedToday;
+  const IconComponent = ICON_MAP[challenge.iconToken];
 
   const handleReset = async (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -63,28 +155,46 @@ function ChallengeCard({
         type="button"
         disabled={disabled}
         onClick={onClick}
-        className={`relative min-h-[212px] w-full overflow-hidden rounded-[10px] p-5 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFE500] md:p-6 ${
+        className={`relative flex h-[184px] w-full flex-col overflow-hidden rounded-[8px] p-3.5 pb-10 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFE500] md:block md:h-auto md:min-h-[212px] md:rounded-[10px] md:p-6 ${
           isCompleted
-            ? "border-2 border-[#58CC02] bg-[#164314] text-white shadow-[0_0_0_4px_rgba(88,204,2,0.16)] disabled:cursor-default"
+            ? "bg-[#FFE500] text-black disabled:cursor-default md:border-2 md:border-[#58CC02] md:bg-[#164314] md:text-white md:shadow-[0_0_0_4px_rgba(88,204,2,0.16)]"
             : "bg-[#FFE500] text-black hover:brightness-105 active:translate-y-[2px]"
         }`}
       >
         {isCompleted ? (
-          <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-[#58CC02] px-3 py-1 text-[11px] font-black uppercase tracking-wide text-white">
+          <div className="absolute left-3 top-3 hidden items-center gap-1.5 rounded-full bg-[#58CC02] px-3 py-1 text-[11px] font-black uppercase tracking-wide text-white md:inline-flex">
             <CheckCircle2 className="size-3.5" />
             Completed
           </div>
         ) : null}
 
-        <h3 className={`font-poppins text-center text-xl uppercase leading-none md:text-2xl ${isCompleted ? "mt-8 text-white" : "text-black"}`}>
+        <h3 className={`font-poppins min-h-[31px] pr-7 text-center text-[16px] uppercase leading-[0.95] md:min-h-0 md:pr-0 md:text-2xl ${isCompleted ? "text-black md:mt-8 md:text-white" : "text-black"}`}>
           {challenge.title}
         </h3>
-        <p className={`mt-3 text-center text-sm font-bold leading-snug md:text-base ${isCompleted ? "text-white/75" : "text-black/70"}`}>
+        <div className="mt-2.5 flex justify-center md:mt-4">
+          <span
+            className={`flex size-11 items-center justify-center text-[#FFE500] md:size-24 ${
+              ASSET_ICON_CHALLENGES.has(challenge.challengeType) ? "" : "rounded-full bg-black"
+            }`}
+          >
+            <ChallengeIcon challenge={challenge} fallback={IconComponent} />
+          </span>
+        </div>
+        <p className={`mt-2.5 line-clamp-3 text-center text-[10px] font-bold leading-tight md:mt-3 md:line-clamp-none md:text-base md:leading-snug ${isCompleted ? "text-black/65 md:text-white/75" : "text-black/70"}`}>
           {challenge.availableToday
             ? challenge.description
             : "Completed today. Come back after the UTC reset."}
         </p>
-        <div className="mt-5 flex justify-center">
+        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 lg:hidden">
+          <span className="inline-flex h-6 items-center gap-1 rounded-full bg-white/70 px-2.5 text-[10px] font-black text-[#9A7900]">
+            {challenge.coinReward}
+            <Image src="/assets/coin-1.png" alt="" width={16} height={16} className="size-4 object-contain" />
+          </span>
+          <span className="inline-flex h-6 items-center gap-1 rounded-full bg-[#58CC02] px-2.5 text-[10px] font-black text-white">
+            {challenge.xpReward} XP
+          </span>
+        </div>
+        <div className="mt-5 hidden justify-center md:flex">
           <span className={`font-poppins inline-flex h-11 min-w-[140px] items-center justify-center rounded-xl px-8 text-lg uppercase tracking-wide ${
             isCompleted ? "bg-white text-[#164314]" : "bg-black text-white"
           }`}>
@@ -98,9 +208,9 @@ function ChallengeCard({
           type="button"
           onClick={handleReset}
           disabled={resetMutation.isPending}
-          className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-lg bg-black/60 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white hover:bg-black/80 disabled:opacity-50"
+          className="absolute right-1.5 top-1.5 inline-flex h-4 items-center gap-0.5 rounded-md bg-black/60 px-1.5 text-[7px] font-black uppercase tracking-wide text-white hover:bg-black/80 disabled:opacity-50 md:right-2 md:top-2 md:h-auto md:gap-1 md:rounded-lg md:px-2 md:py-1 md:text-[10px]"
         >
-          <RotateCcw className="size-3" />
+          <RotateCcw className="size-2.5 md:size-3" />
           {resetMutation.isPending ? "…" : "Reset"}
         </button>
       )}
@@ -146,20 +256,20 @@ export default function DailyChallengesPage() {
 
   return (
     <div className="min-h-screen font-fun">
-      <div className="max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-10">
+      <div className="mx-auto max-w-[430px] px-4 py-6 md:max-w-6xl md:px-8 md:py-10">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-8 md:mb-10">
+        <div className="mb-5 flex items-start justify-between gap-4 md:mb-10">
           <div>
-            <h1 className="font-poppins text-4xl md:text-6xl uppercase leading-none text-white">
+            <h1 className="font-poppins text-[20px] uppercase leading-none text-white md:text-6xl">
               Daily Challenges
             </h1>
-            <p className="mt-2 text-xs md:text-sm font-black uppercase tracking-[0.2em] text-white/40">
+            <p className="mt-1 text-[8px] font-black uppercase tracking-[0.14em] text-white/45 md:mt-2 md:text-sm md:tracking-[0.2em]">
               UTC Reset in {timeUntilReset}
             </p>
           </div>
 
           <div className="flex items-start gap-3 md:gap-4">
-            <div className="w-[250px]">
+            <div className="hidden w-[250px] md:block">
               <p className="inline-block whitespace-nowrap font-poppins text-sm md:text-[0.95rem] font-semibold uppercase leading-none tracking-[-0.02em] text-white">
                 Today&apos;s Progress
               </p>
@@ -174,14 +284,14 @@ export default function DailyChallengesPage() {
               </p>
             </div>
 
-            <div className="w-[165px] text-right">
-              <p className="font-poppins text-sm md:text-[0.95rem] font-semibold uppercase leading-none tracking-[-0.02em] text-white">
+            <div className="w-[96px] text-right md:w-[165px]">
+              <p className="font-poppins text-[8px] font-semibold uppercase leading-none tracking-[-0.02em] text-white md:text-[0.95rem]">
                 Coins Earned
               </p>
-              <p className="font-poppins mt-2 text-[40px] font-semibold uppercase leading-none text-[#FFE500] md:text-[44px]">
+              <p className="font-poppins mt-1 text-[30px] font-semibold uppercase leading-none text-[#FFE500] md:mt-2 md:text-[44px]">
                 {earnedCoins}
               </p>
-              <p className="mt-1 font-poppins text-[14px] font-semibold uppercase leading-none text-white/45 md:text-[16px]">
+              <p className="mt-0.5 font-poppins text-[10px] font-semibold uppercase leading-none text-white/45 md:mt-1 md:text-[16px]">
                 of {totalCoins}
               </p>
             </div>
@@ -194,7 +304,7 @@ export default function DailyChallengesPage() {
             Loading today&apos;s challenge lineup...
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 gap-2.5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
             {challenges.map((challenge, index) => (
               <ChallengeCard
                 key={challenge.challengeType}
@@ -207,9 +317,26 @@ export default function DailyChallengesPage() {
           </div>
         )}
 
+        {!isLoading && challenges.length > 0 && (
+          <div className="mt-4 flex flex-col items-center lg:hidden">
+            <p className="font-poppins text-[8px] font-black uppercase tracking-[0.12em] text-white">
+              Today&apos;s Progress
+            </p>
+            <div className="mt-2 h-[7px] w-[74px] overflow-hidden rounded-full bg-[#A18F00]">
+              <div
+                className="h-full rounded-full bg-[#FFE500] transition-all duration-500"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+            <p className="mt-2 font-poppins text-[9px] font-semibold leading-none text-white/55">
+              {completedCount}/{challenges.length}
+            </p>
+          </div>
+        )}
+
         {/* Bottom stats */}
         {!isLoading && challenges.length > 0 && (
-          <div className="mt-8 md:mt-10 flex flex-wrap items-end gap-8">
+          <div className="mt-8 hidden flex-wrap items-end gap-8 md:mt-10 md:flex">
             <div className="flex flex-col items-center">
               <p className="font-poppins text-xs uppercase tracking-wider text-white mb-2">
                 Play For

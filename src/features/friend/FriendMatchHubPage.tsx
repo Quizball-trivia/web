@@ -217,7 +217,7 @@ export function FriendMatchHubPage() {
          </div>
 
          {/* Gamified Stat/Decor (Optional) */}
-         <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-card border border-border rounded-full shadow-sm text-sm font-medium">
+         <div className="hidden lg:flex items-center gap-3 px-4 py-2 bg-card border border-border rounded-full shadow-sm text-sm font-medium">
             <Users className="size-4 text-green-500" />
             <span>
               {onlineUsers === null ? "Players online..." : `${onlineUsers.toLocaleString()} players online`}

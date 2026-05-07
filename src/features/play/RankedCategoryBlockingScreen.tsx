@@ -10,7 +10,6 @@ import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
 import { getSocket } from '@/lib/realtime/socket-client';
 import { usePlayer } from '@/contexts/PlayerContext';
 import { useAuthStore } from '@/stores/auth.store';
-import { useHeadToHead } from '@/lib/queries/stats.queries';
 import { useRankedProfile } from '@/lib/queries/ranked.queries';
 import { useCategoriesList } from '@/lib/queries/categories.queries';
 import { logger } from '@/utils/logger';
@@ -20,22 +19,15 @@ import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { tierFromRp, type RankedTier } from '@/utils/rankedTier';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { BanCategoryCard } from '@/components/shared/BanCategoryCard';
+import { getTierAccent } from '@/utils/tierVisuals';
 import type { AvatarCustomization } from '@/types/game';
 
-// Tier accent colors (mirrors ModeSelectionScreen)
-const TIER_COLORS: Record<RankedTier, string> = {
-  Academy: '#8B9DA4',
-  'Youth Prospect': '#58CC02',
-  Reserve: '#1CB0F6',
-  Bench: '#1CB0F6',
-  Rotation: '#CE82FF',
-  Starting11: '#CE82FF',
-  'Key Player': '#FF9600',
-  Captain: '#FF9600',
-  'World-Class': '#FF4B4B',
-  Legend: '#FFD700',
-  GOAT: '#FFD700',
-};
+const poppins = {
+  fontFamily: "'Poppins', sans-serif",
+  fontWeight: 600,
+  letterSpacing: '0',
+  lineHeight: 1,
+} as const;
 
 export interface BanCategoryViewCategory {
   id: string;
@@ -63,10 +55,73 @@ export interface BanCategoryViewProps {
   phase: 'ban' | 'ready';
   currentActor: 'player' | 'opponent';
   timeLeft: number;
-  h2h?: { winsA: number; winsB: number; total: number } | null;
   soundMuted: boolean;
   onToggleSound: () => void;
   onBanCategory: (categoryId: string) => void;
+}
+
+function PlayerHeader({
+  info,
+  tierColor,
+  bgColor,
+  align,
+  dimmed,
+}: {
+  info: BanCategoryViewPlayer;
+  tierColor: string;
+  bgColor: string;
+  align: 'left' | 'right';
+  dimmed: boolean;
+}) {
+  const isLeft = align === 'left';
+  return (
+    <div
+      className={cn(
+        'flex items-center gap-3 transition-opacity duration-300',
+        isLeft ? 'justify-self-start' : 'flex-row-reverse justify-self-end',
+        dimmed && 'opacity-50'
+      )}
+    >
+      <div className="rounded-full p-2" style={{ backgroundColor: bgColor }}>
+        <AvatarDisplay
+          customization={info.avatarCustomization ?? { base: info.avatar }}
+          size="md"
+          countryCode={info.countryCode ?? null}
+        />
+      </div>
+      <div
+        className={cn('hidden min-w-0 sm:block', !isLeft && 'text-right')}
+      >
+        <div
+          className="max-w-[160px] truncate text-[13px] uppercase text-white sm:text-sm"
+          style={poppins}
+        >
+          {info.username}
+        </div>
+        <div
+          className={cn(
+            'mt-1.5 flex items-center gap-1.5',
+            !isLeft && 'flex-row-reverse'
+          )}
+        >
+          <span
+            className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] tabular-nums"
+            style={{ backgroundColor: '#FFE500', color: '#1a1800' }}
+          >
+            {info.rankPoints != null ? `${info.rankPoints} RP` : '— RP'}
+          </span>
+          {info.tier && (
+            <span
+              className="text-[10px] uppercase tracking-[0.08em]"
+              style={{ ...poppins, color: tierColor }}
+            >
+              {info.tier}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /**
@@ -83,112 +138,46 @@ export function BanCategoryView({
   phase,
   currentActor,
   timeLeft,
-  h2h,
   soundMuted,
   onToggleSound,
   onBanCategory,
 }: BanCategoryViewProps) {
-  const playerTierColor = player.tier ? TIER_COLORS[player.tier] : '#56707A';
-  const opponentTierColor = opponent.tier ? TIER_COLORS[opponent.tier] : '#56707A';
+  const playerTierColor = player.tier ? getTierAccent(player.tier) : '#94A3B8';
+  const opponentTierColor = opponent.tier ? getTierAccent(opponent.tier) : '#94A3B8';
 
   return (
-    <div className="relative min-h-dvh flex flex-col font-poppins">
-      {/* ── Shared AppShell-style background ── */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 bg-[#0f1420] bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0"
-        style={{
-          background:
-            "radial-gradient(circle at top center, rgba(28,176,246,0.08), transparent 32%), radial-gradient(circle at bottom left, rgba(88,204,2,0.06), transparent 28%)",
-        }}
-      />
-
-      {/* ── Header (no separator, blends into page bg) ── */}
+    <div className="relative min-h-dvh flex flex-col bg-[#071013]">
+      {/* ── Header ── */}
       <div className="relative z-10 w-full">
-        <div className="max-w-5xl mx-auto px-5 py-4 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-5 py-5 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
           {/* Player (Left) */}
-          <div className={cn(
-            "flex items-center gap-3 transition-opacity duration-300",
-            currentActor === 'opponent' && "opacity-50"
-          )}>
-            <AvatarDisplay
-              customization={player.avatarCustomization ?? { base: player.avatar }}
-              size="sm"
-              countryCode={player.countryCode ?? null}
-              className="ring-2 ring-[#1CB0F6]"
-            />
-            <div className="hidden sm:block">
-              <div className="max-w-[140px] truncate text-[15px] font-black uppercase leading-none text-white">
-                {player.username}
-              </div>
-              <div className="mt-1 flex items-center gap-1.5 text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white/45">
-                <span>{player.rankPoints != null ? `${player.rankPoints} RP` : '— RP'}</span>
-                {player.tier && (
-                  <>
-                    <span className="text-white/25">·</span>
-                    <span style={{ color: playerTierColor }}>{player.tier}</span>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
+          <PlayerHeader
+            info={player}
+            tierColor={playerTierColor}
+            bgColor="#1645FF"
+            align="left"
+            dimmed={currentActor === 'opponent'}
+          />
 
-          {/* Center: H2H + Timer + Phase */}
-          <div className="flex flex-col items-center">
-            {h2h && h2h.total > 0 && (
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-lg font-black text-[#1CB0F6] tabular-nums">{h2h.winsA}</span>
-                <span className="text-[10px] font-black text-[#56707A]">vs</span>
-                <span className="text-lg font-black text-[#FF4B4B] tabular-nums">{h2h.winsB}</span>
-              </div>
+          {/* Center timer pill */}
+          <div
+            className={cn(
+              'flex h-14 min-w-[72px] items-center justify-center rounded-full px-6 text-3xl tabular-nums text-white transition-colors',
+              timeLeft <= 5 ? 'bg-[#FF4B4B] animate-pulse' : 'bg-[#1645FF]'
             )}
-
-            <div className={cn(
-              'text-5xl font-black tabular-nums leading-none transition-colors',
-              timeLeft <= 5 ? 'text-[#FF4B4B] animate-pulse' : 'text-[#58CC02]'
-            )}>
-              {timeLeft}
-            </div>
-
-            <div className="mt-2 rounded-full bg-[#FF4B4B] px-3 py-1">
-              <span className="text-[10px] font-black uppercase tracking-[0.18em] text-white">Ban Phase</span>
-            </div>
-
-            <span className="mt-1.5 text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white/45">
-              {currentActor === 'player' ? "Your Turn" : "Opponent's Turn"}
-            </span>
+            style={poppins}
+          >
+            {timeLeft}
           </div>
 
           {/* Opponent (Right) */}
-          <div className={cn(
-            "flex flex-row-reverse items-center gap-3 transition-opacity duration-300",
-            currentActor === 'player' && "opacity-50"
-          )}>
-            <AvatarDisplay
-              customization={opponent.avatarCustomization ?? { base: opponent.avatar }}
-              size="sm"
-              countryCode={opponent.countryCode ?? null}
-              className="ring-2 ring-[#FF4B4B]"
-            />
-            <div className="hidden text-right sm:block">
-              <div className="max-w-[140px] truncate text-[15px] font-black uppercase leading-none text-white">
-                {opponent.username}
-              </div>
-              <div className="mt-1 flex items-center justify-end gap-1.5 text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white/45">
-                <span>{opponent.rankPoints != null ? `${opponent.rankPoints} RP` : '— RP'}</span>
-                {opponent.tier && (
-                  <>
-                    <span className="text-white/25">·</span>
-                    <span style={{ color: opponentTierColor }}>{opponent.tier}</span>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
+          <PlayerHeader
+            info={opponent}
+            tierColor={opponentTierColor}
+            bgColor="#FF4B4B"
+            align="right"
+            dimmed={currentActor === 'player'}
+          />
         </div>
 
         {/* Sound toggle (top-right floating) */}
@@ -202,27 +191,33 @@ export function BanCategoryView({
       </div>
 
       {/* ── Content ── */}
-      <div className="relative z-10 flex flex-col items-center pt-4 sm:pt-6">
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 pb-12">
         {/* Heading */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="text-center mb-6 sm:mb-8 px-6"
+          className="text-center mb-8 sm:mb-10 px-6"
         >
-          <h2 className="text-3xl font-black text-white uppercase tracking-tight">
-            {phase === 'ban' ? "Ban a Category" : "Get Ready!"}
+          <h2
+            className="text-3xl uppercase text-white sm:text-4xl"
+            style={poppins}
+          >
+            {phase === 'ban' ? 'Ban Category' : 'Get Ready'}
           </h2>
-          <p className="text-sm text-[#56707A] font-bold mt-1.5">
+          <p
+            className="mt-2 text-xs uppercase tracking-[0.08em] text-white/55 sm:text-sm"
+            style={poppins}
+          >
             {phase === 'ban'
-              ? "Tap a card to remove it. One category remains for Half 1."
-              : "Match starting with selected Half 1 category..."}
+              ? 'Tap a card to remove it. One category remains for Half 1.'
+              : 'Match starting with selected Half 1 category…'}
           </p>
         </motion.div>
 
         {/* Category Cards — shared BanCategoryCard matches /play mode-selection style */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="w-full">
-          <div className="grid grid-cols-3 gap-3 sm:gap-5 pb-8 px-4 sm:px-6 max-w-2xl mx-auto">
+          <div className="grid grid-cols-3 gap-3 sm:gap-5 px-4 sm:px-6 max-w-3xl mx-auto">
             {categories.map((category, i) => {
               const isPlayerBanned = category.id === playerBannedId;
               const isOpponentBanned = category.id === opponentBannedId;
@@ -291,11 +286,6 @@ export function RankedCategoryBlockingScreen() {
   );
   const opponentId = opponentMember?.userId ?? 'opponent';
   const opponentUsername = opponentMember?.username ?? 'Opponent';
-
-  const h2h = useHeadToHead(
-    selfUserId ?? undefined,
-    opponentId !== 'opponent' ? opponentId : undefined
-  );
 
   useEffect(() => {
     if (!draft || showShowdown) return;
@@ -412,7 +402,6 @@ export function RankedCategoryBlockingScreen() {
       phase={phase}
       currentActor={currentActor}
       timeLeft={timeLeft}
-      h2h={h2h.data ?? null}
       soundMuted={soundMuted}
       onToggleSound={() => setSoundMuted(toggleMute())}
       onBanCategory={(categoryId) => {

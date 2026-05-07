@@ -57,7 +57,7 @@ const MOBILE_NAV_ITEMS = [
 ] as const;
 
 const HIDE_NAV_PATHS = ["/game", "/onboarding"];
-const HEADER_PATHS = ["/", "/play", "/events", "/leaderboard", "/social", "/profile", "/store", "/career"];
+const HEADER_PATHS = ["/", "/play", "/events", "/leaderboard", "/social", "/profile", "/store", "/career", "/daily"];
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -247,8 +247,8 @@ export function AppShell({ children }: AppShellProps) {
             "radial-gradient(circle at top center, rgba(28,176,246,0.08), transparent 32%), radial-gradient(circle at bottom left, rgba(88,204,2,0.06), transparent 28%)",
         }}
       />
-      {/* DESKTOP LAYOUT (>= md) */}
-      <div className="relative z-10 hidden min-h-screen md:flex">
+      {/* DESKTOP LAYOUT (>= xl) — tablets including iPad Pro portrait get the mobile shell */}
+      <div className="relative z-10 hidden min-h-screen xl:flex">
         <Sidebar currentPath={currentPath} socialBadgeCount={socialBadgeCount} />
 
         {/* Main Wrapper */}
@@ -333,12 +333,14 @@ export function AppShell({ children }: AppShellProps) {
               {/* User Profile + Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-3 rounded-2xl px-1 py-1 hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
-                    <AvatarDisplay
-                      customization={playerStats.avatarCustomization || { base: playerStats.avatar }}
-                      size="sm"
-                      countryCode={authUser?.country}
-                    />
+                  <button className="flex items-center gap-3 rounded-full px-1 py-1 hover:bg-white/5 transition-colors focus:outline-none">
+                    <div className="rounded-full bg-[#1645FF] p-1.5">
+                      <AvatarDisplay
+                        customization={playerStats.avatarCustomization || { base: playerStats.avatar }}
+                        size="sm"
+                        countryCode={authUser?.country}
+                      />
+                    </div>
                     <div className="text-left">
                       <div className="text-sm font-black uppercase tracking-wide text-white">
                         {playerStats.username}
@@ -481,8 +483,8 @@ export function AppShell({ children }: AppShellProps) {
         </div>
       </div>
 
-      {/* MOBILE LAYOUT (< md) */}
-      <div className="relative z-10 flex min-h-screen flex-col md:hidden">
+      {/* MOBILE / TABLET LAYOUT (< xl) */}
+      <div className="relative z-10 flex min-h-screen flex-col xl:hidden">
         {/* Header */}
         {showHeader && (
           <div>

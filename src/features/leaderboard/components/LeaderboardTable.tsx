@@ -1,6 +1,7 @@
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import type { LeaderboardEntry } from "@/lib/domain/leaderboard";
 import { cn } from "@/lib/utils";
+import { getTierAccent } from "@/utils/tierVisuals";
 import { Minus, TrendingDown, TrendingUp, Trophy } from "lucide-react";
 
 interface LeaderboardTableProps {
@@ -37,6 +38,7 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
             const isCurrentUser = entry.isCurrentUser || entry.id === currentUserId;
             const isTopThree = entry.rank <= 3;
             const interactive = !!onEntryClick;
+            const tierAccent = getTierAccent(entry.tier);
 
             return (
               <div
@@ -100,14 +102,14 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
                     <div className="block sm:hidden">
                       <AvatarDisplay
                         customization={entry.avatarCustomization ?? { base: entry.avatar || "avatar-1" }}
-                        size="xs"
+                        size="sm"
                         countryCode={entry.country}
                       />
                     </div>
                     <div className="hidden sm:block">
                       <AvatarDisplay
                         customization={entry.avatarCustomization ?? { base: entry.avatar || "avatar-1" }}
-                        size="sm"
+                        size="md"
                         countryCode={entry.country}
                       />
                     </div>
@@ -127,7 +129,10 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
 
                 {/* Tier */}
                 <div className="col-span-2 sm:col-span-3 min-w-0 text-center">
-                  <span className="truncate text-[10px] sm:text-sm font-fun font-black uppercase tracking-wide text-white">
+                  <span
+                    className="block truncate text-[10px] sm:text-sm font-fun font-black uppercase tracking-wide"
+                    style={{ color: isCurrentUser ? "#FFFFFF" : tierAccent }}
+                  >
                     {entry.tier}
                   </span>
                 </div>

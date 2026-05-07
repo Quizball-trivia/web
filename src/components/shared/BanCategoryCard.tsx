@@ -90,7 +90,7 @@ export function BanCategoryCard({
         }
       }}
       className={cn(
-        'group relative aspect-[3/4] sm:aspect-[4/5] w-full overflow-hidden rounded-2xl md:rounded-[28px] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60',
+        'group relative aspect-[3/4] sm:aspect-[4/5] w-full overflow-hidden rounded-xl md:rounded-2xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60',
         interactive && 'cursor-pointer active:translate-y-[2px]',
         !interactive && 'cursor-default',
         fadedOut && 'opacity-30 pointer-events-none',
@@ -119,7 +119,7 @@ export function BanCategoryCard({
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <span
             className={cn(
-              'text-[5.5rem] sm:text-[7rem] leading-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.35)] transition-all duration-300',
+              'text-[7rem] sm:text-[9rem] md:text-[10rem] leading-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.35)] transition-all duration-300',
               interactive && 'group-hover:scale-105',
               isBanned && 'grayscale opacity-40 scale-90'
             )}
@@ -133,7 +133,7 @@ export function BanCategoryCard({
       <div className="relative z-10 flex h-full flex-col justify-end items-center p-3 sm:p-4">
         <h3
           className={cn(
-            'text-xs sm:text-base md:text-lg uppercase leading-tight break-words hyphens-auto text-center w-full',
+            'text-sm sm:text-lg md:text-xl uppercase leading-tight break-words hyphens-auto text-center w-full',
             isBanned && 'grayscale opacity-70'
           )}
           style={{

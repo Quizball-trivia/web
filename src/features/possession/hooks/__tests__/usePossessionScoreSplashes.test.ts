@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { MatchAnswerAckPayload, ResolvedMatchQuestionPayload } from '@/lib/realtime/socket.types';
 import { usePossessionScoreSplashes } from '../usePossessionScoreSplashes';
@@ -39,7 +39,7 @@ describe('usePossessionScoreSplashes', () => {
     vi.restoreAllMocks();
   });
 
-  it('clears active player splash when halftime begins', () => {
+  it('clears active player splash when halftime begins', async () => {
     const { result, rerender } = renderHook((props: {
       isHalftime: boolean;
       localQuestion: ResolvedMatchQuestionPayload | null;
@@ -64,6 +64,8 @@ describe('usePossessionScoreSplashes', () => {
       },
     });
 
+    await act(async () => {});
+
     expect(result.current.showPlayerSplash).toBe(true);
 
     rerender({
@@ -72,11 +74,13 @@ describe('usePossessionScoreSplashes', () => {
       answerAck: ACK,
     });
 
+    await act(async () => {});
+
     expect(result.current.showPlayerSplash).toBe(false);
     expect(result.current.playerSplashPoints).toBeNull();
   });
 
-  it('uses authoritative player points from answer ack even near a timer boundary', () => {
+  it('uses authoritative player points from answer ack even near a timer boundary', async () => {
     const mockNow = new Date('2026-04-26T12:00:00.999Z').getTime();
     vi.spyOn(Date, 'now').mockReturnValue(mockNow);
 
@@ -100,12 +104,14 @@ describe('usePossessionScoreSplashes', () => {
       opponentRound: null,
     }));
 
+    await act(async () => {});
+
     expect(result.current.showPlayerSplash).toBe(true);
     expect(result.current.playerSplashVariant).toBe('points');
     expect(result.current.playerSplashPoints).toBe(70);
   });
 
-  it('uses immediate opponent points instead of a pending correct label when available', () => {
+  it('uses immediate opponent points instead of a pending correct label when available', async () => {
     const { result } = renderHook(() => usePossessionScoreSplashes({
       localQuestion: QUESTION,
       phaseKind: 'normal',
@@ -119,6 +125,8 @@ describe('usePossessionScoreSplashes', () => {
       roundResult: null,
       opponentRound: null,
     }));
+
+    await act(async () => {});
 
     expect(result.current.showOpponentSplash).toBe(true);
     expect(result.current.opponentSplashVariant).toBe('points');

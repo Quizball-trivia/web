@@ -141,7 +141,6 @@ export default function BanPagePreview() {
           phase={firstHalfPhase}
           currentActor={firstHalfCurrentActor}
           timeLeft={14}
-          h2h={{ winsA: 2, winsB: 1, total: 3 }}
           soundMuted={soundMuted}
           onToggleSound={() => setSoundMuted((prev) => !prev)}
           onBanCategory={(id) => setFirstHalfPlayerBannedId(id)}
