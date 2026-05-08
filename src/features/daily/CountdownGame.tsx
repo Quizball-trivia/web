@@ -285,9 +285,9 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
 
   if (!currentQuestion) {
     return (
-      <div className="fixed inset-0 z-40 bg-[#131F24] font-fun flex items-center justify-center">
-        <div className="bg-[#1B2F36] rounded-xl border-b-4 border-[#0F1F26] p-6">
-          <p className="text-center text-[#56707A]">Loading questions...</p>
+      <div className="fixed inset-0 z-40 bg-surface-deep font-fun flex items-center justify-center">
+        <div className="bg-surface-card rounded-xl border-b-4 border-surface-card-deeper p-6">
+          <p className="text-center text-brand-slate">Loading questions...</p>
         </div>
       </div>
     );
@@ -295,18 +295,18 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
 
   if (showRoundTransition) {
     return (
-      <div className="fixed inset-0 z-40 bg-[#131F24] font-fun flex items-center justify-center p-4">
-        <div className="bg-[#1B2F36] rounded-xl border-b-4 border-[#0F1F26] p-6 md:p-8 max-w-md w-full text-center space-y-4">
-          <div className="mb-4"><CheckCircle2 className="size-14 text-[#58CC02] mx-auto" /></div>
+      <div className="fixed inset-0 z-40 bg-surface-deep font-fun flex items-center justify-center p-4">
+        <div className="bg-surface-card rounded-xl border-b-4 border-surface-card-deeper p-6 md:p-8 max-w-md w-full text-center space-y-4">
+          <div className="mb-4"><CheckCircle2 className="size-14 text-brand-green-light mx-auto" /></div>
           <h2 className="text-2xl font-black uppercase text-white">Round {currentRound + 1} Complete!</h2>
           <div className="space-y-2">
-            <p className="text-[#56707A]">You found</p>
-            <div className="text-4xl text-[#1CB0F6] font-black">{foundAnswers.length}</div>
-            <p className="text-[#56707A]">answers</p>
+            <p className="text-brand-slate">You found</p>
+            <div className="text-4xl text-brand-cyan font-black">{foundAnswers.length}</div>
+            <p className="text-brand-slate">answers</p>
           </div>
           {currentRound < questions.length - 1 && (
             <div className="pt-4">
-              <p className="text-sm text-[#56707A]">Next round starting...</p>
+              <p className="text-sm text-brand-slate">Next round starting...</p>
             </div>
           )}
         </div>
@@ -315,29 +315,29 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
   }
 
   return (
-    <div className="fixed inset-0 z-40 bg-[#131F24] font-fun flex flex-col">
+    <div className="fixed inset-0 z-40 bg-surface-deep font-fun flex flex-col">
       {/* Header */}
-      <div className="bg-[#1B2F36] border-b-[3px] border-[#131F24]">
+      <div className="bg-surface-card border-b-[3px] border-surface-deep">
         <div className="max-w-2xl mx-auto px-3 md:px-4 py-2.5 md:py-3">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowQuitDialog(true)}
-                className="flex items-center justify-center size-9 rounded-xl hover:bg-[#243B44] active:scale-95 transition-all text-white"
+                className="flex items-center justify-center size-9 rounded-xl hover:bg-surface-card-tint active:scale-95 transition-all text-white"
               >
                 <ArrowLeft className="size-5" />
               </button>
               <div className="flex items-center gap-2">
-                <Timer className="size-6 text-[#1CB0F6]" />
+                <Timer className="size-6 text-brand-cyan" />
                 <h1 className="text-lg md:text-xl font-black uppercase text-white">Countdown</h1>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-[#243B44] text-white">
+              <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-surface-card-tint text-white">
                 Round {currentRound + 1}/{totalRounds}
               </span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-[#1CB0F6]/15 text-[#1CB0F6]">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-brand-cyan/15 text-brand-cyan">
                 <Trophy className="size-3" />
                 {allRoundAnswers.reduce((sum, arr) => sum + arr.length, 0) +
                   foundAnswers.length}
@@ -347,7 +347,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
 
           <div className="h-2 bg-white/10 rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#58CC02] rounded-full transition-all duration-300"
+              className="h-full bg-brand-green-light rounded-full transition-all duration-300"
               style={{ width: `${((currentRound + 1) / totalRounds) * 100}%` }}
             />
           </div>
@@ -360,7 +360,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
         <div className="max-w-2xl mx-auto space-y-3 w-full">
         {/* Timer */}
         <div
-          className={`bg-[#1B2F36] rounded-xl border-b-4 p-4 md:p-5 ${
+          className={`bg-surface-card rounded-xl border-b-4 p-4 md:p-5 ${
             timeRemaining <= 5
               ? "border-b-[#CC3C3C] animate-pulse"
               : "border-b-[#0F1F26]"
@@ -369,12 +369,12 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Clock
-                className={`size-5 ${timeRemaining <= 5 ? "text-[#FF4B4B]" : "text-[#1CB0F6]"}`}
+                className={`size-5 ${timeRemaining <= 5 ? "text-brand-red-soft" : "text-brand-cyan"}`}
               />
-              <span className="text-sm text-[#56707A] font-bold">Time Remaining</span>
+              <span className="text-sm text-brand-slate font-bold">Time Remaining</span>
             </div>
             <div
-              className={`text-3xl font-black ${timeRemaining <= 5 ? "text-[#FF4B4B]" : "text-[#1CB0F6]"}`}
+              className={`text-3xl font-black ${timeRemaining <= 5 ? "text-brand-red-soft" : "text-brand-cyan"}`}
             >
               {timeRemaining}s
             </div>
@@ -382,9 +382,9 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
         </div>
 
         {/* Category */}
-        <div className="bg-[#1B2F36] rounded-xl border-b-4 border-b-[#0F1F26] p-4 md:p-5">
+        <div className="bg-surface-card rounded-xl border-b-4 border-b-[#0F1F26] p-4 md:p-5">
           <div className="space-y-2">
-            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-[#1CB0F6] text-white">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-brand-cyan text-white">
               {currentQuestion.category}
             </span>
             <h2 className="text-xl md:text-2xl font-black text-white">{currentQuestion.prompt}</h2>
@@ -392,9 +392,9 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
         </div>
 
         {/* Input */}
-        <div className="bg-[#1B2F36] rounded-xl border-b-4 border-b-[#0F1F26] p-4 md:p-5">
+        <div className="bg-surface-card rounded-xl border-b-4 border-b-[#0F1F26] p-4 md:p-5">
           <div className="space-y-2">
-            <label className="text-sm text-[#56707A] font-bold">Type your answer</label>
+            <label className="text-sm text-brand-slate font-bold">Type your answer</label>
             <Input
               ref={inputRef}
               type="text"
@@ -402,12 +402,12 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
               onChange={handleInputChange}
               onKeyDown={handleInputKeyDown}
               placeholder="Press Enter to submit..."
-              className="bg-[#243B44] border-2 border-[#1B2F36] text-white placeholder:text-[#56707A] focus:border-[#1CB0F6] text-lg h-12 rounded-xl"
+              className="bg-surface-card-tint border-2 border-surface-card text-white placeholder:text-brand-slate focus:border-brand-cyan text-lg h-12 rounded-xl"
               autoComplete="off"
               autoCapitalize="off"
             />
-            <p className="text-xs text-[#56707A]">
-              <Lightbulb className="size-3.5 inline-block align-text-bottom mr-1 text-[#FF9600]" />Tip: Don&apos;t worry about exact spelling - close matches count!
+            <p className="text-xs text-brand-slate">
+              <Lightbulb className="size-3.5 inline-block align-text-bottom mr-1 text-brand-orange" />Tip: Don&apos;t worry about exact spelling - close matches count!
             </p>
             {suggestions.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-1">
@@ -418,8 +418,8 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
                     onClick={() => submitSuggestion(suggestion.display)}
                     className={`rounded-full border px-3 py-1 text-xs font-bold transition-all ${
                       index === highlightedSuggestion
-                        ? "border-[#1CB0F6] bg-[#1CB0F6]/15 text-[#1CB0F6]"
-                        : "border-white/10 bg-white/5 text-white/80 hover:border-[#1CB0F6]/50"
+                        ? "border-brand-cyan bg-brand-cyan/15 text-brand-cyan"
+                        : "border-white/10 bg-white/5 text-white/80 hover:border-brand-cyan/50"
                     }`}
                   >
                     {suggestion.display}
@@ -433,13 +433,13 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
         {/* Recent Answer Feedback */}
         {recentAnswer && (
           <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 animate-in fade-in zoom-in duration-300">
-            <div className="bg-[#1B2F36] rounded-xl border-b-4 border-b-[#46A302] p-6 px-8">
+            <div className="bg-surface-card rounded-xl border-b-4 border-b-[#46A302] p-6 px-8">
               <div className="flex items-center gap-3">
-                <div className="size-12 rounded-full bg-[#58CC02] flex items-center justify-center">
+                <div className="size-12 rounded-full bg-brand-green-light flex items-center justify-center">
                   <Check className="size-6 text-white" />
                 </div>
                 <div>
-                  <div className="text-sm text-[#56707A]">Correct!</div>
+                  <div className="text-sm text-brand-slate">Correct!</div>
                   <div className="text-xl font-black text-white">{recentAnswer}</div>
                 </div>
               </div>
@@ -448,15 +448,15 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
         )}
 
         {/* Found Answers */}
-        <div className="bg-[#1B2F36] rounded-xl border-b-4 border-b-[#0F1F26] p-4 md:p-5">
+        <div className="bg-surface-card rounded-xl border-b-4 border-b-[#0F1F26] p-4 md:p-5">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-black text-white">Answers Found</h3>
-            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-[#1CB0F6]/15 text-[#1CB0F6]">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-brand-cyan/15 text-brand-cyan">
               {foundAnswers.length}
             </span>
           </div>
           {foundAnswers.length === 0 ? (
-            <p className="text-sm text-[#56707A] text-center py-8">
+            <p className="text-sm text-brand-slate text-center py-8">
               No answers found yet. Start typing!
             </p>
           ) : (
@@ -464,9 +464,9 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
               {foundAnswers.map((answer, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-2 p-2 rounded-lg bg-[#58CC02]/15 border border-[#58CC02]/30"
+                  className="flex items-center gap-2 p-2 rounded-lg bg-brand-green-light/15 border border-brand-green-light/30"
                 >
-                  <Check className="size-4 text-[#58CC02] shrink-0" />
+                  <Check className="size-4 text-brand-green-light shrink-0" />
                   <span className="text-sm truncate text-white">{answer}</span>
                 </div>
               ))}
@@ -477,7 +477,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
         {/* Skip Button */}
         <button
           onClick={handleSkipRound}
-          className="w-full py-3 rounded-xl font-black text-white bg-[#243B44] border-b-4 border-b-[#1B2F36] active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-2"
+          className="w-full py-3 rounded-xl font-black text-white bg-surface-card-tint border-b-4 border-b-[#1B2F36] active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-2"
         >
           <ArrowRight className="size-4" />
           Skip to Next Round

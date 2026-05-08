@@ -19,8 +19,8 @@ export function EventsComingSoon() {
     <div className="min-h-screen flex flex-col items-center justify-center px-6 pb-24 font-fun relative overflow-hidden">
       {/* Ambient glow */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-[#1CB0F6]/[0.04] blur-[100px]" />
-        <div className="absolute bottom-1/4 left-1/3 w-[300px] h-[300px] rounded-full bg-[#CE82FF]/[0.03] blur-[80px]" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-brand-cyan/[0.04] blur-[100px]" />
+        <div className="absolute bottom-1/4 left-1/3 w-[300px] h-[300px] rounded-full bg-brand-purple/[0.03] blur-[80px]" />
       </div>
 
       {/* Main content */}
@@ -71,14 +71,14 @@ export function EventsComingSoon() {
             delay: 0.1,
           }}
         >
-          <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-[#FFD700] to-[#FF9600] border-b-[6px] border-[#B8860B] flex items-center justify-center shadow-lg shadow-[#FFD700]/20">
-            <Trophy size={56} className="text-[#131F24]" strokeWidth={2.5} />
+          <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-brand-gold to-brand-orange border-b-[6px] border-brand-gold-deep flex items-center justify-center shadow-lg shadow-brand-gold/20">
+            <Trophy size={56} className="text-surface-deep" strokeWidth={2.5} />
           </div>
 
           {/* Pulse ring */}
           <motion.div
             aria-hidden
-            className="absolute inset-0 rounded-3xl border-2 border-[#FFD700]/40"
+            className="absolute inset-0 rounded-3xl border-2 border-brand-gold/40"
             animate={{ scale: [1, 1.3, 1.3], opacity: [0.6, 0, 0] }}
             transition={{ duration: 2, repeat: shouldReduce ? 0 : Infinity, ease: 'easeOut' }}
           />
@@ -112,7 +112,7 @@ export function EventsComingSoon() {
           </h1>
 
           <motion.p
-            className="text-[#56707A] text-base sm:text-lg font-semibold text-center max-w-xs leading-relaxed"
+            className="text-brand-slate text-base sm:text-lg font-semibold text-center max-w-xs leading-relaxed"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.0, duration: 0.6 }}
@@ -132,7 +132,7 @@ export function EventsComingSoon() {
             <motion.div
               aria-hidden
               key={i}
-              className="w-3 h-3 rounded-full bg-[#1CB0F6]"
+              className="w-3 h-3 rounded-full bg-brand-cyan"
               animate={{
                 scale: [1, 1.4, 1],
                 opacity: [0.4, 1, 0.4],
@@ -149,12 +149,12 @@ export function EventsComingSoon() {
 
         {/* Bottom badge */}
         <motion.div
-          className="mt-10 px-5 py-2.5 rounded-2xl bg-[#1B2F36] border-b-4 border-[#0D1B21]"
+          className="mt-10 px-5 py-2.5 rounded-2xl bg-surface-card border-b-4 border-surface-card-deep"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 1.4, type: 'spring', stiffness: 200, damping: 20 }}
         >
-          <span className="text-[#58CC02] font-bold text-sm tracking-wide">
+          <span className="text-brand-green-light font-bold text-sm tracking-wide">
             Stay tuned
           </span>
         </motion.div>

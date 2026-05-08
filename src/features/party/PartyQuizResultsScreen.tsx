@@ -105,13 +105,13 @@ function CelebrationBurst() {
 const PODIUM_CONFIG = {
   1: {
     label: 'Champion',
-    borderColor: 'border-[#FCD200]/50',
+    borderColor: 'border-brand-yellow-deep/50',
     borderBottom: 'border-b-[#C9A600]',
-    bg: 'bg-gradient-to-b from-[#FCD200]/16 to-[#FCD200]/4',
+    bg: 'bg-gradient-to-b from-brand-yellow-deep/16 to-brand-yellow-deep/4',
     glow: 'shadow-[0_0_60px_rgba(252,208,0,0.15)]',
-    accentColor: 'text-[#FCD200]',
-    iconBg: 'bg-[#FCD200]/15',
-    avatarRing: 'ring-4 ring-[#FCD200]/30 border-[#FCD200]/50',
+    accentColor: 'text-brand-yellow-deep',
+    iconBg: 'bg-brand-yellow-deep/15',
+    avatarRing: 'ring-4 ring-brand-yellow-deep/30 border-brand-yellow-deep/50',
     Icon: Crown,
   },
   2: {
@@ -127,13 +127,13 @@ const PODIUM_CONFIG = {
   },
   3: {
     label: 'Third',
-    borderColor: 'border-[#FF9600]/30',
+    borderColor: 'border-brand-orange/30',
     borderBottom: 'border-b-[#CC7800]',
-    bg: 'bg-[#FF9600]/[0.06]',
+    bg: 'bg-brand-orange/[0.06]',
     glow: '',
-    accentColor: 'text-[#FF9600]',
-    iconBg: 'bg-[#FF9600]/12',
-    avatarRing: 'ring-2 ring-[#FF9600]/20 border-[#FF9600]/30',
+    accentColor: 'text-brand-orange',
+    iconBg: 'bg-brand-orange/12',
+    avatarRing: 'ring-2 ring-brand-orange/20 border-brand-orange/30',
     Icon: Medal,
   },
 } as const;
@@ -210,7 +210,7 @@ function PodiumCard({ standing, index, className }: { standing: StandingRow; ind
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.5 + index * 0.1, type: 'spring', stiffness: 400, damping: 20 }}
-              className="mt-1 rounded-full bg-[#1CB0F6]/18 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-[0.22em] text-[#A9E6FF]"
+              className="mt-1 rounded-full bg-brand-cyan/18 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-[0.22em] text-[#A9E6FF]"
             >
               You
             </motion.div>
@@ -307,7 +307,7 @@ export function PartyQuizResultsScreen({
       : 'Party quiz finished in a tie!';
 
   return (
-    <div className="min-h-dvh bg-[#0f1420] text-white relative overflow-hidden">
+    <div className="min-h-dvh bg-surface-page-alt text-white relative overflow-hidden">
       {/* Background atmosphere */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(252,208,0,0.14),_transparent_32%),radial-gradient(circle_at_bottom_left,_rgba(28,176,246,0.12),_transparent_36%)]" />
       <div
@@ -332,7 +332,7 @@ export function PartyQuizResultsScreen({
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.1, type: 'spring', stiffness: 300, damping: 22 }}
-            className="inline-flex items-center gap-2 rounded-full border border-[#FCD200]/25 bg-[#FCD200]/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.26em] text-[#FFE98A]"
+            className="inline-flex items-center gap-2 rounded-full border border-brand-yellow-deep/25 bg-brand-yellow-deep/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.26em] text-[#FFE98A]"
           >
             <Trophy className="size-3.5" />
             Party Quiz
@@ -344,7 +344,7 @@ export function PartyQuizResultsScreen({
             transition={{ delay: 0.2, duration: 0.4 }}
             className={cn(
               'mt-3 text-xl font-black tracking-tight sm:text-2xl',
-              selfWon ? 'text-[#FCD200]' : 'text-white',
+              selfWon ? 'text-brand-yellow-deep' : 'text-white',
             )}
             style={selfWon ? { textShadow: '0 0 30px rgba(252,208,0,0.25)' } : undefined}
           >
@@ -370,7 +370,7 @@ export function PartyQuizResultsScreen({
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="mt-4 rounded-2xl border-2 border-b-4 border-[#1CB0F6]/30 border-b-[#0E8AC7] bg-[#1CB0F6]/8 px-4 py-3.5 font-fun"
+            className="mt-4 rounded-2xl border-2 border-b-4 border-brand-cyan/30 border-b-[#0E8AC7] bg-brand-cyan/8 px-4 py-3.5 font-fun"
           >
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -396,7 +396,7 @@ export function PartyQuizResultsScreen({
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="mt-4 rounded-2xl border-2 border-b-4 border-white/8 border-b-white/12 bg-[#131F24]/80 p-3.5 backdrop-blur sm:p-4"
+            className="mt-4 rounded-2xl border-2 border-b-4 border-white/8 border-b-white/12 bg-surface-deep/80 p-3.5 backdrop-blur sm:p-4"
           >
             <div className="flex items-center justify-between px-1 pb-3">
               <span className="text-[10px] font-fun font-black uppercase tracking-[0.24em] text-white/40">
@@ -417,7 +417,7 @@ export function PartyQuizResultsScreen({
                   className={cn(
                     'flex items-center gap-3 rounded-xl border border-b-2 px-3 py-3 font-fun',
                     standing.isSelf
-                      ? 'border-[#1CB0F6]/25 border-b-[#0E8AC7]/30 bg-[#1CB0F6]/8'
+                      ? 'border-brand-cyan/25 border-b-[#0E8AC7]/30 bg-brand-cyan/8'
                       : 'border-white/6 border-b-white/10 bg-white/[0.02]',
                   )}
                 >
@@ -435,7 +435,7 @@ export function PartyQuizResultsScreen({
                     <div className="flex items-center gap-1.5">
                       <span className="truncate text-sm font-bold text-white">{standing.username}</span>
                       {standing.isSelf && (
-                        <span className="rounded bg-[#1CB0F6]/18 px-1.5 py-0.5 text-[8px] font-black uppercase text-[#A9E6FF]">
+                        <span className="rounded bg-brand-cyan/18 px-1.5 py-0.5 text-[8px] font-black uppercase text-[#A9E6FF]">
                           You
                         </span>
                       )}
@@ -467,7 +467,7 @@ export function PartyQuizResultsScreen({
           <button
             type="button"
             onClick={onPlayAgain}
-            className="flex-1 rounded-2xl bg-[#58CC02] border-b-4 border-b-[#46A302] px-5 py-3.5 text-sm font-black font-fun text-white transition-all hover:bg-[#61D802] active:border-b-2 active:translate-y-[2px]"
+            className="flex-1 rounded-2xl bg-brand-green-light border-b-4 border-b-[#46A302] px-5 py-3.5 text-sm font-black font-fun text-white transition-all hover:bg-brand-green-light active:border-b-2 active:translate-y-[2px]"
           >
             Play Again
           </button>

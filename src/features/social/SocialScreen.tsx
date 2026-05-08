@@ -46,7 +46,7 @@ function getRankedDisplay(player: SocialPlayer) {
       level,
       tierLabel: "Unranked",
       rpLabel: "0 RP",
-      highlightClass: "text-[#56707A]",
+      highlightClass: "text-brand-slate",
     };
   }
 
@@ -55,7 +55,7 @@ function getRankedDisplay(player: SocialPlayer) {
       level,
       tierLabel: `Placement ${ranked.placementPlayed}/${ranked.placementRequired}`,
       rpLabel: "0 RP",
-      highlightClass: "text-[#58CC02]",
+      highlightClass: "text-brand-green-light",
     };
   }
 
@@ -63,7 +63,7 @@ function getRankedDisplay(player: SocialPlayer) {
     level,
     tierLabel: ranked.tier,
     rpLabel: `${ranked.rp} RP`,
-    highlightClass: "text-[#CE82FF]",
+    highlightClass: "text-brand-purple",
   };
 }
 
@@ -115,9 +115,9 @@ function PlayerCard({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.04, ease: "easeOut" }}
-      className="flex items-center gap-3 rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] px-4 py-3"
+      className="flex items-center gap-3 rounded-2xl border-b-4 border-surface-card-deep bg-surface-card px-4 py-3"
     >
-      <div className="flex size-12 shrink-0 items-center justify-center rounded-xl border-2 border-[#1CB0F6]/20 bg-[#243B44]">
+      <div className="flex size-12 shrink-0 items-center justify-center rounded-xl border-2 border-brand-cyan/20 bg-surface-card-tint">
         <AvatarDisplay
           customization={player.avatarCustomization ?? { base: player.avatarUrl ?? undefined }}
           size="sm"
@@ -128,17 +128,17 @@ function PlayerCard({
         <div className="flex items-center gap-2">
           <p className="truncate text-sm font-black text-white">{player.nickname ?? "Unknown"}</p>
           {isPendingDeletion && (
-            <span className="shrink-0 rounded-full bg-[#FB3101]/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-[#FB3101]">
+            <span className="shrink-0 rounded-full bg-brand-red/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-brand-red">
               {t("social.pendingDeletion")}
             </span>
           )}
         </div>
         <div className="mt-0.5 flex items-center gap-2">
-          <span className="text-[11px] font-bold text-[#56707A]">Lvl {rankedDisplay.level}</span>
-          <span className="text-[11px] font-bold text-[#56707A]">·</span>
+          <span className="text-[11px] font-bold text-brand-slate">Lvl {rankedDisplay.level}</span>
+          <span className="text-[11px] font-bold text-brand-slate">·</span>
           <span className={`text-[11px] font-bold ${rankedDisplay.highlightClass}`}>{rankedDisplay.tierLabel}</span>
-          <span className="text-[11px] font-bold text-[#56707A]">·</span>
-          <span className="text-[11px] font-bold text-[#FFD700]">{rankedDisplay.rpLabel}</span>
+          <span className="text-[11px] font-bold text-brand-slate">·</span>
+          <span className="text-[11px] font-bold text-brand-gold">{rankedDisplay.rpLabel}</span>
         </div>
       </div>
 
@@ -148,7 +148,7 @@ function PlayerCard({
             type="button"
             onClick={() => onChallenge(player.id)}
             disabled={isPendingDeletion}
-            className="flex items-center gap-1.5 rounded-xl border border-[#1CB0F6]/25 bg-[#1CB0F6]/15 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-[#7FD8FF] transition-colors hover:bg-[#1CB0F6]/25 disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex items-center gap-1.5 rounded-xl border border-brand-cyan/25 bg-brand-cyan/15 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-[#7FD8FF] transition-colors hover:bg-brand-cyan/25 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Swords className="size-3.5" />
             Challenge
@@ -160,7 +160,7 @@ function PlayerCard({
             type="button"
             onClick={() => onRemove(player.id)}
             disabled={isRemoving}
-            className="flex items-center justify-center rounded-xl border border-[#FF4B4B]/25 bg-[#FF4B4B]/15 px-2.5 py-2 text-[11px] font-black uppercase tracking-wide text-[#FF9999] transition-colors hover:bg-[#FF4B4B]/25 disabled:opacity-50"
+            className="flex items-center justify-center rounded-xl border border-brand-red-soft/25 bg-brand-red-soft/15 px-2.5 py-2 text-[11px] font-black uppercase tracking-wide text-brand-red-light transition-colors hover:bg-brand-red-soft/25 disabled:opacity-50"
             title="Remove friend"
           >
             {isRemoving ? (
@@ -176,7 +176,7 @@ function PlayerCard({
             type="button"
             onClick={() => onSendRequest(player.id)}
             disabled={isPending || isPendingDeletion}
-            className="flex items-center gap-1.5 rounded-xl border border-[#58CC02]/25 bg-[#58CC02]/15 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-[#58CC02] transition-colors hover:bg-[#58CC02]/25 disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex items-center gap-1.5 rounded-xl border border-brand-green-light/25 bg-brand-green-light/15 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-brand-green-light transition-colors hover:bg-brand-green-light/25 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {isPending ? (
               <Loader2 className="size-3.5 animate-spin" />
@@ -188,7 +188,7 @@ function PlayerCard({
         )}
 
         {player.friendStatus === "pending_sent" && (
-          <span className="rounded-xl border border-[#FFD700]/20 bg-[#FFD700]/10 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-[#FFD700]">
+          <span className="rounded-xl border border-brand-gold/20 bg-brand-gold/10 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-brand-gold">
             Sent
           </span>
         )}
@@ -197,14 +197,14 @@ function PlayerCard({
           <button
             type="button"
             onClick={onRespond}
-            className="rounded-xl border border-[#FF8A3D]/20 bg-[#FF8A3D]/10 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-[#FFB37D] transition-colors hover:bg-[#FF8A3D]/20"
+            className="rounded-xl border border-brand-orange-light/20 bg-brand-orange-light/10 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-[#FFB37D] transition-colors hover:bg-brand-orange-light/20"
           >
             Respond
           </button>
         )}
 
         {player.friendStatus === "friends" && !onChallenge && (
-          <span className="rounded-xl border border-[#56707A]/20 bg-[#56707A]/15 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-[#56707A]">
+          <span className="rounded-xl border border-brand-slate/20 bg-brand-slate/15 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-brand-slate">
             Friends
           </span>
         )}
@@ -238,9 +238,9 @@ function RequestCard({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: index * 0.03, ease: "easeOut" }}
-      className="flex items-center gap-3 rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] px-4 py-3"
+      className="flex items-center gap-3 rounded-2xl border-b-4 border-surface-card-deep bg-surface-card px-4 py-3"
     >
-      <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-[#1CB0F6]/20 bg-[#243B44]">
+      <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-brand-cyan/20 bg-surface-card-tint">
         <AvatarDisplay
           customization={item.user.avatarCustomization ?? { base: item.user.avatarUrl ?? undefined }}
           size="sm"
@@ -253,24 +253,24 @@ function RequestCard({
           <span
             className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ${
               isIncoming
-                ? "bg-[#FF8A3D]/15 text-[#FFB37D]"
-                : "bg-[#FFD700]/10 text-[#FFD700]"
+                ? "bg-brand-orange-light/15 text-[#FFB37D]"
+                : "bg-brand-gold/10 text-brand-gold"
             }`}
           >
             {isIncoming ? "Incoming" : "Sent"}
           </span>
           {isPendingDeletion && (
-            <span className="shrink-0 rounded-full bg-[#FB3101]/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-[#FB3101]">
+            <span className="shrink-0 rounded-full bg-brand-red/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-brand-red">
               {t("social.pendingDeletion")}
             </span>
           )}
         </div>
         <div className="mt-0.5 flex items-center gap-2">
-          <span className="text-[11px] font-bold text-[#56707A]">Lvl {rankedDisplay.level}</span>
-          <span className="text-[11px] font-bold text-[#56707A]">·</span>
+          <span className="text-[11px] font-bold text-brand-slate">Lvl {rankedDisplay.level}</span>
+          <span className="text-[11px] font-bold text-brand-slate">·</span>
           <span className={`text-[11px] font-bold ${rankedDisplay.highlightClass}`}>{rankedDisplay.tierLabel}</span>
-          <span className="text-[11px] font-bold text-[#56707A]">·</span>
-          <span className="text-[11px] font-bold text-[#FFD700]">{rankedDisplay.rpLabel}</span>
+          <span className="text-[11px] font-bold text-brand-slate">·</span>
+          <span className="text-[11px] font-bold text-brand-gold">{rankedDisplay.rpLabel}</span>
         </div>
       </div>
 
@@ -280,7 +280,7 @@ function RequestCard({
             type="button"
             onClick={() => onAccept?.(item.requestId)}
             disabled={isPending || isPendingDeletion}
-            className="flex items-center gap-1 rounded-xl border border-[#58CC02]/25 bg-[#58CC02]/15 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-[#58CC02] transition-colors hover:bg-[#58CC02]/25 disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex items-center gap-1 rounded-xl border border-brand-green-light/25 bg-brand-green-light/15 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-brand-green-light transition-colors hover:bg-brand-green-light/25 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}
             Accept
@@ -289,13 +289,13 @@ function RequestCard({
             type="button"
             onClick={() => onDecline?.(item.requestId)}
             disabled={isPending}
-            className="rounded-xl border border-[#FF4B4B]/20 bg-[#FF4B4B]/10 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-[#FF8E8E] transition-colors hover:bg-[#FF4B4B]/20 disabled:opacity-50"
+            className="rounded-xl border border-brand-red-soft/20 bg-brand-red-soft/10 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-brand-red-light transition-colors hover:bg-brand-red-soft/20 disabled:opacity-50"
           >
             Decline
           </button>
         </div>
       ) : (
-        <div className="flex shrink-0 items-center gap-1 rounded-xl border border-[#FFD700]/20 bg-[#FFD700]/10 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-[#FFD700]">
+        <div className="flex shrink-0 items-center gap-1 rounded-xl border border-brand-gold/20 bg-brand-gold/10 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-brand-gold">
           <Clock3 className="size-3.5" />
           Pending
         </div>
@@ -317,15 +317,15 @@ function SocialSection({
 }) {
   const toneClass =
     tone === "orange"
-      ? "bg-[#FF8A3D]/15 text-[#FFB37D]"
+      ? "bg-brand-orange-light/15 text-[#FFB37D]"
       : tone === "gold"
-        ? "bg-[#FFD700]/10 text-[#FFD700]"
-        : "bg-[#1CB0F6]/15 text-[#7FD8FF]";
+        ? "bg-brand-gold/10 text-brand-gold"
+        : "bg-brand-cyan/15 text-[#7FD8FF]";
 
   return (
     <section className="space-y-3">
       <div className="flex items-center gap-2">
-        <h2 className="text-xs font-black uppercase tracking-[0.18em] text-[#8CB7C7]">{title}</h2>
+        <h2 className="text-xs font-black uppercase tracking-[0.18em] text-brand-slate-light">{title}</h2>
         <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${toneClass}`}>{count}</span>
       </div>
       <div className="space-y-3">{children}</div>
@@ -450,16 +450,16 @@ export function SocialScreen() {
 
   return (
     <div className="min-h-screen font-fun">
-      <div className="sticky top-0 z-20 border-b-2 border-[#1B2F36] backdrop-blur-sm">
+      <div className="sticky top-0 z-20 border-b-2 border-surface-card backdrop-blur-sm">
         <div className="mx-auto max-w-2xl px-3 py-3 md:max-w-3xl md:px-4 md:py-4">
           <div className="flex items-center gap-3">
-            <div className="flex size-9 items-center justify-center rounded-xl border-2 border-[#1CB0F6]/30 bg-[#1CB0F6]/15 md:size-10">
-              <Users className="size-4 text-[#1CB0F6] md:size-5" />
+            <div className="flex size-9 items-center justify-center rounded-xl border-2 border-brand-cyan/30 bg-brand-cyan/15 md:size-10">
+              <Users className="size-4 text-brand-cyan md:size-5" />
             </div>
             <div className="flex items-center gap-2">
               <h1 className="text-base font-black uppercase tracking-wide text-white md:text-xl">Social</h1>
               {incomingCount > 0 && (
-                <span className="rounded-full bg-[#FF4B4B] px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-white">
+                <span className="rounded-full bg-brand-red-soft px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-white">
                   {incomingCount} new
                 </span>
               )}
@@ -469,7 +469,7 @@ export function SocialScreen() {
       </div>
 
       <div className="mx-auto max-w-2xl space-y-4 px-3 py-4 md:max-w-3xl md:px-4 md:py-6">
-        <div className="flex gap-2 rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] p-1.5">
+        <div className="flex gap-2 rounded-2xl border-b-4 border-surface-card-deep bg-surface-card p-1.5">
           {(["friends", "find"] as const).map((tab) => (
             <button
               key={tab}
@@ -477,8 +477,8 @@ export function SocialScreen() {
               onClick={() => setActiveTab(tab)}
               className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-black uppercase tracking-wide transition-all ${
                 activeTab === tab
-                  ? "bg-[#1CB0F6] text-white shadow-sm"
-                  : "text-[#56707A] hover:text-white"
+                  ? "bg-brand-cyan text-white shadow-sm"
+                  : "text-brand-slate hover:text-white"
               }`}
             >
               {tab === "friends" ? (
@@ -486,12 +486,12 @@ export function SocialScreen() {
                   <Users className="size-4" />
                   Friends
                   {friends.length > 0 && (
-                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-black ${activeTab === tab ? "bg-white/20" : "bg-[#243B44]"}`}>
+                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-black ${activeTab === tab ? "bg-white/20" : "bg-surface-card-tint"}`}>
                       {friends.length}
                     </span>
                   )}
                   {incomingCount > 0 && (
-                    <span className="rounded-full bg-[#FF4B4B] px-1.5 py-0.5 text-[10px] font-black text-white">
+                    <span className="rounded-full bg-brand-red-soft px-1.5 py-0.5 text-[10px] font-black text-white">
                       {incomingCount}
                     </span>
                   )}
@@ -518,25 +518,25 @@ export function SocialScreen() {
             >
               {friendsLoading ? (
                 <div className="flex items-center justify-center py-16">
-                  <Loader2 className="size-8 animate-spin text-[#1CB0F6]" />
+                  <Loader2 className="size-8 animate-spin text-brand-cyan" />
                 </div>
               ) : friendsError ? (
-                <div className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] p-6 text-center">
-                  <p className="text-sm font-bold text-[#FF4B4B]">{friendsError}</p>
+                <div className="rounded-2xl border-b-4 border-surface-card-deep bg-surface-card p-6 text-center">
+                  <p className="text-sm font-bold text-brand-red-soft">{friendsError}</p>
                 </div>
               ) : hasNoSocialData ? (
-                <div className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] p-8 text-center">
-                  <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl border-2 border-[#56707A]/20 bg-[#243B44]">
-                    <Users className="size-8 text-[#56707A]" />
+                <div className="rounded-2xl border-b-4 border-surface-card-deep bg-surface-card p-8 text-center">
+                  <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl border-2 border-brand-slate/20 bg-surface-card-tint">
+                    <Users className="size-8 text-brand-slate" />
                   </div>
                   <h3 className="mb-2 text-base font-black uppercase text-white">No friends yet</h3>
-                  <p className="mb-5 text-sm font-semibold text-[#56707A]">
+                  <p className="mb-5 text-sm font-semibold text-brand-slate">
                     Search for players and send them a friend request.
                   </p>
                   <button
                     type="button"
                     onClick={() => setActiveTab("find")}
-                    className="rounded-xl border-b-[3px] border-[#14627F] bg-[#1CB0F6] px-5 py-2.5 text-sm font-black uppercase tracking-wide text-white transition-all hover:bg-[#1A9FE0] active:translate-y-[2px] active:border-b-[1px]"
+                    className="rounded-xl border-b-[3px] border-[#14627F] bg-brand-cyan px-5 py-2.5 text-sm font-black uppercase tracking-wide text-white transition-all hover:bg-brand-cyan active:translate-y-[2px] active:border-b-[1px]"
                   >
                     Find Players
                   </button>
@@ -599,19 +599,19 @@ export function SocialScreen() {
               className="space-y-3"
             >
               <div className="relative">
-                <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#56707A]" />
+                <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-brand-slate" />
                 <input
                   type="text"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Search by username..."
-                  className="w-full rounded-2xl border-2 border-[#243B44] bg-[#1B2F36] py-3 pl-10 pr-10 text-sm font-semibold text-white outline-none transition-colors placeholder:text-[#56707A] focus:border-[#1CB0F6]"
+                  className="w-full rounded-2xl border-2 border-surface-card-tint bg-surface-card py-3 pl-10 pr-10 text-sm font-semibold text-white outline-none transition-colors placeholder:text-brand-slate focus:border-brand-cyan"
                 />
                 {query && (
                   <button
                     type="button"
                     onClick={() => setQuery("")}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#56707A] transition-colors hover:text-white"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-brand-slate transition-colors hover:text-white"
                   >
                     <X className="size-4" />
                   </button>
@@ -620,27 +620,27 @@ export function SocialScreen() {
 
               {isSearching ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="size-7 animate-spin text-[#1CB0F6]" />
+                  <Loader2 className="size-7 animate-spin text-brand-cyan" />
                 </div>
               ) : searchError ? (
-                <div className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] p-6 text-center">
-                  <p className="text-sm font-bold text-[#FF4B4B]">{searchError}</p>
+                <div className="rounded-2xl border-b-4 border-surface-card-deep bg-surface-card p-6 text-center">
+                  <p className="text-sm font-bold text-brand-red-soft">{searchError}</p>
                 </div>
               ) : debouncedQuery && searchResults.length === 0 ? (
-                <div className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] p-8 text-center">
-                  <div className="mx-auto mb-3 flex size-14 items-center justify-center rounded-2xl border-2 border-[#56707A]/20 bg-[#243B44]">
-                    <UserRound className="size-7 text-[#56707A]" />
+                <div className="rounded-2xl border-b-4 border-surface-card-deep bg-surface-card p-8 text-center">
+                  <div className="mx-auto mb-3 flex size-14 items-center justify-center rounded-2xl border-2 border-brand-slate/20 bg-surface-card-tint">
+                    <UserRound className="size-7 text-brand-slate" />
                   </div>
                   <p className="mb-1 text-sm font-black uppercase text-white">No players found</p>
-                  <p className="text-xs font-semibold text-[#56707A]">Try a different username</p>
+                  <p className="text-xs font-semibold text-brand-slate">Try a different username</p>
                 </div>
               ) : !debouncedQuery ? (
-                <div className="rounded-2xl border-b-4 border-[#0D1B21] bg-[#1B2F36] p-8 text-center">
-                  <div className="mx-auto mb-3 flex size-14 items-center justify-center rounded-2xl border-2 border-[#1CB0F6]/25 bg-[#1CB0F6]/15">
-                    <Search className="size-7 text-[#1CB0F6]" />
+                <div className="rounded-2xl border-b-4 border-surface-card-deep bg-surface-card p-8 text-center">
+                  <div className="mx-auto mb-3 flex size-14 items-center justify-center rounded-2xl border-2 border-brand-cyan/25 bg-brand-cyan/15">
+                    <Search className="size-7 text-brand-cyan" />
                   </div>
                   <p className="mb-1 text-sm font-black uppercase text-white">Find your rivals</p>
-                  <p className="text-xs font-semibold text-[#56707A]">
+                  <p className="text-xs font-semibold text-brand-slate">
                     Search for a player to add them as a friend
                   </p>
                 </div>

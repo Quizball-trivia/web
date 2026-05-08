@@ -200,10 +200,10 @@ export default function ChallengePage() {
 
   if (sessionError || sessionTypeMismatch) {
     return (
-      <div className="fixed inset-0 z-40 flex items-center justify-center bg-[#131F24] px-4 font-fun text-white">
-        <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#1B2F36] p-6 text-center shadow-2xl">
+      <div className="fixed inset-0 z-40 flex items-center justify-center bg-surface-deep px-4 font-fun text-white">
+        <div className="w-full max-w-md rounded-2xl border border-white/10 bg-surface-card p-6 text-center shadow-2xl">
           <p className="text-lg font-black uppercase">Challenge unavailable</p>
-          <p className="mt-3 text-sm leading-6 text-[#9EB3BC]">
+          <p className="mt-3 text-sm leading-6 text-brand-slate-light">
             {sessionTypeMismatch
               ? `Received a ${session?.challengeType} session while opening ${challengeType}. Refresh and try again.`
               : getSessionErrorMessage(sessionError)}
@@ -214,7 +214,7 @@ export default function ChallengePage() {
               onClick={() => {
                 setSessionAttempt((attempt) => attempt + 1);
               }}
-              className="flex-1 rounded-xl bg-[#38B60E] px-4 py-3 text-sm font-black uppercase text-white"
+              className="flex-1 rounded-xl bg-brand-green px-4 py-3 text-sm font-black uppercase text-white"
             >
               Try again
             </button>
@@ -233,10 +233,10 @@ export default function ChallengePage() {
 
   if (isSessionLoading || !session) {
     return (
-      <div className="fixed inset-0 z-40 bg-[#131F24] font-fun flex items-center justify-center">
-        <div className="bg-[#1B2F36] rounded-xl border-b-4 border-[#0F1F26] p-6 text-center">
+      <div className="fixed inset-0 z-40 bg-surface-deep font-fun flex items-center justify-center">
+        <div className="bg-surface-card rounded-xl border-b-4 border-surface-card-deeper p-6 text-center">
           <p className="text-white font-black uppercase">Loading challenge</p>
-          <p className="text-sm text-[#56707A] mt-2">Fetching today&apos;s live challenge session.</p>
+          <p className="text-sm text-brand-slate mt-2">Fetching today&apos;s live challenge session.</p>
         </div>
       </div>
     );

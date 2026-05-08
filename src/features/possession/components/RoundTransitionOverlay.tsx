@@ -13,14 +13,14 @@ export function RoundTransitionOverlay({ title, categoryName, subtitle }: RoundT
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
-      className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#131F24]/95 backdrop-blur-sm rounded-2xl overflow-hidden"
+      className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-surface-deep/95 backdrop-blur-sm rounded-2xl overflow-hidden"
     >
       {/* Top accent bar */}
       <motion.div
         initial={{ scaleX: 0 }}
         animate={{ scaleX: 1 }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
-        className="absolute top-0 inset-x-0 h-[3px] bg-[#1CB0F6] origin-left"
+        className="absolute top-0 inset-x-0 h-[3px] bg-brand-cyan origin-left"
       />
 
       {/* Bottom accent bar */}
@@ -28,7 +28,7 @@ export function RoundTransitionOverlay({ title, categoryName, subtitle }: RoundT
         initial={{ scaleX: 0 }}
         animate={{ scaleX: 1 }}
         transition={{ duration: 0.4, ease: 'easeOut', delay: 0.05 }}
-        className="absolute bottom-0 inset-x-0 h-[3px] bg-[#1CB0F6] origin-right"
+        className="absolute bottom-0 inset-x-0 h-[3px] bg-brand-cyan origin-right"
       />
 
       {categoryName ? (
@@ -36,7 +36,7 @@ export function RoundTransitionOverlay({ title, categoryName, subtitle }: RoundT
           initial={{ y: 8, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 400, damping: 28, delay: 0.1 }}
-          className="text-[#1CB0F6] text-xs font-bold font-fun uppercase tracking-[0.2em] mb-2"
+          className="text-brand-cyan text-xs font-bold font-fun uppercase tracking-[0.2em] mb-2"
         >
           {categoryName}
         </motion.div>

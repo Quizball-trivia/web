@@ -56,7 +56,9 @@ describe('PartyQuestionPanel', () => {
       />,
     );
 
-    const button = screen.getByRole('button', { name: /chelsea/i });
+    // Panel sets aria-hidden on the options grid when showOptions={false}.
+    // Pass `hidden: true` so testing-library still finds the disabled button.
+    const button = screen.getByRole('button', { name: /chelsea/i, hidden: true });
     expect(button).toBeDisabled();
     await user.click(button);
 

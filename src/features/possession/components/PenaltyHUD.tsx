@@ -63,11 +63,11 @@ export function PenaltyHUD({
           <div className="min-w-0">
             <div className="truncate text-xs font-bold text-white/85">{playerName}</div>
             <div className="text-3xl font-black leading-7 tabular-nums text-white">{penaltyPlayerScore}</div>
-            <AnimatedPointsCounter value={playerPoints} accentClassName="text-[#FFE500]" />
+            <AnimatedPointsCounter value={playerPoints} accentClassName="text-brand-yellow" />
           </div>
         </div>
         <div className="flex min-w-[100px] shrink-0 flex-col items-center justify-center">
-          <div className="mb-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#FF9600]">
+          <div className="mb-1 text-[10px] font-black uppercase tracking-[0.18em] text-brand-orange">
             {isPenaltySuddenDeath ? 'Sudden Death' : `Pen ${penaltyRound}/${MAX_PENALTY_ROUNDS}`}
           </div>
           <motion.div
@@ -81,7 +81,7 @@ export function PenaltyHUD({
           >
             {phase === 'penalty-playing' ? timeRemaining : '\u2014'}
           </motion.div>
-          <div className="-mt-0.5 text-[10px] font-black tracking-[0.18em] text-[#FF9600]/70">
+          <div className="-mt-0.5 text-[10px] font-black tracking-[0.18em] text-brand-orange/70">
             {isPlayerShooter ? 'YOU SHOOT' : 'YOU SAVE'}
           </div>
         </div>
@@ -92,7 +92,7 @@ export function PenaltyHUD({
             <AnimatedPointsCounter
               value={opponentPoints}
               align="right"
-              accentClassName="text-[#FF4B4B]"
+              accentClassName="text-brand-red-soft"
             />
           </div>
           <AvatarDisplay customization={opponentAvatarCustomization ?? {}} size="sm" className="size-11 shrink-0" />
@@ -102,13 +102,13 @@ export function PenaltyHUD({
       <div className="flex justify-center gap-4 px-3">
         <div className="flex gap-1.5">
           {Array.from({ length: MAX_PENALTY_ROUNDS }).map((_, i) => (
-            <div key={`pp-${i}`} className={`size-3 rounded-full border-2 ${i < penaltyPlayerScore ? 'bg-[#58CC02] border-[#58CC02]' : 'bg-transparent border-white/20'}`} />
+            <div key={`pp-${i}`} className={`size-3 rounded-full border-2 ${i < penaltyPlayerScore ? 'bg-brand-green-light border-brand-green-light' : 'bg-transparent border-white/20'}`} />
           ))}
         </div>
         <div className="text-[10px] font-black text-white/30 tracking-wider">PENS</div>
         <div className="flex gap-1.5">
           {Array.from({ length: MAX_PENALTY_ROUNDS }).map((_, i) => (
-            <div key={`op-${i}`} className={`size-3 rounded-full border-2 ${i < penaltyOpponentScore ? 'bg-[#FF4B4B] border-[#FF4B4B]' : 'bg-transparent border-white/20'}`} />
+            <div key={`op-${i}`} className={`size-3 rounded-full border-2 ${i < penaltyOpponentScore ? 'bg-brand-red-soft border-brand-red-soft' : 'bg-transparent border-white/20'}`} />
           ))}
         </div>
       </div>

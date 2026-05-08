@@ -18,7 +18,7 @@ function easeOutCubic(t: number): number {
 export function AnimatedPointsCounter({
   value,
   align = 'left',
-  accentClassName = 'text-[#58CC02]',
+  accentClassName = 'text-brand-green-light',
   label = 'PTS',
 }: AnimatedPointsCounterProps) {
   const [displayValue, setDisplayValue] = useState(value);

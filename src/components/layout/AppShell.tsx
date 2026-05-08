@@ -237,7 +237,7 @@ export function AppShell({ children }: AppShellProps) {
     <div className="relative min-h-screen text-foreground">
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 bg-[#0f1420] bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
+        className="pointer-events-none fixed inset-0 bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
       />
       <div
         aria-hidden="true"
@@ -293,7 +293,7 @@ export function AppShell({ children }: AppShellProps) {
                 {/* Coins */}
                 <Link
                   href="/store"
-                  className="flex items-center gap-1 pl-1.5 pr-3.5 py-1 rounded-full bg-[#FFE500] hover:bg-[#FFD000] transition-all active:scale-95"
+                  className="flex items-center gap-1 pl-1.5 pr-3.5 py-1 rounded-full bg-brand-yellow hover:bg-[#FFD000] transition-all active:scale-95"
                 >
                   <Image
                     src="/assets/coin-1.png"
@@ -310,7 +310,7 @@ export function AppShell({ children }: AppShellProps) {
                 {/* Tickets */}
                 <Link
                   href="/store"
-                  className="flex items-center gap-1.5 pl-2 pr-3.5 py-1 rounded-full bg-[#58CC02] hover:bg-[#4CAF00] transition-all active:scale-95"
+                  className="flex items-center gap-1.5 pl-2 pr-3.5 py-1 rounded-full bg-brand-green-light hover:bg-brand-green-light transition-all active:scale-95"
                 >
                   <Image
                     src="/assets/ticket-1.png"
@@ -334,7 +334,7 @@ export function AppShell({ children }: AppShellProps) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center gap-3 rounded-full px-1 py-1 hover:bg-white/5 transition-colors focus:outline-none">
-                    <div className="rounded-full bg-[#1645FF] p-1.5">
+                    <div className="rounded-full bg-brand-blue p-1.5">
                       <AvatarDisplay
                         customization={playerStats.avatarCustomization || { base: playerStats.avatar }}
                         size="sm"
@@ -345,7 +345,7 @@ export function AppShell({ children }: AppShellProps) {
                       <div className="text-sm font-black uppercase tracking-wide text-white">
                         {playerStats.username}
                       </div>
-                      <div className="mt-0.5 inline-flex items-center rounded-full bg-[#FFE500] px-2.5 py-0.5 text-xs font-black text-black">
+                      <div className="mt-0.5 inline-flex items-center rounded-full bg-brand-yellow px-2.5 py-0.5 text-xs font-black text-black">
                         {playerStats.rankPoints ?? 0}RP
                       </div>
                     </div>
@@ -503,7 +503,7 @@ export function AppShell({ children }: AppShellProps) {
                       <div className="text-sm font-black uppercase tracking-[0.03em] text-white">
                         {playerStats.username}
                       </div>
-                      <div className="mt-1 inline-flex items-center rounded-full bg-[#FFE500] px-2.5 py-0.5 text-[11px] font-black uppercase leading-none text-black">
+                      <div className="mt-1 inline-flex items-center rounded-full bg-brand-yellow px-2.5 py-0.5 text-[11px] font-black uppercase leading-none text-black">
                         {playerStats.rankPoints ?? 0} RP
                       </div>
                     </div>
@@ -514,7 +514,7 @@ export function AppShell({ children }: AppShellProps) {
                   {/* Coins */}
                   <Link
                     href="/store"
-                    className="flex h-8 min-w-[72px] items-center gap-1.5 rounded-full bg-[#FFE500] pl-1 pr-3 transition-colors hover:bg-[#FFD000] active:scale-95"
+                    className="flex h-8 min-w-[72px] items-center gap-1.5 rounded-full bg-brand-yellow pl-1 pr-3 transition-colors hover:bg-[#FFD000] active:scale-95"
                   >
                     <span className="flex size-6 shrink-0 items-center justify-center">
                       <img src="/assets/coin-1.png" alt="Coins" className="size-6 object-contain" />
@@ -527,7 +527,7 @@ export function AppShell({ children }: AppShellProps) {
                   {/* Tickets */}
                   <Link
                     href="/store"
-                    className="flex h-8 min-w-[72px] items-center gap-1.5 rounded-full bg-[#58CC02] pl-1 pr-3 transition-colors hover:bg-[#4CAF00] active:scale-95"
+                    className="flex h-8 min-w-[72px] items-center gap-1.5 rounded-full bg-brand-green-light pl-1 pr-3 transition-colors hover:bg-brand-green-light active:scale-95"
                   >
                     <span className="flex size-6 shrink-0 items-center justify-center">
                       <img src="/assets/ticket-1.png" alt="Tickets" className="size-5 object-contain" />

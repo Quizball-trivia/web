@@ -33,7 +33,7 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
         className="overflow-hidden rounded-[10px] border-2"
         style={{ borderColor: "#38B60E" }}
       >
-        <div className="divide-y divide-[#38B60E]/25">
+        <div className="divide-y divide-brand-green/25">
           {entries.map((entry) => {
             const isCurrentUser = entry.isCurrentUser || entry.id === currentUserId;
             const isTopThree = entry.rank <= 3;
@@ -58,7 +58,7 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
                 tabIndex={interactive ? 0 : undefined}
                 className={cn(
                   "grid grid-cols-12 gap-2 sm:gap-4 items-center px-3 sm:px-4 py-3 sm:py-3.5 transition-colors",
-                  isCurrentUser ? "bg-[#38B60E]" : "hover:bg-white/[0.03]",
+                  isCurrentUser ? "bg-brand-green" : "hover:bg-white/[0.03]",
                   interactive && "cursor-pointer",
                 )}
               >
@@ -74,7 +74,7 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
                     <TrendingUp
                       className={cn(
                         "size-3 shrink-0",
-                        isCurrentUser ? "text-white" : "text-[#58CC02]",
+                        isCurrentUser ? "text-white" : "text-brand-green-light",
                       )}
                     />
                   )}
@@ -82,7 +82,7 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
                     <TrendingDown
                       className={cn(
                         "size-3 shrink-0",
-                        isCurrentUser ? "text-white" : "text-[#FF4B4B]",
+                        isCurrentUser ? "text-white" : "text-brand-red-soft",
                       )}
                     />
                   )}
@@ -114,7 +114,7 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
                       />
                     </div>
                     {isTopThree && (
-                      <div className="absolute -top-1 -left-1 flex size-4 sm:size-5 items-center justify-center rounded-full bg-[#FFE500] shadow ring-2 ring-[#071013]">
+                      <div className="absolute -top-1 -left-1 flex size-4 sm:size-5 items-center justify-center rounded-full bg-brand-yellow shadow ring-2 ring-surface-page">
                         <Trophy
                           className="size-2.5 sm:size-3 text-black"
                           strokeWidth={2.5}

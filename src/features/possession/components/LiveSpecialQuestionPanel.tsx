@@ -69,11 +69,11 @@ function QuestionKindBadge({ kind }: { kind: LiveSpecialQuestion['kind'] }) {
   };
   return (
     <div
-      className="inline-flex items-center justify-center rounded-[18px] bg-[#FFE500] px-4 py-1.5"
+      className="inline-flex items-center justify-center rounded-[18px] bg-brand-yellow px-4 py-1.5"
       style={{ transform: 'rotate(-3.64deg)', transformOrigin: 'center' }}
     >
       <span
-        className="text-[#071013] uppercase whitespace-nowrap"
+        className="text-surface-page uppercase whitespace-nowrap"
         style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 14 }}
       >
         {labels[kind]}
@@ -167,7 +167,7 @@ function CountdownPanel({
       {/* Prompt — plain text, no card chrome */}
       <div className="px-1 pt-1">
         {question.categoryName && (
-          <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-[#1CB0F6]">
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-brand-cyan">
             ⚽ {question.categoryName}
           </span>
         )}
@@ -191,19 +191,19 @@ function CountdownPanel({
               }}
               placeholder="Start typing to find answers..."
               disabled={inputLocked}
-              className="h-11 rounded-[8px] border border-white/10 bg-white/[0.04] text-base text-white placeholder:text-white/30 focus:border-[#1CB0F6] focus:bg-white/[0.06]"
+              className="h-11 rounded-[8px] border border-white/10 bg-white/[0.04] text-base text-white placeholder:text-white/30 focus:border-brand-cyan focus:bg-white/[0.06]"
             />
             <button
               type="button"
               onClick={submitGuess}
               disabled={inputLocked || !guess.trim()}
-              className="inline-flex items-center justify-center rounded-[8px] bg-[#FF9600] px-4 text-white transition-transform active:translate-y-[2px] disabled:opacity-40"
+              className="inline-flex items-center justify-center rounded-[8px] bg-brand-orange px-4 text-white transition-transform active:translate-y-[2px] disabled:opacity-40"
             >
               <Send className="size-4" />
             </button>
           </div>
           <p className="mt-1.5 flex items-center gap-1 text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white/40">
-            <Lightbulb className="size-3 text-[#FF9600]" />
+            <Lightbulb className="size-3 text-brand-orange" />
             Auto-matches as you type · Enter for short answers
           </p>
         </div>
@@ -217,11 +217,11 @@ function CountdownPanel({
           </h3>
           <div className="flex items-center gap-2 text-[10px] font-fun font-black uppercase tracking-[0.18em]">
             {roundResolved && opponentRound && typeof opponentRound.foundCount === 'number' && (
-              <span className="text-[#FF4B4B]">
+              <span className="text-brand-red-soft">
                 Opp {opponentRound.foundCount}/{question.answerSlotCount}
               </span>
             )}
-            <span className="text-[#1CB0F6]">
+            <span className="text-brand-cyan">
               {roundResolved ? 'You ' : ''}{foundAnswers.length}/{question.answerSlotCount}
             </span>
           </div>
@@ -239,7 +239,7 @@ function CountdownPanel({
                 animate={{ opacity: 1, scale: 1 }}
                 className={`rounded-[8px] px-3 py-2 text-sm font-fun font-black ${
                   foundAnswers.includes(answer)
-                    ? 'bg-[#38B60E]/15 text-[#7BDA1A]'
+                    ? 'bg-brand-green/15 text-[#7BDA1A]'
                     : 'bg-white/[0.04] text-white/65'
                 }`}
               >
@@ -279,8 +279,8 @@ function SortableItem({
           !isRevealed
             ? 'cursor-grab bg-white/[0.04] hover:bg-white/[0.07] active:cursor-grabbing'
             : isCorrect
-              ? 'bg-[#38B60E]/12'
-              : 'bg-[#FF4B4B]/12'
+              ? 'bg-brand-green/12'
+              : 'bg-brand-red-soft/12'
         } ${isDragging ? 'scale-[1.02] shadow-xl' : ''}`}
       >
         {!isRevealed && (
@@ -292,9 +292,9 @@ function SortableItem({
         <div
           className={`flex size-8 shrink-0 items-center justify-center rounded-[6px] text-sm font-black ${
             isRevealed && isCorrect
-              ? 'bg-[#38B60E] text-white'
+              ? 'bg-brand-green text-white'
               : isRevealed
-                ? 'bg-[#FF4B4B] text-white'
+                ? 'bg-brand-red-soft text-white'
                 : 'bg-white/10 text-white'
           }`}
         >
@@ -323,9 +323,9 @@ function SortableItem({
               </span>
             )}
             {isCorrect ? (
-              <CheckCircle2 className="size-5 text-[#38B60E]" />
+              <CheckCircle2 className="size-5 text-brand-green" />
             ) : (
-              <XCircle className="size-5 text-[#FF4B4B]" />
+              <XCircle className="size-5 text-brand-red-soft" />
             )}
           </div>
         ) : (
@@ -430,7 +430,7 @@ function PutInOrderPanel({
       {/* Prompt — plain text */}
       <div className="px-1">
         {question.categoryName && (
-          <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-[#1CB0F6]">
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-brand-cyan">
             ⚽ {question.categoryName}
           </span>
         )}
@@ -439,9 +439,9 @@ function PutInOrderPanel({
 
       {/* Instruction — single inline line, no card */}
       <div className="flex items-center gap-2 px-1 text-[11px] font-fun font-black uppercase tracking-[0.18em] text-white/55">
-        <ArrowUpDown className="size-3.5 text-[#1CB0F6]" />
+        <ArrowUpDown className="size-3.5 text-brand-cyan" />
         <span>
-          Drag to arrange from <span className="text-[#1CB0F6]">{question.instruction}</span>
+          Drag to arrange from <span className="text-brand-cyan">{question.instruction}</span>
         </span>
       </div>
 
@@ -470,25 +470,25 @@ function PutInOrderPanel({
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           className={`rounded-[10px] p-4 text-center ${
-            answerAck?.isCorrect ? 'bg-[#38B60E]/15' : 'bg-[#FF4B4B]/15'
+            answerAck?.isCorrect ? 'bg-brand-green/15' : 'bg-brand-red-soft/15'
           }`}
         >
           {answerAck?.isCorrect ? (
             <>
-              <CheckCircle2 className="mx-auto mb-1.5 size-7 text-[#38B60E]" />
-              <p className="text-sm font-fun font-black uppercase tracking-wide text-[#38B60E]">Perfect order!</p>
+              <CheckCircle2 className="mx-auto mb-1.5 size-7 text-brand-green" />
+              <p className="text-sm font-fun font-black uppercase tracking-wide text-brand-green">Perfect order!</p>
             </>
           ) : (
             <>
-              <XCircle className="mx-auto mb-1.5 size-7 text-[#FF4B4B]" />
-              <p className="text-sm font-fun font-black uppercase tracking-wide text-[#FF4B4B]">Not quite — correct order revealed above</p>
+              <XCircle className="mx-auto mb-1.5 size-7 text-brand-red-soft" />
+              <p className="text-sm font-fun font-black uppercase tracking-wide text-brand-red-soft">Not quite — correct order revealed above</p>
             </>
           )}
           {opponentRound && (
             <p className="mt-2 text-[10px] font-fun font-black uppercase tracking-[0.22em] text-white/55">
               {opponentRound.isCorrect
-                ? <>Opponent: <span className="text-[#38B60E]">Correct</span></>
-                : <>Opponent: <span className="text-[#FF4B4B]">Wrong</span></>}
+                ? <>Opponent: <span className="text-brand-green">Correct</span></>
+                : <>Opponent: <span className="text-brand-red-soft">Wrong</span></>}
             </p>
           )}
         </motion.div>
@@ -497,7 +497,7 @@ function PutInOrderPanel({
           type="button"
           onClick={handleSubmit}
           disabled={inputLocked}
-          className="w-full rounded-[10px] bg-[#38B60E] py-3 text-sm font-fun font-black uppercase tracking-wide text-white transition-transform hover:bg-[#2D950B] active:translate-y-[2px] disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full rounded-[10px] bg-brand-green py-3 text-sm font-fun font-black uppercase tracking-wide text-white transition-transform hover:bg-brand-green-deep active:translate-y-[2px] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {submitted ? 'Submitted' : 'Submit Order'}
         </button>
@@ -604,7 +604,7 @@ function CluesPanel({
       {/* Prompt — plain text */}
       <div className="px-1">
         {question.categoryName && (
-          <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-[#FF9600]">
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-brand-orange">
             <Lightbulb className="size-3" />
             {question.categoryName}
           </span>
@@ -614,7 +614,7 @@ function CluesPanel({
 
       {!roundResolved && (
         <div className="flex items-center justify-center gap-1.5 text-[11px] font-fun font-black uppercase tracking-[0.18em] text-white/55">
-          <Star className="size-3.5 text-[#FFD700]" />
+          <Star className="size-3.5 text-brand-gold" />
           <span>
             Answer now <span className="text-white">{currentPoints} pts</span>
           </span>
@@ -648,7 +648,7 @@ function CluesPanel({
             <div
               key={index}
               className={`h-2 w-10 rounded-full transition-colors duration-300 ${
-                index < revealedClues ? 'bg-[#FF9600]' : 'bg-white/10'
+                index < revealedClues ? 'bg-brand-orange' : 'bg-white/10'
               }`}
             />
           ))}
@@ -669,14 +669,14 @@ function CluesPanel({
             }}
             disabled={inputLocked}
             autoFocus
-            className="h-11 rounded-[8px] border border-white/10 bg-white/[0.04] text-center text-base text-white placeholder:text-white/30 focus:border-[#FF9600] focus:bg-white/[0.06]"
+            className="h-11 rounded-[8px] border border-white/10 bg-white/[0.04] text-center text-base text-white placeholder:text-white/30 focus:border-brand-orange focus:bg-white/[0.06]"
           />
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={() => emitGuess()}
               disabled={!guess.trim() || inputLocked}
-              className="rounded-[8px] bg-[#38B60E] py-3 text-sm font-fun font-black uppercase tracking-wide text-white transition-transform hover:bg-[#2D950B] active:translate-y-[2px] disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-[8px] bg-brand-green py-3 text-sm font-fun font-black uppercase tracking-wide text-white transition-transform hover:bg-brand-green-deep active:translate-y-[2px] disabled:cursor-not-allowed disabled:opacity-40"
             >
               Submit
             </button>
@@ -695,20 +695,20 @@ function CluesPanel({
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           className={`rounded-[10px] p-4 text-center ${
-            answerAck?.isCorrect ? 'bg-[#38B60E]/15' : 'bg-[#FF4B4B]/15'
+            answerAck?.isCorrect ? 'bg-brand-green/15' : 'bg-brand-red-soft/15'
           }`}
         >
           {answerAck?.isCorrect ? (
             <>
-              <CheckCircle2 className="mx-auto mb-2 size-7 text-[#38B60E]" />
-              <p className="text-sm font-fun font-black uppercase tracking-wide text-[#38B60E]">
+              <CheckCircle2 className="mx-auto mb-2 size-7 text-brand-green" />
+              <p className="text-sm font-fun font-black uppercase tracking-wide text-brand-green">
                 Correct! +{answerAck.pointsEarned} pts
               </p>
             </>
           ) : (
             <>
-              <XCircle className="mx-auto mb-2 size-7 text-[#FF4B4B]" />
-              <p className="mb-1 text-xs font-fun font-black uppercase tracking-[0.18em] text-[#FF4B4B]">
+              <XCircle className="mx-auto mb-2 size-7 text-brand-red-soft" />
+              <p className="mb-1 text-xs font-fun font-black uppercase tracking-[0.18em] text-brand-red-soft">
                 The answer was
               </p>
               <p className="text-xl font-fun font-black uppercase tracking-wide text-white">{displayAnswer}</p>
@@ -717,8 +717,8 @@ function CluesPanel({
           {opponentRound && (
             <p className="mt-2 text-[10px] font-fun font-black uppercase tracking-[0.22em] text-white/55">
               {opponentRound.isCorrect && typeof opponentRound.clueIndex === 'number'
-                ? <>Opponent: <span className="text-[#38B60E]">Got it on clue {opponentRound.clueIndex + 1}</span></>
-                : <>Opponent: <span className="text-[#FF4B4B]">Didn&apos;t get it</span></>}
+                ? <>Opponent: <span className="text-brand-green">Got it on clue {opponentRound.clueIndex + 1}</span></>
+                : <>Opponent: <span className="text-brand-red-soft">Didn&apos;t get it</span></>}
             </p>
           )}
         </motion.div>

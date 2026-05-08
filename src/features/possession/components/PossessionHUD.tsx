@@ -79,7 +79,7 @@ export function PossessionHUD({
       <div className="mt-2 flex items-center justify-center gap-3 sm:gap-4">
         {/* Player (left) */}
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="rounded-full bg-[#1645FF] p-2 sm:p-2.5">
+          <div className="rounded-full bg-brand-blue p-2 sm:p-2.5">
             <AvatarDisplay customization={playerAvatarCustomization ?? {}} size="sm" />
           </div>
           <AnimatedPointsCounter value={playerPoints} accentClassName="text-white/50" />
@@ -89,7 +89,7 @@ export function PossessionHUD({
         <div className="relative inline-flex h-[40px] items-center sm:h-[51px]">
           {/* Left score (player goals) — outline */}
           <div
-            className="flex h-full items-center justify-center rounded-l-[20px] border-2 border-r-0 border-[#1645FF] px-3 text-white sm:px-4"
+            className="flex h-full items-center justify-center rounded-l-[20px] border-2 border-r-0 border-brand-blue px-3 text-white sm:px-4"
             style={{ ...poppins, fontSize: 'clamp(14px, 1.4vw, 20px)', minWidth: 44 }}
           >
             <motion.span
@@ -103,14 +103,14 @@ export function PossessionHUD({
           </div>
           {/* Center timer */}
           <div
-            className="flex h-full items-center justify-center bg-[#1645FF] px-4 text-white tabular-nums"
+            className="flex h-full items-center justify-center bg-brand-blue px-4 text-white tabular-nums"
             style={{ ...poppins, fontSize: 'clamp(14px, 1.4vw, 20px)', minWidth: 64 }}
           >
             {timerLabel}
           </div>
           {/* Right score (opponent goals) — outline */}
           <div
-            className="flex h-full items-center justify-center rounded-r-[20px] border-2 border-l-0 border-[#1645FF] px-3 text-white sm:px-4"
+            className="flex h-full items-center justify-center rounded-r-[20px] border-2 border-l-0 border-brand-blue px-3 text-white sm:px-4"
             style={{ ...poppins, fontSize: 'clamp(14px, 1.4vw, 20px)', minWidth: 44 }}
           >
             <motion.span
@@ -127,7 +127,7 @@ export function PossessionHUD({
         {/* Opponent (right) */}
         <div className="flex items-center gap-2 sm:gap-3">
           <AnimatedPointsCounter value={opponentPoints} align="right" accentClassName="text-white/50" />
-          <div className="rounded-full bg-[#FF4B4B] p-2 sm:p-2.5">
+          <div className="rounded-full bg-brand-red-soft p-2 sm:p-2.5">
             <AvatarDisplay customization={opponentAvatarCustomization ?? {}} size="sm" className="-scale-x-100" />
           </div>
         </div>

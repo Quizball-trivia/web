@@ -189,7 +189,7 @@ export function HalftimeScreen({
                 />
               </div>
             </div>
-            <div className="absolute inset-0 bg-[#0f1420]/80" />
+            <div className="absolute inset-0 bg-surface-page-alt/80" />
             <div
               className="absolute inset-0"
               style={{ background: 'radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.6) 100%)' }}
@@ -207,7 +207,7 @@ export function HalftimeScreen({
               className="mb-4 sm:mb-5"
             >
               <span
-                className="text-xs sm:text-sm font-black uppercase tracking-[0.35em] text-[#FF9600]"
+                className="text-xs sm:text-sm font-black uppercase tracking-[0.35em] text-brand-orange"
                 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, letterSpacing: '0.35em' }}
               >
                 Half Time
@@ -229,7 +229,7 @@ export function HalftimeScreen({
                     customization={playerAvatarCustomization ?? { base: playerAvatarUrl }}
                     size="sm"
                     countryCode={playerCountryCode}
-                    className="ring-[3px] ring-[#1CB0F6]"
+                    className="ring-[3px] ring-brand-cyan"
                   />
                   <span className="text-xs font-black text-white truncate max-w-[120px]">
                     {playerName}
@@ -253,7 +253,7 @@ export function HalftimeScreen({
                     customization={opponentAvatarCustomization ?? { base: opponentAvatarUrl }}
                     size="sm"
                     countryCode={opponentCountryCode}
-                    className="ring-[3px] ring-[#FF4B4B]"
+                    className="ring-[3px] ring-brand-red-soft"
                   />
                   <span className="text-xs font-black text-white truncate max-w-[120px]">
                     {opponentName}
@@ -279,7 +279,7 @@ export function HalftimeScreen({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.1 }}
-                    className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] text-[#56707A] mb-3 sm:mb-4"
+                    className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] text-brand-slate mb-3 sm:mb-4"
                   >
                     Ban 1 Category Each
                   </motion.div>

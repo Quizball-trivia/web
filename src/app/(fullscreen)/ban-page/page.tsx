@@ -95,7 +95,7 @@ export default function BanPagePreview() {
             type="button"
             onClick={() => setPhaseMode('first')}
             className={`rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] transition ${
-              phaseMode === 'first' ? 'bg-[#1CB0F6] text-white' : 'text-white/60 hover:text-white'
+              phaseMode === 'first' ? 'bg-brand-cyan text-white' : 'text-white/60 hover:text-white'
             }`}
             style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
           >
@@ -105,7 +105,7 @@ export default function BanPagePreview() {
             type="button"
             onClick={() => setPhaseMode('second')}
             className={`rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] transition ${
-              phaseMode === 'second' ? 'bg-[#FF9600] text-white' : 'text-white/60 hover:text-white'
+              phaseMode === 'second' ? 'bg-brand-orange text-white' : 'text-white/60 hover:text-white'
             }`}
             style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
           >

@@ -58,14 +58,14 @@ export function ShotHUD({
           <div className="min-w-0">
             <div className="truncate text-xs font-bold text-white/85">{playerName}</div>
             <div className="text-3xl font-black leading-7 tabular-nums text-white">{playerGoals}</div>
-            <AnimatedPointsCounter value={playerPoints} accentClassName="text-[#FFE500]" />
+            <AnimatedPointsCounter value={playerPoints} accentClassName="text-brand-yellow" />
           </div>
         </div>
         <div className="flex min-w-[100px] shrink-0 flex-col items-center justify-center">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="mb-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#FF9600]"
+            className="mb-1 text-[10px] font-black uppercase tracking-[0.18em] text-brand-orange"
           >
             Shot on Goal
           </motion.div>
@@ -80,7 +80,7 @@ export function ShotHUD({
           >
             {phase === 'shot' ? timeRemaining : '\u2014'}
           </motion.div>
-          <div className="-mt-0.5 text-[10px] font-black tracking-[0.18em] text-[#FF9600]/70">
+          <div className="-mt-0.5 text-[10px] font-black tracking-[0.18em] text-brand-orange/70">
             {isPlayerAttacker ? 'YOU SHOOT' : 'YOU SAVE'}
           </div>
         </div>
@@ -91,7 +91,7 @@ export function ShotHUD({
             <AnimatedPointsCounter
               value={opponentPoints}
               align="right"
-              accentClassName="text-[#FF4B4B]"
+              accentClassName="text-brand-red-soft"
             />
           </div>
           <AvatarDisplay customization={opponentAvatarCustomization ?? {}} size="sm" className="size-11 shrink-0" />

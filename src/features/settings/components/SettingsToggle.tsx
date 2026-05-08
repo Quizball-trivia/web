@@ -45,8 +45,8 @@ export function SettingsToggle({
             className={cn(
               "flex size-9 shrink-0 items-center justify-center rounded-xl border-b-2 transition-colors",
               checked
-                ? "border-[#0F8AC4] bg-[#1CB0F6] text-white"
-                : "border-[#0D1B21] bg-[#243B44] text-white/60",
+                ? "border-brand-cyan-deep bg-brand-cyan text-white"
+                : "border-surface-card-deep bg-surface-card-tint text-white/60",
             )}
           >
             {icon}
@@ -65,7 +65,7 @@ export function SettingsToggle({
         checked={checked}
         onCheckedChange={handleChange}
         disabled={disabled}
-        className="data-[state=checked]:bg-[#38B60E]"
+        className="data-[state=checked]:bg-brand-green"
       />
     </div>
   );

@@ -28,7 +28,7 @@ export function UserRankStrip({ userEntry }: UserRankStripProps) {
           countryCode={userEntry.country}
           size="md"
         />
-        <div className="absolute -top-1 -left-1 flex size-5 items-center justify-center rounded-full bg-[#FFE500] shadow-sm ring-2 ring-black">
+        <div className="absolute -top-1 -left-1 flex size-5 items-center justify-center rounded-full bg-brand-yellow shadow-sm ring-2 ring-black">
           <Trophy className="size-3 text-black" strokeWidth={2.5} />
         </div>
       </div>

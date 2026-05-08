@@ -7,15 +7,15 @@ import { formatMatchScore } from '@/utils/matchScore';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 
 const rowBorder = (result: string) => {
-  if (result === 'win') return 'border-[#38B60E]';
-  if (result === 'loss') return 'border-[#E04B3A]';
-  return 'border-[#3A4F56]';
+  if (result === 'win') return 'border-brand-green';
+  if (result === 'loss') return 'border-brand-red-deep';
+  return 'border-brand-slate-deep';
 };
 
 const rpPillTone = (result: string) => {
-  if (result === 'win') return 'bg-[#348A1A] text-white';
+  if (result === 'win') return 'bg-brand-green-deep text-white';
   if (result === 'loss') return 'bg-[#B8401D] text-white';
-  return 'bg-[#3A4F56] text-white';
+  return 'bg-brand-slate-deep text-white';
 };
 
 interface HomeRecentMatchesProps {
@@ -73,7 +73,7 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
         <button
           type="button"
           onClick={() => router.push('/profile')}
-          className="font-poppins flex items-center justify-center w-[120px] h-[40px] rounded-xl border-2 border-[#58CC02] text-xs text-white uppercase tracking-wide hover:bg-[#58CC02]/10 transition-colors"
+          className="font-poppins flex items-center justify-center w-[120px] h-[40px] rounded-xl border-2 border-brand-green-light text-xs text-white uppercase tracking-wide hover:bg-brand-green-light/10 transition-colors"
         >
           View All
         </button>
@@ -82,7 +82,7 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
       {/* Match rows */}
       <div className="space-y-2.5">
         {isLoading && (
-          <div className="p-4 rounded-2xl bg-[#1B2F36] text-sm font-bold text-[#56707A]">
+          <div className="p-4 rounded-2xl bg-surface-card text-sm font-bold text-brand-slate">
             Loading recent matches...
           </div>
         )}
@@ -90,13 +90,13 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
           <div
             role="alert"
             aria-live="polite"
-            className="p-4 rounded-2xl bg-[#FF4B4B]/10 text-sm font-bold text-[#FF4B4B]"
+            className="p-4 rounded-2xl bg-brand-red-soft/10 text-sm font-bold text-brand-red-soft"
           >
             Failed to load recent matches. Please try again later.
           </div>
         )}
         {!isLoading && !error && matches.length === 0 && (
-          <div className="p-4 rounded-2xl bg-[#1B2F36] text-sm font-bold text-[#56707A]">
+          <div className="p-4 rounded-2xl bg-surface-card text-sm font-bold text-brand-slate">
             No recent matches yet.
           </div>
         )}
@@ -142,7 +142,7 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
                 {match.scoreBadge && (
                   <span className={`rounded-[8px] px-2 py-1 font-poppins text-[9px] md:text-[10px] font-semibold uppercase ${
                     match.scoreBadgeVariant === 'red'
-                      ? 'bg-[#4D1C1B] text-[#FF8B7D]'
+                      ? 'bg-[#4D1C1B] text-brand-red-light'
                       : 'bg-white/10 text-white/70'
                   }`}>
                     {match.scoreBadge}
@@ -158,7 +158,7 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
           <button
             type="button"
             onClick={() => setIsExpanded((prev) => !prev)}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-[#1B2F36] hover:bg-[#243B44] transition-all text-sm font-bold text-[#56707A] hover:text-white"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-surface-card hover:bg-surface-card-tint transition-all text-sm font-bold text-brand-slate hover:text-white"
           >
             {isExpanded ? (
               <>

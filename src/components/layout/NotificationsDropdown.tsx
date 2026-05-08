@@ -25,17 +25,17 @@ function getRankedDisplay(player: SocialPlayer) {
   const ranked = player.ranked;
 
   if (!ranked) {
-    return { level, tierLabel: "Unranked", rpLabel: "0 RP", highlightClass: "text-[#56707A]" };
+    return { level, tierLabel: "Unranked", rpLabel: "0 RP", highlightClass: "text-brand-slate" };
   }
   if (ranked.placementStatus !== "placed") {
     return {
       level,
       tierLabel: `Placement ${ranked.placementPlayed}/${ranked.placementRequired}`,
       rpLabel: "0 RP",
-      highlightClass: "text-[#58CC02]",
+      highlightClass: "text-brand-green-light",
     };
   }
-  return { level, tierLabel: ranked.tier, rpLabel: `${ranked.rp} RP`, highlightClass: "text-[#CE82FF]" };
+  return { level, tierLabel: ranked.tier, rpLabel: `${ranked.rp} RP`, highlightClass: "text-brand-purple" };
 }
 
 function RequestRow({
@@ -59,10 +59,10 @@ function RequestRow({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -12 }}
       transition={{ duration: 0.2, delay: index * 0.04, ease: "easeOut" }}
-      className="flex items-center gap-2.5 rounded-xl border-b-[3px] border-[#0D1B21] bg-[#1B2F36] px-3 py-2.5"
+      className="flex items-center gap-2.5 rounded-xl border-b-[3px] border-surface-card-deep bg-surface-card px-3 py-2.5"
     >
       {/* Avatar */}
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border-2 border-[#1CB0F6]/20 bg-[#243B44]">
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border-2 border-brand-cyan/20 bg-surface-card-tint">
         <AvatarDisplay
           customization={item.user.avatarCustomization ?? { base: item.user.avatarUrl ?? undefined }}
           size="xs"
@@ -75,13 +75,13 @@ function RequestRow({
           {item.user.nickname ?? "Unknown"}
         </p>
         <div className="mt-0.5 flex items-center gap-1.5">
-          <span className="text-[10px] font-bold text-[#56707A]">Lvl {ranked.level}</span>
-          <span className="text-[10px] text-[#56707A]">&middot;</span>
+          <span className="text-[10px] font-bold text-brand-slate">Lvl {ranked.level}</span>
+          <span className="text-[10px] text-brand-slate">&middot;</span>
           <span className={`text-[10px] font-bold ${ranked.highlightClass}`}>
             {ranked.tierLabel}
           </span>
-          <span className="text-[10px] text-[#56707A]">&middot;</span>
-          <span className="text-[10px] font-bold text-[#FFD700]">{ranked.rpLabel}</span>
+          <span className="text-[10px] text-brand-slate">&middot;</span>
+          <span className="text-[10px] font-bold text-brand-gold">{ranked.rpLabel}</span>
         </div>
       </div>
 
@@ -91,7 +91,7 @@ function RequestRow({
           type="button"
           onClick={() => onAccept(item.requestId)}
           disabled={pendingAction !== null}
-          className="flex size-8 items-center justify-center rounded-lg border border-[#58CC02]/25 bg-[#58CC02]/15 text-[#58CC02] transition-colors hover:bg-[#58CC02]/25 disabled:opacity-50"
+          className="flex size-8 items-center justify-center rounded-lg border border-brand-green-light/25 bg-brand-green-light/15 text-brand-green-light transition-colors hover:bg-brand-green-light/25 disabled:opacity-50"
           aria-label={`Accept request from ${item.user.nickname}`}
         >
           {pendingAction === "accept" ? (
@@ -104,7 +104,7 @@ function RequestRow({
           type="button"
           onClick={() => onDecline(item.requestId)}
           disabled={pendingAction !== null}
-          className="flex size-8 items-center justify-center rounded-lg border border-[#FF4B4B]/20 bg-[#FF4B4B]/10 text-[#FF8E8E] transition-colors hover:bg-[#FF4B4B]/20 disabled:opacity-50"
+          className="flex size-8 items-center justify-center rounded-lg border border-brand-red-soft/20 bg-brand-red-soft/10 text-brand-red-light transition-colors hover:bg-brand-red-soft/20 disabled:opacity-50"
           aria-label={`Decline request from ${item.user.nickname}`}
         >
           {pendingAction === "decline" ? (
@@ -199,15 +199,15 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
       <PopoverContent
         align="end"
         sideOffset={8}
-        className="w-[340px] overflow-hidden rounded-2xl border border-[#243B44] bg-[#131F24] p-0 shadow-xl shadow-black/40"
+        className="w-[340px] overflow-hidden rounded-2xl border border-surface-card-tint bg-surface-deep p-0 shadow-xl shadow-black/40"
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#243B44] px-4 py-3">
-          <h3 className="text-xs font-black uppercase tracking-[0.18em] text-[#8CB7C7]">
+        <div className="flex items-center justify-between border-b border-surface-card-tint px-4 py-3">
+          <h3 className="text-xs font-black uppercase tracking-[0.18em] text-brand-slate-light">
             Notifications
           </h3>
           {incoming.length > 0 && (
-            <span className="rounded-full bg-[#FF8A3D]/15 px-2 py-0.5 text-[10px] font-black text-[#FFB37D]">
+            <span className="rounded-full bg-brand-orange-light/15 px-2 py-0.5 text-[10px] font-black text-[#FFB37D]">
               {incoming.length}
             </span>
           )}
@@ -217,10 +217,10 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
         <div className="max-h-[320px] overflow-y-auto overscroll-contain">
           {incoming.length === 0 ? (
             <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
-              <div className="flex size-10 items-center justify-center rounded-full bg-[#243B44]">
-                <Bell className="size-5 text-[#56707A]" />
+              <div className="flex size-10 items-center justify-center rounded-full bg-surface-card-tint">
+                <Bell className="size-5 text-brand-slate" />
               </div>
-              <p className="text-xs font-bold text-[#56707A]">No notifications</p>
+              <p className="text-xs font-bold text-brand-slate">No notifications</p>
             </div>
           ) : (
             <div className="flex flex-col gap-1.5 p-2">

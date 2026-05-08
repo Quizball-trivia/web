@@ -318,10 +318,10 @@ export function RealtimeResultsScreen({
   const opponentDisplayRp = opponentRankedOutcome?.newRp ?? null;
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0f1420] p-3 md:p-6">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-surface-page-alt p-3 md:p-6">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[#0f1420] bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
+        className="pointer-events-none absolute inset-0 bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
       />
       <div
         aria-hidden="true"
@@ -352,7 +352,7 @@ export function RealtimeResultsScreen({
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6">
             {/* Player (Left) */}
             <div className="flex items-center gap-3 justify-self-start sm:gap-4">
-              <div className="rounded-full bg-[#1645FF] p-1.5 sm:p-2">
+              <div className="rounded-full bg-brand-blue p-1.5 sm:p-2">
                 <AvatarDisplay
                   customization={playerAvatarCustomization ?? { base: playerAvatar }}
                   size="lg"
@@ -390,7 +390,7 @@ export function RealtimeResultsScreen({
             {/* Center score pill */}
             <div className="flex flex-col items-center">
               <div
-                className="flex h-[44px] min-w-[110px] items-center justify-center rounded-[20px] bg-[#1645FF] px-5 font-poppins font-semibold tabular-nums text-white text-2xl sm:h-[51px] sm:min-w-[133px] sm:px-6 sm:text-[36px]"
+                className="flex h-[44px] min-w-[110px] items-center justify-center rounded-[20px] bg-brand-blue px-5 font-poppins font-semibold tabular-nums text-white text-2xl sm:h-[51px] sm:min-w-[133px] sm:px-6 sm:text-[36px]"
               >
                 <AnimatedCounter from={0} to={playerScore} delay={0.25} />
                 <span className="mx-1 sm:mx-1.5">:</span>
@@ -406,7 +406,7 @@ export function RealtimeResultsScreen({
 
             {/* Opponent (Right) */}
             <div className="flex flex-row-reverse items-center gap-3 justify-self-end sm:gap-4">
-              <div className="rounded-full bg-[#FF4B4B] p-1.5 sm:p-2">
+              <div className="rounded-full bg-brand-red-soft p-1.5 sm:p-2">
                 <AvatarDisplay
                   customization={opponentAvatarCustomization ?? { base: opponentAvatar }}
                   size="lg"
@@ -459,7 +459,7 @@ export function RealtimeResultsScreen({
                     className="border-t border-white/10 pt-3 md:pt-4"
                   >
                       <div className="mb-2 flex items-center justify-between">
-                        <div className="text-xs font-black uppercase tracking-wide text-[#58CC02] md:text-sm">Placement Progress</div>
+                        <div className="text-xs font-black uppercase tracking-wide text-brand-green-light md:text-sm">Placement Progress</div>
                         <div className="text-xs font-black text-[#85E000] md:text-sm">{placementPlayed}/{placementRequired}</div>
                       </div>
                       <div className="relative mb-2 h-3 md:h-4 bg-white/10 rounded-full overflow-hidden">
@@ -467,7 +467,7 @@ export function RealtimeResultsScreen({
                         initial={{ width: `${(Math.max(0, placementPlayed - 1) / placementRequired) * 100}%` }}
                         animate={{ width: `${(placementPlayed / placementRequired) * 100}%` }}
                         transition={{ duration: 0.7, ease: 'easeOut' }}
-                        className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#58CC02] to-[#85E000]"
+                        className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-brand-green-light to-[#85E000]"
                       >
                         <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/25 to-transparent h-1/2" />
                       </motion.div>
@@ -544,7 +544,7 @@ export function RealtimeResultsScreen({
           <div className="grid grid-cols-2 gap-x-4 gap-y-6 md:grid-cols-4 md:gap-x-8 md:grid-rows-[auto_auto_auto_auto] md:items-start">
             {/* Accuracy — value row 1, label sits on bar row */}
             <div className="grid grid-rows-subgrid text-center md:row-span-4">
-              <div className="font-poppins font-semibold leading-none text-[#1645FF] text-[2rem] md:text-[36px]">
+              <div className="font-poppins font-semibold leading-none text-brand-blue text-[2rem] md:text-[36px]">
                 {accuracy}%
               </div>
               <div className="hidden md:block" />
@@ -559,7 +559,7 @@ export function RealtimeResultsScreen({
             {/* RP card */}
             {showRankedRpCard ? (
               <div className="grid grid-rows-subgrid text-center md:row-span-4">
-                <div className="font-poppins font-semibold leading-none text-[#38B60E] text-[2rem] md:text-[36px]">
+                <div className="font-poppins font-semibold leading-none text-brand-green text-[2rem] md:text-[36px]">
                   {newRP} RP
                 </div>
                 <div className="mt-2 font-poppins font-semibold uppercase text-white text-xs sm:text-sm md:mt-0 md:text-[20px] md:self-center">
@@ -577,7 +577,7 @@ export function RealtimeResultsScreen({
                       ? { duration: 0.8, ease: 'easeOut' }
                       : { duration: 1.2, ease: 'easeInOut', delay: 0.5 }
                     }
-                    className="absolute inset-y-0 left-0 rounded-[20px] bg-[#38B60E]"
+                    className="absolute inset-y-0 left-0 rounded-[20px] bg-brand-green"
                   />
                 </div>
                 <div
@@ -594,7 +594,7 @@ export function RealtimeResultsScreen({
             {/* XP / Level */}
             {showXpCard && preMatchProgression && projectedProgression ? (
               <div className="grid grid-rows-subgrid text-center md:row-span-4">
-                <div className="font-poppins font-semibold leading-none text-[#FFE500] text-[2rem] md:text-[36px]">
+                <div className="font-poppins font-semibold leading-none text-brand-yellow text-[2rem] md:text-[36px]">
                   Level {projectedProgression.level}
                 </div>
                 <div className="mt-2 font-poppins font-semibold uppercase text-white text-xs sm:text-sm md:mt-0 md:text-[20px] md:self-center">
@@ -605,7 +605,7 @@ export function RealtimeResultsScreen({
                     initial={{ width: `${xpBarInitialProgress}%` }}
                     animate={{ width: `${projectedProgression.progressPct}%` }}
                     transition={{ duration: 1.1, ease: 'easeOut', delay: 0.45 }}
-                    className="absolute inset-y-0 left-0 rounded-[20px] bg-[#FFE500]"
+                    className="absolute inset-y-0 left-0 rounded-[20px] bg-brand-yellow"
                   />
                 </div>
                 <div
@@ -619,7 +619,7 @@ export function RealtimeResultsScreen({
 
             {/* Correct Answers — value row 1, label sits on bar row */}
             <div className="grid grid-rows-subgrid text-center md:row-span-4">
-              <div className="font-poppins font-semibold leading-none text-[#1645FF] text-[2rem] md:text-[36px]">
+              <div className="font-poppins font-semibold leading-none text-brand-blue text-[2rem] md:text-[36px]">
                 {playerCorrect}/{totalQuestions}
               </div>
               <div className="hidden md:block" />
@@ -639,13 +639,13 @@ export function RealtimeResultsScreen({
         <div className="mx-auto flex w-full max-w-[498px] flex-col gap-3 pt-2 md:gap-4">
           <button
             onClick={onPlayAgain}
-            className="flex h-[64px] w-full items-center justify-center rounded-[20px] bg-[#38B60E] font-poppins font-semibold uppercase text-white text-[1.5rem] transition-colors hover:bg-[#43C417] md:h-[91px] md:text-[36px]"
+            className="flex h-[64px] w-full items-center justify-center rounded-[20px] bg-brand-green font-poppins font-semibold uppercase text-white text-[1.5rem] transition-colors hover:bg-brand-green md:h-[91px] md:text-[36px]"
           >
             Play Again
           </button>
           <button
             onClick={onMainMenu}
-            className="flex h-[64px] w-full items-center justify-center rounded-[20px] border-[3px] border-[#38B60E] bg-transparent font-poppins font-semibold uppercase text-white text-[1.5rem] transition-colors hover:bg-[#38B60E]/10 md:h-[91px] md:text-[36px]"
+            className="flex h-[64px] w-full items-center justify-center rounded-[20px] border-[3px] border-brand-green bg-transparent font-poppins font-semibold uppercase text-white text-[1.5rem] transition-colors hover:bg-brand-green/10 md:h-[91px] md:text-[36px]"
           >
             Main Menu
           </button>

@@ -45,7 +45,7 @@ export function PartyQuestionPanel({
   const isPlaying = phase === 'playing';
 
   return (
-    <div className="relative rounded-[28px] border border-white/10 bg-[#131F24]/88 p-4 shadow-[0_24px_60px_rgba(0,0,0,0.28)] backdrop-blur sm:p-5">
+    <div className="relative rounded-[28px] border border-white/10 bg-surface-deep/88 p-4 shadow-[0_24px_60px_rgba(0,0,0,0.28)] backdrop-blur sm:p-5">
       {/* Score splash — overlays entire panel */}
       <ArenaScoreSplash
         show={showPlayerSplash}

@@ -134,7 +134,7 @@ export function ShowdownScreen({
   const accentMatch = '#BA02E8';
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#071013] px-4">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-surface-page px-4">
       {/* Player vs Opponent */}
       <div className="relative z-10 grid w-full max-w-5xl grid-cols-[1fr_auto_1fr] items-start gap-4 sm:gap-8 md:gap-12">
         <div className="flex justify-center">

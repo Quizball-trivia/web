@@ -174,7 +174,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                      </div>
                   </div>
                </div>
-               <Button variant="ghost" size="sm" className="font-semibold text-[#38B60E] hover:text-[#43C417] hover:bg-[#38B60E]/10" disabled={isLanguageSaving}>
+               <Button variant="ghost" size="sm" className="font-semibold text-brand-green hover:text-brand-green hover:bg-brand-green/10" disabled={isLanguageSaving}>
                  {t("common.change")}
                </Button>
             </div>

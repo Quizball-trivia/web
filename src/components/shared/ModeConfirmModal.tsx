@@ -103,7 +103,7 @@ export function ModeConfirmModal({
         className="font-poppins mx-auto max-w-[80%] text-center uppercase text-white leading-[0.95]"
         style={{ fontSize: "clamp(28px, 4.6vw, 52px)" }}
       >
-        <span className="text-[#FFE500]">{config.titlePrefix}</span>{" "}
+        <span className="text-brand-yellow">{config.titlePrefix}</span>{" "}
         {config.titleRest}
       </h2>
 
@@ -131,7 +131,7 @@ export function ModeConfirmModal({
           className={cn(
             "absolute left-0 top-1/2 -translate-y-1/2",
             "rounded-full px-4 py-2 text-xs font-black uppercase whitespace-nowrap",
-            "bg-[#FFE500] text-black shadow-sm md:text-sm",
+            "bg-brand-yellow text-black shadow-sm md:text-sm",
           )}
         >
           {config.statLeft}
@@ -143,7 +143,7 @@ export function ModeConfirmModal({
           className={cn(
             "absolute right-0 top-[28%]",
             "rounded-full px-4 py-2 text-xs font-black uppercase whitespace-nowrap",
-            "bg-[#FFE500] text-black shadow-sm md:text-sm",
+            "bg-brand-yellow text-black shadow-sm md:text-sm",
           )}
         >
           {config.statRight}
@@ -168,7 +168,7 @@ export function ModeConfirmModal({
         {config.entryCost > 0 ? (
           <>
             Play for{" "}
-            <span className="text-[#FFE500]">
+            <span className="text-brand-yellow">
               {config.entryCost} Ticket{config.entryCost === 1 ? "" : "s"}
             </span>
           </>

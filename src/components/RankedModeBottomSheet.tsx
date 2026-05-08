@@ -112,7 +112,7 @@ export function RankedModeBottomSheet({
 
           {/* Play Button */}
           <Button
-            className="w-full h-12 bg-[#58CC02] border-b-4 border-[#46A302] text-base font-black text-white uppercase tracking-wide hover:bg-[#4CB801] active:translate-y-[2px] active:border-b-2 transition-all"
+            className="w-full h-12 bg-brand-green-light border-b-4 border-brand-green text-base font-black text-white uppercase tracking-wide hover:bg-brand-green active:translate-y-[2px] active:border-b-2 transition-all"
             onClick={onPlay}
             disabled={ticketsRemaining <= 0}
           >

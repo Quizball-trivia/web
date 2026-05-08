@@ -115,9 +115,9 @@ export function TrainingBanningStage() {
   const steps = [banCount >= 1, banCount >= 2, playerBan !== null && botBan !== null];
 
   return (
-    <div className="min-h-screen bg-[#131F24] flex flex-col font-fun">
+    <div className="min-h-screen bg-surface-deep flex flex-col font-fun">
       {/* ─── Chunky Header Bar (same as RankedCategoryBlockingScreen) ─── */}
-      <div className="w-full bg-[#1B2F36] border-b-[3px] border-[#0D1B21]">
+      <div className="w-full bg-surface-card border-b-[3px] border-surface-card-deep">
         <div className="max-w-5xl mx-auto px-5 py-4 flex items-center justify-between">
           {/* Player (Left) */}
           <div
@@ -127,7 +127,7 @@ export function TrainingBanningStage() {
             )}
           >
             <div className="relative">
-              <div className="size-14 rounded-full bg-[#131F24] border-[4px] border-[#1CB0F6] flex items-center justify-center text-3xl overflow-hidden shadow-[0_3px_0_0_#1899D6]">
+              <div className="size-14 rounded-full bg-surface-deep border-[4px] border-brand-cyan flex items-center justify-center text-3xl overflow-hidden shadow-[0_3px_0_0_#1899D6]">
                 {avatarCustomization ? (
                   <AvatarDisplay customization={avatarCustomization} size="sm" className="size-full" />
                 ) : isAvatarUrl(playerResolvedAvatar) ? (
@@ -143,7 +143,7 @@ export function TrainingBanningStage() {
                   <span>{playerResolvedAvatar || "🧑"}</span>
                 )}
               </div>
-              <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[9px] font-black bg-[#1CB0F6] text-white px-2 py-[2px] rounded-full border-b-2 border-[#1899D6] uppercase tracking-wide">
+              <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[9px] font-black bg-brand-cyan text-white px-2 py-[2px] rounded-full border-b-2 border-brand-cyan-deep uppercase tracking-wide">
                 YOU
               </span>
             </div>
@@ -159,17 +159,17 @@ export function TrainingBanningStage() {
             <div
               className={cn(
                 "text-5xl font-black tabular-nums leading-none transition-colors",
-                timeLeft <= 5 ? "text-[#FF4B4B] animate-pulse" : "text-[#58CC02]",
+                timeLeft <= 5 ? "text-brand-red-soft animate-pulse" : "text-brand-green-light",
               )}
             >
               {timeLeft}
             </div>
-            <div className="mt-2 bg-[#FF4B4B] px-3 py-1 rounded-full border-b-[3px] border-[#E04242]">
+            <div className="mt-2 bg-brand-red-soft px-3 py-1 rounded-full border-b-[3px] border-brand-red-deep">
               <span className="text-[10px] font-black text-white uppercase tracking-wider">
                 Ban Phase
               </span>
             </div>
-            <span className="text-[10px] font-extrabold text-[#56707A] mt-1.5 uppercase">
+            <span className="text-[10px] font-extrabold text-brand-slate mt-1.5 uppercase">
               {currentActor === "player" ? "Your Turn" : "Opponent's Turn"}
             </span>
           </div>
@@ -182,7 +182,7 @@ export function TrainingBanningStage() {
             )}
           >
             <div className="relative">
-              <div className="size-14 rounded-full bg-[#131F24] border-[4px] border-[#FF4B4B] flex items-center justify-center text-3xl overflow-hidden shadow-[0_3px_0_0_#E04242]">
+              <div className="size-14 rounded-full bg-surface-deep border-[4px] border-brand-red-soft flex items-center justify-center text-3xl overflow-hidden shadow-[0_3px_0_0_#E04242]">
                 {isAvatarUrl(BOT_AVATAR) ? (
                   <Image
                     src={BOT_AVATAR}
@@ -196,7 +196,7 @@ export function TrainingBanningStage() {
                   <span>😈</span>
                 )}
               </div>
-              <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[9px] font-black bg-[#FF4B4B] text-white px-2 py-[2px] rounded-full border-b-2 border-[#E04242] uppercase tracking-wide">
+              <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[9px] font-black bg-brand-red-soft text-white px-2 py-[2px] rounded-full border-b-2 border-brand-red-deep uppercase tracking-wide">
                 FOE
               </span>
             </div>
@@ -216,8 +216,8 @@ export function TrainingBanningStage() {
               className={cn(
                 "h-[10px] flex-1 rounded-full border-b-2 transition-colors duration-300",
                 done
-                  ? "bg-[#FF4B4B] border-[#E04242]"
-                  : "bg-[#243B44] border-[#1B2F36]",
+                  ? "bg-brand-red-soft border-brand-red-deep"
+                  : "bg-surface-card-tint border-surface-card",
               )}
             />
           ))}
@@ -236,7 +236,7 @@ export function TrainingBanningStage() {
           <h2 className="text-3xl font-black text-white uppercase tracking-tight">
             {phase === "ban" ? "Ban a Category" : "Get Ready!"}
           </h2>
-          <p className="text-sm text-[#56707A] font-bold mt-1.5">
+          <p className="text-sm text-brand-slate font-bold mt-1.5">
             {phase === "ban"
               ? "Tap a card to remove it. One category remains for Half 1."
               : "Match starting with selected Half 1 category..."}
@@ -325,7 +325,7 @@ export function TrainingBanningStage() {
                               stiffness: 400,
                               damping: 14,
                             }}
-                            className="bg-[#FF4B4B] px-5 py-2.5 rounded-2xl border-b-4 border-[#CC3E3E] shadow-lg"
+                            className="bg-brand-red-soft px-5 py-2.5 rounded-2xl border-b-4 border-[#CC3E3E] shadow-lg"
                           >
                             <span className="text-base font-black text-white uppercase tracking-wide">
                               BANNED
@@ -338,7 +338,7 @@ export function TrainingBanningStage() {
 
                   {/* Info area */}
                   <div
-                    className="p-4 bg-[#1B2F36]"
+                    className="p-4 bg-surface-card"
                     style={{
                       borderBottom: `5px solid ${isBanned ? "#1B2F36" : color.dark}`,
                     }}
@@ -360,7 +360,7 @@ export function TrainingBanningStage() {
           transition={{ delay: 0.5 }}
           className="text-center mt-1"
         >
-          <span className="text-[10px] text-[#56707A] font-bold">
+          <span className="text-[10px] text-brand-slate font-bold">
             ← Swipe to see all categories →
           </span>
         </motion.div>

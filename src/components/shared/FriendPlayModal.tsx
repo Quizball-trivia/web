@@ -83,7 +83,7 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
         className="font-poppins pr-16 text-left uppercase text-white leading-[0.95]"
         style={{ fontSize: "clamp(28px, 4.5vw, 48px)" }}
       >
-        Play with <span className="text-[#FFE500]">a Friend</span>
+        Play with <span className="text-brand-yellow">a Friend</span>
       </h2>
 
       {/* Description + friends illustration. The illustration is the
@@ -121,7 +121,7 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
       >
         <span
           aria-hidden
-          className="font-poppins leading-none text-[#FFE500]"
+          className="font-poppins leading-none text-brand-yellow"
           style={{ fontSize: "clamp(36px, 4.5vw, 52px)" }}
         >
           +

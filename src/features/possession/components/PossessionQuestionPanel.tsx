@@ -108,13 +108,13 @@ export function PossessionQuestionPanel({
       {/* Header pills: QUESTION X/Y + timer */}
       <div className="flex items-stretch gap-3">
         <div
-          className="flex flex-1 items-center justify-center rounded-[20px] bg-[#1645FF] px-6 text-white h-[52px] sm:h-[68px] md:h-[80px] lg:h-[92px]"
+          className="flex flex-1 items-center justify-center rounded-[20px] bg-brand-blue px-6 text-white h-[52px] sm:h-[68px] md:h-[80px] lg:h-[92px]"
           style={{ ...poppins, fontSize: 'clamp(18px, 3vw, 36px)' }}
         >
           QUESTION {displayQuestionNum}/{totalQuestions}
         </div>
         <div
-          className="flex w-[80px] items-center justify-center rounded-[20px] bg-[#1645FF] text-white h-[52px] sm:h-[68px] sm:w-[120px] md:h-[80px] md:w-[150px] lg:h-[92px] lg:w-[175px] tabular-nums"
+          className="flex w-[80px] items-center justify-center rounded-[20px] bg-brand-blue text-white h-[52px] sm:h-[68px] sm:w-[120px] md:h-[80px] md:w-[150px] lg:h-[92px] lg:w-[175px] tabular-nums"
           style={{ ...poppins, fontSize: 'clamp(18px, 3vw, 36px)' }}
         >
           {timerLabel}
@@ -133,7 +133,7 @@ export function PossessionQuestionPanel({
           className="relative mt-3"
         >
           <div
-            className="flex items-center rounded-[30px] bg-[#071013] px-6 py-6 text-white sm:px-8 sm:py-8 md:px-10 md:py-10"
+            className="flex items-center rounded-[30px] bg-surface-page px-6 py-6 text-white sm:px-8 sm:py-8 md:px-10 md:py-10"
             style={{
               fontFamily: "'Poppins', sans-serif",
               fontWeight: 700,

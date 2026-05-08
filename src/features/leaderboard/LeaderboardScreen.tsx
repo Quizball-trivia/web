@@ -72,7 +72,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
 
           {userEntry && (
             <div
-              className="shrink-0 text-right text-2xl sm:text-3xl md:text-4xl tabular-nums text-[#FFE500] drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]"
+              className="shrink-0 text-right text-2xl sm:text-3xl md:text-4xl tabular-nums text-brand-yellow drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]"
               style={poppinsTitle}
             >
               {userEntry.rankPoints.toLocaleString()} RP
@@ -111,8 +111,8 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
                 onClick={() => setActiveTab(tab.value)}
                 className={`inline-flex h-10 min-w-[130px] items-center justify-center rounded-full px-6 text-xs sm:text-sm font-fun font-black uppercase tracking-wide transition-all active:translate-y-[1px] ${
                   isActive
-                    ? "bg-[#38B60E] text-white"
-                    : "border-2 border-[#38B60E] text-white hover:bg-[#38B60E]/10"
+                    ? "bg-brand-green text-white"
+                    : "border-2 border-brand-green text-white hover:bg-brand-green/10"
                 }`}
               >
                 {tab.label}
@@ -128,7 +128,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
             animate={{ opacity: 1 }}
             className="flex flex-col items-center justify-center py-20 gap-3"
           >
-            <Loader2 className="size-8 text-[#FFE500] animate-spin" />
+            <Loader2 className="size-8 text-brand-yellow animate-spin" />
             <p className="text-xs font-black uppercase tracking-[0.2em] text-white/40">
               Loading rankings…
             </p>
@@ -136,8 +136,8 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
         )}
 
         {isError && (
-          <div className="rounded-[10px] border-2 border-[#FF4B4B]/40 bg-[#FF4B4B]/10 px-4 py-6 text-center">
-            <p className="text-sm font-fun font-black uppercase tracking-wide text-[#FF4B4B]">
+          <div className="rounded-[10px] border-2 border-brand-red-soft/40 bg-brand-red-soft/10 px-4 py-6 text-center">
+            <p className="text-sm font-fun font-black uppercase tracking-wide text-brand-red-soft">
               Failed to load leaderboard data.
             </p>
           </div>

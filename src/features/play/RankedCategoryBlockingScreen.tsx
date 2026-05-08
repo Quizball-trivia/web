@@ -147,7 +147,7 @@ export function BanCategoryView({
   const opponentTierColor = opponent.tier ? getTierAccent(opponent.tier) : '#94A3B8';
 
   return (
-    <div className="relative min-h-dvh flex flex-col bg-[#071013]">
+    <div className="relative min-h-dvh flex flex-col bg-surface-page">
       {/* ── Header ── */}
       <div className="relative z-10 w-full">
         <div className="max-w-5xl mx-auto px-5 py-5 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
@@ -164,7 +164,7 @@ export function BanCategoryView({
           <div
             className={cn(
               'flex h-14 min-w-[72px] items-center justify-center rounded-full px-6 text-3xl tabular-nums text-white transition-colors',
-              timeLeft <= 5 ? 'bg-[#FF4B4B] animate-pulse' : 'bg-[#1645FF]'
+              timeLeft <= 5 ? 'bg-brand-red-soft animate-pulse' : 'bg-brand-blue'
             )}
             style={poppins}
           >

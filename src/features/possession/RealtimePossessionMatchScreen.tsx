@@ -44,11 +44,11 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
 
   if (!isReady) {
     return (
-      <div className="flex min-h-dvh w-full items-center justify-center bg-[#0f1420]">
+      <div className="flex min-h-dvh w-full items-center justify-center bg-surface-page-alt">
         {showStartCountdown ? (
           <div className="flex flex-col items-center gap-2">
             <div className="text-xs font-bold uppercase tracking-[0.28em] text-white/60 font-fun">Kickoff in</div>
-            <div className="flex size-28 items-center justify-center rounded-full border-4 border-[#1CB0F6]/60 bg-[#131F24] shadow-[0_0_40px_rgba(28,176,246,0.25)]">
+            <div className="flex size-28 items-center justify-center rounded-full border-4 border-brand-cyan/60 bg-surface-deep shadow-[0_0_40px_rgba(28,176,246,0.25)]">
               <span className="text-5xl font-black leading-none tabular-nums text-white font-fun">{countdownDisplay}</span>
             </div>
           </div>
@@ -60,7 +60,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
   }
 
   return (
-    <div className="relative flex min-h-dvh flex-col items-center justify-center bg-[#0f1420] bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat">
+    <div className="relative flex min-h-dvh flex-col items-center justify-center bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat">
       <button
         onClick={toggleMuted}
         className="fixed top-4 left-4 z-40 flex size-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-lg text-white transition-colors hover:bg-white/20"
@@ -81,7 +81,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
             transition={{ duration: 0.2 }}
             className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center"
           >
-            <div className="absolute inset-0 bg-[#0f1420]/45 backdrop-blur-[1.5px]" />
+            <div className="absolute inset-0 bg-surface-page-alt/45 backdrop-blur-[1.5px]" />
             <motion.div
               key={`countdown-${countdownDisplay}`}
               initial={{ scale: 0.72, opacity: 0.4 }}
@@ -90,7 +90,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
               className="relative flex flex-col items-center gap-2"
             >
               <div className="text-xs font-bold uppercase tracking-[0.28em] text-white/70 font-fun">Kickoff in</div>
-              <div className="flex size-32 items-center justify-center rounded-full border-4 border-[#1CB0F6]/70 bg-[#131F24] shadow-[0_0_50px_rgba(28,176,246,0.3)]">
+              <div className="flex size-32 items-center justify-center rounded-full border-4 border-brand-cyan/70 bg-surface-deep shadow-[0_0_50px_rgba(28,176,246,0.3)]">
                 <span className="text-6xl font-black leading-none tabular-nums text-white font-fun">{countdownDisplay}</span>
               </div>
             </motion.div>
@@ -108,7 +108,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
             transition={{ duration: 0.3 }}
             className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center"
           >
-            <div className="absolute inset-0 bg-[#0f1420]/60 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-surface-page-alt/60 backdrop-blur-sm" />
             <motion.div
               initial={{ scale: 0.6, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -119,7 +119,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.15, duration: 0.4 }}
-                className="text-4xl font-black uppercase tracking-wider text-[#FF4B4B] font-fun"
+                className="text-4xl font-black uppercase tracking-wider text-brand-red-soft font-fun"
                 style={{ textShadow: '0 0 30px rgba(255,75,75,0.5), 0 4px 0 rgba(200,40,40,0.8)' }}
               >
                 Penalty Shootout
@@ -130,7 +130,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: 'spring', stiffness: 340, damping: 22 }}
               >
-                <div className="flex size-28 items-center justify-center rounded-full border-4 border-[#FF4B4B]/70 bg-[#131F24] shadow-[0_0_50px_rgba(255,75,75,0.3)]">
+                <div className="flex size-28 items-center justify-center rounded-full border-4 border-brand-red-soft/70 bg-surface-deep shadow-[0_0_50px_rgba(255,75,75,0.3)]">
                   <span className="text-5xl font-black leading-none tabular-nums text-white font-fun">
                     {penaltyCountdownDisplay}
                   </span>

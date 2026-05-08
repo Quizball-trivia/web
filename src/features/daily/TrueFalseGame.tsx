@@ -111,7 +111,7 @@ export function TrueFalseGame({
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-[#101820] font-poppins text-white">
+    <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-deep font-poppins text-white">
       <div className="border-b border-white/10 bg-black/15">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-3">
           <button
@@ -130,7 +130,7 @@ export function TrueFalseGame({
           </div>
           <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-center">
             <div className="flex items-center gap-2 text-sm font-semibold">
-              <Clock className="size-4 text-[#F8D34A]" />
+              <Clock className="size-4 text-brand-yellow-soft" />
               <span>{timeLeft}s</span>
             </div>
           </div>
@@ -140,20 +140,20 @@ export function TrueFalseGame({
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 py-6">
         <div className="mb-6 h-2 overflow-hidden rounded-full bg-white/10">
           <div
-            className="h-full rounded-full bg-[#58CC02] transition-all"
+            className="h-full rounded-full bg-brand-green-light transition-all"
             style={{ width: `${((currentQuestionIndex + 1) / session.questionCount) * 100}%` }}
           />
         </div>
 
         <div
           className={[
-            "rounded-[28px] border bg-[#17222A]/90 p-6 shadow-[0_24px_60px_rgba(0,0,0,0.28)] transition",
+            "rounded-[28px] border bg-surface-input/90 p-6 shadow-[0_24px_60px_rgba(0,0,0,0.28)] transition",
             resultTone === "correct"
-              ? "border-[#58CC02]/70 shadow-[0_24px_70px_rgba(88,204,2,0.18)]"
+              ? "border-brand-green-light/70 shadow-[0_24px_70px_rgba(88,204,2,0.18)]"
               : resultTone === "wrong"
-                ? "border-[#FF6B6B]/70 shadow-[0_24px_70px_rgba(255,107,107,0.16)]"
+                ? "border-brand-red-light/70 shadow-[0_24px_70px_rgba(255,107,107,0.16)]"
                 : resultTone === "timeout"
-                  ? "border-[#F8D34A]/60"
+                  ? "border-brand-yellow-soft/60"
                   : "border-white/10",
           ].join(" ")}
         >
@@ -175,10 +175,10 @@ export function TrueFalseGame({
               className={[
                 "mb-5 flex items-center justify-between gap-4 rounded-2xl border px-4 py-3 text-sm font-semibold",
                 resultTone === "correct"
-                  ? "border-[#58CC02]/60 bg-[#58CC02]/15 text-[#8BF15B]"
+                  ? "border-brand-green-light/60 bg-brand-green-light/15 text-[#8BF15B]"
                   : resultTone === "wrong"
-                    ? "border-[#FF6B6B]/60 bg-[#FF6B6B]/15 text-[#FF8A8A]"
-                    : "border-[#F8D34A]/50 bg-[#F8D34A]/12 text-[#F8D34A]",
+                    ? "border-brand-red-light/60 bg-brand-red-light/15 text-brand-red-light"
+                    : "border-brand-yellow-soft/50 bg-brand-yellow-soft/12 text-brand-yellow-soft",
               ].join(" ")}
             >
               <span>
@@ -212,11 +212,11 @@ export function TrueFalseGame({
                   className={[
                     "rounded-[24px] border px-5 py-6 text-left text-xl font-semibold transition",
                     shouldShowCorrect
-                      ? "border-[#58CC02] bg-[#58CC02] text-black shadow-[0_14px_35px_rgba(88,204,2,0.28)]"
+                      ? "border-brand-green-light bg-brand-green-light text-black shadow-[0_14px_35px_rgba(88,204,2,0.28)]"
                       : shouldShowWrong
-                        ? "border-[#FF6B6B] bg-[#FF6B6B] text-black shadow-[0_14px_35px_rgba(255,107,107,0.22)]"
+                        ? "border-brand-red-light bg-brand-red-light text-black shadow-[0_14px_35px_rgba(255,107,107,0.22)]"
                         : isSelected
-                          ? "border-[#1CB0F6] bg-[#1CB0F6]/15 text-white"
+                          ? "border-brand-cyan bg-brand-cyan/15 text-white"
                           : showResult
                             ? "border-white/10 bg-white/[0.02] text-white/35"
                             : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]",

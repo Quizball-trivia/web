@@ -270,11 +270,11 @@ export function RealtimePartyQuizScreen({
 
   if (!partyState) {
     return (
-      <div className="flex min-h-dvh w-full items-center justify-center bg-[#0f1420]">
+      <div className="flex min-h-dvh w-full items-center justify-center bg-surface-page-alt">
         {state.startCountdownActive ? (
           <div className="flex flex-col items-center gap-3">
             <div className="font-fun text-xs font-bold uppercase tracking-[0.28em] text-white/60">Quiz starts in</div>
-            <div className="flex size-28 items-center justify-center rounded-full border-4 border-[#CE82FF]/70 bg-[#131F24] shadow-[0_0_40px_rgba(206,130,255,0.28)]">
+            <div className="flex size-28 items-center justify-center rounded-full border-4 border-brand-purple/70 bg-surface-deep shadow-[0_0_40px_rgba(206,130,255,0.28)]">
               <span className="font-fun text-5xl font-black leading-none tabular-nums text-white">
                 {Math.max(1, state.countdownSeconds)}
               </span>
@@ -292,7 +292,7 @@ export function RealtimePartyQuizScreen({
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="relative min-h-dvh overflow-hidden bg-[#0f1420] text-white">
+    <div className="relative min-h-dvh overflow-hidden bg-surface-page-alt text-white">
       {/* Background gradients */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(206,130,255,0.18),_transparent_34%),radial-gradient(circle_at_bottom_left,_rgba(28,176,246,0.16),_transparent_36%)]" />
       <div
@@ -310,7 +310,7 @@ export function RealtimePartyQuizScreen({
             exit={{ opacity: 0 }}
             className="absolute inset-0 z-30 flex items-center justify-center"
           >
-            <div className="absolute inset-0 bg-[#0f1420]/60 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-surface-page-alt/60 backdrop-blur-sm" />
             <motion.div
               key={`party-countdown-${state.countdownSeconds}`}
               initial={{ scale: 0.72, opacity: 0.45 }}
@@ -319,7 +319,7 @@ export function RealtimePartyQuizScreen({
               className="relative flex flex-col items-center gap-3"
             >
               <div className="font-fun text-xs font-bold uppercase tracking-[0.28em] text-white/60">Quiz starts in</div>
-              <div className="flex size-28 items-center justify-center rounded-full border-4 border-[#CE82FF]/70 bg-[#131F24] shadow-[0_0_48px_rgba(206,130,255,0.3)] sm:size-32">
+              <div className="flex size-28 items-center justify-center rounded-full border-4 border-brand-purple/70 bg-surface-deep shadow-[0_0_48px_rgba(206,130,255,0.3)] sm:size-32">
                 <span className="font-fun text-5xl font-black leading-none tabular-nums text-white sm:text-6xl">
                   {Math.max(1, state.countdownSeconds)}
                 </span>
@@ -337,12 +337,12 @@ export function RealtimePartyQuizScreen({
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16 }}
-            className="absolute left-1/2 top-4 z-30 w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 rounded-2xl border border-white/10 bg-[#131F24]/95 px-4 py-3 shadow-2xl backdrop-blur"
+            className="absolute left-1/2 top-4 z-30 w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 rounded-2xl border border-white/10 bg-surface-deep/95 px-4 py-3 shadow-2xl backdrop-blur"
           >
             <div className="text-center font-fun">
               <div className="text-[10px] uppercase tracking-[0.22em] text-white/50">Match Paused</div>
               <div className="mt-1 text-sm font-black text-white">Waiting for a player to reconnect</div>
-              <div className="mt-1 text-xs font-bold text-[#CE82FF]">Resumes automatically in {pauseSeconds}s</div>
+              <div className="mt-1 text-xs font-bold text-brand-purple">Resumes automatically in {pauseSeconds}s</div>
             </div>
           </motion.div>
         )}
@@ -487,9 +487,9 @@ export function RealtimePartyQuizScreen({
                     className={cn(
                       'flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition-colors',
                       player.isSelf
-                        ? 'bg-[#1CB0F6]/10 border border-[#1CB0F6]/25'
+                        ? 'bg-brand-cyan/10 border border-brand-cyan/25'
                         : player.isLeader
-                          ? 'bg-[#FCD200]/8 border border-[#FCD200]/20'
+                          ? 'bg-brand-yellow-deep/8 border border-brand-yellow-deep/20'
                           : 'bg-white/[0.03] border border-transparent',
                     )}
                   >
@@ -510,11 +510,11 @@ export function RealtimePartyQuizScreen({
                       <div className="flex items-center gap-1.5">
                         <span className="truncate text-sm font-bold text-white">{player.username}</span>
                         {player.isSelf && (
-                          <span className="shrink-0 rounded bg-[#1CB0F6]/20 px-1 py-0.5 text-[8px] font-black uppercase text-[#A9E6FF]">
+                          <span className="shrink-0 rounded bg-brand-cyan/20 px-1 py-0.5 text-[8px] font-black uppercase text-[#A9E6FF]">
                             You
                           </span>
                         )}
-                        {player.isLeader && <Crown className="size-3.5 shrink-0 text-[#FCD200]" />}
+                        {player.isLeader && <Crown className="size-3.5 shrink-0 text-brand-yellow-deep" />}
                       </div>
                     </div>
 
@@ -532,7 +532,7 @@ export function RealtimePartyQuizScreen({
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: 4 }}
                           transition={{ duration: 0.25 }}
-                          className="text-xs font-black text-[#58CC02] shrink-0"
+                          className="text-xs font-black text-brand-green-light shrink-0"
                         >
                           +{player.roundDelta}
                         </motion.span>
@@ -543,9 +543,9 @@ export function RealtimePartyQuizScreen({
                     <span
                       className={cn(
                         'size-2.5 rounded-full shrink-0',
-                        dotStatus === 'correct' && 'bg-[#58CC02]',
-                        dotStatus === 'answering' && 'bg-[#1CB0F6] animate-pulse',
-                        dotStatus === 'resolved' && 'bg-[#CE82FF] animate-pulse',
+                        dotStatus === 'correct' && 'bg-brand-green-light',
+                        dotStatus === 'answering' && 'bg-brand-cyan animate-pulse',
+                        dotStatus === 'resolved' && 'bg-brand-purple animate-pulse',
                         dotStatus === 'idle' && 'bg-white/20',
                       )}
                     />
@@ -558,7 +558,7 @@ export function RealtimePartyQuizScreen({
       </div>
 
       {/* ─── Mobile bottom standings bar ─── */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-10 bg-gradient-to-t from-[#0f1420] via-[#0f1420]/95 to-transparent pt-6 pb-3 px-3">
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-10 bg-gradient-to-t from-surface-page-alt via-surface-page-alt/95 to-transparent pt-6 pb-3 px-3">
         <div className="flex gap-2 overflow-x-auto scrollbar-none">
           {standings.map((player) => {
             const dotStatus = getStandingDotStatus({
@@ -575,9 +575,9 @@ export function RealtimePartyQuizScreen({
                 className={cn(
                   'flex shrink-0 items-center gap-2 rounded-full px-2.5 py-1.5 border transition-colors',
                   player.isSelf
-                    ? 'bg-[#1CB0F6]/10 border-[#1CB0F6]/25'
+                    ? 'bg-brand-cyan/10 border-brand-cyan/25'
                     : hasAnswered
-                      ? 'bg-[#58CC02]/8 border-[#58CC02]/25'
+                      ? 'bg-brand-green-light/8 border-brand-green-light/25'
                       : 'bg-white/5 border-white/10',
                 )}
               >
@@ -595,7 +595,7 @@ export function RealtimePartyQuizScreen({
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="absolute -right-0.5 -bottom-0.5 flex size-3.5 items-center justify-center rounded-full bg-[#58CC02] ring-2 ring-[#0f1420]"
+                      className="absolute -right-0.5 -bottom-0.5 flex size-3.5 items-center justify-center rounded-full bg-brand-green-light ring-2 ring-surface-page-alt"
                     >
                       <svg viewBox="0 0 12 12" className="size-2 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M2 6l3 3 5-5" />

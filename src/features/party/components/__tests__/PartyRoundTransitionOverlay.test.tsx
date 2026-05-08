@@ -14,7 +14,8 @@ describe('PartyRoundTransitionOverlay', () => {
       />,
     );
 
-    expect(screen.getByText(/Question 4/)).toBeInTheDocument();
+    // Exact match to avoid colliding with "Question 4 of 10".
+    expect(screen.getByText(/^Question 4$/)).toBeInTheDocument();
     expect(screen.getByText(/Question 4 of 10/)).toBeInTheDocument();
     expect(screen.getByText('Football History')).toBeInTheDocument();
   });

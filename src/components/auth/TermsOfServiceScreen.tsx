@@ -59,13 +59,13 @@ const sections = [
 
 export function TermsOfServiceScreen({ onBack }: TermsOfServiceScreenProps) {
   return (
-    <div className="min-h-screen w-full bg-[#131F24] text-white font-sans">
+    <div className="min-h-screen w-full bg-surface-deep text-white font-sans">
       {/* Header */}
-      <header className="sticky top-0 z-50 flex h-16 md:h-20 items-center justify-between px-6 md:px-12 lg:px-20 bg-[#131F24]/80 backdrop-blur-md border-b border-white/6">
+      <header className="sticky top-0 z-50 flex h-16 md:h-20 items-center justify-between px-6 md:px-12 lg:px-20 bg-surface-deep/80 backdrop-blur-md border-b border-white/6">
         <Button
           variant="ghost"
           size="sm"
-          className="gap-2 text-[#56707A] hover:text-white hover:bg-white/5"
+          className="gap-2 text-brand-slate hover:text-white hover:bg-white/5"
           onClick={onBack}
         >
           <ChevronLeft className="size-4" />
@@ -83,16 +83,16 @@ export function TermsOfServiceScreen({ onBack }: TermsOfServiceScreenProps) {
           transition={{ duration: 0.4 }}
         >
           {/* Title card */}
-          <div className="mb-8 rounded-2xl bg-[#1B2F36] border border-white/8 border-b-4 border-b-[#14242a] p-6 md:p-8">
+          <div className="mb-8 rounded-2xl bg-surface-card border border-white/8 border-b-4 border-b-[#14242a] p-6 md:p-8">
             <div className="flex items-center gap-3 mb-3">
-              <div className="flex size-10 items-center justify-center rounded-xl bg-[#1CB0F6]/15 text-[#1CB0F6]">
+              <div className="flex size-10 items-center justify-center rounded-xl bg-brand-cyan/15 text-brand-cyan">
                 <ScrollText className="size-5" />
               </div>
               <h1 className="font-fun text-2xl md:text-3xl font-black tracking-tight text-white">
                 Terms of Service
               </h1>
             </div>
-            <p className="text-sm font-bold text-[#56707A]">
+            <p className="text-sm font-bold text-brand-slate">
               Last updated: January 30, 2026
             </p>
           </div>
@@ -105,7 +105,7 @@ export function TermsOfServiceScreen({ onBack }: TermsOfServiceScreenProps) {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.08 * i }}
-                className="rounded-2xl bg-[#1B2F36]/60 border border-white/6 border-b-4 border-b-[#14242a] p-5 md:p-6"
+                className="rounded-2xl bg-surface-card/60 border border-white/6 border-b-4 border-b-[#14242a] p-5 md:p-6"
               >
                 <h2 className="font-fun mb-3 text-base md:text-lg font-black text-white">
                   {section.title}
@@ -120,7 +120,7 @@ export function TermsOfServiceScreen({ onBack }: TermsOfServiceScreenProps) {
                         key={bullet}
                         className="flex items-start gap-2 text-sm md:text-[15px] text-white/60"
                       >
-                        <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[#1CB0F6]" />
+                        <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand-cyan" />
                         {bullet}
                       </li>
                     ))}

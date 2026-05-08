@@ -159,7 +159,7 @@ export function BanCategoryCard({
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-          className="absolute top-2 right-2 z-20 flex size-7 items-center justify-center rounded-full bg-[#58CC02] text-white shadow-lg"
+          className="absolute top-2 right-2 z-20 flex size-7 items-center justify-center rounded-full bg-brand-green-light text-white shadow-lg"
         >
           <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
             <path d="M20 6 9 17l-5-5" />
@@ -179,7 +179,7 @@ export function BanCategoryCard({
               initial={{ scale: 0, rotate: -20 }}
               animate={{ scale: 1, rotate: -8 }}
               transition={{ type: 'spring', stiffness: 400, damping: 14 }}
-              className="rounded-lg bg-[#FF4B4B] px-3 py-1.5 sm:rounded-xl sm:px-5 sm:py-2"
+              className="rounded-lg bg-brand-red-soft px-3 py-1.5 sm:rounded-xl sm:px-5 sm:py-2"
             >
               <span
                 className="text-xs uppercase tracking-[0.15em] text-white sm:text-base"

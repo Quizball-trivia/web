@@ -19,7 +19,7 @@ const START_TIMEOUT_MS = 8_000;
 
 export default function DevMatchPage() {
   if (process.env.NODE_ENV !== 'development') {
-    return <div className="min-h-dvh bg-[#131F24] flex items-center justify-center text-white font-fun">Dev only</div>;
+    return <div className="min-h-dvh bg-surface-deep flex items-center justify-center text-white font-fun">Dev only</div>;
   }
 
   return <DevMatchContent />;
@@ -133,9 +133,9 @@ function DevMatchContent() {
   // Pre-match: show start button
   if (!match) {
     return (
-      <div className="min-h-dvh bg-[#131F24] flex flex-col items-center justify-center gap-6 font-fun">
+      <div className="min-h-dvh bg-surface-deep flex flex-col items-center justify-center gap-6 font-fun">
         <h1 className="text-3xl font-black text-white uppercase">Dev Quick Ranked</h1>
-        <p className="text-sm text-[#56707A] font-semibold max-w-sm text-center">
+        <p className="text-sm text-brand-slate font-semibold max-w-sm text-center">
           Launching a real ranked possession match against AI.
         </p>
         <div className="text-sm font-bold text-white/80 uppercase tracking-wider">
@@ -144,14 +144,14 @@ function DevMatchContent() {
         {!starting ? (
           <button
             onClick={startMatch}
-            className="px-10 py-4 rounded-2xl bg-[#FF9600] border-b-4 border-[#C47400] text-white font-black text-xl uppercase tracking-wide hover:bg-[#FFa620] active:border-b-2 active:translate-y-[2px] transition-all"
+            className="px-10 py-4 rounded-2xl bg-brand-orange border-b-4 border-[#C47400] text-white font-black text-xl uppercase tracking-wide hover:bg-brand-orange active:border-b-2 active:translate-y-[2px] transition-all"
           >
             Retry
           </button>
         ) : null}
         <button
           onClick={exitToPlay}
-          className="text-sm font-bold text-[#56707A] hover:text-white/80 transition-colors"
+          className="text-sm font-bold text-brand-slate hover:text-white/80 transition-colors"
         >
           Back to Play
         </button>
@@ -164,8 +164,8 @@ function DevMatchContent() {
     const myResult = selfUserId ? finalResults.players[selfUserId] : null;
     const isWinner = finalResults.winnerId === selfUserId;
     return (
-      <div className="min-h-dvh bg-[#131F24] flex flex-col items-center justify-center gap-6 font-fun">
-        <h1 className={`text-4xl font-black uppercase ${isWinner ? 'text-[#58CC02]' : 'text-[#FF4B4B]'}`}>
+      <div className="min-h-dvh bg-surface-deep flex flex-col items-center justify-center gap-6 font-fun">
+        <h1 className={`text-4xl font-black uppercase ${isWinner ? 'text-brand-green-light' : 'text-brand-red-soft'}`}>
           {isWinner ? 'Victory!' : 'Defeat'}
         </h1>
         {myResult && (
@@ -178,13 +178,13 @@ function DevMatchContent() {
         <div className="flex gap-3">
           <button
             onClick={playAgain}
-            className="px-8 py-3 rounded-2xl bg-[#FF9600] border-b-4 border-[#C47400] text-white font-black text-lg uppercase hover:bg-[#FFa620] active:border-b-2 active:translate-y-[2px] transition-all"
+            className="px-8 py-3 rounded-2xl bg-brand-orange border-b-4 border-[#C47400] text-white font-black text-lg uppercase hover:bg-brand-orange active:border-b-2 active:translate-y-[2px] transition-all"
           >
             Play Again
           </button>
           <button
             onClick={exitToPlay}
-            className="px-8 py-3 rounded-2xl bg-[#1B2F36] border-b-4 border-[#131F24] text-white font-black text-lg uppercase hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] transition-all"
+            className="px-8 py-3 rounded-2xl bg-surface-card border-b-4 border-surface-deep text-white font-black text-lg uppercase hover:bg-surface-card-tint active:border-b-2 active:translate-y-[2px] transition-all"
           >
             Back
           </button>

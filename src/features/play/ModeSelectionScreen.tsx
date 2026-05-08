@@ -18,9 +18,9 @@ import { getNextTierBand } from '@/utils/rankedTier';
 function RpProgressBar({ current, target }: { current: number; target: number }) {
   const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
   return (
-    <div className="h-3 md:h-4 w-full rounded-[4px] bg-[#2D950B] overflow-hidden">
+    <div className="h-3 md:h-4 w-full rounded-[4px] bg-brand-green-deep overflow-hidden">
       <div
-        className="h-full rounded-[4px] bg-[#FFE500] transition-all duration-500"
+        className="h-full rounded-[4px] bg-brand-yellow transition-all duration-500"
         style={{ width: `${pct}%` }}
       />
     </div>
@@ -172,7 +172,7 @@ export function ModeSelectionScreen({
             {/* Right: RP stats */}
             <div className="text-right shrink-0 w-[280px]">
               <div className="inline-flex flex-col items-stretch">
-                <div className="text-4xl font-black text-[#FFE500] drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)] whitespace-nowrap">
+                <div className="text-4xl font-black text-brand-yellow drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)] whitespace-nowrap">
                   {displayRp}/{nextTierTargetRp ?? 600} RP
                 </div>
                 <div className="mt-2">
@@ -214,7 +214,7 @@ export function ModeSelectionScreen({
                 </div>
               </div>
               <div className="shrink-0 text-right w-[125px]">
-                <div className="text-[1.4rem] font-black leading-none text-[#FFE500] drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]">
+                <div className="text-[1.4rem] font-black leading-none text-brand-yellow drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]">
                   {displayRp}/{nextTierTargetRp ?? 600} RP
                 </div>
                 <div className="mt-2">
@@ -382,7 +382,7 @@ export function ModeSelectionScreen({
           </h2>
           <Link
             href="/objectives"
-            className="flex items-center justify-center w-[120px] h-[40px] rounded-xl border-2 border-[#58CC02] text-xs font-black text-white uppercase tracking-wide hover:bg-[#58CC02]/10 transition-colors"
+            className="flex items-center justify-center w-[120px] h-[40px] rounded-xl border-2 border-brand-green-light text-xs font-black text-white uppercase tracking-wide hover:bg-brand-green-light/10 transition-colors"
           >
             View All
           </Link>
@@ -392,7 +392,7 @@ export function ModeSelectionScreen({
             <Link
               key={`${obj.title}-${index}`}
               href="/objectives"
-              className="rounded-xl bg-[#2E8C16] p-3 transition-all hover:bg-[#369F19]"
+              className="rounded-xl bg-brand-green-deep p-3 transition-all hover:bg-brand-green"
             >
               <div className="mb-2 flex items-center justify-center">
                 <Image src="/assets/obj_icon.png" alt="" width={45} height={44} className="size-12 object-contain opacity-90" />
@@ -400,7 +400,7 @@ export function ModeSelectionScreen({
               <h4 className="text-[10px] font-black leading-tight text-white uppercase truncate">{obj.title}</h4>
               <p className="mt-0.5 text-[9px] leading-tight text-white/80">{obj.desc}</p>
               <div className="mt-4 h-3 rounded-full bg-[#07200C] overflow-hidden">
-                <div className="h-full rounded-full bg-[#58CC02]" style={{ width: `${obj.progress}%` }} />
+                <div className="h-full rounded-full bg-brand-green-light" style={{ width: `${obj.progress}%` }} />
               </div>
               <div className="mt-2 flex items-center justify-between text-[9px] font-black uppercase">
                 <span className="text-white">{obj.progress > 0 ? '1/3' : '0/1'}</span>
@@ -423,7 +423,7 @@ export function ModeSelectionScreen({
               </div>
             </div>
             <div className="h-3 bg-[#0F260F] rounded-full overflow-hidden mb-2.5">
-              <div className="h-full bg-[#58CC02] rounded-full" style={{ width: '33%' }} />
+              <div className="h-full bg-brand-green-light rounded-full" style={{ width: '33%' }} />
             </div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-white">1/3</span>
@@ -455,7 +455,7 @@ export function ModeSelectionScreen({
                   </div>
                 </div>
                 <div className="h-3 bg-[#0F260F] rounded-full overflow-hidden mb-2.5">
-                  <div className="h-full bg-[#58CC02] rounded-full" style={{ width: '0%' }} />
+                  <div className="h-full bg-brand-green-light rounded-full" style={{ width: '0%' }} />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black text-white">0/1</span>

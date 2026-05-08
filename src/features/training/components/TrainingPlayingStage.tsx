@@ -138,7 +138,7 @@ export function TrainingPlayingStage() {
   const isShotVisualPhase = state.phase === "shot" || state.phase === "goal" || state.phase === "saved";
 
   return (
-    <div className="min-h-dvh bg-[#0f1420] flex flex-col items-center justify-center relative">
+    <div className="min-h-dvh bg-surface-page-alt flex flex-col items-center justify-center relative">
       <div className="w-full max-w-lg flex flex-col lg:max-w-7xl lg:flex-row lg:h-[calc(100dvh-2rem)] lg:items-stretch lg:gap-4 lg:px-4">
 
         {/* LEFT: Portrait pitch — desktop only */}

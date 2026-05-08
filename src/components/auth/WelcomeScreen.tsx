@@ -271,9 +271,9 @@ export function WelcomeScreen() {
   const stadiumScene = STADIUM_SCENES[stadiumPhase];
 
   return (
-    <div className="min-h-screen w-full bg-[#071013] font-sans text-foreground flex flex-col overflow-x-hidden">
+    <div className="min-h-screen w-full bg-surface-page font-sans text-foreground flex flex-col overflow-x-hidden">
       {/* ── Navbar ── */}
-      <header className="flex h-16 md:h-20 items-center justify-between px-6 md:px-12 lg:px-20 shrink-0 bg-[#071013]/80 backdrop-blur-md sticky top-0 z-50">
+      <header className="flex h-16 md:h-20 items-center justify-between px-6 md:px-12 lg:px-20 shrink-0 bg-surface-page/80 backdrop-blur-md sticky top-0 z-50">
         <AppLogo size="md" className="!justify-start" />
         <div className="flex items-center gap-2.5">
           <Image src="/assets/brand/world-cup-trophy.webp" alt="Trophy" width={96} height={96} className="h-10 md:h-12 w-auto object-contain" />
@@ -282,7 +282,7 @@ export function WelcomeScreen() {
               <span className="text-lg md:text-xl font-black tabular-nums text-white">
                 {wcDaysLeft}
               </span>
-              <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-[#FFE500]">
+              <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-brand-yellow">
                 until kickoff
               </span>
             </div>
@@ -302,8 +302,8 @@ export function WelcomeScreen() {
         >
           <div className="w-full max-w-3xl">
             <div className="mb-4 flex items-center justify-between gap-3 px-1 md:px-2">
-              <div className="flex items-center gap-3 flex-1 min-w-0 rounded-2xl bg-[#071013] px-3 py-2.5">
-                <div className="rounded-full bg-[#38B60E] p-[3px] shadow-[0_0_16px_rgba(56,182,14,0.35)]">
+              <div className="flex items-center gap-3 flex-1 min-w-0 rounded-2xl bg-surface-page px-3 py-2.5">
+                <div className="rounded-full bg-brand-green p-[3px] shadow-[0_0_16px_rgba(56,182,14,0.35)]">
                   <AvatarDisplay customization={{ base: "avatar-1" }} size="sm" className="rounded-full" />
                 </div>
                 <div className="min-w-0">
@@ -314,7 +314,7 @@ export function WelcomeScreen() {
 
               <div className="shrink-0 text-xl font-black text-white/90 min-w-[44px] text-center">VS</div>
 
-              <div className="flex items-center gap-3 flex-1 min-w-0 justify-end rounded-2xl bg-[#071013] px-3 py-2.5">
+              <div className="flex items-center gap-3 flex-1 min-w-0 justify-end rounded-2xl bg-surface-page px-3 py-2.5">
                 <div className="min-w-0 text-right">
                   <div className="text-xs font-bold text-white/85 truncate">{demoPlayers.right}</div>
                   <motion.div
@@ -327,7 +327,7 @@ export function WelcomeScreen() {
                     {stadiumScene.rightScore}
                   </motion.div>
                 </div>
-                <div className="rounded-full bg-[#FF4B4B] p-[3px] shadow-[0_0_16px_rgba(255,75,75,0.3)]">
+                <div className="rounded-full bg-brand-red-soft p-[3px] shadow-[0_0_16px_rgba(255,75,75,0.3)]">
                   <AvatarDisplay customization={{ base: "avatar-8" }} size="sm" className="rounded-full" />
                 </div>
               </div>
@@ -374,7 +374,7 @@ export function WelcomeScreen() {
               </AnimatePresence>
 
               <div className="relative overflow-hidden rounded-[28px] border border-white/8 bg-[#0B1417] p-2 md:rounded-[34px] md:p-3">
-                <div className="absolute inset-x-10 bottom-2 h-16 rounded-full bg-[#38B60E]/18 blur-3xl" />
+                <div className="absolute inset-x-10 bottom-2 h-16 rounded-full bg-brand-green/18 blur-3xl" />
                 <Image
                   src="/assets/stadium-green.png"
                   alt="QuizBall stadium"
@@ -391,7 +391,7 @@ export function WelcomeScreen() {
                   <motion.div
                     animate={{ y: [0, -4, 0], scale: [1, 1.04, 1] }}
                     transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-                    className="rounded-full bg-[#FF4B4B] p-[3px] shadow-[0_0_18px_rgba(255,75,75,0.35)]"
+                    className="rounded-full bg-brand-red-soft p-[3px] shadow-[0_0_18px_rgba(255,75,75,0.35)]"
                   >
                     <AvatarDisplay customization={{ base: "avatar-1" }} size="sm" className="rounded-full" />
                   </motion.div>
@@ -405,7 +405,7 @@ export function WelcomeScreen() {
                   <motion.div
                     animate={{ y: [0, 4, 0], scale: [1, 1.04, 1] }}
                     transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut', delay: 0.25 }}
-                    className="rounded-full bg-[#38B60E] p-[3px] shadow-[0_0_18px_rgba(56,182,14,0.35)]"
+                    className="rounded-full bg-brand-green p-[3px] shadow-[0_0_18px_rgba(56,182,14,0.35)]"
                   >
                     <AvatarDisplay customization={{ base: "avatar-8" }} size="sm" className="rounded-full" />
                   </motion.div>
@@ -508,17 +508,17 @@ export function WelcomeScreen() {
           {/* Social proof */}
           <div className="flex items-center gap-3 mb-6">
             <div className="flex -space-x-2">
-              <div className="rounded-full bg-[#FF4B4B] p-[3px] ring-2 ring-[#071013]">
+              <div className="rounded-full bg-brand-red-soft p-[3px] ring-2 ring-surface-page">
                 <AvatarDisplay customization={{ base: "avatar-1" }} size="sm" className="rounded-full" />
               </div>
-              <div className="rounded-full bg-[#38B60E] p-[3px] ring-2 ring-[#071013]">
+              <div className="rounded-full bg-brand-green p-[3px] ring-2 ring-surface-page">
                 <AvatarDisplay customization={{ base: "avatar-8" }} size="sm" className="rounded-full" />
               </div>
-              <div className="rounded-full bg-[#FFD700] p-[3px] ring-2 ring-[#071013]">
+              <div className="rounded-full bg-brand-gold p-[3px] ring-2 ring-surface-page">
                 <AvatarDisplay customization={{ base: "avatar-3" }} size="sm" className="rounded-full" />
               </div>
             </div>
-            <span className="text-[#56707A] font-bold text-sm">{duelsCount.toLocaleString()}+ duels played so far</span>
+            <span className="text-brand-slate font-bold text-sm">{duelsCount.toLocaleString()}+ duels played so far</span>
           </div>
 
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-[1.1] mb-4 text-white">
@@ -532,7 +532,7 @@ export function WelcomeScreen() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="text-lg font-bold text-[#38B60E]"
+                className="text-lg font-bold text-brand-green"
               >
                 {SUBHEADING_PHRASES[currentPhraseIndex]}
               </motion.p>
@@ -541,7 +541,7 @@ export function WelcomeScreen() {
 
           <Button
             onClick={handleKickOff}
-            className="w-full sm:w-auto min-w-[280px] h-14 rounded-2xl text-lg font-black uppercase tracking-wide bg-[#38B60E] text-white hover:bg-[#42c814] border-b-[5px] border-[#2D950B] active:border-b-0 active:translate-y-[5px] transition-all shadow-none hover:shadow-none"
+            className="w-full sm:w-auto min-w-[280px] h-14 rounded-2xl text-lg font-black uppercase tracking-wide bg-brand-green text-white hover:bg-brand-green border-b-[5px] border-brand-green-deep active:border-b-0 active:translate-y-[5px] transition-all shadow-none hover:shadow-none"
           >
             Kick off
             </Button>
@@ -711,7 +711,7 @@ export function WelcomeScreen() {
           >
             <Button
               onClick={() => setLoginOpen(true)}
-              className="h-14 px-10 rounded-2xl text-lg font-black uppercase tracking-wide bg-[#38B60E] hover:bg-[#2ea00b] text-white border-b-[5px] border-[#2c8a0a] active:border-b-0 active:translate-y-[5px] transition-all shadow-none hover:shadow-none"
+              className="h-14 px-10 rounded-2xl text-lg font-black uppercase tracking-wide bg-brand-green hover:bg-brand-green-deep text-white border-b-[5px] border-brand-green-deep active:border-b-0 active:translate-y-[5px] transition-all shadow-none hover:shadow-none"
             >
               Start climbing
             </Button>
@@ -771,7 +771,7 @@ export function WelcomeScreen() {
           >
             <Button
               onClick={() => setLoginOpen(true)}
-              className="h-14 px-10 rounded-2xl text-lg font-black uppercase tracking-wide bg-[#38B60E] hover:bg-[#2ea00b] text-white border-b-[5px] border-[#2c8a0a] active:border-b-0 active:translate-y-[5px] transition-all shadow-none hover:shadow-none"
+              className="h-14 px-10 rounded-2xl text-lg font-black uppercase tracking-wide bg-brand-green hover:bg-brand-green-deep text-white border-b-[5px] border-brand-green-deep active:border-b-0 active:translate-y-[5px] transition-all shadow-none hover:shadow-none"
             >
               View the full table
             </Button>
@@ -780,14 +780,14 @@ export function WelcomeScreen() {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="border-t border-white/6 bg-[#071013] py-8">
+      <footer className="border-t border-white/6 bg-surface-page py-8">
         <div className="mx-auto max-w-4xl px-6">
           <div className="flex flex-wrap justify-center gap-8 md:gap-16">
-            <div className="flex items-center gap-2 font-bold text-[#FFE500]">
+            <div className="flex items-center gap-2 font-bold text-brand-yellow">
               <Brain className="size-4" />
               <span className="text-sm">10k+ verified questions</span>
             </div>
-            <div className="flex items-center gap-2 font-bold text-[#FFE500]">
+            <div className="flex items-center gap-2 font-bold text-brand-yellow">
               <Swords className="size-4" />
               <span className="text-sm">{duelsCount.toLocaleString()}+ duels played</span>
             </div>
@@ -795,14 +795,14 @@ export function WelcomeScreen() {
           <div className="mt-6 flex items-center justify-center gap-4 text-sm">
             <Link
               href="/terms"
-              className="font-bold text-white/40 hover:text-[#1CB0F6] transition-colors"
+              className="font-bold text-white/40 hover:text-brand-cyan transition-colors"
             >
               Terms of Service
             </Link>
             <span className="text-white/20">|</span>
             <Link
               href="/privacy"
-              className="font-bold text-white/40 hover:text-[#1CB0F6] transition-colors"
+              className="font-bold text-white/40 hover:text-brand-cyan transition-colors"
             >
               Privacy Policy
             </Link>
@@ -820,7 +820,7 @@ export function WelcomeScreen() {
 
       {/* ── All Categories Modal ── */}
       <Dialog open={categoriesOpen} onOpenChange={setCategoriesOpen}>
-        <DialogContent className="max-w-2xl w-[95vw] rounded-2xl p-5 md:p-8 bg-[#071013] border-[#071013] max-h-[85vh] flex flex-col">
+        <DialogContent className="max-w-2xl w-[95vw] rounded-2xl p-5 md:p-8 bg-surface-page border-surface-page max-h-[85vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black text-center text-white">All categories</DialogTitle>
             <DialogDescription className="text-center text-white/50">
@@ -870,7 +870,7 @@ export function WelcomeScreen() {
 
       {/* ── Login Dialog ── */}
       <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
-        <DialogContent className="max-w-md w-full rounded-2xl p-8 bg-[#071013] border-[#071013]">
+        <DialogContent className="max-w-md w-full rounded-2xl p-8 bg-surface-page border-surface-page">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold mb-4 text-center text-white">Sign in to QuizBall</DialogTitle>
             <DialogDescription className="text-center text-white/50">
@@ -879,7 +879,7 @@ export function WelcomeScreen() {
           </DialogHeader>
           <div className="flex flex-col gap-4 mt-2">
             <Button
-              className="flex items-center justify-center gap-3 h-14 rounded-2xl text-lg font-black uppercase tracking-wide bg-[#FFE500] text-black hover:bg-[#FFD700] border-b-[5px] border-[#CCB800] active:border-b-0 active:translate-y-[5px] transition-all shadow-none hover:shadow-none"
+              className="flex items-center justify-center gap-3 h-14 rounded-2xl text-lg font-black uppercase tracking-wide bg-brand-yellow text-black hover:bg-brand-gold border-b-[5px] border-[#CCB800] active:border-b-0 active:translate-y-[5px] transition-all shadow-none hover:shadow-none"
               onClick={handleGoogleLogin}
             >
               <FcGoogle className="size-6" /> Continue with Google

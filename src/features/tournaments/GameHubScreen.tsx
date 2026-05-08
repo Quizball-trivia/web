@@ -88,7 +88,7 @@ export function GameHubScreen() {
           className="space-y-3"
         >
           <div className="flex items-center gap-2">
-            <TrendingUp className="size-4 text-[#CE82FF]" />
+            <TrendingUp className="size-4 text-brand-purple" />
             <h2 className="text-sm font-black text-white uppercase tracking-wide">
               Your Path
             </h2>
@@ -104,7 +104,7 @@ export function GameHubScreen() {
                 <div
                   key={quest.id}
                   className={cn(
-                    'shrink-0 w-[200px] bg-[#1B2F36] rounded-2xl border-b-4 p-4',
+                    'shrink-0 w-[200px] bg-surface-card rounded-2xl border-b-4 p-4',
                     isCompleted && 'border-b-[#58CC02]',
                     isActive && 'border-b-[#1CB0F6]',
                     isLocked && 'border-b-[#243B44] opacity-60'
@@ -114,16 +114,16 @@ export function GameHubScreen() {
                     <div
                       className={cn(
                         'size-8 rounded-xl flex items-center justify-center shrink-0',
-                        isCompleted && 'bg-[#58CC02]/20',
-                        isActive && 'bg-[#1CB0F6]/20',
-                        isLocked && 'bg-[#56707A]/20'
+                        isCompleted && 'bg-brand-green-light/20',
+                        isActive && 'bg-brand-cyan/20',
+                        isLocked && 'bg-brand-slate/20'
                       )}
                     >
                       {isCompleted ? (
                         <span className="text-xl">✓</span>
                       ) : isLocked ? (
                         <svg
-                          className="size-4 text-[#56707A]"
+                          className="size-4 text-brand-slate"
                           viewBox="0 0 24 24"
                           fill="none"
                           stroke="currentColor"
@@ -133,7 +133,7 @@ export function GameHubScreen() {
                           <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                         </svg>
                       ) : (
-                        <TrendingUp className="size-4 text-[#1CB0F6]" />
+                        <TrendingUp className="size-4 text-brand-cyan" />
                       )}
                     </div>
                   </div>
@@ -141,19 +141,19 @@ export function GameHubScreen() {
                   <h3 className="text-sm font-black text-white mb-1">
                     {quest.label}
                   </h3>
-                  <p className="text-xs text-[#56707A] font-semibold mb-3">
+                  <p className="text-xs text-brand-slate font-semibold mb-3">
                     {quest.subLabel}
                   </p>
 
                   {isActive && quest.progress !== undefined && (
                     <div className="space-y-1">
-                      <div className="h-2 bg-[#131F24] rounded-full overflow-hidden">
+                      <div className="h-2 bg-surface-deep rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-[#1CB0F6] rounded-full"
+                          className="h-full bg-brand-cyan rounded-full"
                           style={{ width: `${quest.progress}%` }}
                         />
                       </div>
-                      <p className="text-xs font-black text-[#1CB0F6] text-right">
+                      <p className="text-xs font-black text-brand-cyan text-right">
                         {quest.progress}%
                       </p>
                     </div>
@@ -173,35 +173,35 @@ export function GameHubScreen() {
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Star className="size-5 text-[#FF9600] fill-current" />
+              <Star className="size-5 text-brand-orange fill-current" />
               <h2 className="text-sm font-black text-white uppercase tracking-wide">
                 World Event
               </h2>
             </div>
-            <button className="text-xs font-bold text-[#1CB0F6] hover:text-[#1CB0F6]/80 transition-colors">
+            <button className="text-xs font-bold text-brand-cyan hover:text-brand-cyan/80 transition-colors">
               View Past Events
             </button>
           </div>
 
-          <div className="bg-gradient-to-br from-[#2A1F0F] via-[#1F1A12] to-[#1A1510] rounded-3xl border-4 border-[#B8860B] overflow-hidden relative">
+          <div className="bg-gradient-to-br from-[#2A1F0F] via-[#1F1A12] to-[#1A1510] rounded-3xl border-4 border-brand-gold-deep overflow-hidden relative">
             {/* Decorative gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#FFD700]/5 via-transparent to-[#FFD700]/5 opacity-30" />
+            <div className="absolute inset-0 bg-gradient-to-r from-brand-gold/5 via-transparent to-brand-gold/5 opacity-30" />
 
             <div className="relative z-10 p-6 space-y-4">
               {/* Header */}
               <div className="flex items-start justify-between gap-6">
                 <div className="flex-1">
-                  <div className="inline-flex items-center gap-2 bg-[#FFD700]/10 rounded-full px-3 py-1 mb-3 border border-[#B8860B]/30">
-                    <span className="text-xs font-black text-[#FFD700] uppercase tracking-wider">
+                  <div className="inline-flex items-center gap-2 bg-brand-gold/10 rounded-full px-3 py-1 mb-3 border border-brand-gold-deep/30">
+                    <span className="text-xs font-black text-brand-gold uppercase tracking-wider">
                       World Event
                     </span>
-                    <Clock className="size-3 text-[#FFD700]" />
-                    <span className="text-xs font-black text-[#FF4B4B]">
+                    <Clock className="size-3 text-brand-gold" />
+                    <span className="text-xs font-black text-brand-red-soft">
                       Ends in {bossEventExpiry ? getTimeRemaining(bossEventExpiry) : '...'}
                     </span>
                   </div>
 
-                  <h3 className="text-3xl font-black text-transparent bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] bg-clip-text mb-2 leading-tight italic">
+                  <h3 className="text-3xl font-black text-transparent bg-gradient-to-r from-brand-gold via-brand-orange to-brand-gold bg-clip-text mb-2 leading-tight italic">
                     THE GOLDEN BOOT
                   </h3>
                   <p className="text-sm text-white/60 font-semibold max-w-xl">
@@ -245,7 +245,7 @@ export function GameHubScreen() {
               </div>
 
               {/* Progress */}
-              <div className="bg-black/40 rounded-2xl p-4 space-y-3 border border-[#B8860B]/20">
+              <div className="bg-black/40 rounded-2xl p-4 space-y-3 border border-brand-gold-deep/20">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-white/60 uppercase tracking-wider">
                     Goals Scored
@@ -255,26 +255,26 @@ export function GameHubScreen() {
                   </span>
                 </div>
 
-                <div className="relative h-3 bg-[#1A1510] rounded-full overflow-hidden border border-[#B8860B]/20">
+                <div className="relative h-3 bg-[#1A1510] rounded-full overflow-hidden border border-brand-gold-deep/20">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${eventPercent}%` }}
                     transition={{ duration: 1, ease: 'easeOut', delay: 0.3 }}
-                    className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#58CC02] to-[#85E000]"
+                    className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-brand-green-light to-[#85E000]"
                   >
                     <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/30 to-transparent h-1/2" />
                   </motion.div>
                 </div>
 
-                <p className="text-sm font-black text-[#FFD700]">{eventPercent}%</p>
+                <p className="text-sm font-black text-brand-gold">{eventPercent}%</p>
               </div>
 
               {/* CTA Button */}
-              <button className="w-full md:w-auto px-8 py-4 rounded-2xl bg-gradient-to-b from-[#FFD700] to-[#FFA500] border-b-4 border-[#CC8800] text-[#1A1510] font-black text-base uppercase hover:from-[#FFA500] hover:to-[#FFD700] active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-3 group shadow-lg shadow-[#FFD700]/20">
+              <button className="w-full md:w-auto px-8 py-4 rounded-2xl bg-gradient-to-b from-brand-gold to-brand-orange border-b-4 border-[#CC8800] text-[#1A1510] font-black text-base uppercase hover:from-brand-orange hover:to-brand-gold active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-3 group shadow-lg shadow-brand-gold/20">
                 Continue Quest
                 <div className="flex items-center gap-2">
                   <span className="text-xl">🪙</span>
-                  <div className="w-3 h-3 rounded-full bg-[#FF4B4B]" />
+                  <div className="w-3 h-3 rounded-full bg-brand-red-soft" />
                 </div>
               </button>
             </div>
@@ -290,12 +290,12 @@ export function GameHubScreen() {
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Trophy className="size-5 text-[#CE82FF]" />
+              <Trophy className="size-5 text-brand-purple" />
               <h2 className="text-sm font-black text-white uppercase tracking-wide">
                 Weekly Challenges
               </h2>
             </div>
-            <span className="text-xs font-bold text-[#56707A] bg-[#1B2F36] px-3 py-1.5 rounded-full border-b-2 border-[#0D1B21]">
+            <span className="text-xs font-bold text-brand-slate bg-surface-card px-3 py-1.5 rounded-full border-b-2 border-surface-card-deep">
               Resets in 3d 12h
             </span>
           </div>
@@ -306,8 +306,8 @@ export function GameHubScreen() {
               const tierColors = {
                 bronze: {
                   border: 'border-b-[#FF9600]/60',
-                  bg: 'bg-[#FF9600]/15',
-                  text: 'text-[#FF9600]',
+                  bg: 'bg-brand-orange/15',
+                  text: 'text-brand-orange',
                   icon: '🥉',
                 },
                 silver: {
@@ -318,14 +318,14 @@ export function GameHubScreen() {
                 },
                 gold: {
                   border: 'border-b-[#FFD700]/60',
-                  bg: 'bg-[#FFD700]/15',
-                  text: 'text-[#FFD700]',
+                  bg: 'bg-brand-gold/15',
+                  text: 'text-brand-gold',
                   icon: '🥇',
                 },
                 platinum: {
                   border: 'border-b-[#1CB0F6]/60',
-                  bg: 'bg-[#1CB0F6]/15',
-                  text: 'text-[#1CB0F6]',
+                  bg: 'bg-brand-cyan/15',
+                  text: 'text-brand-cyan',
                   icon: '💎',
                 },
               }[challenge.tier];
@@ -335,11 +335,11 @@ export function GameHubScreen() {
                   key={challenge.id}
                   disabled={isLocked}
                   className={cn(
-                    'text-left bg-[#1B2F36] rounded-2xl border-b-4 p-5 transition-all',
+                    'text-left bg-surface-card rounded-2xl border-b-4 p-5 transition-all',
                     tierColors.border,
                     isLocked
                       ? 'opacity-50 cursor-not-allowed'
-                      : 'hover:bg-[#243B44] active:border-b-2 active:translate-y-[2px] cursor-pointer'
+                      : 'hover:bg-surface-card-tint active:border-b-2 active:translate-y-[2px] cursor-pointer'
                   )}
                 >
                   <div className="flex items-start gap-3 mb-3">
@@ -355,7 +355,7 @@ export function GameHubScreen() {
                       <h3 className="text-base font-black text-white mb-1">
                         {challenge.title}
                       </h3>
-                      <p className="text-xs text-[#56707A] font-semibold">
+                      <p className="text-xs text-brand-slate font-semibold">
                         {isLocked ? challenge.requirement : challenge.rewards}
                       </p>
                     </div>

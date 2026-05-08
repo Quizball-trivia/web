@@ -38,17 +38,17 @@ export function TrainingTooltip({ title, message, position, onDismiss, onSkip }:
           initial={{ opacity: 0, scale: 0.85, y: position === "top" ? -20 : 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 22 }}
-          className="w-full max-w-sm bg-[#1B2F36] border-2 border-[#0D1B21] border-b-4 rounded-2xl p-5 shadow-2xl"
+          className="w-full max-w-sm bg-surface-card border-2 border-surface-card-deep border-b-4 rounded-2xl p-5 shadow-2xl"
         >
           <h3 className="text-lg font-black text-white uppercase tracking-wide mb-2">
             {title}
           </h3>
-          <p className="text-sm font-semibold text-[#9CB8C4] leading-relaxed mb-5">
+          <p className="text-sm font-semibold text-brand-slate-light leading-relaxed mb-5">
             {message}
           </p>
           <button
             onClick={onDismiss}
-            className="w-full py-3 rounded-xl bg-[#58CC02] border-b-[5px] border-[#46A302] text-sm font-black text-white uppercase tracking-wider active:translate-y-[2px] active:border-b-[3px] transition-all"
+            className="w-full py-3 rounded-xl bg-brand-green-light border-b-[5px] border-brand-green text-sm font-black text-white uppercase tracking-wider active:translate-y-[2px] active:border-b-[3px] transition-all"
           >
             GOT IT
           </button>

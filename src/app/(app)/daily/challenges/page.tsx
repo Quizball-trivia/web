@@ -155,14 +155,14 @@ function ChallengeCard({
         type="button"
         disabled={disabled}
         onClick={onClick}
-        className={`relative flex h-[184px] w-full flex-col overflow-hidden rounded-[8px] p-3.5 pb-10 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFE500] md:block md:h-auto md:min-h-[212px] md:rounded-[10px] md:p-6 ${
+        className={`relative flex h-[184px] w-full flex-col overflow-hidden rounded-[8px] p-3.5 pb-10 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow md:block md:h-auto md:min-h-[212px] md:rounded-[10px] md:p-6 ${
           isCompleted
-            ? "bg-[#FFE500] text-black disabled:cursor-default md:border-2 md:border-[#58CC02] md:bg-[#164314] md:text-white md:shadow-[0_0_0_4px_rgba(88,204,2,0.16)]"
-            : "bg-[#FFE500] text-black hover:brightness-105 active:translate-y-[2px]"
+            ? "bg-brand-yellow text-black disabled:cursor-default md:border-2 md:border-brand-green-light md:bg-[#164314] md:text-white md:shadow-[0_0_0_4px_rgba(88,204,2,0.16)]"
+            : "bg-brand-yellow text-black hover:brightness-105 active:translate-y-[2px]"
         }`}
       >
         {isCompleted ? (
-          <div className="absolute left-3 top-3 hidden items-center gap-1.5 rounded-full bg-[#58CC02] px-3 py-1 text-[11px] font-black uppercase tracking-wide text-white md:inline-flex">
+          <div className="absolute left-3 top-3 hidden items-center gap-1.5 rounded-full bg-brand-green-light px-3 py-1 text-[11px] font-black uppercase tracking-wide text-white md:inline-flex">
             <CheckCircle2 className="size-3.5" />
             Completed
           </div>
@@ -173,7 +173,7 @@ function ChallengeCard({
         </h3>
         <div className="mt-2.5 flex justify-center md:mt-4">
           <span
-            className={`flex size-11 items-center justify-center text-[#FFE500] md:size-24 ${
+            className={`flex size-11 items-center justify-center text-brand-yellow md:size-24 ${
               ASSET_ICON_CHALLENGES.has(challenge.challengeType) ? "" : "rounded-full bg-black"
             }`}
           >
@@ -190,7 +190,7 @@ function ChallengeCard({
             {challenge.coinReward}
             <Image src="/assets/coin-1.png" alt="" width={16} height={16} className="size-4 object-contain" />
           </span>
-          <span className="inline-flex h-6 items-center gap-1 rounded-full bg-[#58CC02] px-2.5 text-[10px] font-black text-white">
+          <span className="inline-flex h-6 items-center gap-1 rounded-full bg-brand-green-light px-2.5 text-[10px] font-black text-white">
             {challenge.xpReward} XP
           </span>
         </div>
@@ -275,7 +275,7 @@ export default function DailyChallengesPage() {
               </p>
               <div className="mt-3 h-[18px] w-[15ch] max-w-full overflow-hidden rounded-[5px] bg-[#A18F00]">
                 <div
-                  className="h-full rounded-[5px] bg-[#FFE500] transition-all duration-500"
+                  className="h-full rounded-[5px] bg-brand-yellow transition-all duration-500"
                   style={{ width: `${progressPct}%` }}
                 />
               </div>
@@ -288,7 +288,7 @@ export default function DailyChallengesPage() {
               <p className="font-poppins text-[8px] font-semibold uppercase leading-none tracking-[-0.02em] text-white md:text-[0.95rem]">
                 Coins Earned
               </p>
-              <p className="font-poppins mt-1 text-[30px] font-semibold uppercase leading-none text-[#FFE500] md:mt-2 md:text-[44px]">
+              <p className="font-poppins mt-1 text-[30px] font-semibold uppercase leading-none text-brand-yellow md:mt-2 md:text-[44px]">
                 {earnedCoins}
               </p>
               <p className="mt-0.5 font-poppins text-[10px] font-semibold uppercase leading-none text-white/45 md:mt-1 md:text-[16px]">
@@ -300,7 +300,7 @@ export default function DailyChallengesPage() {
 
         {/* Grid of challenge cards */}
         {isLoading ? (
-          <div className="rounded-[10px] bg-[#1B2F36] p-6 text-center text-[#56707A] font-bold">
+          <div className="rounded-[10px] bg-surface-card p-6 text-center text-brand-slate font-bold">
             Loading today&apos;s challenge lineup...
           </div>
         ) : (
@@ -324,7 +324,7 @@ export default function DailyChallengesPage() {
             </p>
             <div className="mt-2 h-[7px] w-[74px] overflow-hidden rounded-full bg-[#A18F00]">
               <div
-                className="h-full rounded-full bg-[#FFE500] transition-all duration-500"
+                className="h-full rounded-full bg-brand-yellow transition-all duration-500"
                 style={{ width: `${progressPct}%` }}
               />
             </div>
@@ -341,7 +341,7 @@ export default function DailyChallengesPage() {
               <p className="font-poppins text-xs uppercase tracking-wider text-white mb-2">
                 Play For
               </p>
-              <span className="inline-flex items-center gap-2 rounded-full bg-[#FFE500]/15 px-4 py-1.5 text-sm font-black text-[#FFE500]">
+              <span className="inline-flex items-center gap-2 rounded-full bg-brand-yellow/15 px-4 py-1.5 text-sm font-black text-brand-yellow">
                 {totalPlayCost}
                 <Image src="/assets/coin-1.png" alt="" width={20} height={20} className="size-5 object-contain" />
               </span>
@@ -350,7 +350,7 @@ export default function DailyChallengesPage() {
               <p className="font-poppins text-xs uppercase tracking-wider text-white mb-2">
                 Earn
               </p>
-              <span className="inline-flex items-center rounded-full bg-[#58CC02] px-4 py-1.5 text-sm font-black text-white">
+              <span className="inline-flex items-center rounded-full bg-brand-green-light px-4 py-1.5 text-sm font-black text-white">
                 {totalXp} XP
               </span>
             </div>

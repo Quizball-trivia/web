@@ -43,21 +43,21 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 const DIFFICULTY_STYLES: Record<string, { text: string; bg: string; border: string }> = {
-  easy: { text: "text-[#58CC02]", bg: "bg-[#58CC02]/10", border: "border-[#58CC02]/30" },
-  medium: { text: "text-[#FFD700]", bg: "bg-[#FFD700]/10", border: "border-[#FFD700]/30" },
-  hard: { text: "text-[#FF9600]", bg: "bg-[#FF9600]/10", border: "border-[#FF9600]/30" },
-  expert: { text: "text-[#FF4B4B]", bg: "bg-[#FF4B4B]/10", border: "border-[#FF4B4B]/30" },
+  easy: { text: "text-brand-green-light", bg: "bg-brand-green-light/10", border: "border-brand-green-light/30" },
+  medium: { text: "text-brand-gold", bg: "bg-brand-gold/10", border: "border-brand-gold/30" },
+  hard: { text: "text-brand-orange", bg: "bg-brand-orange/10", border: "border-brand-orange/30" },
+  expert: { text: "text-brand-red-soft", bg: "bg-brand-red-soft/10", border: "border-brand-red-soft/30" },
 };
 
 const ICON_COLOR_MAP: Record<string, string> = {
-  "text-yellow-500": "text-[#FFD700]",
-  "text-orange-500": "text-[#FF9600]",
-  "text-blue-500": "text-[#1CB0F6]",
-  "text-red-500": "text-[#FF4B4B]",
-  "text-purple-500": "text-[#CE82FF]",
-  "text-cyan-500": "text-[#1CB0F6]",
-  "text-green-500": "text-[#58CC02]",
-  "text-primary": "text-[#1CB0F6]",
+  "text-yellow-500": "text-brand-gold",
+  "text-orange-500": "text-brand-orange",
+  "text-blue-500": "text-brand-cyan",
+  "text-red-500": "text-brand-red-soft",
+  "text-purple-500": "text-brand-purple",
+  "text-cyan-500": "text-brand-cyan",
+  "text-green-500": "text-brand-green-light",
+  "text-primary": "text-brand-cyan",
 };
 
 interface ObjectiveCardProps {
@@ -100,10 +100,10 @@ export const ObjectiveCard = memo(function ObjectiveCard({
       <div
         className={`rounded-2xl border-b-4 transition-all overflow-hidden ${
           isClaimed
-            ? "bg-[#1B2F36]/60 border-b-[#58CC02]/50 opacity-70"
+            ? "bg-surface-card/60 border-b-[#58CC02]/50 opacity-70"
             : objective.completed
-              ? "bg-[#1B2F36] border-b-[#58CC02]"
-              : "bg-[#1B2F36] border-b-[#243B44]"
+              ? "bg-surface-card border-b-[#58CC02]"
+              : "bg-surface-card border-b-[#243B44]"
         }`}
       >
         <div className="p-3.5 md:p-5">
@@ -112,14 +112,14 @@ export const ObjectiveCard = memo(function ObjectiveCard({
             <div
               className={`flex size-12 md:size-14 items-center justify-center rounded-xl md:rounded-2xl border-2 shrink-0 ${
                 isClaimed
-                  ? "bg-[#58CC02]/20 border-[#58CC02]/40"
+                  ? "bg-brand-green-light/20 border-brand-green-light/40"
                   : objective.completed
-                    ? "bg-[#58CC02]/20 border-[#58CC02]/40"
-                    : "bg-[#243B44] border-[#243B44]"
+                    ? "bg-brand-green-light/20 border-brand-green-light/40"
+                    : "bg-surface-card-tint border-surface-card-tint"
               }`}
             >
               {isClaimed ? (
-                <CheckCircle2 className="size-6 md:size-7 text-[#58CC02]" />
+                <CheckCircle2 className="size-6 md:size-7 text-brand-green-light" />
               ) : (
                 <IconComponent className={`size-5 md:size-6 ${iconColor}`} />
               )}
@@ -134,11 +134,11 @@ export const ObjectiveCard = memo(function ObjectiveCard({
                   {objective.difficulty}
                 </span>
               </div>
-              <p className="text-xs md:text-sm text-[#56707A] font-semibold">{objective.description}</p>
+              <p className="text-xs md:text-sm text-brand-slate font-semibold">{objective.description}</p>
             </div>
 
             {objective.expiresIn && (
-              <div className="flex items-center gap-1 text-[10px] font-bold text-[#56707A] shrink-0 bg-[#243B44] px-2 py-1 rounded-full">
+              <div className="flex items-center gap-1 text-[10px] font-bold text-brand-slate shrink-0 bg-surface-card-tint px-2 py-1 rounded-full">
                 <Clock className="size-3" />
                 {formatTimeRemaining(objective.expiresIn)}
               </div>
@@ -146,26 +146,26 @@ export const ObjectiveCard = memo(function ObjectiveCard({
           </div>
 
           {/* Progress Bar */}
-          <div className="bg-[#131F24] rounded-xl border-b-[3px] border-[#0D1B21] p-2 md:p-2.5 mb-3">
-            <div className="relative h-2.5 md:h-3 bg-[#243B44] rounded-full overflow-hidden">
+          <div className="bg-surface-deep rounded-xl border-b-[3px] border-surface-card-deep p-2 md:p-2.5 mb-3">
+            <div className="relative h-2.5 md:h-3 bg-surface-card-tint rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${progressPercent}%` }}
                 transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 + index * 0.05 }}
                 className={`absolute inset-y-0 left-0 rounded-full ${
                   objective.completed
-                    ? "bg-gradient-to-r from-[#58CC02] to-[#85E000]"
-                    : "bg-gradient-to-r from-[#CE82FF] to-[#E0A8FF]"
+                    ? "bg-gradient-to-r from-brand-green-light to-[#85E000]"
+                    : "bg-gradient-to-r from-brand-purple to-[#E0A8FF]"
                 }`}
               >
                 <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/30 to-transparent h-1/2" />
               </motion.div>
             </div>
             <div className="flex items-center justify-between mt-1.5">
-              <span className="text-[10px] md:text-xs font-black text-[#56707A]">
-                <span className={objective.completed ? "text-[#58CC02]" : "text-[#CE82FF]"}>{objective.progress}</span>/{objective.target}
+              <span className="text-[10px] md:text-xs font-black text-brand-slate">
+                <span className={objective.completed ? "text-brand-green-light" : "text-brand-purple"}>{objective.progress}</span>/{objective.target}
               </span>
-              <span className={`text-[10px] md:text-xs font-black ${objective.completed ? "text-[#58CC02]" : "text-[#CE82FF]"}`}>
+              <span className={`text-[10px] md:text-xs font-black ${objective.completed ? "text-brand-green-light" : "text-brand-purple"}`}>
                 {progressPercent.toFixed(0)}%
               </span>
             </div>
@@ -175,13 +175,13 @@ export const ObjectiveCard = memo(function ObjectiveCard({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 md:gap-3">
               {objective.rewards.coins && (
-                <span className="flex items-center gap-1 text-[11px] md:text-xs font-black px-2.5 py-0.5 rounded-full bg-[#FFD700]/15 border border-[#FFD700]/30 text-[#FFD700]">
+                <span className="flex items-center gap-1 text-[11px] md:text-xs font-black px-2.5 py-0.5 rounded-full bg-brand-gold/15 border border-brand-gold/30 text-brand-gold">
                   <Coins className="size-3.5" />
                   {objective.rewards.coins}
                 </span>
               )}
               {objective.rewards.xp && (
-                <span className="flex items-center gap-1 text-[11px] md:text-xs font-black px-2.5 py-0.5 rounded-full bg-[#CE82FF]/15 border border-[#CE82FF]/30 text-[#CE82FF]">
+                <span className="flex items-center gap-1 text-[11px] md:text-xs font-black px-2.5 py-0.5 rounded-full bg-brand-purple/15 border border-brand-purple/30 text-brand-purple">
                   <Sparkles className="size-3.5" />
                   {objective.rewards.xp} XP
                 </span>
@@ -190,7 +190,7 @@ export const ObjectiveCard = memo(function ObjectiveCard({
                 <span className="text-sm">{objective.rewards.badge}</span>
               )}
               {objective.rewards.item && (
-                <span className="flex items-center gap-1 text-[11px] md:text-xs font-black px-2.5 py-0.5 rounded-full bg-[#FF9600]/15 border border-[#FF9600]/30 text-[#FF9600]">
+                <span className="flex items-center gap-1 text-[11px] md:text-xs font-black px-2.5 py-0.5 rounded-full bg-brand-orange/15 border border-brand-orange/30 text-brand-orange">
                   <Gift className="size-3.5" />
                   <span className="truncate max-w-[80px]">{objective.rewards.item}</span>
                 </span>
@@ -198,8 +198,8 @@ export const ObjectiveCard = memo(function ObjectiveCard({
             </div>
 
             {isClaimed ? (
-              <div className="px-4 py-2 md:px-5 md:py-2.5 rounded-xl bg-[#58CC02]/20 border-b-[3px] border-[#58CC02]/30 shrink-0">
-                <span className="flex items-center gap-1 text-xs font-black text-[#58CC02] uppercase">
+              <div className="px-4 py-2 md:px-5 md:py-2.5 rounded-xl bg-brand-green-light/20 border-b-[3px] border-brand-green-light/30 shrink-0">
+                <span className="flex items-center gap-1 text-xs font-black text-brand-green-light uppercase">
                   <CheckCircle2 className="size-3.5" />
                   Claimed
                 </span>
@@ -207,14 +207,14 @@ export const ObjectiveCard = memo(function ObjectiveCard({
             ) : objective.completed ? (
               <button
                 onClick={onClaim}
-                className="px-5 py-2.5 md:px-6 md:py-3 rounded-xl bg-[#58CC02] border-b-4 border-[#46A302] text-white font-black text-xs md:text-sm uppercase tracking-wide hover:bg-[#61D806] active:border-b-2 active:translate-y-[2px] transition-all shrink-0"
+                className="px-5 py-2.5 md:px-6 md:py-3 rounded-xl bg-brand-green-light border-b-4 border-brand-green text-white font-black text-xs md:text-sm uppercase tracking-wide hover:bg-brand-green-light active:border-b-2 active:translate-y-[2px] transition-all shrink-0"
               >
                 <Gift className="size-3.5 inline-block mr-1.5" />
                 Claim
               </button>
             ) : (
-              <div className="px-3 py-1.5 rounded-xl bg-[#243B44] border-b-[3px] border-[#1B2F36] shrink-0">
-                <span className="flex items-center gap-1 text-[11px] font-black text-[#56707A] uppercase">
+              <div className="px-3 py-1.5 rounded-xl bg-surface-card-tint border-b-[3px] border-surface-card shrink-0">
+                <span className="flex items-center gap-1 text-[11px] font-black text-brand-slate uppercase">
                   <Lock className="size-3" />
                   Locked
                 </span>

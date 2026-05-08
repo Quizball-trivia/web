@@ -15,7 +15,7 @@ export function IntroScreen({ visible, onStart }: IntroScreenProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#131F24]"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-surface-deep"
         >
           <motion.button
             initial={{ scale: 0 }}
@@ -36,7 +36,7 @@ export function IntroScreen({ visible, onStart }: IntroScreenProps) {
             <div className="text-3xl font-black text-white uppercase tracking-widest mb-2">
               Quizball
             </div>
-            <div className="text-lg text-[#56707A] group-hover:text-[#1CB0F6] transition-colors">
+            <div className="text-lg text-brand-slate group-hover:text-brand-cyan transition-colors">
               Tap to Start
             </div>
           </motion.button>
