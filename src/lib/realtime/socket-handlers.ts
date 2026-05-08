@@ -6,12 +6,14 @@ import { queryKeys } from '@/lib/queries/queryKeys';
 import { logger } from '@/utils/logger';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 import { getI18nText } from '@/lib/utils/i18n';
+import { translate, normalizeLocale } from '@/lib/i18n/messages';
 import { toast } from 'sonner';
 import { getMe } from '@/lib/api/endpoints';
 import { useAuthStore } from '@/stores/auth.store';
 import type {
   DraftState,
   ErrorPayload,
+  ForceLogoutPayload,
   MatchChanceCardAppliedPayload,
   MatchCluesGuessAckPayload,
   MatchCountdownGuessAckPayload,
@@ -75,6 +77,21 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
         stateSnapshot: data.stateSnapshot,
       },
     });
+  });
+
+  socket.on('auth:force_logout', async (data: ForceLogoutPayload) => {
+    logger.warn('Socket event auth:force_logout', data);
+    // Pull locale from storage; this module isn't a React component so we can't use useLocale().
+    const locale = normalizeLocale(storage.get<string>(STORAGE_KEYS.LOCALE, 'en'));
+    toast.error(translate(locale, 'auth.sessionEnded'));
+    try {
+      await useAuthStore.getState().logout();
+    } catch (err) {
+      logger.warn('Failed to call logout() after force_logout', err);
+    }
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
+    }
   });
 
   socket.on('lobby:state', (data: LobbyState) => {

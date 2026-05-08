@@ -71,7 +71,7 @@ export function PurchaseConfirmModal({
 
             {/* Item name */}
             <div
-              className="text-center text-[24px] uppercase text-[#071013]"
+              className="text-center text-[24px] uppercase text-surface-page"
               style={poppins}
             >
               {name}
@@ -80,7 +80,7 @@ export function PurchaseConfirmModal({
             {/* Price */}
             <div className="mt-4 flex items-center justify-center gap-2">
               <span
-                className="text-[10px] uppercase tracking-[0.04em] text-[#071013]/55"
+                className="text-[10px] uppercase tracking-[0.04em] text-surface-page/55"
                 style={poppins}
               >
                 Price
@@ -100,7 +100,7 @@ export function PurchaseConfirmModal({
                 type="button"
                 disabled={isPending}
                 onClick={onClose}
-                className="flex h-[48px] flex-1 items-center justify-center rounded-[16px] border-2 border-[#071013]/20 bg-[#071013]/5 text-[14px] uppercase text-[#071013] transition-colors hover:bg-[#071013]/10 disabled:opacity-40"
+                className="flex h-[48px] flex-1 items-center justify-center rounded-[16px] border-2 border-surface-page/20 bg-surface-page/5 text-[14px] uppercase text-surface-page transition-colors hover:bg-surface-page/10 disabled:opacity-40"
                 style={poppins}
               >
                 Cancel

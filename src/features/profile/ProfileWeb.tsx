@@ -246,7 +246,7 @@ export function ProfileWeb({
                     disabled={isUpdating}
                     onKeyDown={(e) => e.key === 'Enter' && handleNameChange()}
                   />
-                  <button onClick={handleNameChange} disabled={isUpdating} className="size-10 rounded-[8px] bg-[#38B60E] flex items-center justify-center text-white active:translate-y-[2px] transition-transform">
+                  <button onClick={handleNameChange} disabled={isUpdating} className="size-10 rounded-[8px] bg-brand-green flex items-center justify-center text-white active:translate-y-[2px] transition-transform">
                     <Check className="size-5" />
                   </button>
                   <button onClick={() => setIsEditingName(false)} disabled={isUpdating} className="size-10 rounded-[8px] bg-white/[0.06] flex items-center justify-center text-white/70 active:translate-y-[2px] transition-transform">
@@ -297,14 +297,14 @@ export function ProfileWeb({
             {/* Economy: Coins & Tickets (self only) */}
             {isSelf && (
               <div className="flex items-center justify-center lg:justify-start gap-3">
-                <span className="inline-flex items-center gap-1.5 text-sm font-fun font-black tabular-nums text-[#FFE500]">
+                <span className="inline-flex items-center gap-1.5 text-sm font-fun font-black tabular-nums text-brand-yellow">
                   <Coins className="size-4" />
                   {displayedCoins.toLocaleString()}
                 </span>
                 {displayedTickets !== undefined && (
                   <>
                     <div className="w-px h-4 bg-white/10" />
-                    <span className="inline-flex items-center gap-1.5 text-sm font-fun font-black tabular-nums text-[#CE82FF]">
+                    <span className="inline-flex items-center gap-1.5 text-sm font-fun font-black tabular-nums text-brand-purple">
                       <Ticket className="size-4" />
                       {displayedTickets}
                     </span>
@@ -317,7 +317,7 @@ export function ProfileWeb({
             <div className="grid grid-cols-3 gap-2 lg:gap-3 pt-2 lg:pt-3 border-t border-white/8">
               <div className="text-center lg:text-left">
                 <div
-                  className="text-2xl lg:text-3xl tabular-nums text-[#38B60E]"
+                  className="text-2xl lg:text-3xl tabular-nums text-brand-green"
                   style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, letterSpacing: '0', lineHeight: 1 }}
                 >
                   {winRate}%
@@ -326,7 +326,7 @@ export function ProfileWeb({
               </div>
               <div className="text-center lg:text-left">
                 <div
-                  className="text-2xl lg:text-3xl tabular-nums text-[#FF9600]"
+                  className="text-2xl lg:text-3xl tabular-nums text-brand-orange"
                   style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, letterSpacing: '0', lineHeight: 1 }}
                 >
                   {rankedProfile?.currentWinStreak ?? 0}
@@ -335,7 +335,7 @@ export function ProfileWeb({
               </div>
               <div className="text-center lg:text-left">
                 <div
-                  className="text-2xl lg:text-3xl tabular-nums text-[#FFE500]"
+                  className="text-2xl lg:text-3xl tabular-nums text-brand-yellow"
                   style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, letterSpacing: '0', lineHeight: 1 }}
                 >
                   {gamesPlayed}
@@ -360,14 +360,14 @@ export function ProfileWeb({
               <>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-fun font-black uppercase tracking-[0.22em] text-white/45">Placement</span>
-                  <span className="text-xs font-fun font-black text-[#FFE500] tabular-nums">{placementPlayed}/{placementRequired}</span>
+                  <span className="text-xs font-fun font-black text-brand-yellow tabular-nums">{placementPlayed}/{placementRequired}</span>
                 </div>
-                <div className="relative h-2.5 bg-[#2D950B]/50 rounded-full overflow-hidden mb-2">
+                <div className="relative h-2.5 bg-brand-green-deep/50 rounded-full overflow-hidden mb-2">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${(placementPlayed / placementRequired) * 100}%` }}
                     transition={{ duration: 0.8, ease: 'easeOut' }}
-                    className="absolute inset-y-0 left-0 rounded-full bg-[#FFE500]"
+                    className="absolute inset-y-0 left-0 rounded-full bg-brand-yellow"
                   />
                 </div>
                 <div className="text-[10px] font-fun font-black uppercase tracking-wide text-white/45">
@@ -379,7 +379,7 @@ export function ProfileWeb({
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-fun font-black uppercase tracking-[0.22em] text-white/45">Rank Points</span>
                   {rankedProfile?.currentWinStreak && rankedProfile.currentWinStreak > 1 ? (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-fun font-black uppercase tracking-wide text-[#FF9600]">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-fun font-black uppercase tracking-wide text-brand-orange">
                       <Flame className="size-3" />
                       {rankedProfile.currentWinStreak} streak
                     </span>
@@ -387,19 +387,19 @@ export function ProfileWeb({
                 </div>
                 <div className="flex items-baseline gap-1 mb-2">
                   <span
-                    className="text-3xl tabular-nums text-[#FFE500]"
+                    className="text-3xl tabular-nums text-brand-yellow"
                     style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, letterSpacing: '0', lineHeight: 1 }}
                   >
                     {displayRp}
                   </span>
-                  <span className="text-sm font-fun font-black uppercase text-[#FFE500]">RP</span>
+                  <span className="text-sm font-fun font-black uppercase text-brand-yellow">RP</span>
                 </div>
-                <div className="relative h-2.5 bg-[#2D950B]/50 rounded-full overflow-hidden">
+                <div className="relative h-2.5 bg-brand-green-deep/50 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: '100%' }}
                     transition={{ duration: 1, ease: 'easeOut', delay: 0.3 }}
-                    className="absolute inset-y-0 left-0 rounded-full bg-[#FFE500]"
+                    className="absolute inset-y-0 left-0 rounded-full bg-brand-yellow"
                   />
                 </div>
               </>
@@ -408,7 +408,7 @@ export function ProfileWeb({
             <div className="mt-4 pt-4 border-t border-white/8">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] font-fun font-black uppercase tracking-[0.22em] text-white/45">XP Progress</span>
-                <span className="inline-flex items-center gap-1 text-[10px] font-fun font-black uppercase tracking-wide text-[#1CB0F6]">
+                <span className="inline-flex items-center gap-1 text-[10px] font-fun font-black uppercase tracking-wide text-brand-cyan">
                   <Zap className="size-3.5" />
                   Level {progressionLevel}
                 </span>
@@ -432,7 +432,7 @@ export function ProfileWeb({
                   initial={{ width: 0 }}
                   animate={{ width: `${progressionPct}%` }}
                   transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
-                  className="absolute inset-y-0 left-0 rounded-full bg-[#1CB0F6]"
+                  className="absolute inset-y-0 left-0 rounded-full bg-brand-cyan"
                 />
               </div>
               <div className="text-[10px] font-fun font-black uppercase tracking-wide text-white/45">
@@ -483,9 +483,9 @@ export function ProfileWeb({
                 {/* Hero row: current tier badge → progress bar → next tier badge */}
                 <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 sm:gap-5">
                   {/* Current tier */}
-                  <div className="flex items-center gap-3 rounded-[12px] bg-[#FFE500]/10 border border-[#FFE500]/30 px-3 py-2.5 sm:px-4 sm:py-3 shadow-[0_0_24px_rgba(255,229,0,0.15)]">
+                  <div className="flex items-center gap-3 rounded-[12px] bg-brand-yellow/10 border border-brand-yellow/30 px-3 py-2.5 sm:px-4 sm:py-3 shadow-[0_0_24px_rgba(255,229,0,0.15)]">
                     <div className="relative">
-                      <div className="absolute inset-0 rounded-full bg-[#FFE500]/25 blur-md" />
+                      <div className="absolute inset-0 rounded-full bg-brand-yellow/25 blur-md" />
                       <div className="relative text-3xl sm:text-4xl drop-shadow-[0_2px_8px_rgba(255,229,0,0.5)]">
                         {currentVisual?.emoji ?? '⭐'}
                       </div>
@@ -498,7 +498,7 @@ export function ProfileWeb({
                       >
                         {currentTier ?? 'Unranked'}
                       </div>
-                      <div className="mt-1 text-[10px] font-fun font-black uppercase tracking-wide text-[#FFE500] tabular-nums">
+                      <div className="mt-1 text-[10px] font-fun font-black uppercase tracking-wide text-brand-yellow tabular-nums">
                         {displayRp} RP
                       </div>
                     </div>
@@ -512,11 +512,11 @@ export function ProfileWeb({
                       </span>
                       {next ? (
                         <span className="text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white/65">
-                          <span className="text-[#FFE500] tabular-nums">{rpToNext} RP</span>
+                          <span className="text-brand-yellow tabular-nums">{rpToNext} RP</span>
                           <span className="mx-1.5 text-white/35">to next</span>
                         </span>
                       ) : (
-                        <span className="text-[10px] font-fun font-black uppercase tracking-[0.18em] text-[#FFE500]">
+                        <span className="text-[10px] font-fun font-black uppercase tracking-[0.18em] text-brand-yellow">
                           Max rank
                         </span>
                       )}
@@ -526,7 +526,7 @@ export function ProfileWeb({
                         initial={{ width: 0 }}
                         animate={{ width: `${bandPct}%` }}
                         transition={{ duration: 0.9, ease: 'easeOut', delay: 0.25 }}
-                        className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#FFE500] to-[#FF9600] shadow-[0_0_12px_rgba(255,229,0,0.5)]"
+                        className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-brand-yellow to-brand-orange shadow-[0_0_12px_rgba(255,229,0,0.5)]"
                       />
                     </div>
                     <div className="mt-1.5 flex items-center justify-between text-[9px] font-fun font-black uppercase tracking-[0.18em] text-white/35 tabular-nums">
@@ -556,10 +556,10 @@ export function ProfileWeb({
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-3 rounded-[12px] bg-[#FFE500]/10 border border-[#FFE500]/30 px-3 py-2.5 sm:px-4 sm:py-3">
+                    <div className="flex items-center gap-3 rounded-[12px] bg-brand-yellow/10 border border-brand-yellow/30 px-3 py-2.5 sm:px-4 sm:py-3">
                       <div className="text-3xl sm:text-4xl">🏆</div>
                       <div className="min-w-0">
-                        <div className="text-[9px] font-fun font-black uppercase tracking-[0.22em] text-[#FFE500]">Achieved</div>
+                        <div className="text-[9px] font-fun font-black uppercase tracking-[0.22em] text-brand-yellow">Achieved</div>
                         <div
                           className="text-base sm:text-lg uppercase text-white leading-none mt-1"
                           style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
@@ -589,7 +589,7 @@ export function ProfileWeb({
                           }}
                         >
                           <div className="text-lg sm:text-xl">{visual.emoji}</div>
-                          {isCurrent && <div className="size-1 rounded-full bg-[#FFE500]" />}
+                          {isCurrent && <div className="size-1 rounded-full bg-brand-yellow" />}
                         </div>
                       );
                     })}
@@ -599,7 +599,7 @@ export function ProfileWeb({
                       initial={{ width: 0 }}
                       animate={{ width: `${overallPct}%` }}
                       transition={{ duration: 0.8, ease: 'easeOut', delay: 0.35 }}
-                      className="absolute inset-y-0 left-0 rounded-full bg-[#38B60E]"
+                      className="absolute inset-y-0 left-0 rounded-full bg-brand-green"
                     />
                   </div>
                 </div>
@@ -650,11 +650,11 @@ export function ProfileWeb({
                     <div className="w-full space-y-1.5">
                       <div className="flex justify-between items-center px-3 py-2.5 bg-white/[0.03] rounded-[8px]">
                         <div className="flex items-center gap-2">
-                          <Globe className="size-4 text-[#1CB0F6]" />
+                          <Globe className="size-4 text-brand-cyan" />
                           <span className="text-xs font-fun font-black uppercase tracking-wide text-white">World</span>
                         </div>
                         <span
-                          className="text-sm tabular-nums text-[#1CB0F6]"
+                          className="text-sm tabular-nums text-brand-cyan"
                           style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
                         >
                           {globalRank ? `#${globalRank.rank}` : '#--'}
@@ -662,11 +662,11 @@ export function ProfileWeb({
                       </div>
                       <div className="flex justify-between items-center px-3 py-2.5 bg-white/[0.03] rounded-[8px]">
                         <div className="flex items-center gap-2">
-                          <MapPin className="size-4 text-[#FF4B4B]" />
+                          <MapPin className="size-4 text-brand-red-soft" />
                           <span className="text-xs font-fun font-black uppercase tracking-wide text-white">Country</span>
                         </div>
                         <span
-                          className="text-sm tabular-nums text-[#FF4B4B]"
+                          className="text-sm tabular-nums text-brand-red-soft"
                           style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
                         >
                           {countryRank ? `#${countryRank.rank}` : '#--'}
@@ -729,9 +729,9 @@ export function ProfileWeb({
                     />
                   </div>
                   <div className="flex justify-between text-xs font-fun font-black uppercase tracking-wide tabular-nums">
-                    <span className="text-[#38B60E]">{wins}W</span>
+                    <span className="text-brand-green">{wins}W</span>
                     <span className="text-white/45">{draws}D</span>
-                    <span className="text-[#FF4B4B]">{losses}L</span>
+                    <span className="text-brand-red-soft">{losses}L</span>
                   </div>
                   <div className="mt-4 pt-3 border-t border-white/8 flex justify-between text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white/45">
                     <span>Ranked {rankedStats?.gamesPlayed ?? 0}</span>
@@ -815,8 +815,8 @@ export function ProfileWeb({
                         disabled={isUpdating}
                         className={`inline-flex h-7 min-w-[52px] items-center justify-center rounded-full px-3 text-[10px] font-fun font-black uppercase tracking-wide transition-colors active:translate-y-[1px] ${
                           preferredLanguage === 'en'
-                            ? 'bg-[#38B60E] text-white'
-                            : 'border border-[#38B60E] text-white/85 hover:bg-[#38B60E]/10'
+                            ? 'bg-brand-green text-white'
+                            : 'border border-brand-green text-white/85 hover:bg-brand-green/10'
                         }`}
                       >
                         🇬🇧 EN
@@ -826,8 +826,8 @@ export function ProfileWeb({
                         disabled={isUpdating}
                         className={`inline-flex h-7 min-w-[52px] items-center justify-center rounded-full px-3 text-[10px] font-fun font-black uppercase tracking-wide transition-colors active:translate-y-[1px] ${
                           preferredLanguage === 'ka'
-                            ? 'bg-[#38B60E] text-white'
-                            : 'border border-[#38B60E] text-white/85 hover:bg-[#38B60E]/10'
+                            ? 'bg-brand-green text-white'
+                            : 'border border-brand-green text-white/85 hover:bg-brand-green/10'
                         }`}
                       >
                         🇬🇪 GE
@@ -854,7 +854,7 @@ export function ProfileWeb({
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-fun font-black uppercase tracking-wide text-white">Your Wins</span>
                     <span
-                      className="text-xl tabular-nums text-[#38B60E]"
+                      className="text-xl tabular-nums text-brand-green"
                       style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
                     >
                       {headToHead.winsA}
@@ -863,7 +863,7 @@ export function ProfileWeb({
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-fun font-black uppercase tracking-wide text-white">Their Wins</span>
                     <span
-                      className="text-xl tabular-nums text-[#FF4B4B]"
+                      className="text-xl tabular-nums text-brand-red-soft"
                       style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
                     >
                       {headToHead.winsB}
@@ -892,7 +892,7 @@ export function ProfileWeb({
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.24 }}>
                 <button
                   onClick={onSignOut}
-                  className="w-full h-[48px] rounded-[10px] bg-black text-sm font-fun font-black uppercase tracking-wide text-[#FF4B4B] hover:text-[#FF8D8D] active:translate-y-[2px] transition-transform flex items-center justify-center gap-2"
+                  className="w-full h-[48px] rounded-[10px] bg-black text-sm font-fun font-black uppercase tracking-wide text-brand-red-soft hover:text-brand-red-light active:translate-y-[2px] transition-transform flex items-center justify-center gap-2"
                 >
                   <LogOut className="size-4" />
                   Sign Out
@@ -923,7 +923,7 @@ export function ProfileWeb({
               {recentMatchesLoading && (
                 <>
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center gap-3 rounded-[16px] min-h-[58px] md:min-h-[62px] px-4 md:px-5 border-2 border-[#3A4F56] bg-[#041217] animate-pulse">
+                    <div key={i} className="flex items-center gap-3 rounded-[16px] min-h-[58px] md:min-h-[62px] px-4 md:px-5 border-2 border-brand-slate-deep bg-[#041217] animate-pulse">
                       <div className="size-8 md:size-10 rounded-full bg-white/10" />
                       <div className="flex-1 space-y-1.5">
                         <div className="h-3.5 w-24 bg-white/10 rounded" />
@@ -935,12 +935,12 @@ export function ProfileWeb({
                 </>
               )}
               {!recentMatchesLoading && recentMatchesError && (
-                <div className="p-4 rounded-[16px] border-2 border-[#FF4B4B]/40 bg-[#FF4B4B]/10 text-sm font-fun font-black uppercase tracking-wide text-[#FF4B4B]">
+                <div className="p-4 rounded-[16px] border-2 border-brand-red-soft/40 bg-brand-red-soft/10 text-sm font-fun font-black uppercase tracking-wide text-brand-red-soft">
                   {recentMatchesError}
                 </div>
               )}
               {!recentMatchesLoading && !recentMatchesError && recentMatches.length === 0 && (
-                <div className="p-6 text-center rounded-[16px] border-2 border-[#3A4F56] bg-[#041217]">
+                <div className="p-6 text-center rounded-[16px] border-2 border-brand-slate-deep bg-[#041217]">
                   <div className="text-2xl mb-2">⚽</div>
                   <div className="text-sm font-fun font-black uppercase tracking-wide text-white/55">No recent matches yet.</div>
                   <div className="text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white/30 mt-1">Play a match and it&apos;ll show up here.</div>
@@ -949,8 +949,8 @@ export function ProfileWeb({
               {!recentMatchesLoading && !recentMatchesError && visibleMatches.map((match, index) => {
                 const isWin = match.result === 'Win';
                 const isLoss = match.result === 'Loss';
-                const borderColor = isWin ? 'border-[#38B60E]' : isLoss ? 'border-[#E04B3A]' : 'border-[#3A4F56]';
-                const rpPillTone = isWin ? 'bg-[#348A1A] text-white' : isLoss ? 'bg-[#B8401D] text-white' : 'bg-[#3A4F56] text-white';
+                const borderColor = isWin ? 'border-brand-green' : isLoss ? 'border-brand-red-deep' : 'border-brand-slate-deep';
+                const rpPillTone = isWin ? 'bg-brand-green-deep text-white' : isLoss ? 'bg-[#B8401D] text-white' : 'bg-brand-slate-deep text-white';
                 const competitionLabel = match.competition === 'friendly'
                   ? 'Friendly'
                   : match.competition === 'placement'
@@ -1004,7 +1004,7 @@ export function ProfileWeb({
                         {match.scoreFormatted.badge && (
                           <span className={`rounded-[8px] px-2 py-1 font-poppins text-[9px] md:text-[10px] font-semibold uppercase ${
                             match.scoreFormatted.badgeVariant === 'red'
-                              ? 'bg-[#4D1C1B] text-[#FF8B7D]'
+                              ? 'bg-[#4D1C1B] text-brand-red-light'
                               : 'bg-white/10 text-white/70'
                           }`}>
                             {match.scoreFormatted.badge}
@@ -1021,7 +1021,7 @@ export function ProfileWeb({
                 <button
                   type="button"
                   onClick={() => setIsMatchesExpanded((prev) => !prev)}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-[#1B2F36] hover:bg-[#243B44] transition-all text-sm font-bold text-[#56707A] hover:text-white"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-surface-card hover:bg-surface-card-tint transition-all text-sm font-bold text-brand-slate hover:text-white"
                 >
                   {isMatchesExpanded ? (
                     <>

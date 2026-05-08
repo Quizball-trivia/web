@@ -36,7 +36,7 @@ export function WalletSection({ coins, tickets }: WalletSectionProps) {
           </div>
 
           {/* Right: Progress Context (Desktop mostly) */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-3">
              <div className="text-right">
                 <div className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider mb-0.5">
                    Next Arena Entry

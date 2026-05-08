@@ -31,7 +31,7 @@ const podiumConfig: Record<
     height: "h-40 sm:h-52",
     bg: "#38B60E",
     nameColor: "text-white",
-    rpColor: "text-[#FFE500]",
+    rpColor: "text-brand-yellow",
     order: "order-2",
   },
   2: {
@@ -47,7 +47,7 @@ const podiumConfig: Record<
     height: "h-24 sm:h-32",
     bg: "#1645FF",
     nameColor: "text-white",
-    rpColor: "text-[#FFE500]",
+    rpColor: "text-brand-yellow",
     order: "order-3",
   },
 };
@@ -68,7 +68,7 @@ export function LeaderboardPodium({ topThree, onEntryClick }: LeaderboardPodiumP
   ];
 
   return (
-    <div className="overflow-hidden rounded-[10px] bg-[#071013] p-4 pt-10 sm:p-6 sm:pt-14 pb-0">
+    <div className="overflow-hidden rounded-[10px] bg-surface-page p-4 pt-10 sm:p-6 sm:pt-14 pb-0">
       <div className="flex items-end justify-center gap-2 sm:gap-4 w-full max-w-md mx-auto">
         {players.map(({ entry, rank }) => {
           const config = podiumConfig[rank];
@@ -116,7 +116,7 @@ export function LeaderboardPodium({ topThree, onEntryClick }: LeaderboardPodiumP
                   />
                 </div>
                 {/* Trophy badge */}
-                <div className="absolute -top-1 -left-1 flex size-5 sm:size-6 items-center justify-center rounded-full bg-[#FFE500] shadow ring-2 ring-[#071013]">
+                <div className="absolute -top-1 -left-1 flex size-5 sm:size-6 items-center justify-center rounded-full bg-brand-yellow shadow ring-2 ring-surface-page">
                   <Trophy className="size-3 sm:size-3.5 text-black" strokeWidth={2.5} />
                 </div>
               </div>

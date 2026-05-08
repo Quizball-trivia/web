@@ -229,9 +229,9 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
 
   if (!currentQuestion) {
     return (
-      <div className="fixed inset-0 z-40 bg-[#131F24] font-fun flex items-center justify-center">
-        <div className="bg-[#1B2F36] rounded-xl border-b-4 border-[#0F1F26] p-6">
-          <p className="text-center text-[#56707A]">
+      <div className="fixed inset-0 z-40 bg-surface-deep font-fun flex items-center justify-center">
+        <div className="bg-surface-card rounded-xl border-b-4 border-surface-card-deeper p-6">
+          <p className="text-center text-brand-slate">
             Loading questions...
           </p>
         </div>
@@ -240,24 +240,24 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-40 bg-[#131F24] font-fun flex flex-col">
+    <div className="fixed inset-0 z-40 bg-surface-deep font-fun flex flex-col">
       {/* Header */}
-      <div className="bg-[#1B2F36] border-b-[3px] border-[#131F24]">
+      <div className="bg-surface-card border-b-[3px] border-surface-deep">
         <div className="max-w-2xl mx-auto px-3 md:px-4 py-2.5 md:py-3">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowQuitDialog(true)}
-                className="flex items-center justify-center size-9 rounded-xl hover:bg-[#243B44] active:scale-95 transition-all text-white"
+                className="flex items-center justify-center size-9 rounded-xl hover:bg-surface-card-tint active:scale-95 transition-all text-white"
               >
                 <ArrowLeft className="size-5" />
               </button>
               <div>
                 <div className="flex items-center gap-2">
-                  <Lightbulb className="size-6 text-[#FF9600]" />
+                  <Lightbulb className="size-6 text-brand-orange" />
                   <h1 className="text-lg md:text-xl font-black uppercase text-white">Clues Challenge</h1>
                 </div>
-                <div className="text-xs text-[#56707A] font-bold">
+                <div className="text-xs text-brand-slate font-bold">
                   Question {currentQuestionIndex + 1}/{questions.length}
                 </div>
               </div>
@@ -265,10 +265,10 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
             <div className="flex items-center gap-3">
               <div className="text-right">
                 <div className="flex items-center gap-1">
-                  <Trophy className="size-4 text-[#FFD700]" />
+                  <Trophy className="size-4 text-brand-gold" />
                   <span className="text-sm font-black text-white">{score}</span>
                 </div>
-                <div className="text-xs text-[#56707A] font-bold">
+                <div className="text-xs text-brand-slate font-bold">
                   Streak: {streak}
                 </div>
               </div>
@@ -276,7 +276,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
           </div>
           <div className="h-2 bg-white/10 rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#58CC02] rounded-full transition-all duration-300"
+              className="h-full bg-brand-green-light rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -287,22 +287,22 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
       <div className="flex-1 overflow-y-auto">
         <div className="min-h-full p-3 md:p-4 lg:flex lg:flex-col lg:justify-center">
         <div className="max-w-2xl mx-auto space-y-4 w-full">
-        <div className="bg-[#1B2F36] rounded-xl border-b-4 border-[#0F1F26] p-4 md:p-5">
+        <div className="bg-surface-card rounded-xl border-b-4 border-surface-card-deeper p-4 md:p-5">
           <div className="text-center mb-4">
-            <h3 className="text-sm text-[#56707A] mb-1">
+            <h3 className="text-sm text-brand-slate mb-1">
               Guess the {currentQuestion.category}
             </h3>
-            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-[#243B44] text-[#1CB0F6] mb-3">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-surface-card-tint text-brand-cyan mb-3">
               {currentQuestion.category}
             </span>
             {!showResult && (
               <div className="flex items-center justify-center gap-2 text-lg">
                 <Clock
-                  className={`size-5 ${timeRemaining <= 5 ? "text-[#FF4B4B]" : "text-[#1CB0F6]"}`}
+                  className={`size-5 ${timeRemaining <= 5 ? "text-brand-red-soft" : "text-brand-cyan"}`}
                 />
                 <span
                   className={`font-black ${
-                    timeRemaining <= 5 ? "text-[#FF4B4B]" : "text-[#1CB0F6]"
+                    timeRemaining <= 5 ? "text-brand-red-soft" : "text-brand-cyan"
                   }`}
                 >
                   {timeRemaining}s
@@ -316,7 +316,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
             {currentQuestion.clues.slice(0, revealedClues).map((clue, index) => (
               <div
                 key={index}
-                className="p-4 bg-[#243B44] rounded-xl border-b-4 border-[#1B2F36] text-center text-white animate-in fade-in slide-in-from-bottom-2 duration-300"
+                className="p-4 bg-surface-card-tint rounded-xl border-b-4 border-surface-card text-center text-white animate-in fade-in slide-in-from-bottom-2 duration-300"
                 style={{
                   animationDelay: `${index * 100}ms`,
                 }}
@@ -337,7 +337,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
                 <div
                   key={index}
                   className={`h-2 w-12 rounded-full transition-colors ${
-                    index < revealedClues ? "bg-[#1CB0F6]" : "bg-white/10"
+                    index < revealedClues ? "bg-brand-cyan" : "bg-white/10"
                   }`}
                 />
               ))}
@@ -346,8 +346,8 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
 
           {/* Points Indicator */}
           {!showResult && (
-            <div className="text-center text-sm text-[#56707A] mb-4 font-bold flex items-center justify-center gap-1.5">
-              <Star className="size-4 text-[#FFD700]" />
+            <div className="text-center text-sm text-brand-slate mb-4 font-bold flex items-center justify-center gap-1.5">
+              <Star className="size-4 text-brand-gold" />
               Answer now: {getPoints(revealedClues)} points
             </div>
           )}
@@ -361,21 +361,21 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
                 value={userAnswer}
                 onChange={(e) => setUserAnswer(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="bg-[#243B44] border-2 border-[#1B2F36] text-white placeholder:text-[#56707A] focus:border-[#1CB0F6] text-center text-lg h-12 rounded-xl"
+                className="bg-surface-card-tint border-2 border-surface-card text-white placeholder:text-brand-slate focus:border-brand-cyan text-center text-lg h-12 rounded-xl"
                 autoFocus
                 disabled={hasSubmitted}
               />
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={handleSubmit}
-                  className="w-full py-3 rounded-xl font-black text-white bg-[#58CC02] border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px] transition-all disabled:opacity-50 disabled:active:border-b-4 disabled:active:translate-y-0"
+                  className="w-full py-3 rounded-xl font-black text-white bg-brand-green-light border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px] transition-all disabled:opacity-50 disabled:active:border-b-4 disabled:active:translate-y-0"
                   disabled={!userAnswer.trim() || hasSubmitted}
                 >
                   {hasSubmitted ? "Submitted..." : "Submit"}
                 </button>
                 <button
                   onClick={handleGiveUp}
-                  className="w-full py-3 rounded-xl font-black text-white bg-[#243B44] border-b-4 border-b-[#1B2F36] active:border-b-2 active:translate-y-[2px] transition-all disabled:opacity-50 disabled:active:border-b-4 disabled:active:translate-y-0"
+                  className="w-full py-3 rounded-xl font-black text-white bg-surface-card-tint border-b-4 border-b-[#1B2F36] active:border-b-2 active:translate-y-[2px] transition-all disabled:opacity-50 disabled:active:border-b-4 disabled:active:translate-y-0"
                   disabled={hasSubmitted}
                 >
                   Give Up
@@ -387,34 +387,34 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
               <div
                 className={`p-4 rounded-xl text-center border-b-4 ${
                   isCorrect
-                    ? "bg-[#58CC02]/15 border-b-[#46A302]"
-                    : "bg-[#FF4B4B]/10 border-b-[#CC3C3C]"
+                    ? "bg-brand-green-light/15 border-b-[#46A302]"
+                    : "bg-brand-red-soft/10 border-b-[#CC3C3C]"
                 }`}
               >
                 <div className="flex items-center justify-center gap-2 mb-2">
                   {isCorrect ? (
                     <>
-                      <CheckCircle2 className="size-6 text-[#58CC02]" />
-                      <span className="text-[#58CC02] font-bold">
+                      <CheckCircle2 className="size-6 text-brand-green-light" />
+                      <span className="text-brand-green-light font-bold">
                         Correct!
                       </span>
                     </>
                   ) : (
                     <>
-                      <XCircle className="size-6 text-[#FF4B4B]" />
-                      <span className="text-[#FF4B4B] font-bold">
+                      <XCircle className="size-6 text-brand-red-soft" />
+                      <span className="text-brand-red-soft font-bold">
                         {hasSubmitted ? "Incorrect" : "Time's Up!"}
                       </span>
                     </>
                   )}
                 </div>
                 {isCorrect ? (
-                  <div className="text-sm text-[#56707A]">
+                  <div className="text-sm text-brand-slate">
                     +{getPoints(revealedClues)} points
                   </div>
                 ) : (
                   <div>
-                    <div className="text-sm text-[#56707A] mb-1">
+                    <div className="text-sm text-brand-slate mb-1">
                       Correct answer:
                     </div>
                     <div className="text-lg font-bold text-white">
@@ -427,13 +427,13 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
               {currentQuestionIndex < questions.length - 1 ? (
                 <button
                   onClick={handleNext}
-                  className="w-full py-3 rounded-xl font-black text-white bg-[#58CC02] border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-xl font-black text-white bg-brand-green-light border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-2"
                 >
                   Next Question
                   <ArrowRight className="size-4" />
                 </button>
               ) : (
-                <div className="text-center text-sm text-[#56707A] py-3">
+                <div className="text-center text-sm text-brand-slate py-3">
                   Loading results...
                 </div>
               )}
@@ -442,9 +442,9 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
         </div>
 
         {/* Hints */}
-        <div className="text-center text-xs text-[#56707A] space-y-1">
-          <p className="flex items-center justify-center gap-1"><Clock className="size-3.5 text-[#1CB0F6]" /> {secondsPerClueStep} seconds per clue - answer quickly!</p>
-          <p className="flex items-center justify-center gap-1"><Lightbulb className="size-3.5 text-[#FF9600]" /> Fewer clues = more points</p>
+        <div className="text-center text-xs text-brand-slate space-y-1">
+          <p className="flex items-center justify-center gap-1"><Clock className="size-3.5 text-brand-cyan" /> {secondsPerClueStep} seconds per clue - answer quickly!</p>
+          <p className="flex items-center justify-center gap-1"><Lightbulb className="size-3.5 text-brand-orange" /> Fewer clues = more points</p>
         </div>
         </div>
         </div>

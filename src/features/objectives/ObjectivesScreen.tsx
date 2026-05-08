@@ -25,10 +25,10 @@ const DEFAULT_PROGRESS: PlayerProgress = {
 };
 
 const TABS: { value: ObjectiveCategory; label: string; icon: typeof Calendar; color: string; activeColor: string }[] = [
-  { value: "daily", label: "Daily", icon: Calendar, color: "text-[#56707A]", activeColor: "text-[#58CC02] bg-[#58CC02]/15 border-[#58CC02]/40" },
-  { value: "weekly", label: "Weekly", icon: Clock, color: "text-[#56707A]", activeColor: "text-[#1CB0F6] bg-[#1CB0F6]/15 border-[#1CB0F6]/40" },
-  { value: "season", label: "Season", icon: Crown, color: "text-[#56707A]", activeColor: "text-[#FFD700] bg-[#FFD700]/15 border-[#FFD700]/40" },
-  { value: "lifetime", label: "Lifetime", icon: Star, color: "text-[#56707A]", activeColor: "text-[#CE82FF] bg-[#CE82FF]/15 border-[#CE82FF]/40" },
+  { value: "daily", label: "Daily", icon: Calendar, color: "text-brand-slate", activeColor: "text-brand-green-light bg-brand-green-light/15 border-brand-green-light/40" },
+  { value: "weekly", label: "Weekly", icon: Clock, color: "text-brand-slate", activeColor: "text-brand-cyan bg-brand-cyan/15 border-brand-cyan/40" },
+  { value: "season", label: "Season", icon: Crown, color: "text-brand-slate", activeColor: "text-brand-gold bg-brand-gold/15 border-brand-gold/40" },
+  { value: "lifetime", label: "Lifetime", icon: Star, color: "text-brand-slate", activeColor: "text-brand-purple bg-brand-purple/15 border-brand-purple/40" },
 ];
 
 export function ObjectivesScreen({
@@ -74,21 +74,21 @@ export function ObjectivesScreen({
   const progressPct = totalObjectives > 0 ? (totalCompleted / totalObjectives) * 100 : 0;
 
   return (
-    <div className="min-h-screen bg-[#131F24] font-fun">
+    <div className="min-h-screen bg-surface-deep font-fun">
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-[#131F24]/95 backdrop-blur-sm border-b-2 border-[#1B2F36]">
+      <div className="sticky top-0 z-20 bg-surface-deep/95 backdrop-blur-sm border-b-2 border-surface-card">
         <div className="max-w-2xl lg:max-w-4xl mx-auto px-3 md:px-4 py-3 md:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 md:gap-3">
               <button
                 aria-label="Back"
                 onClick={onBack}
-                className="flex items-center justify-center size-9 md:size-10 rounded-xl bg-[#1B2F36] border-b-[3px] border-[#0D1B21] hover:bg-[#243B44] active:border-b-[1px] active:translate-y-[2px] transition-all"
+                className="flex items-center justify-center size-9 md:size-10 rounded-xl bg-surface-card border-b-[3px] border-surface-card-deep hover:bg-surface-card-tint active:border-b-[1px] active:translate-y-[2px] transition-all"
               >
                 <ArrowLeft className="size-4 md:size-5 text-white" />
               </button>
               <div className="flex items-center gap-1.5 md:gap-2">
-                <Target className="size-5 md:size-6 text-[#CE82FF]" />
+                <Target className="size-5 md:size-6 text-brand-purple" />
                 <h1 className="text-base md:text-xl font-black text-white uppercase tracking-wide">
                   Objectives
                 </h1>
@@ -96,9 +96,9 @@ export function ObjectivesScreen({
             </div>
 
             {totalClaimable > 0 && (
-              <div className="px-3 py-1.5 rounded-full bg-[#58CC02]/15 border border-[#58CC02]/30 flex items-center gap-1.5">
-                <Trophy className="size-3.5 md:size-4 text-[#58CC02]" />
-                <span className="text-[10px] md:text-xs font-black text-[#58CC02] uppercase">
+              <div className="px-3 py-1.5 rounded-full bg-brand-green-light/15 border border-brand-green-light/30 flex items-center gap-1.5">
+                <Trophy className="size-3.5 md:size-4 text-brand-green-light" />
+                <span className="text-[10px] md:text-xs font-black text-brand-green-light uppercase">
                   {totalClaimable} to claim
                 </span>
               </div>
@@ -114,39 +114,39 @@ export function ObjectivesScreen({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="bg-[#1B2F36] rounded-2xl border-b-4 border-[#CE82FF] p-3 md:p-5"
+          className="bg-surface-card rounded-2xl border-b-4 border-brand-purple p-3 md:p-5"
         >
           <div className="flex items-center justify-between mb-2 md:mb-3">
             <div>
-              <span className="text-[10px] md:text-xs font-black text-[#56707A] uppercase tracking-wider">
+              <span className="text-[10px] md:text-xs font-black text-brand-slate uppercase tracking-wider">
                 Overall Progress
               </span>
               <div className="flex items-baseline gap-0.5 mt-0.5">
                 <span className="text-2xl md:text-4xl font-black text-white">{totalCompleted}</span>
-                <span className="text-base md:text-xl font-black text-[#56707A]">/{totalObjectives}</span>
+                <span className="text-base md:text-xl font-black text-brand-slate">/{totalObjectives}</span>
               </div>
             </div>
-            <div className="size-12 md:size-16 rounded-2xl bg-[#CE82FF]/20 border-2 border-[#CE82FF]/40 flex items-center justify-center">
-              <Target className="size-6 md:size-8 text-[#CE82FF]" />
+            <div className="size-12 md:size-16 rounded-2xl bg-brand-purple/20 border-2 border-brand-purple/40 flex items-center justify-center">
+              <Target className="size-6 md:size-8 text-brand-purple" />
             </div>
           </div>
 
-          <div className="bg-[#131F24] rounded-xl md:rounded-2xl border-b-[3px] border-[#0D1B21] p-2 md:p-3">
-            <div className="relative h-3 md:h-4 bg-[#243B44] rounded-full overflow-hidden">
+          <div className="bg-surface-deep rounded-xl md:rounded-2xl border-b-[3px] border-surface-card-deep p-2 md:p-3">
+            <div className="relative h-3 md:h-4 bg-surface-card-tint rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${progressPct}%` }}
                 transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
-                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#CE82FF] to-[#E0A8FF]"
+                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-brand-purple to-[#E0A8FF]"
               >
                 <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/30 to-transparent h-1/2" />
               </motion.div>
             </div>
             <div className="flex items-center justify-between mt-1.5 md:mt-2">
-              <span className="text-[10px] md:text-xs font-black text-[#56707A]">
+              <span className="text-[10px] md:text-xs font-black text-brand-slate">
                 Complete missions to earn rewards
               </span>
-              <span className="text-[10px] md:text-xs font-black text-[#CE82FF]">
+              <span className="text-[10px] md:text-xs font-black text-brand-purple">
                 {progressPct.toFixed(0)}%
               </span>
             </div>
@@ -164,14 +164,14 @@ export function ObjectivesScreen({
                 onClick={() => setSelectedTab(tab.value)}
                 className={`flex flex-col items-center gap-1 py-2.5 md:py-3 rounded-xl border-b-[3px] font-black text-xs transition-all ${
                   isActive
-                    ? `bg-[#1B2F36] ${tab.activeColor} border-b-current`
-                    : "bg-[#1B2F36]/50 text-[#56707A] border-b-[#0D1B21] hover:bg-[#1B2F36]"
+                    ? `bg-surface-card ${tab.activeColor} border-b-current`
+                    : "bg-surface-card/50 text-brand-slate border-b-[#0D1B21] hover:bg-surface-card"
                 }`}
               >
                 <tab.icon className="size-4 md:size-5" />
                 <span className="text-[11px] md:text-xs uppercase">{tab.label}</span>
                 {count > 0 && (
-                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-[#58CC02]/20 text-[#58CC02] border border-[#58CC02]/30">
+                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-brand-green-light/20 text-brand-green-light border border-brand-green-light/30">
                     {count}
                   </span>
                 )}

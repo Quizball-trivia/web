@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentProps } from 'react';
+import { useMemo, type ComponentProps } from 'react';
 import type {
   MatchAnswerAckPayload,
   MatchRoundResultPayload,
@@ -9,15 +9,9 @@ import type {
 } from '@/lib/realtime/socket.types';
 import type { DevPossessionAnimation, MatchStatus } from '@/stores/realtimeMatch.store';
 import { PitchVisualization } from '../components/PitchVisualization';
+import { usePossessionAnimationOrchestrator } from './usePossessionAnimationOrchestrator';
 import { getZone } from './usePossessionMovement';
-import {
-  DEV_ATTACK_GOAL_HOLD_MS,
-  DEV_ATTACK_OTHER_HOLD_MS,
-  FIELD_POSSESSION_CUE_MS,
-  FIELD_RESULT_COMPARE_MS,
-  PENALTY_ICON_SWAP_DELAY_MS,
-  getQuestionDurationSeconds,
-} from '../realtimePossession.helpers';
+import { getQuestionDurationSeconds } from '../realtimePossession.helpers';
 import type { PenaltyResult, Phase, ShotResult } from '../types/possession.types';
 
 type PitchProps = ComponentProps<typeof PitchVisualization>;
@@ -108,7 +102,6 @@ export function usePossessionFieldState({
   isHalftime,
 }: UsePossessionFieldStateParams): PossessionFieldState {
   const possessionState = match?.possessionState ?? null;
-  const phase = possessionState?.phase;
   const mySeat = match?.mySeat ?? null;
   const shooterSeat = possessionState?.shooterSeat ?? null;
   const phaseKind = localQuestion?.phaseKind ?? possessionState?.phaseKind ?? 'normal';
@@ -116,285 +109,42 @@ export function usePossessionFieldState({
   const isLastAttackQuestion = phaseKind === 'last_attack';
   const isShotQuestion = phaseKind === 'shot';
 
-  const [delayedIsShooter, setDelayedIsShooter] = useState(false);
-  const [optimisticOffset, setOptimisticOffset] = useState(0);
-  const initialPossessionPct = Math.max(
-    10,
-    Math.min(
-      90,
-      (mySeat === 2 ? 100 - Math.max(0, Math.min(100, 50 + ((possessionState?.possessionDiff ?? 0) / 2))) : Math.max(0, Math.min(100, 50 + ((possessionState?.possessionDiff ?? 0) / 2))))
-    )
-  );
-  const [myPossessionPct, setMyPossessionPct] = useState(initialPossessionPct);
-  const [fieldMotionLocked, setFieldMotionLocked] = useState(false);
-  const [shotBallOriginX, setShotBallOriginX] = useState(440);
-  const [secondHalfKickoffResetPending, setSecondHalfKickoffResetPending] = useState(false);
-
-  const optimisticAppliedQRef = useRef<number | null>(null);
-  const latestPossessionRef = useRef(initialPossessionPct);
-  const prevPhaseForFieldResetRef = useRef<string | null>(phase ?? null);
-  const delayedFieldQRef = useRef<number | null>(null);
-  const fieldReleaseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const shotOriginCaptureKeyRef = useRef<string | null>(null);
-  const attackOriginQRef = useRef<number | null>(null);
-  const attackOriginPctRef = useRef<number | null>(null);
-
-  const possessionPct = Math.max(0, Math.min(100, 50 + ((possessionState?.possessionDiff ?? 0) / 2)));
-  const serverMyPossessionPct = mySeat === 2 ? 100 - possessionPct : possessionPct;
-  const localQuestionIndex = localQuestion?.qIndex ?? null;
   const questionDurationSeconds = getQuestionDurationSeconds(localQuestion);
-  const isShooter = mySeat !== null && mySeat !== undefined && shooterSeat === mySeat;
-
-  useEffect(() => {
-    if (!isPenaltyQuestion) {
-      queueMicrotask(() => {
-        setDelayedIsShooter(isShooter);
-      });
-      return;
-    }
-
-    const timer = setTimeout(() => setDelayedIsShooter(isShooter), PENALTY_ICON_SWAP_DELAY_MS);
-    return () => clearTimeout(timer);
-  }, [isPenaltyQuestion, isShooter]);
 
   const { myGoals, oppGoals, myPenaltyGoals, oppPenaltyGoals } = useMemo(() => getSeatGoals({
     possessionState,
     mySeat,
   }), [mySeat, possessionState]);
 
-  const suppressCarryoverAttackVisual = secondHalfKickoffResetPending && Boolean(roundResult);
+  const {
+    activeAttackAnimation,
+    attackerSeat,
+    delayedIsShooter,
+    isAttackAnimationPhase,
+    isShotVisualPhase,
+    shotBallOriginX,
+    visualMyPossessionPct,
+  } = usePossessionAnimationOrchestrator({
+    possessionState,
+    mySeat,
+    shooterSeat,
+    phaseKind,
+    isPenaltyQuestion,
+    isShotQuestion,
+    localQuestion,
+    roundResult,
+    myRound,
+    opponentRound,
+    devPossessionAnimation,
+    clearDevPossessionAnimation,
+  });
 
-  const roundAttackAnimation = useMemo((): { result: ShotResult; attackerSeat: 1 | 2 | null } | null => {
-    if (!roundResult) return null;
-    if (suppressCarryoverAttackVisual) return null;
-
-    const kind = roundResult.phaseKind ?? phaseKind;
-    if (kind === 'penalty' || kind === 'shot') return null;
-
-    const scorerSeat = roundResult.deltas?.goalScoredBySeat ?? null;
-    if (kind === 'normal') {
-      if (!scorerSeat) return null;
-      return { result: 'goal', attackerSeat: scorerSeat };
-    }
-
-    if (kind === 'last_attack') {
-      const attackerSeatFromRound = roundResult.attackerSeat ?? possessionState?.attackerSeat ?? null;
-      if (scorerSeat) {
-        return { result: 'goal', attackerSeat: attackerSeatFromRound ?? scorerSeat };
-      }
-      return { result: 'miss', attackerSeat: attackerSeatFromRound };
-    }
-
-    return null;
-  }, [phaseKind, possessionState?.attackerSeat, roundResult, suppressCarryoverAttackVisual]);
-
-  const devAttackAnimation = useMemo((): { result: ShotResult; attackerSeat: 1 | 2 | null } | null => {
-    if (!devPossessionAnimation) return null;
-    return {
-      result: devPossessionAnimation.result,
-      attackerSeat: devPossessionAnimation.attackerSeat,
-    };
-  }, [devPossessionAnimation]);
-
-  const activeAttackAnimation = roundAttackAnimation ?? (roundResult ? null : devAttackAnimation);
-
-  useEffect(() => {
-    if (!devPossessionAnimation) return;
-
-    const holdMs = devPossessionAnimation.result === 'goal' ? DEV_ATTACK_GOAL_HOLD_MS : DEV_ATTACK_OTHER_HOLD_MS;
-    const timer = setTimeout(() => clearDevPossessionAnimation(), holdMs);
-    return () => clearTimeout(timer);
-  }, [clearDevPossessionAnimation, devPossessionAnimation]);
-
-  const isAttackAnimationPhase = activeAttackAnimation !== null;
-  const isShotVisualPhase = isShotQuestion || isAttackAnimationPhase;
-
-  useEffect(() => {
-    if (!roundResult || !myRound || !opponentRound) return;
-
-    const kind = roundResult.phaseKind ?? phaseKind;
-    if (kind === 'normal') return;
-    if (kind !== 'last_attack') return;
-
-    const qIndex = roundResult.qIndex;
-    if (optimisticAppliedQRef.current === qIndex) return;
-    optimisticAppliedQRef.current = qIndex;
-
-    const deltas = roundResult.deltas;
-    if (deltas) {
-      const mySignedDelta = mySeat === 2 ? -deltas.possessionDelta : deltas.possessionDelta;
-      queueMicrotask(() => {
-        setOptimisticOffset(mySignedDelta / 2);
-      });
-      return;
-    }
-
-    const mySignedDelta = myRound.pointsEarned - opponentRound.pointsEarned;
-    queueMicrotask(() => {
-      setOptimisticOffset(mySignedDelta / 2);
-    });
-  }, [mySeat, myRound, opponentRound, phaseKind, roundResult]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      setOptimisticOffset(0);
-    });
-  }, [possessionPct]);
-
-  const immediateMyPossessionPct = Math.max(10, Math.min(90, serverMyPossessionPct + optimisticOffset));
-
-  useEffect(() => {
-    latestPossessionRef.current = immediateMyPossessionPct;
-  }, [immediateMyPossessionPct]);
-
-  useEffect(() => {
-    const prevPhase = prevPhaseForFieldResetRef.current;
-    prevPhaseForFieldResetRef.current = phase ?? null;
-    if (prevPhase !== 'HALFTIME' || phase !== 'NORMAL_PLAY' || possessionState?.half !== 2) return;
-
-    queueMicrotask(() => {
-      setSecondHalfKickoffResetPending(true);
-    });
-    if (fieldReleaseTimerRef.current) {
-      clearTimeout(fieldReleaseTimerRef.current);
-      fieldReleaseTimerRef.current = null;
-    }
-    delayedFieldQRef.current = null;
-    latestPossessionRef.current = 50;
-    queueMicrotask(() => {
-      setFieldMotionLocked(false);
-      setOptimisticOffset(0);
-      setMyPossessionPct(50);
-    });
-  }, [phase, possessionState?.half]);
-
-  useEffect(() => {
-    if (!secondHalfKickoffResetPending) return;
-    if (roundResult) return;
-    queueMicrotask(() => {
-      setSecondHalfKickoffResetPending(false);
-    });
-  }, [roundResult, secondHalfKickoffResetPending]);
-
-  useEffect(() => {
-    if (fieldMotionLocked) return;
-    const activeRoundQIdx = roundResult?.qIndex ?? null;
-    if (activeRoundQIdx !== null && delayedFieldQRef.current === activeRoundQIdx) return;
-    queueMicrotask(() => {
-      setMyPossessionPct(immediateMyPossessionPct);
-    });
-  }, [fieldMotionLocked, immediateMyPossessionPct, roundResult]);
-
-  useLayoutEffect(() => {
-    if (!roundResult) return;
-
-    const kind = roundResult.phaseKind ?? phaseKind;
-    if (kind !== 'normal' && kind !== 'last_attack') return;
-
-    const qIndex = roundResult.qIndex;
-    if (delayedFieldQRef.current === qIndex) return;
-
-    delayedFieldQRef.current = qIndex;
-    queueMicrotask(() => {
-      setFieldMotionLocked(true);
-    });
-    if (fieldReleaseTimerRef.current) clearTimeout(fieldReleaseTimerRef.current);
-    fieldReleaseTimerRef.current = setTimeout(() => {
-      setFieldMotionLocked(false);
-      setMyPossessionPct(latestPossessionRef.current);
-      fieldReleaseTimerRef.current = null;
-    }, FIELD_RESULT_COMPARE_MS + FIELD_POSSESSION_CUE_MS);
-  }, [phaseKind, roundResult]);
-
-  useEffect(() => {
-    delayedFieldQRef.current = null;
-    if (fieldReleaseTimerRef.current) {
-      clearTimeout(fieldReleaseTimerRef.current);
-      fieldReleaseTimerRef.current = null;
-    }
-    queueMicrotask(() => {
-      setFieldMotionLocked(false);
-      setMyPossessionPct(latestPossessionRef.current);
-    });
-  }, [localQuestionIndex]);
-
-  useEffect(() => {
-    if (phase !== 'HALFTIME' && phase !== 'COMPLETED') return;
-    if (fieldReleaseTimerRef.current) {
-      clearTimeout(fieldReleaseTimerRef.current);
-      fieldReleaseTimerRef.current = null;
-    }
-    queueMicrotask(() => {
-      setFieldMotionLocked(false);
-      setMyPossessionPct(latestPossessionRef.current);
-    });
-  }, [phase]);
-
-  useEffect(() => {
-    return () => {
-      if (fieldReleaseTimerRef.current) {
-        clearTimeout(fieldReleaseTimerRef.current);
-      }
-    };
-  }, []);
-
-  const attackerSeat = (isAttackAnimationPhase
-    ? activeAttackAnimation?.attackerSeat
-    : (localQuestion?.attackerSeat ?? possessionState?.attackerSeat)) ?? null;
   const attackerIsMe = attackerSeat !== null && attackerSeat === mySeat;
   const shooterIsMe = shooterSeat !== null && shooterSeat === mySeat;
-  const visualMyPossessionPct = suppressCarryoverAttackVisual ? 50 : myPossessionPct;
   const mirrored = possessionState?.half === 2;
   const ballOnPlayer = visualMyPossessionPct > 50 || (
     visualMyPossessionPct === 50 && possessionState?.kickOffSeat === mySeat
   );
-
-  useEffect(() => {
-    if (!isAttackAnimationPhase) {
-      attackOriginQRef.current = null;
-      attackOriginPctRef.current = null;
-      return;
-    }
-
-    const qIndex = roundResult?.qIndex ?? localQuestion?.qIndex ?? null;
-    if (qIndex === null) return;
-    if (attackOriginQRef.current === qIndex) return;
-
-    attackOriginQRef.current = qIndex;
-    attackOriginPctRef.current = visualMyPossessionPct;
-  }, [isAttackAnimationPhase, localQuestion?.qIndex, roundResult?.qIndex, visualMyPossessionPct]);
-
-  useEffect(() => {
-    if (!isShotVisualPhase || !possessionState) {
-      shotOriginCaptureKeyRef.current = null;
-      return;
-    }
-
-    const captureKey = isAttackAnimationPhase
-      ? `attack:${roundResult?.qIndex ?? localQuestion?.qIndex ?? 'na'}`
-      : `shot:${localQuestion?.qIndex ?? 'na'}`;
-    if (shotOriginCaptureKeyRef.current === captureKey) return;
-    shotOriginCaptureKeyRef.current = captureKey;
-
-    const sourcePossessionPct = isAttackAnimationPhase
-      ? (attackOriginPctRef.current ?? visualMyPossessionPct)
-      : visualMyPossessionPct;
-    const isAttackerMe = attackerSeat === mySeat;
-    const basePlayerX = 30 + (sourcePossessionPct / 100) * 440;
-    const baseOpponentX = basePlayerX - 30;
-    queueMicrotask(() => {
-      setShotBallOriginX(isAttackerMe ? basePlayerX + 14 : baseOpponentX - 14);
-    });
-  }, [
-    attackerSeat,
-    isAttackAnimationPhase,
-    isShotVisualPhase,
-    localQuestion?.qIndex,
-    mySeat,
-    possessionState,
-    roundResult?.qIndex,
-    visualMyPossessionPct,
-  ]);
 
   const shotAnimationVariant = useMemo(() => {
     if (roundResult) {

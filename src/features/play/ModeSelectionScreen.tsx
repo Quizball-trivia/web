@@ -18,9 +18,9 @@ import { getNextTierBand } from '@/utils/rankedTier';
 function RpProgressBar({ current, target }: { current: number; target: number }) {
   const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
   return (
-    <div className="h-3 md:h-4 w-full rounded-[4px] bg-[#2D950B] overflow-hidden">
+    <div className="h-3 md:h-4 w-full rounded-[4px] bg-brand-green-deep overflow-hidden">
       <div
-        className="h-full rounded-[4px] bg-[#FFE500] transition-all duration-500"
+        className="h-full rounded-[4px] bg-brand-yellow transition-all duration-500"
         style={{ width: `${pct}%` }}
       />
     </div>
@@ -126,12 +126,12 @@ export function ModeSelectionScreen({
           alt=""
           width={200}
           height={200}
-          className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 object-contain opacity-80 pointer-events-none"
+          className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 object-contain opacity-80 pointer-events-none"
         />
 
         <div className="relative z-10 p-4 md:p-7">
           {/* ── Desktop layout ── */}
-          <div className="hidden md:flex items-start gap-6">
+          <div className="hidden lg:flex items-start gap-6">
             {/* Left: Title + Play */}
             <div className="flex-1 min-w-0">
               <h1
@@ -172,7 +172,7 @@ export function ModeSelectionScreen({
             {/* Right: RP stats */}
             <div className="text-right shrink-0 w-[280px]">
               <div className="inline-flex flex-col items-stretch">
-                <div className="text-4xl font-black text-[#FFE500] drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)] whitespace-nowrap">
+                <div className="text-4xl font-black text-brand-yellow drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)] whitespace-nowrap">
                   {displayRp}/{nextTierTargetRp ?? 600} RP
                 </div>
                 <div className="mt-2">
@@ -195,7 +195,7 @@ export function ModeSelectionScreen({
           </div>
 
           {/* ── Mobile layout ── */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             {/* Top row: title (left) | RP block (right) */}
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
@@ -214,7 +214,7 @@ export function ModeSelectionScreen({
                 </div>
               </div>
               <div className="shrink-0 text-right w-[125px]">
-                <div className="text-[1.4rem] font-black leading-none text-[#FFE500] drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]">
+                <div className="text-[1.4rem] font-black leading-none text-brand-yellow drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]">
                   {displayRp}/{nextTierTargetRp ?? 600} RP
                 </div>
                 <div className="mt-2">
@@ -281,7 +281,7 @@ export function ModeSelectionScreen({
             alt=""
             width={160}
             height={160}
-            className="hidden md:block absolute right-4 bottom-4 h-36 w-36 object-contain opacity-90 pointer-events-none"
+            className="hidden lg:block absolute right-4 bottom-4 h-36 w-36 object-contain opacity-90 pointer-events-none"
           />
           <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
             <h3
@@ -293,7 +293,7 @@ export function ModeSelectionScreen({
             <p className="mt-1 text-[10px] md:mt-1.5 md:text-base font-black uppercase text-white">Create/Join Room</p>
 
             {/* Mobile: icon (centered, right under subtitle) + PLAY (bottom, full width) */}
-            <div className="mt-1.5 flex flex-1 items-center justify-center md:hidden">
+            <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
               <Image
                 src="/assets/friendly_match-icon.webp"
                 alt=""
@@ -302,12 +302,12 @@ export function ModeSelectionScreen({
                 className="h-[110px] w-[110px] object-contain pointer-events-none"
               />
             </div>
-            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] font-black uppercase tracking-wide text-white md:hidden">
+            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] font-black uppercase tracking-wide text-white lg:hidden">
               Play
             </div>
 
             {/* Desktop: bottom-left PLAY */}
-            <div className="mt-auto hidden pt-8 md:block">
+            <div className="mt-auto hidden pt-8 lg:block">
               <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-black text-xl font-black uppercase tracking-wide text-white">
                 Play
               </div>
@@ -335,7 +335,7 @@ export function ModeSelectionScreen({
             alt=""
             width={160}
             height={160}
-            className="hidden md:block absolute right-2 bottom-2 h-40 w-40 object-contain opacity-90 pointer-events-none"
+            className="hidden lg:block absolute right-2 bottom-2 h-40 w-40 object-contain opacity-90 pointer-events-none"
           />
           <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
             <h3
@@ -347,7 +347,7 @@ export function ModeSelectionScreen({
             <p className="mt-1 text-[10px] md:mt-1.5 md:text-base font-black uppercase text-black">View Challenges</p>
 
             {/* Mobile: icon (centered, right under subtitle) + PLAY (bottom, full width) */}
-            <div className="mt-1.5 flex flex-1 items-center justify-center md:hidden">
+            <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
               <Image
                 src="/assets/daily_challenge_mobile.webp"
                 alt=""
@@ -356,12 +356,12 @@ export function ModeSelectionScreen({
                 className="h-[150px] w-full object-contain pointer-events-none"
               />
             </div>
-            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] font-black uppercase tracking-wide text-white md:hidden">
+            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] font-black uppercase tracking-wide text-white lg:hidden">
               Play
             </div>
 
             {/* Desktop: bottom-left PLAY */}
-            <div className="mt-auto hidden pt-8 md:block">
+            <div className="mt-auto hidden pt-8 lg:block">
               <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-black text-xl font-black uppercase tracking-wide text-white">
                 Play
               </div>
@@ -382,17 +382,17 @@ export function ModeSelectionScreen({
           </h2>
           <Link
             href="/objectives"
-            className="flex items-center justify-center w-[120px] h-[40px] rounded-xl border-2 border-[#58CC02] text-xs font-black text-white uppercase tracking-wide hover:bg-[#58CC02]/10 transition-colors"
+            className="flex items-center justify-center w-[120px] h-[40px] rounded-xl border-2 border-brand-green-light text-xs font-black text-white uppercase tracking-wide hover:bg-brand-green-light/10 transition-colors"
           >
             View All
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-3 md:hidden">
+        <div className="grid grid-cols-2 gap-3 lg:hidden">
           {mobileObjectives.map((obj, index) => (
             <Link
               key={`${obj.title}-${index}`}
               href="/objectives"
-              className="rounded-xl bg-[#2E8C16] p-3 transition-all hover:bg-[#369F19]"
+              className="rounded-xl bg-brand-green-deep p-3 transition-all hover:bg-brand-green"
             >
               <div className="mb-2 flex items-center justify-center">
                 <Image src="/assets/obj_icon.png" alt="" width={45} height={44} className="size-12 object-contain opacity-90" />
@@ -400,7 +400,7 @@ export function ModeSelectionScreen({
               <h4 className="text-[10px] font-black leading-tight text-white uppercase truncate">{obj.title}</h4>
               <p className="mt-0.5 text-[9px] leading-tight text-white/80">{obj.desc}</p>
               <div className="mt-4 h-3 rounded-full bg-[#07200C] overflow-hidden">
-                <div className="h-full rounded-full bg-[#58CC02]" style={{ width: `${obj.progress}%` }} />
+                <div className="h-full rounded-full bg-brand-green-light" style={{ width: `${obj.progress}%` }} />
               </div>
               <div className="mt-2 flex items-center justify-between text-[9px] font-black uppercase">
                 <span className="text-white">{obj.progress > 0 ? '1/3' : '0/1'}</span>
@@ -409,7 +409,7 @@ export function ModeSelectionScreen({
             </Link>
           ))}
         </div>
-        <div className="hidden md:flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
+        <div className="hidden lg:flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
           {/* TODO: Replace hardcoded progress (33%, "1/3", "+100 coins") with dynamic values from objectives API/hook */}
           <Link
             href="/objectives"
@@ -423,7 +423,7 @@ export function ModeSelectionScreen({
               </div>
             </div>
             <div className="h-3 bg-[#0F260F] rounded-full overflow-hidden mb-2.5">
-              <div className="h-full bg-[#58CC02] rounded-full" style={{ width: '33%' }} />
+              <div className="h-full bg-brand-green-light rounded-full" style={{ width: '33%' }} />
             </div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-white">1/3</span>
@@ -455,7 +455,7 @@ export function ModeSelectionScreen({
                   </div>
                 </div>
                 <div className="h-3 bg-[#0F260F] rounded-full overflow-hidden mb-2.5">
-                  <div className="h-full bg-[#58CC02] rounded-full" style={{ width: '0%' }} />
+                  <div className="h-full bg-brand-green-light rounded-full" style={{ width: '0%' }} />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black text-white">0/1</span>

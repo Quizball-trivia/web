@@ -18,7 +18,7 @@ export function EventListRow({ event, playerRankPoints, onSelect }: EventListRow
        className={`group relative grid grid-cols-12 gap-4 items-center p-4 rounded-xl border border-transparent hover:bg-card/60 hover:border-border/50 transition-all cursor-pointer ${isLocked ? 'opacity-60 grayscale-[0.5]' : ''}`}
     >
        {/* 1. Icon & Name */}
-       <div className="col-span-12 md:col-span-5 flex items-center gap-4">
+       <div className="col-span-12 md:col-span-8 lg:col-span-5 flex items-center gap-4">
           <div className={`p-2.5 rounded-lg border bg-card ${isLocked ? 'border-border text-muted-foreground' : 'border-primary/20 text-primary bg-primary/5'}`}>
              {event.type === 'weekly' ? <Calendar className="size-5" /> : <Trophy className="size-5" />}
           </div>
@@ -27,12 +27,12 @@ export function EventListRow({ event, playerRankPoints, onSelect }: EventListRow
                 <h4 className="font-bold text-base group-hover:text-primary transition-colors">{event.name}</h4>
                 {isLocked && <Lock className="size-3 text-muted-foreground" />}
              </div>
-             <p className="text-xs text-muted-foreground hidden md:block">{event.rewards.first} for 1st Place</p>
+             <p className="text-xs text-muted-foreground hidden lg:block">{event.rewards.first} for 1st Place</p>
           </div>
        </div>
 
-       {/* 2. Prize/Status (Hidden on mobile very small) */}
-       <div className="col-span-4 md:col-span-3 hidden md:flex flex-col justify-center">
+       {/* 2. Prize/Status (Hidden below lg breakpoint) */}
+       <div className="col-span-4 lg:col-span-3 hidden lg:flex flex-col justify-center">
           <div className="text-sm font-medium text-yellow-500">{event.prizePool} Pool</div>
           <div className="text-xs text-muted-foreground">{event.endsIn} remaining</div>
        </div>

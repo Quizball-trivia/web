@@ -210,11 +210,11 @@ export function AvatarPicker({
               )}
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-black uppercase tracking-wider text-[#071013]/70">
+              <span className="text-[10px] font-black uppercase tracking-wider text-surface-page/70">
                 {skin.name}
               </span>
               {!owned && skin.priceCoins && (
-                <span className="text-[9px] font-black uppercase tracking-wider text-[#FFE500]">
+                <span className="text-[9px] font-black uppercase tracking-wider text-brand-yellow">
                   {skin.priceCoins}
                 </span>
               )}
@@ -254,10 +254,10 @@ export function AvatarPicker({
               backgroundColor: "#FFFFFF",
             }}
           >
-            <div className="flex size-20 sm:size-24 items-center justify-center rounded-full border-2 border-dashed border-[#071013]/20">
-              <X className="size-8 text-[#071013]/40" strokeWidth={2.5} />
+            <div className="flex size-20 sm:size-24 items-center justify-center rounded-full border-2 border-dashed border-surface-page/20">
+              <X className="size-8 text-surface-page/40" strokeWidth={2.5} />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-[#071013]/70">
+            <span className="text-[10px] font-black uppercase tracking-wider text-surface-page/70">
               None
             </span>
             {!currentValue && (
@@ -301,11 +301,11 @@ export function AvatarPicker({
                   )}
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="max-w-[96px] text-center text-[10px] font-black uppercase tracking-wider leading-tight text-[#071013]/70 line-clamp-2">
+                  <span className="max-w-[96px] text-center text-[10px] font-black uppercase tracking-wider leading-tight text-surface-page/70 line-clamp-2">
                     {part.name}
                   </span>
                   {!owned && part.priceCoins && (
-                    <span className="text-[9px] font-black uppercase tracking-wider text-[#FFE500]">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-brand-yellow">
                       {part.priceCoins}
                     </span>
                   )}

@@ -1,5 +1,6 @@
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import type { LeaderboardEntry } from "@/lib/domain/leaderboard";
+import { getTierAccent } from "@/utils/tierVisuals";
 import { Trophy } from "lucide-react";
 
 interface UserRankStripProps {
@@ -14,6 +15,7 @@ const poppins = {
 } as const;
 
 export function UserRankStrip({ userEntry }: UserRankStripProps) {
+  const tierAccent = getTierAccent(userEntry.tier);
   return (
     <div
       className="relative flex items-center gap-3 sm:gap-4 rounded-[10px] border-2 px-3 sm:px-4 py-3 sm:py-3.5"
@@ -24,9 +26,9 @@ export function UserRankStrip({ userEntry }: UserRankStripProps) {
         <AvatarDisplay
           customization={userEntry.avatarCustomization ?? { base: userEntry.avatar || "avatar-1" }}
           countryCode={userEntry.country}
-          size="sm"
+          size="md"
         />
-        <div className="absolute -top-1 -left-1 flex size-5 items-center justify-center rounded-full bg-[#FFE500] shadow-sm ring-2 ring-black">
+        <div className="absolute -top-1 -left-1 flex size-5 items-center justify-center rounded-full bg-brand-yellow shadow-sm ring-2 ring-black">
           <Trophy className="size-3 text-black" strokeWidth={2.5} />
         </div>
       </div>
@@ -40,8 +42,8 @@ export function UserRankStrip({ userEntry }: UserRankStripProps) {
           {userEntry.username}
         </div>
         <div className="mt-1 flex items-center gap-2 text-[10px] sm:text-xs font-fun font-black uppercase tracking-wide">
-          <span className="text-white/50 truncate">{userEntry.tier}</span>
-          <span className="text-[#38B60E] tabular-nums shrink-0">
+          <span className="truncate" style={{ color: tierAccent }}>{userEntry.tier}</span>
+          <span className="tabular-nums shrink-0 text-white">
             {userEntry.rankPoints.toLocaleString()} RP
           </span>
         </div>

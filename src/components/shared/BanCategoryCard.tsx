@@ -90,7 +90,7 @@ export function BanCategoryCard({
         }
       }}
       className={cn(
-        'group relative aspect-[3/4] sm:aspect-[4/5] w-full overflow-hidden rounded-2xl md:rounded-[28px] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60',
+        'group relative aspect-[3/4] sm:aspect-[4/5] w-full overflow-hidden rounded-xl md:rounded-2xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60',
         interactive && 'cursor-pointer active:translate-y-[2px]',
         !interactive && 'cursor-default',
         fadedOut && 'opacity-30 pointer-events-none',
@@ -119,7 +119,7 @@ export function BanCategoryCard({
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <span
             className={cn(
-              'text-[5.5rem] sm:text-[7rem] leading-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.35)] transition-all duration-300',
+              'text-[7rem] sm:text-[9rem] md:text-[10rem] leading-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.35)] transition-all duration-300',
               interactive && 'group-hover:scale-105',
               isBanned && 'grayscale opacity-40 scale-90'
             )}
@@ -133,7 +133,7 @@ export function BanCategoryCard({
       <div className="relative z-10 flex h-full flex-col justify-end items-center p-3 sm:p-4">
         <h3
           className={cn(
-            'text-xs sm:text-base md:text-lg uppercase leading-tight break-words hyphens-auto text-center w-full',
+            'text-sm sm:text-lg md:text-xl uppercase leading-tight break-words hyphens-auto text-center w-full',
             isBanned && 'grayscale opacity-70'
           )}
           style={{
@@ -159,7 +159,7 @@ export function BanCategoryCard({
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-          className="absolute top-2 right-2 z-20 flex size-7 items-center justify-center rounded-full bg-[#58CC02] text-white shadow-lg"
+          className="absolute top-2 right-2 z-20 flex size-7 items-center justify-center rounded-full bg-brand-green-light text-white shadow-lg"
         >
           <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
             <path d="M20 6 9 17l-5-5" />
@@ -179,7 +179,7 @@ export function BanCategoryCard({
               initial={{ scale: 0, rotate: -20 }}
               animate={{ scale: 1, rotate: -8 }}
               transition={{ type: 'spring', stiffness: 400, damping: 14 }}
-              className="rounded-lg bg-[#FF4B4B] px-3 py-1.5 sm:rounded-xl sm:px-5 sm:py-2"
+              className="rounded-lg bg-brand-red-soft px-3 py-1.5 sm:rounded-xl sm:px-5 sm:py-2"
             >
               <span
                 className="text-xs uppercase tracking-[0.15em] text-white sm:text-base"

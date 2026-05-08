@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { toast } from 'sonner';
 
 import { SocialScreen } from '../SocialScreen';
+import { LocaleProvider } from '@/contexts/LocaleContext';
 import * as socialQueries from '@/lib/queries/social.queries';
 import * as socialRepo from '@/lib/repositories/social.repo';
 
@@ -80,7 +81,9 @@ describe('Delete Friend Feature', () => {
   function renderScreen() {
     return render(
       <QueryClientProvider client={queryClient}>
-        <SocialScreen />
+        <LocaleProvider>
+          <SocialScreen />
+        </LocaleProvider>
       </QueryClientProvider>
     );
   }

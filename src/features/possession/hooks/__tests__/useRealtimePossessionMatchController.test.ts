@@ -1,9 +1,12 @@
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import type { MatchStatePayload, ResolvedMatchQuestionPayload } from '@/lib/realtime/socket.types';
 
 const emitMock = vi.fn();
+const storeQueryMock = vi.hoisted(() => ({
+  inventoryItems: [] as Array<{ slug: string; quantity: number }>,
+}));
 
 vi.mock('@/lib/realtime/socket-client', () => ({
   getSocket: () => ({
@@ -71,7 +74,7 @@ vi.mock('@/features/game/hooks/useRealtimeGameLogic', () => ({
 vi.mock('@/lib/queries/store.queries', () => ({
   useStoreInventory: () => ({
     data: {
-      items: [],
+      items: storeQueryMock.inventoryItems,
     },
   }),
 }));
@@ -206,6 +209,7 @@ describe('useRealtimePossessionMatchController', () => {
     mockGameLogicState.opponentScore = 90;
     mockGameLogicState.matchPaused = false;
     mockGameLogicState.timeRemaining = 8;
+    storeQueryMock.inventoryItems = [];
     seedMatchState();
     useRealtimeMatchStore.getState().setMatchQuestion(mockQuestion);
   });
@@ -270,6 +274,47 @@ describe('useRealtimePossessionMatchController', () => {
       'disabled',
       'disabled',
     ]);
+  });
+
+  it('uses a chance card optimistically and emits the socket event when eligible', () => {
+    storeQueryMock.inventoryItems = [{ slug: 'chance_card_5050', quantity: 1 }];
+
+    const { result } = renderHook(() => useRealtimePossessionMatchController({
+      playerAvatar: '/me.png',
+      playerUsername: 'me',
+      opponentAvatar: '/opp.png',
+      opponentUsername: 'opp',
+      onQuit: vi.fn(),
+      onForfeit: vi.fn(),
+    }));
+
+    const content = result.current.questionAreaModel?.content;
+    expect(content?.kind).toBe('multipleChoice');
+    if (content?.kind !== 'multipleChoice') {
+      throw new Error('Expected multipleChoice question area model');
+    }
+
+    const onUseChanceCard = content.props.onUseChanceCard;
+    expect(onUseChanceCard).toBeTypeOf('function');
+    if (!onUseChanceCard) {
+      throw new Error('Expected chance card handler');
+    }
+
+    act(() => {
+      onUseChanceCard();
+    });
+
+    expect(useRealtimeMatchStore.getState().match?.optimisticChanceCard).toMatchObject({
+      qIndex: 0,
+      eliminatedIndices: [1, 2],
+      pending: true,
+      remainingQuantityAfter: null,
+    });
+    expect(emitMock).toHaveBeenCalledWith('match:chance_card_use', {
+      matchId: MATCH_ID,
+      qIndex: 0,
+      clientActionId: expect.any(String),
+    });
   });
 
   it('emits halftime ui ready only once per halftime instance', () => {

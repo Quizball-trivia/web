@@ -27,6 +27,12 @@
     "social": "Social",
     "store": "Store"
   },
+  "auth": {
+    "sessionEnded": "Your session has ended"
+  },
+  "social": {
+    "pendingDeletion": "Pending Deletion"
+  },
   "settings": {
     "title": "Settings",
     "languageAndExperience": "Language & Experience",
@@ -58,12 +64,21 @@
     "streakProtectionDescription": "Alerts before you lose your streak",
     "accountAndSafety": "Account & Safety",
     "manageAccount": "Manage Account",
+    "deleteAccount": "Delete Account",
+    "deleteAccountDescription": "Disable this account and start the 30-day deletion window",
+    "deleteAccountTitle": "Delete account?",
+    "deleteAccountModalDescription": "Your account will be disabled immediately and hidden from public surfaces. Support can restore it for 30 days. After that, personal data is removed in accordance with our Privacy Policy and this email can be used for a new account.",
+    "deleteAccountConfirmWord": "DELETE",
+    "deleteAccountConfirmLabel": "Type {confirmWord} to confirm",
+    "deleteAccountDeleting": "Deleting...",
+    "deleteAccountScheduled": "Account deletion scheduled",
+    "deleteAccountFailed": "Failed to schedule account deletion",
     "resetOnboarding": "Reset Onboarding",
     "resetTrainingMatch": "Reset Training Match",
     "resetTrainingSuccess": "Training match reset. You'll see the offer next time you click Ranked.",
     "logOut": "Log Out",
     "about": "About",
-    "version": "Version 1.0.0 (Beta)",
+    "version": "Version 0.9.1 (Beta)",
     "guest": "Guest",
     "dev": "dev"
   },

@@ -131,8 +131,10 @@ export function GameStageRouter() {
     } else {
       logger.info("Socket emit match:forfeit skipped (missing matchId)");
     }
-    exitToPlay();
-  }, [realtimeMatchId, exitToPlay]);
+    // Don't navigate or reset here — the server-driven match:final_results
+    // flow takes the player to the final results screen so they see the
+    // outcome of their forfeit instead of bouncing straight back to /play.
+  }, [realtimeMatchId]);
 
   const handleMatchmakingExit = useCallback(() => {
     if (matchType === "ranked") {
@@ -364,7 +366,6 @@ export function GameStageRouter() {
           tier: playerRankPoints != null ? tierFromRp(playerRankPoints) : undefined,
           country: authUser?.country ?? undefined,
           countryCode: authUser?.country ?? undefined,
-          favoriteClub: authUser?.favorite_club ?? undefined,
         }}
         opponentInfo={oppInfo ? {
           username: oppInfo.username,

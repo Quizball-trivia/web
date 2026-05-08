@@ -31,9 +31,9 @@ export interface ItemCardProps {
 }
 
 const SIZE_PCT: Record<NonNullable<ItemCardProps["imageSize"]>, number> = {
-  sm: 55,
-  md: 70,
-  lg: 80,
+  sm: 75,
+  md: 90,
+  lg: 100,
 };
 
 export function ItemCard({
@@ -53,7 +53,7 @@ export function ItemCard({
       className="relative flex flex-col"
     >
       <div
-        className="relative flex flex-col rounded-[20px] border-[3px] aspect-[320/268] px-5 pt-5 pb-5"
+        className="relative flex flex-col rounded-[20px] border-[3px] aspect-[3/4] px-5 py-5"
         style={{ backgroundColor: CARD_BG, borderColor: PURPLE }}
       >
         {/* Title */}

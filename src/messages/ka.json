@@ -27,6 +27,12 @@
     "social": "სოციალური",
     "store": "მაღაზია"
   },
+  "auth": {
+    "sessionEnded": "სესია დასრულდა"
+  },
+  "social": {
+    "pendingDeletion": "იშლება"
+  },
   "settings": {
     "title": "პარამეტრები",
     "languageAndExperience": "ენა და გამოცდილება",
@@ -58,6 +64,15 @@
     "streakProtectionDescription": "შეტყობინებები სერიის დაკარგვამდე",
     "accountAndSafety": "ანგარიში და უსაფრთხოება",
     "manageAccount": "ანგარიშის მართვა",
+    "deleteAccount": "ანგარიშის წაშლა",
+    "deleteAccountDescription": "ანგარიში გაითიშება და 30-დღიანი წაშლის პერიოდი დაიწყება",
+    "deleteAccountTitle": "წავშალოთ ანგარიში?",
+    "deleteAccountModalDescription": "ანგარიში დაუყოვნებლივ გაითიშება და საჯარო გვერდებიდან დაიმალება. მხარდაჭერას მისი აღდგენა 30 დღის განმავლობაში შეუძლია. ამის შემდეგ პირადი მონაცემები ჩვენი კონფიდენციალურობის პოლიტიკის მიხედვით წაიშლება და ამ ელფოსტით ახალი ანგარიშის შექმნა შესაძლებელი იქნება.",
+    "deleteAccountConfirmWord": "DELETE",
+    "deleteAccountConfirmLabel": "დასადასტურებლად ჩაწერე {confirmWord}",
+    "deleteAccountDeleting": "იშლება...",
+    "deleteAccountScheduled": "ანგარიშის წაშლა დაიგეგმა",
+    "deleteAccountFailed": "ანგარიშის წაშლის დაგეგმვა ვერ მოხერხდა",
     "resetOnboarding": "ონბორდინგის თავიდან დაწყება",
     "resetTrainingMatch": "სავარჯიშო მატჩის თავიდან დაწყება",
     "resetTrainingSuccess": "სავარჯიშო მატჩი განახლდა. შეთავაზებას შემდეგ Ranked-ზე დაჭერისას ნახავ.",

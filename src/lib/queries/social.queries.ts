@@ -15,6 +15,7 @@ export interface SocialPlayer {
   avatarUrl: string | null;
   avatarCustomization: AvatarCustomization | null;
   level: number;
+  pendingDeletion: boolean;
   ranked: SocialPlayerResponse["ranked"];
   friendStatus: SocialPlayerResponse["friendStatus"];
 }
@@ -38,6 +39,7 @@ function toSocialPlayer(player: SocialPlayerResponse): SocialPlayer {
     avatarUrl: player.avatarUrl,
     avatarCustomization: player.avatarCustomization,
     level: player.level,
+    pendingDeletion: player.pendingDeletion,
     ranked: player.ranked,
     friendStatus: player.friendStatus,
   };

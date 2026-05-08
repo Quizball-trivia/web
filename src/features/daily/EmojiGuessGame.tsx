@@ -96,11 +96,11 @@ export function EmojiGuessGame({ onBack, onComplete }: EmojiGuessGameProps) {
   const getAnswerTypeColor = (type: "player" | "manager" | "club") => {
     switch (type) {
       case "player":
-        return "text-[#1CB0F6]";
+        return "text-brand-cyan";
       case "manager":
-        return "text-[#CE82FF]";
+        return "text-brand-purple";
       case "club":
-        return "text-[#58CC02]";
+        return "text-brand-green-light";
     }
   };
 
@@ -146,20 +146,20 @@ export function EmojiGuessGame({ onBack, onComplete }: EmojiGuessGameProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-40 bg-[#131F24] font-fun flex flex-col">
+    <div className="fixed inset-0 z-40 bg-surface-deep font-fun flex flex-col">
       {/* Header */}
-      <div className="bg-[#1B2F36] border-b-[3px] border-[#131F24]">
+      <div className="bg-surface-card border-b-[3px] border-surface-deep">
         <div className="max-w-2xl mx-auto px-3 md:px-4 py-2.5 md:py-3">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowQuitDialog(true)}
-                className="flex items-center justify-center size-9 rounded-xl hover:bg-[#243B44] active:scale-95 transition-all text-white"
+                className="flex items-center justify-center size-9 rounded-xl hover:bg-surface-card-tint active:scale-95 transition-all text-white"
               >
                 <ArrowLeft className="size-5" />
               </button>
               <div className="flex items-center gap-2">
-                <Sparkles className="size-5 text-[#1CB0F6]" />
+                <Sparkles className="size-5 text-brand-cyan" />
                 <h1 className="text-lg md:text-xl font-black uppercase text-white">Emoji Guess</h1>
               </div>
             </div>
@@ -167,7 +167,7 @@ export function EmojiGuessGame({ onBack, onComplete }: EmojiGuessGameProps) {
 
           <div className="h-2 bg-white/10 rounded-full overflow-hidden">
             <motion.div
-              className="h-full bg-[#58CC02] rounded-full"
+              className="h-full bg-brand-green-light rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.3 }}
@@ -175,16 +175,16 @@ export function EmojiGuessGame({ onBack, onComplete }: EmojiGuessGameProps) {
           </div>
 
           <div className="flex items-center justify-between mt-3">
-            <div className="text-xs text-[#56707A] font-bold">
+            <div className="text-xs text-brand-slate font-bold">
               Question {currentQuestionIndex + 1}/{questions.length}
             </div>
             <div className="flex items-center gap-3">
               {streak > 0 && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-[#FF9600]/15 border border-[#FF9600]/30 text-[#FF9600]">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-brand-orange/15 border border-brand-orange/30 text-brand-orange">
                   🔥 {streak} streak
                 </span>
               )}
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-[#243B44] text-[#1CB0F6]">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-surface-card-tint text-brand-cyan">
                 <Coins className="size-3" />
                 {score}
               </span>
@@ -204,10 +204,10 @@ export function EmojiGuessGame({ onBack, onComplete }: EmojiGuessGameProps) {
             exit={{ opacity: 0, y: -20 }}
             className="w-full max-w-md"
           >
-            <div className="bg-[#1B2F36] rounded-xl border-b-4 border-[#0F1F26] p-5 md:p-6">
+            <div className="bg-surface-card rounded-xl border-b-4 border-surface-card-deeper p-5 md:p-6">
               {/* Answer Type Badge */}
               <div className="flex justify-center mb-6">
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-[#243B44] ${getAnswerTypeColor(currentQuestion.answerType)}`}>
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-surface-card-tint ${getAnswerTypeColor(currentQuestion.answerType)}`}>
                   {getAnswerTypeIcon(currentQuestion.answerType)}
                   {currentQuestion.answerType.charAt(0).toUpperCase() +
                     currentQuestion.answerType.slice(1)}
@@ -230,14 +230,14 @@ export function EmojiGuessGame({ onBack, onComplete }: EmojiGuessGameProps) {
                   onChange={(e) => setUserAnswer(e.target.value)}
                   onKeyDown={handleKeyDown}
                   disabled={showFeedback}
-                  className="bg-[#243B44] border-2 border-[#1B2F36] text-white placeholder:text-[#56707A] focus:border-[#1CB0F6] text-center h-12 text-base rounded-xl"
+                  className="bg-surface-card-tint border-2 border-surface-card text-white placeholder:text-brand-slate focus:border-brand-cyan text-center h-12 text-base rounded-xl"
                   autoFocus
                 />
 
                 <button
                   onClick={handleSubmit}
                   disabled={!userAnswer.trim() || showFeedback}
-                  className="w-full py-3 rounded-xl font-black text-white bg-[#58CC02] border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px] transition-all disabled:opacity-50 disabled:active:border-b-4 disabled:active:translate-y-0"
+                  className="w-full py-3 rounded-xl font-black text-white bg-brand-green-light border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px] transition-all disabled:opacity-50 disabled:active:border-b-4 disabled:active:translate-y-0"
                 >
                   {showFeedback ? "Next..." : "Submit Answer"}
                 </button>
@@ -255,23 +255,23 @@ export function EmojiGuessGame({ onBack, onComplete }: EmojiGuessGameProps) {
                     <div
                       className={`flex items-center justify-center gap-2 p-4 rounded-xl border-b-4 ${
                         isCorrect
-                          ? "bg-[#58CC02]/15 border-b-[#46A302]"
-                          : "bg-[#FF4B4B]/10 border-b-[#CC3C3C]"
+                          ? "bg-brand-green-light/15 border-b-[#46A302]"
+                          : "bg-brand-red-soft/10 border-b-[#CC3C3C]"
                       }`}
                     >
                       {isCorrect ? (
                         <>
-                          <CheckCircle2 className="size-5 text-[#58CC02]" />
-                          <span className="text-sm font-bold text-[#58CC02]">
+                          <CheckCircle2 className="size-5 text-brand-green-light" />
+                          <span className="text-sm font-bold text-brand-green-light">
                             Correct! +{lastAwardedPoints} coins
                           </span>
                         </>
                       ) : (
                         <>
-                          <XCircle className="size-5 text-[#FF4B4B]" />
+                          <XCircle className="size-5 text-brand-red-soft" />
                           <div className="text-sm text-center">
-                            <div className="font-bold text-[#FF4B4B]">Incorrect!</div>
-                            <div className="mt-1 text-[#56707A]">
+                            <div className="font-bold text-brand-red-soft">Incorrect!</div>
+                            <div className="mt-1 text-brand-slate">
                               Answer: {currentQuestion.displayAnswer}
                             </div>
                           </div>
@@ -283,7 +283,7 @@ export function EmojiGuessGame({ onBack, onComplete }: EmojiGuessGameProps) {
               </AnimatePresence>
             </div>
 
-            <div className="text-center mt-4 text-xs text-[#56707A]">
+            <div className="text-center mt-4 text-xs text-brand-slate">
               Guess the {currentQuestion.answerType} represented by the emojis
             </div>
           </motion.div>

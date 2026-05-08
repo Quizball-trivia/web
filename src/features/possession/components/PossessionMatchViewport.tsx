@@ -55,7 +55,7 @@ function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
     >
       <div
         className={`text-5xl font-black font-fun uppercase tracking-wider ${
-          result === 'goal' ? 'text-[#58CC02]' : 'text-[#FF4B4B]'
+          result === 'goal' ? 'text-brand-green-light' : 'text-brand-red-soft'
         }`}
         style={{
           textShadow: result === 'goal'
@@ -99,7 +99,7 @@ export function PossessionMatchViewport({ model, children }: PossessionMatchView
         </div>
       )}
 
-      <div className="w-full flex flex-col lg:flex-1 lg:max-w-2xl lg:mx-auto lg:justify-start lg:py-4">
+      <div className="w-full flex flex-col lg:flex-1 lg:max-w-3xl lg:mx-auto lg:justify-start lg:py-4">
         {showMainUI && (
           <>
             {hud.kind === 'shot' ? (

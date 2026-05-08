@@ -304,16 +304,24 @@ export function RealtimeResultsScreen({
   const revealTier = tierFromRp(myOutcome?.newRp ?? newRP);
   const revealTierVisual = getTierVisual(revealTier);
   const resultHeading = isDraw ? 'DRAW' : playerWon ? 'VICTORY' : 'DEFEAT';
-  const progressPanelVisible = showRankedRpCard || showXpCard;
   const totalGamesLabel = totalMatches > 0
     ? `${totalMatches} GAME${totalMatches === 1 ? '' : 'S'} PLAYED`
     : 'MATCH COMPLETE';
 
+  const playerTier = matchType === 'ranked' && preMatchRankedProfile?.placementStatus === 'placed'
+    ? tierFromRp(oldRpBase)
+    : null;
+  const opponentRankedOutcome = rankedOutcome?.byUserId[opponentId] ?? null;
+  const opponentTier = opponentRankedOutcome?.placementStatus === 'placed'
+    ? tierFromRp(opponentRankedOutcome.newRp)
+    : null;
+  const opponentDisplayRp = opponentRankedOutcome?.newRp ?? null;
+
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0f1420] p-3 md:p-6">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-surface-page-alt p-3 md:p-6">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[#0f1420] bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
+        className="pointer-events-none absolute inset-0 bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
       />
       <div
         aria-hidden="true"
@@ -326,114 +334,113 @@ export function RealtimeResultsScreen({
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="relative z-10 w-full max-w-[860px] space-y-3 font-poppins md:space-y-4"
+        className="relative z-10 w-full max-w-[1280px] space-y-4 font-poppins md:space-y-6"
       >
-        <div className="pb-1 pt-1 text-center">
-          <h1 className={cn(
-            'font-poppins text-[2rem] font-semibold uppercase tracking-[0.02em] md:text-[3.5rem]',
-            playerWon ? 'text-emerald-400' : isDraw ? 'text-yellow-400' : 'text-[#F36A6A]'
-          )}>
+        <div className="pb-2 text-center">
+          <h1
+            className="font-poppins text-[3rem] font-black uppercase tracking-[0] md:text-[3.75rem]"
+            style={{
+              lineHeight: '1.3',
+              color: playerWon ? '#22C55E' : isDraw ? '#FACC15' : '#FB3101',
+            }}
+          >
             {resultHeading}
           </h1>
         </div>
 
-        <div className="mx-auto w-full max-w-[760px] space-y-3">
-          <div className="md:hidden space-y-3">
-            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-              <div className="flex flex-col items-center text-center">
+        <div className="mx-auto w-full max-w-[1100px]">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6">
+            {/* Player (Left) */}
+            <div className="flex items-center gap-3 justify-self-start sm:gap-4">
+              <div className="rounded-full bg-brand-blue p-1.5 sm:p-2">
                 <AvatarDisplay
                   customization={playerAvatarCustomization ?? { base: playerAvatar }}
-                  size="sm"
-                  className="border border-white/15 bg-white/[0.03] shadow-[0_0_0_1px_rgba(255,255,255,0.04)]"
+                  size="lg"
                 />
-                <div className="mt-2 max-w-full truncate text-[1.15rem] font-bold text-white">{playerUsername}</div>
-                <div className="text-[0.8rem] font-black uppercase tracking-wide text-[#38D66B]">You</div>
               </div>
-
-              <div className="flex items-center gap-2">
-                <AnimatedCounter
-                  from={0}
-                  to={playerScore}
-                  delay={0.25}
-                  className="text-[2.25rem] font-black leading-none text-white tabular-nums"
-                />
-                <div className="flex h-10 w-10 items-center justify-center text-sm font-black text-white/80">
-                  VS
+              <div className="hidden min-w-0 sm:block">
+                <div
+                  className="truncate font-poppins font-semibold uppercase text-white text-base sm:text-lg md:text-xl"
+                >
+                  {playerUsername}
                 </div>
-                <AnimatedCounter
-                  from={0}
-                  to={opponentScore}
-                  delay={0.25}
-                  className="text-[2.25rem] font-black leading-none text-white tabular-nums"
-                />
+                {(preMatchRankedProfile?.rp != null || playerTier) && (
+                  <div className="mt-2 flex items-center gap-2">
+                    {preMatchRankedProfile?.rp != null && (
+                      <span
+                        className="inline-flex h-[22px] items-center rounded-[20px] px-3 font-poppins font-semibold uppercase tabular-nums text-[12px] sm:text-[13px] md:text-[15px]"
+                        style={{ backgroundColor: '#FFE500', color: '#071013' }}
+                      >
+                        {preMatchRankedProfile.rp} RP
+                      </span>
+                    )}
+                    {playerTier && (
+                      <span
+                        className="font-poppins font-semibold uppercase text-[12px] sm:text-[13px] md:text-[15px]"
+                        style={{ color: '#FFE500' }}
+                      >
+                        {playerTier}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
+            </div>
 
-              <div className="flex flex-col items-center text-center">
+            {/* Center score pill */}
+            <div className="flex flex-col items-center">
+              <div
+                className="flex h-[44px] min-w-[110px] items-center justify-center rounded-[20px] bg-brand-blue px-5 font-poppins font-semibold tabular-nums text-white text-2xl sm:h-[51px] sm:min-w-[133px] sm:px-6 sm:text-[36px]"
+              >
+                <AnimatedCounter from={0} to={playerScore} delay={0.25} />
+                <span className="mx-1 sm:mx-1.5">:</span>
+                <AnimatedCounter from={0} to={opponentScore} delay={0.25} />
+              </div>
+              <div
+                className="mt-2 whitespace-nowrap font-poppins font-semibold uppercase text-white text-xs sm:text-sm md:text-[20px]"
+                style={{ opacity: 0.5 }}
+              >
+                {totalGamesLabel}
+              </div>
+            </div>
+
+            {/* Opponent (Right) */}
+            <div className="flex flex-row-reverse items-center gap-3 justify-self-end sm:gap-4">
+              <div className="rounded-full bg-brand-red-soft p-1.5 sm:p-2">
                 <AvatarDisplay
                   customization={opponentAvatarCustomization ?? { base: opponentAvatar }}
-                  size="sm"
-                  className="border border-[#F36A6A]/70 bg-white/[0.03] shadow-[0_0_16px_rgba(243,106,106,0.24)]"
+                  size="lg"
+                  className="-scale-x-100"
                 />
-                <div className="mt-2 max-w-full truncate text-[1.15rem] font-bold text-white">{opponentUsername}</div>
-                <div className="text-[0.8rem] font-black uppercase tracking-wide text-[#F36A6A]">Opponent</div>
+              </div>
+              <div className="hidden min-w-0 text-right sm:block">
+                <div
+                  className="truncate font-poppins font-semibold uppercase text-white text-base sm:text-lg md:text-xl"
+                >
+                  {opponentUsername}
+                </div>
+                {(opponentDisplayRp != null || opponentTier) && (
+                  <div className="mt-2 flex flex-row-reverse items-center gap-2">
+                    {opponentDisplayRp != null && (
+                      <span
+                        className="inline-flex h-[22px] items-center rounded-[20px] px-3 font-poppins font-semibold uppercase tabular-nums text-[12px] sm:text-[13px] md:text-[15px]"
+                        style={{ backgroundColor: '#FFE500', color: '#071013' }}
+                      >
+                        {opponentDisplayRp} RP
+                      </span>
+                    )}
+                    {opponentTier && (
+                      <span
+                        className="font-poppins font-semibold uppercase text-[12px] sm:text-[13px] md:text-[15px]"
+                        style={{ color: '#FFE500' }}
+                      >
+                        {opponentTier}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-
-          <div className="hidden md:grid items-center gap-6 md:grid-cols-[1fr_auto_auto_auto_1fr]">
-            <div className="flex items-center gap-4 justify-self-start">
-              <AvatarDisplay
-                customization={playerAvatarCustomization ?? { base: playerAvatar }}
-                size="lg"
-                className="h-[4.5rem] w-[4.5rem] border-2 border-white/15 bg-white/[0.03] shadow-[0_0_0_1px_rgba(255,255,255,0.04)]"
-              />
-              <div className="min-w-0">
-                <div className="truncate text-[2.1rem] font-bold text-white">{playerUsername}</div>
-                <div className="text-lg font-black uppercase tracking-wide text-[#38D66B]">You</div>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <AnimatedCounter
-                from={0}
-                to={playerScore}
-                delay={0.25}
-                className="text-[4rem] font-black leading-none text-white tabular-nums"
-              />
-            </div>
-
-            <div className="mx-auto flex h-14 w-14 items-center justify-center text-xl font-black text-white/80">
-              VS
-            </div>
-
-            <div className="text-center">
-              <AnimatedCounter
-                from={0}
-                to={opponentScore}
-                delay={0.25}
-                className="text-[4rem] font-black leading-none text-white tabular-nums"
-              />
-            </div>
-
-            <div className="flex items-center justify-end gap-4 justify-self-end">
-              <div className="min-w-0 text-right">
-                <div className="truncate text-[2.1rem] font-bold text-white">{opponentUsername}</div>
-                <div className="text-lg font-black uppercase tracking-wide text-[#F36A6A]">Opponent</div>
-              </div>
-              <AvatarDisplay
-                customization={opponentAvatarCustomization ?? { base: opponentAvatar }}
-                size="lg"
-                className="h-[4.5rem] w-[4.5rem] border-2 border-[#F36A6A]/70 bg-white/[0.03] shadow-[0_0_24px_rgba(243,106,106,0.32)]"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 md:gap-6 text-white/35">
-            <div className="h-px flex-1 bg-white/15" />
-            <div className="whitespace-nowrap text-[0.78rem] font-semibold uppercase tracking-[0.08em] text-white/55 md:text-base">
-              {totalGamesLabel}
-            </div>
-            <div className="h-px flex-1 bg-white/15" />
           </div>
         </div>
 
@@ -452,7 +459,7 @@ export function RealtimeResultsScreen({
                     className="border-t border-white/10 pt-3 md:pt-4"
                   >
                       <div className="mb-2 flex items-center justify-between">
-                        <div className="text-xs font-black uppercase tracking-wide text-[#58CC02] md:text-sm">Placement Progress</div>
+                        <div className="text-xs font-black uppercase tracking-wide text-brand-green-light md:text-sm">Placement Progress</div>
                         <div className="text-xs font-black text-[#85E000] md:text-sm">{placementPlayed}/{placementRequired}</div>
                       </div>
                       <div className="relative mb-2 h-3 md:h-4 bg-white/10 rounded-full overflow-hidden">
@@ -460,7 +467,7 @@ export function RealtimeResultsScreen({
                         initial={{ width: `${(Math.max(0, placementPlayed - 1) / placementRequired) * 100}%` }}
                         animate={{ width: `${(placementPlayed / placementRequired) * 100}%` }}
                         transition={{ duration: 0.7, ease: 'easeOut' }}
-                        className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#58CC02] to-[#85E000]"
+                        className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-brand-green-light to-[#85E000]"
                       >
                         <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/25 to-transparent h-1/2" />
                       </motion.div>
@@ -525,129 +532,102 @@ export function RealtimeResultsScreen({
               </AnimatePresence>
             )}
 
-            {progressPanelVisible && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="mx-auto w-full max-w-[760px] border-t border-white/10 pt-4 md:pt-5"
-              >
-                <div className={cn(
-                  'grid gap-x-5 gap-y-3 text-center md:gap-y-3.5',
-                  showRankedRpCard && showXpCard
-                    ? 'grid-cols-1 grid-rows-[auto_auto_auto_auto] md:grid-cols-[minmax(0,1fr)_1px_minmax(0,1fr)]'
-                    : 'grid-cols-1 grid-rows-[auto_auto_auto_auto]'
-                )}>
-                  {showRankedRpCard && (
-                    <div className="grid grid-rows-subgrid gap-y-3 md:row-span-4 md:row-start-1 md:gap-y-3.5">
-                      {/* Row 1: Tier label */}
-                      <div className="self-end text-sm font-bold uppercase tracking-[0.18em] text-white/70 md:text-base">
-                        {rpTierInfo.tier}
-                      </div>
-
-                      {/* Row 2: Big RP value */}
-                      <div className="self-end text-[2.2rem] font-black leading-none text-[#FFD126] md:text-[2.6rem]">
-                        {newRP} <span className="text-[1.5rem] md:text-[1.8rem]">RP</span>
-                      </div>
-
-                      {/* Row 3: Progress bar (auto-aligned via subgrid) */}
-                      <div className="relative h-3 self-center overflow-hidden rounded-full bg-white/12 md:h-4">
-                        <motion.div
-                          initial={{ width: `${oldRpTierInfo.progress}%` }}
-                          animate={{
-                            width: tierChanged && tierTransitionPhase === 'fill'
-                              ? (tierPromoted ? '100%' : '0%')
-                              : `${rpTierInfo.progress}%`,
-                          }}
-                          transition={tierTransitionPhase === 'settled' && tierChanged
-                            ? { duration: 0.8, ease: 'easeOut' }
-                            : { duration: 1.2, ease: 'easeInOut', delay: 0.5 }
-                          }
-                          className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#38B60E] to-[#7BDA1A]"
-                        />
-                      </div>
-
-                      {/* Row 4: Caption */}
-                      <div className="flex items-center justify-between text-[11px] font-medium text-white/60 md:text-sm">
-                        <span>{newRP} RP</span>
-                        {rpTierInfo.pointsToNext !== null && (
-                          <span>{rpTierInfo.pointsToNext} RP to next tier</span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {showRankedRpCard && showXpCard && (
-                    <div className="hidden w-px bg-white/12 md:row-span-4 md:row-start-1 md:block" />
-                  )}
-
-                  {showXpCard && preMatchProgression && projectedProgression && (
-                    <div className="grid grid-rows-subgrid gap-y-3 md:row-span-4 md:row-start-1 md:gap-y-3.5">
-                      {/* Row 1: Title + +XP gain inline */}
-                      <div className="flex items-baseline justify-center gap-2 self-end text-sm font-bold uppercase tracking-[0.18em] text-[#48C7FF] md:text-base">
-                        <span>XP Progress</span>
-                        <span className="text-base font-black md:text-lg">+{animatedXp} XP</span>
-                      </div>
-
-                      {/* Row 2: Big level value */}
-                      <div className="self-end text-[2.2rem] font-black leading-none text-white md:text-[2.6rem]">
-                        Level {projectedProgression.level}
-                      </div>
-
-                      {/* Row 3: Progress bar */}
-                      <div className="relative h-3 self-center overflow-hidden rounded-full bg-white/12 md:h-4">
-                        <motion.div
-                          initial={{ width: `${xpBarInitialProgress}%` }}
-                          animate={{ width: `${projectedProgression.progressPct}%` }}
-                          transition={{ duration: 1.1, ease: 'easeOut', delay: 0.45 }}
-                          className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#169FF5] to-[#58D7FF]"
-                        />
-                      </div>
-
-                      {/* Row 4: Caption */}
-                      <div className="flex flex-col items-center gap-1 text-[11px] font-medium text-white/60 md:flex-row md:items-center md:justify-between md:text-sm">
-                        {leveledUp ? (
-                          <>
-                            <span>{projectedProgression.currentLevelXp} XP into level {projectedProgression.level}</span>
-                            <span>{xpToNextLevelAfterMatch} to level {projectedProgression.level + 1}</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>{projectedProgression.currentLevelXp} / {projectedProgression.xpForNextLevel} XP</span>
-                            <span>{projectedProgression.progressPct}% to level {projectedProgression.level + 1}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            )}
           </>
         )}
 
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-          className="mx-auto w-full max-w-[760px] border-t border-white/10 pt-4 md:pt-5"
+          transition={{ delay: 0.3 }}
+          className="mx-auto w-full max-w-[960px] pt-4 md:pt-6"
         >
-          <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_1px_minmax(0,1fr)] md:items-center">
-            <div className="flex items-center gap-3">
-              <div>
-                <div className="text-[1rem] font-medium uppercase tracking-wide text-white/65 md:text-[1.25rem]">Accuracy</div>
-                <div className="text-[1.85rem] font-black leading-none text-[#3BA6FF] md:text-[2.2rem]">{accuracy}%</div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-6 md:grid-cols-4 md:gap-x-8 md:grid-rows-[auto_auto_auto_auto] md:items-start">
+            {/* Accuracy — value row 1, label sits on bar row */}
+            <div className="grid grid-rows-subgrid text-center md:row-span-4">
+              <div className="font-poppins font-semibold leading-none text-brand-blue text-[2rem] md:text-[36px]">
+                {accuracy}%
+              </div>
+              <div className="hidden md:block" />
+              <div
+                className="mt-2 font-poppins font-semibold uppercase text-white text-xs sm:text-sm md:mt-0 md:text-[20px] md:self-center"
+                style={{ opacity: 0.5 }}
+              >
+                Accuracy
               </div>
             </div>
 
-            <div className="hidden h-full w-px bg-white/12 md:block" />
-
-            <div className="flex items-center gap-3">
-              <div>
-                <div className="text-[1rem] font-medium uppercase tracking-wide text-white/65 md:text-[1.25rem]">Correct Answers</div>
-                <div className="text-[1.85rem] font-black leading-none text-[#FFD126] md:text-[2.2rem]">
-                  {playerCorrect} / {totalQuestions}
+            {/* RP card */}
+            {showRankedRpCard ? (
+              <div className="grid grid-rows-subgrid text-center md:row-span-4">
+                <div className="font-poppins font-semibold leading-none text-brand-green text-[2rem] md:text-[36px]">
+                  {newRP} RP
                 </div>
+                <div className="mt-2 font-poppins font-semibold uppercase text-white text-xs sm:text-sm md:mt-0 md:text-[20px] md:self-center">
+                  {rpTierInfo.tier}
+                </div>
+                <div className="mt-3 relative h-[12px] self-center overflow-hidden rounded-[20px] bg-[#2D7715] md:mt-0 md:h-[15px]">
+                  <motion.div
+                    initial={{ width: `${oldRpTierInfo.progress}%` }}
+                    animate={{
+                      width: tierChanged && tierTransitionPhase === 'fill'
+                        ? (tierPromoted ? '100%' : '0%')
+                        : `${rpTierInfo.progress}%`,
+                    }}
+                    transition={tierTransitionPhase === 'settled' && tierChanged
+                      ? { duration: 0.8, ease: 'easeOut' }
+                      : { duration: 1.2, ease: 'easeInOut', delay: 0.5 }
+                    }
+                    className="absolute inset-y-0 left-0 rounded-[20px] bg-brand-green"
+                  />
+                </div>
+                <div
+                  className="mt-2 font-poppins font-semibold uppercase text-white text-[11px] sm:text-xs md:mt-0 md:text-[20px] md:self-center"
+                  style={{ opacity: 0.5 }}
+                >
+                  {rpTierInfo.pointsToNext !== null
+                    ? `${rpTierInfo.pointsToNext} RP to next tier`
+                    : '—'}
+                </div>
+              </div>
+            ) : <div className="hidden md:block md:row-span-4" />}
+
+            {/* XP / Level */}
+            {showXpCard && preMatchProgression && projectedProgression ? (
+              <div className="grid grid-rows-subgrid text-center md:row-span-4">
+                <div className="font-poppins font-semibold leading-none text-brand-yellow text-[2rem] md:text-[36px]">
+                  Level {projectedProgression.level}
+                </div>
+                <div className="mt-2 font-poppins font-semibold uppercase text-white text-xs sm:text-sm md:mt-0 md:text-[20px] md:self-center">
+                  XP Progress +{animatedXp} XP
+                </div>
+                <div className="mt-3 relative h-[12px] self-center overflow-hidden rounded-[20px] bg-[#A1920D] md:mt-0 md:h-[15px]">
+                  <motion.div
+                    initial={{ width: `${xpBarInitialProgress}%` }}
+                    animate={{ width: `${projectedProgression.progressPct}%` }}
+                    transition={{ duration: 1.1, ease: 'easeOut', delay: 0.45 }}
+                    className="absolute inset-y-0 left-0 rounded-[20px] bg-brand-yellow"
+                  />
+                </div>
+                <div
+                  className="mt-2 font-poppins font-semibold uppercase text-white text-[11px] sm:text-xs md:mt-0 md:text-[20px] md:self-center"
+                  style={{ opacity: 0.5 }}
+                >
+                  {xpToNextLevelAfterMatch} XP to level {projectedProgression.level + 1}
+                </div>
+              </div>
+            ) : <div className="hidden md:block md:row-span-4" />}
+
+            {/* Correct Answers — value row 1, label sits on bar row */}
+            <div className="grid grid-rows-subgrid text-center md:row-span-4">
+              <div className="font-poppins font-semibold leading-none text-brand-blue text-[2rem] md:text-[36px]">
+                {playerCorrect}/{totalQuestions}
+              </div>
+              <div className="hidden md:block" />
+              <div
+                className="mt-2 font-poppins font-semibold uppercase text-white text-xs sm:text-sm md:mt-0 md:text-[20px] md:self-center"
+                style={{ opacity: 0.5 }}
+              >
+                Correct Answers
               </div>
             </div>
           </div>
@@ -656,16 +636,16 @@ export function RealtimeResultsScreen({
         <AchievementUnlockStrip achievements={unlockedAchievements} />
 
         {/* Action buttons */}
-        <div className="mx-auto flex max-w-[420px] flex-col gap-2.5 pt-1 md:max-w-[500px]">
+        <div className="mx-auto flex w-full max-w-[498px] flex-col gap-3 pt-2 md:gap-4">
           <button
             onClick={onPlayAgain}
-            className="flex w-full items-center justify-center gap-2.5 rounded-[18px] bg-[#38B60E] py-3.5 text-[1.2rem] font-black uppercase tracking-[0.04em] text-white transition-colors hover:bg-[#43C417] md:rounded-[20px] md:py-4 md:text-[1.35rem]"
+            className="flex h-[64px] w-full items-center justify-center rounded-[20px] bg-brand-green font-poppins font-semibold uppercase text-white text-[1.5rem] transition-colors hover:bg-brand-green md:h-[91px] md:text-[36px]"
           >
             Play Again
           </button>
           <button
             onClick={onMainMenu}
-            className="w-full rounded-[18px] border border-white/12 bg-white/[0.02] py-3.5 text-[1.2rem] font-black uppercase tracking-[0.04em] text-white/88 transition-colors hover:bg-white/[0.05] md:rounded-[20px] md:py-4 md:text-[1.35rem]"
+            className="flex h-[64px] w-full items-center justify-center rounded-[20px] border-[3px] border-brand-green bg-transparent font-poppins font-semibold uppercase text-white text-[1.5rem] transition-colors hover:bg-brand-green/10 md:h-[91px] md:text-[36px]"
           >
             Main Menu
           </button>

@@ -1,17 +1,19 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ComponentProps } from 'react';
 import { useRealtimeGameLogic } from '@/features/game/hooks/useRealtimeGameLogic';
 import { useStoreInventory } from '@/lib/queries/store.queries';
-import { getSocket } from '@/lib/realtime/socket-client';
 import { useGameSounds } from '@/lib/sounds/useGameSounds';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { logger } from '@/utils/logger';
 import { HalftimeScreen } from '../components/HalftimeScreen';
 import type { PossessionViewportModel } from '../components/PossessionMatchViewport';
 import type { PossessionQuestionAreaModel } from '../components/PossessionQuestionArea';
+import { useChanceCardController } from './useChanceCardController';
+import { useHalftimeBanController } from './useHalftimeBanController';
 import { usePossessionFieldState } from './usePossessionFieldState';
 import { usePossessionGoalCelebration } from './usePossessionGoalCelebration';
+import { usePossessionMatchSounds } from './usePossessionMatchSounds';
 import {
   usePossessionFirstQuestionIntro,
   usePossessionRoundTransition,
@@ -19,9 +21,7 @@ import {
 import { usePossessionScoreSplashes } from './usePossessionScoreSplashes';
 import {
   TRANSITION_DELAY_MS,
-  createClientActionId,
   getQuestionProgress,
-  isHalftimeBanRetryableErrorCode,
   toAnswerStates,
   toMultipleChoiceGameQuestion,
   toRevealAnswerStates,
@@ -89,9 +89,6 @@ export function useRealtimePossessionMatchController({
 
   const [muted, setMuted] = useState(false);
   const [quitModalOpen, setQuitModalOpen] = useState(false);
-  const halftimeBanSentRef = useRef(false);
-  const halftimeUiReadySentRef = useRef<string | null>(null);
-  const prevPhaseRef = useRef<string | null>(null);
 
   const firstQuestionIntro = usePossessionFirstQuestionIntro({
     countdownEndsAt: match?.countdownEndsAt,
@@ -127,34 +124,12 @@ export function useRealtimePossessionMatchController({
     setMuted(isMuted());
   }, [isMuted]);
 
-  useEffect(() => {
-    if (!phase) return;
-    const prevPhase = prevPhaseRef.current;
-    prevPhaseRef.current = phase;
-    if (!prevPhase || prevPhase === phase) return;
-    if (phase === 'HALFTIME' || phase === 'PENALTY_SHOOTOUT') {
-      playSfx('whistle');
-    }
-  }, [phase, playSfx]);
-
-  useEffect(() => {
-    if (!state.roundResult) return;
-    const phaseKindForSfx = state.roundResult.phaseKind;
-    if (
-      phaseKindForSfx === 'penalty'
-      || phaseKindForSfx === 'last_attack'
-      || Boolean(state.roundResult.deltas?.goalScoredBySeat)
-    ) {
-      playSfx('kick');
-    } else {
-      playSfx('pass');
-    }
-  }, [playSfx, state.roundResult]);
-
-  useEffect(() => {
-    if (!devPossessionAnimation) return;
-    playSfx('kick');
-  }, [devPossessionAnimation, playSfx]);
+  usePossessionMatchSounds({
+    phase,
+    roundResult: state.roundResult,
+    devPossessionAnimation,
+    playSfx,
+  });
 
   useEffect(() => {
     if (!match?.matchId || !possessionState) return;
@@ -273,19 +248,13 @@ export function useRealtimePossessionMatchController({
     opponentRound,
   });
 
-  useEffect(() => {
-    if (!overlayModel.isHalftime) {
-      halftimeBanSentRef.current = false;
-    }
-  }, [overlayModel.isHalftime]);
-
-  useEffect(() => {
-    if (!overlayModel.isHalftime) return;
-    if (!realtimeError?.code) return;
-    if (isHalftimeBanRetryableErrorCode(realtimeError.code)) {
-      halftimeBanSentRef.current = false;
-    }
-  }, [overlayModel.isHalftime, realtimeError?.code]);
+  const { handleHalftimeBan, handleHalftimeBanPhaseShown } = useHalftimeBanController({
+    matchId: match?.matchId,
+    halftimeActive,
+    overlayIsHalftime: overlayModel.isHalftime,
+    halftimeDeadlineAt: possessionState?.halftime.deadlineAt,
+    realtimeErrorCode: realtimeError?.code,
+  });
 
   const showMainUI = !overlayModel.isHalftime;
   const showStartCountdown = state.startCountdownActive;
@@ -331,115 +300,28 @@ export function useRealtimePossessionMatchController({
     questionInHalf,
   }), [localQuestion, phase, questionInHalf]);
 
-  const optimisticChanceCard = match?.optimisticChanceCard ?? null;
-
-  const chanceCardBaseQuantity = useMemo(() => {
-    const inventoryItems = inventoryData?.items ?? [];
-    const chanceCardItem = inventoryItems.find((item) => item.slug === 'chance_card_5050');
-    return chanceCardItem?.quantity ?? 0;
-  }, [inventoryData?.items]);
-
-  const activeOptimisticChanceCard = useMemo(() => {
-    if (!optimisticChanceCard || localQuestionIndex === null) return null;
-    return optimisticChanceCard.qIndex === localQuestionIndex ? optimisticChanceCard : null;
-  }, [localQuestionIndex, optimisticChanceCard]);
-
-  const chanceCardCount = useMemo(() => {
-    if (!activeOptimisticChanceCard) return chanceCardBaseQuantity;
-    if (activeOptimisticChanceCard.remainingQuantityAfter !== null) {
-      return activeOptimisticChanceCard.remainingQuantityAfter;
-    }
-    if (activeOptimisticChanceCard.pending || activeOptimisticChanceCard.pendingSync) {
-      return Math.max(0, chanceCardBaseQuantity - 1);
-    }
-    return chanceCardBaseQuantity;
-  }, [activeOptimisticChanceCard, chanceCardBaseQuantity]);
-
-  useEffect(() => {
-    if (!activeOptimisticChanceCard?.pending) return;
-    const timer = setTimeout(() => {
-      markOptimisticChanceCardPendingSync({
-        qIndex: activeOptimisticChanceCard.qIndex,
-        clientActionId: activeOptimisticChanceCard.clientActionId,
-      });
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, [activeOptimisticChanceCard, markOptimisticChanceCardPendingSync]);
+  const {
+    activeOptimisticChanceCard,
+    chanceCardCount,
+    handleUseChanceCard,
+  } = useChanceCardController({
+    match,
+    localQuestion,
+    inventoryItems: inventoryData?.items,
+    isPenaltyQuestion: fieldState.isPenaltyQuestion,
+    isShotVisualPhase: fieldState.isShotVisualPhase,
+    isHalftime: overlayModel.isHalftime,
+    questionPhase: state.questionPhase,
+    roundResolved: state.roundResolved,
+    selectedAnswer: state.selectedAnswer,
+    correctIndex: state.correctIndex,
+    applyOptimisticChanceCard,
+    markOptimisticChanceCardPendingSync,
+  });
 
   const openQuitModal = useCallback(() => {
     setQuitModalOpen(true);
   }, []);
-
-  const handleHalftimeBan = useCallback((categoryId: string) => {
-    if (!match?.matchId) return;
-    if (halftimeBanSentRef.current) return;
-    halftimeBanSentRef.current = true;
-    getSocket().emit('match:halftime_ban', {
-      matchId: match.matchId,
-      categoryId,
-    });
-  }, [match?.matchId]);
-
-  const handleHalftimeBanPhaseShown = useCallback(() => {
-    if (!match?.matchId || !halftimeActive) return;
-    const halftimeKey = possessionState?.halftime.deadlineAt ?? `${match.matchId}:halftime`;
-    if (halftimeUiReadySentRef.current === halftimeKey) return;
-    halftimeUiReadySentRef.current = halftimeKey;
-    try {
-      getSocket().emit('match:halftime_ui_ready', {
-        matchId: match.matchId,
-      });
-    } catch (error) {
-      logger.warn('Failed to emit match:halftime_ui_ready', { error });
-    }
-  }, [halftimeActive, match?.matchId, possessionState?.halftime.deadlineAt]);
-
-  const handleUseChanceCard = useCallback(() => {
-    if (!match || !localQuestion) return;
-    if (match.mode !== 'ranked') return;
-    if (localQuestion.question.kind !== 'multipleChoice') return;
-    if (fieldState.isPenaltyQuestion || fieldState.isShotVisualPhase || overlayModel.isHalftime) return;
-    if (state.questionPhase !== 'playing') return;
-    if (state.roundResolved || state.selectedAnswer !== null) return;
-    if (activeOptimisticChanceCard) return;
-    if (chanceCardCount <= 0) return;
-    if (typeof state.correctIndex !== 'number' || state.correctIndex < 0) return;
-
-    const optionsCount = localQuestion.question.options.length;
-    const wrongIndices = Array.from({ length: optionsCount }, (_, index) => index).filter(
-      (index) => index !== state.correctIndex
-    );
-    if (wrongIndices.length < 2) return;
-
-    const eliminatedIndices = wrongIndices.slice(0, 2);
-    const clientActionId = createClientActionId();
-
-    applyOptimisticChanceCard({
-      qIndex: localQuestion.qIndex,
-      clientActionId,
-      eliminatedIndices,
-      remainingQuantityBefore: chanceCardCount,
-    });
-
-    getSocket().emit('match:chance_card_use', {
-      matchId: match.matchId,
-      qIndex: localQuestion.qIndex,
-      clientActionId,
-    });
-  }, [
-    activeOptimisticChanceCard,
-    applyOptimisticChanceCard,
-    chanceCardCount,
-    fieldState.isPenaltyQuestion,
-    fieldState.isShotVisualPhase,
-    localQuestion,
-    match,
-    overlayModel.isHalftime,
-    state.correctIndex,
-    state.questionPhase,
-    state.roundResolved,
-    state.selectedAnswer,
-  ]);
 
   const feed = useMemo((): {
     message: string | null;
@@ -619,6 +501,9 @@ export function useRealtimePossessionMatchController({
             isShotPhase: fieldState.isShotVisualPhase,
             isLastAttackPhase: fieldState.isLastAttackQuestion,
             question,
+            qIndex: localQuestion?.qIndex ?? 0,
+            totalQuestions: localQuestion?.total ?? 12,
+            timeRemaining: state.timeRemaining,
             showOptions: state.showOptions,
             selectedAnswer: state.selectedAnswer,
             answerStates,

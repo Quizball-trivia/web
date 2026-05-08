@@ -65,27 +65,27 @@ function SortableItem({
       className={`group relative ${isDragging ? "z-50" : "z-0"}`}
     >
       <div
-        className={`bg-[#1B2F36] rounded-xl border-b-4 p-4 lg:p-5 transition-all ${
-          !isRevealed ? "cursor-grab active:cursor-grabbing hover:bg-[#243B44] border-b-[#0F1F26]" : ""
+        className={`bg-surface-card rounded-xl border-b-4 p-4 lg:p-5 transition-all ${
+          !isRevealed ? "cursor-grab active:cursor-grabbing hover:bg-surface-card-tint border-b-[#0F1F26]" : ""
         } ${
-          isRevealed && isCorrectPosition ? "border-b-[#46A302] bg-[#58CC02]/10" : ""
+          isRevealed && isCorrectPosition ? "border-b-[#46A302] bg-brand-green-light/10" : ""
         } ${
-          isRevealed && !isCorrectPosition ? "border-b-[#CC3C3C] bg-[#FF4B4B]/10" : ""
+          isRevealed && !isCorrectPosition ? "border-b-[#CC3C3C] bg-brand-red-soft/10" : ""
         } ${isDragging ? "shadow-lg scale-105" : ""}`}
       >
         <div className="flex items-center gap-3 lg:gap-4">
           {!isRevealed ? (
             <div {...attributes} {...listeners} className="flex-shrink-0 cursor-grab active:cursor-grabbing touch-none">
-              <GripVertical className="size-5 lg:size-6 text-[#56707A] group-hover:text-[#1CB0F6] transition-colors" />
+              <GripVertical className="size-5 lg:size-6 text-brand-slate group-hover:text-brand-cyan transition-colors" />
             </div>
           ) : null}
 
           <div
             className={`flex-shrink-0 flex items-center justify-center size-8 lg:size-10 rounded-lg lg:rounded-xl text-sm lg:text-base font-black ${
-              isRevealed && isCorrectPosition ? "bg-[#58CC02]/20 text-[#58CC02]" : ""
+              isRevealed && isCorrectPosition ? "bg-brand-green-light/20 text-brand-green-light" : ""
             } ${
-              isRevealed && !isCorrectPosition ? "bg-[#FF4B4B]/20 text-[#FF4B4B]" : ""
-            } ${!isRevealed ? "bg-[#243B44] text-white" : ""}`}
+              isRevealed && !isCorrectPosition ? "bg-brand-red-soft/20 text-brand-red-soft" : ""
+            } ${!isRevealed ? "bg-surface-card-tint text-white" : ""}`}
           >
             {index + 1}
           </div>
@@ -95,23 +95,23 @@ function SortableItem({
               {item.emoji ? <span className="text-xl lg:text-2xl">{item.emoji}</span> : null}
               <span className="text-sm lg:text-base truncate text-white">{item.label}</span>
             </div>
-            {item.details ? <p className="text-xs lg:text-sm text-[#56707A] mt-0.5 truncate">{item.details}</p> : null}
+            {item.details ? <p className="text-xs lg:text-sm text-brand-slate mt-0.5 truncate">{item.details}</p> : null}
           </div>
 
           {isRevealed ? (
             <div className="flex-shrink-0 flex items-center gap-2 lg:gap-3">
-              <span className="inline-flex items-center px-2 py-0.5 lg:px-3 lg:py-1 rounded-lg text-xs lg:text-sm font-bold bg-[#243B44] text-white">
+              <span className="inline-flex items-center px-2 py-0.5 lg:px-3 lg:py-1 rounded-lg text-xs lg:text-sm font-bold bg-surface-card-tint text-white">
                 {item.sortValue}
               </span>
               {isCorrectPosition ? (
-                <CheckCircle2 className="size-5 lg:size-6 text-[#58CC02]" />
+                <CheckCircle2 className="size-5 lg:size-6 text-brand-green-light" />
               ) : (
-                <XCircle className="size-5 lg:size-6 text-[#FF4B4B]" />
+                <XCircle className="size-5 lg:size-6 text-brand-red-soft" />
               )}
             </div>
           ) : (
             <div className="flex-shrink-0">
-              <ArrowUpDown className="size-4 lg:size-5 text-[#56707A]" />
+              <ArrowUpDown className="size-4 lg:size-5 text-brand-slate" />
             </div>
           )}
         </div>
@@ -192,15 +192,15 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
     const isPerfect = correctCount === session.roundCount;
 
     return (
-      <div className="fixed inset-0 z-40 bg-[#131F24] font-fun flex flex-col">
-        <div className="bg-[#1B2F36] border-b-[3px] border-[#131F24]">
+      <div className="fixed inset-0 z-40 bg-surface-deep font-fun flex flex-col">
+        <div className="bg-surface-card border-b-[3px] border-surface-deep">
           <div className="max-w-2xl lg:max-w-3xl mx-auto px-3 md:px-4 lg:px-6 py-2.5 md:py-3 lg:py-4">
             <div className="flex items-center gap-3">
-              <button onClick={onBack} className="flex items-center justify-center size-9 lg:size-11 rounded-xl hover:bg-[#243B44] active:scale-95 transition-all text-white">
+              <button onClick={onBack} className="flex items-center justify-center size-9 lg:size-11 rounded-xl hover:bg-surface-card-tint active:scale-95 transition-all text-white">
                 <ArrowLeft className="size-5 lg:size-6" />
               </button>
               <div className="flex items-center gap-2">
-                <Calendar className="size-6 lg:size-7 text-[#1CB0F6]" />
+                <Calendar className="size-6 lg:size-7 text-brand-cyan" />
                 <h1 className="text-lg md:text-xl lg:text-2xl font-black uppercase text-white">Challenge Complete!</h1>
               </div>
             </div>
@@ -208,35 +208,35 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
         </div>
 
         <div className="flex-1 flex items-center justify-center p-4 lg:p-6 overflow-y-auto">
-          <div className="bg-[#1B2F36] rounded-xl border-b-4 border-[#0F1F26] p-6 md:p-8 lg:p-10 w-full max-w-md lg:max-w-lg text-center">
-            <div className={`inline-flex items-center justify-center size-20 lg:size-24 rounded-full mb-4 lg:mb-6 ${isPerfect ? "bg-[#FFD700]/20" : "bg-[#243B44]"}`}>
-              <Trophy className={`size-10 lg:size-12 ${isPerfect ? "text-[#FFD700]" : "text-[#56707A]"}`} />
+          <div className="bg-surface-card rounded-xl border-b-4 border-surface-card-deeper p-6 md:p-8 lg:p-10 w-full max-w-md lg:max-w-lg text-center">
+            <div className={`inline-flex items-center justify-center size-20 lg:size-24 rounded-full mb-4 lg:mb-6 ${isPerfect ? "bg-brand-gold/20" : "bg-surface-card-tint"}`}>
+              <Trophy className={`size-10 lg:size-12 ${isPerfect ? "text-brand-gold" : "text-brand-slate"}`} />
             </div>
 
             <h2 className="text-2xl lg:text-3xl font-black text-white mb-2">
-              {isPerfect ? <span className="flex items-center justify-center gap-2">Perfect Score! <Sparkles className="size-6 lg:size-7 text-[#FFD700]" /></span> : "Challenge Complete!"}
+              {isPerfect ? <span className="flex items-center justify-center gap-2">Perfect Score! <Sparkles className="size-6 lg:size-7 text-brand-gold" /></span> : "Challenge Complete!"}
             </h2>
-            <p className="text-[#56707A] lg:text-base mb-6">{session.title}</p>
+            <p className="text-brand-slate lg:text-base mb-6">{session.title}</p>
 
             <div className="space-y-3 mb-6">
-              <div className="flex items-center justify-between p-3 lg:p-4 rounded-xl bg-[#243B44]">
-                <span className="text-sm lg:text-base text-[#56707A]">Correct Rounds</span>
+              <div className="flex items-center justify-between p-3 lg:p-4 rounded-xl bg-surface-card-tint">
+                <span className="text-sm lg:text-base text-brand-slate">Correct Rounds</span>
                 <span className="text-lg lg:text-xl font-black text-white">{correctCount}/{session.roundCount}</span>
               </div>
-              <div className="flex items-center justify-between p-3 lg:p-4 rounded-xl bg-[#243B44]">
-                <span className="text-sm lg:text-base text-[#56707A]">Accuracy</span>
+              <div className="flex items-center justify-between p-3 lg:p-4 rounded-xl bg-surface-card-tint">
+                <span className="text-sm lg:text-base text-brand-slate">Accuracy</span>
                 <span className="text-lg lg:text-xl font-black text-white">{Math.round((correctCount / session.roundCount) * 100)}%</span>
               </div>
-              <div className="flex items-center justify-between p-3 lg:p-4 rounded-xl bg-[#1CB0F6]/10">
+              <div className="flex items-center justify-between p-3 lg:p-4 rounded-xl bg-brand-cyan/10">
                 <span className="text-sm lg:text-base font-bold text-white">Round Score</span>
                 <div className="flex items-center gap-1.5">
-                  <Coins className="size-4 lg:size-5 text-[#FFD700]" />
+                  <Coins className="size-4 lg:size-5 text-brand-gold" />
                   <span className="text-lg lg:text-xl font-black text-white">{totalCoins}</span>
                 </div>
               </div>
             </div>
 
-            <button onClick={handleComplete} className="w-full py-3 lg:py-4 rounded-xl font-black text-white lg:text-lg bg-[#58CC02] border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px] transition-all">
+            <button onClick={handleComplete} className="w-full py-3 lg:py-4 rounded-xl font-black text-white lg:text-lg bg-brand-green-light border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px] transition-all">
               Collect Rewards
             </button>
           </div>
@@ -246,31 +246,31 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
   }
 
   return (
-    <div className="fixed inset-0 z-40 bg-[#131F24] font-fun flex flex-col">
-      <div className="bg-[#1B2F36] border-b-[3px] border-[#131F24]">
+    <div className="fixed inset-0 z-40 bg-surface-deep font-fun flex flex-col">
+      <div className="bg-surface-card border-b-[3px] border-surface-deep">
         <div className="max-w-2xl lg:max-w-3xl mx-auto px-3 md:px-4 lg:px-6 py-2.5 md:py-3 lg:py-4">
           <div className="flex items-center gap-3 lg:gap-4 mb-3">
-            <button onClick={() => setShowQuitDialog(true)} className="flex items-center justify-center size-9 lg:size-11 rounded-xl hover:bg-[#243B44] active:scale-95 transition-all text-white">
+            <button onClick={() => setShowQuitDialog(true)} className="flex items-center justify-center size-9 lg:size-11 rounded-xl hover:bg-surface-card-tint active:scale-95 transition-all text-white">
               <ArrowLeft className="size-5 lg:size-6" />
             </button>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <Calendar className="size-5 lg:size-6 text-[#1CB0F6]" />
+                <Calendar className="size-5 lg:size-6 text-brand-cyan" />
                 <h1 className="text-lg lg:text-xl font-black uppercase text-white">Put in Order</h1>
               </div>
-              <p className="text-xs lg:text-sm text-[#56707A] mt-0.5">{round.category}</p>
+              <p className="text-xs lg:text-sm text-brand-slate mt-0.5">{round.category}</p>
             </div>
-            <span className="inline-flex items-center gap-1 lg:gap-1.5 px-2.5 py-1 lg:px-3 lg:py-1.5 rounded-lg text-xs lg:text-sm font-bold bg-[#243B44] text-white">
-              <Coins className="size-3 lg:size-4 text-[#FFD700]" />
+            <span className="inline-flex items-center gap-1 lg:gap-1.5 px-2.5 py-1 lg:px-3 lg:py-1.5 rounded-lg text-xs lg:text-sm font-bold bg-surface-card-tint text-white">
+              <Coins className="size-3 lg:size-4 text-brand-gold" />
               {totalCoins}
             </span>
           </div>
 
           <div className="flex items-center gap-2">
             <div className="flex-1 h-2 lg:h-2.5 bg-white/10 rounded-full overflow-hidden">
-              <div className="h-full bg-[#58CC02] rounded-full transition-all duration-300" style={{ width: `${((currentRound + 1) / session.roundCount) * 100}%` }} />
+              <div className="h-full bg-brand-green-light rounded-full transition-all duration-300" style={{ width: `${((currentRound + 1) / session.roundCount) * 100}%` }} />
             </div>
-            <span className="text-xs lg:text-sm text-[#56707A] whitespace-nowrap font-bold">{currentRound + 1}/{session.roundCount}</span>
+            <span className="text-xs lg:text-sm text-brand-slate whitespace-nowrap font-bold">{currentRound + 1}/{session.roundCount}</span>
           </div>
         </div>
       </div>
@@ -278,16 +278,16 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
       <div className="flex-1 overflow-y-auto">
         <div className="min-h-full p-3 md:p-4 lg:p-6 lg:flex lg:flex-col lg:justify-center">
           <div className="max-w-2xl lg:max-w-3xl mx-auto w-full">
-            <div className="bg-[#1B2F36] rounded-xl border-b-4 border-[#0F1F26] p-4 lg:p-5 mb-4 lg:mb-5">
+            <div className="bg-surface-card rounded-xl border-b-4 border-surface-card-deeper p-4 lg:p-5 mb-4 lg:mb-5">
               <div className="flex items-start gap-2.5 lg:gap-3">
-                <div className="p-2 lg:p-2.5 rounded-lg lg:rounded-xl bg-[#1CB0F6]/15 shrink-0">
-                  <ArrowUpDown className="size-4 lg:size-5 text-[#1CB0F6]" />
+                <div className="p-2 lg:p-2.5 rounded-lg lg:rounded-xl bg-brand-cyan/15 shrink-0">
+                  <ArrowUpDown className="size-4 lg:size-5 text-brand-cyan" />
                 </div>
                 <div className="text-sm lg:text-base">
                   <p className="mb-1 text-white">
                     <span className="font-bold">Drag and drop</span> to arrange these items from <span className="font-bold">{roundInstruction}</span>.
                   </p>
-                  <p className="text-xs lg:text-sm text-[#56707A]">{round.prompt}</p>
+                  <p className="text-xs lg:text-sm text-brand-slate">{round.prompt}</p>
                 </div>
               </div>
             </div>
@@ -309,32 +309,32 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
             </div>
 
             {!isRevealed ? (
-              <button onClick={checkOrder} className="w-full py-3 lg:py-4 rounded-xl font-black text-white lg:text-lg bg-[#58CC02] border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px] transition-all">
+              <button onClick={checkOrder} className="w-full py-3 lg:py-4 rounded-xl font-black text-white lg:text-lg bg-brand-green-light border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px] transition-all">
                 Submit Order
               </button>
             ) : (
               <div className="space-y-3 lg:space-y-4">
                 <div className={`rounded-xl border-b-4 p-4 lg:p-5 text-center ${
                   userOrder.every((item, idx) => isCurrentOrderCorrect(item.id, idx))
-                    ? "border-b-[#46A302] bg-[#58CC02]/10"
-                    : "border-b-[#CC3C3C] bg-[#FF4B4B]/10"
+                    ? "border-b-[#46A302] bg-brand-green-light/10"
+                    : "border-b-[#CC3C3C] bg-brand-red-soft/10"
                 }`}>
                   {userOrder.every((item, idx) => isCurrentOrderCorrect(item.id, idx)) ? (
                     <>
-                      <CheckCircle2 className="size-8 lg:size-10 text-[#58CC02] mx-auto mb-2" />
-                      <p className="text-[#58CC02] font-bold lg:text-lg mb-1">Perfect! +50 round points</p>
-                      <p className="text-xs lg:text-sm text-[#56707A]">You got the chronological order correct.</p>
+                      <CheckCircle2 className="size-8 lg:size-10 text-brand-green-light mx-auto mb-2" />
+                      <p className="text-brand-green-light font-bold lg:text-lg mb-1">Perfect! +50 round points</p>
+                      <p className="text-xs lg:text-sm text-brand-slate">You got the chronological order correct.</p>
                     </>
                   ) : (
                     <>
-                      <XCircle className="size-8 lg:size-10 text-[#FF4B4B] mx-auto mb-2" />
-                      <p className="text-[#FF4B4B] font-bold lg:text-lg mb-1">Not quite right</p>
-                      <p className="text-xs lg:text-sm text-[#56707A]">The correct order is revealed above.</p>
+                      <XCircle className="size-8 lg:size-10 text-brand-red-soft mx-auto mb-2" />
+                      <p className="text-brand-red-soft font-bold lg:text-lg mb-1">Not quite right</p>
+                      <p className="text-xs lg:text-sm text-brand-slate">The correct order is revealed above.</p>
                     </>
                   )}
                 </div>
 
-                <button onClick={handleNextRound} className="w-full py-3 lg:py-4 rounded-xl font-black text-white lg:text-lg bg-[#58CC02] border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px] transition-all">
+                <button onClick={handleNextRound} className="w-full py-3 lg:py-4 rounded-xl font-black text-white lg:text-lg bg-brand-green-light border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px] transition-all">
                   {currentRound + 1 >= session.roundCount ? "View Results" : "Next Round"}
                 </button>
               </div>

@@ -1,11 +1,17 @@
 'use client';
 
-import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { X } from 'lucide-react';
 import { AnimatedPointsCounter } from './AnimatedPointsCounter';
 import type { AvatarCustomization } from '@/types/game';
+
+const poppins = {
+  fontFamily: "'Poppins', sans-serif",
+  fontWeight: 600,
+  letterSpacing: '0',
+  lineHeight: 1,
+} as const;
 
 interface PossessionHUDProps {
   playerGoals: number;
@@ -33,21 +39,23 @@ export function PossessionHUD({
   opponentGoals,
   playerPoints = 0,
   opponentPoints = 0,
-  playerName,
-  opponentName,
+  playerName: _playerName,
+  opponentName: _opponentName,
   playerAvatarCustomization = null,
   opponentAvatarCustomization = null,
   timeRemaining,
   half,
-  zone,
-  zoneColor,
   onQuit,
 }: PossessionHUDProps) {
-  const isUrgent = timeRemaining !== null && timeRemaining <= 3;
+  void _playerName;
+  void _opponentName;
   const showTimer = timeRemaining !== null;
+  const timerLabel = showTimer
+    ? (timeRemaining! >= 10 ? `${timeRemaining}` : `0${timeRemaining}`)
+    : '\u00B7\u00B7';
 
   return (
-    <div className="w-full font-fun space-y-3 mb-3 relative">
+    <div className="relative w-full mb-3 px-3">
       {/* Quit button — fixed top right corner of screen */}
       {onQuit && (
         <button
@@ -59,81 +67,70 @@ export function PossessionHUD({
         </button>
       )}
 
-      {/* Player strip — flat, no card chrome */}
-      <div className="flex items-center justify-between gap-3 px-3">
-        {/* Player side */}
-        <div className="flex min-w-0 flex-1 items-center gap-3">
-          <AvatarDisplay customization={playerAvatarCustomization ?? {}} size="sm" className="size-12" />
-          <div className="min-w-0">
-            <div className="max-w-[100px] truncate text-xs font-bold text-white/85">{playerName}</div>
-            <div className="text-3xl font-black leading-7 tabular-nums text-white">
-              {playerGoals}
-            </div>
-            <AnimatedPointsCounter value={playerPoints} accentClassName="text-[#FFE500]" />
+      {/* FIRST HALF / 2ND HALF label */}
+      <div
+        className="text-center text-white"
+        style={{ ...poppins, fontSize: 'clamp(12px, 1.4vw, 20px)', opacity: 0.5 }}
+      >
+        {half === 1 ? 'FIRST HALF' : 'SECOND HALF'}
+      </div>
+
+      {/* HUD strip: avatar | PT | score-pill | PT | avatar */}
+      <div className="mt-2 flex items-center justify-center gap-3 sm:gap-4">
+        {/* Player (left) */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="rounded-full bg-brand-blue p-2 sm:p-2.5">
+            <AvatarDisplay customization={playerAvatarCustomization ?? {}} size="sm" />
           </div>
+          <AnimatedPointsCounter value={playerPoints} accentClassName="text-white/50" />
         </div>
 
-        {/* Center timer + half */}
-        <div className="flex min-w-[100px] shrink-0 flex-col items-center justify-center">
-          <div className="mb-1 text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
-            {half === 1 ? '1st Half' : '2nd Half'}
-          </div>
+        {/* Score pill: [2 | 09 | 3] */}
+        <div className="relative inline-flex h-[40px] items-center sm:h-[51px]">
+          {/* Left score (player goals) — outline */}
           <div
-            className={cn(
-              'text-3xl font-black tabular-nums transition-all duration-200',
-              showTimer
-                ? isUrgent ? 'text-red-500 opacity-100 scale-100' : 'text-white opacity-100 scale-100'
-                : 'text-white/20 opacity-0 scale-90'
-            )}
+            className="flex h-full items-center justify-center rounded-l-[20px] border-2 border-r-0 border-brand-blue px-3 text-white sm:px-4"
+            style={{ ...poppins, fontSize: 'clamp(14px, 1.4vw, 20px)', minWidth: 44 }}
           >
-            {showTimer ? timeRemaining : '\u00B7'}
-          </div>
-          <div className="-mt-0.5 text-[10px] font-black tracking-[0.18em] text-white/35">VS</div>
-        </div>
-
-        {/* Opponent side */}
-        <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
-          <div className="min-w-0 text-right">
-            <div className="text-xs font-bold text-white/85 truncate max-w-[100px] ml-auto">{opponentName}</div>
-            <motion.div
-              key="opp-goals"
+            <motion.span
+              key={`p-${playerGoals}`}
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}
-              className="text-3xl leading-7 font-black text-white tabular-nums"
+            >
+              {playerGoals}
+            </motion.span>
+          </div>
+          {/* Center timer */}
+          <div
+            className="flex h-full items-center justify-center bg-brand-blue px-4 text-white tabular-nums"
+            style={{ ...poppins, fontSize: 'clamp(14px, 1.4vw, 20px)', minWidth: 64 }}
+          >
+            {timerLabel}
+          </div>
+          {/* Right score (opponent goals) — outline */}
+          <div
+            className="flex h-full items-center justify-center rounded-r-[20px] border-2 border-l-0 border-brand-blue px-3 text-white sm:px-4"
+            style={{ ...poppins, fontSize: 'clamp(14px, 1.4vw, 20px)', minWidth: 44 }}
+          >
+            <motion.span
+              key={`o-${opponentGoals}`}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
             >
               {opponentGoals}
-            </motion.div>
-            <AnimatedPointsCounter
-              value={opponentPoints}
-              align="right"
-              accentClassName="text-[#FF4B4B]"
-            />
+            </motion.span>
           </div>
-          <AvatarDisplay customization={opponentAvatarCustomization ?? {}} size="sm" className="size-12" />
         </div>
-      </div>
 
-      {/* Zone pill */}
-      <div className="px-3 flex items-center gap-3">
-
-        {/* Zone pill */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={zone}
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em]"
-            style={{
-              backgroundColor: zoneColor + '18',
-              color: zoneColor,
-            }}
-          >
-            {zone}
-          </motion.div>
-        </AnimatePresence>
+        {/* Opponent (right) */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <AnimatedPointsCounter value={opponentPoints} align="right" accentClassName="text-white/50" />
+          <div className="rounded-full bg-brand-red-soft p-2 sm:p-2.5">
+            <AvatarDisplay customization={opponentAvatarCustomization ?? {}} size="sm" className="-scale-x-100" />
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -182,6 +182,7 @@ const CITY_DATA: {
   country: string;
   flag: string;
   name: string;
+  customization: AvatarCustomization;
 }[] = [
   {
     lon: -104.99,
@@ -190,6 +191,7 @@ const CITY_DATA: {
     country: "USA",
     flag: "🇺🇸",
     name: "Alex",
+    customization: { skin: "skin_male_white", hair: "hair_ramos", jersey: "jersey_blue", glasses: "glasses_aviator" },
   },
   {
     lon: -99.1,
@@ -198,6 +200,7 @@ const CITY_DATA: {
     country: "Mexico",
     flag: "🇲🇽",
     name: "Carlos",
+    customization: { skin: "skin_male_dark", hair: "hair_ronaldo_brazil", jersey: "jersey_green", facialHair: "stache" },
   },
   {
     lon: -47.88,
@@ -206,6 +209,7 @@ const CITY_DATA: {
     country: "Brazil",
     flag: "🇧🇷",
     name: "Lucas",
+    customization: { skin: "skin_male_dark_alt", hair: "hair_ronaldo_goat", jersey: "jersey_brazil_retro" },
   },
   {
     lon: -1.9,
@@ -214,6 +218,7 @@ const CITY_DATA: {
     country: "UK",
     flag: "🇬🇧",
     name: "James",
+    customization: { skin: "skin_male_white_alt", hair: "hair_boy_basic", jersey: "jersey_liverpool", facialHair: "beard" },
   },
   {
     lon: 4.83,
@@ -222,6 +227,7 @@ const CITY_DATA: {
     country: "France",
     flag: "🇫🇷",
     name: "Louis",
+    customization: { skin: "skin_male_white", hair: "hair_hamsik", jersey: "jersey_france_retro", glasses: "glasses_round" },
   },
   {
     lon: 11.58,
@@ -230,6 +236,7 @@ const CITY_DATA: {
     country: "Germany",
     flag: "🇩🇪",
     name: "Max",
+    customization: { skin: "skin_male_white_alt", hair: "hair_boy_basic", jersey: "jersey_germany_retro", facialHair: "beard" },
   },
   {
     lon: 32.86,
@@ -238,6 +245,7 @@ const CITY_DATA: {
     country: "Turkey",
     flag: "🇹🇷",
     name: "Emre",
+    customization: { skin: "skin_male_white", hair: "hair_hamsik", jersey: "jersey_red", facialHair: "stache" },
   },
   {
     lon: 46.71,
@@ -246,6 +254,7 @@ const CITY_DATA: {
     country: "Saudi Arabia",
     flag: "🇸🇦",
     name: "Omar",
+    customization: { skin: "skin_male_dark", hair: "hair_boy_basic", jersey: "jersey_violet", facialHair: "beard" },
   },
   {
     lon: 77.21,
@@ -254,6 +263,7 @@ const CITY_DATA: {
     country: "India",
     flag: "🇮🇳",
     name: "Arjun",
+    customization: { skin: "skin_male_dark_alt", hair: "hair_ramos", jersey: "jersey_yellow", glasses: "glasses_wayfarer" },
   },
   {
     lon: 98.98,
@@ -262,6 +272,7 @@ const CITY_DATA: {
     country: "Thailand",
     flag: "🇹🇭",
     name: "Niran",
+    customization: { skin: "skin_male_dark", hair: "hair_boy_basic", jersey: "jersey_pink" },
   },
   {
     lon: 104.06,
@@ -270,6 +281,7 @@ const CITY_DATA: {
     country: "China",
     flag: "🇨🇳",
     name: "Wei",
+    customization: { skin: "skin_male_white", hair: "hair_boy_basic", jersey: "jersey_milan", glasses: "glasses_round" },
   },
   {
     lon: 141.35,
@@ -278,6 +290,7 @@ const CITY_DATA: {
     country: "Japan",
     flag: "🇯🇵",
     name: "Yuki",
+    customization: { skin: "skin_male_white_alt", hair: "hair_boy_basic", jersey: "jersey_bayern" },
   },
   {
     lon: 133.88,
@@ -286,6 +299,7 @@ const CITY_DATA: {
     country: "Australia",
     flag: "🇦🇺",
     name: "Liam",
+    customization: { skin: "skin_male_white", hair: "hair_ronaldo_brazil", jersey: "jersey_yellow", glasses: "glasses_aviator" },
   },
   {
     lon: 36.82,
@@ -294,6 +308,7 @@ const CITY_DATA: {
     country: "Kenya",
     flag: "🇰🇪",
     name: "Kofi",
+    customization: { skin: "skin_male_dark_alt", hair: "hair_boy_basic", jersey: "jersey_argentina_retro", facialHair: "stache" },
   },
   {
     lon: 7.49,
@@ -302,6 +317,7 @@ const CITY_DATA: {
     country: "Nigeria",
     flag: "🇳🇬",
     name: "Chidi",
+    customization: { skin: "skin_male_dark", hair: "hair_ramos", jersey: "jersey_netherlands_retro" },
   },
   {
     lon: 44.79,
@@ -310,6 +326,7 @@ const CITY_DATA: {
     country: "Georgia",
     flag: "🇬🇪",
     name: "Giorgi",
+    customization: { skin: "skin_male_white", hair: "hair_hamsik", jersey: "jersey_real", facialHair: "beard" },
   },
 ];
 
@@ -971,7 +988,7 @@ function generateFakePlayers(): FakePlayer[] {
       y: py,
       color: PIN_COLORS[i % PIN_COLORS.length],
       avatarUrl: getAvatarAsset(AVATAR_COLORS[i % AVATAR_COLORS.length]),
-      avatarCustomization: {},
+      avatarCustomization: c.customization,
       name: c.name,
       flag: c.flag,
       city: c.city,
@@ -1320,7 +1337,7 @@ export function MatchmakingMapScreen({
   }, [showFoundState, fakePlayers, opponentPinId]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#0D1117] bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat overflow-hidden font-fun select-none">
+    <div className="fixed inset-0 z-50 bg-surface-darkest bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat overflow-hidden font-fun select-none">
       {/* ── Map ── */}
       <ComposableMap
         width={MAP_W}
@@ -1552,8 +1569,8 @@ export function MatchmakingMapScreen({
             "radial-gradient(ellipse at center, transparent 25%, rgba(13,17,23,0.7) 100%)",
         }}
       />
-      <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-[#0D1117] to-transparent pointer-events-none" />
-      <div className="absolute bottom-0 left-0 right-0 h-52 bg-gradient-to-t from-[#0D1117] via-[#0D1117]/90 to-transparent pointer-events-none" />
+      <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-surface-darkest to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 left-0 right-0 h-52 bg-gradient-to-t from-surface-darkest via-surface-darkest/90 to-transparent pointer-events-none" />
 
       {/* ── Mute (top-left) ── */}
       <motion.button
@@ -1610,7 +1627,7 @@ export function MatchmakingMapScreen({
                       delay: i * 0.2,
                       ease: "easeInOut",
                     }}
-                    className="size-2 rounded-full bg-[#1CB0F6]"
+                    className="size-2 rounded-full bg-brand-cyan"
                   />
                 ))}
               </div>
@@ -1619,7 +1636,7 @@ export function MatchmakingMapScreen({
                 Searching
               </h2>
 
-              <p className="text-sm font-bold text-[#56707A]">
+              <p className="text-sm font-bold text-brand-slate">
                 {searchTime > 0
                   ? `${searchTime}s`
                   : "Finding a worthy opponent..."}
@@ -1627,7 +1644,7 @@ export function MatchmakingMapScreen({
 
               <button
                 onClick={onCancel}
-                className="mt-2 px-6 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-[#56707A] uppercase tracking-wider hover:bg-[#FF4B4B]/20 hover:text-[#FF4B4B] hover:border-[#FF4B4B]/30 transition-all active:scale-95"
+                className="mt-2 px-6 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-brand-slate uppercase tracking-wider hover:bg-brand-red-soft/20 hover:text-brand-red-soft hover:border-brand-red-soft/30 transition-all active:scale-95"
               >
                 Cancel
               </button>
@@ -1649,7 +1666,7 @@ export function MatchmakingMapScreen({
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 1.0, duration: 0.5, ease: "backOut" }}
-                className="w-full max-w-[22rem] mx-auto bg-[#1C2733]/95 backdrop-blur-md rounded-2xl border-b-4 border-[#0D1117] p-4 sm:p-5 flex flex-col items-center gap-3 text-center"
+                className="w-full max-w-[22rem] mx-auto bg-[#1C2733]/95 backdrop-blur-md rounded-2xl border-b-4 border-surface-darkest p-4 sm:p-5 flex flex-col items-center gap-3 text-center"
               >
                 {/* Opponent avatar */}
                 <div className="relative">
@@ -1657,14 +1674,14 @@ export function MatchmakingMapScreen({
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 1.2, type: "spring", stiffness: 200 }}
-                    className="size-16 rounded-full bg-[#243B44] border-[3px] border-[#FF9600] flex items-center justify-center overflow-hidden"
+                    className="size-16 rounded-full bg-surface-card-tint border-[3px] border-brand-orange flex items-center justify-center overflow-hidden"
                   >
                     <AvatarDisplay
                       customization={rankedFoundOpponent?.avatarCustomization ?? { base: rankedFoundOpponent?.avatarUrl ?? undefined }}
                       size="sm"
                     />
                   </motion.div>
-                  <div className="absolute -bottom-0.5 -right-0.5 size-5 rounded-full bg-[#58CC02] border-2 border-[#1C2733]" />
+                  <div className="absolute -bottom-0.5 -right-0.5 size-5 rounded-full bg-brand-green-light border-2 border-[#1C2733]" />
                 </div>
 
                 <div className="text-center">
@@ -1688,7 +1705,7 @@ export function MatchmakingMapScreen({
                       <span className="text-2xl leading-none">
                         {opponentPin.flag}
                       </span>
-                      <span className="text-xs font-bold text-[#56707A]">
+                      <span className="text-xs font-bold text-brand-slate">
                         {opponentPin.city}, {opponentPin.country}
                       </span>
                     </motion.div>
@@ -1700,7 +1717,7 @@ export function MatchmakingMapScreen({
                   initial={{ scale: 0, rotate: -20 }}
                   animate={{ scale: 1, rotate: 0 }}
                   transition={{ delay: 1.5, type: "spring", stiffness: 300 }}
-                  className="px-5 py-1.5 rounded-full bg-[#FF4B4B] border-b-[3px] border-[#E04242] text-sm font-black text-white uppercase tracking-wide"
+                  className="px-5 py-1.5 rounded-full bg-brand-red-soft border-b-[3px] border-brand-red-deep text-sm font-black text-white uppercase tracking-wide"
                 >
                   VS
                 </motion.div>
@@ -1710,7 +1727,7 @@ export function MatchmakingMapScreen({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.8 }}
-                className="text-xs font-bold text-[#56707A] uppercase tracking-wider"
+                className="text-xs font-bold text-brand-slate uppercase tracking-wider"
               >
                 Preparing match...
               </motion.p>
@@ -1720,28 +1737,28 @@ export function MatchmakingMapScreen({
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15, duration: 0.25 }}
-                  className="w-full max-w-[24rem] rounded-2xl border border-[#FF4B4B]/25 bg-[#131C27]/92 p-4 text-center shadow-[0_16px_40px_rgba(0,0,0,0.32)]"
+                  className="w-full max-w-[24rem] rounded-2xl border border-brand-red-soft/25 bg-[#131C27]/92 p-4 text-center shadow-[0_16px_40px_rgba(0,0,0,0.32)]"
                 >
-                  <div className="mx-auto mb-2 flex size-10 items-center justify-center rounded-full bg-[#FF4B4B]/16 text-[#FF7B7B]">
+                  <div className="mx-auto mb-2 flex size-10 items-center justify-center rounded-full bg-brand-red-soft/16 text-brand-red-light">
                     <TriangleAlert className="size-5" />
                   </div>
                   <p className="text-sm font-black uppercase tracking-wide text-white">
                     Match setup got stuck
                   </p>
-                  <p className="mt-2 text-xs font-bold leading-5 text-[#8FA3B8]">
+                  <p className="mt-2 text-xs font-bold leading-5 text-brand-slate-light">
                     Restart matchmaking and try again. If it keeps happening, the backend is still failing while preparing the draft.
                   </p>
                   <div className="mt-4 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
                     <button
                       onClick={onRestart ?? onCancel}
-                      className="inline-flex min-w-[10rem] items-center justify-center gap-2 rounded-xl bg-[#FF4B4B] px-4 py-2.5 text-xs font-black uppercase tracking-wide text-white transition-all hover:bg-[#ff5f5f] active:scale-95"
+                      className="inline-flex min-w-[10rem] items-center justify-center gap-2 rounded-xl bg-brand-red-soft px-4 py-2.5 text-xs font-black uppercase tracking-wide text-white transition-all hover:bg-brand-red-soft active:scale-95"
                     >
                       <RotateCcw className="size-4" />
                       Restart Search
                     </button>
                     <button
                       onClick={onCancel}
-                      className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-black uppercase tracking-wide text-[#9FB1C3] transition-all hover:border-white/20 hover:bg-white/8 hover:text-white active:scale-95"
+                      className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-black uppercase tracking-wide text-brand-slate-light transition-all hover:border-white/20 hover:bg-white/8 hover:text-white active:scale-95"
                     >
                       Back to Play
                     </button>

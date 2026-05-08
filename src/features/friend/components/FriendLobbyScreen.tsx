@@ -84,12 +84,12 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
 
         {/* Ready / Status Panel */}
         <div className="space-y-6">
-          <div className="bg-[#1B2F36] rounded-2xl border-b-4 border-[#0D1B21] sticky top-4">
-            <div className="px-5 py-4 border-b-[3px] border-[#0D1B21]">
+          <div className="bg-surface-card rounded-2xl border-b-4 border-surface-card-deep sticky top-4">
+            <div className="px-5 py-4 border-b-[3px] border-surface-card-deep">
               <h2 className="text-lg font-black text-white">Ready Check</h2>
             </div>
             <div className="p-5 space-y-4">
-              <p className="text-sm font-bold text-[#56707A]">
+              <p className="text-sm font-bold text-brand-slate">
                 {readyCopy}
               </p>
 
@@ -100,8 +100,8 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
                 className={cn(
                   "w-full py-4 rounded-2xl border-b-4 text-base font-black uppercase tracking-wide active:translate-y-[2px] active:border-b-2 transition-all",
                   me?.isReady
-                    ? "bg-[#243B44] border-[#1B2F36] text-[#56707A] hover:bg-[#2D4A55]"
-                    : "bg-[#58CC02] border-[#46A302] text-white hover:bg-[#4CB801] shadow-[0_0_20px_rgba(88,204,2,0.4),0_0_40px_rgba(88,204,2,0.15)]"
+                    ? "bg-surface-card-tint border-surface-card text-brand-slate hover:bg-[#2D4A55]"
+                    : "bg-brand-green-light border-brand-green text-white hover:bg-brand-green shadow-[0_0_20px_rgba(88,204,2,0.4),0_0_40px_rgba(88,204,2,0.15)]"
                 )}
               >
                 {me?.isReady ? (
@@ -121,9 +121,9 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
                   className={cn(
                     "w-full py-3.5 rounded-2xl border-b-4 text-sm font-black uppercase tracking-wide transition-all",
                     canStartMatch
-                      ? "bg-[#1CB0F6] border-[#1899D6] text-white hover:bg-[#18A0E0] active:translate-y-[2px] active:border-b-2"
-                      : "bg-[#243B44] border-[#1B2F36] text-[#56707A]/50 cursor-not-allowed",
-                    isStartingMatch && "cursor-wait bg-[#1899D6] border-[#127FB3]"
+                      ? "bg-brand-cyan border-brand-cyan-deep text-white hover:bg-brand-cyan active:translate-y-[2px] active:border-b-2"
+                      : "bg-surface-card-tint border-surface-card text-brand-slate/50 cursor-not-allowed",
+                    isStartingMatch && "cursor-wait bg-brand-cyan-deep border-brand-cyan-deep"
                   )}
                 >
                   {isStartingMatch ? (
@@ -138,8 +138,8 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
               )}
 
               {isStartingMatch && (
-                <div className="bg-[#131F24] rounded-xl border-b-[3px] border-[#0D1B21] py-2 px-3 text-center animate-pulse">
-                  <span className="text-[11px] font-black uppercase tracking-wider text-[#1CB0F6]">
+                <div className="bg-surface-deep rounded-xl border-b-[3px] border-surface-card-deep py-2 px-3 text-center animate-pulse">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-brand-cyan">
                     Preparing match...
                   </span>
                 </div>
@@ -149,17 +149,17 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
               <button
                 onClick={actions.handleLeaveLobby}
                 disabled={!lobby}
-                className="w-full py-3.5 rounded-2xl bg-[#1B2F36] border-b-4 border-[#0D1B21] text-sm font-black text-[#FF4B4B] uppercase tracking-wide hover:bg-[#FF4B4B] hover:text-white hover:border-[#E04242] active:translate-y-[2px] active:border-b-2 transition-all flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-2xl bg-surface-card border-b-4 border-surface-card-deep text-sm font-black text-brand-red-soft uppercase tracking-wide hover:bg-brand-red-soft hover:text-white hover:border-brand-red-deep active:translate-y-[2px] active:border-b-2 transition-all flex items-center justify-center gap-2"
               >
                 <LogOut className="size-4" />
                 Leave Lobby
               </button>
 
               {/* Status */}
-              <div className="bg-[#131F24] rounded-xl border-b-[3px] border-[#0D1B21] py-2.5 px-3 text-center">
+              <div className="bg-surface-deep rounded-xl border-b-[3px] border-surface-card-deep py-2.5 px-3 text-center">
                 <span className={cn(
                   "text-xs font-black uppercase tracking-wider",
-                  allReady ? "text-[#58CC02]" : "text-[#56707A]"
+                  allReady ? "text-brand-green-light" : "text-brand-slate"
                 )}>
                   {statusCopy}
                 </span>

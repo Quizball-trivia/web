@@ -11,7 +11,7 @@
  *
  * NOTE: Do NOT use template interpolation in className (e.g. `bg-[${colors.green.base}]`)
  * — Tailwind cannot statically scan dynamic class names. Use inline styles or
- * static Tailwind classes like `bg-[#38B60E]` instead.
+ * static Tailwind classes like `bg-brand-green` instead.
  */
 
 export const colors = {

@@ -42,7 +42,7 @@ export function QuestionArena({
               key={lvl}
               className={cn(
                 'size-1.5 rounded-full',
-                lvl <= difficultyLevel ? 'bg-[#38B60E]' : 'bg-white/15',
+                lvl <= difficultyLevel ? 'bg-brand-green' : 'bg-white/15',
               )}
             />
           ))}

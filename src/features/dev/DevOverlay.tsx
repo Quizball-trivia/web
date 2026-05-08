@@ -41,7 +41,7 @@ export function DevOverlay({ onQuit, onRestart }: DevOverlayProps) {
   }
 
   return (
-    <div className="fixed top-4 right-4 z-50 w-72 bg-[#1B2F36] border border-[#2a4a55] rounded-xl shadow-2xl font-mono text-xs overflow-hidden">
+    <div className="fixed top-4 right-4 z-50 w-72 bg-surface-card border border-surface-card-light rounded-xl shadow-2xl font-mono text-xs overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 bg-yellow-500/20 border-b border-yellow-500/30">
         <span className="font-black text-yellow-400 uppercase tracking-wider text-[10px]">Dev Panel</span>
@@ -51,7 +51,7 @@ export function DevOverlay({ onQuit, onRestart }: DevOverlayProps) {
       </div>
 
       {/* State Inspector */}
-      <div className="p-3 space-y-1.5 text-[11px] border-b border-[#2a4a55]">
+      <div className="p-3 space-y-1.5 text-[11px] border-b border-surface-card-light">
         <Row label="Phase" value={ps?.phase ?? '—'} color={phaseColor(ps?.phase)} />
         <Row label="Half" value={ps?.half ?? '—'} />
         <Row label="Poss Diff" value={ps?.possessionDiff ?? '—'} />
@@ -67,29 +67,29 @@ export function DevOverlay({ onQuit, onRestart }: DevOverlayProps) {
 
       {/* Skip Buttons */}
       <div className="p-3 grid grid-cols-2 gap-2">
-        <SkipBtn label="Halftime" onClick={() => skipTo('halftime')} color="bg-[#1CB0F6]" />
-        <SkipBtn label="2nd Half" onClick={() => skipTo('second_half')} color="bg-[#58CC02]" />
-        <SkipBtn label="Last Attack" onClick={() => skipTo('last_attack')} color="bg-[#FF9600]" />
-        <SkipBtn label="Penalties" onClick={() => skipTo('penalties')} color="bg-[#FF4B4B]" />
+        <SkipBtn label="Halftime" onClick={() => skipTo('halftime')} color="bg-brand-cyan" />
+        <SkipBtn label="2nd Half" onClick={() => skipTo('second_half')} color="bg-brand-green-light" />
+        <SkipBtn label="Last Attack" onClick={() => skipTo('last_attack')} color="bg-brand-orange" />
+        <SkipBtn label="Penalties" onClick={() => skipTo('penalties')} color="bg-brand-red-soft" />
       </div>
 
       {/* Navigation */}
       {(onQuit || onRestart) ? (
-        <div className="p-3 border-t border-[#2a4a55]">
-          <div className="mb-2 text-[10px] font-black text-[#8FB7C5] uppercase tracking-wider">Match</div>
+        <div className="p-3 border-t border-surface-card-light">
+          <div className="mb-2 text-[10px] font-black text-brand-slate-light uppercase tracking-wider">Match</div>
           <div className="grid grid-cols-2 gap-2">
             {onRestart && (
               <SkipBtn
                 label="Restart"
                 onClick={onRestart}
-                color="bg-[#58CC02]"
+                color="bg-brand-green-light"
               />
             )}
             {onQuit && (
               <SkipBtn
                 label="Quit"
                 onClick={onQuit}
-                color="bg-[#FF4B4B]"
+                color="bg-brand-red-soft"
               />
             )}
           </div>
@@ -97,22 +97,22 @@ export function DevOverlay({ onQuit, onRestart }: DevOverlayProps) {
       ) : null}
 
       {/* Goal Sequence — full celebration test */}
-      <div className="p-3 border-t border-[#2a4a55]">
-        <div className="mb-2 text-[10px] font-black text-[#8FB7C5] uppercase tracking-wider">Goal Sequence</div>
+      <div className="p-3 border-t border-surface-card-light">
+        <div className="mb-2 text-[10px] font-black text-brand-slate-light uppercase tracking-wider">Goal Sequence</div>
         <div className="grid grid-cols-2 gap-2">
-          <SkipBtn label="⚽ My Goal" onClick={() => triggerAnim('goal', 'me')} color="bg-[#FFE500] !text-black" />
-          <SkipBtn label="⚽ Opp Goal" onClick={() => triggerAnim('goal', 'opp')} color="bg-[#FFE500] !text-black" />
+          <SkipBtn label="⚽ My Goal" onClick={() => triggerAnim('goal', 'me')} color="bg-brand-yellow !text-black" />
+          <SkipBtn label="⚽ Opp Goal" onClick={() => triggerAnim('goal', 'opp')} color="bg-brand-yellow !text-black" />
         </div>
-        <p className="mt-1.5 text-[9px] text-[#56707A]">Triggers full shot → celebration → sound (7s)</p>
+        <p className="mt-1.5 text-[9px] text-brand-slate">Triggers full shot → celebration → sound (7s)</p>
       </div>
 
       {/* Animation Triggers */}
-      <div className="p-3 border-t border-[#2a4a55]">
-        <div className="mb-2 text-[10px] font-black text-[#8FB7C5] uppercase tracking-wider">Animations</div>
+      <div className="p-3 border-t border-surface-card-light">
+        <div className="mb-2 text-[10px] font-black text-brand-slate-light uppercase tracking-wider">Animations</div>
         <div className="grid grid-cols-2 gap-2">
-          <SkipBtn label="My Saved" onClick={() => triggerAnim('saved', 'me')} color="bg-[#1CB0F6]" />
-          <SkipBtn label="Opp Saved" onClick={() => triggerAnim('saved', 'opp')} color="bg-[#0A8BC5]" />
-          <SkipBtn label="My Miss" onClick={() => triggerAnim('miss', 'me')} color="bg-[#FF9600]" />
+          <SkipBtn label="My Saved" onClick={() => triggerAnim('saved', 'me')} color="bg-brand-cyan" />
+          <SkipBtn label="Opp Saved" onClick={() => triggerAnim('saved', 'opp')} color="bg-brand-cyan-deep" />
+          <SkipBtn label="My Miss" onClick={() => triggerAnim('miss', 'me')} color="bg-brand-orange" />
           <SkipBtn label="Opp Miss" onClick={() => triggerAnim('miss', 'opp')} color="bg-[#E07A00]" />
         </div>
       </div>
@@ -123,7 +123,7 @@ export function DevOverlay({ onQuit, onRestart }: DevOverlayProps) {
 function Row({ label, value, color }: { label: string; value: string | number; color?: string }) {
   return (
     <div className="flex justify-between">
-      <span className="text-[#56707A]">{label}</span>
+      <span className="text-brand-slate">{label}</span>
       <span className={color ?? 'text-white/90'}>{String(value)}</span>
     </div>
   );
@@ -142,12 +142,12 @@ function SkipBtn({ label, onClick, color }: { label: string; onClick: () => void
 
 function phaseColor(phase?: string): string {
   switch (phase) {
-    case 'NORMAL_PLAY': return 'text-[#58CC02]';
-    case 'LAST_ATTACK': return 'text-[#FF9600]';
-    case 'SHOT_ON_GOAL': return 'text-[#FF9600]';
-    case 'HALFTIME': return 'text-[#1CB0F6]';
-    case 'PENALTY_SHOOTOUT': return 'text-[#FF4B4B]';
-    case 'COMPLETED': return 'text-[#56707A]';
+    case 'NORMAL_PLAY': return 'text-brand-green-light';
+    case 'LAST_ATTACK': return 'text-brand-orange';
+    case 'SHOT_ON_GOAL': return 'text-brand-orange';
+    case 'HALFTIME': return 'text-brand-cyan';
+    case 'PENALTY_SHOOTOUT': return 'text-brand-red-soft';
+    case 'COMPLETED': return 'text-brand-slate';
     default: return 'text-white/90';
   }
 }

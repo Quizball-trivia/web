@@ -118,7 +118,7 @@ describe('usePossessionFieldState', () => {
     vi.useRealTimers();
   });
 
-  it('resets the field to center when the second half starts', () => {
+  it('resets the field to center when the second half starts', async () => {
     const { result, rerender } = renderHook((props: { match: MatchStatus }) => usePossessionFieldState({
       match: props.match,
       localQuestion: makeQuestion(6),
@@ -145,6 +145,8 @@ describe('usePossessionFieldState', () => {
     rerender({
       match: makeMatch(40, { phase: 'NORMAL_PLAY', half: 2 }),
     });
+
+    await act(async () => {});
 
     expect(result.current.visualMyPossessionPct).toBe(50);
   });
@@ -193,7 +195,7 @@ describe('usePossessionFieldState', () => {
     expect(result.current.visualMyPossessionPct).toBe(50);
   });
 
-  it('keeps the captured shot origin stable even when possession resets after a goal', () => {
+  it('keeps the captured shot origin stable even when possession resets after a goal', async () => {
     const { result, rerender } = renderHook((props: {
       match: MatchStatus;
       roundResult: MatchRoundResultPayload | null;
@@ -226,12 +228,16 @@ describe('usePossessionFieldState', () => {
       roundResult: makeRoundResult(5, 1, 1),
     });
 
+    await act(async () => {});
+
     expect(result.current.pitchProps.shotMode?.ballOriginX).toBe(352);
 
     rerender({
       match: makeMatch(-20),
       roundResult: makeRoundResult(5, 1, 1),
     });
+
+    await act(async () => {});
 
     expect(result.current.pitchProps.shotMode?.ballOriginX).toBe(352);
   });

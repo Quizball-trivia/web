@@ -35,8 +35,8 @@ export function ModalCloseButton({ onClose, className }: ModalCloseButtonProps) 
       aria-label="Close"
       className={cn(
         "absolute top-4 right-4 z-20 flex size-12 items-center justify-center",
-        "rounded-xl bg-[#FB3101] text-white shadow-sm transition-colors",
-        "hover:bg-[#E02B00] active:translate-y-[1px]",
+        "rounded-xl bg-brand-red text-white shadow-sm transition-colors",
+        "hover:bg-brand-red active:translate-y-[1px]",
         className,
       )}
     >
