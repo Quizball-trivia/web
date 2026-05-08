@@ -1,17 +1,16 @@
 'use client';
 
 import { motion, AnimatePresence } from 'motion/react';
-import { QuestionArena } from '@/components/game/QuestionArena';
-import { AnswerCard } from '@/components/game/AnswerCard';
-import { ArenaScoreSplash } from '@/components/game/ArenaScoreSplash';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import type { AnswerStateArray, Phase } from '../types/possession.types';
-import { ANSWER_LABELS } from '../types/possession.types';
-function getDifficultyLabel(d?: string): string {
-  if (d === 'hard') return 'Hard';
-  if (d === 'medium') return 'Medium';
-  return 'Easy';
-}
+import { ArenaScoreSplash } from '@/components/game/ArenaScoreSplash';
+
+const poppins = {
+  fontFamily: "'Poppins', sans-serif",
+  fontWeight: 600,
+  letterSpacing: '0',
+  lineHeight: 1,
+} as const;
 
 interface PossessionQuestionPanelProps {
   phase: Phase;
@@ -19,19 +18,22 @@ interface PossessionQuestionPanelProps {
   isShotPhase: boolean;
   isLastAttackPhase: boolean;
 
-  // Question data (resolved by caller for the active mode)
   question: GameQuestion | null;
+  qIndex: number;
+  totalQuestions: number;
+  timeRemaining: number | null;
+
   showOptions: boolean;
   selectedAnswer: number | null;
   answerStates: AnswerStateArray;
   eliminatedIndices?: number[];
   opponentAnswer: number | null;
+
   chanceCardCount?: number;
   chanceCardPending?: boolean;
   chanceCardPendingSync?: boolean;
   onUseChanceCard?: () => void;
 
-  // Splashes
   showPlayerSplash?: boolean;
   showOpponentSplash?: boolean;
   playerSplashPoints?: number | null;
@@ -41,25 +43,42 @@ interface PossessionQuestionPanelProps {
   onPlayerSplashComplete?: () => void;
   onOpponentSplashComplete?: () => void;
 
-  // Handlers
   onAnswer: (index: number) => void;
+}
+
+function getButtonState(
+  index: number,
+  selectedAnswer: number | null,
+  answerStates: AnswerStateArray,
+  eliminatedIndices: number[],
+  correctIndex: number | undefined,
+  showOptions: boolean,
+): 'default' | 'selected-correct' | 'selected-wrong' | 'reveal-correct' | 'eliminated' {
+  if (eliminatedIndices.includes(index) && selectedAnswer !== index) return 'eliminated';
+
+  const state = answerStates[index];
+  if (state === 'correct') return 'selected-correct';
+  if (state === 'wrong') return 'selected-wrong';
+
+  // After round resolves, reveal the correct answer (even if not selected by player)
+  if (!showOptions && correctIndex === index) return 'reveal-correct';
+
+  return 'default';
 }
 
 export function PossessionQuestionPanel({
   phase,
   isPenaltyPhase,
   isShotPhase,
-  isLastAttackPhase,
   question,
+  qIndex,
+  totalQuestions,
+  timeRemaining,
   showOptions,
   selectedAnswer,
   answerStates,
   eliminatedIndices = [],
   opponentAnswer,
-  chanceCardCount = 0,
-  chanceCardPending = false,
-  chanceCardPendingSync = false,
-  onUseChanceCard,
   showPlayerSplash = false,
   showOpponentSplash = false,
   playerSplashPoints = null,
@@ -73,29 +92,35 @@ export function PossessionQuestionPanel({
   if (phase === 'goal') return null;
   if (!question) return null;
 
-  const categoryLabel = isPenaltyPhase
-    ? 'Penalty'
-    : isShotPhase
-      ? 'Shot on Goal'
-      : isLastAttackPhase
-        ? 'Last Attack'
-        : 'Football';
-
   const isPlaying = isPenaltyPhase
     ? phase === 'penalty-playing'
     : isShotPhase
       ? phase === 'shot' && selectedAnswer === null
       : phase === 'playing';
-  const canUseChanceCard =
-    !isPenaltyPhase &&
-    !isShotPhase &&
-    isPlaying &&
-    chanceCardCount > 0 &&
-    !chanceCardPending &&
-    typeof onUseChanceCard === 'function';
+
+  const correctIndex = question.correctIndex;
+  const displayQuestionNum = qIndex + 1;
+  const displayTimer = timeRemaining ?? 0;
+  const timerLabel = displayTimer >= 10 ? `${displayTimer}` : `0${displayTimer}`;
 
   return (
-    <>
+    <div className="px-4 mt-2">
+      {/* Header pills: QUESTION X/Y + timer */}
+      <div className="flex items-stretch gap-3">
+        <div
+          className="flex flex-1 items-center justify-center rounded-[20px] bg-[#1645FF] px-6 text-white h-[52px] sm:h-[68px] md:h-[80px] lg:h-[92px]"
+          style={{ ...poppins, fontSize: 'clamp(18px, 3vw, 36px)' }}
+        >
+          QUESTION {displayQuestionNum}/{totalQuestions}
+        </div>
+        <div
+          className="flex w-[80px] items-center justify-center rounded-[20px] bg-[#1645FF] text-white h-[52px] sm:h-[68px] sm:w-[120px] md:h-[80px] md:w-[150px] lg:h-[92px] lg:w-[175px] tabular-nums"
+          style={{ ...poppins, fontSize: 'clamp(18px, 3vw, 36px)' }}
+        >
+          {timerLabel}
+        </div>
+      </div>
+
       {/* Question card — popLayout pops exiting question out of flow to prevent height doubling */}
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.div
@@ -105,125 +130,132 @@ export function PossessionQuestionPanel({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
-          className="px-4 mt-2"
+          className="relative mt-3"
         >
-          <QuestionArena
-            question={question.prompt}
-            category={question.categoryName ?? categoryLabel}
-            categoryIcon="⚽"
-            difficulty={getDifficultyLabel(question.difficulty)}
-          />
+          <div
+            className="flex items-center rounded-[30px] bg-[#071013] px-6 py-6 text-white sm:px-8 sm:py-8 md:px-10 md:py-10"
+            style={{
+              fontFamily: "'Poppins', sans-serif",
+              fontWeight: 700,
+              fontSize: 'clamp(18px, 2.4vw, 36px)',
+              minHeight: 'clamp(140px, 20vw, 232px)',
+            }}
+          >
+            <p className="leading-snug">{question.prompt}</p>
+          </div>
+
+          {/* +points floating splash — player on left, opponent on right */}
+          <div className="pointer-events-none absolute left-[-12px] top-1/2 z-10 -translate-y-1/2">
+            <ArenaScoreSplash
+              show={showPlayerSplash}
+              points={playerSplashPoints}
+              variant={playerSplashVariant}
+              side="left"
+              onComplete={onPlayerSplashComplete}
+            />
+          </div>
+          <div className="pointer-events-none absolute right-[-12px] top-1/2 z-10 -translate-y-1/2">
+            <ArenaScoreSplash
+              show={showOpponentSplash}
+              points={opponentSplashPoints}
+              variant={opponentSplashVariant}
+              side="right"
+              onComplete={onOpponentSplashComplete}
+            />
+          </div>
         </motion.div>
       </AnimatePresence>
 
-      <div className="relative h-0">
-        <ArenaScoreSplash
-          show={showPlayerSplash}
-          points={playerSplashPoints}
-          variant={playerSplashVariant}
-          side="left"
-          onComplete={onPlayerSplashComplete}
-        />
-        <ArenaScoreSplash
-          show={showOpponentSplash}
-          points={opponentSplashPoints}
-          variant={opponentSplashVariant}
-          side="right"
-          onComplete={onOpponentSplashComplete}
-        />
-      </div>
-
-      {/* Answer cards */}
+      {/* Answer cards — 2x2 grid */}
       <motion.div
         key={`options-${question.id}`}
-        className={`grid grid-cols-2 gap-3 px-4 mt-4 min-h-[15rem] ${
+        className={`mt-3 grid grid-cols-2 gap-3 ${
           showOptions ? 'pointer-events-auto' : 'pointer-events-none'
         }`}
         initial={false}
-        animate={{ opacity: showOptions ? 1 : 0, y: showOptions ? 0 : 8 }}
+        animate={{ opacity: showOptions ? 1 : 0.95, y: showOptions ? 0 : 4 }}
         transition={{ duration: 0.25 }}
         aria-hidden={!showOptions}
       >
         {question.options.map((opt, i) => {
-          const isEliminated = eliminatedIndices.includes(i) && selectedAnswer !== i;
-          const cardState = isEliminated && answerStates[i] === 'default'
-            ? 'disabled'
-            : answerStates[i];
+          const buttonState = getButtonState(i, selectedAnswer, answerStates, eliminatedIndices, correctIndex, showOptions);
+          const isEliminated = buttonState === 'eliminated';
+          const isWinningAnswer = buttonState === 'selected-correct' || buttonState === 'reveal-correct';
+          const isWrongPick = buttonState === 'selected-wrong';
+
+          const isPlayerPicked = selectedAnswer === i;
+          const opponentPickedThis = !isPenaltyPhase && opponentAnswer === i;
+          const opponentPickCorrect = opponentAnswer !== null && correctIndex !== undefined
+            ? opponentAnswer === correctIndex
+            : null;
+
           return (
-          <motion.div
-            key={`${question.id}-${i}`}
-            initial={false}
-            animate={{
-              opacity: showOptions ? 1 : 0.9,
-              y: showOptions ? 0 : 6,
-              scale: showOptions ? 1 : 0.98,
-            }}
-            transition={{
-              type: 'spring',
-              stiffness: 320,
-              damping: 24,
-              mass: 0.75,
-              delay: showOptions ? i * 0.05 : 0,
-            }}
-          >
-            <AnswerCard
-              label={ANSWER_LABELS[i]}
-              text={opt}
-              index={i}
-              isSelected={selectedAnswer === i}
-              state={cardState}
-              fadeOut={false}
-              opponentPicked={!isPenaltyPhase && opponentAnswer === i}
-              opponentPickCorrect={!isPenaltyPhase && opponentAnswer !== null ? opponentAnswer === question.correctIndex : undefined}
+            <motion.button
+              key={`${question.id}-${i}`}
+              type="button"
+              disabled={!showOptions || !isPlaying || isEliminated}
               onClick={() => {
-                if (!showOptions || !isPlaying) return;
-                if (isEliminated) return;
+                if (!showOptions || !isPlaying || isEliminated) return;
                 onAnswer(i);
               }}
-              disabled={!showOptions || !isPlaying || isEliminated}
-            />
-          </motion.div>
+              initial={false}
+              animate={{
+                opacity: isEliminated ? 0.3 : 1,
+                scale: 1,
+              }}
+              transition={{
+                type: 'spring',
+                stiffness: 320,
+                damping: 24,
+                mass: 0.75,
+                delay: showOptions ? i * 0.04 : 0,
+              }}
+              className="relative flex items-center justify-center overflow-hidden rounded-[20px] px-4 transition-shadow duration-150 h-[80px] sm:h-[100px] md:h-[120px] lg:h-[148px]"
+              style={{
+                ...poppins,
+                fontSize: 'clamp(16px, 2.2vw, 36px)',
+                textTransform: 'uppercase',
+                color: isWrongPick ? '#FB3101' : '#FFFFFF',
+                backgroundColor: isWinningAnswer ? '#38B60E' : 'transparent',
+                border: isWinningAnswer
+                  ? 'none'
+                  : isWrongPick
+                    ? '2px solid #FB3101'
+                    : '2px solid #FFE500',
+                boxShadow: isWinningAnswer
+                  ? '0 1.76px 6.334px 1.32px rgba(56,182,14,0.25)'
+                  : isWrongPick
+                    ? '0 1.76px 6.334px 1.32px rgba(251,49,1,0.25)'
+                    : '0 0 6.334px 1.32px rgba(255,229,0,0.25)',
+                cursor: !showOptions || !isPlaying || isEliminated ? 'default' : 'pointer',
+              }}
+            >
+              {/* Player's pick notch (left) */}
+              {isPlayerPicked && (
+                <motion.div
+                  initial={{ x: -14, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+                  className="absolute left-0 top-1/2 h-12 w-[6px] -translate-y-1/2 rounded-r-md"
+                  style={{ backgroundColor: '#FFFFFF' }}
+                />
+              )}
+              {/* Opponent's pick notch (right) */}
+              {opponentPickedThis && opponentPickCorrect !== null && (
+                <motion.div
+                  initial={{ x: 14, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+                  className="absolute right-0 top-1/2 h-12 w-[6px] -translate-y-1/2 rounded-l-md"
+                  style={{ backgroundColor: opponentPickCorrect ? '#38B60E' : '#FB3101' }}
+                />
+              )}
+
+              <span className="text-center leading-tight">{opt}</span>
+            </motion.button>
           );
         })}
       </motion.div>
-
-      {/* Power-ups bar hidden — 50/50 chance card disabled in UI to avoid pay-to-win.
-          Controller logic, socket emits, store wiring, and props are preserved for future revival. */}
-      {false && !isPenaltyPhase && !isShotPhase && (
-        <motion.div
-          initial={false}
-          animate={{ opacity: showOptions ? 1 : 0 }}
-          transition={{ duration: 0.2 }}
-          className="px-4 mt-3 pb-6"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-bold font-fun uppercase tracking-[0.18em] text-[#56707A]">
-              Power Ups
-            </span>
-          </div>
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={onUseChanceCard}
-              disabled={!canUseChanceCard}
-              className={`flex items-center gap-2.5 rounded-xl border-2 border-b-4 px-4 py-2.5 transition-colors ${
-                canUseChanceCard
-                  ? 'bg-[#1B2F36] border-[#FF9600] border-b-[#CC7800] text-white hover:bg-[#1B2F36]/80 active:border-b-2 active:translate-y-[2px]'
-                  : 'bg-[#1B2F36]/50 border-white/10 border-b-white/10 text-white/30 cursor-not-allowed'
-              }`}
-            >
-              <span className="text-lg font-black font-fun tracking-tight">50/50</span>
-              <span className={`text-xs font-bold font-fun tabular-nums ${canUseChanceCard ? 'text-[#FF9600]' : 'text-white/30'}`}>
-                {chanceCardPending
-                  ? 'Applying...'
-                  : chanceCardPendingSync
-                    ? 'Syncing...'
-                    : `×${chanceCardCount}`}
-              </span>
-            </button>
-          </div>
-        </motion.div>
-      )}
-    </>
+    </div>
   );
 }

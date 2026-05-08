@@ -82,11 +82,12 @@ function PlayerHeader({
         dimmed && 'opacity-50'
       )}
     >
-      <div className="rounded-full p-2" style={{ backgroundColor: bgColor }}>
+      <div className="rounded-full p-3" style={{ backgroundColor: bgColor }}>
         <AvatarDisplay
           customization={info.avatarCustomization ?? { base: info.avatar }}
           size="md"
           countryCode={info.countryCode ?? null}
+          className={!isLeft ? '-scale-x-100' : undefined}
         />
       </div>
       <div

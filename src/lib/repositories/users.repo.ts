@@ -1,13 +1,20 @@
 import { API_BASE_URL } from "@/lib/config";
 import { getAccessToken } from "@/lib/auth/tokenStorage";
 import { ApiError } from "@/lib/api/api";
-import type { components } from "@/types/api.generated";
+import { apiFetch } from "@/lib/api/client";
+import type { components, paths } from "@/types/api.generated";
 import type { Achievement } from "@/types/game";
 
 export type PublicProfileResponse = components["schemas"]["PublicProfileResponse"];
+export type AccountDeletionResponse =
+  paths["/api/v1/users/me/deletion"]["post"]["responses"][200]["content"]["application/json"];
 
 export interface AchievementsResponse {
   achievements: Achievement[];
+}
+
+export async function requestAccountDeletion(): Promise<AccountDeletionResponse> {
+  return apiFetch("post", "/api/v1/users/me/deletion");
 }
 
 export async function getPublicProfile(userId: string): Promise<PublicProfileResponse> {

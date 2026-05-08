@@ -62,16 +62,23 @@ function resolveI18nText(value: Record<string, string> | string, locale = 'en'):
 }
 
 function QuestionKindBadge({ kind }: { kind: LiveSpecialQuestion['kind'] }) {
-  const config: Record<LiveSpecialQuestion['kind'], { label: string; color: string }> = {
-    countdown: { label: 'Countdown', color: 'bg-[#FF9600]/15 text-[#FF9600]' },
-    putInOrder: { label: 'Put In Order', color: 'bg-[#CE82FF]/15 text-[#CE82FF]' },
-    clues: { label: 'Who Am I?', color: 'bg-[#58CC02]/15 text-[#58CC02]' },
+  const labels: Record<LiveSpecialQuestion['kind'], string> = {
+    countdown: 'Countdown',
+    putInOrder: 'Put In Order',
+    clues: 'Who Am I?',
   };
-  const { label, color } = config[kind];
   return (
-    <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-wider ${color}`}>
-      {label}
-    </span>
+    <div
+      className="inline-flex items-center justify-center rounded-[18px] bg-[#FFE500] px-4 py-1.5"
+      style={{ transform: 'rotate(-3.64deg)', transformOrigin: 'center' }}
+    >
+      <span
+        className="text-[#071013] uppercase whitespace-nowrap"
+        style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 14 }}
+      >
+        {labels[kind]}
+      </span>
+    </div>
   );
 }
 
@@ -153,12 +160,12 @@ function CountdownPanel({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pt-2">
         <QuestionKindBadge kind="countdown" />
       </div>
 
       {/* Prompt — plain text, no card chrome */}
-      <div className="px-1">
+      <div className="px-1 pt-1">
         {question.categoryName && (
           <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-[#1CB0F6]">
             ⚽ {question.categoryName}

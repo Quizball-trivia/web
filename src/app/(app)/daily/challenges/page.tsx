@@ -129,7 +129,7 @@ function ChallengeCard({
   const resetMutation = useResetDailyChallengeDev(challenge.challengeType);
   const disabled = !challenge.availableToday;
   const isCompleted = challenge.completedToday;
-  const IconComponent = ICON_MAP[challenge.iconToken];
+  const IconComponent = ICON_MAP[challenge.iconToken] ?? Lightbulb;
 
   const handleReset = async (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();

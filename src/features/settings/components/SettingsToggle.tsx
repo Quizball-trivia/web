@@ -20,39 +20,53 @@ export function SettingsToggle({
   checked,
   onCheckedChange,
   toastMessage,
-  disabled
+  disabled,
 }: SettingsToggleProps) {
-
   const handleChange = (newChecked: boolean) => {
     onCheckedChange(newChecked);
     if (newChecked && toastMessage) {
-       toast.success(toastMessage, {
-          icon: icon,
-          className: "bg-background border-border"
-       });
+      toast.success(toastMessage, {
+        icon,
+        className: "bg-background border-border",
+      });
     }
   };
 
   return (
-    <div className={cn(
-       "flex items-center justify-between p-4 transition-colors hover:bg-muted/30",
-       disabled && "opacity-50 pointer-events-none"
-    )}>
-      <div className="flex items-center gap-4">
+    <div
+      className={cn(
+        "flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-white/[0.04]",
+        disabled && "pointer-events-none opacity-50",
+      )}
+    >
+      <div className="flex min-w-0 items-center gap-3">
         {icon && (
-           <div className={cn(
-              "p-2 rounded-xl transition-colors",
-              checked ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-           )}>
-              {icon}
-           </div>
+          <div
+            className={cn(
+              "flex size-9 shrink-0 items-center justify-center rounded-xl border-b-2 transition-colors",
+              checked
+                ? "border-[#0F8AC4] bg-[#1CB0F6] text-white"
+                : "border-[#0D1B21] bg-[#243B44] text-white/60",
+            )}
+          >
+            {icon}
+          </div>
         )}
-        <div>
-           <div className="font-medium">{label}</div>
-           {description && <div className="text-xs text-muted-foreground mt-0.5">{description}</div>}
+        <div className="min-w-0">
+          <div className="font-fun text-sm font-black uppercase tracking-wide text-white">
+            {label}
+          </div>
+          {description && (
+            <div className="mt-0.5 text-xs text-white/55">{description}</div>
+          )}
         </div>
       </div>
-      <Switch checked={checked} onCheckedChange={handleChange} disabled={disabled} />
+      <Switch
+        checked={checked}
+        onCheckedChange={handleChange}
+        disabled={disabled}
+        className="data-[state=checked]:bg-[#38B60E]"
+      />
     </div>
   );
 }

@@ -19,6 +19,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api/api";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
+import { useLocale } from "@/contexts/LocaleContext";
 import { queryKeys } from "@/lib/queries/queryKeys";
 import {
   useFriendRequests,
@@ -105,7 +106,9 @@ function PlayerCard({
   isPending?: boolean;
   isRemoving?: boolean;
 }) {
+  const { t } = useLocale();
   const rankedDisplay = getRankedDisplay(player);
+  const isPendingDeletion = player.pendingDeletion === true;
 
   return (
     <motion.div
@@ -122,7 +125,14 @@ function PlayerCard({
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-black text-white">{player.nickname ?? "Unknown"}</p>
+        <div className="flex items-center gap-2">
+          <p className="truncate text-sm font-black text-white">{player.nickname ?? "Unknown"}</p>
+          {isPendingDeletion && (
+            <span className="shrink-0 rounded-full bg-[#FB3101]/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-[#FB3101]">
+              {t("social.pendingDeletion")}
+            </span>
+          )}
+        </div>
         <div className="mt-0.5 flex items-center gap-2">
           <span className="text-[11px] font-bold text-[#56707A]">Lvl {rankedDisplay.level}</span>
           <span className="text-[11px] font-bold text-[#56707A]">·</span>
@@ -137,7 +147,8 @@ function PlayerCard({
           <button
             type="button"
             onClick={() => onChallenge(player.id)}
-            className="flex items-center gap-1.5 rounded-xl border border-[#1CB0F6]/25 bg-[#1CB0F6]/15 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-[#7FD8FF] transition-colors hover:bg-[#1CB0F6]/25"
+            disabled={isPendingDeletion}
+            className="flex items-center gap-1.5 rounded-xl border border-[#1CB0F6]/25 bg-[#1CB0F6]/15 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-[#7FD8FF] transition-colors hover:bg-[#1CB0F6]/25 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Swords className="size-3.5" />
             Challenge
@@ -164,8 +175,8 @@ function PlayerCard({
           <button
             type="button"
             onClick={() => onSendRequest(player.id)}
-            disabled={isPending}
-            className="flex items-center gap-1.5 rounded-xl border border-[#58CC02]/25 bg-[#58CC02]/15 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-[#58CC02] transition-colors hover:bg-[#58CC02]/25 disabled:opacity-50"
+            disabled={isPending || isPendingDeletion}
+            className="flex items-center gap-1.5 rounded-xl border border-[#58CC02]/25 bg-[#58CC02]/15 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-[#58CC02] transition-colors hover:bg-[#58CC02]/25 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {isPending ? (
               <Loader2 className="size-3.5 animate-spin" />
@@ -217,8 +228,10 @@ function RequestCard({
   onDecline?: (requestId: string) => void;
   isPending?: boolean;
 }) {
+  const { t } = useLocale();
   const rankedDisplay = getRankedDisplay(item.user);
   const isIncoming = type === "incoming";
+  const isPendingDeletion = item.user.pendingDeletion === true;
 
   return (
     <motion.div
@@ -246,6 +259,11 @@ function RequestCard({
           >
             {isIncoming ? "Incoming" : "Sent"}
           </span>
+          {isPendingDeletion && (
+            <span className="shrink-0 rounded-full bg-[#FB3101]/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-[#FB3101]">
+              {t("social.pendingDeletion")}
+            </span>
+          )}
         </div>
         <div className="mt-0.5 flex items-center gap-2">
           <span className="text-[11px] font-bold text-[#56707A]">Lvl {rankedDisplay.level}</span>
@@ -261,8 +279,8 @@ function RequestCard({
           <button
             type="button"
             onClick={() => onAccept?.(item.requestId)}
-            disabled={isPending}
-            className="flex items-center gap-1 rounded-xl border border-[#58CC02]/25 bg-[#58CC02]/15 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-[#58CC02] transition-colors hover:bg-[#58CC02]/25 disabled:opacity-50"
+            disabled={isPending || isPendingDeletion}
+            className="flex items-center gap-1 rounded-xl border border-[#58CC02]/25 bg-[#58CC02]/15 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-[#58CC02] transition-colors hover:bg-[#58CC02]/25 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}
             Accept

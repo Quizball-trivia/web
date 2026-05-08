@@ -99,7 +99,7 @@ export function PossessionMatchViewport({ model, children }: PossessionMatchView
         </div>
       )}
 
-      <div className="w-full flex flex-col lg:flex-1 lg:max-w-2xl lg:mx-auto lg:justify-start lg:py-4">
+      <div className="w-full flex flex-col lg:flex-1 lg:max-w-3xl lg:mx-auto lg:justify-start lg:py-4">
         {showMainUI && (
           <>
             {hud.kind === 'shot' ? (

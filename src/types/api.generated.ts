@@ -1410,6 +1410,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/me/deletion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Schedule current user account for deletion */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Account deletion scheduled */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AccountDeletionResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/{userId}/profile": {
         parameters: {
             query?: never;
@@ -1466,6 +1511,83 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/users/{userId}/deletion/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restore a user account pending deletion
+         * @description Requires admin role. Only works before the 30-day grace period expires.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Account deletion cancelled */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UserResponse"];
+                    };
+                };
+                /** @description Account is not restorable */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description User not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/search": {
         parameters: {
             query?: never;
@@ -1511,6 +1633,7 @@ export interface paths {
                                     facialHair?: "stache" | "beard";
                                 } | null;
                                 level: number;
+                                pendingDeletion: boolean;
                                 ranked: {
                                     rp: number;
                                     /** @enum {string} */
@@ -1592,6 +1715,7 @@ export interface paths {
                                     facialHair?: "stache" | "beard";
                                 } | null;
                                 level: number;
+                                pendingDeletion: boolean;
                                 ranked: {
                                     rp: number;
                                     /** @enum {string} */
@@ -1678,6 +1802,7 @@ export interface paths {
                                         facialHair?: "stache" | "beard";
                                     } | null;
                                     level: number;
+                                    pendingDeletion: boolean;
                                     ranked: {
                                         rp: number;
                                         /** @enum {string} */
@@ -1719,6 +1844,7 @@ export interface paths {
                                         facialHair?: "stache" | "beard";
                                     } | null;
                                     level: number;
+                                    pendingDeletion: boolean;
                                     ranked: {
                                         rp: number;
                                         /** @enum {string} */
@@ -4261,6 +4387,12 @@ export interface components {
                 total: number;
             } | null;
         };
+        AccountDeletionResponse: {
+            /** Format: date-time */
+            deletionRequestedAt: string;
+            /** Format: date-time */
+            pendingDeletionAt: string;
+        };
         StoreProductsResponse: {
             items: {
                 /** Format: uuid */
@@ -4426,6 +4558,7 @@ export interface components {
                     facialHair?: "stache" | "beard";
                 } | null;
                 level: number;
+                pendingDeletion: boolean;
                 ranked: {
                     rp: number;
                     /** @enum {string} */
@@ -4468,6 +4601,7 @@ export interface components {
                         facialHair?: "stache" | "beard";
                     } | null;
                     level: number;
+                    pendingDeletion: boolean;
                     ranked: {
                         rp: number;
                         /** @enum {string} */
@@ -4509,6 +4643,7 @@ export interface components {
                         facialHair?: "stache" | "beard";
                     } | null;
                     level: number;
+                    pendingDeletion: boolean;
                     ranked: {
                         rp: number;
                         /** @enum {string} */

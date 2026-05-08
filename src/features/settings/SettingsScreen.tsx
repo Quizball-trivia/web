@@ -2,7 +2,18 @@
 
 import { useAuthStore } from "@/stores/auth.store";
 import { Button } from "@/components/ui/button";
-import { Bell, ChevronLeft, Globe, LogOut, Shield, User, Volume2, HelpCircle, RotateCcw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Bell, ChevronLeft, Globe, LogOut, Shield, Trash2, Volume2, HelpCircle, RotateCcw } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { SettingsSection } from "./components/SettingsSection";
 import { SettingsToggle } from "./components/SettingsToggle";
@@ -10,24 +21,21 @@ import { toast } from "sonner";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { useLocale } from "@/contexts/LocaleContext";
 import { updateMe } from "@/lib/api/endpoints";
+import { requestAccountDeletion } from "@/lib/repositories/users.repo";
 import { type Locale } from "@/lib/i18n/messages";
 
 interface UserPreferences {
   soundEnabled: boolean;
   musicEnabled: boolean;
-  hapticsEnabled: boolean;
   invitesEnabled: boolean;
   questAlertsEnabled: boolean;
-  streakAlertsEnabled: boolean;
 }
 
 const DEFAULT_PREFERENCES: UserPreferences = {
   soundEnabled: true,
   musicEnabled: true,
-  hapticsEnabled: true,
   invitesEnabled: true,
   questAlertsEnabled: true,
-  streakAlertsEnabled: true,
 };
 
 interface SettingsScreenProps {
@@ -41,13 +49,16 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   // Preferences state - initialized from storage
   const [soundEnabled, setSoundEnabled] = useState(DEFAULT_PREFERENCES.soundEnabled);
   const [musicEnabled, setMusicEnabled] = useState(DEFAULT_PREFERENCES.musicEnabled);
-  const [hapticsEnabled, setHapticsEnabled] = useState(DEFAULT_PREFERENCES.hapticsEnabled);
   const [invitesEnabled, setInvitesEnabled] = useState(DEFAULT_PREFERENCES.invitesEnabled);
   const [questAlertsEnabled, setQuestAlertsEnabled] = useState(DEFAULT_PREFERENCES.questAlertsEnabled);
-  const [streakAlertsEnabled, setStreakAlertsEnabled] = useState(DEFAULT_PREFERENCES.streakAlertsEnabled);
   const [isLanguageSaving, setIsLanguageSaving] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   const isInitialMount = useRef(true);
+  const deletionConfirmWord = t("settings.deleteAccountConfirmWord");
+  const canConfirmDeletion = deleteConfirmation === deletionConfirmWord && !isDeletingAccount;
 
   // Load preferences from storage on mount - intentional initialization pattern
   useEffect(() => {
@@ -55,10 +66,8 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
     queueMicrotask(() => {
       setSoundEnabled(savedPrefs.soundEnabled ?? DEFAULT_PREFERENCES.soundEnabled);
       setMusicEnabled(savedPrefs.musicEnabled ?? DEFAULT_PREFERENCES.musicEnabled);
-      setHapticsEnabled(savedPrefs.hapticsEnabled ?? DEFAULT_PREFERENCES.hapticsEnabled);
       setInvitesEnabled(savedPrefs.invitesEnabled ?? DEFAULT_PREFERENCES.invitesEnabled);
       setQuestAlertsEnabled(savedPrefs.questAlertsEnabled ?? DEFAULT_PREFERENCES.questAlertsEnabled);
-      setStreakAlertsEnabled(savedPrefs.streakAlertsEnabled ?? DEFAULT_PREFERENCES.streakAlertsEnabled);
     });
   }, []);
 
@@ -72,17 +81,32 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
     const prefs: UserPreferences = {
       soundEnabled,
       musicEnabled,
-      hapticsEnabled,
       invitesEnabled,
       questAlertsEnabled,
-      streakAlertsEnabled,
     };
     storage.set(STORAGE_KEYS.USER_PREFERENCES, prefs);
-  }, [soundEnabled, musicEnabled, hapticsEnabled, invitesEnabled, questAlertsEnabled, streakAlertsEnabled]);
+  }, [soundEnabled, musicEnabled, invitesEnabled, questAlertsEnabled]);
 
   const handleLogout = async () => {
     await logout();
     window.location.href = "/"; // Force full reload/redirect
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!canConfirmDeletion) {
+      return;
+    }
+
+    setIsDeletingAccount(true);
+    try {
+      await requestAccountDeletion();
+      toast.success(t("settings.deleteAccountScheduled"));
+      await logout();
+      window.location.href = "/";
+    } catch {
+      toast.error(t("settings.deleteAccountFailed"));
+      setIsDeletingAccount(false);
+    }
   };
 
   const handleResetOnboarding = () => {
@@ -150,7 +174,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                      </div>
                   </div>
                </div>
-               <Button variant="ghost" size="sm" className="font-semibold text-primary" disabled={isLanguageSaving}>
+               <Button variant="ghost" size="sm" className="font-semibold text-[#38B60E] hover:text-[#43C417] hover:bg-[#38B60E]/10" disabled={isLanguageSaving}>
                  {t("common.change")}
                </Button>
             </div>
@@ -172,12 +196,6 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                onCheckedChange={setMusicEnabled}
                toastMessage={musicEnabled ? t("settings.stadiumMusicMuted") : t("settings.stadiumMusicEnabled")}
             />
-             <SettingsToggle
-               label={t("settings.haptics")}
-               description={t("settings.hapticsDescription")}
-               checked={hapticsEnabled}
-               onCheckedChange={setHapticsEnabled}
-            />
          </SettingsSection>
 
          {/* Game Alerts */}
@@ -194,22 +212,35 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                checked={questAlertsEnabled}
                onCheckedChange={setQuestAlertsEnabled}
             />
-            <SettingsToggle
-               label={t("settings.streakProtection")}
-               description={t("settings.streakProtectionDescription")}
-               checked={streakAlertsEnabled}
-               onCheckedChange={setStreakAlertsEnabled}
-            />
          </SettingsSection>
 
          {/* Account & Safety */}
          <SettingsSection title={t("settings.accountAndSafety")} icon={<Shield className="size-5" />}>
-            <div className="group flex items-center justify-between p-3 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border/40 last:border-0">
+            <div
+              role="button"
+              tabIndex={0}
+              aria-haspopup="dialog"
+              className="group flex items-center justify-between p-3 hover:bg-destructive/10 transition-colors cursor-pointer border-b border-border/40 last:border-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40"
+              onClick={() => {
+                setDeleteConfirmation("");
+                setDeleteDialogOpen(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setDeleteConfirmation("");
+                  setDeleteDialogOpen(true);
+                }
+              }}
+            >
                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                     <User className="size-4" />
+                  <div className="p-2 rounded-lg bg-destructive/10 text-destructive group-hover:bg-destructive/15 transition-colors">
+                     <Trash2 className="size-4" />
                   </div>
-                  <div className="font-medium text-sm">{t("settings.manageAccount")}</div>
+                  <div>
+                    <div className="font-medium text-sm text-destructive">{t("settings.deleteAccount")}</div>
+                    <div className="text-xs text-muted-foreground">{t("settings.deleteAccountDescription")}</div>
+                  </div>
                </div>
                <ChevronLeft className="size-4 rotate-180 text-muted-foreground" />
             </div>
@@ -261,6 +292,53 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
              </div>
          </SettingsSection>
       </div>
+
+      <AlertDialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => {
+          if (isDeletingAccount) return;
+          setDeleteDialogOpen(open);
+          if (!open) {
+            setDeleteConfirmation("");
+          }
+        }}
+      >
+        <AlertDialogContent className="border-border bg-[var(--overlay-bg)]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">{t("settings.deleteAccountTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("settings.deleteAccountModalDescription")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2">
+            <label htmlFor="delete-account-confirmation" className="text-sm font-medium">
+              {t("settings.deleteAccountConfirmLabel", { confirmWord: deletionConfirmWord })}
+            </label>
+            <Input
+              id="delete-account-confirmation"
+              value={deleteConfirmation}
+              onChange={(event) => setDeleteConfirmation(event.target.value)}
+              disabled={isDeletingAccount}
+              autoComplete="off"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-border bg-card text-foreground hover:bg-muted" disabled={isDeletingAccount}>
+              {t("common.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={!canConfirmDeletion}
+              onClick={(event) => {
+                event.preventDefault();
+                void handleDeleteAccount();
+              }}
+              className="border-destructive/25 bg-destructive text-white hover:bg-destructive/90 disabled:pointer-events-none disabled:opacity-50"
+            >
+              {isDeletingAccount ? t("settings.deleteAccountDeleting") : t("settings.deleteAccount")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

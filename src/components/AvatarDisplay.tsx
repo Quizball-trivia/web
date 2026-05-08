@@ -83,17 +83,23 @@ export function AvatarDisplay({
   const merged = resolveCustomization(customization);
   const skinAsset = getSkinPart(merged.skin).asset;
 
+  const cropClass = shape === 'circle' ? 'rounded-full' : 'rounded-2xl';
+
   return (
     <div
       className={cn(
-        'relative flex items-center justify-center shrink-0 overflow-hidden',
-        shape === 'circle' ? 'rounded-full' : 'rounded-2xl',
+        'relative shrink-0',
+        cropClass,
         sizeClasses[size],
         className,
       )}
     >
-      {/* Wrapper at canonical Figma aspect ratio so item % positions land precisely. */}
-        <div className="relative h-full" style={{ aspectRatio: '495.25 / 543.03' }}>
+      {/* Inner clipper — clips the figure to the avatar shape. Flag sits OUTSIDE this clipper
+          so it can extend past the avatar's circular bounds without being cropped. */}
+      <div className={cn('absolute inset-0 flex items-center justify-center overflow-hidden', cropClass)}>
+        {/* Wrapper at canonical Figma aspect ratio so item % positions land precisely.
+            h-[88%] leaves ~6% top/bottom margin so the figure's head/feet don't clip the rounded crop. */}
+        <div className="relative h-[88%]" style={{ aspectRatio: '495.25 / 543.03' }}>
           <Image
             src={skinAsset}
             alt="Avatar"
@@ -120,6 +126,7 @@ export function AvatarDisplay({
             );
           })}
         </div>
+      </div>
 
       {normalizedCountryCode && (
         <div

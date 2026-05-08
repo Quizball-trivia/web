@@ -227,6 +227,9 @@ export function TrainingPlayingStage() {
               isShotPhase={state.phase === "shot"}
               isLastAttackPhase={false}
               question={state.question}
+              qIndex={state.questionIndex}
+              totalQuestions={12}
+              timeRemaining={null}
               showOptions={state.showOptions}
               selectedAnswer={state.selectedAnswer}
               answerStates={state.answerStates}
