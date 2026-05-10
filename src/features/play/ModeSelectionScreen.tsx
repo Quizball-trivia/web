@@ -9,6 +9,7 @@ import { FriendPlayModal } from '@/components/shared/FriendPlayModal';
 import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
 import type { MatchStatsSummary } from '@/lib/domain';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
+import { useObjectives } from '@/lib/queries/objectives.queries';
 
 import { colors } from '@/lib/colors';
 
@@ -40,12 +41,6 @@ interface ModeSelectionScreenProps {
 
 const IS_DEV = process.env.NODE_ENV === 'development';
 
-const PLACEHOLDER_OBJECTIVES = [
-  { title: 'Streak Master', desc: 'Answer 10 in a row', reward: '+150 coins', icon: '🔥' },
-  { title: 'Social Butterfly', desc: 'Challenge 2 friends', reward: '+120 coins', icon: '👥' },
-  { title: 'Perfect Game', desc: '100% accuracy match', reward: '+200 coins', icon: '🎯' },
-];
-
 export function ModeSelectionScreen({
   onSelectMode,
   onRankedIntercept,
@@ -65,6 +60,7 @@ export function ModeSelectionScreen({
   const nextTierBand = getNextTierBand(displayRp);
   const nextTierTargetRp = nextTierBand?.minRp ?? null;
   const router = useRouter();
+  const { data: objectivesData, isLoading: objectivesLoading } = useObjectives();
   const rankedTitleStyle = {
     fontFamily: "'Poppins', sans-serif",
     fontWeight: 600,
@@ -92,10 +88,15 @@ export function ModeSelectionScreen({
     setSelectedMode(null);
   };
 
-  const mobileObjectives = [
-    { title: 'Morning Kickoff', desc: 'Play a match before 9 am', reward: '+100 coins', progress: 33 },
-    ...PLACEHOLDER_OBJECTIVES.map((obj) => ({ title: obj.title, desc: obj.desc, reward: obj.reward, progress: 0 })),
-  ];
+  const previewObjectives = [...(objectivesData?.daily.objectives ?? [])]
+    .sort((a, b) => {
+      if (a.completed !== b.completed) return a.completed ? 1 : -1;
+      const aPct = a.target > 0 ? a.progress / a.target : 0;
+      const bPct = b.target > 0 ? b.progress / b.target : 0;
+      return bPct - aPct;
+    })
+    .slice(0, 4);
+  const hasPreviewObjectives = previewObjectives.length > 0;
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-3 space-y-4 md:py-6 md:space-y-5 font-fun">
@@ -388,80 +389,136 @@ export function ModeSelectionScreen({
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-3 lg:hidden">
-          {mobileObjectives.map((obj, index) => (
+          {objectivesLoading && [0, 1].map((item) => (
+            <div
+              key={item}
+              className="rounded-xl bg-brand-green-deep/70 p-3"
+            >
+              <div className="mb-2 flex items-center justify-center">
+                <div className="size-12 animate-pulse rounded-[10px] bg-white/10" />
+              </div>
+              <div className="h-3 w-3/4 animate-pulse rounded-full bg-white/12" />
+              <div className="mt-2 h-2 w-full animate-pulse rounded-full bg-white/8" />
+              <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#07200C]">
+                <div className="h-full w-1/4 animate-pulse rounded-full bg-brand-green-light/55" />
+              </div>
+              <div className="mt-2 flex items-center justify-between">
+                <div className="h-2 w-8 animate-pulse rounded-full bg-white/12" />
+                <div className="h-2 w-14 animate-pulse rounded-full bg-white/12" />
+              </div>
+            </div>
+          ))}
+          {!objectivesLoading && !hasPreviewObjectives && (
             <Link
-              key={`${obj.title}-${index}`}
               href="/objectives"
-              className="rounded-xl bg-brand-green-deep p-3 transition-all hover:bg-brand-green"
+              className="col-span-2 rounded-xl bg-brand-green-deep p-4 transition-all hover:bg-brand-green"
             >
               <div className="mb-2 flex items-center justify-center">
                 <Image src="/assets/obj_icon.png" alt="" width={45} height={44} className="size-12 object-contain opacity-90" />
               </div>
-              <h4 className="text-[10px] font-black leading-tight text-white uppercase truncate">{obj.title}</h4>
-              <p className="mt-0.5 text-[9px] leading-tight text-white/80">{obj.desc}</p>
-              <div className="mt-4 h-3 rounded-full bg-[#07200C] overflow-hidden">
-                <div className="h-full rounded-full bg-brand-green-light" style={{ width: `${obj.progress}%` }} />
-              </div>
-              <div className="mt-2 flex items-center justify-between text-[9px] font-black uppercase">
-                <span className="text-white">{obj.progress > 0 ? '1/3' : '0/1'}</span>
-                <span className="text-white/65">{obj.reward}</span>
-              </div>
+              <h4 className="text-center text-[11px] font-black leading-tight text-white uppercase">Objectives unavailable</h4>
+              <p className="mt-1 text-center text-[10px] leading-tight text-white/75">Open objectives to refresh</p>
             </Link>
-          ))}
+          )}
+          {previewObjectives.map((objective) => {
+            const progressPercent = objective.target > 0
+              ? Math.min(100, Math.round((objective.progress / objective.target) * 100))
+              : 0;
+
+            return (
+              <Link
+                key={objective.id}
+                href="/objectives"
+                className="rounded-xl bg-brand-green-deep p-3 transition-all hover:bg-brand-green"
+              >
+                <div className="mb-2 flex items-center justify-center">
+                  <Image src="/assets/obj_icon.png" alt="" width={45} height={44} className="size-12 object-contain opacity-90" />
+                </div>
+                <h4 className="text-[10px] font-black leading-tight text-white uppercase truncate">{objective.title}</h4>
+                <p className="mt-0.5 line-clamp-2 min-h-[22px] text-[9px] leading-tight text-white/80">{objective.description}</p>
+                <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#07200C]">
+                  <div className="h-full rounded-full bg-brand-green-light" style={{ width: `${progressPercent}%` }} />
+                </div>
+                <div className="mt-2 flex items-center justify-between text-[9px] font-black uppercase">
+                  <span className="text-white">{objective.progress}/{objective.target}</span>
+                  <span className="text-white/65">+{objective.rewardCoins} Coins</span>
+                </div>
+              </Link>
+            );
+          })}
         </div>
         <div className="hidden lg:flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
-          {/* TODO: Replace hardcoded progress (33%, "1/3", "+100 coins") with dynamic values from objectives API/hook */}
-          <Link
-            href="/objectives"
-            className="shrink-0 w-[260px] md:w-[300px] bg-[#1A3A1A] rounded-[10px] p-4 hover:bg-[#224422] transition-all"
-          >
-            <div className="flex items-center gap-3 mb-3">
-              <Image src="/assets/obj_icon.png" alt="" width={45} height={44} className="size-12 object-contain" />
-              <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-black text-white uppercase truncate">Morning Kickoff</h4>
-                <p className="text-[11px] font-bold text-white/60 uppercase truncate">Play a match before 9 AM</p>
+          {objectivesLoading && [0, 1, 2].map((item) => (
+            <div
+              key={item}
+              className="shrink-0 w-[260px] rounded-[10px] bg-[#1A3A1A]/80 p-4 md:w-[300px]"
+            >
+              <div className="mb-3 flex items-center gap-3">
+                <div className="size-12 shrink-0 animate-pulse rounded-[10px] bg-white/10" />
+                <div className="min-w-0 flex-1">
+                  <div className="h-3 w-3/4 animate-pulse rounded-full bg-white/12" />
+                  <div className="mt-2 h-2 w-full animate-pulse rounded-full bg-white/8" />
+                </div>
+              </div>
+              <div className="mb-2.5 h-3 overflow-hidden rounded-full bg-[#0F260F]">
+                <div className="h-full w-1/4 animate-pulse rounded-full bg-brand-green-light/55" />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="h-3 w-10 animate-pulse rounded-full bg-white/12" />
+                <div className="h-3 w-20 animate-pulse rounded-full bg-white/12" />
               </div>
             </div>
-            <div className="h-3 bg-[#0F260F] rounded-full overflow-hidden mb-2.5">
-              <div className="h-full bg-brand-green-light rounded-full" style={{ width: '33%' }} />
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-black text-white">1/3</span>
-              <span className="text-xs font-black text-white uppercase">+100 Coins</span>
-            </div>
-          </Link>
+          ))}
+          {!objectivesLoading && !hasPreviewObjectives && (
+            <Link
+              href="/objectives"
+              className="shrink-0 w-[260px] rounded-[10px] bg-[#1A3A1A] p-4 transition-all hover:bg-[#224422] md:w-[300px]"
+            >
+              <div className="mb-3 flex items-center gap-3">
+                <Image src="/assets/obj_icon.png" alt="" width={45} height={44} className="size-12 object-contain" />
+                <div className="min-w-0 flex-1">
+                  <h4 className="truncate text-sm font-black uppercase text-white">Objectives unavailable</h4>
+                  <p className="truncate text-[11px] font-bold uppercase text-white/60">Open objectives to refresh</p>
+                </div>
+              </div>
+              <div className="mb-2.5 h-3 overflow-hidden rounded-full bg-[#0F260F]">
+                <div className="h-full w-[8%] rounded-full bg-brand-green-light" />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-white">0/1</span>
+                <span className="text-xs font-black uppercase text-white">Coins + XP</span>
+              </div>
+            </Link>
+          )}
+          {previewObjectives.map((objective) => {
+            const progressPercent = objective.target > 0
+              ? Math.min(100, Math.round((objective.progress / objective.target) * 100))
+              : 0;
 
-          {/* Other objectives — unlocked in dev mode */}
-          {PLACEHOLDER_OBJECTIVES.map((obj) => {
-            const isLocked = !IS_DEV;
-            const Wrapper = IS_DEV ? Link : 'div' as React.ElementType;
-            const wrapperProps = IS_DEV ? { href: '/objectives' } : {};
             return (
-              <Wrapper
-                key={obj.title}
-                {...wrapperProps}
+              <Link
+                key={objective.id}
+                href="/objectives"
                 className={cn(
-                  'shrink-0 w-[260px] md:w-[300px] bg-[#1A3A1A] rounded-[10px] p-4',
-                  isLocked
-                    ? 'opacity-50 cursor-default'
-                    : 'hover:bg-[#224422] transition-all'
+                  "shrink-0 w-[260px] rounded-[10px] bg-[#1A3A1A] p-4 transition-all hover:bg-[#224422] md:w-[300px]",
+                  objective.completed && "ring-1 ring-brand-green-light/30"
                 )}
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <Image src="/assets/obj_icon.png" alt="" width={45} height={44} className={cn('size-12 object-contain', isLocked && 'opacity-40')} />
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-black text-white uppercase truncate">{obj.title}</h4>
-                    <p className="text-[11px] font-bold text-white/60 uppercase truncate">{obj.desc}</p>
+                <div className="mb-3 flex items-center gap-3">
+                  <Image src="/assets/obj_icon.png" alt="" width={45} height={44} className="size-12 object-contain" />
+                  <div className="min-w-0 flex-1">
+                    <h4 className="truncate text-sm font-black uppercase text-white">{objective.title}</h4>
+                    <p className="truncate text-[11px] font-bold uppercase text-white/60">{objective.description}</p>
                   </div>
                 </div>
-                <div className="h-3 bg-[#0F260F] rounded-full overflow-hidden mb-2.5">
-                  <div className="h-full bg-brand-green-light rounded-full" style={{ width: '0%' }} />
+                <div className="mb-2.5 h-3 overflow-hidden rounded-full bg-[#0F260F]">
+                  <div className="h-full rounded-full bg-brand-green-light" style={{ width: `${progressPercent}%` }} />
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-white">0/1</span>
-                  <span className="text-xs font-black text-white uppercase">{obj.reward}</span>
+                  <span className="text-xs font-black text-white">{objective.progress}/{objective.target}</span>
+                  <span className="text-xs font-black uppercase text-white">+{objective.rewardCoins} Coins</span>
                 </div>
-              </Wrapper>
+              </Link>
             );
           })}
         </div>

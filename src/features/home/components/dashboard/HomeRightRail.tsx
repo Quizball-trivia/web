@@ -1,9 +1,11 @@
 import { useRouter } from 'next/navigation';
+import { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Users, User, ArrowRight, Trophy, Gamepad2, Zap, Timer } from 'lucide-react';
 import { useDailyChallenges } from '@/lib/queries/dailyChallenges.queries';
+import { useObjectives } from '@/lib/queries/objectives.queries';
 
 interface HomeRightRailProps {
   onOpenFriend: () => void;
@@ -12,11 +14,22 @@ interface HomeRightRailProps {
 export function HomeRightRail({ onOpenFriend }: HomeRightRailProps) {
   const router = useRouter();
   const { data: dailyChallenges = [] } = useDailyChallenges();
+  const { data: objectivesData } = useObjectives();
 
   const challenge = dailyChallenges.find((item) => item.showOnHome && item.availableToday)
     ?? dailyChallenges.find((item) => item.availableToday)
     ?? dailyChallenges[0];
   const isActionable = challenge?.availableToday === true && !challenge.completedToday;
+  const railObjectives = useMemo(() => {
+    return [...(objectivesData?.daily.objectives ?? [])]
+      .sort((a, b) => {
+        if (a.completed !== b.completed) return a.completed ? 1 : -1;
+        const aPct = a.target > 0 ? a.progress / a.target : 0;
+        const bPct = b.target > 0 ? b.progress / b.target : 0;
+        return bPct - aPct;
+      })
+      .slice(0, 2);
+  }, [objectivesData]);
 
   // Auto-start handler
   const handleStartChallenge = () => {
@@ -33,7 +46,7 @@ export function HomeRightRail({ onOpenFriend }: HomeRightRailProps) {
   };
 
   return (
-    <div className="space-y-6 sticky top-24">
+    <div className="sticky top-24 max-h-[calc(100dvh-7rem)] space-y-6 overflow-y-auto overscroll-contain pr-1">
       {/* 1. Today's Quests Module */}
       <Card className="border-border/40 bg-card/40 backdrop-blur-sm overflow-hidden">
         <div className="p-4 border-b border-border/40 flex items-center justify-between bg-card/30">
@@ -97,38 +110,36 @@ export function HomeRightRail({ onOpenFriend }: HomeRightRailProps) {
                   </div>
               </div>
 
-              <div className="flex items-center justify-between p-3 hover:bg-card/40 transition-colors cursor-pointer group">
-                 <div className="flex items-center gap-3">
-                    <div className="p-1.5 rounded-full bg-primary/10 text-primary ring-1 ring-primary/20 group-hover:scale-105 transition-transform">
-                       <Trophy className="size-3.5" />
-                    </div>
-                    <div>
-                       <div className="text-xs font-bold leading-tight group-hover:text-primary transition-colors">Win Streak</div>
-                       <div className="text-[10px] text-muted-foreground">Win 2 ranked games</div>
-                    </div>
-                 </div>
-                 <div className="text-right">
-                    <div className="text-[10px] font-bold text-yellow-600">+150</div>
-                    <div className="text-[10px] text-muted-foreground">0/2</div>
-                 </div>
-              </div>
+              {railObjectives.map((objective) => {
+                const progressPercent = objective.target > 0
+                  ? Math.min(100, Math.round((objective.progress / objective.target) * 100))
+                  : 0;
 
-              <div className="flex items-center justify-between p-3 hover:bg-card/40 transition-colors cursor-pointer group">
-                 <div className="flex items-center gap-3">
-                    <div className="p-1.5 rounded-full bg-blue-500/10 text-blue-500 ring-1 ring-blue-500/20 group-hover:scale-105 transition-transform">
-                       <Users className="size-3.5" />
+                return (
+                  <div
+                    key={objective.id}
+                    className="flex items-center justify-between p-3 transition-colors hover:bg-card/40 cursor-pointer group"
+                    onClick={() => router.push('/objectives')}
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="p-1.5 rounded-full bg-primary/10 text-primary ring-1 ring-primary/20 group-hover:scale-105 transition-transform">
+                        <Trophy className="size-3.5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="truncate text-xs font-bold leading-tight transition-colors group-hover:text-primary">{objective.title}</div>
+                        <div className="truncate text-[10px] text-muted-foreground">{objective.description}</div>
+                      </div>
                     </div>
-                    <div>
-                       <div className="text-xs font-bold leading-tight group-hover:text-blue-400 transition-colors">Social Butterfly</div>
-                       <div className="text-[10px] text-muted-foreground">Play with a friend</div>
+                    <div className="ml-3 shrink-0 text-right">
+                      <div className="text-[10px] font-bold text-yellow-600">+{objective.rewardCoins}</div>
+                      <div className="text-[10px] text-muted-foreground">{objective.progress}/{objective.target}</div>
+                      <div className="mt-1 h-1 w-12 overflow-hidden rounded-full bg-secondary/60">
+                        <div className="h-full rounded-full bg-primary" style={{ width: `${progressPercent}%` }} />
+                      </div>
                     </div>
-                 </div>
-                 <div className="text-right">
-                     <Badge variant="outline" className="h-5 px-1.5 bg-background/50 text-muted-foreground border-border/50">
-                        +50 XP
-                     </Badge>
-                 </div>
-              </div>
+                  </div>
+                );
+              })}
            </div>
 
            <div className="p-2 border-t border-border/40">

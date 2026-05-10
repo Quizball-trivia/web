@@ -248,11 +248,11 @@ export function AppShell({ children }: AppShellProps) {
         }}
       />
       {/* DESKTOP LAYOUT (>= xl) — tablets including iPad Pro portrait get the mobile shell */}
-      <div className="relative z-10 hidden min-h-screen xl:flex">
+      <div className="relative z-10 hidden h-dvh overflow-hidden xl:flex">
         <Sidebar currentPath={currentPath} socialBadgeCount={socialBadgeCount} />
 
         {/* Main Wrapper */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex min-h-0 flex-1 flex-col">
           {/* TopBar */}
           <header className="h-16 bg-background/60 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between px-6">
             <div className="flex-1" />
@@ -388,7 +388,7 @@ export function AppShell({ children }: AppShellProps) {
           </header>
 
           {/* Content Area */}
-          <div className="flex-1 overflow-y-auto scrollbar-hide">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-hide">
             {showRejoinBanner && (
               <div className="px-6 pt-4">
                 <div className="rounded-2xl border border-blue-500/35 bg-gradient-to-r from-blue-500/15 to-cyan-400/15 px-5 py-4 shadow-[0_8px_30px_rgba(59,130,246,0.2)]">

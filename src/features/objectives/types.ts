@@ -1,28 +1,11 @@
-export interface ObjectiveRewards {
-  coins?: number;
-  xp?: number;
-  badge?: string;
-  item?: string;
-}
+export type {
+  ObjectivePeriod,
+  ObjectivePeriodType as ObjectiveCategory,
+  ObjectiveProgress as Objective,
+  ObjectivesResponse,
+} from "@/lib/domain/objective";
 
-export interface Objective {
-  id: string;
-  title: string;
-  description: string;
-  category: ObjectiveCategory;
-  icon: string; // lucide icon name
-  iconColor: string;
-  progress: number;
-  target: number;
-  completed: boolean;
-  rewards: ObjectiveRewards;
-  difficulty: ObjectiveDifficulty;
-  expiresIn?: number;
-}
-
-export type ObjectiveCategory = 'daily' | 'weekly' | 'season' | 'lifetime';
-export type ObjectiveDifficulty = 'easy' | 'medium' | 'hard' | 'expert';
-
+export type ObjectiveDifficulty = "easy" | "medium" | "hard" | "expert";
 export interface PlayerProgress {
   questionsStreak?: number;
   rankedWins?: number;
