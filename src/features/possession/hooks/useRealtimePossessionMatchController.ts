@@ -19,6 +19,7 @@ import {
   usePossessionRoundTransition,
 } from './usePossessionRoundTransition';
 import { usePossessionScoreSplashes } from './usePossessionScoreSplashes';
+import { useBarBattle } from './useBarBattle';
 import {
   TRANSITION_DELAY_MS,
   getQuestionProgress,
@@ -245,7 +246,26 @@ export function useRealtimePossessionMatchController({
     opponentRecentPoints: match?.opponentRecentPoints ?? null,
     answerAck,
     roundResult: state.roundResult,
+    myRound,
     opponentRound,
+  });
+
+  // Divider X in SVG coords — snapshot for bar battle origin
+  const mirrored = possessionState?.half === 2;
+  const dividerX = mirrored
+    ? 470 - (fieldState.visualMyPossessionPct / 100) * 455
+    : 15 + (fieldState.visualMyPossessionPct / 100) * 455;
+
+  const barBattle = useBarBattle({
+    answerAck,
+    opponentAnswered: state.opponentAnswered,
+    opponentRecentPoints: match?.opponentRecentPoints ?? null,
+    opponentAnsweredCorrectly,
+    roundResult: state.roundResult,
+    myRound,
+    opponentRound,
+    phaseKind,
+    dividerX,
   });
 
   const { handleHalftimeBan, handleHalftimeBanPhaseShown } = useHalftimeBanController({
@@ -472,6 +492,7 @@ export function useRealtimePossessionMatchController({
         ...fieldState.pitchProps,
         playerAvatarCustomization,
         opponentAvatarCustomization,
+        barBattle,
       },
       goalCelebration,
       penaltySplash: fieldState.isPenaltyQuestion

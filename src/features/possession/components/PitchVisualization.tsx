@@ -4,6 +4,7 @@ import { useId, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import type { AvatarCustomization } from '@/types/game';
+import { BarBattleOverlay, type BarBattleState } from './BarBattleOverlay';
 
 type GoalSide = 'left' | 'right';
 
@@ -144,6 +145,8 @@ interface PitchVisualizationProps {
   ballOnPlayer?: boolean;
   /** Pitch layout orientation. Portrait wraps all content in a 90° rotation matrix. */
   orientation?: 'landscape' | 'portrait';
+  /** Bar battle animation state — rendered inside the possession zone */
+  barBattle?: BarBattleState | null;
 }
 
 function toShotVariant(value: number | undefined): 0 | 1 | 2 | 3 | 4 {
@@ -167,6 +170,7 @@ export function PitchVisualization({
   targetGoal,
   ballOnPlayer = true,
   orientation = 'landscape',
+  barBattle,
 }: PitchVisualizationProps) {
   const isPenalty = !!penaltyMode;
   const isShot = !!shotMode;
@@ -704,6 +708,9 @@ export function PitchVisualization({
                         : 'ATTACKING ZONE'}
                   </text>
                 </g>
+
+                {/* Bar battle animation — bars march, collide, and push the center line */}
+                {barBattle && <BarBattleOverlay battle={barBattle} mirrored={mirrored} />}
               </g>
             </>
           )}

@@ -55,6 +55,7 @@ describe('usePossessionScoreSplashes', () => {
       opponentRecentPoints: null,
       answerAck: props.answerAck,
       roundResult: null,
+      myRound: null,
       opponentRound: null,
     }), {
       initialProps: {
@@ -101,6 +102,7 @@ describe('usePossessionScoreSplashes', () => {
       opponentRecentPoints: null,
       answerAck: ACK,
       roundResult: null,
+      myRound: null,
       opponentRound: null,
     }));
 
@@ -123,6 +125,7 @@ describe('usePossessionScoreSplashes', () => {
       opponentRecentPoints: 60,
       answerAck: null,
       roundResult: null,
+      myRound: null,
       opponentRound: null,
     }));
 
