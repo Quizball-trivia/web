@@ -20,6 +20,7 @@ interface UsePossessionScoreSplashesParams {
   opponentRecentPoints: number | null;
   answerAck: MatchAnswerAckPayload | null;
   roundResult: MatchRoundResultPayload | null;
+  myRound: MatchRoundResultPlayer | null;
   opponentRound: MatchRoundResultPlayer | null;
 }
 
@@ -34,6 +35,7 @@ export function usePossessionScoreSplashes({
   opponentRecentPoints,
   answerAck,
   roundResult,
+  myRound,
   opponentRound,
 }: UsePossessionScoreSplashesParams) {
   const [showPlayerSplash, setShowPlayerSplash] = useState(false);
@@ -82,6 +84,25 @@ export function usePossessionScoreSplashes({
     });
     shownSplashQRef.current.player = answerAck.qIndex;
   }, [answerAck, localQuestion?.qIndex, phaseKind, selectedAnswer, selectedAnswerQIndex]);
+
+  // Player splash for non-MC questions (countdown, putInOrder, clues) — fires from roundResult
+  // since selectedAnswer is always null for these types
+  useEffect(() => {
+    if (!roundResult || !myRound) return;
+    const resolvedPhaseKind = roundResult.phaseKind ?? phaseKind;
+    if (resolvedPhaseKind !== 'normal' && resolvedPhaseKind !== 'last_attack') return;
+    if (shownSplashQRef.current.player === roundResult.qIndex) return;
+    // Only for non-MC: if selectedAnswer was set, the MC path above already handled it
+    if (selectedAnswer !== null) return;
+    if (!myRound.isCorrect || myRound.pointsEarned <= 0) return;
+
+    queueMicrotask(() => {
+      setPlayerSplashVariant('points');
+      setPlayerSplashPoints(myRound.pointsEarned);
+      setShowPlayerSplash(true);
+    });
+    shownSplashQRef.current.player = roundResult.qIndex;
+  }, [roundResult, myRound, phaseKind, selectedAnswer]);
 
   useEffect(() => {
     if (!opponentAnswered && !roundResult) return;
