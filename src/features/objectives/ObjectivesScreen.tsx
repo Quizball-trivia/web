@@ -110,7 +110,7 @@ export function ObjectivesScreen({ onBack }: ObjectivesScreenProps) {
         <div className="mt-4 grid grid-cols-2 gap-2 rounded-[8px] bg-surface-card p-1">
           {TABS.map((tab) => {
             const isActive = selectedTab === tab.value;
-            const count = data?.[tab.value].completedCount ?? 0;
+            const count = data?.[tab.value]?.completedCount ?? 0;
             return (
               <button
                 key={tab.value}
