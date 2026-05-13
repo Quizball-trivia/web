@@ -1511,7 +1511,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/users/me/reset-onboarding": {
+    "/api/v1/users/me/reset-onboarding": {
         parameters: {
             query?: never;
             header?: never;
@@ -1522,7 +1522,7 @@ export interface paths {
         put?: never;
         /**
          * Reset onboarding flag for the current admin (dev-only)
-         * @description Requires admin role. Flips onboarding_complete back to false so the onboarding flow can be re-tested.
+         * @description Requires admin role. Flips onboarding_complete back to false so the onboarding flow can be re-tested. Operates on the caller's own user.
          */
         post: {
             parameters: {
@@ -1553,15 +1553,6 @@ export interface paths {
                 };
                 /** @description Insufficient permissions */
                 403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description User not found */
-                404: {
                     headers: {
                         [name: string]: unknown;
                     };

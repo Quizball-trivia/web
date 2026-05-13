@@ -17,5 +17,5 @@ export function updateMe(payload: UpdateMeBody) {
 }
 
 export function resetOwnOnboarding() {
-  return apiFetch("post", "/api/v1/admin/users/me/reset-onboarding");
+  return apiFetch("post", "/api/v1/users/me/reset-onboarding");
 }

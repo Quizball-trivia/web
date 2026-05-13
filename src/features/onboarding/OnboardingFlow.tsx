@@ -105,7 +105,14 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
             <ChevronLeft className="size-5" />
           </button>
 
-          <div className="h-[18px] md:h-[22px] flex-1 overflow-hidden bg-brand-green-deep">
+          <div
+            role="progressbar"
+            aria-label="Onboarding progress"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(progress)}
+            className="h-[18px] md:h-[22px] flex-1 overflow-hidden bg-brand-green-deep"
+          >
             <motion.div
               className="h-full bg-brand-green"
               initial={{ width: 0 }}
