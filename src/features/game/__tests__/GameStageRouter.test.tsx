@@ -53,6 +53,7 @@ function createInitialRankedMatchmakingState() {
     rankedSearchDurationMs: 0,
     rankedSearchStartedAt: null,
     rankedFoundOpponent: null,
+    clearRankedMatchmaking: vi.fn(),
   };
 }
 
@@ -220,7 +221,7 @@ describe('GameStageRouter', () => {
     expect(screen.getByText('Realtime Possession Match')).toBeInTheDocument();
   });
 
-  it('forfeit emits match:forfeit without leaving the screen immediately', () => {
+  it('forfeit emits match:forfeit and immediately returns the forfeiting player home', () => {
     gameSessionState.stage = 'playing';
     realtimeMatchState.match = {
       ...realtimeMatchState.match,
@@ -233,9 +234,9 @@ describe('GameStageRouter', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Forfeit Match' }));
 
     expect(socket.emit).toHaveBeenCalledWith('match:forfeit', { matchId: 'match-forfeit-1' });
-    expect(realtimeMatchState.reset).not.toHaveBeenCalled();
-    expect(gameSessionState.reset).not.toHaveBeenCalled();
-    expect(router.push).not.toHaveBeenCalledWith('/play');
+    expect(realtimeMatchState.reset).toHaveBeenCalled();
+    expect(gameSessionState.reset).toHaveBeenCalled();
+    expect(router.push).toHaveBeenCalledWith('/');
   });
 
   it('shows loading instead of possession final results until authoritative final payload arrives', () => {
