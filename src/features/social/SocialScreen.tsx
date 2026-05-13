@@ -319,6 +319,7 @@ export function SocialScreen() {
   const [activeTab, setActiveTab] = useState<Tab>("friends");
   const [query, setQuery] = useState("");
   const [pendingTargetId, setPendingTargetId] = useState<string | null>(null);
+  const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null);
   const [pendingRequestAction, setPendingRequestAction] = useState<{
     requestId: string;
     action: "accept" | "decline";
@@ -377,6 +378,16 @@ export function SocialScreen() {
       toast.error(getApiErrorMessage(error, "Failed to remove friend"));
     },
   });
+
+  const handleRemoveFriend = async (friendUserId: string) => {
+    if (pendingRemoveId) return;
+    setPendingRemoveId(friendUserId);
+    try {
+      await removeFriendMutation.mutateAsync(friendUserId);
+    } finally {
+      setPendingRemoveId(null);
+    }
+  };
 
   const handleSendRequest = async (targetUserId: string) => {
     if (pendingTargetId || sendRequestMutation.isPending) return;
@@ -548,8 +559,8 @@ export function SocialScreen() {
                             player={friend}
                             index={index}
                             onChallenge={(id) => router.push(`/profile/${id}`)}
-                            onRemove={(id) => removeFriendMutation.mutate(id)}
-                            isRemoving={removeFriendMutation.isPending}
+                            onRemove={handleRemoveFriend}
+                            isRemoving={pendingRemoveId === friend.id}
                           />
                         ))}
                       </section>
