@@ -116,10 +116,12 @@ export function HomeRightRail({ onOpenFriend }: HomeRightRailProps) {
                   : 0;
 
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={objective.id}
-                    className="flex items-center justify-between p-3 transition-colors hover:bg-card/40 cursor-pointer group"
+                    className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-card/40 cursor-pointer group"
                     onClick={() => router.push('/objectives')}
+                    aria-label={`Open objective: ${objective.title}`}
                   >
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="p-1.5 rounded-full bg-primary/10 text-primary ring-1 ring-primary/20 group-hover:scale-105 transition-transform">
@@ -137,7 +139,7 @@ export function HomeRightRail({ onOpenFriend }: HomeRightRailProps) {
                         <div className="h-full rounded-full bg-primary" style={{ width: `${progressPercent}%` }} />
                       </div>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
            </div>

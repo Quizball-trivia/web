@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Calendar, Clock, Target, Trophy } from "lucide-react";
 import { ObjectiveCard } from "./components/ObjectiveCard";
@@ -12,9 +12,9 @@ const TABS: Array<{ value: ObjectiveCategory; label: string; icon: typeof Calend
   { value: "weekly", label: "Weekly", icon: Clock },
 ];
 
-function formatResetTime(periodEnd?: string): string {
+function formatResetTime(periodEnd: string | undefined, nowMs: number): string {
   if (!periodEnd) return "--";
-  const remainingMs = new Date(periodEnd).getTime() - Date.now();
+  const remainingMs = new Date(periodEnd).getTime() - nowMs;
   if (remainingMs <= 0) return "soon";
   const hours = Math.floor(remainingMs / 3_600_000);
   const minutes = Math.floor((remainingMs % 3_600_000) / 60_000);
@@ -33,6 +33,14 @@ export function ObjectivesScreen({ onBack }: ObjectivesScreenProps) {
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState<ObjectiveCategory>("daily");
   const { data, isLoading, isError } = useObjectives();
+
+  // Drive a re-render every minute so the "Resets in …" countdown ticks down
+  // instead of freezing at mount time.
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNowMs(Date.now()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   const currentPeriod = data?.[selectedTab];
   const objectives = currentPeriod?.objectives ?? [];
@@ -102,7 +110,7 @@ export function ObjectivesScreen({ onBack }: ObjectivesScreenProps) {
               </div>
             </div>
             <div className="rounded-[8px] bg-surface-deep px-3 py-2 text-sm font-black uppercase text-brand-cyan">
-              Resets in {formatResetTime(currentPeriod?.periodEnd)}
+              Resets in {formatResetTime(currentPeriod?.periodEnd, nowMs)}
             </div>
           </div>
         </section>

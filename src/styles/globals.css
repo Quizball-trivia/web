@@ -67,6 +67,7 @@
 
   /* Brand color shade/tint variants. */
   --brand-green-deep: 102 86% 31%;  /* #2D950B — brand-green hover/active (×6) */
+  --brand-green-darkest: 117 53% 17%; /* #164314 — completed-state card bg */
   --brand-yellow-deep: 50 100% 49%; /* #FCD200 — slightly darker yellow (×13) */
   --brand-yellow-soft: 47 92% 63%;  /* #F8D34A — softer yellow (×10) */
   --brand-red-light: 0 100% 71%;    /* #FF6B6B — lighter red (×10) */
@@ -136,6 +137,7 @@
 
   /* Brand variants */
   --color-brand-green-deep: hsl(var(--brand-green-deep));
+  --color-brand-green-darkest: hsl(var(--brand-green-darkest));
   --color-brand-yellow-deep: hsl(var(--brand-yellow-deep));
   --color-brand-yellow-soft: hsl(var(--brand-yellow-soft));
   --color-brand-red-light: hsl(var(--brand-red-light));
