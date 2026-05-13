@@ -24,10 +24,12 @@ export interface PurchaseConfirmModalProps {
   isPending?: boolean;
   /** Item label, e.g. "Pouch" or "Slick Back". */
   name: string;
-  /** Display price, e.g. "0.99$" or "500". */
+  /** Display price, e.g. "0.99$" or "500". Pass empty string for owned items (equip flow). */
   price: string;
   /** When provided, modal renders an equipped-on-avatar preview (used for avatar parts). */
   previewCustomization?: AvatarCustomization;
+  /** Confirm button label override (e.g. "Equip" when item is already owned). */
+  confirmLabel?: string;
 }
 
 export function PurchaseConfirmModal({
@@ -38,7 +40,9 @@ export function PurchaseConfirmModal({
   name,
   price,
   previewCustomization,
+  confirmLabel,
 }: PurchaseConfirmModalProps) {
+  const hidePrice = !price.trim();
   return (
     <AnimatePresence>
       {open && (
@@ -77,22 +81,24 @@ export function PurchaseConfirmModal({
               {name}
             </div>
 
-            {/* Price */}
-            <div className="mt-4 flex items-center justify-center gap-2">
-              <span
-                className="text-[10px] uppercase tracking-[0.04em] text-surface-page/55"
-                style={poppins}
-              >
-                Price
-              </span>
-              <span
-                className="text-[28px] tabular-nums"
-                style={{ ...poppins, color: PURPLE }}
-              >
-                {price.replace(/\s*coins?$/i, "").trim()}
-              </span>
-              {/^[\d,]+\s*coins?$/i.test(price) && <CoinIcon size={28} />}
-            </div>
+            {/* Price (hidden in equip flow) */}
+            {!hidePrice && (
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <span
+                  className="text-[10px] uppercase tracking-[0.04em] text-surface-page/55"
+                  style={poppins}
+                >
+                  Price
+                </span>
+                <span
+                  className="text-[28px] tabular-nums"
+                  style={{ ...poppins, color: PURPLE }}
+                >
+                  {price.replace(/\s*coins?$/i, "").trim()}
+                </span>
+                {/^[\d,]+\s*coins?$/i.test(price) && <CoinIcon size={28} />}
+              </div>
+            )}
 
             {/* Buttons */}
             <div className="mt-6 flex gap-3">
@@ -113,7 +119,7 @@ export function PurchaseConfirmModal({
                 style={{ ...poppins, backgroundColor: PURPLE, color: "#FFFFFF" }}
               >
                 {isPending && <Loader2 className="size-4 animate-spin" />}
-                {isPending ? "Processing" : "Confirm"}
+                {isPending ? "Processing" : (confirmLabel ?? "Confirm")}
               </button>
             </div>
           </motion.div>

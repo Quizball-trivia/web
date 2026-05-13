@@ -60,8 +60,8 @@ export function BundleCard({
         className="relative flex flex-col rounded-[20px] border-[3px] aspect-[295/268] px-5 pt-6 pb-5"
         style={{ backgroundColor: CARD_BG, borderColor: accent }}
       >
-        {/* Top-left: amount + label */}
-        <div>
+        {/* Top: amount + label (centered) */}
+        <div className="text-center">
           <div
             className="text-[28px] sm:text-[32px] tabular-nums leading-none text-white"
             style={poppins}
@@ -76,20 +76,26 @@ export function BundleCard({
           </div>
         </div>
 
-        {/* Center image — fills remaining space above button */}
-        <div className="relative flex flex-1 items-center justify-center pt-1">
+        {/* Center image — fixed-height slot (anchors padding from text → slot
+            and slot → button identically across all four tiers). Icons
+            object-contain inside the slot; the Handful (single coin) gets a
+            tighter max-h so its square shape doesn't dominate the card. */}
+        <div className="relative flex h-[110px] items-center justify-center pt-1 sm:h-[120px]">
           {imageSrc ? (
             <Image
               src={imageSrc}
               alt={title}
               width={200}
               height={200}
-              className="h-auto w-auto max-h-[110px] sm:max-h-[140px] max-w-full object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
+              className={`w-auto max-w-full object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)] ${
+                amount <= 100 ? "max-h-[70px] sm:max-h-[78px]" : "max-h-full"
+              }`}
             />
           ) : (
             <div className="size-20 rounded-2xl" style={{ backgroundColor: `${accent}20` }} />
           )}
         </div>
+        <div className="flex-1" />
 
         {/* Bottom: pill button */}
         <button
