@@ -4,8 +4,6 @@ import type { PlayerStats } from '@/types/game';
 import type { MatchStatsSummary, RankPosition, UserProgression } from '@/lib/domain';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import { ProfileWeb, type ProfileRecentMatch } from './ProfileWeb';
-import { useAuthStore } from '@/stores/auth.store';
-import { logger } from '@/utils/logger';
 
 interface ProfileScreenProps {
   player: PlayerStats;
@@ -31,17 +29,6 @@ interface ProfileScreenProps {
 }
 
 export function ProfileScreen(props: ProfileScreenProps) {
-  const logout = useAuthStore((state) => state.logout);
-
-  const handleSignOut = async () => {
-    try {
-      await logout();
-      // Navigation handled by auth state change
-    } catch (error) {
-      logger.error('Logout failed', error);
-    }
-  };
-
   return (
       <ProfileWeb
         player={props.player}
@@ -62,7 +49,6 @@ export function ProfileScreen(props: ProfileScreenProps) {
         onAvatarChange={props.onAvatarChange}
         onClubChange={props.onClubChange}
         onLanguageChange={props.onLanguageChange}
-        onSignOut={handleSignOut}
         isUpdating={props.isUpdating}
       />
   );

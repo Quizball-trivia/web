@@ -11,7 +11,6 @@ import {
   Search,
   Swords,
   UserPlus,
-  UserRound,
   Users,
   X,
 } from "lucide-react";
@@ -567,20 +566,30 @@ export function SocialScreen() {
                 transition={{ duration: 0.2 }}
                 className="space-y-3"
               >
-                <div className="relative">
-                  <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-white/50" />
+                {!debouncedQuery && !isSearching && (
+                  <div className="pt-8 md:pt-12 pb-5 text-center">
+                    <h2 className="font-poppins text-3xl md:text-4xl font-semibold uppercase text-white">
+                      Find your rivals
+                    </h2>
+                    <p className="mt-2 font-poppins text-xs md:text-sm font-semibold uppercase text-white/50">
+                      Search for a player to add them as a friend
+                    </p>
+                  </div>
+                )}
+
+                <div className="relative mx-auto w-full max-w-md">
                   <input
                     type="text"
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="Search by username"
-                    className="w-full rounded-2xl border-2 border-brand-green bg-transparent py-3 pl-10 pr-10 font-poppins text-sm font-semibold text-white outline-none transition-colors placeholder:text-white/30 focus:border-white"
+                    className="h-11 w-full rounded-[10px] bg-brand-blue px-10 text-center font-poppins text-sm font-semibold uppercase text-white outline-none placeholder:text-white/50 focus:ring-2 focus:ring-white"
                   />
                   {query && (
                     <button
                       type="button"
                       onClick={() => setQuery("")}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/50 transition-colors hover:text-white"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 transition-colors hover:text-white"
                     >
                       <X className="size-4" />
                     </button>
@@ -592,28 +601,13 @@ export function SocialScreen() {
                     <Loader2 className="size-7 animate-spin text-brand-green" />
                   </div>
                 ) : searchError ? (
-                  <div className="rounded-2xl border-2 border-brand-red p-6 text-center">
-                    <p className="font-poppins text-sm font-semibold text-brand-red-light">{searchError}</p>
-                  </div>
+                  <p className="pt-8 text-center font-poppins text-sm font-semibold uppercase text-brand-red-light">{searchError}</p>
                 ) : debouncedQuery && searchResults.length === 0 ? (
-                  <div className="rounded-2xl border-2 border-brand-green p-6 text-center">
-                    <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-brand-blue">
-                      <UserRound className="size-6 text-white" />
-                    </div>
-                    <p className="mb-1 font-poppins text-sm font-semibold uppercase text-white">No players found</p>
-                    <p className="font-poppins text-[11px] font-semibold uppercase text-white/50">Try a different username</p>
+                  <div className="pt-8 text-center">
+                    <h2 className="font-poppins text-xl md:text-2xl font-semibold uppercase text-white">No players found</h2>
+                    <p className="mt-2 font-poppins text-[11px] md:text-xs font-semibold uppercase text-white/50">Try a different username</p>
                   </div>
-                ) : !debouncedQuery ? (
-                  <div className="rounded-2xl border-2 border-brand-green p-6 text-center">
-                    <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-brand-blue">
-                      <Search className="size-6 text-white" />
-                    </div>
-                    <p className="mb-1 font-poppins text-sm font-semibold uppercase text-white">Find your rivals</p>
-                    <p className="font-poppins text-[11px] font-semibold uppercase text-white/50">
-                      Search for a player to add them as a friend
-                    </p>
-                  </div>
-                ) : (
+                ) : !debouncedQuery ? null : (
                   searchResults.map((player, index) => (
                     <PlayerCard
                       key={player.id}
