@@ -87,6 +87,81 @@ function getApiErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
+const CARD_BASE =
+  "flex items-center gap-3 rounded-2xl border-2 bg-transparent px-3 py-3";
+
+const PILL_BASE =
+  "flex items-center justify-center gap-1.5 rounded-full px-3.5 h-9 font-poppins text-[11px] font-semibold uppercase text-white transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40";
+
+function CardShell({
+  variant = "default",
+  children,
+  index,
+}: {
+  variant?: "default" | "alert";
+  children: React.ReactNode;
+  index: number;
+}) {
+  const borderClass = variant === "alert" ? "border-brand-red" : "border-brand-green";
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: index * 0.04, ease: "easeOut" }}
+      className={`${CARD_BASE} ${borderClass}`}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function CardAvatar({ player }: { player: SocialPlayer }) {
+  return (
+    <div className="shrink-0">
+      <div className="block sm:hidden">
+        <AvatarDisplay
+          customization={player.avatarCustomization ?? { base: player.avatarUrl ?? undefined }}
+          size="sm"
+        />
+      </div>
+      <div className="hidden sm:block">
+        <AvatarDisplay
+          customization={player.avatarCustomization ?? { base: player.avatarUrl ?? undefined }}
+          size="md"
+        />
+      </div>
+    </div>
+  );
+}
+
+function CardIdentity({ player }: { player: SocialPlayer }) {
+  const { t } = useLocale();
+  const rankedDisplay = getRankedDisplay(player);
+  const isPendingDeletion = player.pendingDeletion === true;
+
+  return (
+    <div className="min-w-0 flex-1">
+      <div className="flex items-center gap-2">
+        <p className="truncate font-poppins text-sm font-semibold uppercase text-white">
+          {player.nickname ?? "Unknown"}
+        </p>
+        {isPendingDeletion && (
+          <span className="shrink-0 rounded-full bg-brand-red/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-brand-red">
+            {t("social.pendingDeletion")}
+          </span>
+        )}
+      </div>
+      <div className="mt-0.5 flex items-center gap-2">
+        <span className="text-[11px] font-bold text-brand-slate">Lvl {rankedDisplay.level}</span>
+        <span className="text-[11px] font-bold text-brand-slate">·</span>
+        <span className={`text-[11px] font-bold ${rankedDisplay.highlightClass}`}>{rankedDisplay.tierLabel}</span>
+        <span className="text-[11px] font-bold text-brand-slate">·</span>
+        <span className="text-[11px] font-bold text-brand-gold">{rankedDisplay.rpLabel}</span>
+      </div>
+    </div>
+  );
+}
+
 function PlayerCard({
   player,
   index,
@@ -106,41 +181,13 @@ function PlayerCard({
   isPending?: boolean;
   isRemoving?: boolean;
 }) {
-  const { t } = useLocale();
-  const rankedDisplay = getRankedDisplay(player);
   const isPendingDeletion = player.pendingDeletion === true;
+  const variant = isPendingDeletion ? "alert" : "default";
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.04, ease: "easeOut" }}
-      className="flex items-center gap-3 rounded-2xl border-b-4 border-surface-card-deep bg-surface-card px-4 py-3"
-    >
-      <div className="flex size-12 shrink-0 items-center justify-center rounded-xl border-2 border-brand-cyan/20 bg-surface-card-tint">
-        <AvatarDisplay
-          customization={player.avatarCustomization ?? { base: player.avatarUrl ?? undefined }}
-          size="sm"
-        />
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <p className="truncate text-sm font-black text-white">{player.nickname ?? "Unknown"}</p>
-          {isPendingDeletion && (
-            <span className="shrink-0 rounded-full bg-brand-red/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-brand-red">
-              {t("social.pendingDeletion")}
-            </span>
-          )}
-        </div>
-        <div className="mt-0.5 flex items-center gap-2">
-          <span className="text-[11px] font-bold text-brand-slate">Lvl {rankedDisplay.level}</span>
-          <span className="text-[11px] font-bold text-brand-slate">·</span>
-          <span className={`text-[11px] font-bold ${rankedDisplay.highlightClass}`}>{rankedDisplay.tierLabel}</span>
-          <span className="text-[11px] font-bold text-brand-slate">·</span>
-          <span className="text-[11px] font-bold text-brand-gold">{rankedDisplay.rpLabel}</span>
-        </div>
-      </div>
+    <CardShell variant={variant} index={index}>
+      <CardAvatar player={player} />
+      <CardIdentity player={player} />
 
       <div className="flex shrink-0 items-center gap-2">
         {onChallenge && player.friendStatus === "friends" && (
@@ -148,7 +195,7 @@ function PlayerCard({
             type="button"
             onClick={() => onChallenge(player.id)}
             disabled={isPendingDeletion}
-            className="flex items-center gap-1.5 rounded-xl border border-brand-cyan/25 bg-brand-cyan/15 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-[#7FD8FF] transition-colors hover:bg-brand-cyan/25 disabled:cursor-not-allowed disabled:opacity-40"
+            className={`${PILL_BASE} bg-brand-cyan`}
           >
             <Swords className="size-3.5" />
             Challenge
@@ -160,14 +207,10 @@ function PlayerCard({
             type="button"
             onClick={() => onRemove(player.id)}
             disabled={isRemoving}
-            className="flex items-center justify-center rounded-xl border border-brand-red-soft/25 bg-brand-red-soft/15 px-2.5 py-2 text-[11px] font-black uppercase tracking-wide text-brand-red-light transition-colors hover:bg-brand-red-soft/25 disabled:opacity-50"
+            className={`${PILL_BASE} bg-brand-red !px-0 !w-9`}
             title="Remove friend"
           >
-            {isRemoving ? (
-              <Loader2 className="size-3.5 animate-spin" />
-            ) : (
-              <X className="size-3.5" />
-            )}
+            {isRemoving ? <Loader2 className="size-4 animate-spin" /> : <X className="size-4" />}
           </button>
         )}
 
@@ -176,19 +219,16 @@ function PlayerCard({
             type="button"
             onClick={() => onSendRequest(player.id)}
             disabled={isPending || isPendingDeletion}
-            className="flex items-center gap-1.5 rounded-xl border border-brand-green-light/25 bg-brand-green-light/15 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-brand-green-light transition-colors hover:bg-brand-green-light/25 disabled:cursor-not-allowed disabled:opacity-40"
+            className={`${PILL_BASE} bg-brand-green`}
           >
-            {isPending ? (
-              <Loader2 className="size-3.5 animate-spin" />
-            ) : (
-              <UserPlus className="size-3.5" />
-            )}
+            {isPending ? <Loader2 className="size-3.5 animate-spin" /> : <UserPlus className="size-3.5" />}
             Add
           </button>
         )}
 
         {player.friendStatus === "pending_sent" && (
-          <span className="rounded-xl border border-brand-gold/20 bg-brand-gold/10 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-brand-gold">
+          <span className={`${PILL_BASE} bg-brand-gold !text-black`}>
+            <Clock3 className="size-3.5" />
             Sent
           </span>
         )}
@@ -197,19 +237,17 @@ function PlayerCard({
           <button
             type="button"
             onClick={onRespond}
-            className="rounded-xl border border-brand-orange-light/20 bg-brand-orange-light/10 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-[#FFB37D] transition-colors hover:bg-brand-orange-light/20"
+            className={`${PILL_BASE} bg-brand-orange`}
           >
             Respond
           </button>
         )}
 
         {player.friendStatus === "friends" && !onChallenge && (
-          <span className="rounded-xl border border-brand-slate/20 bg-brand-slate/15 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-brand-slate">
-            Friends
-          </span>
+          <span className={`${PILL_BASE} bg-brand-slate`}>Friends</span>
         )}
       </div>
-    </motion.div>
+    </CardShell>
   );
 }
 
@@ -228,51 +266,14 @@ function RequestCard({
   onDecline?: (requestId: string) => void;
   isPending?: boolean;
 }) {
-  const { t } = useLocale();
-  const rankedDisplay = getRankedDisplay(item.user);
   const isIncoming = type === "incoming";
   const isPendingDeletion = item.user.pendingDeletion === true;
+  const variant = isPendingDeletion ? "alert" : "default";
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, delay: index * 0.03, ease: "easeOut" }}
-      className="flex items-center gap-3 rounded-2xl border-b-4 border-surface-card-deep bg-surface-card px-4 py-3"
-    >
-      <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-brand-cyan/20 bg-surface-card-tint">
-        <AvatarDisplay
-          customization={item.user.avatarCustomization ?? { base: item.user.avatarUrl ?? undefined }}
-          size="sm"
-        />
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <p className="truncate text-sm font-black text-white">{item.user.nickname ?? "Unknown"}</p>
-          <span
-            className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ${
-              isIncoming
-                ? "bg-brand-orange-light/15 text-[#FFB37D]"
-                : "bg-brand-gold/10 text-brand-gold"
-            }`}
-          >
-            {isIncoming ? "Incoming" : "Sent"}
-          </span>
-          {isPendingDeletion && (
-            <span className="shrink-0 rounded-full bg-brand-red/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-brand-red">
-              {t("social.pendingDeletion")}
-            </span>
-          )}
-        </div>
-        <div className="mt-0.5 flex items-center gap-2">
-          <span className="text-[11px] font-bold text-brand-slate">Lvl {rankedDisplay.level}</span>
-          <span className="text-[11px] font-bold text-brand-slate">·</span>
-          <span className={`text-[11px] font-bold ${rankedDisplay.highlightClass}`}>{rankedDisplay.tierLabel}</span>
-          <span className="text-[11px] font-bold text-brand-slate">·</span>
-          <span className="text-[11px] font-bold text-brand-gold">{rankedDisplay.rpLabel}</span>
-        </div>
-      </div>
+    <CardShell variant={variant} index={index}>
+      <CardAvatar player={item.user} />
+      <CardIdentity player={item.user} />
 
       {isIncoming ? (
         <div className="flex shrink-0 items-center gap-2">
@@ -280,7 +281,7 @@ function RequestCard({
             type="button"
             onClick={() => onAccept?.(item.requestId)}
             disabled={isPending || isPendingDeletion}
-            className="flex items-center gap-1 rounded-xl border border-brand-green-light/25 bg-brand-green-light/15 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-brand-green-light transition-colors hover:bg-brand-green-light/25 disabled:cursor-not-allowed disabled:opacity-40"
+            className={`${PILL_BASE} bg-brand-green`}
           >
             {isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}
             Accept
@@ -289,47 +290,26 @@ function RequestCard({
             type="button"
             onClick={() => onDecline?.(item.requestId)}
             disabled={isPending}
-            className="rounded-xl border border-brand-red-soft/20 bg-brand-red-soft/10 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-brand-red-light transition-colors hover:bg-brand-red-soft/20 disabled:opacity-50"
+            className={`${PILL_BASE} bg-brand-red`}
           >
             Decline
           </button>
         </div>
       ) : (
-        <div className="flex shrink-0 items-center gap-1 rounded-xl border border-brand-gold/20 bg-brand-gold/10 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-brand-gold">
+        <span className={`${PILL_BASE} bg-brand-gold !text-black`}>
           <Clock3 className="size-3.5" />
           Pending
-        </div>
+        </span>
       )}
-    </motion.div>
+    </CardShell>
   );
 }
 
-function SocialSection({
-  title,
-  count,
-  tone,
-  children,
-}: {
-  title: string;
-  count: number;
-  tone: "blue" | "orange" | "gold";
-  children: React.ReactNode;
-}) {
-  const toneClass =
-    tone === "orange"
-      ? "bg-brand-orange-light/15 text-[#FFB37D]"
-      : tone === "gold"
-        ? "bg-brand-gold/10 text-brand-gold"
-        : "bg-brand-cyan/15 text-[#7FD8FF]";
-
+function SectionHeader({ title }: { title: string }) {
   return (
-    <section className="space-y-3">
-      <div className="flex items-center gap-2">
-        <h2 className="text-xs font-black uppercase tracking-[0.18em] text-brand-slate-light">{title}</h2>
-        <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${toneClass}`}>{count}</span>
-      </div>
-      <div className="space-y-3">{children}</div>
-    </section>
+    <h2 className="font-poppins text-base md:text-lg font-semibold uppercase text-white">
+      {title}
+    </h2>
   );
 }
 
@@ -448,217 +428,207 @@ export function SocialScreen() {
     incomingRequests.length === 0 &&
     outgoingRequests.length === 0;
 
+  const TABS: Array<{ id: Tab; label: string; icon: typeof Users }> = [
+    { id: "friends", label: "Friends", icon: Users },
+    { id: "find", label: "Find Friends", icon: Search },
+  ];
+
   return (
     <div className="min-h-screen font-fun">
-      <div className="sticky top-0 z-20 border-b-2 border-surface-card backdrop-blur-sm">
-        <div className="mx-auto max-w-2xl px-3 py-3 md:max-w-3xl md:px-4 md:py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex size-9 items-center justify-center rounded-xl border-2 border-brand-cyan/30 bg-brand-cyan/15 md:size-10">
-              <Users className="size-4 text-brand-cyan md:size-5" />
-            </div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-base font-black uppercase tracking-wide text-white md:text-xl">Social</h1>
-              {incomingCount > 0 && (
-                <span className="rounded-full bg-brand-red-soft px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-white">
-                  {incomingCount} new
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+      <div className="mx-auto w-full max-w-2xl px-3 py-4 md:max-w-3xl md:px-4 md:py-6">
+        <h1 className="font-poppins text-xl md:text-2xl font-semibold uppercase text-white">
+          Social
+        </h1>
 
-      <div className="mx-auto max-w-2xl space-y-4 px-3 py-4 md:max-w-3xl md:px-4 md:py-6">
-        <div className="flex gap-2 rounded-2xl border-b-4 border-surface-card-deep bg-surface-card p-1.5">
-          {(["friends", "find"] as const).map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setActiveTab(tab)}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-black uppercase tracking-wide transition-all ${
-                activeTab === tab
-                  ? "bg-brand-cyan text-white shadow-sm"
-                  : "text-brand-slate hover:text-white"
-              }`}
-            >
-              {tab === "friends" ? (
-                <>
-                  <Users className="size-4" />
-                  Friends
-                  {friends.length > 0 && (
-                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-black ${activeTab === tab ? "bg-white/20" : "bg-surface-card-tint"}`}>
-                      {friends.length}
-                    </span>
-                  )}
-                  {incomingCount > 0 && (
-                    <span className="rounded-full bg-brand-red-soft px-1.5 py-0.5 text-[10px] font-black text-white">
+        {/* Tab pill — Figma styling at original compact size */}
+        <div className="mt-3 rounded-2xl border-2 border-brand-green p-1.5">
+          <div className="grid grid-cols-2 gap-1.5">
+            {TABS.map((tab) => {
+              const isActive = activeTab === tab.id;
+              const Icon = tab.icon;
+              const tabIncomingBadge = tab.id === "friends" && incomingCount > 0;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex h-10 items-center justify-center gap-2 rounded-xl font-poppins text-sm font-semibold uppercase transition-colors ${
+                    isActive ? "bg-brand-green text-white" : "text-white hover:bg-white/5"
+                  }`}
+                >
+                  <Icon className="size-4" />
+                  {tab.label}
+                  {tabIncomingBadge && (
+                    <span className="rounded-full bg-brand-red px-1.5 py-0.5 text-[10px] font-black text-white">
                       {incomingCount}
                     </span>
                   )}
-                </>
-              ) : (
-                <>
-                  <Search className="size-4" />
-                  Find Players
-                </>
-              )}
-            </button>
-          ))}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        <AnimatePresence mode="wait">
-          {activeTab === "friends" ? (
-            <motion.div
-              key="friends"
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -8 }}
-              transition={{ duration: 0.2 }}
-              className="space-y-5"
-            >
-              {friendsLoading ? (
-                <div className="flex items-center justify-center py-16">
-                  <Loader2 className="size-8 animate-spin text-brand-cyan" />
-                </div>
-              ) : friendsError ? (
-                <div className="rounded-2xl border-b-4 border-surface-card-deep bg-surface-card p-6 text-center">
-                  <p className="text-sm font-bold text-brand-red-soft">{friendsError}</p>
-                </div>
-              ) : hasNoSocialData ? (
-                <div className="rounded-2xl border-b-4 border-surface-card-deep bg-surface-card p-8 text-center">
-                  <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl border-2 border-brand-slate/20 bg-surface-card-tint">
-                    <Users className="size-8 text-brand-slate" />
+        <div className="mt-5">
+          <AnimatePresence mode="wait">
+            {activeTab === "friends" ? (
+              <motion.div
+                key="friends"
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -8 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-8"
+              >
+                {friendsLoading ? (
+                  <div className="flex items-center justify-center py-16">
+                    <Loader2 className="size-8 animate-spin text-brand-green" />
                   </div>
-                  <h3 className="mb-2 text-base font-black uppercase text-white">No friends yet</h3>
-                  <p className="mb-5 text-sm font-semibold text-brand-slate">
-                    Search for players and send them a friend request.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("find")}
-                    className="rounded-xl border-b-[3px] border-[#14627F] bg-brand-cyan px-5 py-2.5 text-sm font-black uppercase tracking-wide text-white transition-all hover:bg-brand-cyan active:translate-y-[2px] active:border-b-[1px]"
-                  >
-                    Find Players
-                  </button>
-                </div>
-              ) : (
-                <>
-                  {incomingRequests.length > 0 && (
-                    <SocialSection title="Incoming Requests" count={incomingRequests.length} tone="orange">
-                      {incomingRequests.map((item, index) => (
-                        <RequestCard
-                          key={item.requestId}
-                          item={item}
-                          index={index}
-                          type="incoming"
-                          onAccept={handleAcceptRequest}
-                          onDecline={handleDeclineRequest}
-                          isPending={pendingRequestAction?.requestId === item.requestId}
-                        />
-                      ))}
-                    </SocialSection>
-                  )}
+                ) : friendsError ? (
+                  <div className="rounded-2xl border-2 border-brand-red p-6 text-center">
+                    <p className="font-poppins text-sm font-semibold text-brand-red-light">{friendsError}</p>
+                  </div>
+                ) : hasNoSocialData ? (
+                  <div className="rounded-2xl border-2 border-brand-green p-8 text-center">
+                    <div className="mx-auto mb-3 flex size-14 items-center justify-center rounded-full bg-brand-blue">
+                      <Users className="size-7 text-white" />
+                    </div>
+                    <h3 className="mb-1 font-poppins text-base font-semibold uppercase text-white">
+                      No friends yet
+                    </h3>
+                    <p className="mb-4 font-poppins text-xs font-semibold uppercase text-white/50">
+                      Search for players and send them a friend request
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("find")}
+                      className="rounded-xl bg-brand-green px-5 py-2.5 font-poppins text-sm font-semibold uppercase text-white hover:brightness-110 transition-all"
+                    >
+                      Find Friends
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {incomingRequests.length > 0 && (
+                      <section className="space-y-3">
+                        <SectionHeader title={`Incoming Requests (${incomingRequests.length})`} />
+                        {incomingRequests.map((item, index) => (
+                          <RequestCard
+                            key={item.requestId}
+                            item={item}
+                            index={index}
+                            type="incoming"
+                            onAccept={handleAcceptRequest}
+                            onDecline={handleDeclineRequest}
+                            isPending={pendingRequestAction?.requestId === item.requestId}
+                          />
+                        ))}
+                      </section>
+                    )}
 
-                  {outgoingRequests.length > 0 && (
-                    <SocialSection title="Sent Requests" count={outgoingRequests.length} tone="gold">
-                      {outgoingRequests.map((item, index) => (
-                        <RequestCard
-                          key={item.requestId}
-                          item={item}
-                          index={index}
-                          type="outgoing"
-                        />
-                      ))}
-                    </SocialSection>
-                  )}
+                    {outgoingRequests.length > 0 && (
+                      <section className="space-y-3">
+                        <SectionHeader title={`Sent Requests (${outgoingRequests.length})`} />
+                        {outgoingRequests.map((item, index) => (
+                          <RequestCard
+                            key={item.requestId}
+                            item={item}
+                            index={index}
+                            type="outgoing"
+                          />
+                        ))}
+                      </section>
+                    )}
 
-                  {friends.length > 0 && (
-                    <SocialSection title="Your Friends" count={friends.length} tone="blue">
-                      {friends.map((friend, index) => (
-                        <PlayerCard
-                          key={friend.id}
-                          player={friend}
-                          index={index}
-                          onChallenge={(id) => router.push(`/profile/${id}`)}
-                          onRemove={(id) => removeFriendMutation.mutate(id)}
-                          isRemoving={removeFriendMutation.isPending}
-                        />
-                      ))}
-                    </SocialSection>
-                  )}
-                </>
-              )}
-            </motion.div>
-          ) : (
-            <motion.div
-              key="find"
-              initial={{ opacity: 0, x: 8 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 8 }}
-              transition={{ duration: 0.2 }}
-              className="space-y-3"
-            >
-              <div className="relative">
-                <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-brand-slate" />
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search by username..."
-                  className="w-full rounded-2xl border-2 border-surface-card-tint bg-surface-card py-3 pl-10 pr-10 text-sm font-semibold text-white outline-none transition-colors placeholder:text-brand-slate focus:border-brand-cyan"
-                />
-                {query && (
-                  <button
-                    type="button"
-                    onClick={() => setQuery("")}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-brand-slate transition-colors hover:text-white"
-                  >
-                    <X className="size-4" />
-                  </button>
+                    {friends.length > 0 && (
+                      <section className="space-y-3">
+                        <SectionHeader title={`Friends (${friends.length})`} />
+                        {friends.map((friend, index) => (
+                          <PlayerCard
+                            key={friend.id}
+                            player={friend}
+                            index={index}
+                            onChallenge={(id) => router.push(`/profile/${id}`)}
+                            onRemove={(id) => removeFriendMutation.mutate(id)}
+                            isRemoving={removeFriendMutation.isPending}
+                          />
+                        ))}
+                      </section>
+                    )}
+                  </>
                 )}
-              </div>
-
-              {isSearching ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="size-7 animate-spin text-brand-cyan" />
-                </div>
-              ) : searchError ? (
-                <div className="rounded-2xl border-b-4 border-surface-card-deep bg-surface-card p-6 text-center">
-                  <p className="text-sm font-bold text-brand-red-soft">{searchError}</p>
-                </div>
-              ) : debouncedQuery && searchResults.length === 0 ? (
-                <div className="rounded-2xl border-b-4 border-surface-card-deep bg-surface-card p-8 text-center">
-                  <div className="mx-auto mb-3 flex size-14 items-center justify-center rounded-2xl border-2 border-brand-slate/20 bg-surface-card-tint">
-                    <UserRound className="size-7 text-brand-slate" />
-                  </div>
-                  <p className="mb-1 text-sm font-black uppercase text-white">No players found</p>
-                  <p className="text-xs font-semibold text-brand-slate">Try a different username</p>
-                </div>
-              ) : !debouncedQuery ? (
-                <div className="rounded-2xl border-b-4 border-surface-card-deep bg-surface-card p-8 text-center">
-                  <div className="mx-auto mb-3 flex size-14 items-center justify-center rounded-2xl border-2 border-brand-cyan/25 bg-brand-cyan/15">
-                    <Search className="size-7 text-brand-cyan" />
-                  </div>
-                  <p className="mb-1 text-sm font-black uppercase text-white">Find your rivals</p>
-                  <p className="text-xs font-semibold text-brand-slate">
-                    Search for a player to add them as a friend
-                  </p>
-                </div>
-              ) : (
-                searchResults.map((player, index) => (
-                  <PlayerCard
-                    key={player.id}
-                    player={player}
-                    index={index}
-                    onSendRequest={handleSendRequest}
-                    onRespond={() => setActiveTab("friends")}
-                    isPending={pendingTargetId === player.id}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="find"
+                initial={{ opacity: 0, x: 8 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 8 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-3"
+              >
+                <div className="relative">
+                  <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-white/50" />
+                  <input
+                    type="text"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="Search by username"
+                    className="w-full rounded-2xl border-2 border-brand-green bg-transparent py-3 pl-10 pr-10 font-poppins text-sm font-semibold text-white outline-none transition-colors placeholder:text-white/30 focus:border-white"
                   />
-                ))
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+                  {query && (
+                    <button
+                      type="button"
+                      onClick={() => setQuery("")}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/50 transition-colors hover:text-white"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  )}
+                </div>
+
+                {isSearching ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="size-7 animate-spin text-brand-green" />
+                  </div>
+                ) : searchError ? (
+                  <div className="rounded-2xl border-2 border-brand-red p-6 text-center">
+                    <p className="font-poppins text-sm font-semibold text-brand-red-light">{searchError}</p>
+                  </div>
+                ) : debouncedQuery && searchResults.length === 0 ? (
+                  <div className="rounded-2xl border-2 border-brand-green p-6 text-center">
+                    <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-brand-blue">
+                      <UserRound className="size-6 text-white" />
+                    </div>
+                    <p className="mb-1 font-poppins text-sm font-semibold uppercase text-white">No players found</p>
+                    <p className="font-poppins text-[11px] font-semibold uppercase text-white/50">Try a different username</p>
+                  </div>
+                ) : !debouncedQuery ? (
+                  <div className="rounded-2xl border-2 border-brand-green p-6 text-center">
+                    <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-brand-blue">
+                      <Search className="size-6 text-white" />
+                    </div>
+                    <p className="mb-1 font-poppins text-sm font-semibold uppercase text-white">Find your rivals</p>
+                    <p className="font-poppins text-[11px] font-semibold uppercase text-white/50">
+                      Search for a player to add them as a friend
+                    </p>
+                  </div>
+                ) : (
+                  searchResults.map((player, index) => (
+                    <PlayerCard
+                      key={player.id}
+                      player={player}
+                      index={index}
+                      onSendRequest={handleSendRequest}
+                      onRespond={() => setActiveTab("friends")}
+                      isPending={pendingTargetId === player.id}
+                    />
+                  ))
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );
