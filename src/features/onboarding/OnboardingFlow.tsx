@@ -1,21 +1,17 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Input } from '@/components/ui/input';
+import { ChevronLeft, Loader2 } from 'lucide-react';
+import { AppLogo } from '@/components/AppLogo';
+import { CountryFlag } from '@/components/CountryFlag';
 import ClubSelect from './ClubSelect';
 import { AvatarPreview } from '@/components/AvatarPreview';
-import {
-  Trophy,
-  ChevronLeft,
-  CheckCircle2,
-  Globe,
-  User,
-} from 'lucide-react';
 import type { AvatarCustomization } from '@/types/game';
-import { AVATAR_COLORS, AVATAR_COLOR_SWATCHES } from '@/lib/avatars';
+import { AVATAR_COLORS } from '@/lib/avatars';
 import { DEFAULT_HAIR_ID, DEFAULT_JERSEY_ID, DEFAULT_SKIN_ID } from '@/lib/avatars/parts';
 
 interface OnboardingFlowProps {
   onComplete: (data: OnboardingData) => void;
+  isSubmitting?: boolean;
 }
 
 interface OnboardingData {
@@ -26,348 +22,263 @@ interface OnboardingData {
   quizScore: number;
 }
 
-const languages = [
-  { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
-  { code: 'ka', name: 'Georgian', nativeName: 'ქართული', flag: '🇬🇪' },
+const LANGUAGES = [
+  { code: 'en', name: 'ENGLISH', nativeName: 'English', countryCode: 'gb' },
+  { code: 'ka', name: 'GEORGIAN', nativeName: 'ქართული', countryCode: 'ge' },
 ];
-
-const avatarSeeds = AVATAR_COLORS;
 
 function getAvatarCustomization(color: string | null | undefined): AvatarCustomization {
   return {
     skin: DEFAULT_SKIN_ID,
-    jersey: color ? `jersey_${color}` as AvatarCustomization["jersey"] : DEFAULT_JERSEY_ID,
+    jersey: color ? `jersey_${color}` as AvatarCustomization['jersey'] : DEFAULT_JERSEY_ID,
     hair: DEFAULT_HAIR_ID,
   };
 }
 
-const CONTINUE_BUTTON_CLASS = "w-full h-14 rounded-2xl text-lg font-black uppercase tracking-wide bg-green-500 text-surface-deep hover:bg-green-400 border-b-[5px] border-green-700 active:border-b-0 active:translate-y-[5px] transition-all disabled:opacity-40 disabled:pointer-events-none";
-const SKIP_BUTTON_CLASS = "w-full mt-4 text-sm font-bold text-brand-slate hover:text-foreground transition-colors uppercase tracking-wide";
+const PRIMARY_CTA_CLASS =
+  'w-full h-[56px] md:h-[64px] rounded-[18px] bg-brand-green text-white font-poppins text-[20px] md:text-[24px] font-semibold uppercase hover:brightness-110 transition-all disabled:opacity-40 disabled:pointer-events-none';
 
-type OnboardingStep = 'question1' | 'question3' | 'avatar';
+const OPTION_PILL_CLASS =
+  'flex h-[56px] md:h-[64px] w-full items-center gap-3 rounded-[18px] bg-brand-blue px-3 text-left transition-all hover:brightness-110';
 
-const stepOrder: OnboardingStep[] = ['question1', 'question3', 'avatar'];
+type OnboardingStep = 'language' | 'club' | 'profile';
+const STEP_ORDER: OnboardingStep[] = ['language', 'club', 'profile'];
 
-export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
-  const [username, setUsername] = useState('');
-  const [currentStep, setCurrentStep] = useState<OnboardingStep>('question1');
+export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingFlowProps) {
+  const [currentStep, setCurrentStep] = useState<OnboardingStep>('language');
   const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
-  const [favoriteClub, setFavoriteClub] = useState('');
   const [preferredLanguage, setPreferredLanguage] = useState('');
+  const [favoriteClub, setFavoriteClub] = useState('');
+  const [username, setUsername] = useState('');
   const [avatar, setAvatar] = useState('');
 
-  const currentIndex = stepOrder.indexOf(currentStep);
-  const progress = Math.round(((currentIndex + 1) / stepOrder.length) * 100);
+  const currentIndex = STEP_ORDER.indexOf(currentStep);
+  const progress = ((currentIndex + 1) / STEP_ORDER.length) * 100;
 
-  const goToPrevStep = () => {
+  const goBack = () => {
+    if (currentIndex === 0) return;
     setDirection('backward');
-    if (currentIndex > 0) {
-      setCurrentStep(stepOrder[currentIndex - 1]);
-    }
+    setCurrentStep(STEP_ORDER[currentIndex - 1]);
   };
 
-  const goToNextStep = () => {
+  const goNext = () => {
+    if (currentIndex >= STEP_ORDER.length - 1) return;
     setDirection('forward');
-    if (currentIndex < stepOrder.length - 1) {
-      setCurrentStep(stepOrder[currentIndex + 1]);
-    }
+    setCurrentStep(STEP_ORDER[currentIndex + 1]);
   };
 
   const handleComplete = () => {
-    const data: OnboardingData = {
-      favoriteClub,
-      preferredLanguage,
-      avatar,
-      username,
-      quizScore: 0,
-    };
-    onComplete(data);
+    onComplete({ favoriteClub, preferredLanguage, avatar, username, quizScore: 0 });
   };
 
   const variants = {
-    enter: (dir: 'forward' | 'backward') => ({
-      x: dir === 'forward' ? 300 : -300,
-      opacity: 0,
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-    },
-    exit: (dir: 'forward' | 'backward') => ({
-      x: dir === 'forward' ? -300 : 300,
-      opacity: 0,
-    }),
+    enter: (dir: 'forward' | 'backward') => ({ x: dir === 'forward' ? 200 : -200, opacity: 0 }),
+    center: { x: 0, opacity: 1 },
+    exit: (dir: 'forward' | 'backward') => ({ x: dir === 'forward' ? -200 : 200, opacity: 0 }),
   };
 
+  const canAdvance =
+    (currentStep === 'language' && !!preferredLanguage) ||
+    (currentStep === 'club' && !!favoriteClub.trim()) ||
+    (currentStep === 'profile' && !!avatar && !!username.trim());
+
   return (
-    <div className="min-h-screen w-full bg-surface-deep flex flex-col items-center justify-center py-12 px-4">
-      {/* Progress bar */}
-      <div className="w-full max-w-xl mx-auto mb-8 flex items-center gap-3">
-        {currentIndex > 0 && (
+    <div className="min-h-screen w-full bg-black text-white">
+      <header className="px-5 pt-5 md:px-12 md:pt-6">
+        <AppLogo size="md" iconOnly className="!justify-start" />
+      </header>
+
+      <div className="mx-auto w-full max-w-[440px] md:max-w-[520px] px-5 pb-10 pt-6 md:pt-8">
+        <p className="text-center font-poppins text-[20px] md:text-[24px] font-semibold uppercase text-white/50">
+          {currentIndex + 1}/{STEP_ORDER.length}
+        </p>
+
+        <div className="mt-1.5 flex items-center gap-3">
           <button
-            onClick={goToPrevStep}
-            className="p-2 rounded-xl text-brand-slate hover:text-foreground hover:bg-surface-card transition-colors"
+            type="button"
+            onClick={goBack}
+            aria-label="Go back"
+            className={`flex size-9 shrink-0 items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/5 transition-colors ${
+              currentIndex > 0 ? '' : 'invisible'
+            }`}
           >
-            <ChevronLeft className="size-6" />
+            <ChevronLeft className="size-5" />
           </button>
-        )}
-        <div className="flex-1 h-4 bg-surface-card rounded-full overflow-hidden border-2 border-surface-card-deep">
-          <motion.div
-            className="h-full bg-green-500 rounded-full"
-            initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.4, ease: 'easeOut' }}
-          />
+
+          <div className="h-[18px] md:h-[22px] flex-1 overflow-hidden bg-brand-green-deep">
+            <motion.div
+              className="h-full bg-brand-green"
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+            />
+          </div>
+
+          <div className="size-9 shrink-0" aria-hidden />
         </div>
-        <span className="text-xs font-black uppercase tracking-wide text-brand-slate min-w-[3ch] text-right">
-          {currentIndex + 1}/{stepOrder.length}
-        </span>
-      </div>
 
-      <AnimatePresence mode="wait" custom={direction}>
-        {/* Step 1: Club Selection */}
-        {currentStep === 'question1' && (
-          <motion.div
-            key="question1"
-            custom={direction}
-            variants={variants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: 0.3 }}
-            className="w-full max-w-xl mx-auto"
-          >
-            <div className="bg-surface-card rounded-2xl border-2 border-surface-card-deep border-b-4 p-8 shadow-xl">
-              {/* Icon */}
-              <div className="flex justify-center mb-6">
-                <div className="size-20 rounded-2xl bg-brand-orange/10 border-2 border-brand-orange/30 border-b-4 flex items-center justify-center">
-                  <Trophy className="size-10 text-brand-orange" />
-                </div>
-              </div>
-
-              {/* Title */}
-              <h1 className="text-2xl font-black uppercase tracking-wide text-center text-foreground mb-2">
-                Pick Your Club
-              </h1>
-              <p className="text-brand-slate text-center font-medium mb-8">
-                Search and select your favorite football club.
-              </p>
-
-              {/* Club Select */}
-              <div className="w-full mb-8">
-                <ClubSelect
-                  value={favoriteClub}
-                  onChange={setFavoriteClub}
-                />
-              </div>
-
-              {/* Continue Button */}
-              <button
-                onClick={goToNextStep}
-                disabled={!favoriteClub.trim()}
-                className={CONTINUE_BUTTON_CLASS}
-              >
-                Continue
-              </button>
-
-              {/* Skip */}
-              <button
-                onClick={goToNextStep}
-                className={SKIP_BUTTON_CLASS}
-              >
-                Skip for now
-              </button>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Step 2: Language */}
-        {currentStep === 'question3' && (
-          <motion.div
-            key="question3"
-            custom={direction}
-            variants={variants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: 0.3 }}
-            className="w-full max-w-xl mx-auto"
-          >
-            <div className="bg-surface-card rounded-2xl border-2 border-surface-card-deep border-b-4 p-8 shadow-xl">
-              {/* Icon */}
-              <div className="flex justify-center mb-6">
-                <div className="size-20 rounded-2xl bg-brand-cyan/10 border-2 border-brand-cyan/30 border-b-4 flex items-center justify-center">
-                  <Globe className="size-10 text-brand-cyan" />
-                </div>
-              </div>
-
-              {/* Title */}
-              <h1 className="text-2xl font-black uppercase tracking-wide text-center text-foreground mb-2">
+        <AnimatePresence mode="wait" custom={direction}>
+          {currentStep === 'language' && (
+            <motion.div
+              key="language"
+              custom={direction}
+              variants={variants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.3 }}
+            >
+              <h1 className="mt-8 md:mt-10 text-center font-poppins text-[28px] md:text-[40px] font-semibold uppercase leading-none">
                 Choose Language
               </h1>
-              <p className="text-brand-slate text-center font-medium mb-8">
-                Select the language for your QuizBall experience.
+              <p className="mt-2 md:mt-3 text-center font-poppins text-[12px] md:text-[14px] font-semibold uppercase text-white/50">
+                Select the language for your QuizBall experience
               </p>
 
-              {/* Language Options */}
-              <div className="flex flex-col gap-3 mb-8">
-                {languages.map((language) => {
+              <div className="mt-7 md:mt-9 space-y-2.5 md:space-y-3">
+                {LANGUAGES.map((language) => {
                   const isSelected = preferredLanguage === language.code;
                   return (
                     <button
                       key={language.code}
+                      type="button"
                       onClick={() => setPreferredLanguage(language.code)}
-                      className={`
-                        w-full p-4 rounded-2xl border-2 border-b-4 flex items-center gap-4 transition-all text-left
-                        ${isSelected
-                          ? 'border-brand-cyan bg-brand-cyan/10'
-                          : 'border-surface-card-deep hover:border-brand-slate bg-surface-deep'
-                        }
-                      `}
+                      className={`${OPTION_PILL_CLASS} ${isSelected ? 'ring-2 ring-white' : ''}`}
                     >
-                      <span className="text-3xl">{language.flag}</span>
-                      <div className="flex-1">
-                        <div className="font-black text-foreground">{language.name}</div>
-                        <div className="text-xs text-brand-slate font-medium">{language.nativeName}</div>
+                      <CountryFlag
+                        code={language.countryCode}
+                        className="shrink-0 overflow-hidden rounded-md text-[36px] md:text-[42px]"
+                      />
+                      <div className="flex flex-col leading-none">
+                        <span className="font-poppins text-[18px] md:text-[24px] font-semibold uppercase text-white">
+                          {language.name}
+                        </span>
+                        <span className="mt-1 font-poppins text-[12px] md:text-[14px] font-semibold uppercase text-white/50">
+                          {language.nativeName}
+                        </span>
                       </div>
-                      {isSelected && (
-                        <CheckCircle2 className="size-6 text-brand-cyan" />
-                      )}
                     </button>
                   );
                 })}
               </div>
 
-              {/* Continue Button */}
               <button
-                onClick={goToNextStep}
-                disabled={!preferredLanguage}
-                className={CONTINUE_BUTTON_CLASS}
+                type="button"
+                onClick={goNext}
+                disabled={!canAdvance}
+                className={`mt-8 md:mt-10 ${PRIMARY_CTA_CLASS}`}
               >
-                Continue
+                Let&apos;s Go
               </button>
+            </motion.div>
+          )}
 
-              <button
-                onClick={goToNextStep}
-                className={SKIP_BUTTON_CLASS}
-              >
-                Skip for now
-              </button>
-            </div>
-          </motion.div>
-        )}
+          {currentStep === 'club' && (
+            <motion.div
+              key="club"
+              custom={direction}
+              variants={variants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.3 }}
+            >
+              <h1 className="mt-8 md:mt-10 text-center font-poppins text-[28px] md:text-[40px] font-semibold uppercase leading-none">
+                Pick Your Club
+              </h1>
 
-        {/* Step 3: Avatar + Username */}
-        {currentStep === 'avatar' && (
-          <motion.div
-            key="avatar"
-            custom={direction}
-            variants={variants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: 0.3 }}
-            className="w-full max-w-xl mx-auto"
-          >
-            <div className="bg-surface-card rounded-2xl border-2 border-surface-card-deep border-b-4 p-8 shadow-xl">
-              {/* Avatar Preview */}
-              <div className="flex justify-center mb-6">
-                <div className="relative">
-                  <div className="size-28 rounded-full bg-surface-deep border-4 border-green-500 flex items-center justify-center overflow-hidden shadow-lg shadow-green-500/20">
-                    {avatar ? (
-                      <AvatarPreview customization={getAvatarCustomization(avatar)} width={112} />
-                    ) : (
-                      <User className="size-14 text-brand-slate" />
-                    )}
-                  </div>
-                  {avatar && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute -bottom-1 -right-1 size-8 rounded-full bg-green-500 border-2 border-surface-card flex items-center justify-center"
-                    >
-                      <CheckCircle2 className="size-4 text-surface-deep" />
-                    </motion.div>
-                  )}
-                </div>
+              <div className="mt-7 md:mt-9">
+                <ClubSelect value={favoriteClub} onChange={setFavoriteClub} />
               </div>
 
-              {/* Title */}
-              <h1 className="text-2xl font-black uppercase tracking-wide text-center text-foreground mb-2">
+              <button
+                type="button"
+                onClick={goNext}
+                disabled={!canAdvance}
+                className={`mt-8 md:mt-10 ${PRIMARY_CTA_CLASS}`}
+              >
+                Let&apos;s Go
+              </button>
+            </motion.div>
+          )}
+
+          {currentStep === 'profile' && (
+            <motion.div
+              key="profile"
+              custom={direction}
+              variants={variants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.3 }}
+            >
+              <h1 className="mt-8 md:mt-10 text-center font-poppins text-[28px] md:text-[40px] font-semibold uppercase leading-none">
                 Create Your Profile
               </h1>
-              <p className="text-brand-slate text-center font-medium mb-6">
-                Pick an avatar and choose your display name.
+              <p className="mt-2 md:mt-3 text-center font-poppins text-[12px] md:text-[14px] font-semibold uppercase text-white/50">
+                Pick a username and your avatar
               </p>
 
-              {/* Username Input */}
-              <div className="mb-6">
-                <Input
-                  value={username}
-                  onChange={e => setUsername(e.target.value)}
-                  placeholder="Enter your username"
-                  className="
-                    text-center text-lg font-bold py-3 h-14
-                    bg-surface-deep border-2 border-surface-card-deep border-b-4 rounded-2xl
-                    text-foreground placeholder:text-brand-slate
-                    focus:border-green-500 focus:ring-0
-                  "
-                  maxLength={20}
-                />
-                <div className="text-xs text-brand-slate mt-2 text-center font-medium">
-                  This will be your public display name.
-                </div>
+              <input
+                type="text"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                placeholder="Enter your username"
+                maxLength={20}
+                className="mt-7 md:mt-9 h-[56px] md:h-[64px] w-full rounded-[18px] bg-brand-blue px-5 text-center font-poppins text-[18px] md:text-[24px] font-semibold uppercase text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-white"
+              />
+
+              <p className="mt-6 md:mt-8 text-center font-poppins text-[12px] md:text-[14px] font-semibold uppercase text-white/50">
+                Choose your avatar
+              </p>
+
+              <div className="mt-3 md:mt-4 flex justify-between gap-2">
+                {AVATAR_COLORS.map((color) => {
+                  const isSelected = avatar === color;
+                  return (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setAvatar(color)}
+                      aria-label={`Select ${color} avatar`}
+                      className={`relative flex size-14 md:size-[78px] items-center justify-center overflow-hidden rounded-full bg-brand-blue transition-transform ${
+                        isSelected ? 'ring-2 ring-white scale-[1.06]' : 'hover:brightness-110'
+                      }`}
+                    >
+                      <AvatarPreview
+                        customization={getAvatarCustomization(color)}
+                        width={42}
+                        className="md:hidden translate-y-[2px]"
+                      />
+                      <AvatarPreview
+                        customization={getAvatarCustomization(color)}
+                        width={58}
+                        className="hidden md:block translate-y-[2px]"
+                      />
+                    </button>
+                  );
+                })}
               </div>
 
-              {/* Avatar Grid */}
-              <div className="mb-8">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-px bg-surface-card-deep flex-1" />
-                  <span className="text-xs font-black uppercase tracking-wide text-brand-slate">Choose Avatar</span>
-                  <div className="h-px bg-surface-card-deep flex-1" />
-                </div>
-                <div className="grid grid-cols-6 gap-2">
-                  {avatarSeeds.map((seed) => {
-                    const isSelected = avatar === seed;
-                    const swatch = AVATAR_COLOR_SWATCHES[seed];
-                    return (
-                      <button
-                        key={seed}
-                        onClick={() => setAvatar(seed)}
-                        className="relative aspect-square rounded-xl border-2 border-b-4 transition-all flex items-center justify-center overflow-hidden"
-                        style={{
-                          borderColor: isSelected ? swatch : '#0D1B21',
-                          backgroundColor: isSelected ? `${swatch}1A` : '#131F24',
-                          transform: isSelected ? 'scale(1.1)' : undefined,
-                          zIndex: isSelected ? 10 : undefined,
-                        }}
-                      >
-                        <AvatarPreview customization={getAvatarCustomization(seed)} width={64} />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Complete Button */}
               <button
+                type="button"
                 onClick={handleComplete}
-                disabled={!avatar || !username.trim()}
-                className={CONTINUE_BUTTON_CLASS}
+                disabled={!canAdvance || isSubmitting}
+                className={`mt-8 md:mt-10 ${PRIMARY_CTA_CLASS}`}
               >
-                Let&apos;s Go!
+                {isSubmitting ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Loader2 className="size-5 animate-spin" />
+                    Saving…
+                  </span>
+                ) : (
+                  <>Let&apos;s Go</>
+                )}
               </button>
-
-              <button
-                onClick={handleComplete}
-                className={SKIP_BUTTON_CLASS}
-              >
-                Skip for now
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

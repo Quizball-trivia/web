@@ -13,7 +13,7 @@ export default function ClubSelect({ value, onChange }: ClubSelectProps) {
       options={clubs}
       value={clubs.find((c) => c.value === value) || null}
       onChange={(option) => onChange(option ? option.value : '')}
-      placeholder="Search and select your club..."
+      placeholder="Search and select your club"
       isClearable
       classNamePrefix="react-select"
       menuPortalTarget={typeof document !== 'undefined' ? document.body : undefined}
@@ -21,43 +21,45 @@ export default function ClubSelect({ value, onChange }: ClubSelectProps) {
         menuPortal: (base) => ({ ...base, zIndex: 9999 }),
         control: (base, state) => ({
           ...base,
-          minHeight: 56,
-          fontSize: 18,
-          backgroundColor: 'hsl(var(--card, 220 15% 15%))',
-          borderColor: state.isFocused ? 'hsl(var(--primary, 145 60% 45%))' : 'hsl(var(--border, 220 15% 25%))',
-          boxShadow: state.isFocused ? '0 0 0 2px hsl(var(--primary, 145 60% 45%) / 0.2)' : 'none',
-          color: 'hsl(var(--card-foreground, 0 0% 95%))',
+          minHeight: 64,
+          paddingInline: 16,
+          fontSize: 22,
+          fontWeight: 600,
+          textTransform: 'uppercase',
+          fontFamily: 'var(--font-poppins), Poppins, sans-serif',
+          borderRadius: 18,
+          backgroundColor: 'hsl(var(--brand-blue))',
+          borderColor: 'transparent',
+          boxShadow: state.isFocused ? '0 0 0 2px #fff' : 'none',
+          color: '#fff',
+          textAlign: 'center',
+          ':hover': { borderColor: 'transparent' },
         }),
         menu: (base) => ({
           ...base,
           zIndex: 100,
-          backgroundColor: 'hsl(var(--card, 220 15% 15%))',
-          color: 'hsl(var(--card-foreground, 0 0% 95%))',
+          borderRadius: 16,
+          overflow: 'hidden',
+          backgroundColor: 'hsl(var(--surface-card))',
+          color: '#fff',
         }),
         option: (base, state) => ({
           ...base,
           backgroundColor: state.isSelected
-            ? 'hsl(var(--primary, 145 60% 45%))'
+            ? 'hsl(var(--brand-blue))'
             : state.isFocused
-            ? 'hsl(var(--primary, 145 60% 45%) / 0.15)'
+            ? 'hsl(var(--brand-blue) / 0.2)'
             : 'transparent',
-          color: state.isSelected
-            ? 'hsl(var(--primary-foreground, 220 20% 10%))'
-            : 'hsl(var(--card-foreground, 0 0% 95%))',
-          fontWeight: state.isSelected ? 600 : 400,
+          color: '#fff',
+          fontWeight: state.isSelected ? 700 : 500,
         }),
-        singleValue: (base) => ({
-          ...base,
-          color: 'hsl(var(--card-foreground, 0 0% 95%))',
-        }),
-        placeholder: (base) => ({
-          ...base,
-          color: 'hsl(var(--muted-foreground, 220 10% 60%))',
-        }),
-        input: (base) => ({
-          ...base,
-          color: 'hsl(var(--card-foreground, 0 0% 95%))',
-        }),
+        singleValue: (base) => ({ ...base, color: '#fff', textAlign: 'center', width: '100%' }),
+        placeholder: (base) => ({ ...base, color: 'rgba(255,255,255,0.7)', textAlign: 'center', width: '100%' }),
+        input: (base) => ({ ...base, color: '#fff' }),
+        indicatorSeparator: () => ({ display: 'none' }),
+        dropdownIndicator: (base) => ({ ...base, color: 'rgba(255,255,255,0.8)' }),
+        clearIndicator: (base) => ({ ...base, color: 'rgba(255,255,255,0.8)' }),
+        valueContainer: (base) => ({ ...base, justifyContent: 'center' }),
       }}
     />
   );

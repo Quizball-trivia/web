@@ -91,16 +91,25 @@ function MannequinPreview({ part }: { part: AvatarPart }) {
             }}
           />
         )}
-        <img
-          src={part.asset}
-          alt=""
-          className="pointer-events-none absolute object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
-          style={{
-            top: `${part.position.top}%`,
-            left: `${part.position.left}%`,
-            width: `${part.position.width}%`,
-          }}
-        />
+        {(() => {
+          // Prefer the part's store-specific tuning when present, fall back to
+          // the canonical preview position. This lets individual parts ship a
+          // `storePosition` override in parts.ts when their store-card alignment
+          // differs from the live AvatarPreview.
+          const pos = part.storePosition ?? part.position;
+          return (
+            <img
+              src={part.asset}
+              alt=""
+              className="pointer-events-none absolute object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
+              style={{
+                top: `${pos.top}%`,
+                left: `${pos.left}%`,
+                width: `${pos.width}%`,
+              }}
+            />
+          );
+        })()}
       </div>
     </div>
   );
