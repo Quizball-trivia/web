@@ -70,7 +70,7 @@ export function HomeDashboard({
         </div>
 
         {/* RIGHT COLUMN: Status Rail (Desktop Only) */}
-        <aside className="hidden lg:block space-y-6 pt-2">
+        <aside className="hidden min-h-0 lg:block">
            <HomeRightRail 
              onOpenFriend={() => setShowFriendModal(true)} 
            />

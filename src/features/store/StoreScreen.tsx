@@ -38,7 +38,7 @@ function formatUsd(priceCents: number): string {
   }).format(priceCents / 100);
 }
 
-interface BoosterItem {
+interface TicketPackItem {
   id: string;
   title: string;
   description: string;
@@ -46,13 +46,15 @@ interface BoosterItem {
   iconAsset: string;
   productSlug?: string;
   disabled?: boolean;
+  /** Number of tickets this pack grants — drives the stacked-icon visual. */
+  ticketCount: number;
 }
 
 interface BuyModalState {
   name: string;
   price: string;
   productSlug?: string;
-  mode: "stripe" | "coins" | "none";
+  mode: "stripe" | "coins" | "equip" | "none";
   /** When set, modal renders the avatar with this part equipped + persists equip on confirm. */
   avatarPart?: AvatarPart;
   /** Avatar customization to use for the preview (built from current user). */
@@ -84,7 +86,43 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }
   );
 }
 
-function BoosterCard({ booster, onBuy }: { booster: BoosterItem; onBuy: (b: BoosterItem) => void }) {
+/**
+ * Stack of ticket icons, fanned out and slightly rotated. The count drives how
+ * many icons are visible (capped at 5 — beyond that they overlap too much to
+ * read). The title on the card communicates the actual ticket count.
+ */
+function TicketStack({ count }: { count: number }) {
+  const visible = Math.min(Math.max(count, 1), 5);
+  return (
+    <div className="relative h-[120px] w-[150px]">
+      {Array.from({ length: visible }).map((_, i) => {
+        const mid = (visible - 1) / 2;
+        const angle = (i - mid) * 9;
+        const offsetX = (i - mid) * 10;
+        const offsetY = Math.abs(i - mid) * 3;
+        return (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={i}
+            src="/assets/ticket_icon.webp"
+            alt=""
+            className="pointer-events-none absolute object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]"
+            style={{
+              left: "50%",
+              top: "50%",
+              width: "100px",
+              height: "auto",
+              transform: `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px)) rotate(${angle}deg)`,
+              zIndex: i,
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function TicketCard({ pack, onBuy }: { pack: TicketPackItem; onBuy: (b: TicketPackItem) => void }) {
   const ACCENT_PURPLE = "#BA02E8";
   const CARD_BG = "#0B1619";
 
@@ -99,44 +137,37 @@ function BoosterCard({ booster, onBuy }: { booster: BoosterItem; onBuy: (b: Boos
         className="relative flex flex-col rounded-[20px] border-[3px] aspect-[320/268] px-5 pt-5 pb-5"
         style={{ backgroundColor: CARD_BG, borderColor: ACCENT_PURPLE }}
       >
-        {/* Top-left: title + subtitle */}
-        <div>
+        {/* Top: title + subtitle (centered) */}
+        <div className="text-center">
           <div
             className="text-[18px] sm:text-[20px] uppercase leading-tight text-white"
             style={POPPINS_HEADER}
           >
-            {booster.title}
+            {pack.title}
           </div>
           <div
             className="mt-1.5 text-[9px] sm:text-[10px] uppercase tracking-[0.04em] text-white/50 leading-snug"
             style={POPPINS_HEADER}
           >
-            {booster.description}
+            {pack.description}
           </div>
         </div>
 
-        {/* Center icon image */}
+        {/* Center icon image (ticket stack scales with pack size) */}
         <div className="relative flex flex-1 items-center justify-center py-2">
-          <Image
-            src={booster.iconAsset}
-            alt=""
-            width={120}
-            height={120}
-            unoptimized
-            className="max-h-full w-auto object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
-          />
+          <TicketStack count={pack.ticketCount} />
         </div>
 
-        {/* Bottom: pill button with coin icon */}
+        {/* Bottom: pill button — coin price + coin icon */}
         <button
           type="button"
-          onClick={() => onBuy(booster)}
-          disabled={booster.disabled}
-          className="mt-2 flex h-[44px] w-full items-center justify-center gap-2 rounded-[20px] text-[18px] uppercase text-white transition-transform active:translate-y-[2px] disabled:opacity-50 disabled:active:translate-y-0"
+          onClick={() => onBuy(pack)}
+          disabled={pack.disabled}
+          className="mt-2 flex h-[44px] w-full items-center justify-center gap-2 rounded-[20px] text-[16px] uppercase text-white transition-transform active:translate-y-[2px] disabled:opacity-50 disabled:active:translate-y-0"
           style={{ ...POPPINS_HEADER, backgroundColor: ACCENT_PURPLE }}
         >
-          <span className="tabular-nums">{booster.disabled ? "Full" : booster.price}</span>
-          {!booster.disabled && <CoinIcon size={26} />}
+          <span className="tabular-nums">{pack.disabled ? "Full" : pack.price}</span>
+          {!pack.disabled && <CoinIcon size={22} />}
         </button>
       </div>
     </motion.div>
@@ -155,7 +186,6 @@ export function StoreScreen() {
   const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
   const { player, updateStats } = usePlayer();
   const [buyModal, setBuyModal] = useState<BuyModalState | null>(null);
-  const ticketsFull = (wallet?.tickets ?? 0) >= 10;
 
   /** Currently saved customization (decoded from avatar_url). */
   const currentCustomization = useMemo<AvatarCustomization>(() => {
@@ -299,23 +329,35 @@ export function StoreScreen() {
     });
   }, [productsBySlug]);
 
-  const boosters = useMemo<BoosterItem[]>(() => {
-    const ticketCard: BoosterItem = {
-      id: "tickets",
-      title: "Extra Tickets",
-      description: "Top up ranked tickets up to the 10-ticket cap",
-      price: "500",
-      productSlug: "ticket_pack_3",
-      iconAsset: "/assets/ticket_icon.webp",
-      disabled: ticketsFull,
-    };
-    return [
-      { ...ticketCard, id: "tickets-1" },
-      { ...ticketCard, id: "tickets-2" },
-      { ...ticketCard, id: "tickets-3" },
-      { ...ticketCard, id: "tickets-4" },
-    ];
-  }, [ticketsFull]);
+  const ticketPacks = useMemo<TicketPackItem[]>(() => {
+    const currentTickets = wallet?.tickets ?? 0;
+    const TICKET_CAP = 10;
+    const availableSpace = Math.max(0, TICKET_CAP - currentTickets);
+
+    const ticketPacks = (productsData?.items ?? []).filter(
+      (p) => p.type === "ticket_pack",
+    );
+    return ticketPacks
+      .map((product) => {
+        const ticketCount =
+          typeof product.metadata === "object" &&
+          product.metadata !== null &&
+          typeof (product.metadata as { tickets?: unknown }).tickets === "number"
+            ? ((product.metadata as { tickets: number }).tickets)
+            : 1;
+        return {
+          id: product.slug,
+          title: `${ticketCount} ${ticketCount === 1 ? "Ticket" : "Tickets"}`,
+          description: product.description?.en ?? "Top up your ranked arena tickets",
+          price: product.priceCents.toLocaleString(),
+          productSlug: product.slug,
+          iconAsset: "/assets/ticket_icon.webp",
+          disabled: ticketCount > availableSpace,
+          ticketCount,
+        } satisfies TicketPackItem;
+      })
+      .sort((a, b) => a.ticketCount - b.ticketCount);
+  }, [productsData, wallet?.tickets]);
 
   const purchasePending = checkoutMutation.isPending || coinPurchaseMutation.isPending;
 
@@ -332,23 +374,18 @@ export function StoreScreen() {
     }
   };
 
-  /** Open the buy modal for an avatar part (with preview). */
+  /** Open the buy / equip modal for an avatar part (always with preview). */
   const openAvatarPartModal = (part: AvatarPart) => {
-    if (ownedPartIds.has(part.id)) {
-      // Already owned → equip immediately, no modal
-      void persistCustomization({ ...currentCustomization, [part.slot]: part.id });
-      toast.success(`${part.name} equipped.`);
-      return;
-    }
     const previewCustomization: AvatarCustomization = {
       ...currentCustomization,
       [part.slot]: part.id,
     };
+    const isOwned = ownedPartIds.has(part.id);
     setBuyModal({
       name: part.name,
-      price: part.priceCoins ? `${part.priceCoins.toLocaleString()} coins` : "—",
+      price: isOwned ? "" : part.priceCoins ? `${part.priceCoins.toLocaleString()} coins` : "—",
       productSlug: part.productSlug,
-      mode: part.productSlug ? "coins" : "none",
+      mode: isOwned ? "equip" : part.productSlug ? "coins" : "none",
       avatarPart: part,
       previewCustomization,
     });
@@ -356,6 +393,13 @@ export function StoreScreen() {
 
   const handleConfirm = () => {
     if (!buyModal || purchasePending) return;
+    if (buyModal.mode === "equip" && buyModal.avatarPart) {
+      const part = buyModal.avatarPart;
+      void persistCustomization({ ...currentCustomization, [part.slot]: part.id });
+      toast.success(`${part.name} equipped.`);
+      setBuyModal(null);
+      return;
+    }
     if (!buyModal.productSlug || buyModal.mode === "none") {
       toast.message("This item is not purchasable yet.");
       setBuyModal(null);
@@ -411,7 +455,7 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.1 }}
           >
-            <SectionHeader title="Buy Coins" subtitle="Power up your wallet" />
+            <SectionHeader title="Coins" subtitle="Power up your wallet" />
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {coinBundles.map((bundle, i) => (
                 <motion.div
@@ -431,20 +475,20 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.2 }}
           >
-            <SectionHeader title="Boosters & Helplines" subtitle="Gain the competitive edge" />
+            <SectionHeader title="Tickets" subtitle="Top up your ranked arena tickets" />
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {boosters.map((booster, i) => (
+              {ticketPacks.map((pack, i) => (
                 <motion.div
-                  key={booster.id}
+                  key={pack.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.2 + i * 0.05 }}
                 >
-                  <BoosterCard
-                    booster={booster}
+                  <TicketCard
+                    pack={pack}
                     onBuy={(b) => {
-                      if (b.productSlug === "ticket_pack_3" && ticketsFull) {
-                        toast.message("Tickets are already full.");
+                      if (b.disabled) {
+                        toast.message("Not enough ticket space.");
                         return;
                       }
                       setBuyModal({
@@ -478,7 +522,7 @@ export function StoreScreen() {
                     name={part.name}
                     asset={part.asset}
                     price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
-                    imageSize="lg"
+                    mannequinPart={part}
                     owned={ownedPartIds.has(part.id)}
                     onBuy={() => openAvatarPartModal(part)}
                   />
@@ -505,7 +549,7 @@ export function StoreScreen() {
                     name={part.name}
                     asset={part.asset}
                     price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
-                    imageSize="md"
+                    mannequinPart={part}
                     owned={ownedPartIds.has(part.id)}
                     onBuy={() => openAvatarPartModal(part)}
                   />
@@ -532,7 +576,7 @@ export function StoreScreen() {
                     name={part.name}
                     asset={part.asset}
                     price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
-                    imageSize="sm"
+                    mannequinPart={part}
                     owned={ownedPartIds.has(part.id)}
                     onBuy={() => openAvatarPartModal(part)}
                   />
@@ -576,6 +620,7 @@ export function StoreScreen() {
             name={buyModal?.name ?? ""}
             price={buyModal?.price ?? ""}
             previewCustomization={buyModal?.previewCustomization}
+            confirmLabel={buyModal?.mode === "equip" ? "Equip" : undefined}
           />
 
         </div>

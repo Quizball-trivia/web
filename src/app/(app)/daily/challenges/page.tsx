@@ -3,105 +3,14 @@
 import Image from "next/image";
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Brain,
-  CheckCircle2,
-  CircleCheckBig,
-  DollarSign,
-  ImageIcon,
-  Lightbulb,
-  ListOrdered,
-  RotateCcw,
-  Route,
-  Timer,
-  TrendingUp,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import { CheckCircle2, RotateCcw } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { useDailyChallenges, useResetDailyChallengeDev } from "@/lib/queries/dailyChallenges.queries";
 import { queryKeys } from "@/lib/queries/queryKeys";
-import type { DailyChallengeIconToken, DailyChallengeSummary } from "@/lib/domain/dailyChallenge";
+import type { DailyChallengeSummary } from "@/lib/domain/dailyChallenge";
 import { useAuthStore } from "@/stores/auth.store";
 import { useQueryClient } from "@tanstack/react-query";
-
-const ICON_MAP: Record<DailyChallengeIconToken, LucideIcon> = {
-  dollarSign: DollarSign,
-  checkCircle: CircleCheckBig,
-  lightbulb: Lightbulb,
-  timer: Timer,
-  list: ListOrdered,
-  users: Users,
-  route: Route,
-  trendingUp: TrendingUp,
-  image: ImageIcon,
-};
-
-const ASSET_ICON_CHALLENGES = new Set<DailyChallengeSummary["challengeType"]>([
-  "trueFalse",
-  "highLow",
-  "imposter",
-]);
-
-function ChallengeIcon({
-  challenge,
-  fallback: FallbackIcon,
-}: {
-  challenge: DailyChallengeSummary;
-  fallback: LucideIcon;
-}) {
-  if (challenge.challengeType === "trueFalse") {
-    return (
-      <Image
-        src="/assets/true_or_false.webp"
-        alt=""
-        width={228}
-        height={96}
-        className="h-12 w-auto object-contain md:h-20"
-      />
-    );
-  }
-
-  if (challenge.challengeType === "highLow") {
-    return (
-      <Image
-        src="/assets/high_low.webp"
-        alt=""
-        width={220}
-        height={96}
-        className="h-12 w-auto object-contain md:h-20"
-      />
-    );
-  }
-
-  if (challenge.challengeType === "imposter") {
-    return (
-      <span className="relative block h-[32px] w-[58px] md:h-[64px] md:w-[116px]">
-        <Image
-          src="/assets/imposter_top.webp"
-          alt=""
-          width={86}
-          height={28}
-          className="absolute left-1/2 top-0 h-[17px] w-auto -translate-x-1/2 object-contain md:h-[34px]"
-        />
-        <Image
-          src="/assets/imposter_bottom.webp"
-          alt=""
-          width={76}
-          height={30}
-          className="absolute left-1/2 top-[15px] h-[18px] w-auto -translate-x-1/2 object-contain md:top-[30px] md:h-[36px]"
-        />
-      </span>
-    );
-  }
-
-  if (challenge.challengeType === "footballLogic") {
-    return <Brain className="size-7 md:size-10" strokeWidth={3} />;
-  }
-
-  return <FallbackIcon className="size-6 md:size-8" strokeWidth={3} />;
-}
 
 function getTimeUntilUtcReset() {
   const now = new Date();
@@ -129,7 +38,6 @@ function ChallengeCard({
   const resetMutation = useResetDailyChallengeDev(challenge.challengeType);
   const disabled = !challenge.availableToday;
   const isCompleted = challenge.completedToday;
-  const IconComponent = ICON_MAP[challenge.iconToken] ?? Lightbulb;
 
   const handleReset = async (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -155,9 +63,9 @@ function ChallengeCard({
         type="button"
         disabled={disabled}
         onClick={onClick}
-        className={`relative flex h-[184px] w-full flex-col overflow-hidden rounded-[8px] p-3.5 pb-10 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow md:block md:h-auto md:min-h-[212px] md:rounded-[10px] md:p-6 ${
+        className={`relative flex h-[184px] w-full flex-col overflow-hidden rounded-[8px] p-3.5 pb-10 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow md:flex md:h-[252px] md:flex-col md:rounded-[20px] md:p-6 ${
           isCompleted
-            ? "bg-brand-yellow text-black disabled:cursor-default md:border-2 md:border-brand-green-light md:bg-[#164314] md:text-white md:shadow-[0_0_0_4px_rgba(88,204,2,0.16)]"
+            ? "bg-brand-yellow text-black disabled:cursor-default md:border-2 md:border-brand-green-light md:bg-brand-green-darkest md:text-white md:shadow-[0_0_0_4px_hsl(var(--brand-green-light)/0.16)]"
             : "bg-brand-yellow text-black hover:brightness-105 active:translate-y-[2px]"
         }`}
       >
@@ -168,19 +76,10 @@ function ChallengeCard({
           </div>
         ) : null}
 
-        <h3 className={`font-poppins min-h-[31px] pr-7 text-center text-[16px] uppercase leading-[0.95] md:min-h-0 md:pr-0 md:text-2xl ${isCompleted ? "text-black md:mt-8 md:text-white" : "text-black"}`}>
+        <h3 className={`font-poppins min-h-[31px] pr-7 text-center text-[16px] uppercase leading-[0.95] md:min-h-0 md:pr-0 md:text-[28px] md:mt-2 ${isCompleted ? "text-black md:mt-8 md:text-white" : "text-black"}`}>
           {challenge.title}
         </h3>
-        <div className="mt-2.5 flex justify-center md:mt-4">
-          <span
-            className={`flex size-11 items-center justify-center text-brand-yellow md:size-24 ${
-              ASSET_ICON_CHALLENGES.has(challenge.challengeType) ? "" : "rounded-full bg-black"
-            }`}
-          >
-            <ChallengeIcon challenge={challenge} fallback={IconComponent} />
-          </span>
-        </div>
-        <p className={`mt-2.5 line-clamp-3 text-center text-[10px] font-bold leading-tight md:mt-3 md:line-clamp-none md:text-base md:leading-snug ${isCompleted ? "text-black/65 md:text-white/75" : "text-black/70"}`}>
+        <p className={`mt-3 line-clamp-3 text-center text-[10px] font-bold leading-tight md:mt-5 md:line-clamp-3 md:flex-1 md:text-[18px] md:font-semibold md:leading-snug md:px-4 ${isCompleted ? "text-black/65 md:text-white/75" : "text-black/55"}`}>
           {challenge.availableToday
             ? challenge.description
             : "Completed today. Come back after the UTC reset."}
@@ -194,9 +93,9 @@ function ChallengeCard({
             {challenge.xpReward} XP
           </span>
         </div>
-        <div className="mt-5 hidden justify-center md:flex">
-          <span className={`font-poppins inline-flex h-11 min-w-[140px] items-center justify-center rounded-xl px-8 text-lg uppercase tracking-wide ${
-            isCompleted ? "bg-white text-[#164314]" : "bg-black text-white"
+        <div className="hidden justify-center md:flex md:mt-auto">
+          <span className={`font-poppins inline-flex h-[50px] min-w-[200px] items-center justify-center rounded-[20px] px-8 text-[24px] uppercase tracking-wide ${
+            isCompleted ? "bg-white text-brand-green-darkest" : "bg-black text-white"
           }`}>
             {isCompleted ? "Done" : "Play"}
           </span>

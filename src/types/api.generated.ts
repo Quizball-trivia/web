@@ -1180,7 +1180,7 @@ export interface paths {
                 query?: {
                     userId?: string;
                     purchaseId?: string;
-                    eventType?: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed";
+                    eventType?: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded";
                     outcome?: "success" | "failure";
                     from?: string;
                     to?: string;
@@ -1204,7 +1204,7 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
-                                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed";
+                                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded";
                                 /** @enum {string} */
                                 outcome: "success" | "failure";
                                 /** Format: uuid */
@@ -3894,6 +3894,120 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/objectives": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List current daily and weekly objectives for the current user */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Current objective progress */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            daily: {
+                                /** Format: date-time */
+                                periodStart: string;
+                                /** Format: date-time */
+                                periodEnd: string;
+                                completedCount: number;
+                                totalCount: number;
+                                objectives: {
+                                    id: string;
+                                    /** @enum {string} */
+                                    periodType: "daily" | "weekly";
+                                    title: string;
+                                    description: string;
+                                    icon: string;
+                                    progress: number;
+                                    target: number;
+                                    completed: boolean;
+                                    rewarded: boolean;
+                                    /** Format: date-time */
+                                    completedAt: string | null;
+                                    /** Format: date-time */
+                                    rewardedAt: string | null;
+                                    rewardCoins: number;
+                                    rewardXp: number;
+                                    metadata?: {
+                                        /** Format: uuid */
+                                        leadingCategoryId?: string;
+                                        leadingCategoryName?: string;
+                                        categoryProgress?: {
+                                            [key: string]: number;
+                                        };
+                                    };
+                                }[];
+                            };
+                            weekly: {
+                                /** Format: date-time */
+                                periodStart: string;
+                                /** Format: date-time */
+                                periodEnd: string;
+                                completedCount: number;
+                                totalCount: number;
+                                objectives: {
+                                    id: string;
+                                    /** @enum {string} */
+                                    periodType: "daily" | "weekly";
+                                    title: string;
+                                    description: string;
+                                    icon: string;
+                                    progress: number;
+                                    target: number;
+                                    completed: boolean;
+                                    rewarded: boolean;
+                                    /** Format: date-time */
+                                    completedAt: string | null;
+                                    /** Format: date-time */
+                                    rewardedAt: string | null;
+                                    rewardCoins: number;
+                                    rewardXp: number;
+                                    metadata?: {
+                                        /** Format: uuid */
+                                        leadingCategoryId?: string;
+                                        leadingCategoryName?: string;
+                                        categoryProgress?: {
+                                            [key: string]: number;
+                                        };
+                                    };
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/daily-challenges": {
         parameters: {
             query?: never;
@@ -4470,7 +4584,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed";
+            eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded";
             /** @enum {string} */
             outcome: "success" | "failure";
             /** Format: uuid */
@@ -4504,7 +4618,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed";
+                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded";
                 /** @enum {string} */
                 outcome: "success" | "failure";
                 /** Format: uuid */
@@ -4672,6 +4786,76 @@ export interface components {
         FriendActionResponse: {
             /** @enum {boolean} */
             success: true;
+        };
+        ObjectivesResponse: {
+            daily: {
+                /** Format: date-time */
+                periodStart: string;
+                /** Format: date-time */
+                periodEnd: string;
+                completedCount: number;
+                totalCount: number;
+                objectives: {
+                    id: string;
+                    /** @enum {string} */
+                    periodType: "daily" | "weekly";
+                    title: string;
+                    description: string;
+                    icon: string;
+                    progress: number;
+                    target: number;
+                    completed: boolean;
+                    rewarded: boolean;
+                    /** Format: date-time */
+                    completedAt: string | null;
+                    /** Format: date-time */
+                    rewardedAt: string | null;
+                    rewardCoins: number;
+                    rewardXp: number;
+                    metadata?: {
+                        /** Format: uuid */
+                        leadingCategoryId?: string;
+                        leadingCategoryName?: string;
+                        categoryProgress?: {
+                            [key: string]: number;
+                        };
+                    };
+                }[];
+            };
+            weekly: {
+                /** Format: date-time */
+                periodStart: string;
+                /** Format: date-time */
+                periodEnd: string;
+                completedCount: number;
+                totalCount: number;
+                objectives: {
+                    id: string;
+                    /** @enum {string} */
+                    periodType: "daily" | "weekly";
+                    title: string;
+                    description: string;
+                    icon: string;
+                    progress: number;
+                    target: number;
+                    completed: boolean;
+                    rewarded: boolean;
+                    /** Format: date-time */
+                    completedAt: string | null;
+                    /** Format: date-time */
+                    rewardedAt: string | null;
+                    rewardCoins: number;
+                    rewardXp: number;
+                    metadata?: {
+                        /** Format: uuid */
+                        leadingCategoryId?: string;
+                        leadingCategoryName?: string;
+                        categoryProgress?: {
+                            [key: string]: number;
+                        };
+                    };
+                }[];
+            };
         };
         I18nField: {
             [key: string]: string;

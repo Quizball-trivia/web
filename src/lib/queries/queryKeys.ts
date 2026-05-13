@@ -71,4 +71,8 @@ export const queryKeys = {
     session: (challengeType: string) =>
       [...queryKeys.dailyChallenges.all, "session", challengeType] as const,
   },
+  objectives: {
+    all: ["objectives"] as const,
+    current: () => [...queryKeys.objectives.all, "current"] as const,
+  },
 };

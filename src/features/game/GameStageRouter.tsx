@@ -131,10 +131,11 @@ export function GameStageRouter() {
     } else {
       logger.info("Socket emit match:forfeit skipped (missing matchId)");
     }
-    // Don't navigate or reset here — the server-driven match:final_results
-    // flow takes the player to the final results screen so they see the
-    // outcome of their forfeit instead of bouncing straight back to /play.
-  }, [realtimeMatchId]);
+    resetRealtime();
+    clearRankedMatchmaking();
+    resetGameSession();
+    router.push("/");
+  }, [clearRankedMatchmaking, realtimeMatchId, resetGameSession, resetRealtime, router]);
 
   const handleMatchmakingExit = useCallback(() => {
     if (matchType === "ranked") {
