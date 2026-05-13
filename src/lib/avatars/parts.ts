@@ -50,7 +50,10 @@ export interface AvatarPart {
   free?: boolean;
   priceCoins?: number;
   productSlug?: string;
+  /** Position on the live AvatarPreview (full body). */
   position: AvatarPartPosition;
+  /** Optional override for store mannequin card. Falls back to `position` when omitted. */
+  storePosition?: AvatarPartPosition;
 }
 
 // Canonical Figma canvas dimensions
@@ -125,6 +128,7 @@ export const HAIR_PARTS: AvatarPart[] = [
     priceCoins: 500,
     productSlug: "avatar_hair_girl_basic",
     position: { top: -5, left: 20, width: 57 },
+    storePosition: { top: 13, left: 17, width: 62 },
   },
   {
     id: "hair_hamsik",

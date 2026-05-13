@@ -478,7 +478,7 @@ export function StoreScreen() {
                     name={part.name}
                     asset={part.asset}
                     price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
-                    imageSize="lg"
+                    mannequinPart={part}
                     owned={ownedPartIds.has(part.id)}
                     onBuy={() => openAvatarPartModal(part)}
                   />
@@ -505,7 +505,7 @@ export function StoreScreen() {
                     name={part.name}
                     asset={part.asset}
                     price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
-                    imageSize="md"
+                    mannequinPart={part}
                     owned={ownedPartIds.has(part.id)}
                     onBuy={() => openAvatarPartModal(part)}
                   />
@@ -532,7 +532,7 @@ export function StoreScreen() {
                     name={part.name}
                     asset={part.asset}
                     price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
-                    imageSize="sm"
+                    mannequinPart={part}
                     owned={ownedPartIds.has(part.id)}
                     onBuy={() => openAvatarPartModal(part)}
                   />
