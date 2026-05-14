@@ -487,7 +487,7 @@ export function RealtimeResultsScreen({
                     transition={{ type: 'spring', damping: 12, stiffness: 150 }}
                     className={cn(
                       'border-t border-white/10 pt-4 md:pt-6 text-center relative overflow-hidden',
-                      hasServerReveal && `shadow-[0_0_60px_-10px] ${revealTierVisual.glow}`
+                      hasServerReveal && revealTierVisual.glow
                     )}
                   >
                     {hasServerReveal ? (

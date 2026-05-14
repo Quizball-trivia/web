@@ -38,21 +38,22 @@ export interface TierVisual {
   glow: string;
 }
 
-// Colors/glows reference the brand-* tokens defined in src/styles/globals.css.
-// Some Tailwind palette steps don't have a direct brand match — we map to the
-// closest semantic token (e.g. amber → brand-yellow-soft, fuchsia → brand-gold).
+// Colors reference the brand-* tokens defined in src/styles/globals.css.
+// Glows use full arbitrary-shadow utilities (geometry + rgba) so they render
+// without needing a separate base shadow class — matches the convention in
+// features/party/PartyQuizResultsScreen.tsx.
 export const tierConfig: Record<TierName, TierVisual> = {
-  'Academy':        { emoji: '🎓', Icon: GraduationCap,   color: 'text-brand-slate-light',  glow: 'shadow-brand-slate-light/40' },
-  'Youth Prospect': { emoji: '🌟', Icon: Rocket,          color: 'text-brand-green-light',  glow: 'shadow-brand-green-light/40' },
-  'Reserve':        { emoji: '🛡️', Icon: ShieldChevron,   color: 'text-brand-slate-light',  glow: 'shadow-brand-slate-light/40' },
-  'Bench':          { emoji: '🔰', Icon: Armchair,        color: 'text-brand-yellow-soft',  glow: 'shadow-brand-yellow-soft/40' },
-  'Rotation':       { emoji: '⚡', Icon: ArrowsClockwise, color: 'text-brand-cyan',         glow: 'shadow-brand-cyan/40' },
-  'Starting11':     { emoji: '⚽', Icon: SoccerBall,      color: 'text-brand-green-light',  glow: 'shadow-brand-green-light/40' },
-  'Key Player':     { emoji: '🔥', Icon: Medal,           color: 'text-brand-yellow',       glow: 'shadow-brand-yellow/40' },
-  'Captain':        { emoji: '💪', Icon: ShieldStar,      color: 'text-brand-orange-light', glow: 'shadow-brand-orange-light/40' },
-  'World-Class':    { emoji: '💎', Icon: Globe,           color: 'text-brand-cyan',         glow: 'shadow-brand-cyan/40' },
-  'Legend':         { emoji: '👑', Icon: Crown,           color: 'text-brand-purple',       glow: 'shadow-brand-purple/40' },
-  'GOAT':           { emoji: '🏆', Icon: Trophy,          color: 'text-brand-gold',         glow: 'shadow-brand-gold/40' },
+  'Academy':        { emoji: '🎓', Icon: GraduationCap,   color: 'text-brand-slate-light',  glow: 'shadow-[0_0_60px_-10px_rgba(156,182,194,0.4)]' },
+  'Youth Prospect': { emoji: '🌟', Icon: Rocket,          color: 'text-brand-green-light',  glow: 'shadow-[0_0_60px_-10px_rgba(88,204,2,0.4)]' },
+  'Reserve':        { emoji: '🛡️', Icon: ShieldChevron,   color: 'text-brand-slate-light',  glow: 'shadow-[0_0_60px_-10px_rgba(156,182,194,0.4)]' },
+  'Bench':          { emoji: '🔰', Icon: Armchair,        color: 'text-brand-yellow-soft',  glow: 'shadow-[0_0_60px_-10px_rgba(248,211,74,0.4)]' },
+  'Rotation':       { emoji: '⚡', Icon: ArrowsClockwise, color: 'text-brand-cyan',         glow: 'shadow-[0_0_60px_-10px_rgba(28,176,246,0.4)]' },
+  'Starting11':     { emoji: '⚽', Icon: SoccerBall,      color: 'text-brand-green-light',  glow: 'shadow-[0_0_60px_-10px_rgba(88,204,2,0.4)]' },
+  'Key Player':     { emoji: '🔥', Icon: Medal,           color: 'text-brand-yellow',       glow: 'shadow-[0_0_60px_-10px_rgba(255,229,0,0.4)]' },
+  'Captain':        { emoji: '💪', Icon: ShieldStar,      color: 'text-brand-orange-light', glow: 'shadow-[0_0_60px_-10px_rgba(255,138,61,0.4)]' },
+  'World-Class':    { emoji: '💎', Icon: Globe,           color: 'text-brand-cyan',         glow: 'shadow-[0_0_60px_-10px_rgba(28,176,246,0.4)]' },
+  'Legend':         { emoji: '👑', Icon: Crown,           color: 'text-brand-purple',       glow: 'shadow-[0_0_60px_-10px_rgba(206,130,255,0.4)]' },
+  'GOAT':           { emoji: '🏆', Icon: Trophy,          color: 'text-brand-gold',         glow: 'shadow-[0_0_60px_-10px_rgba(255,215,0,0.4)]' },
 };
 
 export function isKnownTier(value: string): value is TierName {
