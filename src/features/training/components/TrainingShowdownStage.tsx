@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { ShowdownScreen } from "@/features/game/components/ShowdownScreen";
+import { ShowdownScreen } from "@/components/ShowdownScreen";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { usePlayerAvatar } from "@/hooks/usePlayerAvatar";
 import { useTraining } from "../TrainingMatchProvider";

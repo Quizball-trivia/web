@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ShowdownScreen } from '@/features/game/components/ShowdownScreen';
+import { ShowdownScreen } from '@/components/ShowdownScreen';
 import { motion } from 'motion/react';
 import { Volume2, VolumeX } from 'lucide-react';
 import { isMuted as getIsMuted, toggleMute } from '@/lib/sounds/gameSounds';

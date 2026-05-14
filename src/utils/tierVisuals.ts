@@ -66,22 +66,22 @@ export function getTierVisual(tier: string): TierVisual {
 }
 
 /**
- * Brand-aligned accent hex for ranking surfaces (leaderboard table, rank strip).
- * Grouped: Elite (GOAT/Legend = distinct), High (World-Class/Captain = distinct),
- * Mid (Key Player/Starting11/Rotation = same green), Low (Bench and below = same slate).
+ * Brand-aligned accent hex for ranking surfaces (leaderboard table, rank strip,
+ * showdown tier label). Each tier gets a distinct color so low tiers don't all
+ * blend into the same grey.
  */
 const tierAccent: Record<TierName, string> = {
   'GOAT':           '#FFD700',
-  'Legend':         '#E2E8F0',
-  'World-Class':    '#00E5FF',
-  'Captain':        '#FF7A00',
-  'Key Player':     '#38B60E',
-  'Starting11':     '#38B60E',
-  'Rotation':       '#38B60E',
-  'Bench':          '#94A3B8',
-  'Reserve':        '#94A3B8',
-  'Youth Prospect': '#94A3B8',
-  'Academy':        '#94A3B8',
+  'Legend':         '#CE82FF',
+  'World-Class':    '#1CB0F6',
+  'Captain':        '#FF8A3D',
+  'Key Player':     '#FFE500',
+  'Starting11':     '#58CC02',
+  'Rotation':       '#1CB0F6',
+  'Bench':          '#F8D34A',
+  'Reserve':        '#9CB6C2',
+  'Youth Prospect': '#58CC02',
+  'Academy':        '#9CB6C2',
 };
 
 export function getTierAccent(tier: string): string {
