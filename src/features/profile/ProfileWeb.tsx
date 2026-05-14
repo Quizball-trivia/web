@@ -638,7 +638,13 @@ export function ProfileWeb({
                     <span className="font-poppins text-sm font-semibold uppercase text-white/50">Language</span>
                     <div className="flex items-center gap-1.5">
                       <button
-                        onClick={() => onLanguageChange?.('ka')}
+                        onClick={async () => {
+                          try {
+                            await onLanguageChange?.('ka');
+                          } catch {
+                            toast.error('Failed to update language');
+                          }
+                        }}
                         disabled={isUpdating}
                         className={`inline-flex h-9 min-w-[80px] items-center justify-center gap-1.5 rounded-[20px] px-3 font-poppins text-sm font-semibold uppercase transition-colors active:translate-y-[1px] ${
                           preferredLanguage === 'ka'
@@ -650,7 +656,13 @@ export function ProfileWeb({
                         GEO
                       </button>
                       <button
-                        onClick={() => onLanguageChange?.('en')}
+                        onClick={async () => {
+                          try {
+                            await onLanguageChange?.('en');
+                          } catch {
+                            toast.error('Failed to update language');
+                          }
+                        }}
                         disabled={isUpdating}
                         className={`inline-flex h-9 min-w-[80px] items-center justify-center gap-1.5 rounded-[20px] px-3 font-poppins text-sm font-semibold uppercase transition-colors active:translate-y-[1px] ${
                           preferredLanguage === 'en'

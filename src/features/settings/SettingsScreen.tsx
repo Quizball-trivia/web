@@ -255,7 +255,11 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
 
              {canUseDevReset && (
                <>
-                 <div className="group flex items-center justify-between p-3 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => { void handleResetOnboarding(); }}>
+                 <button
+                   type="button"
+                   className="group flex w-full items-center justify-between p-3 text-left hover:bg-muted/30 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                   onClick={() => { void handleResetOnboarding(); }}
+                 >
                    <div className="flex items-center gap-3">
                       <div className="p-2 rounded-lg bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                          <RotateCcw className="size-4" />
@@ -264,8 +268,12 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                         {t("settings.resetOnboarding")} <span className="text-xs text-muted-foreground">({t("settings.dev")})</span>
                       </div>
                    </div>
-                 </div>
-                 <div className="group flex items-center justify-between p-3 hover:bg-muted/30 transition-colors cursor-pointer" onClick={handleResetTraining}>
+                 </button>
+                 <button
+                   type="button"
+                   className="group flex w-full items-center justify-between p-3 text-left hover:bg-muted/30 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                   onClick={handleResetTraining}
+                 >
                    <div className="flex items-center gap-3">
                       <div className="p-2 rounded-lg bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                          <RotateCcw className="size-4" />
@@ -274,7 +282,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                         {t("settings.resetTrainingMatch")} <span className="text-xs text-muted-foreground">({t("settings.dev")})</span>
                       </div>
                    </div>
-                 </div>
+                 </button>
                </>
              )}
 

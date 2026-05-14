@@ -206,7 +206,7 @@ function PlayerCard({
             type="button"
             onClick={() => onRemove(player.id)}
             disabled={isRemoving}
-            className={`${PILL_BASE} bg-brand-red !px-0 !w-9`}
+            className={`${PILL_BASE} bg-brand-red px-0! w-9!`}
             title="Remove friend"
           >
             {isRemoving ? <Loader2 className="size-4 animate-spin" /> : <X className="size-4" />}
@@ -226,7 +226,7 @@ function PlayerCard({
         )}
 
         {player.friendStatus === "pending_sent" && (
-          <span className={`${PILL_BASE} bg-brand-gold !text-black`}>
+          <span className={`${PILL_BASE} bg-brand-gold text-black!`}>
             <Clock3 className="size-3.5" />
             Sent
           </span>
