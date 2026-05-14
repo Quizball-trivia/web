@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { FeaturedBundleCard } from "./components/FeaturedBundleCard";
 import { BundleCard, type BundleProps } from "./components/BundleCard";
 import { ItemCard } from "./components/ItemCard";

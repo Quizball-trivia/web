@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "@fontsource-variable/nunito";
 import "@fontsource/poppins/600.css";
+import "flag-icons/css/flag-icons.min.css";
 import { Providers } from "./providers";
 import { Analytics } from "@vercel/analytics/next";
 import "../styles/globals.css";

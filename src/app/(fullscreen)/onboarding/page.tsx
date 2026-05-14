@@ -59,5 +59,5 @@ export default function OnboardingPage() {
     }
   };
 
-  return <OnboardingFlow onComplete={handleComplete} />;
+  return <OnboardingFlow onComplete={handleComplete} isSubmitting={isSubmitting} />;
 }

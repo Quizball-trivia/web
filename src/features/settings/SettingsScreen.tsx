@@ -20,7 +20,7 @@ import { SettingsToggle } from "./components/SettingsToggle";
 import { toast } from "sonner";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { useLocale } from "@/contexts/LocaleContext";
-import { updateMe } from "@/lib/api/endpoints";
+import { resetOwnOnboarding, updateMe } from "@/lib/api/endpoints";
 import { requestAccountDeletion } from "@/lib/repositories/users.repo";
 import { type Locale } from "@/lib/i18n/messages";
 
@@ -59,6 +59,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const isInitialMount = useRef(true);
   const deletionConfirmWord = t("settings.deleteAccountConfirmWord");
   const canConfirmDeletion = deleteConfirmation === deletionConfirmWord && !isDeletingAccount;
+  const canUseDevReset = user?.role === "admin";
 
   // Load preferences from storage on mount - intentional initialization pattern
   useEffect(() => {
@@ -109,10 +110,17 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
     }
   };
 
-  const handleResetOnboarding = () => {
-    storage.remove(STORAGE_KEYS.ONBOARDING_COMPLETE);
-    storage.remove(STORAGE_KEYS.WALKTHROUGH_COMPLETE);
-    window.location.href = "/onboarding";
+  const handleResetOnboarding = async () => {
+    try {
+      const updated = await resetOwnOnboarding();
+      setAuthenticated(updated);
+      storage.remove(STORAGE_KEYS.ONBOARDING_COMPLETE);
+      storage.remove(STORAGE_KEYS.WALKTHROUGH_COMPLETE);
+      window.location.href = "/onboarding";
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to reset onboarding";
+      toast.error(message);
+    }
   };
 
   const handleResetTraining = () => {
@@ -245,9 +253,13 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                <ChevronLeft className="size-4 rotate-180 text-muted-foreground" />
             </div>
 
-             {process.env.NODE_ENV !== "production" && (
+             {canUseDevReset && (
                <>
-                 <div className="group flex items-center justify-between p-3 hover:bg-muted/30 transition-colors cursor-pointer" onClick={handleResetOnboarding}>
+                 <button
+                   type="button"
+                   className="group flex w-full items-center justify-between p-3 text-left hover:bg-muted/30 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                   onClick={() => { void handleResetOnboarding(); }}
+                 >
                    <div className="flex items-center gap-3">
                       <div className="p-2 rounded-lg bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                          <RotateCcw className="size-4" />
@@ -256,8 +268,12 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                         {t("settings.resetOnboarding")} <span className="text-xs text-muted-foreground">({t("settings.dev")})</span>
                       </div>
                    </div>
-                 </div>
-                 <div className="group flex items-center justify-between p-3 hover:bg-muted/30 transition-colors cursor-pointer" onClick={handleResetTraining}>
+                 </button>
+                 <button
+                   type="button"
+                   className="group flex w-full items-center justify-between p-3 text-left hover:bg-muted/30 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                   onClick={handleResetTraining}
+                 >
                    <div className="flex items-center gap-3">
                       <div className="p-2 rounded-lg bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                          <RotateCcw className="size-4" />
@@ -266,7 +282,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                         {t("settings.resetTrainingMatch")} <span className="text-xs text-muted-foreground">({t("settings.dev")})</span>
                       </div>
                    </div>
-                 </div>
+                 </button>
                </>
              )}
 
