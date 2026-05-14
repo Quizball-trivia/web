@@ -471,7 +471,10 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   socket.on('ranked:match_found', (data: RankedMatchFoundPayload) => {
     logger.info('Socket event ranked:match_found', { lobbyId: data.lobbyId, opponentId: data.opponent.id });
     store.clearError();
-    useRankedMatchmakingStore.getState().setRankedMatchFound({ opponent: data.opponent });
+    useRankedMatchmakingStore.getState().setRankedMatchFound({
+      opponent: data.opponent,
+      myRecentForm: data.myRecentForm,
+    });
   });
 
   socket.on('ranked:queue_left', () => {

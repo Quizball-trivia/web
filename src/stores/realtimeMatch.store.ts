@@ -46,6 +46,8 @@ export interface MatchStatus {
   variant: MatchVariant;
   mySeat: number | null;
   opponent: OpponentInfo;
+  /** Recipient's last 3 match results (most recent first) — surfaced to the showdown screen's form strip. */
+  myRecentForm?: Array<'W' | 'L' | 'D'>;
   participants: MatchParticipant[];
   countdownEndsAt: number | null;
   currentQuestion: ResolvedMatchQuestionPayload | null;
@@ -246,6 +248,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         variant: payload.variant,
         mySeat: payload.mySeat ?? null,
         opponent: payload.opponent,
+        myRecentForm: payload.myRecentForm,
         participants: payload.participants,
         countdownEndsAt: Date.now() + DEFAULT_COUNTDOWN_MS,
         currentQuestion: null,

@@ -146,7 +146,7 @@ vi.mock('@/features/game/components/MatchmakingMapScreen', () => ({
   MatchmakingMapScreen: () => <div>Matchmaking Map</div>,
 }));
 
-vi.mock('@/features/game/components/ShowdownScreen', () => ({
+vi.mock('@/components/ShowdownScreen', () => ({
   ShowdownScreen: (props: { matchType: string }) => <div>Showdown {props.matchType}</div>,
 }));
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { ShowdownScreen } from "@/features/play/ShowdownScreen";
+import { ShowdownScreen } from "@/components/ShowdownScreen";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { usePlayerAvatar } from "@/hooks/usePlayerAvatar";
 import { useTraining } from "../TrainingMatchProvider";
@@ -22,23 +22,28 @@ export function TrainingShowdownStage() {
 
   return (
     <ShowdownScreen
-      player={{
+      matchType="friendly"
+      playerUsername={player.username}
+      playerAvatar={playerResolvedAvatar}
+      opponentUsername={BOT_NAME}
+      opponentAvatar={BOT_AVATAR}
+      onComplete={() => match.setStage("banning")}
+      playerInfo={{
+        username: player.username,
         avatar: playerResolvedAvatar,
         avatarCustomization,
-        username: player.username,
         rankPoints: 0,
         level: player.level,
         tier: "academy",
       }}
-      opponent={{
-        avatar: BOT_AVATAR,
+      opponentInfo={{
         username: BOT_NAME,
+        avatar: BOT_AVATAR,
         rankPoints: 1200,
         tier: "silver",
         country: "Brazil",
         countryCode: "BR",
       }}
-      onContinue={() => match.setStage("banning")}
     />
   );
 }

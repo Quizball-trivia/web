@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { MatchmakingMapScreen } from "./components/MatchmakingMapScreen";
-import { ShowdownScreen } from "./components/ShowdownScreen";
+import { ShowdownScreen } from "@/components/ShowdownScreen";
 import { RankedCategoryBlockingScreen } from "@/features/play/RankedCategoryBlockingScreen";
 import { RealtimeResultsScreen } from "./RealtimeResultsScreen";
 import { RealtimePossessionMatchScreen } from "@/features/possession/RealtimePossessionMatchScreen";
@@ -367,6 +367,8 @@ export function GameStageRouter() {
           tier: playerRankPoints != null ? tierFromRp(playerRankPoints) : undefined,
           country: authUser?.country ?? undefined,
           countryCode: authUser?.country ?? undefined,
+          favoriteClub: authUser?.favorite_club ?? null,
+          recentForm: realtimeMatch?.myRecentForm,
         }}
         opponentInfo={oppInfo ? {
           username: oppInfo.username,
@@ -377,6 +379,8 @@ export function GameStageRouter() {
           country: oppCountry,
           countryCode: oppCountryCode,
           flag: oppInfo.flag,
+          favoriteClub: oppInfo.favoriteClub ?? null,
+          recentForm: oppInfo.recentForm,
         } : undefined}
       />
     );

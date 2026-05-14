@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ShowdownScreen } from './ShowdownScreen';
+import { ShowdownScreen } from '@/components/ShowdownScreen';
 import { motion } from 'motion/react';
 import { Volume2, VolumeX } from 'lucide-react';
 import { isMuted as getIsMuted, toggleMute } from '@/lib/sounds/gameSounds';
@@ -264,7 +264,9 @@ export function RankedCategoryBlockingScreen() {
   const lobby = useRealtimeMatchStore((state) => state.lobby);
   const draft = useRealtimeMatchStore((state) => state.draft);
   const rankedFoundOpponent = useRankedMatchmakingStore((state) => state.rankedFoundOpponent);
+  const rankedFoundMyRecentForm = useRankedMatchmakingStore((state) => state.rankedFoundMyRecentForm);
   const matchOpponent = useRealtimeMatchStore((state) => state.match?.opponent);
+  const realtimeMatchState = useRealtimeMatchStore((state) => state.match);
   const { data: rankedProfile } = useRankedProfile();
   const [timeLeft, setTimeLeft] = useState(15);
   const [showShowdown, setShowShowdown] = useState(true);
@@ -357,22 +359,33 @@ export function RankedCategoryBlockingScreen() {
   if (showShowdown) {
     return (
       <ShowdownScreen
-        player={{
+        matchType="ranked"
+        playerUsername={player.username}
+        playerAvatar={playerResolvedAvatar}
+        opponentUsername={opponentUsername}
+        opponentAvatar={opponentResolvedAvatar}
+        onComplete={() => setShowShowdown(false)}
+        playerInfo={{
+          username: player.username,
           avatar: playerResolvedAvatar,
           avatarCustomization: authUser?.avatar_customization ?? player.avatarCustomization,
-          username: player.username,
           rankPoints: playerRp,
           level: player.level,
           tier: playerTier,
+          countryCode: authUser?.country ?? undefined,
+          favoriteClub: authUser?.favorite_club ?? null,
+          recentForm: realtimeMatchState?.myRecentForm ?? rankedFoundMyRecentForm ?? undefined,
         }}
-        opponent={{
+        opponentInfo={{
+          username: opponentUsername,
           avatar: opponentResolvedAvatar,
           avatarCustomization: opponentMember?.avatarCustomization ?? matchOpponent?.avatarCustomization ?? rankedFoundOpponent?.avatarCustomization,
-          username: opponentUsername,
           rankPoints: opponentRp,
           tier: opponentTier,
+          countryCode: opponentCountryCode ?? undefined,
+          favoriteClub: matchOpponent?.favoriteClub ?? rankedFoundOpponent?.favoriteClub ?? null,
+          recentForm: matchOpponent?.recentForm ?? rankedFoundOpponent?.recentForm,
         }}
-        onContinue={() => setShowShowdown(false)}
       />
     );
   }
