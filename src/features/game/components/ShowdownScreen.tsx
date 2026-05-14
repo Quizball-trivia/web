@@ -1,10 +1,15 @@
 "use client";
 
+import Image from 'next/image';
 import { useEffect } from 'react';
 import { motion } from 'motion/react';
-import { AvatarDisplay } from '@/components/AvatarDisplay';
+import { AvatarPreview } from '@/components/AvatarPreview';
+import { CountryFlag } from '@/components/CountryFlag';
 import type { AvatarCustomization } from '@/types/game';
 import { getTierAccent } from '@/utils/tierVisuals';
+import { getClub } from '@/lib/clubs';
+
+type MatchResultLetter = 'W' | 'L' | 'D';
 
 interface ShowdownPlayerInfo {
   username: string;
@@ -15,8 +20,12 @@ interface ShowdownPlayerInfo {
   tier?: string;
   country?: string;
   countryCode?: string;
-  /** Direct flag emoji from backend */
+  /** Direct flag emoji from backend (legacy). Prefer `countryCode`. */
   flag?: string;
+  /** Persisted favorite club value (the display name stored on the profile). */
+  favoriteClub?: string | null;
+  /** Last 3 match results, most recent first — used to render a WWL-style form chip strip. */
+  recentForm?: MatchResultLetter[];
 }
 
 interface ShowdownScreenProps {
@@ -30,6 +39,9 @@ interface ShowdownScreenProps {
   playerInfo?: ShowdownPlayerInfo;
   /** Extended opponent info for richer display */
   opponentInfo?: ShowdownPlayerInfo;
+  /** Override outer container classes — used by the dev preview to leave
+   *  room for its control panel. Defaults to full-screen centering. */
+  wrapperClassName?: string;
 }
 
 const poppins = {
@@ -42,16 +54,17 @@ const poppins = {
 function PlayerSide({
   info,
   side,
-  frameColor,
 }: {
   info: ShowdownPlayerInfo;
   side: 'left' | 'right';
-  frameColor: string;
 }) {
   const countryCode = info.countryCode ?? (info.country?.length === 2 ? info.country : null);
+  const club = getClub(info.favoriteClub ?? null);
+  const tierAccent = info.tier ? getTierAccent(info.tier) : '#FFE500';
 
-  const tierAccent = info.tier ? getTierAccent(info.tier) : undefined;
-  const xpBlue = '#48C7FF';
+  // Opponent (right side) faces the player — flip horizontally per Figma.
+  const isOpponent = side === 'right';
+  const avatarCustomization = info.avatarCustomization ?? { base: info.avatar || 'avatar-1' };
 
   return (
     <motion.div
@@ -60,53 +73,118 @@ function PlayerSide({
       transition={{ delay: 0.3, type: 'spring', stiffness: 120, damping: 18 }}
       className="flex flex-col items-center"
     >
+      {/* Avatar card — 5:6 aspect, character bottom-anchored per Figma */}
       <motion.div
         initial={{ scale: 0.7 }}
         animate={{ scale: 1 }}
         transition={{ delay: 0.5, type: 'spring', stiffness: 200 }}
-        className="relative flex aspect-square w-[180px] items-end justify-center overflow-hidden rounded-2xl sm:w-[220px] md:w-[260px]"
-        style={{ backgroundColor: frameColor }}
+        className="relative flex aspect-[5/6] w-[200px] items-end justify-center overflow-hidden rounded-[20px] bg-brand-blue md:w-[240px]"
       >
-        <AvatarDisplay
-          customization={info.avatarCustomization ?? { base: info.avatar || 'avatar-1' }}
-          size="xxl"
-          shape="square"
-          className="!size-full !rounded-none bg-transparent"
-          countryCode={countryCode}
+        {/* Country flag chip — top-left, rounded-br/tl. Chip is 3:2 to match
+            the flag-icons SVG aspect exactly so no background bleeds through. */}
+        {countryCode && (
+          <div className="absolute left-0 top-0 z-10 flex h-[44px] w-[66px] items-center justify-center overflow-hidden rounded-br-[20px] rounded-tl-[20px] md:h-[56px] md:w-[84px]">
+            <CountryFlag
+              code={countryCode}
+              className="!h-full !w-full"
+              style={{ backgroundSize: 'cover', backgroundPosition: 'center' }}
+            />
+          </div>
+        )}
+
+        {/* Club logo chip — top-right, rounded-bl/tr, club's primary color */}
+        {club && (
+          <div
+            className="absolute right-0 top-0 z-10 flex size-[52px] items-center justify-center overflow-hidden rounded-bl-[20px] rounded-tr-[20px] md:size-[64px]"
+            style={{ backgroundColor: club.primaryColor }}
+          >
+            <Image
+              src={club.logo}
+              alt={club.label}
+              width={64}
+              height={64}
+              unoptimized
+              className="size-[95%] object-contain"
+            />
+          </div>
+        )}
+
+        {/* Avatar character — pushed down so the body is partially clipped by
+            the bottom of the card (matches the profile-page look).
+            Opponent gets -scale-x so they face the player on the left. */}
+        <AvatarPreview
+          customization={avatarCustomization}
+          width={170}
+          className={`md:hidden translate-y-5 ${isOpponent ? '-scale-x-100' : ''}`}
+        />
+        <AvatarPreview
+          customization={avatarCustomization}
+          width={210}
+          className={`hidden md:block translate-y-7 ${isOpponent ? '-scale-x-100' : ''}`}
         />
       </motion.div>
 
+      {/* RP pill */}
+      {info.rankPoints !== undefined && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="mt-4 flex h-10 w-[180px] items-center justify-center rounded-[14px] bg-brand-yellow text-[18px] uppercase text-surface-page sm:h-12 sm:w-[220px] sm:text-[22px] md:w-[260px] md:text-[24px]"
+          style={poppins}
+        >
+          {info.rankPoints} RP
+        </motion.div>
+      )}
+
+      {/* Username */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-        className="mt-5 max-w-[220px] truncate text-center text-2xl uppercase text-white sm:max-w-[260px] sm:text-3xl"
+        transition={{ delay: 0.8 }}
+        className="mt-4 max-w-[260px] truncate text-center text-2xl uppercase text-white sm:text-3xl"
         style={poppins}
       >
         {info.username}
       </motion.div>
 
-      {(info.level !== undefined || info.rankPoints !== undefined || info.tier) && (
+      {/* Tier name (replaces the fan-text from the figma) */}
+      {info.tier && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.85 }}
-          className="mt-2 flex items-center gap-1.5 text-[11px] uppercase tracking-[0.08em] sm:text-xs"
-          style={poppins}
+          transition={{ delay: 0.95 }}
+          className="mt-1.5 text-sm uppercase sm:text-base"
+          style={{ ...poppins, color: tierAccent }}
         >
-          {info.level !== undefined && (
-            <span style={{ color: xpBlue }}>LVL {info.level}</span>
-          )}
-          {info.level !== undefined && info.rankPoints !== undefined && (
-            <span className="text-white/40">/</span>
-          )}
-          {info.rankPoints !== undefined && (
-            <span className="text-white">{info.rankPoints} RP</span>
-          )}
-          {(info.level !== undefined || info.rankPoints !== undefined) && info.tier && (
-            <span className="text-white/40">/</span>
-          )}
-          {info.tier && <span style={{ color: tierAccent }}>{info.tier}</span>}
+          {info.tier}
+        </motion.div>
+      )}
+
+      {/* Recent form — last 3 matches, most recent first */}
+      {info.recentForm && info.recentForm.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.05 }}
+          className="mt-2 flex items-center gap-1"
+        >
+          {info.recentForm.slice(0, 3).map((result, idx) => (
+            <span
+              key={idx}
+              className={`flex size-6 items-center justify-center rounded-md text-[11px] uppercase text-white sm:size-7 sm:text-[12px] ${
+                result === 'W'
+                  ? 'bg-brand-green'
+                  : result === 'L'
+                    ? 'bg-brand-red'
+                    : 'bg-brand-slate'
+              }`}
+              style={poppins}
+              title={result === 'W' ? 'Win' : result === 'L' ? 'Loss' : 'Draw'}
+            >
+              {result}
+            </span>
+          ))}
         </motion.div>
       )}
     </motion.div>
@@ -122,6 +200,7 @@ export function ShowdownScreen({
   onComplete,
   playerInfo,
   opponentInfo,
+  wrapperClassName = 'min-h-screen',
 }: ShowdownScreenProps) {
   useEffect(() => {
     const timer = setTimeout(() => onComplete(), 4500);
@@ -131,14 +210,13 @@ export function ShowdownScreen({
   const playerData: ShowdownPlayerInfo = { ...playerInfo, username: playerUsername, avatar: playerAvatar };
   const opponentData: ShowdownPlayerInfo = { ...opponentInfo, username: opponentUsername, avatar: opponentAvatar };
   const isRanked = matchType === 'ranked';
-  const accentMatch = '#BA02E8';
+  const accentMatch = '#1645FF';
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-surface-page px-4">
-      {/* Player vs Opponent */}
+    <div className={`relative flex flex-col items-center justify-center overflow-hidden bg-surface-page px-4 ${wrapperClassName}`}>
       <div className="relative z-10 grid w-full max-w-5xl grid-cols-[1fr_auto_1fr] items-start gap-4 sm:gap-8 md:gap-12">
         <div className="flex justify-center">
-          <PlayerSide info={playerData} side="left" frameColor="#3B5BFF" />
+          <PlayerSide info={playerData} side="left" />
         </div>
 
         <motion.div
@@ -175,7 +253,7 @@ export function ShowdownScreen({
         </motion.div>
 
         <div className="flex justify-center">
-          <PlayerSide info={opponentData} side="right" frameColor="#3B5BFF" />
+          <PlayerSide info={opponentData} side="right" />
         </div>
       </div>
     </div>

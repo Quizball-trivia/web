@@ -83,6 +83,10 @@ export interface OpponentInfo {
   countryCode?: string;
   city?: string;
   flag?: string;
+  /** Opponent's favorite club (display name). Used by the showdown screen to render the club logo + primary-color chip. */
+  favoriteClub?: string | null;
+  /** Last few completed-match results (most recent first), e.g. ['W','L','W']. Used by the showdown form-strip. */
+  recentForm?: Array<'W' | 'L' | 'D'>;
   lat?: number | string;
   lon?: number | string;
   lng?: number | string;
@@ -256,6 +260,8 @@ export interface MatchStartPayload {
   variant: MatchVariant;
   mySeat?: number;
   opponent: OpponentInfo;
+  /** Recipient's own last 3 match results (most recent first). Used by the showdown form-strip. */
+  myRecentForm?: Array<'W' | 'L' | 'D'>;
   participants: MatchParticipant[];
 }
 
@@ -547,6 +553,8 @@ export interface RankedSearchStartedPayload {
 export interface RankedMatchFoundPayload {
   lobbyId: string;
   opponent: OpponentInfo;
+  /** Recipient's own last 3 match results (most recent first). */
+  myRecentForm?: Array<'W' | 'L' | 'D'>;
 }
 
 export interface RankedQueueJoinPayload {
