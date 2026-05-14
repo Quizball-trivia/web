@@ -68,7 +68,13 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
   };
 
   const handleComplete = () => {
-    onComplete({ favoriteClub, preferredLanguage, avatar, username, quizScore: 0 });
+    onComplete({
+      favoriteClub: favoriteClub.trim(),
+      preferredLanguage: preferredLanguage.trim(),
+      avatar: avatar.trim(),
+      username: username.trim(),
+      quizScore: 0,
+    });
   };
 
   const variants = {
@@ -150,6 +156,7 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
                       key={language.code}
                       type="button"
                       onClick={() => setPreferredLanguage(language.code)}
+                      aria-pressed={isSelected}
                       className={`${OPTION_PILL_CLASS} ${isSelected ? 'ring-2 ring-white' : ''}`}
                     >
                       <CountryFlag
@@ -248,6 +255,7 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
                       type="button"
                       onClick={() => setAvatar(color)}
                       aria-label={`Select ${color} avatar`}
+                      aria-pressed={isSelected}
                       className={`relative flex size-14 md:size-[78px] items-center justify-center overflow-hidden rounded-full bg-brand-blue transition-transform ${
                         isSelected ? 'ring-2 ring-white scale-[1.06]' : 'hover:brightness-110'
                       }`}

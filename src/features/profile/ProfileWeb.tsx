@@ -96,7 +96,6 @@ interface ProfileWebProps {
 export function ProfileWeb({
   viewMode = 'self',
   player, avatarUrl, country = null, favoriteClub, preferredLanguage,
-  progression = null,
   globalRank = null, countryRank = null,
   matchStatsSummary = null,
   rankedProfile = null, rankedProfileLoading = false,
