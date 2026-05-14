@@ -160,7 +160,10 @@ async function main() {
     for (const filename of files) {
       const label = cleanLabel(filename);
       const slug = slugify(label);
-      const path = join(OUT_DIR, `${slug}.png`);
+      // We persist logos as WebP (see downloadLogo), so probe and read the
+      // .webp file — using .png here was a latent bug that would make
+      // extractPrimaryColor fail for any club not in the overrides JSON.
+      const path = join(OUT_DIR, `${slug}.webp`);
       const wasCached = await fileExists(path);
       await downloadLogo(league.folder, filename, slug);
       if (wasCached) cached += 1; else downloaded += 1;
