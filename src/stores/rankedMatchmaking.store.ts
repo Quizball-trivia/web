@@ -6,9 +6,10 @@ interface RankedMatchmakingState {
   rankedSearchDurationMs: number | null;
   rankedSearchStartedAt: number | null;
   rankedFoundOpponent: OpponentInfo | null;
+  rankedFoundMyRecentForm: Array<'W' | 'L' | 'D'> | null;
   rankedSearching: boolean;
   setRankedSearchStarted: (payload: { durationMs: number }) => void;
-  setRankedMatchFound: (payload: { opponent: OpponentInfo }) => void;
+  setRankedMatchFound: (payload: { opponent: OpponentInfo; myRecentForm?: Array<'W' | 'L' | 'D'> }) => void;
   setRankedQueueLeft: () => void;
   clearRankedMatchmaking: () => void;
 }
@@ -17,6 +18,7 @@ export const useRankedMatchmakingStore = create<RankedMatchmakingState>((set) =>
   rankedSearchDurationMs: null,
   rankedSearchStartedAt: null,
   rankedFoundOpponent: null,
+  rankedFoundMyRecentForm: null,
   rankedSearching: false,
   setRankedSearchStarted: ({ durationMs }) => {
     logger.info('Ranked matchmaking store set search started', { durationMs });
@@ -26,14 +28,16 @@ export const useRankedMatchmakingStore = create<RankedMatchmakingState>((set) =>
         rankedSearchDurationMs: durationMs,
         rankedSearchStartedAt: keepExistingStart ? state.rankedSearchStartedAt : Date.now(),
         rankedFoundOpponent: null,
+        rankedFoundMyRecentForm: null,
         rankedSearching: true,
       };
     });
   },
-  setRankedMatchFound: ({ opponent }) => {
-    logger.info('Ranked matchmaking store set match found', { opponentId: opponent.id });
+  setRankedMatchFound: ({ opponent, myRecentForm }) => {
+    logger.info('Ranked matchmaking store set match found', { opponentId: opponent.id, formLen: myRecentForm?.length ?? 0 });
     set({
       rankedFoundOpponent: opponent,
+      rankedFoundMyRecentForm: myRecentForm ?? null,
       rankedSearching: false,
     });
   },
@@ -43,6 +47,7 @@ export const useRankedMatchmakingStore = create<RankedMatchmakingState>((set) =>
       rankedSearchDurationMs: null,
       rankedSearchStartedAt: null,
       rankedFoundOpponent: null,
+      rankedFoundMyRecentForm: null,
       rankedSearching: false,
     });
   },
@@ -52,6 +57,7 @@ export const useRankedMatchmakingStore = create<RankedMatchmakingState>((set) =>
       rankedSearchDurationMs: null,
       rankedSearchStartedAt: null,
       rankedFoundOpponent: null,
+      rankedFoundMyRecentForm: null,
       rankedSearching: false,
     });
   },
