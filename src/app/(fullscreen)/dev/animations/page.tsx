@@ -239,6 +239,7 @@ function makeRoundResult(
   // you preview big-vs-small bar battles (e.g. +80 vs +10 → 8 bars vs 1).
   const mePoints = meCorrect ? customPoints.me : 0;
   const oppPoints = oppCorrect ? customPoints.opp : 0;
+  const possessionDelta = mePoints - oppPoints;
 
   return {
     matchId: MATCH_ID,
@@ -267,7 +268,7 @@ function makeRoundResult(
     phaseKind: 'normal',
     phaseRound: qIndex < 6 ? qIndex + 1 : qIndex - 5,
     deltas: {
-      possessionDelta: meCorrect && !oppCorrect ? 25 : oppCorrect && !meCorrect ? -25 : 0,
+      possessionDelta,
       goalScoredBySeat,
       penaltyOutcome: null,
     },
@@ -661,6 +662,7 @@ function DevAnimationsContent() {
   }, []);
 
   function loadPutInOrderScenario(mode: 'goal' | 'partial') {
+    setMobilePanelOpen(false);
     pendingTimers.current.forEach((t) => window.clearTimeout(t));
     pendingTimers.current = [];
 
@@ -717,6 +719,7 @@ function DevAnimationsContent() {
   }
 
   function loadSpecialScenario(kind: Extract<QuestionKind, 'countdown' | 'clues'>, mode: 'goal' | 'partial') {
+    setMobilePanelOpen(false);
     pendingTimers.current.forEach((t) => window.clearTimeout(t));
     pendingTimers.current = [];
 
@@ -776,13 +779,14 @@ function DevAnimationsContent() {
   }
 
   function loadEdgeBarDemo(winner: 'green' | 'red') {
+    setMobilePanelOpen(false);
     pendingTimers.current.forEach((t) => window.clearTimeout(t));
     pendingTimers.current = [];
 
     const s = store();
     const activeQIndex = s.match?.currentQuestion?.qIndex ?? -1;
     const qIndex = Math.min(activeQIndex + 1, TOTAL_QUESTIONS - 1);
-    const edgeDiff = 95;
+    const edgeDiff = 80;
     possessionDiffRef.current = edgeDiff;
 
     stateVersion.current += 1;
@@ -816,8 +820,8 @@ function DevAnimationsContent() {
     setNextQuestionKind('multipleChoice');
     setRemountKey((k) => k + 1);
 
-    const greenPoints = winner === 'green' ? 80 : 40;
-    const redPoints = winner === 'red' ? 80 : 40;
+    const greenPoints = winner === 'green' ? 100 : 40;
+    const redPoints = winner === 'red' ? 100 : 40;
 
     pendingTimers.current.push(
       window.setTimeout(() => {
@@ -865,6 +869,7 @@ function DevAnimationsContent() {
               s.setRoundResult(result);
             }, 1400)
           );
+          schedulePostRoundPossessionState(result, 1400);
 
           scoreRef.current.meTotal = me.totalPoints;
           scoreRef.current.oppTotal = opp.totalPoints;
@@ -1166,6 +1171,7 @@ function DevAnimationsContent() {
   }
 
   function previewShot(result: 'saved' | 'miss', attackerSeat: 1 | 2) {
+    setMobilePanelOpen(false);
     pendingTimers.current.forEach((t) => window.clearTimeout(t));
     pendingTimers.current = [];
     store().triggerDevPossessionAnimation({ result, attackerSeat });
@@ -1502,8 +1508,8 @@ function DevAnimationsContent() {
 
         <p className="mt-3 text-[10px] leading-tight text-brand-slate">
           Dev-only. Mocks the realtime store events (no socket). Apply a round
-          result, then "next question" to advance. Goal triggers the celebration
-          overlay + bar battle conversion when you score.
+          result, then &quot;next question&quot; to advance. Goal triggers the
+          celebration overlay + bar battle conversion when you score.
         </p>
       </aside>
 

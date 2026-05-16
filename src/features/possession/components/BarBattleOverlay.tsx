@@ -41,7 +41,6 @@ const BAR_GAP_ANCHORED = 4;
 const BAR_RX_ANCHORED = 6;
 const CY_ANCHORED = 115;
 const AVATAR_BAR_OFFSET = 58;
-const AVATAR_LANE_CLEARANCE = 42;
 
 const BLUE = '#1CB0F6';
 const RED = '#FF4B4B';
@@ -272,6 +271,108 @@ function Bar({
   );
 }
 
+// Single bar with a "×N" label for rows that cannot fit behind the avatar.
+function StackedBar({
+  spawnX,
+  marchX,
+  pushX,
+  gradientId,
+  count,
+  phase,
+  cancelled,
+  survived,
+  cy = CY,
+  barW = BAR_W,
+  barH = BAR_H,
+  barRx = BAR_RX,
+  morphFromX,
+  morphFromY,
+  isPortrait = false,
+}: {
+  spawnX: number;
+  marchX: number;
+  pushX: number;
+  gradientId: string;
+  count: number;
+  phase: BarBattlePhase;
+  cancelled: boolean;
+  survived: boolean;
+  cy?: number;
+  barW?: number;
+  barH?: number;
+  barRx?: number;
+  morphFromX?: number;
+  morphFromY?: number;
+  isPortrait?: boolean;
+}) {
+  const W = barW * 2.2;
+  const H = barH;
+  const y = cy - H / 2;
+  const initialX = morphFromX ?? spawnX;
+  const initialYOffset = morphFromY != null ? morphFromY - y : 0;
+
+  const showBar = phase === 'bars' || phase === 'battle' || phase === 'result';
+  const isMarching = phase === 'battle' || phase === 'result';
+  const isBattling = phase === 'battle' && cancelled;
+  const isResult = phase === 'result';
+  if (!showBar) return null;
+
+  if (isBattling) {
+    return (
+      <motion.g>
+        <motion.rect
+          x={-W / 2} y={y} width={W} height={H} rx={barRx}
+          fill={`url(#${gradientId})`}
+          initial={{ opacity: 0.95, x: spawnX }}
+          animate={{ x: marchX, opacity: [0.95, 0.95, 0], scaleY: [1, 1, 0.3], scaleX: [1, 1, 0.15] }}
+          transition={{
+            x: { type: 'spring', stiffness: 100, damping: 18, mass: 0.6 },
+            opacity: { duration: 0.3, ease: 'easeOut' },
+            scaleY: { duration: 0.3, ease: 'easeOut' },
+            scaleX: { duration: 0.3, ease: 'easeOut' },
+          }}
+        />
+      </motion.g>
+    );
+  }
+
+  if (isResult && cancelled) return null;
+
+  const textRotate = isPortrait ? `rotate(90, 0, ${cy})` : undefined;
+  const targetX = isMarching && !isResult ? marchX : isResult && survived ? pushX : spawnX;
+
+  return (
+    <motion.g
+      initial={{ opacity: 0, x: initialX, y: initialYOffset, scale: 0.4 }}
+      animate={{ opacity: 0.95, x: targetX, y: 0, scale: 1 }}
+      transition={{
+        opacity: { duration: 0.25, ease: 'easeOut' },
+        scale: { type: 'spring', stiffness: 220, damping: 14 },
+        x: { type: 'spring', stiffness: 140, damping: 18, mass: 0.7 },
+        y: { type: 'spring', stiffness: 180, damping: 16, mass: 0.6 },
+      }}
+    >
+      <rect
+        x={-W / 2} y={y} width={W} height={H} rx={barRx}
+        fill={`url(#${gradientId})`}
+      />
+      <text
+        x={0}
+        y={cy + 4}
+        textAnchor="middle"
+        fill="white"
+        fontSize={H * 0.45}
+        fontWeight="900"
+        fontFamily="'Poppins', system-ui, sans-serif"
+        transform={textRotate}
+        style={{ paintOrder: 'stroke fill', stroke: 'rgba(0,0,0,0.55)', strokeWidth: 1.5 }}
+      >
+        ×{count}
+      </text>
+    </motion.g>
+  );
+}
+
 // ─── Collision flash ─────────────────────────────────────────────────────────
 
 function CollisionFlash({
@@ -370,92 +471,75 @@ export function BarBattleOverlay({
   const minBars = Math.min(playerBars, opponentBars);
   const playerDir = mirrored ? 1 : -1;
   const opponentDir = mirrored ? -1 : 1;
+  const pointsToBarCount = (points: number) => (
+    points > 0 ? Math.min(Math.max(Math.round(points / 10), 1), 12) : 0
+  );
+  const playerLayoutBars = playerBars > 0 ? playerBars : pointsToBarCount(playerPoints);
+  const opponentLayoutBars = opponentBars > 0 ? opponentBars : pointsToBarCount(opponentPoints);
 
-  // Direction each side extends its bar row in landscape coords.
-  //   - For non-mirrored (player on left attacking right): player's defensive
-  //     zone is to the LEFT, so player bars extend leftward (-1).
-  //   - Opponent attacks the other way, bars extend rightward (+1).
-  // For mirrored layout the signs flip. We re-use playerDir/opponentDir which
-  // already encode that.
-  // In portrait the pitch group is rotated, so SVG X becomes screen Y. The two
-  // sides need opposite lanes: the lower/player side pushes from bottom upward
-  // (decreasing SVG X), while the upper/opponent side pushes from top downward
-  // (increasing SVG X).
+  // In portrait, SVG X maps to screen Y. Player pushes from bottom upward,
+  // opponent pushes from top downward.
   const playerPreferredBarDir = isAnchored && isPortrait ? -1 : playerDir;
   const opponentPreferredBarDir = isAnchored && isPortrait ? 1 : opponentDir;
 
-  const resolveAnchoredRowDir = (
-    avatarX: number,
-    otherAvatarX: number | null | undefined,
-    preferredDir: number,
+  const compactW = barW * 2.2;
+  const clampCenterX = (x: number, width: number) =>
+    Math.max(FIELD_MIN_X + width / 2, Math.min(FIELD_MAX_X - width / 2, x));
+  const normalRowX = (avatarX: number, dir: number, count: number) => {
+    if (count <= 0) return [];
+    const firstX = avatarX + dir * AVATAR_BAR_OFFSET;
+    const maxStep = count <= 1
+      ? barW + barGap
+      : dir > 0
+        ? ((FIELD_MAX_X - barW) - firstX) / (count - 1)
+        : (firstX - FIELD_MIN_X) / (count - 1);
+    const step = Math.min(barW + barGap, maxStep);
+    if (step < barW) return null;
+    return Array.from({ length: count }, (_, i) => firstX + dir * i * step);
+  };
+  const buildAnchoredLayout = (
+    avatarX: number | undefined,
+    dir: number,
     count: number
   ) => {
-    if (count <= 0) return preferredDir;
-    const getShiftedBounds = (dir: number) => {
-      const raw = Array.from({ length: count }, (_, i) => (
-        avatarX + dir * (AVATAR_BAR_OFFSET + i * (barW + barGap))
-      ));
-      const minX = Math.min(...raw);
-      const maxX = Math.max(...raw) + barW;
-      const leftOverflow = FIELD_MIN_X - minX;
-      const rightOverflow = maxX - FIELD_MAX_X;
-      const shift = leftOverflow > 0
-        ? leftOverflow
-        : rightOverflow > 0
-          ? -rightOverflow
-          : 0;
+    if (!isAnchored || avatarX == null || count <= 0) {
       return {
-        minX: minX + shift,
-        maxX: maxX + shift,
-        clipped: leftOverflow > 0 || rightOverflow > 0,
+        compact: false,
+        dir,
+        rowX: (_i: number) => avatarX ?? dividerX,
+        compactX: avatarX ?? dividerX,
+        splashX: avatarX ?? dividerX,
       };
+    }
+
+    const xs = normalRowX(avatarX, dir, count);
+    const compactX = clampCenterX(avatarX + dir * (AVATAR_BAR_OFFSET + compactW / 2), compactW);
+    if (xs === null) {
+      return {
+        compact: true,
+        dir,
+        rowX: (_i: number) => compactX,
+        compactX,
+        splashX: compactX,
+      };
+    }
+    const splashX = (xs[0] + xs[xs.length - 1] + barW) / 2;
+
+    return {
+      compact: false,
+      dir,
+      rowX: (i: number) => xs[i] ?? avatarX,
+      compactX,
+      splashX,
     };
-
-    const isClearOfOtherAvatar = (dir: number) => {
-      if (otherAvatarX == null) return true;
-      const bounds = getShiftedBounds(dir);
-      return otherAvatarX < bounds.minX - AVATAR_LANE_CLEARANCE
-        || otherAvatarX > bounds.maxX + AVATAR_LANE_CLEARANCE;
-    };
-
-    const candidates = [preferredDir, -preferredDir];
-    const clearCandidate = candidates.find((dir) => isClearOfOtherAvatar(dir));
-    if (clearCandidate != null) return clearCandidate;
-
-    const unclippedCandidate = candidates.find((dir) => !getShiftedBounds(dir).clipped);
-    return unclippedCandidate ?? preferredDir;
   };
 
-  const playerBarDir = isAnchored && playerAvatarX != null
-    ? resolveAnchoredRowDir(playerAvatarX, opponentAvatarX, playerPreferredBarDir, playerBars)
-    : playerPreferredBarDir;
-  const opponentBarDir = isAnchored && opponentAvatarX != null
-    ? resolveAnchoredRowDir(opponentAvatarX, playerAvatarX, opponentPreferredBarDir, opponentBars)
-    : opponentPreferredBarDir;
-  const makeAnchoredRowX = (avatarX: number, dir: number, count: number) => {
-    const raw = Array.from({ length: count }, (_, i) => (
-      avatarX + dir * (AVATAR_BAR_OFFSET + i * (barW + barGap))
-    ));
-    if (raw.length === 0) return (_i: number) => avatarX;
-
-    const minX = Math.min(...raw);
-    const maxX = Math.max(...raw) + barW;
-    const leftOverflow = FIELD_MIN_X - minX;
-    const rightOverflow = maxX - FIELD_MAX_X;
-    const shift = leftOverflow > 0
-      ? leftOverflow
-      : rightOverflow > 0
-        ? -rightOverflow
-        : 0;
-    const shifted = raw.map((x) => Math.max(FIELD_MIN_X, Math.min(FIELD_MAX_X - barW, x + shift)));
-    return (i: number) => shifted[i] ?? avatarX;
-  };
-  const playerAnchoredRowX = isAnchored && playerAvatarX != null
-    ? makeAnchoredRowX(playerAvatarX, playerBarDir, playerBars)
-    : null;
-  const opponentAnchoredRowX = isAnchored && opponentAvatarX != null
-    ? makeAnchoredRowX(opponentAvatarX, opponentBarDir, opponentBars)
-    : null;
+  const playerLayout = buildAnchoredLayout(playerAvatarX, playerPreferredBarDir, playerLayoutBars);
+  const opponentLayout = buildAnchoredLayout(opponentAvatarX, opponentPreferredBarDir, opponentLayoutBars);
+  const playerBarDir = playerLayout.dir;
+  const opponentBarDir = opponentLayout.dir;
+  const playerStackCount = phase === 'result' && remainingDelta > 0 ? remainingDelta : playerBars;
+  const opponentStackCount = phase === 'result' && remainingDelta < 0 ? -remainingDelta : opponentBars;
 
   // Spawn position:
   //   - classic: cluster just outside the divider on each player's side
@@ -463,15 +547,15 @@ export function BarBattleOverlay({
   //     avatar in landscape x; in portrait that maps to above/below in screen).
   //     Bar i=0 is closest to avatar, i=N furthest away.
   const playerBarStartX = (i: number) => {
-    if (isAnchored && playerAnchoredRowX) {
-      return playerAnchoredRowX(i);
+    if (isAnchored) {
+      return playerLayout.rowX(i);
     }
     const barAreaOffset = 28;
     return dividerX + playerDir * (barAreaOffset + i * (barW + barGap));
   };
   const opponentBarStartX = (i: number) => {
-    if (isAnchored && opponentAnchoredRowX) {
-      return opponentAnchoredRowX(i);
+    if (isAnchored) {
+      return opponentLayout.rowX(i);
     }
     const barAreaOffset = 28;
     return dividerX + opponentDir * (barAreaOffset + i * (barW + barGap));
@@ -512,12 +596,12 @@ export function BarBattleOverlay({
   const FAR_LEFT_X = 30;
   const FAR_RIGHT_X = 470;
   const playerSplashLandX = isAnchored && playerBars > 0
-    ? (playerBarStartX(0) + playerBarStartX(playerBars - 1) + barW) / 2
+    ? playerLayout.splashX
     : playerAvatarX != null
       ? playerAvatarX + playerBarDir * AVATAR_BAR_OFFSET
     : dividerX + playerDir * (28 + (playerBars * (barW + barGap)) / 2);
   const opponentSplashLandX = isAnchored && opponentBars > 0
-    ? (opponentBarStartX(0) + opponentBarStartX(opponentBars - 1) + barW) / 2
+    ? opponentLayout.splashX
     : opponentAvatarX != null
       ? opponentAvatarX + opponentBarDir * AVATAR_BAR_OFFSET
     : dividerX + opponentDir * (28 + (opponentBars * (barW + barGap)) / 2);
@@ -551,6 +635,13 @@ export function BarBattleOverlay({
           <rect x="0" y="-30" width="500" height="290" />
         </clipPath>
       </defs>
+
+      {isAnchored && (
+        <g pointerEvents="none" aria-hidden="true">
+          <circle data-pitch-bar-target="player" cx={playerSplashLandX} cy={cy} r="6" fill="transparent" />
+          <circle data-pitch-bar-target="opponent" cx={opponentSplashLandX} cy={cy} r="6" fill="transparent" />
+        </g>
+      )}
 
       {/* Score texts — only shown in the CLASSIC variant.
           In the avatar-anchored variant the splash is handled entirely by the
@@ -589,69 +680,107 @@ export function BarBattleOverlay({
       })()}
 
       <g clipPath={`url(#${battleClip})`}>
-        {/* Player bars — in anchored variant they morph FROM the splash landing
-            point outward to their row positions, so the splash visually scatters
-            into bars. Classic uses spawnX as the start point (no morph). */}
-        {Array.from({ length: playerBars }).map((_, i) => {
-          const isCancelled = remainingDelta >= 0 ? i < minBars : true;
-          const isSurvived = remainingDelta > 0 && i >= minBars;
-          const cancelOrder = isCancelled ? (minBars - 1 - i) : 0;
-          const survivedIndex = isSurvived ? i - minBars : i;
+        {playerLayout.compact ? (
+          <StackedBar
+            key={`p-stack-${battle.key}`}
+            spawnX={playerLayout.compactX}
+            marchX={playerLayout.compactX}
+            pushX={playerLayout.compactX}
+            gradientId={blueGrad}
+            count={playerStackCount}
+            phase={phase}
+            cancelled={remainingDelta < 0}
+            survived={remainingDelta > 0}
+            cy={cy}
+            barW={barW}
+            barH={barH}
+            barRx={barRx}
+            morphFromX={isAnchored ? playerSplashLandX : undefined}
+            morphFromY={isAnchored ? cy : undefined}
+            isPortrait={isPortrait}
+          />
+        ) : (
+          Array.from({ length: playerBars }).map((_, i) => {
+            const isCancelled = remainingDelta >= 0 ? i < minBars : true;
+            const isSurvived = remainingDelta > 0 && i >= minBars;
+            const cancelOrder = isCancelled ? (minBars - 1 - i) : 0;
+            const survivedIndex = isSurvived ? i - minBars : i;
 
-          return (
-            <Bar
-              key={`p-${battle.key}-${i}`}
-              spawnX={playerBarStartX(i)}
-              marchX={playerMarchX(i)}
-              pushX={playerPushX(survivedIndex)}
-              color={BLUE}
-              darkColor={BLUE_DARK}
-              gradientId={blueGrad}
-              index={i}
-              phase={phase}
-              cancelled={isCancelled}
-              cancelOrder={cancelOrder}
-              survived={isSurvived}
-              cy={cy}
-              barW={barW}
-              barH={barH}
-              barRx={barRx}
-              morphFromX={isAnchored ? playerSplashLandX : undefined}
-              morphFromY={isAnchored ? cy : undefined}
-            />
-          );
-        })}
+            return (
+              <Bar
+                key={`p-${battle.key}-${i}`}
+                spawnX={playerBarStartX(i)}
+                marchX={playerMarchX(i)}
+                pushX={playerPushX(survivedIndex)}
+                color={BLUE}
+                darkColor={BLUE_DARK}
+                gradientId={blueGrad}
+                index={i}
+                phase={phase}
+                cancelled={isCancelled}
+                cancelOrder={cancelOrder}
+                survived={isSurvived}
+                cy={cy}
+                barW={barW}
+                barH={barH}
+                barRx={barRx}
+                morphFromX={isAnchored ? playerSplashLandX : undefined}
+                morphFromY={isAnchored ? cy : undefined}
+              />
+            );
+          })
+        )}
 
-        {/* Opponent bars */}
-        {Array.from({ length: opponentBars }).map((_, i) => {
-          const isCancelled = remainingDelta <= 0 ? i < minBars : true;
-          const isSurvived = remainingDelta < 0 && i >= minBars;
-          const cancelOrder = isCancelled ? (minBars - 1 - i) : 0;
-          const survivedIndex = isSurvived ? i - minBars : i;
+        {opponentLayout.compact ? (
+          <StackedBar
+            key={`o-stack-${battle.key}`}
+            spawnX={opponentLayout.compactX}
+            marchX={opponentLayout.compactX}
+            pushX={opponentLayout.compactX}
+            gradientId={redGrad}
+            count={opponentStackCount}
+            phase={phase}
+            cancelled={remainingDelta > 0}
+            survived={remainingDelta < 0}
+            cy={cy}
+            barW={barW}
+            barH={barH}
+            barRx={barRx}
+            morphFromX={isAnchored ? opponentSplashLandX : undefined}
+            morphFromY={isAnchored ? cy : undefined}
+            isPortrait={isPortrait}
+          />
+        ) : (
+          Array.from({ length: opponentBars }).map((_, i) => {
+            const isCancelled = remainingDelta <= 0 ? i < minBars : true;
+            const isSurvived = remainingDelta < 0 && i >= minBars;
+            const cancelOrder = isCancelled ? (minBars - 1 - i) : 0;
+            const survivedIndex = isSurvived ? i - minBars : i;
 
-          return (
-            <Bar
-              key={`o-${battle.key}-${i}`}
-              spawnX={opponentBarStartX(i)}
-              marchX={opponentMarchX(i)}
-              pushX={opponentPushX(survivedIndex)}
-              color={RED}
-              darkColor={RED_DARK}
-              gradientId={redGrad}
-              index={i}
-              phase={phase}
-              cancelled={isCancelled}
-              cancelOrder={cancelOrder}
-              survived={isSurvived}
-              cy={cy}
-              barW={barW}
-              barH={barH}
-              barRx={barRx}
-              morphFromX={isAnchored ? opponentSplashLandX : undefined}
-              morphFromY={isAnchored ? cy : undefined}
-            />
-          );
-        })}
+            return (
+              <Bar
+                key={`o-${battle.key}-${i}`}
+                spawnX={opponentBarStartX(i)}
+                marchX={opponentMarchX(i)}
+                pushX={opponentPushX(survivedIndex)}
+                color={RED}
+                darkColor={RED_DARK}
+                gradientId={redGrad}
+                index={i}
+                phase={phase}
+                cancelled={isCancelled}
+                cancelOrder={cancelOrder}
+                survived={isSurvived}
+                cy={cy}
+                barW={barW}
+                barH={barH}
+                barRx={barRx}
+                morphFromX={isAnchored ? opponentSplashLandX : undefined}
+                morphFromY={isAnchored ? cy : undefined}
+              />
+            );
+          })
+        )}
 
         {/* Collision flash — flash position follows the bar row's Y */}
         <CollisionFlash

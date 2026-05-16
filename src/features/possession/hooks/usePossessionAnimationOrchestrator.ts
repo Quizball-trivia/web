@@ -369,9 +369,17 @@ export function usePossessionAnimationOrchestrator({
       || goalFieldResetReadyQIndex !== activeAttackQIndex
     );
   const freezePendingAttackField = hasPendingRoundAttackAnimation;
+  // Intentionally reads `attackOriginPctRef.current` during render: when
+  // an attack animation starts we capture a SNAPSHOT of the possession
+  // pct into the ref (see the useEffect below), and during the freeze
+  // window we want every subsequent render to see that frozen value so
+  // the field doesn't drift while the ball/avatar animate. Mirroring the
+  // ref into state would re-introduce a 1-render lag and break the
+  // freeze — the stale read is the desired behaviour here.
   const visualMyPossessionPct = suppressCarryoverAttackVisual
     ? 50
     : (freezeActiveAttackField || freezePendingAttackField)
+      // eslint-disable-next-line react-hooks/refs -- snapshot read by design (see comment above)
       ? (attackOriginPctRef.current ?? myPossessionPct)
       : myPossessionPct;
 

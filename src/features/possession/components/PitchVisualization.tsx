@@ -221,13 +221,23 @@ export function PitchVisualization({
   const possessionTrackLeft = 15;
   const possessionTrackRight = centerPossessionTrack ? 485 : 470;
   const possessionTrackWidth = possessionTrackRight - possessionTrackLeft;
-  const possessionBoundaryX = mirrored
+  const rawPossessionBoundaryX = mirrored
     ? possessionTrackRight - (playerPosition / 100) * possessionTrackWidth
     : possessionTrackLeft + (playerPosition / 100) * possessionTrackWidth;
-  // Mobile uses bigger avatars (diameter ~88 SVG units) — push them further
-  // from the possession boundary so they don't overlap visually. Desktop's
-  // smaller avatars (~60) stay at the original 35-unit offset.
+  // Mobile avatars are bigger, so they need more spread from the boundary.
   const avatarSpread = isPortrait ? 35 : 55;
+
+  // Clamp the boundary so the winning side's bar zone (1 stacked bar
+  // worth — AVATAR_BAR_OFFSET 58 + half bar 16 = 74) always fits behind
+  // the avatar on either edge of the pitch.
+  const BAR_ZONE_PADDING = 74;
+  const minBoundary = 24 + avatarSpread + BAR_ZONE_PADDING;
+  const maxBoundary = 476 - avatarSpread - BAR_ZONE_PADDING;
+  const possessionBoundaryX = Math.max(
+    minBoundary,
+    Math.min(maxBoundary, rawPossessionBoundaryX),
+  );
+
   const playerAvatarX = possessionBoundaryX + (mirrored ? avatarSpread : -avatarSpread);
   const opponentAvatarX = possessionBoundaryX + (mirrored ? -avatarSpread : avatarSpread);
 
@@ -278,6 +288,7 @@ export function PitchVisualization({
     : null;
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset on key change
     setSimpleShotReturnToCenter(false);
     if (!useSimpleShotAnimation || !isShotGoal || !simpleShotKey) return;
 

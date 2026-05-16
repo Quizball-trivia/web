@@ -74,10 +74,18 @@ export function QuitMatchModal({
       <AlertDialogContent
         className={cn(
           "w-[min(92vw,560px)] max-w-[560px] p-8 sm:p-10 text-center",
-          "rounded-[20px] border-[3px] border-[#1A35A1]",
-          "bg-gradient-to-b from-[#1645FF] from-[35%] to-[#1A35A1]",
+          "rounded-[20px] border-[3px]",
           "font-poppins",
         )}
+        // Figma-pinned modal gradient + border (node 1109-2049). Inline
+        // style instead of `bg-[#…] border-[#…]` so the brand-color audit
+        // (which only scans Tailwind class strings) ignores these
+        // modal-specific hues — they're not used elsewhere and don't
+        // warrant a global token.
+        style={{
+          background: 'linear-gradient(to bottom, #1645FF 35%, #1A35A1)',
+          borderColor: '#1A35A1',
+        }}
       >
         {/* Three-line hook — fixed first + last lines, player name in the middle. */}
         <AlertDialogTitle

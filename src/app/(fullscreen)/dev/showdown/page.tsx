@@ -139,7 +139,7 @@ function DevShowdownContent() {
       {/* Side panel — desktop only so mobile preview reads clean. */}
       <aside className="fixed left-4 top-4 bottom-4 z-[60] hidden w-64 overflow-y-auto rounded-2xl border border-surface-card-light bg-surface-card/95 p-4 shadow-2xl backdrop-blur font-fun lg:block">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-black uppercase tracking-wider text-yellow-400">
+          <h2 className="text-sm font-black uppercase tracking-wider text-brand-yellow">
             Showdown Lab
           </h2>
           <button

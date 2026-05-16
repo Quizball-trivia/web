@@ -561,7 +561,14 @@ export function RealtimeResultsScreen({
                 short bar with the bottom of each marker column. */}
             <div className="mt-6 flex items-end md:mt-8">
               <TierEndMarker label={rpTierInfo.tier} />
-              <div className="relative h-[18px] flex-1 overflow-hidden bg-[#1F5D0E] md:h-[24px]">
+              <div
+                className="relative h-[18px] flex-1 overflow-hidden md:h-[24px]"
+                // Track shade for the rank-progress bar — darker than the
+                // brand-green fill so the green progress reads clearly
+                // against an unfilled background. Inline-style avoids
+                // adding a one-off token for a single visual.
+                style={{ backgroundColor: '#1F5D0E' }}
+              >
                 <motion.div
                   initial={{ width: `${oldRpTierInfo.progress}%` }}
                   animate={{

@@ -61,6 +61,11 @@ function findPitchAvatar(side: Side): DOMRect | null {
   return findVisibleRect(`[data-pitch-avatar="${side}"]`);
 }
 
+function findPitchBarTarget(side: Side): DOMRect | null {
+  if (typeof document === 'undefined') return null;
+  return findVisibleRect(`[data-pitch-bar-target="${side}"]`);
+}
+
 function findPitchField(): DOMRect | null {
   if (typeof document === 'undefined') return null;
   return findVisibleRect('[data-pitch-field="possession"]');
@@ -96,42 +101,44 @@ function rectCentre(rect: DOMRect): { x: number; y: number } {
   };
 }
 
-/**
- * Compute the flight's landing point — shifted from the avatar's centre toward
- * the player's defensive zone (where the bars actually spawn) so the +N ghost
- * lands at the bar position and morphs continuously into bars, rather than
- * landing on the avatar and then bars appearing offset from it.
- *
- * The "defensive zone" direction is the vector pointing AWAY from the opposing
- * avatar. This works automatically for all layouts (portrait/landscape,
- * mirrored/not, possessionDiff shifts) because it's derived from the live
- * screen positions of both avatars.
- */
+function clampFlightPoint(point: { x: number; y: number }): { x: number; y: number } {
+  if (typeof window === 'undefined') return point;
+  const xPadding = window.innerWidth < 640 ? 88 : 56;
+  const yPadding = window.innerWidth < 640 ? 64 : 48;
+  return {
+    x: Math.max(xPadding, Math.min(window.innerWidth - xPadding, point.x)),
+    y: Math.max(yPadding, Math.min(window.innerHeight - yPadding, point.y)),
+  };
+}
+
 function computeFlightTarget(
   selfRect: DOMRect,
   opponentRect: DOMRect | null,
   pitchRect: DOMRect | null
 ): { x: number; y: number } {
-  const centre = rectCentre(selfRect);
+  const centre = clampFlightPoint(rectCentre(selfRect));
   if (!opponentRect) return centre;
   const oppCentre = rectCentre(opponentRect);
   const dx = centre.x - oppCentre.x;
   const dy = centre.y - oppCentre.y;
-  // Bar zone sits ~30% of the avatar-to-avatar distance past the avatar
-  // — far enough that the ghost lands visibly past the circle but not
-  // so far that it overshoots into empty pitch.
-  const PUSH = 0.3;
-  const target = {
-    x: centre.x + dx * PUSH,
-    y: centre.y + dy * PUSH,
-  };
-  if (!pitchRect) return target;
+  const PUSH = 0.22;
+  let x = centre.x + dx * PUSH;
+  let y = centre.y + dy * PUSH;
 
-  const padding = 22;
-  return {
-    x: Math.max(pitchRect.left + padding, Math.min(pitchRect.right - padding, target.x)),
-    y: Math.max(pitchRect.top + padding, Math.min(pitchRect.bottom - padding, target.y)),
-  };
+  if (pitchRect) {
+    const padding = 22;
+    x = Math.max(pitchRect.left + padding, Math.min(pitchRect.right - padding, x));
+    y = Math.max(pitchRect.top + padding, Math.min(pitchRect.bottom - padding, y));
+
+    const cx = (pitchRect.left + pitchRect.right) / 2;
+    const cy = (pitchRect.top + pitchRect.bottom) / 2;
+    if (centre.x < cx) x = Math.min(x, cx - padding);
+    else if (centre.x > cx) x = Math.max(x, cx + padding);
+    if (centre.y < cy) y = Math.min(y, cy - padding);
+    else if (centre.y > cy) y = Math.max(y, cy + padding);
+  }
+
+  return clampFlightPoint({ x, y });
 }
 
 export function usePossessionBarBattleFlights() {
@@ -194,6 +201,38 @@ export function usePossessionBarBattleFlights() {
     ?? match?.possessionState?.phaseKind
     ?? 'normal';
 
+  const enqueueFlight = useCallback((params: {
+    side: Side;
+    sourceRect: DOMRect;
+    targetRect: DOMRect;
+    opponentRect: DOMRect | null;
+    pitchRect: DOMRect | null;
+    points: number;
+    failed?: boolean;
+  }) => {
+    const id = ++flightSeqRef.current;
+    const addFlight = () => {
+      const barTargetRect = findPitchBarTarget(params.side);
+      setFlights((prev) => [...prev, {
+        id,
+        side: params.side,
+        source: clampFlightPoint(rectCentre(params.sourceRect)),
+        target: barTargetRect
+          ? clampFlightPoint(rectCentre(barTargetRect))
+          : computeFlightTarget(params.targetRect, params.opponentRect, params.pitchRect),
+        points: params.points,
+        failed: params.failed,
+      }]);
+    };
+
+    if (typeof window === 'undefined') {
+      addFlight();
+      return;
+    }
+
+    window.setTimeout(addFlight, 50);
+  }, []);
+
   // ── Player flight on answerAck ──────────────────────────────────────────
   // Fires regardless of correctness — wrong/zero-point answers get a "failed"
   // flight that falls off the bottom of the screen instead of reaching the
@@ -222,16 +261,16 @@ export function usePossessionBarBattleFlights() {
     const oppAvatarRect = findPitchAvatar('opponent');
     const pitchRect = findPitchField();
     playerFiredQRef.current = answerAck.qIndex;
-    const flight: FlightSpec = {
-      id: ++flightSeqRef.current,
+    enqueueFlight({
       side: 'player',
-      source: rectCentre(sourceRect),
-      target: computeFlightTarget(targetRect, oppAvatarRect, pitchRect),
+      sourceRect,
+      targetRect,
+      opponentRect: oppAvatarRect,
+      pitchRect,
       points,
       failed,
-    };
-    setFlights((prev) => [...prev, flight]);
-  }, [enabled, answerAck]);
+    });
+  }, [enabled, answerAck, enqueueFlight]);
 
   // Fallback: if the client missed its immediate answer_ack, fire the same
   // player flight from the authoritative round_result so the user still sees
@@ -253,6 +292,7 @@ export function usePossessionBarBattleFlights() {
     const sourceRect = findScoreAnchor('player');
     const targetRect = findPitchAvatar('player');
     if (!sourceRect || !targetRect) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSuppressScoreSplash(false);
       logger.warn('Bar-battle player fallback flight skipped: anchor missing', {
         sourceFound: !!sourceRect,
@@ -264,15 +304,15 @@ export function usePossessionBarBattleFlights() {
     const oppAvatarRect = findPitchAvatar('opponent');
     const pitchRect = findPitchField();
     playerFiredQRef.current = roundResult.qIndex;
-    const flight: FlightSpec = {
-      id: ++flightSeqRef.current,
+    enqueueFlight({
       side: 'player',
-      source: rectCentre(sourceRect),
-      target: computeFlightTarget(targetRect, oppAvatarRect, pitchRect),
+      sourceRect,
+      targetRect,
+      opponentRect: oppAvatarRect,
+      pitchRect,
       points,
-    };
-    setFlights((prev) => [...prev, flight]);
-  }, [currentQIndex, enabled, phaseKindFromState, roundResult, selfUserId]);
+    });
+  }, [currentQIndex, enabled, enqueueFlight, phaseKindFromState, roundResult, selfUserId]);
 
   // Same fallback for the opponent. Special questions may only expose final
   // opponent scoring through round_result, so keep the flight feedback even
@@ -293,6 +333,7 @@ export function usePossessionBarBattleFlights() {
     const sourceRect = findScoreAnchor('opponent');
     const targetRect = findPitchAvatar('opponent');
     if (!sourceRect || !targetRect) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSuppressScoreSplash(false);
       logger.warn('Bar-battle opponent fallback flight skipped: anchor missing', {
         sourceFound: !!sourceRect,
@@ -304,15 +345,15 @@ export function usePossessionBarBattleFlights() {
     const selfAvatarRect = findPitchAvatar('player');
     const pitchRect = findPitchField();
     opponentFiredQRef.current = roundResult.qIndex;
-    const flight: FlightSpec = {
-      id: ++flightSeqRef.current,
+    enqueueFlight({
       side: 'opponent',
-      source: rectCentre(sourceRect),
-      target: computeFlightTarget(targetRect, selfAvatarRect, pitchRect),
+      sourceRect,
+      targetRect,
+      opponentRect: selfAvatarRect,
+      pitchRect,
       points,
-    };
-    setFlights((prev) => [...prev, flight]);
-  }, [currentQIndex, enabled, phaseKindFromState, roundResult, selfUserId]);
+    });
+  }, [currentQIndex, enabled, enqueueFlight, phaseKindFromState, roundResult, selfUserId]);
 
   // ── Opponent flight on opponent answer ──────────────────────────────────
   const opponentAnswered = match?.opponentAnswered ?? false;
@@ -343,17 +384,18 @@ export function usePossessionBarBattleFlights() {
     const pitchRect = findPitchField();
     opponentFiredQRef.current = currentQIndex;
     const failed = opponentAnsweredCorrectly !== true || opponentRecentPoints <= 0;
-    const flight: FlightSpec = {
-      id: ++flightSeqRef.current,
+    enqueueFlight({
       side: 'opponent',
-      source: rectCentre(sourceRect),
-      target: computeFlightTarget(targetRect, selfAvatarRect, pitchRect),
+      sourceRect,
+      targetRect,
+      opponentRect: selfAvatarRect,
+      pitchRect,
       points: opponentRecentPoints,
       failed,
-    };
-    setFlights((prev) => [...prev, flight]);
+    });
   }, [
     enabled,
+    enqueueFlight,
     opponentAnswered,
     opponentAnsweredCorrectly,
     opponentRecentPoints,
