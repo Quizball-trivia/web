@@ -1,11 +1,7 @@
+# Allow all crawlers to index the public site.
+# Dev / API routes are blocked from indexing — they don't make sense as
+# search results (auth-gated UI, JSON endpoints).
 User-agent: *
-Disallow: /
-
-User-agent: Googlebot
-Disallow: /
-
-User-agent: CCBot
-Disallow: /
-
-User-agent: anthropic-ai
-Disallow: /
+Allow: /
+Disallow: /dev/
+Disallow: /api/
