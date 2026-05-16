@@ -264,7 +264,7 @@ export function usePossessionFieldState({
       isPlayerAttacker: attackerIsMe,
       variant: shotAnimationVariant,
     } : undefined,
-    zoomToGoal: isPenaltyQuestion || isShotVisualPhase,
+    zoomToGoal: isPenaltyQuestion || isShotQuestion,
     mirrored,
     targetGoal,
     ballOnPlayer,

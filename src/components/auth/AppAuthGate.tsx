@@ -17,6 +17,7 @@ export default function AppAuthGate({ children }: AppAuthGateProps) {
   const user = useAuthStore((state) => state.user);
   const bootstrap = useAuthStore((state) => state.bootstrap);
   const hasBootstrapped = useRef(false);
+  const isDevelopmentDevRoute = process.env.NODE_ENV === "development" && (pathname?.startsWith("/dev") ?? false);
 
   useEffect(() => {
     if (hasBootstrapped.current) return;
@@ -25,12 +26,14 @@ export default function AppAuthGate({ children }: AppAuthGateProps) {
   }, [bootstrap]);
 
   useEffect(() => {
+    if (isDevelopmentDevRoute) return;
     if (status === "anonymous") {
       router.replace("/auth/welcome");
     }
-  }, [status, router]);
+  }, [isDevelopmentDevRoute, status, router]);
 
   useEffect(() => {
+    if (isDevelopmentDevRoute) return;
     if (status !== "authenticated" || !user) return;
 
     const currentPath = pathname ?? "/";
@@ -45,7 +48,11 @@ export default function AppAuthGate({ children }: AppAuthGateProps) {
     if (completed && onOnboardingPage) {
       router.replace("/play");
     }
-  }, [pathname, router, status, user]);
+  }, [isDevelopmentDevRoute, pathname, router, status, user]);
+
+  if (isDevelopmentDevRoute) {
+    return <>{children}</>;
+  }
 
   if (status === "loading") {
     return <LoadingScreen text="Warming Up..." />;

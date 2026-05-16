@@ -1,12 +1,17 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MatchRoundResultPayload } from '@/lib/realtime/socket.types';
-import { GOAL_CELEBRATION_MS } from '../../realtimePossession.helpers';
+import {
+  GOAL_ATTACK_START_DELAY_MS,
+  GOAL_CELEBRATION_MS,
+  GOAL_SHOT_TO_CELEBRATION_MS,
+} from '../../realtimePossession.helpers';
 import { usePossessionGoalCelebration } from '../usePossessionGoalCelebration';
 
 const MATCH_ID = 'match-1';
 const USER_A = 'user-a';
 const USER_B = 'user-b';
+const ROUND_GOAL_CELEBRATION_DELAY_MS = GOAL_ATTACK_START_DELAY_MS + GOAL_SHOT_TO_CELEBRATION_MS;
 
 function makeRoundResult(
   qIndex: number,
@@ -44,7 +49,7 @@ describe('usePossessionGoalCelebration', () => {
     vi.useRealTimers();
   });
 
-  it('waits for roundResultHoldDone before showing a normal-goal celebration and then clears it', () => {
+  it('shows a normal-goal celebration after the shot lands and then clears it', () => {
     const { result, rerender } = renderHook((props: {
       roundResult: MatchRoundResultPayload | null;
       roundResultHoldDone: boolean;
@@ -74,11 +79,14 @@ describe('usePossessionGoalCelebration', () => {
 
     expect(result.current.goalCelebration).toBeNull();
 
-    rerender({
-      roundResult: makeRoundResult(5, 'normal', 1),
-      roundResultHoldDone: true,
-      currentQuestionIndex: 5,
-      isHalftime: false,
+    act(() => {
+      vi.advanceTimersByTime(ROUND_GOAL_CELEBRATION_DELAY_MS - 10);
+    });
+
+    expect(result.current.goalCelebration).toBeNull();
+
+    act(() => {
+      vi.advanceTimersByTime(10);
     });
 
     expect(result.current.goalCelebration).toEqual({
@@ -122,7 +130,7 @@ describe('usePossessionGoalCelebration', () => {
     expect(penaltyResult.current.goalCelebration).toBeNull();
   });
 
-  it('clears an active goal celebration when halftime begins', async () => {
+  it('keeps a boundary goal celebration when server halftime begins immediately', async () => {
     const { result, rerender } = renderHook((props: {
       roundResult: MatchRoundResultPayload | null;
       roundResultHoldDone: boolean;
@@ -150,6 +158,10 @@ describe('usePossessionGoalCelebration', () => {
       isHalftime: false,
     });
 
+    act(() => {
+      vi.advanceTimersByTime(ROUND_GOAL_CELEBRATION_DELAY_MS);
+    });
+
     expect(result.current.goalCelebration).toEqual({
       scorerName: 'me',
       isMeScorer: true,
@@ -159,6 +171,57 @@ describe('usePossessionGoalCelebration', () => {
       roundResult: makeRoundResult(5, 'normal', 1),
       roundResultHoldDone: true,
       currentQuestionIndex: 5,
+      isHalftime: true,
+    });
+
+    await act(async () => {});
+
+    expect(result.current.goalCelebration).toEqual({
+      scorerName: 'me',
+      isMeScorer: true,
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(GOAL_CELEBRATION_MS + 10);
+    });
+
+    expect(result.current.goalCelebration).toBeNull();
+  });
+
+  it('clears active celebration on halftime when the current round has no goal', async () => {
+    const { result, rerender } = renderHook((props: {
+      roundResult: MatchRoundResultPayload | null;
+      roundResultHoldDone: boolean;
+      currentQuestionIndex: number | null;
+      isHalftime: boolean;
+    }) => usePossessionGoalCelebration({
+      ...props,
+      mySeat: 1,
+      playerUsername: 'me',
+      opponentUsername: 'opponent',
+      devPossessionAnimation: null,
+    }), {
+      initialProps: {
+        roundResult: makeRoundResult(5, 'normal', 1),
+        roundResultHoldDone: true,
+        currentQuestionIndex: 5,
+        isHalftime: false,
+      },
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(ROUND_GOAL_CELEBRATION_DELAY_MS);
+    });
+
+    expect(result.current.goalCelebration).toEqual({
+      scorerName: 'me',
+      isMeScorer: true,
+    });
+
+    rerender({
+      roundResult: makeRoundResult(6, 'normal', null),
+      roundResultHoldDone: true,
+      currentQuestionIndex: 6,
       isHalftime: true,
     });
 

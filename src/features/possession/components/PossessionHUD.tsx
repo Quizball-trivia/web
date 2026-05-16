@@ -79,9 +79,7 @@ export function PossessionHUD({
       <div className="mt-2 flex items-center justify-center gap-3 sm:gap-4">
         {/* Player (left) */}
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="rounded-full bg-brand-blue p-2 sm:p-2.5">
-            <AvatarDisplay customization={playerAvatarCustomization ?? {}} size="sm" />
-          </div>
+          <AvatarDisplay customization={playerAvatarCustomization ?? {}} size="sm" className="size-11 shrink-0" />
           <AnimatedPointsCounter value={playerPoints} accentClassName="text-white/50" />
         </div>
 
@@ -127,9 +125,11 @@ export function PossessionHUD({
         {/* Opponent (right) */}
         <div className="flex items-center gap-2 sm:gap-3">
           <AnimatedPointsCounter value={opponentPoints} align="right" accentClassName="text-white/50" />
-          <div className="rounded-full bg-brand-red-soft p-2 sm:p-2.5">
-            <AvatarDisplay customization={opponentAvatarCustomization ?? {}} size="sm" className="-scale-x-100" />
-          </div>
+          <AvatarDisplay
+            customization={opponentAvatarCustomization ?? {}}
+            size="sm"
+            className="size-11 shrink-0 -scale-x-100"
+          />
         </div>
       </div>
     </div>

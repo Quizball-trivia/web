@@ -43,6 +43,9 @@ interface UseRealtimePossessionMatchControllerParams {
   /** ISO country code for the flag badge shown on the halftime avatar. */
   playerCountryCode?: string | null;
   opponentCountryCode?: string | null;
+  centerPossessionTrack?: boolean;
+  simpleShotAnimation?: boolean;
+  suppressAvatarScoreSplash?: boolean;
   onQuit: () => void;
   onForfeit: () => void;
 }
@@ -75,6 +78,9 @@ export function useRealtimePossessionMatchController({
   opponentUsername,
   playerCountryCode = null,
   opponentCountryCode = null,
+  centerPossessionTrack = true,
+  simpleShotAnimation = true,
+  suppressAvatarScoreSplash = false,
   onQuit,
   onForfeit,
 }: UseRealtimePossessionMatchControllerParams): RealtimePossessionMatchControllerResult {
@@ -238,7 +244,7 @@ export function useRealtimePossessionMatchController({
   const splashState = usePossessionScoreSplashes({
     localQuestion,
     phaseKind,
-    isHalftime: halftimeActive,
+    isHalftime: overlayModel.isHalftime,
     selectedAnswer: state.selectedAnswer,
     selectedAnswerQIndex: state.selectedAnswerQIndex ?? null,
     opponentAnswered: state.opponentAnswered,
@@ -252,9 +258,12 @@ export function useRealtimePossessionMatchController({
 
   // Divider X in SVG coords — snapshot for bar battle origin
   const mirrored = possessionState?.half === 2;
+  const possessionTrackLeft = 15;
+  const possessionTrackRight = centerPossessionTrack ? 485 : 470;
+  const possessionTrackWidth = possessionTrackRight - possessionTrackLeft;
   const dividerX = mirrored
-    ? 470 - (fieldState.visualMyPossessionPct / 100) * 455
-    : 15 + (fieldState.visualMyPossessionPct / 100) * 455;
+    ? possessionTrackRight - (fieldState.visualMyPossessionPct / 100) * possessionTrackWidth
+    : possessionTrackLeft + (fieldState.visualMyPossessionPct / 100) * possessionTrackWidth;
 
   const barBattle = useBarBattle({
     answerAck,
@@ -492,6 +501,8 @@ export function useRealtimePossessionMatchController({
         ...fieldState.pitchProps,
         playerAvatarCustomization,
         opponentAvatarCustomization,
+        centerPossessionTrack,
+        simpleShotAnimation,
         barBattle,
       },
       goalCelebration,
@@ -534,10 +545,10 @@ export function useRealtimePossessionMatchController({
             chanceCardPending: Boolean(activeOptimisticChanceCard?.pending || activeOptimisticChanceCard?.pendingSync),
             chanceCardPendingSync: Boolean(activeOptimisticChanceCard?.pendingSync),
             onUseChanceCard: handleUseChanceCard,
-            showPlayerSplash: splashState.showPlayerSplash,
-            showOpponentSplash: splashState.showOpponentSplash,
-            playerSplashPoints: splashState.playerSplashPoints,
-            opponentSplashPoints: splashState.opponentSplashPoints,
+            showPlayerSplash: suppressAvatarScoreSplash ? false : splashState.showPlayerSplash,
+            showOpponentSplash: suppressAvatarScoreSplash ? false : splashState.showOpponentSplash,
+            playerSplashPoints: suppressAvatarScoreSplash ? null : splashState.playerSplashPoints,
+            opponentSplashPoints: suppressAvatarScoreSplash ? null : splashState.opponentSplashPoints,
             playerSplashVariant: splashState.playerSplashVariant,
             opponentSplashVariant: splashState.opponentSplashVariant,
             onPlayerSplashComplete: splashState.onPlayerSplashComplete,
@@ -561,6 +572,7 @@ export function useRealtimePossessionMatchController({
               roundResolved: state.roundResolved,
               answerAck,
               roundResult: state.roundResult,
+              myRound,
               opponentRound,
               countdownGuessAck,
               cluesGuessAck,

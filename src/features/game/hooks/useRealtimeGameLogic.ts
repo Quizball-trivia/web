@@ -3,12 +3,15 @@ import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { getSocket } from '@/lib/realtime/socket-client';
 import { logger } from '@/utils/logger';
 import { QUESTION_REVEAL_MS } from '@/features/possession/types/possession.types';
+import { GOAL_CELEBRATION_MS } from '@/features/possession/realtimePossession.helpers';
 import { trackAnswerSubmitted } from '@/lib/analytics/game-events';
 
 const QUESTION_PLAYING_MS = 10000; // 10 second playing phase
 export const ROUND_RESULT_HOLD_MS = 2500; // hold result for 2.5s before transitioning to next question
 const SPECIAL_RESULT_EXTRA_MS = 3000; // extra hold for special question reveals (countdown answers, correct order, clues answer)
-const GOAL_CELEBRATION_EXTRA_MS = 7000; // keep promotion blocked until the goal celebration overlay finishes
+const GOAL_CELEBRATION_EXTRA_MS = GOAL_CELEBRATION_MS; // keep promotion blocked until the goal celebration overlay finishes
+const ANSWER_ACK_RETRY_MS = 900;
+const ANSWER_ACK_MAX_RETRIES = 2;
 const SPECIAL_QUESTION_KINDS = new Set(['countdown', 'putInOrder', 'clues']);
 
 interface UseRealtimeGameLogicOptions {
@@ -34,6 +37,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
   const [transitionElapsed, setTransitionElapsed] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const matchPausedRef = useRef(matchPaused);
+  const answerAckRetryCountRef = useRef(0);
 
   useEffect(() => {
     matchPausedRef.current = matchPaused;
@@ -86,6 +90,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedAnswer(null);
     setSelectedAnswerQIndex(undefined);
+    answerAckRetryCountRef.current = 0;
     setShowOptions(false);
     setTimeRemaining(initialTimeRemaining);
 
@@ -197,8 +202,8 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
 
   // Hold timer — hide options after result display, then either signal transition
   // (normal phases with delay) or let the gate effect promote directly (non-normal).
-  // Also set roundResultHoldDone for goal rounds so the GoalCelebrationOverlay fires
-  // (it triggers on roundResultHoldDone, not effectiveDelay).
+  // Also set roundResultHoldDone for goal rounds so normal promotion stays
+  // blocked while the shot and goal celebration sequence runs.
   useEffect(() => {
     if (!roundResolved || !showOptions || matchPaused || startCountdownActive) return;
 
@@ -344,6 +349,71 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
       timeMs: Math.round(elapsed),
     });
   };
+
+  useEffect(() => {
+    if (selectedAnswer === null || selectedAnswerQIndex === undefined) return;
+    if (!match || !currentQuestion) return;
+    if (selectedAnswerQIndex !== currentQuestion.qIndex) return;
+    if (answerAck || roundResult) return;
+    if (matchPaused || startCountdownActive) return;
+
+    const retryTimer = setInterval(() => {
+      if (answerAckRetryCountRef.current >= ANSWER_ACK_MAX_RETRIES) {
+        clearInterval(retryTimer);
+        return;
+      }
+
+      const latestMatch = useRealtimeMatchStore.getState().match;
+      if (!latestMatch || latestMatch.matchId !== match.matchId) {
+        clearInterval(retryTimer);
+        return;
+      }
+      if (latestMatch.currentQuestion?.qIndex !== selectedAnswerQIndex) {
+        clearInterval(retryTimer);
+        return;
+      }
+      if (latestMatch.answerAck?.qIndex === selectedAnswerQIndex || latestMatch.lastRoundResult?.qIndex === selectedAnswerQIndex) {
+        clearInterval(retryTimer);
+        return;
+      }
+
+      answerAckRetryCountRef.current += 1;
+      const startedAt = normalizedPlayableAtMs ?? optionsShownAtRef.current ?? Date.now();
+      const now = normalizedQuestionDeadlineAtMs != null
+        ? Math.min(Date.now(), normalizedQuestionDeadlineAtMs)
+        : Date.now();
+      const maxWindowMs = normalizedQuestionDeadlineAtMs != null
+        ? Math.max(0, normalizedQuestionDeadlineAtMs - startedAt)
+        : QUESTION_PLAYING_MS;
+      const elapsed = Math.min(maxWindowMs, Math.max(0, now - startedAt));
+
+      getSocket().emit('match:answer', {
+        matchId: match.matchId,
+        qIndex: selectedAnswerQIndex,
+        selectedIndex: selectedAnswer,
+        timeMs: Math.round(elapsed),
+      });
+      logger.info('Socket retry match:answer pending ack', {
+        matchId: match.matchId,
+        qIndex: selectedAnswerQIndex,
+        selectedIndex: selectedAnswer,
+        retry: answerAckRetryCountRef.current,
+      });
+    }, ANSWER_ACK_RETRY_MS);
+
+    return () => clearInterval(retryTimer);
+  }, [
+    answerAck,
+    currentQuestion,
+    match,
+    matchPaused,
+    normalizedPlayableAtMs,
+    normalizedQuestionDeadlineAtMs,
+    roundResult,
+    selectedAnswer,
+    selectedAnswerQIndex,
+    startCountdownActive,
+  ]);
 
   return {
     state: {

@@ -28,11 +28,51 @@ const BATTLE_PER_BAR_MS = 150;    // Extra time per cancelled bar pair
 const RESULT_HOLD_MS = 500;       // Show remaining bars
 const DONE_LINGER_MS = 100;
 
-/** Total time from convert start. Export so orchestrator can size its lock window. */
-export const BAR_BATTLE_TOTAL_MS = 2800; // Conservative upper bound
-
 const POINTS_PER_BAR = 10;
 const MAX_BARS = 12;
+const BAR_BATTLE_LOCK_BUFFER_MS = 180;
+
+export function pointsToBars(points: number): number {
+  if (points <= 0) return 0;
+  return Math.min(Math.max(Math.round(points / POINTS_PER_BAR), 1), MAX_BARS);
+}
+
+export function getBarBattleTotalMs(playerPoints: number, opponentPoints: number): number {
+  const playerBars = pointsToBars(playerPoints);
+  const opponentBars = pointsToBars(opponentPoints);
+  if (playerBars === 0 && opponentBars === 0) return 0;
+  const maxBars = Math.max(playerBars, opponentBars);
+  const cancelledCount = Math.min(playerBars, opponentBars);
+  return (
+    BOTH_SCORE_HOLD_MS +
+    CONVERT_DURATION +
+    BARS_SPAWN_BASE_MS +
+    maxBars * BARS_PER_STAGGER_MS +
+    BATTLE_BASE_MS +
+    cancelledCount * BATTLE_PER_BAR_MS +
+    RESULT_HOLD_MS +
+    DONE_LINGER_MS
+  );
+}
+
+/** Exported so the field orchestrator can size its lock window from real phase timing. */
+export const BAR_BATTLE_TOTAL_MS = getBarBattleTotalMs(MAX_BARS * POINTS_PER_BAR, MAX_BARS * POINTS_PER_BAR);
+
+export function getBarBattleFieldLockMs(playerPoints: number, opponentPoints: number): number {
+  return getBarBattleTotalMs(playerPoints, opponentPoints) + BAR_BATTLE_LOCK_BUFFER_MS;
+}
+
+function resolveBattlePoints(
+  pointsEarned: number,
+  questionKind?: MatchAnswerAckPayload['questionKind'] | MatchRoundResultPayload['questionKind'],
+  foundCount?: number
+): number {
+  if (pointsEarned > 0) return pointsEarned;
+  if (questionKind === 'putInOrder' && typeof foundCount === 'number' && foundCount > 0) {
+    return Math.min(foundCount, 5) * 20;
+  }
+  return pointsEarned;
+}
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
@@ -52,11 +92,6 @@ interface UseBarBattleParams {
   phaseKind: string;
   /** Current divider X in SVG coords */
   dividerX: number;
-}
-
-function pointsToBars(points: number): number {
-  if (points <= 0) return 0;
-  return Math.min(Math.max(Math.round(points / POINTS_PER_BAR), 1), MAX_BARS);
 }
 
 export function useBarBattle({
@@ -88,15 +123,25 @@ export function useBarBattle({
     };
   }, []);
 
+  // A goal is terminal for this possession exchange: show the shot/goal
+  // moment, not possession conversion bars.
+  useEffect(() => {
+    if (!roundResult?.deltas?.goalScoredBySeat) return;
+    for (const t of timersRef.current) clearTimeout(t);
+    timersRef.current = [];
+    battleStartedQRef.current = roundResult.qIndex;
+    queueMicrotask(() => setBattle(null));
+  }, [roundResult]);
+
   // ─── Step 1: Player answers → show player score immediately ─────────────
   useEffect(() => {
     if (!answerAck) return;
     const kind = answerAck.phaseKind ?? phaseKind;
-    if (kind !== 'normal' && kind !== 'last_attack') return;
+    if (kind !== 'normal') return;
     if (scoreShownQRef.current.player === answerAck.qIndex) return;
 
     scoreShownQRef.current.player = answerAck.qIndex;
-    const pts = answerAck.isCorrect ? answerAck.pointsEarned : 0;
+    const pts = resolveBattlePoints(answerAck.pointsEarned, answerAck.questionKind, answerAck.foundCount);
 
     queueMicrotask(() => {
       setBattle((prev) => {
@@ -130,14 +175,14 @@ export function useBarBattle({
     if (qIndex === null) return;
 
     const kind = roundResult?.phaseKind ?? phaseKind;
-    if (kind !== 'normal' && kind !== 'last_attack') return;
+    if (kind !== 'normal') return;
+    if (roundResult?.deltas?.goalScoredBySeat) return;
     if (scoreShownQRef.current.opponent === qIndex) return;
 
     // Get opponent points from best available source
-    const oppCorrect = opponentAnsweredCorrectly === true || opponentRound?.isCorrect === true;
-    const oppPts = oppCorrect
-      ? (opponentRound?.pointsEarned ?? opponentRecentPoints ?? 0)
-      : 0;
+    const oppPts = opponentRound
+      ? resolveBattlePoints(opponentRound.pointsEarned, roundResult?.questionKind, opponentRound.foundCount)
+      : (opponentRecentPoints ?? 0);
 
     scoreShownQRef.current.opponent = qIndex;
 
@@ -169,7 +214,11 @@ export function useBarBattle({
     if (!roundResult || !myRound || !opponentRound) return;
 
     const kind = roundResult.phaseKind ?? phaseKind;
-    if (kind !== 'normal' && kind !== 'last_attack') return;
+    if (kind !== 'normal') return;
+    if (roundResult.deltas?.goalScoredBySeat) {
+      queueMicrotask(() => setBattle(null));
+      return;
+    }
     if (battleStartedQRef.current === roundResult.qIndex) return;
     battleStartedQRef.current = roundResult.qIndex;
 
@@ -177,8 +226,8 @@ export function useBarBattle({
     for (const t of timersRef.current) clearTimeout(t);
     timersRef.current = [];
 
-    const myPts = myRound.pointsEarned;
-    const oppPts = opponentRound.pointsEarned;
+    const myPts = resolveBattlePoints(myRound.pointsEarned, roundResult.questionKind, myRound.foundCount);
+    const oppPts = resolveBattlePoints(opponentRound.pointsEarned, roundResult.questionKind, opponentRound.foundCount);
     const pBars = pointsToBars(myPts);
     const oBars = pointsToBars(oppPts);
     const delta = pBars - oBars;

@@ -104,18 +104,18 @@ export function PossessionQuestionPanel({
   const timerLabel = displayTimer >= 10 ? `${displayTimer}` : `0${displayTimer}`;
 
   return (
-    <div className="px-4 mt-2">
+    <div className="px-3 mt-1.5">
       {/* Header pills: QUESTION X/Y + timer */}
-      <div className="flex items-stretch gap-3">
+      <div className="flex items-stretch gap-2.5">
         <div
-          className="flex flex-1 items-center justify-center rounded-[20px] bg-brand-blue px-6 text-white h-[52px] sm:h-[68px] md:h-[80px] lg:h-[92px]"
-          style={{ ...poppins, fontSize: 'clamp(18px, 3vw, 36px)' }}
+          className="flex flex-1 items-center justify-center rounded-[16px] bg-brand-blue px-5 text-white h-[40px] sm:h-[52px] md:h-[62px] lg:h-[72px]"
+          style={{ ...poppins, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
         >
           QUESTION {displayQuestionNum}/{totalQuestions}
         </div>
         <div
-          className="flex w-[80px] items-center justify-center rounded-[20px] bg-brand-blue text-white h-[52px] sm:h-[68px] sm:w-[120px] md:h-[80px] md:w-[150px] lg:h-[92px] lg:w-[175px] tabular-nums"
-          style={{ ...poppins, fontSize: 'clamp(18px, 3vw, 36px)' }}
+          className="flex w-[64px] items-center justify-center rounded-[16px] bg-brand-blue text-white h-[40px] sm:h-[52px] sm:w-[92px] md:h-[62px] md:w-[116px] lg:h-[72px] lg:w-[136px] tabular-nums"
+          style={{ ...poppins, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
         >
           {timerLabel}
         </div>
@@ -133,19 +133,31 @@ export function PossessionQuestionPanel({
           className="relative mt-3"
         >
           <div
-            className="flex items-center rounded-[30px] bg-surface-page px-6 py-6 text-white sm:px-8 sm:py-8 md:px-10 md:py-10"
+            className="flex items-center rounded-[24px] bg-surface-page px-5 py-5 text-white sm:px-6 sm:py-6 md:px-8 md:py-7"
             style={{
               fontFamily: "'Poppins', sans-serif",
               fontWeight: 700,
-              fontSize: 'clamp(18px, 2.4vw, 36px)',
-              minHeight: 'clamp(140px, 20vw, 232px)',
+              fontSize: 'clamp(15px, 1.9vw, 26px)',
+              minHeight: 'clamp(108px, 15vw, 176px)',
             }}
           >
             <p className="leading-snug">{question.prompt}</p>
           </div>
 
-          {/* +points floating splash — player on left, opponent on right */}
-          <div className="pointer-events-none absolute left-[-12px] top-1/2 z-10 -translate-y-1/2">
+          {/* +points floating splash — player on left, opponent on right.
+              The data-splash-anchor attribute lets `usePossessionBarBattleFlights`
+              measure these exact screen positions so a `+N` flight ghost can
+              launch from here onto the pitch.
+              The min-size is critical: when `ArenaScoreSplash` is hidden
+              (e.g. before the player has answered) the wrapper would collapse
+              to 0×0 and `findVisibleRect` would reject it — silently breaking
+              the flight in production matches. A 1×1 anchor keeps the flight
+              launch position findable without affecting layout. */}
+          <div
+            data-splash-anchor="player"
+            className="pointer-events-none absolute left-[-12px] top-1/2 z-10 -translate-y-1/2"
+            style={{ minWidth: 1, minHeight: 1 }}
+          >
             <ArenaScoreSplash
               show={showPlayerSplash}
               points={playerSplashPoints}
@@ -154,7 +166,11 @@ export function PossessionQuestionPanel({
               onComplete={onPlayerSplashComplete}
             />
           </div>
-          <div className="pointer-events-none absolute right-[-12px] top-1/2 z-10 -translate-y-1/2">
+          <div
+            data-splash-anchor="opponent"
+            className="pointer-events-none absolute right-[-12px] top-1/2 z-10 -translate-y-1/2"
+            style={{ minWidth: 1, minHeight: 1 }}
+          >
             <ArenaScoreSplash
               show={showOpponentSplash}
               points={opponentSplashPoints}
@@ -169,7 +185,7 @@ export function PossessionQuestionPanel({
       {/* Answer cards — 2x2 grid */}
       <motion.div
         key={`options-${question.id}`}
-        className={`mt-3 grid grid-cols-2 gap-3 ${
+        className={`mt-2.5 grid grid-cols-2 gap-2.5 ${
           showOptions ? 'pointer-events-auto' : 'pointer-events-none'
         }`}
         initial={false}
@@ -210,10 +226,10 @@ export function PossessionQuestionPanel({
                 mass: 0.75,
                 delay: showOptions ? i * 0.04 : 0,
               }}
-              className="relative flex items-center justify-center overflow-hidden rounded-[20px] px-4 transition-shadow duration-150 h-[80px] sm:h-[100px] md:h-[120px] lg:h-[148px]"
+              className="relative flex items-center justify-center overflow-hidden rounded-[16px] px-3 transition-shadow duration-150 h-[60px] sm:h-[78px] md:h-[94px] lg:h-[116px]"
               style={{
                 ...poppins,
-                fontSize: 'clamp(16px, 2.2vw, 36px)',
+                fontSize: 'clamp(13px, 1.7vw, 26px)',
                 textTransform: 'uppercase',
                 color: isWrongPick ? '#FB3101' : '#FFFFFF',
                 backgroundColor: isWinningAnswer ? '#38B60E' : 'transparent',

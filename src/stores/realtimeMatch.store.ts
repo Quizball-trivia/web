@@ -38,6 +38,10 @@ export interface DraftStatus {
 export interface MatchQuestionState {
   payload: ResolvedMatchQuestionPayload;
   correctIndex?: number;
+  /** Whether the self user answered this question correctly (set by round_result). */
+  selfIsCorrect?: boolean;
+  /** Whether the opponent answered this question correctly (set by round_result). */
+  opponentIsCorrect?: boolean;
 }
 
 export interface MatchStatus {
@@ -818,6 +822,9 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
                 payload.reveal.kind === 'multipleChoice'
                   ? payload.reveal.correctIndex
                   : state.match.questions[payload.qIndex]?.correctIndex,
+              selfIsCorrect: myTotals?.isCorrect ?? state.match.questions[payload.qIndex]?.selfIsCorrect,
+              opponentIsCorrect:
+                opponentTotals?.isCorrect ?? state.match.questions[payload.qIndex]?.opponentIsCorrect,
             },
           },
         },

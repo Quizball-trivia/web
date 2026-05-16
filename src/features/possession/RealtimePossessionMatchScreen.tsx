@@ -3,9 +3,11 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { QuitMatchModal } from '@/features/game/components/QuitMatchModal';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
+import { BarBattleFlightOverlay } from './components/BarBattleFlightOverlay';
 import { HalftimeScreen } from './components/HalftimeScreen';
 import { PossessionMatchViewport } from './components/PossessionMatchViewport';
 import { PossessionQuestionArea } from './components/PossessionQuestionArea';
+import { usePossessionBarBattleFlights } from './hooks/usePossessionBarBattleFlights';
 import { useRealtimePossessionMatchController } from './hooks/useRealtimePossessionMatchController';
 import type { AvatarCustomization } from '@/types/game';
 
@@ -19,11 +21,22 @@ interface RealtimePossessionMatchScreenProps {
   /** ISO country code — enables the flag badge on halftime avatars. */
   playerCountryCode?: string | null;
   opponentCountryCode?: string | null;
+  /** Player's favourite club slug (e.g. `real-madrid`). Used by the quit
+   *  modal to pick a famous player from that club for the motivational
+   *  headline. */
+  playerFavoriteClub?: string | null;
+  centerPossessionTrack?: boolean;
+  simpleShotAnimation?: boolean;
   onQuit: () => void;
   onForfeit: () => void;
 }
 
 export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScreenProps) {
+  // Bar-battle flight ghosts — fires +N from MCQ prompt onto pitch when the
+  // 'avatar-anchored' variant is active (ranked-sim matches). No-op in
+  // classic variant. Manages its own state internally.
+  const barBattleFlights = usePossessionBarBattleFlights();
+
   const {
     isReady,
     showStartCountdown,
@@ -40,7 +53,10 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
     setQuitModalOpen,
     handleTemporaryQuit,
     handleForfeit,
-  } = useRealtimePossessionMatchController(props);
+  } = useRealtimePossessionMatchController({
+    ...props,
+    suppressAvatarScoreSplash: barBattleFlights.suppressScoreSplash,
+  });
 
   if (!isReady) {
     return (
@@ -159,11 +175,21 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
       <QuitMatchModal
         open={quitModalOpen}
         onOpenChange={setQuitModalOpen}
+        playerClubId={props.playerFavoriteClub}
         description="Leave temporarily and rejoin before the timer ends, or forfeit now."
         secondaryConfirmLabel="Leave Temporarily"
         onSecondaryConfirm={handleTemporaryQuit}
         confirmLabel="Forfeit Match"
         onConfirm={handleForfeit}
+      />
+
+      {/* Bar-battle +N flight overlay — fixed-position, spans the viewport.
+          Renders nothing for non-ranked matches; in ranked-sim it flies the
+          score splash from the MCQ prompt onto the pitch avatar, where the
+          SVG bars expand outward from the landing point. */}
+      <BarBattleFlightOverlay
+        flights={barBattleFlights.flights}
+        onArrive={barBattleFlights.handleFlightArrive}
       />
     </div>
   );

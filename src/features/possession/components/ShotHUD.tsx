@@ -61,11 +61,11 @@ export function ShotHUD({
             <AnimatedPointsCounter value={playerPoints} accentClassName="text-brand-yellow" />
           </div>
         </div>
-        <div className="flex min-w-[100px] shrink-0 flex-col items-center justify-center">
+        <div className="flex min-w-[44px] shrink-0 flex-col items-center justify-center sm:min-w-[100px]">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="mb-1 text-[10px] font-black uppercase tracking-[0.18em] text-brand-orange"
+            className="mb-1 hidden text-[10px] font-black uppercase tracking-[0.18em] text-brand-orange sm:block"
           >
             Shot on Goal
           </motion.div>
@@ -73,6 +73,8 @@ export function ShotHUD({
             animate={timeRemaining <= 3 && phase === 'shot' ? { scale: [1, 1.1, 1] } : {}}
             transition={timeRemaining <= 3 ? { repeat: Infinity, duration: 0.6 } : {}}
             className={`text-3xl font-black tabular-nums transition-colors duration-200 ${
+              phase === 'shot' ? '' : 'hidden sm:block'
+            } ${
               phase === 'shot'
                 ? timeRemaining <= 3 ? 'text-red-500' : 'text-white'
                 : 'text-white/40'
@@ -80,7 +82,7 @@ export function ShotHUD({
           >
             {phase === 'shot' ? timeRemaining : '\u2014'}
           </motion.div>
-          <div className="-mt-0.5 text-[10px] font-black tracking-[0.18em] text-brand-orange/70">
+          <div className="-mt-0.5 hidden text-[10px] font-black tracking-[0.18em] text-brand-orange/70 sm:block">
             {isPlayerAttacker ? 'YOU SHOOT' : 'YOU SAVE'}
           </div>
         </div>

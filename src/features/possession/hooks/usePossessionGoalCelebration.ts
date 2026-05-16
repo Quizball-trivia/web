@@ -4,12 +4,14 @@ import { useEffect, useRef, useState } from 'react';
 import type { MatchRoundResultPayload } from '@/lib/realtime/socket.types';
 import type { ShotResult } from '../types/possession.types';
 import {
-  DEV_GOAL_CELEBRATION_DELAY_MS,
+  GOAL_ATTACK_START_DELAY_MS,
   GOAL_CELEBRATION_MS,
+  GOAL_SHOT_TO_CELEBRATION_MS,
   type GoalCelebrationState,
 } from '../realtimePossession.helpers';
 
 interface DevPossessionAnimationLike {
+  id?: number;
   result: ShotResult;
   attackerSeat: 1 | 2 | null;
 }
@@ -27,7 +29,7 @@ interface UsePossessionGoalCelebrationParams {
 
 export function usePossessionGoalCelebration({
   roundResult,
-  roundResultHoldDone,
+  roundResultHoldDone: _roundResultHoldDone,
   currentQuestionIndex,
   isHalftime,
   mySeat,
@@ -37,41 +39,72 @@ export function usePossessionGoalCelebration({
 }: UsePossessionGoalCelebrationParams) {
   const [goalCelebration, setGoalCelebration] = useState<GoalCelebrationState | null>(null);
   const goalCelebrationHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const goalCelebrationQRef = useRef<number | null>(null);
-  const pendingGoalRef = useRef<{ scorerName: string; isMeScorer: boolean; qIndex: number } | null>(null);
+  const goalCelebrationStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const goalCelebrationKeyRef = useRef<string | null>(null);
+  const roundDeltas = roundResult?.deltas;
+  const roundScorerSeat = roundDeltas?.goalScoredBySeat ?? null;
+  const roundPenaltyOutcome = roundDeltas?.penaltyOutcome ?? null;
+  const roundPhaseKind = roundResult?.phaseKind ?? null;
+  const roundQIndex = roundResult?.qIndex ?? null;
+  const roundMatchId = roundResult?.matchId ?? null;
+  const devAnimationId = devPossessionAnimation?.id ?? null;
+  const devAnimationResult = devPossessionAnimation?.result ?? null;
+  const devAnimationAttackerSeat = devPossessionAnimation?.attackerSeat ?? null;
 
   useEffect(() => {
-    if (!roundResult) return;
+    if (!roundMatchId || roundQIndex === null) return;
+    if (!roundScorerSeat) return;
 
-    const deltas = roundResult.deltas;
-    const scorerSeat = deltas?.goalScoredBySeat ?? null;
-    if (!scorerSeat) return;
+    if (roundPhaseKind !== 'normal' && roundPhaseKind !== 'last_attack') return;
+    if (roundPenaltyOutcome) return;
 
-    const kind = roundResult.phaseKind;
-    if (kind !== 'normal' && kind !== 'last_attack') return;
-    if (deltas?.penaltyOutcome) return;
-
-    const qIndex = roundResult.qIndex;
-    if (goalCelebrationQRef.current === qIndex) return;
-
-    goalCelebrationQRef.current = qIndex;
-    const isMeScorer = scorerSeat === mySeat;
-    pendingGoalRef.current = {
-      scorerName: isMeScorer ? playerUsername : opponentUsername,
-      isMeScorer,
-      qIndex,
-    };
-  }, [mySeat, opponentUsername, playerUsername, roundResult]);
-
-  useEffect(() => {
-    if (currentQuestionIndex !== null && currentQuestionIndex !== undefined) {
-      pendingGoalRef.current = null;
+    if (currentQuestionIndex !== null && currentQuestionIndex !== undefined && currentQuestionIndex !== roundQIndex) {
+      return;
     }
-  }, [currentQuestionIndex]);
+    const celebrationKey = `${roundMatchId}:${roundQIndex}`;
+    if (goalCelebrationKeyRef.current === celebrationKey) return;
+
+    goalCelebrationKeyRef.current = celebrationKey;
+    const isMeScorer = roundScorerSeat === mySeat;
+    goalCelebrationStartTimerRef.current = setTimeout(() => {
+      setGoalCelebration({
+        scorerName: isMeScorer ? playerUsername : opponentUsername,
+        isMeScorer,
+      });
+      goalCelebrationStartTimerRef.current = null;
+    }, GOAL_ATTACK_START_DELAY_MS + GOAL_SHOT_TO_CELEBRATION_MS);
+
+    return () => {
+      if (goalCelebrationStartTimerRef.current) {
+        clearTimeout(goalCelebrationStartTimerRef.current);
+        goalCelebrationStartTimerRef.current = null;
+      }
+    };
+  }, [
+    currentQuestionIndex,
+    mySeat,
+    opponentUsername,
+    playerUsername,
+    roundMatchId,
+    roundPenaltyOutcome,
+    roundPhaseKind,
+    roundQIndex,
+    roundScorerSeat,
+  ]);
 
   useEffect(() => {
     if (!isHalftime) return;
-    pendingGoalRef.current = null;
+    const isBoundaryGoalRound = Boolean(
+      roundScorerSeat
+      && (roundPhaseKind === 'normal' || roundPhaseKind === 'last_attack')
+      && !roundPenaltyOutcome
+    );
+    if (isBoundaryGoalRound) return;
+
+    if (goalCelebrationStartTimerRef.current) {
+      clearTimeout(goalCelebrationStartTimerRef.current);
+      goalCelebrationStartTimerRef.current = null;
+    }
     queueMicrotask(() => {
       setGoalCelebration(null);
     });
@@ -79,14 +112,7 @@ export function usePossessionGoalCelebration({
       clearTimeout(goalCelebrationHideTimerRef.current);
       goalCelebrationHideTimerRef.current = null;
     }
-  }, [isHalftime]);
-
-  useEffect(() => {
-    if (!roundResultHoldDone || !pendingGoalRef.current) return;
-    const info = pendingGoalRef.current;
-    pendingGoalRef.current = null;
-    setGoalCelebration({ scorerName: info.scorerName, isMeScorer: info.isMeScorer });
-  }, [roundResultHoldDone]);
+  }, [isHalftime, roundPenaltyOutcome, roundPhaseKind, roundScorerSeat]);
 
   useEffect(() => {
     if (!goalCelebration) return;
@@ -109,18 +135,24 @@ export function usePossessionGoalCelebration({
   }, [goalCelebration]);
 
   useEffect(() => {
-    if (!devPossessionAnimation || devPossessionAnimation.result !== 'goal') return;
+    if (devAnimationResult !== 'goal') return;
 
-    const celebrationTimer = setTimeout(() => {
-      const isMeScorer = devPossessionAnimation.attackerSeat === mySeat;
+    const isMeScorer = devAnimationAttackerSeat === mySeat;
+    goalCelebrationStartTimerRef.current = setTimeout(() => {
       setGoalCelebration({
         scorerName: isMeScorer ? playerUsername : opponentUsername,
         isMeScorer,
       });
-    }, DEV_GOAL_CELEBRATION_DELAY_MS);
+      goalCelebrationStartTimerRef.current = null;
+    }, GOAL_SHOT_TO_CELEBRATION_MS);
 
-    return () => clearTimeout(celebrationTimer);
-  }, [devPossessionAnimation, mySeat, opponentUsername, playerUsername]);
+    return () => {
+      if (goalCelebrationStartTimerRef.current) {
+        clearTimeout(goalCelebrationStartTimerRef.current);
+        goalCelebrationStartTimerRef.current = null;
+      }
+    };
+  }, [devAnimationAttackerSeat, devAnimationId, devAnimationResult, mySeat, opponentUsername, playerUsername]);
 
   return { goalCelebration };
 }

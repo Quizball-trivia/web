@@ -74,9 +74,6 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
 
   const Body = (
     <div className="relative font-fun">
-      {/* Shared close button — pinned to top-right of the modal. */}
-      <ModalCloseButton onClose={() => onOpenChange(false)} />
-
       {/* Title row — left-aligned, reserves a 64px right margin so the
           text never crashes into the close button on narrower viewports. */}
       <h2
@@ -201,6 +198,12 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
           className="rounded-t-3xl border-0 px-6 pt-6 pb-8 [&>button]:hidden"
           style={{ backgroundColor: MODAL_BG }}
         >
+          <div className="absolute top-5 right-5 z-30">
+            <ModalCloseButton
+              onClose={() => onOpenChange(false)}
+              className="!static"
+            />
+          </div>
           <SheetTitle className="sr-only">Play with a Friend</SheetTitle>
           <SheetDescription className="sr-only">
             Create a room or join an existing room with an invite code.
@@ -222,6 +225,12 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
         )}
         style={{ backgroundColor: MODAL_BG }}
       >
+        <div className="absolute top-6 right-6 z-30">
+          <ModalCloseButton
+            onClose={() => onOpenChange(false)}
+            className="!static"
+          />
+        </div>
         <DialogTitle className="sr-only">Play with a Friend</DialogTitle>
         <DialogDescription className="sr-only">
           Create a room or join an existing room with an invite code.

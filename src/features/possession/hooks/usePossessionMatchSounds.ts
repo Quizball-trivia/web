@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import type { MatchRoundResultPayload } from '@/lib/realtime/socket.types';
 import type { DevPossessionAnimation } from '@/stores/realtimeMatch.store';
+import { GOAL_ATTACK_START_DELAY_MS } from '../realtimePossession.helpers';
 
 type PossessionSfxName = 'whistle' | 'kick' | 'pass';
 
@@ -43,7 +44,14 @@ export function usePossessionMatchSounds({
       || phaseKindForSfx === 'last_attack'
       || Boolean(roundResult.deltas?.goalScoredBySeat)
     ) {
-      playSfxRef.current('kick');
+      const shouldDelayKick = phaseKindForSfx !== 'penalty' && (
+        phaseKindForSfx === 'last_attack' || Boolean(roundResult.deltas?.goalScoredBySeat)
+      );
+      const timer = window.setTimeout(
+        () => playSfxRef.current('kick'),
+        shouldDelayKick ? GOAL_ATTACK_START_DELAY_MS : 0
+      );
+      return () => window.clearTimeout(timer);
     } else {
       playSfxRef.current('pass');
     }

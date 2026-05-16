@@ -7,6 +7,7 @@ import type {
 } from '@/lib/realtime/socket.types';
 import {
   FIRST_QUESTION_INTRO_MS,
+  GOAL_VISUAL_SEQUENCE_MS,
   PENALTY_COUNTDOWN_MS,
 } from '../../realtimePossession.helpers';
 import {
@@ -34,7 +35,11 @@ function makeQuestion(qIndex: number, phaseRound: number, phaseKind: 'normal' | 
   };
 }
 
-function makeRoundResult(phaseKind: 'normal' | 'penalty', phaseRound: number): MatchRoundResultPayload {
+function makeRoundResult(
+  phaseKind: 'normal' | 'last_attack' | 'penalty',
+  phaseRound: number,
+  goalScoredBySeat: 1 | 2 | null = null
+): MatchRoundResultPayload {
   return {
     matchId: MATCH_ID,
     qIndex: phaseRound - 1,
@@ -46,7 +51,7 @@ function makeRoundResult(phaseKind: 'normal' | 'penalty', phaseRound: number): M
     deltas: {
       possessionDelta: 0,
       penaltyOutcome: null,
-      goalScoredBySeat: null,
+      goalScoredBySeat,
     },
   };
 }
@@ -179,5 +184,47 @@ describe('usePossessionRoundTransition', () => {
       categoryName: 'Penalty Shootout',
       subtitle: 'Sudden Death',
     });
+  });
+
+  it('delays penalty countdown until a boundary goal celebration can finish', async () => {
+    const { result, rerender } = renderHook((props: {
+      phase: MatchStatePayload['phase'];
+    }) => usePossessionRoundTransition({
+      phase: props.phase,
+      half: 2,
+      penaltySuddenDeath: false,
+      firstQuestionIntro: false,
+      localQuestion: makeQuestion(11, 6, 'normal', 'Current'),
+      pendingQuestion: makeQuestion(12, 1, 'penalty', 'Penalty'),
+      roundResult: makeRoundResult('normal', 6, 1),
+      roundResultHoldDone: true,
+      isPenaltyQuestion: false,
+      isShotQuestion: false,
+      isLastAttackQuestion: false,
+      goalCelebration: null,
+    }), {
+      initialProps: {
+        phase: 'NORMAL_PLAY' as MatchStatePayload['phase'],
+      },
+    });
+
+    rerender({
+      phase: 'PENALTY_SHOOTOUT',
+    });
+
+    await act(async () => {});
+    expect(result.current.penaltyCountdownActive).toBe(false);
+
+    act(() => {
+      vi.advanceTimersByTime(GOAL_VISUAL_SEQUENCE_MS - 1);
+    });
+    expect(result.current.penaltyCountdownActive).toBe(false);
+
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    await act(async () => {});
+
+    expect(result.current.penaltyCountdownActive).toBe(true);
   });
 });

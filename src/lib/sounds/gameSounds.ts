@@ -12,7 +12,7 @@ const SOUND_FILES = {
 type SoundName = keyof typeof SOUND_FILES;
 
 // ─── Volume defaults ─────────────────────────────────────────────
-const SFX_VOLUME = 0.0;
+const SFX_VOLUME = 0.4;
 
 // ─── Howl instances (lazy-loaded) ────────────────────────────────
 const sounds: Partial<Record<SoundName, Howl>> = {};

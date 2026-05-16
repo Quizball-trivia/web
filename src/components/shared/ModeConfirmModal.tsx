@@ -93,9 +93,6 @@ export function ModeConfirmModal({
 
   const Body = (
     <div className="relative font-fun">
-      {/* Shared close button */}
-      <ModalCloseButton onClose={() => onOpenChange(false)} />
-
       {/* Title — centered, max-width keeps it from running into the
           close button on narrow viewports. The natural break after
           "RANKED" produces the Figma's two-line composition. */}
@@ -112,11 +109,9 @@ export function ModeConfirmModal({
         {config.description}
       </p>
 
-      {/* Trophy section. Trophy is a large fixed-aspect art piece;
-          the two yellow stat pills float on the LEFT and RIGHT around
-          the trophy's vertical centre. Pills are absolutely
-          positioned so the trophy stays centered regardless of pill
-          text length. */}
+      {/* Trophy section. Mobile gets the Figma's 3-pill composition
+          (top-left entry-cost, mid-right duration, bottom-left question
+          count). Desktop keeps the original 2-pill layout. */}
       <div className="relative mx-auto my-6 h-48 w-full md:my-8 md:h-60">
         <Image
           src={config.icon}
@@ -126,31 +121,47 @@ export function ModeConfirmModal({
           className="object-contain"
         />
 
-        {/* Mid-left pill (e.g. "12-18 QUESTIONS") */}
-        <div
-          className={cn(
-            "absolute left-0 top-1/2 -translate-y-1/2",
-            "rounded-full px-4 py-2 text-xs font-black uppercase whitespace-nowrap",
-            "bg-brand-yellow text-black shadow-sm md:text-sm",
-          )}
-        >
-          {config.statLeft}
-        </div>
+        {/* Mobile-only: top-left "PLAY FOR N TICKETS" pill from Figma */}
+        {isMobile && config.entryCost > 0 && (
+          <div
+            className={cn(
+              "absolute left-0 top-[6%]",
+              "rounded-full px-4 py-2 text-xs font-black uppercase whitespace-nowrap",
+              "bg-brand-yellow text-black shadow-sm",
+            )}
+          >
+            Play for {config.entryCost} Ticket{config.entryCost === 1 ? "" : "s"}
+          </div>
+        )}
 
-        {/* Upper-right pill (e.g. "DURATION 5 MIN") — slightly higher
-            than centre to mirror the Figma composition. */}
+        {/* Mid-right pill (e.g. "DURATION 5 MIN") — slightly higher than
+            centre on desktop to match the original composition. */}
         <div
           className={cn(
-            "absolute right-0 top-[28%]",
-            "rounded-full px-4 py-2 text-xs font-black uppercase whitespace-nowrap",
+            "absolute right-0 rounded-full px-4 py-2 text-xs font-black uppercase whitespace-nowrap",
             "bg-brand-yellow text-black shadow-sm md:text-sm",
+            isMobile ? "top-[42%]" : "top-[28%]",
           )}
         >
           {config.statRight}
         </div>
+
+        {/* Left pill (e.g. "12-18 QUESTIONS"). Mobile pushes to the
+            bottom-left to mirror Figma; desktop keeps it vertically
+            centred next to the trophy. */}
+        <div
+          className={cn(
+            "absolute left-0 rounded-full px-4 py-2 text-xs font-black uppercase whitespace-nowrap",
+            "bg-brand-yellow text-black shadow-sm md:text-sm",
+            isMobile ? "bottom-[10%]" : "top-1/2 -translate-y-1/2",
+          )}
+        >
+          {config.statLeft}
+        </div>
       </div>
 
-      {/* Primary CTA */}
+      {/* Primary CTA. Mobile = clean "PLAY" (cost shown in the top-left
+          pill); desktop keeps the original "PLAY FOR N TICKETS" wording. */}
       <button
         type="button"
         onClick={() => {
@@ -165,15 +176,15 @@ export function ModeConfirmModal({
             : "bg-black/60 text-white/50 cursor-not-allowed",
         )}
       >
-        {config.entryCost > 0 ? (
+        {isMobile || config.entryCost === 0 ? (
+          "Play"
+        ) : (
           <>
             Play for{" "}
             <span className="text-brand-yellow">
               {config.entryCost} Ticket{config.entryCost === 1 ? "" : "s"}
             </span>
           </>
-        ) : (
-          "Play"
         )}
       </button>
 
@@ -204,6 +215,12 @@ export function ModeConfirmModal({
           className="rounded-t-3xl border-0 px-6 pt-8 pb-8 [&>button]:hidden"
           style={{ backgroundColor: config.bg }}
         >
+          <div className="absolute top-5 right-5 z-30">
+            <ModalCloseButton
+              onClose={() => onOpenChange(false)}
+              className="!static"
+            />
+          </div>
           <SheetTitle className="sr-only">{config.titleRest}</SheetTitle>
           <SheetDescription className="sr-only">
             {config.description}
@@ -225,6 +242,12 @@ export function ModeConfirmModal({
         )}
         style={{ backgroundColor: config.bg }}
       >
+        <div className="absolute top-6 right-6 z-30">
+          <ModalCloseButton
+            onClose={() => onOpenChange(false)}
+            className="!static"
+          />
+        </div>
         <DialogTitle className="sr-only">{config.titleRest}</DialogTitle>
         <DialogDescription className="sr-only">
           {config.description}

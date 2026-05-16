@@ -47,7 +47,7 @@ export function GoalCelebrationOverlay({}: GoalCelebrationOverlayProps) {
 
       {/* Celebration hands — slide in then gently sway */}
       <motion.div
-        className="pointer-events-none absolute left-0 bottom-[10%] z-30 w-[18%] max-w-[80px] origin-bottom"
+        className="pointer-events-none absolute bottom-0 left-0 z-50 w-[24%] min-w-[54px] max-w-[92px] origin-bottom sm:bottom-[10%] sm:w-[18%] sm:min-w-0 sm:max-w-[80px]"
         initial={{ opacity: 0, x: -20, rotate: -12 }}
         animate={{ opacity: 1, x: 0, rotate: [-5, 3, -5] }}
         exit={{ opacity: 0, x: -12 }}
@@ -61,7 +61,7 @@ export function GoalCelebrationOverlay({}: GoalCelebrationOverlayProps) {
       </motion.div>
 
       <motion.div
-        className="pointer-events-none absolute right-0 bottom-[10%] z-30 w-[18%] max-w-[80px] origin-bottom"
+        className="pointer-events-none absolute bottom-0 right-0 z-50 w-[24%] min-w-[54px] max-w-[92px] origin-bottom sm:bottom-[10%] sm:w-[18%] sm:min-w-0 sm:max-w-[80px]"
         initial={{ opacity: 0, x: 20, rotate: 12 }}
         animate={{ opacity: 1, x: 0, rotate: [5, -3, 5] }}
         exit={{ opacity: 0, x: 12 }}

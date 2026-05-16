@@ -1,0 +1,371 @@
+'use client';
+
+/**
+ * Drives the bar-battle flight overlay in ranked-sim matches.
+ *
+ * Triggers a `+N` ghost flight from the MCQ prompt's score-splash anchor
+ * (`[data-splash-anchor="player|opponent"]`) onto the pitch avatar
+ * (`[data-pitch-avatar="player|opponent"]`) whenever a player answers
+ * correctly. The flight visually replaces the suppressed ArenaScoreSplash
+ * and hands off naturally to the SVG bars that appear when `roundResult`
+ * arrives.
+ *
+ * Triggers (when `match.variant === 'ranked_sim'`):
+ *   - Player flight: fires when `answerAck` arrives with `pointsEarned > 0`,
+ *     gated on phaseKind === normal.
+ *     Deduped by `answerAck.qIndex`.
+ *   - Opponent flight: fires when `opponentAnswered` flips true with
+ *     `opponentAnsweredCorrectly === true && opponentRecentPoints > 0`,
+ *     gated similarly. Deduped by the current question's qIndex.
+ *
+ * Returns the active flights list + handlers ready to feed into
+ * `BarBattleFlightOverlay`.
+ *
+ * Note: `answerAck` arrives before `roundResult`, so the flight lands
+ * shortly after the player clicks and the SVG bars appear later when both
+ * players are done. Timing alignment isn't perfect across variable
+ * opponent answer speeds — but the flight serves as immediate "you
+ * scored" feedback while the bars are the round resolution. Adequate UX.
+ */
+
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
+import type { FlightSpec } from '../components/BarBattleFlightOverlay';
+import { logger } from '@/utils/logger';
+import type {
+  MatchAnswerAckPayload,
+  MatchRoundResultPayload,
+} from '@/lib/realtime/socket.types';
+
+type Side = 'player' | 'opponent';
+
+function resolveFlightPoints(
+  pointsEarned: number,
+  questionKind?: MatchAnswerAckPayload['questionKind'] | MatchRoundResultPayload['questionKind'],
+  foundCount?: number
+): number {
+  if (pointsEarned > 0) return pointsEarned;
+  if (questionKind === 'putInOrder' && typeof foundCount === 'number' && foundCount > 0) {
+    return Math.min(foundCount, 5) * 20;
+  }
+  return pointsEarned;
+}
+
+function findScoreAnchor(side: Side): DOMRect | null {
+  if (typeof document === 'undefined') return null;
+  return findVisibleRect(`[data-splash-anchor="${side}"]`);
+}
+
+function findPitchAvatar(side: Side): DOMRect | null {
+  if (typeof document === 'undefined') return null;
+  return findVisibleRect(`[data-pitch-avatar="${side}"]`);
+}
+
+function findPitchField(): DOMRect | null {
+  if (typeof document === 'undefined') return null;
+  return findVisibleRect('[data-pitch-field="possession"]');
+}
+
+function findVisibleRect(selector: string): DOMRect | null {
+  if (typeof document === 'undefined') return null;
+  const elements = Array.from(document.querySelectorAll<HTMLElement>(selector));
+  for (const el of elements) {
+    const rect = el.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) continue;
+    const style = window.getComputedStyle(el);
+    if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) continue;
+    if (rect.bottom <= 0 || rect.right <= 0 || rect.top >= window.innerHeight || rect.left >= window.innerWidth) continue;
+    return rect;
+  }
+  return null;
+}
+
+function hasUsableAnchors(): boolean {
+  return Boolean(
+    findScoreAnchor('player') &&
+    findScoreAnchor('opponent') &&
+    findPitchAvatar('player') &&
+    findPitchAvatar('opponent')
+  );
+}
+
+function rectCentre(rect: DOMRect): { x: number; y: number } {
+  return {
+    x: rect.left + rect.width / 2,
+    y: rect.top + rect.height / 2,
+  };
+}
+
+/**
+ * Compute the flight's landing point — shifted from the avatar's centre toward
+ * the player's defensive zone (where the bars actually spawn) so the +N ghost
+ * lands at the bar position and morphs continuously into bars, rather than
+ * landing on the avatar and then bars appearing offset from it.
+ *
+ * The "defensive zone" direction is the vector pointing AWAY from the opposing
+ * avatar. This works automatically for all layouts (portrait/landscape,
+ * mirrored/not, possessionDiff shifts) because it's derived from the live
+ * screen positions of both avatars.
+ */
+function computeFlightTarget(
+  selfRect: DOMRect,
+  opponentRect: DOMRect | null,
+  pitchRect: DOMRect | null
+): { x: number; y: number } {
+  const centre = rectCentre(selfRect);
+  if (!opponentRect) return centre;
+  const oppCentre = rectCentre(opponentRect);
+  const dx = centre.x - oppCentre.x;
+  const dy = centre.y - oppCentre.y;
+  // Bar zone sits ~30% of the avatar-to-avatar distance past the avatar
+  // — far enough that the ghost lands visibly past the circle but not
+  // so far that it overshoots into empty pitch.
+  const PUSH = 0.3;
+  const target = {
+    x: centre.x + dx * PUSH,
+    y: centre.y + dy * PUSH,
+  };
+  if (!pitchRect) return target;
+
+  const padding = 22;
+  return {
+    x: Math.max(pitchRect.left + padding, Math.min(pitchRect.right - padding, target.x)),
+    y: Math.max(pitchRect.top + padding, Math.min(pitchRect.bottom - padding, target.y)),
+  };
+}
+
+export function usePossessionBarBattleFlights() {
+  const match = useRealtimeMatchStore((s) => s.match);
+  const selfUserId = useRealtimeMatchStore((s) => s.selfUserId);
+  // Only fire flights for ranked-sim matches (the new bar-battle layout).
+  const enabled = match?.variant === 'ranked_sim';
+
+  const [flights, setFlights] = useState<FlightSpec[]>([]);
+  const [suppressScoreSplash, setSuppressScoreSplash] = useState(false);
+  const flightSeqRef = useRef(0);
+  // Dedupe by qIndex so each side fires at most one flight per question.
+  const playerFiredQRef = useRef<number | null>(null);
+  const opponentFiredQRef = useRef<number | null>(null);
+
+  // Reset dedupe refs when the question changes — so the next round can
+  // fire its own flights. We key on qIndex transition.
+  const currentQIndex = match?.currentQuestion?.qIndex ?? null;
+  const lastSeenQIndexRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (currentQIndex == null) return;
+    if (lastSeenQIndexRef.current === currentQIndex) return;
+    lastSeenQIndexRef.current = currentQIndex;
+    // Only reset refs that belong to a PRIOR qIndex — keeps the current
+    // qIndex's dedupe locked in case this effect runs after the trigger
+    // effect (which would otherwise allow a duplicate fire).
+    if (playerFiredQRef.current != null && playerFiredQRef.current !== currentQIndex) {
+      playerFiredQRef.current = null;
+    }
+    if (opponentFiredQRef.current != null && opponentFiredQRef.current !== currentQIndex) {
+      opponentFiredQRef.current = null;
+    }
+  }, [currentQIndex]);
+
+  useEffect(() => {
+    if (!enabled) {
+      // One-shot toggle when ranked-sim ends; doesn't cascade (state isn't in deps).
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSuppressScoreSplash(false);
+      return;
+    }
+
+    let frame: number | null = null;
+    const update = () => setSuppressScoreSplash(hasUsableAnchors());
+    if (typeof window.requestAnimationFrame === 'function') {
+      frame = window.requestAnimationFrame(update);
+    } else {
+      update();
+    }
+    window.addEventListener('resize', update);
+    return () => {
+      if (frame !== null && typeof window.cancelAnimationFrame === 'function') {
+        window.cancelAnimationFrame(frame);
+      }
+      window.removeEventListener('resize', update);
+    };
+  }, [enabled, currentQIndex]);
+
+  const phaseKindFromState = match?.currentQuestion?.phaseKind
+    ?? match?.possessionState?.phaseKind
+    ?? 'normal';
+
+  // ── Player flight on answerAck ──────────────────────────────────────────
+  // Fires regardless of correctness — wrong/zero-point answers get a "failed"
+  // flight that falls off the bottom of the screen instead of reaching the
+  // pitch, so the player always sees their splash react to the answer.
+  const answerAck = match?.answerAck;
+  useEffect(() => {
+    if (!enabled || !answerAck) return;
+    const points = resolveFlightPoints(answerAck.pointsEarned, answerAck.questionKind, answerAck.foundCount);
+    const failed = !answerAck.isCorrect || points <= 0;
+    const phaseKind = answerAck.phaseKind ?? 'normal';
+    if (phaseKind !== 'normal') return;
+    if (playerFiredQRef.current === answerAck.qIndex) return;
+
+    const sourceRect = findScoreAnchor('player');
+    const targetRect = findPitchAvatar('player');
+    if (!sourceRect || !targetRect) {
+      // Fallback to ArenaScoreSplash when DOM anchors are missing.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSuppressScoreSplash(false);
+      logger.warn('Bar-battle player flight skipped: anchor missing', {
+        sourceFound: !!sourceRect,
+        targetFound: !!targetRect,
+      });
+      return;
+    }
+    const oppAvatarRect = findPitchAvatar('opponent');
+    const pitchRect = findPitchField();
+    playerFiredQRef.current = answerAck.qIndex;
+    const flight: FlightSpec = {
+      id: ++flightSeqRef.current,
+      side: 'player',
+      source: rectCentre(sourceRect),
+      target: computeFlightTarget(targetRect, oppAvatarRect, pitchRect),
+      points,
+      failed,
+    };
+    setFlights((prev) => [...prev, flight]);
+  }, [enabled, answerAck]);
+
+  // Fallback: if the client missed its immediate answer_ack, fire the same
+  // player flight from the authoritative round_result so the user still sees
+  // their own scoring motion.
+  const roundResult = match?.lastRoundResult ?? null;
+  useEffect(() => {
+    if (!enabled || !roundResult || !selfUserId) return;
+    if (roundResult.qIndex !== currentQIndex) return;
+    const phaseKind = roundResult.phaseKind ?? phaseKindFromState;
+    if (phaseKind !== 'normal') return;
+    if (playerFiredQRef.current === roundResult.qIndex) return;
+
+    const playerRound = roundResult.players[selfUserId];
+    const points = playerRound
+      ? resolveFlightPoints(playerRound.pointsEarned, roundResult.questionKind, playerRound.foundCount)
+      : 0;
+    if (!playerRound || points <= 0) return;
+
+    const sourceRect = findScoreAnchor('player');
+    const targetRect = findPitchAvatar('player');
+    if (!sourceRect || !targetRect) {
+      setSuppressScoreSplash(false);
+      logger.warn('Bar-battle player fallback flight skipped: anchor missing', {
+        sourceFound: !!sourceRect,
+        targetFound: !!targetRect,
+      });
+      return;
+    }
+
+    const oppAvatarRect = findPitchAvatar('opponent');
+    const pitchRect = findPitchField();
+    playerFiredQRef.current = roundResult.qIndex;
+    const flight: FlightSpec = {
+      id: ++flightSeqRef.current,
+      side: 'player',
+      source: rectCentre(sourceRect),
+      target: computeFlightTarget(targetRect, oppAvatarRect, pitchRect),
+      points,
+    };
+    setFlights((prev) => [...prev, flight]);
+  }, [currentQIndex, enabled, phaseKindFromState, roundResult, selfUserId]);
+
+  // Same fallback for the opponent. Special questions may only expose final
+  // opponent scoring through round_result, so keep the flight feedback even
+  // when match:opponent_answered was not emitted or arrived too early.
+  useEffect(() => {
+    if (!enabled || !roundResult || !selfUserId) return;
+    if (roundResult.qIndex !== currentQIndex) return;
+    const phaseKind = roundResult.phaseKind ?? phaseKindFromState;
+    if (phaseKind !== 'normal') return;
+    if (opponentFiredQRef.current === roundResult.qIndex) return;
+
+    const opponentRound = Object.entries(roundResult.players).find(([userId]) => userId !== selfUserId)?.[1];
+    const points = opponentRound
+      ? resolveFlightPoints(opponentRound.pointsEarned, roundResult.questionKind, opponentRound.foundCount)
+      : 0;
+    if (!opponentRound || points <= 0) return;
+
+    const sourceRect = findScoreAnchor('opponent');
+    const targetRect = findPitchAvatar('opponent');
+    if (!sourceRect || !targetRect) {
+      setSuppressScoreSplash(false);
+      logger.warn('Bar-battle opponent fallback flight skipped: anchor missing', {
+        sourceFound: !!sourceRect,
+        targetFound: !!targetRect,
+      });
+      return;
+    }
+
+    const selfAvatarRect = findPitchAvatar('player');
+    const pitchRect = findPitchField();
+    opponentFiredQRef.current = roundResult.qIndex;
+    const flight: FlightSpec = {
+      id: ++flightSeqRef.current,
+      side: 'opponent',
+      source: rectCentre(sourceRect),
+      target: computeFlightTarget(targetRect, selfAvatarRect, pitchRect),
+      points,
+    };
+    setFlights((prev) => [...prev, flight]);
+  }, [currentQIndex, enabled, phaseKindFromState, roundResult, selfUserId]);
+
+  // ── Opponent flight on opponent answer ──────────────────────────────────
+  const opponentAnswered = match?.opponentAnswered ?? false;
+  const opponentAnsweredCorrectly = match?.opponentAnsweredCorrectly ?? null;
+  const opponentRecentPoints = match?.opponentRecentPoints ?? 0;
+  useEffect(() => {
+    if (!enabled) return;
+    if (!opponentAnswered) return;
+    // Fire flights for both correct and wrong opponent answers. The wrong/
+    // zero-point case renders a "failed" flight that falls off-screen.
+    if (currentQIndex == null) return;
+    if (phaseKindFromState !== 'normal') return;
+    if (opponentFiredQRef.current === currentQIndex) return;
+
+    const sourceRect = findScoreAnchor('opponent');
+    const targetRect = findPitchAvatar('opponent');
+    if (!sourceRect || !targetRect) {
+      // Fallback to ArenaScoreSplash when DOM anchors are missing.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSuppressScoreSplash(false);
+      logger.warn('Bar-battle opponent flight skipped: anchor missing', {
+        sourceFound: !!sourceRect,
+        targetFound: !!targetRect,
+      });
+      return;
+    }
+    const selfAvatarRect = findPitchAvatar('player');
+    const pitchRect = findPitchField();
+    opponentFiredQRef.current = currentQIndex;
+    const failed = opponentAnsweredCorrectly !== true || opponentRecentPoints <= 0;
+    const flight: FlightSpec = {
+      id: ++flightSeqRef.current,
+      side: 'opponent',
+      source: rectCentre(sourceRect),
+      target: computeFlightTarget(targetRect, selfAvatarRect, pitchRect),
+      points: opponentRecentPoints,
+      failed,
+    };
+    setFlights((prev) => [...prev, flight]);
+  }, [
+    enabled,
+    opponentAnswered,
+    opponentAnsweredCorrectly,
+    opponentRecentPoints,
+    currentQIndex,
+    phaseKindFromState,
+  ]);
+
+  // Drop flights from the list once they finish animating. The overlay
+  // handles enter/exit; we just keep state lean.
+  const handleFlightArrive = useCallback((id: number) => {
+    setFlights((prev) => prev.filter((f) => f.id !== id));
+  }, []);
+
+  return { flights, handleFlightArrive, suppressScoreSplash };
+}
