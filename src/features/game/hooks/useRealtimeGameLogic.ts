@@ -38,6 +38,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
   const [nowMs, setNowMs] = useState(() => Date.now());
   const matchPausedRef = useRef(matchPaused);
   const answerAckRetryCountRef = useRef(0);
+  const answerPayloadRef = useRef<{ matchId: string; qIndex: number; selectedIndex: number; timeMs: number } | null>(null);
 
   useEffect(() => {
     matchPausedRef.current = matchPaused;
@@ -91,6 +92,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     setSelectedAnswer(null);
     setSelectedAnswerQIndex(undefined);
     answerAckRetryCountRef.current = 0;
+    answerPayloadRef.current = null;
     setShowOptions(false);
     setTimeRemaining(initialTimeRemaining);
 
@@ -336,18 +338,15 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
       );
     }
 
-    getSocket().emit('match:answer', {
+    const payload = {
       matchId: match.matchId,
       qIndex: currentQuestion.qIndex,
       selectedIndex: index,
       timeMs: Math.round(elapsed),
-    });
-    logger.info('Socket emit match:answer', {
-      matchId: match.matchId,
-      qIndex: currentQuestion.qIndex,
-      selectedIndex: index,
-      timeMs: Math.round(elapsed),
-    });
+    };
+    answerPayloadRef.current = payload;
+    getSocket().emit('match:answer', payload);
+    logger.info('Socket emit match:answer', payload);
   };
 
   useEffect(() => {
@@ -377,26 +376,16 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
         return;
       }
 
-      answerAckRetryCountRef.current += 1;
-      const startedAt = normalizedPlayableAtMs ?? optionsShownAtRef.current ?? Date.now();
-      const now = normalizedQuestionDeadlineAtMs != null
-        ? Math.min(Date.now(), normalizedQuestionDeadlineAtMs)
-        : Date.now();
-      const maxWindowMs = normalizedQuestionDeadlineAtMs != null
-        ? Math.max(0, normalizedQuestionDeadlineAtMs - startedAt)
-        : QUESTION_PLAYING_MS;
-      const elapsed = Math.min(maxWindowMs, Math.max(0, now - startedAt));
+      const payload = answerPayloadRef.current;
+      if (!payload) {
+        clearInterval(retryTimer);
+        return;
+      }
 
-      getSocket().emit('match:answer', {
-        matchId: match.matchId,
-        qIndex: selectedAnswerQIndex,
-        selectedIndex: selectedAnswer,
-        timeMs: Math.round(elapsed),
-      });
+      answerAckRetryCountRef.current += 1;
+      getSocket().emit('match:answer', payload);
       logger.info('Socket retry match:answer pending ack', {
-        matchId: match.matchId,
-        qIndex: selectedAnswerQIndex,
-        selectedIndex: selectedAnswer,
+        ...payload,
         retry: answerAckRetryCountRef.current,
       });
     }, ANSWER_ACK_RETRY_MS);
@@ -407,8 +396,6 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     currentQuestion,
     match,
     matchPaused,
-    normalizedPlayableAtMs,
-    normalizedQuestionDeadlineAtMs,
     roundResult,
     selectedAnswer,
     selectedAnswerQIndex,

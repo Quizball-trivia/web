@@ -150,28 +150,31 @@ export function usePossessionBarBattleFlights() {
   const [flights, setFlights] = useState<FlightSpec[]>([]);
   const [suppressScoreSplash, setSuppressScoreSplash] = useState(false);
   const flightSeqRef = useRef(0);
-  // Dedupe by qIndex so each side fires at most one flight per question.
-  const playerFiredQRef = useRef<number | null>(null);
-  const opponentFiredQRef = useRef<number | null>(null);
+  // Dedupe per (matchId, qIndex) so reused qIndex across matches doesn't
+  // block flights for a new match.
+  const playerFiredQRef = useRef<string | null>(null);
+  const opponentFiredQRef = useRef<string | null>(null);
 
-  // Reset dedupe refs when the question changes — so the next round can
-  // fire its own flights. We key on qIndex transition.
   const currentQIndex = match?.currentQuestion?.qIndex ?? null;
-  const lastSeenQIndexRef = useRef<number | null>(null);
+  const currentMatchId = match?.matchId ?? null;
+  const currentKey = currentMatchId != null && currentQIndex != null
+    ? `${currentMatchId}:${currentQIndex}`
+    : null;
+  const lastSeenQIndexRef = useRef<string | null>(null);
   useEffect(() => {
-    if (currentQIndex == null) return;
-    if (lastSeenQIndexRef.current === currentQIndex) return;
-    lastSeenQIndexRef.current = currentQIndex;
-    // Only reset refs that belong to a PRIOR qIndex — keeps the current
-    // qIndex's dedupe locked in case this effect runs after the trigger
+    if (currentKey == null) return;
+    if (lastSeenQIndexRef.current === currentKey) return;
+    lastSeenQIndexRef.current = currentKey;
+    // Only reset refs that belong to a PRIOR key — keeps the current
+    // key's dedupe locked in case this effect runs after the trigger
     // effect (which would otherwise allow a duplicate fire).
-    if (playerFiredQRef.current != null && playerFiredQRef.current !== currentQIndex) {
+    if (playerFiredQRef.current != null && playerFiredQRef.current !== currentKey) {
       playerFiredQRef.current = null;
     }
-    if (opponentFiredQRef.current != null && opponentFiredQRef.current !== currentQIndex) {
+    if (opponentFiredQRef.current != null && opponentFiredQRef.current !== currentKey) {
       opponentFiredQRef.current = null;
     }
-  }, [currentQIndex]);
+  }, [currentKey]);
 
   useEffect(() => {
     if (!enabled) {
@@ -244,7 +247,8 @@ export function usePossessionBarBattleFlights() {
     const failed = !answerAck.isCorrect || points <= 0;
     const phaseKind = answerAck.phaseKind ?? 'normal';
     if (phaseKind !== 'normal') return;
-    if (playerFiredQRef.current === answerAck.qIndex) return;
+    const ackKey = `${answerAck.matchId}:${answerAck.qIndex}`;
+    if (playerFiredQRef.current === ackKey) return;
 
     const sourceRect = findScoreAnchor('player');
     const targetRect = findPitchAvatar('player');
@@ -260,7 +264,7 @@ export function usePossessionBarBattleFlights() {
     }
     const oppAvatarRect = findPitchAvatar('opponent');
     const pitchRect = findPitchField();
-    playerFiredQRef.current = answerAck.qIndex;
+    playerFiredQRef.current = ackKey;
     enqueueFlight({
       side: 'player',
       sourceRect,
@@ -281,7 +285,8 @@ export function usePossessionBarBattleFlights() {
     if (roundResult.qIndex !== currentQIndex) return;
     const phaseKind = roundResult.phaseKind ?? phaseKindFromState;
     if (phaseKind !== 'normal') return;
-    if (playerFiredQRef.current === roundResult.qIndex) return;
+    const roundKey = `${roundResult.matchId}:${roundResult.qIndex}`;
+    if (playerFiredQRef.current === roundKey) return;
 
     const playerRound = roundResult.players[selfUserId];
     const points = playerRound
@@ -303,7 +308,7 @@ export function usePossessionBarBattleFlights() {
 
     const oppAvatarRect = findPitchAvatar('opponent');
     const pitchRect = findPitchField();
-    playerFiredQRef.current = roundResult.qIndex;
+    playerFiredQRef.current = roundKey;
     enqueueFlight({
       side: 'player',
       sourceRect,
@@ -322,7 +327,8 @@ export function usePossessionBarBattleFlights() {
     if (roundResult.qIndex !== currentQIndex) return;
     const phaseKind = roundResult.phaseKind ?? phaseKindFromState;
     if (phaseKind !== 'normal') return;
-    if (opponentFiredQRef.current === roundResult.qIndex) return;
+    const roundKey = `${roundResult.matchId}:${roundResult.qIndex}`;
+    if (opponentFiredQRef.current === roundKey) return;
 
     const opponentRound = Object.entries(roundResult.players).find(([userId]) => userId !== selfUserId)?.[1];
     const points = opponentRound
@@ -344,7 +350,7 @@ export function usePossessionBarBattleFlights() {
 
     const selfAvatarRect = findPitchAvatar('player');
     const pitchRect = findPitchField();
-    opponentFiredQRef.current = roundResult.qIndex;
+    opponentFiredQRef.current = roundKey;
     enqueueFlight({
       side: 'opponent',
       sourceRect,
@@ -366,7 +372,8 @@ export function usePossessionBarBattleFlights() {
     // zero-point case renders a "failed" flight that falls off-screen.
     if (currentQIndex == null) return;
     if (phaseKindFromState !== 'normal') return;
-    if (opponentFiredQRef.current === currentQIndex) return;
+    if (currentKey == null) return;
+    if (opponentFiredQRef.current === currentKey) return;
 
     const sourceRect = findScoreAnchor('opponent');
     const targetRect = findPitchAvatar('opponent');
@@ -382,7 +389,7 @@ export function usePossessionBarBattleFlights() {
     }
     const selfAvatarRect = findPitchAvatar('player');
     const pitchRect = findPitchField();
-    opponentFiredQRef.current = currentQIndex;
+    opponentFiredQRef.current = currentKey;
     const failed = opponentAnsweredCorrectly !== true || opponentRecentPoints <= 0;
     enqueueFlight({
       side: 'opponent',
@@ -400,6 +407,7 @@ export function usePossessionBarBattleFlights() {
     opponentAnsweredCorrectly,
     opponentRecentPoints,
     currentQIndex,
+    currentKey,
     phaseKindFromState,
   ]);
 

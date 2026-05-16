@@ -349,10 +349,21 @@ function CountdownPanel({
   }, [matchId, opponentRound?.foundCount, qIndex, question.answerSlotCount, roundResolved, showOptions]);
 
   useEffect(() => {
-    if (!countdownGuessAck?.accepted || countdownGuessAck.qIndex !== qIndex || !countdownGuessAck.acceptedDisplay) return;
-    const display = resolveI18nText(countdownGuessAck.acceptedDisplay, resolvedLocale);
+    if (!countdownGuessAck?.accepted || countdownGuessAck.qIndex !== qIndex) return;
+    const displays = countdownGuessAck.acceptedDisplays?.length
+      ? countdownGuessAck.acceptedDisplays.map((display) => resolveI18nText(display, resolvedLocale))
+      : countdownGuessAck.acceptedDisplay
+        ? [resolveI18nText(countdownGuessAck.acceptedDisplay, resolvedLocale)]
+        : [];
+    if (displays.length === 0) return;
     queueMicrotask(() => {
-      setFoundAnswers((current) => (current.includes(display) ? current : [...current, display]));
+      setFoundAnswers((current) => {
+        const next = [...current];
+        for (const display of displays) {
+          if (!next.includes(display)) next.push(display);
+        }
+        return next;
+      });
       setGuess('');
     });
     lastSubmittedRef.current = '';
@@ -881,6 +892,28 @@ function PutInOrderPanel({
     ]),
     [correctOrder, questionItemById]
   );
+  useEffect(() => {
+    if (answerAck?.questionKind !== 'putInOrder' || answerAck.qIndex !== qIndex) return;
+    if (!answerAck.submittedOrderIds?.length) {
+      queueMicrotask(() => setIsSubmitting(false));
+      return;
+    }
+
+    const byId = new Map(question.items.map((item) => [item.id, item]));
+    const restoredOrder = answerAck.submittedOrderIds
+      .map((itemId) => byId.get(itemId))
+      .filter((item): item is ResolvedPutInOrderQuestionItem => Boolean(item));
+    if (restoredOrder.length !== question.items.length) {
+      queueMicrotask(() => setIsSubmitting(false));
+      return;
+    }
+
+    queueMicrotask(() => {
+      setUserOrder(restoredOrder);
+      setIsSubmitting(false);
+      submissionStartedRef.current = false;
+    });
+  }, [answerAck, qIndex, question.items]);
   const totalItems = question.items.length;
   const submittedForThisQuestion = answerAck?.questionKind === 'putInOrder' && answerAck.qIndex === qIndex;
   const playerCorrectCount = roundResolved

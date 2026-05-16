@@ -122,6 +122,8 @@ interface ShotMode {
   isPlayerAttacker: boolean;
   /** Optional animation variant index used to diversify shot visuals. */
   variant?: number;
+  /** Unique per-shot identifier — forces shot-effect reset when consecutive shots share attacker/result/goal/variant. */
+  shotId?: number | string;
 }
 
 interface PitchVisualizationProps {
@@ -284,7 +286,7 @@ export function PitchVisualization({
   const isShotMiss = shotResultActive && shotMode.result === 'miss';
   const [simpleShotReturnToCenter, setSimpleShotReturnToCenter] = useState(false);
   const simpleShotKey = useSimpleShotAnimation && isShot && shotMode
-    ? `${shotMode.isPlayerAttacker ? 'player' : 'opponent'}:${shotMode.result}:${targetGoal ?? 'right'}:${shotMode.variant ?? 0}`
+    ? `${shotMode.shotId ?? 0}:${shotMode.isPlayerAttacker ? 'player' : 'opponent'}:${shotMode.result}:${targetGoal ?? 'right'}:${shotMode.variant ?? 0}`
     : null;
 
   useEffect(() => {

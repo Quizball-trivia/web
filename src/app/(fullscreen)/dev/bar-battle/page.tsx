@@ -198,9 +198,8 @@ function DevBarBattleContent() {
     const tEnd = window.setTimeout(() => {
       setBattle(null);
       if (autoLoop) {
-        setPlayKey((k) => k + 1);
-        // Slight pause before next loop
-        window.setTimeout(() => play(), 400);
+        const tLoop = window.setTimeout(() => setPlayKey((k) => k + 1), 400);
+        timers.current.push(tLoop);
       }
     }, t);
     timers.current.push(tEnd);
@@ -228,12 +227,17 @@ function DevBarBattleContent() {
   // Avatar positions driven by `possession` (0..100), matching production's
   // PitchVisualization formula: the player avatar slides across the pitch as
   // possession shifts, with the opponent shadowing 30 units offset.
+  const pitchWidth = isPortrait ? 230 : 500;
+  const leftAnchor = 15;
+  const rightAnchor = pitchWidth - 30;
+  const travel = rightAnchor - leftAnchor;
+  const centreX = (leftAnchor + rightAnchor) / 2;
   const playerAvatarX = mirrored
-    ? 470 - (possession / 100) * 455 + 35
-    : 15 + (possession / 100) * 455 - 35;
+    ? rightAnchor - (possession / 100) * travel + 35
+    : leftAnchor + (possession / 100) * travel - 35;
   const opponentAvatarX = mirrored
-    ? 470 - (possession / 100) * 455 - 35
-    : 15 + (possession / 100) * 455 + 35;
+    ? rightAnchor - (possession / 100) * travel - 35
+    : leftAnchor + (possession / 100) * travel + 35;
 
   const myBars = pointsToBars(myPoints);
   const oppBars = pointsToBars(oppPoints);
@@ -267,8 +271,8 @@ function DevBarBattleContent() {
               className="absolute inset-0 overflow-visible"
             >
               {/* Centre line + circle to match the production pitch */}
-              <line x1="242.5" y1="0" x2="242.5" y2="230" stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" />
-              <circle cx="242.5" cy="115" r="36" stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" fill="none" />
+              <line x1={centreX} y1="0" x2={centreX} y2="230" stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" />
+              <circle cx={centreX} cy="115" r="36" stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" fill="none" />
 
               {/* Player & opponent avatars — animate cx via motion so the
                   push at 'result' phase reads as the avatar charging through

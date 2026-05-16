@@ -12,7 +12,7 @@ import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
 import type { DraftStatus, MatchStatus } from "@/stores/realtimeMatch.store";
 import type { GameConfig, GameStage } from "@/types/game.runtime";
 import { logger } from "@/utils/logger";
-import { GOAL_VISUAL_SEQUENCE_MS } from "@/features/possession/realtimePossession.helpers";
+import { GOAL_VISUAL_SEQUENCE_MS } from "@/lib/constants/game";
 
 const STAGE_ORDER: GameStage[] = [
   "idle",

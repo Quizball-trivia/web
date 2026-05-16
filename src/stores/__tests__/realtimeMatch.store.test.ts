@@ -308,6 +308,25 @@ describe('realtimeMatch.store — setMatchState shouldClearQuestion', () => {
       expect(state.remainingReconnects).toBe(2);
     });
 
+    it('accepts same-qIndex question payload when resume sends refreshed timing after pause clears', () => {
+      seedMatch();
+      const store = useRealtimeMatchStore.getState();
+
+      const initialQuestion = makeQuestion(4);
+      const refreshedQuestion: ResolvedMatchQuestionPayload = {
+        ...initialQuestion,
+        playableAt: new Date(Date.now() + 1_000).toISOString(),
+        deadlineAt: new Date(Date.now() + 20_000).toISOString(),
+      };
+
+      store.setMatchQuestion(initialQuestion);
+      store.setMatchQuestion(refreshedQuestion);
+
+      const state = useRealtimeMatchStore.getState();
+      expect(state.match?.currentQuestion?.deadlineAt).toBe(refreshedQuestion.deadlineAt);
+      expect(state.match?.currentQuestion?.playableAt).toBe(refreshedQuestion.playableAt);
+    });
+
     it('stores remaining reconnect metadata for rejoin availability', () => {
       seedMatch();
       const store = useRealtimeMatchStore.getState();
@@ -332,6 +351,41 @@ describe('realtimeMatch.store — setMatchState shouldClearQuestion', () => {
 
       store.clearMatchPaused();
       expect(useRealtimeMatchStore.getState().remainingReconnects).toBeNull();
+    });
+
+    it('hydrates a completed match when final results arrive after the local match was reset', () => {
+      const store = useRealtimeMatchStore.getState();
+      store.setSelfUserId(USER_A);
+      store.setRejoinAvailable({
+        matchId: MATCH_ID,
+        mode: 'ranked',
+        variant: 'ranked_sim',
+        opponent: { id: USER_B, username: 'opponent', avatarUrl: null },
+        participants: [
+          { userId: USER_A, username: 'me', avatarUrl: null, seat: 1 },
+          { userId: USER_B, username: 'opponent', avatarUrl: null, seat: 2 },
+        ],
+        graceMs: 60_000,
+        remainingReconnects: 1,
+      });
+
+      store.setFinalResults({
+        matchId: MATCH_ID,
+        winnerId: USER_B,
+        players: {
+          [USER_A]: { totalPoints: 100, correctAnswers: 2, avgTimeMs: null },
+          [USER_B]: { totalPoints: 200, correctAnswers: 4, avgTimeMs: null },
+        },
+        durationMs: 60_000,
+        resultVersion: 123,
+        winnerDecisionMethod: 'forfeit',
+      });
+
+      const state = useRealtimeMatchStore.getState();
+      expect(state.match?.matchId).toBe(MATCH_ID);
+      expect(state.match?.finalResults?.winnerDecisionMethod).toBe('forfeit');
+      expect(state.match?.opponent.id).toBe(USER_B);
+      expect(state.rejoinMatch).toBeNull();
     });
   });
 });

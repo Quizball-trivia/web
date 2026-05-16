@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { LiveSpecialQuestionPanel } from '../LiveSpecialQuestionPanel';
-import type { ResolvedPutInOrderQuestion } from '@/lib/realtime/socket.types';
+import type { ResolvedCountdownQuestion, ResolvedPutInOrderQuestion } from '@/lib/realtime/socket.types';
 
 const emitMock = vi.fn();
 
@@ -23,6 +23,14 @@ const putInOrderQuestion: ResolvedPutInOrderQuestion = {
     { id: 'maradona', label: 'Maradona debut', details: '1976', emoji: '🇦🇷' },
     { id: 'ronaldo', label: 'Ronaldo debut', details: '1993', emoji: '🇧🇷' },
   ],
+};
+
+const countdownQuestion: ResolvedCountdownQuestion = {
+  kind: 'countdown',
+  id: 'countdown-1',
+  prompt: 'Name clubs',
+  answerSlotCount: 3,
+  categoryName: 'Clubs',
 };
 
 function renderPutInOrder(overrides: Partial<Parameters<typeof LiveSpecialQuestionPanel>[0]> = {}) {
@@ -103,5 +111,62 @@ describe('LiveSpecialQuestionPanel put-in-order submission', () => {
         timeMs: 22000,
       });
     });
+  });
+
+  it('restores submitted state from a replayed answer ack', async () => {
+    renderPutInOrder({
+      answerAck: {
+        matchId: 'match-1',
+        qIndex: 2,
+        questionKind: 'putInOrder',
+        selectedIndex: null,
+        isCorrect: false,
+        myTotalPoints: 40,
+        oppAnswered: false,
+        pointsEarned: 40,
+        foundCount: 2,
+        submittedOrderIds: ['ronaldo', 'pele', 'maradona'],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /submitted/i })).toBeDisabled();
+    });
+  });
+});
+
+describe('LiveSpecialQuestionPanel countdown replay', () => {
+  beforeEach(() => {
+    emitMock.mockClear();
+  });
+
+  it('hydrates all restored found answers from a replay ack', async () => {
+    render(
+      <LiveSpecialQuestionPanel
+        matchId="match-1"
+        qIndex={3}
+        question={countdownQuestion}
+        showOptions
+        timeRemaining={10}
+        questionDurationSeconds={30}
+        roundResolved={false}
+        answerAck={null}
+        roundResult={null}
+        myRound={null}
+        opponentRound={null}
+        countdownGuessAck={{
+          matchId: 'match-1',
+          qIndex: 3,
+          accepted: true,
+          duplicate: false,
+          foundCount: 2,
+          acceptedDisplays: [{ en: 'Arsenal' }, { en: 'Chelsea' }],
+        }}
+        cluesGuessAck={null}
+      />
+    );
+
+    expect(await screen.findByText('Arsenal')).toBeInTheDocument();
+    expect(screen.getByText('Chelsea')).toBeInTheDocument();
   });
 });

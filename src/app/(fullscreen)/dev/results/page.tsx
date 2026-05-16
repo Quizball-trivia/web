@@ -268,7 +268,17 @@ function DevResultsContent() {
           </div>
         </Group>
         <Group label="Total questions">
-          <Slider min={1} max={20} step={1} value={totalQuestions} onChange={setTotalQuestions} />
+          <Slider
+            min={1}
+            max={20}
+            step={1}
+            value={totalQuestions}
+            onChange={(next) => {
+              setTotalQuestions(next);
+              setPlayerCorrect((v) => Math.min(v, next));
+              setOpponentCorrect((v) => Math.min(v, next));
+            }}
+          />
         </Group>
 
         {/* Toggles */}

@@ -1081,6 +1081,8 @@ function DevAnimationsContent() {
     // Mobile: auto-dismiss the controls drawer so the animation has the
     // full viewport. Desktop is unaffected (panel is lg:translate-x-0).
     setMobilePanelOpen(false);
+    pendingTimers.current.forEach((t) => window.clearTimeout(t));
+    pendingTimers.current = [];
     const s = store();
     const q = s.match?.currentQuestion;
     if (!q) return;

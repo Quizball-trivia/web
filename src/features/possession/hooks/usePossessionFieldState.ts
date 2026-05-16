@@ -273,6 +273,7 @@ export function usePossessionFieldState({
     ballOnPlayer,
     delayedIsShooter,
     isPenaltyQuestion,
+    isShotQuestion,
     isShotVisualPhase,
     opponentAvatar,
     opponentUsername,

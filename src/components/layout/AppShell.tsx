@@ -145,6 +145,14 @@ export function AppShell({ children }: AppShellProps) {
         }
       : null;
   const showRejoinBanner = !!activeMatchBanner && !currentPath.startsWith("/game");
+  const completedMatchBanner = match?.finalResults
+    ? {
+        matchId: match.matchId,
+        mode: match.mode,
+        opponent: match.opponent,
+      }
+    : null;
+  const showCompletedMatchBanner = !!completedMatchBanner && !currentPath.startsWith("/game");
   const lobbyCode = lobby?.inviteCode ?? "";
   const showLobbyDebug = process.env.NODE_ENV !== "production";
   const localWaitingLobbyId = lobby?.status === "waiting" ? lobby.lobbyId : null;
@@ -230,7 +238,21 @@ export function AppShell({ children }: AppShellProps) {
       return;
     }
     getSocket().emit("match:forfeit", { matchId: activeMatchBanner.matchId });
-    clearRejoinAvailable();
+  };
+
+  const handleViewCompletedMatch = () => {
+    if (!completedMatchBanner) return;
+
+    startSession({
+      mode: completedMatchBanner.mode === "ranked" ? "ranked" : "quizball",
+      matchType: completedMatchBanner.mode === "ranked" ? "ranked" : "friendly",
+      questionCount: 10,
+      opponentId: completedMatchBanner.opponent.id,
+      opponentUsername: completedMatchBanner.opponent.username,
+      opponentAvatar: completedMatchBanner.opponent.avatarUrl ?? undefined,
+    });
+    setGameStage("finalResults");
+    router.push("/game");
   };
 
   return (
@@ -389,6 +411,33 @@ export function AppShell({ children }: AppShellProps) {
 
           {/* Content Area */}
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-hide">
+            {showCompletedMatchBanner && (
+              <div className="px-6 pt-4">
+                <div className="rounded-2xl border border-emerald-500/35 bg-emerald-500/15 px-5 py-4 shadow-[0_8px_30px_rgba(16,185,129,0.16)]">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="size-10 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center">
+                        <Gamepad2 className="size-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-emerald-100">
+                          Match finished against{" "}
+                          <span className="text-foreground">{completedMatchBanner?.opponent.username ?? "Opponent"}</span>
+                        </p>
+                        <p className="text-xs text-emerald-200/80">View the final result</p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      className="h-9 bg-emerald-500 text-emerald-950 hover:bg-emerald-400"
+                      onClick={handleViewCompletedMatch}
+                    >
+                      View Results <ArrowRight className="ml-2 size-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
             {showRejoinBanner && (
               <div className="px-6 pt-4">
                 <div className="rounded-2xl border border-blue-500/35 bg-gradient-to-r from-blue-500/15 to-cyan-400/15 px-5 py-4 shadow-[0_8px_30px_rgba(59,130,246,0.2)]">
@@ -544,6 +593,33 @@ export function AppShell({ children }: AppShellProps) {
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto pb-20">
+          {showCompletedMatchBanner && (
+            <div className="px-4 pt-4">
+              <div className="rounded-2xl border border-emerald-500/35 bg-emerald-500/15 px-4 py-3 shadow-[0_8px_30px_rgba(16,185,129,0.16)]">
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="size-9 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center">
+                      <Gamepad2 className="size-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-emerald-100">
+                        Match finished vs{" "}
+                        <span className="text-foreground">{completedMatchBanner?.opponent.username ?? "Opponent"}</span>
+                      </p>
+                      <p className="text-xs text-emerald-200/80">Final result is ready</p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="h-10 bg-emerald-500 text-emerald-950 hover:bg-emerald-400"
+                    onClick={handleViewCompletedMatch}
+                  >
+                    View Results
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
           {showRejoinBanner && (
             <div className="px-4 pt-4">
               <div className="rounded-2xl border border-blue-500/35 bg-gradient-to-r from-blue-500/15 to-cyan-400/15 px-4 py-3 shadow-[0_8px_30px_rgba(59,130,246,0.2)]">
