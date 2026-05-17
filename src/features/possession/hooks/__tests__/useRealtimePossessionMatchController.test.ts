@@ -276,46 +276,7 @@ describe('useRealtimePossessionMatchController', () => {
     ]);
   });
 
-  it('uses a chance card optimistically and emits the socket event when eligible', () => {
-    storeQueryMock.inventoryItems = [{ slug: 'chance_card_5050', quantity: 1 }];
-
-    const { result } = renderHook(() => useRealtimePossessionMatchController({
-      playerAvatar: '/me.png',
-      playerUsername: 'me',
-      opponentAvatar: '/opp.png',
-      opponentUsername: 'opp',
-      onQuit: vi.fn(),
-      onForfeit: vi.fn(),
-    }));
-
-    const content = result.current.questionAreaModel?.content;
-    expect(content?.kind).toBe('multipleChoice');
-    if (content?.kind !== 'multipleChoice') {
-      throw new Error('Expected multipleChoice question area model');
-    }
-
-    const onUseChanceCard = content.props.onUseChanceCard;
-    expect(onUseChanceCard).toBeTypeOf('function');
-    if (!onUseChanceCard) {
-      throw new Error('Expected chance card handler');
-    }
-
-    act(() => {
-      onUseChanceCard();
-    });
-
-    expect(useRealtimeMatchStore.getState().match?.optimisticChanceCard).toMatchObject({
-      qIndex: 0,
-      eliminatedIndices: [1, 2],
-      pending: true,
-      remainingQuantityAfter: null,
-    });
-    expect(emitMock).toHaveBeenCalledWith('match:chance_card_use', {
-      matchId: MATCH_ID,
-      qIndex: 0,
-      clientActionId: expect.any(String),
-    });
-  });
+  // 50-50 chance card test removed — feature was retired from the UI.
 
   it('emits halftime ui ready only once per halftime instance', () => {
     mockOverlayState.isHalftime = true;

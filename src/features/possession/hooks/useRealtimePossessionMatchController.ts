@@ -2,14 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState, type ComponentProps } from 'react';
 import { useRealtimeGameLogic } from '@/features/game/hooks/useRealtimeGameLogic';
-import { useStoreInventory } from '@/lib/queries/store.queries';
 import { useGameSounds } from '@/lib/sounds/useGameSounds';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { logger } from '@/utils/logger';
 import { HalftimeScreen } from '../components/HalftimeScreen';
 import type { PossessionViewportModel } from '../components/PossessionMatchViewport';
 import type { PossessionQuestionAreaModel } from '../components/PossessionQuestionArea';
-import { useChanceCardController } from './useChanceCardController';
 import { useHalftimeBanController } from './useHalftimeBanController';
 import { usePossessionFieldState } from './usePossessionFieldState';
 import { usePossessionGoalCelebration } from './usePossessionGoalCelebration';
@@ -88,11 +86,8 @@ export function useRealtimePossessionMatchController({
   const match = useRealtimeMatchStore((store) => store.match);
   const devPossessionAnimation = useRealtimeMatchStore((store) => store.devPossessionAnimation);
   const clearDevPossessionAnimation = useRealtimeMatchStore((store) => store.clearDevPossessionAnimation);
-  const applyOptimisticChanceCard = useRealtimeMatchStore((store) => store.applyOptimisticChanceCard);
-  const markOptimisticChanceCardPendingSync = useRealtimeMatchStore((store) => store.markOptimisticChanceCardPendingSync);
   const realtimeError = useRealtimeMatchStore((store) => store.error);
   const meUserId = useRealtimeMatchStore((store) => store.selfUserId);
-  const { data: inventoryData } = useStoreInventory();
 
   const [muted, setMuted] = useState(false);
   const [quitModalOpen, setQuitModalOpen] = useState(false);
@@ -329,24 +324,6 @@ export function useRealtimePossessionMatchController({
     questionInHalf,
   }), [localQuestion, phase, questionInHalf]);
 
-  const {
-    activeOptimisticChanceCard,
-    chanceCardCount,
-    handleUseChanceCard,
-  } = useChanceCardController({
-    match,
-    localQuestion,
-    inventoryItems: inventoryData?.items,
-    isPenaltyQuestion: fieldState.isPenaltyQuestion,
-    isShotVisualPhase: fieldState.isShotVisualPhase,
-    isHalftime: overlayModel.isHalftime,
-    questionPhase: state.questionPhase,
-    roundResolved: state.roundResolved,
-    selectedAnswer: state.selectedAnswer,
-    correctIndex: state.correctIndex,
-    applyOptimisticChanceCard,
-    markOptimisticChanceCardPendingSync,
-  });
 
   const openQuitModal = useCallback(() => {
     setQuitModalOpen(true);
@@ -539,12 +516,7 @@ export function useRealtimePossessionMatchController({
             showOptions: state.showOptions,
             selectedAnswer: state.selectedAnswer,
             answerStates,
-            eliminatedIndices: activeOptimisticChanceCard?.eliminatedIndices ?? [],
             opponentAnswer,
-            chanceCardCount,
-            chanceCardPending: Boolean(activeOptimisticChanceCard?.pending || activeOptimisticChanceCard?.pendingSync),
-            chanceCardPendingSync: Boolean(activeOptimisticChanceCard?.pendingSync),
-            onUseChanceCard: handleUseChanceCard,
             showPlayerSplash: suppressAvatarScoreSplash ? false : splashState.showPlayerSplash,
             showOpponentSplash: suppressAvatarScoreSplash ? false : splashState.showOpponentSplash,
             playerSplashPoints: suppressAvatarScoreSplash ? null : splashState.playerSplashPoints,

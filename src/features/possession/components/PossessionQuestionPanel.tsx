@@ -26,13 +26,7 @@ interface PossessionQuestionPanelProps {
   showOptions: boolean;
   selectedAnswer: number | null;
   answerStates: AnswerStateArray;
-  eliminatedIndices?: number[];
   opponentAnswer: number | null;
-
-  chanceCardCount?: number;
-  chanceCardPending?: boolean;
-  chanceCardPendingSync?: boolean;
-  onUseChanceCard?: () => void;
 
   showPlayerSplash?: boolean;
   showOpponentSplash?: boolean;
@@ -50,12 +44,9 @@ function getButtonState(
   index: number,
   selectedAnswer: number | null,
   answerStates: AnswerStateArray,
-  eliminatedIndices: number[],
   correctIndex: number | undefined,
   showOptions: boolean,
-): 'default' | 'selected-correct' | 'selected-wrong' | 'reveal-correct' | 'eliminated' {
-  if (eliminatedIndices.includes(index) && selectedAnswer !== index) return 'eliminated';
-
+): 'default' | 'selected-correct' | 'selected-wrong' | 'reveal-correct' {
   const state = answerStates[index];
   if (state === 'correct') return 'selected-correct';
   if (state === 'wrong') return 'selected-wrong';
@@ -77,7 +68,6 @@ export function PossessionQuestionPanel({
   showOptions,
   selectedAnswer,
   answerStates,
-  eliminatedIndices = [],
   opponentAnswer,
   showPlayerSplash = false,
   showOpponentSplash = false,
@@ -194,8 +184,7 @@ export function PossessionQuestionPanel({
         aria-hidden={!showOptions}
       >
         {question.options.map((opt, i) => {
-          const buttonState = getButtonState(i, selectedAnswer, answerStates, eliminatedIndices, correctIndex, showOptions);
-          const isEliminated = buttonState === 'eliminated';
+          const buttonState = getButtonState(i, selectedAnswer, answerStates, correctIndex, showOptions);
           const isWinningAnswer = buttonState === 'selected-correct' || buttonState === 'reveal-correct';
           const isWrongPick = buttonState === 'selected-wrong';
 
@@ -209,14 +198,14 @@ export function PossessionQuestionPanel({
             <motion.button
               key={`${question.id}-${i}`}
               type="button"
-              disabled={!showOptions || !isPlaying || isEliminated}
+              disabled={!showOptions || !isPlaying}
               onClick={() => {
-                if (!showOptions || !isPlaying || isEliminated) return;
+                if (!showOptions || !isPlaying) return;
                 onAnswer(i);
               }}
               initial={false}
               animate={{
-                opacity: isEliminated ? 0.3 : 1,
+                opacity: 1,
                 scale: 1,
               }}
               transition={{
@@ -243,7 +232,7 @@ export function PossessionQuestionPanel({
                   : isWrongPick
                     ? '0 1.76px 6.334px 1.32px rgba(251,49,1,0.25)'
                     : '0 0 6.334px 1.32px rgba(255,229,0,0.25)',
-                cursor: !showOptions || !isPlaying || isEliminated ? 'default' : 'pointer',
+                cursor: !showOptions || !isPlaying ? 'default' : 'pointer',
               }}
             >
               {/* Player's pick notch (left) */}

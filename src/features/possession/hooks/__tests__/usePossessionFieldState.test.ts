@@ -87,7 +87,6 @@ function makeMatch(possessionDiff: number, overrides: Partial<MatchStatus['posse
     opponentAnsweredCorrectly: null,
     partyState: null,
     stateVersion: 1,
-    optimisticChanceCard: null,
     possessionState: {
       matchId: MATCH_ID,
       phase: 'NORMAL_PLAY',
