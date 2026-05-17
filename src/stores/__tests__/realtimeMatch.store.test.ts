@@ -320,6 +320,11 @@ describe('realtimeMatch.store — setMatchState shouldClearQuestion', () => {
       };
 
       store.setMatchQuestion(initialQuestion);
+      // Simulate the pause clearing the current question (no public action exists,
+      // so mirror the cleared state directly to exercise the resume path).
+      useRealtimeMatchStore.setState((prev) => prev.match
+        ? { ...prev, match: { ...prev.match, currentQuestion: null } }
+        : prev);
       store.setMatchQuestion(refreshedQuestion);
 
       const state = useRealtimeMatchStore.getState();

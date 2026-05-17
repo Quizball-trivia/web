@@ -228,10 +228,12 @@ function DevBarBattleContent() {
   // PitchVisualization formula: the player avatar slides across the pitch as
   // possession shifts, with the opponent shadowing 30 units offset.
   const pitchWidth = isPortrait ? 230 : 500;
+  const pitchHeight = isPortrait ? 500 : 230;
   const leftAnchor = 15;
   const rightAnchor = pitchWidth - 30;
   const travel = rightAnchor - leftAnchor;
   const centreX = (leftAnchor + rightAnchor) / 2;
+  const centreY = pitchHeight / 2;
   const playerAvatarX = mirrored
     ? rightAnchor - (possession / 100) * travel + 35
     : leftAnchor + (possession / 100) * travel - 35;
@@ -271,8 +273,8 @@ function DevBarBattleContent() {
               className="absolute inset-0 overflow-visible"
             >
               {/* Centre line + circle to match the production pitch */}
-              <line x1={centreX} y1="0" x2={centreX} y2="230" stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" />
-              <circle cx={centreX} cy="115" r="36" stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" fill="none" />
+              <line x1={centreX} y1="0" x2={centreX} y2={pitchHeight} stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" />
+              <circle cx={centreX} cy={centreY} r="36" stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" fill="none" />
 
               {/* Player & opponent avatars — animate cx via motion so the
                   push at 'result' phase reads as the avatar charging through
