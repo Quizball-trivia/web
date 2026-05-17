@@ -5,3 +5,7 @@ User-agent: *
 Allow: /
 Disallow: /dev/
 Disallow: /api/
+Disallow: /auth/
+Disallow: /profile/
+Disallow: /settings/
+Disallow: /onboarding/
