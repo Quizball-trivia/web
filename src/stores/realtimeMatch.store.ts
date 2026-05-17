@@ -416,15 +416,32 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       }
 
       if (payload.qIndex === currentQIndex) {
-        if (!state.matchPaused || !state.match.currentQuestion) {
+        const currentDeadlineMs = state.match.currentQuestion?.deadlineAt
+          ? new Date(state.match.currentQuestion.deadlineAt).getTime()
+          : Number.NaN;
+        const incomingDeadlineMs = payload.deadlineAt ? new Date(payload.deadlineAt).getTime() : Number.NaN;
+        const hasTimingRefresh = Boolean(
+          state.match.currentQuestion &&
+          (
+            state.match.currentQuestion.deadlineAt !== payload.deadlineAt ||
+            state.match.currentQuestion.playableAt !== payload.playableAt
+          ) &&
+          (
+            !Number.isFinite(currentDeadlineMs) ||
+            !Number.isFinite(incomingDeadlineMs) ||
+            incomingDeadlineMs >= currentDeadlineMs
+          )
+        );
+        if ((!state.matchPaused && !hasTimingRefresh) || !state.match.currentQuestion) {
           logger.warn('Ignoring duplicate match:question event for active question', {
             qIndex: payload.qIndex,
             matchPaused: state.matchPaused,
+            hasTimingRefresh,
           });
           return state;
         }
 
-        logger.info('Refreshing current question after pause/rejoin', {
+        logger.info('Refreshing current question timing after pause/rejoin', {
           qIndex: payload.qIndex,
           questionKind: payload.question.kind,
         });
@@ -834,7 +851,62 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
   setFinalResults: (payload) => {
     logger.info('Realtime store set final results', { matchId: payload.matchId, winnerId: payload.winnerId });
     set((state) => {
-      if (!state.match) return state;
+      if (!state.match) {
+        const rejoin = state.rejoinMatch?.matchId === payload.matchId ? state.rejoinMatch : null;
+        const userIds = Object.keys(payload.players);
+        const fallbackParticipants = userIds.map((userId, index) => ({
+          userId,
+          username: userId === state.selfUserId ? 'You' : `Player ${index + 1}`,
+          avatarUrl: null,
+          avatarCustomization: null,
+          seat: index + 1,
+        }));
+        const participants = rejoin?.participants ?? fallbackParticipants;
+        const opponentParticipant =
+          participants.find((participant) => participant.userId !== state.selfUserId) ?? participants[0];
+        const opponent = rejoin?.opponent ?? {
+          id: opponentParticipant?.userId ?? 'opponent',
+          username: opponentParticipant?.username ?? 'Opponent',
+          avatarUrl: opponentParticipant?.avatarUrl ?? null,
+          avatarCustomization: opponentParticipant?.avatarCustomization ?? null,
+        };
+
+        return {
+          ...state,
+          matchPaused: false,
+          pauseUntil: null,
+          remainingReconnects: null,
+          rejoinMatch: null,
+          match: {
+            matchId: payload.matchId,
+            mode: rejoin?.mode ?? (payload.rankedOutcome ? 'ranked' : 'friendly'),
+            variant: rejoin?.variant ?? (payload.rankedOutcome ? 'ranked_sim' : 'friendly_possession'),
+            mySeat: participants.find((participant) => participant.userId === state.selfUserId)?.seat ?? null,
+            opponent,
+            participants,
+            countdownEndsAt: null,
+            currentQuestion: null,
+            pendingQuestion: null,
+            questions: {},
+            answerAck: null,
+            countdownGuessAck: null,
+            cluesGuessAck: null,
+            opponentAnswered: false,
+            opponentSelectedIndex: null,
+            myTotalPoints: state.selfUserId ? payload.players[state.selfUserId]?.totalPoints ?? 0 : 0,
+            oppTotalPoints: opponentParticipant ? payload.players[opponentParticipant.userId]?.totalPoints ?? 0 : 0,
+            opponentRecentPoints: 0,
+            lastRoundResult: null,
+            finalResults: payload,
+            currentQuestionPhase: 'reveal',
+            opponentAnsweredCorrectly: null,
+            possessionState: null,
+            partyState: null,
+            stateVersion: 0,
+            optimisticChanceCard: null,
+          },
+        };
+      }
       if (state.match.matchId !== payload.matchId) {
         logger.warn('Ignoring mismatched match:final_results event', {
           activeMatchId: state.match.matchId,
