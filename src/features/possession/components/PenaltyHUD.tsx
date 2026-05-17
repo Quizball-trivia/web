@@ -66,14 +66,16 @@ export function PenaltyHUD({
             <AnimatedPointsCounter value={playerPoints} accentClassName="text-brand-yellow" />
           </div>
         </div>
-        <div className="flex min-w-[100px] shrink-0 flex-col items-center justify-center">
-          <div className="mb-1 text-[10px] font-black uppercase tracking-[0.18em] text-brand-orange">
+        <div className="flex min-w-[44px] shrink-0 flex-col items-center justify-center sm:min-w-[100px]">
+          <div className="mb-1 hidden text-[10px] font-black uppercase tracking-[0.18em] text-brand-orange sm:block">
             {isPenaltySuddenDeath ? 'Sudden Death' : `Pen ${penaltyRound}/${MAX_PENALTY_ROUNDS}`}
           </div>
           <motion.div
             animate={timeRemaining <= 2 && phase === 'penalty-playing' ? { scale: [1, 1.1, 1] } : {}}
             transition={timeRemaining <= 2 ? { repeat: Infinity, duration: 0.6 } : {}}
             className={`text-3xl font-black tabular-nums transition-colors duration-200 ${
+              phase === 'penalty-playing' ? '' : 'hidden sm:block'
+            } ${
               phase === 'penalty-playing'
                 ? timeRemaining <= 2 ? 'text-red-500' : 'text-white'
                 : 'text-white/40'
@@ -81,7 +83,7 @@ export function PenaltyHUD({
           >
             {phase === 'penalty-playing' ? timeRemaining : '\u2014'}
           </motion.div>
-          <div className="-mt-0.5 text-[10px] font-black tracking-[0.18em] text-brand-orange/70">
+          <div className="-mt-0.5 hidden text-[10px] font-black tracking-[0.18em] text-brand-orange/70 sm:block">
             {isPlayerShooter ? 'YOU SHOOT' : 'YOU SAVE'}
           </div>
         </div>

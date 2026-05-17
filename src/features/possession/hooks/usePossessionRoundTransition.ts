@@ -8,6 +8,7 @@ import type {
 } from '@/lib/realtime/socket.types';
 import {
   FIRST_QUESTION_INTRO_MS,
+  GOAL_VISUAL_SEQUENCE_MS,
   HALFTIME_RESULTS_DELAY_MS,
   PENALTY_COUNTDOWN_MS,
   type GoalCelebrationState,
@@ -121,26 +122,43 @@ export function usePossessionRoundTransition({
 
   const prevPenaltyPhaseRef = useRef(phase === 'PENALTY_SHOOTOUT');
   const transitionVisibleRef = useRef(false);
+  const hasBoundaryGoalRound = Boolean(
+    (roundResult?.phaseKind === 'normal' || roundResult?.phaseKind === 'last_attack') &&
+    roundResult.deltas?.goalScoredBySeat
+  );
 
   useEffect(() => {
     if (phase === 'HALFTIME') {
-      const timer = setTimeout(() => setIsHalftime(true), HALFTIME_RESULTS_DELAY_MS);
+      const delayMs = hasBoundaryGoalRound
+        ? Math.max(HALFTIME_RESULTS_DELAY_MS, GOAL_VISUAL_SEQUENCE_MS)
+        : HALFTIME_RESULTS_DELAY_MS;
+      const timer = setTimeout(() => setIsHalftime(true), delayMs);
       return () => clearTimeout(timer);
     }
     queueMicrotask(() => {
       setIsHalftime(false);
     });
-  }, [phase]);
+  }, [hasBoundaryGoalRound, phase]);
 
   useEffect(() => {
     const isPenaltyPhaseServer = phase === 'PENALTY_SHOOTOUT';
     if (isPenaltyPhaseServer && !prevPenaltyPhaseRef.current) {
-      queueMicrotask(() => {
+      const delayMs = hasBoundaryGoalRound ? GOAL_VISUAL_SEQUENCE_MS : 0;
+      if (delayMs <= 0) {
+        queueMicrotask(() => {
+          setPenaltyCountdownEndsAt(Date.now() + PENALTY_COUNTDOWN_MS);
+        });
+        prevPenaltyPhaseRef.current = isPenaltyPhaseServer;
+        return;
+      }
+      const timer = setTimeout(() => {
         setPenaltyCountdownEndsAt(Date.now() + PENALTY_COUNTDOWN_MS);
-      });
+      }, delayMs);
+      prevPenaltyPhaseRef.current = isPenaltyPhaseServer;
+      return () => clearTimeout(timer);
     }
     prevPenaltyPhaseRef.current = isPenaltyPhaseServer;
-  }, [phase]);
+  }, [hasBoundaryGoalRound, phase]);
 
   useEffect(() => {
     if (!penaltyCountdownEndsAt) return;

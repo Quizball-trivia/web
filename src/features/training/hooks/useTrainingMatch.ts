@@ -51,6 +51,7 @@ export interface TrainingMatchState {
     ballOriginX: number;
     isPlayerAttacker: boolean;
     variant?: number;
+    shotId?: number;
   };
   showGoalCelebration: boolean;
   goalScorerIsPlayer: boolean;
@@ -364,6 +365,7 @@ export function useTrainingMatch(isPaused: boolean) {
             ballOriginX,
             isPlayerAttacker: true,
             variant,
+            shotId: prev.questionIndex,
           },
           showPlayerSplash: false,
           showOpponentSplash: false,
@@ -382,6 +384,7 @@ export function useTrainingMatch(isPaused: boolean) {
             ballOriginX,
             isPlayerAttacker: false,
             variant,
+            shotId: prev.questionIndex,
           },
           showPlayerSplash: false,
           showOpponentSplash: false,

@@ -13,7 +13,7 @@ import type { UserProgression } from '@/lib/domain';
 import { applyXpReward, getMatchXpReward } from '@/lib/domain/matchXp';
 
 import { getTierVisual } from '@/utils/tierVisuals';
-import { getRankedTierProgress, tierFromRp } from '@/utils/rankedTier';
+import { getRankedTierProgress, getNextTierBand, tierFromRp } from '@/utils/rankedTier';
 import { trackMatchCompleted, trackDivisionPromoted, trackLevelUp } from '@/lib/analytics/game-events';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import type { AvatarCustomization } from '@/types/game';
@@ -97,6 +97,9 @@ interface RealtimeResultsScreenProps {
   playerCorrect: number;
   opponentCorrect: number;
   totalQuestions: number;
+  /** Per-question outcome arrays (length === totalQuestions). `null` = unanswered. */
+  playerQuestionResults?: Array<'correct' | 'wrong' | null>;
+  opponentQuestionResults?: Array<'correct' | 'wrong' | null>;
   selfUserId: string;
   finalWinnerId?: string | null;
   winnerDecisionMethod?: 'goals' | 'penalty_goals' | 'total_points' | 'total_points_fallback' | 'forfeit' | null;
@@ -121,7 +124,10 @@ export function RealtimeResultsScreen({
   playerScore,
   opponentScore,
   playerCorrect,
+  opponentCorrect,
   totalQuestions,
+  playerQuestionResults,
+  opponentQuestionResults,
   selfUserId,
   finalWinnerId,
   winnerDecisionMethod,
@@ -178,12 +184,6 @@ export function RealtimeResultsScreen({
   const projectedProgression = preMatchProgression
     ? applyXpReward(preMatchProgression, xpEarned)
     : null;
-  const showXpCard = Boolean(preMatchProgression && xpEarned > 0);
-  const xpBarInitialProgress = preMatchProgression && projectedProgression
-    ? projectedProgression.level > preMatchProgression.level
-      ? 0
-      : preMatchProgression.progressPct
-    : 0;
   const leveledUp = Boolean(
     preMatchProgression && projectedProgression && projectedProgression.level > preMatchProgression.level
   );
@@ -207,6 +207,8 @@ export function RealtimeResultsScreen({
   const oldRpTierInfo = getRankedTierProgress(oldRP);
   const tierChanged = rpTierInfo.tier !== oldRpTierInfo.tier;
   const tierPromoted = tierChanged && newRP > oldRP;
+  // Next tier (e.g. for "Youth Prospect" → "Reserve") for the NEXT STAGE label.
+  const nextTierBand = getNextTierBand(newRP);
 
   useEffect(() => {
     if (matchType !== 'ranked') return;
@@ -255,31 +257,6 @@ export function RealtimeResultsScreen({
 
   const [showRankReveal, setShowRankReveal] = useState(false);
   const [tierTransitionPhase, setTierTransitionPhase] = useState<'fill' | 'settled'>('fill');
-  const [animatedXp, setAnimatedXp] = useState(0);
-
-  useEffect(() => {
-    if (!showXpCard) {
-      setAnimatedXp(0);
-      return;
-    }
-
-    const duration = 1000;
-    const steps = 25;
-    const increment = xpEarned / steps;
-    let currentStep = 0;
-
-    const timer = setInterval(() => {
-      currentStep += 1;
-      if (currentStep >= steps) {
-        setAnimatedXp(xpEarned);
-        clearInterval(timer);
-      } else {
-        setAnimatedXp(Math.round(increment * currentStep));
-      }
-    }, duration / steps);
-
-    return () => clearInterval(timer);
-  }, [showXpCard, xpEarned]);
 
   // Tier change: fill to boundary first, then settle to new progress after a pause
   useEffect(() => {
@@ -535,122 +512,461 @@ export function RealtimeResultsScreen({
           </>
         )}
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mx-auto w-full max-w-[960px] pt-4 md:pt-6"
-        >
-          <div className="grid grid-cols-2 gap-x-4 gap-y-6 md:grid-cols-4 md:gap-x-8 md:grid-rows-[auto_auto_auto_auto] md:items-start">
-            {/* Accuracy — value row 1, label sits on bar row */}
-            <div className="grid grid-rows-subgrid text-center md:row-span-4">
-              <div className="font-poppins font-semibold leading-none text-brand-blue text-[2rem] md:text-[36px]">
-                {accuracy}%
-              </div>
-              <div className="hidden md:block" />
+        {/* ── Tier progress (ranked only) ─────────────────────────────────
+            Top: centred NEW RANK display with the big RP number + Δ chip.
+            Bottom: a flat green progress bar flanked by YELLOW end-cap pegs.
+            Above each peg sits an inverted yellow POLYGON (downward triangle,
+            58×32 per Figma) with the matching tier label centred above the
+            polygon. */}
+        {showRankedRpCard && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mx-auto w-full max-w-[720px] pt-6 md:pt-8"
+          >
+            <div className="flex flex-col items-center text-center">
               <div
-                className="mt-2 font-poppins font-semibold uppercase text-white text-xs sm:text-sm md:mt-0 md:text-[20px] md:self-center"
-                style={{ opacity: 0.5 }}
+                className="font-poppins font-semibold uppercase text-white text-[11px] sm:text-[13px] md:text-[14px]"
+                style={{ opacity: 0.6 }}
               >
-                Accuracy
+                New Rank
               </div>
-            </div>
-
-            {/* RP card */}
-            {showRankedRpCard ? (
-              <div className="grid grid-rows-subgrid text-center md:row-span-4">
-                <div className="font-poppins font-semibold leading-none text-brand-green text-[2rem] md:text-[36px]">
-                  {newRP} RP
-                </div>
-                <div className="mt-2 font-poppins font-semibold uppercase text-white text-xs sm:text-sm md:mt-0 md:text-[20px] md:self-center">
-                  {rpTierInfo.tier}
-                </div>
-                <div className="mt-3 relative h-[12px] self-center overflow-hidden rounded-[20px] bg-[#2D7715] md:mt-0 md:h-[15px]">
-                  <motion.div
-                    initial={{ width: `${oldRpTierInfo.progress}%` }}
-                    animate={{
-                      width: tierChanged && tierTransitionPhase === 'fill'
-                        ? (tierPromoted ? '100%' : '0%')
-                        : `${rpTierInfo.progress}%`,
+              <div className="mt-1 flex items-baseline gap-2 sm:gap-3">
+                <span className="font-poppins font-semibold tabular-nums leading-none text-brand-green text-[28px] sm:text-[36px] md:text-[44px]">
+                  <AnimatedCounter from={oldRP} to={newRP} delay={0.5} />
+                  <span className="ml-1 text-[18px] sm:text-[24px] md:text-[28px]">RP</span>
+                </span>
+                {rpChange !== 0 && (
+                  <motion.span
+                    initial={{ opacity: 0, y: -6, scale: 0.6 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ delay: 0.9, type: 'spring', stiffness: 260, damping: 14 }}
+                    className="font-poppins font-semibold leading-none text-[18px] sm:text-[22px] md:text-[26px]"
+                    style={{
+                      color: rpChange > 0 ? '#FFE500' : '#FF4B4B',
+                      textShadow: '0 3px 0 rgba(0,0,0,0.55)',
                     }}
-                    transition={tierTransitionPhase === 'settled' && tierChanged
-                      ? { duration: 0.8, ease: 'easeOut' }
-                      : { duration: 1.2, ease: 'easeInOut', delay: 0.5 }
-                    }
-                    className="absolute inset-y-0 left-0 rounded-[20px] bg-brand-green"
-                  />
-                </div>
-                <div
-                  className="mt-2 font-poppins font-semibold uppercase text-white text-[11px] sm:text-xs md:mt-0 md:text-[20px] md:self-center"
-                  style={{ opacity: 0.5 }}
-                >
-                  {rpTierInfo.pointsToNext !== null
-                    ? `${rpTierInfo.pointsToNext} RP to next tier`
-                    : '—'}
-                </div>
-              </div>
-            ) : <div className="hidden md:block md:row-span-4" />}
-
-            {/* XP / Level */}
-            {showXpCard && preMatchProgression && projectedProgression ? (
-              <div className="grid grid-rows-subgrid text-center md:row-span-4">
-                <div className="font-poppins font-semibold leading-none text-brand-yellow text-[2rem] md:text-[36px]">
-                  Level {projectedProgression.level}
-                </div>
-                <div className="mt-2 font-poppins font-semibold uppercase text-white text-xs sm:text-sm md:mt-0 md:text-[20px] md:self-center">
-                  XP Progress +{animatedXp} XP
-                </div>
-                <div className="mt-3 relative h-[12px] self-center overflow-hidden rounded-[20px] bg-[#A1920D] md:mt-0 md:h-[15px]">
-                  <motion.div
-                    initial={{ width: `${xpBarInitialProgress}%` }}
-                    animate={{ width: `${projectedProgression.progressPct}%` }}
-                    transition={{ duration: 1.1, ease: 'easeOut', delay: 0.45 }}
-                    className="absolute inset-y-0 left-0 rounded-[20px] bg-brand-yellow"
-                  />
-                </div>
-                <div
-                  className="mt-2 font-poppins font-semibold uppercase text-white text-[11px] sm:text-xs md:mt-0 md:text-[20px] md:self-center"
-                  style={{ opacity: 0.5 }}
-                >
-                  {xpToNextLevelAfterMatch} XP to level {projectedProgression.level + 1}
-                </div>
-              </div>
-            ) : <div className="hidden md:block md:row-span-4" />}
-
-            {/* Correct Answers — value row 1, label sits on bar row */}
-            <div className="grid grid-rows-subgrid text-center md:row-span-4">
-              <div className="font-poppins font-semibold leading-none text-brand-blue text-[2rem] md:text-[36px]">
-                {playerCorrect}/{totalQuestions}
-              </div>
-              <div className="hidden md:block" />
-              <div
-                className="mt-2 font-poppins font-semibold uppercase text-white text-xs sm:text-sm md:mt-0 md:text-[20px] md:self-center"
-                style={{ opacity: 0.5 }}
-              >
-                Correct Answers
+                  >
+                    {rpChange > 0 ? '+' : ''}{rpChange}
+                  </motion.span>
+                )}
               </div>
             </div>
-          </div>
-        </motion.div>
+
+            {/* Bar + markers row. Each marker column (label · polygon · cap)
+                is the width of the cap; the polygon and label overflow it
+                horizontally and are centred over the cap. The bar runs
+                cap-to-cap between the two markers. `items-end` aligns the
+                short bar with the bottom of each marker column. */}
+            <div className="mt-6 flex items-end md:mt-8">
+              <TierEndMarker label={rpTierInfo.tier} />
+              <div
+                className="relative h-[18px] flex-1 overflow-hidden md:h-[24px]"
+                // Track shade for the rank-progress bar — darker than the
+                // brand-green fill so the green progress reads clearly
+                // against an unfilled background. Inline-style avoids
+                // adding a one-off token for a single visual.
+                style={{ backgroundColor: '#1F5D0E' }}
+              >
+                <motion.div
+                  initial={{ width: `${oldRpTierInfo.progress}%` }}
+                  animate={{
+                    width: tierChanged && tierTransitionPhase === 'fill'
+                      ? (tierPromoted ? '100%' : '0%')
+                      : `${rpTierInfo.progress}%`,
+                  }}
+                  transition={tierTransitionPhase === 'settled' && tierChanged
+                    ? { duration: 0.8, ease: 'easeOut' }
+                    : { duration: 1.2, ease: 'easeInOut', delay: 0.5 }
+                  }
+                  className="absolute inset-y-0 left-0 bg-brand-green"
+                />
+              </div>
+              <TierEndMarker label={nextTierBand?.tier ?? 'Next Stage'} />
+            </div>
+
+            <div
+              className="mt-3 text-center font-poppins font-semibold uppercase text-white text-[12px] sm:text-[14px] md:text-[16px]"
+              style={{ opacity: 0.55 }}
+            >
+              {rpTierInfo.pointsToNext !== null
+                ? `${rpTierInfo.pointsToNext} RP to next tier`
+                : 'Max tier reached'}
+            </div>
+          </motion.div>
+        )}
 
         <AchievementUnlockStrip achievements={unlockedAchievements} />
 
-        {/* Action buttons */}
-        <div className="mx-auto flex w-full max-w-[498px] flex-col gap-3 pt-2 md:gap-4">
+        {/* ── Action buttons (stacked vertically) + match stats dropdown ─── */}
+        <div className="mx-auto flex w-full max-w-[498px] flex-col items-stretch gap-3 pt-2 md:gap-4">
+          <MatchStatsDropdown
+            accuracy={accuracy}
+            playerCorrect={playerCorrect}
+            opponentCorrect={opponentCorrect}
+            totalQuestions={totalQuestions}
+            playerScore={playerScore}
+            opponentScore={opponentScore}
+            xpEarned={xpEarned}
+            level={projectedProgression?.level ?? null}
+            xpToNextLevel={projectedProgression ? xpToNextLevelAfterMatch : null}
+            playerQuestionResults={playerQuestionResults}
+            opponentQuestionResults={opponentQuestionResults}
+          />
+
           <button
             onClick={onPlayAgain}
-            className="flex h-[64px] w-full items-center justify-center rounded-[20px] bg-brand-green font-poppins font-semibold uppercase text-white text-[1.5rem] transition-colors hover:bg-brand-green md:h-[91px] md:text-[36px]"
+            className="flex h-[64px] w-full items-center justify-center rounded-[20px] bg-brand-green font-poppins font-semibold uppercase text-white text-[1.5rem] transition-colors hover:bg-brand-green md:h-[80px] md:text-[28px]"
           >
             Play Again
           </button>
           <button
             onClick={onMainMenu}
-            className="flex h-[64px] w-full items-center justify-center rounded-[20px] border-[3px] border-brand-green bg-transparent font-poppins font-semibold uppercase text-white text-[1.5rem] transition-colors hover:bg-brand-green/10 md:h-[91px] md:text-[36px]"
+            className="flex h-[64px] w-full items-center justify-center rounded-[20px] border-[3px] border-brand-green bg-transparent font-poppins font-semibold uppercase text-white text-[1.5rem] transition-colors hover:bg-brand-green/10 md:h-[80px] md:text-[28px]"
           >
             Main Menu
           </button>
         </div>
       </motion.div>
+    </div>
+  );
+}
+
+/**
+ * Collapsible dropdown showing detailed match stats. Defaults to closed —
+ * the prominent screen stays focused on rank/RP, and players can opt in to
+ * see accuracy, correct-answer counts, goals, and XP progression.
+ */
+function MatchStatsDropdown({
+  accuracy,
+  playerCorrect,
+  opponentCorrect,
+  totalQuestions,
+  playerScore,
+  opponentScore,
+  xpEarned,
+  level,
+  xpToNextLevel,
+  playerQuestionResults,
+  opponentQuestionResults,
+}: {
+  accuracy: number;
+  playerCorrect: number;
+  opponentCorrect: number;
+  totalQuestions: number;
+  playerScore: number;
+  opponentScore: number;
+  xpEarned: number;
+  level: number | null;
+  xpToNextLevel: number | null;
+  playerQuestionResults?: Array<'correct' | 'wrong' | null>;
+  opponentQuestionResults?: Array<'correct' | 'wrong' | null>;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="font-poppins">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="mx-auto flex h-[48px] items-center justify-center gap-2.5 rounded-full border-2 border-white/15 bg-transparent px-7 text-[13px] font-bold uppercase tracking-wider text-white/85 transition-all hover:border-white/30 hover:text-white md:h-[52px] md:px-8 md:text-[14px]"
+      >
+        <span>Match Stats</span>
+        <motion.span
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.18, ease: 'easeOut' }}
+          className="inline-block text-[11px] leading-none"
+        >
+          ▾
+        </motion.span>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key="stats-panel"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className="overflow-hidden"
+          >
+            <StatsPanel
+              accuracy={accuracy}
+              playerCorrect={playerCorrect}
+              opponentCorrect={opponentCorrect}
+              totalQuestions={totalQuestions}
+              playerScore={playerScore}
+              opponentScore={opponentScore}
+              xpEarned={xpEarned}
+              level={level}
+              xpToNextLevel={xpToNextLevel}
+              playerQuestionResults={playerQuestionResults}
+              opponentQuestionResults={opponentQuestionResults}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/**
+ * Tier marker at one end of the rank-progress bar.
+ *
+ * Stacks (top → bottom): tier label · inverted yellow polygon (downward
+ * triangle, Figma "Polygon 1" rotated -180°) · vertical yellow end-cap peg.
+ *
+ * Column width matches the cap width so the cap sits flush with the bar's
+ * end. The polygon and label are wider — they overflow the column
+ * horizontally but stay centred over the cap (so the polygon visually
+ * "points down" at the cap). There's a small gap between polygon and cap
+ * so the polygon hovers rather than touching the cap.
+ */
+function TierEndMarker({ label }: { label: string }) {
+  return (
+    <div
+      className="relative flex flex-shrink-0 flex-col items-center"
+      // Column width = cap width. The polygon and label overflow this on
+      // both sides via `whitespace-nowrap` + no overflow:hidden.
+      style={{ width: 'clamp(8px, 1.2vw, 10px)' }}
+    >
+      <span
+        className="whitespace-nowrap font-poppins font-semibold uppercase tracking-wide text-white text-[12px] sm:text-[13px] md:text-[14px]"
+        style={{ opacity: 0.78 }}
+      >
+        {label}
+      </span>
+      {/* Inverted polygon — flat top, point down. Wider than the column
+          so it visibly overhangs the cap on both sides. */}
+      <div
+        className="mt-2 bg-brand-yellow"
+        style={{
+          width: 'clamp(26px, 4.2vw, 40px)',
+          height: 'clamp(14px, 2.4vw, 22px)',
+          clipPath: 'polygon(0 0, 100% 0, 50% 100%)',
+        }}
+      />
+      {/* Yellow end-cap peg flush with the bar. `mt-2` gives the gap so
+          the polygon doesn't touch the cap. */}
+      <div
+        className="mt-2 bg-brand-yellow"
+        style={{ width: '100%', height: 'clamp(26px, 4vw, 34px)' }}
+      />
+    </div>
+  );
+}
+
+/**
+ * Match stats panel — Duolingo-style chunky card with a unified
+ * You-vs-Opp comparison table and an optional per-question dot strip
+ * (Figma 1157:3739). XP/level metadata sits in a footer row.
+ */
+function StatsPanel({
+  accuracy,
+  playerCorrect,
+  opponentCorrect,
+  totalQuestions,
+  playerScore,
+  opponentScore,
+  xpEarned,
+  level,
+  xpToNextLevel,
+  playerQuestionResults,
+  opponentQuestionResults,
+}: {
+  accuracy: number;
+  playerCorrect: number;
+  opponentCorrect: number;
+  totalQuestions: number;
+  playerScore: number;
+  opponentScore: number;
+  xpEarned: number;
+  level: number | null;
+  xpToNextLevel: number | null;
+  playerQuestionResults?: Array<'correct' | 'wrong' | null>;
+  opponentQuestionResults?: Array<'correct' | 'wrong' | null>;
+}) {
+  const oppAccuracy =
+    totalQuestions === 0 ? 0 : Math.round((opponentCorrect / totalQuestions) * 100);
+  const hasDots = Boolean(playerQuestionResults || opponentQuestionResults);
+
+  return (
+    <div className="mt-4 overflow-hidden rounded-2xl border-2 border-white/10 bg-transparent">
+      {hasDots && (
+        <div className="px-5 pb-4 pt-5 sm:px-6 sm:pt-6">
+          <QuestionResultStrips
+            totalQuestions={totalQuestions}
+            playerResults={playerQuestionResults}
+            opponentResults={opponentQuestionResults}
+          />
+        </div>
+      )}
+
+      {/* You vs Opp header */}
+      <div className={cn('grid grid-cols-[1fr_auto_1fr] items-center px-5 pb-3 sm:px-6', hasDots && 'border-t border-white/10 pt-4')}>
+        <div className="text-center text-[13px] font-bold uppercase tracking-wider text-white/75 sm:text-[14px]">
+          You
+        </div>
+        <div className="w-12" aria-hidden="true" />
+        <div className="text-center text-[13px] font-bold uppercase tracking-wider text-white/75 sm:text-[14px]">
+          Opp
+        </div>
+      </div>
+
+      <div className="px-5 pb-4 sm:px-6">
+        <ComparisonRow
+          label="Accuracy"
+          you={`${accuracy}%`}
+          opp={`${oppAccuracy}%`}
+          youBetter={accuracy > oppAccuracy}
+          oppBetter={oppAccuracy > accuracy}
+        />
+        <ComparisonRow
+          label="Correct"
+          you={`${playerCorrect}/${totalQuestions}`}
+          opp={`${opponentCorrect}/${totalQuestions}`}
+          youBetter={playerCorrect > opponentCorrect}
+          oppBetter={opponentCorrect > playerCorrect}
+        />
+        <ComparisonRow
+          label="Goals"
+          you={String(playerScore)}
+          opp={String(opponentScore)}
+          youBetter={playerScore > opponentScore}
+          oppBetter={opponentScore > playerScore}
+        />
+      </div>
+
+      {/* XP footer */}
+      <div className="flex items-center justify-center gap-2 border-t border-white/10 px-5 py-3.5 sm:px-6">
+        {xpEarned > 0 ? (
+          <>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-white/55">XP</span>
+            <span className="text-[18px] font-semibold tabular-nums text-brand-green">
+              +{xpEarned}
+            </span>
+            {level != null && xpToNextLevel != null && (
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-cyan">
+                · Lvl {level} · {xpToNextLevel} to next
+              </span>
+            )}
+          </>
+        ) : (
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-white/40">
+            No XP earned
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ComparisonRow({
+  label,
+  you,
+  opp,
+  youBetter,
+  oppBetter,
+}: {
+  label: string;
+  you: string;
+  opp: string;
+  youBetter: boolean;
+  oppBetter: boolean;
+}) {
+  const winnerClass = 'text-white font-bold';
+  const loserClass = 'text-white/40 font-semibold';
+  const tieClass = 'text-white/85 font-semibold';
+  const youClass = youBetter ? winnerClass : oppBetter ? loserClass : tieClass;
+  const oppClass = oppBetter ? winnerClass : youBetter ? loserClass : tieClass;
+  return (
+    <div className="grid grid-cols-[1fr_auto_1fr] items-center border-t border-white/[0.06] py-3 first:border-t-0">
+      <span className={cn('text-center text-[20px] tabular-nums sm:text-[22px]', youClass)}>
+        {you}
+      </span>
+      <span className="w-12 text-center text-[10px] font-bold uppercase tracking-wider text-white/40">
+        {label}
+      </span>
+      <span className={cn('text-center text-[20px] tabular-nums sm:text-[22px]', oppClass)}>
+        {opp}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Per-question correctness strip. Renders one row per player, split into halves
+ * by a thin divider. Each question is a dot: solid green = correct, solid red
+ * = wrong, hollow yellow ring = unanswered / not reached.
+ *
+ * Matches Figma node 1157:3739 — `brand-green` / `brand-red` / yellow-ring.
+ */
+function QuestionResultStrips({
+  totalQuestions,
+  playerResults,
+  opponentResults,
+}: {
+  totalQuestions: number;
+  playerResults?: Array<'correct' | 'wrong' | null>;
+  opponentResults?: Array<'correct' | 'wrong' | null>;
+}) {
+  return (
+    <div className="flex flex-col gap-3">
+      {playerResults && (
+        <QuestionDotRow label="You" total={totalQuestions} results={playerResults} />
+      )}
+      {opponentResults && (
+        <QuestionDotRow label="Opp" total={totalQuestions} results={opponentResults} variant="opp" />
+      )}
+    </div>
+  );
+}
+
+function QuestionDotRow({
+  label,
+  total,
+  results,
+  variant = 'self',
+}: {
+  label: string;
+  total: number;
+  results: Array<'correct' | 'wrong' | null>;
+  variant?: 'self' | 'opp';
+}) {
+  const half = Math.ceil(total / 2);
+  const firstHalf = Array.from({ length: half }, (_, i) => results[i] ?? null);
+  const secondHalf = Array.from({ length: total - half }, (_, i) => results[half + i] ?? null);
+
+  return (
+    <div className="flex items-center gap-3">
+      <span className="w-10 shrink-0 text-[12px] font-bold uppercase tracking-wider text-white/75 sm:text-[13px]">
+        {label}
+      </span>
+      <div className="flex flex-1 items-center justify-center gap-2">
+        <DotGroup dots={firstHalf} />
+        <span className="h-3 w-px bg-white/15" aria-hidden="true" />
+        <DotGroup dots={secondHalf} />
+      </div>
+    </div>
+  );
+}
+
+function DotGroup({ dots }: { dots: Array<'correct' | 'wrong' | null> }) {
+  return (
+    <div className="flex items-center gap-1.5 sm:gap-2">
+      {dots.map((d, i) => (
+        <span
+          key={i}
+          aria-label={d === 'correct' ? 'correct' : d === 'wrong' ? 'wrong' : 'unanswered'}
+          className={cn(
+            'size-[14px] rounded-full sm:size-[18px]',
+            d === 'correct' && 'bg-brand-green',
+            d === 'wrong' && 'bg-brand-red',
+            d === null && 'border border-brand-yellow'
+          )}
+        />
+      ))}
     </div>
   );
 }

@@ -12,6 +12,7 @@ import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
 import type { DraftStatus, MatchStatus } from "@/stores/realtimeMatch.store";
 import type { GameConfig, GameStage } from "@/types/game.runtime";
 import { logger } from "@/utils/logger";
+import { GOAL_VISUAL_SEQUENCE_MS } from "@/lib/constants/game";
 
 const STAGE_ORDER: GameStage[] = [
   "idle",
@@ -31,7 +32,8 @@ const RANKED_QUEUE_MAX_RETRIES = 3;
 const RANKED_QUEUE_ACK_TIMEOUT_MS = 2500;
 const MATCH_FOUND_HOLD_MS = 2000;
 const FINAL_RESULTS_HOLD_BASE_MS = 2500;
-const FINAL_RESULTS_HOLD_WITH_GOAL_MS = 5000;
+const FINAL_RESULTS_HOLD_WITH_GOAL_MS = GOAL_VISUAL_SEQUENCE_MS + 500;
+const FINAL_RESULTS_PAYLOAD_FALLBACK_MS = 3000;
 const GEO_HINT_CACHE_KEY = "ranked_geo_hint_v1";
 const IP_LOOKUP_TIMEOUT_MS = 1800;
 
@@ -580,7 +582,8 @@ export function useGameStageTransitions({
     const elapsedMs = lastRoundResolvedAtRef.current
       ? Date.now() - lastRoundResolvedAtRef.current
       : holdMs;
-    const remainingMs = Math.max(0, holdMs - elapsedMs);
+    const payloadWaitMs = hasFinalResults ? 0 : FINAL_RESULTS_PAYLOAD_FALLBACK_MS;
+    const remainingMs = Math.max(0, holdMs + payloadWaitMs - elapsedMs);
 
     if (remainingMs <= 0) {
       clearFinalStageTimer();

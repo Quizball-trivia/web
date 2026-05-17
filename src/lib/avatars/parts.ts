@@ -128,7 +128,7 @@ export const HAIR_PARTS: AvatarPart[] = [
     priceCoins: 500,
     productSlug: "avatar_hair_girl_basic",
     position: { top: -5, left: 20, width: 57 },
-    storePosition: { top: 13, left: 17, width: 62 },
+    storePosition: { top: 0, left: 25, width: 50 },
   },
   {
     id: "hair_hamsik",

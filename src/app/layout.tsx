@@ -9,7 +9,10 @@ import "../styles/globals.css";
 export const metadata: Metadata = {
   title: "QuizBall",
   description: "QuizBall",
-  robots: "noindex, nofollow",
+  // Allow search engines to index + follow links. Earlier we emitted
+  // `noindex, nofollow` site-wide which prevented every page from
+  // appearing in Google Search results ("No page information" snippet).
+  robots: "index, follow",
   icons: {
     icon: "/assets/brand/quziball-logo-2.png",
     shortcut: "/assets/brand/quziball-logo-2.png",

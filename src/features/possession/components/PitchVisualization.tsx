@@ -1,10 +1,11 @@
 'use client';
 
-import { useId, useMemo } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import type { AvatarCustomization } from '@/types/game';
 import { BarBattleOverlay, type BarBattleState } from './BarBattleOverlay';
+import { GOAL_SHOT_TO_FIELD_RESET_MS } from '../realtimePossession.helpers';
 
 type GoalSide = 'left' | 'right';
 
@@ -121,6 +122,8 @@ interface ShotMode {
   isPlayerAttacker: boolean;
   /** Optional animation variant index used to diversify shot visuals. */
   variant?: number;
+  /** Unique per-shot identifier — forces shot-effect reset when consecutive shots share attacker/result/goal/variant. */
+  shotId?: number | string;
 }
 
 interface PitchVisualizationProps {
@@ -147,6 +150,10 @@ interface PitchVisualizationProps {
   orientation?: 'landscape' | 'portrait';
   /** Bar battle animation state — rendered inside the possession zone */
   barBattle?: BarBattleState | null;
+  /** Align the possession boundary to the stadium art's true center line. */
+  centerPossessionTrack?: boolean;
+  /** Dev prototype: keep avatars planted and animate only the ball for shot/goal results. */
+  simpleShotAnimation?: boolean;
 }
 
 function toShotVariant(value: number | undefined): 0 | 1 | 2 | 3 | 4 {
@@ -171,10 +178,19 @@ export function PitchVisualization({
   ballOnPlayer = true,
   orientation = 'landscape',
   barBattle,
+  centerPossessionTrack = true,
+  simpleShotAnimation = false,
 }: PitchVisualizationProps) {
   const isPenalty = !!penaltyMode;
   const isShot = !!shotMode;
+  const useSimpleShotAnimation = simpleShotAnimation && isShot && !!shotMode;
   const isPortrait = orientation === 'portrait';
+  // Mobile uses the landscape pitch (desktop puts the pitch in a narrow
+  // portrait sidebar). Bigger avatars on mobile so they're readable at
+  // small viewport sizes.
+  const avatarBox = isPortrait ? 60 : 88;
+  const avatarBoxOffset = avatarBox / 2; // SVG x/y offset from centre
+  const avatarBoxY = 115 - avatarBoxOffset; // foreignObject y, centred on cy=115
   void _myMomentum;
   void _oppMomentum;
 
@@ -188,13 +204,44 @@ export function PitchVisualization({
   const textTf = (cx: number, cy: number) =>
     isPortrait ? `rotate(90, ${cx}, ${cy})` : undefined;
 
-  // Helper: ball emoji style — counter-rotate in portrait to stay upright
+  // Ball emoji style — bigger on mobile (landscape pitch) to match the
+  // bigger avatars and not look lost between them. Counter-rotate in
+  // portrait so the emoji stays upright after the pitch transform.
+  const ballFontPx = isPortrait ? 20 : 30;
+  const ballLineHeightPx = isPortrait ? 24 : 34;
   const ballEmojiStyle: React.CSSProperties = isPortrait
-    ? { fontSize: '20px', lineHeight: '24px', textAlign: 'center', transform: 'rotate(90deg)' }
-    : { fontSize: '20px', lineHeight: '24px', textAlign: 'center' };
+    ? { fontSize: `${ballFontPx}px`, lineHeight: `${ballLineHeightPx}px`, textAlign: 'center', transform: 'rotate(90deg)' }
+    : { fontSize: `${ballFontPx}px`, lineHeight: `${ballLineHeightPx}px`, textAlign: 'center' };
+  // Ball container + glow size — match the font roughly so the emoji has
+  // room without clipping.
+  const ballBox = isPortrait ? 24 : 36;
+  const ballBoxOffset = ballBox / 2;
+  const ballGlowR = isPortrait ? 14 : 20;
 
   // Goal coordinate set based on target
   const goal: GoalCoordinates = (targetGoal ?? 'right') === 'right' ? RIGHT_GOAL : LEFT_GOAL;
+  const possessionTrackLeft = 15;
+  const possessionTrackRight = centerPossessionTrack ? 485 : 470;
+  const possessionTrackWidth = possessionTrackRight - possessionTrackLeft;
+  const rawPossessionBoundaryX = mirrored
+    ? possessionTrackRight - (playerPosition / 100) * possessionTrackWidth
+    : possessionTrackLeft + (playerPosition / 100) * possessionTrackWidth;
+  // Mobile avatars are bigger, so they need more spread from the boundary.
+  const avatarSpread = isPortrait ? 35 : 55;
+
+  // Clamp the boundary so the winning side's bar zone (1 stacked bar
+  // worth — AVATAR_BAR_OFFSET 58 + half bar 16 = 74) always fits behind
+  // the avatar on either edge of the pitch.
+  const BAR_ZONE_PADDING = 74;
+  const minBoundary = 24 + avatarSpread + BAR_ZONE_PADDING;
+  const maxBoundary = 476 - avatarSpread - BAR_ZONE_PADDING;
+  const possessionBoundaryX = Math.max(
+    minBoundary,
+    Math.min(maxBoundary, rawPossessionBoundaryX),
+  );
+
+  const playerAvatarX = possessionBoundaryX + (mirrored ? avatarSpread : -avatarSpread);
+  const opponentAvatarX = possessionBoundaryX + (mirrored ? -avatarSpread : avatarSpread);
 
   // Normal positions (mirrored flips attack direction for 2nd half)
   const normalPlayerX = mirrored
@@ -203,6 +250,14 @@ export function PitchVisualization({
   const normalOpponentX = mirrored
     ? normalPlayerX + 30
     : normalPlayerX - 30;
+
+  // Avatar visual X — mirrors the inline `animate.x` on the player/opponent
+  // <motion.g> below. Passed to BarBattleOverlay so the avatar-anchored variant
+  // can spawn bars directly below each avatar.
+  const playerAvatarVisualX = playerAvatarX;
+  const opponentAvatarVisualX = opponentAvatarX;
+  const simpleShotOriginX = shotMode?.isPlayerAttacker ? playerAvatarX : opponentAvatarX;
+  const simpleShotOriginY = 115;
   const normalBallX = ballOnPlayer
     ? normalPlayerX + (mirrored ? -14 : 14)
     : normalOpponentX + (mirrored ? 14 : -14);
@@ -229,6 +284,31 @@ export function PitchVisualization({
   const isShotGoal = shotResultActive && shotMode.result === 'goal';
   const isShotSave = shotResultActive && shotMode.result === 'saved';
   const isShotMiss = shotResultActive && shotMode.result === 'miss';
+  const [simpleShotReturnToCenter, setSimpleShotReturnToCenter] = useState(false);
+  const simpleShotKey = useSimpleShotAnimation && isShot && shotMode
+    ? `${shotMode.shotId ?? 0}:${shotMode.isPlayerAttacker ? 'player' : 'opponent'}:${shotMode.result}:${targetGoal ?? 'right'}:${shotMode.variant ?? 0}`
+    : null;
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset on key change
+    setSimpleShotReturnToCenter(false);
+    if (!useSimpleShotAnimation || !isShotGoal || !simpleShotKey) return;
+
+    const timer = setTimeout(() => {
+      setSimpleShotReturnToCenter(true);
+    }, GOAL_SHOT_TO_FIELD_RESET_MS);
+
+    return () => clearTimeout(timer);
+  }, [isShotGoal, simpleShotKey, useSimpleShotAnimation]);
+
+  const simpleShotTarget = (() => {
+    if (simpleShotReturnToCenter) return { x: possessionBoundaryX, y: 112 };
+    if (isShotGoal) return { x: goal.goalTarget.x, y: goal.goalTarget.y - 6 };
+    if (isShotSave) return { x: goal.goalLineX - 10 * goal.inward, y: goal.penY };
+    if (isShotMiss) return { x: goal.goalLineX + 38 * goal.inward, y: goal.goalTarget.y - 58 };
+    return { x: simpleShotOriginX, y: simpleShotOriginY };
+  })();
+  const renderSimpleShotBall = useSimpleShotAnimation && (isShotGoal || isShotSave || isShotMiss);
   const shotVariant = toShotVariant(shotMode?.variant);
   const shotGoalLabel = shotVariant === 1
     ? 'TOP BINS'
@@ -242,8 +322,8 @@ export function PitchVisualization({
   const shotSaveLabel = shotVariant === 1 ? 'DENIED' : shotVariant === 2 ? 'STOPPED' : 'SAVED';
   const shotMissLabel = shotVariant === 1 ? 'OFF TARGET' : shotVariant === 2 ? 'HIT POST' : 'MISS';
   // Ball origin — captured at shot start so it doesn't shift when positions reset
-  const shotBallOriginX = isShot ? shotMode.ballOriginX : normalBallX;
-  const shotBallOriginY = 145; // Below shooter's feet (avatar at 115 + radius 28 + ball offset)
+  const shotBallOriginX = useSimpleShotAnimation ? simpleShotOriginX : (isShot ? shotMode.ballOriginX : normalBallX);
+  const shotBallOriginY = useSimpleShotAnimation ? simpleShotOriginY : 145; // Below shooter's feet (avatar at 115 + radius 28 + ball offset)
 
   // Zone bands (mirrored reverses order: BOX on left, DEF on right)
   const zoneBands = mirrored
@@ -271,12 +351,16 @@ export function PitchVisualization({
     : (targetGoal === 'left'
       ? 'radial-gradient(ellipse at 20% 50%, transparent 35%, rgba(0,0,0,0.35) 100%)'
       : 'radial-gradient(ellipse at 80% 50%, transparent 35%, rgba(0,0,0,0.35) 100%)');
+  const shouldZoomToGoal = !!zoomToGoal && !useSimpleShotAnimation;
 
   // Keeper jolt direction (away from goal) — enhanced amplitude for cinematic feel
   const keeperJolt = { x: [0, -8 * goal.inward, 4 * goal.inward, 0], y: [0, -6, -2, 0] };
   const ballTarget = useMemo(() => {
     if (isGoal) return { x: goal.goalTarget.x, y: goal.goalTarget.y - 8 };
     if (isSave) return { x: goal.saveTarget.x - 10 * goal.inward, y: goal.saveTarget.y + 5 };
+    if (useSimpleShotAnimation && isShotGoal) return simpleShotTarget;
+    if (useSimpleShotAnimation && isShotSave) return simpleShotTarget;
+    if (useSimpleShotAnimation && isShotMiss) return simpleShotTarget;
     if (isShotGoal) {
       if (shotVariant === 1) {
         return {
@@ -351,17 +435,26 @@ export function PitchVisualization({
     if (isPenalty) return { x: goal.penSpotX, y: 105 };
     // During shot pending, position ball between shooter and goal
     if (isShot && shotMode.result === 'pending') {
+      if (useSimpleShotAnimation) {
+        return { x: simpleShotOriginX, y: simpleShotOriginY };
+      }
       return {
         x: (shotBallOriginX + goal.goalLineX) / 2,
         y: 115
       };
     }
     // Position ball at the boundary between blue and red zones
-    return { x: mirrored ? (470 - (playerPosition / 100) * 455) : (15 + (playerPosition / 100) * 455), y: 112 };
-  }, [isGoal, isSave, isShotGoal, isShotSave, isShotMiss, isPenalty, isShot, shotMode, shotVariant, goal, shotBallOriginX, shotBallOriginY, playerPosition, mirrored]);
+    return { x: possessionBoundaryX, y: 112 };
+  }, [isGoal, isSave, useSimpleShotAnimation, isShotGoal, simpleShotTarget, isShotSave, isShotMiss, isPenalty, isShot, shotMode, shotVariant, goal, shotBallOriginX, shotBallOriginY, simpleShotOriginX, simpleShotOriginY, possessionBoundaryX]);
   const ballTransition = useMemo(() => {
     if (isGoal) return { duration: 0.4, ease: [0.2, 0, 0.4, 1] as const };
     if (isSave) return { duration: 0.5, ease: [0.3, 0, 0.2, 1] as const };
+    if (useSimpleShotAnimation && simpleShotReturnToCenter) {
+      return { duration: 0.75, ease: [0.22, 1, 0.36, 1] as const };
+    }
+    if (useSimpleShotAnimation && (isShotGoal || isShotSave || isShotMiss)) {
+      return { duration: isShotGoal ? 1.05 : 0.9, ease: [0.22, 1, 0.36, 1] as const };
+    }
     if (isShotGoal) {
       const duration = shotVariant === 1
         ? 0.55
@@ -377,15 +470,18 @@ export function PitchVisualization({
     if (isShotSave) return { duration: shotVariant === 1 ? 0.6 : 0.5, ease: [0.3, 0, 0.2, 1] as const, times: [0, 0.5, 1] };
     if (isShotMiss) return { duration: shotVariant === 1 ? 0.45 : 0.55, ease: [0.2, 0, 0.6, 1] as const };
     return { type: 'spring' as const, stiffness: 160, damping: 12, mass: 0.7 };
-  }, [isGoal, isSave, isShotGoal, isShotSave, isShotMiss, shotVariant]);
-  const ballOpacity = isShotMiss ? 0.3 : 1;
+  }, [isGoal, isSave, useSimpleShotAnimation, simpleShotReturnToCenter, isShotGoal, isShotSave, isShotMiss, shotVariant]);
+  const ballOpacity = isShotMiss && !useSimpleShotAnimation ? 0.3 : 1;
+  const shotGoalNetDelay = useSimpleShotAnimation ? 0.95 : 0.35;
+  const shotGoalTextDelay = useSimpleShotAnimation ? 0.9 : 0.25;
 
   return (
     <div className={isPortrait ? 'h-full w-full' : 'w-full'}>
-      <div className={`relative overflow-hidden ${isPortrait ? 'h-full w-full' : 'rounded-2xl'}`}>
+      {/* Square corners — matches the Figma stadium frame (no rounded edges) */}
+      <div className={`relative overflow-hidden ${isPortrait ? 'h-full w-full' : ''}`}>
         {/* Camera zoom wrapper — field container stays anchored, SVG zooms inside */}
         <motion.div
-          animate={zoomToGoal ? {
+          animate={shouldZoomToGoal ? {
             scale: 1.8,
             x: '0%',
             y: '0%',
@@ -397,13 +493,20 @@ export function PitchVisualization({
           transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
           style={{ transformOrigin: zoomOrigin, ...(isPortrait ? { height: '100%' } : {}) }}
         >
+        {/* viewBox aspect 500/290 ≈ 1.72:1 — matches the Figma stadium frame
+            (846.95 × 493.07). The internal 500-wide × 230-tall play area
+            stays at y=0..230 so existing markings/avatar positions don't
+            need to shift; we extend 30 units of green pitch above and below
+            (y=-30..0 and y=230..260) to reach Figma's proportions. */}
         <svg
-          viewBox={isPortrait ? '0 0 230 500' : '0 0 500 230'}
+          data-pitch-field="possession"
+          viewBox={isPortrait ? '-30 0 290 500' : '0 -30 500 290'}
           className={isPortrait ? 'w-full h-full' : 'w-full h-auto'}
         >
           <defs>
             <clipPath id={uid('fieldClip')}>
-              <rect x="0" y="0" width="500" height="230" rx="12" />
+              {/* Square clip — matches Figma's sharp-cornered stadium frame. */}
+              <rect x="0" y="-30" width="500" height="290" />
             </clipPath>
             <filter id={uid('blueGlow')} x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="4" result="blur" />
@@ -441,14 +544,16 @@ export function PitchVisualization({
               Animations operate in local coord space, parent transform maps to viewport. */}
           <g transform={isPortrait ? 'matrix(0,-1,1,0,0,500)' : undefined}>
 
-          {/* Field background — stadium image */}
-          <image href="/assets/stadium-green.png" x="0" y="0" width="500" height="230" preserveAspectRatio="none" clipPath={`url(#${uid('fieldClip')})`} />
+          {/* Field background — stadium image stretches to fill the full
+              500×290 viewBox so the green + yellow boundary lines reach the
+              edges of the Figma-matched aspect frame. */}
+          <image href="/assets/stadium-green.png" x="0" y="-30" width="500" height="290" preserveAspectRatio="none" clipPath={`url(#${uid('fieldClip')})`} />
 
           {/* Zone bands — hidden during penalties */}
           {!isPenalty && (
             <>
               {zoneBands.map((z, i) => (
-                <rect key={i} x={z.x} y="0" width={z.w} height="230" fill={z.fill} rx={z.rx} />
+                <rect key={i} x={z.x} y="-30" width={z.w} height="290" fill={z.fill} rx={z.rx} />
               ))}
             </>
           )}
@@ -457,7 +562,7 @@ export function PitchVisualization({
 
 
           {/* === Player avatars — ONLY shown during shots and penalties === */}
-          {(isPenalty || isShot) && (
+          {(isPenalty || (isShot && !useSimpleShotAnimation)) && (
             <>
               {/* === Opponent marker === */}
               <PitchMarker
@@ -490,7 +595,7 @@ export function PitchVisualization({
           )}
 
           {/* === Live Score Tracker Style — ONLY shown during normal gameplay === */}
-          {!isPenalty && !isShot && (
+          {!isPenalty && (!isShot || useSimpleShotAnimation) && (
             <>
               {/* Possession tracking visualization */}
               <g>
@@ -502,9 +607,9 @@ export function PitchVisualization({
 
                 {/* Player's possession fill (always from their defensive end) */}
                 <motion.rect
-                  x={mirrored ? 470 - (playerPosition / 100) * 455 : 15}
+                  x={mirrored ? possessionBoundaryX : possessionTrackLeft}
                   y="70"
-                  width={(playerPosition / 100) * 455}
+                  width={(playerPosition / 100) * possessionTrackWidth}
                   height="90"
                   fill="#1CB0F6"
                   opacity="0.18"
@@ -517,9 +622,9 @@ export function PitchVisualization({
 
                 {/* Opponent's possession fill */}
                 <motion.rect
-                  x={mirrored ? 15 : 15 + (playerPosition / 100) * 455}
+                  x={mirrored ? possessionTrackLeft : possessionBoundaryX}
                   y="70"
-                  width={((100 - playerPosition) / 100) * 455}
+                  width={((100 - playerPosition) / 100) * possessionTrackWidth}
                   height="90"
                   fill="#FF4B4B"
                   opacity="0.12"
@@ -530,10 +635,26 @@ export function PitchVisualization({
                   transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
                 />
 
-                {/* Player avatar (positioned close to white line on blue side) */}
+                {/* Bar battle animation sits UNDER avatars. If bars overlap in
+                    tight edge cases, the player art remains on top and readable. */}
+                {barBattle && (
+                  <BarBattleOverlay
+                    battle={barBattle}
+                    mirrored={mirrored}
+                    playerAvatarX={playerAvatarVisualX}
+                    opponentAvatarX={opponentAvatarVisualX}
+                    isPortrait={isPortrait}
+                  />
+                )}
+
+                {/* Player avatar (positioned close to white line on blue side).
+                    The data-pitch-avatar attribute lets the bar-battle flight
+                    overlay find the avatar's screen position so the +N ghost
+                    can fly into it. Production code paths ignore the attr. */}
                 <motion.g
+                  data-pitch-avatar="player"
                   animate={{
-                    x: mirrored ? (470 - (playerPosition / 100) * 455 + 35) : (15 + (playerPosition / 100) * 455 - 35),
+                    x: playerAvatarX,
                     scale: mirrored ? (playerPosition < 50 ? [1, 1.08, 1] : 1) : (playerPosition > 50 ? [1, 1.08, 1] : 1),
                   }}
                   transition={{
@@ -541,24 +662,25 @@ export function PitchVisualization({
                     scale: { duration: 1.5, repeat: Infinity, ease: 'easeInOut' }
                   }}
                 >
-                  <circle
-                    cx="0"
-                    cy="115"
-                    r="22"
-                    fill="none"
-                    stroke="#1CB0F6"
-                    strokeWidth="2"
-                  />
                   <g transform={isPortrait ? 'rotate(90, 0, 115)' : undefined}>
                     <foreignObject
-                      x="-22"
-                      y="93"
-                      width="44"
-                      height="44"
+                      x={-avatarBoxOffset}
+                      y={avatarBoxY}
+                      width={avatarBox}
+                      height={avatarBox}
                     >
                       <div
                         aria-label={playerAvatarAlt}
-                        style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden' }}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          borderRadius: '50%',
+                          overflow: 'hidden',
+                          // 2nd half (mirrored) flips the pitch — player is
+                          // now on the right side and needs to face left
+                          // toward the opp. Default half: player faces forward.
+                          transform: mirrored ? 'scaleX(-1)' : undefined,
+                        }}
                       >
                         <AvatarDisplay customization={playerAvatarCustomization ?? {}} size="xs" className="size-full" />
                       </div>
@@ -568,8 +690,9 @@ export function PitchVisualization({
 
                 {/* Opponent avatar (positioned close to white line on red side) */}
                 <motion.g
+                  data-pitch-avatar="opponent"
                   animate={{
-                    x: mirrored ? (470 - (playerPosition / 100) * 455 - 35) : (15 + (playerPosition / 100) * 455 + 35),
+                    x: opponentAvatarX,
                     scale: mirrored ? (playerPosition > 50 ? [1, 1.08, 1] : 1) : (playerPosition < 50 ? [1, 1.08, 1] : 1),
                   }}
                   transition={{
@@ -577,24 +700,25 @@ export function PitchVisualization({
                     scale: { duration: 1.5, repeat: Infinity, ease: 'easeInOut' }
                   }}
                 >
-                  <circle
-                    cx="0"
-                    cy="115"
-                    r="22"
-                    fill="none"
-                    stroke="#FF4B4B"
-                    strokeWidth="2"
-                  />
                   <g transform={isPortrait ? 'rotate(90, 0, 115)' : undefined}>
                     <foreignObject
-                      x="-22"
-                      y="93"
-                      width="44"
-                      height="44"
+                      x={-avatarBoxOffset}
+                      y={avatarBoxY}
+                      width={avatarBox}
+                      height={avatarBox}
                     >
                       <div
                         aria-label={opponentAvatarAlt}
-                        style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden' }}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          borderRadius: '50%',
+                          overflow: 'hidden',
+                          // Default half: opp sits on the right and faces
+                          // left toward the player. After mirror (2nd half)
+                          // opp is on the left and faces forward.
+                          transform: mirrored ? undefined : 'scaleX(-1)',
+                        }}
                       >
                         <AvatarDisplay customization={opponentAvatarCustomization ?? {}} size="xs" className="size-full" />
                       </div>
@@ -604,7 +728,7 @@ export function PitchVisualization({
 
                 {/* Ball position indicator - positioned at boundary between blue/red zones */}
                 <motion.g
-                  animate={{ x: mirrored ? (470 - (playerPosition / 100) * 455) : (15 + (playerPosition / 100) * 455) }}
+                  animate={{ x: possessionBoundaryX }}
                   transition={{ type: 'spring', stiffness: 160, damping: 12, mass: 0.7 }}
                 >
                   {/* Vertical indicator line */}
@@ -620,78 +744,11 @@ export function PitchVisualization({
                   />
                 </motion.g>
 
-                {/* Possession percentages - counter-rotated in portrait */}
+                {/* Zone indicator only — the per-avatar possession % and name
+                    labels were redundant with the top scoreboard and clustered
+                    awkwardly on mobile (the "50% Me" overlap). The scoreboard
+                    already shows points/possession, so the pitch stays clean. */}
                 <g transform={textTf(0, 0)}>
-                  {/* Player possession % */}
-                  <motion.text
-                    x={mirrored ? (470 - (playerPosition / 100) * 455 + 35) : (15 + (playerPosition / 100) * 455 - 35)}
-                    y="180"
-                    textAnchor="middle"
-                    fill="#1CB0F6"
-                    fontSize="12"
-                    fontWeight="900"
-                    fontFamily="system-ui"
-                    animate={{
-                      x: mirrored ? (470 - (playerPosition / 100) * 455 + 35) : (15 + (playerPosition / 100) * 455 - 35),
-                    }}
-                    transition={{ type: 'spring', stiffness: 160, damping: 12, mass: 0.7 }}
-                  >
-                    {Math.round(playerPosition)}%
-                  </motion.text>
-
-                  {/* Opponent possession % */}
-                  <motion.text
-                    x={mirrored ? (470 - (playerPosition / 100) * 455 - 35) : (15 + (playerPosition / 100) * 455 + 35)}
-                    y="180"
-                    textAnchor="middle"
-                    fill="#FF4B4B"
-                    fontSize="12"
-                    fontWeight="900"
-                    fontFamily="system-ui"
-                    animate={{
-                      x: mirrored ? (470 - (playerPosition / 100) * 455 - 35) : (15 + (playerPosition / 100) * 455 + 35),
-                    }}
-                    transition={{ type: 'spring', stiffness: 160, damping: 12, mass: 0.7 }}
-                  >
-                    {Math.round(100 - playerPosition)}%
-                  </motion.text>
-
-                  {/* Player name */}
-                  <motion.text
-                    x={mirrored ? (470 - (playerPosition / 100) * 455 + 35) : (15 + (playerPosition / 100) * 455 - 35)}
-                    y="195"
-                    textAnchor="middle"
-                    fill="rgba(255,255,255,0.7)"
-                    fontSize="8"
-                    fontWeight="700"
-                    fontFamily="system-ui"
-                    animate={{
-                      x: mirrored ? (470 - (playerPosition / 100) * 455 + 35) : (15 + (playerPosition / 100) * 455 - 35),
-                    }}
-                    transition={{ type: 'spring', stiffness: 160, damping: 12, mass: 0.7 }}
-                  >
-                    {playerName || 'YOU'}
-                  </motion.text>
-
-                  {/* Opponent name */}
-                  <motion.text
-                    x={mirrored ? (470 - (playerPosition / 100) * 455 - 35) : (15 + (playerPosition / 100) * 455 + 35)}
-                    y="195"
-                    textAnchor="middle"
-                    fill="rgba(255,255,255,0.7)"
-                    fontSize="8"
-                    fontWeight="700"
-                    fontFamily="system-ui"
-                    animate={{
-                      x: mirrored ? (470 - (playerPosition / 100) * 455 - 35) : (15 + (playerPosition / 100) * 455 + 35),
-                    }}
-                    transition={{ type: 'spring', stiffness: 160, damping: 12, mass: 0.7 }}
-                  >
-                    {opponentName || 'OPPONENT'}
-                  </motion.text>
-
-
-                  {/* Zone indicator */}
                   <text
                     x="250"
                     y="210"
@@ -709,27 +766,49 @@ export function PitchVisualization({
                   </text>
                 </g>
 
-                {/* Bar battle animation — bars march, collide, and push the center line */}
-                {barBattle && <BarBattleOverlay battle={barBattle} mirrored={mirrored} />}
               </g>
             </>
           )}
 
           {/* === UNIFIED BALL — single persistent <motion.g> that never unmounts === */}
-          <motion.g
-            key="ball"
-            animate={{
-              x: ballTarget.x,
-              y: ballTarget.y,
-              opacity: ballOpacity,
-            }}
-            transition={ballTransition}
-          >
-            <motion.circle  cx="0" cy="0" r="14" fill="rgba(255,255,255,0.1)" filter={`url(#${uid('ballGlow')})`} />
-            <foreignObject x="-12" y="-12" width="24" height="24">
-              <div style={ballEmojiStyle}>⚽</div>
-            </foreignObject>
-          </motion.g>
+          {!renderSimpleShotBall && (
+            <motion.g
+              key="ball"
+              animate={{
+                x: ballTarget.x,
+                y: ballTarget.y,
+                opacity: ballOpacity,
+              }}
+              transition={ballTransition}
+            >
+              <motion.circle cx="0" cy="0" r={ballGlowR} fill="rgba(255,255,255,0.1)" filter={`url(#${uid('ballGlow')})`} />
+              <foreignObject x={-ballBoxOffset} y={-ballBoxOffset} width={ballBox} height={ballBox}>
+                <div style={ballEmojiStyle}>⚽</div>
+              </foreignObject>
+            </motion.g>
+          )}
+
+          {renderSimpleShotBall && (
+            <motion.g
+              key={`simple-shot-ball-${shotMode?.isPlayerAttacker ? 'player' : 'opponent'}-${shotMode?.result}-${targetGoal ?? 'right'}`}
+              initial={{
+                x: simpleShotOriginX,
+                y: simpleShotOriginY,
+                opacity: 1,
+              }}
+              animate={{
+                x: simpleShotTarget.x,
+                y: simpleShotTarget.y,
+                opacity: 1,
+              }}
+              transition={ballTransition}
+            >
+              <motion.circle cx="0" cy="0" r={ballGlowR} fill="rgba(255,255,255,0.1)" filter={`url(#${uid('ballGlow')})`} />
+              <foreignObject x={-ballBoxOffset} y={-ballBoxOffset} width={ballBox} height={ballBox}>
+                <div style={ballEmojiStyle}>⚽</div>
+              </foreignObject>
+            </motion.g>
+          )}
 
           {/* === Decorative overlays (net ripple, text) — separate AnimatePresence === */}
           <AnimatePresence>
@@ -787,14 +866,14 @@ export function PitchVisualization({
                     opacity: [0, 0.8, 0.4, 0],
                     x: [goal.netX, goal.netX + 2 * goal.inward, goal.netX + goal.inward, goal.netX],
                   }}
-                  transition={{ duration: 0.5, delay: 0.35 }}
+                  transition={{ duration: 0.5, delay: shotGoalNetDelay }}
                 />
                 <motion.text
                   x={goal.goalTextX} y="82"
                   textAnchor="middle" fill="#58CC02" fontSize="8" fontWeight="900" fontFamily="system-ui"
                   initial={{ opacity: 0, y: 86 }}
                   animate={{ opacity: [0, 1, 1, 0], y: [86, 82, 82, 80] }}
-                  transition={{ duration: 0.6, delay: 0.25, times: [0, 0.2, 0.75, 1] }}
+                  transition={{ duration: 0.6, delay: shotGoalTextDelay, times: [0, 0.2, 0.75, 1] }}
                   transform={textTf(goal.goalTextX, 82)}
                 >
                   {shotGoalLabel}
@@ -843,7 +922,7 @@ export function PitchVisualization({
 
         {/* Vignette overlay during camera zoom */}
         <AnimatePresence>
-          {zoomToGoal && (
+          {shouldZoomToGoal && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

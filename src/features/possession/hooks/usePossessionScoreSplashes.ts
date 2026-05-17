@@ -24,6 +24,18 @@ interface UsePossessionScoreSplashesParams {
   opponentRound: MatchRoundResultPlayer | null;
 }
 
+function resolveFeedbackPoints(
+  pointsEarned: number,
+  questionKind?: MatchAnswerAckPayload['questionKind'] | MatchRoundResultPayload['questionKind'],
+  foundCount?: number
+): number {
+  if (pointsEarned > 0) return pointsEarned;
+  if (questionKind === 'putInOrder' && typeof foundCount === 'number' && foundCount > 0) {
+    return Math.min(foundCount, 5) * 20;
+  }
+  return pointsEarned;
+}
+
 export function usePossessionScoreSplashes({
   localQuestion,
   phaseKind,
@@ -68,10 +80,12 @@ export function usePossessionScoreSplashes({
   }, [isHalftime, localQuestion?.qIndex]);
 
   useEffect(() => {
-    if (!answerAck || !answerAck.isCorrect) return;
-    if (selectedAnswer === null || selectedAnswerQIndex == null) return;
+    if (!answerAck) return;
+    const points = resolveFeedbackPoints(answerAck.pointsEarned, answerAck.questionKind, answerAck.foundCount);
+    if (points <= 0) return;
     if (phaseKind !== 'normal' && phaseKind !== 'last_attack') return;
-    if (selectedAnswerQIndex !== answerAck.qIndex) return;
+    const isMultipleChoiceAck = answerAck.questionKind === 'multipleChoice';
+    if (isMultipleChoiceAck && (selectedAnswer === null || selectedAnswerQIndex !== answerAck.qIndex)) return;
     if (shownSplashQRef.current.player === answerAck.qIndex) return;
 
     const activeQIndex = localQuestion?.qIndex ?? answerAck.qIndex;
@@ -79,26 +93,26 @@ export function usePossessionScoreSplashes({
 
     queueMicrotask(() => {
       setPlayerSplashVariant('points');
-      setPlayerSplashPoints(answerAck.pointsEarned);
+      setPlayerSplashPoints(points);
       setShowPlayerSplash(true);
     });
     shownSplashQRef.current.player = answerAck.qIndex;
   }, [answerAck, localQuestion?.qIndex, phaseKind, selectedAnswer, selectedAnswerQIndex]);
 
-  // Player splash for non-MC questions (countdown, putInOrder, clues) — fires from roundResult
-  // since selectedAnswer is always null for these types
+  // Round-result fallback. Special questions always use this path; MC rounds
+  // also use it if the immediate answer_ack was missed and did not show a
+  // player splash already.
   useEffect(() => {
     if (!roundResult || !myRound) return;
     const resolvedPhaseKind = roundResult.phaseKind ?? phaseKind;
     if (resolvedPhaseKind !== 'normal' && resolvedPhaseKind !== 'last_attack') return;
     if (shownSplashQRef.current.player === roundResult.qIndex) return;
-    // Only for non-MC: if selectedAnswer was set, the MC path above already handled it
-    if (selectedAnswer !== null) return;
-    if (!myRound.isCorrect || myRound.pointsEarned <= 0) return;
+    const points = resolveFeedbackPoints(myRound.pointsEarned, roundResult.questionKind, myRound.foundCount);
+    if (points <= 0) return;
 
     queueMicrotask(() => {
       setPlayerSplashVariant('points');
-      setPlayerSplashPoints(myRound.pointsEarned);
+      setPlayerSplashPoints(points);
       setShowPlayerSplash(true);
     });
     shownSplashQRef.current.player = roundResult.qIndex;
@@ -112,13 +126,13 @@ export function usePossessionScoreSplashes({
     const activeQIndex = localQuestion?.qIndex ?? roundResult?.qIndex ?? null;
     if (activeQIndex === null || shownSplashQRef.current.opponent === activeQIndex) return;
 
-    const opponentCorrectImmediate = opponentAnswered && opponentAnsweredCorrectly === true;
-    const opponentCorrectResolved = opponentRound?.isCorrect === true;
-    const immediatePoints = opponentCorrectImmediate ? opponentRecentPoints : null;
-    const resolvedPoints = opponentCorrectResolved ? (opponentRound?.pointsEarned ?? null) : null;
+    const immediatePoints = opponentAnswered ? opponentRecentPoints : null;
+    const resolvedPoints = opponentRound
+      ? resolveFeedbackPoints(opponentRound.pointsEarned, roundResult?.questionKind, opponentRound.foundCount)
+      : null;
     const splashPoints = resolvedPoints ?? immediatePoints;
 
-    if ((opponentCorrectImmediate || opponentCorrectResolved) && splashPoints != null && splashPoints > 0) {
+    if (splashPoints != null && splashPoints > 0) {
       queueMicrotask(() => {
         setOpponentSplashVariant('points');
         setOpponentSplashPoints(splashPoints);
@@ -129,12 +143,14 @@ export function usePossessionScoreSplashes({
   }, [localQuestion?.qIndex, opponentAnswered, opponentAnsweredCorrectly, opponentRecentPoints, opponentRound, phaseKind, roundResult]);
 
   useEffect(() => {
-    if (!roundResult || !opponentRound?.isCorrect) return;
+    if (!roundResult || !opponentRound) return;
+    const points = resolveFeedbackPoints(opponentRound.pointsEarned, roundResult.questionKind, opponentRound.foundCount);
+    if (points <= 0) return;
     if (shownSplashQRef.current.opponent !== roundResult.qIndex) return;
 
     queueMicrotask(() => {
       setOpponentSplashVariant('points');
-      setOpponentSplashPoints(opponentRound.pointsEarned);
+      setOpponentSplashPoints(points);
       setShowOpponentSplash(true);
     });
   }, [opponentRound, roundResult]);

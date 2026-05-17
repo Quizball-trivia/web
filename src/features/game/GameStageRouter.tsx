@@ -246,6 +246,7 @@ export function GameStageRouter() {
           opponentUsername={opponent.username}
           playerCountryCode={authUser?.country ?? null}
           opponentCountryCode={playingOppCountryCode}
+          playerFavoriteClub={authUser?.favorite_club ?? null}
           onQuit={handleQuit}
           onForfeit={handleForfeit}
         />
@@ -293,6 +294,18 @@ export function GameStageRouter() {
         ?? clientTotalQuestions
         ?? POSSESSION_TOTAL_QUESTIONS_FALLBACK;
 
+      // Per-question dot strip: read the correctness flags captured by
+      // round_result for each qIndex. `undefined` → not yet reached (renders
+      // as a hollow yellow ring in the strip).
+      const toResult = (v: boolean | undefined): 'correct' | 'wrong' | null =>
+        v === undefined ? null : v ? 'correct' : 'wrong';
+      const playerQuestionResults = Array.from({ length: totalQuestionsPlayed }, (_, i) =>
+        toResult(realtimeMatch?.questions?.[i]?.selfIsCorrect)
+      );
+      const opponentQuestionResults = Array.from({ length: totalQuestionsPlayed }, (_, i) =>
+        toResult(realtimeMatch?.questions?.[i]?.opponentIsCorrect)
+      );
+
       return (
         <RealtimeResultsScreen
           matchType={matchType}
@@ -307,6 +320,8 @@ export function GameStageRouter() {
           playerCorrect={myStats?.correctAnswers ?? clientTotalCorrect}
           opponentCorrect={opponentStats?.correctAnswers ?? 0}
           totalQuestions={totalQuestionsPlayed}
+          playerQuestionResults={playerQuestionResults}
+          opponentQuestionResults={opponentQuestionResults}
           selfUserId={selfUserId}
           finalWinnerId={final?.winnerId}
           winnerDecisionMethod={final?.winnerDecisionMethod ?? null}

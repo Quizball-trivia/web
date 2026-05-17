@@ -96,6 +96,7 @@ describe('PossessionQuestionArea', () => {
               roundResolved: false,
               answerAck: null,
               roundResult: null,
+              myRound: null,
               opponentRound: null,
               countdownGuessAck: null,
               cluesGuessAck: null,

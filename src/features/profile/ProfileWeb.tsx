@@ -327,21 +327,24 @@ export function ProfileWeb({
 
             return (
               <>
-                {/* Hero row: current tier badge → big RP + progress → next tier badge */}
-                <div className="grid grid-cols-[auto_1fr_auto] items-center gap-4 sm:gap-6">
+                {/* Hero row: current tier badge → big RP + progress → next tier badge.
+                    Mobile shrinks the side cards (gap, width, padding, icon, font)
+                    so the centre column — the progress bar — gets significantly more
+                    horizontal room. Desktop keeps the original chunky 160px squares. */}
+                <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 sm:gap-6">
                   {/* Current tier — big blue square card per Figma */}
-                  <div className="flex w-[120px] sm:w-[160px] flex-col items-center justify-center gap-2 rounded-[20px] bg-brand-blue p-4">
+                  <div className="flex w-[84px] sm:w-[160px] flex-col items-center justify-center gap-1.5 sm:gap-2 rounded-[16px] sm:rounded-[20px] bg-brand-blue p-2.5 sm:p-4">
                     {currentVisual?.Icon ? (
-                      <currentVisual.Icon className="size-14 sm:size-16 text-brand-yellow" weight="light" />
+                      <currentVisual.Icon className="size-9 sm:size-16 text-brand-yellow" weight="light" />
                     ) : (
-                      <TrophyPh className="size-14 sm:size-16 text-brand-yellow" weight="light" />
+                      <TrophyPh className="size-9 sm:size-16 text-brand-yellow" weight="light" />
                     )}
                     <div className="text-center">
-                      <div className="font-poppins text-[10px] sm:text-[11px] font-semibold uppercase text-white/60">Current</div>
-                      <div className="mt-1 font-poppins text-sm sm:text-base font-semibold uppercase leading-none text-white">
+                      <div className="font-poppins text-[9px] sm:text-[11px] font-semibold uppercase text-white/60">Current</div>
+                      <div className="mt-0.5 sm:mt-1 font-poppins text-[11px] sm:text-base font-semibold uppercase leading-tight text-white">
                         {currentTier ?? 'Unranked'}
                       </div>
-                      <div className="mt-1 font-poppins text-[11px] font-semibold uppercase tabular-nums text-white/70">
+                      <div className="mt-0.5 sm:mt-1 font-poppins text-[10px] sm:text-[11px] font-semibold uppercase tabular-nums text-white/70">
                         {displayRp} RP
                       </div>
                     </div>
@@ -377,30 +380,31 @@ export function ProfileWeb({
                     </div>
                   </div>
 
-                  {/* Next tier — big blue square per Figma */}
+                  {/* Next tier — same mobile-shrink treatment as the
+                      current-tier card; desktop keeps the full 160px square. */}
                   {next ? (
-                    <div className="flex w-[120px] sm:w-[160px] flex-col items-center justify-center gap-2 rounded-[20px] bg-brand-blue/30 border-2 border-brand-blue p-4">
+                    <div className="flex w-[84px] sm:w-[160px] flex-col items-center justify-center gap-1.5 sm:gap-2 rounded-[16px] sm:rounded-[20px] bg-brand-blue/30 border-2 border-brand-blue p-2.5 sm:p-4">
                       {nextVisual?.Icon ? (
-                        <nextVisual.Icon className="size-14 sm:size-16 text-white/80" weight="light" />
+                        <nextVisual.Icon className="size-9 sm:size-16 text-white/80" weight="light" />
                       ) : (
-                        <TrophyPh className="size-14 sm:size-16 text-white/80" weight="light" />
+                        <TrophyPh className="size-9 sm:size-16 text-white/80" weight="light" />
                       )}
                       <div className="text-center">
-                        <div className="font-poppins text-[10px] sm:text-[11px] font-semibold uppercase text-white/50">Next</div>
-                        <div className="mt-1 font-poppins text-sm sm:text-base font-semibold uppercase leading-none text-white/85">
+                        <div className="font-poppins text-[9px] sm:text-[11px] font-semibold uppercase text-white/50">Next</div>
+                        <div className="mt-0.5 sm:mt-1 font-poppins text-[11px] sm:text-base font-semibold uppercase leading-tight text-white/85">
                           {next.tier}
                         </div>
-                        <div className="mt-1 font-poppins text-[11px] font-semibold uppercase tabular-nums text-white/50">
+                        <div className="mt-0.5 sm:mt-1 font-poppins text-[10px] sm:text-[11px] font-semibold uppercase tabular-nums text-white/50">
                           {next.minRp} RP
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="flex w-[120px] sm:w-[160px] flex-col items-center justify-center gap-2 rounded-[20px] bg-brand-yellow/15 border-2 border-brand-yellow p-4">
-                      <TrophyPh className="size-14 sm:size-16 text-brand-yellow" weight="light" />
+                    <div className="flex w-[84px] sm:w-[160px] flex-col items-center justify-center gap-1.5 sm:gap-2 rounded-[16px] sm:rounded-[20px] bg-brand-yellow/15 border-2 border-brand-yellow p-2.5 sm:p-4">
+                      <TrophyPh className="size-9 sm:size-16 text-brand-yellow" weight="light" />
                       <div className="text-center">
-                        <div className="font-poppins text-[10px] sm:text-[11px] font-semibold uppercase text-brand-yellow">Achieved</div>
-                        <div className="mt-1 font-poppins text-sm sm:text-base font-semibold uppercase leading-none text-white">
+                        <div className="font-poppins text-[9px] sm:text-[11px] font-semibold uppercase text-brand-yellow">Achieved</div>
+                        <div className="mt-0.5 sm:mt-1 font-poppins text-[11px] sm:text-base font-semibold uppercase leading-tight text-white">
                           GOAT
                         </div>
                       </div>
@@ -452,12 +456,14 @@ export function ProfileWeb({
       {/* ─── 3. Stat cards row (3 columns on desktop) ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
-          {/* Rank Card — blue bg per Figma */}
+          {/* Rank Card — translucent blue with brand-blue border outline.
+              Mirrors the "next tier" badge style elsewhere on this page so
+              the card sits as an outline panel rather than a solid fill. */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08 }}
-              className="rounded-[20px] overflow-hidden bg-brand-blue"
+              className="rounded-[20px] overflow-hidden border-2 border-brand-blue"
             >
               <div className="p-5 flex flex-col items-center">
                 {rankedProfileLoading && (
@@ -525,7 +531,7 @@ export function ProfileWeb({
               className="h-full flex flex-col gap-3"
             >
               {/* Mode header card */}
-              <div className="flex h-12 shrink-0 items-center justify-between rounded-[20px] bg-brand-blue px-6">
+              <div className="flex h-12 shrink-0 items-center justify-between rounded-[20px] border-2 border-brand-blue px-6">
                 <span className="font-poppins text-sm font-semibold uppercase text-white">
                   Ranked: <span className="text-brand-yellow">{rankedStats?.gamesPlayed ?? 0}</span>
                 </span>
@@ -535,7 +541,7 @@ export function ProfileWeb({
               </div>
 
               {/* W/D/L card — flex-1 fills remaining column height */}
-              <div className="flex-1 flex items-center justify-center rounded-[20px] bg-brand-blue">
+              <div className="flex-1 flex items-center justify-center rounded-[20px] border-2 border-brand-blue">
                 {wldTotal > 0 ? (
                   <div className="grid w-full grid-cols-3 px-6 py-8 text-center">
                     <div>
@@ -580,7 +586,7 @@ export function ProfileWeb({
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="rounded-[20px] bg-brand-blue px-6 py-5"
+                className="rounded-[20px] border-2 border-brand-blue px-6 py-5"
               >
                 <h3 className="font-poppins text-sm font-semibold uppercase text-white text-center mb-4">
                   Preferences
@@ -890,35 +896,30 @@ export function ProfileWeb({
 
                 return (
                   <div key={achievement.id} className="flex items-center gap-2">
-                    {/* Icon card — separate square per Figma */}
-                    <div
-                      className={`flex size-[88px] shrink-0 items-center justify-center rounded-[20px] ${
-                        achievement.unlocked ? 'bg-brand-blue' : 'border-2 border-brand-blue'
-                      }`}
-                    >
+                    {/* Icon card — yellow outline matches the achievement
+                        accent colour (the trophy icons + progress fill are
+                        already brand-yellow), creating a tighter colour story
+                        than the previous blue border. */}
+                    <div className="flex size-[64px] shrink-0 items-center justify-center rounded-[16px] border-2 border-brand-yellow">
                       <Icon
-                        className={`size-10 ${achievement.unlocked ? 'text-brand-yellow' : 'text-brand-yellow/80'}`}
+                        className={`size-8 ${achievement.unlocked ? 'text-brand-yellow' : 'text-brand-yellow/80'}`}
                         strokeWidth={2.5}
                       />
                     </div>
 
                     {/* Body card */}
-                    <div
-                      className={`relative flex-1 min-w-0 h-[88px] rounded-[20px] px-4 py-3 ${
-                        achievement.unlocked ? 'bg-brand-blue' : 'border-2 border-brand-blue'
-                      }`}
-                    >
-                      <div className="font-poppins text-sm font-semibold uppercase truncate text-white pr-7">
+                    <div className="relative flex-1 min-w-0 h-[64px] rounded-[16px] border-2 border-brand-yellow px-3 py-2">
+                      <div className="font-poppins text-[13px] font-semibold uppercase truncate text-white pr-7">
                         {achievement.title}
                       </div>
-                      <div className="mt-0.5 font-poppins text-[11px] font-semibold uppercase text-white/60 truncate">
+                      <div className="mt-0.5 font-poppins text-[10px] font-semibold uppercase text-white/60 truncate">
                         {achievement.unlocked
                           ? 'Completed'
                           : hasProgress
                             ? `${achievement.progress} / ${achievement.target}`
                             : 'Locked'}
                       </div>
-                      <div className={`mt-2 h-1.5 w-full rounded-full overflow-hidden ${achievement.unlocked ? 'bg-black/30' : 'bg-brand-yellow/20'}`}>
+                      <div className="mt-1.5 h-1 w-full rounded-full overflow-hidden bg-brand-yellow/20">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${progressPct}%` }}
@@ -927,8 +928,8 @@ export function ProfileWeb({
                         />
                       </div>
                       {achievement.unlocked && (
-                        <div className="absolute right-3 top-3 flex size-6 items-center justify-center rounded-full bg-brand-yellow">
-                          <Check className="size-3.5 text-black" strokeWidth={3} />
+                        <div className="absolute right-2 top-2 flex size-5 items-center justify-center rounded-full bg-brand-yellow">
+                          <Check className="size-3 text-black" strokeWidth={3} />
                         </div>
                       )}
                     </div>

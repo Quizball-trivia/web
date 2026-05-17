@@ -39,7 +39,6 @@ interface ModeSelectionScreenProps {
   rankedProfileLoading?: boolean;
 }
 
-const IS_DEV = process.env.NODE_ENV === 'development';
 
 export function ModeSelectionScreen({
   onSelectMode,
@@ -149,19 +148,6 @@ export function ModeSelectionScreen({
                     : '1v1 Competitive'}
               </div>
 
-              {IS_DEV && (
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <Link
-                    href="/dev/match"
-                    onClick={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => e.stopPropagation()}
-                    onKeyUp={(e) => e.stopPropagation()}
-                    className="inline-flex items-center justify-center rounded-xl bg-black/90 px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white transition-colors hover:bg-black"
-                  >
-                    Dev Quick Ranked
-                  </Link>
-                </div>
-              )}
 
               <div className="mt-5">
                 <div className="flex w-[180px] items-center justify-center rounded-[8px] bg-black h-[56px] text-xl font-black uppercase tracking-wide text-white">

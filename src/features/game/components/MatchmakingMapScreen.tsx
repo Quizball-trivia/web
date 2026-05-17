@@ -1057,7 +1057,7 @@ export function MatchmakingMapScreen({
 
     const audio = new Audio(MATCHMAKING_MUSIC_URL);
     audio.currentTime = 10;
-    audio.volume = 0.0;
+    audio.volume = 0.4;
     audio.loop = true;
     matchmakingAudioRef.current = audio;
 

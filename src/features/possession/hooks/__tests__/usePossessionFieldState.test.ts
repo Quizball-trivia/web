@@ -8,6 +8,9 @@ import type { MatchStatus } from '@/stores/realtimeMatch.store';
 import {
   FIELD_POSSESSION_CUE_MS,
   FIELD_RESULT_COMPARE_MS,
+  GOAL_ATTACK_START_DELAY_MS,
+  GOAL_FIELD_CENTER_RESET_MS,
+  GOAL_SHOT_TO_CELEBRATION_MS,
 } from '../../realtimePossession.helpers';
 import { usePossessionFieldState } from '../usePossessionFieldState';
 
@@ -183,7 +186,7 @@ describe('usePossessionFieldState', () => {
 
     rerender({
       match: makeMatch(0),
-      roundResult: makeRoundResult(5, 1),
+      roundResult: makeRoundResult(5, null),
     });
 
     expect(result.current.visualMyPossessionPct).toBe(70);
@@ -230,6 +233,10 @@ describe('usePossessionFieldState', () => {
 
     await act(async () => {});
 
+    await act(async () => {
+      vi.advanceTimersByTime(GOAL_ATTACK_START_DELAY_MS + 50);
+    });
+
     expect(result.current.pitchProps.shotMode?.ballOriginX).toBe(352);
 
     rerender({
@@ -240,6 +247,55 @@ describe('usePossessionFieldState', () => {
     await act(async () => {});
 
     expect(result.current.pitchProps.shotMode?.ballOriginX).toBe(352);
+  });
+
+  it('keeps goal scorers planted through the shot, then resets to center for the goal celebration', async () => {
+    const { result, rerender } = renderHook((props: {
+      match: MatchStatus;
+      roundResult: MatchRoundResultPayload | null;
+    }) => usePossessionFieldState({
+      match: props.match,
+      localQuestion: makeQuestion(5, 'normal', 1),
+      roundResult: props.roundResult,
+      questionPhase: 'playing',
+      roundResolved: Boolean(props.roundResult),
+      answerAck: null,
+      opponentAnsweredCorrectly: null,
+      myRound: null,
+      opponentRound: null,
+      devPossessionAnimation: null,
+      clearDevPossessionAnimation: vi.fn(),
+      playerAvatar: '/me.png',
+      opponentAvatar: '/opp.png',
+      playerUsername: 'me',
+      opponentUsername: 'opp',
+      isHalftime: false,
+    }), {
+      initialProps: {
+        match: makeMatch(40),
+        roundResult: null as MatchRoundResultPayload | null,
+      },
+    });
+
+    expect(result.current.visualMyPossessionPct).toBe(70);
+
+    rerender({
+      match: makeMatch(0),
+      roundResult: makeRoundResult(5, 1, 1),
+    });
+
+    await act(async () => {});
+    expect(result.current.visualMyPossessionPct).toBe(70);
+
+    await act(async () => {
+      vi.advanceTimersByTime(GOAL_SHOT_TO_CELEBRATION_MS + 50);
+    });
+    expect(result.current.visualMyPossessionPct).toBe(70);
+
+    await act(async () => {
+      vi.advanceTimersByTime(GOAL_FIELD_CENTER_RESET_MS + 100);
+    });
+    expect(result.current.visualMyPossessionPct).toBe(50);
   });
 
   it('mirrors the pitch and target goal in the second half', () => {

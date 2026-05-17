@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { MatchAnswerAckPayload, ResolvedMatchQuestionPayload } from '@/lib/realtime/socket.types';
+import type { MatchAnswerAckPayload, MatchRoundResultPayload, ResolvedMatchQuestionPayload } from '@/lib/realtime/socket.types';
 import { usePossessionScoreSplashes } from '../usePossessionScoreSplashes';
 
 const QUESTION: ResolvedMatchQuestionPayload = {
@@ -32,6 +32,38 @@ const ACK: MatchAnswerAckPayload = {
   pointsEarned: 70,
   phaseKind: 'normal',
   phaseRound: 6,
+};
+
+const ROUND_RESULT: MatchRoundResultPayload = {
+  matchId: 'match-1',
+  qIndex: 5,
+  questionKind: 'multipleChoice',
+  reveal: { kind: 'multipleChoice', correctIndex: 1 },
+  players: {
+    player: {
+      totalPoints: 120,
+      pointsEarned: 70,
+      isCorrect: true,
+      timeMs: 900,
+      selectedIndex: 1,
+    },
+    opponent: {
+      totalPoints: 40,
+      pointsEarned: 0,
+      isCorrect: false,
+      timeMs: 3000,
+      selectedIndex: 2,
+    },
+  },
+  phaseKind: 'normal',
+  phaseRound: 6,
+  shooterSeat: null,
+  attackerSeat: null,
+  deltas: {
+    possessionDelta: 70,
+    penaltyOutcome: null,
+    goalScoredBySeat: null,
+  },
 };
 
 describe('usePossessionScoreSplashes', () => {
@@ -113,6 +145,51 @@ describe('usePossessionScoreSplashes', () => {
     expect(result.current.playerSplashPoints).toBe(70);
   });
 
+  it('shows player splash for clue answer acks without a selected MC answer', async () => {
+    const clueAck: MatchAnswerAckPayload = {
+      ...ACK,
+      questionKind: 'clues',
+      selectedIndex: null,
+      isCorrect: true,
+      correctIndex: undefined,
+      pointsEarned: 100,
+    };
+    const clueQuestion: ResolvedMatchQuestionPayload = {
+      ...QUESTION,
+      question: {
+        kind: 'clues',
+        id: 'clue-5',
+        prompt: 'Who am I?',
+        categoryName: 'Football',
+        clues: [
+          { type: 'text', content: 'Portuguese forward' },
+          { type: 'text', content: 'Won five Ballon d’Or awards' },
+        ],
+      },
+    };
+
+    const { result } = renderHook(() => usePossessionScoreSplashes({
+      localQuestion: clueQuestion,
+      phaseKind: 'normal',
+      isHalftime: false,
+      selectedAnswer: null,
+      selectedAnswerQIndex: null,
+      opponentAnswered: false,
+      opponentAnsweredCorrectly: null,
+      opponentRecentPoints: null,
+      answerAck: clueAck,
+      roundResult: null,
+      myRound: null,
+      opponentRound: null,
+    }));
+
+    await act(async () => {});
+
+    expect(result.current.showPlayerSplash).toBe(true);
+    expect(result.current.playerSplashVariant).toBe('points');
+    expect(result.current.playerSplashPoints).toBe(100);
+  });
+
   it('uses immediate opponent points instead of a pending correct label when available', async () => {
     const { result } = renderHook(() => usePossessionScoreSplashes({
       localQuestion: QUESTION,
@@ -134,5 +211,28 @@ describe('usePossessionScoreSplashes', () => {
     expect(result.current.showOpponentSplash).toBe(true);
     expect(result.current.opponentSplashVariant).toBe('points');
     expect(result.current.opponentSplashPoints).toBe(60);
+  });
+
+  it('falls back to round result for player MC splash when answer ack is missed', async () => {
+    const { result } = renderHook(() => usePossessionScoreSplashes({
+      localQuestion: QUESTION,
+      phaseKind: 'normal',
+      isHalftime: false,
+      selectedAnswer: 1,
+      selectedAnswerQIndex: 5,
+      opponentAnswered: true,
+      opponentAnsweredCorrectly: false,
+      opponentRecentPoints: 0,
+      answerAck: null,
+      roundResult: ROUND_RESULT,
+      myRound: ROUND_RESULT.players.player,
+      opponentRound: ROUND_RESULT.players.opponent,
+    }));
+
+    await act(async () => {});
+
+    expect(result.current.showPlayerSplash).toBe(true);
+    expect(result.current.playerSplashVariant).toBe('points');
+    expect(result.current.playerSplashPoints).toBe(70);
   });
 });
