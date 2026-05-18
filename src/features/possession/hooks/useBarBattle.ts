@@ -130,6 +130,10 @@ export function resolveBattlePoints(
   return pointsEarned;
 }
 
+function isBarBattlePhaseKind(kind: string | undefined): boolean {
+  return kind === 'normal';
+}
+
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
 interface UseBarBattleParams {
@@ -184,7 +188,7 @@ export function useBarBattle({
   useEffect(() => {
     if (!answerAck) return;
     const kind = answerAck.phaseKind ?? phaseKind;
-    if (kind !== 'normal') return;
+    if (!isBarBattlePhaseKind(kind)) return;
     if (scoreShownQRef.current.player === answerAck.qIndex) return;
 
     scoreShownQRef.current.player = answerAck.qIndex;
@@ -222,7 +226,7 @@ export function useBarBattle({
     if (qIndex === null) return;
 
     const kind = roundResult?.phaseKind ?? phaseKind;
-    if (kind !== 'normal') return;
+    if (!isBarBattlePhaseKind(kind)) return;
     if (scoreShownQRef.current.opponent === qIndex) return;
 
     // Get opponent points from best available source
@@ -260,7 +264,7 @@ export function useBarBattle({
     if (!roundResult || !myRound || !opponentRound) return;
 
     const kind = roundResult.phaseKind ?? phaseKind;
-    if (kind !== 'normal') return;
+    if (!isBarBattlePhaseKind(kind)) return;
     if (battleStartedQRef.current === roundResult.qIndex) return;
     battleStartedQRef.current = roundResult.qIndex;
 
@@ -276,7 +280,9 @@ export function useBarBattle({
     const cancelledCount = Math.min(pBars, oBars);
     const key = roundResult.qIndex;
     const snapDividerX = dividerXRef.current;
-    const isShotResolution = Boolean(roundResult.deltas?.goalScoredBySeat);
+    const isShotResolution = Boolean(
+      roundResult.deltas?.goalScoredBySeat || roundResult.deltas?.penaltyOutcome
+    );
 
     // If both scored 0, just clean up
     if (myPts === 0 && oppPts === 0) {

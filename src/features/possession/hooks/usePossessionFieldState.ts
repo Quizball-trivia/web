@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, type ComponentProps } from 'react';
+import { useEffect, useMemo, useState, type ComponentProps } from 'react';
 import type {
   MatchAnswerAckPayload,
   MatchRoundResultPayload,
@@ -11,7 +11,11 @@ import type { DevPossessionAnimation, MatchStatus } from '@/stores/realtimeMatch
 import { PitchVisualization } from '../components/PitchVisualization';
 import { usePossessionAnimationOrchestrator } from './usePossessionAnimationOrchestrator';
 import { getZone } from './usePossessionMovement';
-import { getQuestionDurationSeconds } from '../realtimePossession.helpers';
+import {
+  getQuestionDurationSeconds,
+  PENALTY_RESULT_DISPLAY_DELAY_MS,
+  PENALTY_SCORE_FLIGHT_HANDOFF_MS,
+} from '../realtimePossession.helpers';
 import type { PenaltyResult, Phase, ShotResult } from '../types/possession.types';
 
 type PitchProps = ComponentProps<typeof PitchVisualization>;
@@ -38,6 +42,7 @@ export interface PossessionFieldState {
   visualMyPossessionPct: number;
   shotResult: ShotResult;
   penaltyResult: PenaltyResult;
+  penaltyDisplayResult: PenaltyResult;
   uiPhase: Phase;
   pitchProps: PitchProps;
 }
@@ -191,51 +196,112 @@ export function usePossessionFieldState({
 
   const resultShooterIsMe = roundResult?.shooterSeat != null && roundResult.shooterSeat === mySeat;
 
-  const penaltyResult: PenaltyResult = useMemo(() => {
-    if (!isPenaltyQuestion) return null;
+  const penaltyRoundResult = roundResult && (roundResult.phaseKind ?? phaseKind) === 'penalty'
+    ? roundResult
+    : null;
 
-    if (roundResult?.deltas?.penaltyOutcome) {
-      return roundResult.deltas.penaltyOutcome;
+  const immediatePenaltyResult: PenaltyResult = useMemo(() => {
+    if (!isPenaltyQuestion || !penaltyRoundResult) return null;
+
+    if (penaltyRoundResult.deltas?.penaltyOutcome) {
+      return penaltyRoundResult.deltas.penaltyOutcome;
     }
 
-    if (roundResult && (roundResult.phaseKind ?? phaseKind) === 'penalty') {
-      const shooterRound = resultShooterIsMe ? myRound : opponentRound;
-      const keeperRound = resultShooterIsMe ? opponentRound : myRound;
-      const shooterCorrect = shooterRound?.isCorrect ?? false;
-      const keeperCorrect = keeperRound?.isCorrect ?? false;
-      if (!shooterCorrect) return 'saved';
-      if (!keeperCorrect) return 'goal';
-      return (shooterRound?.timeMs ?? 10000) < (keeperRound?.timeMs ?? 10000) ? 'goal' : 'saved';
+    const shooterRound = resultShooterIsMe ? myRound : opponentRound;
+    const keeperRound = resultShooterIsMe ? opponentRound : myRound;
+    const shooterCorrect = shooterRound?.isCorrect ?? false;
+    const keeperCorrect = keeperRound?.isCorrect ?? false;
+    if (!shooterCorrect) return 'saved';
+    if (!keeperCorrect) return 'goal';
+    return (shooterRound?.timeMs ?? 10000) < (keeperRound?.timeMs ?? 10000) ? 'goal' : 'saved';
+  }, [isPenaltyQuestion, myRound, opponentRound, penaltyRoundResult, resultShooterIsMe]);
+
+  const penaltyShotDelayMs = useMemo(() => {
+    if (!isPenaltyQuestion || !penaltyRoundResult || !myRound || !opponentRound || !immediatePenaltyResult) return 0;
+    if (match?.variant !== 'ranked_sim') return 0;
+
+    return PENALTY_SCORE_FLIGHT_HANDOFF_MS;
+  }, [immediatePenaltyResult, isPenaltyQuestion, match?.variant, myRound, opponentRound, penaltyRoundResult]);
+
+  const penaltyResultKey = penaltyRoundResult && immediatePenaltyResult
+    ? `${penaltyRoundResult.matchId}:${penaltyRoundResult.qIndex}:${immediatePenaltyResult}`
+    : null;
+  const [delayedPenaltyResult, setDelayedPenaltyResult] = useState<{
+    key: string;
+    result: NonNullable<PenaltyResult>;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!penaltyResultKey || !immediatePenaltyResult) {
+      setDelayedPenaltyResult(null);
+      return undefined;
     }
 
-    const myAnswerCorrect = answerAck?.isCorrect;
-    if (myAnswerCorrect == null) return null;
+    setDelayedPenaltyResult(null);
+    const timer = window.setTimeout(() => {
+      setDelayedPenaltyResult({
+        key: penaltyResultKey,
+        result: immediatePenaltyResult,
+      });
+    }, penaltyShotDelayMs);
 
-    if (opponentAnsweredCorrectly != null) {
-      const shooterCorrect = shooterIsMe ? myAnswerCorrect : opponentAnsweredCorrectly;
-      const keeperCorrect = shooterIsMe ? opponentAnsweredCorrectly : myAnswerCorrect;
-      if (!shooterCorrect) return 'saved';
-      if (!keeperCorrect) return 'goal';
-      return 'goal';
+    return () => window.clearTimeout(timer);
+  }, [immediatePenaltyResult, penaltyResultKey, penaltyShotDelayMs]);
+
+  const penaltyResult: PenaltyResult = delayedPenaltyResult?.key === penaltyResultKey
+    ? delayedPenaltyResult.result
+    : null;
+
+  const [displayedPenaltyResult, setDisplayedPenaltyResult] = useState<{
+    key: string;
+    result: NonNullable<PenaltyResult>;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!penaltyResultKey || !immediatePenaltyResult) {
+      setDisplayedPenaltyResult(null);
+      return undefined;
     }
 
-    return null;
+    setDisplayedPenaltyResult(null);
+    const timer = window.setTimeout(() => {
+      setDisplayedPenaltyResult({
+        key: penaltyResultKey,
+        result: immediatePenaltyResult,
+      });
+    }, penaltyShotDelayMs + PENALTY_RESULT_DISPLAY_DELAY_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [immediatePenaltyResult, penaltyResultKey, penaltyShotDelayMs]);
+
+  const penaltyDisplayResult: PenaltyResult = displayedPenaltyResult?.key === penaltyResultKey
+    ? displayedPenaltyResult.result
+    : null;
+
+  const visiblePenaltyGoals = useMemo(() => {
+    if (!isPenaltyQuestion || !penaltyRoundResult || !immediatePenaltyResult || penaltyDisplayResult) {
+      return { myPenaltyGoals, oppPenaltyGoals };
+    }
+    if (immediatePenaltyResult !== 'goal') {
+      return { myPenaltyGoals, oppPenaltyGoals };
+    }
+    return resultShooterIsMe
+      ? { myPenaltyGoals: Math.max(0, myPenaltyGoals - 1), oppPenaltyGoals }
+      : { myPenaltyGoals, oppPenaltyGoals: Math.max(0, oppPenaltyGoals - 1) };
   }, [
-    answerAck?.isCorrect,
+    immediatePenaltyResult,
     isPenaltyQuestion,
-    myRound,
-    opponentAnsweredCorrectly,
-    opponentRound,
-    phaseKind,
+    myPenaltyGoals,
+    oppPenaltyGoals,
+    penaltyDisplayResult,
+    penaltyRoundResult,
     resultShooterIsMe,
-    roundResult,
-    shooterIsMe,
   ]);
 
   const uiPhase: Phase = useMemo(() => {
     if (isHalftime) return 'halftime';
     if (isPenaltyQuestion) {
-      if (roundResolved || penaltyResult) return 'penalty-result';
+      if (penaltyResult) return 'penalty-result';
       return questionPhase === 'playing' ? 'penalty-playing' : 'penalty-question';
     }
     if (isShotVisualPhase) {
@@ -257,7 +323,7 @@ export function usePossessionFieldState({
     penaltyMode: isPenaltyQuestion ? {
       isPlayerShooter: delayedIsShooter,
       result: penaltyResult,
-      phase: (roundResolved ? 'result' : (questionPhase === 'playing' ? 'playing' : 'setup')) as 'setup' | 'playing' | 'result',
+      phase: (penaltyResult ? 'result' : (questionPhase === 'playing' ? 'playing' : 'setup')) as 'setup' | 'playing' | 'result',
     } : undefined,
     shotMode: isShotVisualPhase ? {
       result: shotResult,
@@ -305,14 +371,15 @@ export function usePossessionFieldState({
     delayedIsShooter,
     myGoals,
     oppGoals,
-    myPenaltyGoals,
-    oppPenaltyGoals,
+    myPenaltyGoals: visiblePenaltyGoals.myPenaltyGoals,
+    oppPenaltyGoals: visiblePenaltyGoals.oppPenaltyGoals,
     questionDurationSeconds,
     zone,
     zoneColor,
     visualMyPossessionPct,
     shotResult,
     penaltyResult,
+    penaltyDisplayResult,
     uiPhase,
     pitchProps,
   };

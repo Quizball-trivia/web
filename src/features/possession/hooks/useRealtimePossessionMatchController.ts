@@ -389,11 +389,11 @@ export function useRealtimePossessionMatchController({
     }
 
     if (resolvedPhaseKind === 'penalty') {
-      const side = fieldState.penaltyResult === 'goal'
+      const side = fieldState.penaltyDisplayResult === 'goal'
         ? (fieldState.resultShooterIsMe ? 'left' : 'right')
         : (fieldState.resultShooterIsMe ? 'right' : 'left');
-      const penaltyResult = fieldState.penaltyResult === 'goal' || fieldState.penaltyResult === 'saved'
-        ? fieldState.penaltyResult
+      const penaltyResult = fieldState.penaltyDisplayResult === 'goal' || fieldState.penaltyDisplayResult === 'saved'
+        ? fieldState.penaltyDisplayResult
         : null;
       return { message: null, direction: 'neutral', side, penaltyResult };
     }
@@ -418,7 +418,7 @@ export function useRealtimePossessionMatchController({
     answerAck,
     fieldState.attackerIsMe,
     fieldState.isAttackAnimationPhase,
-    fieldState.penaltyResult,
+    fieldState.penaltyDisplayResult,
     fieldState.resultShooterIsMe,
     fieldState.shotResult,
     myRound,
@@ -511,11 +511,11 @@ export function useRealtimePossessionMatchController({
       goalCelebration,
       penaltySplash: fieldState.isPenaltyQuestion
         && state.roundResolved
-        && fieldState.penaltyResult !== null
-        && fieldState.penaltyResult !== 'pending'
+        && fieldState.penaltyDisplayResult !== null
+        && fieldState.penaltyDisplayResult !== 'pending'
         ? {
           visible: true,
-          result: fieldState.penaltyResult,
+          result: fieldState.penaltyDisplayResult,
           resultShooterIsMe: fieldState.resultShooterIsMe,
           localQuestionIndex,
         }

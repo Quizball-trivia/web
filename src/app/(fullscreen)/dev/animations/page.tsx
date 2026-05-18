@@ -311,7 +311,8 @@ function makePenaltyRoundResult(
   qIndex: number,
   shooterSeat: 1 | 2,
   outcome: 'goal' | 'saved',
-  scores: { meTotal: number; oppTotal: number }
+  scores: { meTotal: number; oppTotal: number },
+  points: { me: number; opp: number }
 ): MatchRoundResultPayload {
   const sample = SAMPLE_QUESTIONS[qIndex % SAMPLE_QUESTIONS.length];
   // Field-state derives penaltyOutcome straight from deltas.penaltyOutcome,
@@ -329,16 +330,16 @@ function makePenaltyRoundResult(
     reveal: { kind: 'multipleChoice', correctIndex: sample.correctIndex },
     players: {
       [SELF_ID]: {
-        totalPoints: scores.meTotal,
-        pointsEarned: 0,
+        totalPoints: scores.meTotal + points.me,
+        pointsEarned: points.me,
         isCorrect: meCorrect,
         timeMs: meCorrect ? 2500 : 6000,
         selectedIndex: meCorrect ? sample.correctIndex : (sample.correctIndex + 1) % 4,
         submittedOrderIds: [],
       },
       [OPP_ID]: {
-        totalPoints: scores.oppTotal,
-        pointsEarned: 0,
+        totalPoints: scores.oppTotal + points.opp,
+        pointsEarned: points.opp,
         isCorrect: oppCorrect,
         timeMs: oppCorrect ? 3000 : 6000,
         selectedIndex: oppCorrect ? sample.correctIndex : (sample.correctIndex + 2) % 4,
@@ -1483,11 +1484,20 @@ function DevAnimationsContent() {
 
     s.setMatchQuestion(makePenaltyQuestion(qIndex, shooterSeat));
 
-    const result = makePenaltyRoundResult(qIndex, shooterSeat, outcome, scoreRef.current);
+    const winningSeat = outcome === 'goal' ? shooterSeat : (shooterSeat === 1 ? 2 : 1);
+    const points = {
+      me: winningSeat === 1 ? Math.max(myPoints, 80) : 0,
+      opp: winningSeat === 2 ? Math.max(oppPoints, 80) : 0,
+    };
+    const result = makePenaltyRoundResult(qIndex, shooterSeat, outcome, scoreRef.current, points);
     const me = result.players[SELF_ID];
     const opp = result.players[OPP_ID];
     if (!me || !opp) return;
 
+    // Longer beats than fireOutcome so the question / timer countdown /
+    // shot animation are all visible during a penalty sim. Shooter "thinks"
+    // for ~2.5s, keeper for another ~1s, then the ball flies and the result
+    // lands ~1.3s after that.
     waitForAnchors(() => {
       pendingTimers.current.push(
         window.setTimeout(() => {
@@ -1499,12 +1509,12 @@ function DevAnimationsContent() {
             isCorrect: me.isCorrect,
             myTotalPoints: me.totalPoints,
             oppAnswered: false,
-            pointsEarned: 0,
+            pointsEarned: me.pointsEarned,
             phaseKind: 'penalty',
             phaseRound: null,
             shooterSeat,
           });
-        }, 800)
+        }, 2500)
       );
 
       pendingTimers.current.push(
@@ -1513,11 +1523,11 @@ function DevAnimationsContent() {
             matchId: MATCH_ID,
             qIndex,
             opponentTotalPoints: opp.totalPoints,
-            pointsEarned: 0,
+            pointsEarned: opp.pointsEarned,
             isCorrect: opp.isCorrect,
             selectedIndex: opp.selectedIndex,
           });
-        }, 1400)
+        }, 3500)
       );
 
       pendingTimers.current.push(
@@ -1527,6 +1537,8 @@ function DevAnimationsContent() {
             if (shooterSeat === 1) penaltyGoalsRef.current.seat1 += 1;
             else penaltyGoalsRef.current.seat2 += 1;
           }
+          scoreRef.current.meTotal = me.totalPoints;
+          scoreRef.current.oppTotal = opp.totalPoints;
           stateVersion.current += 1;
           s.setMatchState(
             makeMatchState('PENALTY_SHOOTOUT', {
@@ -1538,7 +1550,7 @@ function DevAnimationsContent() {
               shooterSeat,
             })
           );
-        }, 2200)
+        }, 4800)
       );
     });
   }

@@ -90,24 +90,36 @@ function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
   return (
     <motion.div
       key={`pen-splash-${localQuestionIndex}`}
-      initial={{ opacity: 0, scale: 0.5 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.8 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+      initial={{ opacity: 0, y: 22, scale: 0.78 }}
+      animate={{
+        opacity: [0, 1, 1, 1, 0],
+        y: [22, -8, -4, 0, 34],
+        scale: [0.78, 1.16, 1.07, 1, 0.86],
+      }}
+      exit={{ opacity: 0, y: 34, scale: 0.86 }}
+      transition={{
+        duration: 1.85,
+        times: [0, 0.12, 0.25, 0.82, 1],
+        ease: [0.22, 1, 0.36, 1],
+      }}
       className="absolute inset-x-0 top-[35%] z-30 flex pointer-events-none flex-col items-center"
     >
-      <div
-        className={`text-5xl font-black font-fun uppercase tracking-wider ${
-          result === 'goal' ? 'text-brand-green-light' : 'text-brand-red-soft'
-        }`}
-        style={{
-          textShadow: result === 'goal'
-            ? '0 0 30px rgba(88,204,2,0.5), 0 4px 0 rgba(70,163,2,0.8)'
-            : '0 0 30px rgba(255,75,75,0.5), 0 4px 0 rgba(200,40,40,0.8)',
-        }}
-      >
-        {result === 'goal' ? 'GOAL!' : 'SAVED!'}
-      </div>
+      {result === 'goal' ? (
+        <img
+          src="/assets/goal.png"
+          alt="Goal"
+          className="h-auto w-[min(64vw,260px)] object-contain drop-shadow-[0_10px_0_rgba(0,0,0,0.65)]"
+        />
+      ) : (
+        <div
+          className="font-fun text-5xl font-black uppercase tracking-wider text-brand-red-soft"
+          style={{
+            textShadow: '0 0 30px rgba(255,75,75,0.5), 0 4px 0 rgba(200,40,40,0.8)',
+          }}
+        >
+          SAVED!
+        </div>
+      )}
       <div className="mt-1 text-sm font-bold font-fun uppercase tracking-widest text-white/60">
         {result === 'goal'
           ? (resultShooterIsMe ? 'You scored!' : 'Opponent scored')

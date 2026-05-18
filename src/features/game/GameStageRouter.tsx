@@ -256,7 +256,11 @@ export function GameStageRouter() {
     if (stage === "finalResults") {
       const final = realtimeMatch?.finalResults;
       if (!isPartyQuizMatch && !final) {
-        return <LoadingScreen />;
+        return (
+          <LoadingScreen
+            text={matchType === "ranked" ? "Updating rank..." : "Finalizing results..."}
+          />
+        );
       }
       const unlockedAchievements = selfUserId
         ? final?.unlockedAchievements?.[selfUserId] ?? []

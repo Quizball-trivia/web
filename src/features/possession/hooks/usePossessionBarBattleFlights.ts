@@ -51,6 +51,10 @@ function resolveFlightPoints(
   return pointsEarned;
 }
 
+function isFlightPhaseKind(kind: string | undefined): boolean {
+  return kind === 'normal' || kind === 'penalty';
+}
+
 function findScoreAnchor(side: Side): DOMRect | null {
   if (typeof document === 'undefined') return null;
   return findVisibleRect(`[data-splash-anchor="${side}"]`);
@@ -277,7 +281,7 @@ export function usePossessionBarBattleFlights() {
     const points = resolveFlightPoints(answerAck.pointsEarned, answerAck.questionKind, answerAck.foundCount);
     const failed = !answerAck.isCorrect || points <= 0;
     const phaseKind = answerAck.phaseKind ?? 'normal';
-    if (phaseKind !== 'normal') return;
+    if (!isFlightPhaseKind(phaseKind)) return;
     const ackKey = `${answerAck.matchId}:${answerAck.qIndex}`;
     if (playerFiredQRef.current === ackKey) return;
 
@@ -315,7 +319,7 @@ export function usePossessionBarBattleFlights() {
     if (!enabled || !roundResult || !selfUserId) return;
     if (roundResult.qIndex !== currentQIndex) return;
     const phaseKind = roundResult.phaseKind ?? phaseKindFromState;
-    if (phaseKind !== 'normal') return;
+    if (!isFlightPhaseKind(phaseKind)) return;
     const roundKey = `${roundResult.matchId}:${roundResult.qIndex}`;
     if (playerFiredQRef.current === roundKey) return;
 
@@ -357,7 +361,7 @@ export function usePossessionBarBattleFlights() {
     if (!enabled || !roundResult || !selfUserId) return;
     if (roundResult.qIndex !== currentQIndex) return;
     const phaseKind = roundResult.phaseKind ?? phaseKindFromState;
-    if (phaseKind !== 'normal') return;
+    if (!isFlightPhaseKind(phaseKind)) return;
     const roundKey = `${roundResult.matchId}:${roundResult.qIndex}`;
     if (opponentFiredQRef.current === roundKey) return;
 
@@ -402,7 +406,7 @@ export function usePossessionBarBattleFlights() {
     // Fire flights for both correct and wrong opponent answers. The wrong/
     // zero-point case renders a "failed" flight that falls off-screen.
     if (currentQIndex == null) return;
-    if (phaseKindFromState !== 'normal') return;
+    if (!isFlightPhaseKind(phaseKindFromState)) return;
     if (currentKey == null) return;
     if (opponentFiredQRef.current === currentKey) return;
 
