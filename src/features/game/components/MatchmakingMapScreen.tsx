@@ -60,6 +60,14 @@ interface MatchmakingMapScreenProps {
   onRestart?: () => void;
 }
 
+export function resolveSearchTimerStartedAt(
+  rankedSearchStartedAt: number | null | undefined,
+  fallbackSearchStartedAt: number,
+): number {
+  if (typeof rankedSearchStartedAt !== "number") return fallbackSearchStartedAt;
+  return Math.min(rankedSearchStartedAt, fallbackSearchStartedAt);
+}
+
 const PREPARING_MATCH_STUCK_TIMEOUT_MS = 20000;
 
 const MOBILE_BREAKPOINT = 768;
@@ -1311,8 +1319,10 @@ export function MatchmakingMapScreen({
     if (fallbackSearchStartedAtRef.current == null) {
       fallbackSearchStartedAtRef.current = Date.now();
     }
-    const startedAt =
-      rankedSearchStartedAt ?? fallbackSearchStartedAtRef.current;
+    const startedAt = resolveSearchTimerStartedAt(
+      rankedSearchStartedAt,
+      fallbackSearchStartedAtRef.current,
+    );
     const tick = () =>
       setSearchTime(Math.floor(Math.max(0, Date.now() - startedAt) / 1000));
     tick();

@@ -82,6 +82,9 @@ vi.mock('@/lib/queries/store.queries', () => ({
 vi.mock('@/lib/sounds/useGameSounds', () => ({
   useGameSounds: () => ({
     playSfx: vi.fn(),
+    playBgm: vi.fn(),
+    stopBgm: vi.fn(),
+    setBgmVolume: vi.fn(),
     toggleMute: () => true,
     isMuted: () => false,
   }),
@@ -95,6 +98,7 @@ vi.mock('../usePossessionGoalCelebration', () => ({
 
 vi.mock('../usePossessionRoundTransition', () => ({
   usePossessionFirstQuestionIntro: () => false,
+  usePossessionSecondHalfQuestionIntro: () => false,
   usePossessionRoundTransition: () => mockOverlayState,
 }));
 

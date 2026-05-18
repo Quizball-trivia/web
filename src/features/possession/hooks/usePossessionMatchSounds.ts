@@ -2,8 +2,9 @@
 
 import { useEffect, useRef } from 'react';
 import type { MatchRoundResultPayload } from '@/lib/realtime/socket.types';
-import type { DevPossessionAnimation } from '@/stores/realtimeMatch.store';
+import { useRealtimeMatchStore, type DevPossessionAnimation } from '@/stores/realtimeMatch.store';
 import { GOAL_ATTACK_START_DELAY_MS } from '../realtimePossession.helpers';
+import { getBarBattleGoalAttackDelayMs, resolveBattlePoints } from './useBarBattle';
 
 type PossessionSfxName = 'whistle' | 'kick' | 'pass';
 
@@ -20,6 +21,7 @@ export function usePossessionMatchSounds({
   devPossessionAnimation,
   playSfx,
 }: UsePossessionMatchSoundsParams): void {
+  const matchVariant = useRealtimeMatchStore((s) => s.match?.variant);
   const prevPhaseRef = useRef<string | null>(null);
   const playSfxRef = useRef(playSfx);
   useEffect(() => {
@@ -47,15 +49,30 @@ export function usePossessionMatchSounds({
       const shouldDelayKick = phaseKindForSfx !== 'penalty' && (
         phaseKindForSfx === 'last_attack' || Boolean(roundResult.deltas?.goalScoredBySeat)
       );
+      const roundPlayers = Object.values(roundResult.players ?? {});
+      const playerPoints = resolveBattlePoints(
+        roundPlayers[0]?.pointsEarned ?? 0,
+        roundResult.questionKind,
+        roundPlayers[0]?.foundCount
+      );
+      const opponentPoints = resolveBattlePoints(
+        roundPlayers[1]?.pointsEarned ?? 0,
+        roundResult.questionKind,
+        roundPlayers[1]?.foundCount
+      );
       const timer = window.setTimeout(
         () => playSfxRef.current('kick'),
-        shouldDelayKick ? GOAL_ATTACK_START_DELAY_MS : 0
+        shouldDelayKick
+          ? getBarBattleGoalAttackDelayMs(playerPoints, opponentPoints, GOAL_ATTACK_START_DELAY_MS, {
+              includeScoreFlightHandoff: matchVariant === 'ranked_sim',
+            })
+          : 0
       );
       return () => window.clearTimeout(timer);
     } else {
       playSfxRef.current('pass');
     }
-  }, [roundResult]);
+  }, [matchVariant, roundResult]);
 
   useEffect(() => {
     if (!devPossessionAnimation) return;

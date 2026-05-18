@@ -126,6 +126,7 @@ export function usePossessionFieldState({
     visualMyPossessionPct,
   } = usePossessionAnimationOrchestrator({
     possessionState,
+    matchVariant: match?.variant ?? null,
     mySeat,
     shooterSeat,
     phaseKind,

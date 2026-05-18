@@ -25,6 +25,8 @@ interface PitchMarkerProps {
   keeperJolt: Record<string, number[]>;
   isPortrait?: boolean;
   size?: number; // avatar diameter in px
+  /** Hide the colored ring + glow halo (penalty UI uses raw avatars). */
+  hideRing?: boolean;
 }
 
 function PitchMarker({
@@ -32,6 +34,7 @@ function PitchMarker({
   isShooter, isKeeper, isSave, isGoal, showPenResult, keeperJolt,
   isPortrait = false,
   size = 40,
+  hideRing = false,
 }: PitchMarkerProps) {
   const isGoalCelebration = isGoal && isShooter;
   const joltAnim = isSave && isKeeper
@@ -47,11 +50,11 @@ function PitchMarker({
     <motion.g
       animate={{ x, y }}
       transition={{ type: 'spring', stiffness: 150, damping: 14, mass: 0.8 }}
-      filter={`url(#${glowFilter})`}
+      filter={hideRing ? undefined : `url(#${glowFilter})`}
     >
       <motion.g animate={joltAnim} transition={joltTransition}>
         <g transform={isPortrait ? 'rotate(90)' : undefined}>
-          {isShooter && !showPenResult && (
+          {isShooter && !showPenResult && !hideRing && (
             <motion.circle
               cx="0" cy="0" r={size * 0.7}
               fill="none" stroke={color} strokeWidth="1.5" opacity="0.4"
@@ -59,7 +62,9 @@ function PitchMarker({
               transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
             />
           )}
-          <circle cx="0" cy="0" r={size * 0.55} fill="none" stroke={color} strokeWidth={isKeeper ? 3.5 : 2.5} />
+          {!hideRing && (
+            <circle cx="0" cy="0" r={size * 0.55} fill="none" stroke={color} strokeWidth={isKeeper ? 3.5 : 2.5} />
+          )}
           <foreignObject x={-size/2} y={-size/2} width={size} height={size}>
             <div
               aria-label={avatarAlt}
@@ -87,7 +92,7 @@ interface GoalCoordinates {
 }
 
 const RIGHT_GOAL: GoalCoordinates = {
-  penSpotX: 440,
+  penSpotX: 360,
   goalLineX: 485,
   goalTarget: { x: 492, y: 107 },
   saveTarget: { x: 483, y: 115 },
@@ -98,7 +103,7 @@ const RIGHT_GOAL: GoalCoordinates = {
 };
 
 const LEFT_GOAL: GoalCoordinates = {
-  penSpotX: 60,
+  penSpotX: 140,
   goalLineX: 15,
   goalTarget: { x: 8, y: 107 },
   saveTarget: { x: 17, y: 115 },
@@ -154,6 +159,8 @@ interface PitchVisualizationProps {
   centerPossessionTrack?: boolean;
   /** Dev prototype: keep avatars planted and animate only the ball for shot/goal results. */
   simpleShotAnimation?: boolean;
+  /** Hide the pitch-owned ball while a full-screen celebration owns the visible ball. */
+  hideBall?: boolean;
 }
 
 function toShotVariant(value: number | undefined): 0 | 1 | 2 | 3 | 4 {
@@ -180,6 +187,7 @@ export function PitchVisualization({
   barBattle,
   centerPossessionTrack = true,
   simpleShotAnimation = false,
+  hideBall = false,
 }: PitchVisualizationProps) {
   const isPenalty = !!penaltyMode;
   const isShot = !!shotMode;
@@ -188,7 +196,7 @@ export function PitchVisualization({
   // Mobile uses the landscape pitch (desktop puts the pitch in a narrow
   // portrait sidebar). Bigger avatars on mobile so they're readable at
   // small viewport sizes.
-  const avatarBox = isPortrait ? 60 : 88;
+  const avatarBox = isPortrait ? 68 : 88;
   const avatarBoxOffset = avatarBox / 2; // SVG x/y offset from centre
   const avatarBoxY = 115 - avatarBoxOffset; // foreignObject y, centred on cy=115
   void _myMomentum;
@@ -204,19 +212,13 @@ export function PitchVisualization({
   const textTf = (cx: number, cy: number) =>
     isPortrait ? `rotate(90, ${cx}, ${cy})` : undefined;
 
-  // Ball emoji style — bigger on mobile (landscape pitch) to match the
-  // bigger avatars and not look lost between them. Counter-rotate in
-  // portrait so the emoji stays upright after the pitch transform.
-  const ballFontPx = isPortrait ? 20 : 30;
-  const ballLineHeightPx = isPortrait ? 24 : 34;
-  const ballEmojiStyle: React.CSSProperties = isPortrait
-    ? { fontSize: `${ballFontPx}px`, lineHeight: `${ballLineHeightPx}px`, textAlign: 'center', transform: 'rotate(90deg)' }
-    : { fontSize: `${ballFontPx}px`, lineHeight: `${ballLineHeightPx}px`, textAlign: 'center' };
-  // Ball container + glow size — match the font roughly so the emoji has
-  // room without clipping.
-  const ballBox = isPortrait ? 24 : 36;
+  const ballImageStyle: React.CSSProperties = isPortrait
+    ? { width: '100%', height: '100%', objectFit: 'contain', transform: 'rotate(90deg)' }
+    : { width: '100%', height: '100%', objectFit: 'contain' };
+  // Penalty UI uses a smaller ball so it doesn't dominate the goal-mouth view.
+  const ballBox = isPenalty ? (isPortrait ? 14 : 20) : (isPortrait ? 24 : 36);
   const ballBoxOffset = ballBox / 2;
-  const ballGlowR = isPortrait ? 14 : 20;
+  const ballGlowR = isPenalty ? (isPortrait ? 8 : 11) : (isPortrait ? 14 : 20);
 
   // Goal coordinate set based on target
   const goal: GoalCoordinates = (targetGoal ?? 'right') === 'right' ? RIGHT_GOAL : LEFT_GOAL;
@@ -227,7 +229,7 @@ export function PitchVisualization({
     ? possessionTrackRight - (playerPosition / 100) * possessionTrackWidth
     : possessionTrackLeft + (playerPosition / 100) * possessionTrackWidth;
   // Mobile avatars are bigger, so they need more spread from the boundary.
-  const avatarSpread = isPortrait ? 35 : 55;
+  const avatarSpread = isPortrait ? 48 : 55;
 
   // Clamp the boundary so the winning side's bar zone (1 stacked bar
   // worth — AVATAR_BAR_OFFSET 58 + half bar 16 = 74) always fits behind
@@ -301,14 +303,18 @@ export function PitchVisualization({
     return () => clearTimeout(timer);
   }, [isShotGoal, simpleShotKey, useSimpleShotAnimation]);
 
+  const simpleShotGoalTarget = { x: goal.goalTarget.x, y: goal.goalTarget.y - 6 };
+  const simpleShotCenterTarget = { x: possessionBoundaryX, y: 112 };
   const simpleShotTarget = (() => {
-    if (simpleShotReturnToCenter) return { x: possessionBoundaryX, y: 112 };
-    if (isShotGoal) return { x: goal.goalTarget.x, y: goal.goalTarget.y - 6 };
+    if (simpleShotReturnToCenter) return simpleShotCenterTarget;
+    if (isShotGoal) return simpleShotGoalTarget;
     if (isShotSave) return { x: goal.goalLineX - 10 * goal.inward, y: goal.penY };
     if (isShotMiss) return { x: goal.goalLineX + 38 * goal.inward, y: goal.goalTarget.y - 58 };
     return { x: simpleShotOriginX, y: simpleShotOriginY };
   })();
-  const renderSimpleShotBall = useSimpleShotAnimation && (isShotGoal || isShotSave || isShotMiss);
+  const renderSimpleShotBall = useSimpleShotAnimation && (
+    (isShotGoal && !simpleShotReturnToCenter) || isShotSave || isShotMiss
+  );
   const shotVariant = toShotVariant(shotMode?.variant);
   const shotGoalLabel = shotVariant === 1
     ? 'TOP BINS'
@@ -450,7 +456,7 @@ export function PitchVisualization({
     if (isGoal) return { duration: 0.4, ease: [0.2, 0, 0.4, 1] as const };
     if (isSave) return { duration: 0.5, ease: [0.3, 0, 0.2, 1] as const };
     if (useSimpleShotAnimation && simpleShotReturnToCenter) {
-      return { duration: 0.75, ease: [0.22, 1, 0.36, 1] as const };
+      return { duration: 1.45, ease: [0.22, 1, 0.36, 1] as const, times: [0, 0.28, 1] };
     }
     if (useSimpleShotAnimation && (isShotGoal || isShotSave || isShotMiss)) {
       return { duration: isShotGoal ? 1.05 : 0.9, ease: [0.22, 1, 0.36, 1] as const };
@@ -474,6 +480,19 @@ export function PitchVisualization({
   const ballOpacity = isShotMiss && !useSimpleShotAnimation ? 0.3 : 1;
   const shotGoalNetDelay = useSimpleShotAnimation ? 0.95 : 0.35;
   const shotGoalTextDelay = useSimpleShotAnimation ? 0.9 : 0.25;
+  const simpleShotBallAnimate = simpleShotReturnToCenter && isShotGoal
+    ? {
+        x: simpleShotCenterTarget.x,
+        y: simpleShotCenterTarget.y,
+        scale: 1,
+        opacity: 1,
+      }
+    : {
+        x: simpleShotTarget.x,
+        y: simpleShotTarget.y,
+        scale: 1,
+        opacity: 1,
+      };
 
   return (
     <div className={isPortrait ? 'h-full w-full' : 'w-full'}>
@@ -560,6 +579,15 @@ export function PitchVisualization({
 
           {/* Pitch markings removed — stadium-green.png has its own lines */}
 
+          <circle
+            data-pitch-ball-center="true"
+            cx={possessionBoundaryX}
+            cy="112"
+            r="1"
+            fill="transparent"
+            pointerEvents="none"
+          />
+
 
           {/* === Player avatars — ONLY shown during shots and penalties === */}
           {(isPenalty || (isShot && !useSimpleShotAnimation)) && (
@@ -576,6 +604,7 @@ export function PitchVisualization({
                 showPenResult={!!showPenResult || !!shotResultActive} keeperJolt={keeperJolt}
                 isPortrait={isPortrait}
                 size={isShot ? 30 : 40}
+                hideRing={isPenalty}
               />
 
               {/* === Player marker === */}
@@ -590,6 +619,7 @@ export function PitchVisualization({
                 showPenResult={!!showPenResult || !!shotResultActive} keeperJolt={keeperJolt}
                 isPortrait={isPortrait}
                 size={isShot ? 30 : 40}
+                hideRing={isPenalty}
               />
             </>
           )}
@@ -771,9 +801,10 @@ export function PitchVisualization({
           )}
 
           {/* === UNIFIED BALL — single persistent <motion.g> that never unmounts === */}
-          {!renderSimpleShotBall && (
+          {!hideBall && !renderSimpleShotBall && (
             <motion.g
               key="ball"
+              initial={false}
               animate={{
                 x: ballTarget.x,
                 y: ballTarget.y,
@@ -783,29 +814,26 @@ export function PitchVisualization({
             >
               <motion.circle cx="0" cy="0" r={ballGlowR} fill="rgba(255,255,255,0.1)" filter={`url(#${uid('ballGlow')})`} />
               <foreignObject x={-ballBoxOffset} y={-ballBoxOffset} width={ballBox} height={ballBox}>
-                <div style={ballEmojiStyle}>⚽</div>
+                <img src="/assets/brand/large-ball.png" alt="" style={ballImageStyle} />
               </foreignObject>
             </motion.g>
           )}
 
-          {renderSimpleShotBall && (
+          {!hideBall && renderSimpleShotBall && (
             <motion.g
               key={`simple-shot-ball-${shotMode?.isPlayerAttacker ? 'player' : 'opponent'}-${shotMode?.result}-${targetGoal ?? 'right'}`}
               initial={{
                 x: simpleShotOriginX,
                 y: simpleShotOriginY,
+                scale: 1,
                 opacity: 1,
               }}
-              animate={{
-                x: simpleShotTarget.x,
-                y: simpleShotTarget.y,
-                opacity: 1,
-              }}
+              animate={simpleShotBallAnimate}
               transition={ballTransition}
             >
               <motion.circle cx="0" cy="0" r={ballGlowR} fill="rgba(255,255,255,0.1)" filter={`url(#${uid('ballGlow')})`} />
               <foreignObject x={-ballBoxOffset} y={-ballBoxOffset} width={ballBox} height={ballBox}>
-                <div style={ballEmojiStyle}>⚽</div>
+                <img src="/assets/brand/large-ball.png" alt="" style={ballImageStyle} />
               </foreignObject>
             </motion.g>
           )}

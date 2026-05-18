@@ -1,6 +1,6 @@
 'use client';
 
-import { type ComponentProps, type ReactNode } from 'react';
+import { type ComponentProps, type ReactNode, useLayoutEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { GoalCelebrationOverlay } from './GoalCelebrationOverlay';
 import { PenaltyHUD } from './PenaltyHUD';
@@ -40,6 +40,49 @@ interface PossessionMatchViewportProps {
   children?: ReactNode;
 }
 
+function usePitchBallMetrics(orientation: 'portrait' | 'landscape', pitchProps: PitchProps) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [ballSizePx, setBallSizePx] = useState(32);
+  const [ballCenterPx, setBallCenterPx] = useState({ x: 0, y: 0 });
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      const isPortrait = orientation === 'portrait';
+      const viewBox = isPortrait
+        ? { width: 290, height: 500, ball: 24 }
+        : { width: 500, height: 290, ball: 36 };
+      const scale = Math.min(rect.width / viewBox.width, rect.height / viewBox.height);
+
+      setBallSizePx(Math.max(1, viewBox.ball * scale));
+      const marker = el.querySelector<SVGCircleElement>('[data-pitch-ball-center="true"]');
+      if (marker) {
+        const markerRect = marker.getBoundingClientRect();
+        setBallCenterPx({
+          x: markerRect.left + markerRect.width / 2 - rect.left,
+          y: markerRect.top + markerRect.height / 2 - rect.top,
+        });
+      } else {
+        setBallCenterPx({
+          x: rect.width / 2,
+          y: rect.height / 2,
+        });
+      }
+    };
+
+    update();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [orientation, pitchProps.centerPossessionTrack, pitchProps.mirrored, pitchProps.playerPosition]);
+
+  return { ref, ballSizePx, ballCenterPx };
+}
+
 function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
   if (!model?.visible) return null;
 
@@ -76,18 +119,23 @@ function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
 
 export function PossessionMatchViewport({ model, children }: PossessionMatchViewportProps) {
   const { showMainUI, hud, pitchProps, goalCelebration, penaltySplash, muted } = model;
+  const celebrationOwnsBall = Boolean(goalCelebration);
+  const desktopPitch = usePitchBallMetrics('portrait', pitchProps);
+  const mobilePitch = usePitchBallMetrics('landscape', pitchProps);
 
   return (
     <>
       {showMainUI && (
         <div className="hidden lg:flex lg:w-[42%] lg:items-center lg:py-4 relative">
-          <div className="relative h-full w-full max-h-[calc(100dvh-2rem)]">
-            <PitchVisualization {...pitchProps} orientation="portrait" />
+          <div ref={desktopPitch.ref} className="relative h-full w-full max-h-[calc(100dvh-2rem)]">
+            <PitchVisualization {...pitchProps} orientation="portrait" hideBall={celebrationOwnsBall} />
             <AnimatePresence>
               {goalCelebration && (
                 <GoalCelebrationOverlay
                   scorerName={goalCelebration.scorerName}
                   isMeScorer={goalCelebration.isMeScorer}
+                  ballSizePx={desktopPitch.ballSizePx}
+                  ballCenterPx={desktopPitch.ballCenterPx}
                   muted={muted}
                 />
               )}
@@ -110,13 +158,15 @@ export function PossessionMatchViewport({ model, children }: PossessionMatchView
               <PossessionHUD {...hud.props} />
             )}
 
-            <div className="lg:hidden relative">
-              <PitchVisualization {...pitchProps} orientation="landscape" />
+            <div ref={mobilePitch.ref} className="lg:hidden relative">
+              <PitchVisualization {...pitchProps} orientation="landscape" hideBall={celebrationOwnsBall} />
               <AnimatePresence>
                 {goalCelebration && (
                   <GoalCelebrationOverlay
                     scorerName={goalCelebration.scorerName}
                     isMeScorer={goalCelebration.isMeScorer}
+                    ballSizePx={mobilePitch.ballSizePx}
+                    ballCenterPx={mobilePitch.ballCenterPx}
                     muted={muted}
                   />
                 )}

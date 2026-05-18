@@ -5,8 +5,8 @@ import type { ResolvedMatchQuestionPayload } from '@/lib/realtime/socket.types';
 import type { AnswerState, AnswerStateArray } from './types/possession.types';
 
 export const TRANSITION_DELAY_MS = 2500;
-export const FIELD_RESULT_COMPARE_MS = 2400;
-export const FIELD_POSSESSION_CUE_MS = 600;
+export const FIELD_RESULT_COMPARE_MS = 900;
+export const FIELD_POSSESSION_CUE_MS = 200;
 export const QUESTION_PLAYING_MS = 10000;
 export const OPTIMISTIC_SPLASH_SAFE_MARGIN_MS = 250;
 export const HALFTIME_RESULTS_DELAY_MS = 4500;

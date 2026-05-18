@@ -17,7 +17,7 @@ import {
   PENALTY_ICON_SWAP_DELAY_MS,
   computeMyPossessionPct,
 } from '../realtimePossession.helpers';
-import { getBarBattleFieldLockMs } from './useBarBattle';
+import { getBarBattleFieldLockMs, getBarBattleGoalAttackDelayMs, resolveBattlePoints } from './useBarBattle';
 import type { ShotResult } from '../types/possession.types';
 
 interface AttackAnimation {
@@ -27,6 +27,7 @@ interface AttackAnimation {
 
 interface UsePossessionAnimationOrchestratorParams {
   possessionState: MatchStatus['possessionState'];
+  matchVariant?: MatchStatus['variant'] | null;
   mySeat: number | null;
   shooterSeat: number | null;
   phaseKind: string;
@@ -56,6 +57,7 @@ function toSeat(value: number | null): 1 | 2 {
 
 export function usePossessionAnimationOrchestrator({
   possessionState,
+  matchVariant,
   mySeat,
   shooterSeat,
   phaseKind,
@@ -84,6 +86,7 @@ export function usePossessionAnimationOrchestrator({
   const [readyRoundAttackKey, setReadyRoundAttackKey] = useState<string | null>(null);
 
   const latestPossessionRef = useRef(initialPossessionPct);
+  const fieldMotionLockedRef = useRef(false);
   const prevPhaseForFieldResetRef = useRef<string | null>(phase ?? null);
   const delayedFieldQRef = useRef<number | null>(null);
   const fieldReleaseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -167,12 +170,29 @@ export function usePossessionAnimationOrchestrator({
     queueMicrotask(() => {
       setReadyRoundAttackKey(null);
     });
+    const playerPoints = resolveBattlePoints(
+      myRound?.pointsEarned ?? 0,
+      roundResult?.questionKind,
+      myRound?.foundCount
+    );
+    const opponentPoints = resolveBattlePoints(
+      opponentRound?.pointsEarned ?? 0,
+      roundResult?.questionKind,
+      opponentRound?.foundCount
+    );
+    const attackDelayMs = getBarBattleGoalAttackDelayMs(
+      playerPoints,
+      opponentPoints,
+      GOAL_ATTACK_START_DELAY_MS,
+      { includeScoreFlightHandoff: matchVariant === 'ranked_sim' }
+    );
+
     const timer = setTimeout(() => {
       setReadyRoundAttackKey(roundAttackKey);
-    }, GOAL_ATTACK_START_DELAY_MS);
+    }, attackDelayMs);
 
     return () => clearTimeout(timer);
-  }, [roundAttackKey]);
+  }, [matchVariant, myRound, opponentRound, roundAttackKey, roundResult?.questionKind]);
 
   const delayedRoundAttackAnimation = roundAttackKey && readyRoundAttackKey === roundAttackKey
     ? roundAttackAnimation
@@ -253,6 +273,7 @@ export function usePossessionAnimationOrchestrator({
     }
     delayedFieldQRef.current = null;
     latestPossessionRef.current = 50;
+    fieldMotionLockedRef.current = false;
     queueMicrotask(() => {
       setFieldMotionLocked(false);
       setOptimisticOffset(0);
@@ -272,10 +293,13 @@ export function usePossessionAnimationOrchestrator({
     if (fieldMotionLocked) return;
     const activeRoundQIdx = roundResult?.qIndex ?? null;
     if (activeRoundQIdx !== null && delayedFieldQRef.current === activeRoundQIdx) return;
+    const hasOpenNormalQuestion = phase === 'NORMAL_PLAY' && phaseKind === 'normal' && localQuestionIndex !== null;
+    if (!roundResult && hasOpenNormalQuestion) return;
     queueMicrotask(() => {
+      if (fieldMotionLockedRef.current) return;
       setMyPossessionPct(immediateMyPossessionPct);
     });
-  }, [fieldMotionLocked, immediateMyPossessionPct, roundResult]);
+  }, [fieldMotionLocked, immediateMyPossessionPct, localQuestionIndex, phase, phaseKind, roundResult]);
 
   useLayoutEffect(() => {
     if (!roundResult) return;
@@ -288,23 +312,33 @@ export function usePossessionAnimationOrchestrator({
     if (delayedFieldQRef.current === qIndex) return;
 
     delayedFieldQRef.current = qIndex;
-    queueMicrotask(() => {
-      setFieldMotionLocked(true);
-    });
+    fieldMotionLockedRef.current = true;
+    setFieldMotionLocked(true);
     if (fieldReleaseTimerRef.current) clearTimeout(fieldReleaseTimerRef.current);
-    const playerPoints = myRound?.pointsEarned ?? 0;
-    const opponentPoints = opponentRound?.pointsEarned ?? 0;
+    const playerPoints = resolveBattlePoints(
+      myRound?.pointsEarned ?? 0,
+      roundResult.questionKind,
+      myRound?.foundCount
+    );
+    const opponentPoints = resolveBattlePoints(
+      opponentRound?.pointsEarned ?? 0,
+      roundResult.questionKind,
+      opponentRound?.foundCount
+    );
     const fieldLockMs = Math.max(
       FIELD_RESULT_COMPARE_MS + FIELD_POSSESSION_CUE_MS,
-      getBarBattleFieldLockMs(playerPoints, opponentPoints)
+      getBarBattleFieldLockMs(playerPoints, opponentPoints, {
+        includeScoreFlightHandoff: matchVariant === 'ranked_sim',
+      })
     );
 
     fieldReleaseTimerRef.current = setTimeout(() => {
+      fieldMotionLockedRef.current = false;
       setFieldMotionLocked(false);
       setMyPossessionPct(latestPossessionRef.current);
       fieldReleaseTimerRef.current = null;
     }, fieldLockMs);
-  }, [myRound, opponentRound, phaseKind, roundResult]);
+  }, [matchVariant, myRound, opponentRound, phaseKind, roundResult]);
 
   useEffect(() => {
     delayedFieldQRef.current = null;
@@ -316,10 +350,12 @@ export function usePossessionAnimationOrchestrator({
       clearTimeout(goalFieldResetTimerRef.current);
       goalFieldResetTimerRef.current = null;
     }
+    fieldMotionLockedRef.current = false;
+    const resetPossessionPct = latestPossessionRef.current;
     queueMicrotask(() => {
       setFieldMotionLocked(false);
       setGoalFieldResetReadyQIndex(null);
-      setMyPossessionPct(latestPossessionRef.current);
+      setMyPossessionPct(resetPossessionPct);
     });
   }, [localQuestionIndex]);
 
@@ -340,10 +376,12 @@ export function usePossessionAnimationOrchestrator({
       clearTimeout(goalFieldResetTimerRef.current);
       goalFieldResetTimerRef.current = null;
     }
+    fieldMotionLockedRef.current = false;
+    const resetPossessionPct = latestPossessionRef.current;
     queueMicrotask(() => {
       setFieldMotionLocked(false);
       setGoalFieldResetReadyQIndex(null);
-      setMyPossessionPct(latestPossessionRef.current);
+      setMyPossessionPct(resetPossessionPct);
     });
   }, [phase, roundResult]);
 

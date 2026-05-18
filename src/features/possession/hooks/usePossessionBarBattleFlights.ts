@@ -78,7 +78,8 @@ function findVisibleRect(selector: string): DOMRect | null {
     const rect = el.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) continue;
     const style = window.getComputedStyle(el);
-    if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) continue;
+    const opacity = Number.parseFloat(style.opacity);
+    if (style.display === 'none' || style.visibility === 'hidden' || opacity === 0) continue;
     if (rect.bottom <= 0 || rect.right <= 0 || rect.top >= window.innerHeight || rect.left >= window.innerWidth) continue;
     return rect;
   }
@@ -139,6 +140,36 @@ function computeFlightTarget(
   }
 
   return clampFlightPoint({ x, y });
+}
+
+function computeFallbackBarLaneTarget(
+  selfRect: DOMRect,
+  opponentRect: DOMRect | null,
+  pitchRect: DOMRect | null
+): { x: number; y: number } {
+  const centre = rectCentre(selfRect);
+  if (!opponentRect) return clampFlightPoint(centre);
+
+  const oppCentre = rectCentre(opponentRect);
+  const isVerticalStack = Math.abs(centre.y - oppCentre.y) > Math.abs(centre.x - oppCentre.x);
+  if (!isVerticalStack) return computeFlightTarget(selfRect, opponentRect, pitchRect);
+
+  const offset = Math.max(44, Math.min(78, selfRect.height * 0.82));
+  const awayY = centre.y <= oppCentre.y ? -1 : 1;
+  let target = {
+    x: centre.x,
+    y: centre.y + offset * awayY,
+  };
+
+  if (pitchRect) {
+    const padding = 22;
+    target = {
+      x: Math.max(pitchRect.left + padding, Math.min(pitchRect.right - padding, target.x)),
+      y: Math.max(pitchRect.top + padding, Math.min(pitchRect.bottom - padding, target.y)),
+    };
+  }
+
+  return clampFlightPoint(target);
 }
 
 export function usePossessionBarBattleFlights() {
@@ -222,7 +253,7 @@ export function usePossessionBarBattleFlights() {
         source: clampFlightPoint(rectCentre(params.sourceRect)),
         target: barTargetRect
           ? clampFlightPoint(rectCentre(barTargetRect))
-          : computeFlightTarget(params.targetRect, params.opponentRect, params.pitchRect),
+          : computeFallbackBarLaneTarget(params.targetRect, params.opponentRect, params.pitchRect),
         points: params.points,
         failed: params.failed,
       }]);

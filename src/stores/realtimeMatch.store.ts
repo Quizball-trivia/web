@@ -294,9 +294,16 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         return state;
       }
       
+      const isSecondHalfKickoff =
+        state.match.possessionState?.phase === 'HALFTIME'
+        && payload.phase === 'NORMAL_PLAY'
+        && payload.half === 2;
       const shouldClearQuestion =
-        (payload.phase === 'COMPLETED' || payload.phase === 'HALFTIME')
-        && !state.match.lastRoundResult;
+        isSecondHalfKickoff ||
+        (
+          (payload.phase === 'COMPLETED' || payload.phase === 'HALFTIME')
+          && !state.match.lastRoundResult
+        );
       const shouldClearCountdown =
         payload.phase !== 'NORMAL_PLAY' ||
         payload.normalQuestionsAnsweredInHalf > 0 ||

@@ -35,6 +35,7 @@ import type {
   ResolvedPutInOrderQuestionItem,
 } from '@/lib/realtime/socket.types';
 import { getI18nText } from '@/lib/utils/i18n';
+import { calculateCluesDisplayPoints } from '@/utils/cluesScoring';
 
 type LiveSpecialQuestion =
   | ResolvedCountdownQuestion
@@ -683,6 +684,9 @@ function PutInOrderCompactColumn({
   itemById,
   emptyText,
   tone,
+  forceAllWrong = false,
+  matchedCountOverride,
+  totalCountOverride,
 }: {
   title: string;
   itemIds: string[];
@@ -690,10 +694,14 @@ function PutInOrderCompactColumn({
   itemById: Map<string, PutInOrderDisplayItem>;
   emptyText: string;
   tone: 'green' | 'red';
+  forceAllWrong?: boolean;
+  matchedCountOverride?: number;
+  totalCountOverride?: number;
 }) {
-  const matchedCount = itemIds.reduce((count, itemId, index) => (
+  const matchedCount = matchedCountOverride ?? itemIds.reduce((count, itemId, index) => (
     correctById.get(itemId)?.index === index ? count + 1 : count
   ), 0);
+  const totalCount = totalCountOverride ?? itemIds.length;
   const accentClass = tone === 'green' ? 'text-brand-green' : 'text-brand-red-soft';
 
   return (
@@ -702,9 +710,9 @@ function PutInOrderCompactColumn({
         <h3 className="truncate text-[9px] font-fun font-black uppercase tracking-[0.18em] text-white/50 sm:text-[10px]">
           {title}
         </h3>
-        {itemIds.length > 0 && (
+        {totalCount > 0 && (
           <span className={`justify-self-end text-[10px] font-fun font-black uppercase ${accentClass}`}>
-            {matchedCount}/{itemIds.length}
+            {matchedCount}/{totalCount}
           </span>
         )}
       </div>
@@ -717,7 +725,7 @@ function PutInOrderCompactColumn({
           {itemIds.map((itemId, index) => {
             const item = itemById.get(itemId);
             const correctInfo = correctById.get(itemId);
-            const isCorrectPosition = correctInfo?.index === index;
+            const isCorrectPosition = !forceAllWrong && correctInfo?.index === index;
             return (
               <div
                 key={`${title}-${itemId}-${index}`}
@@ -764,11 +772,21 @@ function PutInOrderCompactColumn({
 function PutInOrderResultComparison({
   playerOrderIds,
   opponentOrderIds,
+  playerForceAllWrong = false,
+  opponentForceAllWrong = false,
+  playerMatchedCount,
+  opponentMatchedCount,
+  totalCount,
   correctById,
   itemById,
 }: {
   playerOrderIds: string[];
   opponentOrderIds: string[];
+  playerForceAllWrong?: boolean;
+  opponentForceAllWrong?: boolean;
+  playerMatchedCount?: number;
+  opponentMatchedCount?: number | null;
+  totalCount?: number;
   correctById: Map<string, { sortValue: number; index: number }>;
   itemById: Map<string, PutInOrderDisplayItem>;
 }) {
@@ -789,6 +807,9 @@ function PutInOrderResultComparison({
           itemById={itemById}
           emptyText="No order submitted"
           tone="green"
+          forceAllWrong={playerForceAllWrong}
+          matchedCountOverride={playerMatchedCount}
+          totalCountOverride={totalCount}
         />
         <PutInOrderCompactColumn
           title="Opponent"
@@ -797,6 +818,9 @@ function PutInOrderResultComparison({
           itemById={itemById}
           emptyText="Opponent order unavailable"
           tone="red"
+          forceAllWrong={opponentForceAllWrong}
+          matchedCountOverride={opponentMatchedCount ?? undefined}
+          totalCountOverride={totalCount}
         />
       </div>
     </motion.div>
@@ -807,10 +831,29 @@ function buildFallbackPutInOrderSubmission(correctOrderIds: string[], matchedCou
   if (correctOrderIds.length === 0) return [];
   const safeMatchedCount = clampCount(matchedCount ?? 0, correctOrderIds.length);
   if (safeMatchedCount >= correctOrderIds.length) return [...correctOrderIds];
+  const fixedPrefix = correctOrderIds.slice(0, safeMatchedCount);
+  const tail = correctOrderIds.slice(safeMatchedCount);
+  if (tail.length <= 1) return [...fixedPrefix, ...tail];
+
+  // Rotate the unmatched tail so fallback rows have exactly `matchedCount`
+  // correct positions. A simple reverse leaves the middle item fixed for odd
+  // tail lengths, which can display 2/4 while the score says 1/4.
   return [
-    ...correctOrderIds.slice(0, safeMatchedCount),
-    ...correctOrderIds.slice(safeMatchedCount).reverse(),
+    ...fixedPrefix,
+    ...tail.slice(1),
+    tail[0],
   ];
+}
+
+function resolvePutInOrderSubmission(
+  submittedOrderIds: string[] | null | undefined,
+  correctOrderIds: string[],
+  matchedCount: number | null | undefined
+): string[] {
+  if (submittedOrderIds?.length) return submittedOrderIds;
+  return matchedCount && matchedCount > 0
+    ? buildFallbackPutInOrderSubmission(correctOrderIds, matchedCount)
+    : [];
 }
 
 function PutInOrderPanel({
@@ -930,12 +973,15 @@ function PutInOrderPanel({
     ? correctOrder.map((item) => item.id)
     : question.items.map((item) => item.id);
   const playerSubmittedOrderIds = roundResolved
-    ? (myRound?.submittedOrderIds ?? userOrder.map((item) => item.id))
+    ? resolvePutInOrderSubmission(myRound?.submittedOrderIds, userOrder.map((item) => item.id), playerCorrectCount)
     : userOrder.map((item) => item.id);
   const opponentSubmittedOrderIds = roundResolved
-    ? (opponentRound?.submittedOrderIds
-      ?? buildFallbackPutInOrderSubmission(correctOrderIds, opponentCorrectCount))
+    ? resolvePutInOrderSubmission(opponentRound?.submittedOrderIds, correctOrderIds, opponentCorrectCount)
     : [];
+  const playerDidNotSubmit = roundResolved && Boolean(myRound) && playerSubmittedOrderIds.length === 0 && playerCorrectCount === 0;
+  const opponentDidNotSubmit = roundResolved && Boolean(opponentRound) && opponentSubmittedOrderIds.length === 0 && opponentCorrectCount === 0;
+  const playerResultOrderIds = playerDidNotSubmit ? correctOrderIds : playerSubmittedOrderIds;
+  const opponentResultOrderIds = opponentDidNotSubmit ? correctOrderIds : opponentSubmittedOrderIds;
   const putOrderPlayerPoints = roundResolved
     ? resolvePutInOrderPoints(myRound?.pointsEarned, playerCorrectCount)
     : (submittedForThisQuestion ? resolvePutInOrderPoints(answerAck?.pointsEarned, playerCorrectCount) : null);
@@ -1051,8 +1097,13 @@ function PutInOrderPanel({
 
       {roundResolved ? (
         <PutInOrderResultComparison
-          playerOrderIds={playerSubmittedOrderIds}
-          opponentOrderIds={opponentSubmittedOrderIds}
+          playerOrderIds={playerResultOrderIds}
+          opponentOrderIds={opponentResultOrderIds}
+          playerForceAllWrong={playerDidNotSubmit}
+          opponentForceAllWrong={opponentDidNotSubmit}
+          playerMatchedCount={playerDidNotSubmit ? 0 : undefined}
+          opponentMatchedCount={opponentDidNotSubmit ? 0 : undefined}
+          totalCount={correctOrderIds.length}
           correctById={correctById}
           itemById={itemById}
         />
@@ -1133,7 +1184,7 @@ function CluesPanel({
   const displayAnswer = roundResult?.reveal.kind === 'clues'
     ? resolveI18nText(roundResult.reveal.displayAnswer, resolvedLocale)
     : null;
-  const currentPoints = [200, 150, 100, 50, 25][Math.max(0, revealedClues - 1)] ?? 25;
+  const currentPoints = calculateCluesDisplayPoints(revealedClues);
   const inputLocked = !showOptions || submitted || pendingGuess || roundResolved;
   const playerAnswerCount = roundResolved
     ? (myRound?.isCorrect ? 1 : 0)
@@ -1244,6 +1295,52 @@ function CluesPanel({
         }}
       />
 
+      {roundResolved && displayAnswer && (
+        <motion.div
+          aria-live="polite"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.22, ease: 'easeOut' }}
+          className={`flex items-center justify-between gap-3 rounded-[8px] border px-3 py-2 ${
+            cluesPlayerCorrect
+              ? 'border-brand-green/25 bg-brand-green/10'
+              : 'border-brand-red-soft/25 bg-brand-red-soft/10'
+          }`}
+        >
+          <div className="flex min-w-0 items-center gap-2">
+            {cluesPlayerCorrect ? (
+              <CheckCircle2 className="size-4 shrink-0 text-brand-green" />
+            ) : (
+              <XCircle className="size-4 shrink-0 text-brand-red-soft" />
+            )}
+            <div className="min-w-0">
+              <p className={`text-[10px] font-fun font-black uppercase tracking-[0.18em] ${
+                cluesPlayerCorrect ? 'text-brand-green' : 'text-brand-red-soft'
+              }`}>
+                {cluesPlayerCorrect ? 'Correct answer' : 'The answer was'}
+              </p>
+              <p className="truncate text-sm font-fun font-black uppercase tracking-wide text-white">
+                {displayAnswer}
+              </p>
+            </div>
+          </div>
+          <div className="shrink-0 text-right">
+            {cluesPlayerCorrect && cluesPlayerPoints != null && (
+              <p className="text-[11px] font-fun font-black uppercase text-brand-green">
+                +{cluesPlayerPoints} pts
+              </p>
+            )}
+            {opponentRound && (
+              <p className="text-[9px] font-fun font-black uppercase tracking-[0.16em] text-white/50">
+                {opponentRound.isCorrect && typeof opponentRound.clueIndex === 'number'
+                  ? <>Opp clue {opponentRound.clueIndex + 1}</>
+                  : <>Opp missed</>}
+              </p>
+            )}
+          </div>
+        </motion.div>
+      )}
+
       {!roundResolved && (
         <div className="flex items-center justify-center gap-1.5 text-[11px] font-fun font-black uppercase tracking-[0.18em] text-white/55">
           <Star className="size-3.5 text-brand-gold" />
@@ -1287,7 +1384,7 @@ function CluesPanel({
         </div>
       )}
 
-      {!roundResolved ? (
+      {!roundResolved && (
         <div className="space-y-2">
           <Input
             type="text"
@@ -1322,38 +1419,6 @@ function CluesPanel({
             </button>
           </div>
         </div>
-      ) : (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={`rounded-[10px] p-4 text-center ${
-            answerAck?.isCorrect ? 'bg-brand-green/15' : 'bg-brand-red-soft/15'
-          }`}
-        >
-          {answerAck?.isCorrect ? (
-            <>
-              <CheckCircle2 className="mx-auto mb-2 size-7 text-brand-green" />
-              <p className="text-sm font-fun font-black uppercase tracking-wide text-brand-green">
-                Correct! +{answerAck.pointsEarned} pts
-              </p>
-            </>
-          ) : (
-            <>
-              <XCircle className="mx-auto mb-2 size-7 text-brand-red-soft" />
-              <p className="mb-1 text-xs font-fun font-black uppercase tracking-[0.18em] text-brand-red-soft">
-                The answer was
-              </p>
-              <p className="text-xl font-fun font-black uppercase tracking-wide text-white">{displayAnswer}</p>
-            </>
-          )}
-          {opponentRound && (
-            <p className="mt-2 text-[10px] font-fun font-black uppercase tracking-[0.22em] text-white/55">
-              {opponentRound.isCorrect && typeof opponentRound.clueIndex === 'number'
-                ? <>Opponent: <span className="text-brand-green">Got it on clue {opponentRound.clueIndex + 1}</span></>
-                : <>Opponent: <span className="text-brand-red-soft">Didn&apos;t get it</span></>}
-            </p>
-          )}
-        </motion.div>
       )}
     </div>
   );

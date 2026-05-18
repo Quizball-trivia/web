@@ -15,6 +15,7 @@ import { usePossessionMatchSounds } from './usePossessionMatchSounds';
 import {
   usePossessionFirstQuestionIntro,
   usePossessionRoundTransition,
+  usePossessionSecondHalfQuestionIntro,
 } from './usePossessionRoundTransition';
 import { usePossessionScoreSplashes } from './usePossessionScoreSplashes';
 import { useBarBattle } from './useBarBattle';
@@ -44,6 +45,8 @@ interface UseRealtimePossessionMatchControllerParams {
   centerPossessionTrack?: boolean;
   simpleShotAnimation?: boolean;
   suppressAvatarScoreSplash?: boolean;
+  /** Skip the ranked BGM loop (dev playgrounds). */
+  disableBgm?: boolean;
   onQuit: () => void;
   onForfeit: () => void;
 }
@@ -79,10 +82,11 @@ export function useRealtimePossessionMatchController({
   centerPossessionTrack = true,
   simpleShotAnimation = true,
   suppressAvatarScoreSplash = false,
+  disableBgm = false,
   onQuit,
   onForfeit,
 }: UseRealtimePossessionMatchControllerParams): RealtimePossessionMatchControllerResult {
-  const { playSfx, toggleMute: toggleMuteSound, isMuted } = useGameSounds();
+  const { playSfx, playBgm, stopBgm, toggleMute: toggleMuteSound, isMuted } = useGameSounds();
   const match = useRealtimeMatchStore((store) => store.match);
   const devPossessionAnimation = useRealtimeMatchStore((store) => store.devPossessionAnimation);
   const clearDevPossessionAnimation = useRealtimeMatchStore((store) => store.clearDevPossessionAnimation);
@@ -96,13 +100,20 @@ export function useRealtimePossessionMatchController({
     countdownEndsAt: match?.countdownEndsAt,
     currentQuestionIndex: match?.currentQuestion?.qIndex ?? null,
   });
+  const possessionState = match?.possessionState ?? null;
+  const secondHalfQuestionIntro = usePossessionSecondHalfQuestionIntro({
+    phase: possessionState?.phase,
+    half: possessionState?.half,
+    normalQuestionsAnsweredInHalf: possessionState?.normalQuestionsAnsweredInHalf,
+    currentQuestionIndex: match?.currentQuestion?.qIndex ?? null,
+    currentQuestionPhase: match?.currentQuestionPhase,
+  });
 
   const { state, actions } = useRealtimeGameLogic({
     transitionDelayMs: TRANSITION_DELAY_MS,
-    blockReveal: firstQuestionIntro,
+    blockReveal: firstQuestionIntro || secondHalfQuestionIntro,
   });
 
-  const possessionState = match?.possessionState ?? null;
   const phase = possessionState?.phase;
   const mySeat = match?.mySeat ?? null;
   const duelMySeat = mySeat === 1 || mySeat === 2 ? mySeat : null;
@@ -132,6 +143,20 @@ export function useRealtimePossessionMatchController({
     devPossessionAnimation,
     playSfx,
   });
+
+  // `phase` is intentionally kept out of these deps. The BGM should not
+  // be torn down on every intra-match phase transition — each cleanup
+  // arms a fade-out that can fire mid-match and silence the loop.
+  useEffect(() => {
+    if (disableBgm) return;
+    if (match?.variant !== 'ranked_sim') return;
+    playBgm('ranked');
+    return () => stopBgm(400);
+  }, [disableBgm, match?.variant, playBgm, stopBgm]);
+
+  useEffect(() => {
+    if (phase === 'COMPLETED') stopBgm(600);
+  }, [phase, stopBgm]);
 
   useEffect(() => {
     if (!match?.matchId || !possessionState) return;
@@ -207,6 +232,7 @@ export function useRealtimePossessionMatchController({
     half: possessionState?.half,
     penaltySuddenDeath: possessionState?.penaltySuddenDeath,
     firstQuestionIntro,
+    secondHalfQuestionIntro,
     localQuestion,
     pendingQuestion,
     roundResult: state.roundResult,
@@ -572,6 +598,7 @@ export function useRealtimePossessionMatchController({
       playerCountryCode,
       opponentCountryCode,
       deadlineAt: possessionState.halftime.deadlineAt,
+      uiReadyAt: possessionState.halftime.uiReadyAt ?? null,
       categoryOptions: possessionState.halftime.categoryOptions,
       mySeat: duelMySeat,
       firstBanSeat: possessionState.halftime.firstBanSeat,

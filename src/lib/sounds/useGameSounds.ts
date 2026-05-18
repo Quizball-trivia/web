@@ -2,7 +2,10 @@
 
 import { useEffect, useRef } from 'react';
 import {
+  playBgm,
   playSfx,
+  stopBgm,
+  setBgmVolume,
   toggleMute,
   isMuted,
   preloadAll,
@@ -24,6 +27,9 @@ export function useGameSounds() {
 
   return {
     playSfx,
+    playBgm,
+    stopBgm,
+    setBgmVolume,
     toggleMute,
     isMuted,
   };

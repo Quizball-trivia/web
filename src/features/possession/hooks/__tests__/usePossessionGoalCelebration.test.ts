@@ -6,12 +6,14 @@ import {
   GOAL_CELEBRATION_MS,
   GOAL_SHOT_TO_CELEBRATION_MS,
 } from '../../realtimePossession.helpers';
+import { getBarBattleGoalAttackDelayMs } from '../useBarBattle';
 import { usePossessionGoalCelebration } from '../usePossessionGoalCelebration';
 
 const MATCH_ID = 'match-1';
 const USER_A = 'user-a';
 const USER_B = 'user-b';
-const ROUND_GOAL_CELEBRATION_DELAY_MS = GOAL_ATTACK_START_DELAY_MS + GOAL_SHOT_TO_CELEBRATION_MS;
+const ROUND_GOAL_CELEBRATION_DELAY_MS =
+  getBarBattleGoalAttackDelayMs(10, 0, GOAL_ATTACK_START_DELAY_MS) + GOAL_SHOT_TO_CELEBRATION_MS;
 
 function makeRoundResult(
   qIndex: number,
@@ -27,8 +29,8 @@ function makeRoundResult(
       correctIndex: 0,
     },
     players: {
-      [USER_A]: { totalPoints: 100, pointsEarned: 10, isCorrect: true, timeMs: 1000, selectedIndex: 0 },
-      [USER_B]: { totalPoints: 80, pointsEarned: 0, isCorrect: false, timeMs: 2000, selectedIndex: 1 },
+      [USER_A]: { totalPoints: 100, pointsEarned: 10, isCorrect: true, timeMs: 1000, selectedIndex: 0, submittedOrderIds: [] },
+      [USER_B]: { totalPoints: 80, pointsEarned: 0, isCorrect: false, timeMs: 2000, selectedIndex: 1, submittedOrderIds: [] },
     },
     phaseKind,
     phaseRound: 6,

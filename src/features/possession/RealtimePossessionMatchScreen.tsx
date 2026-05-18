@@ -27,6 +27,8 @@ interface RealtimePossessionMatchScreenProps {
   playerFavoriteClub?: string | null;
   centerPossessionTrack?: boolean;
   simpleShotAnimation?: boolean;
+  /** Skip the ranked background music loop. Pass `true` from dev playgrounds. */
+  disableBgm?: boolean;
   onQuit: () => void;
   onForfeit: () => void;
 }

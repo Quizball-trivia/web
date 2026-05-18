@@ -197,6 +197,56 @@ describe('usePossessionFieldState', () => {
     expect(result.current.visualMyPossessionPct).toBe(50);
   });
 
+  it('ignores queued possession movement once the bar battle field lock starts', async () => {
+    const { result, rerender } = renderHook((props: {
+      match: MatchStatus;
+      roundResult: MatchRoundResultPayload | null;
+    }) => usePossessionFieldState({
+      match: props.match,
+      localQuestion: makeQuestion(5),
+      roundResult: props.roundResult,
+      questionPhase: 'playing',
+      roundResolved: Boolean(props.roundResult),
+      answerAck: null,
+      opponentAnsweredCorrectly: null,
+      myRound: null,
+      opponentRound: null,
+      devPossessionAnimation: null,
+      clearDevPossessionAnimation: vi.fn(),
+      playerAvatar: '/me.png',
+      opponentAvatar: '/opp.png',
+      playerUsername: 'me',
+      opponentUsername: 'opp',
+      isHalftime: false,
+    }), {
+      initialProps: {
+        match: makeMatch(40),
+        roundResult: null as MatchRoundResultPayload | null,
+      },
+    });
+
+    expect(result.current.visualMyPossessionPct).toBe(70);
+
+    rerender({
+      match: makeMatch(0),
+      roundResult: null,
+    });
+    rerender({
+      match: makeMatch(0),
+      roundResult: makeRoundResult(5, null),
+    });
+
+    await act(async () => {});
+
+    expect(result.current.visualMyPossessionPct).toBe(70);
+
+    act(() => {
+      vi.advanceTimersByTime(FIELD_RESULT_COMPARE_MS + FIELD_POSSESSION_CUE_MS + 10);
+    });
+
+    expect(result.current.visualMyPossessionPct).toBe(50);
+  });
+
   it('keeps the captured shot origin stable even when possession resets after a goal', async () => {
     const { result, rerender } = renderHook((props: {
       match: MatchStatus;

@@ -24,6 +24,7 @@ interface HalftimeScreenProps {
   playerCountryCode?: string | null;
   opponentCountryCode?: string | null;
   deadlineAt?: string | null;
+  uiReadyAt?: string | null;
   categoryOptions?: DraftCategory[];
   mySeat?: 1 | 2 | null;
   firstBanSeat?: 1 | 2 | null;
@@ -88,6 +89,7 @@ export function HalftimeScreen({
   playerCountryCode = null,
   opponentCountryCode = null,
   deadlineAt = null,
+  uiReadyAt = null,
   categoryOptions = [],
   mySeat = null,
   firstBanSeat = null,
@@ -124,12 +126,15 @@ export function HalftimeScreen({
     return () => clearInterval(timer);
   }, [visible, deadlineAt]);
 
-  // Parse deadline once — only changes when a new halftime starts
+  const banTimerReady = showBanPhase && Boolean(deadlineAt && uiReadyAt === deadlineAt);
+  const timerDeadlineAt = banTimerReady ? deadlineAt : null;
+
+  // Parse the real ban deadline once it has been restarted for the ban UI.
   const deadlineMs = useMemo(() => {
-    if (!deadlineAt) return null;
-    const ms = new Date(deadlineAt).getTime();
+    if (!timerDeadlineAt) return null;
+    const ms = new Date(timerDeadlineAt).getTime();
     return Number.isFinite(ms) ? ms : null;
-  }, [deadlineAt]);
+  }, [timerDeadlineAt]);
 
   const totalDuration = useMemo(() => {
     if (!deadlineMs) return FALLBACK_HALFTIME_SECONDS;
@@ -261,8 +266,10 @@ export function HalftimeScreen({
                 </div>
               </div>
 
-              {/* Timer */}
-              <CircularTimer timeLeft={timeLeft} totalDuration={totalDuration} isUrgent={isUrgent} />
+              {/* Timer appears only after the backend confirms the ban UI deadline. */}
+              {banTimerReady && (
+                <CircularTimer timeLeft={timeLeft} totalDuration={totalDuration} isUrgent={isUrgent} />
+              )}
             </motion.div>
 
             {/* Ban phase — slides in after intro delay */}

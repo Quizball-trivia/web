@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { MatchRoundResultPayload } from '@/lib/realtime/socket.types';
+import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import type { ShotResult } from '../types/possession.types';
 import {
   GOAL_ATTACK_START_DELAY_MS,
@@ -9,6 +10,7 @@ import {
   GOAL_SHOT_TO_CELEBRATION_MS,
   type GoalCelebrationState,
 } from '../realtimePossession.helpers';
+import { getBarBattleGoalAttackDelayMs, resolveBattlePoints } from './useBarBattle';
 
 interface DevPossessionAnimationLike {
   id?: number;
@@ -37,6 +39,7 @@ export function usePossessionGoalCelebration({
   opponentUsername,
   devPossessionAnimation,
 }: UsePossessionGoalCelebrationParams) {
+  const matchVariant = useRealtimeMatchStore((s) => s.match?.variant);
   const [goalCelebration, setGoalCelebration] = useState<GoalCelebrationState | null>(null);
   const goalCelebrationHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const goalCelebrationStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -66,13 +69,30 @@ export function usePossessionGoalCelebration({
 
     goalCelebrationKeyRef.current = celebrationKey;
     const isMeScorer = roundScorerSeat === mySeat;
+    const roundPlayers = Object.values(roundResult?.players ?? {});
+    const playerPoints = resolveBattlePoints(
+      roundPlayers[0]?.pointsEarned ?? 0,
+      roundResult?.questionKind,
+      roundPlayers[0]?.foundCount
+    );
+    const opponentPoints = resolveBattlePoints(
+      roundPlayers[1]?.pointsEarned ?? 0,
+      roundResult?.questionKind,
+      roundPlayers[1]?.foundCount
+    );
+    const attackDelayMs = getBarBattleGoalAttackDelayMs(
+      playerPoints,
+      opponentPoints,
+      GOAL_ATTACK_START_DELAY_MS,
+      { includeScoreFlightHandoff: matchVariant === 'ranked_sim' }
+    );
     goalCelebrationStartTimerRef.current = setTimeout(() => {
       setGoalCelebration({
         scorerName: isMeScorer ? playerUsername : opponentUsername,
         isMeScorer,
       });
       goalCelebrationStartTimerRef.current = null;
-    }, GOAL_ATTACK_START_DELAY_MS + GOAL_SHOT_TO_CELEBRATION_MS);
+    }, attackDelayMs + GOAL_SHOT_TO_CELEBRATION_MS);
 
     return () => {
       if (goalCelebrationStartTimerRef.current) {
@@ -90,6 +110,8 @@ export function usePossessionGoalCelebration({
     roundPhaseKind,
     roundQIndex,
     roundScorerSeat,
+    roundResult,
+    matchVariant,
   ]);
 
   useEffect(() => {

@@ -46,6 +46,7 @@ const ROUND_RESULT: MatchRoundResultPayload = {
       isCorrect: true,
       timeMs: 900,
       selectedIndex: 1,
+      submittedOrderIds: [],
     },
     opponent: {
       totalPoints: 40,
@@ -53,6 +54,7 @@ const ROUND_RESULT: MatchRoundResultPayload = {
       isCorrect: false,
       timeMs: 3000,
       selectedIndex: 2,
+      submittedOrderIds: [],
     },
   },
   phaseKind: 'normal',
