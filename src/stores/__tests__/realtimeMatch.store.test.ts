@@ -63,8 +63,8 @@ function makeRoundResult(
       correctIndex: 0,
     },
     players: {
-      [USER_A]: { totalPoints: 100, pointsEarned: 10, isCorrect: true, timeMs: 3000, selectedIndex: 0 },
-      [USER_B]: { totalPoints: 80, pointsEarned: 0, isCorrect: false, timeMs: 5000, selectedIndex: 1 },
+      [USER_A]: { totalPoints: 100, pointsEarned: 10, isCorrect: true, timeMs: 3000, selectedIndex: 0, submittedOrderIds: [] },
+      [USER_B]: { totalPoints: 80, pointsEarned: 0, isCorrect: false, timeMs: 5000, selectedIndex: 1, submittedOrderIds: [] },
     },
     phaseKind: opts.phaseKind ?? 'normal',
     phaseRound: 6,
@@ -265,6 +265,30 @@ describe('realtimeMatch.store — setMatchState shouldClearQuestion', () => {
       const state = useRealtimeMatchStore.getState();
       expect(state.match?.lastRoundResult).not.toBeNull();
       expect(state.match?.currentQuestion).not.toBeNull();
+    });
+
+    it('clears stale first-half question state when second half starts after halftime', () => {
+      seedMatch();
+      const store = useRealtimeMatchStore.getState();
+
+      store.setMatchQuestion(makeQuestion(5));
+      store.setRoundResult(makeRoundResult(5, { goalScoredBySeat: null }));
+      store.setMatchState(makeMatchState('HALFTIME', { stateVersion: 2, half: 1 }));
+
+      expect(useRealtimeMatchStore.getState().match?.currentQuestion?.qIndex).toBe(5);
+      expect(useRealtimeMatchStore.getState().match?.lastRoundResult?.qIndex).toBe(5);
+
+      store.setMatchState(makeMatchState('NORMAL_PLAY', { stateVersion: 3, half: 2 }));
+
+      const state = useRealtimeMatchStore.getState();
+      expect(state.match?.possessionState?.phase).toBe('NORMAL_PLAY');
+      expect(state.match?.possessionState?.half).toBe(2);
+      expect(state.match?.currentQuestion).toBeNull();
+      expect(state.match?.pendingQuestion).toBeNull();
+      expect(state.match?.answerAck).toBeNull();
+      expect(state.match?.lastRoundResult).toBeNull();
+      expect(state.match?.opponentAnswered).toBe(false);
+      expect(state.match?.currentQuestionPhase).toBe('reveal');
     });
   });
 

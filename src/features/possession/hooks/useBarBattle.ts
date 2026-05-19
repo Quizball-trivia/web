@@ -6,6 +6,8 @@ import type {
   MatchRoundResultPayload,
   MatchRoundResultPlayer,
 } from '@/lib/realtime/socket.types';
+import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
+import { FLIGHT_TOTAL_MS } from '../components/BarBattleFlightOverlay';
 import type { BarBattleState } from '../components/BarBattleOverlay';
 
 // ─── Timing constants (ms) ──────────────────────────────────────────────────
@@ -16,53 +18,123 @@ import type { BarBattleState } from '../components/BarBattleOverlay';
 //   [roundResult]      → 'convert'     (texts fly into zones)
 //                      → 'bars'        (bars spawn one by one)
 //                      → 'battle'      (bars cancel one by one)
+//                      → 'charge'      (shot rounds only: surviving bars power up the avatar)
 //                      → 'result'      (remaining bars visible)
 //                      → 'done'        (cleanup)
+// Goal rounds still run this sequence; the surviving bars hand off to the
+// shot/goal animation instead of a normal possession push.
 //
-const BOTH_SCORE_HOLD_MS = 400;   // Brief hold after both scores visible
-const CONVERT_DURATION = 500;     // Text flies into zone
-const BARS_SPAWN_BASE_MS = 300;   // Base time for bar spawning (+ per-bar stagger)
-const BARS_PER_STAGGER_MS = 80;   // Extra time per bar for spawn stagger
-const BATTLE_BASE_MS = 200;       // Base time for battle phase (+ per-cancelled-bar)
-const BATTLE_PER_BAR_MS = 150;    // Extra time per cancelled bar pair
-const RESULT_HOLD_MS = 500;       // Show remaining bars
+const BOTH_SCORE_HOLD_MS = 80;    // Minimal handoff after both scores are known
+const CONVERT_DURATION = 80;      // Ranked-sim score flight already handled the visual travel
+const BARS_SPAWN_BASE_MS = 130;   // Base time for bar spawning (+ per-bar stagger)
+const BARS_PER_STAGGER_MS = 58;   // Extra time per bar for spawn stagger
+const BATTLE_BASE_MS = 280;       // Base time for battle phase (+ per-cancelled-bar)
+const BATTLE_PER_BAR_MS = 185;    // Extra time per cancelled bar pair
+const CHARGE_BASE_MS = 500;       // Power-up phase before a shot
+const CHARGE_PER_BAR_MS = 75;     // Sequential glow from farthest bar to avatar
+const CHARGE_SHOT_OVERLAP_MS = 260; // Start the shot as the final charge glow peaks
+const RESULT_HOLD_MS = 320;       // Show remaining bars briefly before possession moves
 const DONE_LINGER_MS = 100;
+const UNOPPOSED_PULSE_RESULT_HOLD_MS = 80;
+const UNOPPOSED_PULSE_DONE_LINGER_MS = 40;
+const RANKED_SCORE_FLIGHT_HANDOFF_MS = FLIGHT_TOTAL_MS + 120;
 
 const POINTS_PER_BAR = 10;
 const MAX_BARS = 12;
-const BAR_BATTLE_LOCK_BUFFER_MS = 180;
+const BAR_BATTLE_LOCK_BUFFER_MS = 240;
+const UNOPPOSED_PULSE_LOCK_BUFFER_MS = 60;
 
 export function pointsToBars(points: number): number {
   if (points <= 0) return 0;
   return Math.min(Math.max(Math.round(points / POINTS_PER_BAR), 1), MAX_BARS);
 }
 
-export function getBarBattleTotalMs(playerPoints: number, opponentPoints: number): number {
+interface BarBattleTimingOptions {
+  includeScoreFlightHandoff?: boolean;
+  includeUnopposedPulse?: boolean;
+}
+
+function getScoreHandoffMs(includeScoreFlightHandoff = false): number {
+  return includeScoreFlightHandoff
+    ? Math.max(BOTH_SCORE_HOLD_MS, RANKED_SCORE_FLIGHT_HANDOFF_MS)
+    : BOTH_SCORE_HOLD_MS;
+}
+
+export function getBarBattleTotalMs(
+  playerPoints: number,
+  opponentPoints: number,
+  options: BarBattleTimingOptions = {}
+): number {
+  return getBarBattleTimelineMs(playerPoints, opponentPoints, false, options).totalMs;
+}
+
+function getBarBattleTimelineMs(
+  playerPoints: number,
+  opponentPoints: number,
+  includeShotCharge: boolean,
+  options: BarBattleTimingOptions = {}
+): {
+  totalMs: number;
+  shotHandoffMs: number;
+} {
   const playerBars = pointsToBars(playerPoints);
   const opponentBars = pointsToBars(opponentPoints);
-  if (playerBars === 0 && opponentBars === 0) return 0;
+  if (playerBars === 0 && opponentBars === 0) return { totalMs: 0, shotHandoffMs: 0 };
   const maxBars = Math.max(playerBars, opponentBars);
   const cancelledCount = Math.min(playerBars, opponentBars);
-  return (
-    BOTH_SCORE_HOLD_MS +
+  const survivorCount = maxBars - cancelledCount;
+  const battleMs = cancelledCount > 0 ? BATTLE_BASE_MS + cancelledCount * BATTLE_PER_BAR_MS : 0;
+  const shouldPulseUnopposed = options.includeUnopposedPulse && cancelledCount === 0 && survivorCount > 0;
+  const chargeMs = (includeShotCharge || shouldPulseUnopposed) && survivorCount > 0
+    ? CHARGE_BASE_MS + survivorCount * CHARGE_PER_BAR_MS
+    : 0;
+  const resultHoldMs = shouldPulseUnopposed ? UNOPPOSED_PULSE_RESULT_HOLD_MS : RESULT_HOLD_MS;
+  const doneLingerMs = shouldPulseUnopposed ? UNOPPOSED_PULSE_DONE_LINGER_MS : DONE_LINGER_MS;
+  const scoreHandoffMs = getScoreHandoffMs(options.includeScoreFlightHandoff);
+  const beforeResultMs = (
+    scoreHandoffMs +
     CONVERT_DURATION +
     BARS_SPAWN_BASE_MS +
     maxBars * BARS_PER_STAGGER_MS +
-    BATTLE_BASE_MS +
-    cancelledCount * BATTLE_PER_BAR_MS +
-    RESULT_HOLD_MS +
-    DONE_LINGER_MS
+    battleMs +
+    chargeMs
   );
+  return {
+    totalMs: beforeResultMs + resultHoldMs + doneLingerMs,
+    shotHandoffMs: chargeMs > 0
+      ? Math.max(0, beforeResultMs - CHARGE_SHOT_OVERLAP_MS)
+      : beforeResultMs,
+  };
 }
 
 /** Exported so the field orchestrator can size its lock window from real phase timing. */
 export const BAR_BATTLE_TOTAL_MS = getBarBattleTotalMs(MAX_BARS * POINTS_PER_BAR, MAX_BARS * POINTS_PER_BAR);
 
-export function getBarBattleFieldLockMs(playerPoints: number, opponentPoints: number): number {
-  return getBarBattleTotalMs(playerPoints, opponentPoints) + BAR_BATTLE_LOCK_BUFFER_MS;
+export function getBarBattleFieldLockMs(
+  playerPoints: number,
+  opponentPoints: number,
+  options: BarBattleTimingOptions = {}
+): number {
+  const playerBars = pointsToBars(playerPoints);
+  const opponentBars = pointsToBars(opponentPoints);
+  const isUnopposedPulse =
+    options.includeUnopposedPulse
+    && Math.min(playerBars, opponentBars) === 0
+    && Math.max(playerBars, opponentBars) > 0;
+  const bufferMs = isUnopposedPulse ? UNOPPOSED_PULSE_LOCK_BUFFER_MS : BAR_BATTLE_LOCK_BUFFER_MS;
+  return getBarBattleTotalMs(playerPoints, opponentPoints, options) + bufferMs;
 }
 
-function resolveBattlePoints(
+export function getBarBattleGoalAttackDelayMs(
+  playerPoints: number,
+  opponentPoints: number,
+  minimumDelayMs: number,
+  options: BarBattleTimingOptions = {}
+): number {
+  return Math.max(minimumDelayMs, getBarBattleTimelineMs(playerPoints, opponentPoints, true, options).shotHandoffMs);
+}
+
+export function resolveBattlePoints(
   pointsEarned: number,
   questionKind?: MatchAnswerAckPayload['questionKind'] | MatchRoundResultPayload['questionKind'],
   foundCount?: number
@@ -72,6 +144,10 @@ function resolveBattlePoints(
     return Math.min(foundCount, 5) * 20;
   }
   return pointsEarned;
+}
+
+function isBarBattlePhaseKind(kind: string | undefined): boolean {
+  return kind === 'normal';
 }
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
@@ -92,6 +168,8 @@ interface UseBarBattleParams {
   phaseKind: string;
   /** Current divider X in SVG coords */
   dividerX: number;
+  /** Dev prototype: glow surviving one-sided bars before normal possession movement. */
+  unopposedBarPulse?: boolean;
 }
 
 export function useBarBattle({
@@ -104,7 +182,9 @@ export function useBarBattle({
   opponentRound,
   phaseKind,
   dividerX,
+  unopposedBarPulse = false,
 }: UseBarBattleParams): BarBattleState | null {
+  const matchVariant = useRealtimeMatchStore((s) => s.match?.variant);
   const [battle, setBattle] = useState<BarBattleState | null>(null);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const dividerXRef = useRef(dividerX);
@@ -123,21 +203,11 @@ export function useBarBattle({
     };
   }, []);
 
-  // A goal is terminal for this possession exchange: show the shot/goal
-  // moment, not possession conversion bars.
-  useEffect(() => {
-    if (!roundResult?.deltas?.goalScoredBySeat) return;
-    for (const t of timersRef.current) clearTimeout(t);
-    timersRef.current = [];
-    battleStartedQRef.current = roundResult.qIndex;
-    queueMicrotask(() => setBattle(null));
-  }, [roundResult]);
-
   // ─── Step 1: Player answers → show player score immediately ─────────────
   useEffect(() => {
     if (!answerAck) return;
     const kind = answerAck.phaseKind ?? phaseKind;
-    if (kind !== 'normal') return;
+    if (!isBarBattlePhaseKind(kind)) return;
     if (scoreShownQRef.current.player === answerAck.qIndex) return;
 
     scoreShownQRef.current.player = answerAck.qIndex;
@@ -175,8 +245,7 @@ export function useBarBattle({
     if (qIndex === null) return;
 
     const kind = roundResult?.phaseKind ?? phaseKind;
-    if (kind !== 'normal') return;
-    if (roundResult?.deltas?.goalScoredBySeat) return;
+    if (!isBarBattlePhaseKind(kind)) return;
     if (scoreShownQRef.current.opponent === qIndex) return;
 
     // Get opponent points from best available source
@@ -214,11 +283,7 @@ export function useBarBattle({
     if (!roundResult || !myRound || !opponentRound) return;
 
     const kind = roundResult.phaseKind ?? phaseKind;
-    if (kind !== 'normal') return;
-    if (roundResult.deltas?.goalScoredBySeat) {
-      queueMicrotask(() => setBattle(null));
-      return;
-    }
+    if (!isBarBattlePhaseKind(kind)) return;
     if (battleStartedQRef.current === roundResult.qIndex) return;
     battleStartedQRef.current = roundResult.qIndex;
 
@@ -234,6 +299,10 @@ export function useBarBattle({
     const cancelledCount = Math.min(pBars, oBars);
     const key = roundResult.qIndex;
     const snapDividerX = dividerXRef.current;
+    const isShotResolution = Boolean(
+      roundResult.deltas?.goalScoredBySeat || roundResult.deltas?.penaltyOutcome
+    );
+    const shouldPulseUnopposed = unopposedBarPulse && !isShotResolution && cancelledCount === 0 && Math.max(pBars, oBars) > 0;
 
     // If both scored 0, just clean up
     if (myPts === 0 && oppPts === 0) {
@@ -249,6 +318,7 @@ export function useBarBattle({
       opponentPoints: oppPts,
       remainingDelta: delta,
       dividerX: snapDividerX,
+      chargeMode: shouldPulseUnopposed ? 'pulse' as const : 'lunge' as const,
     };
 
     // First ensure both-score is showing with final values
@@ -260,7 +330,7 @@ export function useBarBattle({
       }));
     });
 
-    let t = BOTH_SCORE_HOLD_MS;
+    let t = getScoreHandoffMs(matchVariant === 'ranked_sim');
 
     // Convert: text flies into zones
     const t1 = setTimeout(() => {
@@ -275,26 +345,43 @@ export function useBarBattle({
       setBattle((prev) => prev?.key === key ? { ...prev, phase: 'bars' } : prev);
     }, t);
 
-    // Battle: bars cancel one by one
+    // Battle: bars cancel one by one. On shot resolutions only, surviving
+    // bars then charge sequentially so they power the avatar into the shot.
     t += barsPhaseMs;
-    const battleMs = BATTLE_BASE_MS + cancelledCount * BATTLE_PER_BAR_MS;
-    const t3 = setTimeout(() => {
-      setBattle((prev) => prev?.key === key ? { ...prev, phase: 'battle' } : prev);
-    }, t);
+    const survivorCount = maxBars - cancelledCount;
+    const battleMs = cancelledCount > 0 ? BATTLE_BASE_MS + cancelledCount * BATTLE_PER_BAR_MS : 0;
+    const chargeMs = (isShotResolution || shouldPulseUnopposed) && survivorCount > 0
+      ? CHARGE_BASE_MS + survivorCount * CHARGE_PER_BAR_MS
+      : 0;
+    const t3 = cancelledCount > 0
+      ? setTimeout(() => {
+          setBattle((prev) => prev?.key === key ? { ...prev, phase: 'battle' } : prev);
+        }, t)
+      : null;
+
+    t += battleMs;
+    const tCharge = chargeMs > 0
+      ? setTimeout(() => {
+          setBattle((prev) => prev?.key === key ? { ...prev, phase: 'charge' } : prev);
+        }, t)
+      : null;
+
+    const resultHoldMs = shouldPulseUnopposed ? UNOPPOSED_PULSE_RESULT_HOLD_MS : RESULT_HOLD_MS;
+    const doneLingerMs = shouldPulseUnopposed ? UNOPPOSED_PULSE_DONE_LINGER_MS : DONE_LINGER_MS;
 
     // Result: show remaining bars
-    t += battleMs;
+    t += chargeMs;
     const t4 = setTimeout(() => {
       setBattle((prev) => prev?.key === key ? { ...prev, phase: 'result' } : prev);
     }, t);
 
     // Done + cleanup
-    t += RESULT_HOLD_MS;
+    t += resultHoldMs;
     const t5 = setTimeout(() => {
       setBattle((prev) => prev?.key === key ? { ...prev, phase: 'done' } : prev);
     }, t);
 
-    t += DONE_LINGER_MS;
+    t += doneLingerMs;
     const t6 = setTimeout(() => {
       setBattle((prev) => prev?.key === key ? null : prev);
       // NOTE: Do NOT reset battleStartedQRef here — dividerX changes after
@@ -302,8 +389,8 @@ export function useBarBattle({
       // It's only reset when a new question arrives (cleanup effect below).
     }, t);
 
-    timersRef.current = [t1, t2, t3, t4, t5, t6];
-  }, [roundResult, myRound, opponentRound, phaseKind]);
+    timersRef.current = [t1, t2, t3, tCharge, t4, t5, t6].filter((timer): timer is ReturnType<typeof setTimeout> => timer !== null);
+  }, [roundResult, myRound, opponentRound, phaseKind, matchVariant, unopposedBarPulse]);
 
   // ─── Reset when new question arrives ────────────────────────────────────
   useEffect(() => {

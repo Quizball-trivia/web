@@ -105,6 +105,7 @@ interface RealtimeResultsScreenProps {
   winnerDecisionMethod?: 'goals' | 'penalty_goals' | 'total_points' | 'total_points_fallback' | 'forfeit' | null;
   preMatchRp?: number;
   opponentId: string;
+  opponentRankPoints?: number | null;
   rankedOutcome?: RankedMatchOutcomePayload | null;
   preMatchRankedProfile?: RankedProfileResponse | null;
   preMatchProgression?: UserProgression | null;
@@ -133,6 +134,7 @@ export function RealtimeResultsScreen({
   winnerDecisionMethod,
   preMatchRp,
   opponentId,
+  opponentRankPoints = null,
   rankedOutcome,
   preMatchRankedProfile,
   preMatchProgression,
@@ -142,7 +144,7 @@ export function RealtimeResultsScreen({
 }: RealtimeResultsScreenProps) {
   const hasAuthoritativeWinner = finalWinnerId !== undefined;
   const playerWon = hasAuthoritativeWinner
-    ? finalWinnerId !== null && finalWinnerId !== opponentId
+    ? finalWinnerId === selfUserId
     : playerScore > opponentScore;
   const isDraw = hasAuthoritativeWinner
     ? finalWinnerId === null
@@ -291,8 +293,10 @@ export function RealtimeResultsScreen({
   const opponentRankedOutcome = rankedOutcome?.byUserId[opponentId] ?? null;
   const opponentTier = opponentRankedOutcome?.placementStatus === 'placed'
     ? tierFromRp(opponentRankedOutcome.newRp)
-    : null;
-  const opponentDisplayRp = opponentRankedOutcome?.newRp ?? null;
+    : opponentRankPoints != null
+      ? tierFromRp(opponentRankPoints)
+      : null;
+  const opponentDisplayRp = opponentRankedOutcome?.newRp ?? opponentRankPoints ?? null;
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-surface-page-alt p-3 md:p-6">

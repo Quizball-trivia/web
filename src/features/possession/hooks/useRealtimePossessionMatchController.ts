@@ -2,14 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState, type ComponentProps } from 'react';
 import { useRealtimeGameLogic } from '@/features/game/hooks/useRealtimeGameLogic';
-import { useStoreInventory } from '@/lib/queries/store.queries';
 import { useGameSounds } from '@/lib/sounds/useGameSounds';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { logger } from '@/utils/logger';
 import { HalftimeScreen } from '../components/HalftimeScreen';
 import type { PossessionViewportModel } from '../components/PossessionMatchViewport';
 import type { PossessionQuestionAreaModel } from '../components/PossessionQuestionArea';
-import { useChanceCardController } from './useChanceCardController';
 import { useHalftimeBanController } from './useHalftimeBanController';
 import { usePossessionFieldState } from './usePossessionFieldState';
 import { usePossessionGoalCelebration } from './usePossessionGoalCelebration';
@@ -17,6 +15,7 @@ import { usePossessionMatchSounds } from './usePossessionMatchSounds';
 import {
   usePossessionFirstQuestionIntro,
   usePossessionRoundTransition,
+  usePossessionSecondHalfQuestionIntro,
 } from './usePossessionRoundTransition';
 import { usePossessionScoreSplashes } from './usePossessionScoreSplashes';
 import { useBarBattle } from './useBarBattle';
@@ -45,7 +44,10 @@ interface UseRealtimePossessionMatchControllerParams {
   opponentCountryCode?: string | null;
   centerPossessionTrack?: boolean;
   simpleShotAnimation?: boolean;
+  unopposedBarPulse?: boolean;
   suppressAvatarScoreSplash?: boolean;
+  /** Skip the ranked BGM loop (dev playgrounds). */
+  disableBgm?: boolean;
   onQuit: () => void;
   onForfeit: () => void;
 }
@@ -80,19 +82,19 @@ export function useRealtimePossessionMatchController({
   opponentCountryCode = null,
   centerPossessionTrack = true,
   simpleShotAnimation = true,
+  unopposedBarPulse = false,
   suppressAvatarScoreSplash = false,
+  disableBgm = false,
   onQuit,
   onForfeit,
 }: UseRealtimePossessionMatchControllerParams): RealtimePossessionMatchControllerResult {
-  const { playSfx, toggleMute: toggleMuteSound, isMuted } = useGameSounds();
+  const { playSfx, playBgm, stopBgm, toggleMute: toggleMuteSound, isMuted } = useGameSounds();
   const match = useRealtimeMatchStore((store) => store.match);
   const devPossessionAnimation = useRealtimeMatchStore((store) => store.devPossessionAnimation);
   const clearDevPossessionAnimation = useRealtimeMatchStore((store) => store.clearDevPossessionAnimation);
-  const applyOptimisticChanceCard = useRealtimeMatchStore((store) => store.applyOptimisticChanceCard);
-  const markOptimisticChanceCardPendingSync = useRealtimeMatchStore((store) => store.markOptimisticChanceCardPendingSync);
   const realtimeError = useRealtimeMatchStore((store) => store.error);
   const meUserId = useRealtimeMatchStore((store) => store.selfUserId);
-  const { data: inventoryData } = useStoreInventory();
+  const shouldPulseUnopposedBars = unopposedBarPulse || match?.variant === 'ranked_sim';
 
   const [muted, setMuted] = useState(false);
   const [quitModalOpen, setQuitModalOpen] = useState(false);
@@ -101,13 +103,20 @@ export function useRealtimePossessionMatchController({
     countdownEndsAt: match?.countdownEndsAt,
     currentQuestionIndex: match?.currentQuestion?.qIndex ?? null,
   });
+  const possessionState = match?.possessionState ?? null;
+  const secondHalfQuestionIntro = usePossessionSecondHalfQuestionIntro({
+    phase: possessionState?.phase,
+    half: possessionState?.half,
+    normalQuestionsAnsweredInHalf: possessionState?.normalQuestionsAnsweredInHalf,
+    currentQuestionIndex: match?.currentQuestion?.qIndex ?? null,
+    currentQuestionPhase: match?.currentQuestionPhase,
+  });
 
   const { state, actions } = useRealtimeGameLogic({
     transitionDelayMs: TRANSITION_DELAY_MS,
-    blockReveal: firstQuestionIntro,
+    blockReveal: firstQuestionIntro || secondHalfQuestionIntro,
   });
 
-  const possessionState = match?.possessionState ?? null;
   const phase = possessionState?.phase;
   const mySeat = match?.mySeat ?? null;
   const duelMySeat = mySeat === 1 || mySeat === 2 ? mySeat : null;
@@ -137,6 +146,20 @@ export function useRealtimePossessionMatchController({
     devPossessionAnimation,
     playSfx,
   });
+
+  // `phase` is intentionally kept out of these deps. The BGM should not
+  // be torn down on every intra-match phase transition — each cleanup
+  // arms a fade-out that can fire mid-match and silence the loop.
+  useEffect(() => {
+    if (disableBgm) return;
+    if (match?.variant !== 'ranked_sim') return;
+    playBgm('ranked');
+    return () => stopBgm(400);
+  }, [disableBgm, match?.variant, playBgm, stopBgm]);
+
+  useEffect(() => {
+    if (phase === 'COMPLETED') stopBgm(600);
+  }, [phase, stopBgm]);
 
   useEffect(() => {
     if (!match?.matchId || !possessionState) return;
@@ -212,6 +235,7 @@ export function useRealtimePossessionMatchController({
     half: possessionState?.half,
     penaltySuddenDeath: possessionState?.penaltySuddenDeath,
     firstQuestionIntro,
+    secondHalfQuestionIntro,
     localQuestion,
     pendingQuestion,
     roundResult: state.roundResult,
@@ -239,6 +263,7 @@ export function useRealtimePossessionMatchController({
     playerUsername,
     opponentUsername,
     isHalftime: overlayModel.isHalftime,
+    unopposedBarPulse: shouldPulseUnopposedBars,
   });
 
   const splashState = usePossessionScoreSplashes({
@@ -275,6 +300,7 @@ export function useRealtimePossessionMatchController({
     opponentRound,
     phaseKind,
     dividerX,
+    unopposedBarPulse: shouldPulseUnopposedBars,
   });
 
   const { handleHalftimeBan, handleHalftimeBanPhaseShown } = useHalftimeBanController({
@@ -329,24 +355,6 @@ export function useRealtimePossessionMatchController({
     questionInHalf,
   }), [localQuestion, phase, questionInHalf]);
 
-  const {
-    activeOptimisticChanceCard,
-    chanceCardCount,
-    handleUseChanceCard,
-  } = useChanceCardController({
-    match,
-    localQuestion,
-    inventoryItems: inventoryData?.items,
-    isPenaltyQuestion: fieldState.isPenaltyQuestion,
-    isShotVisualPhase: fieldState.isShotVisualPhase,
-    isHalftime: overlayModel.isHalftime,
-    questionPhase: state.questionPhase,
-    roundResolved: state.roundResolved,
-    selectedAnswer: state.selectedAnswer,
-    correctIndex: state.correctIndex,
-    applyOptimisticChanceCard,
-    markOptimisticChanceCardPendingSync,
-  });
 
   const openQuitModal = useCallback(() => {
     setQuitModalOpen(true);
@@ -386,11 +394,11 @@ export function useRealtimePossessionMatchController({
     }
 
     if (resolvedPhaseKind === 'penalty') {
-      const side = fieldState.penaltyResult === 'goal'
+      const side = fieldState.penaltyDisplayResult === 'goal'
         ? (fieldState.resultShooterIsMe ? 'left' : 'right')
         : (fieldState.resultShooterIsMe ? 'right' : 'left');
-      const penaltyResult = fieldState.penaltyResult === 'goal' || fieldState.penaltyResult === 'saved'
-        ? fieldState.penaltyResult
+      const penaltyResult = fieldState.penaltyDisplayResult === 'goal' || fieldState.penaltyDisplayResult === 'saved'
+        ? fieldState.penaltyDisplayResult
         : null;
       return { message: null, direction: 'neutral', side, penaltyResult };
     }
@@ -415,7 +423,7 @@ export function useRealtimePossessionMatchController({
     answerAck,
     fieldState.attackerIsMe,
     fieldState.isAttackAnimationPhase,
-    fieldState.penaltyResult,
+    fieldState.penaltyDisplayResult,
     fieldState.resultShooterIsMe,
     fieldState.shotResult,
     myRound,
@@ -508,11 +516,11 @@ export function useRealtimePossessionMatchController({
       goalCelebration,
       penaltySplash: fieldState.isPenaltyQuestion
         && state.roundResolved
-        && fieldState.penaltyResult !== null
-        && fieldState.penaltyResult !== 'pending'
+        && fieldState.penaltyDisplayResult !== null
+        && fieldState.penaltyDisplayResult !== 'pending'
         ? {
           visible: true,
-          result: fieldState.penaltyResult,
+          result: fieldState.penaltyDisplayResult,
           resultShooterIsMe: fieldState.resultShooterIsMe,
           localQuestionIndex,
         }
@@ -539,12 +547,7 @@ export function useRealtimePossessionMatchController({
             showOptions: state.showOptions,
             selectedAnswer: state.selectedAnswer,
             answerStates,
-            eliminatedIndices: activeOptimisticChanceCard?.eliminatedIndices ?? [],
             opponentAnswer,
-            chanceCardCount,
-            chanceCardPending: Boolean(activeOptimisticChanceCard?.pending || activeOptimisticChanceCard?.pendingSync),
-            chanceCardPendingSync: Boolean(activeOptimisticChanceCard?.pendingSync),
-            onUseChanceCard: handleUseChanceCard,
             showPlayerSplash: suppressAvatarScoreSplash ? false : splashState.showPlayerSplash,
             showOpponentSplash: suppressAvatarScoreSplash ? false : splashState.showOpponentSplash,
             playerSplashPoints: suppressAvatarScoreSplash ? null : splashState.playerSplashPoints,
@@ -600,6 +603,7 @@ export function useRealtimePossessionMatchController({
       playerCountryCode,
       opponentCountryCode,
       deadlineAt: possessionState.halftime.deadlineAt,
+      uiReadyAt: possessionState.halftime.uiReadyAt ?? null,
       categoryOptions: possessionState.halftime.categoryOptions,
       mySeat: duelMySeat,
       firstBanSeat: possessionState.halftime.firstBanSeat,

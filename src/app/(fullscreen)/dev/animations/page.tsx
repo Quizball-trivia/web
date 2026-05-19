@@ -167,6 +167,28 @@ function makeQuestion(qIndex: number, kind: QuestionKind = 'multipleChoice'): Re
   } as ResolvedMatchQuestionPayload;
 }
 
+function makeOpponentMarkerQuestion(qIndex: number): ResolvedMatchQuestionPayload {
+  const now = Date.now();
+  return {
+    matchId: MATCH_ID,
+    qIndex,
+    total: TOTAL_QUESTIONS,
+    playableAt: new Date(now - 1000).toISOString(),
+    deadlineAt: new Date(now + 60_000).toISOString(),
+    phaseKind: 'normal',
+    phaseRound: qIndex < 6 ? qIndex + 1 : qIndex - 5,
+    attackerSeat: (qIndex % 2 === 0 ? 1 : 2) as 1 | 2,
+    question: {
+      kind: 'multipleChoice',
+      id: `dev-marker-q-${qIndex}`,
+      prompt: 'Which Italian midfielder was known as "The Architect"?',
+      options: ['Gianluigi Buffon', 'Andrea Pirlo', 'Paolo Maldini', 'Francesco Totti'],
+      categoryName: 'Legends',
+      difficulty: 'medium',
+    },
+  } as ResolvedMatchQuestionPayload;
+}
+
 function makeStartPayload(): MatchStartPayload {
   return {
     matchId: MATCH_ID,
@@ -187,6 +209,8 @@ function makeMatchState(
     stateVersion: number;
     half?: 1 | 2;
     goals?: { seat1: number; seat2: number };
+    penaltyGoals?: { seat1: number; seat2: number };
+    shooterSeat?: 1 | 2 | null;
     phaseKind?: 'normal' | 'last_attack' | 'penalty';
     possessionDiff?: number;
   } = { stateVersion: 1 }
@@ -200,10 +224,10 @@ function makeMatchState(
     attackerSeat: 1,
     kickOffSeat: 1,
     goals: opts.goals ?? { seat1: 0, seat2: 0 },
-    penaltyGoals: { seat1: 0, seat2: 0 },
+    penaltyGoals: opts.penaltyGoals ?? { seat1: 0, seat2: 0 },
     phaseKind: opts.phaseKind ?? 'normal',
     phaseRound: 1,
-    shooterSeat: null,
+    shooterSeat: opts.shooterSeat ?? null,
     halftime: {
       deadlineAt: null,
       categoryOptions: [],
@@ -256,6 +280,7 @@ function makeRoundResult(
         isCorrect: meCorrect,
         timeMs: 3000,
         selectedIndex: meCorrect ? sample.correctIndex : (sample.correctIndex + 1) % 4,
+        submittedOrderIds: [],
       },
       [OPP_ID]: {
         totalPoints: scores.oppTotal + oppPoints,
@@ -263,6 +288,7 @@ function makeRoundResult(
         isCorrect: oppCorrect,
         timeMs: 4200,
         selectedIndex: oppCorrect ? sample.correctIndex : (sample.correctIndex + 2) % 4,
+        submittedOrderIds: [],
       },
     },
     phaseKind: 'normal',
@@ -271,6 +297,85 @@ function makeRoundResult(
       possessionDelta,
       goalScoredBySeat,
       penaltyOutcome: null,
+    },
+  };
+}
+
+// qIndex range reserved for penalty kicks so it doesn't collide with the
+// normal-play range. The dev sim cycles kicks under this base.
+const PENALTY_QINDEX_BASE = 1000;
+
+function makePenaltyQuestion(qIndex: number, shooterSeat: 1 | 2): ResolvedMatchQuestionPayload {
+  const sample = SAMPLE_QUESTIONS[qIndex % SAMPLE_QUESTIONS.length];
+  const now = Date.now();
+  return {
+    matchId: MATCH_ID,
+    qIndex,
+    total: TOTAL_QUESTIONS,
+    playableAt: new Date(now - 1000).toISOString(),
+    deadlineAt: new Date(now + 60_000).toISOString(),
+    phaseKind: 'penalty',
+    phaseRound: ((qIndex - PENALTY_QINDEX_BASE) % 10) + 1,
+    attackerSeat: shooterSeat,
+    shooterSeat,
+    question: {
+      kind: 'multipleChoice',
+      id: `dev-pen-q-${qIndex}`,
+      prompt: sample.prompt,
+      options: sample.options,
+      categoryName: sample.categoryName,
+      difficulty: 'medium',
+    },
+  } as ResolvedMatchQuestionPayload;
+}
+
+function makePenaltyRoundResult(
+  qIndex: number,
+  shooterSeat: 1 | 2,
+  outcome: 'goal' | 'saved',
+  scores: { meTotal: number; oppTotal: number },
+  points: { me: number; opp: number }
+): MatchRoundResultPayload {
+  const sample = SAMPLE_QUESTIONS[qIndex % SAMPLE_QUESTIONS.length];
+  // Field-state derives penaltyOutcome straight from deltas.penaltyOutcome,
+  // so per-player correctness is decorative here — pick a plausible combo:
+  // goal = shooter correct, keeper wrong; saved = keeper correct.
+  const shooterCorrect = outcome === 'goal';
+  const keeperCorrect = outcome === 'saved';
+  const shooterIsMe = shooterSeat === 1;
+  const meCorrect = shooterIsMe ? shooterCorrect : keeperCorrect;
+  const oppCorrect = shooterIsMe ? keeperCorrect : shooterCorrect;
+  return {
+    matchId: MATCH_ID,
+    qIndex,
+    questionKind: 'multipleChoice',
+    reveal: { kind: 'multipleChoice', correctIndex: sample.correctIndex },
+    players: {
+      [SELF_ID]: {
+        totalPoints: scores.meTotal + points.me,
+        pointsEarned: points.me,
+        isCorrect: meCorrect,
+        timeMs: meCorrect ? 2500 : 6000,
+        selectedIndex: meCorrect ? sample.correctIndex : (sample.correctIndex + 1) % 4,
+        submittedOrderIds: [],
+      },
+      [OPP_ID]: {
+        totalPoints: scores.oppTotal + points.opp,
+        pointsEarned: points.opp,
+        isCorrect: oppCorrect,
+        timeMs: oppCorrect ? 3000 : 6000,
+        selectedIndex: oppCorrect ? sample.correctIndex : (sample.correctIndex + 2) % 4,
+        submittedOrderIds: [],
+      },
+    },
+    phaseKind: 'penalty',
+    phaseRound: null,
+    shooterSeat,
+    attackerSeat: shooterSeat,
+    deltas: {
+      possessionDelta: 0,
+      goalScoredBySeat: null,
+      penaltyOutcome: outcome,
     },
   };
 }
@@ -389,6 +494,7 @@ function makeCountdownRoundResult(
         selectedIndex: null,
         foundCount: meFoundAnswerIds.length,
         foundAnswerIds: meFoundAnswerIds,
+        submittedOrderIds: [],
       },
       [OPP_ID]: {
         totalPoints: scores.oppTotal + oppPoints,
@@ -398,6 +504,7 @@ function makeCountdownRoundResult(
         selectedIndex: null,
         foundCount: oppFoundAnswerIds.length,
         foundAnswerIds: oppFoundAnswerIds,
+        submittedOrderIds: [],
       },
     },
     phaseKind: 'normal',
@@ -439,6 +546,7 @@ function makeCluesRoundResult(
         timeMs: 2400,
         selectedIndex: null,
         clueIndex: options.meClueIndex ?? 2,
+        submittedOrderIds: [],
       },
       [OPP_ID]: {
         totalPoints: scores.oppTotal + oppPoints,
@@ -447,6 +555,7 @@ function makeCluesRoundResult(
         timeMs: 6000,
         selectedIndex: null,
         clueIndex: options.oppClueIndex ?? null,
+        submittedOrderIds: [],
       },
     },
     phaseKind: 'normal',
@@ -519,6 +628,10 @@ function DevAnimationsContent() {
   const stateVersion = useRef(0);
   const scoreRef = useRef({ meTotal: 0, oppTotal: 0 });
   const goalsRef = useRef({ seat1: 0, seat2: 0 });
+  // Penalty shootout sim: tracks accumulated penalty goals and the running
+  // qIndex offset for each kick so consecutive kicks don't collide.
+  const penaltyGoalsRef = useRef({ seat1: 0, seat2: 0 });
+  const penaltyKickIndexRef = useRef(0);
   // possessionDiff drives the avatar X position on the pitch. Production
   // updates it via match:state after each round result; we mirror that here
   // so the avatars actually push when bars survive.
@@ -554,6 +667,8 @@ function DevAnimationsContent() {
     stateVersion.current = 0;
     scoreRef.current = { meTotal: 0, oppTotal: 0 };
     goalsRef.current = { seat1: 0, seat2: 0 };
+    penaltyGoalsRef.current = { seat1: 0, seat2: 0 };
+    penaltyKickIndexRef.current = 0;
     possessionDiffRef.current = 0;
 
     const s = store();
@@ -587,7 +702,8 @@ function DevAnimationsContent() {
         const rect = el.getBoundingClientRect();
         if (rect.width <= 0 || rect.height <= 0) return false;
         const style = window.getComputedStyle(el);
-        return Number(style.opacity) > 0.95 && style.visibility !== 'hidden';
+        const opacity = Number.parseFloat(style.opacity);
+        return (Number.isNaN(opacity) || opacity > 0.95) && style.visibility !== 'hidden';
       });
       if (ready || performance.now() - startTime > 1500) {
         cb();
@@ -596,6 +712,16 @@ function DevAnimationsContent() {
       window.setTimeout(tick, 50);
     };
     window.setTimeout(tick, 50);
+  };
+
+  const clickMcqOption = (index: number, attempts = 0) => {
+    const button = document.querySelector<HTMLButtonElement>(`[data-mcq-option-index="${index}"]`);
+    if (button && !button.disabled) {
+      button.click();
+      return;
+    }
+    if (attempts >= 30) return;
+    window.setTimeout(() => clickMcqOption(index, attempts + 1), 100);
   };
 
   function schedulePostRoundPossessionState(result: MatchRoundResultPayload, roundResultDelayMs = 1600) {
@@ -718,7 +844,7 @@ function DevAnimationsContent() {
     );
   }
 
-  function loadSpecialScenario(kind: Extract<QuestionKind, 'countdown' | 'clues'>, mode: 'goal' | 'partial') {
+  function loadSpecialScenario(kind: Extract<QuestionKind, 'countdown' | 'clues'>, mode: 'goal' | 'goal-opp' | 'partial') {
     setMobilePanelOpen(false);
     pendingTimers.current.forEach((t) => window.clearTimeout(t));
     pendingTimers.current = [];
@@ -764,13 +890,17 @@ function DevAnimationsContent() {
           const result = kind === 'countdown'
             ? makeCountdownRoundResult(qIndex, scoreRef.current, mode === 'goal'
               ? { meFoundCount: 15, oppFoundCount: 0 }
+              : mode === 'goal-opp'
+                ? { meFoundCount: 0, oppFoundCount: 15 }
               : { meFoundCount: 7, oppFoundCount: 3 })
             : makeCluesRoundResult(qIndex, scoreRef.current, mode === 'goal'
               ? { mePoints: 100, oppPoints: 0, meClueIndex: 2, oppClueIndex: null }
+              : mode === 'goal-opp'
+                ? { mePoints: 0, oppPoints: 100, meClueIndex: null, oppClueIndex: 3 }
               : { mePoints: 50, oppPoints: 25, meClueIndex: 3, oppClueIndex: 4 });
           playPrebuiltSpecialResult(
             result,
-            mode === 'goal' ? 350 : 500,
+            mode === 'goal' || mode === 'goal-opp' ? 350 : 500,
             { roundResultDelayMs: kind === 'countdown' ? DEV_COUNTDOWN_ROUND_RESULT_DELAY_MS : undefined }
           );
         });
@@ -828,10 +958,24 @@ function DevAnimationsContent() {
         setMyPoints(greenPoints);
         setOppPoints(redPoints);
         waitForAnchors(() => {
-          const result = makeRoundResult(qIndex, 'both-correct', scoreRef.current, {
+          const baseResult = makeRoundResult(qIndex, 'both-correct', scoreRef.current, {
             me: greenPoints,
             opp: redPoints,
           });
+          const survivingDelta = pointsToBars(greenPoints) - pointsToBars(redPoints);
+          const projectedDiff = edgeDiff + survivingDelta * 9;
+          const edgeGoalScoredBySeat: 1 | 2 | null =
+            projectedDiff >= 100 ? 1 : projectedDiff <= -100 ? 2 : null;
+          const result: MatchRoundResultPayload = edgeGoalScoredBySeat
+            ? {
+                ...baseResult,
+                deltas: {
+                  possessionDelta: baseResult.deltas?.possessionDelta ?? greenPoints - redPoints,
+                  penaltyOutcome: baseResult.deltas?.penaltyOutcome ?? null,
+                  goalScoredBySeat: edgeGoalScoredBySeat,
+                },
+              }
+            : baseResult;
           const me = result.players[SELF_ID];
           const opp = result.players[OPP_ID];
           if (!me || !opp) return;
@@ -873,6 +1017,8 @@ function DevAnimationsContent() {
 
           scoreRef.current.meTotal = me.totalPoints;
           scoreRef.current.oppTotal = opp.totalPoints;
+          if (result.deltas?.goalScoredBySeat === 1) goalsRef.current.seat1 += 1;
+          if (result.deltas?.goalScoredBySeat === 2) goalsRef.current.seat2 += 1;
         });
       }, 900)
     );
@@ -1134,36 +1280,7 @@ function DevAnimationsContent() {
       );
     });
 
-    // Step 4: push the avatars by firing match:state with the new possessionDiff.
-    // Each surviving bar shifts possession by ~9 units (production-ish feel
-    // — 10pts ≈ 1 bar, 1 bar ≈ ~9% of the pitch). We fire this AFTER the
-    // bar battle's "result" phase begins so the survivors visually charge in
-    // before the avatar slides over them.
-    const myBars = pointsToBars(me.pointsEarned);
-    const oppBars = pointsToBars(opp.pointsEarned);
-    const survivingDelta = myBars - oppBars; // positive = me pushing right
-    if (survivingDelta !== 0 && !result.deltas?.goalScoredBySeat) {
-      const PUSH_PER_BAR = 9;
-      const newDiff = Math.max(-100, Math.min(100, possessionDiffRef.current + survivingDelta * PUSH_PER_BAR));
-      possessionDiffRef.current = newDiff;
-      // Time the push to land during the bar-battle "result" phase.
-      // Schedule = roundResult at 1400ms + bothScoreHold (400) + convert (500)
-      // + bars (~800) + battle (~600) ≈ 3700ms total. We pick 3500ms which
-      // sits inside the result window for a range of point pairs.
-      pendingTimers.current.push(
-        window.setTimeout(() => {
-          stateVersion.current += 1;
-          s.setMatchState(
-            makeMatchState('NORMAL_PLAY', {
-              stateVersion: stateVersion.current,
-              half: 1,
-              goals: goalsRef.current,
-              possessionDiff: newDiff,
-            })
-          );
-        }, 3500)
-      );
-    }
+    schedulePostRoundPossessionState(result, 1400);
 
     // Update score & goals refs for the next round
     scoreRef.current.meTotal = me.totalPoints;
@@ -1233,6 +1350,242 @@ function DevAnimationsContent() {
     // firstQuestionIntro, etc.) resets cleanly. Without this, dev clicks land
     // between phases and the round transition overlay sticks.
     setRemountKey((k) => k + 1);
+  }
+
+  function loadOpponentMarkerRevealDemo() {
+    setMobilePanelOpen(false);
+    pendingTimers.current.forEach((t) => window.clearTimeout(t));
+    pendingTimers.current = [];
+
+    const s = store();
+    const activeQIndex = s.match?.currentQuestion?.qIndex ?? -1;
+    const qIndex = Math.min(activeQIndex + 1, TOTAL_QUESTIONS - 1);
+    const correctIndex = 1;
+    const wrongIndex = 0;
+    const opponentPoints = 40;
+
+    stateVersion.current += 1;
+    s.setMatchState(makeMatchState('NORMAL_PLAY', {
+      stateVersion: stateVersion.current,
+      goals: goalsRef.current,
+      possessionDiff: possessionDiffRef.current,
+    }));
+
+    useRealtimeMatchStore.setState((prev) =>
+      prev.match
+        ? {
+            ...prev,
+            match: {
+              ...prev.match,
+              lastRoundResult: null,
+              answerAck: null,
+              countdownGuessAck: null,
+              cluesGuessAck: null,
+              opponentAnswered: false,
+              opponentSelectedIndex: null,
+              opponentRecentPoints: 0,
+              opponentAnsweredCorrectly: null,
+              currentQuestionPhase: 'reveal',
+            },
+          }
+        : prev
+    );
+
+    s.setMatchQuestion(makeOpponentMarkerQuestion(qIndex));
+    setNextQuestionKind('multipleChoice');
+    setRemountKey((k) => k + 1);
+
+    const result: MatchRoundResultPayload = {
+      matchId: MATCH_ID,
+      qIndex,
+      questionKind: 'multipleChoice',
+      reveal: { kind: 'multipleChoice', correctIndex },
+      players: {
+        [SELF_ID]: {
+          totalPoints: scoreRef.current.meTotal,
+          pointsEarned: 0,
+          isCorrect: false,
+          timeMs: 5200,
+          selectedIndex: wrongIndex,
+          submittedOrderIds: [],
+        },
+        [OPP_ID]: {
+          totalPoints: scoreRef.current.oppTotal + opponentPoints,
+          pointsEarned: opponentPoints,
+          isCorrect: true,
+          timeMs: 2400,
+          selectedIndex: correctIndex,
+          submittedOrderIds: [],
+        },
+      },
+      phaseKind: 'normal',
+      phaseRound: qIndex < 6 ? qIndex + 1 : qIndex - 5,
+      deltas: {
+        possessionDelta: -opponentPoints,
+        goalScoredBySeat: null,
+        penaltyOutcome: null,
+      },
+    };
+
+    pendingTimers.current.push(
+      window.setTimeout(() => {
+        s.setOpponentAnswered({
+          matchId: MATCH_ID,
+          qIndex,
+          opponentTotalPoints: scoreRef.current.oppTotal + opponentPoints,
+          pointsEarned: opponentPoints,
+          isCorrect: true,
+          selectedIndex: correctIndex,
+        });
+
+        clickMcqOption(wrongIndex);
+
+        pendingTimers.current.push(
+          window.setTimeout(() => {
+            s.setAnswerAck({
+              matchId: MATCH_ID,
+              qIndex,
+              questionKind: 'multipleChoice',
+              selectedIndex: wrongIndex,
+              isCorrect: false,
+              correctIndex,
+              myTotalPoints: scoreRef.current.meTotal,
+              oppAnswered: true,
+              pointsEarned: 0,
+              phaseKind: 'normal',
+              phaseRound: result.phaseRound ?? null,
+            });
+          }, 450)
+        );
+
+        pendingTimers.current.push(
+          window.setTimeout(() => {
+            s.setRoundResult(result);
+          }, 1300)
+        );
+        schedulePostRoundPossessionState(result, 1300);
+
+        scoreRef.current.oppTotal += opponentPoints;
+      }, 900)
+    );
+  }
+
+  function loadPlayerCorrectOpponentWrongDemo() {
+    setMobilePanelOpen(false);
+    pendingTimers.current.forEach((t) => window.clearTimeout(t));
+    pendingTimers.current = [];
+
+    const s = store();
+    const activeQIndex = s.match?.currentQuestion?.qIndex ?? -1;
+    const qIndex = Math.min(activeQIndex + 1, TOTAL_QUESTIONS - 1);
+    const correctIndex = 1;
+    const opponentWrongIndex = 0;
+    const playerPoints = 40;
+
+    stateVersion.current += 1;
+    s.setMatchState(makeMatchState('NORMAL_PLAY', {
+      stateVersion: stateVersion.current,
+      goals: goalsRef.current,
+      possessionDiff: possessionDiffRef.current,
+    }));
+
+    useRealtimeMatchStore.setState((prev) =>
+      prev.match
+        ? {
+            ...prev,
+            match: {
+              ...prev.match,
+              lastRoundResult: null,
+              answerAck: null,
+              countdownGuessAck: null,
+              cluesGuessAck: null,
+              opponentAnswered: false,
+              opponentSelectedIndex: null,
+              opponentRecentPoints: 0,
+              opponentAnsweredCorrectly: null,
+              currentQuestionPhase: 'reveal',
+            },
+          }
+        : prev
+    );
+
+    s.setMatchQuestion(makeOpponentMarkerQuestion(qIndex));
+    setNextQuestionKind('multipleChoice');
+    setRemountKey((k) => k + 1);
+
+    const result: MatchRoundResultPayload = {
+      matchId: MATCH_ID,
+      qIndex,
+      questionKind: 'multipleChoice',
+      reveal: { kind: 'multipleChoice', correctIndex },
+      players: {
+        [SELF_ID]: {
+          totalPoints: scoreRef.current.meTotal + playerPoints,
+          pointsEarned: playerPoints,
+          isCorrect: true,
+          timeMs: 2400,
+          selectedIndex: correctIndex,
+          submittedOrderIds: [],
+        },
+        [OPP_ID]: {
+          totalPoints: scoreRef.current.oppTotal,
+          pointsEarned: 0,
+          isCorrect: false,
+          timeMs: 5200,
+          selectedIndex: opponentWrongIndex,
+          submittedOrderIds: [],
+        },
+      },
+      phaseKind: 'normal',
+      phaseRound: qIndex < 6 ? qIndex + 1 : qIndex - 5,
+      deltas: {
+        possessionDelta: playerPoints,
+        goalScoredBySeat: null,
+        penaltyOutcome: null,
+      },
+    };
+
+    pendingTimers.current.push(
+      window.setTimeout(() => {
+        s.setOpponentAnswered({
+          matchId: MATCH_ID,
+          qIndex,
+          opponentTotalPoints: scoreRef.current.oppTotal,
+          pointsEarned: 0,
+          isCorrect: false,
+          selectedIndex: opponentWrongIndex,
+        });
+
+        clickMcqOption(correctIndex);
+
+        pendingTimers.current.push(
+          window.setTimeout(() => {
+            s.setAnswerAck({
+              matchId: MATCH_ID,
+              qIndex,
+              questionKind: 'multipleChoice',
+              selectedIndex: correctIndex,
+              isCorrect: true,
+              correctIndex,
+              myTotalPoints: scoreRef.current.meTotal + playerPoints,
+              oppAnswered: true,
+              pointsEarned: playerPoints,
+              phaseKind: 'normal',
+              phaseRound: result.phaseRound ?? null,
+            });
+          }, 450)
+        );
+
+        pendingTimers.current.push(
+          window.setTimeout(() => {
+            s.setRoundResult(result);
+          }, 1300)
+        );
+        schedulePostRoundPossessionState(result, 1300);
+
+        scoreRef.current.meTotal += playerPoints;
+      }, 900)
+    );
   }
 
   function goHalftime() {
@@ -1335,8 +1688,12 @@ function DevAnimationsContent() {
     );
   }
 
-  function goPenalties() {
+  function enterPenaltyShootout() {
     setMobilePanelOpen(false);
+    pendingTimers.current.forEach((t) => window.clearTimeout(t));
+    pendingTimers.current = [];
+    penaltyGoalsRef.current = { seat1: 0, seat2: 0 };
+    penaltyKickIndexRef.current = 0;
     const s = store();
     stateVersion.current += 1;
     s.setMatchState(
@@ -1344,9 +1701,126 @@ function DevAnimationsContent() {
         stateVersion: stateVersion.current,
         half: 2,
         goals: goalsRef.current,
+        penaltyGoals: penaltyGoalsRef.current,
         phaseKind: 'penalty',
+        shooterSeat: null,
       })
     );
+    setRemountKey((k) => k + 1);
+  }
+
+  function takePenaltyKick(shooterSeat: 1 | 2, outcome: 'goal' | 'saved') {
+    setMobilePanelOpen(false);
+    pendingTimers.current.forEach((t) => window.clearTimeout(t));
+    pendingTimers.current = [];
+
+    const s = store();
+    const qIndex = PENALTY_QINDEX_BASE + penaltyKickIndexRef.current;
+    penaltyKickIndexRef.current += 1;
+
+    stateVersion.current += 1;
+    s.setMatchState(
+      makeMatchState('PENALTY_SHOOTOUT', {
+        stateVersion: stateVersion.current,
+        half: 2,
+        goals: goalsRef.current,
+        penaltyGoals: penaltyGoalsRef.current,
+        phaseKind: 'penalty',
+        shooterSeat,
+      })
+    );
+
+    useRealtimeMatchStore.setState((prev) =>
+      prev.match
+        ? {
+            ...prev,
+            match: {
+              ...prev.match,
+              lastRoundResult: null,
+              answerAck: null,
+              countdownGuessAck: null,
+              cluesGuessAck: null,
+              opponentAnswered: false,
+              opponentSelectedIndex: null,
+              opponentRecentPoints: 0,
+              opponentAnsweredCorrectly: null,
+              currentQuestionPhase: 'reveal',
+            },
+          }
+        : prev
+    );
+
+    s.setMatchQuestion(makePenaltyQuestion(qIndex, shooterSeat));
+
+    const winningSeat = outcome === 'goal' ? shooterSeat : (shooterSeat === 1 ? 2 : 1);
+    const points = {
+      me: winningSeat === 1 ? Math.max(myPoints, 80) : 0,
+      opp: winningSeat === 2 ? Math.max(oppPoints, 80) : 0,
+    };
+    const result = makePenaltyRoundResult(qIndex, shooterSeat, outcome, scoreRef.current, points);
+    const me = result.players[SELF_ID];
+    const opp = result.players[OPP_ID];
+    if (!me || !opp) return;
+
+    // Longer beats than fireOutcome so the question / timer countdown /
+    // shot animation are all visible during a penalty sim. Shooter "thinks"
+    // for ~2.5s, keeper for another ~1s, then the ball flies and the result
+    // lands ~1.3s after that.
+    waitForAnchors(() => {
+      pendingTimers.current.push(
+        window.setTimeout(() => {
+          s.setAnswerAck({
+            matchId: MATCH_ID,
+            qIndex,
+            questionKind: 'multipleChoice',
+            selectedIndex: me.selectedIndex,
+            isCorrect: me.isCorrect,
+            myTotalPoints: me.totalPoints,
+            oppAnswered: false,
+            pointsEarned: me.pointsEarned,
+            phaseKind: 'penalty',
+            phaseRound: null,
+            shooterSeat,
+          });
+        }, 2500)
+      );
+
+      pendingTimers.current.push(
+        window.setTimeout(() => {
+          s.setOpponentAnswered({
+            matchId: MATCH_ID,
+            qIndex,
+            opponentTotalPoints: opp.totalPoints,
+            pointsEarned: opp.pointsEarned,
+            isCorrect: opp.isCorrect,
+            selectedIndex: opp.selectedIndex,
+          });
+        }, 3500)
+      );
+
+      pendingTimers.current.push(
+        window.setTimeout(() => {
+          s.setRoundResult(result);
+          if (outcome === 'goal') {
+            if (shooterSeat === 1) penaltyGoalsRef.current.seat1 += 1;
+            else penaltyGoalsRef.current.seat2 += 1;
+          }
+          scoreRef.current.meTotal = me.totalPoints;
+          scoreRef.current.oppTotal = opp.totalPoints;
+          stateVersion.current += 1;
+          s.setMatchState(
+            makeMatchState('PENALTY_SHOOTOUT', {
+              stateVersion: stateVersion.current,
+              half: 2,
+              goals: goalsRef.current,
+              penaltyGoals: penaltyGoalsRef.current,
+              phaseKind: 'penalty',
+              shooterSeat,
+            })
+          );
+        }, 4800)
+      );
+    });
   }
 
   return (
@@ -1364,6 +1838,8 @@ function DevAnimationsContent() {
           playerFavoriteClub="real-madrid"
           centerPossessionTrack
           simpleShotAnimation
+          unopposedBarPulse
+          disableBgm
           onQuit={() => router.push('/play')}
           onForfeit={() => router.push('/play')}
         />
@@ -1479,15 +1955,25 @@ function DevAnimationsContent() {
           <Btn variant="yellow" onClick={() => loadEdgeBarDemo('red')}>edge demo · red wins</Btn>
           <p className="mt-1 text-[9px] text-brand-slate">
             Starts both avatars near the goal edge. Bars prefer below the
-            avatar on mobile, then flip only if that side would clip.
+            avatar on mobile, then flip only if that side would clip. A green
+            win from the edge now resolves as a shot and goal.
           </p>
         </Group>
 
         <Group label="Apply round result">
-          <Btn variant="green" onClick={() => fireOutcome('me-correct')}>me correct · opp wrong</Btn>
-          <Btn variant="red" onClick={() => fireOutcome('opp-correct')}>opp correct · me wrong</Btn>
+          <Btn variant="green" onClick={loadPlayerCorrectOpponentWrongDemo}>me correct · opp wrong</Btn>
+          <Btn variant="red" onClick={loadOpponentMarkerRevealDemo}>opp correct · me wrong</Btn>
           <Btn onClick={() => fireOutcome('both-correct')}>both correct</Btn>
           <Btn onClick={() => fireOutcome('both-wrong')}>both wrong</Btn>
+        </Group>
+
+        <Group label="MCQ reveal states">
+          <Btn variant="yellow" onClick={loadPlayerCorrectOpponentWrongDemo}>player correct · opp marker wrong</Btn>
+          <Btn variant="yellow" onClick={loadOpponentMarkerRevealDemo}>opp marker on correct card</Btn>
+          <p className="mt-1 text-[9px] text-brand-slate">
+            Mirror MCQ reveal cases for player-correct and opponent-correct
+            answers, including opponent marker rails.
+          </p>
         </Group>
 
         <Group label="Score / shot">
@@ -1496,6 +1982,7 @@ function DevAnimationsContent() {
           <Btn variant="yellow" onClick={() => loadSpecialScenario('countdown', 'goal')}>countdown goal sim</Btn>
           <Btn variant="yellow" onClick={() => loadSpecialScenario('countdown', 'partial')}>countdown partial sim</Btn>
           <Btn variant="yellow" onClick={() => loadSpecialScenario('clues', 'goal')}>who am i goal sim</Btn>
+          <Btn variant="yellow" onClick={() => loadSpecialScenario('clues', 'goal-opp')}>who am i opp goal sim</Btn>
           <Btn variant="yellow" onClick={() => loadSpecialScenario('clues', 'partial')}>who am i partial sim</Btn>
           <Btn variant="yellow" onClick={() => fireOutcome('goal-me')}>⚽ goal · me</Btn>
           <Btn variant="yellow" onClick={() => fireOutcome('goal-opp')}>⚽ goal · opp</Btn>
@@ -1505,7 +1992,19 @@ function DevAnimationsContent() {
 
         <Group label="Phase transitions">
           <Btn onClick={goHalftime}>→ halftime</Btn>
-          <Btn onClick={goPenalties}>→ penalty shootout</Btn>
+          <Btn onClick={enterPenaltyShootout}>→ enter penalty shootout</Btn>
+        </Group>
+
+        <Group label="Penalty shootout sim">
+          <Btn variant="yellow" onClick={() => takePenaltyKick(1, 'goal')}>kick · me scores ⚽</Btn>
+          <Btn onClick={() => takePenaltyKick(1, 'saved')}>kick · me saved 🧤</Btn>
+          <Btn variant="yellow" onClick={() => takePenaltyKick(2, 'goal')}>kick · opp scores ⚽</Btn>
+          <Btn onClick={() => takePenaltyKick(2, 'saved')}>kick · opp saved 🧤</Btn>
+          <p className="mt-1 text-[9px] text-brand-slate">
+            Each click fires one penalty kick — sets state with the shooter,
+            pushes the question, then answer ack → opp answered → round
+            result. Penalty goals accumulate across kicks until you re-enter.
+          </p>
         </Group>
 
         <p className="mt-3 text-[10px] leading-tight text-brand-slate">

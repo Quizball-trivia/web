@@ -87,7 +87,6 @@ function makeMatch(possessionDiff: number, overrides: Partial<MatchStatus['posse
     opponentAnsweredCorrectly: null,
     partyState: null,
     stateVersion: 1,
-    optimisticChanceCard: null,
     possessionState: {
       matchId: MATCH_ID,
       phase: 'NORMAL_PLAY',
@@ -119,6 +118,48 @@ describe('usePossessionFieldState', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  it('resets stale possession position when a new match starts on an open question', () => {
+    const makeNewMatch = (possessionDiff: number): MatchStatus => {
+      const match = makeMatch(possessionDiff);
+      return {
+        ...match,
+        matchId: 'match-2',
+        possessionState: match.possessionState
+          ? { ...match.possessionState, matchId: 'match-2', normalQuestionsAnsweredInHalf: 0, phaseRound: 1 }
+          : null,
+      };
+    };
+
+    const { result, rerender } = renderHook((props: { match: MatchStatus }) => usePossessionFieldState({
+      match: props.match,
+      localQuestion: makeQuestion(0),
+      roundResult: null,
+      questionPhase: 'playing',
+      roundResolved: false,
+      answerAck: null,
+      opponentAnsweredCorrectly: null,
+      myRound: null,
+      opponentRound: null,
+      devPossessionAnimation: null,
+      clearDevPossessionAnimation: vi.fn(),
+      playerAvatar: '/me.png',
+      opponentAvatar: '/opp.png',
+      playerUsername: 'me',
+      opponentUsername: 'opp',
+      isHalftime: false,
+    }), {
+      initialProps: {
+        match: makeMatch(-80, { normalQuestionsAnsweredInHalf: 0, phaseRound: 1 }),
+      },
+    });
+
+    expect(result.current.visualMyPossessionPct).toBe(10);
+
+    rerender({ match: makeNewMatch(0) });
+
+    expect(result.current.visualMyPossessionPct).toBe(50);
   });
 
   it('resets the field to center when the second half starts', async () => {
@@ -188,6 +229,56 @@ describe('usePossessionFieldState', () => {
       match: makeMatch(0),
       roundResult: makeRoundResult(5, null),
     });
+
+    expect(result.current.visualMyPossessionPct).toBe(70);
+
+    act(() => {
+      vi.advanceTimersByTime(FIELD_RESULT_COMPARE_MS + FIELD_POSSESSION_CUE_MS + 10);
+    });
+
+    expect(result.current.visualMyPossessionPct).toBe(50);
+  });
+
+  it('ignores queued possession movement once the bar battle field lock starts', async () => {
+    const { result, rerender } = renderHook((props: {
+      match: MatchStatus;
+      roundResult: MatchRoundResultPayload | null;
+    }) => usePossessionFieldState({
+      match: props.match,
+      localQuestion: makeQuestion(5),
+      roundResult: props.roundResult,
+      questionPhase: 'playing',
+      roundResolved: Boolean(props.roundResult),
+      answerAck: null,
+      opponentAnsweredCorrectly: null,
+      myRound: null,
+      opponentRound: null,
+      devPossessionAnimation: null,
+      clearDevPossessionAnimation: vi.fn(),
+      playerAvatar: '/me.png',
+      opponentAvatar: '/opp.png',
+      playerUsername: 'me',
+      opponentUsername: 'opp',
+      isHalftime: false,
+    }), {
+      initialProps: {
+        match: makeMatch(40),
+        roundResult: null as MatchRoundResultPayload | null,
+      },
+    });
+
+    expect(result.current.visualMyPossessionPct).toBe(70);
+
+    rerender({
+      match: makeMatch(0),
+      roundResult: null,
+    });
+    rerender({
+      match: makeMatch(0),
+      roundResult: makeRoundResult(5, null),
+    });
+
+    await act(async () => {});
 
     expect(result.current.visualMyPossessionPct).toBe(70);
 

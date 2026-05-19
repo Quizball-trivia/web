@@ -45,6 +45,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getSocket } from "@/lib/realtime/socket-client";
+import { useRealtimeConnection } from "@/lib/realtime/useRealtimeConnection";
 import { Medal, Gem, User, Gamepad2, UserRound } from "lucide-react";
 import type { MessageKey } from "@/lib/i18n/messages";
 
@@ -123,6 +124,7 @@ export function AppShell({ children }: AppShellProps) {
     () => readRankedGeoHintDebug()
   );
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  useRealtimeConnection({ enabled: Boolean(authUser), selfUserId: authUser?.id ?? null });
 
   const currentPath = pathname ?? "/";
   const showHeader = HEADER_PATHS.some((p) => p === "/" ? currentPath === "/" : currentPath.startsWith(p));

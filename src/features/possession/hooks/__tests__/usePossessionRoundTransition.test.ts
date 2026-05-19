@@ -7,17 +7,23 @@ import type {
 } from '@/lib/realtime/socket.types';
 import {
   FIRST_QUESTION_INTRO_MS,
-  GOAL_VISUAL_SEQUENCE_MS,
   PENALTY_COUNTDOWN_MS,
+  TRANSITION_DELAY_MS,
 } from '../../realtimePossession.helpers';
 import {
   usePossessionFirstQuestionIntro,
   usePossessionRoundTransition,
+  usePossessionSecondHalfQuestionIntro,
 } from '../usePossessionRoundTransition';
 
 const MATCH_ID = 'match-1';
 
-function makeQuestion(qIndex: number, phaseRound: number, phaseKind: 'normal' | 'penalty' = 'normal', categoryName = 'Football'): ResolvedMatchQuestionPayload {
+function makeQuestion(
+  qIndex: number,
+  phaseRound: number,
+  phaseKind: 'normal' | 'last_attack' | 'penalty' = 'normal',
+  categoryName = 'Football'
+): ResolvedMatchQuestionPayload {
   return {
     matchId: MATCH_ID,
     qIndex,
@@ -93,6 +99,7 @@ describe('usePossessionRoundTransition', () => {
       half: 1,
       penaltySuddenDeath: false,
       firstQuestionIntro: false,
+      secondHalfQuestionIntro: false,
       localQuestion: makeQuestion(4, 5, 'normal', 'Current'),
       pendingQuestion: props.pendingQuestion,
       roundResult: makeRoundResult('normal', 5),
@@ -136,6 +143,7 @@ describe('usePossessionRoundTransition', () => {
       half: 2,
       penaltySuddenDeath: true,
       firstQuestionIntro: false,
+      secondHalfQuestionIntro: false,
       localQuestion: makeQuestion(11, 6, 'normal', 'Current'),
       pendingQuestion: props.pendingQuestion,
       roundResult: makeRoundResult('penalty', 1),
@@ -186,18 +194,20 @@ describe('usePossessionRoundTransition', () => {
     });
   });
 
-  it('delays penalty countdown until a boundary goal celebration can finish', async () => {
+  it('waits for the final field result hold before starting the penalty countdown', async () => {
     const { result, rerender } = renderHook((props: {
       phase: MatchStatePayload['phase'];
+      roundResultHoldDone: boolean;
     }) => usePossessionRoundTransition({
       phase: props.phase,
       half: 2,
       penaltySuddenDeath: false,
       firstQuestionIntro: false,
+      secondHalfQuestionIntro: false,
       localQuestion: makeQuestion(11, 6, 'normal', 'Current'),
       pendingQuestion: makeQuestion(12, 1, 'penalty', 'Penalty'),
-      roundResult: makeRoundResult('normal', 6, 1),
-      roundResultHoldDone: true,
+      roundResult: makeRoundResult('normal', 6),
+      roundResultHoldDone: props.roundResultHoldDone,
       isPenaltyQuestion: false,
       isShotQuestion: false,
       isLastAttackQuestion: false,
@@ -205,26 +215,198 @@ describe('usePossessionRoundTransition', () => {
     }), {
       initialProps: {
         phase: 'NORMAL_PLAY' as MatchStatePayload['phase'],
+        roundResultHoldDone: false,
       },
     });
 
     rerender({
       phase: 'PENALTY_SHOOTOUT',
+      roundResultHoldDone: false,
     });
 
     await act(async () => {});
     expect(result.current.penaltyCountdownActive).toBe(false);
 
-    act(() => {
-      vi.advanceTimersByTime(GOAL_VISUAL_SEQUENCE_MS - 1);
+    rerender({
+      phase: 'PENALTY_SHOOTOUT',
+      roundResultHoldDone: true,
     });
+
+    await act(async () => {});
+    expect(result.current.penaltyCountdownActive).toBe(true);
+  });
+
+  it('waits for a boundary goal celebration to clear before starting the penalty countdown', async () => {
+    type Props = {
+      phase: MatchStatePayload['phase'];
+      goalCelebration: { scorerName: string; isMeScorer: boolean } | null;
+    };
+    const initialProps: Props = {
+      phase: 'NORMAL_PLAY',
+      goalCelebration: null,
+    };
+
+    const { result, rerender } = renderHook((props: Props) => usePossessionRoundTransition({
+      phase: props.phase,
+      half: 2,
+      penaltySuddenDeath: false,
+      firstQuestionIntro: false,
+      secondHalfQuestionIntro: false,
+      localQuestion: makeQuestion(11, 6, 'normal', 'Current'),
+      pendingQuestion: makeQuestion(12, 1, 'penalty', 'Penalty'),
+      roundResult: makeRoundResult('normal', 6, 1),
+      roundResultHoldDone: true,
+      isPenaltyQuestion: false,
+      isShotQuestion: false,
+      isLastAttackQuestion: false,
+      goalCelebration: props.goalCelebration,
+    }), {
+      initialProps,
+    });
+
+    rerender({
+      phase: 'PENALTY_SHOOTOUT',
+      goalCelebration: { scorerName: 'Player', isMeScorer: true },
+    } satisfies Props);
+
+    await act(async () => {});
     expect(result.current.penaltyCountdownActive).toBe(false);
 
-    act(() => {
-      vi.advanceTimersByTime(1);
-    });
+    rerender({
+      phase: 'PENALTY_SHOOTOUT',
+      goalCelebration: null,
+    } satisfies Props);
+
     await act(async () => {});
 
     expect(result.current.penaltyCountdownActive).toBe(true);
+  });
+
+  it('shows a second-half question intro before the first question after halftime can play', () => {
+    const { result } = renderHook(() => usePossessionSecondHalfQuestionIntro({
+      phase: 'NORMAL_PLAY',
+      half: 2,
+      normalQuestionsAnsweredInHalf: 0,
+      currentQuestionIndex: 6,
+      currentQuestionPhase: 'reveal',
+    }));
+
+    expect(result.current).toBe(true);
+
+    act(() => {
+      vi.advanceTimersByTime(TRANSITION_DELAY_MS + 1);
+    });
+
+    expect(result.current).toBe(false);
+  });
+
+  it('uses the active second-half question for the transition snapshot', async () => {
+    const { result } = renderHook(() => usePossessionRoundTransition({
+      phase: 'NORMAL_PLAY',
+      half: 2,
+      penaltySuddenDeath: false,
+      firstQuestionIntro: false,
+      secondHalfQuestionIntro: true,
+      localQuestion: makeQuestion(6, 1, 'normal', 'Second Half Category'),
+      pendingQuestion: null,
+      roundResult: null,
+      roundResultHoldDone: false,
+      isPenaltyQuestion: false,
+      isShotQuestion: false,
+      isLastAttackQuestion: false,
+      goalCelebration: null,
+    }));
+
+    await act(async () => {});
+
+    expect(result.current.showRoundTransition).toBe(true);
+    expect(result.current.transitionSnapshot).toEqual({
+      title: 'Question 7',
+      categoryName: 'Second Half Category',
+      subtitle: '2nd Half',
+    });
+  });
+
+  it('does not flash the stale first-question snapshot when second-half intro starts', async () => {
+    type Props = {
+      firstQuestionIntro: boolean;
+      secondHalfQuestionIntro: boolean;
+      localQuestion: ResolvedMatchQuestionPayload | null;
+      half: 1 | 2;
+    };
+    const { result, rerender } = renderHook((props: Props) => usePossessionRoundTransition({
+      phase: 'NORMAL_PLAY',
+      half: props.half,
+      penaltySuddenDeath: false,
+      firstQuestionIntro: props.firstQuestionIntro,
+      secondHalfQuestionIntro: props.secondHalfQuestionIntro,
+      localQuestion: props.localQuestion,
+      pendingQuestion: null,
+      roundResult: null,
+      roundResultHoldDone: false,
+      isPenaltyQuestion: false,
+      isShotQuestion: false,
+      isLastAttackQuestion: false,
+      goalCelebration: null,
+    }), {
+      initialProps: {
+        firstQuestionIntro: true,
+        secondHalfQuestionIntro: false,
+        localQuestion: makeQuestion(0, 1, 'normal', 'Football'),
+        half: 1,
+      },
+    });
+
+    await act(async () => {});
+
+    expect(result.current.transitionSnapshot.title).toBe('Question 1');
+
+    rerender({
+      firstQuestionIntro: false,
+      secondHalfQuestionIntro: false,
+      localQuestion: null,
+      half: 2,
+    });
+
+    rerender({
+      firstQuestionIntro: false,
+      secondHalfQuestionIntro: true,
+      localQuestion: makeQuestion(6, 1, 'normal', 'Dortmund'),
+      half: 2,
+    });
+
+    expect(result.current.showRoundTransition).toBe(true);
+    expect(result.current.transitionSnapshot).toEqual({
+      title: 'Question 7',
+      categoryName: 'Dortmund',
+      subtitle: '2nd Half',
+    });
+  });
+
+  it('shows an extra-question transition before a pending last-attack question', async () => {
+    const { result } = renderHook(() => usePossessionRoundTransition({
+      phase: 'LAST_ATTACK',
+      half: 1,
+      penaltySuddenDeath: false,
+      firstQuestionIntro: false,
+      secondHalfQuestionIntro: false,
+      localQuestion: makeQuestion(5, 6, 'normal', 'Current'),
+      pendingQuestion: makeQuestion(6, 1, 'last_attack', 'Extra Category'),
+      roundResult: makeRoundResult('normal', 6),
+      roundResultHoldDone: true,
+      isPenaltyQuestion: false,
+      isShotQuestion: false,
+      isLastAttackQuestion: false,
+      goalCelebration: null,
+    }));
+
+    await act(async () => {});
+
+    expect(result.current.showRoundTransition).toBe(true);
+    expect(result.current.transitionSnapshot).toEqual({
+      title: 'Extra Question',
+      categoryName: 'Extra Category',
+      subtitle: '1st Half',
+    });
   });
 });

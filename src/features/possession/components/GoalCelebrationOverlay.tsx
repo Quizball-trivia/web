@@ -6,11 +6,13 @@ import { motion } from 'motion/react';
 interface GoalCelebrationOverlayProps {
   scorerName?: string;
   isMeScorer?: boolean;
+  ballSizePx?: number;
+  ballCenterPx?: { x: number; y: number };
   /** When true, skip all audio playback */
   muted?: boolean;
 }
 
-export function GoalCelebrationOverlay({}: GoalCelebrationOverlayProps) {
+export function GoalCelebrationOverlay({ ballSizePx = 32, ballCenterPx }: GoalCelebrationOverlayProps) {
   const accentColor = '#FFE500'; // Always yellow splash
 
   return (
@@ -50,7 +52,12 @@ export function GoalCelebrationOverlay({}: GoalCelebrationOverlayProps) {
         className="pointer-events-none absolute bottom-0 left-0 z-50 w-[24%] min-w-[54px] max-w-[92px] origin-bottom sm:bottom-[10%] sm:w-[18%] sm:min-w-0 sm:max-w-[80px]"
         initial={{ opacity: 0, x: -20, rotate: -12 }}
         animate={{ opacity: 1, x: 0, rotate: [-5, 3, -5] }}
-        exit={{ opacity: 0, x: -12 }}
+        exit={{
+          opacity: 0,
+          x: -46,
+          rotate: -16,
+          transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] },
+        }}
         transition={{
           opacity: { duration: 0.3, delay: 0.15 },
           x: { duration: 0.3, delay: 0.15 },
@@ -64,7 +71,12 @@ export function GoalCelebrationOverlay({}: GoalCelebrationOverlayProps) {
         className="pointer-events-none absolute bottom-0 right-0 z-50 w-[24%] min-w-[54px] max-w-[92px] origin-bottom sm:bottom-[10%] sm:w-[18%] sm:min-w-0 sm:max-w-[80px]"
         initial={{ opacity: 0, x: 20, rotate: 12 }}
         animate={{ opacity: 1, x: 0, rotate: [5, -3, 5] }}
-        exit={{ opacity: 0, x: 12 }}
+        exit={{
+          opacity: 0,
+          x: 46,
+          rotate: 16,
+          transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] },
+        }}
         transition={{
           opacity: { duration: 0.3, delay: 0.15 },
           x: { duration: 0.3, delay: 0.15 },
@@ -84,7 +96,7 @@ export function GoalCelebrationOverlay({}: GoalCelebrationOverlayProps) {
         <Image src="/assets/brand/ellipse-yellow.webp" alt="" width={400} height={400} className="w-[60%] max-w-[200px] h-auto object-contain" />
       </motion.div>
 
-      {/* Goal.png image + ball animation — constrained to container height */}
+      {/* Goal artwork split into two halves so the exit peels open. */}
       <motion.div
         initial={{ opacity: 0, scale: 0.94 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -92,17 +104,41 @@ export function GoalCelebrationOverlay({}: GoalCelebrationOverlayProps) {
         transition={{ duration: 0.3 }}
         className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none p-2"
       >
-        <div className="relative h-full max-h-full flex items-center justify-center">
-          <Image src="/assets/goal.png" alt="Goal celebration" width={760} height={538} className="max-h-full w-auto object-contain" />
+        <div className="relative h-full max-h-full w-full">
           <motion.div
-            className="absolute left-1/2 top-[44%] flex size-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center"
-            initial={{ scale: 1, y: 10, opacity: 0.94 }}
-            animate={{ scale: [1, 3, 0.9], y: [10, -16, 8], opacity: [0.94, 1, 0.98] }}
-            transition={{ duration: 1.4, times: [0, 0.38, 1], ease: 'easeInOut' }}
+            className="absolute inset-0 flex items-center justify-center"
+            exit={{ y: '-115%', opacity: 0 }}
+            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+            style={{ clipPath: 'inset(0 0 50% 0)' }}
           >
-            <Image src="/assets/brand/large-ball.png" alt="" width={256} height={256} className="size-6 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.32)]" />
+            <Image src="/assets/goal.png" alt="Goal celebration" width={760} height={538} className="max-h-full w-auto object-contain" />
+          </motion.div>
+          <motion.div
+            className="absolute inset-0 flex items-center justify-center"
+            exit={{ y: '115%', opacity: 0 }}
+            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+            style={{ clipPath: 'inset(50% 0 0 0)' }}
+          >
+            <Image src="/assets/goal.png" alt="" width={760} height={538} className="max-h-full w-auto object-contain" />
           </motion.div>
         </div>
+      </motion.div>
+
+      <motion.div
+        className="absolute z-30 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center"
+        style={{
+          width: ballSizePx,
+          height: ballSizePx,
+          left: ballCenterPx ? ballCenterPx.x : '50%',
+          top: ballCenterPx ? ballCenterPx.y : '50%',
+        }}
+        initial={{ scale: 1, y: 10, opacity: 0.94 }}
+        animate={{ scale: [1, 3, 1], y: [10, -16, 0], opacity: [0.94, 1, 1] }}
+        exit={{ opacity: 1, scale: 1, transition: { duration: 0.25 } }}
+        transition={{ duration: 1.45, times: [0, 0.38, 1], ease: 'easeInOut' }}
+      >
+        <div className="absolute inset-[-6px] rounded-full bg-white/10 blur-sm" />
+        <Image src="/assets/brand/large-ball.png" alt="" width={256} height={256} className="size-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.32)]" />
       </motion.div>
 
       {/* Content */}

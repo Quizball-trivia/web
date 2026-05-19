@@ -284,22 +284,8 @@ export interface MatchQuestionPayload {
   attackerSeat?: 1 | 2 | null;
 }
 
-export interface MatchChanceCardUsePayload {
-  matchId: string;
-  qIndex: number;
-  clientActionId: string;
-}
-
 export interface MatchPlayAgainPayload {
   matchId: string;
-}
-
-export interface MatchChanceCardAppliedPayload {
-  matchId: string;
-  qIndex: number;
-  clientActionId: string;
-  eliminatedIndices: number[];
-  remainingQuantity: number;
 }
 
 /** Locale-resolved version of MatchQuestionPayload for use in the store & components. */
@@ -360,7 +346,7 @@ export interface MatchRoundResultPlayer {
   totalPoints: number;
   foundCount?: number;
   foundAnswerIds?: string[];
-  submittedOrderIds?: string[];
+  submittedOrderIds: string[];
   clueIndex?: number | null;
 }
 
@@ -469,6 +455,8 @@ export interface MatchFinalResultsPayload {
   winnerId: string | null;
   players: Record<string, MatchFinalResultPlayer>;
   standings?: MatchStandingPayload[];
+  totalQuestions?: number;
+  questionResults?: Record<string, Array<'correct' | 'wrong' | null>>;
   unlockedAchievements?: Record<string, AchievementUnlockPayload[]>;
   durationMs: number;
   resultVersion: number;
@@ -498,6 +486,7 @@ export interface MatchStatePayload {
   shooterSeat: 1 | 2 | null;
   halftime: {
     deadlineAt: string | null;
+    uiReadyAt?: string | null;
     categoryOptions: DraftCategory[];
     firstBanSeat: 1 | 2 | null;
     bans: {
@@ -700,7 +689,6 @@ export interface ClientToServerEvents {
   'match:countdown_guess': (data: { matchId: string; qIndex: number; guess: string }) => void;
   'match:put_in_order_answer': (data: { matchId: string; qIndex: number; orderedItemIds: string[]; timeMs: number }) => void;
   'match:clues_answer': (data: MatchCluesAnswerPayload) => void;
-  'match:chance_card_use': (data: MatchChanceCardUsePayload) => void;
   'match:halftime_ban': (data: { matchId: string; categoryId: string }) => void;
   'match:halftime_ui_ready': (data: { matchId: string }) => void;
   'match:leave': (data?: { matchId?: string }) => void;
@@ -738,7 +726,6 @@ export interface ServerToClientEvents {
   'match:state': (data: MatchStatePayload) => void;
   'match:party_state': (data: MatchPartyStatePayload) => void;
   'match:question': (data: MatchQuestionPayload) => void;
-  'match:chance_card_applied': (data: MatchChanceCardAppliedPayload) => void;
   'match:opponent_answered': (data: MatchOpponentAnsweredPayload) => void;
   'match:answer_ack': (data: MatchAnswerAckPayload) => void;
   'match:countdown_guess_ack': (data: MatchCountdownGuessAckPayload) => void;

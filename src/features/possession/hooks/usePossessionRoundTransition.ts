@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type {
   MatchRoundResultPayload,
   MatchStatePayload,
@@ -11,6 +11,7 @@ import {
   GOAL_VISUAL_SEQUENCE_MS,
   HALFTIME_RESULTS_DELAY_MS,
   PENALTY_COUNTDOWN_MS,
+  TRANSITION_DELAY_MS,
   type GoalCelebrationState,
   type TransitionSnapshot,
 } from '../realtimePossession.helpers';
@@ -82,11 +83,48 @@ export function usePossessionFirstQuestionIntro({
   return firstQuestionIntro;
 }
 
+interface UsePossessionSecondHalfQuestionIntroParams {
+  phase: MatchStatePayload['phase'] | undefined;
+  half: 1 | 2 | undefined;
+  normalQuestionsAnsweredInHalf: number | undefined;
+  currentQuestionIndex: number | null;
+  currentQuestionPhase: 'reveal' | 'playing' | undefined;
+}
+
+export function usePossessionSecondHalfQuestionIntro({
+  phase,
+  half,
+  normalQuestionsAnsweredInHalf,
+  currentQuestionIndex,
+  currentQuestionPhase,
+}: UsePossessionSecondHalfQuestionIntroParams): boolean {
+  const [expiredKey, setExpiredKey] = useState<string | null>(null);
+  const introKey = phase === 'NORMAL_PLAY'
+    && half === 2
+    && normalQuestionsAnsweredInHalf === 0
+    && currentQuestionIndex !== null
+    && currentQuestionPhase !== 'playing'
+    ? `second-half:${currentQuestionIndex}`
+    : null;
+  const secondHalfIntro = introKey !== null && expiredKey !== introKey;
+
+  useEffect(() => {
+    if (!introKey || expiredKey === introKey) return;
+    const timer = setTimeout(() => {
+      setExpiredKey(introKey);
+    }, TRANSITION_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [expiredKey, introKey]);
+
+  return secondHalfIntro;
+}
+
 interface UsePossessionRoundTransitionParams {
   phase: MatchStatePayload['phase'] | undefined;
   half: 1 | 2 | undefined;
   penaltySuddenDeath: boolean | undefined;
   firstQuestionIntro: boolean;
+  secondHalfQuestionIntro: boolean;
   localQuestion: ResolvedMatchQuestionPayload | null;
   pendingQuestion: ResolvedMatchQuestionPayload | null;
   roundResult: MatchRoundResultPayload | null;
@@ -102,6 +140,7 @@ export function usePossessionRoundTransition({
   half,
   penaltySuddenDeath,
   firstQuestionIntro,
+  secondHalfQuestionIntro,
   localQuestion,
   pendingQuestion,
   roundResult,
@@ -121,11 +160,21 @@ export function usePossessionRoundTransition({
   });
 
   const prevPenaltyPhaseRef = useRef(phase === 'PENALTY_SHOOTOUT');
+  const pendingPenaltyCountdownRef = useRef(false);
   const transitionVisibleRef = useRef(false);
   const hasBoundaryGoalRound = Boolean(
     (roundResult?.phaseKind === 'normal' || roundResult?.phaseKind === 'last_attack') &&
     roundResult.deltas?.goalScoredBySeat
   );
+  const hasFieldQuestionBeforePenalty = localQuestion?.phaseKind === 'normal'
+    || localQuestion?.phaseKind === 'last_attack'
+    || localQuestion?.phaseKind === 'shot';
+  const canStartPenaltyCountdown = phase === 'PENALTY_SHOOTOUT'
+    && !isPenaltyQuestion
+    && (
+      !hasFieldQuestionBeforePenalty
+      || (Boolean(roundResult) && roundResultHoldDone && !goalCelebration)
+    );
 
   useEffect(() => {
     if (phase === 'HALFTIME') {
@@ -142,23 +191,29 @@ export function usePossessionRoundTransition({
 
   useEffect(() => {
     const isPenaltyPhaseServer = phase === 'PENALTY_SHOOTOUT';
-    if (isPenaltyPhaseServer && !prevPenaltyPhaseRef.current) {
-      const delayMs = hasBoundaryGoalRound ? GOAL_VISUAL_SEQUENCE_MS : 0;
-      if (delayMs <= 0) {
-        queueMicrotask(() => {
-          setPenaltyCountdownEndsAt(Date.now() + PENALTY_COUNTDOWN_MS);
-        });
-        prevPenaltyPhaseRef.current = isPenaltyPhaseServer;
-        return;
-      }
-      const timer = setTimeout(() => {
-        setPenaltyCountdownEndsAt(Date.now() + PENALTY_COUNTDOWN_MS);
-      }, delayMs);
-      prevPenaltyPhaseRef.current = isPenaltyPhaseServer;
-      return () => clearTimeout(timer);
+    if (!isPenaltyPhaseServer) {
+      prevPenaltyPhaseRef.current = false;
+      pendingPenaltyCountdownRef.current = false;
+      return;
     }
-    prevPenaltyPhaseRef.current = isPenaltyPhaseServer;
-  }, [hasBoundaryGoalRound, phase]);
+
+    if (!prevPenaltyPhaseRef.current) {
+      pendingPenaltyCountdownRef.current = true;
+      prevPenaltyPhaseRef.current = true;
+    }
+
+    if (!pendingPenaltyCountdownRef.current || !canStartPenaltyCountdown) {
+      return;
+    }
+
+    pendingPenaltyCountdownRef.current = false;
+    queueMicrotask(() => {
+      setPenaltyCountdownEndsAt((current) => {
+        if (current && current > Date.now()) return current;
+        return Date.now() + PENALTY_COUNTDOWN_MS;
+      });
+    });
+  }, [canStartPenaltyCountdown, phase]);
 
   useEffect(() => {
     if (!penaltyCountdownEndsAt) return;
@@ -191,12 +246,15 @@ export function usePossessionRoundTransition({
   const penaltyCountdownActive = penaltyCountdownRemainingMs > 0;
   const penaltyCountdownDisplay = Math.max(1, Math.ceil(penaltyCountdownRemainingMs / 1000));
 
+  const hasPendingLastAttackQuestion = pendingQuestion?.phaseKind === 'last_attack';
   const isHalfBoundaryRound = roundResult?.phaseKind === 'normal' && roundResult.phaseRound === 6;
   const hasConcreteNextQuestion = Boolean(pendingQuestion);
   const allowBoundaryTransition = !isHalfBoundaryRound || hasConcreteNextQuestion;
+  const isRoundTransitionPhase = phase === 'NORMAL_PLAY'
+    || (phase === 'LAST_ATTACK' && hasPendingLastAttackQuestion);
 
-  const showRoundTransition = phase === 'NORMAL_PLAY'
-    && (roundResultHoldDone || firstQuestionIntro)
+  const showRoundTransition = isRoundTransitionPhase
+    && (roundResultHoldDone || firstQuestionIntro || secondHalfQuestionIntro)
     && allowBoundaryTransition
     && !isPenaltyQuestion
     && !isShotQuestion
@@ -212,15 +270,18 @@ export function usePossessionRoundTransition({
     && roundResult?.phaseKind === 'penalty'
     && pendingQuestion?.phaseKind === 'penalty';
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (showRoundTransition && !transitionVisibleRef.current) {
       transitionVisibleRef.current = true;
       const isExtra = pendingQuestion?.phaseKind === 'last_attack';
+      const transitionQIndex = pendingQuestion?.qIndex ?? localQuestion?.qIndex;
       const title = firstQuestionIntro
         ? 'Question 1'
         : isExtra
           ? 'Extra Question'
-          : `Question ${pendingQuestion?.phaseRound
+          : `Question ${typeof transitionQIndex === 'number'
+            ? transitionQIndex + 1
+            : pendingQuestion?.phaseRound
             ?? (typeof localQuestion?.phaseRound === 'number' ? localQuestion.phaseRound + 1 : 1)}`;
       const categoryName = firstQuestionIntro
         ? (localQuestion?.question.categoryName ?? 'Football')
@@ -228,12 +289,11 @@ export function usePossessionRoundTransition({
           ?? localQuestion?.question.categoryName
           ?? 'Football');
 
-      queueMicrotask(() => {
-        setTransitionSnapshot({
-          title,
-          categoryName,
-          subtitle: (half ?? 1) === 1 ? '1st Half' : '2nd Half',
-        });
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- layout effect commits the new label before paint, avoiding a one-frame stale "Question 1" flash.
+      setTransitionSnapshot({
+        title,
+        categoryName,
+        subtitle: (half ?? 1) === 1 ? '1st Half' : '2nd Half',
       });
       return;
     }
@@ -243,12 +303,10 @@ export function usePossessionRoundTransition({
       const penaltyRound = pendingQuestion?.phaseRound
         ?? (typeof roundResult?.phaseRound === 'number' ? roundResult.phaseRound + 1 : undefined)
         ?? 1;
-      queueMicrotask(() => {
-        setTransitionSnapshot({
-          title: `Penalty ${penaltyRound}`,
-          categoryName: 'Penalty Shootout',
-          subtitle: penaltySuddenDeath ? 'Sudden Death' : 'Shootout',
-        });
+      setTransitionSnapshot({
+        title: `Penalty ${penaltyRound}`,
+        categoryName: 'Penalty Shootout',
+        subtitle: penaltySuddenDeath ? 'Sudden Death' : 'Shootout',
       });
       return;
     }
@@ -260,12 +318,15 @@ export function usePossessionRoundTransition({
     firstQuestionIntro,
     half,
     localQuestion?.phaseRound,
+    localQuestion?.qIndex,
     localQuestion?.question.categoryName,
     pendingQuestion?.phaseKind,
     pendingQuestion?.phaseRound,
+    pendingQuestion?.qIndex,
     pendingQuestion?.question.categoryName,
     penaltySuddenDeath,
     roundResult?.phaseRound,
+    secondHalfQuestionIntro,
     showPenaltyTransition,
     showRoundTransition,
   ]);
