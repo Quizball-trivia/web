@@ -120,6 +120,48 @@ describe('usePossessionFieldState', () => {
     vi.useRealTimers();
   });
 
+  it('resets stale possession position when a new match starts on an open question', () => {
+    const makeNewMatch = (possessionDiff: number): MatchStatus => {
+      const match = makeMatch(possessionDiff);
+      return {
+        ...match,
+        matchId: 'match-2',
+        possessionState: match.possessionState
+          ? { ...match.possessionState, matchId: 'match-2', normalQuestionsAnsweredInHalf: 0, phaseRound: 1 }
+          : null,
+      };
+    };
+
+    const { result, rerender } = renderHook((props: { match: MatchStatus }) => usePossessionFieldState({
+      match: props.match,
+      localQuestion: makeQuestion(0),
+      roundResult: null,
+      questionPhase: 'playing',
+      roundResolved: false,
+      answerAck: null,
+      opponentAnsweredCorrectly: null,
+      myRound: null,
+      opponentRound: null,
+      devPossessionAnimation: null,
+      clearDevPossessionAnimation: vi.fn(),
+      playerAvatar: '/me.png',
+      opponentAvatar: '/opp.png',
+      playerUsername: 'me',
+      opponentUsername: 'opp',
+      isHalftime: false,
+    }), {
+      initialProps: {
+        match: makeMatch(-80, { normalQuestionsAnsweredInHalf: 0, phaseRound: 1 }),
+      },
+    });
+
+    expect(result.current.visualMyPossessionPct).toBe(10);
+
+    rerender({ match: makeNewMatch(0) });
+
+    expect(result.current.visualMyPossessionPct).toBe(50);
+  });
+
   it('resets the field to center when the second half starts', async () => {
     const { result, rerender } = renderHook((props: { match: MatchStatus }) => usePossessionFieldState({
       match: props.match,

@@ -27,6 +27,8 @@ interface RealtimePossessionMatchScreenProps {
   playerFavoriteClub?: string | null;
   centerPossessionTrack?: boolean;
   simpleShotAnimation?: boolean;
+  /** Dev prototype: glow one-sided surviving bars before normal possession moves. */
+  unopposedBarPulse?: boolean;
   /** Skip the ranked background music loop. Pass `true` from dev playgrounds. */
   disableBgm?: boolean;
   onQuit: () => void;

@@ -26,6 +26,7 @@ interface AttackAnimation {
 }
 
 interface UsePossessionAnimationOrchestratorParams {
+  matchId?: string | null;
   possessionState: MatchStatus['possessionState'];
   matchVariant?: MatchStatus['variant'] | null;
   mySeat: number | null;
@@ -39,6 +40,7 @@ interface UsePossessionAnimationOrchestratorParams {
   opponentRound: MatchRoundResultPlayer | null;
   devPossessionAnimation: DevPossessionAnimation | null;
   clearDevPossessionAnimation: () => void;
+  unopposedBarPulse?: boolean;
 }
 
 interface PossessionAnimationOrchestratorResult {
@@ -56,6 +58,7 @@ function toSeat(value: number | null): 1 | 2 {
 }
 
 export function usePossessionAnimationOrchestrator({
+  matchId,
   possessionState,
   matchVariant,
   mySeat,
@@ -69,6 +72,7 @@ export function usePossessionAnimationOrchestrator({
   opponentRound,
   devPossessionAnimation,
   clearDevPossessionAnimation,
+  unopposedBarPulse = false,
 }: UsePossessionAnimationOrchestratorParams): PossessionAnimationOrchestratorResult {
   const phase = possessionState?.phase;
   const localQuestionIndex = localQuestion?.qIndex ?? null;
@@ -103,6 +107,34 @@ export function usePossessionAnimationOrchestrator({
     optimisticOffset,
     'field'
   );
+
+  useLayoutEffect(() => {
+    latestPossessionRef.current = initialPossessionPct;
+    fieldMotionLockedRef.current = false;
+    delayedFieldQRef.current = null;
+    shotOriginCaptureKeyRef.current = null;
+    attackOriginQRef.current = null;
+    attackOriginPctRef.current = null;
+    if (fieldReleaseTimerRef.current) {
+      clearTimeout(fieldReleaseTimerRef.current);
+      fieldReleaseTimerRef.current = null;
+    }
+    if (goalFieldResetTimerRef.current) {
+      clearTimeout(goalFieldResetTimerRef.current);
+      goalFieldResetTimerRef.current = null;
+    }
+    setOptimisticOffset(0);
+    setFieldMotionLocked(false);
+    setGoalFieldResetReadyQIndex(null);
+    setSecondHalfKickoffResetPending(false);
+    setReadyRoundAttackKey(null);
+    setMyPossessionPct(initialPossessionPct);
+  // Reset only when the active match changes. `initialPossessionPct` is
+  // intentionally read from this render; including it as a dependency would
+  // reset the field on every legitimate possessionDiff update and cancel the
+  // bar/field animation timing.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matchId]);
 
   useEffect(() => {
     if (!isPenaltyQuestion) {
@@ -329,6 +361,7 @@ export function usePossessionAnimationOrchestrator({
       FIELD_RESULT_COMPARE_MS + FIELD_POSSESSION_CUE_MS,
       getBarBattleFieldLockMs(playerPoints, opponentPoints, {
         includeScoreFlightHandoff: matchVariant === 'ranked_sim',
+        includeUnopposedPulse: unopposedBarPulse,
       })
     );
 
@@ -338,7 +371,7 @@ export function usePossessionAnimationOrchestrator({
       setMyPossessionPct(latestPossessionRef.current);
       fieldReleaseTimerRef.current = null;
     }, fieldLockMs);
-  }, [matchVariant, myRound, opponentRound, phaseKind, roundResult]);
+  }, [matchVariant, myRound, opponentRound, phaseKind, roundResult, unopposedBarPulse]);
 
   useEffect(() => {
     delayedFieldQRef.current = null;

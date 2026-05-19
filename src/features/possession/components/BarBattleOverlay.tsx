@@ -26,6 +26,8 @@ export interface BarBattleState {
   opponentPoints: number;
   remainingDelta: number;
   dividerX: number;
+  /** `pulse` uses the charge glow without lunging the final bar into the avatar. */
+  chargeMode?: 'lunge' | 'pulse';
 }
 
 // ─── Visual constants ────────────────────────────────────────────────────────
@@ -585,6 +587,7 @@ export function BarBattleOverlay({
 
   const { phase, playerBars, opponentBars, playerPoints, opponentPoints, remainingDelta, dividerX } = battle;
   if (phase === 'done') return null;
+  const chargeLunges = battle.chargeMode !== 'pulse';
   const blueGrad = `${uid}-blue`;
   const redGrad = `${uid}-red`;
   const battleClip = `${uid}-battle-clip`;
@@ -831,7 +834,9 @@ export function BarBattleOverlay({
             cancelled={remainingDelta <= 0}
             survived={remainingDelta > 0}
             chargeOrder={0}
-            chargeHitOffsetX={remainingDelta > 0 && isAnchored && playerAvatarX != null
+            chargeHitOffsetX={!chargeLunges
+              ? 0
+              : remainingDelta > 0 && isAnchored && playerAvatarX != null
               ? (playerAvatarX + playerBarDir * 20) - playerLayout.compactX
               : remainingDelta > 0
                 ? -playerBarDir * 34
@@ -852,7 +857,9 @@ export function BarBattleOverlay({
             const survivedIndex = isSurvived ? i - minBars : i;
             const survivorCount = Math.max(0, playerBars - minBars);
             const chargeOrder = isSurvived ? Math.max(0, survivorCount - 1 - survivedIndex) : 0;
-            const chargeHitOffsetX = isSurvived && survivedIndex === 0
+            const chargeHitOffsetX = !chargeLunges
+              ? 0
+              : isSurvived && survivedIndex === 0
               ? isAnchored && playerAvatarX != null
                 ? (playerAvatarX + playerBarDir * 20) - playerBarStartX(i)
                 : -playerBarDir * 34
@@ -898,7 +905,9 @@ export function BarBattleOverlay({
             cancelled={remainingDelta >= 0}
             survived={remainingDelta < 0}
             chargeOrder={0}
-            chargeHitOffsetX={remainingDelta < 0 && isAnchored && opponentAvatarX != null
+            chargeHitOffsetX={!chargeLunges
+              ? 0
+              : remainingDelta < 0 && isAnchored && opponentAvatarX != null
               ? (opponentAvatarX + opponentBarDir * 20) - opponentLayout.compactX
               : remainingDelta < 0
                 ? -opponentBarDir * 34
@@ -919,7 +928,9 @@ export function BarBattleOverlay({
             const survivedIndex = isSurvived ? i - minBars : i;
             const survivorCount = Math.max(0, opponentBars - minBars);
             const chargeOrder = isSurvived ? Math.max(0, survivorCount - 1 - survivedIndex) : 0;
-            const chargeHitOffsetX = isSurvived && survivedIndex === 0
+            const chargeHitOffsetX = !chargeLunges
+              ? 0
+              : isSurvived && survivedIndex === 0
               ? isAnchored && opponentAvatarX != null
                 ? (opponentAvatarX + opponentBarDir * 20) - opponentBarStartX(i)
                 : -opponentBarDir * 34

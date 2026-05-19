@@ -35,11 +35,14 @@ const CHARGE_PER_BAR_MS = 75;     // Sequential glow from farthest bar to avatar
 const CHARGE_SHOT_OVERLAP_MS = 260; // Start the shot as the final charge glow peaks
 const RESULT_HOLD_MS = 320;       // Show remaining bars briefly before possession moves
 const DONE_LINGER_MS = 100;
+const UNOPPOSED_PULSE_RESULT_HOLD_MS = 80;
+const UNOPPOSED_PULSE_DONE_LINGER_MS = 40;
 const RANKED_SCORE_FLIGHT_HANDOFF_MS = FLIGHT_TOTAL_MS + 120;
 
 const POINTS_PER_BAR = 10;
 const MAX_BARS = 12;
 const BAR_BATTLE_LOCK_BUFFER_MS = 240;
+const UNOPPOSED_PULSE_LOCK_BUFFER_MS = 60;
 
 export function pointsToBars(points: number): number {
   if (points <= 0) return 0;
@@ -48,6 +51,7 @@ export function pointsToBars(points: number): number {
 
 interface BarBattleTimingOptions {
   includeScoreFlightHandoff?: boolean;
+  includeUnopposedPulse?: boolean;
 }
 
 function getScoreHandoffMs(includeScoreFlightHandoff = false): number {
@@ -80,7 +84,12 @@ function getBarBattleTimelineMs(
   const cancelledCount = Math.min(playerBars, opponentBars);
   const survivorCount = maxBars - cancelledCount;
   const battleMs = cancelledCount > 0 ? BATTLE_BASE_MS + cancelledCount * BATTLE_PER_BAR_MS : 0;
-  const chargeMs = includeShotCharge && survivorCount > 0 ? CHARGE_BASE_MS + survivorCount * CHARGE_PER_BAR_MS : 0;
+  const shouldPulseUnopposed = options.includeUnopposedPulse && cancelledCount === 0 && survivorCount > 0;
+  const chargeMs = (includeShotCharge || shouldPulseUnopposed) && survivorCount > 0
+    ? CHARGE_BASE_MS + survivorCount * CHARGE_PER_BAR_MS
+    : 0;
+  const resultHoldMs = shouldPulseUnopposed ? UNOPPOSED_PULSE_RESULT_HOLD_MS : RESULT_HOLD_MS;
+  const doneLingerMs = shouldPulseUnopposed ? UNOPPOSED_PULSE_DONE_LINGER_MS : DONE_LINGER_MS;
   const scoreHandoffMs = getScoreHandoffMs(options.includeScoreFlightHandoff);
   const beforeResultMs = (
     scoreHandoffMs +
@@ -91,7 +100,7 @@ function getBarBattleTimelineMs(
     chargeMs
   );
   return {
-    totalMs: beforeResultMs + RESULT_HOLD_MS + DONE_LINGER_MS,
+    totalMs: beforeResultMs + resultHoldMs + doneLingerMs,
     shotHandoffMs: chargeMs > 0
       ? Math.max(0, beforeResultMs - CHARGE_SHOT_OVERLAP_MS)
       : beforeResultMs,
@@ -106,7 +115,14 @@ export function getBarBattleFieldLockMs(
   opponentPoints: number,
   options: BarBattleTimingOptions = {}
 ): number {
-  return getBarBattleTotalMs(playerPoints, opponentPoints, options) + BAR_BATTLE_LOCK_BUFFER_MS;
+  const playerBars = pointsToBars(playerPoints);
+  const opponentBars = pointsToBars(opponentPoints);
+  const isUnopposedPulse =
+    options.includeUnopposedPulse
+    && Math.min(playerBars, opponentBars) === 0
+    && Math.max(playerBars, opponentBars) > 0;
+  const bufferMs = isUnopposedPulse ? UNOPPOSED_PULSE_LOCK_BUFFER_MS : BAR_BATTLE_LOCK_BUFFER_MS;
+  return getBarBattleTotalMs(playerPoints, opponentPoints, options) + bufferMs;
 }
 
 export function getBarBattleGoalAttackDelayMs(
@@ -152,6 +168,8 @@ interface UseBarBattleParams {
   phaseKind: string;
   /** Current divider X in SVG coords */
   dividerX: number;
+  /** Dev prototype: glow surviving one-sided bars before normal possession movement. */
+  unopposedBarPulse?: boolean;
 }
 
 export function useBarBattle({
@@ -164,6 +182,7 @@ export function useBarBattle({
   opponentRound,
   phaseKind,
   dividerX,
+  unopposedBarPulse = false,
 }: UseBarBattleParams): BarBattleState | null {
   const matchVariant = useRealtimeMatchStore((s) => s.match?.variant);
   const [battle, setBattle] = useState<BarBattleState | null>(null);
@@ -283,6 +302,7 @@ export function useBarBattle({
     const isShotResolution = Boolean(
       roundResult.deltas?.goalScoredBySeat || roundResult.deltas?.penaltyOutcome
     );
+    const shouldPulseUnopposed = unopposedBarPulse && !isShotResolution && cancelledCount === 0 && Math.max(pBars, oBars) > 0;
 
     // If both scored 0, just clean up
     if (myPts === 0 && oppPts === 0) {
@@ -298,6 +318,7 @@ export function useBarBattle({
       opponentPoints: oppPts,
       remainingDelta: delta,
       dividerX: snapDividerX,
+      chargeMode: shouldPulseUnopposed ? 'pulse' as const : 'lunge' as const,
     };
 
     // First ensure both-score is showing with final values
@@ -329,7 +350,9 @@ export function useBarBattle({
     t += barsPhaseMs;
     const survivorCount = maxBars - cancelledCount;
     const battleMs = cancelledCount > 0 ? BATTLE_BASE_MS + cancelledCount * BATTLE_PER_BAR_MS : 0;
-    const chargeMs = isShotResolution && survivorCount > 0 ? CHARGE_BASE_MS + survivorCount * CHARGE_PER_BAR_MS : 0;
+    const chargeMs = (isShotResolution || shouldPulseUnopposed) && survivorCount > 0
+      ? CHARGE_BASE_MS + survivorCount * CHARGE_PER_BAR_MS
+      : 0;
     const t3 = cancelledCount > 0
       ? setTimeout(() => {
           setBattle((prev) => prev?.key === key ? { ...prev, phase: 'battle' } : prev);
@@ -343,6 +366,9 @@ export function useBarBattle({
         }, t)
       : null;
 
+    const resultHoldMs = shouldPulseUnopposed ? UNOPPOSED_PULSE_RESULT_HOLD_MS : RESULT_HOLD_MS;
+    const doneLingerMs = shouldPulseUnopposed ? UNOPPOSED_PULSE_DONE_LINGER_MS : DONE_LINGER_MS;
+
     // Result: show remaining bars
     t += chargeMs;
     const t4 = setTimeout(() => {
@@ -350,12 +376,12 @@ export function useBarBattle({
     }, t);
 
     // Done + cleanup
-    t += RESULT_HOLD_MS;
+    t += resultHoldMs;
     const t5 = setTimeout(() => {
       setBattle((prev) => prev?.key === key ? { ...prev, phase: 'done' } : prev);
     }, t);
 
-    t += DONE_LINGER_MS;
+    t += doneLingerMs;
     const t6 = setTimeout(() => {
       setBattle((prev) => prev?.key === key ? null : prev);
       // NOTE: Do NOT reset battleStartedQRef here — dividerX changes after
@@ -364,7 +390,7 @@ export function useBarBattle({
     }, t);
 
     timersRef.current = [t1, t2, t3, tCharge, t4, t5, t6].filter((timer): timer is ReturnType<typeof setTimeout> => timer !== null);
-  }, [roundResult, myRound, opponentRound, phaseKind, matchVariant]);
+  }, [roundResult, myRound, opponentRound, phaseKind, matchVariant, unopposedBarPulse]);
 
   // ─── Reset when new question arrives ────────────────────────────────────
   useEffect(() => {

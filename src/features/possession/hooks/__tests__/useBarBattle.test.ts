@@ -4,6 +4,7 @@ import type { MatchRoundResultPayload, MatchRoundResultPlayer } from '@/lib/real
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { FLIGHT_TOTAL_MS } from '../../components/BarBattleFlightOverlay';
 import {
+  getBarBattleFieldLockMs,
   getBarBattleGoalAttackDelayMs,
   getBarBattleTotalMs,
   useBarBattle,
@@ -244,6 +245,68 @@ describe('useBarBattle', () => {
       opponentBars: 3,
       remainingDelta: 5,
     });
+  });
+
+  it('can pulse one-sided surviving bars before normal possession movement', async () => {
+    const myRound = makePlayer(70, true);
+    const opponentRound = makePlayer(0, false);
+    const roundResult = makeRoundResult(70, 0);
+
+    const { result } = renderHook(() => useBarBattle({
+      answerAck: {
+        matchId: MATCH_ID,
+        qIndex: 5,
+        questionKind: 'multipleChoice',
+        selectedIndex: 0,
+        isCorrect: true,
+        myTotalPoints: 70,
+        oppAnswered: true,
+        pointsEarned: 70,
+        phaseKind: 'normal',
+        phaseRound: 6,
+      },
+      opponentAnswered: true,
+      opponentRecentPoints: 0,
+      opponentAnsweredCorrectly: false,
+      roundResult,
+      myRound,
+      opponentRound,
+      phaseKind: 'normal',
+      dividerX: 250,
+      unopposedBarPulse: true,
+    }));
+
+    await act(async () => {});
+
+    act(() => {
+      vi.advanceTimersByTime(700);
+    });
+
+    expect(result.current).toMatchObject({
+      phase: 'charge',
+      chargeMode: 'pulse',
+      playerBars: 7,
+      opponentBars: 0,
+      remainingDelta: 7,
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(1030);
+    });
+
+    expect(result.current).toMatchObject({
+      phase: 'result',
+      playerBars: 7,
+      opponentBars: 0,
+      remainingDelta: 7,
+    });
+  });
+
+  it('keeps only a minimal movement delay after a one-sided pulse cleanup', () => {
+    const totalMs = getBarBattleTotalMs(70, 0, { includeUnopposedPulse: true });
+    const fieldLockMs = getBarBattleFieldLockMs(70, 0, { includeUnopposedPulse: true });
+
+    expect(fieldLockMs - totalMs).toBe(60);
   });
 
   it('charges surviving bars after a shot collision before the goal animation', async () => {

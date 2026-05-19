@@ -40,6 +40,7 @@ export function usePossessionGoalCelebration({
   devPossessionAnimation,
 }: UsePossessionGoalCelebrationParams) {
   const matchVariant = useRealtimeMatchStore((s) => s.match?.variant);
+  const selfUserId = useRealtimeMatchStore((s) => s.selfUserId);
   const [goalCelebration, setGoalCelebration] = useState<GoalCelebrationState | null>(null);
   const goalCelebrationHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const goalCelebrationStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -69,16 +70,21 @@ export function usePossessionGoalCelebration({
 
     goalCelebrationKeyRef.current = celebrationKey;
     const isMeScorer = roundScorerSeat === mySeat;
-    const roundPlayers = Object.values(roundResult?.players ?? {});
+    // Look up player/opponent by self user id rather than Object.values()
+    // ordering — Record key enumeration order is engine-dependent for
+    // non-integer keys, so [0]/[1] could swap player and opponent.
+    const players = roundResult?.players ?? {};
+    const playerRound = selfUserId ? players[selfUserId] : undefined;
+    const opponentRound = Object.entries(players).find(([userId]) => userId !== selfUserId)?.[1];
     const playerPoints = resolveBattlePoints(
-      roundPlayers[0]?.pointsEarned ?? 0,
+      playerRound?.pointsEarned ?? 0,
       roundResult?.questionKind,
-      roundPlayers[0]?.foundCount
+      playerRound?.foundCount
     );
     const opponentPoints = resolveBattlePoints(
-      roundPlayers[1]?.pointsEarned ?? 0,
+      opponentRound?.pointsEarned ?? 0,
       roundResult?.questionKind,
-      roundPlayers[1]?.foundCount
+      opponentRound?.foundCount
     );
     const attackDelayMs = getBarBattleGoalAttackDelayMs(
       playerPoints,
@@ -112,6 +118,7 @@ export function usePossessionGoalCelebration({
     roundScorerSeat,
     roundResult,
     matchVariant,
+    selfUserId,
   ]);
 
   useEffect(() => {

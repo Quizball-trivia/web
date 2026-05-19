@@ -167,6 +167,28 @@ function makeQuestion(qIndex: number, kind: QuestionKind = 'multipleChoice'): Re
   } as ResolvedMatchQuestionPayload;
 }
 
+function makeOpponentMarkerQuestion(qIndex: number): ResolvedMatchQuestionPayload {
+  const now = Date.now();
+  return {
+    matchId: MATCH_ID,
+    qIndex,
+    total: TOTAL_QUESTIONS,
+    playableAt: new Date(now - 1000).toISOString(),
+    deadlineAt: new Date(now + 60_000).toISOString(),
+    phaseKind: 'normal',
+    phaseRound: qIndex < 6 ? qIndex + 1 : qIndex - 5,
+    attackerSeat: (qIndex % 2 === 0 ? 1 : 2) as 1 | 2,
+    question: {
+      kind: 'multipleChoice',
+      id: `dev-marker-q-${qIndex}`,
+      prompt: 'Which Italian midfielder was known as "The Architect"?',
+      options: ['Gianluigi Buffon', 'Andrea Pirlo', 'Paolo Maldini', 'Francesco Totti'],
+      categoryName: 'Legends',
+      difficulty: 'medium',
+    },
+  } as ResolvedMatchQuestionPayload;
+}
+
 function makeStartPayload(): MatchStartPayload {
   return {
     matchId: MATCH_ID,
@@ -690,6 +712,16 @@ function DevAnimationsContent() {
       window.setTimeout(tick, 50);
     };
     window.setTimeout(tick, 50);
+  };
+
+  const clickMcqOption = (index: number, attempts = 0) => {
+    const button = document.querySelector<HTMLButtonElement>(`[data-mcq-option-index="${index}"]`);
+    if (button && !button.disabled) {
+      button.click();
+      return;
+    }
+    if (attempts >= 30) return;
+    window.setTimeout(() => clickMcqOption(index, attempts + 1), 100);
   };
 
   function schedulePostRoundPossessionState(result: MatchRoundResultPayload, roundResultDelayMs = 1600) {
@@ -1320,6 +1352,242 @@ function DevAnimationsContent() {
     setRemountKey((k) => k + 1);
   }
 
+  function loadOpponentMarkerRevealDemo() {
+    setMobilePanelOpen(false);
+    pendingTimers.current.forEach((t) => window.clearTimeout(t));
+    pendingTimers.current = [];
+
+    const s = store();
+    const activeQIndex = s.match?.currentQuestion?.qIndex ?? -1;
+    const qIndex = Math.min(activeQIndex + 1, TOTAL_QUESTIONS - 1);
+    const correctIndex = 1;
+    const wrongIndex = 0;
+    const opponentPoints = 40;
+
+    stateVersion.current += 1;
+    s.setMatchState(makeMatchState('NORMAL_PLAY', {
+      stateVersion: stateVersion.current,
+      goals: goalsRef.current,
+      possessionDiff: possessionDiffRef.current,
+    }));
+
+    useRealtimeMatchStore.setState((prev) =>
+      prev.match
+        ? {
+            ...prev,
+            match: {
+              ...prev.match,
+              lastRoundResult: null,
+              answerAck: null,
+              countdownGuessAck: null,
+              cluesGuessAck: null,
+              opponentAnswered: false,
+              opponentSelectedIndex: null,
+              opponentRecentPoints: 0,
+              opponentAnsweredCorrectly: null,
+              currentQuestionPhase: 'reveal',
+            },
+          }
+        : prev
+    );
+
+    s.setMatchQuestion(makeOpponentMarkerQuestion(qIndex));
+    setNextQuestionKind('multipleChoice');
+    setRemountKey((k) => k + 1);
+
+    const result: MatchRoundResultPayload = {
+      matchId: MATCH_ID,
+      qIndex,
+      questionKind: 'multipleChoice',
+      reveal: { kind: 'multipleChoice', correctIndex },
+      players: {
+        [SELF_ID]: {
+          totalPoints: scoreRef.current.meTotal,
+          pointsEarned: 0,
+          isCorrect: false,
+          timeMs: 5200,
+          selectedIndex: wrongIndex,
+          submittedOrderIds: [],
+        },
+        [OPP_ID]: {
+          totalPoints: scoreRef.current.oppTotal + opponentPoints,
+          pointsEarned: opponentPoints,
+          isCorrect: true,
+          timeMs: 2400,
+          selectedIndex: correctIndex,
+          submittedOrderIds: [],
+        },
+      },
+      phaseKind: 'normal',
+      phaseRound: qIndex < 6 ? qIndex + 1 : qIndex - 5,
+      deltas: {
+        possessionDelta: -opponentPoints,
+        goalScoredBySeat: null,
+        penaltyOutcome: null,
+      },
+    };
+
+    pendingTimers.current.push(
+      window.setTimeout(() => {
+        s.setOpponentAnswered({
+          matchId: MATCH_ID,
+          qIndex,
+          opponentTotalPoints: scoreRef.current.oppTotal + opponentPoints,
+          pointsEarned: opponentPoints,
+          isCorrect: true,
+          selectedIndex: correctIndex,
+        });
+
+        clickMcqOption(wrongIndex);
+
+        pendingTimers.current.push(
+          window.setTimeout(() => {
+            s.setAnswerAck({
+              matchId: MATCH_ID,
+              qIndex,
+              questionKind: 'multipleChoice',
+              selectedIndex: wrongIndex,
+              isCorrect: false,
+              correctIndex,
+              myTotalPoints: scoreRef.current.meTotal,
+              oppAnswered: true,
+              pointsEarned: 0,
+              phaseKind: 'normal',
+              phaseRound: result.phaseRound ?? null,
+            });
+          }, 450)
+        );
+
+        pendingTimers.current.push(
+          window.setTimeout(() => {
+            s.setRoundResult(result);
+          }, 1300)
+        );
+        schedulePostRoundPossessionState(result, 1300);
+
+        scoreRef.current.oppTotal += opponentPoints;
+      }, 900)
+    );
+  }
+
+  function loadPlayerCorrectOpponentWrongDemo() {
+    setMobilePanelOpen(false);
+    pendingTimers.current.forEach((t) => window.clearTimeout(t));
+    pendingTimers.current = [];
+
+    const s = store();
+    const activeQIndex = s.match?.currentQuestion?.qIndex ?? -1;
+    const qIndex = Math.min(activeQIndex + 1, TOTAL_QUESTIONS - 1);
+    const correctIndex = 1;
+    const opponentWrongIndex = 0;
+    const playerPoints = 40;
+
+    stateVersion.current += 1;
+    s.setMatchState(makeMatchState('NORMAL_PLAY', {
+      stateVersion: stateVersion.current,
+      goals: goalsRef.current,
+      possessionDiff: possessionDiffRef.current,
+    }));
+
+    useRealtimeMatchStore.setState((prev) =>
+      prev.match
+        ? {
+            ...prev,
+            match: {
+              ...prev.match,
+              lastRoundResult: null,
+              answerAck: null,
+              countdownGuessAck: null,
+              cluesGuessAck: null,
+              opponentAnswered: false,
+              opponentSelectedIndex: null,
+              opponentRecentPoints: 0,
+              opponentAnsweredCorrectly: null,
+              currentQuestionPhase: 'reveal',
+            },
+          }
+        : prev
+    );
+
+    s.setMatchQuestion(makeOpponentMarkerQuestion(qIndex));
+    setNextQuestionKind('multipleChoice');
+    setRemountKey((k) => k + 1);
+
+    const result: MatchRoundResultPayload = {
+      matchId: MATCH_ID,
+      qIndex,
+      questionKind: 'multipleChoice',
+      reveal: { kind: 'multipleChoice', correctIndex },
+      players: {
+        [SELF_ID]: {
+          totalPoints: scoreRef.current.meTotal + playerPoints,
+          pointsEarned: playerPoints,
+          isCorrect: true,
+          timeMs: 2400,
+          selectedIndex: correctIndex,
+          submittedOrderIds: [],
+        },
+        [OPP_ID]: {
+          totalPoints: scoreRef.current.oppTotal,
+          pointsEarned: 0,
+          isCorrect: false,
+          timeMs: 5200,
+          selectedIndex: opponentWrongIndex,
+          submittedOrderIds: [],
+        },
+      },
+      phaseKind: 'normal',
+      phaseRound: qIndex < 6 ? qIndex + 1 : qIndex - 5,
+      deltas: {
+        possessionDelta: playerPoints,
+        goalScoredBySeat: null,
+        penaltyOutcome: null,
+      },
+    };
+
+    pendingTimers.current.push(
+      window.setTimeout(() => {
+        s.setOpponentAnswered({
+          matchId: MATCH_ID,
+          qIndex,
+          opponentTotalPoints: scoreRef.current.oppTotal,
+          pointsEarned: 0,
+          isCorrect: false,
+          selectedIndex: opponentWrongIndex,
+        });
+
+        clickMcqOption(correctIndex);
+
+        pendingTimers.current.push(
+          window.setTimeout(() => {
+            s.setAnswerAck({
+              matchId: MATCH_ID,
+              qIndex,
+              questionKind: 'multipleChoice',
+              selectedIndex: correctIndex,
+              isCorrect: true,
+              correctIndex,
+              myTotalPoints: scoreRef.current.meTotal + playerPoints,
+              oppAnswered: true,
+              pointsEarned: playerPoints,
+              phaseKind: 'normal',
+              phaseRound: result.phaseRound ?? null,
+            });
+          }, 450)
+        );
+
+        pendingTimers.current.push(
+          window.setTimeout(() => {
+            s.setRoundResult(result);
+          }, 1300)
+        );
+        schedulePostRoundPossessionState(result, 1300);
+
+        scoreRef.current.meTotal += playerPoints;
+      }, 900)
+    );
+  }
+
   function goHalftime() {
     setMobilePanelOpen(false);
     const s = store();
@@ -1570,6 +1838,7 @@ function DevAnimationsContent() {
           playerFavoriteClub="real-madrid"
           centerPossessionTrack
           simpleShotAnimation
+          unopposedBarPulse
           disableBgm
           onQuit={() => router.push('/play')}
           onForfeit={() => router.push('/play')}
@@ -1692,10 +1961,19 @@ function DevAnimationsContent() {
         </Group>
 
         <Group label="Apply round result">
-          <Btn variant="green" onClick={() => fireOutcome('me-correct')}>me correct · opp wrong</Btn>
-          <Btn variant="red" onClick={() => fireOutcome('opp-correct')}>opp correct · me wrong</Btn>
+          <Btn variant="green" onClick={loadPlayerCorrectOpponentWrongDemo}>me correct · opp wrong</Btn>
+          <Btn variant="red" onClick={loadOpponentMarkerRevealDemo}>opp correct · me wrong</Btn>
           <Btn onClick={() => fireOutcome('both-correct')}>both correct</Btn>
           <Btn onClick={() => fireOutcome('both-wrong')}>both wrong</Btn>
+        </Group>
+
+        <Group label="MCQ reveal states">
+          <Btn variant="yellow" onClick={loadPlayerCorrectOpponentWrongDemo}>player correct · opp marker wrong</Btn>
+          <Btn variant="yellow" onClick={loadOpponentMarkerRevealDemo}>opp marker on correct card</Btn>
+          <p className="mt-1 text-[9px] text-brand-slate">
+            Mirror MCQ reveal cases for player-correct and opponent-correct
+            answers, including opponent marker rails.
+          </p>
         </Group>
 
         <Group label="Score / shot">

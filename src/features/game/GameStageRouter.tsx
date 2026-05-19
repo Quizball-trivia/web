@@ -74,11 +74,22 @@ export function GameStageRouter() {
   const showdownType = matchType === "ranked" ? "ranked" : "friendly";
 
   const exitToPlay = useCallback(() => {
+    const final = realtimeMatch?.finalResults;
+    if (final) {
+      socket.emit("match:final_results_ack", {
+        matchId: final.matchId,
+        resultVersion: final.resultVersion,
+      });
+      logger.info("Socket emit match:final_results_ack before exit", {
+        matchId: final.matchId,
+        resultVersion: final.resultVersion,
+      });
+    }
     resetRealtime();
     clearRankedMatchmaking();
     resetGameSession();
     router.push("/play");
-  }, [clearRankedMatchmaking, resetGameSession, resetRealtime, router]);
+  }, [clearRankedMatchmaking, realtimeMatch?.finalResults, resetGameSession, resetRealtime, router, socket]);
 
   useEffect(() => {
     const inviteCode = realtimeLobby?.inviteCode;

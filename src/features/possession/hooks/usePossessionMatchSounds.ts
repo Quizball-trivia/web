@@ -26,6 +26,7 @@ export function usePossessionMatchSounds({
   playSfx,
 }: UsePossessionMatchSoundsParams): void {
   const matchVariant = useRealtimeMatchStore((s) => s.match?.variant);
+  const selfUserId = useRealtimeMatchStore((s) => s.selfUserId);
   const prevPhaseRef = useRef<string | null>(null);
   const playSfxRef = useRef(playSfx);
   useEffect(() => {
@@ -54,16 +55,21 @@ export function usePossessionMatchSounds({
       const shouldDelayKick = !isPenaltyKick && (
         phaseKindForSfx === 'last_attack' || Boolean(roundResult.deltas?.goalScoredBySeat)
       );
-      const roundPlayers = Object.values(roundResult.players ?? {});
+      // Look up player/opponent by self user id rather than Object.values()
+      // ordering — Record key enumeration order is engine-dependent for
+      // non-integer keys, so [0]/[1] could swap player and opponent.
+      const players = roundResult.players ?? {};
+      const playerRound = selfUserId ? players[selfUserId] : undefined;
+      const opponentRound = Object.entries(players).find(([userId]) => userId !== selfUserId)?.[1];
       const playerPoints = resolveBattlePoints(
-        roundPlayers[0]?.pointsEarned ?? 0,
+        playerRound?.pointsEarned ?? 0,
         roundResult.questionKind,
-        roundPlayers[0]?.foundCount
+        playerRound?.foundCount
       );
       const opponentPoints = resolveBattlePoints(
-        roundPlayers[1]?.pointsEarned ?? 0,
+        opponentRound?.pointsEarned ?? 0,
         roundResult.questionKind,
-        roundPlayers[1]?.foundCount
+        opponentRound?.foundCount
       );
       // Penalty kick: roundResult first waits for score-flight handoff before
       // the visible avatar kick starts. Schedule the SFX from raw roundResult
@@ -80,7 +86,7 @@ export function usePossessionMatchSounds({
     } else {
       playSfxRef.current('pass');
     }
-  }, [matchVariant, roundResult]);
+  }, [matchVariant, roundResult, selfUserId]);
 
   useEffect(() => {
     if (!devPossessionAnimation) return;

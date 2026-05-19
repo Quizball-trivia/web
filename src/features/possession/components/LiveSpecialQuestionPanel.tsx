@@ -230,6 +230,8 @@ function SpecialResultSummary({
   );
 }
 
+const COUNTDOWN_AUTO_SUBMIT_DEBOUNCE_MS = 100;
+
 function CountdownAnswerChip({ answer, tone }: { answer: string; tone: 'green' | 'red' | 'both' }) {
   const toneClass = tone === 'red'
     ? 'border-brand-red-soft/30 bg-brand-red-soft/10 text-brand-red-soft'
@@ -414,7 +416,7 @@ function CountdownPanel({
     lastSubmittedRef.current = guess.trim().toLowerCase();
   }, [guess, inputLocked, matchId, qIndex]);
 
-  // Auto-submit on keystroke with 200ms debounce (3+ characters).
+  // Auto-submit on keystroke with a short debounce (3+ characters).
   // The server handles matching (prefix, fuzzy, exact) — if accepted, the ACK clears the input.
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -427,7 +429,7 @@ function CountdownPanel({
       if (normalized === lastSubmittedRef.current) return;
       getSocket().emit('match:countdown_guess', { matchId, qIndex, guess: trimmed });
       lastSubmittedRef.current = normalized;
-    }, 200);
+    }, COUNTDOWN_AUTO_SUBMIT_DEBOUNCE_MS);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);

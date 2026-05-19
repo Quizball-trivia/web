@@ -44,6 +44,7 @@ interface UseRealtimePossessionMatchControllerParams {
   opponentCountryCode?: string | null;
   centerPossessionTrack?: boolean;
   simpleShotAnimation?: boolean;
+  unopposedBarPulse?: boolean;
   suppressAvatarScoreSplash?: boolean;
   /** Skip the ranked BGM loop (dev playgrounds). */
   disableBgm?: boolean;
@@ -81,6 +82,7 @@ export function useRealtimePossessionMatchController({
   opponentCountryCode = null,
   centerPossessionTrack = true,
   simpleShotAnimation = true,
+  unopposedBarPulse = false,
   suppressAvatarScoreSplash = false,
   disableBgm = false,
   onQuit,
@@ -92,6 +94,7 @@ export function useRealtimePossessionMatchController({
   const clearDevPossessionAnimation = useRealtimeMatchStore((store) => store.clearDevPossessionAnimation);
   const realtimeError = useRealtimeMatchStore((store) => store.error);
   const meUserId = useRealtimeMatchStore((store) => store.selfUserId);
+  const shouldPulseUnopposedBars = unopposedBarPulse || match?.variant === 'ranked_sim';
 
   const [muted, setMuted] = useState(false);
   const [quitModalOpen, setQuitModalOpen] = useState(false);
@@ -260,6 +263,7 @@ export function useRealtimePossessionMatchController({
     playerUsername,
     opponentUsername,
     isHalftime: overlayModel.isHalftime,
+    unopposedBarPulse: shouldPulseUnopposedBars,
   });
 
   const splashState = usePossessionScoreSplashes({
@@ -296,6 +300,7 @@ export function useRealtimePossessionMatchController({
     opponentRound,
     phaseKind,
     dividerX,
+    unopposedBarPulse: shouldPulseUnopposedBars,
   });
 
   const { handleHalftimeBan, handleHalftimeBanPhaseShown } = useHalftimeBanController({

@@ -198,6 +198,7 @@ export function PossessionQuestionPanel({
             <motion.button
               key={`${question.id}-${i}`}
               type="button"
+              data-mcq-option-index={i}
               disabled={!showOptions || !isPlaying}
               onClick={() => {
                 if (!showOptions || !isPlaying) return;
@@ -241,7 +242,7 @@ export function PossessionQuestionPanel({
                   initial={{ x: -14, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 22 }}
-                  className="absolute left-0 top-1/2 h-12 w-[6px] -translate-y-1/2 rounded-r-md"
+                  className="absolute left-0 top-1/2 z-10 h-12 w-[6px] -translate-y-1/2 rounded-r-md"
                   style={{ backgroundColor: '#FFFFFF' }}
                 />
               )}
@@ -251,12 +252,17 @@ export function PossessionQuestionPanel({
                   initial={{ x: 14, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 22 }}
-                  className="absolute right-0 top-1/2 h-12 w-[6px] -translate-y-1/2 rounded-l-md"
-                  style={{ backgroundColor: opponentPickCorrect ? '#38B60E' : '#FB3101' }}
-                />
+                  className="absolute right-0 top-1/2 z-10 flex h-12 w-[10px] -translate-y-1/2 items-center justify-end rounded-l-md bg-white pr-[2px]"
+                  aria-label="Opponent selected this answer"
+                >
+                  <span
+                    className="h-9 w-[4px] rounded-l-sm"
+                    style={{ backgroundColor: opponentPickCorrect ? '#38B60E' : '#FB3101' }}
+                  />
+                </motion.div>
               )}
 
-              <span className="text-center leading-tight">{opt}</span>
+              <span className="relative z-[1] text-center leading-tight">{opt}</span>
             </motion.button>
           );
         })}

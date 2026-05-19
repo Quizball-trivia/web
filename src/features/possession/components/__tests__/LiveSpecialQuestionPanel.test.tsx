@@ -335,3 +335,97 @@ describe('LiveSpecialQuestionPanel countdown replay', () => {
     expect(screen.getByText('Chelsea')).toBeInTheDocument();
   });
 });
+
+describe('LiveSpecialQuestionPanel countdown auto-submit', () => {
+  beforeEach(() => {
+    emitMock.mockClear();
+  });
+
+  it('auto-submits typed guesses after the short debounce', async () => {
+    render(
+      <LiveSpecialQuestionPanel
+        matchId="match-1"
+        qIndex={3}
+        question={countdownQuestion}
+        showOptions
+        timeRemaining={10}
+        questionDurationSeconds={30}
+        roundResolved={false}
+        answerAck={null}
+        roundResult={null}
+        myRound={null}
+        opponentRound={null}
+        countdownGuessAck={null}
+        cluesGuessAck={null}
+      />
+    );
+
+    await new Promise<void>((resolve) => queueMicrotask(resolve));
+
+    fireEvent.change(screen.getByPlaceholderText('Start typing to find answers...'), {
+      target: { value: 'ars' },
+    });
+
+    expect(emitMock).not.toHaveBeenCalledWith('match:countdown_guess', expect.anything());
+
+    await waitFor(() => {
+      expect(emitMock).toHaveBeenCalledWith('match:countdown_guess', {
+        matchId: 'match-1',
+        qIndex: 3,
+        guess: 'ars',
+      });
+    }, { timeout: 350 });
+  });
+
+  it('does not submit immediately on the same keystroke', () => {
+    render(
+      <LiveSpecialQuestionPanel
+        matchId="match-1"
+        qIndex={3}
+        question={countdownQuestion}
+        showOptions
+        timeRemaining={10}
+        questionDurationSeconds={30}
+        roundResolved={false}
+        answerAck={null}
+        roundResult={null}
+        myRound={null}
+        opponentRound={null}
+        countdownGuessAck={null}
+        cluesGuessAck={null}
+      />
+    );
+
+    fireEvent.change(screen.getByPlaceholderText('Start typing to find answers...'), {
+      target: { value: 'ars' },
+    });
+
+    expect(emitMock).not.toHaveBeenCalledWith('match:countdown_guess', expect.anything());
+  });
+
+  it('does not auto-submit one or two character guesses', () => {
+    render(
+      <LiveSpecialQuestionPanel
+        matchId="match-1"
+        qIndex={3}
+        question={countdownQuestion}
+        showOptions
+        timeRemaining={10}
+        questionDurationSeconds={30}
+        roundResolved={false}
+        answerAck={null}
+        roundResult={null}
+        myRound={null}
+        opponentRound={null}
+        countdownGuessAck={null}
+        cluesGuessAck={null}
+      />
+    );
+
+    fireEvent.change(screen.getByPlaceholderText('Start typing to find answers...'), {
+      target: { value: 'ar' },
+    });
+
+    expect(emitMock).not.toHaveBeenCalledWith('match:countdown_guess', expect.anything());
+  });
+});

@@ -64,6 +64,7 @@ interface UsePossessionFieldStateParams {
   playerUsername: string;
   opponentUsername: string;
   isHalftime: boolean;
+  unopposedBarPulse?: boolean;
 }
 
 function getSeatGoals(params: {
@@ -105,6 +106,7 @@ export function usePossessionFieldState({
   playerUsername,
   opponentUsername,
   isHalftime,
+  unopposedBarPulse = false,
 }: UsePossessionFieldStateParams): PossessionFieldState {
   const possessionState = match?.possessionState ?? null;
   const mySeat = match?.mySeat ?? null;
@@ -130,6 +132,7 @@ export function usePossessionFieldState({
     shotBallOriginX,
     visualMyPossessionPct,
   } = usePossessionAnimationOrchestrator({
+    matchId: match?.matchId ?? null,
     possessionState,
     matchVariant: match?.variant ?? null,
     mySeat,
@@ -143,6 +146,7 @@ export function usePossessionFieldState({
     opponentRound,
     devPossessionAnimation,
     clearDevPossessionAnimation,
+    unopposedBarPulse,
   });
 
   const attackerIsMe = attackerSeat !== null && attackerSeat === mySeat;
