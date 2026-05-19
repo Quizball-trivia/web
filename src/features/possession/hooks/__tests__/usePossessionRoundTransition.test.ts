@@ -327,6 +327,62 @@ describe('usePossessionRoundTransition', () => {
     });
   });
 
+  it('does not flash the stale first-question snapshot when second-half intro starts', async () => {
+    type Props = {
+      firstQuestionIntro: boolean;
+      secondHalfQuestionIntro: boolean;
+      localQuestion: ResolvedMatchQuestionPayload | null;
+      half: 1 | 2;
+    };
+    const { result, rerender } = renderHook((props: Props) => usePossessionRoundTransition({
+      phase: 'NORMAL_PLAY',
+      half: props.half,
+      penaltySuddenDeath: false,
+      firstQuestionIntro: props.firstQuestionIntro,
+      secondHalfQuestionIntro: props.secondHalfQuestionIntro,
+      localQuestion: props.localQuestion,
+      pendingQuestion: null,
+      roundResult: null,
+      roundResultHoldDone: false,
+      isPenaltyQuestion: false,
+      isShotQuestion: false,
+      isLastAttackQuestion: false,
+      goalCelebration: null,
+    }), {
+      initialProps: {
+        firstQuestionIntro: true,
+        secondHalfQuestionIntro: false,
+        localQuestion: makeQuestion(0, 1, 'normal', 'Football'),
+        half: 1,
+      },
+    });
+
+    await act(async () => {});
+
+    expect(result.current.transitionSnapshot.title).toBe('Question 1');
+
+    rerender({
+      firstQuestionIntro: false,
+      secondHalfQuestionIntro: false,
+      localQuestion: null,
+      half: 2,
+    });
+
+    rerender({
+      firstQuestionIntro: false,
+      secondHalfQuestionIntro: true,
+      localQuestion: makeQuestion(6, 1, 'normal', 'Dortmund'),
+      half: 2,
+    });
+
+    expect(result.current.showRoundTransition).toBe(true);
+    expect(result.current.transitionSnapshot).toEqual({
+      title: 'Question 7',
+      categoryName: 'Dortmund',
+      subtitle: '2nd Half',
+    });
+  });
+
   it('shows an extra-question transition before a pending last-attack question', async () => {
     const { result } = renderHook(() => usePossessionRoundTransition({
       phase: 'LAST_ATTACK',

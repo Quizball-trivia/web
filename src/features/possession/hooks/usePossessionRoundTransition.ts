@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type {
   MatchRoundResultPayload,
   MatchStatePayload,
@@ -270,17 +270,17 @@ export function usePossessionRoundTransition({
     && roundResult?.phaseKind === 'penalty'
     && pendingQuestion?.phaseKind === 'penalty';
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (showRoundTransition && !transitionVisibleRef.current) {
       transitionVisibleRef.current = true;
-      const transitionQuestion = pendingQuestion ?? localQuestion;
       const isExtra = pendingQuestion?.phaseKind === 'last_attack';
+      const transitionQIndex = pendingQuestion?.qIndex ?? localQuestion?.qIndex;
       const title = firstQuestionIntro
         ? 'Question 1'
         : isExtra
           ? 'Extra Question'
-          : `Question ${typeof transitionQuestion?.qIndex === 'number'
-            ? transitionQuestion.qIndex + 1
+          : `Question ${typeof transitionQIndex === 'number'
+            ? transitionQIndex + 1
             : pendingQuestion?.phaseRound
             ?? (typeof localQuestion?.phaseRound === 'number' ? localQuestion.phaseRound + 1 : 1)}`;
       const categoryName = firstQuestionIntro
@@ -289,12 +289,11 @@ export function usePossessionRoundTransition({
           ?? localQuestion?.question.categoryName
           ?? 'Football');
 
-      queueMicrotask(() => {
-        setTransitionSnapshot({
-          title,
-          categoryName,
-          subtitle: (half ?? 1) === 1 ? '1st Half' : '2nd Half',
-        });
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- layout effect commits the new label before paint, avoiding a one-frame stale "Question 1" flash.
+      setTransitionSnapshot({
+        title,
+        categoryName,
+        subtitle: (half ?? 1) === 1 ? '1st Half' : '2nd Half',
       });
       return;
     }
@@ -304,12 +303,10 @@ export function usePossessionRoundTransition({
       const penaltyRound = pendingQuestion?.phaseRound
         ?? (typeof roundResult?.phaseRound === 'number' ? roundResult.phaseRound + 1 : undefined)
         ?? 1;
-      queueMicrotask(() => {
-        setTransitionSnapshot({
-          title: `Penalty ${penaltyRound}`,
-          categoryName: 'Penalty Shootout',
-          subtitle: penaltySuddenDeath ? 'Sudden Death' : 'Shootout',
-        });
+      setTransitionSnapshot({
+        title: `Penalty ${penaltyRound}`,
+        categoryName: 'Penalty Shootout',
+        subtitle: penaltySuddenDeath ? 'Sudden Death' : 'Shootout',
       });
       return;
     }
