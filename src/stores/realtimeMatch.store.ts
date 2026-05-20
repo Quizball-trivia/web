@@ -8,7 +8,9 @@ import type {
   MatchCluesGuessAckPayload,
   MatchCountdownGuessAckPayload,
   MatchFinalResultsPayload,
+  MatchForfeitPendingPayload,
   MatchPartyStatePayload,
+  DraftOpponentDisconnectedPayload,
   MatchRejoinAvailablePayload,
   MatchParticipant,
   MatchStatePayload,
@@ -53,6 +55,7 @@ export interface MatchStatus {
   myRecentForm?: Array<'W' | 'L' | 'D'>;
   participants: MatchParticipant[];
   countdownEndsAt: number | null;
+  countdownReason: 'kickoff' | 'resume' | null;
   currentQuestion: ResolvedMatchQuestionPayload | null;
   pendingQuestion: ResolvedMatchQuestionPayload | null;
   questions: Record<number, MatchQuestionState>;
@@ -84,6 +87,10 @@ export interface RejoinMatchStatus {
   createdAt: number;
 }
 
+export interface ForfeitPendingStatus extends MatchForfeitPendingPayload {
+  createdAt: number;
+}
+
 export interface DevPossessionAnimation {
   id: number;
   result: 'goal' | 'saved' | 'miss';
@@ -100,7 +107,11 @@ interface RealtimeState {
   matchPaused: boolean;
   pauseUntil: number | null;
   remainingReconnects: number | null;
+  draftPaused: boolean;
+  draftPauseUntil: number | null;
+  draftDisconnectedUserId: string | null;
   rejoinMatch: RejoinMatchStatus | null;
+  forfeitPending: ForfeitPendingStatus | null;
   devPossessionAnimation: DevPossessionAnimation | null;
   error: ErrorPayload | null;
   setSelfUserId: (userId: string | null) => void;
@@ -128,8 +139,12 @@ interface RealtimeState {
   setQuestionPhase: (phase: 'reveal' | 'playing') => void;
   setRoundResult: (payload: MatchRoundResultPayload) => void;
   setFinalResults: (payload: MatchFinalResultsPayload) => void;
+  setForfeitPending: (payload: MatchForfeitPendingPayload) => void;
+  clearForfeitPending: () => void;
   setMatchPaused: (payload: { graceMs: number; remainingReconnects: number }) => void;
   clearMatchPaused: () => void;
+  setDraftPaused: (payload: DraftOpponentDisconnectedPayload) => void;
+  clearDraftPaused: () => void;
   setRejoinAvailable: (payload: MatchRejoinAvailablePayload) => void;
   clearRejoinAvailable: () => void;
   setOnlineUsers: (data: PresenceOnlineCountPayload) => void;
@@ -153,7 +168,11 @@ const initialState = {
   matchPaused: false,
   pauseUntil: null,
   remainingReconnects: null,
+  draftPaused: false,
+  draftPauseUntil: null,
+  draftDisconnectedUserId: null,
   rejoinMatch: null,
+  forfeitPending: null,
   devPossessionAnimation: null,
   error: null,
 };
@@ -178,6 +197,9 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       categoryCount: draft.categories.length,
     });
     set({
+      draftPaused: false,
+      draftPauseUntil: null,
+      draftDisconnectedUserId: null,
       draft: {
         lobbyId: draft.lobbyId,
         categories: draft.categories,
@@ -213,15 +235,19 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         : null,
     }));
   },
-  setMatchStart: (payload) => {
-    logger.info('Realtime store set match start', { matchId: payload.matchId, opponentId: payload.opponent.id });
-    set({
-      lobby: null,
-      draft: null,
-      matchPaused: false,
-      pauseUntil: null,
-      remainingReconnects: null,
-      rejoinMatch: null,
+    setMatchStart: (payload) => {
+      logger.info('Realtime store set match start', { matchId: payload.matchId, opponentId: payload.opponent.id });
+      set({
+        lobby: null,
+        draft: null,
+        matchPaused: false,
+        pauseUntil: null,
+        remainingReconnects: null,
+        draftPaused: false,
+        draftPauseUntil: null,
+        draftDisconnectedUserId: null,
+        rejoinMatch: null,
+        forfeitPending: null,
       match: {
         matchId: payload.matchId,
         mode: payload.mode,
@@ -231,6 +257,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         myRecentForm: payload.myRecentForm,
         participants: payload.participants,
         countdownEndsAt: Date.now() + DEFAULT_COUNTDOWN_MS,
+        countdownReason: 'kickoff',
         currentQuestion: null,
         pendingQuestion: null,
         questions: {},
@@ -257,6 +284,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       matchId: payload.matchId,
       seconds: payload.seconds,
       startsAt: payload.startsAt,
+      reason: payload.reason,
     });
     set((state) => {
       if (!state.match || state.match.matchId !== payload.matchId) return state;
@@ -265,9 +293,13 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         : Date.now() + Math.max(0, payload.seconds) * 1000;
       return {
         ...state,
+        matchPaused: payload.reason === 'resume' ? false : state.matchPaused,
+        pauseUntil: payload.reason === 'resume' ? null : state.pauseUntil,
+        remainingReconnects: payload.reason === 'resume' ? null : state.remainingReconnects,
         match: {
           ...state.match,
           countdownEndsAt: startsAtMs,
+          countdownReason: payload.reason ?? 'kickoff',
         },
       };
     });
@@ -315,6 +347,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
           possessionState: payload,
           stateVersion: incomingVersion > 0 ? incomingVersion : state.match.stateVersion,
           countdownEndsAt: shouldClearCountdown ? null : state.match.countdownEndsAt,
+          countdownReason: shouldClearCountdown ? null : state.match.countdownReason,
           currentQuestion: shouldClearQuestion ? null : state.match.currentQuestion,
           pendingQuestion: shouldClearQuestion ? null : state.match.pendingQuestion,
           answerAck: shouldClearQuestion ? null : state.match.answerAck,
@@ -457,6 +490,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
             ...state.match,
             pendingQuestion: payload,
             countdownEndsAt: payload.qIndex > 0 ? null : state.match.countdownEndsAt,
+            countdownReason: payload.qIndex > 0 ? null : state.match.countdownReason,
             questions: {
               ...state.match.questions,
               [payload.qIndex]: {
@@ -482,6 +516,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
           currentQuestion: payload,
           pendingQuestion: null,
           countdownEndsAt: payload.qIndex > 0 ? null : state.match.countdownEndsAt,
+          countdownReason: payload.qIndex > 0 ? null : state.match.countdownReason,
           answerAck: null,
           countdownGuessAck: null,
           cluesGuessAck: null,
@@ -514,6 +549,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
           currentQuestion: pending,
           pendingQuestion: null,
           countdownEndsAt: pending.qIndex > 0 ? null : state.match.countdownEndsAt,
+          countdownReason: pending.qIndex > 0 ? null : state.match.countdownReason,
           answerAck: null,
           countdownGuessAck: null,
           cluesGuessAck: null,
@@ -745,14 +781,14 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       if (!state.match) {
         const rejoin = state.rejoinMatch?.matchId === payload.matchId ? state.rejoinMatch : null;
         const userIds = Object.keys(payload.players);
-        const fallbackParticipants = userIds.map((userId, index) => ({
+        const fallbackParticipants: MatchParticipant[] = userIds.map((userId, index) => ({
           userId,
           username: userId === state.selfUserId ? 'You' : `Player ${index + 1}`,
           avatarUrl: null,
           avatarCustomization: null,
           seat: index + 1,
         }));
-        const participants = rejoin?.participants ?? fallbackParticipants;
+        const participants = rejoin?.participants ?? payload.participants ?? fallbackParticipants;
         const opponentParticipant =
           participants.find((participant) => participant.userId !== state.selfUserId) ?? participants[0];
         const opponent = rejoin?.opponent ?? {
@@ -760,6 +796,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
           username: opponentParticipant?.username ?? 'Opponent',
           avatarUrl: opponentParticipant?.avatarUrl ?? null,
           avatarCustomization: opponentParticipant?.avatarCustomization ?? null,
+          ...(opponentParticipant?.rankPoints != null ? { rp: opponentParticipant.rankPoints } : {}),
         };
 
         return {
@@ -767,7 +804,11 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
           matchPaused: false,
           pauseUntil: null,
           remainingReconnects: null,
+          draftPaused: false,
+          draftPauseUntil: null,
+          draftDisconnectedUserId: null,
           rejoinMatch: null,
+          forfeitPending: null,
           match: {
             matchId: payload.matchId,
             mode: rejoin?.mode ?? (payload.rankedOutcome ? 'ranked' : 'friendly'),
@@ -776,6 +817,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
             opponent,
             participants,
             countdownEndsAt: null,
+            countdownReason: null,
             currentQuestion: null,
             pendingQuestion: null,
             questions: {},
@@ -794,7 +836,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
             possessionState: null,
             partyState: null,
             stateVersion: 0,
-              },
+          },
         };
       }
       if (state.match.matchId !== payload.matchId) {
@@ -804,17 +846,59 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         });
         return state;
       }
+      const participants = payload.participants ?? state.match.participants;
+      const opponentParticipant =
+        participants.find((participant) => participant.userId !== state.selfUserId) ?? participants[0];
+      const opponent = payload.participants && opponentParticipant
+        ? {
+            ...state.match.opponent,
+            id: opponentParticipant.userId,
+            username: opponentParticipant.username,
+            avatarUrl: opponentParticipant.avatarUrl,
+            avatarCustomization: opponentParticipant.avatarCustomization,
+            ...(opponentParticipant.rankPoints != null ? { rp: opponentParticipant.rankPoints } : {}),
+          }
+        : state.match.opponent;
       return {
         ...state,
         matchPaused: false,
         pauseUntil: null,
+        remainingReconnects: null,
+        draftPaused: false,
+        draftPauseUntil: null,
+        draftDisconnectedUserId: null,
         rejoinMatch: null,
+        forfeitPending: null,
         match: {
           ...state.match,
+          opponent,
+          participants,
+          countdownEndsAt: null,
+          countdownReason: null,
           finalResults: payload,
-          },
+        },
       };
     });
+  },
+  setForfeitPending: (payload) => {
+    logger.info('Realtime store set forfeit pending', {
+      matchId: payload.matchId,
+      reason: payload.reason,
+    });
+    set({
+      forfeitPending: {
+        ...payload,
+        createdAt: Date.now(),
+      },
+      matchPaused: false,
+      pauseUntil: null,
+      remainingReconnects: null,
+      rejoinMatch: null,
+    });
+  },
+  clearForfeitPending: () => {
+    logger.info('Realtime store clear forfeit pending');
+    set({ forfeitPending: null });
   },
   setMatchPaused: ({ graceMs, remainingReconnects }) => {
     logger.info('Realtime store set match paused', { graceMs, remainingReconnects });
@@ -830,6 +914,26 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       matchPaused: false,
       pauseUntil: null,
       remainingReconnects: null,
+    });
+  },
+  setDraftPaused: ({ lobbyId, opponentId, graceMs }) => {
+    logger.info('Realtime store set draft paused', { lobbyId, opponentId, graceMs });
+    set((state) => {
+      if (state.draft?.lobbyId !== lobbyId && state.lobby?.lobbyId !== lobbyId) return state;
+      return {
+        ...state,
+        draftPaused: true,
+        draftPauseUntil: Date.now() + graceMs,
+        draftDisconnectedUserId: opponentId,
+      };
+    });
+  },
+  clearDraftPaused: () => {
+    logger.info('Realtime store clear draft paused');
+    set({
+      draftPaused: false,
+      draftPauseUntil: null,
+      draftDisconnectedUserId: null,
     });
   },
   setRejoinAvailable: (payload) => {
@@ -891,6 +995,9 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       matchPaused: false,
       pauseUntil: null,
       remainingReconnects: null,
+      draftPaused: false,
+      draftPauseUntil: null,
+      draftDisconnectedUserId: null,
       rejoinMatch: null,
       devPossessionAnimation: null,
       error: null,

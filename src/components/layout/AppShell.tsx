@@ -102,6 +102,19 @@ function readRankedGeoHintDebug(): RankedGeoHintDebug | null {
   }
 }
 
+function formatRejoinCopy(remainingReconnects: number, compact = false): string {
+  if (remainingReconnects <= 0) {
+    return compact
+      ? "Last reconnect. Next disconnect forfeits."
+      : "Rejoin now. This is your last reconnect; the next disconnect forfeits the match.";
+  }
+
+  const label = remainingReconnects === 1 ? "reconnect" : "reconnects";
+  return compact
+    ? `Rejoin to continue. ${remainingReconnects} ${label} left.`
+    : `Rejoin now to continue. ${remainingReconnects} ${label} left.`;
+}
+
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -112,9 +125,12 @@ export function AppShell({ children }: AppShellProps) {
   const authUser = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const lobby = useRealtimeMatchStore((state) => state.lobby);
+  const draft = useRealtimeMatchStore((state) => state.draft);
   const match = useRealtimeMatchStore((state) => state.match);
+  const remainingReconnects = useRealtimeMatchStore((state) => state.remainingReconnects);
   const sessionState = useRealtimeMatchStore((state) => state.sessionState);
   const rejoinMatch = useRealtimeMatchStore((state) => state.rejoinMatch);
+  const forfeitPending = useRealtimeMatchStore((state) => state.forfeitPending);
   const clearRejoinAvailable = useRealtimeMatchStore((state) => state.clearRejoinAvailable);
   const resetRealtime = useRealtimeMatchStore((state) => state.reset);
   const startSession = useGameSessionStore((state) => state.startSession);
@@ -131,6 +147,15 @@ export function AppShell({ children }: AppShellProps) {
   const showNav = !HIDE_NAV_PATHS.some((path) => currentPath.startsWith(path));
   const inLobbyRoom = currentPath.startsWith("/friend/room");
   const showLobbyBanner = !!lobby && lobby.status === "waiting" && !inLobbyRoom;
+  const draftOpponent = lobby?.members.find((member) => member.userId !== authUser?.id);
+  const activeDraftBanner = lobby?.status === "active" && draft
+    ? {
+        lobbyId: lobby.lobbyId,
+        mode: lobby.mode,
+        opponent: draftOpponent,
+      }
+    : null;
+  const showDraftBanner = !!activeDraftBanner && !currentPath.startsWith("/game");
   const activeMatchBanner = rejoinMatch
     ? {
         matchId: rejoinMatch.matchId,
@@ -155,6 +180,16 @@ export function AppShell({ children }: AppShellProps) {
       }
     : null;
   const showCompletedMatchBanner = !!completedMatchBanner && !currentPath.startsWith("/game");
+  const showForfeitPendingBanner = !!forfeitPending && !match?.finalResults && !currentPath.startsWith("/game");
+  const forfeitPendingTitle =
+    forfeitPending?.reason === "opponent_forfeit"
+      ? "Opponent forfeited"
+      : forfeitPending?.reason === "opponent_reconnect_limit"
+        ? "Opponent did not reconnect"
+        : "You lost the match";
+  const forfeitPendingDescription = forfeitPending?.message ?? "Finalizing result...";
+  const completedByForfeit = match?.finalResults?.winnerDecisionMethod === "forfeit";
+  const rejoinReconnectsLeft = rejoinMatch?.remainingReconnects ?? remainingReconnects ?? 0;
   const lobbyCode = lobby?.inviteCode ?? "";
   const showLobbyDebug = process.env.NODE_ENV !== "production";
   const localWaitingLobbyId = lobby?.status === "waiting" ? lobby.lobbyId : null;
@@ -234,6 +269,22 @@ export function AppShell({ children }: AppShellProps) {
     router.push("/game");
   };
 
+  const handleReturnToDraft = () => {
+    if (!activeDraftBanner) return;
+
+    startSession({
+      mode: activeDraftBanner.mode === "ranked" ? "ranked" : "quizball",
+      matchType: activeDraftBanner.mode === "ranked" ? "ranked" : "friendly",
+      questionCount: 10,
+      opponentId: activeDraftBanner.opponent?.userId ?? "opponent",
+      opponentUsername: activeDraftBanner.opponent?.username ?? "Opponent",
+      opponentAvatar: activeDraftBanner.opponent?.avatarUrl ?? undefined,
+      skipDraftShowdown: true,
+    });
+    setGameStage("categoryBlocking");
+    router.push("/game");
+  };
+
   const handleForfeitRejoin = () => {
     if (!activeMatchBanner) {
       clearRejoinAvailable();
@@ -255,6 +306,11 @@ export function AppShell({ children }: AppShellProps) {
     });
     setGameStage("finalResults");
     router.push("/game");
+  };
+
+  const handleDismissCompletedMatch = () => {
+    resetRealtime();
+    useRankedMatchmakingStore.getState().clearRankedMatchmaking();
   };
 
   return (
@@ -413,6 +469,23 @@ export function AppShell({ children }: AppShellProps) {
 
           {/* Content Area */}
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-hide">
+            {showForfeitPendingBanner && (
+              <div className="px-6 pt-4">
+                <div className="rounded-2xl border border-red-500/35 bg-red-500/15 px-5 py-4 shadow-[0_8px_30px_rgba(239,68,68,0.16)]">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="size-10 rounded-full bg-red-500/20 text-red-300 flex items-center justify-center">
+                        <Gamepad2 className="size-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-red-100">{forfeitPendingTitle}</p>
+                        <p className="text-xs text-red-200/80">{forfeitPendingDescription}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             {showCompletedMatchBanner && (
               <div className="px-6 pt-4">
                 <div className="rounded-2xl border border-emerald-500/35 bg-emerald-500/15 px-5 py-4 shadow-[0_8px_30px_rgba(16,185,129,0.16)]">
@@ -426,21 +499,62 @@ export function AppShell({ children }: AppShellProps) {
                           Match finished against{" "}
                           <span className="text-foreground">{completedMatchBanner?.opponent.username ?? "Opponent"}</span>
                         </p>
-                        <p className="text-xs text-emerald-200/80">View the final result</p>
+                          <p className="text-xs text-emerald-200/80">
+                            {completedByForfeit
+                              ? "Reconnect limit reached. Final result is ready."
+                              : "View the final result"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          className="h-9 bg-emerald-500 text-emerald-950 hover:bg-emerald-400"
+                          onClick={handleViewCompletedMatch}
+                        >
+                          View Results <ArrowRight className="ml-2 size-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-9 border-emerald-500/40 text-emerald-100 hover:bg-emerald-500/10"
+                          onClick={handleDismissCompletedMatch}
+                        >
+                          Dismiss <X className="ml-2 size-4" />
+                        </Button>
                       </div>
                     </div>
-                    <Button
-                      size="sm"
-                      className="h-9 bg-emerald-500 text-emerald-950 hover:bg-emerald-400"
-                      onClick={handleViewCompletedMatch}
-                    >
-                      View Results <ArrowRight className="ml-2 size-4" />
-                    </Button>
                   </div>
                 </div>
-              </div>
-            )}
-            {showRejoinBanner && (
+              )}
+              {showDraftBanner && (
+                <div className="px-6 pt-4">
+                  <div className="rounded-2xl border border-amber-500/35 bg-amber-500/15 px-5 py-4 shadow-[0_8px_30px_rgba(245,158,11,0.18)]">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="size-10 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center">
+                          <Gamepad2 className="size-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-amber-100">
+                            Draft active against{" "}
+                            <span className="text-foreground">{activeDraftBanner?.opponent?.username ?? "Opponent"}</span>
+                          </p>
+                          <p className="text-xs text-amber-200/80">Return to category banning before the match starts</p>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        className="h-9 bg-amber-400 text-amber-950 hover:bg-amber-300"
+                        onClick={handleReturnToDraft}
+                      >
+                        Return to Draft <ArrowRight className="ml-2 size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {showRejoinBanner && (
               <div className="px-6 pt-4">
                 <div className="rounded-2xl border border-blue-500/35 bg-gradient-to-r from-blue-500/15 to-cyan-400/15 px-5 py-4 shadow-[0_8px_30px_rgba(59,130,246,0.2)]">
                   <div className="flex flex-wrap items-center justify-between gap-3">
@@ -454,9 +568,9 @@ export function AppShell({ children }: AppShellProps) {
                           <span className="text-foreground">{activeMatchBanner?.opponent.username ?? "Opponent"}</span>
                         </p>
                         <p className="text-xs text-blue-200/80">
-                          {activeMatchBanner?.source === "rejoin"
-                            ? "Rejoin now to continue the game"
-                            : "Return to the live match"}
+                            {activeMatchBanner?.source === "rejoin"
+                              ? formatRejoinCopy(rejoinReconnectsLeft)
+                              : "Return to the live match"}
                         </p>
                       </div>
                     </div>
@@ -595,6 +709,21 @@ export function AppShell({ children }: AppShellProps) {
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto pb-20">
+          {showForfeitPendingBanner && (
+            <div className="px-4 pt-4">
+              <div className="rounded-2xl border border-red-500/35 bg-red-500/15 px-4 py-3 shadow-[0_8px_30px_rgba(239,68,68,0.16)]">
+                <div className="flex items-center gap-3">
+                  <div className="size-9 rounded-full bg-red-500/20 text-red-300 flex items-center justify-center">
+                    <Gamepad2 className="size-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-red-100">{forfeitPendingTitle}</p>
+                    <p className="text-xs text-red-200/80">{forfeitPendingDescription}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           {showCompletedMatchBanner && (
             <div className="px-4 pt-4">
               <div className="rounded-2xl border border-emerald-500/35 bg-emerald-500/15 px-4 py-3 shadow-[0_8px_30px_rgba(16,185,129,0.16)]">
@@ -608,21 +737,60 @@ export function AppShell({ children }: AppShellProps) {
                         Match finished vs{" "}
                         <span className="text-foreground">{completedMatchBanner?.opponent.username ?? "Opponent"}</span>
                       </p>
-                      <p className="text-xs text-emerald-200/80">Final result is ready</p>
+                        <p className="text-xs text-emerald-200/80">
+                          {completedByForfeit ? "Reconnect limit reached. Result is ready." : "Final result is ready"}
+                        </p>
                     </div>
                   </div>
-                  <Button
-                    size="sm"
-                    className="h-10 bg-emerald-500 text-emerald-950 hover:bg-emerald-400"
-                    onClick={handleViewCompletedMatch}
-                  >
-                    View Results
-                  </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        className="flex-1 h-10 bg-emerald-500 text-emerald-950 hover:bg-emerald-400"
+                        onClick={handleViewCompletedMatch}
+                      >
+                        View Results
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 h-10 border-emerald-500/40 text-emerald-100 hover:bg-emerald-500/10"
+                        onClick={handleDismissCompletedMatch}
+                      >
+                        Dismiss
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-          {showRejoinBanner && (
+            )}
+            {showDraftBanner && (
+              <div className="px-4 pt-4">
+                <div className="rounded-2xl border border-amber-500/35 bg-amber-500/15 px-4 py-3 shadow-[0_8px_30px_rgba(245,158,11,0.16)]">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="size-9 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center">
+                        <Gamepad2 className="size-4" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-amber-100">
+                          Draft active vs{" "}
+                          <span className="text-foreground">{activeDraftBanner?.opponent?.username ?? "Opponent"}</span>
+                        </p>
+                        <p className="text-xs text-amber-200/80">Return to category banning</p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      className="h-10 bg-amber-400 text-amber-950 hover:bg-amber-300"
+                      onClick={handleReturnToDraft}
+                    >
+                      Return to Draft
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {showRejoinBanner && (
             <div className="px-4 pt-4">
               <div className="rounded-2xl border border-blue-500/35 bg-gradient-to-r from-blue-500/15 to-cyan-400/15 px-4 py-3 shadow-[0_8px_30px_rgba(59,130,246,0.2)]">
                 <div className="flex flex-col gap-3">
@@ -636,9 +804,9 @@ export function AppShell({ children }: AppShellProps) {
                         <span className="text-foreground">{activeMatchBanner?.opponent.username ?? "Opponent"}</span>
                       </p>
                       <p className="text-xs text-blue-200/80">
-                        {activeMatchBanner?.source === "rejoin"
-                          ? "Rejoin to continue"
-                          : "Return to continue"}
+                          {activeMatchBanner?.source === "rejoin"
+                            ? formatRejoinCopy(rejoinReconnectsLeft, true)
+                            : "Return to continue"}
                       </p>
                     </div>
                   </div>

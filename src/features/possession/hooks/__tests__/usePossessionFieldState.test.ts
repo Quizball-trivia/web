@@ -70,6 +70,7 @@ function makeMatch(possessionDiff: number, overrides: Partial<MatchStatus['posse
     opponent: { id: 'opp', username: 'opponent', avatarUrl: null },
     participants: [],
     countdownEndsAt: null,
+    countdownReason: null,
     currentQuestion: null,
     pendingQuestion: null,
     questions: {},

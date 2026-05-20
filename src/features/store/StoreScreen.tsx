@@ -93,7 +93,7 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }
 function TicketStack({ count }: { count: number }) {
   const visible = Math.min(Math.max(count, 1), 5);
   return (
-    <div className="relative h-[120px] w-[150px]">
+    <div className="relative h-[clamp(76px,22vw,120px)] w-[clamp(96px,30vw,150px)]">
       {Array.from({ length: visible }).map((_, i) => {
         const mid = (visible - 1) / 2;
         const angle = (i - mid) * 9;
@@ -109,7 +109,7 @@ function TicketStack({ count }: { count: number }) {
             style={{
               left: "50%",
               top: "50%",
-              width: "100px",
+              width: "min(100px, 64%)",
               height: "auto",
               transform: `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px)) rotate(${angle}deg)`,
               zIndex: i,
@@ -133,19 +133,19 @@ function TicketCard({ pack, onBuy }: { pack: TicketPackItem; onBuy: (b: TicketPa
       className="relative flex flex-col"
     >
       <div
-        className="relative flex flex-col rounded-[20px] border-[3px] aspect-[320/268] px-5 pt-5 pb-5"
+        className="relative flex min-h-[218px] flex-col rounded-[16px] border-[3px] aspect-[4/5] px-2.5 py-3 sm:min-h-[270px] sm:rounded-[20px] sm:px-5 sm:py-5"
         style={{ backgroundColor: CARD_BG, borderColor: ACCENT_PURPLE }}
       >
         {/* Top: title + subtitle (centered) */}
         <div className="text-center">
           <div
-            className="text-[18px] sm:text-[20px] uppercase leading-tight text-white"
+            className="truncate text-[11px] uppercase leading-none text-white sm:text-[16px]"
             style={POPPINS_HEADER}
           >
             {pack.title}
           </div>
           <div
-            className="mt-1.5 text-[9px] sm:text-[10px] uppercase tracking-[0.04em] text-white/50 leading-snug"
+            className="mt-1 text-[7px] uppercase tracking-[0.04em] text-white/50 leading-snug sm:mt-1.5 sm:text-[10px]"
             style={POPPINS_HEADER}
           >
             {pack.description}
@@ -153,7 +153,7 @@ function TicketCard({ pack, onBuy }: { pack: TicketPackItem; onBuy: (b: TicketPa
         </div>
 
         {/* Center icon image (ticket stack scales with pack size) */}
-        <div className="relative flex flex-1 items-center justify-center py-2">
+        <div className="relative flex min-h-0 flex-1 items-center justify-center py-1.5 sm:py-2">
           <TicketStack count={pack.ticketCount} />
         </div>
 
@@ -162,7 +162,7 @@ function TicketCard({ pack, onBuy }: { pack: TicketPackItem; onBuy: (b: TicketPa
           type="button"
           onClick={() => onBuy(pack)}
           disabled={pack.disabled}
-          className="mt-2 flex h-[44px] w-full items-center justify-center gap-2 rounded-[20px] text-[16px] uppercase text-white transition-transform active:translate-y-[2px] disabled:opacity-50 disabled:active:translate-y-0"
+          className="flex h-9 w-full items-center justify-center gap-1 rounded-[16px] text-[12px] uppercase text-white transition-transform active:translate-y-[2px] disabled:opacity-50 disabled:active:translate-y-0 sm:h-[44px] sm:gap-2 sm:rounded-[20px] sm:text-[18px]"
           style={{ ...POPPINS_HEADER, backgroundColor: ACCENT_PURPLE }}
         >
           <span className="tabular-nums">{pack.disabled ? "Full" : pack.price}</span>
@@ -455,7 +455,7 @@ export function StoreScreen() {
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.1 }}
           >
             <SectionHeader title="Coins" subtitle="Power up your wallet" />
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {coinBundles.map((bundle, i) => (
                 <motion.div
                   key={bundle.id}
@@ -475,7 +475,7 @@ export function StoreScreen() {
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.2 }}
           >
             <SectionHeader title="Tickets" subtitle="Top up your ranked arena tickets" />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {ticketPacks.map((pack, i) => (
                 <motion.div
                   key={pack.id}
@@ -509,7 +509,7 @@ export function StoreScreen() {
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.3 }}
           >
             <SectionHeader title="Hair" subtitle="Style your character" />
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {HAIR_PARTS.filter((p) => !p.free).map((part, i) => (
                 <motion.div
                   key={part.id}
@@ -536,7 +536,7 @@ export function StoreScreen() {
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.35 }}
           >
             <SectionHeader title="Glasses" subtitle="Look the part" />
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {GLASSES_PARTS.map((part, i) => (
                 <motion.div
                   key={part.id}
@@ -563,7 +563,7 @@ export function StoreScreen() {
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.4 }}
           >
             <SectionHeader title="Facial Hair" subtitle="Add some character" />
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {FACIAL_HAIR_PARTS.map((part, i) => (
                 <motion.div
                   key={part.id}
@@ -590,7 +590,7 @@ export function StoreScreen() {
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.45 }}
           >
             <SectionHeader title="Jerseys" subtitle="Rep your colors" />
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {JERSEY_DESIGN_PARTS.map((part, i) => (
                 <motion.div
                   key={part.id}

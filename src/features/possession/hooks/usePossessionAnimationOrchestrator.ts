@@ -115,6 +115,9 @@ export function usePossessionAnimationOrchestrator({
     shotOriginCaptureKeyRef.current = null;
     attackOriginQRef.current = null;
     attackOriginPctRef.current = null;
+    // Drop carried-over phase so the halftime→NORMAL_PLAY second-half
+    // detection can't misfire on a fresh match.
+    prevPhaseForFieldResetRef.current = null;
     if (fieldReleaseTimerRef.current) {
       clearTimeout(fieldReleaseTimerRef.current);
       fieldReleaseTimerRef.current = null;

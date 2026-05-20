@@ -236,12 +236,11 @@ export function usePossessionFieldState({
   } | null>(null);
 
   useEffect(() => {
-    if (!penaltyResultKey || !immediatePenaltyResult) {
-      setDelayedPenaltyResult(null);
-      return undefined;
-    }
+    // Stale state is filtered by the `penaltyResult` selector below
+    // (key mismatch ⇒ null), so we don't need to reset here — that would
+    // cost an extra render.
+    if (!penaltyResultKey || !immediatePenaltyResult) return undefined;
 
-    setDelayedPenaltyResult(null);
     const timer = window.setTimeout(() => {
       setDelayedPenaltyResult({
         key: penaltyResultKey,
@@ -262,12 +261,9 @@ export function usePossessionFieldState({
   } | null>(null);
 
   useEffect(() => {
-    if (!penaltyResultKey || !immediatePenaltyResult) {
-      setDisplayedPenaltyResult(null);
-      return undefined;
-    }
+    // Same key-filter pattern as the delayedPenaltyResult effect above.
+    if (!penaltyResultKey || !immediatePenaltyResult) return undefined;
 
-    setDisplayedPenaltyResult(null);
     const timer = window.setTimeout(() => {
       setDisplayedPenaltyResult({
         key: penaltyResultKey,

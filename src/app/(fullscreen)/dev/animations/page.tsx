@@ -19,6 +19,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { X } from 'lucide-react';
 import { RealtimePossessionMatchScreen } from '@/features/possession/RealtimePossessionMatchScreen';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { __setSocketOverride } from '@/lib/realtime/socket-client';
@@ -721,7 +722,11 @@ function DevAnimationsContent() {
       return;
     }
     if (attempts >= 30) return;
-    window.setTimeout(() => clickMcqOption(index, attempts + 1), 100);
+    // Track the retry timer so reset/unmount can cancel it — otherwise a
+    // late retry fires into a different scenario.
+    pendingTimers.current.push(
+      window.setTimeout(() => clickMcqOption(index, attempts + 1), 100)
+    );
   };
 
   function schedulePostRoundPossessionState(result: MatchRoundResultPayload, roundResultDelayMs = 1600) {
@@ -1850,7 +1855,7 @@ function DevAnimationsContent() {
           user can preview animations full-screen, then re-open the panel
           to tweak. */}
       <aside
-        className={`fixed left-4 top-4 bottom-4 z-[60] w-64 overflow-y-auto rounded-2xl border border-surface-card-light bg-surface-card/95 p-4 shadow-2xl backdrop-blur font-fun transition-transform duration-200 lg:translate-x-0 ${
+        className={`fixed left-3 top-[calc(env(safe-area-inset-top)+3.75rem)] bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-[60] w-64 overflow-y-auto rounded-2xl border border-surface-card-light bg-surface-card/95 p-4 shadow-2xl backdrop-blur font-fun transition-transform duration-200 lg:left-4 lg:top-4 lg:bottom-4 lg:translate-x-0 ${
           mobilePanelOpen ? 'translate-x-0' : '-translate-x-[110%]'
         }`}
       >
@@ -1861,10 +1866,10 @@ function DevAnimationsContent() {
           {/* Mobile-only: collapse the panel to inspect the screen. */}
           <button
             onClick={() => setMobilePanelOpen(false)}
-            className="lg:hidden flex size-7 items-center justify-center rounded-md bg-surface-deep text-white/80 hover:text-white"
+            className="lg:hidden flex size-8 items-center justify-center rounded-full border border-white/20 bg-surface-deep/75 text-white/70 shadow-[0_8px_24px_rgba(0,0,0,0.35)] backdrop-blur-md transition-colors hover:bg-white/20 hover:text-white"
             aria-label="Hide controls"
           >
-            ✕
+            <X className="size-4" />
           </button>
           <button
             onClick={() => router.push('/play')}
@@ -2020,7 +2025,7 @@ function DevAnimationsContent() {
       {!mobilePanelOpen && (
         <button
           onClick={() => setMobilePanelOpen(true)}
-          className="lg:hidden fixed left-3 bottom-4 z-[70] flex h-11 items-center gap-2 rounded-full bg-brand-yellow px-4 text-[11px] font-black uppercase tracking-wider text-surface-page shadow-lg"
+          className="lg:hidden fixed left-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-[70] flex h-11 items-center gap-2 rounded-full bg-brand-yellow px-4 text-[11px] font-black uppercase tracking-wider text-surface-page shadow-lg"
           aria-label="Show controls"
         >
           <span>≡</span>

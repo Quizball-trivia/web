@@ -309,6 +309,35 @@ describe('GameStageRouter', () => {
     expect(screen.getByText('Realtime Results self-1')).toBeInTheDocument();
   });
 
+  it('renders replayed final results when a reload clears the game session', () => {
+    gameSessionState.stage = 'idle';
+    gameSessionState.config = null as never;
+    realtimeMatchState.match = {
+      ...realtimeMatchState.match,
+      mode: 'ranked',
+      variant: 'ranked_sim',
+      finalResults: {
+        matchId: 'match-1',
+        winnerId: 'opp-1',
+        winnerDecisionMethod: 'forfeit',
+        players: {
+          'self-1': { totalPoints: 0, goals: 0, correctAnswers: 0 },
+          'opp-1': { totalPoints: 100, goals: 1, correctAnswers: 1 },
+        },
+        unlockedAchievements: {},
+        rankedOutcome: null,
+      },
+    } as typeof realtimeMatchState.match & {
+      mode: 'ranked';
+      finalResults: unknown;
+    };
+
+    render(<GameStageRouter />);
+
+    expect(screen.getByText('Realtime Results opp-1')).toBeInTheDocument();
+    expect(router.replace).not.toHaveBeenCalledWith('/play');
+  });
+
   it('keeps result dots and opponent RP when client totals are reset', () => {
     gameSessionState.stage = 'finalResults';
     gameSessionState.config = { ...gameSessionState.config, matchType: 'ranked' };

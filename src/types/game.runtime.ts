@@ -25,4 +25,5 @@ export interface GameConfig {
   opponentId?: string;
   opponentUsername?: string;
   opponentAvatar?: string;
+  skipDraftShowdown?: boolean;
 }

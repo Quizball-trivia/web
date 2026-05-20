@@ -333,10 +333,11 @@ export function RealtimeResultsScreen({
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6">
             {/* Player (Left) */}
             <div className="flex items-center gap-3 justify-self-start sm:gap-4">
-              <div className="rounded-full bg-brand-blue p-1.5 sm:p-2">
+              <div className="flex size-24 shrink-0 items-center justify-center">
                 <AvatarDisplay
                   customization={playerAvatarCustomization ?? { base: playerAvatar }}
                   size="lg"
+                  shape="square"
                 />
               </div>
               <div className="hidden min-w-0 sm:block">
@@ -387,11 +388,12 @@ export function RealtimeResultsScreen({
 
             {/* Opponent (Right) */}
             <div className="flex flex-row-reverse items-center gap-3 justify-self-end sm:gap-4">
-              <div className="rounded-full bg-brand-red-soft p-1.5 sm:p-2">
+              <div className="flex size-24 shrink-0 items-center justify-center">
                 <AvatarDisplay
                   customization={opponentAvatarCustomization ?? { base: opponentAvatar }}
                   size="lg"
                   className="-scale-x-100"
+                  shape="square"
                 />
               </div>
               <div className="hidden min-w-0 text-right sm:block">

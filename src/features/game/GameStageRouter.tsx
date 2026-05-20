@@ -60,6 +60,7 @@ export function GameStageRouter() {
   } = useGameStageState();
 
   const returningToLobbyRef = useRef(false);
+  const showingFinalResultsFromReplay = stage === "idle" && Boolean(realtimeMatch?.finalResults);
 
   useGameStageTransitions({
     isMultiplayer,
@@ -119,10 +120,10 @@ export function GameStageRouter() {
   ]);
 
   useEffect(() => {
-    if (stage === "idle" && !returningToLobbyRef.current) {
+    if (stage === "idle" && !returningToLobbyRef.current && !realtimeMatch?.finalResults) {
       router.replace("/play");
     }
-  }, [stage, router]);
+  }, [realtimeMatch?.finalResults, stage, router]);
 
   const realtimeMatchId = realtimeMatch?.matchId;
   const handleQuit = useCallback(() => {
@@ -196,11 +197,11 @@ export function GameStageRouter() {
     return <TrainingMatchScreen onComplete={exitToPlay} />;
   }
 
-  if (stage === "idle") {
+  if (stage === "idle" && !showingFinalResultsFromReplay) {
     return <LoadingScreen />;
   }
 
-  if (isMultiplayer) {
+  if (isMultiplayer || showingFinalResultsFromReplay) {
     if (stage === "matchmaking") {
       // Friendly matches skip matchmaking — match data arrives before navigation.
       // Show bouncing ball instead of the map/searching screen for that brief transition frame.
@@ -264,7 +265,7 @@ export function GameStageRouter() {
       );
     }
 
-    if (stage === "finalResults") {
+    if (stage === "finalResults" || showingFinalResultsFromReplay) {
       const final = realtimeMatch?.finalResults;
       if (!isPartyQuizMatch && !final) {
         return (

@@ -114,6 +114,7 @@ export function RealtimePartyQuizScreen({
   const currentQuestion = useRealtimeMatchStore((store) => store.match?.currentQuestion ?? null);
   const answerAck = useRealtimeMatchStore((store) => store.match?.answerAck ?? null);
   const selfUserId = useRealtimeMatchStore((store) => store.selfUserId);
+  const forfeitPending = useRealtimeMatchStore((store) => store.forfeitPending);
   const [showQuitModal, setShowQuitModal] = useState(false);
   const [showPlayerSplash, setShowPlayerSplash] = useState(false);
   const [playerSplashPoints, setPlayerSplashPoints] = useState(0);
@@ -179,6 +180,12 @@ export function RealtimePartyQuizScreen({
   const pauseSeconds = state.pauseUntil
     ? Math.max(0, Math.ceil((state.pauseUntil - nowMs) / 1000))
     : 0;
+  const forfeitPendingTitle =
+    forfeitPending?.reason === 'opponent_forfeit'
+      ? 'Opponent forfeited'
+      : forfeitPending?.reason === 'opponent_reconnect_limit'
+        ? 'Opponent did not reconnect'
+        : 'Match forfeited';
 
   const question: GameQuestion | null = useMemo(() => {
     if (!currentQuestion || currentQuestion.question.kind !== 'multipleChoice') return null;
@@ -318,13 +325,33 @@ export function RealtimePartyQuizScreen({
               transition={{ type: 'spring', stiffness: 340, damping: 22 }}
               className="relative flex flex-col items-center gap-3"
             >
-              <div className="font-fun text-xs font-bold uppercase tracking-[0.28em] text-white/60">Quiz starts in</div>
+              <div className="font-fun text-xs font-bold uppercase tracking-[0.28em] text-white/60">
+                {state.countdownReason === 'resume' ? 'Reconnected. Resuming in' : 'Quiz starts in'}
+              </div>
               <div className="flex size-28 items-center justify-center rounded-full border-4 border-brand-purple/70 bg-surface-deep shadow-[0_0_48px_rgba(206,130,255,0.3)] sm:size-32">
                 <span className="font-fun text-5xl font-black leading-none tabular-nums text-white sm:text-6xl">
                   {Math.max(1, state.countdownSeconds)}
                 </span>
               </div>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {forfeitPending && (
+          <motion.div
+            key="party-forfeit-pending"
+            initial={{ opacity: 0, y: -16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            className="absolute left-1/2 top-4 z-40 w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 rounded-2xl border border-red-500/25 bg-surface-deep/95 px-4 py-3 shadow-2xl backdrop-blur"
+          >
+            <div className="text-center font-fun">
+              <div className="text-[10px] uppercase tracking-[0.22em] text-red-300/70">Finalizing Match</div>
+              <div className="mt-1 text-sm font-black text-white">{forfeitPendingTitle}</div>
+              <div className="mt-1 text-xs font-bold text-white/60">{forfeitPending.message}</div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

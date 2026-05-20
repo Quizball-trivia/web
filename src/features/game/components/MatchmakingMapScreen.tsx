@@ -6,6 +6,7 @@ import {
   AnimatePresence,
   useMotionValue,
   useSpring,
+  useTransform,
   animate,
 } from "motion/react";
 import { RotateCcw, TriangleAlert, Volume2, VolumeX } from "lucide-react";
@@ -129,6 +130,15 @@ function clamp(value: number, min: number, max: number): number {
 /** Project [lon, lat] → [px, py] matching ComposableMap's internal projection */
 function projectPoint(lon: number, lat: number): [number, number] {
   return proj([lon, lat]) ?? [MAP_W / 2, MAP_H / 2];
+}
+
+function shouldUseHtmlMapAvatars(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  const isAppleWebKit = ua.includes("AppleWebKit");
+  const isChromium = ua.includes("Chrome") || ua.includes("Chromium") || ua.includes("CriOS") || ua.includes("Edg");
+  const isFirefox = ua.includes("Firefox") || ua.includes("FxiOS");
+  return isAppleWebKit && !isChromium && !isFirefox;
 }
 
 // ── Pin colors ──
@@ -1007,11 +1017,6 @@ function generateFakePlayers(): FakePlayer[] {
   });
 }
 
-// ── Self-player position ──
-
-const SELF_LON = 0;
-const SELF_LAT = 51.5;
-
 // ── Pan constants ──
 // The map starts showing Americas and pans right across Europe, Asia
 const DESKTOP_CAMERA = {
@@ -1050,6 +1055,7 @@ export function MatchmakingMapScreen({
       ? window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`).matches
       : false,
   );
+  const [useHtmlAvatars] = useState(() => shouldUseHtmlMapAvatars());
   const showFoundState = matchType === "ranked" && rankedFoundOpponent !== null;
   const showPreparationFailure =
     showFoundState &&
@@ -1097,6 +1103,14 @@ export function MatchmakingMapScreen({
   const smoothX = useSpring(mapX, { stiffness: 40, damping: 20 });
   const smoothY = useSpring(mapY, { stiffness: 40, damping: 20 });
   const smoothScale = useSpring(mapScale, { stiffness: 40, damping: 20 });
+  const mapOverlayX = useTransform(
+    smoothX,
+    (value) => `${(value / MAP_W) * 100}%`,
+  );
+  const mapOverlayY = useTransform(
+    smoothY,
+    (value) => `${(value / MAP_H) * 100}%`,
+  );
   const searchCamera = isMobile ? MOBILE_CAMERA : DESKTOP_CAMERA;
 
   const opponentPin = useMemo<FakePlayer | null>(() => {
@@ -1400,49 +1414,7 @@ export function MatchmakingMapScreen({
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-            {/* Avatar clip paths for all player pins */}
-            {mapPlayers.map((p) => (
-              <clipPath key={`clip-${p.id}`} id={`pin-avatar-${p.id}`}>
-                <circle cx="0" cy="-7.5" r="5.1" />
-              </clipPath>
-            ))}
           </defs>
-
-          {/* Self marker */}
-          <Marker coordinates={[SELF_LON, SELF_LAT]}>
-            <circle cx={0} cy={0} r="5" fill="#58CC02" opacity="0.15">
-              <animate
-                attributeName="r"
-                values="5;14;5"
-                dur="2s"
-                repeatCount="indefinite"
-              />
-              <animate
-                attributeName="opacity"
-                values="0.25;0;0.25"
-                dur="2s"
-                repeatCount="indefinite"
-              />
-            </circle>
-            <circle
-              cx={0}
-              cy={0}
-              r="4"
-              fill="#58CC02"
-              stroke="#46A302"
-              strokeWidth="1.2"
-            />
-            <text
-              x={0}
-              y={-8}
-              textAnchor="middle"
-              fill="#58CC02"
-              fontSize="5"
-              fontWeight="900"
-            >
-              YOU
-            </text>
-          </Marker>
 
           {/* Player pins */}
           {mapPlayers.map((p) => {
@@ -1517,9 +1489,17 @@ export function MatchmakingMapScreen({
                   stroke={p.color}
                   strokeWidth="0.8"
                 />
-                <foreignObject x="-5.1" y="-12.6" width="10.2" height="10.2" clipPath={`url(#pin-avatar-${p.id})`}>
-                  <AvatarDisplay customization={p.avatarCustomization ?? {}} size="xs" className="size-full" />
-                </foreignObject>
+                {!useHtmlAvatars && (
+                  <foreignObject x="-5.1" y="-12.6" width="10.2" height="10.2">
+                    <div className="flex size-full items-center justify-center overflow-hidden rounded-full">
+                      <AvatarDisplay
+                        customization={p.avatarCustomization ?? {}}
+                        size="xs"
+                        className="size-full"
+                      />
+                    </div>
+                  </foreignObject>
+                )}
 
                 {/* Name label (only when highlighted or opponent) */}
                 {(isOpp || (highlighted && !showFoundState)) && (
@@ -1570,6 +1550,51 @@ export function MatchmakingMapScreen({
           })}
         </motion.g>
       </ComposableMap>
+
+      {useHtmlAvatars && (
+        <div
+          className="absolute left-0 top-1/2 z-10 w-screen -translate-y-1/2 pointer-events-none"
+          style={{ aspectRatio: `${MAP_W} / ${MAP_H}` }}
+          aria-hidden="true"
+        >
+          <motion.div
+            className="absolute inset-0"
+            style={{
+              x: mapOverlayX,
+              y: mapOverlayY,
+              scale: smoothScale,
+              transformOrigin: "0 0",
+            }}
+          >
+            {mapPlayers.map((p) => {
+              const visible = visiblePins.has(p.id);
+              if (!visible && !showFoundState) return null;
+
+              return (
+                <div
+                  key={`pin-avatar-${p.id}`}
+                  className="absolute flex items-center justify-center overflow-hidden rounded-full bg-[#0D1117]"
+                  style={{
+                    left: `${(p.x / MAP_W) * 100}%`,
+                    top: `${((p.y - 7.5) / MAP_H) * 100}%`,
+                    width: `${(10.2 / MAP_W) * 100}%`,
+                    height: `${(10.2 / MAP_H) * 100}%`,
+                    transform: "translate(-50%, -50%)",
+                    border: `1px solid ${p.color}`,
+                    opacity: 1,
+                  }}
+                >
+                  <AvatarDisplay
+                    customization={p.avatarCustomization ?? {}}
+                    size="xs"
+                    className="size-full"
+                  />
+                </div>
+              );
+            })}
+          </motion.div>
+        </div>
+      )}
 
       {/* ── Overlays ── */}
       <div

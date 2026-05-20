@@ -114,6 +114,10 @@ export function playBgm(name: BgmName) {
       if (key !== name) instance?.stop();
     }
     const sound = getBgm(name);
+    // Drop any pending fade-then-stop callback armed by a prior stopBgm —
+    // otherwise the lingering fade event will fire on the new playback and
+    // silence the track mid-loop.
+    sound.off('fade');
     sound.volume(BGM_VOLUME);
     if (!sound.playing()) sound.play();
     activeBgm = name;
@@ -130,6 +134,9 @@ export function stopBgm(fadeMs = 0) {
     activeBgm = null;
     return;
   }
+  // Clear any prior fade listener so repeated stopBgm calls don't stack
+  // callbacks that fire on later fades.
+  sound.off('fade');
   if (fadeMs > 0 && sound.playing()) {
     const current = sound.volume();
     sound.once('fade', () => sound.stop());

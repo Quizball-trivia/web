@@ -215,6 +215,64 @@ describe('usePossessionScoreSplashes', () => {
     expect(result.current.opponentSplashPoints).toBe(60);
   });
 
+  it('does not replay the opponent splash when round result confirms the same answer', async () => {
+    const opponentScoredRound: MatchRoundResultPayload = {
+      ...ROUND_RESULT,
+      players: {
+        ...ROUND_RESULT.players,
+        opponent: {
+          ...ROUND_RESULT.players.opponent,
+          totalPoints: 60,
+          pointsEarned: 60,
+          isCorrect: true,
+        },
+      },
+    };
+
+    type OpponentSplashProps = {
+      roundResult: MatchRoundResultPayload | null;
+      opponentRound: MatchRoundResultPayload['players'][string] | null;
+    };
+    const initialProps: OpponentSplashProps = {
+      roundResult: null,
+      opponentRound: null,
+    };
+
+    const { result, rerender } = renderHook((props: OpponentSplashProps) => usePossessionScoreSplashes({
+      localQuestion: QUESTION,
+      phaseKind: 'normal',
+      isHalftime: false,
+      selectedAnswer: null,
+      selectedAnswerQIndex: null,
+      opponentAnswered: true,
+      opponentAnsweredCorrectly: true,
+      opponentRecentPoints: 60,
+      answerAck: null,
+      roundResult: props.roundResult,
+      myRound: null,
+      opponentRound: props.opponentRound,
+    }), {
+      initialProps,
+    });
+
+    await act(async () => {});
+    expect(result.current.showOpponentSplash).toBe(true);
+
+    act(() => {
+      result.current.onOpponentSplashComplete();
+    });
+    expect(result.current.showOpponentSplash).toBe(false);
+
+    rerender({
+      roundResult: opponentScoredRound,
+      opponentRound: opponentScoredRound.players.opponent,
+    });
+    await act(async () => {});
+
+    expect(result.current.showOpponentSplash).toBe(false);
+    expect(result.current.opponentSplashPoints).toBe(60);
+  });
+
   it('falls back to round result for player MC splash when answer ack is missed', async () => {
     const { result } = renderHook(() => usePossessionScoreSplashes({
       localQuestion: QUESTION,

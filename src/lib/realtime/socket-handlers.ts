@@ -19,8 +19,11 @@ import type {
   LobbyState,
   MatchAnswerAckPayload,
   MatchFinalResultsPayload,
+  MatchForfeitPendingPayload,
   MatchPartyStatePayload,
   MatchStatePayload,
+  DraftOpponentDisconnectedPayload,
+  DraftResumePayload,
   MatchOpponentAnsweredPayload,
   MatchOpponentDisconnectedPayload,
   RankedMatchFoundPayload,
@@ -157,6 +160,20 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     store.setDraftComplete(data.halfOneCategoryId);
   });
 
+  socket.on('draft:opponent_disconnected', (data: DraftOpponentDisconnectedPayload) => {
+    logger.info('Socket event draft:opponent_disconnected', {
+      lobbyId: data.lobbyId,
+      opponentId: data.opponentId,
+      graceMs: data.graceMs,
+    });
+    store.setDraftPaused(data);
+  });
+
+  socket.on('draft:resume', (data: DraftResumePayload) => {
+    logger.info('Socket event draft:resume', { lobbyId: data.lobbyId });
+    store.clearDraftPaused();
+  });
+
   socket.on('match:start', (data: MatchStartPayload) => {
     logger.info('Socket event match:start', { matchId: data.matchId, opponentId: data.opponent.id });
     store.setMatchStart(data);
@@ -171,6 +188,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       matchId: data.matchId,
       seconds: data.seconds,
       startsAt: data.startsAt,
+      reason: data.reason,
     });
     store.setMatchCountdown(data);
   });
@@ -399,6 +417,14 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       .catch((error) => {
         logger.warn('Failed to refresh auth user after match:final_results', { error });
       });
+  });
+
+  socket.on('match:forfeit_pending', (data: MatchForfeitPendingPayload) => {
+    logger.warn('Socket event match:forfeit_pending', {
+      matchId: data.matchId,
+      reason: data.reason,
+    });
+    store.setForfeitPending(data);
   });
 
   socket.on('match:opponent_disconnected', (data: MatchOpponentDisconnectedPayload) => {

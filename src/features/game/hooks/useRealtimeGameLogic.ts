@@ -61,12 +61,14 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     ? questionDeadlineAtMs
     : null;
   const countdownEndsAt = match?.countdownEndsAt ?? null;
+  const countdownReason = match?.countdownReason ?? null;
   const countdownRemainingMs = useMemo(() => {
     if (!countdownEndsAt) return 0;
     return Math.max(0, countdownEndsAt - nowMs);
   }, [countdownEndsAt, nowMs]);
   const countdownSeconds = Math.ceil(countdownRemainingMs / 1000);
-  const startCountdownActive = countdownRemainingMs > 0 && (currentQuestion?.qIndex ?? 0) === 0;
+  const startCountdownActive =
+    countdownRemainingMs > 0 && (countdownReason === 'resume' || (currentQuestion?.qIndex ?? 0) === 0);
 
   useEffect(() => {
     if (!countdownEndsAt) return;
@@ -426,6 +428,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
       roundResultHoldDone,
       countdownRemainingMs,
       countdownSeconds,
+      countdownReason,
       startCountdownActive,
     },
     actions: {

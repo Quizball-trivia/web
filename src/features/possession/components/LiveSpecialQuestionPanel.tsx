@@ -975,7 +975,7 @@ function PutInOrderPanel({
     ? correctOrder.map((item) => item.id)
     : question.items.map((item) => item.id);
   const playerSubmittedOrderIds = roundResolved
-    ? resolvePutInOrderSubmission(myRound?.submittedOrderIds, userOrder.map((item) => item.id), playerCorrectCount)
+    ? resolvePutInOrderSubmission(myRound?.submittedOrderIds, correctOrderIds, playerCorrectCount)
     : userOrder.map((item) => item.id);
   const opponentSubmittedOrderIds = roundResolved
     ? resolvePutInOrderSubmission(opponentRound?.submittedOrderIds, correctOrderIds, opponentCorrectCount)

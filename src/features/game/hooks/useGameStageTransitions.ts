@@ -571,6 +571,11 @@ export function useGameStageTransitions({
       clearFinalStageTimer();
       return;
     }
+    if (realtimeMatch?.finalResults?.winnerDecisionMethod === "forfeit") {
+      clearFinalStageTimer();
+      setStage("finalResults");
+      return;
+    }
 
     const lastRound = realtimeMatch?.lastRoundResult;
     const hasGoalInLastRound =
