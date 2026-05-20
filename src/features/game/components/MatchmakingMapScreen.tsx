@@ -1573,7 +1573,7 @@ export function MatchmakingMapScreen({
               return (
                 <div
                   key={`pin-avatar-${p.id}`}
-                  className="absolute flex items-center justify-center overflow-hidden rounded-full bg-[#0D1117]"
+                  className="absolute flex items-center justify-center overflow-hidden rounded-full bg-surface-darkest"
                   style={{
                     left: `${(p.x / MAP_W) * 100}%`,
                     top: `${((p.y - 7.5) / MAP_H) * 100}%`,

@@ -211,9 +211,9 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
               animate={{ y: 0, scale: 1, opacity: 1 }}
               exit={{ y: -12, scale: 0.96, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-              className="w-full max-w-sm rounded-2xl border border-red-500/25 bg-surface-deep/95 px-5 py-4 text-center shadow-2xl"
+              className="w-full max-w-sm rounded-2xl border border-brand-red-soft/25 bg-surface-deep/95 px-5 py-4 text-center shadow-2xl"
             >
-              <div className="font-fun text-[10px] font-bold uppercase tracking-[0.28em] text-red-300/70">
+              <div className="font-fun text-[10px] font-bold uppercase tracking-[0.28em] text-brand-red-soft/70">
                 Finalizing Match
               </div>
               <div className="mt-2 font-fun text-base font-black text-white">

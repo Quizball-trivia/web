@@ -196,7 +196,9 @@ export function usePossessionRoundTransition({
       pendingPenaltyCountdownRef.current = false;
       // Drop any running countdown — derived penaltyCountdownActive
       // would otherwise keep gating the UI after the server moved on.
-      setPenaltyCountdownEndsAt(null);
+      queueMicrotask(() => {
+        setPenaltyCountdownEndsAt(null);
+      });
       return;
     }
 

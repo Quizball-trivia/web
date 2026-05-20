@@ -384,6 +384,10 @@ export function SocialScreen() {
     setPendingRemoveId(friendUserId);
     try {
       await removeFriendMutation.mutateAsync(friendUserId);
+    } catch {
+      // Error toast is shown by the mutation's onError; swallow here so
+      // the rejection doesn't bubble past the click handler as an
+      // unhandled rejection (visible in tests + the browser console).
     } finally {
       setPendingRemoveId(null);
     }

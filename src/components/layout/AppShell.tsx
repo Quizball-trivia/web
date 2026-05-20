@@ -471,15 +471,15 @@ export function AppShell({ children }: AppShellProps) {
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-hide">
             {showForfeitPendingBanner && (
               <div className="px-6 pt-4">
-                <div className="rounded-2xl border border-red-500/35 bg-red-500/15 px-5 py-4 shadow-[0_8px_30px_rgba(239,68,68,0.16)]">
+                <div className="rounded-2xl border border-brand-red-soft/35 bg-brand-red-soft/15 px-5 py-4 shadow-[0_8px_30px_rgba(239,68,68,0.16)]">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="size-10 rounded-full bg-red-500/20 text-red-300 flex items-center justify-center">
+                      <div className="size-10 rounded-full bg-brand-red-soft/20 text-brand-red-soft/80 flex items-center justify-center">
                         <Gamepad2 className="size-5" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-red-100">{forfeitPendingTitle}</p>
-                        <p className="text-xs text-red-200/80">{forfeitPendingDescription}</p>
+                        <p className="text-sm font-semibold text-brand-red-soft">{forfeitPendingTitle}</p>
+                        <p className="text-xs text-brand-red-soft/70">{forfeitPendingDescription}</p>
                       </div>
                     </div>
                   </div>
@@ -488,18 +488,18 @@ export function AppShell({ children }: AppShellProps) {
             )}
             {showCompletedMatchBanner && (
               <div className="px-6 pt-4">
-                <div className="rounded-2xl border border-emerald-500/35 bg-emerald-500/15 px-5 py-4 shadow-[0_8px_30px_rgba(16,185,129,0.16)]">
+                <div className="rounded-2xl border border-brand-green/35 bg-brand-green/15 px-5 py-4 shadow-[0_8px_30px_rgba(16,185,129,0.16)]">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="size-10 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center">
+                      <div className="size-10 rounded-full bg-brand-green/20 text-brand-green-light flex items-center justify-center">
                         <Gamepad2 className="size-5" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-emerald-100">
+                        <p className="text-sm font-semibold text-brand-green-light">
                           Match finished against{" "}
                           <span className="text-foreground">{completedMatchBanner?.opponent.username ?? "Opponent"}</span>
                         </p>
-                          <p className="text-xs text-emerald-200/80">
+                          <p className="text-xs text-brand-green-light/70">
                             {completedByForfeit
                               ? "Reconnect limit reached. Final result is ready."
                               : "View the final result"}
@@ -509,7 +509,7 @@ export function AppShell({ children }: AppShellProps) {
                       <div className="flex items-center gap-2">
                         <Button
                           size="sm"
-                          className="h-9 bg-emerald-500 text-emerald-950 hover:bg-emerald-400"
+                          className="h-9 bg-brand-green text-white hover:bg-brand-green-deep"
                           onClick={handleViewCompletedMatch}
                         >
                           View Results <ArrowRight className="ml-2 size-4" />
@@ -517,7 +517,7 @@ export function AppShell({ children }: AppShellProps) {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-9 border-emerald-500/40 text-emerald-100 hover:bg-emerald-500/10"
+                          className="h-9 border-brand-green/40 text-brand-green-light hover:bg-brand-green/10"
                           onClick={handleDismissCompletedMatch}
                         >
                           Dismiss <X className="ml-2 size-4" />
@@ -529,23 +529,23 @@ export function AppShell({ children }: AppShellProps) {
               )}
               {showDraftBanner && (
                 <div className="px-6 pt-4">
-                  <div className="rounded-2xl border border-amber-500/35 bg-amber-500/15 px-5 py-4 shadow-[0_8px_30px_rgba(245,158,11,0.18)]">
+                  <div className="rounded-2xl border border-brand-orange/35 bg-brand-orange/15 px-5 py-4 shadow-[0_8px_30px_rgba(245,158,11,0.18)]">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="size-10 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center">
+                        <div className="size-10 rounded-full bg-brand-orange/20 text-brand-orange-light flex items-center justify-center">
                           <Gamepad2 className="size-5" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-amber-100">
+                          <p className="text-sm font-semibold text-brand-orange-light">
                             Draft active against{" "}
                             <span className="text-foreground">{activeDraftBanner?.opponent?.username ?? "Opponent"}</span>
                           </p>
-                          <p className="text-xs text-amber-200/80">Return to category banning before the match starts</p>
+                          <p className="text-xs text-brand-orange-light/70">Return to category banning before the match starts</p>
                         </div>
                       </div>
                       <Button
                         size="sm"
-                        className="h-9 bg-amber-400 text-amber-950 hover:bg-amber-300"
+                        className="h-9 bg-brand-orange text-white hover:bg-brand-orange-light"
                         onClick={handleReturnToDraft}
                       >
                         Return to Draft <ArrowRight className="ml-2 size-4" />
@@ -556,18 +556,18 @@ export function AppShell({ children }: AppShellProps) {
               )}
               {showRejoinBanner && (
               <div className="px-6 pt-4">
-                <div className="rounded-2xl border border-blue-500/35 bg-gradient-to-r from-blue-500/15 to-cyan-400/15 px-5 py-4 shadow-[0_8px_30px_rgba(59,130,246,0.2)]">
+                <div className="rounded-2xl border border-brand-cyan/35 bg-gradient-to-r from-brand-cyan/15 to-brand-cyan/15 px-5 py-4 shadow-[0_8px_30px_rgba(59,130,246,0.2)]">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="size-10 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center">
+                      <div className="size-10 rounded-full bg-brand-cyan/20 text-brand-cyan flex items-center justify-center">
                         <Gamepad2 className="size-5" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-blue-100">
+                        <p className="text-sm font-semibold text-brand-cyan">
                           Match still active against{" "}
                           <span className="text-foreground">{activeMatchBanner?.opponent.username ?? "Opponent"}</span>
                         </p>
-                        <p className="text-xs text-blue-200/80">
+                        <p className="text-xs text-brand-cyan/70">
                             {activeMatchBanner?.source === "rejoin"
                               ? formatRejoinCopy(rejoinReconnectsLeft)
                               : "Return to the live match"}
@@ -577,7 +577,7 @@ export function AppShell({ children }: AppShellProps) {
                     <div className="flex items-center gap-2">
                       <Button
                         size="sm"
-                        className="h-9 bg-blue-500 text-blue-950 hover:bg-blue-400"
+                        className="h-9 bg-brand-cyan text-white hover:bg-brand-cyan-deep"
                         onClick={handleRejoinMatch}
                       >
                         Rejoin Match <ArrowRight className="ml-2 size-4" />
@@ -585,7 +585,7 @@ export function AppShell({ children }: AppShellProps) {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-9 border-red-500/40 text-red-200 hover:bg-red-500/10"
+                        className="h-9 border-brand-red-soft/40 text-brand-red-soft/80 hover:bg-brand-red-soft/10"
                         onClick={handleForfeitRejoin}
                       >
                         Forfeit <X className="ml-2 size-4" />
@@ -711,14 +711,14 @@ export function AppShell({ children }: AppShellProps) {
         <main className="flex-1 overflow-y-auto pb-20">
           {showForfeitPendingBanner && (
             <div className="px-4 pt-4">
-              <div className="rounded-2xl border border-red-500/35 bg-red-500/15 px-4 py-3 shadow-[0_8px_30px_rgba(239,68,68,0.16)]">
+              <div className="rounded-2xl border border-brand-red-soft/35 bg-brand-red-soft/15 px-4 py-3 shadow-[0_8px_30px_rgba(239,68,68,0.16)]">
                 <div className="flex items-center gap-3">
-                  <div className="size-9 rounded-full bg-red-500/20 text-red-300 flex items-center justify-center">
+                  <div className="size-9 rounded-full bg-brand-red-soft/20 text-brand-red-soft/80 flex items-center justify-center">
                     <Gamepad2 className="size-4" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-red-100">{forfeitPendingTitle}</p>
-                    <p className="text-xs text-red-200/80">{forfeitPendingDescription}</p>
+                    <p className="text-sm font-semibold text-brand-red-soft">{forfeitPendingTitle}</p>
+                    <p className="text-xs text-brand-red-soft/70">{forfeitPendingDescription}</p>
                   </div>
                 </div>
               </div>
@@ -726,18 +726,18 @@ export function AppShell({ children }: AppShellProps) {
           )}
           {showCompletedMatchBanner && (
             <div className="px-4 pt-4">
-              <div className="rounded-2xl border border-emerald-500/35 bg-emerald-500/15 px-4 py-3 shadow-[0_8px_30px_rgba(16,185,129,0.16)]">
+              <div className="rounded-2xl border border-brand-green/35 bg-brand-green/15 px-4 py-3 shadow-[0_8px_30px_rgba(16,185,129,0.16)]">
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="size-9 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center">
+                    <div className="size-9 rounded-full bg-brand-green/20 text-brand-green-light flex items-center justify-center">
                       <Gamepad2 className="size-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-emerald-100">
+                      <p className="text-sm font-semibold text-brand-green-light">
                         Match finished vs{" "}
                         <span className="text-foreground">{completedMatchBanner?.opponent.username ?? "Opponent"}</span>
                       </p>
-                        <p className="text-xs text-emerald-200/80">
+                        <p className="text-xs text-brand-green-light/70">
                           {completedByForfeit ? "Reconnect limit reached. Result is ready." : "Final result is ready"}
                         </p>
                     </div>
@@ -745,7 +745,7 @@ export function AppShell({ children }: AppShellProps) {
                     <div className="flex gap-2">
                       <Button
                         size="sm"
-                        className="flex-1 h-10 bg-emerald-500 text-emerald-950 hover:bg-emerald-400"
+                        className="flex-1 h-10 bg-brand-green text-white hover:bg-brand-green-deep"
                         onClick={handleViewCompletedMatch}
                       >
                         View Results
@@ -753,7 +753,7 @@ export function AppShell({ children }: AppShellProps) {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="flex-1 h-10 border-emerald-500/40 text-emerald-100 hover:bg-emerald-500/10"
+                        className="flex-1 h-10 border-brand-green/40 text-brand-green-light hover:bg-brand-green/10"
                         onClick={handleDismissCompletedMatch}
                       >
                         Dismiss
@@ -765,23 +765,23 @@ export function AppShell({ children }: AppShellProps) {
             )}
             {showDraftBanner && (
               <div className="px-4 pt-4">
-                <div className="rounded-2xl border border-amber-500/35 bg-amber-500/15 px-4 py-3 shadow-[0_8px_30px_rgba(245,158,11,0.16)]">
+                <div className="rounded-2xl border border-brand-orange/35 bg-brand-orange/15 px-4 py-3 shadow-[0_8px_30px_rgba(245,158,11,0.16)]">
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="size-9 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center">
+                      <div className="size-9 rounded-full bg-brand-orange/20 text-brand-orange-light flex items-center justify-center">
                         <Gamepad2 className="size-4" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-amber-100">
+                        <p className="text-sm font-semibold text-brand-orange-light">
                           Draft active vs{" "}
                           <span className="text-foreground">{activeDraftBanner?.opponent?.username ?? "Opponent"}</span>
                         </p>
-                        <p className="text-xs text-amber-200/80">Return to category banning</p>
+                        <p className="text-xs text-brand-orange-light/70">Return to category banning</p>
                       </div>
                     </div>
                     <Button
                       size="sm"
-                      className="h-10 bg-amber-400 text-amber-950 hover:bg-amber-300"
+                      className="h-10 bg-brand-orange text-white hover:bg-brand-orange-light"
                       onClick={handleReturnToDraft}
                     >
                       Return to Draft
@@ -792,18 +792,18 @@ export function AppShell({ children }: AppShellProps) {
             )}
             {showRejoinBanner && (
             <div className="px-4 pt-4">
-              <div className="rounded-2xl border border-blue-500/35 bg-gradient-to-r from-blue-500/15 to-cyan-400/15 px-4 py-3 shadow-[0_8px_30px_rgba(59,130,246,0.2)]">
+              <div className="rounded-2xl border border-brand-cyan/35 bg-gradient-to-r from-brand-cyan/15 to-brand-cyan/15 px-4 py-3 shadow-[0_8px_30px_rgba(59,130,246,0.2)]">
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="size-9 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center">
+                    <div className="size-9 rounded-full bg-brand-cyan/20 text-brand-cyan flex items-center justify-center">
                       <Gamepad2 className="size-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-blue-100">
+                      <p className="text-sm font-semibold text-brand-cyan">
                         Match active vs{" "}
                         <span className="text-foreground">{activeMatchBanner?.opponent.username ?? "Opponent"}</span>
                       </p>
-                      <p className="text-xs text-blue-200/80">
+                      <p className="text-xs text-brand-cyan/70">
                           {activeMatchBanner?.source === "rejoin"
                             ? formatRejoinCopy(rejoinReconnectsLeft, true)
                             : "Return to continue"}
@@ -813,7 +813,7 @@ export function AppShell({ children }: AppShellProps) {
                   <div className="flex gap-2">
                     <Button
                       size="sm"
-                      className="flex-1 h-10 bg-blue-500 text-blue-950 hover:bg-blue-400"
+                      className="flex-1 h-10 bg-brand-cyan text-white hover:bg-brand-cyan-deep"
                       onClick={handleRejoinMatch}
                     >
                       Rejoin
@@ -821,7 +821,7 @@ export function AppShell({ children }: AppShellProps) {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="flex-1 h-10 border-red-500/40 text-red-200 hover:bg-red-500/10"
+                      className="flex-1 h-10 border-brand-red-soft/40 text-brand-red-soft/80 hover:bg-brand-red-soft/10"
                       onClick={handleForfeitRejoin}
                     >
                       Forfeit

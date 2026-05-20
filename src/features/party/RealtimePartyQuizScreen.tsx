@@ -345,10 +345,10 @@ export function RealtimePartyQuizScreen({
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16 }}
-            className="absolute left-1/2 top-4 z-40 w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 rounded-2xl border border-red-500/25 bg-surface-deep/95 px-4 py-3 shadow-2xl backdrop-blur"
+            className="absolute left-1/2 top-4 z-40 w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 rounded-2xl border border-brand-red-soft/25 bg-surface-deep/95 px-4 py-3 shadow-2xl backdrop-blur"
           >
             <div className="text-center font-fun">
-              <div className="text-[10px] uppercase tracking-[0.22em] text-red-300/70">Finalizing Match</div>
+              <div className="text-[10px] uppercase tracking-[0.22em] text-brand-red-soft/70">Finalizing Match</div>
               <div className="mt-1 text-sm font-black text-white">{forfeitPendingTitle}</div>
               <div className="mt-1 text-xs font-bold text-white/60">{forfeitPending.message}</div>
             </div>
