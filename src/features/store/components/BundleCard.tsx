@@ -55,21 +55,21 @@ export function BundleCard({
         </div>
       )}
 
-      {/* Card — 295×268 in Figma; we use aspect ratio so it scales */}
+      {/* Card matches the avatar item-card footprint so store grids stay aligned on mobile. */}
       <div
-        className="relative flex flex-col rounded-[20px] border-[3px] aspect-[295/268] px-5 pt-6 pb-5"
+        className="relative flex min-h-[218px] flex-col rounded-[16px] border-[3px] aspect-[4/5] px-2.5 py-3 sm:min-h-[270px] sm:rounded-[20px] sm:px-5 sm:py-5"
         style={{ backgroundColor: CARD_BG, borderColor: accent }}
       >
         {/* Top: amount + label (centered) */}
         <div className="text-center">
           <div
-            className="text-[28px] sm:text-[32px] tabular-nums leading-none text-white"
+            className="text-[18px] tabular-nums leading-none text-white sm:text-[28px]"
             style={poppins}
           >
             {amount.toLocaleString()}
           </div>
           <div
-            className="mt-2 text-[10px] sm:text-[11px] uppercase tracking-[0.04em] text-white/50"
+            className="mt-1.5 text-[8px] uppercase tracking-[0.04em] text-white/50 sm:mt-2 sm:text-[11px]"
             style={poppins}
           >
             {title}
@@ -80,28 +80,27 @@ export function BundleCard({
             and slot → button identically across all four tiers). Icons
             object-contain inside the slot; the Handful (single coin) gets a
             tighter max-h so its square shape doesn't dominate the card. */}
-        <div className="relative flex h-[110px] items-center justify-center pt-1 sm:h-[120px]">
+        <div className="relative flex min-h-0 flex-1 items-center justify-center py-1.5 sm:py-2">
           {imageSrc ? (
             <Image
               src={imageSrc}
               alt={title}
               width={200}
               height={200}
-              className={`w-auto max-w-full object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)] ${
-                amount <= 100 ? "max-h-[70px] sm:max-h-[78px]" : "max-h-full"
+              className={`h-[clamp(84px,25vw,142px)] w-auto max-w-full object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)] ${
+                amount <= 100 ? "max-h-[54px] sm:max-h-[78px]" : "max-h-[112px] sm:max-h-[142px]"
               }`}
             />
           ) : (
             <div className="size-20 rounded-2xl" style={{ backgroundColor: `${accent}20` }} />
           )}
         </div>
-        <div className="flex-1" />
 
         {/* Bottom: pill button */}
         <button
           type="button"
           onClick={onBuy}
-          className="mt-3 flex h-[44px] w-full items-center justify-center rounded-[20px] text-[18px] uppercase transition-transform active:translate-y-[2px]"
+          className="flex h-9 w-full items-center justify-center rounded-[16px] text-[12px] uppercase transition-transform active:translate-y-[2px] sm:h-[44px] sm:rounded-[20px] sm:text-[18px]"
           style={{ ...poppins, backgroundColor: accent, color: buttonTextColor }}
         >
           {price}

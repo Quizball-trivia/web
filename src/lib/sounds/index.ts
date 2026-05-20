@@ -1,6 +1,9 @@
 export { useGameSounds } from './useGameSounds';
 export {
   playSfx,
+  playBgm,
+  stopBgm,
+  setBgmVolume,
   setMasterVolume,
   setMuted,
   isMuted,

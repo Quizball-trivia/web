@@ -5,8 +5,8 @@ import type { ResolvedMatchQuestionPayload } from '@/lib/realtime/socket.types';
 import type { AnswerState, AnswerStateArray } from './types/possession.types';
 
 export const TRANSITION_DELAY_MS = 2500;
-export const FIELD_RESULT_COMPARE_MS = 2400;
-export const FIELD_POSSESSION_CUE_MS = 600;
+export const FIELD_RESULT_COMPARE_MS = 900;
+export const FIELD_POSSESSION_CUE_MS = 200;
 export const QUESTION_PLAYING_MS = 10000;
 export const OPTIMISTIC_SPLASH_SAFE_MARGIN_MS = 250;
 export const HALFTIME_RESULTS_DELAY_MS = 4500;
@@ -22,6 +22,11 @@ export const GOAL_SHOT_TO_FIELD_RESET_MS = GOAL_SHOT_TO_CELEBRATION_MS + 100;
 export const GOAL_FIELD_CENTER_RESET_MS = GOAL_SHOT_TO_FIELD_RESET_MS;
 export const DEV_ATTACK_OTHER_HOLD_MS = 1500;
 export const PENALTY_ICON_SWAP_DELAY_MS = 600;
+export const PENALTY_SCORE_FLIGHT_HANDOFF_MS = 735;
+export const PENALTY_KICK_CONTACT_MS = 450;
+export const PENALTY_BALL_GOAL_FLIGHT_MS = 620;
+export const PENALTY_BALL_SAVE_FLIGHT_MS = 660;
+export const PENALTY_RESULT_DISPLAY_DELAY_MS = PENALTY_KICK_CONTACT_MS + PENALTY_BALL_SAVE_FLIGHT_MS;
 export const FIRST_QUESTION_INTRO_MS = 2000;
 
 export type FeedResult = 'goal' | 'saved' | 'miss' | null;

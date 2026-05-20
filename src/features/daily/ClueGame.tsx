@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { QuitGameDialog } from "./QuitGameDialog";
 import type { CluesSession } from "@/lib/domain/dailyChallenge";
+import { calculateCluesDisplayPoints } from "@/utils/cluesScoring";
 
 interface ClueGameProps {
   session: CluesSession;
@@ -76,9 +77,8 @@ function findBestMatch(
   return null;
 }
 
-const POINTS_BY_CLUE: Record<number, number> = { 1: 200, 2: 150, 3: 100, 4: 50, 5: 25 };
 function getPoints(revealedClues: number): number {
-  return POINTS_BY_CLUE[revealedClues] ?? 25;
+  return calculateCluesDisplayPoints(revealedClues);
 }
 
 export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {

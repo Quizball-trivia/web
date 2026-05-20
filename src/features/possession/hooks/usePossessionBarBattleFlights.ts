@@ -51,6 +51,10 @@ function resolveFlightPoints(
   return pointsEarned;
 }
 
+function isFlightPhaseKind(kind: string | undefined): boolean {
+  return kind === 'normal' || kind === 'penalty';
+}
+
 function findScoreAnchor(side: Side): DOMRect | null {
   if (typeof document === 'undefined') return null;
   return findVisibleRect(`[data-splash-anchor="${side}"]`);
@@ -78,7 +82,8 @@ function findVisibleRect(selector: string): DOMRect | null {
     const rect = el.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) continue;
     const style = window.getComputedStyle(el);
-    if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) continue;
+    const opacity = Number.parseFloat(style.opacity);
+    if (style.display === 'none' || style.visibility === 'hidden' || opacity === 0) continue;
     if (rect.bottom <= 0 || rect.right <= 0 || rect.top >= window.innerHeight || rect.left >= window.innerWidth) continue;
     return rect;
   }
@@ -139,6 +144,36 @@ function computeFlightTarget(
   }
 
   return clampFlightPoint({ x, y });
+}
+
+function computeFallbackBarLaneTarget(
+  selfRect: DOMRect,
+  opponentRect: DOMRect | null,
+  pitchRect: DOMRect | null
+): { x: number; y: number } {
+  const centre = rectCentre(selfRect);
+  if (!opponentRect) return clampFlightPoint(centre);
+
+  const oppCentre = rectCentre(opponentRect);
+  const isVerticalStack = Math.abs(centre.y - oppCentre.y) > Math.abs(centre.x - oppCentre.x);
+  if (!isVerticalStack) return computeFlightTarget(selfRect, opponentRect, pitchRect);
+
+  const offset = Math.max(44, Math.min(78, selfRect.height * 0.82));
+  const awayY = centre.y <= oppCentre.y ? -1 : 1;
+  let target = {
+    x: centre.x,
+    y: centre.y + offset * awayY,
+  };
+
+  if (pitchRect) {
+    const padding = 22;
+    target = {
+      x: Math.max(pitchRect.left + padding, Math.min(pitchRect.right - padding, target.x)),
+      y: Math.max(pitchRect.top + padding, Math.min(pitchRect.bottom - padding, target.y)),
+    };
+  }
+
+  return clampFlightPoint(target);
 }
 
 export function usePossessionBarBattleFlights() {
@@ -222,7 +257,7 @@ export function usePossessionBarBattleFlights() {
         source: clampFlightPoint(rectCentre(params.sourceRect)),
         target: barTargetRect
           ? clampFlightPoint(rectCentre(barTargetRect))
-          : computeFlightTarget(params.targetRect, params.opponentRect, params.pitchRect),
+          : computeFallbackBarLaneTarget(params.targetRect, params.opponentRect, params.pitchRect),
         points: params.points,
         failed: params.failed,
       }]);
@@ -246,7 +281,7 @@ export function usePossessionBarBattleFlights() {
     const points = resolveFlightPoints(answerAck.pointsEarned, answerAck.questionKind, answerAck.foundCount);
     const failed = !answerAck.isCorrect || points <= 0;
     const phaseKind = answerAck.phaseKind ?? 'normal';
-    if (phaseKind !== 'normal') return;
+    if (!isFlightPhaseKind(phaseKind)) return;
     const ackKey = `${answerAck.matchId}:${answerAck.qIndex}`;
     if (playerFiredQRef.current === ackKey) return;
 
@@ -284,7 +319,7 @@ export function usePossessionBarBattleFlights() {
     if (!enabled || !roundResult || !selfUserId) return;
     if (roundResult.qIndex !== currentQIndex) return;
     const phaseKind = roundResult.phaseKind ?? phaseKindFromState;
-    if (phaseKind !== 'normal') return;
+    if (!isFlightPhaseKind(phaseKind)) return;
     const roundKey = `${roundResult.matchId}:${roundResult.qIndex}`;
     if (playerFiredQRef.current === roundKey) return;
 
@@ -326,7 +361,7 @@ export function usePossessionBarBattleFlights() {
     if (!enabled || !roundResult || !selfUserId) return;
     if (roundResult.qIndex !== currentQIndex) return;
     const phaseKind = roundResult.phaseKind ?? phaseKindFromState;
-    if (phaseKind !== 'normal') return;
+    if (!isFlightPhaseKind(phaseKind)) return;
     const roundKey = `${roundResult.matchId}:${roundResult.qIndex}`;
     if (opponentFiredQRef.current === roundKey) return;
 
@@ -371,7 +406,7 @@ export function usePossessionBarBattleFlights() {
     // Fire flights for both correct and wrong opponent answers. The wrong/
     // zero-point case renders a "failed" flight that falls off-screen.
     if (currentQIndex == null) return;
-    if (phaseKindFromState !== 'normal') return;
+    if (!isFlightPhaseKind(phaseKindFromState)) return;
     if (currentKey == null) return;
     if (opponentFiredQRef.current === currentKey) return;
 

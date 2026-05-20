@@ -1,11 +1,11 @@
 'use client';
 
 import { motion } from 'motion/react';
-import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { X } from 'lucide-react';
 import { MAX_PENALTY_ROUNDS } from '../types/possession.types';
 import type { Phase } from '../types/possession.types';
 import { AnimatedPointsCounter } from './AnimatedPointsCounter';
+import { MatchHudAvatar, MatchHudIconButton } from './MatchHudPrimitives';
 import type { AvatarCustomization } from '@/types/game';
 
 interface PenaltyHUDProps {
@@ -44,26 +44,30 @@ export function PenaltyHUD({
   onQuit,
 }: PenaltyHUDProps) {
   return (
-    <div className="w-full font-fun space-y-2 mb-3">
+    <div className="relative w-full font-fun space-y-2 mb-3">
       {onQuit && (
-        <div className="px-3">
-          <button
-            onClick={onQuit}
-            className="shrink-0 p-1.5 rounded-full text-white/40 hover:text-white/70 hover:bg-white/5 transition-colors"
-            title="Leave match"
-          >
-            <X className="size-5" />
-          </button>
-        </div>
+        <MatchHudIconButton
+          onClick={onQuit}
+          className="absolute right-[calc(env(safe-area-inset-right)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.25rem)] z-[70] sm:right-[calc(env(safe-area-inset-right)+0.5rem)] sm:top-[calc(env(safe-area-inset-top)+0.5rem)]"
+          title="Leave match"
+          aria-label="Leave match"
+        >
+          <X className="size-5" />
+        </MatchHudIconButton>
       )}
 
-      <div className="flex items-center justify-between gap-3 px-3">
-        <div className="flex min-w-0 flex-1 items-center gap-3">
-          <AvatarDisplay customization={playerAvatarCustomization ?? {}} size="sm" className="size-11 shrink-0" />
+      <div className="flex items-center justify-between gap-1 px-12 sm:gap-3 sm:px-3">
+        <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-3">
+          <MatchHudAvatar customization={playerAvatarCustomization} side="player" />
           <div className="min-w-0">
-            <div className="truncate text-xs font-bold text-white/85">{playerName}</div>
-            <div className="text-3xl font-black leading-7 tabular-nums text-white">{penaltyPlayerScore}</div>
-            <AnimatedPointsCounter value={playerPoints} accentClassName="text-brand-yellow" />
+            <div className="hidden truncate text-xs font-bold text-white/85 sm:block">{playerName}</div>
+            <div className="text-2xl font-black leading-6 tabular-nums text-white sm:text-3xl sm:leading-7">{penaltyPlayerScore}</div>
+            <div className="hidden sm:block">
+              <AnimatedPointsCounter value={playerPoints} accentClassName="text-brand-yellow" />
+            </div>
+            <div className="text-[8px] font-black uppercase leading-none tracking-[0.08em] text-white/45 sm:hidden">
+              {playerPoints} pts
+            </div>
           </div>
         </div>
         <div className="flex min-w-[44px] shrink-0 flex-col items-center justify-center sm:min-w-[100px]">
@@ -73,7 +77,7 @@ export function PenaltyHUD({
           <motion.div
             animate={timeRemaining <= 2 && phase === 'penalty-playing' ? { scale: [1, 1.1, 1] } : {}}
             transition={timeRemaining <= 2 ? { repeat: Infinity, duration: 0.6 } : {}}
-            className={`text-3xl font-black tabular-nums transition-colors duration-200 ${
+            className={`text-2xl font-black tabular-nums transition-colors duration-200 sm:text-3xl ${
               phase === 'penalty-playing' ? '' : 'hidden sm:block'
             } ${
               phase === 'penalty-playing'
@@ -87,17 +91,22 @@ export function PenaltyHUD({
             {isPlayerShooter ? 'YOU SHOOT' : 'YOU SAVE'}
           </div>
         </div>
-        <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-1 sm:gap-3">
           <div className="min-w-0 text-right">
-            <div className="ml-auto truncate text-xs font-bold text-white/85">{opponentName}</div>
-            <div className="text-3xl font-black leading-7 tabular-nums text-white">{penaltyOpponentScore}</div>
-            <AnimatedPointsCounter
-              value={opponentPoints}
-              align="right"
-              accentClassName="text-brand-red-soft"
-            />
+            <div className="ml-auto hidden truncate text-xs font-bold text-white/85 sm:block">{opponentName}</div>
+            <div className="text-2xl font-black leading-6 tabular-nums text-white sm:text-3xl sm:leading-7">{penaltyOpponentScore}</div>
+            <div className="hidden sm:block">
+              <AnimatedPointsCounter
+                value={opponentPoints}
+                align="right"
+                accentClassName="text-brand-red-soft"
+              />
+            </div>
+            <div className="text-[8px] font-black uppercase leading-none tracking-[0.08em] text-white/45 sm:hidden">
+              {opponentPoints} pts
+            </div>
           </div>
-          <AvatarDisplay customization={opponentAvatarCustomization ?? {}} size="sm" className="size-11 shrink-0" />
+          <MatchHudAvatar customization={opponentAvatarCustomization} side="opponent" />
         </div>
       </div>
       {/* Penalty score pips */}

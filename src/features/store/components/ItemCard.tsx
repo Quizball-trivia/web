@@ -133,28 +133,30 @@ export function ItemCard({
       className="relative flex flex-col"
     >
       <div
-        className="relative flex flex-col rounded-[20px] border-[3px] aspect-[4/5] px-5 py-5"
+        className="relative flex min-h-[218px] flex-col rounded-[16px] border-[3px] aspect-[4/5] px-2.5 py-3 sm:min-h-[270px] sm:rounded-[20px] sm:px-5 sm:py-5"
         style={{ backgroundColor: CARD_BG, borderColor: PURPLE }}
       >
         {/* Title */}
         <div
-          className="text-center text-[14px] sm:text-[16px] uppercase leading-none text-white truncate"
+          className="min-w-0 truncate text-center text-[11px] uppercase leading-none text-white sm:text-[16px]"
           style={poppins}
         >
           {name}
         </div>
 
         {/* Item image (or composite avatar preview / mannequin overlay) — centered, fills available space */}
-        <div className="relative flex flex-1 items-center justify-center py-2">
+        <div className="relative flex min-h-0 flex-1 items-center justify-center py-1.5 sm:py-2">
           {previewCustomization ? (
-            <div className="flex h-[142px] w-[142px] items-center justify-center">
-              <AvatarPreview customization={previewCustomization} width={130} />
+            <div className="flex size-[clamp(84px,25vw,142px)] items-center justify-center">
+              <AvatarPreview customization={previewCustomization} width={104} className="max-h-full max-w-full" />
             </div>
           ) : mannequinPart ? (
-            <MannequinPreview part={mannequinPart} />
+            <div className="flex h-[clamp(84px,25vw,142px)] items-center justify-center">
+              <MannequinPreview part={mannequinPart} />
+            </div>
           ) : (
             <div
-              className="relative h-full"
+              className="relative h-[clamp(84px,25vw,142px)]"
               style={{ width: `${SIZE_PCT[imageSize]}%` }}
             >
               <Image
@@ -174,7 +176,7 @@ export function ItemCard({
           <button
             type="button"
             onClick={onBuy}
-            className="flex h-[44px] w-full items-center justify-center rounded-[20px] border-2 text-[14px] uppercase text-white/80 transition-colors hover:bg-white/5"
+            className="flex h-9 w-full items-center justify-center rounded-[16px] border-2 text-[11px] uppercase text-white/80 transition-colors hover:bg-white/5 sm:h-[44px] sm:rounded-[20px] sm:text-[14px]"
             style={{ ...poppins, borderColor: "rgba(255,255,255,0.15)" }}
           >
             Owned
@@ -183,11 +185,11 @@ export function ItemCard({
           <button
             type="button"
             onClick={onBuy}
-            className="flex h-[44px] w-full items-center justify-center gap-2 rounded-[20px] text-[18px] uppercase text-white transition-transform active:translate-y-[2px]"
+            className="flex h-9 w-full items-center justify-center gap-1 rounded-[16px] text-[12px] uppercase text-white transition-transform active:translate-y-[2px] sm:h-[44px] sm:gap-2 sm:rounded-[20px] sm:text-[18px]"
             style={{ ...poppins, backgroundColor: PURPLE }}
           >
             <span className="tabular-nums">{price}</span>
-            <CoinIcon size={26} />
+            <CoinIcon size={22} />
           </button>
         )}
       </div>

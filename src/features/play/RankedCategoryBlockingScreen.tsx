@@ -7,6 +7,7 @@ import { Volume2, VolumeX } from 'lucide-react';
 import { isMuted as getIsMuted, toggleMute } from '@/lib/sounds/gameSounds';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
+import { useGameSessionStore } from '@/stores/gameSession.store';
 import { getSocket } from '@/lib/realtime/socket-client';
 import { usePlayer } from '@/contexts/PlayerContext';
 import { useAuthStore } from '@/stores/auth.store';
@@ -55,6 +56,7 @@ export interface BanCategoryViewProps {
   phase: 'ban' | 'ready';
   currentActor: 'player' | 'opponent';
   timeLeft: number;
+  paused?: boolean;
   soundMuted: boolean;
   onToggleSound: () => void;
   onBanCategory: (categoryId: string) => void;
@@ -139,6 +141,7 @@ export function BanCategoryView({
   phase,
   currentActor,
   timeLeft,
+  paused = false,
   soundMuted,
   onToggleSound,
   onBanCategory,
@@ -204,13 +207,15 @@ export function BanCategoryView({
             className="text-3xl uppercase text-white sm:text-4xl"
             style={poppins}
           >
-            {phase === 'ban' ? 'Ban Category' : 'Get Ready'}
+            {paused ? 'Waiting' : phase === 'ban' ? 'Ban Category' : 'Get Ready'}
           </h2>
           <p
             className="mt-2 text-xs uppercase tracking-[0.08em] text-white/55 sm:text-sm"
             style={poppins}
           >
-            {phase === 'ban'
+            {paused
+              ? 'Opponent disconnected. Draft resumes when they return.'
+              : phase === 'ban'
               ? 'Tap a card to remove it. One category remains for Half 1.'
               : 'Match starting with selected Half 1 category…'}
           </p>
@@ -225,6 +230,7 @@ export function BanCategoryView({
               const isBanned = isPlayerBanned || isOpponentBanned;
 
               const disabled =
+                paused ||
                 (!!playerBannedId && !isPlayerBanned && phase === 'ban') ||
                 isOpponentBanned ||
                 currentActor !== 'player' ||
@@ -263,13 +269,22 @@ export function RankedCategoryBlockingScreen() {
   const selfUserId = connectedSelfUserId ?? authUser?.id ?? null;
   const lobby = useRealtimeMatchStore((state) => state.lobby);
   const draft = useRealtimeMatchStore((state) => state.draft);
+  const draftPaused = useRealtimeMatchStore((state) => state.draftPaused);
   const rankedFoundOpponent = useRankedMatchmakingStore((state) => state.rankedFoundOpponent);
   const rankedFoundMyRecentForm = useRankedMatchmakingStore((state) => state.rankedFoundMyRecentForm);
   const matchOpponent = useRealtimeMatchStore((state) => state.match?.opponent);
   const realtimeMatchState = useRealtimeMatchStore((state) => state.match);
+  const skipDraftShowdown = useGameSessionStore((state) => state.config?.skipDraftShowdown === true);
   const { data: rankedProfile } = useRankedProfile();
   const [timeLeft, setTimeLeft] = useState(15);
-  const [showShowdown, setShowShowdown] = useState(true);
+  const [showShowdown, setShowShowdown] = useState(() => {
+    if (skipDraftShowdown) return false;
+    const currentDraft = useRealtimeMatchStore.getState().draft;
+    const hasExistingDraftProgress = Boolean(
+      currentDraft?.halfOneCategoryId || Object.keys(currentDraft?.bans ?? {}).length > 0
+    );
+    return Boolean(useRankedMatchmakingStore.getState().rankedFoundOpponent) && !hasExistingDraftProgress;
+  });
   const autoBanFired = useRef(false);
   const [soundMuted, setSoundMuted] = useState(() => getIsMuted());
 
@@ -291,7 +306,7 @@ export function RankedCategoryBlockingScreen() {
   const opponentUsername = opponentMember?.username ?? 'Opponent';
 
   useEffect(() => {
-    if (!draft || showShowdown) return;
+    if (!draft || showShowdown || draftPaused) return;
     setTimeLeft(15);
     autoBanFired.current = false;
     const interval = setInterval(() => {
@@ -299,11 +314,12 @@ export function RankedCategoryBlockingScreen() {
     }, 1000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft?.turnUserId, draft?.halfOneCategoryId, draft?.categories, showShowdown]);
+  }, [draft?.turnUserId, draft?.halfOneCategoryId, draft?.categories, draftPaused, showShowdown]);
 
   // Auto-ban a random category when timer expires on player's turn
   useEffect(() => {
     if (timeLeft !== 0 || autoBanFired.current) return;
+    if (draftPaused) return;
     if (!selfUserId) return;
     if (!draft || draft.halfOneCategoryId) return;
     if (draft.turnUserId !== selfUserId) return;
@@ -318,7 +334,7 @@ export function RankedCategoryBlockingScreen() {
     autoBanFired.current = true;
     getSocket().emit('draft:ban', { categoryId: randomCategory.id });
     logger.info('Auto-ban on timer expiry', { categoryId: randomCategory.id });
-  }, [timeLeft, draft, selfUserId]);
+  }, [timeLeft, draft, draftPaused, selfUserId]);
 
   useEffect(() => {
     if (showShowdown) {
@@ -416,9 +432,11 @@ export function RankedCategoryBlockingScreen() {
       phase={phase}
       currentActor={currentActor}
       timeLeft={timeLeft}
+      paused={draftPaused}
       soundMuted={soundMuted}
       onToggleSound={() => setSoundMuted(toggleMute())}
       onBanCategory={(categoryId) => {
+        if (draftPaused) return;
         if (!selfUserId) return;
         useRealtimeMatchStore.getState().setDraftBan(selfUserId, categoryId);
         getSocket().emit('draft:ban', { categoryId });

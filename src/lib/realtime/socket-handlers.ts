@@ -14,14 +14,16 @@ import type {
   DraftState,
   ErrorPayload,
   ForceLogoutPayload,
-  MatchChanceCardAppliedPayload,
   MatchCluesGuessAckPayload,
   MatchCountdownGuessAckPayload,
   LobbyState,
   MatchAnswerAckPayload,
   MatchFinalResultsPayload,
+  MatchForfeitPendingPayload,
   MatchPartyStatePayload,
   MatchStatePayload,
+  DraftOpponentDisconnectedPayload,
+  DraftResumePayload,
   MatchOpponentAnsweredPayload,
   MatchOpponentDisconnectedPayload,
   RankedMatchFoundPayload,
@@ -126,28 +128,6 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       }
     }
 
-    if (
-      data.code === 'CHANCE_CARD_NOT_AVAILABLE'
-      || data.code === 'CHANCE_CARD_NOT_ALLOWED'
-      || data.code === 'CHANCE_CARD_ALREADY_USED'
-      || data.code === 'CHANCE_CARD_SYNC_FAILED'
-    ) {
-      const meta = data.meta as
-        | {
-          qIndex?: number;
-          clientActionId?: string;
-        }
-        | undefined;
-      store.rollbackOptimisticChanceCard({
-        qIndex: typeof meta?.qIndex === 'number' ? meta.qIndex : undefined,
-        clientActionId: typeof meta?.clientActionId === 'string' ? meta.clientActionId : undefined,
-      });
-      toast.error(data.message);
-      const qc = getQueryClient();
-      if (qc) {
-        void qc.invalidateQueries({ queryKey: queryKeys.store.inventory() });
-      }
-    }
     if (data.code === 'INSUFFICIENT_TICKETS') {
       toast.error(data.message);
       const qc = getQueryClient();
@@ -180,6 +160,20 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     store.setDraftComplete(data.halfOneCategoryId);
   });
 
+  socket.on('draft:opponent_disconnected', (data: DraftOpponentDisconnectedPayload) => {
+    logger.info('Socket event draft:opponent_disconnected', {
+      lobbyId: data.lobbyId,
+      opponentId: data.opponentId,
+      graceMs: data.graceMs,
+    });
+    store.setDraftPaused(data);
+  });
+
+  socket.on('draft:resume', (data: DraftResumePayload) => {
+    logger.info('Socket event draft:resume', { lobbyId: data.lobbyId });
+    store.clearDraftPaused();
+  });
+
   socket.on('match:start', (data: MatchStartPayload) => {
     logger.info('Socket event match:start', { matchId: data.matchId, opponentId: data.opponent.id });
     store.setMatchStart(data);
@@ -194,6 +188,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       matchId: data.matchId,
       seconds: data.seconds,
       startsAt: data.startsAt,
+      reason: data.reason,
     });
     store.setMatchCountdown(data);
   });
@@ -282,15 +277,6 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
                 },
     };
     store.setMatchQuestion(resolvedData);
-  });
-
-  socket.on('match:chance_card_applied', (data: MatchChanceCardAppliedPayload) => {
-    logger.info('Socket event match:chance_card_applied', data);
-    store.confirmOptimisticChanceCard(data);
-    const qc = getQueryClient();
-    if (qc) {
-      void qc.invalidateQueries({ queryKey: queryKeys.store.inventory() });
-    }
   });
 
   socket.on('match:opponent_answered', (data: MatchOpponentAnsweredPayload) => {
@@ -431,6 +417,14 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       .catch((error) => {
         logger.warn('Failed to refresh auth user after match:final_results', { error });
       });
+  });
+
+  socket.on('match:forfeit_pending', (data: MatchForfeitPendingPayload) => {
+    logger.warn('Socket event match:forfeit_pending', {
+      matchId: data.matchId,
+      reason: data.reason,
+    });
+    store.setForfeitPending(data);
   });
 
   socket.on('match:opponent_disconnected', (data: MatchOpponentDisconnectedPayload) => {

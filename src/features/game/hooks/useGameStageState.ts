@@ -92,7 +92,7 @@ export function useGameStageState() {
 
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const opponent = useMemo<OpponentInfo>(() => {
-    if (isMultiplayer && realtimeMatch?.opponent) {
+    if (realtimeMatch?.opponent) {
       return {
         id: realtimeMatch.opponent.id,
         username: realtimeMatch.opponent.username,
@@ -116,7 +116,7 @@ export function useGameStageState() {
     return defaultOpponent;
   }, [defaultOpponent, isMultiplayer, realtimeLobby, realtimeMatch?.opponent, selfUserId]);
 
-  const matchType = config?.matchType || "friendly";
+  const matchType = config?.matchType || (realtimeMatch?.mode === "ranked" ? "ranked" : "friendly");
   const matchVariant = realtimeMatch?.variant ?? null;
   const activeRankedMatchId = matchType === "ranked" ? realtimeMatch?.matchId ?? null : null;
   const isPartyQuizMatch = matchVariant === "friendly_party_quiz";

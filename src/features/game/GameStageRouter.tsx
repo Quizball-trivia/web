@@ -60,6 +60,7 @@ export function GameStageRouter() {
   } = useGameStageState();
 
   const returningToLobbyRef = useRef(false);
+  const showingFinalResultsFromReplay = stage === "idle" && Boolean(realtimeMatch?.finalResults);
 
   useGameStageTransitions({
     isMultiplayer,
@@ -74,11 +75,22 @@ export function GameStageRouter() {
   const showdownType = matchType === "ranked" ? "ranked" : "friendly";
 
   const exitToPlay = useCallback(() => {
+    const final = realtimeMatch?.finalResults;
+    if (final) {
+      socket.emit("match:final_results_ack", {
+        matchId: final.matchId,
+        resultVersion: final.resultVersion,
+      });
+      logger.info("Socket emit match:final_results_ack before exit", {
+        matchId: final.matchId,
+        resultVersion: final.resultVersion,
+      });
+    }
     resetRealtime();
     clearRankedMatchmaking();
     resetGameSession();
     router.push("/play");
-  }, [clearRankedMatchmaking, resetGameSession, resetRealtime, router]);
+  }, [clearRankedMatchmaking, realtimeMatch?.finalResults, resetGameSession, resetRealtime, router, socket]);
 
   useEffect(() => {
     const inviteCode = realtimeLobby?.inviteCode;
@@ -108,10 +120,10 @@ export function GameStageRouter() {
   ]);
 
   useEffect(() => {
-    if (stage === "idle" && !returningToLobbyRef.current) {
+    if (stage === "idle" && !returningToLobbyRef.current && !realtimeMatch?.finalResults) {
       router.replace("/play");
     }
-  }, [stage, router]);
+  }, [realtimeMatch?.finalResults, stage, router]);
 
   const realtimeMatchId = realtimeMatch?.matchId;
   const handleQuit = useCallback(() => {
@@ -185,11 +197,11 @@ export function GameStageRouter() {
     return <TrainingMatchScreen onComplete={exitToPlay} />;
   }
 
-  if (stage === "idle") {
+  if (stage === "idle" && !showingFinalResultsFromReplay) {
     return <LoadingScreen />;
   }
 
-  if (isMultiplayer) {
+  if (isMultiplayer || showingFinalResultsFromReplay) {
     if (stage === "matchmaking") {
       // Friendly matches skip matchmaking — match data arrives before navigation.
       // Show bouncing ball instead of the map/searching screen for that brief transition frame.
@@ -253,10 +265,14 @@ export function GameStageRouter() {
       );
     }
 
-    if (stage === "finalResults") {
+    if (stage === "finalResults" || showingFinalResultsFromReplay) {
       const final = realtimeMatch?.finalResults;
       if (!isPartyQuizMatch && !final) {
-        return <LoadingScreen />;
+        return (
+          <LoadingScreen
+            text={matchType === "ranked" ? "Updating rank..." : "Finalizing results..."}
+          />
+        );
       }
       const unlockedAchievements = selfUserId
         ? final?.unlockedAchievements?.[selfUserId] ?? []
@@ -284,26 +300,51 @@ export function GameStageRouter() {
       }
 
       const myStats = selfUserId && final ? final.players[selfUserId] : undefined;
-      const opponentStats = selfUserId && final
-        ? Object.entries(final.players).find(([userId]) => userId !== selfUserId)?.[1]
+      const opponentEntry = selfUserId && final
+        ? Object.entries(final.players).find(([userId]) => userId !== selfUserId)
         : undefined;
+      const opponentStats = opponentEntry?.[1];
+      const finalOpponentUserId = opponentEntry?.[0] ?? opponent.id;
+      const opponentParticipant = realtimeMatch?.participants?.find((participant) => participant.userId === finalOpponentUserId)
+        ?? realtimeMatch?.participants?.find((participant) => participant.userId !== selfUserId);
+      const opponentRankPoints = parseRp(
+        realtimeMatch?.opponent?.rp
+        ?? rankedFoundOpponent?.rp
+        ?? opponentParticipant?.rankPoints
+      );
 
       const playerDisplayScore = myStats?.goals ?? 0;
       const opponentDisplayScore = opponentStats?.goals ?? 0;
-      const totalQuestionsPlayed = realtimeMatch?.currentQuestion?.total
-        ?? clientTotalQuestions
-        ?? POSSESSION_TOTAL_QUESTIONS_FALLBACK;
+      const knownQuestionCount = realtimeMatch?.questions
+        ? Math.max(0, ...Object.keys(realtimeMatch.questions).map((key) => Number(key) + 1).filter(Number.isFinite))
+        : 0;
+      const firstPositiveQuestionCount = [
+        final?.totalQuestions,
+        realtimeMatch?.currentQuestion?.total,
+        clientTotalQuestions,
+      ].find((value): value is number => typeof value === 'number' && value > 0);
+      const totalQuestionsPlayed = firstPositiveQuestionCount
+        ?? Math.max(knownQuestionCount, POSSESSION_TOTAL_QUESTIONS_FALLBACK);
 
       // Per-question dot strip: read the correctness flags captured by
       // round_result for each qIndex. `undefined` → not yet reached (renders
       // as a hollow yellow ring in the strip).
       const toResult = (v: boolean | undefined): 'correct' | 'wrong' | null =>
         v === undefined ? null : v ? 'correct' : 'wrong';
-      const playerQuestionResults = Array.from({ length: totalQuestionsPlayed }, (_, i) =>
-        toResult(realtimeMatch?.questions?.[i]?.selfIsCorrect)
+      const buildQuestionResults = (
+        userId: string | undefined,
+        readLocalFlag: (qIndex: number) => boolean | undefined
+      ): Array<'correct' | 'wrong' | null> => {
+        const finalResults = userId ? final?.questionResults?.[userId] : undefined;
+        return Array.from({ length: totalQuestionsPlayed }, (_, i) => (
+          finalResults?.[i] ?? toResult(readLocalFlag(i))
+        ));
+      };
+      const playerQuestionResults = buildQuestionResults(selfUserId, (i) =>
+        realtimeMatch?.questions?.[i]?.selfIsCorrect
       );
-      const opponentQuestionResults = Array.from({ length: totalQuestionsPlayed }, (_, i) =>
-        toResult(realtimeMatch?.questions?.[i]?.opponentIsCorrect)
+      const opponentQuestionResults = buildQuestionResults(finalOpponentUserId, (i) =>
+        realtimeMatch?.questions?.[i]?.opponentIsCorrect
       );
 
       return (
@@ -326,7 +367,8 @@ export function GameStageRouter() {
           finalWinnerId={final?.winnerId}
           winnerDecisionMethod={final?.winnerDecisionMethod ?? null}
           preMatchRp={stableRankedProfile?.placementStatus === 'placed' ? stableRankedProfile.rp : undefined}
-          opponentId={opponent.id}
+          opponentId={finalOpponentUserId}
+          opponentRankPoints={opponentRankPoints ?? null}
           rankedOutcome={final?.rankedOutcome ?? null}
           preMatchRankedProfile={stableRankedProfile}
           preMatchProgression={stableProgression}

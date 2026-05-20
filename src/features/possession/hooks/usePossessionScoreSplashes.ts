@@ -148,10 +148,12 @@ export function usePossessionScoreSplashes({
     if (points <= 0) return;
     if (shownSplashQRef.current.opponent !== roundResult.qIndex) return;
 
+    // The immediate match:opponent_answered event already opened the splash.
+    // When round_result arrives later, only reconcile the value; do not restart
+    // the animation for the same question.
     queueMicrotask(() => {
       setOpponentSplashVariant('points');
       setOpponentSplashPoints(points);
-      setShowOpponentSplash(true);
     });
   }, [opponentRound, roundResult]);
 

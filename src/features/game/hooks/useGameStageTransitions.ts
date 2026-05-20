@@ -33,7 +33,7 @@ const RANKED_QUEUE_ACK_TIMEOUT_MS = 2500;
 const MATCH_FOUND_HOLD_MS = 2000;
 const FINAL_RESULTS_HOLD_BASE_MS = 2500;
 const FINAL_RESULTS_HOLD_WITH_GOAL_MS = GOAL_VISUAL_SEQUENCE_MS + 500;
-const FINAL_RESULTS_PAYLOAD_FALLBACK_MS = 3000;
+const FINAL_RESULTS_PAYLOAD_FALLBACK_MS = 750;
 const GEO_HINT_CACHE_KEY = "ranked_geo_hint_v1";
 const IP_LOOKUP_TIMEOUT_MS = 1800;
 
@@ -569,6 +569,11 @@ export function useGameStageTransitions({
     const phaseCompleted = realtimeMatch?.possessionState?.phase === "COMPLETED";
     if (!hasFinalResults && !phaseCompleted) {
       clearFinalStageTimer();
+      return;
+    }
+    if (realtimeMatch?.finalResults?.winnerDecisionMethod === "forfeit") {
+      clearFinalStageTimer();
+      setStage("finalResults");
       return;
     }
 

@@ -13,6 +13,7 @@ export type BarBattlePhase =
   | 'convert'
   | 'bars'
   | 'battle'
+  | 'charge'
   | 'result'
   | 'done';
 
@@ -25,6 +26,8 @@ export interface BarBattleState {
   opponentPoints: number;
   remainingDelta: number;
   dividerX: number;
+  /** `pulse` uses the charge glow without lunging the final bar into the avatar. */
+  chargeMode?: 'lunge' | 'pulse';
 }
 
 // ─── Visual constants ────────────────────────────────────────────────────────
@@ -48,6 +51,8 @@ const BLUE_DARK = '#0E8ACC';
 const RED_DARK = '#CC2E2E';
 const FIELD_MIN_X = 24;
 const FIELD_MAX_X = 476;
+const STACK_CANCEL_STEP_S = 0.14;
+const STACK_CANCEL_FLASH_S = 0.24;
 
 // ─── Score text ──────────────────────────────────────────────────────────────
 
@@ -140,6 +145,8 @@ function Bar({
   cancelled,
   cancelOrder,
   survived,
+  chargeOrder,
+  chargeHitOffsetX = 0,
   cy = CY,
   barW = BAR_W,
   barH = BAR_H,
@@ -158,6 +165,8 @@ function Bar({
   cancelled: boolean;
   cancelOrder: number;
   survived: boolean;
+  chargeOrder: number;
+  chargeHitOffsetX?: number;
   /** Vertical centre for the bar; classic uses CY=115, anchored uses CY_ANCHORED. */
   cy?: number;
   barW?: number;
@@ -179,9 +188,10 @@ function Bar({
   const initialX = morphFromX ?? spawnX;
   const initialYOffset = morphFromY != null ? morphFromY - y : 0;
 
-  const showBar = phase === 'bars' || phase === 'battle' || phase === 'result';
-  const isMarching = phase === 'battle' || phase === 'result';
+  const showBar = phase === 'bars' || phase === 'battle' || phase === 'charge' || phase === 'result';
+  const isMarching = phase === 'battle' || phase === 'charge' || phase === 'result';
   const isBattling = phase === 'battle' && cancelled;
+  const isCharging = phase === 'charge' && survived;
   const isResult = phase === 'result';
 
   if (!showBar) return null;
@@ -240,34 +250,71 @@ function Bar({
   }
 
   if (isResult && cancelled) return null;
+  if (phase === 'charge' && cancelled) return null;
 
   // Spawning / standing bar. In the anchored variant we morph from the
   // splash's landing point (initialX, initialYOffset) outward to (spawnX, 0),
   // making the splash visually fragment into bars. In classic mode initialX
   // === spawnX, so no extra movement happens.
+  const chargeDelay = chargeOrder * 0.075;
+  const targetX = isMarching ? marchX : spawnX;
+  const isChargeImpact = isCharging && chargeHitOffsetX !== 0;
+
   return (
-    <motion.rect
+    <motion.g
       key={`bar-spawn-${index}`}
-      x={0} y={y} width={BAR_W} height={BAR_H} rx={BAR_RX}
-      fill={`url(#${gradientId})`}
-      initial={{ opacity: 0, x: initialX, y: initialYOffset, scaleY: 0.05, scaleX: 0.4 }}
+      initial={{ x: initialX, y: initialYOffset }}
       animate={{
-        opacity: 0.95,
-        x: isMarching ? marchX : spawnX,
+        x: isChargeImpact
+          ? [targetX, targetX, targetX + chargeHitOffsetX, targetX + chargeHitOffsetX * 0.2]
+          : targetX,
         y: 0,
-        scaleY: 1,
-        scaleX: 1,
       }}
       transition={{
-        opacity: { duration: 0.25, delay: spawnDelay, ease: 'easeOut' },
-        scaleY: { type: 'spring', stiffness: 240, damping: 14, delay: spawnDelay },
-        scaleX: { type: 'spring', stiffness: 240, damping: 14, delay: spawnDelay },
-        x: isMarching
-          ? { type: 'spring', stiffness: 100, damping: 18, mass: 0.6, delay: spawnDelay * 0.25 }
-          : { type: 'spring', stiffness: 180, damping: 16, mass: 0.6, delay: spawnDelay },
+        x: isChargeImpact
+          ? { duration: 0.46, delay: chargeDelay + 0.04, times: [0, 0.38, 0.72, 1], ease: [0.22, 1, 0.36, 1] }
+          : isMarching
+            ? { type: 'spring', stiffness: 100, damping: 18, mass: 0.6, delay: spawnDelay * 0.25 }
+            : { type: 'spring', stiffness: 180, damping: 16, mass: 0.6, delay: spawnDelay },
         y: { type: 'spring', stiffness: 180, damping: 16, mass: 0.6, delay: spawnDelay },
       }}
-    />
+    >
+      <motion.rect
+        x={0} y={y} width={BAR_W} height={BAR_H} rx={BAR_RX}
+        fill={`url(#${gradientId})`}
+        initial={{ opacity: 0, scaleY: 0.05, scaleX: 0.4 }}
+        animate={{
+          opacity: isCharging ? [0.95, 1, 0.95] : 0.95,
+          scaleY: isCharging ? [1, 1.1, 1] : 1,
+          scaleX: isCharging ? [1, 1.16, 1] : 1,
+        }}
+        transition={isCharging
+          ? { duration: 0.34, delay: chargeDelay, ease: 'easeOut' }
+          : {
+              opacity: { duration: 0.25, delay: spawnDelay, ease: 'easeOut' },
+              scaleY: { type: 'spring', stiffness: 240, damping: 14, delay: spawnDelay },
+              scaleX: { type: 'spring', stiffness: 240, damping: 14, delay: spawnDelay },
+            }}
+        style={{
+          filter: isCharging ? 'drop-shadow(0 0 7px rgba(255,229,0,0.75))' : undefined,
+          transformOrigin: `${BAR_W / 2}px ${cy}px`,
+        }}
+      />
+      {isCharging && (
+        <motion.rect
+          x={-2}
+          y={y - 3}
+          width={BAR_W + 4}
+          height={BAR_H + 6}
+          rx={BAR_RX + 2}
+          fill="#FFE500"
+          initial={{ opacity: 0, scaleY: 0.08, scaleX: 0.65 }}
+          animate={{ opacity: [0, 0.88, 0], scaleY: [0.08, 1.18, 1], scaleX: [0.65, 1.4, 1] }}
+          transition={{ duration: 0.42, delay: chargeDelay, ease: [0.22, 1, 0.36, 1] }}
+          style={{ transformOrigin: `${BAR_W / 2}px ${cy}px` }}
+        />
+      )}
+    </motion.g>
   );
 }
 
@@ -278,9 +325,12 @@ function StackedBar({
   pushX,
   gradientId,
   count,
+  cancelCount = 0,
   phase,
   cancelled,
   survived,
+  chargeOrder,
+  chargeHitOffsetX = 0,
   cy = CY,
   barW = BAR_W,
   barH = BAR_H,
@@ -294,9 +344,12 @@ function StackedBar({
   pushX: number;
   gradientId: string;
   count: number;
+  cancelCount?: number;
   phase: BarBattlePhase;
   cancelled: boolean;
   survived: boolean;
+  chargeOrder: number;
+  chargeHitOffsetX?: number;
   cy?: number;
   barW?: number;
   barH?: number;
@@ -311,51 +364,129 @@ function StackedBar({
   const initialX = morphFromX ?? spawnX;
   const initialYOffset = morphFromY != null ? morphFromY - y : 0;
 
-  const showBar = phase === 'bars' || phase === 'battle' || phase === 'result';
-  const isMarching = phase === 'battle' || phase === 'result';
-  const isBattling = phase === 'battle' && cancelled;
+  const showBar = phase === 'bars' || phase === 'battle' || phase === 'charge' || phase === 'result';
+  const isMarching = phase === 'battle' || phase === 'charge' || phase === 'result';
+  const isBattling = phase === 'battle' && cancelCount > 0;
+  const isCharging = phase === 'charge' && survived;
   const isResult = phase === 'result';
+  const textRotate = isPortrait ? `rotate(90, 0, ${cy})` : undefined;
   if (!showBar) return null;
 
   if (isBattling) {
+    const hitCount = Math.max(1, Math.min(cancelCount, 12));
+    const finalHitDelay = (hitCount - 1) * STACK_CANCEL_STEP_S;
+    const vanishAt = finalHitDelay + STACK_CANCEL_FLASH_S;
+    const shouldDisappear = cancelled && !survived;
+
     return (
-      <motion.g>
+      <motion.g
+        initial={{ x: spawnX }}
+        animate={{ x: marchX }}
+        transition={{ type: 'spring', stiffness: 100, damping: 18, mass: 0.6 }}
+      >
         <motion.rect
           x={-W / 2} y={y} width={W} height={H} rx={barRx}
           fill={`url(#${gradientId})`}
-          initial={{ opacity: 0.95, x: spawnX }}
-          animate={{ x: marchX, opacity: [0.95, 0.95, 0], scaleY: [1, 1, 0.3], scaleX: [1, 1, 0.15] }}
-          transition={{
-            x: { type: 'spring', stiffness: 100, damping: 18, mass: 0.6 },
-            opacity: { duration: 0.3, ease: 'easeOut' },
-            scaleY: { duration: 0.3, ease: 'easeOut' },
-            scaleX: { duration: 0.3, ease: 'easeOut' },
-          }}
+          initial={{ opacity: 0.95 }}
+          animate={shouldDisappear
+            ? { opacity: [0.95, 0.95, 0], scaleY: [1, 1, 1.3], scaleX: [1, 1, 0.15] }
+            : { opacity: 0.95, scaleY: [1, 1.04, 1], scaleX: [1, 1.05, 1] }}
+          transition={shouldDisappear
+            ? {
+                opacity: { duration: vanishAt + 0.18, times: [0, 0.82, 1], ease: 'easeOut' },
+                scaleY: { duration: vanishAt + 0.18, times: [0, 0.82, 1], ease: 'easeOut' },
+                scaleX: { duration: vanishAt + 0.18, times: [0, 0.82, 1], ease: 'easeOut' },
+              }
+            : {
+                scaleY: { duration: vanishAt + 0.12, ease: 'easeOut' },
+                scaleX: { duration: vanishAt + 0.12, ease: 'easeOut' },
+              }}
         />
+        {Array.from({ length: hitCount }).map((_, i) => (
+          <motion.rect
+            key={`stack-hit-${i}`}
+            data-testid="stack-cancel-hit"
+            x={-W / 2}
+            y={y - 2}
+            width={W}
+            height={H + 4}
+            rx={barRx}
+            fill="white"
+            initial={{ opacity: 0, scaleX: 1 }}
+            animate={{ opacity: [0, 0.9, 0], scaleX: [1, 1.6, 0.3] }}
+            transition={{ duration: 0.2, delay: i * STACK_CANCEL_STEP_S + 0.05, ease: 'easeOut' }}
+            style={{ transformOrigin: `0px ${cy}px` }}
+          />
+        ))}
+        <motion.text
+          x={0}
+          y={cy + 4}
+          textAnchor="middle"
+          fill="white"
+          fontSize={H * 0.45}
+          fontWeight="900"
+          fontFamily="'Poppins', system-ui, sans-serif"
+          transform={textRotate}
+          initial={{ opacity: 1 }}
+          animate={shouldDisappear ? { opacity: [1, 1, 0] } : { opacity: 1 }}
+          transition={shouldDisappear ? { duration: vanishAt + 0.18, times: [0, 0.82, 1], ease: 'easeOut' } : undefined}
+          style={{ paintOrder: 'stroke fill', stroke: 'rgba(0,0,0,0.55)', strokeWidth: 1.5 }}
+        >
+          ×{count}
+        </motion.text>
       </motion.g>
     );
   }
 
-  if (isResult && cancelled) return null;
+  if (isResult && cancelled && !survived) return null;
+  if (phase === 'charge' && cancelled && !survived) return null;
 
-  const textRotate = isPortrait ? `rotate(90, 0, ${cy})` : undefined;
   const targetX = isMarching && !isResult ? marchX : isResult && survived ? pushX : spawnX;
+  const chargeDelay = chargeOrder * 0.075;
+  const isChargeImpact = isCharging && chargeHitOffsetX !== 0;
 
   return (
     <motion.g
       initial={{ opacity: 0, x: initialX, y: initialYOffset, scale: 0.4 }}
-      animate={{ opacity: 0.95, x: targetX, y: 0, scale: 1 }}
+      animate={{
+        opacity: isCharging ? [0.95, 1, 0.95] : 0.95,
+        x: isChargeImpact
+          ? [targetX, targetX, targetX + chargeHitOffsetX, targetX + chargeHitOffsetX * 0.2]
+          : targetX,
+        y: 0,
+        scale: isCharging ? [1, 1.08, 1] : 1,
+      }}
       transition={{
-        opacity: { duration: 0.25, ease: 'easeOut' },
-        scale: { type: 'spring', stiffness: 220, damping: 14 },
-        x: { type: 'spring', stiffness: 140, damping: 18, mass: 0.7 },
+        opacity: isCharging
+          ? { duration: 0.42, delay: chargeDelay, ease: 'easeOut' }
+          : { duration: 0.25, ease: 'easeOut' },
+        scale: isCharging
+          ? { duration: 0.42, delay: chargeDelay, ease: 'easeOut' }
+          : { type: 'spring', stiffness: 220, damping: 14 },
+        x: isChargeImpact
+          ? { duration: 0.46, delay: chargeDelay + 0.04, times: [0, 0.38, 0.72, 1], ease: [0.22, 1, 0.36, 1] }
+          : { type: 'spring', stiffness: 140, damping: 18, mass: 0.7 },
         y: { type: 'spring', stiffness: 180, damping: 16, mass: 0.6 },
       }}
+      style={{ filter: isCharging ? 'drop-shadow(0 0 9px rgba(255,229,0,0.7))' : undefined }}
     >
       <rect
         x={-W / 2} y={y} width={W} height={H} rx={barRx}
         fill={`url(#${gradientId})`}
       />
+      {isCharging && (
+        <motion.rect
+          x={-W / 2 - 3}
+          y={y - 3}
+          width={W + 6}
+          height={H + 6}
+          rx={barRx + 2}
+          fill="#FFE500"
+          initial={{ opacity: 0, scaleY: 0.1, scaleX: 0.75 }}
+          animate={{ opacity: [0, 0.75, 0], scaleY: [0.1, 1.12, 1], scaleX: [0.75, 1.18, 1] }}
+          transition={{ duration: 0.46, delay: chargeDelay, ease: [0.22, 1, 0.36, 1] }}
+        />
+      )}
       <text
         x={0}
         y={cy + 4}
@@ -456,6 +587,7 @@ export function BarBattleOverlay({
 
   const { phase, playerBars, opponentBars, playerPoints, opponentPoints, remainingDelta, dividerX } = battle;
   if (phase === 'done') return null;
+  const chargeLunges = battle.chargeMode !== 'pulse';
   const blueGrad = `${uid}-blue`;
   const redGrad = `${uid}-red`;
   const battleClip = `${uid}-battle-clip`;
@@ -477,10 +609,12 @@ export function BarBattleOverlay({
   const playerLayoutBars = playerBars > 0 ? playerBars : pointsToBarCount(playerPoints);
   const opponentLayoutBars = opponentBars > 0 ? opponentBars : pointsToBarCount(opponentPoints);
 
-  // In portrait, SVG X maps to screen Y. Player pushes from bottom upward,
-  // opponent pushes from top downward.
-  const playerPreferredBarDir = isAnchored && isPortrait ? -1 : playerDir;
-  const opponentPreferredBarDir = isAnchored && isPortrait ? 1 : opponentDir;
+  // In portrait, SVG X maps to screen Y. The bar lane must extend away from
+  // the opposing avatar, which flips when the second half mirrors the pitch.
+  const portraitPlayerDir = playerAvatarX != null && opponentAvatarX != null && playerAvatarX > opponentAvatarX ? 1 : -1;
+  const portraitOpponentDir = opponentAvatarX != null && playerAvatarX != null && opponentAvatarX > playerAvatarX ? 1 : -1;
+  const playerPreferredBarDir = isAnchored && isPortrait ? portraitPlayerDir : playerDir;
+  const opponentPreferredBarDir = isAnchored && isPortrait ? portraitOpponentDir : opponentDir;
 
   const compactW = barW * 2.2;
   const clampCenterX = (x: number, width: number) =>
@@ -502,13 +636,17 @@ export function BarBattleOverlay({
     dir: number,
     count: number
   ) => {
+    const fallbackBarX = avatarX == null
+      ? dividerX
+      : clampCenterX(avatarX + dir * AVATAR_BAR_OFFSET + barW / 2, barW);
     if (!isAnchored || avatarX == null || count <= 0) {
       return {
         compact: false,
         dir,
-        rowX: (_i: number) => avatarX ?? dividerX,
-        compactX: avatarX ?? dividerX,
-        splashX: avatarX ?? dividerX,
+        rowX: (_i: number) => fallbackBarX - barW / 2,
+        compactX: fallbackBarX,
+        splashX: fallbackBarX,
+        landingX: fallbackBarX,
       };
     }
 
@@ -521,9 +659,11 @@ export function BarBattleOverlay({
         rowX: (_i: number) => compactX,
         compactX,
         splashX: compactX,
+        landingX: compactX,
       };
     }
     const splashX = (xs[0] + xs[xs.length - 1] + barW) / 2;
+    const landingX = xs[0] + barW / 2;
 
     return {
       compact: false,
@@ -531,6 +671,7 @@ export function BarBattleOverlay({
       rowX: (i: number) => xs[i] ?? avatarX,
       compactX,
       splashX,
+      landingX,
     };
   };
 
@@ -538,8 +679,8 @@ export function BarBattleOverlay({
   const opponentLayout = buildAnchoredLayout(opponentAvatarX, opponentPreferredBarDir, opponentLayoutBars);
   const playerBarDir = playerLayout.dir;
   const opponentBarDir = opponentLayout.dir;
-  const playerStackCount = phase === 'result' && remainingDelta > 0 ? remainingDelta : playerBars;
-  const opponentStackCount = phase === 'result' && remainingDelta < 0 ? -remainingDelta : opponentBars;
+  const playerStackCount = (phase === 'result' || phase === 'charge') && remainingDelta > 0 ? remainingDelta : playerBars;
+  const opponentStackCount = (phase === 'result' || phase === 'charge') && remainingDelta < 0 ? -remainingDelta : opponentBars;
 
   // Spawn position:
   //   - classic: cluster just outside the divider on each player's side
@@ -638,8 +779,8 @@ export function BarBattleOverlay({
 
       {isAnchored && (
         <g pointerEvents="none" aria-hidden="true">
-          <circle data-pitch-bar-target="player" cx={playerSplashLandX} cy={cy} r="6" fill="transparent" />
-          <circle data-pitch-bar-target="opponent" cx={opponentSplashLandX} cy={cy} r="6" fill="transparent" />
+          <circle data-testid="bar-target-player" data-pitch-bar-target="player" cx={playerLayout.landingX} cy={cy} r="6" fill="transparent" />
+          <circle data-testid="bar-target-opponent" data-pitch-bar-target="opponent" cx={opponentLayout.landingX} cy={cy} r="6" fill="transparent" />
         </g>
       )}
 
@@ -688,9 +829,18 @@ export function BarBattleOverlay({
             pushX={playerLayout.compactX}
             gradientId={blueGrad}
             count={playerStackCount}
+            cancelCount={minBars}
             phase={phase}
-            cancelled={remainingDelta < 0}
+            cancelled={remainingDelta <= 0}
             survived={remainingDelta > 0}
+            chargeOrder={0}
+            chargeHitOffsetX={!chargeLunges
+              ? 0
+              : remainingDelta > 0 && isAnchored && playerAvatarX != null
+              ? (playerAvatarX + playerBarDir * 20) - playerLayout.compactX
+              : remainingDelta > 0
+                ? -playerBarDir * 34
+                : 0}
             cy={cy}
             barW={barW}
             barH={barH}
@@ -705,6 +855,15 @@ export function BarBattleOverlay({
             const isSurvived = remainingDelta > 0 && i >= minBars;
             const cancelOrder = isCancelled ? (minBars - 1 - i) : 0;
             const survivedIndex = isSurvived ? i - minBars : i;
+            const survivorCount = Math.max(0, playerBars - minBars);
+            const chargeOrder = isSurvived ? Math.max(0, survivorCount - 1 - survivedIndex) : 0;
+            const chargeHitOffsetX = !chargeLunges
+              ? 0
+              : isSurvived && survivedIndex === 0
+              ? isAnchored && playerAvatarX != null
+                ? (playerAvatarX + playerBarDir * 20) - playerBarStartX(i)
+                : -playerBarDir * 34
+              : 0;
 
             return (
               <Bar
@@ -720,6 +879,8 @@ export function BarBattleOverlay({
                 cancelled={isCancelled}
                 cancelOrder={cancelOrder}
                 survived={isSurvived}
+                chargeOrder={chargeOrder}
+                chargeHitOffsetX={chargeHitOffsetX}
                 cy={cy}
                 barW={barW}
                 barH={barH}
@@ -739,9 +900,18 @@ export function BarBattleOverlay({
             pushX={opponentLayout.compactX}
             gradientId={redGrad}
             count={opponentStackCount}
+            cancelCount={minBars}
             phase={phase}
-            cancelled={remainingDelta > 0}
+            cancelled={remainingDelta >= 0}
             survived={remainingDelta < 0}
+            chargeOrder={0}
+            chargeHitOffsetX={!chargeLunges
+              ? 0
+              : remainingDelta < 0 && isAnchored && opponentAvatarX != null
+              ? (opponentAvatarX + opponentBarDir * 20) - opponentLayout.compactX
+              : remainingDelta < 0
+                ? -opponentBarDir * 34
+                : 0}
             cy={cy}
             barW={barW}
             barH={barH}
@@ -756,6 +926,15 @@ export function BarBattleOverlay({
             const isSurvived = remainingDelta < 0 && i >= minBars;
             const cancelOrder = isCancelled ? (minBars - 1 - i) : 0;
             const survivedIndex = isSurvived ? i - minBars : i;
+            const survivorCount = Math.max(0, opponentBars - minBars);
+            const chargeOrder = isSurvived ? Math.max(0, survivorCount - 1 - survivedIndex) : 0;
+            const chargeHitOffsetX = !chargeLunges
+              ? 0
+              : isSurvived && survivedIndex === 0
+              ? isAnchored && opponentAvatarX != null
+                ? (opponentAvatarX + opponentBarDir * 20) - opponentBarStartX(i)
+                : -opponentBarDir * 34
+              : 0;
 
             return (
               <Bar
@@ -771,6 +950,8 @@ export function BarBattleOverlay({
                 cancelled={isCancelled}
                 cancelOrder={cancelOrder}
                 survived={isSurvived}
+                chargeOrder={chargeOrder}
+                chargeHitOffsetX={chargeHitOffsetX}
                 cy={cy}
                 barW={barW}
                 barH={barH}
