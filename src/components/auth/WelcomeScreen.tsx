@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -18,6 +18,15 @@ import type { LeaderboardEntry } from '@/lib/domain/leaderboard';
 import { useLeaderboard } from '@/lib/queries/leaderboard.queries';
 import { RANKED_TIER_BANDS } from '@/utils/rankedTier';
 import { tierConfig, type TierName } from '@/utils/tierVisuals';
+import type { AvatarCustomization } from '@/types/game';
+import { PitchVisualization } from '@/features/possession/components/PitchVisualization';
+import type { BarBattleState } from '@/features/possession/components/BarBattleOverlay';
+import {
+  BarBattleFlightOverlay,
+  FLIGHT_TOTAL_MS,
+  type FlightSpec,
+} from '@/features/possession/components/BarBattleFlightOverlay';
+import { GOAL_CELEBRATION_MS, GOAL_SHOT_TO_CELEBRATION_MS } from '@/features/possession/realtimePossession.helpers';
 
 const SUBHEADING_PHRASES = [
   "Back your football knowledge.",
@@ -37,11 +46,11 @@ const CATEGORY_STYLES: Record<string, { color: string; icon: LucideIcon; flag?: 
   "premier-league": { color: "#3D195B", icon: Crown, flag: "gb-eng" },
   "champions-league": { color: "#1A71B8", icon: Star },
   "world-cup": { color: "#D4AF37", icon: Globe, watermarkImg: "/assets/brand/world-cup-trophy.webp" },
-  "la-liga": { color: "#FF4B44", icon: Flame, flag: "es" },
+  "la-liga": { color: "#FFFFFF", icon: Flame, flag: "es" },
   "serie-a": { color: "#024494", icon: Shield, flag: "it" },
   "bundesliga": { color: "#D20515", icon: Goal, flag: "de" },
-  "ligue-1": { color: "#DFE512", icon: Award, flag: "fr" },
-  "league-1": { color: "#DFE512", icon: Award, flag: "fr" },
+  "ligue-1": { color: "#D8F000", icon: Award, flag: "fr" },
+  "league-1": { color: "#D8F000", icon: Award, flag: "fr" },
   "transfer-history": { color: "#1CB0F6", icon: Repeat },
   "transfers": { color: "#1CB0F6", icon: Repeat },
   "legends": { color: "#FFD700", icon: Trophy, watermarkImg: "/assets/brand/ball.webp" },
@@ -60,14 +69,61 @@ const CATEGORY_STYLES: Record<string, { color: string; icon: LucideIcon; flag?: 
   "stadiums": { color: "#059669", icon: Goal },
   "managers": { color: "#7C3AED", icon: Crown },
   "ballon-dor": { color: "#D4AF37", icon: Award, watermarkImg: "/assets/brand/ball.webp" },
+  "ac-milan": { color: "#B5121B", icon: Shield, flag: "it" },
+  "milan": { color: "#B5121B", icon: Shield, flag: "it" },
+  "argentina": { color: "#6CACE4", icon: Flag, flag: "ar" },
+  "arsenal": { color: "#EF0107", icon: Shield, flag: "gb-eng" },
+  "barcelona": { color: "#A50044", icon: Shield, flag: "es" },
+  "barcelona-b": { color: "#A50044", icon: Shield, flag: "es" },
+  "salvador": { color: "#0047AB", icon: Flag },
+  "el-salvador": { color: "#0047AB", icon: Flag, flag: "sv" },
 };
 
 // Categories to exclude (game modes, not real trivia categories)
 const EXCLUDED_SLUGS = new Set([
   "daily-challenges", "daily-challenge", "countdown", "jeopardy",
   "daily", "daily-quiz", "count-down", "football-jeopardy", "clues",
-  "true-or-false", "put-in-order", "money-drop",
+  "true-or-false", "put-in-order", "money-drop", "high-low",
+  "high_low", "imposter", "football-logic", "career-path",
+  "career_path",
 ]);
+
+const EXCLUDED_CATEGORY_PREFIXES = [
+  "daily-challenges",
+  "daily-challenge",
+];
+
+const EXCLUDED_CATEGORY_NAMES = new Set([
+  "daily challenges",
+  "clues",
+  "countdown",
+  "money drop",
+  "put in order",
+  "true or false",
+  "high low",
+  "high_low",
+  "imposter",
+  "football logic",
+  "career path",
+  "career_path",
+]);
+
+function normalizeCategoryKey(value: string) {
+  return value.toLowerCase().trim().replace(/\s+/g, '-');
+}
+
+function isWelcomeCategoryExcluded(slug: string, name: string) {
+  const normalizedSlug = normalizeCategoryKey(slug);
+  const normalizedName = normalizeCategoryKey(name);
+  const lowerName = name.toLowerCase().trim();
+
+  return (
+    EXCLUDED_SLUGS.has(normalizedSlug) ||
+    EXCLUDED_SLUGS.has(normalizedName) ||
+    EXCLUDED_CATEGORY_PREFIXES.some((prefix) => normalizedSlug.startsWith(prefix)) ||
+    EXCLUDED_CATEGORY_NAMES.has(lowerName)
+  );
+}
 
 // Main categories to feature on the landing page (matched by slug or name substring)
 const FEATURED_NAMES = [
@@ -86,6 +142,33 @@ const FEATURED_CATEGORY_LIMIT = 12;
 // Fallback colors for categories not in the mapping
 const FALLBACK_COLORS = ["#E74C3C", "#3498DB", "#2ECC71", "#9B59B6", "#F39C12", "#1ABC9C", "#E67E22", "#2980B9"];
 
+function CategoryArtwork({
+  src,
+  className,
+  imageClassName,
+}: {
+  src?: string | null;
+  className: string;
+  imageClassName?: string;
+}) {
+  const [failed, setFailed] = useState(false);
+
+  if (!src || failed) return null;
+
+  return (
+    <div className={className}>
+      {/* eslint-disable-next-line @next/next/no-img-element -- Category artwork is runtime CMS data and may be data: URLs. */}
+      <img
+        src={src}
+        alt=""
+        referrerPolicy="no-referrer"
+        className={`size-full object-contain object-center transition-transform duration-500 group-hover:scale-105 ${imageClassName ?? ""}`}
+        onError={() => setFailed(true)}
+      />
+    </div>
+  );
+}
+
 function getCategoryStyle(slug: string, name: string, index: number) {
   // Try exact slug match, then name-based slug, then substring match
   const nameSlug = name.toLowerCase().replace(/\s+/g, '-');
@@ -102,6 +185,22 @@ function getCategoryStyle(slug: string, name: string, index: number) {
 
 const DEMO_PLAYER_NAMES = ["Mason", "Thiago", "Santi", "Jamal", "Enzo", "Rafa", "Nico", "Jude"];
 
+const DEMO_AVATAR_LOADOUTS: AvatarCustomization[] = [
+  { skin: "skin_male_white", hair: "hair_ramos", jersey: "jersey_liverpool", glasses: "glasses_aviator" },
+  { skin: "skin_male_dark", hair: "hair_ronaldo_goat", jersey: "jersey_brazil_retro", facialHair: "stache" },
+  { skin: "skin_male_white_alt", hair: "hair_hamsik", jersey: "jersey_milan", facialHair: "beard" },
+  { skin: "skin_male_dark_alt", hair: "hair_boy_basic", jersey: "jersey_argentina_retro", glasses: "glasses_round" },
+  { skin: "skin_male_white", hair: "hair_girl_basic", jersey: "jersey_barcelona", glasses: "glasses_wayfarer" },
+  { skin: "skin_male_dark", hair: "hair_ronaldo_brazil", jersey: "jersey_france_retro" },
+  { skin: "skin_male_white_alt", hair: "hair_boy_basic", jersey: "jersey_bayern", glasses: "glasses_aviator" },
+  { skin: "skin_male_dark_alt", hair: "hair_ramos", jersey: "jersey_netherlands_retro", facialHair: "beard" },
+];
+
+interface DemoPlayer {
+  name: string;
+  avatarCustomization: AvatarCustomization;
+}
+
 const DEMO_LEADERBOARD: LeaderboardEntry[] = [
   { id: "1", rank: 1, username: "CR7_GOAT", avatar: "avatar-1", country: "pt", tier: "GOAT", rankPoints: 4820, isCurrentUser: false, trend: "same", trendValue: 0 },
   { id: "2", rank: 2, username: "Messianic10", avatar: "avatar-2", country: "ar", tier: "Legend", rankPoints: 4615, isCurrentUser: false, trend: "up", trendValue: 2 },
@@ -113,52 +212,80 @@ const DEMO_LEADERBOARD: LeaderboardEntry[] = [
   { id: "8", rank: 8, username: "ThreeLions_", avatar: "avatar-8", country: "gb-eng", tier: "Key Player", rankPoints: 3510, isCurrentUser: false, trend: "up", trendValue: 4 },
 ];
 
-const STADIUM_SCENES = [
-  {
-    leftX: '20%',
-    leftY: '56%',
-    rightX: '79%',
-    rightY: '45%',
-    ballX: '35%',
-    ballY: '53%',
-    rightScore: 0,
-    showGoal: false,
-    progress: 2,
-  },
-  {
-    leftX: '34%',
-    leftY: '54%',
-    rightX: '73%',
-    rightY: '48%',
-    ballX: '50%',
-    ballY: '52%',
-    rightScore: 0,
-    showGoal: false,
-    progress: 4,
-  },
-  {
-    leftX: '49%',
-    leftY: '52%',
-    rightX: '86%',
-    rightY: '43%',
-    ballX: '81%',
-    ballY: '47%',
-    rightScore: 1,
-    showGoal: true,
-    progress: 6,
-  },
-  {
-    leftX: '22%',
-    leftY: '56%',
-    rightX: '79%',
-    rightY: '45%',
-    ballX: '50%',
-    ballY: '50%',
-    rightScore: 1,
-    showGoal: false,
-    progress: 1,
-  },
-] as const;
+type LandingGoalSide = 'left' | 'right';
+type LandingScenario = {
+  kind: 'left-push' | 'right-push' | 'left-goal' | 'right-goal';
+  playerPoints: number;
+  opponentPoints: number;
+};
+
+const LANDING_SCENARIOS: LandingScenario[] = [
+  { kind: 'left-push', playerPoints: 50, opponentPoints: 20 },
+  { kind: 'right-push', playerPoints: 20, opponentPoints: 50 },
+  { kind: 'left-goal', playerPoints: 70, opponentPoints: 20 },
+  { kind: 'right-goal', playerPoints: 20, opponentPoints: 70 },
+  { kind: 'left-push', playerPoints: 40, opponentPoints: 30 },
+  { kind: 'right-push', playerPoints: 30, opponentPoints: 40 },
+];
+
+const LANDING_SCORE_FLIGHT_START_MS = 120;
+const LANDING_SCORE_HANDOFF_MS = FLIGHT_TOTAL_MS + 420;
+const LANDING_CONVERT_MS = 140;
+const LANDING_BARS_SPAWN_BASE_MS = 210;
+const LANDING_BARS_PER_STAGGER_MS = 82;
+const LANDING_BATTLE_BASE_MS = 400;
+const LANDING_BATTLE_PER_BAR_MS = 235;
+const LANDING_CHARGE_BASE_MS = 660;
+const LANDING_CHARGE_PER_BAR_MS = 105;
+const LANDING_CHARGE_SHOT_OVERLAP_MS = 180;
+const LANDING_RESULT_HOLD_MS = 1150;
+const LANDING_DONE_LINGER_MS = 320;
+const LANDING_LOOP_REST_MS = 850;
+
+function landingPointsToBars(points: number): number {
+  if (points <= 0) return 0;
+  return Math.min(Math.max(Math.round(points / 10), 1), 12);
+}
+
+function clampLandingPosition(position: number): number {
+  return Math.max(22, Math.min(78, position));
+}
+
+function getLandingTargetPosition(startPosition: number, scenario: LandingScenario): number {
+  const isLeftWin = scenario.kind === 'left-push' || scenario.kind === 'left-goal';
+  const isGoalScenario = scenario.kind === 'left-goal' || scenario.kind === 'right-goal';
+  const pointDelta = Math.abs(scenario.playerPoints - scenario.opponentPoints);
+  const movement = (isGoalScenario ? 24 : 13) + Math.min(8, pointDelta / 10);
+  return clampLandingPosition(startPosition + movement * (isLeftWin ? 1 : -1));
+}
+
+function getLandingScenario(cycle: number): LandingScenario {
+  const offset = Math.floor(Math.random() * LANDING_SCENARIOS.length);
+  return LANDING_SCENARIOS[(cycle + offset) % LANDING_SCENARIOS.length];
+}
+
+function getLandingAvatarX(playerPosition: number, side: 'player' | 'opponent'): number {
+  const possessionTrackLeft = 15;
+  const possessionTrackRight = 485;
+  const possessionTrackWidth = possessionTrackRight - possessionTrackLeft;
+  const avatarSpread = 55;
+  const barZonePadding = 74;
+  const minBoundary = 24 + avatarSpread + barZonePadding;
+  const maxBoundary = 476 - avatarSpread - barZonePadding;
+  const rawBoundary = possessionTrackLeft + (playerPosition / 100) * possessionTrackWidth;
+  const boundary = Math.max(minBoundary, Math.min(maxBoundary, rawBoundary));
+  return side === 'player' ? boundary - avatarSpread : boundary + avatarSpread;
+}
+
+function getElementCenter(element: Element | null): { x: number; y: number } | null {
+  if (!element) return null;
+  const rect = element.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return null;
+  return {
+    x: rect.left + rect.width / 2,
+    y: rect.top + rect.height / 2,
+  };
+}
 
 function getDaysUntilWorldCup(): number {
   const WC_START = new Date(2026, 5, 11); // June 11, 2026
@@ -189,11 +316,36 @@ export function WelcomeScreen() {
   const [duelsCount] = useState(() => getDuelsCount());
   const [wcDaysLeft] = useState(() => getDaysUntilWorldCup());
   const [stadiumPhase, setStadiumPhase] = useState(0);
+  const [stadiumCycle, setStadiumCycle] = useState(0);
+  const [landingScore, setLandingScore] = useState({ left: 0, right: 0 });
+  const [landingBattle, setLandingBattle] = useState<BarBattleState | null>(null);
+  const [landingPlayerPosition, setLandingPlayerPosition] = useState(50);
+  const [landingBallOnPlayer, setLandingBallOnPlayer] = useState(true);
+  const [landingGoalVisible, setLandingGoalVisible] = useState(false);
+  const [landingTargetGoal, setLandingTargetGoal] = useState<LandingGoalSide>('right');
+  const [landingShotMode, setLandingShotMode] = useState<React.ComponentProps<typeof PitchVisualization>['shotMode']>(undefined);
+  const [landingFlights, setLandingFlights] = useState<FlightSpec[]>([]);
+  const leftScoreAnchorRef = useRef<HTMLDivElement | null>(null);
+  const rightScoreAnchorRef = useRef<HTMLDivElement | null>(null);
+  const landingPitchRef = useRef<HTMLDivElement | null>(null);
+  const landingFlightSeqRef = useRef(0);
+  const landingPositionRef = useRef(50);
+  const landingTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [demoPlayers] = useState(() => {
-    const shuffled = [...DEMO_PLAYER_NAMES].sort(() => Math.random() - 0.5);
+    const shuffledNames = [...DEMO_PLAYER_NAMES].sort(() => Math.random() - 0.5);
+    const shuffledLoadouts = [...DEMO_AVATAR_LOADOUTS].sort(() => Math.random() - 0.5);
+    const makePlayer = (index: number, fallbackName: string): DemoPlayer => ({
+      name: shuffledNames[index] ?? fallbackName,
+      avatarCustomization: shuffledLoadouts[index] ?? DEMO_AVATAR_LOADOUTS[index % DEMO_AVATAR_LOADOUTS.length],
+    });
     return {
-      left: shuffled[0] ?? "Mason",
-      right: shuffled[1] ?? "Thiago",
+      left: makePlayer(0, "Mason"),
+      right: makePlayer(1, "Thiago"),
+      crowd: [
+        makePlayer(2, "Santi"),
+        makePlayer(3, "Jamal"),
+        makePlayer(4, "Enzo"),
+      ],
     };
   });
 
@@ -204,7 +356,7 @@ export function WelcomeScreen() {
   // Fetch real categories — filter out game modes, split into featured + rest
   const { data: categoriesData } = useAllCategoriesList({ limit: 100, is_active: "true" });
   const allCategories = (categoriesData?.items ?? []).filter(
-    (c) => !EXCLUDED_SLUGS.has(c.slug) && !EXCLUDED_SLUGS.has(c.name.toLowerCase().replace(/\s+/g, '-'))
+    (c) => !isWelcomeCategoryExcluded(c.slug, c.name)
   );
   const featuredCategories: typeof allCategories = [];
   const used = new Set<string>();
@@ -242,21 +394,177 @@ export function WelcomeScreen() {
   }, []);
 
   useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    landingTimersRef.current.forEach((timer) => clearTimeout(timer));
+    landingTimersRef.current = [];
 
-    const scheduleNext = (phase: number) => {
-      const currentScene = STADIUM_SCENES[phase];
-      const delay = currentScene.showGoal ? 3000 : 2600;
-      timeoutId = setTimeout(() => {
-        setStadiumPhase((prev) => (prev + 1) % STADIUM_SCENES.length);
-      }, delay);
+    const scenario = getLandingScenario(stadiumCycle);
+    const playerBars = landingPointsToBars(scenario.playerPoints);
+    const opponentBars = landingPointsToBars(scenario.opponentPoints);
+    const maxBars = Math.max(playerBars, opponentBars);
+    const cancelledCount = Math.min(playerBars, opponentBars);
+    const survivorCount = maxBars - cancelledCount;
+    const remainingDelta = playerBars - opponentBars;
+    const isGoalScenario = scenario.kind === 'left-goal' || scenario.kind === 'right-goal';
+    const playerIsAttacker = scenario.kind === 'left-goal';
+    const targetGoal: LandingGoalSide = playerIsAttacker ? 'right' : 'left';
+    const startPosition = landingPositionRef.current;
+    const targetPosition = getLandingTargetPosition(startPosition, scenario);
+    const battleKey = stadiumCycle;
+    const baseBattle: BarBattleState = {
+      key: battleKey,
+      phase: 'both-score',
+      playerBars,
+      opponentBars,
+      playerPoints: scenario.playerPoints,
+      opponentPoints: scenario.opponentPoints,
+      remainingDelta,
+      dividerX: 242.5,
+      chargeMode: isGoalScenario ? 'lunge' : 'pulse',
+    };
+    const schedule = (delayMs: number, callback: () => void) => {
+      const timer = setTimeout(callback, delayMs);
+      landingTimersRef.current.push(timer);
+    };
+    const setBattlePhase = (delayMs: number, phase: BarBattleState['phase']) => {
+      schedule(delayMs, () => {
+        setLandingBattle((prev) => prev?.key === battleKey ? { ...prev, phase } : prev);
+      });
     };
 
-    scheduleNext(stadiumPhase);
+    schedule(0, () => {
+      setStadiumPhase(0);
+      setLandingPlayerPosition(startPosition);
+      setLandingBallOnPlayer(remainingDelta >= 0);
+      setLandingGoalVisible(false);
+      setLandingFlights([]);
+      setLandingShotMode(undefined);
+      setLandingTargetGoal(targetGoal);
+      setLandingBattle(baseBattle);
+    });
+
+    schedule(LANDING_SCORE_FLIGHT_START_MS, () => {
+      const pitch = landingPitchRef.current;
+      const playerTarget = getElementCenter(
+        pitch?.querySelector('[data-pitch-bar-target="player"]')
+          ?? pitch?.querySelector('[data-pitch-avatar="player"]')
+          ?? null,
+      );
+      const opponentTarget = getElementCenter(
+        pitch?.querySelector('[data-pitch-bar-target="opponent"]')
+          ?? pitch?.querySelector('[data-pitch-avatar="opponent"]')
+          ?? null,
+      );
+      const playerSource = getElementCenter(leftScoreAnchorRef.current);
+      const opponentSource = getElementCenter(rightScoreAnchorRef.current);
+      const nextFlights: FlightSpec[] = [];
+
+      if (scenario.playerPoints > 0 && playerSource && playerTarget) {
+        nextFlights.push({
+          id: ++landingFlightSeqRef.current,
+          side: 'player',
+          source: playerSource,
+          target: playerTarget,
+          points: scenario.playerPoints,
+        });
+      }
+
+      if (scenario.opponentPoints > 0 && opponentSource && opponentTarget) {
+        nextFlights.push({
+          id: ++landingFlightSeqRef.current,
+          side: 'opponent',
+          source: opponentSource,
+          target: opponentTarget,
+          points: scenario.opponentPoints,
+        });
+      }
+
+      if (nextFlights.length > 0) {
+        setLandingFlights((flights) => [...flights, ...nextFlights]);
+      }
+    });
+
+    let t = LANDING_SCORE_HANDOFF_MS;
+    setBattlePhase(t, 'convert');
+
+    t += LANDING_CONVERT_MS;
+    setBattlePhase(t, 'bars');
+
+    t += LANDING_BARS_SPAWN_BASE_MS + maxBars * LANDING_BARS_PER_STAGGER_MS;
+    if (cancelledCount > 0) {
+      setBattlePhase(t, 'battle');
+      t += LANDING_BATTLE_BASE_MS + cancelledCount * LANDING_BATTLE_PER_BAR_MS;
+    }
+
+    if (isGoalScenario && survivorCount > 0) {
+      const chargeMs = LANDING_CHARGE_BASE_MS + survivorCount * LANDING_CHARGE_PER_BAR_MS;
+      setBattlePhase(t, 'charge');
+      schedule(t + Math.max(0, chargeMs - LANDING_CHARGE_SHOT_OVERLAP_MS), () => {
+        setLandingBattle(null);
+        landingPositionRef.current = targetPosition;
+        setLandingPlayerPosition(targetPosition);
+        setLandingTargetGoal(targetGoal);
+        setLandingBallOnPlayer(playerIsAttacker);
+        setLandingShotMode({
+          result: 'goal',
+          ballOriginX: getLandingAvatarX(targetPosition, playerIsAttacker ? 'player' : 'opponent'),
+          isPlayerAttacker: playerIsAttacker,
+          variant: stadiumCycle % 5,
+          shotId: `landing-${stadiumCycle}`,
+        });
+      });
+      t += chargeMs;
+    } else {
+      setBattlePhase(t, 'result');
+      schedule(t + 80, () => {
+        landingPositionRef.current = targetPosition;
+        setLandingPlayerPosition(targetPosition);
+        setLandingBallOnPlayer(remainingDelta >= 0);
+      });
+    }
+
+    if (isGoalScenario) {
+      schedule(t + GOAL_SHOT_TO_CELEBRATION_MS, () => {
+        setLandingGoalVisible(true);
+        setLandingScore((score) => ({
+          left: score.left + (playerIsAttacker ? 1 : 0),
+          right: score.right + (playerIsAttacker ? 0 : 1),
+        }));
+        setStadiumPhase(2);
+      });
+      schedule(t + GOAL_SHOT_TO_CELEBRATION_MS + GOAL_CELEBRATION_MS, () => {
+        setLandingGoalVisible(false);
+        setLandingShotMode(undefined);
+        setLandingBattle(null);
+        landingPositionRef.current = 50;
+        setLandingPlayerPosition(50);
+        setLandingBallOnPlayer(true);
+        setStadiumPhase(3);
+        setStadiumCycle((cycle) => cycle + 1);
+      });
+    } else {
+      t += LANDING_RESULT_HOLD_MS;
+      setBattlePhase(t, 'done');
+      schedule(t + LANDING_DONE_LINGER_MS, () => {
+        setLandingBattle(null);
+      });
+      schedule(t + LANDING_DONE_LINGER_MS + LANDING_LOOP_REST_MS, () => {
+        setLandingShotMode(undefined);
+        setStadiumPhase(3);
+        setStadiumCycle((cycle) => cycle + 1);
+      });
+    }
+
     return () => {
-      if (timeoutId) clearTimeout(timeoutId);
+      landingTimersRef.current.forEach((timer) => clearTimeout(timer));
+      landingTimersRef.current = [];
     };
-  }, [stadiumPhase]);
+  }, [stadiumCycle]);
+
+  useEffect(() => {
+    if (landingScore.left < 3 && landingScore.right < 3) return;
+    const timer = setTimeout(() => setLandingScore({ left: 0, right: 0 }), 1200);
+    return () => clearTimeout(timer);
+  }, [landingScore.left, landingScore.right]);
 
   const handleKickOff = () => setLoginOpen(true);
   const handleGoogleLogin = async () => {
@@ -268,7 +576,10 @@ export function WelcomeScreen() {
     }
   };
 
-  const stadiumScene = STADIUM_SCENES[stadiumPhase];
+  const stadiumScene = {
+    showGoal: landingGoalVisible,
+    rightScore: landingScore.right,
+  };
 
   return (
     <div className="min-h-screen w-full bg-surface-page font-sans text-foreground flex flex-col overflow-x-hidden">
@@ -303,12 +614,21 @@ export function WelcomeScreen() {
           <div className="w-full max-w-3xl">
             <div className="mb-4 flex items-center justify-between gap-3 px-1 md:px-2">
               <div className="flex items-center gap-3 flex-1 min-w-0 rounded-2xl bg-surface-page px-3 py-2.5">
-                <div className="rounded-full bg-brand-green p-[3px] shadow-[0_0_16px_rgba(56,182,14,0.35)]">
-                  <AvatarDisplay customization={{ base: "avatar-1" }} size="sm" className="rounded-full" />
+                <div className="drop-shadow-[0_0_12px_rgba(56,182,14,0.32)]">
+                  <AvatarDisplay customization={demoPlayers.left.avatarCustomization} size="sm" className="rounded-full" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-xs font-bold text-white/85 truncate">{demoPlayers.left}</div>
-                  <div className="text-3xl leading-7 font-black text-white tabular-nums">0</div>
+                  <div className="text-xs font-bold text-white/85 truncate">{demoPlayers.left.name}</div>
+                  <motion.div
+                    ref={leftScoreAnchorRef}
+                    key={landingScore.left}
+                    initial={{ scale: landingGoalVisible ? 1.4 : 1, opacity: 0.8 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 260, damping: 18 }}
+                    className="text-3xl leading-7 font-black text-white tabular-nums"
+                  >
+                    {landingScore.left}
+                  </motion.div>
                 </div>
               </div>
 
@@ -316,8 +636,9 @@ export function WelcomeScreen() {
 
               <div className="flex items-center gap-3 flex-1 min-w-0 justify-end rounded-2xl bg-surface-page px-3 py-2.5">
                 <div className="min-w-0 text-right">
-                  <div className="text-xs font-bold text-white/85 truncate">{demoPlayers.right}</div>
+                  <div className="text-xs font-bold text-white/85 truncate">{demoPlayers.right.name}</div>
                   <motion.div
+                    ref={rightScoreAnchorRef}
                     key={stadiumScene.rightScore}
                     initial={{ scale: stadiumScene.showGoal ? 1.4 : 1, opacity: 0.8 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -327,8 +648,8 @@ export function WelcomeScreen() {
                     {stadiumScene.rightScore}
                   </motion.div>
                 </div>
-                <div className="rounded-full bg-brand-red-soft p-[3px] shadow-[0_0_16px_rgba(255,75,75,0.3)]">
-                  <AvatarDisplay customization={{ base: "avatar-8" }} size="sm" className="rounded-full" />
+                <div className="drop-shadow-[0_0_12px_rgba(255,75,75,0.3)]">
+                  <AvatarDisplay customization={demoPlayers.right.avatarCustomization} size="sm" className="rounded-full scale-x-[-1]" />
                 </div>
               </div>
             </div>
@@ -373,65 +694,28 @@ export function WelcomeScreen() {
                 )}
               </AnimatePresence>
 
-              <div className="relative overflow-hidden rounded-[28px] border border-white/8 bg-[#0B1417] p-2 md:rounded-[34px] md:p-3">
+              <div ref={landingPitchRef} className="relative overflow-hidden rounded-[28px] border border-white/8 bg-[#0B1417] p-2 md:rounded-[34px] md:p-3">
                 <div className="absolute inset-x-10 bottom-2 h-16 rounded-full bg-brand-green/18 blur-3xl" />
-                <Image
-                  src="/assets/stadium-green.png"
-                  alt="QuizBall stadium"
-                  width={1400}
-                  height={520}
-                  className="relative w-full h-auto rounded-[22px] object-contain md:rounded-[28px]"
-                />
-
-                <motion.div
-                  className="pointer-events-none absolute"
-                  animate={{ left: stadiumScene.leftX, top: stadiumScene.leftY }}
-                  transition={{ type: 'spring', stiffness: 120, damping: 18 }}
-                >
-                  <motion.div
-                    animate={{ y: [0, -4, 0], scale: [1, 1.04, 1] }}
-                    transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-                    className="rounded-full bg-brand-red-soft p-[3px] shadow-[0_0_18px_rgba(255,75,75,0.35)]"
-                  >
-                    <AvatarDisplay customization={{ base: "avatar-1" }} size="sm" className="rounded-full" />
-                  </motion.div>
-                </motion.div>
-
-                <motion.div
-                  className="pointer-events-none absolute"
-                  animate={{ left: stadiumScene.rightX, top: stadiumScene.rightY }}
-                  transition={{ type: 'spring', stiffness: 120, damping: 18 }}
-                >
-                  <motion.div
-                    animate={{ y: [0, 4, 0], scale: [1, 1.04, 1] }}
-                    transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut', delay: 0.25 }}
-                    className="rounded-full bg-brand-green p-[3px] shadow-[0_0_18px_rgba(56,182,14,0.35)]"
-                  >
-                    <AvatarDisplay customization={{ base: "avatar-8" }} size="sm" className="rounded-full" />
-                  </motion.div>
-                </motion.div>
-
-                <motion.div
-                  className="pointer-events-none absolute flex size-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center md:size-12"
-                  animate={{
-                    left: stadiumScene.ballX,
-                    top: stadiumScene.ballY,
-                    rotate: stadiumScene.showGoal ? 120 : 0,
-                    scale: stadiumScene.showGoal ? 1.12 : 1,
-                    y: [0, -3, 0],
-                    opacity: stadiumScene.showGoal ? 0 : 1,
-                  }}
-                  transition={{
-                    left: { type: 'spring', stiffness: 120, damping: 16 },
-                    top: { type: 'spring', stiffness: 120, damping: 16 },
-                    rotate: { type: 'spring', stiffness: 120, damping: 16 },
-                    scale: { type: 'spring', stiffness: 120, damping: 16 },
-                    opacity: { duration: 0.2 },
-                    y: { duration: 1.1, repeat: Infinity, ease: 'easeInOut' },
-                  }}
-                >
-                  <Image src="/assets/brand/ball-icon.webp" alt="" width={40} height={40} className="size-8 object-contain drop-shadow-[0_0_14px_rgba(255,255,255,0.32)] md:size-9" />
-                </motion.div>
+                <div className="relative overflow-hidden rounded-[22px] md:rounded-[28px]">
+                  <PitchVisualization
+                    playerPosition={landingPlayerPosition}
+                    playerAvatarUrl=""
+                    opponentAvatarUrl=""
+                    playerAvatarCustomization={demoPlayers.left.avatarCustomization}
+                    opponentAvatarCustomization={demoPlayers.right.avatarCustomization}
+                    playerName={demoPlayers.left.name}
+                    opponentName={demoPlayers.right.name}
+                    ballOnPlayer={landingBallOnPlayer}
+                    barBattle={landingBattle}
+                    barBattleVariant="ranked_sim"
+                    shotMode={landingShotMode}
+                    simpleShotAnimation
+                    hideBall={stadiumScene.showGoal}
+                    targetGoal={landingTargetGoal}
+                    centerPossessionTrack
+                    orientation="landscape"
+                  />
+                </div>
 
                 <AnimatePresence>
                   {stadiumScene.showGoal && (
@@ -452,9 +736,9 @@ export function WelcomeScreen() {
                       >
                         <Image src="/assets/goal.png" alt="Goal celebration" width={760} height={538} className="w-full h-auto object-contain" />
                         <motion.div
-                          className="absolute left-1/2 top-[44%] flex size-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center md:size-24"
-                          initial={{ scale: 1, y: 30, opacity: 0.94 }}
-                          animate={{ scale: [1, 5, 0.9], y: [30, -42, 20], opacity: [0.94, 1, 0.98] }}
+                          className="absolute left-1/2 top-1/2 flex size-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center md:size-24"
+                          initial={{ scale: 1, y: 10, opacity: 0.94 }}
+                          animate={{ scale: [1, 3, 1], y: [10, -16, 0], opacity: [0.94, 1, 1] }}
                           transition={{ duration: 1.45, times: [0, 0.38, 1], ease: 'easeInOut' }}
                         >
                           <Image src="/assets/brand/large-ball.png" alt="" width={256} height={256} className="size-12 object-contain drop-shadow-[0_0_14px_rgba(255,255,255,0.32)] md:size-14" />
@@ -509,13 +793,13 @@ export function WelcomeScreen() {
           <div className="flex items-center gap-3 mb-6">
             <div className="flex -space-x-2">
               <div className="rounded-full bg-brand-red-soft p-[3px] ring-2 ring-surface-page">
-                <AvatarDisplay customization={{ base: "avatar-1" }} size="sm" className="rounded-full" />
+                <AvatarDisplay customization={demoPlayers.crowd[0].avatarCustomization} size="sm" className="rounded-full" />
               </div>
               <div className="rounded-full bg-brand-green p-[3px] ring-2 ring-surface-page">
-                <AvatarDisplay customization={{ base: "avatar-8" }} size="sm" className="rounded-full" />
+                <AvatarDisplay customization={demoPlayers.crowd[1].avatarCustomization} size="sm" className="rounded-full" />
               </div>
               <div className="rounded-full bg-brand-gold p-[3px] ring-2 ring-surface-page">
-                <AvatarDisplay customization={{ base: "avatar-3" }} size="sm" className="rounded-full" />
+                <AvatarDisplay customization={demoPlayers.crowd[2].avatarCustomization} size="sm" className="rounded-full" />
               </div>
             </div>
             <span className="text-brand-slate font-bold text-sm">{duelsCount.toLocaleString()}+ duels played so far</span>
@@ -541,12 +825,17 @@ export function WelcomeScreen() {
 
           <Button
             onClick={handleKickOff}
-            className="w-full sm:w-auto min-w-[280px] h-14 rounded-2xl text-lg font-black uppercase tracking-wide bg-brand-green text-white hover:bg-brand-green border-b-[5px] border-brand-green-deep active:border-b-0 active:translate-y-[5px] transition-all shadow-none hover:shadow-none"
+            className="h-14 min-w-[280px] rounded-[20px] bg-brand-green px-10 font-poppins text-lg font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none sm:w-auto"
           >
             Kick off
             </Button>
         </motion.div>
       </main>
+
+      <BarBattleFlightOverlay
+        flights={landingFlights}
+        onArrive={(id) => setLandingFlights((flights) => flights.filter((flight) => flight.id !== id))}
+      />
 
       {/* ── Categories ── */}
       {featuredCategories.length > 0 && (
@@ -576,20 +865,12 @@ export function WelcomeScreen() {
                     style={{ backgroundColor: style.color }}
                     onClick={() => setLoginOpen(true)}
                   >
+                    <CategoryArtwork src={cat.imageUrl} className="absolute inset-2 md:inset-3" />
                     {cat.imageUrl ? (
-                      <>
-                        <Image
-                          src={cat.imageUrl}
-                          alt=""
-                          fill
-                          unoptimized
-                          className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/30 to-transparent" />
-                      </>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/18 to-black/10" />
                     ) : null}
 
-                    {/* Watermark: flag, image, or icon */}
+                    {/* Watermark: flag, image, or icon. Kept only for categories without artwork. */}
                     {!cat.imageUrl && style.flag ? (
                       <Image
                         src={`https://flagcdn.com/w160/${style.flag}.png`}
@@ -611,7 +892,7 @@ export function WelcomeScreen() {
                     ) : null}
 
                     {/* Name */}
-                    <div className="relative z-10 mt-auto text-left text-sm md:text-base font-black uppercase tracking-wide leading-tight text-white drop-shadow-[0_2px_14px_rgba(0,0,0,0.45)]">
+                    <div className="relative z-10 flex h-full items-center justify-center text-center text-sm md:text-base font-black uppercase tracking-wide leading-tight text-white drop-shadow-[0_2px_14px_rgba(0,0,0,0.45)]">
                       {cat.name}
                     </div>
                   </motion.button>
@@ -711,7 +992,7 @@ export function WelcomeScreen() {
           >
             <Button
               onClick={() => setLoginOpen(true)}
-              className="h-14 px-10 rounded-2xl text-lg font-black uppercase tracking-wide bg-brand-green hover:bg-brand-green-deep text-white border-b-[5px] border-brand-green-deep active:border-b-0 active:translate-y-[5px] transition-all shadow-none hover:shadow-none"
+              className="h-14 rounded-[20px] bg-brand-green px-10 font-poppins text-lg font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none"
             >
               Start climbing
             </Button>
@@ -771,7 +1052,7 @@ export function WelcomeScreen() {
           >
             <Button
               onClick={() => setLoginOpen(true)}
-              className="h-14 px-10 rounded-2xl text-lg font-black uppercase tracking-wide bg-brand-green hover:bg-brand-green-deep text-white border-b-[5px] border-brand-green-deep active:border-b-0 active:translate-y-[5px] transition-all shadow-none hover:shadow-none"
+              className="h-14 rounded-[20px] bg-brand-green px-10 font-poppins text-lg font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none"
             >
               View the full table
             </Button>
@@ -831,33 +1112,21 @@ export function WelcomeScreen() {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 md:gap-3">
               {allCategories.map((cat, i) => {
                 const style = getCategoryStyle(cat.slug, cat.name, i);
-                const IconComponent = style.icon;
                 return (
                   <motion.button
                     key={cat.id}
                     type="button"
                     aria-label={`Open ${cat.name}`}
-                    className="group relative cursor-pointer overflow-hidden rounded-xl border border-white/10 px-3 py-2.5 flex items-center gap-2.5 transition-all duration-200 hover:brightness-110 hover:border-white/20"
+                    className="group relative min-h-[64px] cursor-pointer overflow-hidden rounded-xl border border-white/10 px-3 py-2.5 flex items-center justify-center transition-all duration-200 hover:brightness-110 hover:border-white/20"
                     style={{ backgroundColor: style.color }}
                     onClick={() => { setCategoriesOpen(false); setLoginOpen(true); }}
                   >
+                    <CategoryArtwork src={cat.imageUrl} className="absolute inset-1.5" />
                     {cat.imageUrl ? (
-                      <>
-                        <Image
-                          src={cat.imageUrl}
-                          alt=""
-                          fill
-                          unoptimized
-                          className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-r from-black/42 via-black/28 to-black/55" />
-                      </>
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/48 via-black/18 to-black/55" />
                     ) : null}
 
-                    <div className="relative z-10 flex size-8 items-center justify-center rounded-lg border border-white/20 bg-white/12 text-white shrink-0 backdrop-blur-md">
-                      <IconComponent className="size-4" />
-                    </div>
-                    <span className="relative z-10 text-xs md:text-sm font-bold text-white leading-tight">
+                    <span className="relative z-10 text-center text-xs md:text-sm font-bold text-white leading-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.55)]">
                       {cat.name}
                     </span>
                   </motion.button>
@@ -879,7 +1148,7 @@ export function WelcomeScreen() {
           </DialogHeader>
           <div className="flex flex-col gap-4 mt-2">
             <Button
-              className="flex items-center justify-center gap-3 h-14 rounded-2xl text-lg font-black uppercase tracking-wide bg-brand-yellow text-black hover:bg-brand-gold border-b-[5px] border-[#CCB800] active:border-b-0 active:translate-y-[5px] transition-all shadow-none hover:shadow-none"
+              className="flex h-14 items-center justify-center gap-3 rounded-[20px] bg-brand-yellow font-poppins text-lg font-semibold uppercase tracking-wide text-black shadow-none transition-colors hover:bg-brand-gold hover:shadow-none"
               onClick={handleGoogleLogin}
             >
               <FcGoogle className="size-6" /> Continue with Google

@@ -569,6 +569,8 @@ interface BarBattleOverlayProps {
    *  `matrix(0,-1,1,0,0,500)`) for portrait layout. Used so splash text
    *  can counter-rotate and stay upright. */
   isPortrait?: boolean;
+  /** Override the match variant for isolated demos that should not mutate the realtime store. */
+  variant?: 'ranked_sim' | 'friendly_possession';
 }
 
 export function BarBattleOverlay({
@@ -577,10 +579,12 @@ export function BarBattleOverlay({
   playerAvatarX,
   opponentAvatarX,
   isPortrait = false,
+  variant,
 }: BarBattleOverlayProps) {
   const uid = useId();
   
-  const matchVariant = useRealtimeMatchStore((s) => s.match?.variant);
+  const storeMatchVariant = useRealtimeMatchStore((s) => s.match?.variant);
+  const matchVariant = variant ?? storeMatchVariant;
   const isAnchored = matchVariant === 'ranked_sim'
     && playerAvatarX != null
     && opponentAvatarX != null;
