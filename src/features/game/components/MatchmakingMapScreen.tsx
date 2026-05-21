@@ -5,7 +5,6 @@ import {
   motion,
   AnimatePresence,
   useMotionValue,
-  useSpring,
   useTransform,
   animate,
 } from "motion/react";
@@ -24,7 +23,6 @@ import {
   ComposableMap,
   Geographies,
   Geography,
-  Marker,
 } from "react-simple-maps";
 import { geoNaturalEarth1 } from "d3-geo";
 import worldTopo from "world-atlas/land-110m.json";
@@ -132,15 +130,6 @@ function projectPoint(lon: number, lat: number): [number, number] {
   return proj([lon, lat]) ?? [MAP_W / 2, MAP_H / 2];
 }
 
-function shouldUseHtmlMapAvatars(): boolean {
-  if (typeof navigator === "undefined") return false;
-  const ua = navigator.userAgent;
-  const isAppleWebKit = ua.includes("AppleWebKit");
-  const isChromium = ua.includes("Chrome") || ua.includes("Chromium") || ua.includes("CriOS") || ua.includes("Edg");
-  const isFirefox = ua.includes("Firefox") || ua.includes("FxiOS");
-  return isAppleWebKit && !isChromium && !isFirefox;
-}
-
 // ── Pin colors ──
 
 const PIN_COLORS = [
@@ -178,6 +167,107 @@ interface FakePlayer {
   country: string;
   delay: number;
   source?: string;
+}
+
+const PIN_W = 24;
+const PIN_H = 34;
+const PIN_ORIGIN_Y = 22;
+const PIN_ORIGIN_Y_PCT = (PIN_ORIGIN_Y / PIN_H) * 100;
+const PIN_AVATAR_Y_PCT = ((-7.5 + PIN_ORIGIN_Y) / PIN_H) * 100;
+const PIN_SCREEN_WIDTH = "clamp(20px, min(2.4vw, 4.3vh), 30px)";
+
+function MapPlayerPin({
+  player,
+  highlighted,
+  isOpponent,
+  showFoundState,
+}: {
+  player: FakePlayer;
+  highlighted: boolean;
+  isOpponent: boolean;
+  showFoundState: boolean;
+}) {
+  return (
+    <div
+      className="absolute overflow-visible"
+      style={{
+        left: `${(player.x / MAP_W) * 100}%`,
+        top: `${(player.y / MAP_H) * 100}%`,
+        width: PIN_SCREEN_WIDTH,
+        aspectRatio: `${PIN_W} / ${PIN_H}`,
+        transform: `translate(-50%, -${PIN_ORIGIN_Y_PCT}%)`,
+      }}
+    >
+      <motion.div
+        className="relative size-full overflow-visible"
+        animate={{ y: 0 }}
+      >
+        <svg
+          className="absolute inset-0 overflow-visible"
+          viewBox="-12 -22 24 34"
+          preserveAspectRatio="xMidYMid meet"
+          aria-hidden="true"
+        >
+          <ellipse cx="0" cy="1" rx="3.5" ry="1.2" fill="rgba(0,0,0,0.35)" />
+          <path
+            d="M0,-15 C-6.5,-15 -10,-11 -10,-6 C-10,1.5 0,8 0,8 C0,8 10,1.5 10,-6 C10,-11 6.5,-15 0,-15 Z"
+            fill={player.color}
+            stroke={isOpponent ? "#fff" : "rgba(0,0,0,0.4)"}
+            strokeWidth={isOpponent ? "1.5" : "0.5"}
+            opacity={isOpponent ? 1 : highlighted ? 0.95 : 0.8}
+          />
+          <circle
+            cx="0"
+            cy="-7.5"
+            r="6.1"
+            fill="#0D1117"
+            stroke={player.color}
+            strokeWidth="0.9"
+          />
+        </svg>
+
+        <div
+          className="absolute left-1/2 flex items-center justify-center overflow-hidden rounded-full bg-surface-darkest"
+          style={{
+            top: `${PIN_AVATAR_Y_PCT}%`,
+            width: "52%",
+            aspectRatio: "1 / 1",
+            transform: "translate(-50%, -50%)",
+            border: `1px solid ${player.color}`,
+          }}
+        >
+          <AvatarDisplay
+            customization={player.avatarCustomization ?? {}}
+            size="xs"
+            className="size-full"
+          />
+        </div>
+
+        {(isOpponent || (highlighted && !showFoundState)) && (
+          <div
+            className="absolute left-1/2 whitespace-nowrap rounded-[3px] bg-black/70 px-1.5 py-0.5 text-center text-[5.5px] font-bold leading-none text-white"
+            style={{
+              bottom: "calc(100% + 2px)",
+              transform: "translateX(-50%)",
+            }}
+          >
+            {player.name}
+          </div>
+        )}
+
+        {isOpponent && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 1.35, duration: 0.3 }}
+            className="absolute right-[-24%] top-[8%] flex items-center justify-center rounded-[3px] border border-white/35 bg-surface-darkest/90 px-1 py-0.5 text-[5.7px] leading-none"
+          >
+            {player.flag}
+          </motion.div>
+        )}
+      </motion.div>
+    </div>
+  );
 }
 
 interface OpponentLocationCandidate {
@@ -347,6 +437,66 @@ const CITY_DATA: {
     customization: { skin: "skin_male_white", hair: "hair_hamsik", jersey: "jersey_real", facialHair: "beard" },
   },
 ];
+
+const EXTRA_SEARCH_LOCATIONS: Pick<(typeof CITY_DATA)[number], "lon" | "lat" | "city" | "country" | "flag">[] = [
+  { lon: -74.0, lat: 40.71, city: "New York", country: "USA", flag: "🇺🇸" },
+  { lon: -118.24, lat: 34.05, city: "Los Angeles", country: "USA", flag: "🇺🇸" },
+  { lon: -87.63, lat: 41.88, city: "Chicago", country: "USA", flag: "🇺🇸" },
+  { lon: -80.19, lat: 25.76, city: "Miami", country: "USA", flag: "🇺🇸" },
+  { lon: -123.12, lat: 49.28, city: "Vancouver", country: "Canada", flag: "🇨🇦" },
+  { lon: -79.38, lat: 43.65, city: "Toronto", country: "Canada", flag: "🇨🇦" },
+  { lon: -58.38, lat: -34.6, city: "Buenos Aires", country: "Argentina", flag: "🇦🇷" },
+  { lon: -70.66, lat: -33.45, city: "Santiago", country: "Chile", flag: "🇨🇱" },
+  { lon: -74.07, lat: 4.71, city: "Bogota", country: "Colombia", flag: "🇨🇴" },
+  { lon: -46.63, lat: -23.55, city: "Sao Paulo", country: "Brazil", flag: "🇧🇷" },
+  { lon: -43.17, lat: -22.91, city: "Rio de Janeiro", country: "Brazil", flag: "🇧🇷" },
+  { lon: -0.13, lat: 51.51, city: "London", country: "UK", flag: "🇬🇧" },
+  { lon: -2.24, lat: 53.48, city: "Manchester", country: "UK", flag: "🇬🇧" },
+  { lon: 2.35, lat: 48.86, city: "Paris", country: "France", flag: "🇫🇷" },
+  { lon: 13.4, lat: 52.52, city: "Berlin", country: "Germany", flag: "🇩🇪" },
+  { lon: 4.9, lat: 52.37, city: "Amsterdam", country: "Netherlands", flag: "🇳🇱" },
+  { lon: -3.7, lat: 40.42, city: "Madrid", country: "Spain", flag: "🇪🇸" },
+  { lon: 2.17, lat: 41.39, city: "Barcelona", country: "Spain", flag: "🇪🇸" },
+  { lon: 12.5, lat: 41.9, city: "Rome", country: "Italy", flag: "🇮🇹" },
+  { lon: 9.19, lat: 45.46, city: "Milan", country: "Italy", flag: "🇮🇹" },
+  { lon: -9.14, lat: 38.72, city: "Lisbon", country: "Portugal", flag: "🇵🇹" },
+  { lon: 28.98, lat: 41.01, city: "Istanbul", country: "Turkey", flag: "🇹🇷" },
+  { lon: 37.62, lat: 55.75, city: "Moscow", country: "Russia", flag: "🇷🇺" },
+  { lon: 31.24, lat: 30.04, city: "Cairo", country: "Egypt", flag: "🇪🇬" },
+  { lon: 3.38, lat: 6.52, city: "Lagos", country: "Nigeria", flag: "🇳🇬" },
+  { lon: 18.42, lat: -33.92, city: "Cape Town", country: "South Africa", flag: "🇿🇦" },
+  { lon: 55.27, lat: 25.2, city: "Dubai", country: "UAE", flag: "🇦🇪" },
+  { lon: 72.88, lat: 19.08, city: "Mumbai", country: "India", flag: "🇮🇳" },
+  { lon: 100.5, lat: 13.75, city: "Bangkok", country: "Thailand", flag: "🇹🇭" },
+  { lon: 121.47, lat: 31.23, city: "Shanghai", country: "China", flag: "🇨🇳" },
+  { lon: 139.69, lat: 35.69, city: "Tokyo", country: "Japan", flag: "🇯🇵" },
+  { lon: 126.98, lat: 37.57, city: "Seoul", country: "South Korea", flag: "🇰🇷" },
+  { lon: 151.21, lat: -33.87, city: "Sydney", country: "Australia", flag: "🇦🇺" },
+  { lon: 144.96, lat: -37.81, city: "Melbourne", country: "Australia", flag: "🇦🇺" },
+];
+
+const SEARCH_PLAYER_NAMES = [
+  "Alex",
+  "Maya",
+  "Leo",
+  "Niko",
+  "Sofia",
+  "Kai",
+  "Dani",
+  "Mina",
+  "Rafa",
+  "Noah",
+  "Luca",
+  "Amir",
+  "Elena",
+  "Tomi",
+  "Ibra",
+  "Mila",
+  "Giorgi",
+  "Niran",
+  "Yuki",
+  "Kofi",
+] as const;
 
 const COUNTRY_LOCATION_FALLBACKS: Record<string, OpponentLocationCandidate> = {
   usa: { lon: -104.99, lat: 39.74, city: "Denver", country: "USA", flag: "🇺🇸" },
@@ -995,8 +1145,34 @@ function resolveOpponentLocation(
   };
 }
 
+function shuffled<T>(items: readonly T[]): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function pickRandom<T>(items: readonly T[], indexFallback: number): T {
+  return items[Math.floor(Math.random() * items.length)] ?? items[indexFallback % items.length];
+}
+
 function generateFakePlayers(): FakePlayer[] {
-  return CITY_DATA.map((c, i) => {
+  const cityPool = shuffled([
+    ...CITY_DATA.map(({ lon, lat, city, country, flag }) => ({
+      lon,
+      lat,
+      city,
+      country,
+      flag,
+    })),
+    ...EXTRA_SEARCH_LOCATIONS,
+  ]).slice(0, CITY_DATA.length + 6);
+  const names = shuffled(SEARCH_PLAYER_NAMES);
+  const avatarCustomizations = shuffled(CITY_DATA.map((c) => c.customization));
+
+  return cityPool.map((c, i) => {
     const [px, py] = projectPoint(c.lon, c.lat);
     return {
       id: i,
@@ -1006,13 +1182,13 @@ function generateFakePlayers(): FakePlayer[] {
       y: py,
       color: PIN_COLORS[i % PIN_COLORS.length],
       avatarUrl: getAvatarAsset(AVATAR_COLORS[i % AVATAR_COLORS.length]),
-      avatarCustomization: c.customization,
-      name: c.name,
+      avatarCustomization: pickRandom(avatarCustomizations, i),
+      name: pickRandom(names, i),
       flag: c.flag,
       city: c.city,
       country: c.country,
-      delay: 0.6 + i * 0.15,
-      source: "seeded_city",
+      delay: 0.35 + i * 0.1,
+      source: "randomized_search_city",
     };
   });
 }
@@ -1055,7 +1231,6 @@ export function MatchmakingMapScreen({
       ? window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`).matches
       : false,
   );
-  const [useHtmlAvatars] = useState(() => shouldUseHtmlMapAvatars());
   const showFoundState = matchType === "ranked" && rankedFoundOpponent !== null;
   const showPreparationFailure =
     showFoundState &&
@@ -1096,19 +1271,16 @@ export function MatchmakingMapScreen({
   const panAnimRef = useRef<ReturnType<typeof animate> | null>(null);
   const fallbackSearchStartedAtRef = useRef<number | null>(null);
 
-  // Motion values for smooth pan → zoom transition
+  // Motion values for map pan/zoom.
   const mapX = useMotionValue(DESKTOP_CAMERA.startX);
   const mapY = useMotionValue(0);
   const mapScale = useMotionValue(DESKTOP_CAMERA.searchScale);
-  const smoothX = useSpring(mapX, { stiffness: 40, damping: 20 });
-  const smoothY = useSpring(mapY, { stiffness: 40, damping: 20 });
-  const smoothScale = useSpring(mapScale, { stiffness: 40, damping: 20 });
   const mapOverlayX = useTransform(
-    smoothX,
+    mapX,
     (value) => `${(value / MAP_W) * 100}%`,
   );
   const mapOverlayY = useTransform(
-    smoothY,
+    mapY,
     (value) => `${(value / MAP_H) * 100}%`,
   );
   const searchCamera = isMobile ? MOBILE_CAMERA : DESKTOP_CAMERA;
@@ -1268,7 +1440,7 @@ export function MatchmakingMapScreen({
       searchCamera.startX - searchCamera.panRange,
       {
         duration: searchCamera.panRange / searchCamera.panSpeed,
-        ease: "linear",
+        ease: "easeInOut",
         repeat: Infinity,
         repeatType: "mirror",
       },
@@ -1363,60 +1535,68 @@ export function MatchmakingMapScreen({
   return (
     <div className="fixed inset-0 z-50 bg-surface-darkest bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat overflow-hidden font-fun select-none">
       {/* ── Map ── */}
-      <ComposableMap
-        width={MAP_W}
-        height={MAP_H}
-        projection="geoNaturalEarth1"
-        projectionConfig={{ scale: PROJ_SCALE, center: PROJ_CENTER }}
+      <div
+        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
         style={{
-          width: "100%",
-          height: "100%",
-          position: "absolute",
-          inset: 0,
-          background: "#0D1117",
+          width: `min(100vw, calc(100vh * ${MAP_W} / ${MAP_H}))`,
+          height: `min(100vh, calc(100vw * ${MAP_H} / ${MAP_W}))`,
         }}
       >
-        <motion.g
+        <ComposableMap
+          width={MAP_W}
+          height={MAP_H}
+          projection="geoNaturalEarth1"
+          projectionConfig={{ scale: PROJ_SCALE, center: PROJ_CENTER }}
           style={{
-            x: smoothX,
-            y: smoothY,
-            scale: smoothScale,
-            originX: 0,
-            originY: 0,
-            transformBox: "fill-box",
-            transformOrigin: "0px 0px",
+            width: "100%",
+            height: "100%",
+            position: "absolute",
+            inset: 0,
+            background: "#0D1117",
           }}
         >
-          <Geographies geography={worldTopo}>
-            {({ geographies }) =>
-              geographies.map((geo) => (
-                <Geography
-                  key={geo.rsmKey}
-                  geography={geo}
-                  fill="#1C2733"
-                  stroke="#2D3F4E"
-                  strokeWidth={0.5}
-                  style={{
-                    default: { outline: "none" },
-                    hover: { outline: "none" },
-                    pressed: { outline: "none" },
-                  }}
-                />
-              ))
-            }
-          </Geographies>
+          <motion.g
+            style={{
+              x: mapX,
+              y: mapY,
+              scale: mapScale,
+              originX: 0,
+              originY: 0,
+              transformBox: "fill-box",
+              transformOrigin: "0px 0px",
+            }}
+          >
+            <Geographies geography={worldTopo}>
+              {({ geographies }) =>
+                geographies.map((geo) => (
+                  <Geography
+                    key={geo.rsmKey}
+                    geography={geo}
+                    fill="#1C2733"
+                    stroke="#2D3F4E"
+                    strokeWidth={0.5}
+                    style={{
+                      default: { outline: "none" },
+                      hover: { outline: "none" },
+                      pressed: { outline: "none" },
+                    }}
+                  />
+                ))
+              }
+            </Geographies>
+          </motion.g>
+        </ComposableMap>
 
-          <defs>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="3" result="b" />
-              <feMerge>
-                <feMergeNode in="b" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          {/* Player pins */}
+        <motion.div
+          className="absolute inset-0 z-10 overflow-visible"
+          style={{
+            x: mapOverlayX,
+            y: mapOverlayY,
+            scale: mapScale,
+            transformOrigin: "0 0",
+          }}
+          aria-hidden="true"
+        >
           {mapPlayers.map((p) => {
             const visible = visiblePins.has(p.id);
             const highlighted = showFoundState
@@ -1426,175 +1606,17 @@ export function MatchmakingMapScreen({
             if (!visible && !showFoundState) return null;
 
             return (
-              <Marker key={p.id} coordinates={[p.lon, p.lat]}>
-                {/* Pulse ring */}
-                {(highlighted || isOpp) && (
-                  <circle
-                    cx={0}
-                    cy={0}
-                    r="5"
-                    fill={p.color}
-                    opacity="0.2"
-                    filter="url(#glow)"
-                  >
-                    <animate
-                      attributeName="r"
-                      values="5;18;5"
-                      dur={isOpp ? "1.5s" : "0.7s"}
-                      repeatCount="indefinite"
-                    />
-                    <animate
-                      attributeName="opacity"
-                      values="0.35;0;0.35"
-                      dur={isOpp ? "1.5s" : "0.7s"}
-                      repeatCount="indefinite"
-                    />
-                  </circle>
-                )}
-
-                {/* Drop shadow */}
-                <ellipse
-                  cx="0"
-                  cy="1"
-                  rx="3.5"
-                  ry="1.2"
-                  fill="rgba(0,0,0,0.35)"
-                />
-
-                {/* Pin body */}
-                <path
-                  d="M0,-15 C-6.5,-15 -10,-11 -10,-6 C-10,1.5 0,8 0,8 C0,8 10,1.5 10,-6 C10,-11 6.5,-15 0,-15 Z"
-                  fill={p.color}
-                  stroke={isOpp ? "#fff" : "rgba(0,0,0,0.4)"}
-                  strokeWidth={isOpp ? "1.5" : "0.5"}
-                  opacity={isOpp ? 1 : highlighted ? 0.95 : 0.8}
-                >
-                  {!showFoundState && (
-                    <animateTransform
-                      attributeName="transform"
-                      type="translate"
-                      values="0,0;0,-1.5;0,0"
-                      dur={`${2 + (p.id % 4) * 0.3}s`}
-                      repeatCount="indefinite"
-                    />
-                  )}
-                </path>
-
-                {/* Avatar circle with profile-style image */}
-                <circle
-                  cx="0"
-                  cy="-7.5"
-                  r="5.5"
-                  fill="#0D1117"
-                  stroke={p.color}
-                  strokeWidth="0.8"
-                />
-                {!useHtmlAvatars && (
-                  <foreignObject x="-5.1" y="-12.6" width="10.2" height="10.2">
-                    <div className="flex size-full items-center justify-center overflow-hidden rounded-full">
-                      <AvatarDisplay
-                        customization={p.avatarCustomization ?? {}}
-                        size="xs"
-                        className="size-full"
-                      />
-                    </div>
-                  </foreignObject>
-                )}
-
-                {/* Name label (only when highlighted or opponent) */}
-                {(isOpp || (highlighted && !showFoundState)) && (
-                  <g>
-                    <rect
-                      x={-p.name.length * 2.5 - 4}
-                      y="-27"
-                      width={p.name.length * 5 + 8}
-                      height="9"
-                      rx="3"
-                      fill="rgba(0,0,0,0.7)"
-                    />
-                    <text
-                      x="0"
-                      y="-20.5"
-                      textAnchor="middle"
-                      fill="white"
-                      fontSize="5.5"
-                      fontWeight="bold"
-                    >
-                      {p.name}
-                    </text>
-                  </g>
-                )}
-                {isOpp && (
-                  <motion.g
-                    initial={{ opacity: 0, scale: 0.85 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 1.35, duration: 0.3 }}
-                  >
-                    <rect
-                      x="6.5"
-                      y="-17.2"
-                      width="10.5"
-                      height="7.5"
-                      rx="2.8"
-                      fill="rgba(13,17,23,0.92)"
-                      stroke="rgba(255,255,255,0.35)"
-                      strokeWidth="0.45"
-                    />
-                    <text x="11.7" y="-11.8" textAnchor="middle" fontSize="5.7">
-                      {p.flag}
-                    </text>
-                  </motion.g>
-                )}
-              </Marker>
+              <MapPlayerPin
+                key={p.id}
+                player={p}
+                highlighted={highlighted}
+                isOpponent={isOpp}
+                showFoundState={showFoundState}
+              />
             );
           })}
-        </motion.g>
-      </ComposableMap>
-
-      {useHtmlAvatars && (
-        <div
-          className="absolute left-0 top-1/2 z-10 w-screen -translate-y-1/2 pointer-events-none"
-          style={{ aspectRatio: `${MAP_W} / ${MAP_H}` }}
-          aria-hidden="true"
-        >
-          <motion.div
-            className="absolute inset-0"
-            style={{
-              x: mapOverlayX,
-              y: mapOverlayY,
-              scale: smoothScale,
-              transformOrigin: "0 0",
-            }}
-          >
-            {mapPlayers.map((p) => {
-              const visible = visiblePins.has(p.id);
-              if (!visible && !showFoundState) return null;
-
-              return (
-                <div
-                  key={`pin-avatar-${p.id}`}
-                  className="absolute flex items-center justify-center overflow-hidden rounded-full bg-surface-darkest"
-                  style={{
-                    left: `${(p.x / MAP_W) * 100}%`,
-                    top: `${((p.y - 7.5) / MAP_H) * 100}%`,
-                    width: `${(10.2 / MAP_W) * 100}%`,
-                    height: `${(10.2 / MAP_H) * 100}%`,
-                    transform: "translate(-50%, -50%)",
-                    border: `1px solid ${p.color}`,
-                    opacity: 1,
-                  }}
-                >
-                  <AvatarDisplay
-                    customization={p.avatarCustomization ?? {}}
-                    size="xs"
-                    className="size-full"
-                  />
-                </div>
-              );
-            })}
-          </motion.div>
-        </div>
-      )}
+        </motion.div>
+      </div>
 
       {/* ── Overlays ── */}
       <div
@@ -1673,7 +1695,7 @@ export function MatchmakingMapScreen({
 
               <p className="text-sm font-bold text-brand-slate">
                 {searchTime > 0
-                  ? `${searchTime}s`
+                  ? searchTime
                   : "Finding a worthy opponent..."}
               </p>
 

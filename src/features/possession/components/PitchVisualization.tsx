@@ -186,10 +186,16 @@ interface PitchVisualizationProps {
   orientation?: 'landscape' | 'portrait';
   /** Bar battle animation state — rendered inside the possession zone */
   barBattle?: BarBattleState | null;
+  /** Force a bar-battle variant without changing global realtime match state. */
+  barBattleVariant?: 'ranked_sim' | 'friendly_possession';
   /** Align the possession boundary to the stadium art's true center line. */
   centerPossessionTrack?: boolean;
   /** Dev prototype: keep avatars planted and animate only the ball for shot/goal results. */
   simpleShotAnimation?: boolean;
+  /** Optional shot avatar size override for compact demos where the production marker reads too small. */
+  shotAvatarUnitSize?: number;
+  /** Keep landing/demo avatars upright during shots while preserving the shared ball path. */
+  disableShotActorResultMotion?: boolean;
   /** Hide the pitch-owned ball while a full-screen celebration owns the visible ball. */
   hideBall?: boolean;
 }
@@ -237,8 +243,11 @@ export function PitchVisualization({
   ballOnPlayer = true,
   orientation = 'landscape',
   barBattle,
+  barBattleVariant,
   centerPossessionTrack = true,
   simpleShotAnimation = false,
+  shotAvatarUnitSize,
+  disableShotActorResultMotion = false,
   hideBall = false,
 }: PitchVisualizationProps) {
   const isPenalty = !!penaltyMode;
@@ -596,7 +605,11 @@ export function PitchVisualization({
     ? actorMotionPosition(ballTarget)
     : null;
   const actorWidthUnits = isPortrait ? 290 : 500;
-  const actorAvatarUnitSize = isPenalty ? 40 : isShot && !useSimpleShotAnimation ? 30 : avatarBox;
+  const actorAvatarUnitSize = isPenalty
+    ? 40
+    : isShot && !useSimpleShotAnimation
+      ? (shotAvatarUnitSize ?? 30)
+      : avatarBox;
   const actorAvatarSize = `${(actorAvatarUnitSize / actorWidthUnits) * 100}%`;
   const actorBallSize = `${(ballBox / actorWidthUnits) * 100}%`;
   const playerAvatarPulse = mirrored
@@ -621,6 +634,9 @@ export function PitchVisualization({
     : (isShot && shotMode ? shotMode.isPlayerAttacker : false);
   const htmlActorMotion = (isShooter: boolean, isKeeper: boolean) => {
     if (htmlActorResultActive && isShooter) {
+      if (disableShotActorResultMotion && isShot && !isPenalty) {
+        return { scale: [1, 1.04, 1] };
+      }
       return isPortrait
         ? { y: [0, -16, 4, 0] }
         : { rotate: [0, 34 * goal.inward, -26 * goal.inward, 0] };
@@ -824,6 +840,7 @@ export function PitchVisualization({
                     playerAvatarX={playerAvatarVisualX}
                     opponentAvatarX={opponentAvatarVisualX}
                     isPortrait={isPortrait}
+                    variant={barBattleVariant}
                   />
                 )}
 

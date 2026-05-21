@@ -146,7 +146,17 @@ export function AppShell({ children }: AppShellProps) {
   const showHeader = HEADER_PATHS.some((p) => p === "/" ? currentPath === "/" : currentPath.startsWith(p));
   const showNav = !HIDE_NAV_PATHS.some((path) => currentPath.startsWith(path));
   const inLobbyRoom = currentPath.startsWith("/friend/room");
-  const showLobbyBanner = !!lobby && lobby.status === "waiting" && !inLobbyRoom;
+  const showLobbyBanner =
+    !!lobby &&
+    lobby.status === "waiting" &&
+    lobby.mode === "friendly" &&
+    Boolean(lobby.inviteCode) &&
+    !inLobbyRoom;
+  const showRankedLobbyBanner =
+    !!lobby &&
+    lobby.status === "waiting" &&
+    lobby.mode === "ranked" &&
+    !currentPath.startsWith("/game");
   const draftOpponent = lobby?.members.find((member) => member.userId !== authUser?.id);
   const activeDraftBanner = lobby?.status === "active" && draft
     ? {
@@ -237,6 +247,19 @@ export function AppShell({ children }: AppShellProps) {
   const handleReturnToLobby = () => {
     if (!lobbyCode) return;
     router.push(`/friend/room/${lobbyCode}`);
+  };
+
+  const handleReturnToRankedLobby = () => {
+    startSession({
+      mode: "ranked",
+      matchType: "ranked",
+      questionCount: 10,
+      opponentId: draftOpponent?.userId ?? "opponent",
+      opponentUsername: draftOpponent?.username ?? "Opponent",
+      opponentAvatar: draftOpponent?.avatarUrl ?? undefined,
+    });
+    setGameStage("matchmaking");
+    router.push("/game");
   };
 
   const handleLeaveLobby = () => {
@@ -641,6 +664,51 @@ export function AppShell({ children }: AppShellProps) {
                 </div>
               </div>
             )}
+            {showRankedLobbyBanner && (
+              <div className="px-6 pt-4">
+                <div className="rounded-2xl border border-brand-cyan/35 bg-gradient-to-r from-brand-cyan/15 to-brand-blue/15 px-5 py-4 shadow-[0_8px_30px_rgba(28,176,246,0.16)]">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="size-10 rounded-full bg-brand-cyan/20 text-brand-cyan flex items-center justify-center">
+                        <Gamepad2 className="size-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-brand-cyan">
+                          Ranked match is preparing
+                        </p>
+                        <p className="text-xs text-brand-cyan/70">
+                          {draftOpponent
+                            ? `Opponent found: ${draftOpponent.username}`
+                            : "Return to matchmaking or leave the ranked lobby."}
+                          {!socketConnected && (
+                            <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+                              Reconnecting…
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        className="h-9 bg-brand-cyan text-white hover:bg-brand-cyan-deep"
+                        onClick={handleReturnToRankedLobby}
+                      >
+                        Return to Matchmaking <ArrowRight className="ml-2 size-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-9 border-brand-red-soft/40 text-brand-red-soft/80 hover:bg-brand-red-soft/10"
+                        onClick={handleLeaveLobby}
+                      >
+                        Leave <X className="ml-2 size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             <main className="p-6">
               {children}
             </main>
@@ -868,6 +936,51 @@ export function AppShell({ children }: AppShellProps) {
                       size="sm"
                       variant="outline"
                       className="flex-1 h-10 border-emerald-500/30 text-emerald-100 hover:bg-emerald-500/10"
+                      onClick={handleLeaveLobby}
+                    >
+                      Leave
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {showRankedLobbyBanner && (
+            <div className="px-4 pt-4">
+              <div className="rounded-2xl border border-brand-cyan/35 bg-gradient-to-r from-brand-cyan/15 to-brand-blue/15 px-4 py-3 shadow-[0_8px_30px_rgba(28,176,246,0.16)]">
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="size-9 rounded-full bg-brand-cyan/20 text-brand-cyan flex items-center justify-center">
+                      <Gamepad2 className="size-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-brand-cyan">
+                        Ranked match is preparing
+                      </p>
+                      <p className="text-xs text-brand-cyan/70">
+                        {draftOpponent
+                          ? `Opponent found: ${draftOpponent.username}`
+                          : "Return to matchmaking or leave."}
+                        {!socketConnected && (
+                          <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+                            Reconnecting…
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      className="flex-1 h-10 bg-brand-cyan text-white hover:bg-brand-cyan-deep"
+                      onClick={handleReturnToRankedLobby}
+                    >
+                      Return
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 h-10 border-brand-red-soft/40 text-brand-red-soft/80 hover:bg-brand-red-soft/10"
                       onClick={handleLeaveLobby}
                     >
                       Leave

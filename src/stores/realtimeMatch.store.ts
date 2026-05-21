@@ -966,7 +966,27 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
   },
   setSessionState: (payload) => {
     logger.info('Realtime store set session state', payload);
-    set({ sessionState: payload });
+    set((state) => {
+      const lobbyId = state.lobby?.lobbyId ?? null;
+      const sessionLobbyIds = new Set(
+        [payload.waitingLobbyId, ...payload.openLobbyIds].filter(
+          (id): id is string => typeof id === 'string' && id.length > 0,
+        ),
+      );
+      const shouldClearLobby = lobbyId !== null && !sessionLobbyIds.has(lobbyId);
+      return {
+        sessionState: payload,
+        ...(shouldClearLobby
+          ? {
+              lobby: null,
+              draft: null,
+              draftPaused: false,
+              draftPauseUntil: null,
+              draftDisconnectedUserId: null,
+            }
+          : {}),
+      };
+    });
   },
   revertDraftBan: (actorId) =>
     set((state) => {
