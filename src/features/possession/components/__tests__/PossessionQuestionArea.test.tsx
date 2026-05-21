@@ -84,6 +84,7 @@ describe('PossessionQuestionArea', () => {
             props: {
               matchId: 'match-1',
               qIndex: 4,
+              totalQuestions: 12,
               question: {
                 kind: 'clues',
                 id: 'q-4',

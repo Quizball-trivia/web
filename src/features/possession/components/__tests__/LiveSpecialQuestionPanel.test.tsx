@@ -65,6 +65,7 @@ function renderPutInOrder(overrides: Partial<Parameters<typeof LiveSpecialQuesti
     <LiveSpecialQuestionPanel
       matchId="match-1"
       qIndex={2}
+      totalQuestions={12}
       question={putInOrderQuestion}
       showOptions
       timeRemaining={10}
@@ -101,6 +102,7 @@ describe('LiveSpecialQuestionPanel put-in-order submission', () => {
       <LiveSpecialQuestionPanel
         matchId="match-1"
         qIndex={2}
+      totalQuestions={12}
         question={putInOrderQuestion}
         showOptions
         timeRemaining={0}
@@ -270,6 +272,7 @@ describe('LiveSpecialQuestionPanel clues scoring display', () => {
       <LiveSpecialQuestionPanel
         matchId="match-1"
         qIndex={4}
+        totalQuestions={12}
         question={cluesQuestion}
         showOptions
         timeRemaining={50}
@@ -289,14 +292,18 @@ describe('LiveSpecialQuestionPanel clues scoring display', () => {
   it('starts clue answers at 100 points', () => {
     renderClues();
 
-    expect(screen.getByText('100 pts')).toBeInTheDocument();
-    expect(screen.queryByText('200 pts')).not.toBeInTheDocument();
+    // First-clue pill always reads 100 pt. The per-clue pill format
+    // replaced the single "X PTS" chip — each revealed clue gets its own
+    // points pill.
+    expect(screen.getByText('100 pt')).toBeInTheDocument();
+    expect(screen.queryByText('200 pt')).not.toBeInTheDocument();
   });
 
   it('drops clue answers by 20 points for each revealed clue', () => {
     renderClues({ timeRemaining: 30 });
 
-    expect(screen.getByText('60 pts')).toBeInTheDocument();
+    // After 3 clues reveal, the third pill shows the lowest tier (60 pt).
+    expect(screen.getByText('60 pt')).toBeInTheDocument();
   });
 });
 
@@ -310,6 +317,7 @@ describe('LiveSpecialQuestionPanel countdown replay', () => {
       <LiveSpecialQuestionPanel
         matchId="match-1"
         qIndex={3}
+        totalQuestions={12}
         question={countdownQuestion}
         showOptions
         timeRemaining={10}
@@ -346,6 +354,7 @@ describe('LiveSpecialQuestionPanel countdown auto-submit', () => {
       <LiveSpecialQuestionPanel
         matchId="match-1"
         qIndex={3}
+        totalQuestions={12}
         question={countdownQuestion}
         showOptions
         timeRemaining={10}
@@ -362,7 +371,7 @@ describe('LiveSpecialQuestionPanel countdown auto-submit', () => {
 
     await new Promise<void>((resolve) => queueMicrotask(resolve));
 
-    fireEvent.change(screen.getByPlaceholderText('Start typing to find answers...'), {
+    fireEvent.change(screen.getByPlaceholderText('TYPE YOUR ANSWER'), {
       target: { value: 'ars' },
     });
 
@@ -382,6 +391,7 @@ describe('LiveSpecialQuestionPanel countdown auto-submit', () => {
       <LiveSpecialQuestionPanel
         matchId="match-1"
         qIndex={3}
+        totalQuestions={12}
         question={countdownQuestion}
         showOptions
         timeRemaining={10}
@@ -396,7 +406,7 @@ describe('LiveSpecialQuestionPanel countdown auto-submit', () => {
       />
     );
 
-    fireEvent.change(screen.getByPlaceholderText('Start typing to find answers...'), {
+    fireEvent.change(screen.getByPlaceholderText('TYPE YOUR ANSWER'), {
       target: { value: 'ars' },
     });
 
@@ -408,6 +418,7 @@ describe('LiveSpecialQuestionPanel countdown auto-submit', () => {
       <LiveSpecialQuestionPanel
         matchId="match-1"
         qIndex={3}
+        totalQuestions={12}
         question={countdownQuestion}
         showOptions
         timeRemaining={10}
@@ -422,7 +433,7 @@ describe('LiveSpecialQuestionPanel countdown auto-submit', () => {
       />
     );
 
-    fireEvent.change(screen.getByPlaceholderText('Start typing to find answers...'), {
+    fireEvent.change(screen.getByPlaceholderText('TYPE YOUR ANSWER'), {
       target: { value: 'ar' },
     });
 

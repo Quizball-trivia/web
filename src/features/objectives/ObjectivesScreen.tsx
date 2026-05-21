@@ -2,15 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Calendar, Clock, Target, Trophy } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { ObjectiveCard } from "./components/ObjectiveCard";
 import { useObjectives } from "@/lib/queries/objectives.queries";
 import type { ObjectiveCategory } from "./types";
 
-const TABS: Array<{ value: ObjectiveCategory; label: string; icon: typeof Calendar }> = [
-  { value: "daily", label: "Daily", icon: Calendar },
-  { value: "weekly", label: "Weekly", icon: Clock },
+const TABS: Array<{ value: ObjectiveCategory; label: string }> = [
+  { value: "daily", label: "Daily" },
+  { value: "weekly", label: "Weekly" },
 ];
+
+const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
 function formatResetTime(periodEnd: string | undefined, nowMs: number): string {
   if (!periodEnd) return "--";
@@ -22,7 +24,7 @@ function formatResetTime(periodEnd: string | undefined, nowMs: number): string {
     const days = Math.floor(hours / 24);
     return `${days}d ${hours % 24}h`;
   }
-  return `${hours}h ${minutes}m`;
+  return `${hours}h ${minutes}min`;
 }
 
 interface ObjectivesScreenProps {
@@ -34,8 +36,6 @@ export function ObjectivesScreen({ onBack }: ObjectivesScreenProps) {
   const [selectedTab, setSelectedTab] = useState<ObjectiveCategory>("daily");
   const { data, isLoading, isError } = useObjectives();
 
-  // Drive a re-render every minute so the "Resets in …" countdown ticks down
-  // instead of freezing at mount time.
   const [nowMs, setNowMs] = useState(() => Date.now());
   useEffect(() => {
     const id = window.setInterval(() => setNowMs(Date.now()), 60_000);
@@ -62,96 +62,94 @@ export function ObjectivesScreen({ onBack }: ObjectivesScreenProps) {
   };
 
   return (
-    <div className="min-h-full bg-surface-page-alt font-fun text-white">
-      <div className="sticky top-0 z-20 border-b border-white/8 bg-surface-page-alt/95 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-3">
-            <button
-              aria-label="Back"
-              onClick={handleBack}
-              className="flex size-10 items-center justify-center rounded-[8px] bg-surface-card text-white ring-1 ring-white/8 transition-colors hover:bg-surface-card-tint"
+    <div className="min-h-full text-white">
+      <div className="mx-auto max-w-5xl px-4 py-4 md:px-6 md:py-6">
+        <button
+          aria-label="Back"
+          onClick={handleBack}
+          className="-ml-1 flex size-8 items-center justify-center rounded-[8px] text-white transition-colors hover:bg-white/10"
+        >
+          <ArrowLeft className="size-4" />
+        </button>
+
+        <div className="mt-2 flex items-start justify-between gap-3">
+          <div>
+            <h1
+              className="uppercase text-white"
+              style={{ ...poppins, fontSize: "clamp(22px, 4vw, 36px)", lineHeight: 1 }}
             >
-              <ArrowLeft className="size-5" />
-            </button>
-            <div>
-              <div className="flex items-center gap-2">
-                <Target className="size-5 text-brand-cyan" />
-                <h1 className="text-lg font-black uppercase tracking-wide md:text-2xl">
-                  Objectives
-                </h1>
-              </div>
-              <p className="mt-0.5 text-xs font-semibold text-brand-slate">
-                Complete match goals to earn coins and XP automatically.
-              </p>
-            </div>
+              Objectives
+            </h1>
+            <p
+              className="mt-1 uppercase text-white/50"
+              style={{ ...poppins, fontSize: "clamp(10px, 1.1vw, 12px)", fontWeight: 500 }}
+            >
+              Complete match goals to earn coins and xp automatically.
+            </p>
           </div>
 
-          <div className="hidden rounded-full border border-brand-yellow/30 bg-brand-yellow/10 px-3 py-1.5 text-xs font-black uppercase text-brand-yellow md:flex md:items-center md:gap-1.5">
-            <Trophy className="size-4" />
+          <span
+            className="inline-flex items-center rounded-[14px] bg-brand-green px-3 py-1 uppercase text-white tabular-nums"
+            style={{ ...poppins, fontSize: "clamp(11px, 1.1vw, 13px)" }}
+          >
             {totalCompleted}/{totalObjectives}
-          </div>
+          </span>
         </div>
-      </div>
 
-      <main className="mx-auto max-w-5xl px-4 py-5 md:py-7">
-        <section className="rounded-[8px] border border-white/8 bg-surface-card p-4 md:p-5">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-[11px] font-black uppercase tracking-widest text-brand-slate">
-                Current set
-              </p>
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-4xl font-black text-white">
-                  {currentPeriod?.completedCount ?? 0}
-                </span>
-                <span className="text-lg font-black text-brand-slate">
-                  /{currentPeriod?.totalCount ?? 0}
-                </span>
+        <div className="mt-4 flex flex-col gap-3 md:mt-5 md:flex-row md:items-center md:gap-4">
+          <div className="flex-1">
+            <div className="rounded-[18px] border-2 border-brand-green p-1.5">
+              <div className="grid grid-cols-2 gap-1.5">
+                {TABS.map((tab) => {
+                  const isActive = selectedTab === tab.value;
+                  return (
+                    <button
+                      key={tab.value}
+                      onClick={() => setSelectedTab(tab.value)}
+                      className={
+                        isActive
+                          ? "rounded-[12px] bg-brand-green py-2 uppercase text-white transition-colors md:py-2.5"
+                          : "rounded-[12px] py-2 uppercase text-white transition-colors hover:bg-brand-green/10 md:py-2.5"
+                      }
+                      style={{ ...poppins, fontSize: "clamp(13px, 1.6vw, 16px)" }}
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
-            <div className="rounded-[8px] bg-surface-deep px-3 py-2 text-sm font-black uppercase text-brand-cyan">
-              Resets in {formatResetTime(currentPeriod?.periodEnd, nowMs)}
-            </div>
           </div>
-        </section>
 
-        <div className="mt-4 grid grid-cols-2 gap-2 rounded-[8px] bg-surface-card p-1">
-          {TABS.map((tab) => {
-            const isActive = selectedTab === tab.value;
-            const count = data?.[tab.value]?.completedCount ?? 0;
-            return (
-              <button
-                key={tab.value}
-                onClick={() => setSelectedTab(tab.value)}
-                className={
-                  isActive
-                    ? "flex items-center justify-center gap-2 rounded-[7px] bg-brand-cyan px-3 py-2.5 text-sm font-black uppercase text-surface-page"
-                    : "flex items-center justify-center gap-2 rounded-[7px] px-3 py-2.5 text-sm font-black uppercase text-brand-slate transition-colors hover:bg-surface-card-tint hover:text-white"
-                }
-              >
-                <tab.icon className="size-4" />
-                {tab.label}
-                <span className={isActive ? "text-surface-page/70" : "text-brand-slate-light"}>
-                  {count}
-                </span>
-              </button>
-            );
-          })}
+          <div className="flex items-center justify-between gap-3">
+            <span
+              className="tabular-nums text-white"
+              style={{ ...poppins, fontSize: "clamp(24px, 3.5vw, 36px)", lineHeight: 1 }}
+            >
+              {currentPeriod?.completedCount ?? 0}/{currentPeriod?.totalCount ?? 0}
+            </span>
+            <span
+              className="inline-flex items-center rounded-[14px] bg-brand-green px-3 py-1.5 uppercase text-white whitespace-nowrap"
+              style={{ ...poppins, fontSize: "clamp(11px, 1.1vw, 13px)" }}
+            >
+              Rests in {formatResetTime(currentPeriod?.periodEnd, nowMs)}
+            </span>
+          </div>
         </div>
 
-        <section className="mt-4 space-y-3 pb-8">
+        <section className="mt-4 space-y-2 pb-8 md:mt-5 md:space-y-2.5">
           {isLoading && (
-            <div className="rounded-[8px] border border-white/8 bg-surface-card p-6 text-sm font-bold text-brand-slate">
+            <div className="rounded-[14px] border-2 border-brand-green p-4 uppercase text-white/60" style={{ ...poppins, fontSize: 12 }}>
               Loading objectives...
             </div>
           )}
           {isError && (
-            <div className="rounded-[8px] border border-brand-red-soft/30 bg-brand-red-soft/10 p-6 text-sm font-bold text-brand-red-soft">
+            <div className="rounded-[14px] border-2 border-brand-red-soft p-4 uppercase text-brand-red-soft" style={{ ...poppins, fontSize: 12 }}>
               Could not load objectives. Try refreshing.
             </div>
           )}
           {!isLoading && !isError && objectives.length === 0 && (
-            <div className="rounded-[8px] border border-white/8 bg-surface-card p-6 text-sm font-bold text-brand-slate">
+            <div className="rounded-[14px] border-2 border-brand-green p-4 uppercase text-white/60" style={{ ...poppins, fontSize: 12 }}>
               No objectives available.
             </div>
           )}
@@ -159,7 +157,7 @@ export function ObjectivesScreen({ onBack }: ObjectivesScreenProps) {
             <ObjectiveCard key={objective.id} objective={objective} index={index} />
           ))}
         </section>
-      </main>
+      </div>
     </div>
   );
 }

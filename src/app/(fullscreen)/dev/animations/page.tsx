@@ -86,6 +86,15 @@ const SAMPLE_QUESTIONS: Array<{
 
 type QuestionKind = 'multipleChoice' | 'countdown' | 'putInOrder' | 'clues';
 
+// Mirror backend possession-state durations so the dev playground timer
+// counts down at the production cadence (e.g. countdown = 30s, not 60s).
+const QUESTION_DURATION_MS_BY_KIND: Record<QuestionKind, number> = {
+  multipleChoice: 10_000,
+  countdown: 30_000,
+  putInOrder: 30_000,
+  clues: 50_000,
+};
+
 function makeQuestion(qIndex: number, kind: QuestionKind = 'multipleChoice'): ResolvedMatchQuestionPayload {
   const sample = SAMPLE_QUESTIONS[qIndex % SAMPLE_QUESTIONS.length];
   const now = Date.now();
@@ -93,10 +102,10 @@ function makeQuestion(qIndex: number, kind: QuestionKind = 'multipleChoice'): Re
     matchId: MATCH_ID,
     qIndex,
     total: TOTAL_QUESTIONS,
-    // `playableAt` in the past makes the controller's reveal timer fire
-    // immediately so dev iterations don't wait the production 3s reveal.
-    playableAt: new Date(now - 1000).toISOString(),
-    deadlineAt: new Date(now + 60_000).toISOString(),
+    // 2.5s read phase before options spawn, matching the production reveal
+    // window. Lets the question land first; options drop in when timer starts.
+    playableAt: new Date(now + 2500).toISOString(),
+    deadlineAt: new Date(now + 2500 + QUESTION_DURATION_MS_BY_KIND[kind]).toISOString(),
     phaseKind: 'normal' as const,
     phaseRound: qIndex < 6 ? qIndex + 1 : qIndex - 5,
     attackerSeat: (qIndex % 2 === 0 ? 1 : 2) as 1 | 2,
@@ -148,6 +157,7 @@ function makeQuestion(qIndex: number, kind: QuestionKind = 'multipleChoice'): Re
           { type: 'text', content: 'Won 5 Ballon d\'Or awards' },
           { type: 'text', content: 'Played for Manchester United twice' },
           { type: 'text', content: 'Wears number 7' },
+          { type: 'text', content: 'Captain of the Portugal national team' },
         ],
         categoryName: 'Who Am I?',
         difficulty: 'medium',
@@ -1207,8 +1217,20 @@ function DevAnimationsContent() {
 
     const normalizedGuess = String(data.guess ?? '').trim().toLowerCase();
     const isCorrectGuess = normalizedGuess.includes('ronaldo') || normalizedGuess.includes('cristiano');
+    const isGiveUp = data.kind === 'giveUp' || data.giveUp === true;
 
-    if (data.kind === 'giveUp' || data.giveUp || !isCorrectGuess) {
+    if (isGiveUp) {
+      // Mirror production: pressing Give Up resolves the round as a loss
+      // for the player and emits the round_result so the reveal panel can
+      // show the correct answer with the same UI/flow as live gameplay.
+      playPrebuiltSpecialResult(
+        makeCluesRoundResult(data.qIndex, scoreRef.current, { mePoints: 0, meClueIndex: null }),
+        250
+      );
+      return;
+    }
+
+    if (!isCorrectGuess) {
       s.setCluesGuessAck({
         matchId: MATCH_ID,
         qIndex: data.qIndex,

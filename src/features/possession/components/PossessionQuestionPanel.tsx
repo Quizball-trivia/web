@@ -94,7 +94,7 @@ export function PossessionQuestionPanel({
   const timerLabel = displayTimer >= 10 ? `${displayTimer}` : `0${displayTimer}`;
 
   return (
-    <div className="px-3 mt-1.5">
+    <div className="px-4 sm:px-4 mt-1.5">
       {/* Header pills: QUESTION X/Y + timer */}
       <div className="flex items-stretch gap-2.5">
         <div
@@ -172,15 +172,13 @@ export function PossessionQuestionPanel({
         </motion.div>
       </AnimatePresence>
 
-      {/* Answer cards — 2x2 grid */}
-      <motion.div
-        key={`options-${question.id}`}
+      {/* Answer cards — 2x2 grid. Cards are visible during the read phase
+          (yellow-bordered empty slots) so the layout is stable; only the
+          answer text inside fades in when showOptions flips true. */}
+      <div
         className={`mt-2.5 grid grid-cols-2 gap-2.5 ${
           showOptions ? 'pointer-events-auto' : 'pointer-events-none'
         }`}
-        initial={false}
-        animate={{ opacity: showOptions ? 1 : 0.95, y: showOptions ? 0 : 4 }}
-        transition={{ duration: 0.25 }}
         aria-hidden={!showOptions}
       >
         {question.options.map((opt, i) => {
@@ -214,7 +212,6 @@ export function PossessionQuestionPanel({
                 stiffness: 320,
                 damping: 24,
                 mass: 0.75,
-                delay: showOptions ? i * 0.04 : 0,
               }}
               className="relative flex items-center justify-center overflow-hidden rounded-[16px] px-3 transition-shadow duration-150 h-[60px] sm:h-[78px] md:h-[94px] lg:h-[116px]"
               style={{
@@ -262,11 +259,18 @@ export function PossessionQuestionPanel({
                 </motion.div>
               )}
 
-              <span className="relative z-[1] text-center leading-tight">{opt}</span>
+              <motion.span
+                className="relative z-[1] text-center leading-tight"
+                initial={false}
+                animate={{ opacity: showOptions ? 1 : 0, y: showOptions ? 0 : 6 }}
+                transition={{ duration: 0.25, delay: showOptions ? i * 0.08 : 0, ease: 'easeOut' }}
+              >
+                {opt}
+              </motion.span>
             </motion.button>
           );
         })}
-      </motion.div>
+      </div>
     </div>
   );
 }

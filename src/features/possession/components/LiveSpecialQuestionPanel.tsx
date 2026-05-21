@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ArrowUpDown, CheckCircle2, GripVertical, Lightbulb, Send, Star, XCircle } from 'lucide-react';
+import { ArrowUpDown, CheckCircle2, Send, XCircle } from 'lucide-react';
 import {
   DndContext,
   KeyboardSensor,
@@ -45,6 +45,7 @@ type LiveSpecialQuestion =
 interface LiveSpecialQuestionPanelProps {
   matchId: string;
   qIndex: number;
+  totalQuestions: number;
   question: LiveSpecialQuestion;
   showOptions: boolean;
   timeRemaining: number;
@@ -177,19 +178,11 @@ function SpecialResultSummary({
 }) {
   if (!visible) return null;
 
-  const toneClass = tone === 'orange'
-    ? 'border-brand-orange/55 shadow-[0_0_24px_rgba(255,150,0,0.14)]'
-    : tone === 'green'
-      ? 'border-brand-green/55 shadow-[0_0_24px_rgba(88,204,2,0.14)]'
-      : 'border-brand-green/55 shadow-[0_0_24px_rgba(88,204,2,0.14)]';
+  // tone/status are kept on the data shape for now (callers still pass
+  // them) but no longer drive any visual — the per-side status pills were
+  // removed in favor of the flat dark card.
+  void tone;
   const sides = [player, opponent];
-
-  const statusClasses: Record<SpecialSummaryStatus, string> = {
-    positive: 'bg-brand-green/15 text-brand-green',
-    negative: 'bg-brand-red-soft/15 text-brand-red-soft',
-    pending: 'bg-white/[0.06] text-white/55',
-    neutral: 'bg-brand-green/15 text-brand-green',
-  };
 
   return (
     <motion.div
@@ -197,29 +190,61 @@ function SpecialResultSummary({
       initial={{ opacity: 0, y: 12, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.28, ease: 'easeOut' }}
-      className={`grid grid-cols-2 gap-2 rounded-[8px] border bg-transparent p-2 ${toneClass}`}
+      className="grid grid-cols-2 gap-2 rounded-[30px] bg-surface-card-deeper p-3"
     >
       {sides.map((side) => {
         const safeTotal = Math.max(1, side.total);
         const safeCount = side.count == null ? null : clampCount(side.count, safeTotal);
         const pointsText = side.points == null ? null : `${side.points > 0 ? '+' : ''}${side.points} pts`;
+        const isOpp = side.label === 'Opp';
+        const singleAnswerRound = side.total <= 1;
+        const bigStyle = {
+          fontFamily: "'Poppins', sans-serif",
+          fontWeight: 700,
+          fontSize: 'clamp(22px, 6vw, 36px)',
+        } as const;
+        const tailStyle = {
+          fontFamily: "'Poppins', sans-serif",
+          fontWeight: 500,
+          fontSize: 'clamp(11px, 2.5vw, 16px)',
+        } as const;
         return (
-          <div key={side.label} className="min-w-0 px-3 py-2.5">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[10px] font-fun font-black uppercase text-white/45">{side.label}</span>
-              <span className={`rounded-[7px] px-2 py-0.5 text-[9px] font-fun font-black uppercase ${statusClasses[side.status]}`}>
-                {side.badge}
-              </span>
+          <div key={side.label} className={`min-w-0 px-3 py-2.5 ${isOpp ? 'text-right' : ''}`}>
+            <span className="text-[10px] font-fun font-black uppercase text-white/45">{side.label}</span>
+            <div className={`mt-1 flex items-end gap-1 tabular-nums text-brand-yellow ${isOpp ? 'justify-end' : ''}`}>
+              {singleAnswerRound ? (
+                <>
+                  <span className="leading-none" style={bigStyle}>
+                    {side.points ?? 0}
+                  </span>
+                  <span className="pb-1 leading-none text-brand-yellow/70" style={tailStyle}>
+                    PTS
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="leading-none" style={bigStyle}>
+                    {safeCount == null ? '-' : safeCount}
+                  </span>
+                  <span className="pb-1 leading-none text-brand-yellow/70" style={tailStyle}>
+                    /{safeTotal}
+                  </span>
+                </>
+              )}
             </div>
-            <div className="mt-1 flex items-end gap-1 font-fun font-black text-white">
-              <span className="text-3xl leading-none">{safeCount == null ? '-' : safeCount}</span>
-              <span className="pb-0.5 text-sm text-white/45">/{safeTotal}</span>
-            </div>
-            <div className="mt-1 flex min-h-4 items-center justify-between gap-2">
+            <div className={`mt-1 flex min-h-4 items-center gap-2 ${isOpp ? 'flex-row-reverse' : 'justify-between'}`}>
               <p className="truncate text-[10px] font-fun font-black uppercase text-white/50">{side.detail}</p>
-              {pointsText && (
-                <span className="shrink-0 text-[10px] font-fun font-black uppercase text-white/70">
-                  {pointsText}
+              {!singleAnswerRound && pointsText && (
+                <span
+                  className="shrink-0 tabular-nums text-brand-yellow"
+                  style={{
+                    fontFamily: "'Poppins', sans-serif",
+                    fontWeight: 700,
+                    fontSize: 'clamp(15px, 3.5vw, 20px)',
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  {pointsText.toUpperCase()}
                 </span>
               )}
             </div>
@@ -447,12 +472,7 @@ function CountdownPanel({
 
       {/* Prompt — plain text, no card chrome */}
       <div className="px-1 pt-1">
-        {question.categoryName && (
-          <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-brand-green">
-            ⚽ {question.categoryName}
-          </span>
-        )}
-        <p className="mt-2 text-lg font-black font-fun leading-snug text-white">{question.prompt}</p>
+        <p className="text-lg font-black font-fun leading-snug text-white">{question.prompt}</p>
       </div>
 
       <SpecialResultSummary
@@ -478,14 +498,16 @@ function CountdownPanel({
         }}
       />
 
-      {/* Input row — flat */}
+      {/* Input — flat blue Figma pill. Using a plain <input> rather than
+          the shared Input component because the latter applies a
+          `dark:bg-input/30` default that overrides bg-brand-blue in
+          dark-mode desktop while letting it through on iOS, so the pill
+          renders differently across platforms. */}
       {!roundResolved && (
         <div>
-          <label className="mb-1.5 block text-[10px] font-fun font-black uppercase tracking-[0.22em] text-white/45">
-            Type your answer
-          </label>
-          <div className="flex gap-2">
-            <Input
+          <div className="relative">
+            <input
+              type="text"
               value={guess}
               onChange={(event) => setGuess(event.target.value)}
               onKeyDown={(event) => {
@@ -493,21 +515,29 @@ function CountdownPanel({
                   submitGuess();
                 }
               }}
-              placeholder="Start typing to find answers..."
+              placeholder="TYPE YOUR ANSWER"
               disabled={inputLocked}
-              className="h-11 rounded-[8px] border border-white/10 bg-white/[0.04] text-base text-white placeholder:text-white/30 focus:border-brand-green focus:bg-white/[0.06]"
+              aria-label="Type your answer"
+              className="h-14 w-full rounded-[14px] border-none bg-brand-blue px-5 pr-14 text-center text-base uppercase text-white outline-none placeholder:text-white/55 placeholder:uppercase placeholder:tracking-[0.08em] focus:outline-none disabled:opacity-50"
+              style={{
+                fontFamily: "'Poppins', sans-serif",
+                fontWeight: 600,
+                letterSpacing: '0.08em',
+                boxShadow: '0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)',
+              }}
             />
             <button
               type="button"
               onClick={submitGuess}
               disabled={inputLocked || !guess.trim()}
-              className="inline-flex items-center justify-center rounded-[8px] bg-brand-orange px-4 text-white transition-transform active:translate-y-[2px] disabled:opacity-40"
+              aria-label="Submit answer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex size-9 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-transparent"
             >
               <Send className="size-4" />
             </button>
           </div>
           <p className="mt-1.5 flex items-center gap-1 text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white/40">
-            <Lightbulb className="size-3 text-brand-orange" />
+            
             Auto-matches as you type · Enter for short answers
           </p>
         </div>
@@ -522,7 +552,7 @@ function CountdownPanel({
         </div>
         {(roundResolved ? revealedAnswers : foundAnswers).length === 0 ? (
           <p className="py-6 text-center text-xs font-fun font-black uppercase tracking-[0.18em] text-white/30">
-            {roundResolved ? 'No answers found this round.' : 'Start typing to find answers!'}
+            {roundResolved ? 'No answers found this round.' : ''}
           </p>
         ) : (
           roundResolved ? (
@@ -603,6 +633,11 @@ function SortableItem({
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
 
+  // While the round is being answered, the whole card is the drag handle —
+  // press anywhere on it to reorder. Drag icons removed per user feedback
+  // (people weren't realizing they had to grab the tiny grip icon).
+  const dragProps = isRevealed ? {} : { ...attributes, ...listeners };
+
   return (
     <div
       ref={setNodeRef}
@@ -610,47 +645,47 @@ function SortableItem({
       className={isDragging ? 'z-50' : 'z-0'}
     >
       <div
-        className={`flex items-center gap-2 rounded-[10px] px-2.5 py-3 transition-all sm:gap-3 sm:p-3 ${
+        {...dragProps}
+        className={`flex items-center gap-2 rounded-[14px] px-3 py-3 transition-all sm:gap-3 sm:p-3 ${
           !isRevealed
-            ? 'cursor-grab bg-white/[0.04] hover:bg-white/[0.07] active:cursor-grabbing'
+            ? 'cursor-grab touch-none bg-white/[0.04] hover:bg-white/[0.07] active:cursor-grabbing'
             : isCorrect
               ? 'bg-brand-green/12'
               : 'bg-brand-red-soft/12'
         } ${isDragging ? 'scale-[1.02] shadow-xl' : ''}`}
       >
-        {!isRevealed && (
-          <div {...attributes} {...listeners} className="shrink-0 touch-none cursor-grab active:cursor-grabbing">
-            <GripVertical className="size-4 text-white/35 sm:size-5" />
-          </div>
-        )}
-
         <div
-          className={`flex size-7 shrink-0 items-center justify-center rounded-[6px] text-xs font-black sm:size-8 sm:text-sm ${
-            isRevealed && isCorrect
-              ? 'bg-brand-green text-white'
-              : isRevealed
-                ? 'bg-brand-red-soft text-white'
-                : 'bg-white/10 text-white'
+          className={`flex h-14 w-20 shrink-0 items-center justify-center rounded-[30px] text-white sm:h-16 sm:w-24 ${
+            isRevealed
+              ? isCorrect
+                ? 'bg-brand-green shadow-[0_0_10px_rgba(56,182,14,0.35)]'
+                : 'bg-brand-red-soft shadow-[0_0_10px_rgba(255,75,75,0.35)]'
+              : 'bg-brand-green shadow-[0_0_10px_rgba(56,182,14,0.35)]'
           }`}
+          style={{
+            fontFamily: "'Poppins', sans-serif",
+            fontWeight: 700,
+            fontSize: 24,
+          }}
         >
           {index + 1}
         </div>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            {item.emoji && <span className="text-base sm:text-xl">{item.emoji}</span>}
-            <span className="truncate text-xs font-fun font-black uppercase tracking-wide text-white sm:text-sm">
+            {item.emoji && <span className="text-xl sm:text-2xl">{item.emoji}</span>}
+            <span className="truncate text-base font-fun font-black uppercase tracking-wide text-white sm:text-lg">
               {item.label}
             </span>
           </div>
           {item.details && (
-            <p className="truncate text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white/40">
+            <p className="truncate text-xs font-fun font-black uppercase tracking-[0.16em] text-white/60 sm:text-sm">
               {item.details}
             </p>
           )}
         </div>
 
-        {isRevealed ? (
+        {isRevealed && (
           <div className="flex shrink-0 items-center gap-2">
             {typeof revealSortValue === 'number' && (
               <span className="rounded-[6px] bg-white/10 px-2 py-0.5 text-[10px] font-fun font-black tabular-nums text-white">
@@ -663,8 +698,6 @@ function SortableItem({
               <XCircle className="size-5 text-brand-red-soft" />
             )}
           </div>
-        ) : (
-          <ArrowUpDown className="size-3.5 shrink-0 text-white/35 sm:size-4" />
         )}
       </div>
     </div>
@@ -1058,12 +1091,7 @@ function PutInOrderPanel({
 
       {/* Prompt — plain text */}
       <div className="px-1">
-        {question.categoryName && (
-          <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-brand-cyan">
-            ⚽ {question.categoryName}
-          </span>
-        )}
-        <p className="mt-2 text-base font-black font-fun leading-snug text-white">{question.prompt}</p>
+        <p className="text-base font-black font-fun leading-snug text-white">{question.prompt}</p>
       </div>
 
       {/* Instruction — single inline line, no card */}
@@ -1186,7 +1214,6 @@ function CluesPanel({
   const displayAnswer = roundResult?.reveal.kind === 'clues'
     ? resolveI18nText(roundResult.reveal.displayAnswer, resolvedLocale)
     : null;
-  const currentPoints = calculateCluesDisplayPoints(revealedClues);
   const inputLocked = !showOptions || submitted || pendingGuess || roundResolved;
   const playerAnswerCount = roundResolved
     ? (myRound?.isCorrect ? 1 : 0)
@@ -1259,19 +1286,18 @@ function CluesPanel({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-start">
+      <div className="flex items-center justify-start pt-2">
+        {/* `key={qIndex}` re-fires the drop-in animation on each new
+            question while the rest of the panel keeps its state. */}
         <QuestionKindBadge key={qIndex} kind="clues" />
       </div>
 
-      {/* Prompt — plain text */}
+      {/* Prompt — plain text, no card chrome. Matches the countdown /
+          put-in-order layout: the prompt line sits above the You/Opp
+          summary and the clues so the player has the question's framing
+          before any clues drop. */}
       <div className="px-1">
-        {question.categoryName && (
-          <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-brand-orange">
-            <Lightbulb className="size-3" />
-            {question.categoryName}
-          </span>
-        )}
-        <p className="mt-2 text-base font-black font-fun text-white">Who Am I?</p>
+        <p className="text-base font-black font-fun leading-snug text-white">{question.prompt}</p>
       </div>
 
       <SpecialResultSummary
@@ -1343,81 +1369,140 @@ function CluesPanel({
         </motion.div>
       )}
 
-      {!roundResolved && (
-        <div className="flex items-center justify-center gap-1.5 text-[11px] font-fun font-black uppercase tracking-[0.18em] text-white/55">
-          <Star className="size-3.5 text-brand-gold" />
-          <span>
-            Answer now <span className="text-white">{currentPoints} pts</span>
-          </span>
-        </div>
-      )}
-
-      {/* Clue rows — flat */}
-      <AnimatePresence>
+      {/* All clue cards rendered upfront — locked clues show `???`, revealed
+          clues show their text. Each row has a per-clue points pill on the
+          right (revealed = solid green / white text; locked = dark fill +
+          green border + green text). */}
+      <div>
         <div className="space-y-1.5">
-          {question.clues.slice(0, revealedClues).map((clue, index) => (
-            <motion.div
-              key={`${index}-${clue.content}`}
-              initial={{ opacity: 0, y: 10, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ type: 'spring', stiffness: 280, damping: 22 }}
-              className="rounded-[10px] bg-white/[0.04] px-5 py-4 text-center"
-            >
-              {clue.type === 'emoji' ? (
-                <span className="text-4xl">{clue.content}</span>
-              ) : (
-                <p className="text-base font-fun font-black uppercase tracking-wide text-white">{clue.content}</p>
-              )}
-            </motion.div>
-          ))}
+          {question.clues.map((clue, index) => {
+            const cluePoints = calculateCluesDisplayPoints(index + 1);
+            const revealed = index < revealedClues;
+            return (
+              <motion.div
+                key={`${index}-${clue.content}`}
+                initial={index === 0 ? false : { opacity: 0, y: 8, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: 'spring', stiffness: 280, damping: 22 }}
+                className="flex items-center gap-3 rounded-[14px] bg-white/[0.04] px-5 py-4"
+              >
+                <div className="min-w-0 flex-1 text-center">
+                  {revealed ? (
+                    clue.type === 'emoji' ? (
+                      <span className="text-4xl">{clue.content}</span>
+                    ) : (
+                      <p className="text-base font-fun font-black uppercase tracking-wide text-white">
+                        {clue.content}
+                      </p>
+                    )
+                  ) : (
+                    <p className="text-base font-fun font-black uppercase tracking-wide text-white/35">
+                      ???
+                    </p>
+                  )}
+                </div>
+                <span
+                  className={`inline-flex shrink-0 items-center justify-center rounded-[20px] border-[2px] border-brand-green tabular-nums ${
+                    revealed
+                      ? 'bg-brand-green text-white shadow-[0_0_10px_rgba(56,182,14,0.35)]'
+                      : 'bg-surface-page text-brand-green'
+                  }`}
+                  style={{
+                    fontFamily: "'Poppins', sans-serif",
+                    fontWeight: 600,
+                    fontSize: 18,
+                    letterSpacing: '0.02em',
+                    // Figma node 137 × 81 → ~68 × 40 at 1x design density.
+                    width: 'clamp(72px, 18vw, 96px)',
+                    height: 'clamp(40px, 10vw, 52px)',
+                  }}
+                  aria-label={`${cluePoints} points at this clue${revealed ? '' : ' (locked)'}`}
+                >
+                  {cluePoints} pt
+                </span>
+              </motion.div>
+            );
+          })}
         </div>
-      </AnimatePresence>
+      </div>
 
+      {/* Centered yellow clue indicator row. Filled yellow = revealed,
+          dark = still locked. */}
       {!roundResolved && (
         <div className="flex items-center justify-center gap-2">
-          {question.clues.map((_, index) => (
-            <div
-              key={index}
-              className={`h-2 w-10 rounded-full transition-colors duration-300 ${
-                index < revealedClues ? 'bg-brand-orange' : 'bg-white/10'
-              }`}
-            />
-          ))}
+          {question.clues.map((_, index) => {
+            const revealed = index < revealedClues;
+            return (
+              <div
+                key={index}
+                className={`size-3 rounded-full transition-colors duration-300 ${
+                  revealed
+                    ? 'bg-brand-yellow shadow-[0_0_10px_rgba(255,229,0,0.55)]'
+                    : 'bg-surface-page'
+                }`}
+              />
+            );
+          })}
         </div>
       )}
 
       {!roundResolved && (
         <div className="space-y-2">
-          <Input
-            type="text"
-            placeholder="Type your answer..."
-            value={guess}
-            onChange={(event) => setGuess(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                emitGuess();
-              }
-            }}
-            disabled={inputLocked}
-            autoFocus
-            className="h-11 rounded-[8px] border border-white/10 bg-white/[0.04] text-center text-base text-white placeholder:text-white/30 focus:border-brand-orange focus:bg-white/[0.06]"
-          />
-          <div className="grid grid-cols-2 gap-2">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="TYPE YOUR ANSWER"
+              value={guess}
+              onChange={(event) => setGuess(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  emitGuess();
+                }
+              }}
+              disabled={inputLocked}
+              autoFocus
+              aria-label="Type your answer"
+              className="h-14 w-full rounded-[20px] border-none bg-brand-blue px-5 text-center text-base uppercase text-white outline-none placeholder:text-white/55 placeholder:uppercase placeholder:tracking-[0.08em] focus:outline-none disabled:opacity-50"
+              style={{
+                fontFamily: "'Poppins', sans-serif",
+                fontWeight: 600,
+                letterSpacing: '0.08em',
+                boxShadow: '0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)',
+              }}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => emitGuess()}
               disabled={!guess.trim() || inputLocked}
-              className="rounded-[8px] bg-brand-green py-3 text-sm font-fun font-black uppercase tracking-wide text-white transition-transform hover:bg-brand-green-deep active:translate-y-[2px] disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label="Submit answer"
+              className="h-14 rounded-[20px] bg-brand-green text-white outline-none transition-colors hover:bg-brand-green-deep disabled:cursor-not-allowed disabled:opacity-40"
+              style={{
+                fontFamily: "'Poppins', sans-serif",
+                fontWeight: 600,
+                fontSize: 16,
+                letterSpacing: '0.06em',
+                boxShadow: '0 1.76px 6.334px 1.32px rgba(56, 182, 14, 0.25)',
+              }}
             >
-              Submit
+              SUBMIT
             </button>
             <button
               type="button"
               onClick={() => emitGuess({ giveUp: true })}
               disabled={inputLocked}
-              className="rounded-[8px] bg-white/[0.06] py-3 text-sm font-fun font-black uppercase tracking-wide text-white/70 transition-colors hover:bg-white/[0.10] hover:text-white active:translate-y-[2px] disabled:opacity-40"
+              aria-label="Give up"
+              className="h-14 rounded-[20px] bg-brand-red-soft text-white outline-none transition-colors hover:bg-brand-red-deep disabled:opacity-40"
+              style={{
+                fontFamily: "'Poppins', sans-serif",
+                fontWeight: 600,
+                fontSize: 16,
+                letterSpacing: '0.06em',
+                boxShadow: '0 1.76px 6.334px 1.32px rgba(255, 75, 75, 0.25)',
+              }}
             >
-              Give Up
+              GIVE UP
             </button>
           </div>
         </div>
@@ -1430,6 +1515,7 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
   const {
     matchId,
     qIndex,
+    totalQuestions,
     question,
     showOptions,
     timeRemaining,
@@ -1442,6 +1528,10 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
     countdownGuessAck,
     cluesGuessAck,
   } = props;
+
+  const displayQuestionNum = qIndex + 1;
+  const displayTimer = Math.max(0, timeRemaining ?? 0);
+  const timerLabel = displayTimer >= 10 ? `${displayTimer}` : `0${displayTimer}`;
 
   let content: ReactNode;
 
@@ -1496,8 +1586,29 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
   }
 
   return (
-    <div className="relative px-3 sm:px-4 lg:px-0">
+    <div className="relative px-4 sm:px-4 lg:px-0">
       <SpecialScoreFlightAnchors />
+      {/* QUESTION X/Y + timer header — exact same pill dimensions as
+          PossessionQuestionPanel (MCQ) so the special panels feel like
+          part of the same UI. Stays visible when the user scrolls down
+          to type an answer on mobile. Hidden once the round resolves. */}
+      {!roundResolved && (
+        <div className="mt-1.5 mb-2 flex items-stretch gap-2.5">
+          <div
+            className="flex flex-1 items-center justify-center rounded-[16px] bg-brand-blue px-5 text-white h-[40px] sm:h-[52px] md:h-[62px] lg:h-[72px]"
+            style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
+          >
+            QUESTION {displayQuestionNum}/{totalQuestions}
+          </div>
+          <div
+            className="flex w-[64px] items-center justify-center rounded-[16px] bg-brand-blue text-white h-[40px] sm:h-[52px] sm:w-[92px] md:h-[62px] md:w-[116px] lg:h-[72px] lg:w-[136px] tabular-nums"
+            style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
+            aria-label="Time remaining"
+          >
+            {timerLabel}
+          </div>
+        </div>
+      )}
       {content}
     </div>
   );

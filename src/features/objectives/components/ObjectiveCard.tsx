@@ -1,39 +1,13 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- Brand PNGs need raw img sizing. */
+
 import { memo } from "react";
 import { motion } from "motion/react";
-import {
-  Brain,
-  CalendarCheck,
-  CheckCircle2,
-  Coins,
-  Crown,
-  Flame,
-  Gamepad2,
-  Goal,
-  ShieldCheck,
-  Sparkles,
-  Target,
-  Trophy,
-  Users,
-} from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import type { Objective } from "../types";
 
-const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  Brain,
-  CalendarCheck,
-  CheckCircle2,
-  Coins,
-  Crown,
-  Flame,
-  Gamepad2,
-  Goal,
-  ShieldCheck,
-  Sparkles,
-  Target,
-  Trophy,
-  Users,
-};
+const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
 interface ObjectiveCardProps {
   objective: Objective;
@@ -44,80 +18,86 @@ export const ObjectiveCard = memo(function ObjectiveCard({
   objective,
   index,
 }: ObjectiveCardProps) {
-  const IconComponent = ICON_MAP[objective.icon] ?? Target;
   const progressPercent = objective.target > 0
     ? Math.min(100, Math.round((objective.progress / objective.target) * 100))
     : 0;
   const completed = objective.completed;
-  const categoryLabel = objective.metadata?.leadingCategoryName;
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, delay: index * 0.035 }}
-      className="rounded-[8px] border border-white/8 bg-surface-card shadow-[0_10px_30px_rgba(0,0,0,0.18)]"
+      transition={{ duration: 0.22, delay: index * 0.03 }}
+      className="rounded-[14px] border-2 border-brand-green"
     >
-      <div className="flex gap-3 p-4 md:gap-4 md:p-5">
-        <div
-          className={
-            completed
-              ? "flex size-11 shrink-0 items-center justify-center rounded-[8px] bg-brand-green-light/15 text-brand-green-light ring-1 ring-brand-green-light/35 md:size-12"
-              : "flex size-11 shrink-0 items-center justify-center rounded-[8px] bg-surface-card-tint text-brand-cyan ring-1 ring-white/8 md:size-12"
-          }
-        >
+      <div className="flex items-center gap-2.5 px-3 py-2.5 md:gap-3 md:px-4 md:py-3">
+        <div className="flex size-8 shrink-0 items-center justify-center md:size-10">
           {completed ? (
-            <CheckCircle2 className="size-5 md:size-6" />
+            <CheckCircle2 className="size-6 text-brand-green-light" />
           ) : (
-            <IconComponent className="size-5 md:size-6" />
+            <img src="/assets/obj_icon.png" alt="" className="size-full object-contain" />
           )}
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <div className="min-w-0">
-              <h3 className="truncate text-sm font-black uppercase tracking-wide text-white md:text-base">
-                {objective.title}
-              </h3>
-              <p className="mt-1 text-xs font-semibold leading-snug text-brand-slate md:text-sm">
-                {categoryLabel ? `${objective.description} Current: ${categoryLabel}.` : objective.description}
-              </p>
-            </div>
+          <h3
+            className="truncate uppercase text-white"
+            style={{ ...poppins, fontSize: "clamp(12px, 1.5vw, 14px)" }}
+          >
+            {objective.title}
+          </h3>
+          <p
+            className="mt-0.5 truncate uppercase text-white/50"
+            style={{ ...poppins, fontSize: "clamp(9px, 1.1vw, 10px)", fontWeight: 500 }}
+          >
+            {objective.description}
+          </p>
+        </div>
 
-            <span
-              className={
-                completed
-                  ? "rounded-full border border-brand-green-light/30 bg-brand-green-light/15 px-2.5 py-1 text-[10px] font-black uppercase text-brand-green-light"
-                  : "rounded-full border border-brand-cyan/25 bg-brand-cyan/10 px-2.5 py-1 text-[10px] font-black uppercase text-brand-cyan"
-              }
-            >
-              {completed ? "Reward earned" : `${progressPercent}%`}
+        <div className="hidden min-w-0 flex-[2] md:block">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="tabular-nums text-white" style={{ ...poppins, fontSize: 13 }}>
+              {progressPercent}%
+            </span>
+            <span className="tabular-nums text-white" style={{ ...poppins, fontSize: 13 }}>
+              {objective.progress}/{objective.target}
             </span>
           </div>
-
-          <div className="mt-4 rounded-[8px] bg-surface-deep p-2.5">
-            <div className="h-2.5 overflow-hidden rounded-full bg-surface-card-tint">
-              <div
-                className={completed ? "h-full rounded-full bg-brand-green-light" : "h-full rounded-full bg-brand-cyan"}
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-            <div className="mt-2 flex items-center justify-between text-[11px] font-black uppercase">
-              <span className={completed ? "text-brand-green-light" : "text-white"}>
-                {objective.progress}/{objective.target}
-              </span>
-              <div className="flex items-center gap-2 text-brand-slate">
-                <span className="inline-flex items-center gap-1 text-brand-yellow">
-                  <Coins className="size-3.5" />
-                  {objective.rewardCoins}
-                </span>
-                <span className="inline-flex items-center gap-1 text-brand-purple">
-                  <Sparkles className="size-3.5" />
-                  {objective.rewardXp} XP
-                </span>
-              </div>
-            </div>
+          <div className="mt-1 h-4 overflow-hidden rounded-[12px] bg-brand-green-deep/50">
+            <div
+              className="h-full rounded-[12px] bg-brand-green"
+              style={{ width: `${progressPercent}%` }}
+            />
           </div>
+        </div>
+
+        <div className="flex shrink-0 flex-col items-end gap-0.5 pl-1">
+          <div className="flex items-center gap-1">
+            <span className="tabular-nums text-white" style={{ ...poppins, fontSize: 12 }}>
+              {objective.rewardCoins}
+            </span>
+            <img src="/assets/coin-1.png" alt="" className="size-4 object-contain" />
+          </div>
+          <span className="tabular-nums text-white" style={{ ...poppins, fontSize: 11 }}>
+            {objective.rewardXp} XP
+          </span>
+        </div>
+      </div>
+
+      <div className="px-3 pb-2.5 md:hidden">
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="tabular-nums text-white" style={{ ...poppins, fontSize: 11 }}>
+            {progressPercent}%
+          </span>
+          <span className="tabular-nums text-white" style={{ ...poppins, fontSize: 11 }}>
+            {objective.progress}/{objective.target}
+          </span>
+        </div>
+        <div className="mt-1 h-3 overflow-hidden rounded-[10px] bg-brand-green-deep/50">
+          <div
+            className="h-full rounded-[10px] bg-brand-green"
+            style={{ width: `${progressPercent}%` }}
+          />
         </div>
       </div>
     </motion.article>

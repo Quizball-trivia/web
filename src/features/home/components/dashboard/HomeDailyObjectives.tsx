@@ -96,8 +96,8 @@ export function HomeDailyObjectives(props: HomeDailyObjectivesProps) {
 
                   <div className="mt-2">
                     <div className="mb-1 flex items-center justify-between text-[10px] font-bold text-muted-foreground">
-                      <span>{objective.progress}/{objective.target}</span>
                       <span>{Math.round(progressPercent)}%</span>
+                      <span>{objective.progress}/{objective.target}</span>
                     </div>
                     <Progress value={progressPercent} className="h-1.5" />
                   </div>
