@@ -3,12 +3,14 @@ import { Button } from '@/components/ui/button';
 import { X, RefreshCw } from 'lucide-react';
 import { LiveTournamentBracket, type TournamentMatch } from './LiveTournamentBracket';
 import { generateTournamentData } from '../__mocks__/tournamentData';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface TournamentLiveTrackerProps {
   onClose: () => void;
 }
 
 export function TournamentLiveTracker({ onClose }: TournamentLiveTrackerProps) {
+  const { t } = useLocale();
   const [matches, setMatches] = useState<TournamentMatch[]>(generateTournamentData);
   const [currentRound] = useState(1);
   const [lastUpdate, setLastUpdate] = useState(new Date());
@@ -34,7 +36,7 @@ export function TournamentLiveTracker({ onClose }: TournamentLiveTrackerProps) {
       <div className="sticky top-0 z-10 bg-background border-b p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl">Live Tournament</h1>
+            <h1 className="text-xl">{t("tournaments.liveTournament")}</h1>
             <div className="text-xs text-muted-foreground">
               Last updated: {lastUpdate.toLocaleTimeString()}
             </div>
@@ -75,7 +77,7 @@ export function TournamentLiveTracker({ onClose }: TournamentLiveTrackerProps) {
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div className="flex items-center gap-2">
             <div className="size-2 rounded-full bg-primary" />
-            <span>Playing Now</span>
+            <span>{t("tournaments.playingNow")}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="size-2 rounded-full bg-green-500" />
@@ -83,11 +85,11 @@ export function TournamentLiveTracker({ onClose }: TournamentLiveTrackerProps) {
           </div>
           <div className="flex items-center gap-2">
             <div className="size-2 rounded-full bg-muted" />
-            <span>Waiting</span>
+            <span>{t("tournaments.waiting")}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="size-2 rounded-full bg-destructive" />
-            <span>Eliminated</span>
+            <span>{t("tournaments.eliminated")}</span>
           </div>
         </div>
       </div>

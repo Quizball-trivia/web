@@ -8,6 +8,7 @@ import { AvatarDisplay } from '@/components/AvatarDisplay';
 import type { AchievementUnlockPayload, MatchFinalResultsPayload, MatchParticipant, MatchStandingPayload } from '@/lib/realtime/socket.types';
 import { cn } from '@/lib/utils';
 import { AchievementUnlockStrip } from '@/features/game/components/AchievementUnlockStrip';
+import { useLocale } from '@/contexts/LocaleContext';
 import type { AvatarCustomization } from '@/types/game';
 
 interface PartyQuizResultsScreenProps {
@@ -279,6 +280,7 @@ export function PartyQuizResultsScreen({
   onPlayAgain,
   onMainMenu,
 }: PartyQuizResultsScreenProps) {
+  const { t } = useLocale();
   const standings = useMemo<StandingRow[]>(() => {
     const participantMap = new Map(participants.map((participant) => [participant.userId, participant]));
     const payloadStandingMap = new Map((finalResults.standings ?? []).map((standing) => [standing.userId, standing]));
@@ -326,10 +328,10 @@ export function PartyQuizResultsScreen({
   const selfWon = finalResults.winnerId === selfUserId;
 
   const resultLabel = selfWon
-    ? 'You won the party quiz!'
+    ? t('partyResults.youWonPartyQuiz')
     : finalResults.winnerId
-      ? `${standings.find((s) => s.userId === finalResults.winnerId)?.username ?? 'Winner'} takes first!`
-      : 'Party quiz finished in a tie!';
+      ? t('partyResults.takesFirst', { winner: standings.find((s) => s.userId === finalResults.winnerId)?.username ?? t('partyResults.winnerFallback') })
+      : t('partyResults.tied');
 
   return (
     <div className="relative min-h-dvh overflow-hidden bg-surface-page-alt text-white">
@@ -396,14 +398,14 @@ export function PartyQuizResultsScreen({
             onClick={onPlayAgain}
             className="flex-1 rounded-2xl bg-brand-green px-5 py-3.5 font-poppins text-base font-semibold uppercase tracking-wider text-white transition-colors hover:bg-brand-green-deep"
           >
-            Play Again
+            {t('partyResults.playAgain')}
           </button>
           <button
             type="button"
             onClick={onMainMenu}
             className="flex-1 rounded-2xl border-2 border-white/15 bg-transparent px-5 py-3.5 font-poppins text-base font-semibold uppercase tracking-wider text-white/80 transition-colors hover:bg-white/5"
           >
-            Main Menu
+            {t('partyResults.mainMenu')}
           </button>
         </motion.div>
       </div>

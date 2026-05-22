@@ -1,4 +1,5 @@
 import { Gift, Target } from 'lucide-react';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface RewardsObjectivesSectionProps {
   lastSpinDate?: string;
@@ -11,6 +12,7 @@ export function RewardsObjectivesSection({
   onDailySpinClick,
   onObjectivesClick,
 }: RewardsObjectivesSectionProps) {
+  const { t } = useLocale();
   const hasSpunToday = lastSpinDate &&
     new Date(lastSpinDate).toDateString() === new Date().toDateString();
 
@@ -23,7 +25,7 @@ export function RewardsObjectivesSection({
           className="h-14 rounded-xl bg-card border border-border hover:border-primary/50 active:scale-[0.98] transition-all flex items-center justify-center gap-2 relative"
         >
           <Gift className="size-5 text-yellow-400" />
-          <span className="text-sm">Daily Spin</span>
+          <span className="text-sm">{t("home.dailySpin")}</span>
           {hasSpunToday && (
             <div className="absolute top-1.5 right-1.5 size-2 rounded-full bg-green-500 border border-background" />
           )}
@@ -35,7 +37,7 @@ export function RewardsObjectivesSection({
           className="h-14 rounded-xl bg-card border border-border hover:border-primary/50 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
         >
           <Target className="size-5 text-primary" />
-          <span className="text-sm">Objectives</span>
+          <span className="text-sm">{t("home.objectives")}</span>
         </button>
       </div>
     </div>

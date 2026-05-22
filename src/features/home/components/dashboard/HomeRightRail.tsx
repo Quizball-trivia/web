@@ -6,12 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { Users, User, ArrowRight, Trophy, Gamepad2, Zap, Timer } from 'lucide-react';
 import { useDailyChallenges } from '@/lib/queries/dailyChallenges.queries';
 import { useObjectives } from '@/lib/queries/objectives.queries';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface HomeRightRailProps {
   onOpenFriend: () => void;
 }
 
 export function HomeRightRail({ onOpenFriend }: HomeRightRailProps) {
+  const { t } = useLocale();
   const router = useRouter();
   const { data: dailyChallenges = [] } = useDailyChallenges();
   const { data: objectivesData } = useObjectives();
@@ -68,7 +70,7 @@ export function HomeRightRail({ onOpenFriend }: HomeRightRailProps) {
            >
               <div className="flex justify-between items-start mb-2">
                  <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-green-500 uppercase tracking-wider">Daily Focus</span>
+                    <span className="text-[10px] font-bold text-green-500 uppercase tracking-wider">{t("home.dailyFocus")}</span>
                     <h4 className="font-bold text-sm group-hover:text-primary transition-colors">{challenge?.title ?? "Daily challenge"}</h4>
                  </div>
                  <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20 shadow-[0_0_10px_-3px_hsl(var(--yellow-500)/0.3)]">
@@ -99,8 +101,8 @@ export function HomeRightRail({ onOpenFriend }: HomeRightRailProps) {
                         <Zap className="size-3.5" /> 
                     </div>
                     <div>
-                        <div className="text-xs font-bold leading-tight group-hover:text-yellow-400 transition-colors">Spin Daily Wheel</div>
-                        <div className="text-[10px] text-muted-foreground">Claim free rewards</div>
+                        <div className="text-xs font-bold leading-tight group-hover:text-yellow-400 transition-colors">{t("home.spinDailyWheel")}</div>
+                        <div className="text-[10px] text-muted-foreground">{t("home.claimFreeRewards")}</div>
                     </div>
                   </div>
                   <div className="text-right">
@@ -160,7 +162,7 @@ export function HomeRightRail({ onOpenFriend }: HomeRightRailProps) {
 
       {/* 2. Quick Actions */}
       <div className="space-y-3">
-         <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1">Quick Actions</h4>
+         <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1">{t("home.quickActions")}</h4>
          
          <Button 
             variant="ghost" 
@@ -171,7 +173,7 @@ export function HomeRightRail({ onOpenFriend }: HomeRightRailProps) {
                <Users className="size-4" />
             </div>
             <div className="text-left flex-1">
-               <div className="text-sm font-bold group-hover:text-primary transition-colors">Invite Friend</div>
+               <div className="text-sm font-bold group-hover:text-primary transition-colors">{t("home.inviteFriend")}</div>
             </div>
             <ArrowRight className="size-4 text-muted-foreground/30 group-hover:text-primary transition-colors" />
          </Button>
@@ -185,7 +187,7 @@ export function HomeRightRail({ onOpenFriend }: HomeRightRailProps) {
                <User className="size-4" />
             </div>
             <div className="text-left flex-1">
-               <div className="text-sm font-bold group-hover:text-primary transition-colors">Continue Career</div>
+               <div className="text-sm font-bold group-hover:text-primary transition-colors">{t("home.continueCareer")}</div>
             </div>
             <ArrowRight className="size-4 text-muted-foreground/30 group-hover:text-primary transition-colors" />
          </Button>
@@ -193,7 +195,7 @@ export function HomeRightRail({ onOpenFriend }: HomeRightRailProps) {
 
       {/* 3. Last Match Snapshot */}
       <div className="space-y-3">
-         <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1">Last Match</h4>
+         <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1">{t("home.lastMatch")}</h4>
          <div className="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-card/20">
             <div className="flex items-center gap-3">
                <div className="p-1.5 rounded bg-green-500/10 text-green-500">
