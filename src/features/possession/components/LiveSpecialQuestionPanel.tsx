@@ -36,6 +36,7 @@ import type {
 } from '@/lib/realtime/socket.types';
 import { getI18nText } from '@/lib/utils/i18n';
 import { calculateCluesDisplayPoints } from '@/utils/cluesScoring';
+import { useLocale } from '@/contexts/LocaleContext';
 
 type LiveSpecialQuestion =
   | ResolvedCountdownQuestion
@@ -176,6 +177,7 @@ function SpecialResultSummary({
   player: SpecialSummarySide;
   opponent: SpecialSummarySide;
 }) {
+  const { t } = useLocale();
   if (!visible) return null;
 
   // tone/status are kept on the data shape for now (callers still pass
@@ -218,7 +220,7 @@ function SpecialResultSummary({
                     {side.points ?? 0}
                   </span>
                   <span className="pb-1 leading-none text-brand-yellow/70" style={tailStyle}>
-                    PTS
+                    {t('possession.pts')}
                   </span>
                 </>
               ) : (
@@ -317,6 +319,7 @@ function CountdownPanel({
   myRound: MatchRoundResultPlayer | null;
   opponentRound: MatchRoundResultPlayer | null;
 }) {
+  const { t } = useLocale();
   const [guess, setGuess] = useState('');
   const [foundAnswers, setFoundAnswers] = useState<string[]>([]);
   const [opponentLiveFoundCount, setOpponentLiveFoundCount] = useState(0);
@@ -515,9 +518,9 @@ function CountdownPanel({
                   submitGuess();
                 }
               }}
-              placeholder="TYPE YOUR ANSWER"
+              placeholder={t('possession.typeYourAnswerPlaceholder')}
               disabled={inputLocked}
-              aria-label="Type your answer"
+              aria-label={t('possession.typeYourAnswerAriaLabel')}
               className="h-14 w-full rounded-[14px] border-none bg-brand-blue px-5 pr-14 text-center text-base uppercase text-white outline-none placeholder:text-white/55 placeholder:uppercase placeholder:tracking-[0.08em] focus:outline-none disabled:opacity-50"
               style={{
                 fontFamily: "'Poppins', sans-serif",
@@ -530,7 +533,7 @@ function CountdownPanel({
               type="button"
               onClick={submitGuess}
               disabled={inputLocked || !guess.trim()}
-              aria-label="Submit answer"
+              aria-label={t('possession.submitAnswer')}
               className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex size-9 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-transparent"
             >
               <Send className="size-4" />
@@ -825,6 +828,7 @@ function PutInOrderResultComparison({
   correctById: Map<string, { sortValue: number; index: number }>;
   itemById: Map<string, PutInOrderDisplayItem>;
 }) {
+  const { t } = useLocale();
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -832,26 +836,26 @@ function PutInOrderResultComparison({
       className="space-y-2 px-1"
     >
       <div className="text-[11px] font-fun font-black uppercase tracking-[0.22em] text-white/55">
-        Order Results
+        {t('possession.orderResults')}
       </div>
       <div className="grid grid-cols-2 gap-2 sm:gap-3">
         <PutInOrderCompactColumn
-          title="You"
+          title={t('results.you')}
           itemIds={playerOrderIds}
           correctById={correctById}
           itemById={itemById}
-          emptyText="No order submitted"
+          emptyText={t('possession.noOrderSubmitted')}
           tone="green"
           forceAllWrong={playerForceAllWrong}
           matchedCountOverride={playerMatchedCount}
           totalCountOverride={totalCount}
         />
         <PutInOrderCompactColumn
-          title="Opponent"
+          title={t('matchmaking.opponentFallback')}
           itemIds={opponentOrderIds}
           correctById={correctById}
           itemById={itemById}
-          emptyText="Opponent order unavailable"
+          emptyText={t('possession.opponentOrderUnavailable')}
           tone="red"
           forceAllWrong={opponentForceAllWrong}
           matchedCountOverride={opponentMatchedCount ?? undefined}
@@ -1200,6 +1204,7 @@ function CluesPanel({
   opponentRound: MatchRoundResultPlayer | null;
   cluesGuessAck: MatchCluesGuessAckPayload | null;
 }) {
+  const { t } = useLocale();
   const [guess, setGuess] = useState('');
   const [pendingGuess, setPendingGuess] = useState(false);
   const [manualRevealCount, setManualRevealCount] = useState(1);
@@ -1361,8 +1366,8 @@ function CluesPanel({
             {opponentRound && (
               <p className="text-[9px] font-fun font-black uppercase tracking-[0.16em] text-white/50">
                 {opponentRound.isCorrect && typeof opponentRound.clueIndex === 'number'
-                  ? <>Opp clue {opponentRound.clueIndex + 1}</>
-                  : <>Opp missed</>}
+                  ? t('possession.oppClue', { index: opponentRound.clueIndex + 1 })
+                  : t('possession.oppMissed')}
               </p>
             )}
           </div>
@@ -1451,7 +1456,7 @@ function CluesPanel({
           <div className="relative">
             <input
               type="text"
-              placeholder="TYPE YOUR ANSWER"
+              placeholder={t('possession.typeYourAnswerPlaceholder')}
               value={guess}
               onChange={(event) => setGuess(event.target.value)}
               onKeyDown={(event) => {
@@ -1461,7 +1466,7 @@ function CluesPanel({
               }}
               disabled={inputLocked}
               autoFocus
-              aria-label="Type your answer"
+              aria-label={t('possession.typeYourAnswerAriaLabel')}
               className="h-14 w-full rounded-[20px] border-none bg-brand-blue px-5 text-center text-base uppercase text-white outline-none placeholder:text-white/55 placeholder:uppercase placeholder:tracking-[0.08em] focus:outline-none disabled:opacity-50"
               style={{
                 fontFamily: "'Poppins', sans-serif",
@@ -1476,7 +1481,7 @@ function CluesPanel({
               type="button"
               onClick={() => emitGuess()}
               disabled={!guess.trim() || inputLocked}
-              aria-label="Submit answer"
+              aria-label={t('possession.submitAnswer')}
               className="h-14 rounded-[20px] bg-brand-green text-white outline-none transition-colors hover:bg-brand-green-deep disabled:cursor-not-allowed disabled:opacity-40"
               style={{
                 fontFamily: "'Poppins', sans-serif",
@@ -1486,13 +1491,13 @@ function CluesPanel({
                 boxShadow: '0 1.76px 6.334px 1.32px rgba(56, 182, 14, 0.25)',
               }}
             >
-              SUBMIT
+              {t('possession.submit')}
             </button>
             <button
               type="button"
               onClick={() => emitGuess({ giveUp: true })}
               disabled={inputLocked}
-              aria-label="Give up"
+              aria-label={t('possession.giveUp')}
               className="h-14 rounded-[20px] bg-brand-red-soft text-white outline-none transition-colors hover:bg-brand-red-deep disabled:opacity-40"
               style={{
                 fontFamily: "'Poppins', sans-serif",
@@ -1502,7 +1507,7 @@ function CluesPanel({
                 boxShadow: '0 1.76px 6.334px 1.32px rgba(255, 75, 75, 0.25)',
               }}
             >
-              GIVE UP
+              {t('possession.giveUp')}
             </button>
           </div>
         </div>
@@ -1512,6 +1517,7 @@ function CluesPanel({
 }
 
 export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
+  const { t } = useLocale();
   const {
     matchId,
     qIndex,
@@ -1603,7 +1609,7 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
           <div
             className="flex w-[64px] items-center justify-center rounded-[16px] bg-brand-blue text-white h-[40px] sm:h-[52px] sm:w-[92px] md:h-[62px] md:w-[116px] lg:h-[72px] lg:w-[136px] tabular-nums"
             style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
-            aria-label="Time remaining"
+            aria-label={t('possession.timeRemaining')}
           >
             {timerLabel}
           </div>

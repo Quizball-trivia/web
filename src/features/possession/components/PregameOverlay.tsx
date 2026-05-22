@@ -1,12 +1,14 @@
 'use client';
 
 import { motion, AnimatePresence } from 'motion/react';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface PregameOverlayProps {
   visible: boolean;
 }
 
 export function PregameOverlay({ visible }: PregameOverlayProps) {
+  const { t } = useLocale();
   return (
     <AnimatePresence>
       {visible && (
@@ -24,7 +26,7 @@ export function PregameOverlay({ visible }: PregameOverlayProps) {
           >
             <div className="text-5xl mb-3">⚽</div>
             <div className="text-4xl font-black text-white uppercase tracking-widest">
-              Kick Off!
+              {t('possession.kickOffExclaim')}
             </div>
           </motion.div>
         </motion.div>

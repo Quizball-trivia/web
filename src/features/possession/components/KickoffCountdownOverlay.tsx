@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 
 import { AvatarPreview } from '@/components/AvatarPreview';
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/contexts/LocaleContext';
 import type { AvatarCustomization } from '@/types/game';
 
 interface KickoffCountdownOverlayProps {
@@ -35,8 +36,10 @@ export function KickoffCountdownOverlay({
   opponentAvatarCustomization,
   className,
 }: KickoffCountdownOverlayProps) {
+  const { t } = useLocale();
   const playerCustomization = playerAvatarCustomization ?? { base: playerAvatarBase };
   const opponentCustomization = opponentAvatarCustomization ?? { base: opponentAvatarBase };
+  const resolvedLabel = label === 'Kickoff' ? t('possession.kickoff') : label;
 
   return (
     <div
@@ -106,7 +109,7 @@ export function KickoffCountdownOverlay({
         className="pointer-events-none absolute inset-0 flex items-center justify-center"
       >
         <div className="font-fun text-5xl font-black uppercase italic tracking-wide text-brand-yellow drop-shadow-[0_10px_0_rgba(0,0,0,0.35)] sm:text-7xl">
-          Kickoff
+          {resolvedLabel}
         </div>
       </motion.div>
     </div>

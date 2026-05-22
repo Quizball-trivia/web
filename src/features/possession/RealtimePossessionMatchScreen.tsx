@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Volume2, VolumeX } from 'lucide-react';
 import { QuitMatchModal } from '@/features/game/components/QuitMatchModal';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
+import { useLocale } from '@/contexts/LocaleContext';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { BarBattleFlightOverlay } from './components/BarBattleFlightOverlay';
 import { HalftimeScreen } from './components/HalftimeScreen';
@@ -41,6 +42,7 @@ interface RealtimePossessionMatchScreenProps {
 }
 
 export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScreenProps) {
+  const { t } = useLocale();
   // Bar-battle flight ghosts — fires +N from MCQ prompt onto pitch when the
   // 'avatar-anchored' variant is active (ranked-sim matches). No-op in
   // classic variant. Manages its own state internally.
@@ -185,7 +187,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
                 className="text-4xl font-black uppercase tracking-wider text-brand-red-soft font-fun"
                 style={{ textShadow: '0 0 30px rgba(255,75,75,0.5), 0 4px 0 rgba(200,40,40,0.8)' }}
               >
-                Penalty Shootout
+                {t('possession.penaltyShootout')}
               </motion.div>
               <motion.div
                 key={`pen-cd-${penaltyCountdownDisplay}`}
@@ -199,7 +201,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
                   </span>
                 </div>
               </motion.div>
-              <div className="text-sm font-bold uppercase tracking-widest text-white/60 font-fun">Get Ready</div>
+              <div className="text-sm font-bold uppercase tracking-widest text-white/60 font-fun">{t('possession.getReady')}</div>
             </motion.div>
           </motion.div>
         )}
@@ -223,7 +225,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
               className="w-full max-w-sm rounded-2xl border border-brand-red-soft/25 bg-surface-deep/95 px-5 py-4 text-center shadow-2xl"
             >
               <div className="font-fun text-[10px] font-bold uppercase tracking-[0.28em] text-brand-red-soft/70">
-                Finalizing Match
+                {t('possession.finalizingMatch')}
               </div>
               <div className="mt-2 font-fun text-base font-black text-white">
                 {forfeitPendingTitle}
@@ -254,13 +256,13 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
               className="w-full max-w-sm rounded-2xl border border-white/10 bg-surface-deep/95 px-5 py-4 text-center shadow-2xl"
             >
               <div className="font-fun text-[10px] font-bold uppercase tracking-[0.28em] text-white/50">
-                Match Paused
+                {t('possession.matchPaused')}
               </div>
               <div className="mt-2 font-fun text-base font-black text-white">
-                Opponent disconnected
+                {t('possession.opponentDisconnected')}
               </div>
               <div className="mt-1 font-fun text-sm font-bold text-white/60">
-                Waiting for them to reconnect
+                {t('possession.waitingForReconnect')}
               </div>
               <div className="mt-3 inline-flex items-center justify-center rounded-full bg-brand-blue px-5 py-2 font-fun text-2xl font-black tabular-nums text-white">
                 {pauseSeconds}
@@ -293,10 +295,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
         open={quitModalOpen}
         onOpenChange={setQuitModalOpen}
         playerClubId={props.playerFavoriteClub}
-        description="Leave temporarily and rejoin before the timer ends, or forfeit now."
-        secondaryConfirmLabel="Leave Temporarily"
         onSecondaryConfirm={handleTemporaryQuit}
-        confirmLabel="Forfeit Match"
         onConfirm={handleForfeit}
       />
 
