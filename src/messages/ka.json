@@ -104,6 +104,12 @@
     "leaveRewards": "გახვალ ჯილდოებიდან?",
     "quitMoneyDrop": "გათიშავ ფულის ვარდნას?"
   },
+  "achievements": {
+    "newBadge": "ახალი ნიშანი",
+    "newBadges": "ახალი ნიშნები",
+    "unlocked": "გახსნილია",
+    "countNew": "{count} ახალი"
+  },
   "career": {
     "missionObjectives": "მისიის მიზნები",
     "completionCriteria": "შესრულების კრიტერიუმი",

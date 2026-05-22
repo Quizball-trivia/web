@@ -104,6 +104,12 @@
     "leaveRewards": "Leave Rewards?",
     "quitMoneyDrop": "Quit Money Drop?"
   },
+  "achievements": {
+    "newBadge": "New Badge",
+    "newBadges": "New Badges",
+    "unlocked": "unlocked",
+    "countNew": "{count} new"
+  },
   "career": {
     "missionObjectives": "Mission Objectives",
     "completionCriteria": "Completion Criteria",

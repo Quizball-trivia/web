@@ -26,7 +26,23 @@ interface LocaleContextType {
   tClue: (clueId: string) => ClueTranslation;
 }
 
-const LocaleContext = createContext<LocaleContextType | undefined>(undefined);
+/**
+ * Default context — used when components are rendered outside the
+ * `<LocaleProvider>` (most commonly tests). Resolves keys via the static
+ * `translate('en', ...)` so components render real English copy without
+ * forcing every test fixture to mount a provider.
+ */
+const DEFAULT_LOCALE_CONTEXT: LocaleContextType = {
+  locale: 'en',
+  setLocale: () => {},
+  t: (key, params) => translate('en', key, params),
+  tCategory: (categoryId) => getCategoryTranslation('en', categoryId),
+  tQuestion: (questionId) => getQuestionTranslation('en', questionId),
+  tCountdown: (countdownId) => getCountdownTranslation('en', countdownId),
+  tClue: (clueId) => getClueTranslation('en', clueId),
+};
+
+const LocaleContext = createContext<LocaleContextType>(DEFAULT_LOCALE_CONTEXT);
 
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
   const preferredLanguage = useAuthStore((state) => state.user?.preferred_language);
@@ -81,9 +97,5 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useLocale() {
-  const context = useContext(LocaleContext);
-  if (context === undefined) {
-    throw new Error('useLocale must be used within a LocaleProvider');
-  }
-  return context;
+  return useContext(LocaleContext);
 }

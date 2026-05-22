@@ -31,8 +31,8 @@ type Outcome = 'win' | 'loss' | 'draw';
 const ACHIEVEMENT_SAMPLES: AchievementUnlockPayload[] = [
   {
     id: 'first_win',
-    title: 'First Blood',
-    description: 'Win your first ranked match',
+    title: { en: 'First Blood' },
+    description: { en: 'Win your first ranked match' },
     icon: 'Trophy',
     unlocked: true,
     progress: 1,
@@ -41,8 +41,8 @@ const ACHIEVEMENT_SAMPLES: AchievementUnlockPayload[] = [
   },
   {
     id: 'sharp_shooter',
-    title: 'Sharp Shooter',
-    description: '90%+ accuracy in a ranked match',
+    title: { en: 'Sharp Shooter' },
+    description: { en: '90%+ accuracy in a ranked match' },
     icon: 'Star',
     unlocked: true,
     progress: 1,
