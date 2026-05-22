@@ -64,7 +64,7 @@ export interface ProfileRecentMatch {
 export function toProfileRecentMatch(match: RecentMatchSummary): ProfileRecentMatch {
   return {
     id: match.matchId,
-    mode: match.mode === "ranked" ? "Ranked" : "Friendly",
+    mode: match.mode === "ranked" ? "ranked" : "friendly",
     competition: match.competition,
     result: match.result === "win" ? "Win" : match.result === "loss" ? "Loss" : "Draw",
     time: match.timeLabel,
@@ -541,10 +541,10 @@ export function ProfileWeb({
               {/* Mode header card */}
               <div className="flex h-12 shrink-0 items-center justify-between rounded-[20px] border-2 border-brand-blue px-6">
                 <span className="font-poppins text-sm font-semibold uppercase text-white">
-                  Ranked: <span className="text-brand-yellow">{rankedStats?.gamesPlayed ?? 0}</span>
+                  {t('profileScreen.rankedLabel')}: <span className="text-brand-yellow">{rankedStats?.gamesPlayed ?? 0}</span>
                 </span>
                 <span className="font-poppins text-sm font-semibold uppercase text-white">
-                  Friendly: <span className="text-white">{friendlyStats?.gamesPlayed ?? 0}</span>
+                  {t('profileScreen.friendlyLabel')}: <span className="text-white">{friendlyStats?.gamesPlayed ?? 0}</span>
                 </span>
               </div>
 
@@ -559,7 +559,7 @@ export function ProfileWeb({
                       >
                         {wins}
                       </div>
-                      <div className="mt-3 font-poppins text-sm font-semibold uppercase text-white">Win</div>
+                      <div className="mt-3 font-poppins text-sm font-semibold uppercase text-white">{t('profileScreen.win')}</div>
                     </div>
                     <div>
                       <div
@@ -568,7 +568,7 @@ export function ProfileWeb({
                       >
                         {draws}
                       </div>
-                      <div className="mt-3 font-poppins text-sm font-semibold uppercase text-white">Draw</div>
+                      <div className="mt-3 font-poppins text-sm font-semibold uppercase text-white">{t('profileScreen.draw')}</div>
                     </div>
                     <div>
                       <div
@@ -577,12 +577,12 @@ export function ProfileWeb({
                       >
                         {losses}
                       </div>
-                      <div className="mt-3 font-poppins text-sm font-semibold uppercase text-white">Lose</div>
+                      <div className="mt-3 font-poppins text-sm font-semibold uppercase text-white">{t('profileScreen.lose')}</div>
                     </div>
                   </div>
                 ) : (
                   <div className="font-poppins text-sm font-semibold uppercase text-white/50 text-center py-10">
-                    No matches played yet.
+                    {t('profileScreen.noMatchesPlayed')}
                   </div>
                 )}
               </div>
@@ -597,7 +597,7 @@ export function ProfileWeb({
                 className="rounded-[20px] border-2 border-brand-blue px-6 py-5"
               >
                 <h3 className="font-poppins text-sm font-semibold uppercase text-white text-center mb-4">
-                  Preferences
+                  {t('profileScreen.preferences')}
                 </h3>
                 <div className="divide-y divide-white/15">
                   {/* Country */}
@@ -612,7 +612,7 @@ export function ProfileWeb({
                   )}
                   {/* Club */}
                   <div className="flex items-center justify-between py-3.5">
-                    <span className="font-poppins text-sm font-semibold uppercase text-white/50">Club</span>
+                    <span className="font-poppins text-sm font-semibold uppercase text-white/50">{t('profileScreen.club')}</span>
                     <div className="flex items-center gap-2">
                       {isEditingClub ? (
                         <div className="w-48">
@@ -758,7 +758,7 @@ export function ProfileWeb({
               className="text-xl uppercase text-white"
               style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, letterSpacing: '0', lineHeight: 1 }}
             >
-              Recent Activity
+              {t('profileScreen.recentActivity')}
             </h3>
             <div className="space-y-2.5">
               {recentMatchesLoading && (
@@ -793,10 +793,10 @@ export function ProfileWeb({
                 const borderColor = isWin ? 'border-brand-green' : isLoss ? 'border-brand-red-deep' : 'border-brand-slate-deep';
                 const rpPillTone = isWin ? 'bg-brand-green-deep text-white' : isLoss ? 'bg-[#B8401D] text-white' : 'bg-brand-slate-deep text-white';
                 const competitionLabel = match.competition === 'friendly'
-                  ? 'Friendly'
+                  ? t('profileScreen.modeFriendly')
                   : match.competition === 'placement'
-                    ? 'Placement'
-                    : 'Ranked';
+                    ? t('profileScreen.modePlacement')
+                    : t('profileScreen.modeRanked');
                 const showRpDelta = match.competition !== 'friendly' && match.rpDelta !== null;
                 const rpDelta = match.rpDelta ?? 0;
                 const formattedRpDelta = `${rpDelta >= 0 ? '+' : ''}${rpDelta} RP`;
@@ -819,7 +819,7 @@ export function ProfileWeb({
                     {/* Info */}
                     <div className="min-w-0 flex-1">
                       <div className="font-poppins text-[12px] md:text-[14px] font-semibold leading-none text-white uppercase truncate">
-                        vs {match.opponent}
+                        {t('profileScreen.vsOpponent', { opponent: match.opponent })}
                       </div>
                       <div className="mt-1 font-poppins text-[8px] md:text-[9px] font-medium leading-none tracking-[0.08em] text-white/70 uppercase">
                         {competitionLabel} · {match.time}
@@ -867,12 +867,12 @@ export function ProfileWeb({
                   {isMatchesExpanded ? (
                     <>
                       <ChevronUp className="size-4" />
-                      Show less
+                      {t('profileScreen.showLess')}
                     </>
                   ) : (
                     <>
                       <ChevronDown className="size-4" />
-                      Show {hiddenCount} more
+                      {t('profileScreen.showMore', { count: hiddenCount })}
                     </>
                   )}
                 </button>
