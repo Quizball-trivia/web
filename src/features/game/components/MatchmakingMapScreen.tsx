@@ -28,9 +28,6 @@ import {
 import { geoNaturalEarth1 } from "d3-geo";
 import worldTopo from "world-atlas/land-110m.json";
 
-const MATCHMAKING_MUSIC_URL =
-  "/sounds/Ronaldo V-Football Soundtrack - Track 0 (Belo Horizonti).mp3";
-
 // ── Types ──
 
 export interface MatchmakingDebugInfo {
@@ -1240,33 +1237,11 @@ export function MatchmakingMapScreen({
     showFoundState &&
     (preparingMatchStuck ||
       debugInfo?.errorCode === "MATCH_PREPARATION_FAILED");
-  const matchmakingAudioRef = useRef<HTMLAudioElement | null>(null);
+  // Matchmaking search music removed — the previous track was copyrighted.
+  // Leaving the mute button + state in place so it can be re-enabled with a
+  // licensed track without touching the rest of the screen.
   const [musicMuted, setMusicMuted] = useState(() => isMuted());
   const scanRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // Play matchmaking music while searching
-  useEffect(() => {
-    if (musicMuted || showFoundState) return;
-
-    const audio = new Audio(MATCHMAKING_MUSIC_URL);
-    audio.currentTime = 10;
-    audio.volume = 0.4;
-    audio.loop = true;
-    matchmakingAudioRef.current = audio;
-
-    const playPromise = audio.play();
-    if (playPromise) {
-      playPromise.catch(() => {
-        // Autoplay blocked — silently ignore
-      });
-    }
-
-    return () => {
-      audio.pause();
-      audio.src = "";
-      matchmakingAudioRef.current = null;
-    };
-  }, [musicMuted, showFoundState]);
 
   const handleToggleMusicMute = () => {
     setMusicMuted((prev) => !prev);
