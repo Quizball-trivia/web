@@ -7,7 +7,6 @@ import type {
   MatchRoundResultPlayer,
 } from '@/lib/realtime/socket.types';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
-import { FLIGHT_TOTAL_MS } from '../components/BarBattleFlightOverlay';
 import type { BarBattleState } from '../components/BarBattleOverlay';
 
 // ─── Timing constants (ms) ──────────────────────────────────────────────────
@@ -37,7 +36,7 @@ const RESULT_HOLD_MS = 320;       // Show remaining bars briefly before possessi
 const DONE_LINGER_MS = 100;
 const UNOPPOSED_PULSE_RESULT_HOLD_MS = 80;
 const UNOPPOSED_PULSE_DONE_LINGER_MS = 40;
-const RANKED_SCORE_FLIGHT_HANDOFF_MS = FLIGHT_TOTAL_MS + 120;
+const RANKED_SCORE_FLIGHT_HANDOFF_MS = 420;
 
 const POINTS_PER_BAR = 10;
 const MAX_BARS = 12;

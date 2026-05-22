@@ -570,6 +570,7 @@ export function useRealtimePossessionMatchController({
             props: {
               matchId: match.matchId,
               qIndex: localQuestion.qIndex,
+              totalQuestions: localQuestion.total ?? 12,
               question: specialQuestion,
               showOptions: state.showOptions,
               timeRemaining: state.timeRemaining,

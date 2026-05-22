@@ -68,7 +68,7 @@ export function LeaderboardPodium({ topThree, onEntryClick }: LeaderboardPodiumP
   ];
 
   return (
-    <div className="overflow-hidden rounded-[10px] bg-surface-page p-4 pt-10 sm:p-6 sm:pt-14 pb-0">
+    <div className="overflow-visible px-4 pt-10 sm:px-6 sm:pt-14">
       <div className="flex items-end justify-center gap-2 sm:gap-4 w-full max-w-md mx-auto">
         {players.map(({ entry, rank }) => {
           const config = podiumConfig[rank];

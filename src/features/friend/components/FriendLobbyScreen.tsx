@@ -58,10 +58,11 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
         ? "Waiting for everyone to ready up..."
         : "Waiting for both players to ready up...";
 
-  return (
-    <div className="container mx-auto max-w-5xl py-6 animate-in fade-in space-y-6 font-fun">
+  const poppins = "'Poppins', sans-serif";
 
-      {/* Header with H2H */}
+  return (
+    <div className="container mx-auto max-w-5xl py-6 animate-in fade-in space-y-6">
+
       <LobbyHeader
         lobbyName={lobby?.displayName}
         lobbyCode={lobbyCode}
@@ -71,7 +72,6 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Settings Panel (Host Controls) */}
         <div className="lg:col-span-2 space-y-6">
           <LobbySettings
             isHost={isCurrentHost}
@@ -82,55 +82,80 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
           />
         </div>
 
-        {/* Ready / Status Panel */}
         <div className="space-y-6">
-          <div className="bg-surface-card rounded-2xl border-b-4 border-surface-card-deep sticky top-4">
-            <div className="px-5 py-4 border-b-[3px] border-surface-card-deep">
-              <h2 className="text-lg font-black text-white">Ready Check</h2>
+          <div className="rounded-[20px]">
+            <div className="px-1 pb-1">
+              <h2
+                className="text-white uppercase"
+                style={{ fontFamily: poppins, fontWeight: 600, fontSize: 16, letterSpacing: '0.04em' }}
+              >
+                Ready Check
+              </h2>
             </div>
-            <div className="p-5 space-y-4">
-              <p className="text-sm font-bold text-brand-slate">
+            <div
+              className="rounded-[20px] p-5 space-y-4 lg:mt-6"
+              style={{
+                background: 'linear-gradient(180deg, #1645FF 35%, #1a35a1 100%)',
+              }}
+            >
+              <p
+                className="text-white/70"
+                style={{ fontFamily: poppins, fontWeight: 500, fontSize: 13, lineHeight: 1.4 }}
+              >
                 {readyCopy}
               </p>
 
-              {/* Mark Ready */}
               <button
                 onClick={actions.handleReadyToggle}
                 disabled={!lobby}
                 className={cn(
-                  "w-full py-4 rounded-2xl border-b-4 text-base font-black uppercase tracking-wide active:translate-y-[2px] active:border-b-2 transition-all",
+                  "w-full h-14 rounded-[20px] uppercase transition-colors flex items-center justify-center gap-2 disabled:opacity-60",
                   me?.isReady
-                    ? "bg-surface-card-tint border-surface-card text-brand-slate hover:bg-[#2D4A55]"
-                    : "bg-brand-green-light border-brand-green text-white hover:bg-brand-green shadow-[0_0_20px_rgba(88,204,2,0.4),0_0_40px_rgba(88,204,2,0.15)]"
+                    ? "bg-black/30 text-white/70 hover:bg-black/40"
+                    : "bg-surface-page text-white hover:bg-surface-page/90"
                 )}
+                style={{
+                  fontFamily: poppins,
+                  fontWeight: 600,
+                  fontSize: 15,
+                  letterSpacing: '0.04em',
+                }}
               >
                 {me?.isReady ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <CheckCircle2 className="size-5" /> Ready (Tap to unready)
-                  </span>
+                  <>
+                    <CheckCircle2 className="size-5 text-brand-green-light" /> Ready (Tap to unready)
+                  </>
                 ) : (
-                  "Mark Ready"
+                  <>
+                    <CheckCircle2 className="size-5 text-brand-yellow" strokeWidth={2.5} />
+                    Mark Ready
+                  </>
                 )}
               </button>
 
-              {/* Start Match */}
               {(settings?.gameMode === "friendly_possession" || settings?.gameMode === "friendly_party_quiz") && (
                 <button
                   onClick={actions.handleStartMatch}
                   disabled={!canStartMatch}
                   className={cn(
-                    "w-full py-3.5 rounded-2xl border-b-4 text-sm font-black uppercase tracking-wide transition-all",
+                    "w-full h-14 rounded-[20px] uppercase transition-colors flex items-center justify-center gap-2",
                     canStartMatch
-                      ? "bg-brand-cyan border-brand-cyan-deep text-white hover:bg-brand-cyan active:translate-y-[2px] active:border-b-2"
-                      : "bg-surface-card-tint border-surface-card text-brand-slate/50 cursor-not-allowed",
-                    isStartingMatch && "cursor-wait bg-brand-cyan-deep border-brand-cyan-deep"
+                      ? "bg-brand-blue text-white hover:bg-brand-blue/90 border-2 border-white/20"
+                      : "bg-black/20 text-white/35 cursor-not-allowed",
+                    isStartingMatch && "cursor-wait"
                   )}
+                  style={{
+                    fontFamily: poppins,
+                    fontWeight: 600,
+                    fontSize: 14,
+                    letterSpacing: '0.04em',
+                  }}
                 >
                   {isStartingMatch ? (
-                    <span className="flex items-center justify-center gap-2">
+                    <>
                       <Loader2 className="size-4 animate-spin" />
                       Starting Match...
-                    </span>
+                    </>
                   ) : (
                     startLabel
                   )}
@@ -138,29 +163,34 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
               )}
 
               {isStartingMatch && (
-                <div className="bg-surface-deep rounded-xl border-b-[3px] border-surface-card-deep py-2 px-3 text-center animate-pulse">
-                  <span className="text-[11px] font-black uppercase tracking-wider text-brand-cyan">
+                <div className="bg-black/30 rounded-[14px] py-2 px-3 text-center animate-pulse">
+                  <span
+                    className="text-brand-yellow uppercase"
+                    style={{ fontFamily: poppins, fontWeight: 600, fontSize: 11, letterSpacing: '0.1em' }}
+                  >
                     Preparing match...
                   </span>
                 </div>
               )}
 
-              {/* Leave Lobby */}
               <button
                 onClick={actions.handleLeaveLobby}
                 disabled={!lobby}
-                className="w-full py-3.5 rounded-2xl bg-surface-card border-b-4 border-surface-card-deep text-sm font-black text-brand-red-soft uppercase tracking-wide hover:bg-brand-red-soft hover:text-white hover:border-brand-red-deep active:translate-y-[2px] active:border-b-2 transition-all flex items-center justify-center gap-2"
+                className="w-full h-12 rounded-[20px] border-2 border-brand-red-soft bg-transparent text-brand-red-soft uppercase transition-colors hover:bg-brand-red-soft/15 disabled:opacity-50 flex items-center justify-center gap-2"
+                style={{ fontFamily: poppins, fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
               >
                 <LogOut className="size-4" />
                 Leave Lobby
               </button>
 
-              {/* Status */}
-              <div className="bg-surface-deep rounded-xl border-b-[3px] border-surface-card-deep py-2.5 px-3 text-center">
-                <span className={cn(
-                  "text-xs font-black uppercase tracking-wider",
-                  allReady ? "text-brand-green-light" : "text-brand-slate"
-                )}>
+              <div className="py-1 text-center">
+                <span
+                  className={cn(
+                    "uppercase",
+                    allReady ? "text-brand-green-light" : "text-white/60"
+                  )}
+                  style={{ fontFamily: poppins, fontWeight: 600, fontSize: 11, letterSpacing: '0.1em' }}
+                >
                   {statusCopy}
                 </span>
               </div>

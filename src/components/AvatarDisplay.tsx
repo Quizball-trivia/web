@@ -88,7 +88,7 @@ export function AvatarDisplay({
   return (
     <div
       className={cn(
-        'relative shrink-0',
+        'relative shrink-0 bg-transparent',
         cropClass,
         sizeClasses[size],
         className,
@@ -96,7 +96,7 @@ export function AvatarDisplay({
     >
       {/* Inner clipper — clips the figure to the avatar shape. Flag sits OUTSIDE this clipper
           so it can extend past the avatar's circular bounds without being cropped. */}
-      <div className={cn('absolute inset-0 flex items-center justify-center overflow-hidden', cropClass)}>
+      <div className={cn('absolute inset-0 flex items-center justify-center overflow-hidden bg-transparent', cropClass)}>
         {/* Wrapper at canonical Figma aspect ratio so item % positions land precisely.
             h-[88%] leaves ~6% top/bottom margin so the figure's head/feet don't clip the rounded crop. */}
         <div className="relative h-[88%]" style={{ aspectRatio: '495.25 / 543.03' }}>

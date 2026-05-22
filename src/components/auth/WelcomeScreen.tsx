@@ -694,7 +694,7 @@ export function WelcomeScreen() {
                 )}
               </AnimatePresence>
 
-              <div ref={landingPitchRef} className="relative overflow-hidden rounded-[28px] border border-white/8 bg-[#0B1417] p-2 md:rounded-[34px] md:p-3">
+              <div ref={landingPitchRef} className="relative overflow-hidden rounded-[28px] border border-white/8 bg-surface-darkest p-2 md:rounded-[34px] md:p-3">
                 <div className="absolute inset-x-10 bottom-2 h-16 rounded-full bg-brand-green/18 blur-3xl" />
                 <div className="relative overflow-hidden rounded-[22px] md:rounded-[28px]">
                   <PitchVisualization

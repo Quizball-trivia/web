@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { AnimatePresence } from "motion/react";
 import { PitchVisualization } from "@/features/possession/components/PitchVisualization";
 import { PossessionHUD } from "@/features/possession/components/PossessionHUD";
-import { PossessionQuestionPanel } from "@/features/possession/components/PossessionQuestionPanel";
+import { PossessionQuestionPanel } from "@/components/game/PossessionQuestionPanel";
 import { PossessionFeed } from "@/features/possession/components/PossessionFeed";
 import { GoalCelebrationOverlay } from "@/features/possession/components/GoalCelebrationOverlay";
 import { usePlayerAvatar } from "@/hooks/usePlayerAvatar";

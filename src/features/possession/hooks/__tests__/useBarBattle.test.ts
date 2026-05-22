@@ -2,7 +2,6 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MatchRoundResultPayload, MatchRoundResultPlayer } from '@/lib/realtime/socket.types';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
-import { FLIGHT_TOTAL_MS } from '../../components/BarBattleFlightOverlay';
 import {
   getBarBattleFieldLockMs,
   getBarBattleGoalAttackDelayMs,
@@ -141,7 +140,7 @@ describe('useBarBattle', () => {
     expect(handoffMs - nonShotTotalMs).toBeLessThan(700);
   });
 
-  it('waits for ranked score flights before spawning bars', async () => {
+  it('starts ranked bars after the shortened score-flight handoff', async () => {
     useRealtimeMatchStore.setState({ match: { variant: 'ranked_sim' } as never });
 
     const myRound = makePlayer(70, true);
@@ -174,17 +173,17 @@ describe('useBarBattle', () => {
     await act(async () => {});
 
     act(() => {
-      vi.advanceTimersByTime(FLIGHT_TOTAL_MS);
+      vi.advanceTimersByTime(499);
     });
 
     expect(result.current).toMatchObject({
-      phase: 'both-score',
+      phase: 'convert',
       playerBars: 7,
       opponentBars: 0,
     });
 
     act(() => {
-      vi.advanceTimersByTime(250);
+      vi.advanceTimersByTime(1);
     });
 
     expect(result.current).toMatchObject({

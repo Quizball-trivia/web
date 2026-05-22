@@ -1,8 +1,8 @@
 /* eslint-disable @next/next/no-img-element -- Category images are runtime CMS URLs. */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Check, Eye, EyeOff, Lock, Shuffle, Trophy } from "lucide-react";
+import { Check, Eye, EyeOff, Lock, Search, Shuffle, Trophy } from "lucide-react";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
@@ -94,10 +94,17 @@ export function LobbySettings({
   // --- Category state ---
   const serverSelectedCategoryId = settings?.friendlyCategoryAId ?? null;
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(serverSelectedCategoryId);
+  const [categorySearch, setCategorySearch] = useState("");
   const lastSentCategoryIdRef = useRef<string | null>(null);
   const handledErrorVersionRef = useRef(0);
   const canEdit = Boolean(isHost && lobby?.status === "waiting" && !lobby?.members.every((m) => m.isReady));
   const lastLobbyIdRef = useRef<string | null>(null);
+
+  const filteredCategories = useMemo(() => {
+    const query = categorySearch.trim().toLowerCase();
+    if (!query) return categories;
+    return categories.filter((cat) => cat.name.toLowerCase().includes(query));
+  }, [categories, categorySearch]);
 
   const clearInFlightTimeout = useCallback(() => {
     if (!inFlightTimeoutRef.current) return;
@@ -399,45 +406,52 @@ export function LobbySettings({
 
   // --- Render ---
   return (
-    <div className="bg-surface-card rounded-2xl border-b-4 border-surface-card-deep font-fun">
-      {/* Header */}
-      <div className="px-5 py-4 border-b-[3px] border-surface-card-deep flex items-center justify-between">
-        <h2 className="text-lg font-black text-white">Game Setup</h2>
+    <div className="rounded-[20px]">
+      <div className="px-5 pb-1 flex items-center justify-between">
+        <h2
+          className="uppercase text-white"
+          style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 16, letterSpacing: '0.04em' }}
+        >
+          Game Setup
+        </h2>
         {!isHost && (
-          <span className="flex items-center gap-1.5 text-[10px] font-black text-brand-slate bg-surface-card-tint px-2.5 py-1 rounded-full border-b-2 border-surface-card uppercase">
+          <span
+            className="flex items-center gap-1.5 text-brand-slate uppercase"
+            style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 10, letterSpacing: '0.08em' }}
+          >
             <Lock className="size-3" /> Host Only
           </span>
         )}
       </div>
 
-      <div className="p-5 space-y-6">
+      <div className="rounded-[20px] p-5 space-y-6">
         {/* Mode Selector */}
         <div className="space-y-3">
           <span className="text-[10px] font-black text-brand-slate uppercase tracking-wider">Match Mode</span>
           {isPartyLocked ? (
-            <div className="rounded-xl border-b-[3px] border-surface-card-deep bg-surface-deep p-1.5">
-              <div className="flex items-center justify-between rounded-lg bg-brand-purple/15 px-4 py-3 text-white border-b-[3px] border-[#B066E0]">
+            <div className="rounded-[14px] bg-surface-deep p-1.5">
+              <div className="flex items-center justify-between rounded-[10px] bg-brand-blue px-4 py-3 text-white">
                 <div>
                   <div className="text-sm font-black uppercase tracking-wide">Party Quiz</div>
-                  <div className="text-[10px] font-bold text-brand-slate-light">
+                  <div className="text-[10px] font-bold text-white/70">
                     Multiplayer friendly lobbies automatically use standings mode.
                   </div>
                 </div>
-                <span className="rounded-full bg-brand-purple px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white">
+                <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white">
                   {memberCount}/6
                 </span>
               </div>
             </div>
           ) : (
-            <div className="flex bg-surface-deep rounded-xl border-b-[3px] border-surface-card-deep p-1">
+            <div className="flex bg-surface-deep rounded-[14px] p-1 gap-1">
               <button
                 onClick={() => handleModeChange('friendly_possession')}
                 disabled={!canEdit}
                 className={cn(
-                  "flex-1 py-2.5 rounded-lg text-sm font-black uppercase tracking-wide transition-all",
+                  "flex-1 py-2.5 rounded-[10px] text-sm font-black uppercase tracking-wide transition-colors",
                   mode === 'friendly_possession'
-                    ? "bg-brand-cyan text-white border-b-[3px] border-brand-cyan-deep"
-                    : "text-brand-slate hover:text-white"
+                    ? "bg-brand-blue text-white"
+                    : "text-white/55 hover:text-white"
                 )}
               >
                 Classic
@@ -446,10 +460,10 @@ export function LobbySettings({
                 onClick={() => handleModeChange('friendly_party_quiz')}
                 disabled={!canEdit}
                 className={cn(
-                  "flex-1 py-2.5 rounded-lg text-sm font-black uppercase tracking-wide transition-all",
+                  "flex-1 py-2.5 rounded-[10px] text-sm font-black uppercase tracking-wide transition-colors",
                   mode === 'friendly_party_quiz'
-                    ? "bg-brand-purple text-white border-b-[3px] border-[#B066E0]"
-                    : "text-brand-slate hover:text-white"
+                    ? "bg-brand-blue text-white"
+                    : "text-white/55 hover:text-white"
                 )}
               >
                 Party Quiz
@@ -458,10 +472,10 @@ export function LobbySettings({
                 onClick={() => handleModeChange('ranked_sim')}
                 disabled={!canEdit}
                 className={cn(
-                  "flex-1 py-2.5 rounded-lg text-sm font-black uppercase tracking-wide transition-all",
+                  "flex-1 py-2.5 rounded-[10px] text-sm font-black uppercase tracking-wide transition-colors",
                   mode === 'ranked_sim'
-                    ? "bg-brand-orange text-white border-b-[3px] border-[#DB8200]"
-                    : "text-brand-slate hover:text-white"
+                    ? "bg-brand-blue text-white"
+                    : "text-white/55 hover:text-white"
                 )}
               >
                 Ranked Sim
@@ -486,19 +500,14 @@ export function LobbySettings({
             onClick={handleVisibilityClick}
             disabled={!canEdit}
             className={cn(
-              "w-full flex items-center justify-between p-3.5 rounded-xl border-b-[3px] transition-all",
-              isPublic
-                ? "bg-brand-green-light/15 border-brand-green-light/40"
-                : "bg-surface-deep border-surface-card-deep",
+              "w-full flex items-center justify-between p-3.5 rounded-[14px] border-2 border-brand-green bg-transparent transition-colors",
               !canEdit && "opacity-50 cursor-not-allowed"
             )}
           >
             <div className="flex items-center gap-3">
               <div className={cn(
-                "size-9 rounded-lg flex items-center justify-center border-b-2",
-                isPublic
-                  ? "bg-brand-green-light border-brand-green"
-                  : "bg-surface-card-tint border-surface-card"
+                "size-9 rounded-[10px] flex items-center justify-center",
+                isPublic ? "bg-brand-green" : "bg-surface-card-tint"
               )}>
                 {isPublic ? <Eye className="size-4 text-white" /> : <EyeOff className="size-4 text-brand-slate" />}
               </div>
@@ -512,10 +521,8 @@ export function LobbySettings({
               </div>
             </div>
             <div className={cn(
-              "w-10 h-6 rounded-full border-b-2 transition-all relative",
-              isPublic
-                ? "bg-brand-green-light border-brand-green"
-                : "bg-surface-card-tint border-surface-card"
+              "w-10 h-6 rounded-full transition-colors relative",
+              isPublic ? "bg-brand-green" : "bg-surface-card-tint"
             )}>
               <div className={cn(
                 "absolute top-0.5 size-5 rounded-full bg-white transition-all shadow-sm",
@@ -533,21 +540,16 @@ export function LobbySettings({
               onClick={handleRandomToggle}
               disabled={!canEdit}
               className={cn(
-                "w-full flex items-center justify-between p-3.5 rounded-xl border-b-[3px] transition-all",
-                isRandom
-                  ? "bg-brand-purple/15 border-brand-purple/40"
-                  : "bg-surface-deep border-surface-card-deep",
+                "w-full flex items-center justify-between p-3.5 rounded-[14px] border-2 border-brand-yellow bg-transparent transition-colors",
                 !canEdit && "opacity-50 cursor-not-allowed"
               )}
             >
               <div className="flex items-center gap-3">
                 <div className={cn(
-                  "size-9 rounded-lg flex items-center justify-center border-b-2",
-                  isRandom
-                    ? "bg-brand-purple border-[#B066E0]"
-                    : "bg-surface-card-tint border-surface-card"
+                  "size-9 rounded-[10px] flex items-center justify-center",
+                  isRandom ? "bg-brand-yellow" : "bg-surface-card-tint"
                 )}>
-                  <Shuffle className={cn("size-4", isRandom ? "text-white" : "text-brand-slate")} />
+                  <Shuffle className={cn("size-4", isRandom ? "text-surface-page" : "text-brand-slate")} />
                 </div>
                 <div className="text-left">
                   <div className="text-sm font-black text-white">Random Categories</div>
@@ -557,10 +559,8 @@ export function LobbySettings({
                 </div>
               </div>
               <div className={cn(
-                "w-10 h-6 rounded-full border-b-2 transition-all relative",
-                isRandom
-                  ? "bg-brand-purple border-[#B066E0]"
-                  : "bg-surface-card-tint border-surface-card"
+                "w-10 h-6 rounded-full transition-colors relative",
+                isRandom ? "bg-brand-yellow" : "bg-surface-card-tint"
               )}>
                 <div className={cn(
                   "absolute top-0.5 size-5 rounded-full bg-white transition-all shadow-sm",
@@ -576,8 +576,23 @@ export function LobbySettings({
                     ? 'Pick the category pool for the party quiz. Questions stay shared across the full lobby.'
                     : 'Pick one category for the first half. The second half category is chosen at halftime.'}
                 </p>
-                <div className="max-h-72 overflow-y-auto space-y-1.5 pr-1 scrollbar-thin scrollbar-thumb-[#243B44] scrollbar-track-transparent">
-                  {categories.map(cat => {
+                <div className="relative">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-white/45" />
+                  <input
+                    type="text"
+                    placeholder="SEARCH CATEGORY..."
+                    value={categorySearch}
+                    onChange={(e) => setCategorySearch(e.target.value)}
+                    className="h-11 w-full rounded-[14px] border-2 border-brand-blue bg-transparent pl-10 pr-3 text-sm uppercase text-white outline-none placeholder:text-white/40 placeholder:tracking-[0.06em] focus:outline-none"
+                    style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, letterSpacing: '0.04em' }}
+                  />
+                </div>
+                <div className="max-h-72 overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-thumb-[#243B44] scrollbar-track-transparent">
+                  {filteredCategories.length === 0 ? (
+                    <p className="py-6 text-center text-xs font-bold text-brand-slate uppercase tracking-wider">
+                      No categories match &quot;{categorySearch}&quot;
+                    </p>
+                  ) : filteredCategories.map(cat => {
                     const isSelected = selectedCategoryId === cat.id;
                     return (
                       <button
@@ -585,21 +600,21 @@ export function LobbySettings({
                         onClick={() => toggleCategory(cat.id)}
                         disabled={!canEdit || isRandom}
                         className={cn(
-                          "w-full flex items-center gap-3 px-3 py-3.5 rounded-xl font-bold transition-all border-b-[3px]",
+                          "w-full flex items-center gap-3 px-3 py-3.5 rounded-[14px] font-bold transition-colors border-2 bg-white/[0.04] hover:bg-white/[0.08]",
                           isSelected
-                            ? "bg-brand-green-light/15 border-brand-green-light text-white"
-                            : "bg-surface-deep border-surface-card-deep text-brand-slate hover:text-white hover:bg-surface-card",
+                            ? "border-brand-green text-white"
+                            : "border-brand-blue text-white/70 hover:text-white",
                           (!canEdit || isRandom) && "opacity-50 cursor-not-allowed"
                         )}
                       >
-                        <div className="size-9 rounded-lg overflow-hidden shrink-0 flex items-center justify-center bg-surface-card-tint">
+                        <div className="size-9 overflow-hidden shrink-0 flex items-center justify-center">
                           {cat.imageUrl
                             ? <img src={cat.imageUrl} alt={cat.name} className="size-full object-contain" />
                             : <span className="text-xl">{cat.icon}</span>
                           }
                         </div>
                         <span className="flex-1 text-left text-sm truncate">{cat.name}</span>
-                        {isSelected && <Check className="size-4 shrink-0 text-brand-green-light" />}
+                        {isSelected && <Check className="size-4 shrink-0 text-brand-green" />}
                       </button>
                     );
                   })}
@@ -608,8 +623,8 @@ export function LobbySettings({
             )}
 
             {isRandom && (
-              <div className="p-5 rounded-xl bg-surface-deep border-2 border-dashed border-surface-card-tint flex flex-col items-center text-center gap-2">
-                <Shuffle className="size-8 text-brand-purple opacity-60" />
+              <div className="p-5 rounded-[14px] flex flex-col items-center text-center gap-2">
+                <Shuffle className="size-8 text-brand-yellow opacity-80" />
                 <p className="text-sm font-bold text-brand-slate">Categories will be selected randomly.</p>
               </div>
             )}

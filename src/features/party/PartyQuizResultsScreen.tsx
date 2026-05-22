@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 
-import { Crown, Medal, Target, Timer, Trophy } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 
 import { AvatarDisplay } from '@/components/AvatarDisplay';
@@ -28,25 +28,14 @@ interface StandingRow extends MatchStandingPayload {
   isWinner: boolean;
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function formatAverageMs(value: number | null): string {
-  if (typeof value !== 'number' || !Number.isFinite(value)) return '--';
-  return `${(value / 1000).toFixed(2)}s`;
-}
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
 function seededRandom(seed: number): number {
   const x = Math.sin(seed * 12.9898) * 43758.5453;
   return x - Math.floor(x);
 }
 
-const CONFETTI_COLORS = ['#FCD200', '#58CC02', '#1CB0F6', '#CE82FF', '#FF9600', '#FFE98A'];
-
-// ---------------------------------------------------------------------------
-// Confetti burst particles (appears for winner)
-// ---------------------------------------------------------------------------
+const CONFETTI_COLORS = ['#FFE500', '#38B60E', '#1645FF', '#CE82FF', '#FF9600', '#FF4B4B'];
 
 function CelebrationBurst() {
   const particles = useMemo(() => {
@@ -77,11 +66,7 @@ function CelebrationBurst() {
             rotate: p.rotation,
             scale: [0, p.scale, p.scale, 0],
           }}
-          transition={{
-            duration: 1.4,
-            delay: 0.3 + p.delay,
-            ease: [0.34, 1.56, 0.64, 1],
-          }}
+          transition={{ duration: 1.4, delay: 0.3 + p.delay, ease: [0.34, 1.56, 0.64, 1] }}
         >
           <div
             className="rounded-sm"
@@ -98,161 +83,168 @@ function CelebrationBurst() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Podium card config
-// ---------------------------------------------------------------------------
+// ─── Per-rank style — shared with the in-match standings sidebar ───────────
 
-const PODIUM_CONFIG = {
-  1: {
-    label: 'Champion',
-    borderColor: 'border-brand-yellow-deep/50',
-    borderBottom: 'border-b-[#C9A600]',
-    bg: 'bg-gradient-to-b from-brand-yellow-deep/16 to-brand-yellow-deep/4',
-    glow: 'shadow-[0_0_60px_rgba(252,208,0,0.15)]',
-    accentColor: 'text-brand-yellow-deep',
-    iconBg: 'bg-brand-yellow-deep/15',
-    avatarRing: 'ring-4 ring-brand-yellow-deep/30 border-brand-yellow-deep/50',
-    Icon: Crown,
-  },
-  2: {
-    label: 'Second',
-    borderColor: 'border-white/12',
-    borderBottom: 'border-b-white/18',
-    bg: 'bg-white/[0.04]',
-    glow: '',
-    accentColor: 'text-white/70',
-    iconBg: 'bg-white/8',
-    avatarRing: 'ring-2 ring-white/15 border-white/20',
-    Icon: Medal,
-  },
-  3: {
-    label: 'Third',
-    borderColor: 'border-brand-orange/30',
-    borderBottom: 'border-b-[#CC7800]',
-    bg: 'bg-brand-orange/[0.06]',
-    glow: '',
-    accentColor: 'text-brand-orange',
-    iconBg: 'bg-brand-orange/12',
-    avatarRing: 'ring-2 ring-brand-orange/20 border-brand-orange/30',
-    Icon: Medal,
-  },
-} as const;
+const RANK_HEX: Record<number, string> = {
+  1: '#FFE500', // yellow podium
+  2: '#38B60E', // green podium
+  3: '#1645FF', // blue podium
+  4: '#FF9600',
+  5: '#FF4B4B',
+  6: '#CE82FF',
+};
 
-// ---------------------------------------------------------------------------
-// Podium card
-// ---------------------------------------------------------------------------
+function getRankHex(rank: number): string {
+  return RANK_HEX[rank] ?? RANK_HEX[6]!;
+}
 
-function PodiumCard({ standing, index, className }: { standing: StandingRow; index: number; className?: string }) {
-  const config = PODIUM_CONFIG[standing.rank as 1 | 2 | 3] ?? PODIUM_CONFIG[3];
-  const { Icon } = config;
-  const isChampion = standing.rank === 1;
+function getRankClasses(rank: number): { border: string; pillBg: string; pillText: string; tint: string } {
+  switch (rank) {
+    case 1:
+      return { border: 'border-brand-yellow', pillBg: 'bg-brand-yellow', pillText: 'text-surface-page', tint: 'bg-brand-yellow/[0.08]' };
+    case 2:
+      return { border: 'border-brand-green', pillBg: 'bg-brand-green', pillText: 'text-white', tint: 'bg-brand-green/[0.08]' };
+    case 3:
+      return { border: 'border-brand-blue', pillBg: 'bg-brand-blue', pillText: 'text-white', tint: 'bg-brand-blue/[0.08]' };
+    case 4:
+      return { border: 'border-brand-orange', pillBg: 'bg-brand-orange', pillText: 'text-white', tint: 'bg-brand-orange/[0.08]' };
+    case 5:
+      return { border: 'border-brand-red-soft', pillBg: 'bg-brand-red-soft', pillText: 'text-white', tint: 'bg-brand-red-soft/[0.08]' };
+    default:
+      return { border: 'border-brand-purple', pillBg: 'bg-brand-purple', pillText: 'text-white', tint: 'bg-brand-purple/[0.08]' };
+  }
+}
+
+// ─── Podium block (top 3) ──────────────────────────────────────────────────
+
+const PODIUM_HEIGHT: Record<1 | 2 | 3, string> = {
+  1: 'h-44 sm:h-52',
+  2: 'h-36 sm:h-44',
+  3: 'h-28 sm:h-36',
+};
+
+function PodiumBlock({ standing, displayIndex }: { standing: StandingRow; displayIndex: number }) {
+  const rank = standing.rank as 1 | 2 | 3;
+  const colorHex = getRankHex(rank);
+  const heightClass = PODIUM_HEIGHT[rank] ?? PODIUM_HEIGHT[3];
+  const textOnBlock = rank === 1 ? 'text-surface-page' : 'text-white';
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{
-        delay: 0.15 + index * 0.12,
-        type: 'spring',
-        stiffness: 300,
-        damping: 24,
-      }}
-      className={cn(
-        'relative overflow-hidden rounded-3xl border-2 border-b-4 font-fun',
-        className,
-        config.borderColor,
-        config.borderBottom,
-        config.bg,
-        config.glow,
-      )}
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.15 + displayIndex * 0.12, type: 'spring', stiffness: 300, damping: 24 }}
+      className="flex flex-col items-center"
     >
-      {/* Inner glow for champion */}
-      {isChampion && (
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(252,208,0,0.12),_transparent_60%)]" />
-      )}
+      {/* Avatar hovering above the block — only the feet kiss the top edge so
+          the character reads as floating on top of the podium (matches the
+          leaderboard podium layout). */}
+      <motion.div
+        initial={{ scale: 0.7, opacity: 0, y: 10 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 + displayIndex * 0.12, type: 'spring', stiffness: 260, damping: 18 }}
+        className="relative z-10 mb-[-6px]"
+      >
+        <AvatarDisplay
+          customization={standing.avatarCustomization ?? { base: standing.avatarUrl ?? undefined }}
+          size="lg"
+        />
+      </motion.div>
 
-      <div className="relative p-4 sm:p-5">
-        {/* Header: label + icon */}
-        <div className="flex items-center justify-between">
-          <span className={cn('text-[10px] font-black uppercase tracking-[0.26em]', config.accentColor)}>
-            {config.label}
-          </span>
-          <div className={cn('flex size-7 items-center justify-center rounded-lg', config.iconBg)}>
-            <Icon className={cn('size-3.5', config.accentColor)} />
-          </div>
+      <div
+        className={cn(
+          'relative w-full rounded-2xl px-3 pt-4 pb-3 flex flex-col items-center justify-end gap-1',
+          heightClass,
+        )}
+        style={{
+          backgroundColor: colorHex,
+          boxShadow: `0 8px 30px ${colorHex}33`,
+        }}
+      >
+        <div
+          className={cn('font-poppins text-center text-[13px] sm:text-sm font-semibold uppercase tracking-wider truncate max-w-full', textOnBlock)}
+        >
+          {standing.username}
         </div>
-
-        {/* Avatar + name + points */}
-        <div className="mt-3 flex flex-col items-center text-center">
-          <motion.div
-            initial={isChampion ? { scale: 0.5, rotate: -10 } : { scale: 0.8 }}
-            animate={isChampion ? { scale: 1, rotate: 0 } : { scale: 1 }}
-            transition={{
-              delay: isChampion ? 0.35 : 0.3 + index * 0.12,
-              type: 'spring',
-              stiffness: 260,
-              damping: 18,
-            }}
-          >
-            <AvatarDisplay
-              customization={standing.avatarCustomization ?? { base: standing.avatarUrl ?? undefined }}
-              size="md"
-              className={cn('border-2 shadow-xl', config.avatarRing)}
-            />
-          </motion.div>
-
-          <div className="mt-2.5 max-w-full truncate text-base font-black text-white">
-            {standing.username}
-          </div>
-
-          {standing.isSelf && (
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.5 + index * 0.1, type: 'spring', stiffness: 400, damping: 20 }}
-              className="mt-1 rounded-full bg-brand-cyan/18 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-[0.22em] text-[#A9E6FF]"
-            >
-              You
-            </motion.div>
-          )}
-
-          {/* Points */}
-          <div className="mt-2 text-xl font-black tabular-nums text-white">
-            {standing.totalPoints}
-            <span className="ml-1 text-[10px] font-bold uppercase tracking-wider text-white/40">pts</span>
-          </div>
+        <div className={cn('font-poppins text-2xl font-extrabold tabular-nums', textOnBlock)}>
+          {standing.totalPoints}
         </div>
-
-        {/* Stats row */}
-        <div className="mt-3 flex items-center justify-center gap-3 text-[11px] font-bold text-white/50">
-          <span className="flex items-center gap-1">
-            <Target className="size-3 text-white/35" />
-            {standing.correctAnswers} correct
+        {standing.isSelf && (
+          <span className="mt-1 rounded-full bg-brand-orange px-2 py-[2px] font-poppins text-[9px] font-semibold uppercase tracking-wider text-white">
+            You
           </span>
-          <span className="size-0.5 rounded-full bg-white/20" />
-          <span className="flex items-center gap-1">
-            <Timer className="size-3 text-white/35" />
-            {formatAverageMs(standing.avgTimeMs)}
-          </span>
-        </div>
+        )}
       </div>
     </motion.div>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Podium grid class — adapts columns to player count
-// ---------------------------------------------------------------------------
+// ─── Standings row (rank 4+) — mirrors the in-match standings sidebar ──────
 
-function podiumGridClass(count: number): string {
-  if (count === 1) return 'grid grid-cols-1 place-items-center gap-3';
-  if (count <= 2) return 'grid grid-cols-2 gap-3';
-  return 'grid grid-cols-2 gap-3 sm:grid-cols-3';
+function RankRow({ standing, displayIndex }: { standing: StandingRow; displayIndex: number }) {
+  const rs = getRankClasses(standing.rank);
+  const colorHex = getRankHex(standing.rank);
+  const selfGlow = standing.isSelf
+    ? `0 0 18px ${colorHex}88, 0 0 36px ${colorHex}44`
+    : undefined;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -8 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.5 + displayIndex * 0.06 }}
+      className="flex items-center gap-2"
+    >
+      <div
+        className={cn(
+          'flex flex-1 items-center gap-3 rounded-2xl px-3 py-2.5 border-2',
+          rs.border,
+          standing.isSelf ? rs.tint : 'bg-transparent',
+        )}
+        style={{ boxShadow: selfGlow }}
+      >
+        {/* Rank pill */}
+        <span
+          className={cn(
+            'flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] font-poppins text-base font-extrabold tabular-nums',
+            rs.pillBg,
+            rs.pillText,
+          )}
+          style={{ boxShadow: `0 1.76px 6.334px 1.32px ${colorHex}40` }}
+        >
+          {standing.rank}
+        </span>
+
+        <AvatarDisplay
+          customization={standing.avatarCustomization ?? { base: standing.avatarUrl ?? undefined }}
+          size="sm"
+          className="shrink-0"
+        />
+
+        <div className="min-w-0 flex-1">
+          <span className="block truncate font-poppins text-base font-semibold text-white">
+            {standing.username}
+          </span>
+        </div>
+
+        <span className="font-poppins text-base font-extrabold tabular-nums text-white shrink-0">
+          {standing.totalPoints}
+        </span>
+      </div>
+
+      {standing.isSelf && (
+        <span
+          className="flex shrink-0 self-stretch items-center justify-center rounded-[16px] bg-brand-orange px-4 font-poppins text-sm font-extrabold uppercase tracking-wider text-white"
+          style={{ boxShadow: '0 1.76px 6.334px 1.32px rgba(255,150,0,0.3)' }}
+        >
+          You
+        </span>
+      )}
+    </motion.div>
+  );
 }
 
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
+// ─── Main component ────────────────────────────────────────────────────────
 
 export function PartyQuizResultsScreen({
   finalResults,
@@ -296,9 +288,7 @@ export function PartyQuizResultsScreen({
 
   const podium = standings.slice(0, 3);
   const rest = standings.slice(3);
-  const localStanding = standings.find((standing) => standing.isSelf) ?? null;
   const selfWon = finalResults.winnerId === selfUserId;
-  const selfOnPodium = localStanding != null && localStanding.rank <= podium.length;
 
   const resultLabel = selfWon
     ? 'You won the party quiz!'
@@ -306,33 +296,31 @@ export function PartyQuizResultsScreen({
       ? `${standings.find((s) => s.userId === finalResults.winnerId)?.username ?? 'Winner'} takes first!`
       : 'Party quiz finished in a tie!';
 
+  // Display order on the podium: 2nd-place block on left, 1st in middle, 3rd on right
+  // (matches the leaderboard podium layout). Falls back gracefully for <3 players.
+  const podiumDisplayOrder = useMemo(() => {
+    if (podium.length < 3) return podium;
+    const [first, second, third] = podium;
+    return [second!, first!, third!];
+  }, [podium]);
+
   return (
-    <div className="min-h-dvh bg-surface-page-alt text-white relative overflow-hidden">
-      {/* Background atmosphere */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(252,208,0,0.14),_transparent_32%),radial-gradient(circle_at_bottom_left,_rgba(28,176,246,0.12),_transparent_36%)]" />
-      <div
-        className="absolute inset-0 opacity-[0.03]"
-        style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '18px 18px' }}
-      />
+    <div className="relative min-h-dvh overflow-hidden bg-surface-page-alt text-white">
+      <AnimatePresence>{selfWon && <CelebrationBurst />}</AnimatePresence>
 
-      {/* Confetti for winner */}
-      <AnimatePresence>
-        {selfWon && <CelebrationBurst />}
-      </AnimatePresence>
-
-      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-xl flex-col px-4 py-6 sm:px-6 sm:py-8">
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 py-6 sm:px-6 sm:py-10">
         {/* ─── Header ─── */}
         <motion.div
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="text-center font-fun"
+          className="text-center"
         >
           <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
+            initial={{ scale: 0.85, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.1, type: 'spring', stiffness: 300, damping: 22 }}
-            className="inline-flex items-center gap-2 rounded-full border border-brand-yellow-deep/25 bg-brand-yellow-deep/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.26em] text-[#FFE98A]"
+            className="inline-flex items-center gap-2 rounded-full border-2 border-brand-yellow bg-transparent px-4 py-1.5 font-poppins text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-yellow"
           >
             <Trophy className="size-3.5" />
             Party Quiz
@@ -343,138 +331,60 @@ export function PartyQuizResultsScreen({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.4 }}
             className={cn(
-              'mt-3 text-xl font-black tracking-tight sm:text-2xl',
-              selfWon ? 'text-brand-yellow-deep' : 'text-white',
+              'mt-4 font-poppins text-2xl sm:text-3xl font-extrabold tracking-tight',
+              selfWon ? 'text-brand-yellow' : 'text-white',
             )}
-            style={selfWon ? { textShadow: '0 0 30px rgba(252,208,0,0.25)' } : undefined}
+            style={selfWon ? { textShadow: '0 0 30px rgba(255,229,0,0.3)' } : undefined}
           >
             {resultLabel}
           </motion.h1>
         </motion.div>
 
         {/* ─── Podium ─── */}
-        <div className={cn('mt-5', podiumGridClass(podium.length))}>
-          {podium.map((standing, index) => (
-            <PodiumCard
-              key={standing.userId}
-              standing={standing}
-              index={index}
-              className={podium.length === 1 ? 'mx-auto w-full max-w-[200px]' : undefined}
-            />
-          ))}
-        </div>
-
-        {/* ─── Your Finish — only when player is NOT visible on podium ─── */}
-        {localStanding && !selfOnPodium && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="mt-4 rounded-2xl border-2 border-b-4 border-brand-cyan/30 border-b-[#0E8AC7] bg-brand-cyan/8 px-4 py-3.5 font-fun"
+        {podium.length > 0 && (
+          <div
+            className={cn(
+              'mt-12 grid gap-3 items-end',
+              podium.length === 1 ? 'grid-cols-1 place-items-center max-w-xs mx-auto' : '',
+              podium.length === 2 ? 'grid-cols-2' : '',
+              podium.length === 3 ? 'grid-cols-3' : '',
+            )}
           >
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <div className="text-[10px] font-black uppercase tracking-[0.24em] text-[#A9E6FF]">Your Finish</div>
-                <div className="mt-1 flex items-baseline gap-2">
-                  <span className="text-xl font-black text-white">#{localStanding.rank}</span>
-                  <span className="text-sm font-bold text-white/60">
-                    {localStanding.totalPoints} pts
-                  </span>
-                </div>
-              </div>
-              <div className="flex gap-1.5 text-[11px] font-bold text-white/70">
-                <span className="rounded-lg bg-white/8 px-2.5 py-1">{localStanding.correctAnswers} correct</span>
-                <span className="rounded-lg bg-white/8 px-2.5 py-1">{formatAverageMs(localStanding.avgTimeMs)} avg</span>
-              </div>
-            </div>
-          </motion.div>
+            {podiumDisplayOrder.map((standing, index) => (
+              <PodiumBlock key={standing.userId} standing={standing} displayIndex={index} />
+            ))}
+          </div>
         )}
 
-        {/* ─── Full standings (remaining players beyond podium) ─── */}
+        {/* ─── Below-podium rankings (rank 4+) ─── */}
         {rest.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="mt-4 rounded-2xl border-2 border-b-4 border-white/8 border-b-white/12 bg-surface-deep/80 p-3.5 backdrop-blur sm:p-4"
-          >
-            <div className="flex items-center justify-between px-1 pb-3">
-              <span className="text-[10px] font-fun font-black uppercase tracking-[0.24em] text-white/40">
-                Full Standings
-              </span>
-              <span className="rounded-lg bg-white/6 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
-                {standings.length} players
-              </span>
-            </div>
-
-            <div className="space-y-2">
-              {rest.map((standing, i) => (
-                <motion.div
-                  key={standing.userId}
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.7 + i * 0.06 }}
-                  className={cn(
-                    'flex items-center gap-3 rounded-xl border border-b-2 px-3 py-3 font-fun',
-                    standing.isSelf
-                      ? 'border-brand-cyan/25 border-b-[#0E8AC7]/30 bg-brand-cyan/8'
-                      : 'border-white/6 border-b-white/10 bg-white/[0.02]',
-                  )}
-                >
-                  <span className="w-8 text-center text-sm font-black tabular-nums text-white/45">
-                    #{standing.rank}
-                  </span>
-
-                  <AvatarDisplay
-                    customization={standing.avatarCustomization ?? { base: standing.avatarUrl ?? undefined }}
-                    size="xs"
-                    className="size-9 border border-white/12 shrink-0"
-                  />
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="truncate text-sm font-bold text-white">{standing.username}</span>
-                      {standing.isSelf && (
-                        <span className="rounded bg-brand-cyan/18 px-1.5 py-0.5 text-[8px] font-black uppercase text-[#A9E6FF]">
-                          You
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-0.5 flex gap-2 text-[11px] font-bold text-white/45">
-                      <span>{standing.totalPoints} pts</span>
-                      <span>{standing.correctAnswers} correct</span>
-                      <span>{formatAverageMs(standing.avgTimeMs)}</span>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
+          <div className="mt-8 space-y-2">
+            {rest.map((standing, index) => (
+              <RankRow key={standing.userId} standing={standing} displayIndex={index} />
+            ))}
+          </div>
         )}
 
-        <AchievementUnlockStrip
-          achievements={unlockedAchievements}
-          className="mt-4"
-        />
+        <AchievementUnlockStrip achievements={unlockedAchievements} className="mt-6" />
 
-        {/* ─── Action buttons (3D Duolingo style) ─── */}
+        {/* ─── Action buttons (flat, Poppins) ─── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.75 }}
-          className="mt-5 flex gap-2.5 pb-2"
+          className="mt-8 flex gap-3 pb-4"
         >
           <button
             type="button"
             onClick={onPlayAgain}
-            className="flex-1 rounded-2xl bg-brand-green-light border-b-4 border-b-[#46A302] px-5 py-3.5 text-sm font-black font-fun text-white transition-all hover:bg-brand-green-light active:border-b-2 active:translate-y-[2px]"
+            className="flex-1 rounded-2xl bg-brand-green px-5 py-3.5 font-poppins text-base font-semibold uppercase tracking-wider text-white transition-colors hover:bg-brand-green-deep"
           >
             Play Again
           </button>
           <button
             type="button"
             onClick={onMainMenu}
-            className="flex-1 rounded-2xl bg-white/[0.04] border-2 border-white/10 border-b-4 border-b-white/15 px-5 py-3.5 text-sm font-black font-fun text-white/80 transition-all hover:bg-white/[0.07] active:border-b-2 active:translate-y-[2px]"
+            className="flex-1 rounded-2xl border-2 border-white/15 bg-transparent px-5 py-3.5 font-poppins text-base font-semibold uppercase tracking-wider text-white/80 transition-colors hover:bg-white/5"
           >
             Main Menu
           </button>

@@ -2,9 +2,8 @@ import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { DEFAULT_AVATAR_PRIMARY, DEFAULT_AVATAR_SECONDARY } from "@/lib/avatars";
 import type { HeadToHeadSummary } from "@/lib/domain";
 import type { LobbyMember } from "@/lib/realtime/socket.types";
-import { cn } from "@/lib/utils";
 import { copyToClipboard } from "@/utils/clipboard";
-import { Copy, Users } from "lucide-react";
+import { Copy } from "lucide-react";
 import { toast } from "sonner";
 
 interface LobbyHeaderProps {
@@ -32,55 +31,80 @@ export function LobbyHeader({
   const opponents = roster.filter((member) => member.userId !== me?.userId);
   const showHeadToHead = Boolean(h2hSummary && opponents.length === 1 && h2hSummary.total > 0);
 
+  const poppins = "'Poppins', sans-serif";
+
   return (
-    <div className="rounded-2xl border-b-4 border-surface-card-deep bg-surface-card p-5 font-fun">
+    <div className="mx-5 rounded-[20px] bg-surface-card/40 p-5">
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex size-14 items-center justify-center rounded-xl border-2 border-brand-cyan/30 bg-brand-cyan/15">
-              <Users className="size-7 text-brand-cyan" />
-            </div>
-            <div>
-              <h1 className="text-xl font-black text-white">{lobbyName || "Friendly Lobby"}</h1>
-              <div className="mt-0.5 flex items-center gap-2">
-                <span className="text-xs font-bold text-brand-slate">Code:</span>
-                <span className="select-all rounded-lg border-b-2 border-surface-card-deep bg-surface-deep px-2.5 py-1 font-mono text-sm font-black tracking-wider text-white">
-                  {lobbyCode || "..."}
-                </span>
-                <button
-                  onClick={copyCode}
-                  aria-label="Copy lobby code"
-                  className="text-brand-slate transition-colors hover:text-brand-cyan"
-                  disabled={!lobbyCode}
-                >
-                  <Copy className="size-3.5" />
-                </button>
-              </div>
+        <div className="flex flex-row items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <h1
+              className="uppercase text-white"
+              style={{ fontFamily: poppins, fontWeight: 600, fontSize: 'clamp(18px, 2.2vw, 24px)', lineHeight: 1.05 }}
+            >
+              {lobbyName || "Friendly Lobby"}
+            </h1>
+            <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+              <span
+                className="uppercase text-white/55"
+                style={{ fontFamily: poppins, fontWeight: 600, fontSize: 11, letterSpacing: '0.08em' }}
+              >
+                Code
+              </span>
+              <span
+                className="select-all rounded-[10px] bg-surface-deep px-2.5 py-1 font-mono uppercase tracking-wider text-white"
+                style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 13, fontWeight: 600 }}
+              >
+                {lobbyCode || "..."}
+              </span>
+              <button
+                onClick={copyCode}
+                aria-label="Copy lobby code"
+                className="text-white/55 transition-colors hover:text-brand-cyan"
+                disabled={!lobbyCode}
+              >
+                <Copy className="size-3.5" />
+              </button>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <div className="rounded-2xl border-b-4 border-surface-card-deep bg-surface-deep px-4 py-3">
-              <div className="text-[10px] font-black uppercase tracking-[0.18em] text-brand-slate">
+          <div className="flex flex-col items-end gap-2 shrink-0">
+            <div className="text-right">
+              <div
+                className="uppercase text-white/45"
+                style={{ fontFamily: poppins, fontWeight: 600, fontSize: 10, letterSpacing: '0.18em' }}
+              >
                 Lobby Size
               </div>
-              <div className="mt-1 text-2xl font-black text-white tabular-nums">
+              <div
+                className="mt-1 text-white tabular-nums"
+                style={{ fontFamily: poppins, fontWeight: 600, fontSize: 22, lineHeight: 1 }}
+              >
                 {roster.length}
-                <span className="ml-1 text-sm text-brand-slate">/ 6</span>
+                <span className="ml-1 text-sm text-white/45">/ 6</span>
               </div>
             </div>
 
             {showHeadToHead ? (
-              <div className="rounded-2xl border-b-4 border-surface-card-deep bg-surface-deep px-4 py-3 text-center">
-                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-brand-slate">
+              <div className="text-right">
+                <div
+                  className="uppercase text-white/45"
+                  style={{ fontFamily: poppins, fontWeight: 600, fontSize: 10, letterSpacing: '0.18em' }}
+                >
                   Head To Head
                 </div>
-                <div className="mt-1 flex items-center justify-center gap-2">
-                  <span className="text-base font-black text-brand-cyan tabular-nums">
+                <div className="mt-1 flex items-center justify-end gap-2">
+                  <span
+                    className="text-brand-cyan tabular-nums"
+                    style={{ fontFamily: poppins, fontWeight: 600, fontSize: 16 }}
+                  >
                     {h2hSummary?.winsA ?? 0}
                   </span>
-                  <span className="text-[10px] font-black text-brand-slate">-</span>
-                  <span className="text-base font-black text-brand-red-soft tabular-nums">
+                  <span className="text-[10px] text-white/45">-</span>
+                  <span
+                    className="text-brand-red-soft tabular-nums"
+                    style={{ fontFamily: poppins, fontWeight: 600, fontSize: 16 }}
+                  >
                     {h2hSummary?.winsB ?? 0}
                   </span>
                 </div>
@@ -89,7 +113,7 @@ export function LobbyHeader({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
           {roster.map((member) => {
             const isMe = member.userId === me?.userId;
             const avatarBase =
@@ -98,38 +122,37 @@ export function LobbyHeader({
             return (
               <div
                 key={member.userId}
-                className={cn(
-                  "rounded-2xl border-b-4 bg-surface-deep px-3 py-4 text-center",
-                  isMe ? "border-brand-cyan-deep ring-2 ring-brand-cyan/20" : "border-surface-card-deep"
-                )}
+                className="flex flex-col items-start"
               >
-                <div className="relative mx-auto mb-2 w-fit">
-                  <div
-                    className={cn(
-                      "overflow-hidden rounded-full border-[3px] border-b-4",
-                      member.isReady
-                        ? "border-brand-green-light shadow-[0_3px_0_0_#46A302]"
-                        : isMe
-                          ? "border-brand-cyan shadow-[0_3px_0_0_#1899D6]"
-                          : "border-brand-red-soft shadow-[0_3px_0_0_#E04242]"
-                    )}
-                  >
+                <div className="flex w-16 flex-col items-center">
+                  <div className="relative mb-2">
                     <AvatarDisplay
                       customization={member.avatarCustomization ?? { base: avatarBase }}
                       size="md"
                       className="rounded-full"
                     />
+                    {member.isHost ? (
+                      <span
+                        className="absolute -top-2 -right-2 rounded-full bg-brand-orange px-1.5 py-[2px] uppercase text-white"
+                        style={{ fontFamily: poppins, fontWeight: 600, fontSize: 8, letterSpacing: '0.06em' }}
+                      >
+                        Host
+                      </span>
+                    ) : null}
                   </div>
-                  {member.isHost ? (
-                    <span className="absolute -top-2 -right-2 rounded-full border-b-2 border-[#DB8200] bg-brand-orange px-1.5 py-[2px] text-[8px] font-black uppercase text-white">
-                      Host
-                    </span>
-                  ) : null}
-                </div>
 
-                <div className="truncate text-sm font-black text-white">{member.username}</div>
-                <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-brand-slate">
-                  {isMe ? "You" : member.isReady ? "Ready" : "Waiting"}
+                  <div
+                    className="truncate text-white text-center max-w-full"
+                    style={{ fontFamily: poppins, fontWeight: 600, fontSize: 14 }}
+                  >
+                    {member.username}
+                  </div>
+                  <div
+                    className="mt-0.5 uppercase text-white/45 text-center"
+                    style={{ fontFamily: poppins, fontWeight: 600, fontSize: 10, letterSpacing: '0.16em' }}
+                  >
+                    {isMe ? "You" : member.isReady ? "Ready" : "Waiting"}
+                  </div>
                 </div>
               </div>
             );

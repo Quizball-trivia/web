@@ -1,8 +1,5 @@
 import { useState, useMemo } from "react";
 import { Search, RotateCcw, Filter } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePublicLobbies } from "@/lib/queries/lobbies.queries";
 import { LobbyCard } from "./LobbyCard";
 import { Loader2 } from "lucide-react";
@@ -47,28 +44,55 @@ export function LobbyBrowsePanel({ onJoin, isJoiningCode, onActionTriggered }: L
   return (
     <div className="space-y-6">
        {/* Search & Filter Bar */}
-       <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-             <Input 
-                placeholder="Search host or code..." 
-                className="pl-9 bg-card"
+       <div className="flex flex-row items-center gap-2 sm:gap-3">
+          <div className="relative min-w-0 flex-1">
+             <Search className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 size-4 sm:size-5 text-white/55" />
+             <input
+                type="text"
+                placeholder="SEARCH..."
+                className="h-12 sm:h-14 w-full rounded-[20px] border-none bg-brand-blue pl-9 sm:pl-14 pr-3 sm:pr-5 text-sm sm:text-base uppercase text-white outline-none placeholder:text-white/45 placeholder:uppercase placeholder:tracking-[0.08em] focus:outline-none disabled:opacity-50"
+                style={{
+                  fontFamily: "'Poppins', sans-serif",
+                  fontWeight: 600,
+                  letterSpacing: '0.06em',
+                  boxShadow: '0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)',
+                }}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
              />
           </div>
-          
-          <div className="flex items-center gap-2">
-             <Tabs value={filter} onValueChange={(v) => setFilter(v as 'all' | 'open')} className="w-full sm:w-auto">
-                <TabsList className="grid w-full grid-cols-2">
-                   <TabsTrigger value="open">Open</TabsTrigger>
-                   <TabsTrigger value="all">All</TabsTrigger>
-                </TabsList>
-             </Tabs>
-             
-             <Button variant="outline" size="icon" onClick={() => refetch()} title="Refresh">
-                <RotateCcw className="size-4" />
-             </Button>
+
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+             <div className="flex items-center gap-1 sm:gap-1.5 rounded-[20px] border-2 border-brand-green p-0.5 sm:p-1">
+                {(['open', 'all'] as const).map((value) => {
+                   const isActive = filter === value;
+                   return (
+                      <button
+                         key={value}
+                         type="button"
+                         onClick={() => setFilter(value)}
+                         className={
+                            isActive
+                               ? "rounded-[14px] bg-brand-green px-2.5 sm:px-5 py-1.5 sm:py-2.5 uppercase text-surface-page transition-colors"
+                               : "rounded-[14px] px-2.5 sm:px-5 py-1.5 sm:py-2.5 uppercase text-white/70 transition-colors hover:bg-brand-green/10"
+                         }
+                         style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: '0.06em' }}
+                      >
+                         {value === 'open' ? 'Open' : 'All'}
+                      </button>
+                   );
+                })}
+             </div>
+
+             <button
+                type="button"
+                onClick={() => refetch()}
+                title="Refresh"
+                aria-label="Refresh"
+                className="flex aspect-square h-9 sm:h-11 items-center justify-center rounded-[20px] border-2 border-brand-green bg-transparent text-brand-green transition-colors hover:bg-brand-green/10"
+             >
+                <RotateCcw className="size-4 sm:size-5" />
+             </button>
           </div>
        </div>
 
@@ -80,12 +104,15 @@ export function LobbyBrowsePanel({ onJoin, isJoiningCode, onActionTriggered }: L
                 <p>Finding matches...</p>
              </div>
           ) : filteredLobbies.length === 0 ? (
-             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground border-2 border-dashed border-border/50 rounded-xl bg-muted/10">
-                <div className="size-12 rounded-full bg-muted flex items-center justify-center mb-3">
-                   <Filter className="size-6 opacity-50" />
+             <div
+                className="flex flex-col items-center justify-center py-12 border-2 border-brand-blue rounded-xl bg-brand-blue/[0.03] text-white/60"
+                style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 500 }}
+             >
+                <div className="size-12 rounded-full bg-brand-blue/15 text-brand-blue flex items-center justify-center mb-3">
+                   <Filter className="size-6" />
                 </div>
-                <h3 className="font-semibold">No lobbies found</h3>
-                <p className="text-sm">Try adjusting filters or create your own room!</p>
+                <h3 className="uppercase text-white" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}>No lobbies found</h3>
+                <p className="text-sm mt-1">Try adjusting filters or create your own room!</p>
              </div>
           ) : (
              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
