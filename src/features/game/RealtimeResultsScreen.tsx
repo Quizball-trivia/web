@@ -18,6 +18,7 @@ import { trackMatchCompleted, trackDivisionPromoted, trackLevelUp } from '@/lib/
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import type { AvatarCustomization } from '@/types/game';
 import { logger } from '@/utils/logger';
+import { useLocale } from '@/contexts/LocaleContext';
 
 /** Animated number that ticks from `from` → `to` after a delay, with a pop + glow */
 function AnimatedCounter({
@@ -142,6 +143,7 @@ export function RealtimeResultsScreen({
   onPlayAgain,
   onMainMenu,
 }: RealtimeResultsScreenProps) {
+  const { t } = useLocale();
   const hasAuthoritativeWinner = finalWinnerId !== undefined;
   const playerWon = hasAuthoritativeWinner
     ? finalWinnerId === selfUserId
@@ -536,7 +538,7 @@ export function RealtimeResultsScreen({
                 className="font-poppins font-semibold uppercase text-white text-[11px] sm:text-[13px] md:text-[14px]"
                 style={{ opacity: 0.6 }}
               >
-                New Rank
+                {t('results.newRank')}
               </div>
               <div className="mt-1 flex items-baseline gap-2 sm:gap-3">
                 <span className="font-poppins font-semibold tabular-nums leading-none text-brand-green text-[28px] sm:text-[36px] md:text-[44px]">
@@ -589,7 +591,7 @@ export function RealtimeResultsScreen({
                   className="absolute inset-y-0 left-0 bg-brand-green"
                 />
               </div>
-              <TierEndMarker label={nextTierBand?.tier ?? 'Next Stage'} />
+              <TierEndMarker label={nextTierBand?.tier ?? t('results.nextStage')} />
             </div>
 
             <div
@@ -597,8 +599,8 @@ export function RealtimeResultsScreen({
               style={{ opacity: 0.55 }}
             >
               {rpTierInfo.pointsToNext !== null
-                ? `${rpTierInfo.pointsToNext} RP to next tier`
-                : 'Max tier reached'}
+                ? t('results.rpToNextTier', { points: rpTierInfo.pointsToNext })
+                : t('results.maxTierReached')}
             </div>
           </motion.div>
         )}
@@ -619,19 +621,20 @@ export function RealtimeResultsScreen({
             xpToNextLevel={projectedProgression ? xpToNextLevelAfterMatch : null}
             playerQuestionResults={playerQuestionResults}
             opponentQuestionResults={opponentQuestionResults}
+            t={t}
           />
 
           <button
             onClick={onPlayAgain}
             className="flex h-[64px] w-full items-center justify-center rounded-[20px] bg-brand-green font-poppins font-semibold uppercase text-white text-[1.5rem] transition-colors hover:bg-brand-green md:h-[80px] md:text-[28px]"
           >
-            Play Again
+            {t('results.playAgain')}
           </button>
           <button
             onClick={onMainMenu}
             className="flex h-[64px] w-full items-center justify-center rounded-[20px] border-[3px] border-brand-green bg-transparent font-poppins font-semibold uppercase text-white text-[1.5rem] transition-colors hover:bg-brand-green/10 md:h-[80px] md:text-[28px]"
           >
-            Main Menu
+            {t('results.mainMenu')}
           </button>
         </div>
       </motion.div>
@@ -656,6 +659,7 @@ function MatchStatsDropdown({
   xpToNextLevel,
   playerQuestionResults,
   opponentQuestionResults,
+  t,
 }: {
   accuracy: number;
   playerCorrect: number;
@@ -668,6 +672,7 @@ function MatchStatsDropdown({
   xpToNextLevel: number | null;
   playerQuestionResults?: Array<'correct' | 'wrong' | null>;
   opponentQuestionResults?: Array<'correct' | 'wrong' | null>;
+  t: ReturnType<typeof useLocale>['t'];
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -677,7 +682,7 @@ function MatchStatsDropdown({
         aria-expanded={open}
         className="mx-auto flex h-[48px] items-center justify-center gap-2.5 rounded-full border-2 border-white/15 bg-transparent px-7 text-[13px] font-bold uppercase tracking-wider text-white/85 transition-all hover:border-white/30 hover:text-white md:h-[52px] md:px-8 md:text-[14px]"
       >
-        <span>Match Stats</span>
+        <span>{t('results.matchStats')}</span>
         <motion.span
           animate={{ rotate: open ? 180 : 0 }}
           transition={{ duration: 0.18, ease: 'easeOut' }}
@@ -709,6 +714,7 @@ function MatchStatsDropdown({
               xpToNextLevel={xpToNextLevel}
               playerQuestionResults={playerQuestionResults}
               opponentQuestionResults={opponentQuestionResults}
+              t={t}
             />
           </motion.div>
         )}
@@ -780,6 +786,7 @@ function StatsPanel({
   xpToNextLevel,
   playerQuestionResults,
   opponentQuestionResults,
+  t,
 }: {
   accuracy: number;
   playerCorrect: number;
@@ -792,6 +799,7 @@ function StatsPanel({
   xpToNextLevel: number | null;
   playerQuestionResults?: Array<'correct' | 'wrong' | null>;
   opponentQuestionResults?: Array<'correct' | 'wrong' | null>;
+  t: ReturnType<typeof useLocale>['t'];
 }) {
   const oppAccuracy =
     totalQuestions === 0 ? 0 : Math.round((opponentCorrect / totalQuestions) * 100);
@@ -805,6 +813,7 @@ function StatsPanel({
             totalQuestions={totalQuestions}
             playerResults={playerQuestionResults}
             opponentResults={opponentQuestionResults}
+            t={t}
           />
         </div>
       )}
@@ -812,31 +821,31 @@ function StatsPanel({
       {/* You vs Opp header */}
       <div className={cn('grid grid-cols-[1fr_auto_1fr] items-center px-5 pb-3 sm:px-6', hasDots && 'border-t border-white/10 pt-4')}>
         <div className="text-center text-[13px] font-bold uppercase tracking-wider text-white/75 sm:text-[14px]">
-          You
+          {t('results.you')}
         </div>
         <div className="w-12" aria-hidden="true" />
         <div className="text-center text-[13px] font-bold uppercase tracking-wider text-white/75 sm:text-[14px]">
-          Opp
+          {t('results.opp')}
         </div>
       </div>
 
       <div className="px-5 pb-4 sm:px-6">
         <ComparisonRow
-          label="Accuracy"
+          label={t('results.accuracy')}
           you={`${accuracy}%`}
           opp={`${oppAccuracy}%`}
           youBetter={accuracy > oppAccuracy}
           oppBetter={oppAccuracy > accuracy}
         />
         <ComparisonRow
-          label="Correct"
+          label={t('results.correct')}
           you={`${playerCorrect}/${totalQuestions}`}
           opp={`${opponentCorrect}/${totalQuestions}`}
           youBetter={playerCorrect > opponentCorrect}
           oppBetter={opponentCorrect > playerCorrect}
         />
         <ComparisonRow
-          label="Goals"
+          label={t('results.goals')}
           you={String(playerScore)}
           opp={String(opponentScore)}
           youBetter={playerScore > opponentScore}
@@ -848,19 +857,19 @@ function StatsPanel({
       <div className="flex items-center justify-center gap-2 border-t border-white/10 px-5 py-3.5 sm:px-6">
         {xpEarned > 0 ? (
           <>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-white/55">XP</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-white/55">{t('results.xp')}</span>
             <span className="text-[18px] font-semibold tabular-nums text-brand-green">
               +{xpEarned}
             </span>
             {level != null && xpToNextLevel != null && (
               <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-cyan">
-                · Lvl {level} · {xpToNextLevel} to next
+                {t('results.levelAndXpToNext', { level, xp: xpToNextLevel })}
               </span>
             )}
           </>
         ) : (
           <span className="text-[11px] font-semibold uppercase tracking-wide text-white/40">
-            No XP earned
+            {t('results.noXpEarned')}
           </span>
         )}
       </div>
@@ -912,18 +921,20 @@ function QuestionResultStrips({
   totalQuestions,
   playerResults,
   opponentResults,
+  t,
 }: {
   totalQuestions: number;
   playerResults?: Array<'correct' | 'wrong' | null>;
   opponentResults?: Array<'correct' | 'wrong' | null>;
+  t: ReturnType<typeof useLocale>['t'];
 }) {
   return (
     <div className="flex flex-col gap-3">
       {playerResults && (
-        <QuestionDotRow label="You" total={totalQuestions} results={playerResults} />
+        <QuestionDotRow label={t('results.you')} total={totalQuestions} results={playerResults} />
       )}
       {opponentResults && (
-        <QuestionDotRow label="Opp" total={totalQuestions} results={opponentResults} variant="opp" />
+        <QuestionDotRow label={t('results.opp')} total={totalQuestions} results={opponentResults} variant="opp" />
       )}
     </div>
   );

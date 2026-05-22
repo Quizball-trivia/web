@@ -257,6 +257,48 @@
     "previousPage": "Go to previous page",
     "nextPage": "Go to next page"
   },
+  "results": {
+    "newRank": "New Rank",
+    "nextStage": "Next Stage",
+    "rpToNextTier": "{points} RP to next tier",
+    "maxTierReached": "Max tier reached",
+    "playAgain": "Play Again",
+    "mainMenu": "Main Menu",
+    "matchStats": "Match Stats",
+    "you": "You",
+    "opp": "Opp",
+    "accuracy": "Accuracy",
+    "correct": "Correct",
+    "goals": "Goals",
+    "xp": "XP",
+    "levelAndXpToNext": "· Lvl {level} · {xp} to next",
+    "noXpEarned": "No XP earned"
+  },
+  "matchmaking": {
+    "muteMusic": "Mute music",
+    "unmuteMusic": "Unmute music",
+    "searching": "Searching",
+    "findingOpponent": "Finding a worthy opponent...",
+    "cancel": "Cancel",
+    "opponentFallback": "Opponent",
+    "preparingMatch": "Preparing match...",
+    "matchSetupStuck": "Match setup got stuck",
+    "matchSetupStuckDescription": "Restart matchmaking and try again. If it keeps happening, the backend is still failing while preparing the draft.",
+    "restartSearch": "Restart Search",
+    "backToPlay": "Back to Play",
+    "unknownCity": "Unknown city",
+    "unknownCountry": "Unknown country",
+    "vs": "VS"
+  },
+  "quitMatch": {
+    "leaving": "Leaving?",
+    "playerWouldNotGiveUp": "{name} would",
+    "notGiveUp": "not give up",
+    "description": "Leave temporarily and rejoin before the timer ends, or forfeit now.",
+    "keepPlaying": "Keep Playing",
+    "leaveTemporary": "Leave Temporary",
+    "forfeitMatch": "Forfeit Match"
+  },
   "notifications": {
     "title": "Notifications",
     "ariaLabel": "Notifications",

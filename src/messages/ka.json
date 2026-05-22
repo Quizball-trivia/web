@@ -257,6 +257,48 @@
     "previousPage": "წინა გვერდი",
     "nextPage": "შემდეგი გვერდი"
   },
+  "results": {
+    "newRank": "ახალი რანგი",
+    "nextStage": "შემდეგი დონე",
+    "rpToNextTier": "{points} RP შემდეგ ტიერამდე",
+    "maxTierReached": "მაქსიმალური ტიერი მიღწეულია",
+    "playAgain": "თავიდან თამაში",
+    "mainMenu": "მთავარი მენიუ",
+    "matchStats": "მატჩის სტატისტიკა",
+    "you": "შენ",
+    "opp": "მოწ.",
+    "accuracy": "სიზუსტე",
+    "correct": "სწორი",
+    "goals": "გოლები",
+    "xp": "XP",
+    "levelAndXpToNext": "· დონე {level} · {xp} შემდეგამდე",
+    "noXpEarned": "XP არ მიგიღია"
+  },
+  "matchmaking": {
+    "muteMusic": "მუსიკის გათიშვა",
+    "unmuteMusic": "მუსიკის ჩართვა",
+    "searching": "ვეძებთ",
+    "findingOpponent": "ვეძებთ ღირსეულ მოწინააღმდეგეს...",
+    "cancel": "გაუქმება",
+    "opponentFallback": "მოწინააღმდეგე",
+    "preparingMatch": "მატჩი მზადდება...",
+    "matchSetupStuck": "მატჩის მომზადება გაიჭედა",
+    "matchSetupStuckDescription": "გადატვირთე მატჩმეიქინგი და სცადე თავიდან. თუ კვლავ ხდება, ბექენდი დრაფტის მომზადებისას ჩავარდება.",
+    "restartSearch": "ძებნის გადატვირთვა",
+    "backToPlay": "უკან თამაშზე",
+    "unknownCity": "უცნობი ქალაქი",
+    "unknownCountry": "უცნობი ქვეყანა",
+    "vs": "VS"
+  },
+  "quitMatch": {
+    "leaving": "გადიხარ?",
+    "playerWouldNotGiveUp": "{name} არ",
+    "notGiveUp": "დანებდებოდა",
+    "description": "გადი დროებით და დაბრუნდი ტაიმერის დასრულებამდე, ან დათმე ახლავე.",
+    "keepPlaying": "თამაშის გაგრძელება",
+    "leaveTemporary": "დროებითი გასვლა",
+    "forfeitMatch": "მატჩის დათმობა"
+  },
   "notifications": {
     "title": "შეტყობინებები",
     "ariaLabel": "შეტყობინებები",
