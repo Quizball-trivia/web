@@ -380,7 +380,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
                   className="w-full py-3 rounded-xl font-black text-white bg-surface-card-tint border-b-4 border-b-[#1B2F36] active:border-b-2 active:translate-y-[2px] transition-all disabled:opacity-50 disabled:active:border-b-4 disabled:active:translate-y-0"
                   disabled={hasSubmitted}
                 >
-                  Give Up
+                  {t("dailyGames.giveUp")}
                 </button>
               </div>
             </div>
@@ -431,7 +431,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
                   onClick={handleNext}
                   className="w-full py-3 rounded-xl font-black text-white bg-brand-green-light border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-2"
                 >
-                  Next Question
+                  {t("dailyGames.nextQuestion")}
                   <ArrowRight className="size-4" />
                 </button>
               ) : (

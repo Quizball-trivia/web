@@ -482,7 +482,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
           className="w-full py-3 rounded-xl font-black text-white bg-surface-card-tint border-b-4 border-b-[#1B2F36] active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-2"
         >
           <ArrowRight className="size-4" />
-          Skip to Next Round
+          {t("dailyGames.skipToNextRound")}
         </button>
         </div>
         </div>

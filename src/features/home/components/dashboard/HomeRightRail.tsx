@@ -153,7 +153,7 @@ export function HomeRightRail({ onOpenFriend }: HomeRightRailProps) {
                 className="w-full h-8 text-xs text-muted-foreground hover:text-foreground"
                 onClick={() => router.push('/objectives')}
               >
-                 View all objectives
+                 {t("homeDashboard.viewAllObjectives")}
                  <ArrowRight className="ml-1.5 size-3" />
               </Button>
            </div>

@@ -275,7 +275,7 @@ export function RewardsWheel({ onRewardWon, onBack }: RewardsWheelProps) {
         <div className="bg-surface-card rounded-xl border-b-4 border-surface-card-deeper border-l-4 border-l-[#1CB0F6] p-4 md:p-5">
           <h2 className="text-lg font-black text-white flex items-center gap-2 mb-2">
             <Gift className="size-5 text-brand-cyan" />
-            Daily Rewards Wheel
+            {t("dailyGames.dailyRewardsWheel")}
           </h2>
           <p className="text-sm text-brand-slate">
             Spin the wheel once every 24 hours for amazing rewards!
@@ -409,7 +409,7 @@ export function RewardsWheel({ onRewardWon, onBack }: RewardsWheelProps) {
                 ) : (
                   <span className="flex items-center justify-center gap-2">
                     <Star className="size-5" />
-                    Spin the Wheel
+                    {t("dailyGames.spinTheWheel")}
                   </span>
                 )}
 
@@ -483,7 +483,7 @@ export function RewardsWheel({ onRewardWon, onBack }: RewardsWheelProps) {
         <div className="bg-surface-card rounded-xl border-b-4 border-surface-card-deeper p-4 md:p-5">
           <h3 className="text-base font-black text-white flex items-center gap-2 mb-3">
             <Sparkles className="size-4 text-brand-cyan" />
-            Possible Rewards
+            {t("dailyGames.possibleRewards")}
           </h3>
           <div className="grid grid-cols-2 gap-2">
             {wheelRewards.map((reward) => (

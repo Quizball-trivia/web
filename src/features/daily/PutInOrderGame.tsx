@@ -239,7 +239,7 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
             </div>
 
             <button onClick={handleComplete} className="w-full py-3 lg:py-4 rounded-xl font-black text-white lg:text-lg bg-brand-green-light border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px] transition-all">
-              Collect Rewards
+              {t("dailyGames.collectRewards")}
             </button>
           </div>
         </div>
@@ -312,7 +312,7 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
 
             {!isRevealed ? (
               <button onClick={checkOrder} className="w-full py-3 lg:py-4 rounded-xl font-black text-white lg:text-lg bg-brand-green-light border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px] transition-all">
-                Submit Order
+                {t("dailyGames.submitOrder")}
               </button>
             ) : (
               <div className="space-y-3 lg:space-y-4">

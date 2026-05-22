@@ -39,7 +39,7 @@
   },
   "settings": {
     "title": "პარამეტრები",
-    "languageAndExperience": "ენა და გამოცდილება",
+    "languageAndExperience": "ენა",
     "languageCurrentEnglish": "ინგლისური (US)",
     "languageCurrentGeorgian": "ქართული",
     "switchToEnglish": "გადართე ინგლისურზე",
@@ -273,6 +273,15 @@
     "tabWeekly": "ყოველკვირეული",
     "back": "უკან"
   },
+  "homeDashboard": {
+    "dailyObjectives": "დღიური მიზნები",
+    "viewAllObjectives": "ყველა მიზნის ნახვა",
+    "viewAllText": "ყველას ნახვა",
+    "viewEvent": "ივენთის ნახვა",
+    "startRun": "დაწყება",
+    "notAvailableToday": "დღეს მიუწვდომელია",
+    "continueCareer": "კარიერის გაგრძელება"
+  },
   "home": {
     "dailySpin": "დღიური ბრუნი",
     "objectives": "მიზნები",
@@ -314,7 +323,17 @@
     "dragAndDrop": "გადაათრიე",
     "toArrange": "და დაალაგე ეს ერთეულები ამ თანმიმდევრობით:",
     "notQuiteRight": "არც ისე სწორად",
-    "proTip": "მინიშნება"
+    "proTip": "მინიშნება",
+    "giveUp": "დანებება",
+    "nextQuestion": "შემდეგი კითხვა",
+    "skipToNextRound": "შემდეგ რაუნდზე გადასვლა",
+    "submitOrder": "თანმიმდევრობის გაგზავნა",
+    "collectRewards": "ჯილდოს აღება",
+    "spinTheWheel": "დაატრიალე ბორბალი",
+    "possibleRewards": "შესაძლო ჯილდოები",
+    "placeYourBets": "გააკეთე ფსონი",
+    "betterLuckNextTime": "მომავალ ჯერზე გაგიმართლოს",
+    "dailyRewardsWheel": "დღიური ჯილდოების ბორბალი"
   },
   "dailyChallenge": {
     "answerPrefix": "პასუხი",
@@ -494,6 +513,16 @@
     "levelAndXpToNext": "· დონე {level} · {xp} შემდეგამდე",
     "noXpEarned": "XP არ მიგიღია"
   },
+  "friendHub": {
+    "title": "მეგობრული მატჩი",
+    "subtitle": "შემოუერთდი ღია ოთახს ან შექმენი საკუთარი.",
+    "playersOnlineLoading": "მოთამაშეები ონლაინ...",
+    "playersOnline": "{count} მოთამაშე ონლაინ",
+    "sessionRecovering": "წინა სესია სუფთავდება... ცოტა დრო დასჭირდება.",
+    "sessionTransitioning": "მზადება მიმდინარეობს... დაელოდე ცოტა ხანი.",
+    "browseRooms": "ოთახების დათვალიერება",
+    "createJoin": "შექმნა / შესვლა"
+  },
   "friend": {
     "createRoom": "ოთახის შექმნა",
     "joinLobby": "ლობში შესვლა",
@@ -573,7 +602,13 @@
     "bothPlayersReady": "ორივე მოთამაშე მზადაა.",
     "waitingMorePlayers": "ველოდებით მეტ მოთამაშეებს...",
     "waitingEveryoneReady": "ველოდებით ყველას მზადყოფნას...",
-    "waitingBothReady": "ველოდებით ორივე მოთამაშის მზადყოფნას..."
+    "waitingBothReady": "ველოდებით ორივე მოთამაშის მზადყოფნას...",
+    "readyCheck": "მზადყოფნის შემოწმება",
+    "readyTapToUnready": "მზადაა (დააჭირე გასაუქმებლად)",
+    "markReady": "მზად ვარ",
+    "startingMatch": "მატჩი იწყება...",
+    "preparingMatchSpinner": "მატჩი მზადდება...",
+    "leaveLobby": "ლობიდან გასვლა"
   },
   "possession": {
     "penaltyShootout": "პენალტების სერია",

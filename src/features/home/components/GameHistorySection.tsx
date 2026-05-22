@@ -1,3 +1,7 @@
+"use client";
+
+import { useLocale } from "@/contexts/LocaleContext";
+
 interface MatchResult {
   id: string;
   opponent: string;
@@ -95,15 +99,16 @@ function MatchResultCard({ match }: { match: MatchResult }) {
 }
 
 export function GameHistorySection({ onViewAll }: GameHistorySectionProps) {
+  const { t } = useLocale();
   return (
     <div className="px-4 mt-6 mb-6">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-semibold">Recent Matches</h2>
+        <h2 className="text-lg font-semibold">{t("recentMatches.title")}</h2>
         <button
           onClick={onViewAll}
           className="text-sm text-primary hover:underline"
         >
-          View All
+          {t("common.viewAll")}
         </button>
       </div>
 

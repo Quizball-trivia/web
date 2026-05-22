@@ -15,11 +15,13 @@ import { Users } from "lucide-react";
 import { toast } from "sonner";
 import { logger } from "@/utils/logger";
 import { connectSocket, getSocket } from "@/lib/realtime/socket-client";
+import { useLocale } from "@/contexts/LocaleContext";
 
 /** Delay (ms) between lobby:leave and lobby:join_by_code to let the server process the leave. */
 const LOBBY_LEAVE_JOIN_DELAY_MS = 140;
 
 export function FriendMatchHubPage() {
+  const { t } = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab') === 'create' ? 'create' : 'browse';
@@ -215,13 +217,13 @@ export function FriendMatchHubPage() {
                className="uppercase text-white"
                style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: "clamp(22px, 4vw, 36px)", lineHeight: 1 }}
             >
-               Friend Match
+               {t("friendHub.title")}
             </h1>
             <p
                className="uppercase text-white/50"
                style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 500, fontSize: "clamp(10px, 1.1vw, 13px)" }}
             >
-               Jump into an open room or start your own.
+               {t("friendHub.subtitle")}
             </p>
          </div>
 
@@ -232,7 +234,9 @@ export function FriendMatchHubPage() {
          >
             <Users className="size-4 text-brand-green" />
             <span>
-              {onlineUsers === null ? "Players online..." : `${onlineUsers.toLocaleString()} players online`}
+              {onlineUsers === null
+                ? t("friendHub.playersOnlineLoading")
+                : t("friendHub.playersOnline", { count: onlineUsers.toLocaleString() })}
             </span>
          </div>
       </div>
@@ -240,8 +244,8 @@ export function FriendMatchHubPage() {
       {(isSessionRecovering || isSessionTransitioning) && (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
           {isSessionRecovering
-            ? "Cleaning up a previous session... this will only take a moment."
-            : "Getting things ready... please wait a moment."}
+            ? t("friendHub.sessionRecovering")
+            : t("friendHub.sessionTransitioning")}
         </div>
       )}
 
@@ -262,7 +266,7 @@ export function FriendMatchHubPage() {
                      }
                      style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 14, letterSpacing: '0.06em' }}
                   >
-                     {value === 'browse' ? 'Browse Rooms' : 'Create / Join'}
+                     {value === 'browse' ? t("friendHub.browseRooms") : t("friendHub.createJoin")}
                   </button>
                );
             })}

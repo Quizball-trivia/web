@@ -91,7 +91,7 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
                 className="text-white uppercase"
                 style={{ fontFamily: poppins, fontWeight: 600, fontSize: 16, letterSpacing: '0.04em' }}
               >
-                Ready Check
+                {t("friend.readyCheck")}
               </h2>
             </div>
             <div
@@ -125,12 +125,12 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
               >
                 {me?.isReady ? (
                   <>
-                    <CheckCircle2 className="size-5 text-brand-green-light" /> Ready (Tap to unready)
+                    <CheckCircle2 className="size-5 text-brand-green-light" /> {t("friend.readyTapToUnready")}
                   </>
                 ) : (
                   <>
                     <CheckCircle2 className="size-5 text-brand-yellow" strokeWidth={2.5} />
-                    Mark Ready
+                    {t("friend.markReady")}
                   </>
                 )}
               </button>
@@ -156,7 +156,7 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
                   {isStartingMatch ? (
                     <>
                       <Loader2 className="size-4 animate-spin" />
-                      Starting Match...
+                      {t("friend.startingMatch")}
                     </>
                   ) : (
                     startLabel
@@ -170,7 +170,7 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
                     className="text-brand-yellow uppercase"
                     style={{ fontFamily: poppins, fontWeight: 600, fontSize: 11, letterSpacing: '0.1em' }}
                   >
-                    Preparing match...
+                    {t("friend.preparingMatchSpinner")}
                   </span>
                 </div>
               )}
@@ -182,7 +182,7 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
                 style={{ fontFamily: poppins, fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
               >
                 <LogOut className="size-4" />
-                Leave Lobby
+                {t("friend.leaveLobby")}
               </button>
 
               <div className="py-1 text-center">
