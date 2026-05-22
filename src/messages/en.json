@@ -104,6 +104,17 @@
     "leaveRewards": "Leave Rewards?",
     "quitMoneyDrop": "Quit Money Drop?"
   },
+  "career": {
+    "missionObjectives": "Mission Objectives",
+    "completionCriteria": "Completion Criteria",
+    "requiredScore": "Required Score",
+    "reward": "Reward",
+    "sideQuests": "Side Quests",
+    "careerMode": "Career Mode",
+    "journeyToGreatness": "Journey to Greatness",
+    "totalProgress": "Total Progress",
+    "levelDetails": "Level Details"
+  },
   "store": {
     "sessionExpired": "Session expired. Please sign in again.",
     "ticketsAlreadyFull": "Tickets are already full.",

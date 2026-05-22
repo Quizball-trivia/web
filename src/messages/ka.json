@@ -104,6 +104,17 @@
     "leaveRewards": "გახვალ ჯილდოებიდან?",
     "quitMoneyDrop": "გათიშავ ფულის ვარდნას?"
   },
+  "career": {
+    "missionObjectives": "მისიის მიზნები",
+    "completionCriteria": "შესრულების კრიტერიუმი",
+    "requiredScore": "საჭირო ქულა",
+    "reward": "ჯილდო",
+    "sideQuests": "გვერდითი ქვესტები",
+    "careerMode": "კარიერის რეჟიმი",
+    "journeyToGreatness": "გზა სიდიადისკენ",
+    "totalProgress": "ჯამური პროგრესი",
+    "levelDetails": "დონის დეტალები"
+  },
   "store": {
     "sessionExpired": "სესია ამოიწურა. გთხოვ ხელახლა შედი.",
     "ticketsAlreadyFull": "ბილეთები უკვე სრულია.",
