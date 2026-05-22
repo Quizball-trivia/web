@@ -454,35 +454,44 @@ export function AppShell({ children }: AppShellProps) {
                     </div>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuContent
+                  className="w-56 border-white/10 bg-surface-page/88 text-white shadow-[0_18px_48px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+                  align="end"
+                  forceMount
+                >
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">
+                      <p className="text-sm font-medium leading-none text-white">
                         {playerStats.username}
                       </p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        {t("accountMenu.levelAndRp", {
-                          level: playerStats.level,
-                          rp: playerStats.rankPoints ?? 0,
-                        })}
+                      <p className="text-xs leading-none">
+                        <span className="text-white">Level {playerStats.level}</span>
+                        <span className="text-white/45"> · </span>
+                        <span className="font-bold text-brand-yellow">{playerStats.rankPoints ?? 0} RP</span>
                       </p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push("/profile")}>
+                  <DropdownMenuItem
+                    className="text-white/90 focus:bg-white/10 focus:text-white"
+                    onClick={() => router.push("/profile")}
+                  >
                     <User className="mr-2 h-4 w-4" />
                     <span>{t("navigation.profile")}</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/settings")}>
+                  <DropdownMenuItem
+                    className="text-white/90 focus:bg-white/10 focus:text-white"
+                    onClick={() => router.push("/settings")}
+                  >
                     <Settings className="mr-2 h-4 w-4" />
                     <span>{t("navigation.settings")}</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => setShowLogoutConfirm(true)}
-                    className="text-red-500 focus:text-red-500 dark:focus:text-red-400"
+                    className="mx-1 my-1 justify-center rounded-[12px] bg-brand-red-soft px-3 py-2 font-semibold text-white shadow-[0_2px_10px_rgba(255,75,75,0.22)] transition-colors focus:bg-brand-red-deep focus:text-white hover:bg-brand-red-deep"
                   >
-                    <LogOut className="mr-2 h-4 w-4" />
+                    <LogOut className="mr-2 h-4 w-4 text-white" />
                     <span>{t("accountMenu.logOut")}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -494,15 +503,15 @@ export function AppShell({ children }: AppShellProps) {
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-hide">
             {showForfeitPendingBanner && (
               <div className="px-6 pt-4">
-                <div className="rounded-2xl border border-brand-red-soft/35 bg-brand-red-soft/15 px-5 py-4 shadow-[0_8px_30px_rgba(239,68,68,0.16)]">
+                <div className="rounded-2xl border-2 border-brand-red-soft bg-brand-red-soft/10 px-5 py-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="size-10 rounded-full bg-brand-red-soft/20 text-brand-red-soft/80 flex items-center justify-center">
+                      <div className="size-10 rounded-full bg-brand-red-soft/20 text-brand-red-soft flex items-center justify-center">
                         <Gamepad2 className="size-5" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-brand-red-soft">{forfeitPendingTitle}</p>
-                        <p className="text-xs text-brand-red-soft/70">{forfeitPendingDescription}</p>
+                        <p className="text-sm font-semibold text-white">{forfeitPendingTitle}</p>
+                        <p className="text-xs text-white/70">{forfeitPendingDescription}</p>
                       </div>
                     </div>
                   </div>
@@ -511,18 +520,18 @@ export function AppShell({ children }: AppShellProps) {
             )}
             {showCompletedMatchBanner && (
               <div className="px-6 pt-4">
-                <div className="rounded-2xl border border-brand-green/35 bg-brand-green/15 px-5 py-4 shadow-[0_8px_30px_rgba(16,185,129,0.16)]">
+                <div className="rounded-2xl border-2 border-brand-green bg-brand-green/10 px-5 py-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="size-10 rounded-full bg-brand-green/20 text-brand-green-light flex items-center justify-center">
+                      <div className="size-10 rounded-full bg-brand-green/20 text-brand-green flex items-center justify-center">
                         <Gamepad2 className="size-5" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-brand-green-light">
+                        <p className="text-sm font-semibold text-white">
                           Match finished against{" "}
-                          <span className="text-foreground">{completedMatchBanner?.opponent.username ?? "Opponent"}</span>
+                          <span className="text-white">{completedMatchBanner?.opponent.username ?? "Opponent"}</span>
                         </p>
-                          <p className="text-xs text-brand-green-light/70">
+                          <p className="text-xs text-white/70">
                             {completedByForfeit
                               ? "Reconnect limit reached. Final result is ready."
                               : "View the final result"}
@@ -539,8 +548,7 @@ export function AppShell({ children }: AppShellProps) {
                         </Button>
                         <Button
                           size="sm"
-                          variant="outline"
-                          className="h-9 border-brand-green/40 text-brand-green-light hover:bg-brand-green/10"
+                          className="h-9 bg-brand-red-soft text-white hover:bg-brand-red-soft/90"
                           onClick={handleDismissCompletedMatch}
                         >
                           Dismiss <X className="ml-2 size-4" />
@@ -552,18 +560,18 @@ export function AppShell({ children }: AppShellProps) {
               )}
               {showDraftBanner && (
                 <div className="px-6 pt-4">
-                  <div className="rounded-2xl border border-brand-orange/35 bg-brand-orange/15 px-5 py-4 shadow-[0_8px_30px_rgba(245,158,11,0.18)]">
+                  <div className="rounded-2xl border-2 border-brand-orange bg-brand-orange/10 px-5 py-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="size-10 rounded-full bg-brand-orange/20 text-brand-orange-light flex items-center justify-center">
+                        <div className="size-10 rounded-full bg-brand-orange/20 text-brand-orange flex items-center justify-center">
                           <Gamepad2 className="size-5" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-brand-orange-light">
+                          <p className="text-sm font-semibold text-white">
                             Draft active against{" "}
-                            <span className="text-foreground">{activeDraftBanner?.opponent?.username ?? "Opponent"}</span>
+                            <span className="text-white">{activeDraftBanner?.opponent?.username ?? "Opponent"}</span>
                           </p>
-                          <p className="text-xs text-brand-orange-light/70">Return to category banning before the match starts</p>
+                          <p className="text-xs text-white/70">Return to category banning before the match starts</p>
                         </div>
                       </div>
                       <Button
@@ -579,18 +587,18 @@ export function AppShell({ children }: AppShellProps) {
               )}
               {showRejoinBanner && (
               <div className="px-6 pt-4">
-                <div className="rounded-2xl border border-brand-cyan/35 bg-gradient-to-r from-brand-cyan/15 to-brand-cyan/15 px-5 py-4 shadow-[0_8px_30px_rgba(59,130,246,0.2)]">
+                <div className="rounded-2xl border-2 border-brand-yellow bg-brand-yellow/10 px-5 py-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="size-10 rounded-full bg-brand-cyan/20 text-brand-cyan flex items-center justify-center">
+                      <div className="size-10 rounded-full bg-brand-yellow/20 text-brand-yellow flex items-center justify-center">
                         <Gamepad2 className="size-5" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-brand-cyan">
+                        <p className="text-sm font-semibold text-white">
                           Match still active against{" "}
-                          <span className="text-foreground">{activeMatchBanner?.opponent.username ?? "Opponent"}</span>
+                          <span className="text-white">{activeMatchBanner?.opponent.username ?? "Opponent"}</span>
                         </p>
-                        <p className="text-xs text-brand-cyan/70">
+                        <p className="text-xs text-white/70">
                             {activeMatchBanner?.source === "rejoin"
                               ? formatRejoinCopy(rejoinReconnectsLeft)
                               : "Return to the live match"}
@@ -600,15 +608,14 @@ export function AppShell({ children }: AppShellProps) {
                     <div className="flex items-center gap-2">
                       <Button
                         size="sm"
-                        className="h-9 bg-brand-cyan text-white hover:bg-brand-cyan-deep"
+                        className="h-9 bg-brand-yellow text-surface-page hover:bg-brand-yellow-deep"
                         onClick={handleRejoinMatch}
                       >
                         Rejoin Match <ArrowRight className="ml-2 size-4" />
                       </Button>
                       <Button
                         size="sm"
-                        variant="outline"
-                        className="h-9 border-brand-red-soft/40 text-brand-red-soft/80 hover:bg-brand-red-soft/10"
+                        className="h-9 bg-brand-red-soft text-white hover:bg-brand-red-soft/90"
                         onClick={handleForfeitRejoin}
                       >
                         Forfeit <X className="ml-2 size-4" />
@@ -620,22 +627,22 @@ export function AppShell({ children }: AppShellProps) {
             )}
             {showLobbyBanner && (
               <div className="px-6 pt-4">
-                <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/15 to-lime-400/15 px-5 py-4 shadow-[0_8px_30px_rgba(16,185,129,0.15)]">
+                <div className="rounded-2xl border-2 border-brand-green bg-brand-green/10 px-5 py-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="size-10 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center">
+                      <div className="size-10 rounded-full bg-brand-green/20 text-brand-green flex items-center justify-center">
                         <Gamepad2 className="size-5" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-emerald-100">
+                        <p className="text-sm font-semibold text-white">
                           You’re still in{" "}
-                          <span className="text-foreground">{lobby?.displayName ?? "a lobby"}</span>
+                          <span className="text-white">{lobby?.displayName ?? "a lobby"}</span>
                         </p>
-                        <p className="text-xs text-emerald-200/80">
+                        <p className="text-xs text-white/70">
                           Code{" "}
-                          <span className="font-mono font-bold text-emerald-50">{lobbyCode || "..."}</span>
+                          <span className="font-mono font-bold text-white">{lobbyCode || "..."}</span>
                           {!socketConnected && (
-                            <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+                            <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-brand-yellow/20 px-2 py-0.5 text-[10px] font-semibold text-brand-yellow">
                               Reconnecting…
                             </span>
                           )}
@@ -645,7 +652,7 @@ export function AppShell({ children }: AppShellProps) {
                     <div className="flex items-center gap-2">
                       <Button
                         size="sm"
-                        className="h-9 bg-emerald-500 text-emerald-950 hover:bg-emerald-400"
+                        className="h-9 bg-brand-green text-white hover:bg-brand-green-deep"
                         onClick={handleReturnToLobby}
                         disabled={!lobbyCode}
                       >
@@ -653,8 +660,7 @@ export function AppShell({ children }: AppShellProps) {
                       </Button>
                       <Button
                         size="sm"
-                        variant="outline"
-                        className="h-9 border-emerald-500/30 text-emerald-100 hover:bg-emerald-500/10"
+                        className="h-9 bg-brand-red-soft text-white hover:bg-brand-red-soft/90"
                         onClick={handleLeaveLobby}
                       >
                         Leave <X className="ml-2 size-4" />
@@ -666,22 +672,22 @@ export function AppShell({ children }: AppShellProps) {
             )}
             {showRankedLobbyBanner && (
               <div className="px-6 pt-4">
-                <div className="rounded-2xl border border-brand-cyan/35 bg-gradient-to-r from-brand-cyan/15 to-brand-blue/15 px-5 py-4 shadow-[0_8px_30px_rgba(28,176,246,0.16)]">
+                <div className="rounded-2xl border-2 border-brand-blue bg-brand-blue/10 px-5 py-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="size-10 rounded-full bg-brand-cyan/20 text-brand-cyan flex items-center justify-center">
+                      <div className="size-10 rounded-full bg-brand-blue/20 text-brand-blue flex items-center justify-center">
                         <Gamepad2 className="size-5" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-brand-cyan">
+                        <p className="text-sm font-semibold text-white">
                           Ranked match is preparing
                         </p>
-                        <p className="text-xs text-brand-cyan/70">
+                        <p className="text-xs text-white/70">
                           {draftOpponent
-                            ? `Opponent found: ${draftOpponent.username}`
+                            ? <>Opponent found: <span className="text-white">{draftOpponent.username}</span></>
                             : "Return to matchmaking or leave the ranked lobby."}
                           {!socketConnected && (
-                            <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+                            <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-brand-yellow/20 px-2 py-0.5 text-[10px] font-semibold text-brand-yellow">
                               Reconnecting…
                             </span>
                           )}
@@ -691,15 +697,14 @@ export function AppShell({ children }: AppShellProps) {
                     <div className="flex items-center gap-2">
                       <Button
                         size="sm"
-                        className="h-9 bg-brand-cyan text-white hover:bg-brand-cyan-deep"
+                        className="h-9 bg-brand-blue text-white hover:bg-brand-blue/90"
                         onClick={handleReturnToRankedLobby}
                       >
                         Return to Matchmaking <ArrowRight className="ml-2 size-4" />
                       </Button>
                       <Button
                         size="sm"
-                        variant="outline"
-                        className="h-9 border-brand-red-soft/40 text-brand-red-soft/80 hover:bg-brand-red-soft/10"
+                        className="h-9 bg-brand-red-soft text-white hover:bg-brand-red-soft/90"
                         onClick={handleLeaveLobby}
                       >
                         Leave <X className="ml-2 size-4" />
@@ -779,14 +784,14 @@ export function AppShell({ children }: AppShellProps) {
         <main className="flex-1 overflow-y-auto pb-20">
           {showForfeitPendingBanner && (
             <div className="px-4 pt-4">
-              <div className="rounded-2xl border border-brand-red-soft/35 bg-brand-red-soft/15 px-4 py-3 shadow-[0_8px_30px_rgba(239,68,68,0.16)]">
+              <div className="rounded-2xl border-2 border-brand-red-soft bg-brand-red-soft/10 px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <div className="size-9 rounded-full bg-brand-red-soft/20 text-brand-red-soft/80 flex items-center justify-center">
+                  <div className="size-9 rounded-full bg-brand-red-soft/20 text-brand-red-soft flex items-center justify-center">
                     <Gamepad2 className="size-4" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-brand-red-soft">{forfeitPendingTitle}</p>
-                    <p className="text-xs text-brand-red-soft/70">{forfeitPendingDescription}</p>
+                    <p className="text-sm font-semibold text-white">{forfeitPendingTitle}</p>
+                    <p className="text-xs text-white/70">{forfeitPendingDescription}</p>
                   </div>
                 </div>
               </div>
@@ -794,18 +799,18 @@ export function AppShell({ children }: AppShellProps) {
           )}
           {showCompletedMatchBanner && (
             <div className="px-4 pt-4">
-              <div className="rounded-2xl border border-brand-green/35 bg-brand-green/15 px-4 py-3 shadow-[0_8px_30px_rgba(16,185,129,0.16)]">
+              <div className="rounded-2xl border-2 border-brand-green bg-brand-green/10 px-4 py-3">
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="size-9 rounded-full bg-brand-green/20 text-brand-green-light flex items-center justify-center">
+                    <div className="size-9 rounded-full bg-brand-green/20 text-brand-green flex items-center justify-center">
                       <Gamepad2 className="size-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-brand-green-light">
+                      <p className="text-sm font-semibold text-white">
                         Match finished vs{" "}
-                        <span className="text-foreground">{completedMatchBanner?.opponent.username ?? "Opponent"}</span>
+                        <span className="text-white">{completedMatchBanner?.opponent.username ?? "Opponent"}</span>
                       </p>
-                        <p className="text-xs text-brand-green-light/70">
+                        <p className="text-xs text-white/70">
                           {completedByForfeit ? "Reconnect limit reached. Result is ready." : "Final result is ready"}
                         </p>
                     </div>
@@ -820,8 +825,7 @@ export function AppShell({ children }: AppShellProps) {
                       </Button>
                       <Button
                         size="sm"
-                        variant="outline"
-                        className="flex-1 h-10 border-brand-green/40 text-brand-green-light hover:bg-brand-green/10"
+                        className="flex-1 h-10 bg-brand-red-soft text-white hover:bg-brand-red-soft/90"
                         onClick={handleDismissCompletedMatch}
                       >
                         Dismiss
@@ -833,18 +837,18 @@ export function AppShell({ children }: AppShellProps) {
             )}
             {showDraftBanner && (
               <div className="px-4 pt-4">
-                <div className="rounded-2xl border border-brand-orange/35 bg-brand-orange/15 px-4 py-3 shadow-[0_8px_30px_rgba(245,158,11,0.16)]">
+                <div className="rounded-2xl border-2 border-brand-orange bg-brand-orange/10 px-4 py-3">
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="size-9 rounded-full bg-brand-orange/20 text-brand-orange-light flex items-center justify-center">
+                      <div className="size-9 rounded-full bg-brand-orange/20 text-brand-orange flex items-center justify-center">
                         <Gamepad2 className="size-4" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-brand-orange-light">
+                        <p className="text-sm font-semibold text-white">
                           Draft active vs{" "}
-                          <span className="text-foreground">{activeDraftBanner?.opponent?.username ?? "Opponent"}</span>
+                          <span className="text-white">{activeDraftBanner?.opponent?.username ?? "Opponent"}</span>
                         </p>
-                        <p className="text-xs text-brand-orange-light/70">Return to category banning</p>
+                        <p className="text-xs text-white/70">Return to category banning</p>
                       </div>
                     </div>
                     <Button
@@ -860,18 +864,18 @@ export function AppShell({ children }: AppShellProps) {
             )}
             {showRejoinBanner && (
             <div className="px-4 pt-4">
-              <div className="rounded-2xl border border-brand-cyan/35 bg-gradient-to-r from-brand-cyan/15 to-brand-cyan/15 px-4 py-3 shadow-[0_8px_30px_rgba(59,130,246,0.2)]">
+              <div className="rounded-2xl border-2 border-brand-yellow bg-brand-yellow/10 px-4 py-3">
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="size-9 rounded-full bg-brand-cyan/20 text-brand-cyan flex items-center justify-center">
+                    <div className="size-9 rounded-full bg-brand-yellow/20 text-brand-yellow flex items-center justify-center">
                       <Gamepad2 className="size-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-brand-cyan">
+                      <p className="text-sm font-semibold text-white">
                         Match active vs{" "}
-                        <span className="text-foreground">{activeMatchBanner?.opponent.username ?? "Opponent"}</span>
+                        <span className="text-white">{activeMatchBanner?.opponent.username ?? "Opponent"}</span>
                       </p>
-                      <p className="text-xs text-brand-cyan/70">
+                      <p className="text-xs text-white/70">
                           {activeMatchBanner?.source === "rejoin"
                             ? formatRejoinCopy(rejoinReconnectsLeft, true)
                             : "Return to continue"}
@@ -881,15 +885,14 @@ export function AppShell({ children }: AppShellProps) {
                   <div className="flex gap-2">
                     <Button
                       size="sm"
-                      className="flex-1 h-10 bg-brand-cyan text-white hover:bg-brand-cyan-deep"
+                      className="flex-1 h-10 bg-brand-yellow text-surface-page hover:bg-brand-yellow-deep"
                       onClick={handleRejoinMatch}
                     >
                       Rejoin
                     </Button>
                     <Button
                       size="sm"
-                      variant="outline"
-                      className="flex-1 h-10 border-brand-red-soft/40 text-brand-red-soft/80 hover:bg-brand-red-soft/10"
+                      className="flex-1 h-10 bg-brand-red-soft text-white hover:bg-brand-red-soft/90"
                       onClick={handleForfeitRejoin}
                     >
                       Forfeit
@@ -901,22 +904,22 @@ export function AppShell({ children }: AppShellProps) {
           )}
           {showLobbyBanner && (
             <div className="px-4 pt-4">
-              <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/15 to-lime-400/15 px-4 py-3 shadow-[0_8px_30px_rgba(16,185,129,0.15)]">
+              <div className="rounded-2xl border-2 border-brand-green bg-brand-green/10 px-4 py-3">
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="size-9 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center">
+                    <div className="size-9 rounded-full bg-brand-green/20 text-brand-green flex items-center justify-center">
                       <Gamepad2 className="size-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-emerald-100">
+                      <p className="text-sm font-semibold text-white">
                         You’re still in{" "}
-                        <span className="text-foreground">{lobby?.displayName ?? "a lobby"}</span>
+                        <span className="text-white">{lobby?.displayName ?? "a lobby"}</span>
                       </p>
-                      <p className="text-xs text-emerald-200/80">
+                      <p className="text-xs text-white/70">
                         Code{" "}
-                        <span className="font-mono font-bold text-emerald-50">{lobbyCode || "..."}</span>
+                        <span className="font-mono font-bold text-white">{lobbyCode || "..."}</span>
                         {!socketConnected && (
-                          <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+                          <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-brand-yellow/20 px-2 py-0.5 text-[10px] font-semibold text-brand-yellow">
                             Reconnecting…
                           </span>
                         )}
@@ -926,7 +929,7 @@ export function AppShell({ children }: AppShellProps) {
                   <div className="flex gap-2">
                     <Button
                       size="sm"
-                      className="flex-1 h-10 bg-emerald-500 text-emerald-950 hover:bg-emerald-400"
+                      className="flex-1 h-10 bg-brand-green text-white hover:bg-brand-green-deep"
                       onClick={handleReturnToLobby}
                       disabled={!lobbyCode}
                     >
@@ -934,8 +937,7 @@ export function AppShell({ children }: AppShellProps) {
                     </Button>
                     <Button
                       size="sm"
-                      variant="outline"
-                      className="flex-1 h-10 border-emerald-500/30 text-emerald-100 hover:bg-emerald-500/10"
+                      className="flex-1 h-10 bg-brand-red-soft text-white hover:bg-brand-red-soft/90"
                       onClick={handleLeaveLobby}
                     >
                       Leave
@@ -947,22 +949,22 @@ export function AppShell({ children }: AppShellProps) {
           )}
           {showRankedLobbyBanner && (
             <div className="px-4 pt-4">
-              <div className="rounded-2xl border border-brand-cyan/35 bg-gradient-to-r from-brand-cyan/15 to-brand-blue/15 px-4 py-3 shadow-[0_8px_30px_rgba(28,176,246,0.16)]">
+              <div className="rounded-2xl border-2 border-brand-blue bg-brand-blue/10 px-4 py-3">
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="size-9 rounded-full bg-brand-cyan/20 text-brand-cyan flex items-center justify-center">
+                    <div className="size-9 rounded-full bg-brand-blue/20 text-brand-blue flex items-center justify-center">
                       <Gamepad2 className="size-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-brand-cyan">
+                      <p className="text-sm font-semibold text-white">
                         Ranked match is preparing
                       </p>
-                      <p className="text-xs text-brand-cyan/70">
+                      <p className="text-xs text-white/70">
                         {draftOpponent
-                          ? `Opponent found: ${draftOpponent.username}`
+                          ? <>Opponent found: <span className="text-white">{draftOpponent.username}</span></>
                           : "Return to matchmaking or leave."}
                         {!socketConnected && (
-                          <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+                          <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-brand-yellow/20 px-2 py-0.5 text-[10px] font-semibold text-brand-yellow">
                             Reconnecting…
                           </span>
                         )}
@@ -972,15 +974,14 @@ export function AppShell({ children }: AppShellProps) {
                   <div className="flex gap-2">
                     <Button
                       size="sm"
-                      className="flex-1 h-10 bg-brand-cyan text-white hover:bg-brand-cyan-deep"
+                      className="flex-1 h-10 bg-brand-blue text-white hover:bg-brand-blue/90"
                       onClick={handleReturnToRankedLobby}
                     >
                       Return
                     </Button>
                     <Button
                       size="sm"
-                      variant="outline"
-                      className="flex-1 h-10 border-brand-red-soft/40 text-brand-red-soft/80 hover:bg-brand-red-soft/10"
+                      className="flex-1 h-10 bg-brand-red-soft text-white hover:bg-brand-red-soft/90"
                       onClick={handleLeaveLobby}
                     >
                       Leave

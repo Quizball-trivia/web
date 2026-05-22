@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LobbyBrowsePanel } from "./components/LobbyBrowsePanel";
 import { CreateJoinPanel } from "./components/CreateJoinPanel";
 import { AlreadyInLobbyModal } from "./components/AlreadyInLobbyModal";
@@ -208,17 +207,30 @@ export function FriendMatchHubPage() {
   ]);
 
   return (
-    <div className="container mx-auto max-w-5xl py-6 animate-in fade-in space-y-6">
+    <div className="container mx-auto max-w-5xl px-4 py-6 animate-in fade-in space-y-6 sm:px-6 lg:px-0">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
          <div className="space-y-1">
-            <h1 className="text-3xl font-black tracking-tight">Friend Match</h1>
-            <p className="text-muted-foreground">Jump into an open room or start your own.</p>
+            <h1
+               className="uppercase text-white"
+               style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: "clamp(22px, 4vw, 36px)", lineHeight: 1 }}
+            >
+               Friend Match
+            </h1>
+            <p
+               className="uppercase text-white/50"
+               style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 500, fontSize: "clamp(10px, 1.1vw, 13px)" }}
+            >
+               Jump into an open room or start your own.
+            </p>
          </div>
 
          {/* Gamified Stat/Decor (Optional) */}
-         <div className="hidden lg:flex items-center gap-3 px-4 py-2 bg-card border border-border rounded-full shadow-sm text-sm font-medium">
-            <Users className="size-4 text-green-500" />
+         <div
+            className="hidden lg:flex items-center gap-2 text-white uppercase"
+            style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: '0.06em' }}
+         >
+            <Users className="size-4 text-brand-green" />
             <span>
               {onlineUsers === null ? "Players online..." : `${onlineUsers.toLocaleString()} players online`}
             </span>
@@ -234,24 +246,40 @@ export function FriendMatchHubPage() {
       )}
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-         <TabsList className="grid w-full grid-cols-2 max-w-sm">
-            <TabsTrigger value="browse">Browse Rooms</TabsTrigger>
-            <TabsTrigger value="create">Create / Join</TabsTrigger>
-         </TabsList>
+      <div className="space-y-6">
+         <div className="flex w-full max-w-sm items-center gap-1.5 rounded-[20px] border-2 border-brand-blue p-1">
+            {(['browse', 'create'] as const).map((value) => {
+               const isActive = activeTab === value;
+               return (
+                  <button
+                     key={value}
+                     type="button"
+                     onClick={() => setActiveTab(value)}
+                     className={
+                        isActive
+                           ? "flex-1 rounded-[14px] bg-brand-blue py-2.5 uppercase text-white outline-none transition-colors focus:outline-none"
+                           : "flex-1 rounded-[14px] py-2.5 uppercase text-white/70 outline-none transition-colors hover:bg-brand-blue/10 focus:outline-none"
+                     }
+                     style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 14, letterSpacing: '0.06em' }}
+                  >
+                     {value === 'browse' ? 'Browse Rooms' : 'Create / Join'}
+                  </button>
+               );
+            })}
+         </div>
 
-         <TabsContent value="browse" className="min-h-[400px]">
-            <LobbyBrowsePanel 
-               onJoin={handleJoinPublic}
-               isJoiningCode={isJoiningCode}
-               onActionTriggered={handleActionTriggered}
-            />
-         </TabsContent>
-
-         <TabsContent value="create">
+         {activeTab === 'browse' ? (
+            <div className="min-h-[400px]">
+               <LobbyBrowsePanel
+                  onJoin={handleJoinPublic}
+                  isJoiningCode={isJoiningCode}
+                  onActionTriggered={handleActionTriggered}
+               />
+            </div>
+         ) : (
             <CreateJoinPanel onActionTriggered={handleActionTriggered} />
-         </TabsContent>
-      </Tabs>
+         )}
+      </div>
 
       {/* Error Modal */}
       <AlreadyInLobbyModal 

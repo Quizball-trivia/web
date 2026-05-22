@@ -16,14 +16,13 @@ export function LobbyCard({ lobby, onJoin, isJoining }: LobbyCardProps) {
   const isFull = lobby.memberCount >= lobby.maxMembers;
   
   return (
-    <Card className="group relative overflow-hidden border-border transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5">
+    <Card className="group relative overflow-hidden border-2 border-brand-green bg-transparent transition-all hover:bg-brand-green/5">
       <div className="flex items-center gap-4 p-4">
         {/* Host Avatar */}
         <div className="relative shrink-0">
           <AvatarDisplay
             customization={lobby.host.avatarCustomization ?? { base: lobby.host.avatarUrl }}
             size="sm"
-            className="border-2 border-border group-hover:border-primary/50 transition-colors"
           />
           <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-background border border-border shadow-sm">
             <Users className="size-3 text-muted-foreground" />
@@ -40,23 +39,27 @@ export function LobbyCard({ lobby, onJoin, isJoining }: LobbyCardProps) {
                 </Badge>
              )}
            </div>
-           
+
            <div className="flex items-center gap-3 text-sm text-muted-foreground">
               <span className="font-mono bg-muted/50 px-1.5 py-0.5 rounded text-xs">
                 {lobby.inviteCode}
               </span>
-              <span className={cn("flex items-center gap-1 text-xs", isFull ? "text-red-500" : "text-green-500")}>
-                <div className={cn("size-1.5 rounded-full", isFull ? "bg-red-500" : "bg-green-500 animate-pulse")} />
+              <span className={cn("flex items-center gap-1 text-xs", isFull ? "text-brand-red-soft" : "text-brand-green")}>
+                <div className={cn("size-1.5 rounded-full", isFull ? "bg-brand-red-soft" : "bg-brand-green animate-pulse")} />
                 {lobby.memberCount}/{lobby.maxMembers}
               </span>
            </div>
         </div>
 
         {/* Action */}
-        <Button 
-           size="sm" 
-           variant={isFull ? "outline" : "default"}
-           className={cn("transition-all gap-2", !isFull && "hover:bg-primary/90")}
+        <Button
+           size="sm"
+           className={cn(
+             "transition-all gap-2",
+             isFull
+               ? "bg-transparent border-2 border-white/15 text-white/50"
+               : "bg-brand-green text-white hover:bg-brand-green-deep"
+           )}
            disabled={isFull || isJoining}
            onClick={() => onJoin(lobby.inviteCode)}
         >
@@ -64,7 +67,7 @@ export function LobbyCard({ lobby, onJoin, isJoining }: LobbyCardProps) {
              "Full"
            ) : (
              <>
-               Join <ArrowRight className="size-4 opacity-50 group-hover:translate-x-0.5 transition-transform" />
+               Join <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />
              </>
            )}
         </Button>

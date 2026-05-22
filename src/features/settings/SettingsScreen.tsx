@@ -168,16 +168,16 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
       <div className="space-y-8">
          {/* Language & Experience */}
          <SettingsSection title={t("settings.languageAndExperience")} icon={<Globe className="size-5" />}>
-            <div className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors cursor-pointer" onClick={toggleLanguage}>
+            <div className="p-4 flex items-center justify-between hover:bg-white/[0.04] transition-colors cursor-pointer" onClick={toggleLanguage}>
                <div className="flex items-center gap-4">
                   <div className="size-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-xl shadow-sm border border-blue-500/20">
                      {locale === 'en' ? '🇺🇸' : '🇬🇪'}
                   </div>
                   <div>
-                     <div className="font-medium">
+                     <div className="font-medium text-white">
                        {locale === 'en' ? t("settings.languageCurrentEnglish") : t("settings.languageCurrentGeorgian")}
                      </div>
-                     <div className="text-xs text-muted-foreground">
+                     <div className="text-xs text-white/55">
                        {locale === 'en' ? t("settings.switchToGeorgian") : t("settings.switchToEnglish")}
                      </div>
                   </div>

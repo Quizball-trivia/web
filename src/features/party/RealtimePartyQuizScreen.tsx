@@ -9,8 +9,8 @@ import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { QuitMatchModal } from '@/features/game/components/QuitMatchModal';
 import { useRealtimeGameLogic } from '@/features/game/hooks/useRealtimeGameLogic';
-import { PartyQuestionPanel } from '@/features/party/components/PartyQuestionPanel';
-import { PartyRoundTransitionOverlay } from '@/features/party/components/PartyRoundTransitionOverlay';
+import { PossessionQuestionPanel } from '@/features/possession/components/PossessionQuestionPanel';
+import { RoundTransitionOverlay } from '@/features/possession/components/RoundTransitionOverlay';
 import type { AnswerStateArray, Phase } from '@/lib/types/game.types';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import type { MatchParticipant } from '@/lib/realtime/socket.types';
@@ -98,6 +98,83 @@ function getStandingDotStatus(params: {
   if (params.answered) return 'correct';
   if (params.showOptions) return 'answering';
   return 'idle';
+}
+
+// Hex color per rank — shared by the standings borders/pills and the
+// per-player pick chips on the question card, so each player has a single
+// recognisable accent colour across the screen.
+const RANK_HEX: Record<number, string> = {
+  1: '#38B60E',
+  2: '#FFE500',
+  3: '#1645FF',
+  4: '#FF9600',
+  5: '#FF4B4B',
+  6: '#CE82FF',
+};
+
+function getRankHex(rank: number): string {
+  return RANK_HEX[rank] ?? RANK_HEX[6]!;
+}
+
+// Per-rank styling — outlined card + pill colour rotate through the brand
+// palette so each row reads as a distinct "slot" with a subtle matching tint.
+function getRankStyle(rank: number): {
+  border: string;
+  pillBg: string;
+  glow: string;
+  tint: string;
+  selfGlow: string;
+} {
+  switch (rank) {
+    case 1:
+      return {
+        border: 'border-brand-green',
+        pillBg: 'bg-brand-green',
+        glow: '0 1.76px 6.334px 1.32px rgba(56,182,14,0.25)',
+        tint: 'bg-brand-green/[0.08]',
+        selfGlow: '0 0 18px rgba(56,182,14,0.55), 0 0 36px rgba(56,182,14,0.25)',
+      };
+    case 2:
+      return {
+        border: 'border-brand-yellow',
+        pillBg: 'bg-brand-yellow text-surface-page',
+        glow: '0 1.76px 6.334px 1.32px rgba(255,229,0,0.25)',
+        tint: 'bg-brand-yellow/[0.08]',
+        selfGlow: '0 0 18px rgba(255,229,0,0.55), 0 0 36px rgba(255,229,0,0.25)',
+      };
+    case 3:
+      return {
+        border: 'border-brand-blue',
+        pillBg: 'bg-brand-blue',
+        glow: '0 1.76px 6.334px 1.32px rgba(22,69,255,0.25)',
+        tint: 'bg-brand-blue/[0.08]',
+        selfGlow: '0 0 18px rgba(22,69,255,0.6), 0 0 36px rgba(22,69,255,0.3)',
+      };
+    case 4:
+      return {
+        border: 'border-brand-orange',
+        pillBg: 'bg-brand-orange',
+        glow: '0 1.76px 6.334px 1.32px rgba(255,150,0,0.25)',
+        tint: 'bg-brand-orange/[0.08]',
+        selfGlow: '0 0 18px rgba(255,150,0,0.55), 0 0 36px rgba(255,150,0,0.25)',
+      };
+    case 5:
+      return {
+        border: 'border-brand-red-soft',
+        pillBg: 'bg-brand-red-soft',
+        glow: '0 1.76px 6.334px 1.32px rgba(255,75,75,0.25)',
+        tint: 'bg-brand-red-soft/[0.08]',
+        selfGlow: '0 0 18px rgba(255,75,75,0.55), 0 0 36px rgba(255,75,75,0.25)',
+      };
+    default:
+      return {
+        border: 'border-brand-purple',
+        pillBg: 'bg-brand-purple',
+        glow: '0 1.76px 6.334px 1.32px rgba(206,130,255,0.25)',
+        tint: 'bg-brand-purple/[0.08]',
+        selfGlow: '0 0 18px rgba(206,130,255,0.55), 0 0 36px rgba(206,130,255,0.25)',
+      };
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -265,11 +342,35 @@ export function RealtimePartyQuizScreen({
   );
   const transitionCategoryName = question?.categoryName ?? 'Football';
 
-  const isTimerUrgent = state.showOptions && state.timeRemaining <= 3;
-  // Always show the timer when we have a question — during reading phase show
-  // the full value in a neutral state, during playing phase show the countdown.
-  const hasQuestion = question !== null;
-  const isReading = hasQuestion && !state.showOptions && !state.roundResolved;
+  // Map each player to a stable rank-tint color for the pick chips.
+  const rankColorByUserId = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const player of standings) {
+      map.set(player.userId, getRankHex(player.rank));
+    }
+    return map;
+  }, [standings]);
+
+  // Party-mode pick chips — every other player's selection for this round.
+  // Only populated once the round resolves (the server sends `selectedIndex`
+  // in the round-result payload, so we can't show live picks during play).
+  const partyPicks = useMemo(() => {
+    if (!state.roundResult?.players) return undefined;
+    const others = Object.entries(state.roundResult.players).filter(
+      ([userId]) => userId !== selfUserId,
+    );
+    if (others.length === 0) return undefined;
+    return others.map(([userId, player]) => {
+      const participant = participantMap.get(userId);
+      return {
+        userId,
+        username: participant?.username ?? 'Player',
+        selectedIndex: player.selectedIndex,
+        isCorrect: player.isCorrect,
+        accentColor: rankColorByUserId.get(userId),
+      };
+    });
+  }, [participantMap, rankColorByUserId, selfUserId, state.roundResult?.players]);
 
   // ---------------------------------------------------------------------------
   // Pre-match / loading
@@ -279,9 +380,9 @@ export function RealtimePartyQuizScreen({
     return (
       <div className="flex min-h-dvh w-full items-center justify-center bg-surface-page-alt">
         {state.startCountdownActive ? (
-          <div className="flex flex-col items-center gap-3">
+          <div className="flex flex-col items-center gap-2">
             <div className="font-fun text-xs font-bold uppercase tracking-[0.28em] text-white/60">Quiz starts in</div>
-            <div className="flex size-28 items-center justify-center rounded-full border-4 border-brand-purple/70 bg-surface-deep shadow-[0_0_40px_rgba(206,130,255,0.28)]">
+            <div className="flex size-28 items-center justify-center rounded-full border-4 border-brand-cyan/60 bg-surface-deep shadow-[0_0_40px_rgba(28,176,246,0.25)]">
               <span className="font-fun text-5xl font-black leading-none tabular-nums text-white">
                 {Math.max(1, state.countdownSeconds)}
               </span>
@@ -299,14 +400,7 @@ export function RealtimePartyQuizScreen({
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="relative min-h-dvh overflow-hidden bg-surface-page-alt text-white">
-      {/* Background gradients */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(206,130,255,0.18),_transparent_34%),radial-gradient(circle_at_bottom_left,_rgba(28,176,246,0.16),_transparent_36%)]" />
-      <div
-        className="absolute inset-0 opacity-[0.04]"
-        style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '18px 18px' }}
-      />
-
+    <div className="relative min-h-dvh overflow-hidden bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat text-white">
       {/* Start countdown overlay */}
       <AnimatePresence>
         {state.startCountdownActive && (
@@ -315,21 +409,22 @@ export function RealtimePartyQuizScreen({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-30 flex items-center justify-center"
+            transition={{ duration: 0.2 }}
+            className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center"
           >
-            <div className="absolute inset-0 bg-surface-page-alt/60 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-surface-page-alt/45 backdrop-blur-[1.5px]" />
             <motion.div
               key={`party-countdown-${state.countdownSeconds}`}
-              initial={{ scale: 0.72, opacity: 0.45 }}
+              initial={{ scale: 0.72, opacity: 0.4 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: 'spring', stiffness: 340, damping: 22 }}
-              className="relative flex flex-col items-center gap-3"
+              className="relative flex flex-col items-center gap-2"
             >
-              <div className="font-fun text-xs font-bold uppercase tracking-[0.28em] text-white/60">
+              <div className="font-fun text-xs font-bold uppercase tracking-[0.28em] text-white/70">
                 {state.countdownReason === 'resume' ? 'Reconnected. Resuming in' : 'Quiz starts in'}
               </div>
-              <div className="flex size-28 items-center justify-center rounded-full border-4 border-brand-purple/70 bg-surface-deep shadow-[0_0_48px_rgba(206,130,255,0.3)] sm:size-32">
-                <span className="font-fun text-5xl font-black leading-none tabular-nums text-white sm:text-6xl">
+              <div className="flex size-32 items-center justify-center rounded-full border-4 border-brand-cyan/70 bg-surface-deep shadow-[0_0_50px_rgba(28,176,246,0.3)]">
+                <span className="font-fun text-6xl font-black leading-none tabular-nums text-white">
                   {Math.max(1, state.countdownSeconds)}
                 </span>
               </div>
@@ -375,122 +470,60 @@ export function RealtimePartyQuizScreen({
         )}
       </AnimatePresence>
 
+      {/* Floating leave button */}
+      <button
+        onClick={() => setShowQuitModal(true)}
+        className="absolute right-3 top-3 z-40 rounded-full p-2 text-white/45 transition-colors hover:bg-white/5 hover:text-white/80 sm:right-4 sm:top-4"
+        title="Leave match"
+      >
+        <X className="size-5" />
+      </button>
+
       {/* ================================================================= */}
       {/* Main content */}
       {/* ================================================================= */}
       <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-5xl flex-col px-3 pb-20 pt-4 sm:px-5 lg:px-8 lg:pb-6">
 
-        {/* ─── HUD Bar ─── */}
-        <div className="mb-3 font-fun space-y-2.5">
-          {/* Top row: round pill • timer (absolutely centered) • leave */}
-          <div className="relative flex items-center justify-between px-1">
-            {/* Round pill */}
-            <div className="rounded-full bg-white/8 px-3 py-1 text-[11px] font-black uppercase tracking-[0.15em] text-white/60">
-              Round {Math.min(questionNumber, totalQuestions)}/{totalQuestions}
-            </div>
-
-            {/* Center timer — absolutely positioned for true centering */}
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-              <div
-                className={cn(
-                  'flex size-14 items-center justify-center rounded-full border-2 transition-all duration-200',
-                  state.showOptions
-                    ? isTimerUrgent
-                      ? 'border-red-500/50 bg-red-500/10'
-                      : 'border-white/15 bg-white/5'
-                    : isReading
-                      ? 'border-white/10 bg-white/[0.04]'
-                      : 'border-white/10 bg-white/[0.03]',
-                )}
-              >
-                <motion.span
-                  className={cn(
-                    'text-3xl font-black tabular-nums transition-all duration-200',
-                    state.showOptions
-                      ? isTimerUrgent ? 'text-red-500' : 'text-white'
-                      : isReading ? 'text-white/30' : 'text-white/20 opacity-0',
-                  )}
-                  animate={isTimerUrgent ? { scale: [1, 1.08, 1] } : { scale: 1 }}
-                  transition={isTimerUrgent ? { duration: 0.5, repeat: Infinity } : {}}
-                >
-                  {state.timeRemaining}
-                </motion.span>
-              </div>
-            </div>
-
-            {/* Right side: leave button only */}
-            <button
-              onClick={() => setShowQuitModal(true)}
-              className="shrink-0 rounded-full p-1.5 text-white/40 transition-colors hover:bg-white/5 hover:text-white/70"
-              title="Leave match"
-            >
-              <X className="size-5" />
-            </button>
-          </div>
-
-          {/* Progress segments */}
-          <div className="flex gap-1.5 px-1">
-            {Array.from({ length: totalQuestions }).map((_, i) => {
-              const qNum = i + 1;
-              const isComplete = qNum < questionNumber;
-              const isCurrent = qNum === questionNumber;
-              return (
-                <div
-                  key={i}
-                  className="h-2 flex-1 rounded-full overflow-hidden bg-white/10"
-                >
-                  <div
-                    className={cn(
-                      'h-full rounded-full transition-all duration-500',
-                      isComplete ? 'w-full' : isCurrent ? 'w-full' : 'w-0',
-                    )}
-                    style={
-                      isComplete
-                        ? { background: 'linear-gradient(180deg, #4ade80 0%, #22c55e 100%)' }
-                        : isCurrent
-                          ? { background: '#1CB0F6' }
-                          : undefined
-                    }
-                  >
-                    {isComplete && (
-                      <div className="h-1/2 rounded-full bg-gradient-to-b from-white/30 to-transparent" />
-                    )}
-                    {isCurrent && (
-                      <motion.div
-                        className="h-full rounded-full bg-white/25"
-                        animate={{ opacity: [0.4, 0.8, 0.4] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                      />
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
         {/* ─── 2-column layout: question + standings ─── */}
-        <div className="grid flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_240px]">
-          {/* Question panel */}
-          <div className="relative">
-            <PartyQuestionPanel
-              phase={uiPhase}
-              question={question}
-              showOptions={state.showOptions}
-              selectedAnswer={state.selectedAnswer}
-              answerStates={answerStates}
-              showPlayerSplash={showPlayerSplash}
-              playerSplashPoints={playerSplashPoints}
-              onPlayerSplashComplete={() => setShowPlayerSplash(false)}
-              onAnswer={actions.submitAnswer}
-            />
+        <div className="grid flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+          {/* Question panel — same UI as ranked possession match (without pitch) */}
+          <div className="relative min-h-[30rem] md:min-h-[34rem] lg:min-h-[38rem]">
+            <motion.div
+              animate={{ opacity: transitionVisible ? 0 : 1 }}
+              transition={{ duration: transitionVisible ? 0 : 0.6 }}
+              initial={false}
+              aria-hidden={transitionVisible}
+              className={transitionVisible ? 'pointer-events-none' : ''}
+            >
+              <PossessionQuestionPanel
+                phase={uiPhase}
+                isPenaltyPhase={false}
+                isShotPhase={false}
+                isLastAttackPhase={false}
+                question={question}
+                qIndex={Math.max(0, questionNumber - 1)}
+                totalQuestions={totalQuestions}
+                timeRemaining={state.timeRemaining}
+                showOptions={state.showOptions}
+                selectedAnswer={state.selectedAnswer}
+                answerStates={answerStates}
+                opponentAnswer={null}
+                partyPicks={partyPicks}
+                showPlayerSplash={showPlayerSplash}
+                playerSplashPoints={playerSplashPoints}
+                onPlayerSplashComplete={() => setShowPlayerSplash(false)}
+                onAnswer={actions.submitAnswer}
+              />
+            </motion.div>
 
-            <PartyRoundTransitionOverlay
-              visible={transitionVisible}
-              questionNumber={transitionQuestionNumber}
-              totalQuestions={totalQuestions}
-              categoryName={transitionCategoryName}
-            />
+            <AnimatePresence>
+              {transitionVisible && (
+                <RoundTransitionOverlay
+                  title={`Question ${transitionQuestionNumber}`}
+                  categoryName={transitionCategoryName}
+                />
+              )}
+            </AnimatePresence>
           </div>
 
           {/* ─── Desktop standings sidebar ─── */}
@@ -505,48 +538,52 @@ export function RealtimePartyQuizScreen({
                   answered: player.answered,
                   showOptions: state.showOptions,
                 });
+                const rankStyle = getRankStyle(player.rank);
                 return (
                   <motion.div
                     key={player.userId}
                     layout
                     layoutId={`standing-${player.userId}`}
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                    className={cn(
-                      'flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition-colors',
-                      player.isSelf
-                        ? 'bg-brand-cyan/10 border border-brand-cyan/25'
-                        : player.isLeader
-                          ? 'bg-brand-yellow-deep/8 border border-brand-yellow-deep/20'
-                          : 'bg-white/[0.03] border border-transparent',
-                    )}
+                    className="flex items-center gap-2"
                   >
-                    {/* Rank */}
-                    <span className="w-5 text-center text-xs font-black tabular-nums text-white/40">
+                  <div
+                    className={cn(
+                      'flex flex-1 items-center gap-3 rounded-2xl px-3 py-2.5 transition-colors border-2',
+                      rankStyle.border,
+                      player.isSelf ? rankStyle.tint : 'bg-transparent',
+                    )}
+                    style={player.isSelf ? { boxShadow: rankStyle.selfGlow } : undefined}
+                  >
+                    {/* Rank pill */}
+                    <span
+                      className={cn(
+                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] text-base font-black tabular-nums text-white',
+                        rankStyle.pillBg,
+                      )}
+                      style={{ boxShadow: rankStyle.glow }}
+                    >
                       {player.rank}
                     </span>
 
                     {/* Avatar */}
                     <AvatarDisplay
                       customization={player.avatarCustomization ?? { base: player.avatarUrl ?? undefined }}
-                      size="xs"
-                      className="border border-white/15 shrink-0"
+                      size="sm"
+                      shape="circle"
+                      className="shrink-0 bg-transparent"
                     />
 
-                    {/* Name + badges */}
+                    {/* Name + leader crown */}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
-                        <span className="truncate text-sm font-bold text-white">{player.username}</span>
-                        {player.isSelf && (
-                          <span className="shrink-0 rounded bg-brand-cyan/20 px-1 py-0.5 text-[8px] font-black uppercase text-[#A9E6FF]">
-                            You
-                          </span>
-                        )}
-                        {player.isLeader && <Crown className="size-3.5 shrink-0 text-brand-yellow-deep" />}
+                        <span className="truncate text-base font-bold text-white">{player.username}</span>
+                        {player.isLeader && <Crown className="size-4 shrink-0 text-brand-yellow-deep" />}
                       </div>
                     </div>
 
                     {/* Points */}
-                    <span className="text-sm font-black tabular-nums text-white/80 shrink-0">
+                    <span className="text-base font-black tabular-nums text-white shrink-0">
                       {player.totalPoints}
                     </span>
 
@@ -559,7 +596,7 @@ export function RealtimePartyQuizScreen({
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: 4 }}
                           transition={{ duration: 0.25 }}
-                          className="text-xs font-black text-brand-green-light shrink-0"
+                          className="text-sm font-black text-brand-green-light shrink-0"
                         >
                           +{player.roundDelta}
                         </motion.span>
@@ -569,13 +606,25 @@ export function RealtimePartyQuizScreen({
                     {/* Status dot */}
                     <span
                       className={cn(
-                        'size-2.5 rounded-full shrink-0',
+                        'size-3 rounded-full shrink-0',
                         dotStatus === 'correct' && 'bg-brand-green-light',
                         dotStatus === 'answering' && 'bg-brand-cyan animate-pulse',
                         dotStatus === 'resolved' && 'bg-brand-purple animate-pulse',
                         dotStatus === 'idle' && 'bg-white/20',
                       )}
                     />
+                  </div>
+                  {/* YOU pill — sits OUTSIDE the bordered card, stretches to
+                      match its height so the right edge reads as a paired
+                      action chip rather than a floating badge. */}
+                  {player.isSelf && (
+                    <span
+                      className="flex shrink-0 self-stretch items-center justify-center rounded-[16px] bg-brand-orange px-4 text-sm font-black uppercase tracking-wider text-white"
+                      style={{ boxShadow: '0 1.76px 6.334px 1.32px rgba(255,150,0,0.3)' }}
+                    >
+                      You
+                    </span>
+                  )}
                   </motion.div>
                 );
               })}
@@ -594,29 +643,40 @@ export function RealtimePartyQuizScreen({
               showOptions: state.showOptions,
             });
             const hasAnswered = dotStatus === 'correct';
+            const rankStyle = getRankStyle(player.rank);
             return (
               <motion.div
                 key={player.userId}
                 layout
                 layoutId={`mobile-standing-${player.userId}`}
                 className={cn(
-                  'flex shrink-0 items-center gap-2 rounded-full px-2.5 py-1.5 border transition-colors',
-                  player.isSelf
-                    ? 'bg-brand-cyan/10 border-brand-cyan/25'
-                    : hasAnswered
-                      ? 'bg-brand-green-light/8 border-brand-green-light/25'
-                      : 'bg-white/5 border-white/10',
+                  'flex shrink-0 items-center gap-2 rounded-full px-2.5 py-1.5 border-2 bg-transparent transition-colors',
+                  rankStyle.border,
                 )}
               >
-                <span className="text-[10px] font-black tabular-nums text-white/40">
-                  #{player.rank}
+                <span
+                  className={cn(
+                    'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-[11px] font-black tabular-nums text-white',
+                    rankStyle.pillBg,
+                  )}
+                  style={{ boxShadow: rankStyle.glow }}
+                >
+                  {player.rank}
                 </span>
                 <div className="relative">
                   <AvatarDisplay
                     customization={player.avatarCustomization ?? { base: player.avatarUrl ?? undefined }}
                     size="xs"
-                    className="size-6 border border-white/15 shrink-0"
+                    className="size-7 shrink-0"
                   />
+                  {player.isSelf && (
+                    <span
+                      className="absolute -top-1 -right-1 rounded-full bg-brand-orange px-1 py-[1px] text-white shadow-[0_1px_3px_rgba(0,0,0,0.35)] font-poppins font-semibold uppercase"
+                      style={{ fontSize: 7, letterSpacing: '0.06em', lineHeight: 1 }}
+                    >
+                      You
+                    </span>
+                  )}
                   {/* Answered check overlay on avatar */}
                   {hasAnswered && !player.isSelf && (
                     <motion.div
@@ -630,7 +690,7 @@ export function RealtimePartyQuizScreen({
                     </motion.div>
                   )}
                 </div>
-                <span className="text-xs font-bold text-white truncate max-w-[60px]">
+                <span className="text-xs font-bold text-white truncate max-w-[80px]">
                   {player.username}
                 </span>
                 <span className="text-xs font-black tabular-nums text-white/70">

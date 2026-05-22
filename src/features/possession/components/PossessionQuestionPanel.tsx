@@ -12,6 +12,18 @@ const poppins = {
   lineHeight: 1,
 } as const;
 
+export interface PartyPickInfo {
+  userId: string;
+  username: string;
+  selectedIndex: number | null;
+  isCorrect?: boolean | null;
+  /**
+   * Per-player accent color (hex) for the pick chip. In party-quiz mode this
+   * is wired to the standings rank-color so each chip matches its row.
+   */
+  accentColor?: string;
+}
+
 interface PossessionQuestionPanelProps {
   phase: Phase;
   isPenaltyPhase: boolean;
@@ -28,6 +40,13 @@ interface PossessionQuestionPanelProps {
   answerStates: AnswerStateArray;
   opponentAnswer: number | null;
 
+  /**
+   * Optional list of other players' picks (party-quiz mode). When provided,
+   * each card renders stacked chips on the right edge for every player who
+   * picked that option. Replaces the single-opponent notch.
+   */
+  partyPicks?: PartyPickInfo[];
+
   showPlayerSplash?: boolean;
   showOpponentSplash?: boolean;
   playerSplashPoints?: number | null;
@@ -38,6 +57,36 @@ interface PossessionQuestionPanelProps {
   onOpponentSplashComplete?: () => void;
 
   onAnswer: (index: number) => void;
+}
+
+// Mini-notch matching the production possession opponent notch (white outer
+// pill with a colored stripe inside) but small enough to stack 3 on one
+// side, 2 on the other. White outer keeps every color legible — including
+// yellow on a green correct-answer fill.
+function renderPartyPickChip(pick: PartyPickInfo, side: 'left' | 'right') {
+  const fill = pick.accentColor ?? 'rgba(255,255,255,0.85)';
+  const initialX = side === 'right' ? 8 : -8;
+  const wrapperRadius = side === 'right' ? 'rounded-l-md' : 'rounded-r-md';
+  const stripeRadius = side === 'right' ? 'rounded-l-sm' : 'rounded-r-sm';
+  const justify = side === 'right' ? 'justify-end pr-[2px]' : 'justify-start pl-[2px]';
+
+  return (
+    <motion.span
+      key={pick.userId}
+      initial={{ x: initialX, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ type: 'spring', stiffness: 380, damping: 24 }}
+      className={`flex h-5 w-[8px] items-center bg-white ${wrapperRadius} ${justify}`}
+      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.35)' }}
+      aria-label={`${pick.username} selected this answer`}
+      title={pick.username}
+    >
+      <span
+        className={`block h-3 w-[3px] ${stripeRadius}`}
+        style={{ backgroundColor: fill }}
+      />
+    </motion.span>
+  );
 }
 
 function getButtonState(
@@ -69,6 +118,7 @@ export function PossessionQuestionPanel({
   selectedAnswer,
   answerStates,
   opponentAnswer,
+  partyPicks,
   showPlayerSplash = false,
   showOpponentSplash = false,
   playerSplashPoints = null,
@@ -187,10 +237,15 @@ export function PossessionQuestionPanel({
           const isWrongPick = buttonState === 'selected-wrong';
 
           const isPlayerPicked = selectedAnswer === i;
-          const opponentPickedThis = !isPenaltyPhase && opponentAnswer === i;
+          const opponentPickedThis = !partyPicks && !isPenaltyPhase && opponentAnswer === i;
           const opponentPickCorrect = opponentAnswer !== null && correctIndex !== undefined
             ? opponentAnswer === correctIndex
             : null;
+          // Party-mode chips: every other player who picked this option.
+          // After reveal we tint based on isCorrect; before reveal stays neutral.
+          const partyPicksForThis = partyPicks
+            ? partyPicks.filter((pick) => pick.selectedIndex === i)
+            : [];
 
           return (
             <motion.button
@@ -243,7 +298,7 @@ export function PossessionQuestionPanel({
                   style={{ backgroundColor: '#FFFFFF' }}
                 />
               )}
-              {/* Opponent's pick notch (right) */}
+              {/* Opponent's pick notch (right) — 1v1 modes only */}
               {opponentPickedThis && opponentPickCorrect !== null && (
                 <motion.div
                   initial={{ x: 14, opacity: 0 }}
@@ -257,6 +312,24 @@ export function PossessionQuestionPanel({
                     style={{ backgroundColor: opponentPickCorrect ? '#38B60E' : '#FB3101' }}
                   />
                 </motion.div>
+              )}
+
+              {/* Party-quiz: pick chips for each other player who selected
+                  this option. Split max 3 on the right edge and max 2 on the
+                  left edge to keep the card from stacking too tall. The green
+                  chip (rank-1 / "you") gets a white pill wrapper for emphasis;
+                  the rest render as a flat colored bar. */}
+              {partyPicksForThis.length > 0 && (
+                <>
+                  <div className="pointer-events-none absolute right-0 top-1/2 z-10 flex -translate-y-1/2 flex-col gap-1">
+                    {partyPicksForThis.slice(0, 3).map((pick) => renderPartyPickChip(pick, 'right'))}
+                  </div>
+                  {partyPicksForThis.length > 3 && (
+                    <div className="pointer-events-none absolute left-0 top-1/2 z-10 flex -translate-y-1/2 flex-col gap-1">
+                      {partyPicksForThis.slice(3, 5).map((pick) => renderPartyPickChip(pick, 'left'))}
+                    </div>
+                  )}
+                </>
               )}
 
               <motion.span
