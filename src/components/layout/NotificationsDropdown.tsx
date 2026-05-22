@@ -199,7 +199,7 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
       <PopoverContent
         align="end"
         sideOffset={8}
-        className="w-[340px] overflow-hidden rounded-2xl border border-surface-card-tint bg-surface-deep p-0 shadow-xl shadow-black/40"
+        className="w-[340px] overflow-hidden rounded-2xl border border-white/10 bg-surface-page/88 p-0 shadow-[0_18px_48px_rgba(0,0,0,0.45)] backdrop-blur-xl"
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-surface-card-tint px-4 py-3">

@@ -468,8 +468,19 @@ function DevPartyQuizContent() {
   }
 
   function endNow() {
+    // If nothing has been scored yet, sprinkle in some sample scores so the
+    // podium has meaningful numbers to render against.
+    const totals = { ...totalsRef.current };
+    const allZero = PLAYER_IDS.slice(0, playerCount).every((id) => (totals[id] ?? 0) === 0);
+    if (allZero) {
+      PLAYER_IDS.slice(0, playerCount).forEach((id, idx) => {
+        totals[id] = 200 - idx * 25 + Math.floor(Math.random() * 30);
+      });
+      totalsRef.current = totals;
+      setTotals(totals);
+    }
     const store = useRealtimeMatchStore.getState();
-    store.setFinalResults(makeFinalResults(playerCount, totalsRef.current));
+    store.setFinalResults(makeFinalResults(playerCount, totals));
     setShowResults(true);
   }
 

@@ -2,7 +2,6 @@
 
 import { useMemo } from 'react';
 
-import { Trophy } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 
 import { AvatarDisplay } from '@/components/AvatarDisplay';
@@ -86,8 +85,8 @@ function CelebrationBurst() {
 // ─── Per-rank style — shared with the in-match standings sidebar ───────────
 
 const RANK_HEX: Record<number, string> = {
-  1: '#FFE500', // yellow podium
-  2: '#38B60E', // green podium
+  1: '#38B60E', // green podium
+  2: '#FFE500', // yellow podium
   3: '#1645FF', // blue podium
   4: '#FF9600',
   5: '#FF4B4B',
@@ -117,43 +116,55 @@ function getRankClasses(rank: number): { border: string; pillBg: string; pillTex
 
 // ─── Podium block (top 3) ──────────────────────────────────────────────────
 
-const PODIUM_HEIGHT: Record<1 | 2 | 3, string> = {
-  1: 'h-44 sm:h-52',
-  2: 'h-36 sm:h-44',
-  3: 'h-28 sm:h-36',
+const PODIUM_HEIGHT_CLASS: Record<1 | 2 | 3, string> = {
+  1: 'h-40 sm:h-52',
+  2: 'h-32 sm:h-40',
+  3: 'h-24 sm:h-32',
+};
+
+// Visual column order on the podium: 2nd on left, 1st in middle, 3rd on right.
+// Using CSS `order` keeps 1st centered even when the array is iterated in rank
+// order — important so the grid columns stay rank-correct on every breakpoint.
+const PODIUM_COLUMN_ORDER: Record<1 | 2 | 3, string> = {
+  1: 'order-2',
+  2: 'order-1',
+  3: 'order-3',
 };
 
 function PodiumBlock({ standing, displayIndex }: { standing: StandingRow; displayIndex: number }) {
   const rank = standing.rank as 1 | 2 | 3;
   const colorHex = getRankHex(rank);
-  const heightClass = PODIUM_HEIGHT[rank] ?? PODIUM_HEIGHT[3];
-  const textOnBlock = rank === 1 ? 'text-surface-page' : 'text-white';
+  const heightClass = PODIUM_HEIGHT_CLASS[rank] ?? PODIUM_HEIGHT_CLASS[3];
+  const orderClass = PODIUM_COLUMN_ORDER[rank] ?? PODIUM_COLUMN_ORDER[3];
+  const nameTextOnBlock = rank === 2 ? 'text-black' : 'text-white';
+  const scoreTextOnBlock = rank === 2 ? 'text-black' : 'text-brand-yellow';
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.15 + displayIndex * 0.12, type: 'spring', stiffness: 300, damping: 24 }}
-      className="flex flex-col items-center"
+      className={cn('flex min-w-0 flex-col items-center justify-end', orderClass)}
     >
-      {/* Avatar hovering above the block — only the feet kiss the top edge so
-          the character reads as floating on top of the podium (matches the
-          leaderboard podium layout). */}
+      {/* Real responsive avatar size, not transform scale, so mobile columns keep honest dimensions. */}
       <motion.div
         initial={{ scale: 0.7, opacity: 0, y: 10 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ delay: 0.3 + displayIndex * 0.12, type: 'spring', stiffness: 260, damping: 18 }}
-        className="relative z-10 mb-[-6px]"
+        className="relative z-10 mb-1 flex h-16 items-end justify-center sm:mb-2 sm:h-24"
       >
         <AvatarDisplay
           customization={standing.avatarCustomization ?? { base: standing.avatarUrl ?? undefined }}
           size="lg"
+          className="size-16 sm:size-24"
         />
       </motion.div>
 
       <div
+        data-testid={`party-podium-block-${rank}`}
         className={cn(
-          'relative w-full rounded-2xl px-3 pt-4 pb-3 flex flex-col items-center justify-end gap-1',
+          'relative flex w-full min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl',
+          'gap-1 px-2 py-2 sm:gap-1.5 sm:px-3 sm:py-3',
           heightClass,
         )}
         style={{
@@ -161,16 +172,30 @@ function PodiumBlock({ standing, displayIndex }: { standing: StandingRow; displa
           boxShadow: `0 8px 30px ${colorHex}33`,
         }}
       >
+        <span
+          className={cn(
+            'flex h-6 min-w-8 shrink-0 items-center justify-center rounded-[9px] bg-surface-page px-2 font-poppins text-[11px] font-extrabold tabular-nums text-white sm:h-7 sm:min-w-9 sm:rounded-[10px] sm:text-xs',
+            'ring-2',
+          )}
+          style={{
+            color: colorHex,
+            boxShadow: `0 1.76px 6.334px 1.32px ${colorHex}55`,
+            ['--tw-ring-color' as string]: colorHex,
+          }}
+        >
+          {standing.rank}
+        </span>
+
         <div
-          className={cn('font-poppins text-center text-[13px] sm:text-sm font-semibold uppercase tracking-wider truncate max-w-full', textOnBlock)}
+          className={cn('w-full max-w-full truncate px-1 text-center font-poppins text-[9px] font-semibold uppercase leading-tight tracking-wider sm:text-xs', nameTextOnBlock)}
         >
           {standing.username}
         </div>
-        <div className={cn('font-poppins text-2xl font-extrabold tabular-nums', textOnBlock)}>
+        <div className={cn('font-poppins text-lg font-extrabold tabular-nums leading-none sm:text-2xl', scoreTextOnBlock)}>
           {standing.totalPoints}
         </div>
         {standing.isSelf && (
-          <span className="mt-1 rounded-full bg-brand-orange px-2 py-[2px] font-poppins text-[9px] font-semibold uppercase tracking-wider text-white">
+          <span className="rounded-full bg-brand-orange px-2 py-[2px] font-poppins text-[8px] font-semibold uppercase leading-none tracking-wider text-white sm:text-[9px]">
             You
           </span>
         )}
@@ -256,38 +281,48 @@ export function PartyQuizResultsScreen({
 }: PartyQuizResultsScreenProps) {
   const standings = useMemo<StandingRow[]>(() => {
     const participantMap = new Map(participants.map((participant) => [participant.userId, participant]));
-    const fallbackStandings = Object.entries(finalResults.players)
-      .map(([userId, stats], index) => ({
-        userId,
-        rank: index + 1,
-        totalPoints: stats.totalPoints,
-        correctAnswers: stats.correctAnswers,
-        avgTimeMs: stats.avgTimeMs,
-      }))
+    const payloadStandingMap = new Map((finalResults.standings ?? []).map((standing) => [standing.userId, standing]));
+    const userIds = Array.from(
+      new Set([
+        ...Object.keys(finalResults.players),
+        ...(finalResults.standings ?? []).map((standing) => standing.userId),
+        ...participants.map((participant) => participant.userId),
+      ]),
+    );
+
+    return userIds
+      .map((userId) => {
+        const stats = finalResults.players[userId];
+        const payloadStanding = payloadStandingMap.get(userId);
+        const participant = participantMap.get(userId);
+
+        return {
+          userId,
+          rank: 0,
+          totalPoints: stats?.totalPoints ?? payloadStanding?.totalPoints ?? 0,
+          correctAnswers: stats?.correctAnswers ?? payloadStanding?.correctAnswers ?? 0,
+          avgTimeMs: stats?.avgTimeMs ?? payloadStanding?.avgTimeMs ?? null,
+          username: participant?.username ?? 'Player',
+          avatarUrl: participant?.avatarUrl ?? null,
+          avatarCustomization: participant?.avatarCustomization ?? null,
+          isSelf: userId === selfUserId,
+          isWinner: finalResults.winnerId === userId,
+        };
+      })
       .sort((left, right) => {
         if (left.totalPoints !== right.totalPoints) return right.totalPoints - left.totalPoints;
         if (left.correctAnswers !== right.correctAnswers) return right.correctAnswers - left.correctAnswers;
-        return (left.avgTimeMs ?? Number.MAX_SAFE_INTEGER) - (right.avgTimeMs ?? Number.MAX_SAFE_INTEGER);
+        const avgTimeDiff = (left.avgTimeMs ?? Number.MAX_SAFE_INTEGER) - (right.avgTimeMs ?? Number.MAX_SAFE_INTEGER);
+        if (avgTimeDiff !== 0) return avgTimeDiff;
+        const usernameDiff = left.username.localeCompare(right.username);
+        if (usernameDiff !== 0) return usernameDiff;
+        return left.userId.localeCompare(right.userId);
       })
       .map((standing, index) => ({ ...standing, rank: index + 1 }));
-
-    const authoritativeStandings = finalResults.standings?.length ? finalResults.standings : fallbackStandings;
-
-    return authoritativeStandings.map((standing) => {
-      const participant = participantMap.get(standing.userId);
-      return {
-        ...standing,
-        username: participant?.username ?? 'Player',
-        avatarUrl: participant?.avatarUrl ?? null,
-        avatarCustomization: participant?.avatarCustomization ?? null,
-        isSelf: standing.userId === selfUserId,
-        isWinner: finalResults.winnerId === standing.userId,
-      };
-    });
   }, [finalResults.players, finalResults.standings, finalResults.winnerId, participants, selfUserId]);
 
-  const podium = standings.slice(0, 3);
-  const rest = standings.slice(3);
+  const podium = standings.filter((standing) => standing.rank <= 3);
+  const rest = standings.filter((standing) => standing.rank > 3);
   const selfWon = finalResults.winnerId === selfUserId;
 
   const resultLabel = selfWon
@@ -295,14 +330,6 @@ export function PartyQuizResultsScreen({
     : finalResults.winnerId
       ? `${standings.find((s) => s.userId === finalResults.winnerId)?.username ?? 'Winner'} takes first!`
       : 'Party quiz finished in a tie!';
-
-  // Display order on the podium: 2nd-place block on left, 1st in middle, 3rd on right
-  // (matches the leaderboard podium layout). Falls back gracefully for <3 players.
-  const podiumDisplayOrder = useMemo(() => {
-    if (podium.length < 3) return podium;
-    const [first, second, third] = podium;
-    return [second!, first!, third!];
-  }, [podium]);
 
   return (
     <div className="relative min-h-dvh overflow-hidden bg-surface-page-alt text-white">
@@ -316,22 +343,12 @@ export function PartyQuizResultsScreen({
           transition={{ duration: 0.4 }}
           className="text-center"
         >
-          <motion.div
-            initial={{ scale: 0.85, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.1, type: 'spring', stiffness: 300, damping: 22 }}
-            className="inline-flex items-center gap-2 rounded-full border-2 border-brand-yellow bg-transparent px-4 py-1.5 font-poppins text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-yellow"
-          >
-            <Trophy className="size-3.5" />
-            Party Quiz
-          </motion.div>
-
           <motion.h1
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.4 }}
             className={cn(
-              'mt-4 font-poppins text-2xl sm:text-3xl font-extrabold tracking-tight',
+              'font-poppins text-2xl sm:text-3xl font-extrabold tracking-tight',
               selfWon ? 'text-brand-yellow' : 'text-white',
             )}
             style={selfWon ? { textShadow: '0 0 30px rgba(255,229,0,0.3)' } : undefined}
@@ -344,13 +361,13 @@ export function PartyQuizResultsScreen({
         {podium.length > 0 && (
           <div
             className={cn(
-              'mt-12 grid gap-3 items-end',
+              'mt-10 grid items-end gap-2 sm:mt-12 sm:gap-3',
               podium.length === 1 ? 'grid-cols-1 place-items-center max-w-xs mx-auto' : '',
               podium.length === 2 ? 'grid-cols-2' : '',
               podium.length === 3 ? 'grid-cols-3' : '',
             )}
           >
-            {podiumDisplayOrder.map((standing, index) => (
+            {podium.map((standing, index) => (
               <PodiumBlock key={standing.userId} standing={standing} displayIndex={index} />
             ))}
           </div>

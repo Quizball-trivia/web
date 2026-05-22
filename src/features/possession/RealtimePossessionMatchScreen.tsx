@@ -8,6 +8,7 @@ import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { BarBattleFlightOverlay } from './components/BarBattleFlightOverlay';
 import { HalftimeScreen } from './components/HalftimeScreen';
+import { KickoffCountdownOverlay } from './components/KickoffCountdownOverlay';
 import { MatchHudIconButton } from './components/MatchHudPrimitives';
 import { PossessionMatchViewport } from './components/PossessionMatchViewport';
 import { PossessionQuestionArea } from './components/PossessionQuestionArea';
@@ -45,6 +46,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
   // classic variant. Manages its own state internally.
   const barBattleFlights = usePossessionBarBattleFlights();
   const matchPaused = useRealtimeMatchStore((state) => state.matchPaused);
+  const match = useRealtimeMatchStore((state) => state.match);
   const pauseUntil = useRealtimeMatchStore((state) => state.pauseUntil);
   const remainingReconnects = useRealtimeMatchStore((state) => state.remainingReconnects);
   const forfeitPending = useRealtimeMatchStore((state) => state.forfeitPending);
@@ -97,15 +99,23 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
         : 'Match forfeited';
 
   if (!isReady) {
+    const showPendingKickoff = showStartCountdown || Boolean(match);
+
     return (
       <div className="flex min-h-dvh w-full items-center justify-center bg-surface-page-alt">
-        {showStartCountdown ? (
-          <div className="flex flex-col items-center gap-2">
-            <div className="text-xs font-bold uppercase tracking-[0.28em] text-white/60 font-fun">{countdownLabel}</div>
-            <div className="flex size-28 items-center justify-center rounded-full border-4 border-brand-cyan/60 bg-surface-deep shadow-[0_0_40px_rgba(28,176,246,0.25)]">
-              <span className="text-5xl font-black leading-none tabular-nums text-white font-fun">{countdownDisplay}</span>
-            </div>
-          </div>
+        {showPendingKickoff ? (
+          <KickoffCountdownOverlay
+            countdownDisplay={countdownDisplay}
+            label={countdownLabel === 'Kickoff in' ? 'Kickoff' : countdownLabel}
+            runKey={countdownLabel}
+            playerName={props.playerUsername}
+            opponentName={props.opponentUsername}
+            playerAvatarBase={props.playerAvatar}
+            opponentAvatarBase={props.opponentAvatar}
+            playerAvatarCustomization={props.playerAvatarCustomization}
+            opponentAvatarCustomization={props.opponentAvatarCustomization}
+            className="min-h-dvh w-full bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
+          />
         ) : (
           <LoadingScreen fullScreen={false} className="h-auto min-h-0" />
         )}
@@ -133,21 +143,20 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center"
+            className="pointer-events-none absolute inset-0 z-30"
           >
-            <div className="absolute inset-0 bg-surface-page-alt/45 backdrop-blur-[1.5px]" />
-            <motion.div
-              key={`countdown-${countdownDisplay}`}
-              initial={{ scale: 0.72, opacity: 0.4 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 340, damping: 22 }}
-              className="relative flex flex-col items-center gap-2"
-            >
-              <div className="text-xs font-bold uppercase tracking-[0.28em] text-white/70 font-fun">{countdownLabel}</div>
-              <div className="flex size-32 items-center justify-center rounded-full border-4 border-brand-cyan/70 bg-surface-deep shadow-[0_0_50px_rgba(28,176,246,0.3)]">
-                <span className="text-6xl font-black leading-none tabular-nums text-white font-fun">{countdownDisplay}</span>
-              </div>
-            </motion.div>
+            <KickoffCountdownOverlay
+              countdownDisplay={countdownDisplay}
+              label={countdownLabel === 'Kickoff in' ? 'Kickoff' : countdownLabel}
+              runKey={countdownLabel}
+              playerName={props.playerUsername}
+              opponentName={props.opponentUsername}
+              playerAvatarBase={props.playerAvatar}
+              opponentAvatarBase={props.opponentAvatar}
+              playerAvatarCustomization={props.playerAvatarCustomization}
+              opponentAvatarCustomization={props.opponentAvatarCustomization}
+              className="min-h-full w-full bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
+            />
           </motion.div>
         )}
       </AnimatePresence>
