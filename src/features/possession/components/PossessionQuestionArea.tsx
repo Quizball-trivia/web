@@ -4,8 +4,8 @@ import { type ComponentProps } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { LiveSpecialQuestionPanel } from './LiveSpecialQuestionPanel';
 import { PossessionFeed } from './PossessionFeed';
-import { PossessionQuestionPanel } from './PossessionQuestionPanel';
-import { RoundTransitionOverlay } from './RoundTransitionOverlay';
+import { PossessionQuestionPanel } from '@/components/game/PossessionQuestionPanel';
+import { RoundTransitionOverlay } from '@/components/game/RoundTransitionOverlay';
 import type { TransitionSnapshot } from '../realtimePossession.helpers';
 
 type PossessionFeedProps = ComponentProps<typeof PossessionFeed>;

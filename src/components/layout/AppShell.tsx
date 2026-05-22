@@ -464,10 +464,11 @@ export function AppShell({ children }: AppShellProps) {
                       <p className="text-sm font-medium leading-none text-white">
                         {playerStats.username}
                       </p>
-                      <p className="text-xs leading-none">
-                        <span className="text-white">Level {playerStats.level}</span>
-                        <span className="text-white/45"> · </span>
-                        <span className="font-bold text-brand-yellow">{playerStats.rankPoints ?? 0} RP</span>
+                      <p className="text-xs leading-none text-white">
+                        {t("accountMenu.levelAndRp", {
+                          level: playerStats.level,
+                          rp: playerStats.rankPoints ?? 0,
+                        })}
                       </p>
                     </div>
                   </DropdownMenuLabel>

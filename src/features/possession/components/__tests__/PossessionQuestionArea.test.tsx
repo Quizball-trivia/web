@@ -5,7 +5,7 @@ vi.mock('../PossessionFeed', () => ({
   PossessionFeed: () => <div>feed</div>,
 }));
 
-vi.mock('../PossessionQuestionPanel', () => ({
+vi.mock('@/components/game/PossessionQuestionPanel', () => ({
   PossessionQuestionPanel: () => <div>mcq-panel</div>,
 }));
 
@@ -13,7 +13,7 @@ vi.mock('../LiveSpecialQuestionPanel', () => ({
   LiveSpecialQuestionPanel: () => <div>special-panel</div>,
 }));
 
-vi.mock('../RoundTransitionOverlay', () => ({
+vi.mock('@/components/game/RoundTransitionOverlay', () => ({
   RoundTransitionOverlay: ({ title }: { title: string }) => <div>{title}</div>,
 }));
 

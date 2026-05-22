@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'motion/react';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
-import type { AnswerStateArray, Phase } from '../types/possession.types';
+import type { AnswerStateArray, Phase } from '@/lib/types/game.types';
 import { ArenaScoreSplash } from '@/components/game/ArenaScoreSplash';
 
 const poppins = {

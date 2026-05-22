@@ -120,13 +120,14 @@ export function ModeSelectionScreen({
         className="relative overflow-hidden rounded-[10px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 active:translate-y-[2px] transition-all"
         style={{ backgroundColor: colors.green.base }}
       >
-        {/* Ranked icon — centered background watermark (desktop only; mobile uses inline icon below) */}
+        {/* Ranked icon — watermark anchored slightly right of card centre so
+            the big "RANKED MATCH" title on the left doesn't overlap it. */}
         <Image
           src="/assets/ranked-icon.webp"
           alt=""
-          width={200}
-          height={200}
-          className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 object-contain opacity-80 pointer-events-none"
+          width={260}
+          height={260}
+          className="hidden lg:block absolute left-[58%] top-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 object-contain pointer-events-none"
         />
 
         <div className="relative z-10 p-4 md:p-7">
@@ -135,7 +136,7 @@ export function ModeSelectionScreen({
             {/* Left: Title + Play */}
             <div className="flex-1 min-w-0">
               <h1
-                className="text-[3.25rem] uppercase text-white"
+                className="text-[2.75rem] uppercase text-white"
                 style={rankedTitleStyle}
               >
                 Ranked Match

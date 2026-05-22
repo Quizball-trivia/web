@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Gamepad2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,15 @@ const dangerBtnClass = 'h-9 bg-brand-red-soft text-white hover:bg-brand-red-soft
 
 export default function BannersPlaygroundPage() {
   const router = useRouter();
+
+  // Production guard — this playground is dev-only. In a prod build, redirect
+  // immediately to home so the page can't be reached.
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production') {
+      router.replace('/');
+    }
+  }, [router]);
+
   const [visible, setVisible] = useState<Record<BannerKey, boolean>>({
     friendlyLobby: true,
     rankedLobby: true,

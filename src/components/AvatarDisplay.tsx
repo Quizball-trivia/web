@@ -88,7 +88,7 @@ export function AvatarDisplay({
   return (
     <div
       className={cn(
-        'relative shrink-0 overflow-hidden bg-transparent',
+        'relative shrink-0 bg-transparent',
         cropClass,
         sizeClasses[size],
         className,

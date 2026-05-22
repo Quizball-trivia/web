@@ -9,8 +9,8 @@ import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { QuitMatchModal } from '@/features/game/components/QuitMatchModal';
 import { useRealtimeGameLogic } from '@/features/game/hooks/useRealtimeGameLogic';
-import { PossessionQuestionPanel } from '@/features/possession/components/PossessionQuestionPanel';
-import { RoundTransitionOverlay } from '@/features/possession/components/RoundTransitionOverlay';
+import { PossessionQuestionPanel } from '@/components/game/PossessionQuestionPanel';
+import { RoundTransitionOverlay } from '@/components/game/RoundTransitionOverlay';
 import type { AnswerStateArray, Phase } from '@/lib/types/game.types';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import type { MatchParticipant } from '@/lib/realtime/socket.types';
@@ -370,7 +370,7 @@ export function RealtimePartyQuizScreen({
         accentColor: rankColorByUserId.get(userId),
       };
     });
-  }, [participantMap, rankColorByUserId, selfUserId, state.roundResult?.players]);
+  }, [participantMap, rankColorByUserId, selfUserId, state.roundResult]);
 
   // ---------------------------------------------------------------------------
   // Pre-match / loading

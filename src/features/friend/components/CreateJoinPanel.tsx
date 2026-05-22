@@ -228,7 +228,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
                 lineHeight: 1.4,
               }}
             >
-              Enter your friend's invite code and jump straight into their lobby.
+              Enter your friend&apos;s invite code and jump straight into their lobby.
             </p>
           </div>
 
