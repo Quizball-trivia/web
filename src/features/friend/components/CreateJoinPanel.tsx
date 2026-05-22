@@ -4,6 +4,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { getSocket } from "@/lib/realtime/socket-client";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
+import { useLocale } from "@/contexts/LocaleContext";
 
 interface CreateJoinPanelProps {
   onActionTriggered?: () => void;
@@ -17,6 +18,7 @@ const cardSurfaceStyle = {
 } as const;
 
 export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
+  const { t } = useLocale();
   const [inviteCode, setInviteCode] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -45,16 +47,16 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
     clearCreateTimeout();
     createTimeoutRef.current = setTimeout(() => {
       setIsCreating(false);
-      toast.error("Create request timed out. Please retry.");
+      toast.error(t("friend.createTimedOut"));
     }, 8000);
     getSocket().emit("lobby:create", { mode: "friendly", isPublic });
-    toast.info("Creating room...");
+    toast.info(t("friend.creatingRoom"));
   };
 
   const handleJoin = () => {
     if (isJoining) return;
     if (!inviteCode || inviteCode.length < 3) {
-      toast.error("Please enter a valid code");
+      toast.error(t("friend.enterValidCode"));
       return;
     }
 
@@ -63,10 +65,10 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
     clearJoinTimeout();
     joinTimeoutRef.current = setTimeout(() => {
       setIsJoining(false);
-      toast.error("Join request timed out. Please retry.");
+      toast.error(t("friend.joinTimedOut"));
     }, 8000);
     getSocket().emit("lobby:join_by_code", { inviteCode: inviteCode.toUpperCase() });
-    toast.info(`Joining ${inviteCode.toUpperCase()}...`);
+    toast.info(t("friend.joiningCode", { code: inviteCode.toUpperCase() }));
   };
 
   useEffect(() => {
@@ -115,7 +117,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
                 lineHeight: 1.05,
               }}
             >
-              Start a New <span className="text-brand-yellow">Lobby</span>
+              {t("friend.startNewLobby")} <span className="text-brand-yellow">{t("friend.lobbySuffix")}</span>
             </h3>
             <p
               className="text-white/55 uppercase"
@@ -127,7 +129,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
                 lineHeight: 1.4,
               }}
             >
-              Host a match and invite a friend, or open it up for anyone.
+              {t("friend.startNewLobbyHint")}
             </p>
           </div>
 
@@ -148,7 +150,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
                 ) : (
                   <Lock className="size-4 text-white/60" />
                 )}
-                Public Room
+                {t("friend.publicRoom")}
               </label>
               <p
                 className="text-white/50"
@@ -160,8 +162,8 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
                 }}
               >
                 {isPublic
-                  ? "Anyone can find this room."
-                  : "Only people with the code can join."}
+                  ? t("friend.publicAnyoneCanFind")
+                  : t("friend.publicCodeOnly")}
               </p>
             </div>
             <Switch
@@ -186,7 +188,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
             {isCreating ? (
               <>
                 <Loader2 className="size-5 animate-spin" />
-                <span className="uppercase">Creating...</span>
+                <span className="uppercase">{t("friend.creating")}</span>
               </>
             ) : (
               <>
@@ -194,7 +196,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
                   className="size-7 text-brand-yellow"
                   strokeWidth={3}
                 />
-                <span className="uppercase">Create Room</span>
+                <span className="uppercase">{t("friend.createRoom")}</span>
               </>
             )}
           </button>
@@ -216,7 +218,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
                 lineHeight: 1.05,
               }}
             >
-              Have a <span className="text-brand-yellow">Code?</span>
+              {t("friend.haveACode")} <span className="text-brand-yellow">{t("friend.codeSuffix")}</span>
             </h3>
             <p
               className="text-white/55 uppercase"
@@ -228,7 +230,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
                 lineHeight: 1.4,
               }}
             >
-              Enter your friend&apos;s invite code and jump straight into their lobby.
+              {t("friend.haveACodeHint")}
             </p>
           </div>
 
@@ -238,7 +240,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
             value={inviteCode}
             onChange={(e) => setInviteCode(e.target.value)}
             maxLength={8}
-            placeholder="ROOM CODE"
+            placeholder={t("friend.roomCodePlaceholder")}
             className="h-16 w-full rounded-[20px] border-none bg-black/25 px-6 text-center text-white uppercase outline-none placeholder:text-white/40 focus:outline-none"
             style={{
               fontFamily: poppinsFont,
@@ -263,7 +265,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
             {isJoining ? (
               <>
                 <Loader2 className="size-5 animate-spin" />
-                <span className="uppercase">Joining...</span>
+                <span className="uppercase">{t("friend.joining")}</span>
               </>
             ) : (
               <>
@@ -271,7 +273,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
                   className="size-6 text-brand-yellow"
                   strokeWidth={3}
                 />
-                <span className="uppercase">Join Lobby</span>
+                <span className="uppercase">{t("friend.joinLobby")}</span>
               </>
             )}
           </button>

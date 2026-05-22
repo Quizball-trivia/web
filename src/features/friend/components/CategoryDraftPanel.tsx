@@ -11,6 +11,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useCategoriesList } from "@/lib/queries/categories.queries";
 import { CategorySummary } from "@/lib/domain";
+import { useLocale } from "@/contexts/LocaleContext";
 
 interface CategoryDraftPanelProps {
   selectedCategoryIds: string[];
@@ -19,6 +20,7 @@ interface CategoryDraftPanelProps {
 }
 
 export function CategoryDraftPanel({ selectedCategoryIds, onToggleCategory, isHost }: CategoryDraftPanelProps) {
+  const { t } = useLocale();
   const [search, setSearch] = useState("");
   
   // Fetch real categories. For now we fetch all (or paginated default) and filter client side for responsiveness
@@ -41,8 +43,8 @@ export function CategoryDraftPanel({ selectedCategoryIds, onToggleCategory, isHo
        <div className="p-4 border-b border-border bg-muted/30">
           <div className="flex items-center justify-between mb-4">
              <div>
-                <h3 className="font-bold text-lg">Categories</h3>
-                <p className="text-xs text-muted-foreground">Select 4 topics for the match</p>
+                <h3 className="font-bold text-lg">{t("friend.categoriesTitle")}</h3>
+                <p className="text-xs text-muted-foreground">{t("friend.selectTopics")}</p>
              </div>
              <Badge variant={selectedCategoryIds.length === 4 ? "default" : "outline"} className="text-sm px-3 py-1">
                 {selectedCategoryIds.length} / 4
@@ -52,7 +54,7 @@ export function CategoryDraftPanel({ selectedCategoryIds, onToggleCategory, isHo
           <div className="relative">
              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
              <Input 
-                placeholder="Search categories..." 
+                placeholder={t("friend.searchCategoriesPlaceholder")}
                 className="pl-9 bg-background" 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -67,12 +69,12 @@ export function CategoryDraftPanel({ selectedCategoryIds, onToggleCategory, isHo
              {isLoading ? (
                 <div className="flex flex-col items-center justify-center h-48 gap-3 text-muted-foreground">
                     <Loader2 className="size-8 animate-spin text-primary" />
-                    <p className="text-sm">Loading categories...</p>
+                    <p className="text-sm">{t("friend.loadingCategories")}</p>
                 </div>
              ) : isError ? (
                 <div className="flex flex-col items-center justify-center h-48 gap-3 text-destructive">
-                    <p className="text-sm">Failed to load categories</p>
-                    <Button variant="outline" size="sm" onClick={() => window.location.reload()}>Retry</Button>
+                    <p className="text-sm">{t("friend.failedToLoadCategories")}</p>
+                    <Button variant="outline" size="sm" onClick={() => window.location.reload()}>{t("friend.retry")}</Button>
                 </div>
              ) : (
                 <div className="p-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -112,7 +114,7 @@ export function CategoryDraftPanel({ selectedCategoryIds, onToggleCategory, isHo
                     
                     {filtered.length === 0 && (
                         <div className="col-span-full py-10 text-center text-muted-foreground text-sm">
-                            No categories found matching &quot;{search}&quot;
+                            {t("friend.noCategoriesFound", { query: search })}
                         </div>
                     )}
                 </div>
@@ -122,7 +124,7 @@ export function CategoryDraftPanel({ selectedCategoryIds, onToggleCategory, isHo
           {/* Sticky Draft Bar (Right on Desktop, Bottom on Mobile) */}
           <div className="w-full md:w-48 bg-muted/10 border-t md:border-t-0 md:border-l border-border flex-shrink-0 flex flex-col">
              <div className="p-3 text-xs font-bold uppercase text-muted-foreground border-b border-border">
-                Your Picks
+                {t("friend.yourPicks")}
              </div>
              <ScrollArea className="flex-1 p-2">
                 <div className="space-y-2">
@@ -158,7 +160,7 @@ export function CategoryDraftPanel({ selectedCategoryIds, onToggleCategory, isHo
                                   )}
                                </div>
                             ) : (
-                               <span className="text-xs text-muted-foreground/50 font-medium">Slot {i + 1}</span>
+                               <span className="text-xs text-muted-foreground/50 font-medium">{t("friend.slotN", { index: i + 1 })}</span>
                             )}
                          </div>
                       );

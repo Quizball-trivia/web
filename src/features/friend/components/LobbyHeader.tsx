@@ -5,6 +5,7 @@ import type { LobbyMember } from "@/lib/realtime/socket.types";
 import { copyToClipboard } from "@/utils/clipboard";
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
+import { useLocale } from "@/contexts/LocaleContext";
 
 interface LobbyHeaderProps {
   lobbyName?: string | null;
@@ -21,10 +22,11 @@ export function LobbyHeader({
   members,
   h2hSummary,
 }: LobbyHeaderProps) {
+  const { t } = useLocale();
   const copyCode = async () => {
     if (!lobbyCode) return;
     const success = await copyToClipboard(lobbyCode);
-    if (success) toast.success("Room Code copied!");
+    if (success) toast.success(t("friend.roomCodeCopied"));
   };
 
   const roster = members.length > 0 ? members : me ? [me] : [];
@@ -42,14 +44,14 @@ export function LobbyHeader({
               className="uppercase text-white"
               style={{ fontFamily: poppins, fontWeight: 600, fontSize: 'clamp(18px, 2.2vw, 24px)', lineHeight: 1.05 }}
             >
-              {lobbyName || "Friendly Lobby"}
+              {lobbyName || t("friend.friendlyLobby")}
             </h1>
             <div className="mt-1.5 flex items-center gap-2 flex-wrap">
               <span
                 className="uppercase text-white/55"
                 style={{ fontFamily: poppins, fontWeight: 600, fontSize: 11, letterSpacing: '0.08em' }}
               >
-                Code
+                {t("appShell.code")}
               </span>
               <span
                 className="select-all rounded-[10px] bg-surface-deep px-2.5 py-1 font-mono uppercase tracking-wider text-white"
@@ -59,7 +61,7 @@ export function LobbyHeader({
               </span>
               <button
                 onClick={copyCode}
-                aria-label="Copy lobby code"
+                aria-label={t("friend.copyLobbyCode")}
                 className="text-white/55 transition-colors hover:text-brand-cyan"
                 disabled={!lobbyCode}
               >
@@ -74,7 +76,7 @@ export function LobbyHeader({
                 className="uppercase text-white/45"
                 style={{ fontFamily: poppins, fontWeight: 600, fontSize: 10, letterSpacing: '0.18em' }}
               >
-                Lobby Size
+                {t("friend.lobbySize")}
               </div>
               <div
                 className="mt-1 text-white tabular-nums"
@@ -91,7 +93,7 @@ export function LobbyHeader({
                   className="uppercase text-white/45"
                   style={{ fontFamily: poppins, fontWeight: 600, fontSize: 10, letterSpacing: '0.18em' }}
                 >
-                  Head To Head
+                  {t("friend.headToHead")}
                 </div>
                 <div className="mt-1 flex items-center justify-end gap-2">
                   <span
@@ -136,7 +138,7 @@ export function LobbyHeader({
                         className="absolute -top-2 -right-2 rounded-full bg-brand-orange px-1.5 py-[2px] uppercase text-white"
                         style={{ fontFamily: poppins, fontWeight: 600, fontSize: 8, letterSpacing: '0.06em' }}
                       >
-                        Host
+                        {t("friend.host")}
                       </span>
                     ) : null}
                   </div>
@@ -151,7 +153,7 @@ export function LobbyHeader({
                     className="mt-0.5 uppercase text-white/45 text-center"
                     style={{ fontFamily: poppins, fontWeight: 600, fontSize: 10, letterSpacing: '0.16em' }}
                   >
-                    {isMe ? "You" : member.isReady ? "Ready" : "Waiting"}
+                    {isMe ? t("friend.you") : member.isReady ? t("friend.ready") : t("friend.waiting")}
                   </div>
                 </div>
               </div>

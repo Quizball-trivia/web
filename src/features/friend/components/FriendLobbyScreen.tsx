@@ -6,6 +6,7 @@ import { LobbyHeader } from "./LobbyHeader";
 import { LobbySettings } from "./LobbySettings";
 import { useFriendLobbyLogic } from "../hooks/useFriendLobbyLogic";
 import { AlreadyInLobbyModal } from "./AlreadyInLobbyModal";
+import { useLocale } from "@/contexts/LocaleContext";
 
 interface FriendLobbyScreenProps {
   roomCode: string;
@@ -13,6 +14,7 @@ interface FriendLobbyScreenProps {
 }
 
 export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) {
+  const { t } = useLocale();
   const {
     lobby,
     members,
@@ -34,10 +36,10 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
     Boolean(settings?.friendlyCategoryAId);
   const readyCopy =
     settings?.gameMode === "ranked_sim"
-      ? "When both players are ready, ranked sim begins automatically."
+      ? t("friend.readyCopyRanked")
       : isPartyMode
-        ? "When everyone is ready, the host can start the party quiz."
-        : "When both players are ready, the host can start the match.";
+        ? t("friend.readyCopyParty")
+        : t("friend.readyCopyClassic");
   const canStartMatch =
     Boolean(
       isCurrentHost &&
@@ -47,16 +49,16 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
         hasFriendlyCategories &&
         !isStartingMatch
     );
-  const startLabel = isPartyMode ? "Start Party Quiz" : "Start Match";
+  const startLabel = isPartyMode ? t("friend.startPartyQuiz") : t("friend.startMatch");
   const statusCopy = allReady
     ? isPartyMode
-      ? "Everyone is ready."
-      : "Both players ready."
+      ? t("friend.everyoneReady")
+      : t("friend.bothPlayersReady")
     : members.length <= 1
-      ? "Waiting for more players..."
+      ? t("friend.waitingMorePlayers")
       : isPartyMode
-        ? "Waiting for everyone to ready up..."
-        : "Waiting for both players to ready up...";
+        ? t("friend.waitingEveryoneReady")
+        : t("friend.waitingBothReady");
 
   const poppins = "'Poppins', sans-serif";
 
