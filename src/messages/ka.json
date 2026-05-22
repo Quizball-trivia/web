@@ -108,7 +108,10 @@
     "newBadge": "ახალი ნიშანი",
     "newBadges": "ახალი ნიშნები",
     "unlocked": "გახსნილია",
-    "countNew": "{count} ახალი"
+    "countNew": "{count} ახალი",
+    "sectionTitle": "მიღწევები",
+    "completed": "შესრულებული",
+    "locked": "დაბლოკილი"
   },
   "career": {
     "missionObjectives": "მისიის მიზნები",

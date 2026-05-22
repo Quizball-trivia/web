@@ -47,11 +47,23 @@ const LocaleContext = createContext<LocaleContextType>(DEFAULT_LOCALE_CONTEXT);
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
   const preferredLanguage = useAuthStore((state) => state.user?.preferred_language);
   const lastSyncedPreferredLanguage = useRef<string | null | undefined>(undefined);
-  const [locale, setLocaleState] = useState<Locale>(() => {
-    return normalizeLocale(storage.get(STORAGE_KEYS.LOCALE, 'en'));
-  });
+  // First render must match the SSR pass — localStorage isn't available on the
+  // server, so the server emits English. We hydrate to the stored locale in an
+  // effect after mount to avoid a hydration mismatch on the first paint.
+  const [locale, setLocaleState] = useState<Locale>('en');
+  const hasHydratedRef = useRef(false);
 
   useEffect(() => {
+    if (hasHydratedRef.current) return;
+    hasHydratedRef.current = true;
+    const stored = normalizeLocale(storage.get(STORAGE_KEYS.LOCALE, 'en'));
+    if (stored !== 'en') {
+      setLocaleState(stored);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hasHydratedRef.current) return;
     storage.set(STORAGE_KEYS.LOCALE, locale);
   }, [locale]);
 

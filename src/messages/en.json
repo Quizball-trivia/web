@@ -108,7 +108,10 @@
     "newBadge": "New Badge",
     "newBadges": "New Badges",
     "unlocked": "unlocked",
-    "countNew": "{count} new"
+    "countNew": "{count} new",
+    "sectionTitle": "Achievements",
+    "completed": "Completed",
+    "locked": "Locked"
   },
   "career": {
     "missionObjectives": "Mission Objectives",

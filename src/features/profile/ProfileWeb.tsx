@@ -40,6 +40,12 @@ import { getTierVisual } from '@/utils/tierVisuals';
 import { RANKED_TIER_BANDS, getNextTierBand } from '@/utils/rankedTier';
 import { useLocale } from '@/contexts/LocaleContext';
 
+function resolveI18n(field: Record<string, string> | string | undefined, locale: string): string {
+  if (!field) return '';
+  if (typeof field === 'string') return field;
+  return field[locale] ?? field.en ?? Object.values(field)[0] ?? '';
+}
+
 import ClubSelect from '@/features/onboarding/ClubSelect';
 
 export interface ProfileRecentMatch {
@@ -105,7 +111,7 @@ export function ProfileWeb({
   onNameChange, onAvatarChange, onClubChange, onLanguageChange,
   isUpdating = false,
 }: ProfileWebProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const isSelf = viewMode === 'self';
   const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
   const placementPlayed = rankedProfile?.placementPlayed ?? 0;
@@ -886,7 +892,7 @@ export function ProfileWeb({
               className="text-xl uppercase text-white"
               style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, letterSpacing: '0', lineHeight: 1 }}
             >
-              Achievements
+              {t("achievements.sectionTitle")}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
               {player.achievements.map((achievement) => {
@@ -912,14 +918,14 @@ export function ProfileWeb({
                     {/* Body card */}
                     <div className="relative flex-1 min-w-0 h-[64px] rounded-[16px] border-2 border-brand-yellow px-3 py-2">
                       <div className="font-poppins text-[13px] font-semibold uppercase truncate text-white pr-7">
-                        {achievement.title}
+                        {resolveI18n(achievement.title, locale)}
                       </div>
                       <div className="mt-0.5 font-poppins text-[10px] font-semibold uppercase text-white/60 truncate">
                         {achievement.unlocked
-                          ? 'Completed'
+                          ? t("achievements.completed")
                           : hasProgress
                             ? `${achievement.progress} / ${achievement.target}`
-                            : 'Locked'}
+                            : t("achievements.locked")}
                       </div>
                       <div className="mt-1.5 h-1 w-full rounded-full overflow-hidden bg-brand-yellow/20">
                         <motion.div
