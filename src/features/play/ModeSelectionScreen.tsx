@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { ModeConfirmModal } from '@/components/shared/ModeConfirmModal';
 import { FriendPlayModal } from '@/components/shared/FriendPlayModal';
 import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
+import { useLocale } from '@/contexts/LocaleContext';
 import type { MatchStatsSummary } from '@/lib/domain';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import { useObjectives } from '@/lib/queries/objectives.queries';
@@ -48,6 +49,7 @@ export function ModeSelectionScreen({
   rankedProfile,
   rankedProfileLoading = false,
 }: ModeSelectionScreenProps) {
+  const { t } = useLocale();
   const [selectedMode, setSelectedMode] = useState<'ranked' | 'friendly' | 'solo' | null>(null);
   const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
   const placementPlayed = rankedProfile?.placementPlayed ?? 0;
@@ -139,20 +141,20 @@ export function ModeSelectionScreen({
                 className="text-[2.75rem] uppercase text-white"
                 style={rankedTitleStyle}
               >
-                Ranked Match
+                {t('play.rankedMatch')}
               </h1>
               <div className="mt-1.5 text-lg font-black uppercase tracking-wide text-white/90">
                 {rankedProfileLoading
-                  ? '1v1 Competitive'
+                  ? t('play.rankedSubtitle')
                   : isPlacementInProgress
-                    ? `Placement ${placementPlayed}/${placementRequired}`
-                    : '1v1 Competitive'}
+                    ? t('play.rankedPlacement', { played: placementPlayed, required: placementRequired })
+                    : t('play.rankedSubtitle')}
               </div>
 
 
               <div className="mt-5">
                 <div className="flex w-[180px] items-center justify-center rounded-[8px] bg-black h-[56px] text-xl font-black uppercase tracking-wide text-white">
-                  Play
+                  {t('common.play')}
                 </div>
               </div>
             </div>
@@ -169,15 +171,20 @@ export function ModeSelectionScreen({
               </div>
               {!rankedProfileLoading && (
                 <div className="mt-1.5 text-[11px] font-black uppercase tracking-wide text-white/70">
-                  {rankedWinRate}% win rate · {rankedGamesPlayed} ranked games
+                  {t('play.winRateLine', { rate: rankedWinRate, games: rankedGamesPlayed })}
                 </div>
               )}
               <div className="mt-0.5 text-sm font-black uppercase tracking-wide text-white">
                 {isPlacementInProgress
-                  ? `${placementMatchesLeft} match${placementMatchesLeft === 1 ? "" : "es"} to rank reveal`
+                  ? t(
+                      placementMatchesLeft === 1
+                        ? 'play.matchesToRankReveal'
+                        : 'play.matchesToRankRevealPlural',
+                      { count: placementMatchesLeft },
+                    )
                   : nextTierBand
-                    ? <>{Math.max(0, (nextTierTargetRp ?? 0) - displayRp)} RP to <span className="text-white">{nextTierBand.tier}</span></>
-                    : "Max rank reached"}
+                    ? <>{t('play.rpToTier', { rp: Math.max(0, (nextTierTargetRp ?? 0) - displayRp) })}<span className="text-white">{nextTierBand.tier}</span></>
+                    : t('play.maxRankReached')}
               </div>
             </div>
           </div>
@@ -191,14 +198,14 @@ export function ModeSelectionScreen({
                   className="text-[1.55rem] leading-none uppercase text-white whitespace-nowrap"
                   style={rankedTitleStyle}
                 >
-                  Ranked Match
+                  {t('play.rankedMatch')}
                 </h1>
                 <div className="mt-1.5 text-[11px] font-black uppercase tracking-wide text-white/90">
                   {rankedProfileLoading
-                    ? '1v1 Competitive'
+                    ? t('play.rankedSubtitle')
                     : isPlacementInProgress
-                      ? `Placement ${placementPlayed}/${placementRequired}`
-                      : '1v1 Competitive'}
+                      ? t('play.rankedPlacement', { played: placementPlayed, required: placementRequired })
+                      : t('play.rankedSubtitle')}
                 </div>
               </div>
               <div className="shrink-0 text-right w-[125px]">
@@ -210,10 +217,15 @@ export function ModeSelectionScreen({
                 </div>
                 <div className="mt-1 text-[9px] font-black uppercase tracking-wide text-white/85">
                   {isPlacementInProgress
-                    ? `${placementMatchesLeft} match${placementMatchesLeft === 1 ? "" : "es"} left`
+                    ? t(
+                        placementMatchesLeft === 1
+                          ? 'play.matchesLeft'
+                          : 'play.matchesLeftPlural',
+                        { count: placementMatchesLeft },
+                      )
                     : nextTierBand
-                      ? <>{Math.max(0, (nextTierTargetRp ?? 0) - displayRp)} RP to <span className="text-white">{nextTierBand.tier}</span></>
-                      : "Max rank reached"}
+                      ? <>{t('play.rpToTier', { rp: Math.max(0, (nextTierTargetRp ?? 0) - displayRp) })}<span className="text-white">{nextTierBand.tier}</span></>
+                      : t('play.maxRankReached')}
                 </div>
               </div>
             </div>
@@ -230,12 +242,12 @@ export function ModeSelectionScreen({
                 />
                 {!rankedProfileLoading && (
                   <div className="text-[10px] font-black uppercase tracking-wide text-white/80">
-                    {rankedWinRate}% win rate · {rankedGamesPlayed} ranked games
+                    {t('play.winRateLine', { rate: rankedWinRate, games: rankedGamesPlayed })}
                   </div>
                 )}
               </div>
               <div className="mb-1 flex h-[44px] w-[120px] items-center justify-center rounded-[8px] bg-black text-[15px] font-black uppercase tracking-wide text-white">
-                Play
+                {t('common.play')}
               </div>
             </div>
           </div>
@@ -276,9 +288,9 @@ export function ModeSelectionScreen({
               className="whitespace-nowrap text-[0.95rem] leading-[1] uppercase text-white md:text-4xl"
               style={friendlyTitleStyle}
             >
-              Friendly Match
+              {t('play.friendlyMatch')}
             </h3>
-            <p className="mt-1 text-[10px] md:mt-1.5 md:text-base font-black uppercase text-white">Create/Join Room</p>
+            <p className="mt-1 text-[10px] md:mt-1.5 md:text-base font-black uppercase text-white">{t('play.friendlySubtitle')}</p>
 
             {/* Mobile: icon (centered, right under subtitle) + PLAY (bottom, full width) */}
             <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
@@ -291,13 +303,13 @@ export function ModeSelectionScreen({
               />
             </div>
             <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] font-black uppercase tracking-wide text-white lg:hidden">
-              Play
+              {t('common.play')}
             </div>
 
             {/* Desktop: bottom-left PLAY */}
             <div className="mt-auto hidden pt-8 lg:block">
               <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-black text-xl font-black uppercase tracking-wide text-white">
-                Play
+                {t('common.play')}
               </div>
             </div>
           </div>
@@ -330,9 +342,9 @@ export function ModeSelectionScreen({
               className="whitespace-nowrap text-[0.95rem] leading-[1] uppercase text-black md:text-4xl"
               style={dailyTitleStyle}
             >
-              Daily Challenge
+              {t('play.dailyChallenge')}
             </h3>
-            <p className="mt-1 text-[10px] md:mt-1.5 md:text-base font-black uppercase text-black">View Challenges</p>
+            <p className="mt-1 text-[10px] md:mt-1.5 md:text-base font-black uppercase text-black">{t('play.dailySubtitle')}</p>
 
             {/* Mobile: icon (centered, right under subtitle) + PLAY (bottom, full width) */}
             <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
@@ -345,13 +357,13 @@ export function ModeSelectionScreen({
               />
             </div>
             <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] font-black uppercase tracking-wide text-white lg:hidden">
-              Play
+              {t('common.play')}
             </div>
 
             {/* Desktop: bottom-left PLAY */}
             <div className="mt-auto hidden pt-8 lg:block">
               <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-black text-xl font-black uppercase tracking-wide text-white">
-                Play
+                {t('common.play')}
               </div>
             </div>
           </div>
@@ -366,13 +378,13 @@ export function ModeSelectionScreen({
       >
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-black text-white uppercase">
-            Objectives
+            {t('play.objectivesTitle')}
           </h2>
           <Link
             href="/objectives"
             className="flex items-center justify-center w-[120px] h-[40px] rounded-xl border-2 border-brand-green-light text-xs font-black text-white uppercase tracking-wide hover:bg-brand-green-light/10 transition-colors"
           >
-            View All
+            {t('common.viewAll')}
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-3 lg:hidden">
@@ -403,8 +415,8 @@ export function ModeSelectionScreen({
               <div className="mb-2 flex items-center justify-center">
                 <Image src="/assets/obj_icon.png" alt="" width={45} height={44} className="size-12 object-contain opacity-90" />
               </div>
-              <h4 className="text-center text-[11px] font-black leading-tight text-white uppercase">Objectives unavailable</h4>
-              <p className="mt-1 text-center text-[10px] leading-tight text-white/75">Open objectives to refresh</p>
+              <h4 className="text-center text-[11px] font-black leading-tight text-white uppercase">{t('play.objectivesUnavailable')}</h4>
+              <p className="mt-1 text-center text-[10px] leading-tight text-white/75">{t('play.objectivesUnavailableHint')}</p>
             </Link>
           )}
           {previewObjectives.map((objective) => {
@@ -428,7 +440,7 @@ export function ModeSelectionScreen({
                 </div>
                 <div className="mt-2 flex items-center justify-between text-[9px] font-black uppercase">
                   <span className="text-white">{objective.progress}/{objective.target}</span>
-                  <span className="text-white/65">+{objective.rewardCoins} Coins</span>
+                  <span className="text-white/65">{t('play.objectiveRewardCoins', { count: objective.rewardCoins })}</span>
                 </div>
               </Link>
             );
@@ -464,8 +476,8 @@ export function ModeSelectionScreen({
               <div className="mb-3 flex items-center gap-3">
                 <Image src="/assets/obj_icon.png" alt="" width={45} height={44} className="size-12 object-contain" />
                 <div className="min-w-0 flex-1">
-                  <h4 className="truncate text-sm font-black uppercase text-white">Objectives unavailable</h4>
-                  <p className="truncate text-[11px] font-bold uppercase text-white/60">Open objectives to refresh</p>
+                  <h4 className="truncate text-sm font-black uppercase text-white">{t('play.objectivesUnavailable')}</h4>
+                  <p className="truncate text-[11px] font-bold uppercase text-white/60">{t('play.objectivesUnavailableHint')}</p>
                 </div>
               </div>
               <div className="mb-2.5 h-3 overflow-hidden rounded-full bg-[#0F260F]">
@@ -473,7 +485,7 @@ export function ModeSelectionScreen({
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-white">0/1</span>
-                <span className="text-xs font-black uppercase text-white">Coins + XP</span>
+                <span className="text-xs font-black uppercase text-white">{t('play.objectiveRewardCoinsAndXp')}</span>
               </div>
             </Link>
           )}
@@ -503,7 +515,7 @@ export function ModeSelectionScreen({
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black text-white">{objective.progress}/{objective.target}</span>
-                  <span className="text-xs font-black uppercase text-white">+{objective.rewardCoins} Coins</span>
+                  <span className="text-xs font-black uppercase text-white">{t('play.objectiveRewardCoins', { count: objective.rewardCoins })}</span>
                 </div>
               </Link>
             );
