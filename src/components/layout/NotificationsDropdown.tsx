@@ -19,23 +19,27 @@ import {
   acceptFriendRequest,
   declineFriendRequest,
 } from "@/lib/repositories/social.repo";
+import { useLocale } from "@/contexts/LocaleContext";
+import type { MessageKey } from "@/lib/i18n/messages";
 
-function getRankedDisplay(player: SocialPlayer) {
+type TranslateFn = (key: MessageKey, params?: Record<string, string | number>) => string;
+
+function getRankedDisplay(player: SocialPlayer, t: TranslateFn) {
   const level = Number.isFinite(player.level) ? player.level : 1;
   const ranked = player.ranked;
 
   if (!ranked) {
-    return { level, tierLabel: "Unranked", rpLabel: "0 RP", highlightClass: "text-brand-slate" };
+    return { level, tierLabel: t("notifications.tierUnranked"), rpLabel: t("notifications.rpLabel", { rp: 0 }), highlightClass: "text-brand-slate" };
   }
   if (ranked.placementStatus !== "placed") {
     return {
       level,
-      tierLabel: `Placement ${ranked.placementPlayed}/${ranked.placementRequired}`,
-      rpLabel: "0 RP",
+      tierLabel: t("notifications.tierPlacement", { played: ranked.placementPlayed, required: ranked.placementRequired }),
+      rpLabel: t("notifications.rpLabel", { rp: 0 }),
       highlightClass: "text-brand-green-light",
     };
   }
-  return { level, tierLabel: ranked.tier, rpLabel: `${ranked.rp} RP`, highlightClass: "text-brand-purple" };
+  return { level, tierLabel: ranked.tier, rpLabel: t("notifications.rpLabel", { rp: ranked.rp }), highlightClass: "text-brand-purple" };
 }
 
 function RequestRow({
@@ -44,14 +48,17 @@ function RequestRow({
   onAccept,
   onDecline,
   pendingAction,
+  t,
 }: {
   item: FriendRequestListItem;
   index: number;
   onAccept: (requestId: string) => void;
   onDecline: (requestId: string) => void;
   pendingAction: "accept" | "decline" | null;
+  t: TranslateFn;
 }) {
-  const ranked = getRankedDisplay(item.user);
+  const ranked = getRankedDisplay(item.user, t);
+  const displayName = item.user.nickname ?? t("notifications.unknownUser");
 
   return (
     <motion.div
@@ -72,10 +79,10 @@ function RequestRow({
       {/* Info */}
       <div className="min-w-0 flex-1">
         <p className="truncate text-xs font-black text-white">
-          {item.user.nickname ?? "Unknown"}
+          {displayName}
         </p>
         <div className="mt-0.5 flex items-center gap-1.5">
-          <span className="text-[10px] font-bold text-brand-slate">Lvl {ranked.level}</span>
+          <span className="text-[10px] font-bold text-brand-slate">{t("notifications.level", { level: ranked.level })}</span>
           <span className="text-[10px] text-brand-slate">&middot;</span>
           <span className={`text-[10px] font-bold ${ranked.highlightClass}`}>
             {ranked.tierLabel}
@@ -92,7 +99,7 @@ function RequestRow({
           onClick={() => onAccept(item.requestId)}
           disabled={pendingAction !== null}
           className="flex size-8 items-center justify-center rounded-lg border border-brand-green-light/25 bg-brand-green-light/15 text-brand-green-light transition-colors hover:bg-brand-green-light/25 disabled:opacity-50"
-          aria-label={`Accept request from ${item.user.nickname}`}
+          aria-label={t("notifications.acceptRequest", { name: displayName })}
         >
           {pendingAction === "accept" ? (
             <Loader2 className="size-3.5 animate-spin" />
@@ -105,7 +112,7 @@ function RequestRow({
           onClick={() => onDecline(item.requestId)}
           disabled={pendingAction !== null}
           className="flex size-8 items-center justify-center rounded-lg border border-brand-red-soft/20 bg-brand-red-soft/10 text-brand-red-light transition-colors hover:bg-brand-red-soft/20 disabled:opacity-50"
-          aria-label={`Decline request from ${item.user.nickname}`}
+          aria-label={t("notifications.declineRequest", { name: displayName })}
         >
           {pendingAction === "decline" ? (
             <Loader2 className="size-3.5 animate-spin" />
@@ -119,6 +126,7 @@ function RequestRow({
 }
 
 export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
+  const { t } = useLocale();
   const badgeDisplay = badgeCount > 99 ? "99+" : String(badgeCount);
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -134,18 +142,18 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
     mutationFn: (requestId: string) => acceptFriendRequest(requestId),
     onSuccess: async () => {
       await invalidate();
-      toast.success("Friend request accepted");
+      toast.success(t("notifications.friendRequestAccepted"));
     },
-    onError: () => toast.error("Failed to accept request"),
+    onError: () => toast.error(t("notifications.acceptFailed")),
   });
 
   const declineMutation = useMutation({
     mutationFn: (requestId: string) => declineFriendRequest(requestId),
     onSuccess: async () => {
       await invalidate();
-      toast.success("Friend request declined");
+      toast.success(t("notifications.friendRequestDeclined"));
     },
-    onError: () => toast.error("Failed to decline request"),
+    onError: () => toast.error(t("notifications.declineFailed")),
   });
 
   const handleAccept = async (requestId: string) => {
@@ -176,8 +184,8 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
           size="icon"
           aria-label={
             badgeCount > 0
-              ? `Notifications, ${badgeCount} unread`
-              : "Notifications"
+              ? t("notifications.ariaLabelWithCount", { count: badgeCount })
+              : t("notifications.ariaLabel")
           }
           className="relative rounded-full hover:bg-white/5"
         >
@@ -204,7 +212,7 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-surface-card-tint px-4 py-3">
           <h3 className="text-xs font-black uppercase tracking-[0.18em] text-brand-slate-light">
-            Notifications
+            {t("notifications.title")}
           </h3>
           {incoming.length > 0 && (
             <span className="rounded-full bg-brand-orange-light/15 px-2 py-0.5 text-[10px] font-black text-[#FFB37D]">
@@ -220,7 +228,7 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
               <div className="flex size-10 items-center justify-center rounded-full bg-surface-card-tint">
                 <Bell className="size-5 text-brand-slate" />
               </div>
-              <p className="text-xs font-bold text-brand-slate">No notifications</p>
+              <p className="text-xs font-bold text-brand-slate">{t("notifications.empty")}</p>
             </div>
           ) : (
             <div className="flex flex-col gap-1.5 p-2">
@@ -233,6 +241,7 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
                     onAccept={handleAccept}
                     onDecline={handleDecline}
                     pendingAction={pendingAction?.requestId === item.requestId ? pendingAction.action : null}
+                    t={t}
                   />
                 ))}
               </AnimatePresence>
@@ -246,7 +255,12 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
       {/* Screen reader announcement */}
       <span aria-live="polite" aria-atomic="true" className="sr-only">
         {badgeCount > 0
-          ? `You have ${badgeCount} new notification${badgeCount === 1 ? "" : "s"}`
+          ? t(
+              badgeCount === 1
+                ? "notifications.unreadAnnouncementSingular"
+                : "notifications.unreadAnnouncementPlural",
+              { count: badgeCount },
+            )
           : ""}
       </span>
     </Popover>

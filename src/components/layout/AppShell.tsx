@@ -102,17 +102,21 @@ function readRankedGeoHintDebug(): RankedGeoHintDebug | null {
   }
 }
 
-function formatRejoinCopy(remainingReconnects: number, compact = false): string {
+type TranslateFn = (key: MessageKey, params?: Record<string, string | number>) => string;
+
+function formatRejoinCopy(t: TranslateFn, remainingReconnects: number, compact = false): string {
   if (remainingReconnects <= 0) {
     return compact
-      ? "Last reconnect. Next disconnect forfeits."
-      : "Rejoin now. This is your last reconnect; the next disconnect forfeits the match.";
+      ? t("appShell.rejoinNowLastMobile")
+      : t("appShell.rejoinNowLastDesktop");
   }
 
-  const label = remainingReconnects === 1 ? "reconnect" : "reconnects";
+  const label = remainingReconnects === 1
+    ? t("appShell.reconnect")
+    : t("appShell.reconnects");
   return compact
-    ? `Rejoin to continue. ${remainingReconnects} ${label} left.`
-    : `Rejoin now to continue. ${remainingReconnects} ${label} left.`;
+    ? t("appShell.rejoinShortMany", { count: remainingReconnects, label })
+    : t("appShell.rejoinNowToContinue", { count: remainingReconnects, label });
 }
 
 export function AppShell({ children }: AppShellProps) {
@@ -529,13 +533,13 @@ export function AppShell({ children }: AppShellProps) {
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-white">
-                          Match finished against{" "}
-                          <span className="text-white">{completedMatchBanner?.opponent.username ?? "Opponent"}</span>
+                          {t("appShell.matchFinishedAgainst")}{" "}
+                          <span className="text-white">{completedMatchBanner?.opponent.username ?? t("appShell.opponentFallback")}</span>
                         </p>
                           <p className="text-xs text-white/70">
                             {completedByForfeit
-                              ? "Reconnect limit reached. Final result is ready."
-                              : "View the final result"}
+                              ? t("appShell.completedByForfeit")
+                              : t("appShell.viewFinalResult")}
                           </p>
                         </div>
                       </div>
@@ -545,7 +549,7 @@ export function AppShell({ children }: AppShellProps) {
                           className="h-9 bg-brand-green text-white hover:bg-brand-green-deep"
                           onClick={handleViewCompletedMatch}
                         >
-                          View Results <ArrowRight className="ml-2 size-4" />
+                          {t("appShell.viewResults")} <ArrowRight className="ml-2 size-4" />
                         </Button>
                         <Button
                           size="sm"
@@ -569,10 +573,10 @@ export function AppShell({ children }: AppShellProps) {
                         </div>
                         <div>
                           <p className="text-sm font-semibold text-white">
-                            Draft active against{" "}
-                            <span className="text-white">{activeDraftBanner?.opponent?.username ?? "Opponent"}</span>
+                            {t("appShell.draftActiveAgainst")}{" "}
+                            <span className="text-white">{activeDraftBanner?.opponent?.username ?? t("appShell.opponentFallback")}</span>
                           </p>
-                          <p className="text-xs text-white/70">Return to category banning before the match starts</p>
+                          <p className="text-xs text-white/70">{t("appShell.returnToCategoryBanning")}</p>
                         </div>
                       </div>
                       <Button
@@ -580,7 +584,7 @@ export function AppShell({ children }: AppShellProps) {
                         className="h-9 bg-brand-orange text-white hover:bg-brand-orange-light"
                         onClick={handleReturnToDraft}
                       >
-                        Return to Draft <ArrowRight className="ml-2 size-4" />
+                        {t("appShell.returnToDraft")} <ArrowRight className="ml-2 size-4" />
                       </Button>
                     </div>
                   </div>
@@ -596,13 +600,13 @@ export function AppShell({ children }: AppShellProps) {
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-white">
-                          Match still active against{" "}
-                          <span className="text-white">{activeMatchBanner?.opponent.username ?? "Opponent"}</span>
+                          {t("appShell.matchStillActiveAgainst")}{" "}
+                          <span className="text-white">{activeMatchBanner?.opponent.username ?? t("appShell.opponentFallback")}</span>
                         </p>
                         <p className="text-xs text-white/70">
                             {activeMatchBanner?.source === "rejoin"
-                              ? formatRejoinCopy(rejoinReconnectsLeft)
-                              : "Return to the live match"}
+                              ? formatRejoinCopy(t, rejoinReconnectsLeft)
+                              : t("appShell.returnToLiveMatch")}
                         </p>
                       </div>
                     </div>
@@ -612,14 +616,14 @@ export function AppShell({ children }: AppShellProps) {
                         className="h-9 bg-brand-yellow text-surface-page hover:bg-brand-yellow-deep"
                         onClick={handleRejoinMatch}
                       >
-                        Rejoin Match <ArrowRight className="ml-2 size-4" />
+                        {t("appShell.rejoinMatch")} <ArrowRight className="ml-2 size-4" />
                       </Button>
                       <Button
                         size="sm"
                         className="h-9 bg-brand-red-soft text-white hover:bg-brand-red-soft/90"
                         onClick={handleForfeitRejoin}
                       >
-                        Forfeit <X className="ml-2 size-4" />
+                        {t("appShell.forfeit")} <X className="ml-2 size-4" />
                       </Button>
                     </div>
                   </div>
@@ -636,15 +640,15 @@ export function AppShell({ children }: AppShellProps) {
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-white">
-                          You’re still in{" "}
-                          <span className="text-white">{lobby?.displayName ?? "a lobby"}</span>
+                          {t("appShell.stillInLobby")}{" "}
+                          <span className="text-white">{lobby?.displayName ?? t("appShell.lobbyFallback")}</span>
                         </p>
                         <p className="text-xs text-white/70">
-                          Code{" "}
+                          {t("appShell.code")}{" "}
                           <span className="font-mono font-bold text-white">{lobbyCode || "..."}</span>
                           {!socketConnected && (
                             <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-brand-yellow/20 px-2 py-0.5 text-[10px] font-semibold text-brand-yellow">
-                              Reconnecting…
+                              {t("appShell.reconnecting")}
                             </span>
                           )}
                         </p>
@@ -657,14 +661,14 @@ export function AppShell({ children }: AppShellProps) {
                         onClick={handleReturnToLobby}
                         disabled={!lobbyCode}
                       >
-                        Return to Lobby <ArrowRight className="ml-2 size-4" />
+                        {t("appShell.returnToLobby")} <ArrowRight className="ml-2 size-4" />
                       </Button>
                       <Button
                         size="sm"
                         className="h-9 bg-brand-red-soft text-white hover:bg-brand-red-soft/90"
                         onClick={handleLeaveLobby}
                       >
-                        Leave <X className="ml-2 size-4" />
+                        {t("appShell.leave")} <X className="ml-2 size-4" />
                       </Button>
                     </div>
                   </div>
@@ -681,15 +685,15 @@ export function AppShell({ children }: AppShellProps) {
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-white">
-                          Ranked match is preparing
+                          {t("appShell.rankedMatchPreparing")}
                         </p>
                         <p className="text-xs text-white/70">
                           {draftOpponent
-                            ? <>Opponent found: <span className="text-white">{draftOpponent.username}</span></>
-                            : "Return to matchmaking or leave the ranked lobby."}
+                            ? <>{t("appShell.opponentFound")}<span className="text-white">{draftOpponent.username}</span></>
+                            : t("appShell.returnToMatchmakingOrLeave")}
                           {!socketConnected && (
                             <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-brand-yellow/20 px-2 py-0.5 text-[10px] font-semibold text-brand-yellow">
-                              Reconnecting…
+                              {t("appShell.reconnecting")}
                             </span>
                           )}
                         </p>
@@ -701,14 +705,14 @@ export function AppShell({ children }: AppShellProps) {
                         className="h-9 bg-brand-blue text-white hover:bg-brand-blue/90"
                         onClick={handleReturnToRankedLobby}
                       >
-                        Return to Matchmaking <ArrowRight className="ml-2 size-4" />
+                        {t("appShell.returnToMatchmaking")} <ArrowRight className="ml-2 size-4" />
                       </Button>
                       <Button
                         size="sm"
                         className="h-9 bg-brand-red-soft text-white hover:bg-brand-red-soft/90"
                         onClick={handleLeaveLobby}
                       >
-                        Leave <X className="ml-2 size-4" />
+                        {t("appShell.leave")} <X className="ml-2 size-4" />
                       </Button>
                     </div>
                   </div>
@@ -808,11 +812,11 @@ export function AppShell({ children }: AppShellProps) {
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-white">
-                        Match finished vs{" "}
-                        <span className="text-white">{completedMatchBanner?.opponent.username ?? "Opponent"}</span>
+                        {t("appShell.matchFinishedVs")}{" "}
+                        <span className="text-white">{completedMatchBanner?.opponent.username ?? t("appShell.opponentFallback")}</span>
                       </p>
                         <p className="text-xs text-white/70">
-                          {completedByForfeit ? "Reconnect limit reached. Result is ready." : "Final result is ready"}
+                          {completedByForfeit ? t("appShell.completedByForfeitCompact") : t("appShell.matchFinishedCompactDesc")}
                         </p>
                     </div>
                   </div>
@@ -822,14 +826,14 @@ export function AppShell({ children }: AppShellProps) {
                         className="flex-1 h-10 bg-brand-green text-white hover:bg-brand-green-deep"
                         onClick={handleViewCompletedMatch}
                       >
-                        View Results
+                        {t("appShell.viewResults")}
                       </Button>
                       <Button
                         size="sm"
                         className="flex-1 h-10 bg-brand-red-soft text-white hover:bg-brand-red-soft/90"
                         onClick={handleDismissCompletedMatch}
                       >
-                        Dismiss
+                        {t("appShell.dismiss")}
                       </Button>
                     </div>
                   </div>
@@ -846,10 +850,10 @@ export function AppShell({ children }: AppShellProps) {
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-white">
-                          Draft active vs{" "}
-                          <span className="text-white">{activeDraftBanner?.opponent?.username ?? "Opponent"}</span>
+                          {t("appShell.draftActiveVs")}{" "}
+                          <span className="text-white">{activeDraftBanner?.opponent?.username ?? t("appShell.opponentFallback")}</span>
                         </p>
-                        <p className="text-xs text-white/70">Return to category banning</p>
+                        <p className="text-xs text-white/70">{t("appShell.returnToCategoryBanningShort")}</p>
                       </div>
                     </div>
                     <Button
@@ -857,7 +861,7 @@ export function AppShell({ children }: AppShellProps) {
                       className="h-10 bg-brand-orange text-white hover:bg-brand-orange-light"
                       onClick={handleReturnToDraft}
                     >
-                      Return to Draft
+                      {t("appShell.returnToDraft")}
                     </Button>
                   </div>
                 </div>
@@ -873,13 +877,13 @@ export function AppShell({ children }: AppShellProps) {
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-white">
-                        Match active vs{" "}
-                        <span className="text-white">{activeMatchBanner?.opponent.username ?? "Opponent"}</span>
+                        {t("appShell.matchActiveVs")}{" "}
+                        <span className="text-white">{activeMatchBanner?.opponent.username ?? t("appShell.opponentFallback")}</span>
                       </p>
                       <p className="text-xs text-white/70">
                           {activeMatchBanner?.source === "rejoin"
-                            ? formatRejoinCopy(rejoinReconnectsLeft, true)
-                            : "Return to continue"}
+                            ? formatRejoinCopy(t, rejoinReconnectsLeft, true)
+                            : t("appShell.returnToContinue")}
                       </p>
                     </div>
                   </div>
@@ -889,14 +893,14 @@ export function AppShell({ children }: AppShellProps) {
                       className="flex-1 h-10 bg-brand-yellow text-surface-page hover:bg-brand-yellow-deep"
                       onClick={handleRejoinMatch}
                     >
-                      Rejoin
+                      {t("appShell.rejoin")}
                     </Button>
                     <Button
                       size="sm"
                       className="flex-1 h-10 bg-brand-red-soft text-white hover:bg-brand-red-soft/90"
                       onClick={handleForfeitRejoin}
                     >
-                      Forfeit
+                      {t("appShell.forfeit")}
                     </Button>
                   </div>
                 </div>
@@ -913,15 +917,15 @@ export function AppShell({ children }: AppShellProps) {
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-white">
-                        You’re still in{" "}
-                        <span className="text-white">{lobby?.displayName ?? "a lobby"}</span>
+                        {t("appShell.stillInLobby")}{" "}
+                        <span className="text-white">{lobby?.displayName ?? t("appShell.lobbyFallback")}</span>
                       </p>
                       <p className="text-xs text-white/70">
-                        Code{" "}
+                        {t("appShell.code")}{" "}
                         <span className="font-mono font-bold text-white">{lobbyCode || "..."}</span>
                         {!socketConnected && (
                           <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-brand-yellow/20 px-2 py-0.5 text-[10px] font-semibold text-brand-yellow">
-                            Reconnecting…
+                            {t("appShell.reconnecting")}
                           </span>
                         )}
                       </p>
@@ -934,14 +938,14 @@ export function AppShell({ children }: AppShellProps) {
                       onClick={handleReturnToLobby}
                       disabled={!lobbyCode}
                     >
-                      Return
+                      {t("appShell.return")}
                     </Button>
                     <Button
                       size="sm"
                       className="flex-1 h-10 bg-brand-red-soft text-white hover:bg-brand-red-soft/90"
                       onClick={handleLeaveLobby}
                     >
-                      Leave
+                      {t("appShell.leave")}
                     </Button>
                   </div>
                 </div>
@@ -958,15 +962,15 @@ export function AppShell({ children }: AppShellProps) {
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-white">
-                        Ranked match is preparing
+                        {t("appShell.rankedMatchPreparing")}
                       </p>
                       <p className="text-xs text-white/70">
                         {draftOpponent
-                          ? <>Opponent found: <span className="text-white">{draftOpponent.username}</span></>
-                          : "Return to matchmaking or leave."}
+                          ? <>{t("appShell.opponentFound")}<span className="text-white">{draftOpponent.username}</span></>
+                          : t("appShell.returnToMatchmakingOrLeaveShort")}
                         {!socketConnected && (
                           <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-brand-yellow/20 px-2 py-0.5 text-[10px] font-semibold text-brand-yellow">
-                            Reconnecting…
+                            {t("appShell.reconnecting")}
                           </span>
                         )}
                       </p>
@@ -978,14 +982,14 @@ export function AppShell({ children }: AppShellProps) {
                       className="flex-1 h-10 bg-brand-blue text-white hover:bg-brand-blue/90"
                       onClick={handleReturnToRankedLobby}
                     >
-                      Return
+                      {t("appShell.return")}
                     </Button>
                     <Button
                       size="sm"
                       className="flex-1 h-10 bg-brand-red-soft text-white hover:bg-brand-red-soft/90"
                       onClick={handleLeaveLobby}
                     >
-                      Leave
+                      {t("appShell.leave")}
                     </Button>
                   </div>
                 </div>
@@ -1004,7 +1008,7 @@ export function AppShell({ children }: AppShellProps) {
                 size="lg"
                 className="w-11/12 h-12 shadow-lg shadow-primary/20"
               >
-                Play
+                {t("common.play")}
               </Button>
             </div>
           </div>
