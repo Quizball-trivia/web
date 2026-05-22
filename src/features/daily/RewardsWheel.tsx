@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { QuitGameDialog } from "./QuitGameDialog";
+import { useLocale } from "@/contexts/LocaleContext";
 
 interface Reward {
   id: string;
@@ -107,6 +108,7 @@ const wheelRewards: Reward[] = [
 ];
 
 export function RewardsWheel({ onRewardWon, onBack }: RewardsWheelProps) {
+  const { t } = useLocale();
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [wonReward, setWonReward] = useState<Reward | null>(null);
@@ -260,7 +262,7 @@ export function RewardsWheel({ onRewardWon, onBack }: RewardsWheelProps) {
             )}
             <div className="flex items-center gap-2">
               <Gift className="size-6 text-brand-cyan" />
-              <h1 className="text-lg md:text-xl font-black uppercase text-white">Daily Rewards</h1>
+              <h1 className="text-lg md:text-xl font-black uppercase text-white">{t("dailyGames.dailyRewards")}</h1>
             </div>
           </div>
         </div>
@@ -508,7 +510,7 @@ export function RewardsWheel({ onRewardWon, onBack }: RewardsWheelProps) {
           <div className="flex items-start gap-3">
             <Zap className="size-5 text-brand-cyan shrink-0 mt-0.5" />
             <div>
-              <div className="text-sm mb-1 font-bold text-white">Pro Tip</div>
+              <div className="text-sm mb-1 font-bold text-white">{t("dailyGames.proTip")}</div>
               <div className="text-xs text-brand-slate">
                 Spin the wheel every day to maximize your rewards! Higher
                 rarity items have better bonuses.
@@ -525,7 +527,7 @@ export function RewardsWheel({ onRewardWon, onBack }: RewardsWheelProps) {
           open={showQuitDialog}
           onOpenChange={setShowQuitDialog}
           onQuit={onBack}
-          title="Leave Rewards?"
+          title={t("dailyQuit.leaveRewards")}
           description="You can come back to spin the wheel anytime."
         />
       )}

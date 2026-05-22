@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { MoneyDropSession } from "@/lib/domain/dailyChallenge";
+import { useLocale } from "@/contexts/LocaleContext";
 
 interface MoneyDropGameProps {
   session: MoneyDropSession;
@@ -172,6 +173,7 @@ function HelpButtons({
 /* ── Main Component ── */
 
 export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProps) {
+  const { t } = useLocale();
   const STARTING_MONEY = session.startingMoney;
   const QUESTION_TIME = session.secondsPerQuestion;
 
@@ -722,7 +724,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
         open={showQuitDialog}
         onOpenChange={setShowQuitDialog}
         onQuit={onBack}
-        title="Quit Money Drop?"
+        title={t("dailyQuit.quitMoneyDrop")}
         description={`You'll lose your current balance of ${formatMoney(currentMoney)}.`}
       />
     </div>

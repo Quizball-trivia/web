@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { QuitGameDialog } from "./QuitGameDialog";
 import { Check, CheckCircle2, Clock, Timer, Lightbulb, Trophy, ArrowRight, ArrowLeft } from "lucide-react";
 import type { CountdownSession } from "@/lib/domain/dailyChallenge";
+import { useLocale } from "@/contexts/LocaleContext";
 
 interface AnswerGroup {
   display: string;
@@ -107,6 +108,7 @@ function rankAnswerMatches(input: string, answerGroups: AnswerGroup[], foundAnsw
 }
 
 export function CountdownGame({ session, onBack, onComplete }: CountdownGameProps) {
+  const { t } = useLocale();
   const TIME_PER_ROUND = session.secondsPerRound;
   const [questions] = useState<CountdownQuestion[]>(() =>
     session.rounds.map((round) => ({
@@ -300,7 +302,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
           <div className="mb-4"><CheckCircle2 className="size-14 text-brand-green-light mx-auto" /></div>
           <h2 className="text-2xl font-black uppercase text-white">Round {currentRound + 1} Complete!</h2>
           <div className="space-y-2">
-            <p className="text-brand-slate">You found</p>
+            <p className="text-brand-slate">{t("dailyGames.youFound")}</p>
             <div className="text-4xl text-brand-cyan font-black">{foundAnswers.length}</div>
             <p className="text-brand-slate">answers</p>
           </div>
@@ -329,7 +331,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
               </button>
               <div className="flex items-center gap-2">
                 <Timer className="size-6 text-brand-cyan" />
-                <h1 className="text-lg md:text-xl font-black uppercase text-white">Countdown</h1>
+                <h1 className="text-lg md:text-xl font-black uppercase text-white">{t("dailyGames.countdown")}</h1>
               </div>
             </div>
 
@@ -371,7 +373,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
               <Clock
                 className={`size-5 ${timeRemaining <= 5 ? "text-brand-red-soft" : "text-brand-cyan"}`}
               />
-              <span className="text-sm text-brand-slate font-bold">Time Remaining</span>
+              <span className="text-sm text-brand-slate font-bold">{t("dailyGames.timeRemaining")}</span>
             </div>
             <div
               className={`text-3xl font-black ${timeRemaining <= 5 ? "text-brand-red-soft" : "text-brand-cyan"}`}
@@ -394,14 +396,14 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
         {/* Input */}
         <div className="bg-surface-card rounded-xl border-b-4 border-b-[#0F1F26] p-4 md:p-5">
           <div className="space-y-2">
-            <label className="text-sm text-brand-slate font-bold">Type your answer</label>
+            <label className="text-sm text-brand-slate font-bold">{t("dailyGames.typeYourAnswer")}</label>
             <Input
               ref={inputRef}
               type="text"
               value={inputValue}
               onChange={handleInputChange}
               onKeyDown={handleInputKeyDown}
-              placeholder="Press Enter to submit..."
+              placeholder={t("dailyGames.pressEnterPlaceholder")}
               className="bg-surface-card-tint border-2 border-surface-card text-white placeholder:text-brand-slate focus:border-brand-cyan text-lg h-12 rounded-xl"
               autoComplete="off"
               autoCapitalize="off"
@@ -450,7 +452,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
         {/* Found Answers */}
         <div className="bg-surface-card rounded-xl border-b-4 border-b-[#0F1F26] p-4 md:p-5">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-black text-white">Answers Found</h3>
+            <h3 className="text-lg font-black text-white">{t("dailyGames.answersFound")}</h3>
             <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-brand-cyan/15 text-brand-cyan">
               {foundAnswers.length}
             </span>

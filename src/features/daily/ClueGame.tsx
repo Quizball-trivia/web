@@ -16,6 +16,7 @@ import {
 import { QuitGameDialog } from "./QuitGameDialog";
 import type { CluesSession } from "@/lib/domain/dailyChallenge";
 import { calculateCluesDisplayPoints } from "@/utils/cluesScoring";
+import { useLocale } from "@/contexts/LocaleContext";
 
 interface ClueGameProps {
   session: CluesSession;
@@ -82,6 +83,7 @@ function getPoints(revealedClues: number): number {
 }
 
 export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
+  const { t } = useLocale();
   const secondsPerClueStep = session.secondsPerClueStep;
   const questions = session.questions;
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -255,7 +257,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
               <div>
                 <div className="flex items-center gap-2">
                   <Lightbulb className="size-6 text-brand-orange" />
-                  <h1 className="text-lg md:text-xl font-black uppercase text-white">Clues Challenge</h1>
+                  <h1 className="text-lg md:text-xl font-black uppercase text-white">{t("dailyGames.cluesChallenge")}</h1>
                 </div>
                 <div className="text-xs text-brand-slate font-bold">
                   Question {currentQuestionIndex + 1}/{questions.length}
@@ -357,7 +359,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
             <div className="space-y-3">
               <Input
                 type="text"
-                placeholder="Type your answer..."
+                placeholder={t("dailyGames.typeYourAnswerPlaceholder")}
                 value={userAnswer}
                 onChange={(e) => setUserAnswer(e.target.value)}
                 onKeyDown={handleKeyDown}
