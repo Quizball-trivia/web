@@ -185,6 +185,73 @@
     "warmingUp": "ვემზადებით...",
     "redirecting": "გადამისამართება..."
   },
+  "oauthCallback": {
+    "finalizingTransfer": "გადარიცხვის დასრულება...",
+    "authenticationFailed": "ავტორიზაცია ვერ მოხერხდა",
+    "authenticationFailedDefault": "ავტორიზაცია ვერ მოხერხდა",
+    "sessionLoadError": "სესიის ჩატვირთვა ვერ მოხერხდა",
+    "sessionEstablishError": "სესიის დამყარება ვერ მოხერხდა",
+    "backToLogin": "უკან შესვლაზე"
+  },
+  "banCategory": {
+    "banned": "აკრძალული"
+  },
+  "recentMatches": {
+    "title": "ბოლო მატჩები",
+    "loading": "ბოლო მატჩები იტვირთება...",
+    "loadFailed": "ბოლო მატჩების ჩატვირთვა ვერ მოხერხდა. სცადე მოგვიანებით.",
+    "empty": "ბოლო მატჩები ჯერ არ გაქვს.",
+    "vs": "{opponent}-ის წინააღმდეგ",
+    "modeRanked": "რეიტინგული",
+    "modeFriendly": "მეგობრული",
+    "showLess": "ნაკლების ჩვენება",
+    "showMore": "კიდევ {count}-ის ჩვენება"
+  },
+  "friendPlay": {
+    "titlePrefix": "ითამაშე",
+    "titleSuffix": "მეგობართან",
+    "title": "ითამაშე მეგობართან",
+    "description": "შექმენი პირადი ოთახი მატჩის ჩასატარებლად ან შეიყვანე კოდი მეგობრის ლობში შესასვლელად.",
+    "createNewRoom": "ახალი ოთახის შექმნა",
+    "orJoin": "ან შემოგვიერთდი",
+    "roomCodePlaceholder": "ოთახის კოდი",
+    "join": "შემოერთება",
+    "browsePublicLobbies": "საჯარო ლობების დათვალიერება",
+    "invalidRoomCode": "არასწორი ოთახის კოდი",
+    "srDescription": "შექმენი ოთახი ან შემოუერთდი არსებულს მოწვევის კოდით."
+  },
+  "modeConfirm": {
+    "rankedTitlePrefix": "1V1",
+    "rankedTitleRest": "რეიტინგული მატჩი",
+    "rankedDescription": "3 შემთხვევითი კატეგორია გამოჩნდება — თითო მოთამაშე 1-ს ბლოკავს, შემდეგ შერჩეულში ხდება ბრძოლა",
+    "rankedStatLeft": "12–18 კითხვა",
+    "rankedStatRight": "ხანგრძლივობა 5 წთ",
+    "friendlyTitlePrefix": "1V1",
+    "friendlyTitleRest": "მეგობრული მატჩი",
+    "friendlyDescription": "ითამაშე მეგობართან. RP არ ირისკება.",
+    "friendlyStatLeft": "მორგებული წესები",
+    "friendlyStatRight": "ცვალებადი ხანგრძლივობა",
+    "soloTitlePrefix": "სოლო",
+    "soloTitleRest": "ვარჯიში",
+    "soloDescription": "გაივარჯიშე AI-ის წინააღმდეგ.",
+    "soloStatLeft": "შენი ტემპით",
+    "soloStatRight": "XP ჯილდო",
+    "playForTicket": "ითამაშე {count} ბილეთად",
+    "playForTickets": "ითამაშე {count} ბილეთად",
+    "youHaveTicket": "შენ გაქვს {count} ბილეთი",
+    "youHaveTickets": "შენ გაქვს {count} ბილეთი"
+  },
+  "forgotPassword": {
+    "title": "დაგავიწყდა პაროლი?",
+    "description": "შეიყვანე ელფოსტა და გამოგიგზავნით პაროლის აღდგენის ბმულს",
+    "emailLabel": "ელფოსტა",
+    "emailPlaceholder": "you@example.com",
+    "sendResetLink": "ბმულის გაგზავნა",
+    "checkEmail": "შეამოწმე შენი ელფოსტა",
+    "sentTo": "პაროლის აღდგენის ბმული გავგზავნეთ მისამართზე",
+    "backToSignIn": "უკან შესვლის გვერდზე",
+    "didntReceive": "არ მიგიღია? სცადე თავიდან"
+  },
   "sidebar": {
     "toggle": "გვერდითი მენიუს გადართვა",
     "previousPage": "წინა გვერდი",

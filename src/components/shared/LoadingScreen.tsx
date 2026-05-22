@@ -2,6 +2,7 @@
 
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface LoadingScreenProps {
   text?: string;
@@ -28,10 +29,12 @@ function LoadingBallImage({ size = 64 }: { size?: number }) {
 }
 
 export function LoadingScreen({
-  text = 'Warming up...',
+  text,
   className,
   fullScreen = true,
 }: LoadingScreenProps) {
+  const { t } = useLocale();
+  const displayText = text ?? t('common.warmingUp');
   return (
     <div
       className={cn(
@@ -84,7 +87,7 @@ export function LoadingScreen({
         transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
         className="mt-8 text-sm font-black uppercase tracking-[0.2em] text-white/40 font-fun"
       >
-        {text}
+        {displayText}
       </motion.p>
     </div>
   );

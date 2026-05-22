@@ -5,6 +5,7 @@ import { useRecentMatches } from '@/lib/queries/stats.queries';
 import { COLLAPSED_MATCHES_COUNT, MAX_MATCHES_COUNT } from '@/lib/constants/matches';
 import { formatMatchScore } from '@/utils/matchScore';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
+import { useLocale } from '@/contexts/LocaleContext';
 
 const rowBorder = (result: string) => {
   if (result === 'win') return 'border-brand-green';
@@ -24,6 +25,7 @@ interface HomeRecentMatchesProps {
 }
 
 export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesProps) {
+  const { t } = useLocale();
   const router = useRouter();
   const fetchCount = collapsedOnly ? COLLAPSED_MATCHES_COUNT : MAX_MATCHES_COUNT;
   const { data: recentMatches = [], isLoading, error } = useRecentMatches(fetchCount);
@@ -38,7 +40,7 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
         opponent: match.opponent.username,
         avatarUrl: match.opponent.avatarUrl,
         avatarCustomization: match.opponent.avatarCustomization,
-        mode: match.mode === 'ranked' ? 'Ranked' : 'Friendly',
+        mode: match.mode === 'ranked' ? t('recentMatches.modeRanked') : t('recentMatches.modeFriendly'),
         competition: match.competition,
         rpDelta: match.rpDelta,
         score: formatted.score,
@@ -48,7 +50,7 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
         time: match.timeLabel,
       };
     }),
-    [recentMatches]
+    [recentMatches, t]
   );
 
   const { visibleMatches, hiddenCount, canExpand } = useMemo(() => {
@@ -68,14 +70,14 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-poppins text-base text-white uppercase">
-          Recent Matches
+          {t('recentMatches.title')}
         </h2>
         <button
           type="button"
           onClick={() => router.push('/profile')}
           className="font-poppins flex items-center justify-center w-[120px] h-[40px] rounded-xl border-2 border-brand-green-light text-xs text-white uppercase tracking-wide hover:bg-brand-green-light/10 transition-colors"
         >
-          View All
+          {t('common.viewAll')}
         </button>
       </div>
 
@@ -83,7 +85,7 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
       <div className="space-y-2.5">
         {isLoading && (
           <div className="p-4 rounded-2xl bg-surface-card text-sm font-bold text-brand-slate">
-            Loading recent matches...
+            {t('recentMatches.loading')}
           </div>
         )}
         {!isLoading && error && (
@@ -92,12 +94,12 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
             aria-live="polite"
             className="p-4 rounded-2xl bg-brand-red-soft/10 text-sm font-bold text-brand-red-soft"
           >
-            Failed to load recent matches. Please try again later.
+            {t('recentMatches.loadFailed')}
           </div>
         )}
         {!isLoading && !error && matches.length === 0 && (
           <div className="p-4 rounded-2xl bg-surface-card text-sm font-bold text-brand-slate">
-            No recent matches yet.
+            {t('recentMatches.empty')}
           </div>
         )}
         {!isLoading && !error && visibleMatches.map((match) => (
@@ -116,7 +118,7 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
             {/* Info */}
             <div className="min-w-0 flex-1">
               <div className="font-poppins text-[12px] md:text-[14px] font-semibold leading-none text-white uppercase truncate">
-                vs {match.opponent}
+                {t('recentMatches.vs', { opponent: match.opponent })}
               </div>
               <div className="mt-1 font-poppins text-[8px] md:text-[9px] font-medium leading-none tracking-[0.08em] text-white/70 uppercase">
                 {match.mode} · {match.time}
@@ -163,12 +165,12 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
             {isExpanded ? (
               <>
                 <ChevronUp className="size-4" />
-                Show less
+                {t('recentMatches.showLess')}
               </>
             ) : (
               <>
                 <ChevronDown className="size-4" />
-                Show {hiddenCount} more
+                {t('recentMatches.showMore', { count: hiddenCount })}
               </>
             )}
           </button>

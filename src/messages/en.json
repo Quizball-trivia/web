@@ -185,6 +185,73 @@
     "warmingUp": "Warming Up...",
     "redirecting": "Redirecting..."
   },
+  "oauthCallback": {
+    "finalizingTransfer": "Finalizing Transfer...",
+    "authenticationFailed": "Authentication Failed",
+    "authenticationFailedDefault": "Authentication failed",
+    "sessionLoadError": "Authentication session could not be loaded",
+    "sessionEstablishError": "Failed to establish session",
+    "backToLogin": "Back to Login"
+  },
+  "banCategory": {
+    "banned": "BANNED"
+  },
+  "recentMatches": {
+    "title": "Recent Matches",
+    "loading": "Loading recent matches...",
+    "loadFailed": "Failed to load recent matches. Please try again later.",
+    "empty": "No recent matches yet.",
+    "vs": "vs {opponent}",
+    "modeRanked": "Ranked",
+    "modeFriendly": "Friendly",
+    "showLess": "Show less",
+    "showMore": "Show {count} more"
+  },
+  "friendPlay": {
+    "titlePrefix": "Play with",
+    "titleSuffix": "a Friend",
+    "title": "Play with a Friend",
+    "description": "Create a private room to host a match, or enter a code to join a friend's lobby.",
+    "createNewRoom": "Create New Room",
+    "orJoin": "Or Join",
+    "roomCodePlaceholder": "ROOM CODE",
+    "join": "Join",
+    "browsePublicLobbies": "Browse Public Lobbies",
+    "invalidRoomCode": "Invalid Room Code",
+    "srDescription": "Create a room or join an existing room with an invite code."
+  },
+  "modeConfirm": {
+    "rankedTitlePrefix": "1V1",
+    "rankedTitleRest": "Ranked Match",
+    "rankedDescription": "3 Random categories appear - each player blocks 1, then compete in the remaining one",
+    "rankedStatLeft": "12–18 Questions",
+    "rankedStatRight": "Duration 5 Min",
+    "friendlyTitlePrefix": "1V1",
+    "friendlyTitleRest": "Friendly Match",
+    "friendlyDescription": "Play against a friend. No RP at stake.",
+    "friendlyStatLeft": "Custom Rules",
+    "friendlyStatRight": "Variable Length",
+    "soloTitlePrefix": "Solo",
+    "soloTitleRest": "Practice",
+    "soloDescription": "Practice your skills against the AI.",
+    "soloStatLeft": "Self-Paced",
+    "soloStatRight": "XP Earned",
+    "playForTicket": "Play for {count} Ticket",
+    "playForTickets": "Play for {count} Tickets",
+    "youHaveTicket": "You have {count} Ticket",
+    "youHaveTickets": "You have {count} Tickets"
+  },
+  "forgotPassword": {
+    "title": "Forgot your password?",
+    "description": "Enter your email address and we'll send you a link to reset your password",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "sendResetLink": "Send Reset Link",
+    "checkEmail": "Check your email",
+    "sentTo": "We've sent a password reset link to",
+    "backToSignIn": "Back to Sign In",
+    "didntReceive": "Didn't receive the email? Try again"
+  },
   "sidebar": {
     "toggle": "Toggle Sidebar",
     "previousPage": "Go to previous page",

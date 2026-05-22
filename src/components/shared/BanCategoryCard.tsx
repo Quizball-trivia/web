@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/contexts/LocaleContext';
 
 /**
  * Vibrant card palette — mirrors the /play mode-selection cards. Each ban card
@@ -68,6 +69,7 @@ export function BanCategoryCard({
   animationIndex = 0,
   onClick,
 }: BanCategoryCardProps) {
+  const { t } = useLocale();
   const color = BAN_CARD_COLORS[colorIndex % BAN_CARD_COLORS.length];
   const hasImage = Boolean(category.imageUrl);
   const interactive = !disabled && !isBanned && !!onClick;
@@ -185,7 +187,7 @@ export function BanCategoryCard({
                 className="text-xs uppercase tracking-[0.15em] text-white sm:text-base"
                 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
               >
-                BANNED
+                {t('banCategory.banned')}
               </span>
             </motion.div>
           </motion.div>
