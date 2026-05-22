@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useLocale } from "@/contexts/LocaleContext";
 import {
   Check,
   Clock3,
@@ -18,7 +19,6 @@ import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api/api";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
-import { useLocale } from "@/contexts/LocaleContext";
 import { queryKeys } from "@/lib/queries/queryKeys";
 import {
   useFriendRequests,
@@ -180,6 +180,7 @@ function PlayerCard({
   isPending?: boolean;
   isRemoving?: boolean;
 }) {
+  const { t } = useLocale();
   const isPendingDeletion = player.pendingDeletion === true;
   const variant = isPendingDeletion ? "alert" : "default";
 
@@ -243,7 +244,7 @@ function PlayerCard({
         )}
 
         {player.friendStatus === "friends" && !onChallenge && (
-          <span className={`${PILL_BASE} bg-brand-slate`}>Friends</span>
+          <span className={`${PILL_BASE} bg-brand-slate`}>{t("socialScreen.friends")}</span>
         )}
       </div>
     </CardShell>
@@ -313,6 +314,7 @@ function SectionHeader({ title }: { title: string }) {
 }
 
 export function SocialScreen() {
+  const { t } = useLocale();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -597,7 +599,7 @@ export function SocialScreen() {
                     type="text"
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Search by username"
+                    placeholder={t("socialScreen.searchByUsername")}
                     className="h-11 w-full rounded-[10px] bg-brand-blue px-10 text-center font-poppins text-sm font-semibold uppercase text-white outline-none placeholder:text-white/50 focus:ring-2 focus:ring-white"
                   />
                   {query && (
@@ -619,8 +621,8 @@ export function SocialScreen() {
                   <p className="pt-8 text-center font-poppins text-sm font-semibold uppercase text-brand-red-light">{searchError}</p>
                 ) : debouncedQuery && searchResults.length === 0 ? (
                   <div className="pt-8 text-center">
-                    <h2 className="font-poppins text-xl md:text-2xl font-semibold uppercase text-white">No players found</h2>
-                    <p className="mt-2 font-poppins text-[11px] md:text-xs font-semibold uppercase text-white/50">Try a different username</p>
+                    <h2 className="font-poppins text-xl md:text-2xl font-semibold uppercase text-white">{t("socialScreen.noPlayersFound")}</h2>
+                    <p className="mt-2 font-poppins text-[11px] md:text-xs font-semibold uppercase text-white/50">{t("socialScreen.tryDifferentUsername")}</p>
                   </div>
                 ) : !debouncedQuery ? null : (
                   searchResults.map((player, index) => (

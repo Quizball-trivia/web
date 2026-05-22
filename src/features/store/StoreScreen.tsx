@@ -13,6 +13,7 @@ import { createStoreCheckout, purchaseStoreWithCoins } from "@/lib/repositories/
 import { queryKeys } from "@/lib/queries/queryKeys";
 import { useStoreProducts, useStoreWallet, useStoreInventory } from "@/lib/queries/store.queries";
 import { trackItemPurchased } from "@/lib/analytics/game-events";
+import { useLocale } from "@/contexts/LocaleContext";
 import {
   HAIR_PARTS,
   GLASSES_PARTS,
@@ -174,6 +175,7 @@ function TicketCard({ pack, onBuy }: { pack: TicketPackItem; onBuy: (b: TicketPa
 }
 
 export function StoreScreen() {
+  const { t } = useLocale();
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -227,7 +229,7 @@ export function StoreScreen() {
     },
     onError: (error) => {
       if (error instanceof ApiError && error.status === 401) {
-        toast.error("Session expired. Please sign in again.");
+        toast.error(t("store.sessionExpired"));
         return;
       }
       if (error instanceof ApiError && error.status === 400) {
@@ -239,11 +241,11 @@ export function StoreScreen() {
             ? (error.data as { code: string }).code
             : null;
         if (errorCode === "TICKETS_FULL") {
-          toast.error("Tickets are already full.");
+          toast.error(t("store.ticketsAlreadyFull"));
           return;
         }
       }
-      toast.error("Unable to start checkout.");
+      toast.error(t("store.unableToStartCheckout"));
     },
   });
 
@@ -253,13 +255,13 @@ export function StoreScreen() {
       const product = productsBySlug.get(productSlug);
       const productName = product?.name?.en ?? product?.slug ?? productSlug;
       trackItemPurchased(productSlug, productName, product?.priceCents ?? 0);
-      toast.success("Purchase completed.");
+      toast.success(t("store.purchaseCompleted"));
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
     },
     onError: (error) => {
       if (error instanceof ApiError && error.status === 401) {
-        toast.error("Session expired. Please sign in again.");
+        toast.error(t("store.sessionExpired"));
         return;
       }
       if (error instanceof ApiError && error.status === 400) {
@@ -271,13 +273,13 @@ export function StoreScreen() {
             ? (error.data as { code: string }).code
             : null;
         if (errorCode === "TICKETS_FULL") {
-          toast.error("Tickets are already full.");
+          toast.error(t("store.ticketsAlreadyFull"));
           return;
         }
-        toast.error("Not enough coins.");
+        toast.error(t("store.notEnoughCoins"));
         return;
       }
-      toast.error("Purchase failed.");
+      toast.error(t("store.purchaseFailed"));
     },
   });
 
@@ -285,12 +287,12 @@ export function StoreScreen() {
     const purchaseStatus = searchParams.get("purchase");
     if (!purchaseStatus) return;
     if (purchaseStatus === "success") {
-      toast.success("Purchase completed.");
+      toast.success(t("store.purchaseCompleted"));
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
     }
     if (purchaseStatus === "cancelled") {
-      toast.message("Purchase cancelled.");
+      toast.message(t("store.purchaseCancelled"));
     }
     const params = new URLSearchParams(searchParams.toString());
     params.delete("purchase");
@@ -369,7 +371,7 @@ export function StoreScreen() {
         setAuthenticated({ ...authUser, avatar_customization: updated.avatar_customization ?? next });
       }
     } catch {
-      toast.error("Could not save avatar.");
+      toast.error(t("store.couldNotSaveAvatar"));
     }
   };
 
@@ -400,7 +402,7 @@ export function StoreScreen() {
       return;
     }
     if (!buyModal.productSlug || buyModal.mode === "none") {
-      toast.message("This item is not purchasable yet.");
+      toast.message(t("store.notPurchasableYet"));
       setBuyModal(null);
       return;
     }
@@ -435,12 +437,12 @@ export function StoreScreen() {
             <FeaturedBundleCard
               onBuy={() => {
                 if (!featuredBundleSlug) {
-                  toast.error("No coin bundle available right now.");
+                  toast.error(t("store.noCoinBundle"));
                   return;
                 }
                 const product = productsBySlug.get(featuredBundleSlug);
                 setBuyModal({
-                  name: "Unlock Bundle",
+                  name: t("store.unlockBundle"),
                   price: product ? formatUsd(product.priceCents) : "$0.00",
                   productSlug: featuredBundleSlug,
                   mode: "stripe",
@@ -454,7 +456,7 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.1 }}
           >
-            <SectionHeader title="Coins" subtitle="Power up your wallet" />
+            <SectionHeader title={t("store.coinsTitle")} subtitle={t("store.coinsSubtitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {coinBundles.map((bundle, i) => (
                 <motion.div
@@ -474,7 +476,7 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.2 }}
           >
-            <SectionHeader title="Tickets" subtitle="Top up your ranked arena tickets" />
+            <SectionHeader title={t("store.ticketsTitle")} subtitle={t("store.ticketsSubtitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {ticketPacks.map((pack, i) => (
                 <motion.div
@@ -487,7 +489,7 @@ export function StoreScreen() {
                     pack={pack}
                     onBuy={(b) => {
                       if (b.disabled) {
-                        toast.message("Not enough ticket space.");
+                        toast.message(t("store.notEnoughTicketSpace"));
                         return;
                       }
                       setBuyModal({
@@ -508,7 +510,7 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.3 }}
           >
-            <SectionHeader title="Hair" subtitle="Style your character" />
+            <SectionHeader title={t("store.hairTitle")} subtitle={t("store.hairSubtitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {HAIR_PARTS.filter((p) => !p.free).map((part, i) => (
                 <motion.div
@@ -535,7 +537,7 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.35 }}
           >
-            <SectionHeader title="Glasses" subtitle="Look the part" />
+            <SectionHeader title={t("store.glassesTitle")} subtitle={t("store.glassesSubtitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {GLASSES_PARTS.map((part, i) => (
                 <motion.div

@@ -38,6 +38,7 @@ import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 
 import { getTierVisual } from '@/utils/tierVisuals';
 import { RANKED_TIER_BANDS, getNextTierBand } from '@/utils/rankedTier';
+import { useLocale } from '@/contexts/LocaleContext';
 
 import ClubSelect from '@/features/onboarding/ClubSelect';
 
@@ -104,6 +105,7 @@ export function ProfileWeb({
   onNameChange, onAvatarChange, onClubChange, onLanguageChange,
   isUpdating = false,
 }: ProfileWebProps) {
+  const { t } = useLocale();
   const isSelf = viewMode === 'self';
   const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
   const placementPlayed = rankedProfile?.placementPlayed ?? 0;
@@ -192,7 +194,7 @@ export function ProfileWeb({
               type="button"
               onClick={() => setIsAvatarPickerOpen(true)}
               className="group relative size-36 lg:size-40 rounded-[12px] bg-brand-blue flex items-end justify-center overflow-hidden shrink-0 transition-transform active:translate-y-[2px]"
-              aria-label="Change avatar"
+              aria-label={t("profileScreen.changeAvatar")}
             >
               <AvatarPreview
                 customization={player.avatarCustomization ?? {}}
@@ -255,7 +257,7 @@ export function ProfileWeb({
                     <button
                       onClick={() => setIsEditingName(true)}
                       className="text-white/35 hover:text-white disabled:opacity-50 transition-colors"
-                      aria-label="Edit nickname"
+                      aria-label={t("profileScreen.editNickname")}
                       disabled={isUpdating}
                     >
                       <Pencil className="size-4" />
@@ -275,7 +277,7 @@ export function ProfileWeb({
               >
                 {winRate}%
               </div>
-              <div className="text-[10px] lg:text-[11px] font-poppins font-semibold uppercase text-white/50 mt-2">Win Rate</div>
+              <div className="text-[10px] lg:text-[11px] font-poppins font-semibold uppercase text-white/50 mt-2">{t("profileScreen.winRate")}</div>
             </div>
             <div className="text-center">
               <div
@@ -284,7 +286,7 @@ export function ProfileWeb({
               >
                 {rankedProfile?.currentWinStreak ?? 0}
               </div>
-              <div className="text-[10px] lg:text-[11px] font-poppins font-semibold uppercase text-white/50 mt-2">Win Streak</div>
+              <div className="text-[10px] lg:text-[11px] font-poppins font-semibold uppercase text-white/50 mt-2">{t("profileScreen.winStreak")}</div>
             </div>
             <div className="text-center">
               <div
@@ -293,7 +295,7 @@ export function ProfileWeb({
               >
                 {gamesPlayed}
               </div>
-              <div className="text-[10px] lg:text-[11px] font-poppins font-semibold uppercase text-white/50 mt-2">Matches</div>
+              <div className="text-[10px] lg:text-[11px] font-poppins font-semibold uppercase text-white/50 mt-2">{t("profileScreen.matches")}</div>
             </div>
           </div>
 
@@ -340,7 +342,7 @@ export function ProfileWeb({
                       <TrophyPh className="size-9 sm:size-16 text-brand-yellow" weight="light" />
                     )}
                     <div className="text-center">
-                      <div className="font-poppins text-[9px] sm:text-[11px] font-semibold uppercase text-white/60">Current</div>
+                      <div className="font-poppins text-[9px] sm:text-[11px] font-semibold uppercase text-white/60">{t("profileScreen.current")}</div>
                       <div className="mt-0.5 sm:mt-1 font-poppins text-[11px] sm:text-base font-semibold uppercase leading-tight text-white">
                         {currentTier ?? 'Unranked'}
                       </div>
@@ -370,7 +372,7 @@ export function ProfileWeb({
                       {next ? (
                         <>{rpToNext} RP to next tier</>
                       ) : (
-                        <>Max rank achieved</>
+                        <>{t("profileScreen.maxRankAchieved")}</>
                       )}
                     </div>
                     <div className="mt-1 flex w-full items-center justify-between font-poppins text-[10px] font-semibold uppercase tabular-nums text-white/30">
@@ -403,7 +405,7 @@ export function ProfileWeb({
                     <div className="flex w-[84px] sm:w-[160px] flex-col items-center justify-center gap-1.5 sm:gap-2 rounded-[16px] sm:rounded-[20px] bg-brand-yellow/15 border-2 border-brand-yellow p-2.5 sm:p-4">
                       <TrophyPh className="size-9 sm:size-16 text-brand-yellow" weight="light" />
                       <div className="text-center">
-                        <div className="font-poppins text-[9px] sm:text-[11px] font-semibold uppercase text-brand-yellow">Achieved</div>
+                        <div className="font-poppins text-[9px] sm:text-[11px] font-semibold uppercase text-brand-yellow">{t("profileScreen.achieved")}</div>
                         <div className="mt-0.5 sm:mt-1 font-poppins text-[11px] sm:text-base font-semibold uppercase leading-tight text-white">
                           GOAT
                         </div>
@@ -486,17 +488,17 @@ export function ProfileWeb({
                     >
                       {rankedProfile!.tier}
                     </h2>
-                    <p className="font-poppins text-[11px] font-semibold uppercase text-white/50 mt-2 mb-4">Current Season</p>
+                    <p className="font-poppins text-[11px] font-semibold uppercase text-white/50 mt-2 mb-4">{t("profileScreen.currentSeason")}</p>
 
                     <div className="w-full space-y-2">
                       <div className="flex justify-between items-center h-10 rounded-full bg-brand-green px-4">
-                        <span className="font-poppins text-xs font-semibold uppercase text-white">Global</span>
+                        <span className="font-poppins text-xs font-semibold uppercase text-white">{t("profileScreen.global")}</span>
                         <span className="font-poppins text-xs font-semibold tabular-nums text-white">
                           {globalRank ? `#${globalRank.rank}` : '#--'}
                         </span>
                       </div>
                       <div className="flex justify-between items-center h-10 rounded-full bg-brand-yellow px-4">
-                        <span className="font-poppins text-xs font-semibold uppercase text-black">Country</span>
+                        <span className="font-poppins text-xs font-semibold uppercase text-black">{t("profileScreen.country")}</span>
                         <span className="font-poppins text-xs font-semibold tabular-nums text-black">
                           {countryRank ? `#${countryRank.rank}` : '#--'}
                         </span>
@@ -595,7 +597,7 @@ export function ProfileWeb({
                   {/* Country */}
                   {country && (
                     <div className="flex items-center justify-between py-3.5">
-                      <span className="font-poppins text-sm font-semibold uppercase text-white/50">Country</span>
+                      <span className="font-poppins text-sm font-semibold uppercase text-white/50">{t("profileScreen.country")}</span>
                       <span className="inline-flex items-center gap-2 font-poppins text-sm font-semibold uppercase text-white">
                         <CountryFlag code={country} className="text-base overflow-hidden rounded-sm" />
                         {countryCodeToName(country)}
@@ -628,7 +630,7 @@ export function ProfileWeb({
                           <button
                             onClick={() => setIsEditingClub(true)}
                             className="text-white/40 hover:text-white disabled:opacity-50 transition-colors"
-                            aria-label="Edit favorite club"
+                            aria-label={t("profileScreen.editFavoriteClub")}
                             disabled={isUpdating}
                           >
                             <Pencil className="size-3" />
@@ -640,7 +642,7 @@ export function ProfileWeb({
 
                   {/* Language */}
                   <div className="flex items-center justify-between py-3.5">
-                    <span className="font-poppins text-sm font-semibold uppercase text-white/50">Language</span>
+                    <span className="font-poppins text-sm font-semibold uppercase text-white/50">{t("profileScreen.language")}</span>
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={async () => {
@@ -698,7 +700,7 @@ export function ProfileWeb({
                 </h3>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-fun font-black uppercase tracking-wide text-white">Your Wins</span>
+                    <span className="text-xs font-fun font-black uppercase tracking-wide text-white">{t("profileScreen.yourWins")}</span>
                     <span
                       className="text-xl tabular-nums text-brand-green"
                       style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
@@ -707,7 +709,7 @@ export function ProfileWeb({
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-fun font-black uppercase tracking-wide text-white">Their Wins</span>
+                    <span className="text-xs font-fun font-black uppercase tracking-wide text-white">{t("profileScreen.theirWins")}</span>
                     <span
                       className="text-xl tabular-nums text-brand-red-soft"
                       style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
@@ -716,7 +718,7 @@ export function ProfileWeb({
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-fun font-black uppercase tracking-wide text-white">Draws</span>
+                    <span className="text-xs font-fun font-black uppercase tracking-wide text-white">{t("profileScreen.draws")}</span>
                     <span
                       className="text-xl tabular-nums text-white/55"
                       style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
@@ -726,7 +728,7 @@ export function ProfileWeb({
                   </div>
                   <div className="h-px bg-white/8" />
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-fun font-black uppercase tracking-[0.2em] text-white/40">Total Matches</span>
+                    <span className="text-[10px] font-fun font-black uppercase tracking-[0.2em] text-white/40">{t("profileScreen.totalMatches")}</span>
                     <span className="text-sm font-fun font-black tabular-nums text-white">{headToHead.total}</span>
                   </div>
                 </div>
