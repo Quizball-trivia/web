@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { motion } from "motion/react";
+import { useLocale } from "@/contexts/LocaleContext";
 
 interface FeaturedBundleCardProps {
   onBuy?: () => void;
@@ -17,6 +18,7 @@ const BORDER_YELLOW = "#FFE600";
 const PILL_BLACK = "#071013";
 
 export function FeaturedBundleCard({ onBuy }: FeaturedBundleCardProps) {
+  const { t } = useLocale();
   return (
     <motion.div
       whileHover={{ scale: 1.005, y: -2 }}
@@ -41,17 +43,13 @@ export function FeaturedBundleCard({ onBuy }: FeaturedBundleCardProps) {
                 className="text-center text-[26px] uppercase leading-[1.2] text-white lg:text-[30px]"
                 style={poppins}
               >
-                Unlock <span style={{ color: ACCENT_YELLOW }}>the Arena</span>
+                {t("store.unlock")} <span style={{ color: ACCENT_YELLOW }}>{t("store.theArena")}</span>
               </h2>
               <p
-                className="mx-auto mt-2.5 max-w-[440px] text-center text-[13px] leading-[1.45] text-white/60 lg:text-[14px]"
+                className="mx-auto mt-2.5 max-w-[440px] text-center text-[13px] leading-[1.45] text-white/85 lg:text-[14px]"
                 style={poppins}
               >
-                Get <span className="text-white">10 Arena Tickets</span>
-                {" + "}
-                <span className="text-white">5,000 Bonus Coins</span>
-                {" "}to jumpstart your ranked climb. Tickets refill hourly while
-                you are below the cap.
+                {t("store.bundleDescription", { tickets: `${t("store.ticketsCount")} + ${t("store.bonusCoinsCount")}` })}
               </p>
 
               {/* Feature pills */}
@@ -60,13 +58,13 @@ export function FeaturedBundleCard({ onBuy }: FeaturedBundleCardProps) {
                   className="inline-flex h-[44px] items-center justify-center rounded-[20px] border-[3px] px-4 text-[13px] uppercase text-white lg:text-[14px]"
                   style={{ ...poppins, borderColor: BORDER_YELLOW }}
                 >
-                  No Ads/7 Days
+                  {t("store.noAds7Days")}
                 </span>
                 <span
                   className="inline-flex h-[44px] items-center justify-center rounded-[20px] border-[3px] px-4 text-[13px] uppercase text-white lg:text-[14px]"
                   style={{ ...poppins, borderColor: BORDER_YELLOW }}
                 >
-                  2x XP Boost
+                  {t("store.xpBoost")}
                 </span>
               </div>
             </div>
@@ -74,10 +72,10 @@ export function FeaturedBundleCard({ onBuy }: FeaturedBundleCardProps) {
             {/* ── Right column: limited time, button, price ── */}
             <div className="w-[260px] shrink-0 lg:w-[300px]">
               <p
-                className="text-center text-[13px] uppercase text-white/55 lg:text-[14px]"
+                className="text-center text-[13px] uppercase text-white/85 lg:text-[14px]"
                 style={poppins}
               >
-                Limited Time Offer
+                {t("store.limitedTimeOffer")}
               </p>
 
               <button
@@ -89,15 +87,15 @@ export function FeaturedBundleCard({ onBuy }: FeaturedBundleCardProps) {
                 className="mt-2.5 flex h-[60px] w-full items-center justify-center rounded-[20px] text-[20px] uppercase text-white transition-transform active:translate-y-[2px] lg:text-[22px]"
                 style={{ ...poppins, backgroundColor: PILL_BLACK }}
               >
-                Unlock Bundle
+                {t("store.unlockBundle")}
               </button>
 
               <div className="mt-3 flex items-baseline justify-center gap-2">
                 <span
-                  className="text-[12px] uppercase text-white/55 lg:text-[13px]"
+                  className="text-[12px] uppercase text-white/85 lg:text-[13px]"
                   style={poppins}
                 >
-                  Only for
+                  {t("store.onlyFor")}
                 </span>
                 <span
                   className="text-[24px] uppercase tabular-nums lg:text-[26px]"
@@ -106,7 +104,7 @@ export function FeaturedBundleCard({ onBuy }: FeaturedBundleCardProps) {
                   $9.99
                 </span>
                 <span
-                  className="text-[13px] uppercase tabular-nums text-white/50 line-through lg:text-[14px]"
+                  className="text-[13px] uppercase tabular-nums text-white/70 line-through lg:text-[14px]"
                   style={poppins}
                 >
                   $19.99
@@ -136,7 +134,7 @@ export function FeaturedBundleCard({ onBuy }: FeaturedBundleCardProps) {
             className="absolute left-[26px] top-[20px] inline-flex h-[44px] items-center justify-center rounded-[20px] px-4 text-[13px] uppercase text-white lg:text-[14px]"
             style={{ ...poppins, backgroundColor: PILL_BLACK }}
           >
-            Pro Starter Pack
+            {t("store.proStarterPack")}
           </span>
 
           {/* BEST VALUE pill */}
@@ -144,7 +142,7 @@ export function FeaturedBundleCard({ onBuy }: FeaturedBundleCardProps) {
             className="absolute bottom-[20px] left-[140px] inline-flex h-[44px] items-center justify-center rounded-[20px] px-4 text-[13px] uppercase text-white lg:text-[14px]"
             style={{ ...poppins, backgroundColor: PILL_BLACK }}
           >
-            Best Value
+            {t("store.bestValue")}
           </span>
         </div>
       </div>
@@ -171,13 +169,13 @@ export function FeaturedBundleCard({ onBuy }: FeaturedBundleCardProps) {
               className="absolute left-0 top-2 inline-flex h-9 items-center rounded-full px-3 text-[11px] uppercase text-white shadow-md"
               style={{ ...poppins, backgroundColor: PILL_BLACK }}
             >
-              Pro Starter Pack
+              {t("store.proStarterPack")}
             </span>
             <span
               className="absolute bottom-2 left-12 inline-flex h-9 items-center rounded-full px-3 text-[11px] uppercase text-white shadow-md"
               style={{ ...poppins, backgroundColor: PILL_BLACK }}
             >
-              Best Value
+              {t("store.bestValue")}
             </span>
           </div>
 
@@ -186,17 +184,13 @@ export function FeaturedBundleCard({ onBuy }: FeaturedBundleCardProps) {
             className="mt-2 text-center text-[26px] uppercase text-white"
             style={poppins}
           >
-            Unlock <span style={{ color: ACCENT_YELLOW }}>the Arena</span>
+            {t("store.unlock")} <span style={{ color: ACCENT_YELLOW }}>{t("store.theArena")}</span>
           </h2>
           <p
-            className="mt-2 text-center text-[13px] leading-[1.5] text-white/60"
+            className="mt-2 text-center text-[13px] leading-[1.5] text-white/85"
             style={poppins}
           >
-            Get <span className="text-white">10 Arena Tickets</span>
-            {" + "}
-            <span className="text-white">5,000 Bonus Coins</span>
-            {" "}to jumpstart your ranked climb. Tickets refill hourly while you
-            are below the cap.
+            {t("store.bundleDescription", { tickets: `${t("store.ticketsCount")} + ${t("store.bonusCoinsCount")}` })}
           </p>
 
           {/* Feature pills */}
@@ -205,22 +199,22 @@ export function FeaturedBundleCard({ onBuy }: FeaturedBundleCardProps) {
               className="inline-flex h-10 items-center rounded-[20px] border-[3px] px-4 text-[12px] uppercase text-white"
               style={{ ...poppins, borderColor: BORDER_YELLOW }}
             >
-              No Ads/7 Days
+              {t("store.noAds7Days")}
             </span>
             <span
               className="inline-flex h-10 items-center rounded-[20px] border-[3px] px-4 text-[12px] uppercase text-white"
               style={{ ...poppins, borderColor: BORDER_YELLOW }}
             >
-              2x XP Boost
+              {t("store.xpBoost")}
             </span>
           </div>
 
           {/* CTA */}
           <p
-            className="mt-5 text-center text-[12px] uppercase text-white/55"
+            className="mt-5 text-center text-[12px] uppercase text-white/85"
             style={poppins}
           >
-            Limited Time Offer
+            {t("store.limitedTimeOffer")}
           </p>
           <button
             type="button"
@@ -231,11 +225,11 @@ export function FeaturedBundleCard({ onBuy }: FeaturedBundleCardProps) {
             className="mt-2 flex h-[58px] w-full items-center justify-center rounded-[20px] text-[20px] uppercase text-white transition-transform active:translate-y-[2px]"
             style={{ ...poppins, backgroundColor: PILL_BLACK }}
           >
-            Unlock Bundle
+            {t("store.unlockBundle")}
           </button>
           <div className="mt-2 flex items-baseline justify-center gap-2">
-            <span className="text-[12px] uppercase text-white/55" style={poppins}>
-              Only for
+            <span className="text-[12px] uppercase text-white/85" style={poppins}>
+              {t("store.onlyFor")}
             </span>
             <span
               className="text-[22px] uppercase tabular-nums"
@@ -244,7 +238,7 @@ export function FeaturedBundleCard({ onBuy }: FeaturedBundleCardProps) {
               $9.99
             </span>
             <span
-              className="text-[12px] uppercase tabular-nums text-white/50 line-through"
+              className="text-[12px] uppercase tabular-nums text-white/70 line-through"
               style={poppins}
             >
               $19.99

@@ -1522,7 +1522,7 @@ export interface paths {
         put?: never;
         /**
          * Reset onboarding flag for the current admin (dev-only)
-         * @description Requires admin role. Flips onboarding_complete back to false so the onboarding flow can be re-tested. Operates on the caller's own user.
+         * @description Dev-only. Requires admin role and NODE_ENV='local'. Flips onboarding_complete back to false so the onboarding flow can be re-tested. Operates on the caller's own user.
          */
         post: {
             parameters: {
@@ -2300,6 +2300,128 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/objectives": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List current daily and weekly objectives for the current user */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Current objective progress */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            daily: {
+                                /** Format: date-time */
+                                periodStart: string;
+                                /** Format: date-time */
+                                periodEnd: string;
+                                completedCount: number;
+                                totalCount: number;
+                                objectives: {
+                                    id: string;
+                                    /** @enum {string} */
+                                    periodType: "daily" | "weekly";
+                                    title: {
+                                        [key: string]: string;
+                                    };
+                                    description: {
+                                        [key: string]: string;
+                                    };
+                                    icon: string;
+                                    progress: number;
+                                    target: number;
+                                    completed: boolean;
+                                    rewarded: boolean;
+                                    /** Format: date-time */
+                                    completedAt: string | null;
+                                    /** Format: date-time */
+                                    rewardedAt: string | null;
+                                    rewardCoins: number;
+                                    rewardXp: number;
+                                    metadata?: {
+                                        /** Format: uuid */
+                                        leadingCategoryId?: string;
+                                        leadingCategoryName?: string;
+                                        categoryProgress?: {
+                                            [key: string]: number;
+                                        };
+                                    };
+                                }[];
+                            };
+                            weekly: {
+                                /** Format: date-time */
+                                periodStart: string;
+                                /** Format: date-time */
+                                periodEnd: string;
+                                completedCount: number;
+                                totalCount: number;
+                                objectives: {
+                                    id: string;
+                                    /** @enum {string} */
+                                    periodType: "daily" | "weekly";
+                                    title: {
+                                        [key: string]: string;
+                                    };
+                                    description: {
+                                        [key: string]: string;
+                                    };
+                                    icon: string;
+                                    progress: number;
+                                    target: number;
+                                    completed: boolean;
+                                    rewarded: boolean;
+                                    /** Format: date-time */
+                                    completedAt: string | null;
+                                    /** Format: date-time */
+                                    rewardedAt: string | null;
+                                    rewardCoins: number;
+                                    rewardXp: number;
+                                    metadata?: {
+                                        /** Format: uuid */
+                                        leadingCategoryId?: string;
+                                        leadingCategoryName?: string;
+                                        categoryProgress?: {
+                                            [key: string]: number;
+                                        };
+                                    };
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/categories": {
         parameters: {
             query?: never;
@@ -3000,8 +3122,8 @@ export interface paths {
                     difficulty?: "easy" | "medium" | "hard";
                     type?: "mcq_single" | "true_false" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order" | "imposter_multi_select" | "career_path" | "high_low" | "football_logic";
                     search?: string;
-                    page?: string;
-                    limit?: string;
+                    page?: number;
+                    limit?: number;
                 };
                 header?: never;
                 path?: never;
@@ -3498,6 +3620,89 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/questions/check-duplicates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check for duplicate prompts before bulk upload
+         * @description Check if question prompts already exist in the database. Used during bulk upload preview to show users which questions are duplicates. Requires admin role.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Array of question prompts to check
+                         * @example [
+                         *       {
+                         *         "en": "What is the capital of France?"
+                         *       },
+                         *       {
+                         *         "en": "What is 2+2?"
+                         *       }
+                         *     ]
+                         */
+                        prompts: components["schemas"]["I18nField"][];
+                    };
+                };
+            };
+            responses: {
+                /** @description Duplicate check completed successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CheckDuplicatesResponse"];
+                    };
+                };
+                /** @description Invalid request (e.g., too many prompts) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient permissions (admin role required) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/daily-challenges": {
         parameters: {
             query?: never;
@@ -3951,120 +4156,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/objectives": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List current daily and weekly objectives for the current user */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Current objective progress */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            daily: {
-                                /** Format: date-time */
-                                periodStart: string;
-                                /** Format: date-time */
-                                periodEnd: string;
-                                completedCount: number;
-                                totalCount: number;
-                                objectives: {
-                                    id: string;
-                                    /** @enum {string} */
-                                    periodType: "daily" | "weekly";
-                                    title: string;
-                                    description: string;
-                                    icon: string;
-                                    progress: number;
-                                    target: number;
-                                    completed: boolean;
-                                    rewarded: boolean;
-                                    /** Format: date-time */
-                                    completedAt: string | null;
-                                    /** Format: date-time */
-                                    rewardedAt: string | null;
-                                    rewardCoins: number;
-                                    rewardXp: number;
-                                    metadata?: {
-                                        /** Format: uuid */
-                                        leadingCategoryId?: string;
-                                        leadingCategoryName?: string;
-                                        categoryProgress?: {
-                                            [key: string]: number;
-                                        };
-                                    };
-                                }[];
-                            };
-                            weekly: {
-                                /** Format: date-time */
-                                periodStart: string;
-                                /** Format: date-time */
-                                periodEnd: string;
-                                completedCount: number;
-                                totalCount: number;
-                                objectives: {
-                                    id: string;
-                                    /** @enum {string} */
-                                    periodType: "daily" | "weekly";
-                                    title: string;
-                                    description: string;
-                                    icon: string;
-                                    progress: number;
-                                    target: number;
-                                    completed: boolean;
-                                    rewarded: boolean;
-                                    /** Format: date-time */
-                                    completedAt: string | null;
-                                    /** Format: date-time */
-                                    rewardedAt: string | null;
-                                    rewardCoins: number;
-                                    rewardXp: number;
-                                    metadata?: {
-                                        /** Format: uuid */
-                                        leadingCategoryId?: string;
-                                        leadingCategoryName?: string;
-                                        categoryProgress?: {
-                                            [key: string]: number;
-                                        };
-                                    };
-                                }[];
-                            };
-                        };
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/admin/daily-challenges": {
         parameters: {
             query?: never;
@@ -4279,89 +4370,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/questions/check-duplicates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Check for duplicate prompts before bulk upload
-         * @description Check if question prompts already exist in the database. Used during bulk upload preview to show users which questions are duplicates. Requires admin role.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /**
-                         * @description Array of question prompts to check
-                         * @example [
-                         *       {
-                         *         "en": "What is the capital of France?"
-                         *       },
-                         *       {
-                         *         "en": "What is 2+2?"
-                         *       }
-                         *     ]
-                         */
-                        prompts: components["schemas"]["I18nField"][];
-                    };
-                };
-            };
-            responses: {
-                /** @description Duplicate check completed successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["CheckDuplicatesResponse"];
-                    };
-                };
-                /** @description Invalid request (e.g., too many prompts) */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Insufficient permissions (admin role required) */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4374,6 +4382,9 @@ export interface components {
             details?: unknown;
             /** @example uuid-here */
             request_id: string | null;
+        };
+        I18nField: {
+            [key: string]: string;
         };
         AuthUser: {
             /** Format: email */
@@ -4394,43 +4405,6 @@ export interface components {
         SocialLoginResponse: {
             /** Format: uri */
             url: string;
-        };
-        ProgressionResponse: {
-            level: number;
-            totalXp: number;
-            currentLevelXp: number;
-            xpForNextLevel: number;
-            progressPct: number;
-        };
-        UserResponse: {
-            /** Format: uuid */
-            id: string;
-            /** Format: email */
-            email: string | null;
-            /** @enum {string} */
-            role: "admin" | "user";
-            nickname: string | null;
-            country: string | null;
-            /** Format: uri */
-            avatar_url: string | null;
-            avatar_customization: {
-                /** @enum {string} */
-                skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
-                /** @enum {string} */
-                jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
-                /** @enum {string} */
-                hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
-                /** @enum {string} */
-                glasses?: "glasses_wayfarer" | "glasses_round" | "glasses_aviator";
-                /** @enum {string} */
-                facialHair?: "stache" | "beard";
-            } | null;
-            favorite_club: string | null;
-            preferred_language: string | null;
-            onboarding_complete: boolean;
-            progression: components["schemas"]["ProgressionResponse"];
-            /** Format: date-time */
-            created_at: string;
         };
         HeadToHeadResponse: {
             /** Format: uuid */
@@ -4524,45 +4498,6 @@ export interface components {
             currentWinStreak: number;
             /** Format: date-time */
             lastRankedMatchAt: string | null;
-        };
-        PublicProfileResponse: {
-            /** Format: uuid */
-            id: string;
-            nickname: string | null;
-            /** Format: uri */
-            avatarUrl: string | null;
-            avatarCustomization: {
-                /** @enum {string} */
-                skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
-                /** @enum {string} */
-                jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
-                /** @enum {string} */
-                hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
-                /** @enum {string} */
-                glasses?: "glasses_wayfarer" | "glasses_round" | "glasses_aviator";
-                /** @enum {string} */
-                facialHair?: "stache" | "beard";
-            } | null;
-            country: string | null;
-            favoriteClub: string | null;
-            progression: components["schemas"]["ProgressionResponse"];
-            ranked: components["schemas"]["RankedProfileResponse"] | null;
-            stats: components["schemas"]["StatsSummaryResponse"];
-            headToHead: components["schemas"]["HeadToHeadResponse"] | null;
-            globalRank: {
-                rank: number;
-                total: number;
-            } | null;
-            countryRank: {
-                rank: number;
-                total: number;
-            } | null;
-        };
-        AccountDeletionResponse: {
-            /** Format: date-time */
-            deletionRequestedAt: string;
-            /** Format: date-time */
-            pendingDeletionAt: string;
         };
         StoreProductsResponse: {
             items: {
@@ -4708,6 +4643,82 @@ export interface components {
             limit: number;
             total: number;
             totalPages: number;
+        };
+        ProgressionResponse: {
+            level: number;
+            totalXp: number;
+            currentLevelXp: number;
+            xpForNextLevel: number;
+            progressPct: number;
+        };
+        UserResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: email */
+            email: string | null;
+            /** @enum {string} */
+            role: "admin" | "user";
+            nickname: string | null;
+            country: string | null;
+            /** Format: uri */
+            avatar_url: string | null;
+            avatar_customization: {
+                /** @enum {string} */
+                skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
+                /** @enum {string} */
+                jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                /** @enum {string} */
+                hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
+                /** @enum {string} */
+                glasses?: "glasses_wayfarer" | "glasses_round" | "glasses_aviator";
+                /** @enum {string} */
+                facialHair?: "stache" | "beard";
+            } | null;
+            favorite_club: string | null;
+            preferred_language: string | null;
+            onboarding_complete: boolean;
+            progression: components["schemas"]["ProgressionResponse"];
+            /** Format: date-time */
+            created_at: string;
+        };
+        PublicProfileResponse: {
+            /** Format: uuid */
+            id: string;
+            nickname: string | null;
+            /** Format: uri */
+            avatarUrl: string | null;
+            avatarCustomization: {
+                /** @enum {string} */
+                skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
+                /** @enum {string} */
+                jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                /** @enum {string} */
+                hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
+                /** @enum {string} */
+                glasses?: "glasses_wayfarer" | "glasses_round" | "glasses_aviator";
+                /** @enum {string} */
+                facialHair?: "stache" | "beard";
+            } | null;
+            country: string | null;
+            favoriteClub: string | null;
+            progression: components["schemas"]["ProgressionResponse"];
+            ranked: components["schemas"]["RankedProfileResponse"] | null;
+            stats: components["schemas"]["StatsSummaryResponse"];
+            headToHead: components["schemas"]["HeadToHeadResponse"] | null;
+            globalRank: {
+                rank: number;
+                total: number;
+            } | null;
+            countryRank: {
+                rank: number;
+                total: number;
+            } | null;
+        };
+        AccountDeletionResponse: {
+            /** Format: date-time */
+            deletionRequestedAt: string;
+            /** Format: date-time */
+            pendingDeletionAt: string;
         };
         FriendsResponse: {
             friends: {
@@ -4856,8 +4867,12 @@ export interface components {
                     id: string;
                     /** @enum {string} */
                     periodType: "daily" | "weekly";
-                    title: string;
-                    description: string;
+                    title: {
+                        [key: string]: string;
+                    };
+                    description: {
+                        [key: string]: string;
+                    };
                     icon: string;
                     progress: number;
                     target: number;
@@ -4890,8 +4905,12 @@ export interface components {
                     id: string;
                     /** @enum {string} */
                     periodType: "daily" | "weekly";
-                    title: string;
-                    description: string;
+                    title: {
+                        [key: string]: string;
+                    };
+                    description: {
+                        [key: string]: string;
+                    };
                     icon: string;
                     progress: number;
                     target: number;
@@ -4913,9 +4932,6 @@ export interface components {
                     };
                 }[];
             };
-        };
-        I18nField: {
-            [key: string]: string;
         };
         CategoryResponse: {
             /** Format: uuid */
@@ -4966,6 +4982,16 @@ export interface components {
                 difficulty: string;
             }[];
             featured: boolean;
+        };
+        FeaturedCategoryResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            category_id: string;
+            sort_order: number;
+            /** Format: date-time */
+            created_at: string;
+            category: components["schemas"]["CategoryResponse"];
         };
         QuestionPayload: {
             /** @enum {string} */
@@ -5097,16 +5123,6 @@ export interface components {
             limit: number;
             total: number;
             total_pages: number;
-        };
-        FeaturedCategoryResponse: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            category_id: string;
-            sort_order: number;
-            /** Format: date-time */
-            created_at: string;
-            category: components["schemas"]["CategoryResponse"];
         };
         BulkCreateResponse: {
             total: number;

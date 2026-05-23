@@ -138,7 +138,7 @@ export function GoalCelebrationOverlay({ ballSizePx = 32, ballCenterPx }: GoalCe
         transition={{ duration: 1.45, times: [0, 0.38, 1], ease: 'easeInOut' }}
       >
         <div className="absolute inset-[-6px] rounded-full bg-white/10 blur-sm" />
-        <Image src="/assets/brand/large-ball.png" alt="" width={256} height={256} className="size-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.32)]" />
+        <Image src="https://lfbwhxvwubzeqkztghok.supabase.co/storage/v1/object/public/imgs/world-cup-style-ball-cartoon-transparent.png" alt="" width={256} height={256} unoptimized className="size-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.32)]" />
       </motion.div>
 
       {/* Content */}

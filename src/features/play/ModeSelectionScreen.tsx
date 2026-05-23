@@ -8,6 +8,7 @@ import { ModeConfirmModal } from '@/components/shared/ModeConfirmModal';
 import { FriendPlayModal } from '@/components/shared/FriendPlayModal';
 import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
 import { useLocale } from '@/contexts/LocaleContext';
+import { getI18nText } from '@/lib/utils/i18n';
 import type { MatchStatsSummary } from '@/lib/domain';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import { useObjectives } from '@/lib/queries/objectives.queries';
@@ -49,7 +50,7 @@ export function ModeSelectionScreen({
   rankedProfile,
   rankedProfileLoading = false,
 }: ModeSelectionScreenProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [selectedMode, setSelectedMode] = useState<'ranked' | 'friendly' | 'solo' | null>(null);
   const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
   const placementPlayed = rankedProfile?.placementPlayed ?? 0;
@@ -433,8 +434,8 @@ export function ModeSelectionScreen({
                 <div className="mb-2 flex items-center justify-center">
                   <Image src="/assets/obj_icon.png" alt="" width={45} height={44} className="size-12 object-contain opacity-90" />
                 </div>
-                <h4 className="text-[10px] font-black leading-tight text-white uppercase truncate">{objective.title}</h4>
-                <p className="mt-0.5 line-clamp-2 min-h-[22px] text-[9px] leading-tight text-white/80">{objective.description}</p>
+                <h4 className="text-[10px] font-black leading-tight text-white uppercase truncate">{getI18nText(objective.title, locale)}</h4>
+                <p className="mt-0.5 line-clamp-2 min-h-[22px] text-[9px] leading-tight text-white/80">{getI18nText(objective.description, locale)}</p>
                 <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#07200C]">
                   <div className="h-full rounded-full bg-brand-green-light" style={{ width: `${progressPercent}%` }} />
                 </div>
@@ -506,8 +507,8 @@ export function ModeSelectionScreen({
                 <div className="mb-3 flex items-center gap-3">
                   <Image src="/assets/obj_icon.png" alt="" width={45} height={44} className="size-12 object-contain" />
                   <div className="min-w-0 flex-1">
-                    <h4 className="truncate text-sm font-black uppercase text-white">{objective.title}</h4>
-                    <p className="truncate text-[11px] font-bold uppercase text-white/60">{objective.description}</p>
+                    <h4 className="truncate text-sm font-black uppercase text-white">{getI18nText(objective.title, locale)}</h4>
+                    <p className="truncate text-[11px] font-bold uppercase text-white/60">{getI18nText(objective.description, locale)}</p>
                   </div>
                 </div>
                 <div className="mb-2.5 h-3 overflow-hidden rounded-full bg-[#0F260F]">

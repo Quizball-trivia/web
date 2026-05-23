@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { motion } from "motion/react";
+import { useLocale } from "@/contexts/LocaleContext";
 
 export interface BundleProps {
   id: string;
@@ -33,8 +34,19 @@ export function BundleCard({
   isPopular,
   onBuy,
 }: BundleProps) {
+  const { t } = useLocale();
   const accent = isPopular ? ACCENT_YELLOW : ACCENT_PURPLE;
   const buttonTextColor = isPopular ? TEXT_DARK : "#FFFFFF";
+  // Bundles ship their title as a static English string (Handful/Pouch/Chest/
+  // Vault). Pass it through the i18n dictionary so Georgian users see the
+  // translated label; unknown titles fall back to the raw value.
+  const tierLookup: Record<string, string> = {
+    "Handful": t("store.handful"),
+    "Pouch": t("store.pouch"),
+    "Chest": t("store.chest"),
+    "Vault": t("store.vault"),
+  };
+  const displayTitle = tierLookup[title] ?? title;
 
   return (
     <motion.div
@@ -50,7 +62,7 @@ export function BundleCard({
             className="rounded-[20px] px-5 py-2 text-[14px] uppercase tracking-[0.04em] shadow-md whitespace-nowrap"
             style={{ ...poppins, backgroundColor: ACCENT_YELLOW, color: TEXT_DARK }}
           >
-            Most Popular
+            {t("store.mostPopular")}
           </div>
         </div>
       )}
@@ -72,7 +84,7 @@ export function BundleCard({
             className="mt-1.5 text-[8px] uppercase tracking-[0.04em] text-white/50 sm:mt-2 sm:text-[11px]"
             style={poppins}
           >
-            {title}
+            {displayTitle}
           </div>
         </div>
 

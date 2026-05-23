@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ModalCloseButton } from '@/components/shared/ModalCloseButton';
 import { FcGoogle } from 'react-icons/fc';
 import { Button } from '@/components/ui/button';
 import { Brain, Goal, Trophy, Crown, Star, Globe, Flame, Shield, Repeat, Award, Flag, Swords, type LucideIcon } from 'lucide-react';
@@ -744,7 +745,7 @@ export function WelcomeScreen() {
                           animate={{ scale: [1, 3, 1], y: [10, -16, 0], opacity: [0.94, 1, 1] }}
                           transition={{ duration: 1.45, times: [0, 0.38, 1], ease: 'easeInOut' }}
                         >
-                          <Image src="/assets/brand/large-ball.png" alt="" width={256} height={256} className="size-12 object-contain drop-shadow-[0_0_14px_rgba(255,255,255,0.32)] md:size-14" />
+                          <Image src="https://lfbwhxvwubzeqkztghok.supabase.co/storage/v1/object/public/imgs/world-cup-style-ball-cartoon-transparent.png" alt="" width={256} height={256} unoptimized className="size-12 object-contain drop-shadow-[0_0_14px_rgba(255,255,255,0.32)] md:size-14" />
                         </motion.div>
                       </motion.div>
                     </motion.div>
@@ -1140,23 +1141,34 @@ export function WelcomeScreen() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Login Dialog ── */}
+      {/* ── Login Dialog — pinned to Figma node 620-7831 (Play with a Friend
+           card). Royal-blue surface, red X close, yellow Google CTA.
+           Hide shadcn's built-in close X (last direct <button> child of
+           DialogContent) and render our own red square one instead.
+           focus:outline-none / focus-visible:ring-0 kills the green-ish focus
+           ring that shadcn paints on every primitive inside the dialog. ── */}
       <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
-        <DialogContent className="max-w-md w-full rounded-2xl p-8 bg-surface-page border-surface-page">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold mb-4 text-center text-white">{t('welcome.loginTitle')}</DialogTitle>
-            <DialogDescription className="text-center text-white/50">
+        <DialogContent
+          className="max-w-md w-[92vw] rounded-[24px] border-0 p-8 sm:p-10 [&>button:last-child]:hidden focus:outline-none focus-visible:outline-none focus-visible:ring-0 ring-0"
+          style={{ backgroundColor: '#1645FF' }}
+        >
+          <ModalCloseButton onClose={() => setLoginOpen(false)} />
+
+          <DialogHeader className="text-center">
+            <DialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
+              {t('welcome.loginTitle')}
+            </DialogTitle>
+            <DialogDescription className="mt-3 text-center font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-[14px]">
               {t('welcome.loginDescription')}
             </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col gap-4 mt-2">
-            <Button
-              className="flex h-14 items-center justify-center gap-3 rounded-[20px] bg-brand-yellow font-poppins text-lg font-semibold uppercase tracking-wide text-black shadow-none transition-colors hover:bg-brand-gold hover:shadow-none"
-              onClick={handleGoogleLogin}
-            >
-              <FcGoogle className="size-6" /> {t('welcome.continueWithGoogle')}
-            </Button>
-          </div>
+          <Button
+            onClick={handleGoogleLogin}
+            className="mt-6 flex h-14 w-full items-center justify-center gap-3 rounded-[28px] bg-brand-yellow font-poppins text-base font-semibold uppercase tracking-wide text-black shadow-none transition-colors hover:bg-brand-yellow-deep hover:shadow-none sm:h-[60px] sm:text-lg focus-visible:ring-0 focus-visible:outline-none"
+          >
+            <FcGoogle className="size-6" />
+            {t('welcome.continueWithGoogle')}
+          </Button>
         </DialogContent>
       </Dialog>
     </div>

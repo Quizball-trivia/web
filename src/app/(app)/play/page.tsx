@@ -48,8 +48,8 @@ export default function PlayPage() {
     const filters: ListQuestionsQuery = {
       category_id: categoryId,
       status: "published",
-      page: "1",
-      limit: String(QUESTION_COUNT),
+      page: 1,
+      limit: QUESTION_COUNT,
     };
 
     const result = await queryClient.fetchQuery(

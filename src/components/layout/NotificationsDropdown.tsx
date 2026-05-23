@@ -207,15 +207,16 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
       <PopoverContent
         align="end"
         sideOffset={8}
-        className="w-[340px] overflow-hidden rounded-2xl border border-white/10 bg-surface-page/88 p-0 shadow-[0_18px_48px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+        className="w-[340px] overflow-hidden rounded-[20px] border-0 p-0 font-poppins shadow-[0_18px_48px_rgba(0,0,0,0.45)]"
+        style={{ backgroundColor: '#1645FF' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-surface-card-tint px-4 py-3">
-          <h3 className="text-xs font-black uppercase tracking-[0.18em] text-brand-slate-light">
+        <div className="flex items-center justify-between border-b border-white/15 px-4 py-3">
+          <h3 className="font-poppins text-sm font-semibold text-white">
             {t("notifications.title")}
           </h3>
           {incoming.length > 0 && (
-            <span className="rounded-full bg-brand-orange-light/15 px-2 py-0.5 text-[10px] font-black text-[#FFB37D]">
+            <span className="rounded-full bg-brand-yellow px-2 py-0.5 font-poppins text-[10px] font-bold text-black">
               {incoming.length}
             </span>
           )}
@@ -225,10 +226,10 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
         <div className="max-h-[320px] overflow-y-auto overscroll-contain">
           {incoming.length === 0 ? (
             <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
-              <div className="flex size-10 items-center justify-center rounded-full bg-surface-card-tint">
-                <Bell className="size-5 text-brand-slate" />
+              <div className="flex size-10 items-center justify-center rounded-full bg-white/15">
+                <Bell className="size-5 text-white/80" />
               </div>
-              <p className="text-xs font-bold text-brand-slate">{t("notifications.empty")}</p>
+              <p className="font-poppins text-xs font-medium text-white/80">{t("notifications.empty")}</p>
             </div>
           ) : (
             <div className="flex flex-col gap-1.5 p-2">

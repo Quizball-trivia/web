@@ -155,25 +155,27 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
           </div>
         ))}
 
-        {/* Expand/Collapse button */}
+        {/* Expand/Collapse toggle — compact pill, mostly transparent. */}
         {!isLoading && !error && canExpand && (
-          <button
-            type="button"
-            onClick={() => setIsExpanded((prev) => !prev)}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-surface-card hover:bg-surface-card-tint transition-all text-sm font-bold text-brand-slate hover:text-white"
-          >
-            {isExpanded ? (
-              <>
-                <ChevronUp className="size-4" />
-                {t('recentMatches.showLess')}
-              </>
-            ) : (
-              <>
-                <ChevronDown className="size-4" />
-                {t('recentMatches.showMore', { count: hiddenCount })}
-              </>
-            )}
-          </button>
+          <div className="flex justify-center pt-1">
+            <button
+              type="button"
+              onClick={() => setIsExpanded((prev) => !prev)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-brand-slate transition-colors hover:bg-white/[0.06] hover:text-white"
+            >
+              {isExpanded ? (
+                <>
+                  <ChevronUp className="size-3.5" />
+                  {t('recentMatches.showLess')}
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="size-3.5" />
+                  {t('recentMatches.showMore', { count: hiddenCount })}
+                </>
+              )}
+            </button>
+          </div>
         )}
       </div>
     </div>

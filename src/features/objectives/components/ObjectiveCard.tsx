@@ -6,6 +6,8 @@ import { memo } from "react";
 import { motion } from "motion/react";
 import { CheckCircle2 } from "lucide-react";
 import type { Objective } from "../types";
+import { useLocale } from "@/contexts/LocaleContext";
+import { getI18nText } from "@/lib/utils/i18n";
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
@@ -18,6 +20,7 @@ export const ObjectiveCard = memo(function ObjectiveCard({
   objective,
   index,
 }: ObjectiveCardProps) {
+  const { locale } = useLocale();
   const progressPercent = objective.target > 0
     ? Math.min(100, Math.round((objective.progress / objective.target) * 100))
     : 0;
@@ -44,13 +47,13 @@ export const ObjectiveCard = memo(function ObjectiveCard({
             className="truncate uppercase text-white"
             style={{ ...poppins, fontSize: "clamp(12px, 1.5vw, 14px)" }}
           >
-            {objective.title}
+            {getI18nText(objective.title, locale)}
           </h3>
           <p
             className="mt-0.5 truncate uppercase text-white/50"
             style={{ ...poppins, fontSize: "clamp(9px, 1.1vw, 10px)", fontWeight: 500 }}
           >
-            {objective.description}
+            {getI18nText(objective.description, locale)}
           </p>
         </div>
 

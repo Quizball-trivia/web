@@ -7,13 +7,14 @@ import { Users, User, ArrowRight, Trophy, Gamepad2, Zap, Timer } from 'lucide-re
 import { useDailyChallenges } from '@/lib/queries/dailyChallenges.queries';
 import { useObjectives } from '@/lib/queries/objectives.queries';
 import { useLocale } from '@/contexts/LocaleContext';
+import { getI18nText } from '@/lib/utils/i18n';
 
 interface HomeRightRailProps {
   onOpenFriend: () => void;
 }
 
 export function HomeRightRail({ onOpenFriend }: HomeRightRailProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const router = useRouter();
   const { data: dailyChallenges = [] } = useDailyChallenges();
   const { data: objectivesData } = useObjectives();
@@ -123,15 +124,15 @@ export function HomeRightRail({ onOpenFriend }: HomeRightRailProps) {
                     key={objective.id}
                     className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-card/40 cursor-pointer group"
                     onClick={() => router.push('/objectives')}
-                    aria-label={`Open objective: ${objective.title}`}
+                    aria-label={`Open objective: ${getI18nText(objective.title, locale)}`}
                   >
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="p-1.5 rounded-full bg-primary/10 text-primary ring-1 ring-primary/20 group-hover:scale-105 transition-transform">
                         <Trophy className="size-3.5" />
                       </div>
                       <div className="min-w-0">
-                        <div className="truncate text-xs font-bold leading-tight transition-colors group-hover:text-primary">{objective.title}</div>
-                        <div className="truncate text-[10px] text-muted-foreground">{objective.description}</div>
+                        <div className="truncate text-xs font-bold leading-tight transition-colors group-hover:text-primary">{getI18nText(objective.title, locale)}</div>
+                        <div className="truncate text-[10px] text-muted-foreground">{getI18nText(objective.description, locale)}</div>
                       </div>
                     </div>
                     <div className="ml-3 shrink-0 text-right">

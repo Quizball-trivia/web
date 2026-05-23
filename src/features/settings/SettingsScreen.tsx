@@ -319,15 +319,20 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
           }
         }}
       >
-        <AlertDialogContent className="border-border bg-[var(--overlay-bg)]">
+        <AlertDialogContent
+          className="max-w-md w-[92vw] rounded-[24px] border-0 p-8 font-poppins sm:p-10"
+          style={{ backgroundColor: '#1645FF' }}
+        >
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-foreground">{t("settings.deleteAccountTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
+              {t("settings.deleteAccountTitle")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="mt-3 text-center font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-[14px]">
               {t("settings.deleteAccountModalDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="space-y-2">
-            <label htmlFor="delete-account-confirmation" className="text-sm font-medium">
+          <div className="mt-5 space-y-2">
+            <label htmlFor="delete-account-confirmation" className="block font-poppins text-xs font-semibold text-white/85">
               {t("settings.deleteAccountConfirmLabel", { confirmWord: deletionConfirmWord })}
             </label>
             <Input
@@ -336,22 +341,27 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
               onChange={(event) => setDeleteConfirmation(event.target.value)}
               disabled={isDeletingAccount}
               autoComplete="off"
+              placeholder={deletionConfirmWord}
+              className="h-[58px] w-full rounded-[20px] border-2 border-white/20 bg-transparent px-4 text-center font-poppins text-base font-semibold uppercase tracking-wide text-white placeholder:text-white/50 focus-visible:border-white/40 focus-visible:ring-0 focus-visible:ring-offset-0"
             />
           </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="border-border bg-card text-foreground hover:bg-muted" disabled={isDeletingAccount}>
-              {t("common.cancel")}
-            </AlertDialogCancel>
+          <AlertDialogFooter className="mt-6 flex-col gap-2 sm:flex-col sm:space-x-0">
             <AlertDialogAction
               disabled={!canConfirmDeletion}
               onClick={(event) => {
                 event.preventDefault();
                 void handleDeleteAccount();
               }}
-              className="border-destructive/25 bg-destructive text-white hover:bg-destructive/90 disabled:pointer-events-none disabled:opacity-50"
+              className="w-full rounded-[16px] bg-brand-red-soft px-3 py-3 font-poppins text-sm font-semibold uppercase tracking-wide text-white hover:bg-brand-red-soft/90 disabled:pointer-events-none disabled:opacity-50"
             >
               {isDeletingAccount ? t("settings.deleteAccountDeleting") : t("settings.deleteAccount")}
             </AlertDialogAction>
+            <AlertDialogCancel
+              disabled={isDeletingAccount}
+              className="mt-0 w-full rounded-[16px] border-0 bg-white/15 px-3 py-3 font-poppins text-sm font-semibold uppercase tracking-wide text-white hover:bg-white/25 hover:text-white"
+            >
+              {t("common.cancel")}
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -10,6 +10,7 @@ import { useObjectives } from "@/lib/queries/objectives.queries";
 import type { Objective } from "@/features/objectives/types";
 import type { PlayerProgress } from "@/features/objectives/types";
 import { useLocale } from "@/contexts/LocaleContext";
+import { getI18nText } from "@/lib/utils/i18n";
 
 interface HomeDailyObjectivesProps {
   playerProgress?: PlayerProgress;
@@ -24,7 +25,7 @@ function sortObjectives(a: Objective, b: Objective) {
 
 export function HomeDailyObjectives(props: HomeDailyObjectivesProps) {
   void props.playerProgress;
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const router = useRouter();
   const { data, isLoading } = useObjectives();
 
@@ -89,7 +90,7 @@ export function HomeDailyObjectives(props: HomeDailyObjectivesProps) {
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-sm font-bold">{objective.title}</p>
+                    <p className="truncate text-sm font-bold">{getI18nText(objective.title, locale)}</p>
                     <div className="flex shrink-0 items-center gap-1 text-xs font-black text-brand-yellow">
                       <Coins className="size-3" />
                       {objective.rewardCoins}

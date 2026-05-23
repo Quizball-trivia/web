@@ -459,16 +459,17 @@ export function AppShell({ children }: AppShellProps) {
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
-                  className="w-56 border-white/10 bg-surface-page/88 text-white shadow-[0_18px_48px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+                  className="w-64 rounded-[20px] border-0 p-3 text-white font-poppins shadow-[0_18px_48px_rgba(0,0,0,0.45)]"
+                  style={{ backgroundColor: '#1645FF' }}
                   align="end"
                   forceMount
                 >
-                  <DropdownMenuLabel className="font-normal">
+                  <DropdownMenuLabel className="font-normal px-2 pb-3">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none text-white">
+                      <p className="font-poppins text-base font-semibold leading-none text-white">
                         {playerStats.username}
                       </p>
-                      <p className="text-xs leading-none text-white">
+                      <p className="font-poppins text-xs font-medium leading-none text-white/70">
                         {t("accountMenu.levelAndRp", {
                           level: playerStats.level,
                           rp: playerStats.rankPoints ?? 0,
@@ -476,25 +477,23 @@ export function AppShell({ children }: AppShellProps) {
                       </p>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    className="text-white/90 focus:bg-white/10 focus:text-white"
+                    className="rounded-[12px] px-3 py-2.5 font-poppins text-sm font-semibold text-white focus:bg-white/15 focus:text-white"
                     onClick={() => router.push("/profile")}
                   >
-                    <User className="mr-2 h-4 w-4" />
+                    <User className="mr-2 h-4 w-4 text-brand-yellow" />
                     <span>{t("navigation.profile")}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    className="text-white/90 focus:bg-white/10 focus:text-white"
+                    className="rounded-[12px] px-3 py-2.5 font-poppins text-sm font-semibold text-white focus:bg-white/15 focus:text-white"
                     onClick={() => router.push("/settings")}
                   >
-                    <Settings className="mr-2 h-4 w-4" />
+                    <Settings className="mr-2 h-4 w-4 text-brand-yellow" />
                     <span>{t("navigation.settings")}</span>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => setShowLogoutConfirm(true)}
-                    className="mx-1 my-1 justify-center rounded-[12px] bg-brand-red-soft px-3 py-2 font-semibold text-white shadow-[0_2px_10px_rgba(255,75,75,0.22)] transition-colors focus:bg-brand-red-deep focus:text-white hover:bg-brand-red-deep"
+                    className="mt-2 justify-center rounded-[16px] bg-brand-red-soft px-3 py-3 font-poppins text-sm font-semibold uppercase text-white transition-colors focus:bg-brand-red-deep focus:text-white hover:bg-brand-red-deep"
                   >
                     <LogOut className="mr-2 h-4 w-4 text-white" />
                     <span>{t("accountMenu.logOut")}</span>
