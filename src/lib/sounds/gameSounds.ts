@@ -91,6 +91,7 @@ export function unloadAll() {
 
 const bgmInstances: Partial<Record<BgmName, Howl>> = {};
 let activeBgm: BgmName | null = null;
+let kickoffAudioFallback: HTMLAudioElement | null = null;
 
 function getBgm(name: BgmName): Howl {
   if (!bgmInstances[name]) {
@@ -125,13 +126,22 @@ export function playBgm(name: BgmName) {
     if (!sound.playing()) sound.play();
     activeBgm = name;
   } catch {
-    // Silently fail — autoplay blocked or file missing.
+    if (name !== 'kickoff' || typeof Audio === 'undefined') return;
+    kickoffAudioFallback ??= new Audio(BGM_FILES.kickoff);
+    kickoffAudioFallback.loop = true;
+    kickoffAudioFallback.volume = KICKOFF_BGM_VOLUME;
+    void kickoffAudioFallback.play().catch(() => {});
+    activeBgm = name;
   }
 }
 
 /** Stop the active BGM. Optionally fade out over `fadeMs` first. */
 export function stopBgm(fadeMs = 0) {
   if (!activeBgm) return;
+  if (activeBgm === 'kickoff' && kickoffAudioFallback) {
+    kickoffAudioFallback.pause();
+    kickoffAudioFallback.currentTime = 0;
+  }
   const sound = bgmInstances[activeBgm];
   if (!sound) {
     activeBgm = null;
