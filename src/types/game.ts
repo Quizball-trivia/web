@@ -5,8 +5,10 @@ export type GameMode = 'timeAttack' | 'moneyDrop' | 'categories' | 'survival' | 
 
 export interface Achievement {
   id: string;
-  title: string;
-  description: string;
+  /** I18nField — `{ en, ka, ... }`. Resolve via `useLocale().locale`. */
+  title: Record<string, string>;
+  /** I18nField — `{ en, ka, ... }`. Resolve via `useLocale().locale`. */
+  description: Record<string, string>;
   icon: string;
   unlocked: boolean;
   progress?: number;

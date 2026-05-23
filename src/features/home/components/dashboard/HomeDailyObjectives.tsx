@@ -9,6 +9,8 @@ import { Progress } from "@/components/ui/progress";
 import { useObjectives } from "@/lib/queries/objectives.queries";
 import type { Objective } from "@/features/objectives/types";
 import type { PlayerProgress } from "@/features/objectives/types";
+import { useLocale } from "@/contexts/LocaleContext";
+import { getI18nText } from "@/lib/utils/i18n";
 
 interface HomeDailyObjectivesProps {
   playerProgress?: PlayerProgress;
@@ -23,6 +25,7 @@ function sortObjectives(a: Objective, b: Objective) {
 
 export function HomeDailyObjectives(props: HomeDailyObjectivesProps) {
   void props.playerProgress;
+  const { t, locale } = useLocale();
   const router = useRouter();
   const { data, isLoading } = useObjectives();
 
@@ -40,7 +43,7 @@ export function HomeDailyObjectives(props: HomeDailyObjectivesProps) {
             <span className="rounded-[8px] bg-brand-cyan/10 p-2 text-brand-cyan ring-1 ring-brand-cyan/20">
               <Target className="size-4" />
             </span>
-            Daily Objectives
+            {t("homeDashboard.dailyObjectives")}
           </CardTitle>
           {data && (
             <span className="rounded-full border border-brand-green-light/30 bg-brand-green-light/10 px-2.5 py-1 text-[10px] font-black uppercase text-brand-green-light">
@@ -52,7 +55,7 @@ export function HomeDailyObjectives(props: HomeDailyObjectivesProps) {
       <CardContent className="space-y-3">
         {isLoading && (
           <div className="rounded-[8px] bg-secondary/30 p-3 text-sm font-semibold text-muted-foreground">
-            Loading objectives...
+            {t("home.objectives")}...
           </div>
         )}
 
@@ -87,7 +90,7 @@ export function HomeDailyObjectives(props: HomeDailyObjectivesProps) {
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-sm font-bold">{objective.title}</p>
+                    <p className="truncate text-sm font-bold">{getI18nText(objective.title, locale)}</p>
                     <div className="flex shrink-0 items-center gap-1 text-xs font-black text-brand-yellow">
                       <Coins className="size-3" />
                       {objective.rewardCoins}
@@ -113,7 +116,7 @@ export function HomeDailyObjectives(props: HomeDailyObjectivesProps) {
           className="w-full text-muted-foreground hover:text-primary"
           onClick={() => router.push("/objectives")}
         >
-          View All Objectives
+          {t("homeDashboard.viewAllObjectives")}
           <ArrowRight className="ml-1 size-4" />
         </Button>
       </CardContent>

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { MoneyDropSession } from "@/lib/domain/dailyChallenge";
+import { useLocale } from "@/contexts/LocaleContext";
 
 interface MoneyDropGameProps {
   session: MoneyDropSession;
@@ -172,6 +173,7 @@ function HelpButtons({
 /* ── Main Component ── */
 
 export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProps) {
+  const { t } = useLocale();
   const STARTING_MONEY = session.startingMoney;
   const QUESTION_TIME = session.secondsPerQuestion;
 
@@ -472,7 +474,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
               {/* Remaining counter */}
               <div className="flex items-center justify-between">
                 <span className="text-xs md:text-sm lg:text-base font-bold text-brand-slate uppercase tracking-wider">
-                  Place Your Bets
+                  {t("dailyGames.placeYourBets")}
                 </span>
                 <span className={cn("text-xs md:text-sm lg:text-base font-black tabular-nums", remaining === 0 ? "text-brand-green-light" : "text-brand-orange")}>
                   {remaining === 0 ? "All in!" : `${remaining.toLocaleString()} remaining`}
@@ -698,7 +700,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
                     Lost all {formatMoney(currentMoney)}
                   </div>
                   <div className="text-brand-slate text-sm lg:text-base font-bold mt-1">
-                    Better luck next time
+                    {t("dailyGames.betterLuckNextTime")}
                   </div>
                 </motion.div>
               )}
@@ -722,7 +724,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
         open={showQuitDialog}
         onOpenChange={setShowQuitDialog}
         onQuit={onBack}
-        title="Quit Money Drop?"
+        title={t("dailyQuit.quitMoneyDrop")}
         description={`You'll lose your current balance of ${formatMoney(currentMoney)}.`}
       />
     </div>

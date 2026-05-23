@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { PitchVisualization } from './PitchVisualization';
 import { BanCategoryCard } from '@/components/shared/BanCategoryCard';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
+import { useLocale } from '@/contexts/LocaleContext';
 import type { DraftCategory } from '@/lib/realtime/socket.types';
 import type { AvatarCustomization } from '@/types/game';
 
@@ -98,6 +99,7 @@ export function HalftimeScreen({
   onBanCategory,
   onBanPhaseShown,
 }: HalftimeScreenProps) {
+  const { t } = useLocale();
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [showBanPhase, setShowBanPhase] = useState(false);
 
@@ -215,7 +217,7 @@ export function HalftimeScreen({
                 className="text-xs sm:text-sm font-black uppercase tracking-[0.35em] text-brand-orange"
                 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, letterSpacing: '0.35em' }}
               >
-                Half Time
+                {t('possession.halfTime')}
               </span>
             </motion.div>
 

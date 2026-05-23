@@ -11,6 +11,7 @@ const SOUND_FILES = {
 
 const BGM_FILES = {
   ranked: "/sounds/ranked_demo.wav",
+  kickoff: "/sounds/gameplay_soundtrack.m4a",
 } as const;
 
 type SoundName = keyof typeof SOUND_FILES;
@@ -20,6 +21,7 @@ type BgmName = keyof typeof BGM_FILES;
 const SFX_VOLUME = 0.4;
 // BGM sits below SFX so whistle/kick/pass stay audible over it.
 const BGM_VOLUME = 0.12;
+const KICKOFF_BGM_VOLUME = 0.5;
 // Flip to true to re-enable the ranked BGM loop. Wiring stays in place
 // so this is a one-liner to revive whenever we want music back.
 const BGM_ENABLED = false;
@@ -89,14 +91,16 @@ export function unloadAll() {
 
 const bgmInstances: Partial<Record<BgmName, Howl>> = {};
 let activeBgm: BgmName | null = null;
+let kickoffAudioFallback: HTMLAudioElement | null = null;
 
 function getBgm(name: BgmName): Howl {
   if (!bgmInstances[name]) {
     bgmInstances[name] = new Howl({
       src: [BGM_FILES[name]],
-      volume: BGM_VOLUME,
+      volume: name === 'kickoff' ? KICKOFF_BGM_VOLUME : BGM_VOLUME,
       loop: true,
       preload: true,
+      ...(name === 'kickoff' ? { format: ['m4a'], html5: true } : {}),
     });
   }
   return bgmInstances[name]!;
@@ -107,7 +111,7 @@ function getBgm(name: BgmName): Howl {
  * Idempotent: calling with the currently-playing track is a no-op.
  */
 export function playBgm(name: BgmName) {
-  if (!BGM_ENABLED) return;
+  if (!BGM_ENABLED && name !== 'kickoff') return;
   try {
     if (activeBgm === name && bgmInstances[name]?.playing()) return;
     for (const [key, instance] of Object.entries(bgmInstances)) {
@@ -118,17 +122,26 @@ export function playBgm(name: BgmName) {
     // otherwise the lingering fade event will fire on the new playback and
     // silence the track mid-loop.
     sound.off('fade');
-    sound.volume(BGM_VOLUME);
+    sound.volume(name === 'kickoff' ? KICKOFF_BGM_VOLUME : BGM_VOLUME);
     if (!sound.playing()) sound.play();
     activeBgm = name;
   } catch {
-    // Silently fail — autoplay blocked or file missing.
+    if (name !== 'kickoff' || typeof Audio === 'undefined') return;
+    kickoffAudioFallback ??= new Audio(BGM_FILES.kickoff);
+    kickoffAudioFallback.loop = true;
+    kickoffAudioFallback.volume = KICKOFF_BGM_VOLUME;
+    void kickoffAudioFallback.play().catch(() => {});
+    activeBgm = name;
   }
 }
 
 /** Stop the active BGM. Optionally fade out over `fadeMs` first. */
 export function stopBgm(fadeMs = 0) {
   if (!activeBgm) return;
+  if (activeBgm === 'kickoff' && kickoffAudioFallback) {
+    kickoffAudioFallback.pause();
+    kickoffAudioFallback.currentTime = 0;
+  }
   const sound = bgmInstances[activeBgm];
   if (!sound) {
     activeBgm = null;

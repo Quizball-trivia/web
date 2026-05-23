@@ -1,6 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'motion/react';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface PenaltyTransitionProps {
   visible: boolean;
@@ -9,6 +10,7 @@ interface PenaltyTransitionProps {
 }
 
 export function PenaltyTransition({ visible, playerGoals, opponentGoals }: PenaltyTransitionProps) {
+  const { t } = useLocale();
   return (
     <AnimatePresence>
       {visible && (
@@ -18,7 +20,7 @@ export function PenaltyTransition({ visible, playerGoals, opponentGoals }: Penal
           exit={{ opacity: 0 }}
           role="alert"
           aria-live="polite"
-          aria-label="Penalty shootout starting: answer correctly and faster to score"
+          aria-label={t('possession.penaltyAriaLabel')}
           className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center overflow-hidden"
         >
           {/* Animated background */}
@@ -63,7 +65,7 @@ export function PenaltyTransition({ visible, playerGoals, opponentGoals }: Penal
                 {playerGoals} - {opponentGoals}
               </div>
               {playerGoals === opponentGoals && (
-                <div className="text-gray-400 text-lg mt-2 tracking-wide">Match Tied</div>
+                <div className="text-gray-400 text-lg mt-2 tracking-wide">{t('possession.matchTied')}</div>
               )}
             </motion.div>
 
@@ -85,7 +87,7 @@ export function PenaltyTransition({ visible, playerGoals, opponentGoals }: Penal
                 }}
                 className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 uppercase tracking-wider font-fun"
               >
-                Penalty Shootout
+                {t('possession.penaltyShootout')}
               </motion.div>
 
               <motion.div
@@ -94,7 +96,7 @@ export function PenaltyTransition({ visible, playerGoals, opponentGoals }: Penal
                 transition={{ delay: 1 }}
                 className="text-gray-300 text-xl font-medium"
               >
-                Best of 5
+                {t('possession.bestOf5')}
               </motion.div>
             </motion.div>
 
@@ -129,7 +131,7 @@ export function PenaltyTransition({ visible, playerGoals, opponentGoals }: Penal
               aria-hidden="true"
               className="mt-8 text-red-400 font-bold text-sm uppercase tracking-widest"
             >
-              🔥 High Pressure 🔥
+              {t('possession.highPressure')}
             </motion.div>
           </div>
 
@@ -141,7 +143,7 @@ export function PenaltyTransition({ visible, playerGoals, opponentGoals }: Penal
             aria-hidden="true"
             className="absolute bottom-12 text-center text-gray-500 text-sm"
           >
-            Answer correctly and faster to score
+            {t('possession.answerCorrectlyAndFaster')}
           </motion.div>
         </motion.div>
       )}

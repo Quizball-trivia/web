@@ -16,6 +16,7 @@ import {
 import { QuitGameDialog } from "./QuitGameDialog";
 import type { CluesSession } from "@/lib/domain/dailyChallenge";
 import { calculateCluesDisplayPoints } from "@/utils/cluesScoring";
+import { useLocale } from "@/contexts/LocaleContext";
 
 interface ClueGameProps {
   session: CluesSession;
@@ -82,6 +83,7 @@ function getPoints(revealedClues: number): number {
 }
 
 export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
+  const { t } = useLocale();
   const secondsPerClueStep = session.secondsPerClueStep;
   const questions = session.questions;
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -255,7 +257,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
               <div>
                 <div className="flex items-center gap-2">
                   <Lightbulb className="size-6 text-brand-orange" />
-                  <h1 className="text-lg md:text-xl font-black uppercase text-white">Clues Challenge</h1>
+                  <h1 className="text-lg md:text-xl font-black uppercase text-white">{t("dailyGames.cluesChallenge")}</h1>
                 </div>
                 <div className="text-xs text-brand-slate font-bold">
                   Question {currentQuestionIndex + 1}/{questions.length}
@@ -357,7 +359,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
             <div className="space-y-3">
               <Input
                 type="text"
-                placeholder="Type your answer..."
+                placeholder={t("dailyGames.typeYourAnswerPlaceholder")}
                 value={userAnswer}
                 onChange={(e) => setUserAnswer(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -378,7 +380,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
                   className="w-full py-3 rounded-xl font-black text-white bg-surface-card-tint border-b-4 border-b-[#1B2F36] active:border-b-2 active:translate-y-[2px] transition-all disabled:opacity-50 disabled:active:border-b-4 disabled:active:translate-y-0"
                   disabled={hasSubmitted}
                 >
-                  Give Up
+                  {t("dailyGames.giveUp")}
                 </button>
               </div>
             </div>
@@ -429,7 +431,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
                   onClick={handleNext}
                   className="w-full py-3 rounded-xl font-black text-white bg-brand-green-light border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-2"
                 >
-                  Next Question
+                  {t("dailyGames.nextQuestion")}
                   <ArrowRight className="size-4" />
                 </button>
               ) : (

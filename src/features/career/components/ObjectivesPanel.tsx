@@ -3,6 +3,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Crown, Sparkles, Target, Trophy, Clock, Zap } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useLocale } from '@/contexts/LocaleContext';
 
 export interface StageObjective {
   id: string;
@@ -27,6 +28,7 @@ export interface ObjectivesPanelProps {
 }
 
 export function ObjectivesPanel({ level, onStart, isOpen, objectives = [] }: ObjectivesPanelProps) {
+  const { t } = useLocale();
   if (!isOpen) return null;
 
   // Mock objectives if none provided
@@ -51,7 +53,7 @@ export function ObjectivesPanel({ level, onStart, isOpen, objectives = [] }: Obj
            </Badge>
         </div>
         <h2 className="text-2xl font-black text-foreground leading-none">{level.name}</h2>
-        <p className="text-xs text-muted-foreground font-medium mt-1 uppercase tracking-wide">Mission Objectives</p>
+        <p className="text-xs text-muted-foreground font-medium mt-1 uppercase tracking-wide">{t("career.missionObjectives")}</p>
       </div>
 
       <ScrollArea className="flex-1 p-6">
@@ -61,16 +63,16 @@ export function ObjectivesPanel({ level, onStart, isOpen, objectives = [] }: Obj
           <div className="space-y-3">
              <div className="flex items-center gap-2 text-sm font-semibold text-primary">
                 <Target className="size-4" />
-                <span>Completion Criteria</span>
+                <span>{t("career.completionCriteria")}</span>
              </div>
              <div className="p-4 rounded-xl bg-background/50 border border-border flex items-center justify-between">
                 <div>
-                   <div className="text-xs text-muted-foreground">Required Score</div>
+                   <div className="text-xs text-muted-foreground">{t("career.requiredScore")}</div>
                    <div className="text-xl font-bold">{level.requiredScore} <span className="text-xs font-normal text-muted-foreground">/ {level.questionsCount}</span></div>
                 </div>
                 <div className="h-8 w-px bg-border mx-2" />
                 <div>
-                   <div className="text-xs text-muted-foreground">Reward</div>
+                   <div className="text-xs text-muted-foreground">{t("career.reward")}</div>
                    <div className="text-xl font-bold text-yellow-500 flex items-center gap-1">
                       <span className="text-base">💰</span> {level.coinReward}
                    </div>
@@ -82,7 +84,7 @@ export function ObjectivesPanel({ level, onStart, isOpen, objectives = [] }: Obj
           <div className="space-y-3">
              <div className="flex items-center gap-2 text-sm font-semibold text-blue-400">
                 <Sparkles className="size-4" />
-                <span>Side Quests</span>
+                <span>{t("career.sideQuests")}</span>
              </div>
              
              <div className="space-y-2">

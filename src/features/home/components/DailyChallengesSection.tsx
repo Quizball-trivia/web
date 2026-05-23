@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { DailyChallengeCard } from './DailyChallengeCard';
 import { useDailyChallenges } from '@/lib/queries/dailyChallenges.queries';
 import { toChallengeCard, type DailyChallengeId } from '../challenges';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface DailyChallengesSectionProps {
   onViewAll: () => void;
@@ -12,6 +13,7 @@ export function DailyChallengesSection({
   onViewAll,
   onSelectChallenge,
 }: DailyChallengesSectionProps) {
+  const { t } = useLocale();
   const { data: dailyChallenges = [] } = useDailyChallenges();
   const homeChallenges = useMemo(
     () => dailyChallenges.filter((challenge) => challenge.showOnHome).map(toChallengeCard),
@@ -21,12 +23,12 @@ export function DailyChallengesSection({
   return (
     <div className="px-4 pt-4">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-semibold">Daily Challenges</h2>
+        <h2 className="text-lg font-semibold">{t("play.dailyChallenge")}</h2>
         <button
           onClick={onViewAll}
           className="text-sm text-primary hover:underline"
         >
-          View All
+          {t("common.viewAll")}
         </button>
       </div>
 

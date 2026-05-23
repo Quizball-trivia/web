@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { QuitGameDialog } from "./QuitGameDialog";
+import { useLocale } from "@/contexts/LocaleContext";
 
 interface Reward {
   id: string;
@@ -107,6 +108,7 @@ const wheelRewards: Reward[] = [
 ];
 
 export function RewardsWheel({ onRewardWon, onBack }: RewardsWheelProps) {
+  const { t } = useLocale();
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [wonReward, setWonReward] = useState<Reward | null>(null);
@@ -260,7 +262,7 @@ export function RewardsWheel({ onRewardWon, onBack }: RewardsWheelProps) {
             )}
             <div className="flex items-center gap-2">
               <Gift className="size-6 text-brand-cyan" />
-              <h1 className="text-lg md:text-xl font-black uppercase text-white">Daily Rewards</h1>
+              <h1 className="text-lg md:text-xl font-black uppercase text-white">{t("dailyGames.dailyRewards")}</h1>
             </div>
           </div>
         </div>
@@ -273,7 +275,7 @@ export function RewardsWheel({ onRewardWon, onBack }: RewardsWheelProps) {
         <div className="bg-surface-card rounded-xl border-b-4 border-surface-card-deeper border-l-4 border-l-[#1CB0F6] p-4 md:p-5">
           <h2 className="text-lg font-black text-white flex items-center gap-2 mb-2">
             <Gift className="size-5 text-brand-cyan" />
-            Daily Rewards Wheel
+            {t("dailyGames.dailyRewardsWheel")}
           </h2>
           <p className="text-sm text-brand-slate">
             Spin the wheel once every 24 hours for amazing rewards!
@@ -407,7 +409,7 @@ export function RewardsWheel({ onRewardWon, onBack }: RewardsWheelProps) {
                 ) : (
                   <span className="flex items-center justify-center gap-2">
                     <Star className="size-5" />
-                    Spin the Wheel
+                    {t("dailyGames.spinTheWheel")}
                   </span>
                 )}
 
@@ -481,7 +483,7 @@ export function RewardsWheel({ onRewardWon, onBack }: RewardsWheelProps) {
         <div className="bg-surface-card rounded-xl border-b-4 border-surface-card-deeper p-4 md:p-5">
           <h3 className="text-base font-black text-white flex items-center gap-2 mb-3">
             <Sparkles className="size-4 text-brand-cyan" />
-            Possible Rewards
+            {t("dailyGames.possibleRewards")}
           </h3>
           <div className="grid grid-cols-2 gap-2">
             {wheelRewards.map((reward) => (
@@ -508,7 +510,7 @@ export function RewardsWheel({ onRewardWon, onBack }: RewardsWheelProps) {
           <div className="flex items-start gap-3">
             <Zap className="size-5 text-brand-cyan shrink-0 mt-0.5" />
             <div>
-              <div className="text-sm mb-1 font-bold text-white">Pro Tip</div>
+              <div className="text-sm mb-1 font-bold text-white">{t("dailyGames.proTip")}</div>
               <div className="text-xs text-brand-slate">
                 Spin the wheel every day to maximize your rewards! Higher
                 rarity items have better bonuses.
@@ -525,7 +527,7 @@ export function RewardsWheel({ onRewardWon, onBack }: RewardsWheelProps) {
           open={showQuitDialog}
           onOpenChange={setShowQuitDialog}
           onQuit={onBack}
-          title="Leave Rewards?"
+          title={t("dailyQuit.leaveRewards")}
           description="You can come back to spin the wheel anytime."
         />
       )}

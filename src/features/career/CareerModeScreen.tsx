@@ -5,6 +5,7 @@ import { ObjectivesPanel } from './components/ObjectivesPanel';
 import { AnimatePresence } from 'motion/react';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { careerLevels } from '@/data/careerLevels';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface CareerModeScreenProps {
   onBack: () => void;
@@ -17,6 +18,7 @@ export function CareerModeScreen({
   onSelectLevel,
   completedLevels
 }: CareerModeScreenProps) {
+  const { t } = useLocale();
   // Find current play level (first uncompleted)
   const currentLevelId = useMemo(() => {
     const lastCompleted = Math.max(...Array.from(completedLevels), 0);
@@ -56,12 +58,12 @@ export function CareerModeScreen({
               <ArrowLeft className="size-5" />
            </button>
            <div>
-              <h1 className="font-bold text-lg leading-none">Career Mode</h1>
-              <p className="text-xs text-muted-foreground">Journey to Greatness</p>
+              <h1 className="font-bold text-lg leading-none">{t("career.careerMode")}</h1>
+              <p className="text-xs text-muted-foreground">{t("career.journeyToGreatness")}</p>
            </div>
         </div>
         <div className="flex items-center gap-2 px-3 py-1 bg-secondary rounded-full">
-           <span className="text-xs font-medium text-muted-foreground">Total Progress</span>
+           <span className="text-xs font-medium text-muted-foreground">{t("career.totalProgress")}</span>
            <span className="text-sm font-bold text-primary">{Math.round((completedLevels.size / careerLevels.length) * 100)}%</span>
         </div>
       </div>
@@ -108,7 +110,7 @@ export function CareerModeScreen({
       <div className="lg:hidden">
          <Sheet open={!!selectedLevelId} onOpenChange={(open) => !open && setSelectedLevelId(null)}>
             <SheetContent side="bottom" className="h-[80vh] p-0 rounded-t-3xl border-t-0">
-                <SheetTitle className="sr-only">Level Details</SheetTitle>
+                <SheetTitle className="sr-only">{t("career.levelDetails")}</SheetTitle>
                 {activeLevelData && (
                    <ObjectivesPanel
                       level={activeLevelData}

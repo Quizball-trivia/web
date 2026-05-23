@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import { X } from 'lucide-react';
 import { AnimatedPointsCounter } from './AnimatedPointsCounter';
 import { MatchHudAvatar, MatchHudIconButton } from './MatchHudPrimitives';
+import { useLocale } from '@/contexts/LocaleContext';
 import type { AvatarCustomization } from '@/types/game';
 
 const poppins = {
@@ -47,6 +48,7 @@ export function PossessionHUD({
   half,
   onQuit,
 }: PossessionHUDProps) {
+  const { t } = useLocale();
   const showTimer = timeRemaining !== null;
   const timerLabel = showTimer
     ? (timeRemaining! >= 10 ? `${timeRemaining}` : `0${timeRemaining}`)
@@ -59,8 +61,8 @@ export function PossessionHUD({
         <MatchHudIconButton
           onClick={onQuit}
           className="absolute right-[calc(env(safe-area-inset-right)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.25rem)] z-[70] sm:right-[calc(env(safe-area-inset-right)+0.5rem)] sm:top-[calc(env(safe-area-inset-top)+0.5rem)] lg:fixed lg:right-[calc(env(safe-area-inset-right)+1rem)] lg:top-[calc(env(safe-area-inset-top)+1rem)]"
-          title="Leave match"
-          aria-label="Leave match"
+          title={t('possession.leaveMatch')}
+          aria-label={t('possession.leaveMatch')}
         >
           <X className="size-5" />
         </MatchHudIconButton>

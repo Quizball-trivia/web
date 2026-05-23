@@ -19,6 +19,7 @@ import type { AvatarCustomization } from "@/types/game";
 import { AVATAR_COLORS, getAvatarAsset } from "@/lib/avatars";
 import { logger } from "@/utils/logger";
 import { isMuted } from "@/lib/sounds/gameSounds";
+import { useLocale } from "@/contexts/LocaleContext";
 import {
   ComposableMap,
   Geographies,
@@ -26,9 +27,6 @@ import {
 } from "react-simple-maps";
 import { geoNaturalEarth1 } from "d3-geo";
 import worldTopo from "world-atlas/land-110m.json";
-
-const MATCHMAKING_MUSIC_URL =
-  "/sounds/Ronaldo V-Football Soundtrack - Track 0 (Belo Horizonti).mp3";
 
 // ── Types ──
 
@@ -998,6 +996,8 @@ function resolveCountryFallback(
 
 function resolveOpponentLocation(
   opponent: OpponentInfo,
+  fallbackCity: string,
+  fallbackCountry: string,
 ): OpponentLocationCandidate {
   const geoObj =
     getGeoObject(opponent.geo) ?? getGeoObject(opponent.location) ?? null;
@@ -1057,12 +1057,12 @@ function resolveOpponentLocation(
   );
   const geoFlag = geoObj?.flag?.trim() ?? "";
   const resolvedCity =
-    cityHint || cityFallback?.city || countryFallback?.city || "Unknown city";
+    cityHint || cityFallback?.city || countryFallback?.city || fallbackCity;
   const resolvedCountry =
     countryHint ||
     cityFallback?.country ||
     countryFallback?.country ||
-    "Unknown country";
+    fallbackCountry;
   const resolvedFlag =
     opponent.flag?.trim() ||
     geoFlag ||
@@ -1220,6 +1220,7 @@ export function MatchmakingMapScreen({
   onCancel,
   onRestart,
 }: MatchmakingMapScreenProps) {
+  const { t } = useLocale();
   const fakePlayers = useMemo(() => generateFakePlayers(), []);
   const localGeoHint = readCachedGeoHint();
   const [visiblePins, setVisiblePins] = useState<Set<number>>(new Set());
@@ -1236,33 +1237,11 @@ export function MatchmakingMapScreen({
     showFoundState &&
     (preparingMatchStuck ||
       debugInfo?.errorCode === "MATCH_PREPARATION_FAILED");
-  const matchmakingAudioRef = useRef<HTMLAudioElement | null>(null);
+  // Matchmaking search music removed — the previous track was copyrighted.
+  // Leaving the mute button + state in place so it can be re-enabled with a
+  // licensed track without touching the rest of the screen.
   const [musicMuted, setMusicMuted] = useState(() => isMuted());
   const scanRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // Play matchmaking music while searching
-  useEffect(() => {
-    if (musicMuted || showFoundState) return;
-
-    const audio = new Audio(MATCHMAKING_MUSIC_URL);
-    audio.currentTime = 10;
-    audio.volume = 0.4;
-    audio.loop = true;
-    matchmakingAudioRef.current = audio;
-
-    const playPromise = audio.play();
-    if (playPromise) {
-      playPromise.catch(() => {
-        // Autoplay blocked — silently ignore
-      });
-    }
-
-    return () => {
-      audio.pause();
-      audio.src = "";
-      matchmakingAudioRef.current = null;
-    };
-  }, [musicMuted, showFoundState]);
 
   const handleToggleMusicMute = () => {
     setMusicMuted((prev) => !prev);
@@ -1287,7 +1266,7 @@ export function MatchmakingMapScreen({
 
   const opponentPin = useMemo<FakePlayer | null>(() => {
     if (!rankedFoundOpponent) return null;
-    const resolved = resolveOpponentLocation(rankedFoundOpponent);
+    const resolved = resolveOpponentLocation(rankedFoundOpponent, t("matchmaking.unknownCity"), t("matchmaking.unknownCountry"));
     const [oppX, oppY] = projectPoint(resolved.lon, resolved.lat);
     return {
       id:
@@ -1304,7 +1283,7 @@ export function MatchmakingMapScreen({
       avatarUrl:
         rankedFoundOpponent.avatarUrl ?? getAvatarAsset("blue"),
       avatarCustomization: rankedFoundOpponent.avatarCustomization ?? null,
-      name: rankedFoundOpponent.username || "Opponent",
+      name: rankedFoundOpponent.username || t("matchmaking.opponentFallback"),
       flag: resolved.flag,
       city: resolved.city,
       country: resolved.country,
@@ -1636,7 +1615,7 @@ export function MatchmakingMapScreen({
         transition={{ delay: 0.5 }}
         onClick={handleToggleMusicMute}
         className="absolute top-12 left-4 z-20 size-10 rounded-full bg-[#1C2733]/80 border border-white/10 flex items-center justify-center text-white/60 hover:text-white active:scale-95 transition-all backdrop-blur-sm"
-        title={musicMuted ? "Unmute music" : "Mute music"}
+        title={musicMuted ? t("matchmaking.unmuteMusic") : t("matchmaking.muteMusic")}
       >
         {musicMuted ? (
           <VolumeX className="size-5" />
@@ -1690,20 +1669,20 @@ export function MatchmakingMapScreen({
               </div>
 
               <h2 className="text-xl font-black text-white uppercase tracking-widest">
-                Searching
+                {t("matchmaking.searching")}
               </h2>
 
               <p className="text-sm font-bold text-brand-slate">
                 {searchTime > 0
                   ? searchTime
-                  : "Finding a worthy opponent..."}
+                  : t("matchmaking.findingOpponent")}
               </p>
 
               <button
                 onClick={onCancel}
                 className="mt-2 px-6 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-brand-slate uppercase tracking-wider hover:bg-brand-red-soft/20 hover:text-brand-red-soft hover:border-brand-red-soft/30 transition-all active:scale-95"
               >
-                Cancel
+                {t("matchmaking.cancel")}
               </button>
             </motion.div>
           ) : (
@@ -1748,7 +1727,7 @@ export function MatchmakingMapScreen({
                     transition={{ delay: 1.3 }}
                     className="text-lg font-black text-white"
                   >
-                    {rankedFoundOpponent?.username ?? "Opponent"}
+                    {rankedFoundOpponent?.username ?? t("matchmaking.opponentFallback")}
                   </motion.h3>
 
                   {/* Country / city */}
@@ -1776,7 +1755,7 @@ export function MatchmakingMapScreen({
                   transition={{ delay: 1.5, type: "spring", stiffness: 300 }}
                   className="px-5 py-1.5 rounded-full bg-brand-red-soft border-b-[3px] border-brand-red-deep text-sm font-black text-white uppercase tracking-wide"
                 >
-                  VS
+                  {t("matchmaking.vs")}
                 </motion.div>
               </motion.div>
 
@@ -1786,7 +1765,7 @@ export function MatchmakingMapScreen({
                 transition={{ delay: 1.8 }}
                 className="text-xs font-bold text-brand-slate uppercase tracking-wider"
               >
-                Preparing match...
+                {t("matchmaking.preparingMatch")}
               </motion.p>
 
               {showPreparationFailure ? (
@@ -1800,10 +1779,10 @@ export function MatchmakingMapScreen({
                     <TriangleAlert className="size-5" />
                   </div>
                   <p className="text-sm font-black uppercase tracking-wide text-white">
-                    Match setup got stuck
+                    {t("matchmaking.matchSetupStuck")}
                   </p>
                   <p className="mt-2 text-xs font-bold leading-5 text-brand-slate-light">
-                    Restart matchmaking and try again. If it keeps happening, the backend is still failing while preparing the draft.
+                    {t("matchmaking.matchSetupStuckDescription")}
                   </p>
                   <div className="mt-4 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
                     <button
@@ -1811,13 +1790,13 @@ export function MatchmakingMapScreen({
                       className="inline-flex min-w-[10rem] items-center justify-center gap-2 rounded-xl bg-brand-red-soft px-4 py-2.5 text-xs font-black uppercase tracking-wide text-white transition-all hover:bg-brand-red-soft active:scale-95"
                     >
                       <RotateCcw className="size-4" />
-                      Restart Search
+                      {t("matchmaking.restartSearch")}
                     </button>
                     <button
                       onClick={onCancel}
                       className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-black uppercase tracking-wide text-brand-slate-light transition-all hover:border-white/20 hover:bg-white/8 hover:text-white active:scale-95"
                     >
-                      Back to Play
+                      {t("matchmaking.backToPlay")}
                     </button>
                   </div>
                 </motion.div>

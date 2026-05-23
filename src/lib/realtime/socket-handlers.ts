@@ -37,6 +37,8 @@ import type {
   PresenceOnlineCountPayload,
   SessionStatePayload,
   SessionBlockedPayload,
+  LobbyChallengeInvitePayload,
+  LobbyChallengeStatusPayload,
 } from './socket.types';
 
 // Module-level ref so handlers always read the latest queryClient
@@ -104,6 +106,30 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       memberIds: data.members.map((member) => member.userId),
     });
     store.setLobby(data);
+  });
+
+  socket.on('lobby:challenge_received', (data: LobbyChallengeInvitePayload) => {
+    logger.info('Socket event lobby:challenge_received', {
+      invitationId: data.invitationId,
+      lobbyId: data.lobbyId,
+      fromUserId: data.fromUser.id,
+    });
+    useRealtimeMatchStore.getState().addChallengeInvite(data);
+    const locale = normalizeLocale(storage.get<string>(STORAGE_KEYS.LOCALE, 'en'));
+    toast.info(translate(locale, 'notifications.challengeReceivedToast', { name: data.fromUser.username }));
+  });
+
+  socket.on('lobby:challenge_status', (data: LobbyChallengeStatusPayload) => {
+    logger.info('Socket event lobby:challenge_status', data);
+    useRealtimeMatchStore.getState().removeChallengeInvite(data.invitationId);
+    const locale = normalizeLocale(storage.get<string>(STORAGE_KEYS.LOCALE, 'en'));
+    if (data.status === 'accepted') {
+      toast.success(translate(locale, 'notifications.challengeAccepted'));
+    } else if (data.status === 'declined') {
+      toast.info(translate(locale, 'notifications.challengeDeclined'));
+    } else if (data.status === 'expired') {
+      toast.info(translate(locale, 'notifications.challengeExpired'));
+    }
   });
 
   socket.on('error', (data: ErrorPayload) => {

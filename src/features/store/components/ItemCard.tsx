@@ -6,6 +6,7 @@ import { CoinIcon } from "./CoinIcon";
 import { AvatarPreview } from "@/components/AvatarPreview";
 import type { AvatarCustomization } from "@/types/game";
 import { HAIR_PARTS, type AvatarPart } from "@/lib/avatars/parts";
+import { useLocale } from "@/contexts/LocaleContext";
 
 const poppins = {
   fontFamily: "'Poppins', sans-serif",
@@ -125,6 +126,7 @@ export function ItemCard({
   previewCustomization,
   mannequinPart,
 }: ItemCardProps) {
+  const { t } = useLocale();
   return (
     <motion.div
       whileHover={{ scale: 1.02, y: -2 }}
@@ -179,7 +181,7 @@ export function ItemCard({
             className="flex h-9 w-full items-center justify-center rounded-[16px] border-2 text-[11px] uppercase text-white/80 transition-colors hover:bg-white/5 sm:h-[44px] sm:rounded-[20px] sm:text-[14px]"
             style={{ ...poppins, borderColor: "rgba(255,255,255,0.15)" }}
           >
-            Owned
+            {t("store.owned")}
           </button>
         ) : (
           <button

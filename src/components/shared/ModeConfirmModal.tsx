@@ -32,6 +32,8 @@ import {
 import { useIsMobile } from "@/hooks/useMobile";
 import { cn } from "@/lib/utils";
 import { ModalCloseButton } from "./ModalCloseButton";
+import { useLocale } from "@/contexts/LocaleContext";
+import type { MessageKey } from "@/lib/i18n/messages";
 
 interface ModeConfirmModalProps {
   mode: "ranked" | "friendly" | "solo" | null;
@@ -41,41 +43,49 @@ interface ModeConfirmModalProps {
   ticketsRemaining?: number;
 }
 
-// Per-mode visual + content. Background colour is part of the config
-// because friendly/solo modes use different brand fills.
+// Per-mode visual + content. Background colour and i18n key prefixes are
+// part of the config; copy is resolved via t() at render time.
 const CONFIG = {
   ranked: {
     bg: "#38B60E", // vivid green
-    titlePrefix: "1V1",
-    titleRest: "Ranked Match",
-    description:
-      "3 Random categories appear - each player blocks 1, then compete in the remaining one",
+    titlePrefixKey: "modeConfirm.rankedTitlePrefix",
+    titleRestKey: "modeConfirm.rankedTitleRest",
+    descriptionKey: "modeConfirm.rankedDescription",
     icon: "/assets/ranked-icon.webp",
-    statLeft: "12–18 Questions",
-    statRight: "Duration 5 Min",
+    statLeftKey: "modeConfirm.rankedStatLeft",
+    statRightKey: "modeConfirm.rankedStatRight",
     entryCost: 1,
   },
   friendly: {
     bg: "#1645FF",
-    titlePrefix: "1V1",
-    titleRest: "Friendly Match",
-    description: "Play against a friend. No RP at stake.",
+    titlePrefixKey: "modeConfirm.friendlyTitlePrefix",
+    titleRestKey: "modeConfirm.friendlyTitleRest",
+    descriptionKey: "modeConfirm.friendlyDescription",
     icon: "/assets/friendly_match-icon.webp",
-    statLeft: "Custom Rules",
-    statRight: "Variable Length",
+    statLeftKey: "modeConfirm.friendlyStatLeft",
+    statRightKey: "modeConfirm.friendlyStatRight",
     entryCost: 0,
   },
   solo: {
     bg: "#7C3AED", // violet for distinction
-    titlePrefix: "Solo",
-    titleRest: "Practice",
-    description: "Practice your skills against the AI.",
+    titlePrefixKey: "modeConfirm.soloTitlePrefix",
+    titleRestKey: "modeConfirm.soloTitleRest",
+    descriptionKey: "modeConfirm.soloDescription",
     icon: "/assets/ranked-icon.webp",
-    statLeft: "Self-Paced",
-    statRight: "XP Earned",
+    statLeftKey: "modeConfirm.soloStatLeft",
+    statRightKey: "modeConfirm.soloStatRight",
     entryCost: 0,
   },
-} as const;
+} as const satisfies Record<string, {
+  bg: string;
+  titlePrefixKey: MessageKey;
+  titleRestKey: MessageKey;
+  descriptionKey: MessageKey;
+  icon: string;
+  statLeftKey: MessageKey;
+  statRightKey: MessageKey;
+  entryCost: number;
+}>;
 
 export function ModeConfirmModal({
   mode,
@@ -84,12 +94,15 @@ export function ModeConfirmModal({
   onConfirm,
   ticketsRemaining = 0,
 }: ModeConfirmModalProps) {
+  const { t } = useLocale();
   const isMobile = useIsMobile();
 
   if (!mode) return null;
 
   const config = CONFIG[mode];
   const hasTickets = ticketsRemaining >= config.entryCost;
+  const titleRest = t(config.titleRestKey);
+  const description = t(config.descriptionKey);
 
   const Body = (
     <div className="relative font-fun">
@@ -100,13 +113,13 @@ export function ModeConfirmModal({
         className="font-poppins mx-auto max-w-[80%] text-center uppercase text-white leading-[0.95]"
         style={{ fontSize: "clamp(28px, 4.6vw, 52px)" }}
       >
-        <span className="text-brand-yellow">{config.titlePrefix}</span>{" "}
-        {config.titleRest}
+        <span className="text-brand-yellow">{t(config.titlePrefixKey)}</span>{" "}
+        {titleRest}
       </h2>
 
       {/* Description */}
       <p className="mx-auto mt-4 max-w-[30rem] text-center text-sm leading-snug font-bold text-white/85 md:text-base">
-        {config.description}
+        {description}
       </p>
 
       {/* Trophy section. Mobile gets the Figma's 3-pill composition
@@ -130,7 +143,10 @@ export function ModeConfirmModal({
               "bg-brand-yellow text-black shadow-sm",
             )}
           >
-            Play for {config.entryCost} Ticket{config.entryCost === 1 ? "" : "s"}
+            {t(
+              config.entryCost === 1 ? "modeConfirm.playForTicket" : "modeConfirm.playForTickets",
+              { count: config.entryCost },
+            )}
           </div>
         )}
 
@@ -143,7 +159,7 @@ export function ModeConfirmModal({
             isMobile ? "top-[42%]" : "top-[28%]",
           )}
         >
-          {config.statRight}
+          {t(config.statRightKey)}
         </div>
 
         {/* Left pill (e.g. "12-18 QUESTIONS"). Mobile pushes to the
@@ -156,7 +172,7 @@ export function ModeConfirmModal({
             isMobile ? "bottom-[10%]" : "top-1/2 -translate-y-1/2",
           )}
         >
-          {config.statLeft}
+          {t(config.statLeftKey)}
         </div>
       </div>
 
@@ -177,14 +193,14 @@ export function ModeConfirmModal({
         )}
       >
         {isMobile || config.entryCost === 0 ? (
-          "Play"
+          t("common.play")
         ) : (
-          <>
-            Play for{" "}
-            <span className="text-brand-yellow">
-              {config.entryCost} Ticket{config.entryCost === 1 ? "" : "s"}
-            </span>
-          </>
+          <span className="[&_strong]:font-inherit [&_strong]:text-brand-yellow">
+            {t(
+              config.entryCost === 1 ? "modeConfirm.playForTicket" : "modeConfirm.playForTickets",
+              { count: config.entryCost },
+            )}
+          </span>
         )}
       </button>
 
@@ -192,7 +208,10 @@ export function ModeConfirmModal({
       {config.entryCost > 0 && (
         <div className="mt-4 flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-wider text-white/80 md:text-xs">
           <span>
-            You have {ticketsRemaining} Ticket{ticketsRemaining === 1 ? "" : "s"}
+            {t(
+              ticketsRemaining === 1 ? "modeConfirm.youHaveTicket" : "modeConfirm.youHaveTickets",
+              { count: ticketsRemaining },
+            )}
           </span>
           <Image
             src="/assets/ticket-1.png"
@@ -221,9 +240,9 @@ export function ModeConfirmModal({
               className="!static"
             />
           </div>
-          <SheetTitle className="sr-only">{config.titleRest}</SheetTitle>
+          <SheetTitle className="sr-only">{titleRest}</SheetTitle>
           <SheetDescription className="sr-only">
-            {config.description}
+            {description}
           </SheetDescription>
           {Body}
         </SheetContent>
@@ -248,9 +267,9 @@ export function ModeConfirmModal({
             className="!static"
           />
         </div>
-        <DialogTitle className="sr-only">{config.titleRest}</DialogTitle>
+        <DialogTitle className="sr-only">{titleRest}</DialogTitle>
         <DialogDescription className="sr-only">
-          {config.description}
+          {description}
         </DialogDescription>
         {Body}
       </DialogContent>

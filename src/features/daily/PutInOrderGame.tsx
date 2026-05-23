@@ -13,6 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { QuitGameDialog } from "./QuitGameDialog";
+import { useLocale } from "@/contexts/LocaleContext";
 import {
   DndContext,
   closestCenter,
@@ -121,6 +122,7 @@ function SortableItem({
 }
 
 export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGameProps) {
+  const { t } = useLocale();
   const [currentRound, setCurrentRound] = useState(0);
   const [userOrder, setUserOrder] = useState<RoundItem[]>(session.rounds[0]?.items ?? []);
   const [isRevealed, setIsRevealed] = useState(false);
@@ -220,15 +222,15 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
 
             <div className="space-y-3 mb-6">
               <div className="flex items-center justify-between p-3 lg:p-4 rounded-xl bg-surface-card-tint">
-                <span className="text-sm lg:text-base text-brand-slate">Correct Rounds</span>
+                <span className="text-sm lg:text-base text-brand-slate">{t("dailyGames.correctRounds")}</span>
                 <span className="text-lg lg:text-xl font-black text-white">{correctCount}/{session.roundCount}</span>
               </div>
               <div className="flex items-center justify-between p-3 lg:p-4 rounded-xl bg-surface-card-tint">
-                <span className="text-sm lg:text-base text-brand-slate">Accuracy</span>
+                <span className="text-sm lg:text-base text-brand-slate">{t("dailyGames.accuracy")}</span>
                 <span className="text-lg lg:text-xl font-black text-white">{Math.round((correctCount / session.roundCount) * 100)}%</span>
               </div>
               <div className="flex items-center justify-between p-3 lg:p-4 rounded-xl bg-brand-cyan/10">
-                <span className="text-sm lg:text-base font-bold text-white">Round Score</span>
+                <span className="text-sm lg:text-base font-bold text-white">{t("dailyGames.roundScore")}</span>
                 <div className="flex items-center gap-1.5">
                   <Coins className="size-4 lg:size-5 text-brand-gold" />
                   <span className="text-lg lg:text-xl font-black text-white">{totalCoins}</span>
@@ -237,7 +239,7 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
             </div>
 
             <button onClick={handleComplete} className="w-full py-3 lg:py-4 rounded-xl font-black text-white lg:text-lg bg-brand-green-light border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px] transition-all">
-              Collect Rewards
+              {t("dailyGames.collectRewards")}
             </button>
           </div>
         </div>
@@ -256,7 +258,7 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <Calendar className="size-5 lg:size-6 text-brand-cyan" />
-                <h1 className="text-lg lg:text-xl font-black uppercase text-white">Put in Order</h1>
+                <h1 className="text-lg lg:text-xl font-black uppercase text-white">{t("dailyGames.putInOrder")}</h1>
               </div>
               <p className="text-xs lg:text-sm text-brand-slate mt-0.5">{round.category}</p>
             </div>
@@ -310,7 +312,7 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
 
             {!isRevealed ? (
               <button onClick={checkOrder} className="w-full py-3 lg:py-4 rounded-xl font-black text-white lg:text-lg bg-brand-green-light border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px] transition-all">
-                Submit Order
+                {t("dailyGames.submitOrder")}
               </button>
             ) : (
               <div className="space-y-3 lg:space-y-4">
@@ -328,7 +330,7 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
                   ) : (
                     <>
                       <XCircle className="size-8 lg:size-10 text-brand-red-soft mx-auto mb-2" />
-                      <p className="text-brand-red-soft font-bold lg:text-lg mb-1">Not quite right</p>
+                      <p className="text-brand-red-soft font-bold lg:text-lg mb-1">{t("dailyGames.notQuiteRight")}</p>
                       <p className="text-xs lg:text-sm text-brand-slate">The correct order is revealed above.</p>
                     </>
                   )}

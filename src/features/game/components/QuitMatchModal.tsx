@@ -34,6 +34,7 @@ import {
 import { cn } from '@/lib/utils';
 import { getClub } from '@/lib/clubs';
 import { getRandomFamousPlayer } from '../data/clubFamousPlayers';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface QuitMatchModalProps {
   open: boolean;
@@ -53,11 +54,15 @@ export function QuitMatchModal({
   onOpenChange,
   onConfirm,
   onSecondaryConfirm,
-  confirmLabel = "Forfeit Match",
-  secondaryConfirmLabel = "Leave Temporary",
-  description = "Leave temporarily and rejoin before the timer ends, or forfeit now.",
+  confirmLabel,
+  secondaryConfirmLabel,
+  description,
   playerClubId = null,
 }: QuitMatchModalProps) {
+  const { t } = useLocale();
+  const resolvedConfirm = confirmLabel ?? t("quitMatch.forfeitMatch");
+  const resolvedSecondary = secondaryConfirmLabel ?? t("quitMatch.leaveTemporary");
+  const resolvedDescription = description ?? t("quitMatch.description");
   // Recompute the famous player each time the modal opens so the headline
   // varies between openings. Tied to `open` so a fresh name is picked on
   // every show, but stable for the duration of a single open session.
@@ -93,9 +98,9 @@ export function QuitMatchModal({
           className="text-white font-semibold uppercase leading-[1.18]"
         >
           <h2 style={{ fontSize: "clamp(26px, 5vw, 52px)" }}>
-            <span className="block">Leaving?</span>
-            <span className="block">{famousPlayer} would</span>
-            <span className="block">not give up</span>
+            <span className="block">{t("quitMatch.leaving")}</span>
+            <span className="block">{t("quitMatch.playerWouldNotGiveUp", { name: famousPlayer })}</span>
+            <span className="block">{t("quitMatch.notGiveUp")}</span>
           </h2>
         </AlertDialogTitle>
 
@@ -103,7 +108,7 @@ export function QuitMatchModal({
           className="mx-auto mt-4 max-w-[36rem] font-semibold leading-snug text-white/55"
           style={{ fontSize: "clamp(13px, 1.4vw, 18px)" }}
         >
-          {description}
+          {resolvedDescription}
         </AlertDialogDescription>
 
         <div className="mt-7 flex flex-col gap-3 sm:gap-4">
@@ -120,7 +125,7 @@ export function QuitMatchModal({
             )}
             style={{ boxShadow: '0 1.76px 6.334px 1.32px rgba(56, 182, 14, 0.25)' }}
           >
-            Keep Playing
+            {t("quitMatch.keepPlaying")}
           </button>
 
           {onSecondaryConfirm && (
@@ -135,7 +140,7 @@ export function QuitMatchModal({
               )}
               style={{ boxShadow: '0 0 6.334px 1.32px rgba(255, 229, 0, 0.25)' }}
             >
-              {secondaryConfirmLabel}
+              {resolvedSecondary}
             </button>
           )}
 
@@ -150,7 +155,7 @@ export function QuitMatchModal({
             )}
             style={{ boxShadow: '0 1.76px 6.334px 1.32px rgba(251, 49, 1, 0.25)' }}
           >
-            {confirmLabel}
+            {resolvedConfirm}
           </button>
         </div>
       </AlertDialogContent>

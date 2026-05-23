@@ -12,6 +12,12 @@ import {
   PENALTY_KICK_CONTACT_MS,
 } from '../realtimePossession.helpers';
 
+// Same cartoon-style ball asset the LoadingScreen bounces — keeps every
+// in-game ball (pitch, shot, goal celebration) visually consistent with
+// the brand's loading state.
+const PITCH_BALL_IMAGE_URL =
+  'https://lfbwhxvwubzeqkztghok.supabase.co/storage/v1/object/public/imgs/world-cup-style-ball-cartoon-transparent.png';
+
 type GoalSide = 'left' | 'right';
 
 // ─── Reusable marker sub-component for player/opponent avatars on the pitch ──
@@ -985,7 +991,7 @@ export function PitchVisualization({
             >
               <motion.circle cx="0" cy="0" r={ballGlowR} fill="rgba(255,255,255,0.1)" filter={`url(#${uid('ballGlow')})`} />
               <foreignObject x={-ballBoxOffset} y={-ballBoxOffset} width={ballBox} height={ballBox}>
-                <img src="/assets/brand/large-ball.png" alt="" style={ballImageStyle} />
+                <img src={PITCH_BALL_IMAGE_URL} alt="" style={ballImageStyle} />
               </foreignObject>
             </motion.g>
           )}
@@ -1004,7 +1010,7 @@ export function PitchVisualization({
             >
               <motion.circle cx="0" cy="0" r={ballGlowR} fill="rgba(255,255,255,0.1)" filter={`url(#${uid('ballGlow')})`} />
               <foreignObject x={-ballBoxOffset} y={-ballBoxOffset} width={ballBox} height={ballBox}>
-                <img src="/assets/brand/large-ball.png" alt="" style={ballImageStyle} />
+                <img src={PITCH_BALL_IMAGE_URL} alt="" style={ballImageStyle} />
               </foreignObject>
             </motion.g>
           )}
@@ -1122,7 +1128,7 @@ export function PitchVisualization({
               >
                 <div className="absolute inset-[-18%] rounded-full bg-white/10 blur-sm" />
                 <img
-                  src="/assets/brand/large-ball.png"
+                  src={PITCH_BALL_IMAGE_URL}
                   alt=""
                   className="relative size-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.32)]"
                 />

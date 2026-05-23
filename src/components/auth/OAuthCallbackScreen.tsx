@@ -9,8 +9,10 @@ import { useAuthStore } from '@/stores/auth.store';
 import { logger } from '@/utils/logger';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { getAuthenticatedEntryRoute } from '@/lib/auth/onboarding';
+import { useLocale } from '@/contexts/LocaleContext';
 
 export function OAuthCallbackScreen() {
+  const { t } = useLocale();
   const router = useRouter();
   const bootstrap = useAuthStore((state) => state.bootstrap);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +66,7 @@ export function OAuthCallbackScreen() {
           }
           const refreshed = await refreshWithToken(tokens.refreshToken);
           if (!refreshed) {
-            throw new Error('Failed to establish session');
+            throw new Error(t('oauthCallback.sessionEstablishError'));
           }
           logger.info('OAuth callback session established');
           // Clear tokens from URL (security: don't leave in browser history)
@@ -80,13 +82,13 @@ export function OAuthCallbackScreen() {
         await bootstrap({ force: true });
         const authenticatedUser = useAuthStore.getState().user;
         if (!authenticatedUser) {
-          throw new Error('Authentication session could not be loaded');
+          throw new Error(t('oauthCallback.sessionLoadError'));
         }
         logger.info('OAuth callback bootstrap success');
         router.replace(getAuthenticatedEntryRoute(authenticatedUser));
       } catch (err) {
         logger.error('OAuth callback failed', err);
-        setError(err instanceof Error ? err.message : 'Authentication failed');
+        setError(err instanceof Error ? err.message : t('oauthCallback.authenticationFailedDefault'));
       }
     };
     processCallback();
@@ -108,7 +110,7 @@ export function OAuthCallbackScreen() {
                   <AlertCircle className="size-8 text-destructive" />
                 </div>
                 <div className="space-y-2">
-                  <h2 className="text-xl font-semibold">Authentication Failed</h2>
+                  <h2 className="text-xl font-semibold">{t('oauthCallback.authenticationFailed')}</h2>
                   <p className="text-muted-foreground">{error}</p>
                 </div>
                 <Button
@@ -116,7 +118,7 @@ export function OAuthCallbackScreen() {
                   className="mt-4 gap-2"
                 >
                   <ArrowLeft className="size-4" />
-                  Back to Login
+                  {t('oauthCallback.backToLogin')}
                 </Button>
               </div>
             </CardContent>
@@ -126,5 +128,5 @@ export function OAuthCallbackScreen() {
     );
   }
 
-  return <LoadingScreen text="Finalizing Transfer..." />;
+  return <LoadingScreen text={t('oauthCallback.finalizingTransfer')} />;
 }

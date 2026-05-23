@@ -1,15 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useLocale } from "@/contexts/LocaleContext";
+import type { MessageKey } from "@/lib/i18n/messages";
 import {
+  Bell,
   Check,
   Clock3,
   Loader2,
   Search,
   Swords,
+  UserCheck,
   UserPlus,
   Users,
   X,
@@ -18,7 +22,9 @@ import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api/api";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
-import { useLocale } from "@/contexts/LocaleContext";
+import { getSocket } from "@/lib/realtime/socket-client";
+import type { ErrorPayload, LobbyChallengeCreatedPayload } from "@/lib/realtime/socket.types";
+import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { queryKeys } from "@/lib/queries/queryKeys";
 import {
   useFriendRequests,
@@ -36,15 +42,17 @@ import {
 
 type Tab = "friends" | "find";
 
-function getRankedDisplay(player: SocialPlayer) {
+type TranslateFn = (key: MessageKey, params?: Record<string, string | number>) => string;
+
+function getRankedDisplay(player: SocialPlayer, t: TranslateFn) {
   const level = Number.isFinite(player.level) ? player.level : 1;
   const ranked = player.ranked;
 
   if (!ranked) {
     return {
       level,
-      tierLabel: "Unranked",
-      rpLabel: "0 RP",
+      tierLabel: t("notifications.tierUnranked"),
+      rpLabel: t("notifications.rpLabel", { rp: 0 }),
       highlightClass: "text-brand-slate",
     };
   }
@@ -52,16 +60,28 @@ function getRankedDisplay(player: SocialPlayer) {
   if (ranked.placementStatus !== "placed") {
     return {
       level,
-      tierLabel: `Placement ${ranked.placementPlayed}/${ranked.placementRequired}`,
-      rpLabel: "0 RP",
+      tierLabel: t("notifications.tierPlacement", { played: ranked.placementPlayed, required: ranked.placementRequired }),
+      rpLabel: t("notifications.rpLabel", { rp: 0 }),
       highlightClass: "text-brand-green-light",
     };
   }
 
+  // Translate well-known tier names via the `tiers` namespace; falls back to
+  // the raw API-supplied tier name if not yet in the dictionary.
+  const tierKey = `tiers.${ranked.tier}` as MessageKey;
+  const tierLabel = (() => {
+    try {
+      const translated = t(tierKey);
+      return translated === tierKey ? ranked.tier : translated;
+    } catch {
+      return ranked.tier;
+    }
+  })();
+
   return {
     level,
-    tierLabel: ranked.tier,
-    rpLabel: `${ranked.rp} RP`,
+    tierLabel,
+    rpLabel: t("notifications.rpLabel", { rp: ranked.rp }),
     highlightClass: "text-brand-purple",
   };
 }
@@ -90,7 +110,9 @@ const CARD_BASE =
   "flex items-center gap-3 rounded-2xl border-2 bg-transparent px-3 py-3";
 
 const PILL_BASE =
-  "flex items-center justify-center gap-1.5 rounded-full px-3.5 h-9 font-poppins text-[11px] font-semibold uppercase text-white transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40";
+  "flex shrink-0 items-center justify-center gap-1.5 rounded-full h-9 w-9 px-0 sm:w-auto sm:px-3.5 font-poppins text-[11px] font-semibold uppercase text-white transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40";
+
+const PILL_LABEL = "hidden sm:inline";
 
 function CardShell({
   variant = "default",
@@ -135,7 +157,7 @@ function CardAvatar({ player }: { player: SocialPlayer }) {
 
 function CardIdentity({ player }: { player: SocialPlayer }) {
   const { t } = useLocale();
-  const rankedDisplay = getRankedDisplay(player);
+  const rankedDisplay = getRankedDisplay(player, t);
   const isPendingDeletion = player.pendingDeletion === true;
 
   return (
@@ -169,6 +191,7 @@ function PlayerCard({
   onChallenge,
   onRemove,
   isPending,
+  isChallenging,
   isRemoving,
 }: {
   player: SocialPlayer;
@@ -178,8 +201,10 @@ function PlayerCard({
   onChallenge?: (id: string) => void;
   onRemove?: (id: string) => void;
   isPending?: boolean;
+  isChallenging?: boolean;
   isRemoving?: boolean;
 }) {
+  const { t } = useLocale();
   const isPendingDeletion = player.pendingDeletion === true;
   const variant = isPendingDeletion ? "alert" : "default";
 
@@ -193,11 +218,11 @@ function PlayerCard({
           <button
             type="button"
             onClick={() => onChallenge(player.id)}
-            disabled={isPendingDeletion}
+            disabled={isPendingDeletion || isChallenging}
             className={`${PILL_BASE} bg-brand-cyan`}
           >
-            <Swords className="size-3.5" />
-            Challenge
+            {isChallenging ? <Loader2 className="size-3.5 animate-spin" /> : <Swords className="size-3.5" />}
+            <span className={PILL_LABEL}>{t("socialScreen.challenge")}</span>
           </button>
         )}
 
@@ -206,8 +231,8 @@ function PlayerCard({
             type="button"
             onClick={() => onRemove(player.id)}
             disabled={isRemoving}
-            className={`${PILL_BASE} bg-brand-red px-0! w-9!`}
-            title="Remove friend"
+            className={`${PILL_BASE} bg-brand-red sm:w-9! sm:px-0!`}
+            title={t("socialScreen.removeFriend")}
           >
             {isRemoving ? <Loader2 className="size-4 animate-spin" /> : <X className="size-4" />}
           </button>
@@ -221,14 +246,14 @@ function PlayerCard({
             className={`${PILL_BASE} bg-brand-green`}
           >
             {isPending ? <Loader2 className="size-3.5 animate-spin" /> : <UserPlus className="size-3.5" />}
-            Add
+            <span className={PILL_LABEL}>{t("socialScreen.add")}</span>
           </button>
         )}
 
         {player.friendStatus === "pending_sent" && (
           <span className={`${PILL_BASE} bg-brand-gold text-black!`}>
             <Clock3 className="size-3.5" />
-            Sent
+            <span className={PILL_LABEL}>{t("socialScreen.sent")}</span>
           </span>
         )}
 
@@ -238,12 +263,16 @@ function PlayerCard({
             onClick={onRespond}
             className={`${PILL_BASE} bg-brand-orange`}
           >
-            Respond
+            <Bell className="size-3.5" />
+            <span className={PILL_LABEL}>{t("socialScreen.respond")}</span>
           </button>
         )}
 
         {player.friendStatus === "friends" && !onChallenge && (
-          <span className={`${PILL_BASE} bg-brand-slate`}>Friends</span>
+          <span className={`${PILL_BASE} bg-brand-slate`}>
+            <UserCheck className="size-3.5" />
+            <span className={PILL_LABEL}>{t("socialScreen.friends")}</span>
+          </span>
         )}
       </div>
     </CardShell>
@@ -265,6 +294,7 @@ function RequestCard({
   onDecline?: (requestId: string) => void;
   isPending?: boolean;
 }) {
+  const { t } = useLocale();
   const isIncoming = type === "incoming";
   const isPendingDeletion = item.user.pendingDeletion === true;
   const variant = isPendingDeletion ? "alert" : "default";
@@ -283,7 +313,7 @@ function RequestCard({
             className={`${PILL_BASE} bg-brand-green`}
           >
             {isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}
-            Accept
+            <span className={PILL_LABEL}>{t("socialScreen.accept")}</span>
           </button>
           <button
             type="button"
@@ -291,13 +321,14 @@ function RequestCard({
             disabled={isPending}
             className={`${PILL_BASE} bg-brand-red`}
           >
-            Decline
+            <X className="size-3.5" />
+            <span className={PILL_LABEL}>{t("socialScreen.decline")}</span>
           </button>
         </div>
       ) : (
         <span className={`${PILL_BASE} bg-brand-gold !text-black`}>
           <Clock3 className="size-3.5" />
-          Pending
+          <span className={PILL_LABEL}>{t("socialScreen.pending")}</span>
         </span>
       )}
     </CardShell>
@@ -313,6 +344,7 @@ function SectionHeader({ title }: { title: string }) {
 }
 
 export function SocialScreen() {
+  const { t } = useLocale();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -320,6 +352,10 @@ export function SocialScreen() {
   const [query, setQuery] = useState("");
   const [pendingTargetId, setPendingTargetId] = useState<string | null>(null);
   const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null);
+  const [pendingChallengeId, setPendingChallengeId] = useState<string | null>(null);
+  const suppressLobbyBanner = useRealtimeMatchStore((state) => state.suppressLobbyBanner);
+  const clearLobbyBannerSuppression = useRealtimeMatchStore((state) => state.clearLobbyBannerSuppression);
+  const beginLobbyHandoff = useRealtimeMatchStore((state) => state.beginLobbyHandoff);
   const [pendingRequestAction, setPendingRequestAction] = useState<{
     requestId: string;
     action: "accept" | "decline";
@@ -379,6 +415,32 @@ export function SocialScreen() {
     },
   });
 
+  useEffect(() => {
+    const socket = getSocket();
+    const handleChallengeCreated = (payload: LobbyChallengeCreatedPayload) => {
+      if (pendingChallengeId !== payload.toUserId) return;
+      beginLobbyHandoff(payload.inviteCode);
+      suppressLobbyBanner(8000, "challenge");
+      setPendingChallengeId(null);
+      router.push(`/friend/room/${payload.inviteCode}`);
+    };
+    const handleChallengeError = (payload: ErrorPayload) => {
+      if (!payload.code.startsWith("LOBBY_CHALLENGE") && payload.code !== "TRANSITION_IN_PROGRESS") {
+        return;
+      }
+      setPendingChallengeId(null);
+      clearLobbyBannerSuppression();
+      toast.error(payload.message || t("socialScreen.challengeFailed"));
+    };
+
+    socket.on("lobby:challenge_created", handleChallengeCreated);
+    socket.on("error", handleChallengeError);
+    return () => {
+      socket.off("lobby:challenge_created", handleChallengeCreated);
+      socket.off("error", handleChallengeError);
+    };
+  }, [beginLobbyHandoff, clearLobbyBannerSuppression, pendingChallengeId, router, suppressLobbyBanner, t]);
+
   const handleRemoveFriend = async (friendUserId: string) => {
     if (pendingRemoveId) return;
     setPendingRemoveId(friendUserId);
@@ -391,6 +453,14 @@ export function SocialScreen() {
     } finally {
       setPendingRemoveId(null);
     }
+  };
+
+  const handleChallenge = (friendUserId: string) => {
+    if (pendingChallengeId) return;
+    setPendingChallengeId(friendUserId);
+    suppressLobbyBanner(8000, "challenge");
+    getSocket().emit("lobby:challenge", { toUserId: friendUserId });
+    toast.info(t("socialScreen.challengeSending"));
   };
 
   const handleSendRequest = async (targetUserId: string) => {
@@ -443,15 +513,15 @@ export function SocialScreen() {
     outgoingRequests.length === 0;
 
   const TABS: Array<{ id: Tab; label: string; icon: typeof Users }> = [
-    { id: "friends", label: "Friends", icon: Users },
-    { id: "find", label: "Find Friends", icon: Search },
+    { id: "friends", label: t("socialScreen.friends"), icon: Users },
+    { id: "find", label: t("socialScreen.findFriends"), icon: Search },
   ];
 
   return (
     <div className="min-h-screen font-fun">
       <div className="mx-auto w-full max-w-2xl px-3 py-4 md:max-w-3xl md:px-4 md:py-6">
         <h1 className="font-poppins text-xl md:text-2xl font-semibold uppercase text-white">
-          Social
+          {t("socialScreen.title")}
         </h1>
 
         {/* Tab pill — Figma styling at original compact size */}
@@ -508,24 +578,24 @@ export function SocialScreen() {
                       <Users className="size-7 text-white" />
                     </div>
                     <h3 className="mb-1 font-poppins text-base font-semibold uppercase text-white">
-                      No friends yet
+                      {t("socialScreen.noFriendsYet")}
                     </h3>
                     <p className="mb-4 font-poppins text-xs font-semibold uppercase text-white/50">
-                      Search for players and send them a friend request
+                      {t("socialScreen.searchPrompt")}
                     </p>
                     <button
                       type="button"
                       onClick={() => setActiveTab("find")}
                       className="rounded-xl bg-brand-green px-5 py-2.5 font-poppins text-sm font-semibold uppercase text-white hover:brightness-110 transition-all"
                     >
-                      Find Friends
+                      {t("socialScreen.findFriends")}
                     </button>
                   </div>
                 ) : (
                   <>
                     {incomingRequests.length > 0 && (
                       <section className="space-y-3">
-                        <SectionHeader title={`Incoming Requests (${incomingRequests.length})`} />
+                        <SectionHeader title={t("socialScreen.incomingRequests", { count: incomingRequests.length })} />
                         {incomingRequests.map((item, index) => (
                           <RequestCard
                             key={item.requestId}
@@ -542,7 +612,7 @@ export function SocialScreen() {
 
                     {outgoingRequests.length > 0 && (
                       <section className="space-y-3">
-                        <SectionHeader title={`Sent Requests (${outgoingRequests.length})`} />
+                        <SectionHeader title={t("socialScreen.sentRequests", { count: outgoingRequests.length })} />
                         {outgoingRequests.map((item, index) => (
                           <RequestCard
                             key={item.requestId}
@@ -556,14 +626,15 @@ export function SocialScreen() {
 
                     {friends.length > 0 && (
                       <section className="space-y-3">
-                        <SectionHeader title={`Friends (${friends.length})`} />
+                        <SectionHeader title={t("socialScreen.friendsList", { count: friends.length })} />
                         {friends.map((friend, index) => (
                           <PlayerCard
                             key={friend.id}
                             player={friend}
                             index={index}
-                            onChallenge={(id) => router.push(`/profile/${id}`)}
+                            onChallenge={handleChallenge}
                             onRemove={handleRemoveFriend}
+                            isChallenging={pendingChallengeId === friend.id}
                             isRemoving={pendingRemoveId === friend.id}
                           />
                         ))}
@@ -584,10 +655,10 @@ export function SocialScreen() {
                 {!debouncedQuery && !isSearching && (
                   <div className="pt-8 md:pt-12 pb-5 text-center">
                     <h2 className="font-poppins text-3xl md:text-4xl font-semibold uppercase text-white">
-                      Find your rivals
+                      {t("socialScreen.findYourRivals")}
                     </h2>
                     <p className="mt-2 font-poppins text-xs md:text-sm font-semibold uppercase text-white/50">
-                      Search for a player to add them as a friend
+                      {t("socialScreen.searchPlayerToAdd")}
                     </p>
                   </div>
                 )}
@@ -597,7 +668,7 @@ export function SocialScreen() {
                     type="text"
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Search by username"
+                    placeholder={t("socialScreen.searchByUsername")}
                     className="h-11 w-full rounded-[10px] bg-brand-blue px-10 text-center font-poppins text-sm font-semibold uppercase text-white outline-none placeholder:text-white/50 focus:ring-2 focus:ring-white"
                   />
                   {query && (
@@ -619,8 +690,8 @@ export function SocialScreen() {
                   <p className="pt-8 text-center font-poppins text-sm font-semibold uppercase text-brand-red-light">{searchError}</p>
                 ) : debouncedQuery && searchResults.length === 0 ? (
                   <div className="pt-8 text-center">
-                    <h2 className="font-poppins text-xl md:text-2xl font-semibold uppercase text-white">No players found</h2>
-                    <p className="mt-2 font-poppins text-[11px] md:text-xs font-semibold uppercase text-white/50">Try a different username</p>
+                    <h2 className="font-poppins text-xl md:text-2xl font-semibold uppercase text-white">{t("socialScreen.noPlayersFound")}</h2>
+                    <p className="mt-2 font-poppins text-[11px] md:text-xs font-semibold uppercase text-white/50">{t("socialScreen.tryDifferentUsername")}</p>
                   </div>
                 ) : !debouncedQuery ? null : (
                   searchResults.map((player, index) => (

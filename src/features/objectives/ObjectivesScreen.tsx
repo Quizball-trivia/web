@@ -6,10 +6,12 @@ import { ArrowLeft } from "lucide-react";
 import { ObjectiveCard } from "./components/ObjectiveCard";
 import { useObjectives } from "@/lib/queries/objectives.queries";
 import type { ObjectiveCategory } from "./types";
+import { useLocale } from "@/contexts/LocaleContext";
+import type { MessageKey } from "@/lib/i18n/messages";
 
-const TABS: Array<{ value: ObjectiveCategory; label: string }> = [
-  { value: "daily", label: "Daily" },
-  { value: "weekly", label: "Weekly" },
+const TABS: Array<{ value: ObjectiveCategory; labelKey: MessageKey }> = [
+  { value: "daily", labelKey: "objectives.tabDaily" },
+  { value: "weekly", labelKey: "objectives.tabWeekly" },
 ];
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
@@ -32,6 +34,7 @@ interface ObjectivesScreenProps {
 }
 
 export function ObjectivesScreen({ onBack }: ObjectivesScreenProps) {
+  const { t } = useLocale();
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState<ObjectiveCategory>("daily");
   const { data, isLoading, isError } = useObjectives();
@@ -65,7 +68,7 @@ export function ObjectivesScreen({ onBack }: ObjectivesScreenProps) {
     <div className="min-h-full text-white">
       <div className="mx-auto max-w-5xl px-4 py-4 md:px-6 md:py-6">
         <button
-          aria-label="Back"
+          aria-label={t("objectives.back")}
           onClick={handleBack}
           className="-ml-1 flex size-8 items-center justify-center rounded-[8px] text-white transition-colors hover:bg-white/10"
         >
@@ -78,13 +81,13 @@ export function ObjectivesScreen({ onBack }: ObjectivesScreenProps) {
               className="uppercase text-white"
               style={{ ...poppins, fontSize: "clamp(22px, 4vw, 36px)", lineHeight: 1 }}
             >
-              Objectives
+              {t("objectives.title")}
             </h1>
             <p
               className="mt-1 uppercase text-white/50"
               style={{ ...poppins, fontSize: "clamp(10px, 1.1vw, 12px)", fontWeight: 500 }}
             >
-              Complete match goals to earn coins and xp automatically.
+              {t("objectives.subtitle")}
             </p>
           </div>
 
@@ -113,7 +116,7 @@ export function ObjectivesScreen({ onBack }: ObjectivesScreenProps) {
                       }
                       style={{ ...poppins, fontSize: "clamp(13px, 1.6vw, 16px)" }}
                     >
-                      {tab.label}
+                      {t(tab.labelKey)}
                     </button>
                   );
                 })}

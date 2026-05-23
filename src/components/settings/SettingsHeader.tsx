@@ -4,6 +4,7 @@ import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
 import { Flame, Trophy } from "lucide-react";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
+import { useLocale } from "@/contexts/LocaleContext";
 
 interface SettingsHeaderProps {
   /** Year/date when the user joined (e.g., 2024 or "Jan 2024") */
@@ -19,6 +20,7 @@ export function SettingsHeader({
   division,
   streak,
 }: SettingsHeaderProps) {
+  const { t } = useLocale();
   const { player } = usePlayer();
   const user = useAuthStore((state) => state.user);
 
@@ -35,9 +37,9 @@ export function SettingsHeader({
   const progress = (currentXp / nextLevelXp) * 100;
 
   // TODO: Fetch memberSince from user profile API (e.g., user.created_at)
-  const displayMemberSince = memberSince ?? "Member";
+  const displayMemberSince = memberSince ?? t("settingsHeader.memberFallback");
   // TODO: Fetch division from player stats or ranking API
-  const displayDivision = division ?? "Unranked";
+  const displayDivision = division ?? t("settingsHeader.unrankedFallback");
   // TODO: Fetch streak from player stats API (e.g., player.currentStreak)
   const displayStreak = streak ?? 0;
 
@@ -54,7 +56,7 @@ export function SettingsHeader({
            className="size-24 border-4 border-background shadow-xl"
          />
          <Badge className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-background border border-primary text-primary shadow-sm whitespace-nowrap">
-            Lvl {level}
+            {t("settingsHeader.level", { level })}
          </Badge>
       </div>
 
@@ -64,7 +66,7 @@ export function SettingsHeader({
             <h1 className="text-2xl font-bold tracking-tight">{displayName}</h1>
             <p className="text-muted-foreground text-sm">
               {typeof displayMemberSince === 'number'
-                ? `Member since ${displayMemberSince}`
+                ? t("settingsHeader.memberSince", { year: displayMemberSince })
                 : displayMemberSince}
             </p>
          </div>
@@ -77,14 +79,14 @@ export function SettingsHeader({
             </div>
             <div className="flex items-center gap-1.5 text-sm font-medium bg-orange-500/10 text-orange-500 px-3 py-1 rounded-full border border-orange-500/20">
                <Flame className="size-3.5" />
-               <span>{displayStreak} Day Streak</span>
+               <span>{t("settingsHeader.dayStreak", { count: displayStreak })}</span>
             </div>
          </div>
 
          {/* XP Progress - Simplified */}
          <div className="max-w-xs mx-auto md:mx-0 pt-2">
             <div className="flex justify-between text-[10px] text-muted-foreground mb-1 uppercase font-bold tracking-wider">
-               <span>XP Progress</span>
+               <span>{t("settingsHeader.xpProgress")}</span>
                <span>{currentXp} / {nextLevelXp}</span>
             </div>
             <Progress value={progress} className="h-2" />

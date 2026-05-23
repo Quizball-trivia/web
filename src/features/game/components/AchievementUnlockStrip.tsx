@@ -5,6 +5,11 @@ import { motion } from 'motion/react';
 
 import type { AchievementUnlockPayload } from '@/lib/realtime/socket.types';
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/contexts/LocaleContext';
+
+function resolveI18n(field: Record<string, string>, locale: string): string {
+  return field[locale] ?? field.en ?? Object.values(field)[0] ?? '';
+}
 
 const iconMap: Record<string, LucideIcon> = {
   Trophy,
@@ -33,6 +38,7 @@ export function AchievementUnlockStrip({
   achievements,
   className,
 }: AchievementUnlockStripProps) {
+  const { locale, t } = useLocale();
   if (achievements.length === 0) return null;
 
   return (
@@ -44,17 +50,17 @@ export function AchievementUnlockStrip({
             className="text-lg uppercase text-white sm:text-xl"
             style={poppins}
           >
-            New Badge{achievements.length > 1 ? 's' : ''}
+            {achievements.length > 1 ? t("achievements.newBadges") : t("achievements.newBadge")}
           </h3>
           <span className="text-[10px] font-fun font-black uppercase tracking-[0.22em] text-white/40">
-            unlocked
+            {t("achievements.unlocked")}
           </span>
         </div>
         <span
           className="text-[10px] font-fun font-black uppercase tracking-[0.22em]"
           style={{ color: YELLOW }}
         >
-          {achievements.length} new
+          {t("achievements.countNew", { count: achievements.length })}
         </span>
       </div>
 
@@ -83,10 +89,10 @@ export function AchievementUnlockStrip({
               {/* Text */}
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-fun font-black uppercase tracking-wide text-white">
-                  {achievement.title}
+                  {resolveI18n(achievement.title, locale)}
                 </div>
                 <div className="mt-0.5 truncate text-[11px] font-fun font-black uppercase tracking-wide text-white/50">
-                  {achievement.description}
+                  {resolveI18n(achievement.description, locale)}
                 </div>
               </div>
             </motion.div>

@@ -13,6 +13,7 @@ import { createStoreCheckout, purchaseStoreWithCoins } from "@/lib/repositories/
 import { queryKeys } from "@/lib/queries/queryKeys";
 import { useStoreProducts, useStoreWallet, useStoreInventory } from "@/lib/queries/store.queries";
 import { trackItemPurchased } from "@/lib/analytics/game-events";
+import { useLocale } from "@/contexts/LocaleContext";
 import {
   HAIR_PARTS,
   GLASSES_PARTS,
@@ -75,7 +76,7 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }
       </h3>
       {subtitle && (
         <p
-          className="mt-1.5 text-[10px] sm:text-[11px] uppercase tracking-[0.04em] text-white/50"
+          className="mt-1.5 text-[13px] sm:text-[15px] uppercase tracking-[0.04em] text-white/70"
           style={POPPINS_HEADER}
         >
           {subtitle}
@@ -122,6 +123,7 @@ function TicketStack({ count }: { count: number }) {
 }
 
 function TicketCard({ pack, onBuy }: { pack: TicketPackItem; onBuy: (b: TicketPackItem) => void }) {
+  const { t } = useLocale();
   const ACCENT_PURPLE = "#BA02E8";
   const CARD_BG = "#0B1619";
 
@@ -165,7 +167,7 @@ function TicketCard({ pack, onBuy }: { pack: TicketPackItem; onBuy: (b: TicketPa
           className="flex h-9 w-full items-center justify-center gap-1 rounded-[16px] text-[12px] uppercase text-white transition-transform active:translate-y-[2px] disabled:opacity-50 disabled:active:translate-y-0 sm:h-[44px] sm:gap-2 sm:rounded-[20px] sm:text-[18px]"
           style={{ ...POPPINS_HEADER, backgroundColor: ACCENT_PURPLE }}
         >
-          <span className="tabular-nums">{pack.disabled ? "Full" : pack.price}</span>
+          <span className="tabular-nums">{pack.disabled ? t("store.full") : pack.price}</span>
           {!pack.disabled && <CoinIcon size={22} />}
         </button>
       </div>
@@ -173,7 +175,37 @@ function TicketCard({ pack, onBuy }: { pack: TicketPackItem; onBuy: (b: TicketPa
   );
 }
 
+// Map of static English part names → translation keys. Football-related
+// proper nouns (Ramos, Real Madrid, Liverpool, etc.) intentionally stay
+// untranslated since they're brand names.
+const PART_NAME_KEY_MAP: Record<string, string> = {
+  "Wayfarer": "store.partWayfarer",
+  "Round Shades": "store.partRoundShades",
+  "Aviator": "store.partAviator",
+  "Mustache": "store.partMustache",
+  "Beard": "store.partBeard",
+  "Boy Basic": "store.partBoyBasic",
+  "Girl Basic": "store.partGirlBasic",
+  "Light": "store.partLight",
+  "Tan": "store.partTan",
+  "Brown": "store.partBrown",
+  "Dark": "store.partDark",
+  "Green": "store.partGreen",
+  "Blue": "store.partBlue",
+  "Yellow": "store.partYellow",
+  "Red": "store.partRed",
+  "Violet": "store.partViolet",
+  "Pink": "store.partPink",
+};
+
 export function StoreScreen() {
+  const { t } = useLocale();
+  const translatePartName = (name: string) => {
+    const key = PART_NAME_KEY_MAP[name];
+    if (!key) return name;
+    const translated = t(key as Parameters<typeof t>[0]);
+    return translated === key ? name : translated;
+  };
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -227,7 +259,7 @@ export function StoreScreen() {
     },
     onError: (error) => {
       if (error instanceof ApiError && error.status === 401) {
-        toast.error("Session expired. Please sign in again.");
+        toast.error(t("store.sessionExpired"));
         return;
       }
       if (error instanceof ApiError && error.status === 400) {
@@ -239,11 +271,11 @@ export function StoreScreen() {
             ? (error.data as { code: string }).code
             : null;
         if (errorCode === "TICKETS_FULL") {
-          toast.error("Tickets are already full.");
+          toast.error(t("store.ticketsAlreadyFull"));
           return;
         }
       }
-      toast.error("Unable to start checkout.");
+      toast.error(t("store.unableToStartCheckout"));
     },
   });
 
@@ -253,13 +285,13 @@ export function StoreScreen() {
       const product = productsBySlug.get(productSlug);
       const productName = product?.name?.en ?? product?.slug ?? productSlug;
       trackItemPurchased(productSlug, productName, product?.priceCents ?? 0);
-      toast.success("Purchase completed.");
+      toast.success(t("store.purchaseCompleted"));
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
     },
     onError: (error) => {
       if (error instanceof ApiError && error.status === 401) {
-        toast.error("Session expired. Please sign in again.");
+        toast.error(t("store.sessionExpired"));
         return;
       }
       if (error instanceof ApiError && error.status === 400) {
@@ -271,13 +303,13 @@ export function StoreScreen() {
             ? (error.data as { code: string }).code
             : null;
         if (errorCode === "TICKETS_FULL") {
-          toast.error("Tickets are already full.");
+          toast.error(t("store.ticketsAlreadyFull"));
           return;
         }
-        toast.error("Not enough coins.");
+        toast.error(t("store.notEnoughCoins"));
         return;
       }
-      toast.error("Purchase failed.");
+      toast.error(t("store.purchaseFailed"));
     },
   });
 
@@ -285,12 +317,12 @@ export function StoreScreen() {
     const purchaseStatus = searchParams.get("purchase");
     if (!purchaseStatus) return;
     if (purchaseStatus === "success") {
-      toast.success("Purchase completed.");
+      toast.success(t("store.purchaseCompleted"));
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
     }
     if (purchaseStatus === "cancelled") {
-      toast.message("Purchase cancelled.");
+      toast.message(t("store.purchaseCancelled"));
     }
     const params = new URLSearchParams(searchParams.toString());
     params.delete("purchase");
@@ -346,8 +378,8 @@ export function StoreScreen() {
             : 1;
         return {
           id: product.slug,
-          title: `${ticketCount} ${ticketCount === 1 ? "Ticket" : "Tickets"}`,
-          description: product.description?.en ?? "Top up your ranked arena tickets",
+          title: `${ticketCount} ${ticketCount === 1 ? t("store.ticket") : t("store.tickets")}`,
+          description: product.description?.en ?? t("store.topUpTicketsDesc"),
           price: product.priceCents.toLocaleString(),
           productSlug: product.slug,
           iconAsset: "/assets/ticket_icon.webp",
@@ -356,7 +388,7 @@ export function StoreScreen() {
         } satisfies TicketPackItem;
       })
       .sort((a, b) => a.ticketCount - b.ticketCount);
-  }, [productsData, wallet?.tickets]);
+  }, [productsData, wallet?.tickets, t]);
 
   const purchasePending = checkoutMutation.isPending || coinPurchaseMutation.isPending;
 
@@ -369,7 +401,7 @@ export function StoreScreen() {
         setAuthenticated({ ...authUser, avatar_customization: updated.avatar_customization ?? next });
       }
     } catch {
-      toast.error("Could not save avatar.");
+      toast.error(t("store.couldNotSaveAvatar"));
     }
   };
 
@@ -381,8 +413,8 @@ export function StoreScreen() {
     };
     const isOwned = ownedPartIds.has(part.id);
     setBuyModal({
-      name: part.name,
-      price: isOwned ? "" : part.priceCoins ? `${part.priceCoins.toLocaleString()} coins` : "—",
+      name: translatePartName(part.name),
+      price: isOwned ? "" : part.priceCoins ? t("store.coinsPrice", { amount: part.priceCoins.toLocaleString() }) : "—",
       productSlug: part.productSlug,
       mode: isOwned ? "equip" : part.productSlug ? "coins" : "none",
       avatarPart: part,
@@ -395,12 +427,12 @@ export function StoreScreen() {
     if (buyModal.mode === "equip" && buyModal.avatarPart) {
       const part = buyModal.avatarPart;
       void persistCustomization({ ...currentCustomization, [part.slot]: part.id });
-      toast.success(`${part.name} equipped.`);
+      toast.success(t("store.equipped", { name: translatePartName(part.name) }));
       setBuyModal(null);
       return;
     }
     if (!buyModal.productSlug || buyModal.mode === "none") {
-      toast.message("This item is not purchasable yet.");
+      toast.message(t("store.notPurchasableYet"));
       setBuyModal(null);
       return;
     }
@@ -435,12 +467,12 @@ export function StoreScreen() {
             <FeaturedBundleCard
               onBuy={() => {
                 if (!featuredBundleSlug) {
-                  toast.error("No coin bundle available right now.");
+                  toast.error(t("store.noCoinBundle"));
                   return;
                 }
                 const product = productsBySlug.get(featuredBundleSlug);
                 setBuyModal({
-                  name: "Unlock Bundle",
+                  name: t("store.unlockBundle"),
                   price: product ? formatUsd(product.priceCents) : "$0.00",
                   productSlug: featuredBundleSlug,
                   mode: "stripe",
@@ -454,7 +486,7 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.1 }}
           >
-            <SectionHeader title="Coins" subtitle="Power up your wallet" />
+            <SectionHeader title={t("store.coinsTitle")} subtitle={t("store.coinsSubtitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {coinBundles.map((bundle, i) => (
                 <motion.div
@@ -474,7 +506,7 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.2 }}
           >
-            <SectionHeader title="Tickets" subtitle="Top up your ranked arena tickets" />
+            <SectionHeader title={t("store.ticketsTitle")} subtitle={t("store.ticketsSubtitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {ticketPacks.map((pack, i) => (
                 <motion.div
@@ -487,7 +519,7 @@ export function StoreScreen() {
                     pack={pack}
                     onBuy={(b) => {
                       if (b.disabled) {
-                        toast.message("Not enough ticket space.");
+                        toast.message(t("store.notEnoughTicketSpace"));
                         return;
                       }
                       setBuyModal({
@@ -508,7 +540,7 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.3 }}
           >
-            <SectionHeader title="Hair" subtitle="Style your character" />
+            <SectionHeader title={t("store.hairTitle")} subtitle={t("store.hairSubtitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {HAIR_PARTS.filter((p) => !p.free).map((part, i) => (
                 <motion.div
@@ -518,7 +550,7 @@ export function StoreScreen() {
                   transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.3 + i * 0.04 }}
                 >
                   <ItemCard
-                    name={part.name}
+                    name={translatePartName(part.name)}
                     asset={part.asset}
                     price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
                     mannequinPart={part}
@@ -535,7 +567,7 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.35 }}
           >
-            <SectionHeader title="Glasses" subtitle="Look the part" />
+            <SectionHeader title={t("store.glassesTitle")} subtitle={t("store.glassesSubtitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {GLASSES_PARTS.map((part, i) => (
                 <motion.div
@@ -545,7 +577,7 @@ export function StoreScreen() {
                   transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.35 + i * 0.04 }}
                 >
                   <ItemCard
-                    name={part.name}
+                    name={translatePartName(part.name)}
                     asset={part.asset}
                     price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
                     mannequinPart={part}
@@ -562,7 +594,7 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.4 }}
           >
-            <SectionHeader title="Facial Hair" subtitle="Add some character" />
+            <SectionHeader title={t("store.facialHairTitle")} subtitle={t("store.facialHairSubtitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {FACIAL_HAIR_PARTS.map((part, i) => (
                 <motion.div
@@ -572,7 +604,7 @@ export function StoreScreen() {
                   transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.4 + i * 0.04 }}
                 >
                   <ItemCard
-                    name={part.name}
+                    name={translatePartName(part.name)}
                     asset={part.asset}
                     price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
                     mannequinPart={part}
@@ -589,7 +621,7 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.45 }}
           >
-            <SectionHeader title="Jerseys" subtitle="Rep your colors" />
+            <SectionHeader title={t("store.jerseysTitle")} subtitle={t("store.jerseysSubtitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {JERSEY_DESIGN_PARTS.map((part, i) => (
                 <motion.div
@@ -599,7 +631,7 @@ export function StoreScreen() {
                   transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.45 + i * 0.04 }}
                 >
                   <ItemCard
-                    name={part.name}
+                    name={translatePartName(part.name)}
                     asset={part.asset}
                     price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
                     imageSize="lg"

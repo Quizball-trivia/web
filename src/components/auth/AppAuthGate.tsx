@@ -5,12 +5,14 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth.store";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { isOnboardingComplete } from "@/lib/auth/onboarding";
+import { useLocale } from "@/contexts/LocaleContext";
 
 type AppAuthGateProps = {
   children: React.ReactNode;
 };
 
 export default function AppAuthGate({ children }: AppAuthGateProps) {
+  const { t } = useLocale();
   const pathname = usePathname();
   const router = useRouter();
   const status = useAuthStore((state) => state.status);
@@ -55,11 +57,11 @@ export default function AppAuthGate({ children }: AppAuthGateProps) {
   }
 
   if (status === "loading") {
-    return <LoadingScreen text="Warming Up..." />;
+    return <LoadingScreen text={t("appAuthGate.warmingUp")} />;
   }
 
   if (status !== "authenticated") {
-    return <LoadingScreen text="Redirecting..." />;
+    return <LoadingScreen text={t("appAuthGate.redirecting")} />;
   }
 
   return <>{children}</>;

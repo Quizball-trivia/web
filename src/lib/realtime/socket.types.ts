@@ -432,10 +432,15 @@ export interface MatchStandingPayload {
   avgTimeMs: number | null;
 }
 
+/**
+ * Sent to the client when an achievement unlocks during a match.
+ * `title` and `description` are I18nField objects (`{ en, ka, ... }`)
+ * — resolve via the current locale before rendering.
+ */
 export interface AchievementUnlockPayload {
   id: string;
-  title: string;
-  description: string;
+  title: Record<string, string>;
+  description: Record<string, string>;
   icon: string;
   unlocked: boolean;
   progress: number;
@@ -666,6 +671,36 @@ export interface ErrorPayload {
   meta?: Record<string, unknown>;
 }
 
+export interface LobbyChallengeUser {
+  id: string;
+  username: string;
+  avatarUrl: string | null;
+  avatarCustomization?: AvatarCustomization | null;
+}
+
+export interface LobbyChallengeInvitePayload {
+  invitationId: string;
+  lobbyId: string;
+  inviteCode: string;
+  fromUser: LobbyChallengeUser;
+  expiresAt: string;
+}
+
+export interface LobbyChallengeCreatedPayload {
+  invitationId: string;
+  lobbyId: string;
+  inviteCode: string;
+  toUserId: string;
+}
+
+export interface LobbyChallengeStatusPayload {
+  invitationId: string;
+  status: "accepted" | "declined" | "canceled" | "expired";
+  toUserId: string;
+  lobbyId?: string;
+  inviteCode?: string;
+}
+
 export interface MatchCluesAnswerGuessPayload {
   kind: 'guess';
   matchId: string;
@@ -688,6 +723,9 @@ export type MatchCluesAnswerPayload =
 
 export interface ClientToServerEvents {
   'lobby:create': (data: { mode: MatchMode; isPublic?: boolean }) => void;
+  'lobby:challenge': (data: { toUserId: string }) => void;
+  'lobby:challenge_accept': (data: { invitationId: string }) => void;
+  'lobby:challenge_decline': (data: { invitationId: string }) => void;
   'lobby:join_by_code': (data: { inviteCode: string }) => void;
   'lobby:leave': () => void;
   'lobby:ready': (data: { ready: boolean }) => void;
@@ -736,6 +774,9 @@ export interface ServerToClientEvents {
   'session:blocked': (data: SessionBlockedPayload) => void;
   'auth:force_logout': (data: ForceLogoutPayload) => void;
   'lobby:state': (data: LobbyState) => void;
+  'lobby:challenge_created': (data: LobbyChallengeCreatedPayload) => void;
+  'lobby:challenge_received': (data: LobbyChallengeInvitePayload) => void;
+  'lobby:challenge_status': (data: LobbyChallengeStatusPayload) => void;
   'draft:start': (data: DraftState) => void;
   'draft:banned': (data: { actorId: string; categoryId: string }) => void;
   'draft:complete': (data: { halfOneCategoryId: string }) => void;

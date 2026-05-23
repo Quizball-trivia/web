@@ -5,9 +5,11 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Volume2, VolumeX } from 'lucide-react';
 import { QuitMatchModal } from '@/features/game/components/QuitMatchModal';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
+import { useLocale } from '@/contexts/LocaleContext';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { BarBattleFlightOverlay } from './components/BarBattleFlightOverlay';
 import { HalftimeScreen } from './components/HalftimeScreen';
+import { KickoffCountdownOverlay } from './components/KickoffCountdownOverlay';
 import { MatchHudIconButton } from './components/MatchHudPrimitives';
 import { PossessionMatchViewport } from './components/PossessionMatchViewport';
 import { PossessionQuestionArea } from './components/PossessionQuestionArea';
@@ -40,11 +42,13 @@ interface RealtimePossessionMatchScreenProps {
 }
 
 export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScreenProps) {
+  const { t } = useLocale();
   // Bar-battle flight ghosts — fires +N from MCQ prompt onto pitch when the
   // 'avatar-anchored' variant is active (ranked-sim matches). No-op in
   // classic variant. Manages its own state internally.
   const barBattleFlights = usePossessionBarBattleFlights();
   const matchPaused = useRealtimeMatchStore((state) => state.matchPaused);
+  const match = useRealtimeMatchStore((state) => state.match);
   const pauseUntil = useRealtimeMatchStore((state) => state.pauseUntil);
   const remainingReconnects = useRealtimeMatchStore((state) => state.remainingReconnects);
   const forfeitPending = useRealtimeMatchStore((state) => state.forfeitPending);
@@ -54,7 +58,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
     isReady,
     showStartCountdown,
     countdownDisplay,
-    countdownLabel,
+    countdownPhase,
     penaltyCountdownActive,
     penaltyCountdownDisplay,
     muted,
@@ -97,15 +101,24 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
         : 'Match forfeited';
 
   if (!isReady) {
+    const showPendingKickoff = showStartCountdown || Boolean(match);
+
     return (
       <div className="flex min-h-dvh w-full items-center justify-center bg-surface-page-alt">
-        {showStartCountdown ? (
-          <div className="flex flex-col items-center gap-2">
-            <div className="text-xs font-bold uppercase tracking-[0.28em] text-white/60 font-fun">{countdownLabel}</div>
-            <div className="flex size-28 items-center justify-center rounded-full border-4 border-brand-cyan/60 bg-surface-deep shadow-[0_0_40px_rgba(28,176,246,0.25)]">
-              <span className="text-5xl font-black leading-none tabular-nums text-white font-fun">{countdownDisplay}</span>
-            </div>
-          </div>
+        {showPendingKickoff ? (
+          <KickoffCountdownOverlay
+            countdownDisplay={countdownDisplay}
+            phase={countdownPhase}
+            durationMs={countdownPhase === 'kickoff' ? 10_000 : 5_000}
+            runKey={countdownPhase}
+            playerName={props.playerUsername}
+            opponentName={props.opponentUsername}
+            playerAvatarBase={props.playerAvatar}
+            opponentAvatarBase={props.opponentAvatar}
+            playerAvatarCustomization={props.playerAvatarCustomization}
+            opponentAvatarCustomization={props.opponentAvatarCustomization}
+            className="h-dvh min-h-dvh w-screen bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
+          />
         ) : (
           <LoadingScreen fullScreen={false} className="h-auto min-h-0" />
         )}
@@ -133,21 +146,21 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center"
+            className="pointer-events-none fixed inset-0 z-[90]"
           >
-            <div className="absolute inset-0 bg-surface-page-alt/45 backdrop-blur-[1.5px]" />
-            <motion.div
-              key={`countdown-${countdownDisplay}`}
-              initial={{ scale: 0.72, opacity: 0.4 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 340, damping: 22 }}
-              className="relative flex flex-col items-center gap-2"
-            >
-              <div className="text-xs font-bold uppercase tracking-[0.28em] text-white/70 font-fun">{countdownLabel}</div>
-              <div className="flex size-32 items-center justify-center rounded-full border-4 border-brand-cyan/70 bg-surface-deep shadow-[0_0_50px_rgba(28,176,246,0.3)]">
-                <span className="text-6xl font-black leading-none tabular-nums text-white font-fun">{countdownDisplay}</span>
-              </div>
-            </motion.div>
+            <KickoffCountdownOverlay
+              countdownDisplay={countdownDisplay}
+              phase={countdownPhase}
+              durationMs={countdownPhase === 'kickoff' ? 10_000 : 5_000}
+              runKey={countdownPhase}
+              playerName={props.playerUsername}
+              opponentName={props.opponentUsername}
+              playerAvatarBase={props.playerAvatar}
+              opponentAvatarBase={props.opponentAvatar}
+              playerAvatarCustomization={props.playerAvatarCustomization}
+              opponentAvatarCustomization={props.opponentAvatarCustomization}
+              className="h-dvh min-h-dvh w-screen bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
+            />
           </motion.div>
         )}
       </AnimatePresence>
@@ -176,7 +189,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
                 className="text-4xl font-black uppercase tracking-wider text-brand-red-soft font-fun"
                 style={{ textShadow: '0 0 30px rgba(255,75,75,0.5), 0 4px 0 rgba(200,40,40,0.8)' }}
               >
-                Penalty Shootout
+                {t('possession.penaltyShootout')}
               </motion.div>
               <motion.div
                 key={`pen-cd-${penaltyCountdownDisplay}`}
@@ -190,7 +203,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
                   </span>
                 </div>
               </motion.div>
-              <div className="text-sm font-bold uppercase tracking-widest text-white/60 font-fun">Get Ready</div>
+              <div className="text-sm font-bold uppercase tracking-widest text-white/60 font-fun">{t('possession.getReady')}</div>
             </motion.div>
           </motion.div>
         )}
@@ -214,7 +227,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
               className="w-full max-w-sm rounded-2xl border border-brand-red-soft/25 bg-surface-deep/95 px-5 py-4 text-center shadow-2xl"
             >
               <div className="font-fun text-[10px] font-bold uppercase tracking-[0.28em] text-brand-red-soft/70">
-                Finalizing Match
+                {t('possession.finalizingMatch')}
               </div>
               <div className="mt-2 font-fun text-base font-black text-white">
                 {forfeitPendingTitle}
@@ -245,13 +258,13 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
               className="w-full max-w-sm rounded-2xl border border-white/10 bg-surface-deep/95 px-5 py-4 text-center shadow-2xl"
             >
               <div className="font-fun text-[10px] font-bold uppercase tracking-[0.28em] text-white/50">
-                Match Paused
+                {t('possession.matchPaused')}
               </div>
               <div className="mt-2 font-fun text-base font-black text-white">
-                Opponent disconnected
+                {t('possession.opponentDisconnected')}
               </div>
               <div className="mt-1 font-fun text-sm font-bold text-white/60">
-                Waiting for them to reconnect
+                {t('possession.waitingForReconnect')}
               </div>
               <div className="mt-3 inline-flex items-center justify-center rounded-full bg-brand-blue px-5 py-2 font-fun text-2xl font-black tabular-nums text-white">
                 {pauseSeconds}
@@ -284,10 +297,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
         open={quitModalOpen}
         onOpenChange={setQuitModalOpen}
         playerClubId={props.playerFavoriteClub}
-        description="Leave temporarily and rejoin before the timer ends, or forfeit now."
-        secondaryConfirmLabel="Leave Temporarily"
         onSecondaryConfirm={handleTemporaryQuit}
-        confirmLabel="Forfeit Match"
         onConfirm={handleForfeit}
       />
 

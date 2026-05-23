@@ -3,6 +3,7 @@ import { Search, RotateCcw, Filter } from "lucide-react";
 import { usePublicLobbies } from "@/lib/queries/lobbies.queries";
 import { LobbyCard } from "./LobbyCard";
 import { Loader2 } from "lucide-react";
+import { useLocale } from "@/contexts/LocaleContext";
 
 interface LobbyBrowsePanelProps {
   onJoin: (inviteCode: string) => void;
@@ -11,6 +12,7 @@ interface LobbyBrowsePanelProps {
 }
 
 export function LobbyBrowsePanel({ onJoin, isJoiningCode, onActionTriggered }: LobbyBrowsePanelProps) {
+  const { t } = useLocale();
   const { data: lobbies, isLoading, refetch } = usePublicLobbies();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<'all' | 'open'>('open');
@@ -49,7 +51,7 @@ export function LobbyBrowsePanel({ onJoin, isJoiningCode, onActionTriggered }: L
              <Search className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 size-4 sm:size-5 text-white/55" />
              <input
                 type="text"
-                placeholder="SEARCH..."
+                placeholder={t("friend.searchPlaceholder")}
                 className="h-12 sm:h-14 w-full rounded-[20px] border-none bg-brand-blue pl-9 sm:pl-14 pr-3 sm:pr-5 text-sm sm:text-base uppercase text-white outline-none placeholder:text-white/45 placeholder:uppercase placeholder:tracking-[0.08em] focus:outline-none disabled:opacity-50"
                 style={{
                   fontFamily: "'Poppins', sans-serif",
@@ -78,7 +80,7 @@ export function LobbyBrowsePanel({ onJoin, isJoiningCode, onActionTriggered }: L
                          }
                          style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: '0.06em' }}
                       >
-                         {value === 'open' ? 'Open' : 'All'}
+                         {value === 'open' ? t("friend.filterOpen") : t("friend.filterAll")}
                       </button>
                    );
                 })}
@@ -87,8 +89,8 @@ export function LobbyBrowsePanel({ onJoin, isJoiningCode, onActionTriggered }: L
              <button
                 type="button"
                 onClick={() => refetch()}
-                title="Refresh"
-                aria-label="Refresh"
+                title={t("friend.refresh")}
+                aria-label={t("friend.refresh")}
                 className="flex aspect-square h-9 sm:h-11 items-center justify-center rounded-[20px] border-2 border-brand-green bg-transparent text-brand-green transition-colors hover:bg-brand-green/10"
              >
                 <RotateCcw className="size-4 sm:size-5" />
@@ -101,7 +103,7 @@ export function LobbyBrowsePanel({ onJoin, isJoiningCode, onActionTriggered }: L
           {isLoading ? (
              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                 <Loader2 className="size-8 animate-spin mb-2" />
-                <p>Finding matches...</p>
+                <p>{t("friend.findingMatches")}</p>
              </div>
           ) : filteredLobbies.length === 0 ? (
              <div
@@ -111,8 +113,8 @@ export function LobbyBrowsePanel({ onJoin, isJoiningCode, onActionTriggered }: L
                 <div className="size-12 rounded-full bg-brand-blue/15 text-brand-blue flex items-center justify-center mb-3">
                    <Filter className="size-6" />
                 </div>
-                <h3 className="uppercase text-white" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}>No lobbies found</h3>
-                <p className="text-sm mt-1">Try adjusting filters or create your own room!</p>
+                <h3 className="uppercase text-white" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}>{t("friend.noLobbiesFound")}</h3>
+                <p className="text-sm mt-1">{t("friend.noLobbiesHint")}</p>
              </div>
           ) : (
              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">

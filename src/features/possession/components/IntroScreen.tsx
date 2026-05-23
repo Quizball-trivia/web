@@ -1,6 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'motion/react';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface IntroScreenProps {
   visible: boolean;
@@ -8,6 +9,7 @@ interface IntroScreenProps {
 }
 
 export function IntroScreen({ visible, onStart }: IntroScreenProps) {
+  const { t } = useLocale();
   return (
     <AnimatePresence>
       {visible && (
@@ -22,7 +24,7 @@ export function IntroScreen({ visible, onStart }: IntroScreenProps) {
             animate={{ scale: [0, 1.15, 1] }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
             onClick={onStart}
-            aria-label="Start match"
+            aria-label={t('possession.startMatch')}
             className="text-center font-fun cursor-pointer group"
           >
             <motion.div
@@ -37,7 +39,7 @@ export function IntroScreen({ visible, onStart }: IntroScreenProps) {
               Quizball
             </div>
             <div className="text-lg text-brand-slate group-hover:text-brand-cyan transition-colors">
-              Tap to Start
+              {t('possession.tapToStart')}
             </div>
           </motion.button>
         </motion.div>

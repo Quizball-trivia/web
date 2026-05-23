@@ -33,6 +33,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ModalCloseButton } from "./ModalCloseButton";
+import { useLocale } from "@/contexts/LocaleContext";
 
 interface FriendPlayModalProps {
   isOpen: boolean;
@@ -48,6 +49,7 @@ const SECONDARY_BG = "#5C6BFF"; // periwinkle (room code + join + browse)
 const SECONDARY_BG_HOVER = "#4A5AF0";
 
 export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) {
+  const { t } = useLocale();
   const isMobile = useIsMobile();
   const router = useRouter();
   const [roomCode, setRoomCode] = useState("");
@@ -63,7 +65,7 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
     setIsJoining(true);
 
     if (roomCode.length < 3) {
-      toast.error("Invalid Room Code");
+      toast.error(t("friendPlay.invalidRoomCode"));
       setIsJoining(false);
       return;
     }
@@ -80,7 +82,7 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
         className="font-poppins pr-16 text-left uppercase text-white leading-[0.95]"
         style={{ fontSize: "clamp(28px, 4.5vw, 48px)" }}
       >
-        Play with <span className="text-brand-yellow">a Friend</span>
+        {t("friendPlay.titlePrefix")} <span className="text-brand-yellow">{t("friendPlay.titleSuffix")}</span>
       </h2>
 
       {/* Description + friends illustration. The illustration is the
@@ -91,8 +93,7 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
         <p
           className="flex-1 text-sm leading-snug font-bold text-white/85 md:text-base"
         >
-          Create a private room to host a match, or enter a code to join a
-          friend&apos;s lobby.
+          {t("friendPlay.description")}
         </p>
         <Image
           src="/assets/friendly_match-icon.webp"
@@ -123,18 +124,18 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
         >
           +
         </span>
-        Create New Room
+        {t("friendPlay.createNewRoom")}
       </button>
 
       {/* "OR JOIN" caption */}
       <div className="mt-5 text-center text-[11px] font-black uppercase tracking-[0.18em] text-white/70 md:text-xs">
-        Or Join
+        {t("friendPlay.orJoin")}
       </div>
 
       {/* Room Code (input, span 2 cols) + Join (button, span 1 col) */}
       <div className="mt-3 grid w-full grid-cols-3 gap-3">
         <input
-          placeholder="ROOM CODE"
+          placeholder={t("friendPlay.roomCodePlaceholder")}
           className={cn(
             "col-span-2 h-14 rounded-2xl px-5 text-center text-base font-black uppercase",
             "tracking-[0.15em] text-white placeholder:text-white/55",
@@ -166,7 +167,7 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
             (e.currentTarget.style.backgroundColor = SECONDARY_BG);
           }}
         >
-          Join
+          {t("friendPlay.join")}
         </button>
       </div>
 
@@ -184,7 +185,7 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
         )}
         style={{ backgroundColor: SECONDARY_BG }}
       >
-        Browse Public Lobbies
+        {t("friendPlay.browsePublicLobbies")}
       </button>
     </div>
   );
@@ -204,9 +205,9 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
               className="!static"
             />
           </div>
-          <SheetTitle className="sr-only">Play with a Friend</SheetTitle>
+          <SheetTitle className="sr-only">{t("friendPlay.title")}</SheetTitle>
           <SheetDescription className="sr-only">
-            Create a room or join an existing room with an invite code.
+            {t("friendPlay.srDescription")}
           </SheetDescription>
           {Body}
         </SheetContent>
@@ -231,9 +232,9 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
             className="!static"
           />
         </div>
-        <DialogTitle className="sr-only">Play with a Friend</DialogTitle>
+        <DialogTitle className="sr-only">{t("friendPlay.title")}</DialogTitle>
         <DialogDescription className="sr-only">
-          Create a room or join an existing room with an invite code.
+          {t("friendPlay.srDescription")}
         </DialogDescription>
         {Body}
       </DialogContent>

@@ -697,6 +697,31 @@ function DevAnimationsContent() {
     s.setMatchQuestion(makeQuestion(0, nextQuestionKind));
   }
 
+  function startKickoffToMcq() {
+    pendingTimers.current.forEach((t) => window.clearTimeout(t));
+    pendingTimers.current = [];
+    stateVersion.current = 0;
+    scoreRef.current = { meTotal: 0, oppTotal: 0 };
+    goalsRef.current = { seat1: 0, seat2: 0 };
+    penaltyGoalsRef.current = { seat1: 0, seat2: 0 };
+    penaltyKickIndexRef.current = 0;
+    possessionDiffRef.current = 0;
+
+    const s = store();
+    s.reset();
+    s.setSelfUserId(SELF_ID);
+    // Keep the real 5s kickoff countdown from setMatchStart, then seed the
+    // first MCQ underneath it. The production game logic blocks reveal/options
+    // until the countdown expires, so this previews the full handoff.
+    s.setMatchStart(makeStartPayload());
+    stateVersion.current += 1;
+    s.setMatchState(makeMatchState('NORMAL_PLAY', { stateVersion: stateVersion.current }));
+    s.setMatchQuestion(makeQuestion(0, 'multipleChoice'));
+    setNextQuestionKind('multipleChoice');
+    setRemountKey((k) => k + 1);
+    setMobilePanelOpen(false);
+  }
+
   // Wait for the DOM to be ready before firing scoring events. The ranked-sim
   // flight overlay reads `data-splash-anchor` + `data-pitch-avatar` positions
   // from screen; if we fire while the panel is still fading in, the flight can
@@ -1911,6 +1936,7 @@ function DevAnimationsContent() {
 
         <Group label="Match flow">
           <Btn onClick={() => { start(); setRemountKey((k) => k + 1); }}>↻ reset & restart</Btn>
+          <Btn variant="yellow" onClick={startKickoffToMcq}>5s kickoff → MCQ</Btn>
           <Btn onClick={nextQuestion}>next question</Btn>
         </Group>
 

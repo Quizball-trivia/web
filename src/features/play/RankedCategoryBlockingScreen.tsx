@@ -21,6 +21,7 @@ import { tierFromRp, type RankedTier } from '@/utils/rankedTier';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { BanCategoryCard } from '@/components/shared/BanCategoryCard';
 import { getTierAccent } from '@/utils/tierVisuals';
+import { useLocale } from '@/contexts/LocaleContext';
 import type { AvatarCustomization } from '@/types/game';
 
 const poppins = {
@@ -146,6 +147,7 @@ export function BanCategoryView({
   onToggleSound,
   onBanCategory,
 }: BanCategoryViewProps) {
+  const { t } = useLocale();
   const playerTierColor = player.tier ? getTierAccent(player.tier) : '#94A3B8';
   const opponentTierColor = opponent.tier ? getTierAccent(opponent.tier) : '#94A3B8';
 
@@ -187,7 +189,7 @@ export function BanCategoryView({
         {/* Sound toggle (top-right floating) */}
         <button
           onClick={onToggleSound}
-          aria-label={soundMuted ? 'Unmute' : 'Mute'}
+          aria-label={soundMuted ? t('common.unmute') : t('common.mute')}
           className="absolute top-4 right-4 sm:top-5 sm:right-6 size-9 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition"
         >
           {soundMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
@@ -263,6 +265,7 @@ export function BanCategoryView({
  * Delegates rendering to the pure {@link BanCategoryView} component.
  */
 export function RankedCategoryBlockingScreen() {
+  const { t } = useLocale();
   const { player } = usePlayer();
   const authUser = useAuthStore((state) => state.user);
   const connectedSelfUserId = useRealtimeMatchStore((state) => state.selfUserId);
@@ -369,7 +372,7 @@ export function RankedCategoryBlockingScreen() {
     ?? null;
 
   if (!draft || !lobby) {
-    return <LoadingScreen text="Preparing Match..." />;
+    return <LoadingScreen text={t('play.preparingMatch')} />;
   }
 
   if (showShowdown) {

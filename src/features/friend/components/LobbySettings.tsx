@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { CategorySummary } from "@/lib/domain";
 import type { LobbyGameMode, LobbySettings as LobbySettingsState, LobbyState } from "@/lib/realtime/socket.types";
 import { logger } from "@/utils/logger";
+import { useLocale } from "@/contexts/LocaleContext";
 
 interface LobbySettingsProps {
   isHost: boolean;
@@ -27,6 +28,7 @@ export function LobbySettings({
   onUpdateSettings,
   settingsErrorVersion = 0,
 }: LobbySettingsProps) {
+  const { t } = useLocale();
   const settings = lobby?.settings;
   const serverMode = settings?.gameMode ?? 'friendly_possession';
   const memberCount = lobby?.members.length ?? 0;
@@ -388,13 +390,13 @@ export function LobbySettings({
       if (!cat) {
         const fallback = categories[0]?.id ?? null;
         if (!fallback) {
-          toast.error("Not enough categories to disable random");
+          toast.error(t("friend.notEnoughCategoriesToDisableRandom"));
           setOptimisticRandom(null); // revert
           return;
         }
         cat = fallback;
         setSelectedCategoryId(fallback);
-        toast.info("Random disabled. Default category selected.");
+        toast.info(t("friend.randomDisabledDefault"));
       }
       queueChange({
         friendlyRandom: false,
@@ -412,14 +414,14 @@ export function LobbySettings({
           className="uppercase text-white"
           style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 16, letterSpacing: '0.04em' }}
         >
-          Game Setup
+          {t("friend.gameSetup")}
         </h2>
         {!isHost && (
           <span
             className="flex items-center gap-1.5 text-brand-slate uppercase"
             style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 10, letterSpacing: '0.08em' }}
           >
-            <Lock className="size-3" /> Host Only
+            <Lock className="size-3" /> {t("friend.hostOnly")}
           </span>
         )}
       </div>
@@ -427,14 +429,14 @@ export function LobbySettings({
       <div className="rounded-[20px] p-5 space-y-6">
         {/* Mode Selector */}
         <div className="space-y-3">
-          <span className="text-[10px] font-black text-brand-slate uppercase tracking-wider">Match Mode</span>
+          <span className="text-[10px] font-black text-brand-slate uppercase tracking-wider">{t("friend.matchMode")}</span>
           {isPartyLocked ? (
             <div className="rounded-[14px] bg-surface-deep p-1.5">
               <div className="flex items-center justify-between rounded-[10px] bg-brand-blue px-4 py-3 text-white">
                 <div>
-                  <div className="text-sm font-black uppercase tracking-wide">Party Quiz</div>
+                  <div className="text-sm font-black uppercase tracking-wide">{t("friend.partyQuiz")}</div>
                   <div className="text-[10px] font-bold text-white/70">
-                    Multiplayer friendly lobbies automatically use standings mode.
+                    {t("friend.partyLockedHint")}
                   </div>
                 </div>
                 <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white">
@@ -454,7 +456,7 @@ export function LobbySettings({
                     : "text-white/55 hover:text-white"
                 )}
               >
-                Classic
+                {t("friend.classic")}
               </button>
               <button
                 onClick={() => handleModeChange('friendly_party_quiz')}
@@ -466,7 +468,7 @@ export function LobbySettings({
                     : "text-white/55 hover:text-white"
                 )}
               >
-                Party Quiz
+                {t("friend.partyQuiz")}
               </button>
               <button
                 onClick={() => handleModeChange('ranked_sim')}
@@ -478,24 +480,24 @@ export function LobbySettings({
                     : "text-white/55 hover:text-white"
                 )}
               >
-                Ranked Sim
+                {t("friend.rankedSim")}
               </button>
             </div>
           )}
           <p className="text-xs font-bold text-brand-slate">
             {isPartyLocked
-              ? "Party quiz keeps the same question pacing, but swaps the pitch for a live leaderboard."
+              ? t("friend.partyDescription")
               : mode === 'friendly_possession'
-                ? "Play for fun. Pick categories or go random. No RP at stake."
+                ? t("friend.classicDescription")
                 : mode === 'friendly_party_quiz'
-                  ? "Use the shared-question party quiz flow in a 1v1 or bigger lobby. No RP at stake."
-                : "Simulate a Competitive match. Ban/Pick phase enabled."}
+                  ? t("friend.partyQuizDescription")
+                : t("friend.rankedSimDescription")}
           </p>
         </div>
 
         {/* Lobby Visibility */}
         <div className="space-y-3">
-          <span className="text-[10px] font-black text-brand-slate uppercase tracking-wider">Lobby Visibility</span>
+          <span className="text-[10px] font-black text-brand-slate uppercase tracking-wider">{t("friend.lobbyVisibility")}</span>
           <button
             onClick={handleVisibilityClick}
             disabled={!canEdit}
@@ -535,7 +537,7 @@ export function LobbySettings({
         {/* Categories (Friendly Only) */}
         {isFriendlyMode && (
           <div className="space-y-3">
-            <span className="text-[10px] font-black text-brand-slate uppercase tracking-wider">Categories</span>
+            <span className="text-[10px] font-black text-brand-slate uppercase tracking-wider">{t("friend.categoriesTitle")}</span>
             <button
               onClick={handleRandomToggle}
               disabled={!canEdit}
@@ -552,9 +554,9 @@ export function LobbySettings({
                   <Shuffle className={cn("size-4", isRandom ? "text-surface-page" : "text-brand-slate")} />
                 </div>
                 <div className="text-left">
-                  <div className="text-sm font-black text-white">Random Categories</div>
+                  <div className="text-sm font-black text-white">{t("friend.randomCategories")}</div>
                   <div className="text-[10px] font-bold text-brand-slate">
-                    {isRandom ? 'Categories picked randomly each game' : 'Choose your own categories below'}
+                    {isRandom ? t("friend.randomCategoriesOn") : t("friend.randomCategoriesOff")}
                   </div>
                 </div>
               </div>
@@ -573,14 +575,14 @@ export function LobbySettings({
               <>
                 <p className="text-[10px] font-bold text-brand-slate">
                   {mode === 'friendly_party_quiz'
-                    ? 'Pick the category pool for the party quiz. Questions stay shared across the full lobby.'
-                    : 'Pick one category for the first half. The second half category is chosen at halftime.'}
+                    ? t("friend.pickCategoryParty")
+                    : t("friend.pickCategoryClassic")}
                 </p>
                 <div className="relative">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-white/45" />
                   <input
                     type="text"
-                    placeholder="SEARCH CATEGORY..."
+                    placeholder={t("friend.searchCategoryPlaceholder")}
                     value={categorySearch}
                     onChange={(e) => setCategorySearch(e.target.value)}
                     className="h-11 w-full rounded-[14px] border-2 border-brand-blue bg-transparent pl-10 pr-3 text-sm uppercase text-white outline-none placeholder:text-white/40 placeholder:tracking-[0.06em] focus:outline-none"
@@ -590,7 +592,7 @@ export function LobbySettings({
                 <div className="max-h-72 overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-thumb-[#243B44] scrollbar-track-transparent">
                   {filteredCategories.length === 0 ? (
                     <p className="py-6 text-center text-xs font-bold text-brand-slate uppercase tracking-wider">
-                      No categories match &quot;{categorySearch}&quot;
+                      {t("friend.noCategoryMatchesSearch", { query: categorySearch })}
                     </p>
                   ) : filteredCategories.map(cat => {
                     const isSelected = selectedCategoryId === cat.id;
@@ -625,7 +627,7 @@ export function LobbySettings({
             {isRandom && (
               <div className="p-5 rounded-[14px] flex flex-col items-center text-center gap-2">
                 <Shuffle className="size-8 text-brand-yellow opacity-80" />
-                <p className="text-sm font-bold text-brand-slate">Categories will be selected randomly.</p>
+                <p className="text-sm font-bold text-brand-slate">{t("friend.categoriesWillBeRandom")}</p>
               </div>
             )}
           </div>
@@ -637,9 +639,9 @@ export function LobbySettings({
             <div className="size-14 rounded-full bg-brand-orange border-4 border-b-[6px] border-[#DB8200] flex items-center justify-center">
               <Trophy className="size-7 text-white" strokeWidth={2.5} />
             </div>
-            <h4 className="text-base font-black text-brand-orange">Ranked Simulation</h4>
+            <h4 className="text-base font-black text-brand-orange">{t("friend.rankedSimHeader")}</h4>
             <p className="text-xs font-bold text-brand-slate max-w-xs">
-              This match follows standard ranked rules. You will enter a Ban/Pick phase before the game starts.
+              {t("friend.rankedSimDescriptionLong")}
             </p>
           </div>
         )}

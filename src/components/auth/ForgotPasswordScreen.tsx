@@ -5,6 +5,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 import { AppLogo } from '../AppLogo';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface ForgotPasswordScreenProps {
   onResetPassword: (email: string) => void;
@@ -12,6 +13,7 @@ interface ForgotPasswordScreenProps {
 }
 
 export function ForgotPasswordScreen({ onResetPassword, onBack }: ForgotPasswordScreenProps) {
+  const { t } = useLocale();
   const [email, setEmail] = useState('');
   const [emailSent, setEmailSent] = useState(false);
 
@@ -44,21 +46,21 @@ export function ForgotPasswordScreen({ onResetPassword, onBack }: ForgotPassword
           {!emailSent ? (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Forgot your password?</CardTitle>
+                <CardTitle className="text-lg">{t('forgotPassword.title')}</CardTitle>
               <CardDescription>
-                  Enter your email address and we&apos;ll send you a link to reset your password
+                  {t('forgotPassword.description')}
               </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{t('forgotPassword.emailLabel')}</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                       <Input
                         id="email"
                         type="email"
-                        placeholder="you@example.com"
+                        placeholder={t('forgotPassword.emailPlaceholder')}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="pl-10"
@@ -68,7 +70,7 @@ export function ForgotPasswordScreen({ onResetPassword, onBack }: ForgotPassword
                   </div>
 
                   <Button type="submit" size="lg" className="w-full">
-                    Send Reset Link
+                    {t('forgotPassword.sendResetLink')}
                   </Button>
                 </form>
               </CardContent>
@@ -82,15 +84,15 @@ export function ForgotPasswordScreen({ onResetPassword, onBack }: ForgotPassword
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <h3>Check your email</h3>
+                  <h3>{t('forgotPassword.checkEmail')}</h3>
                   <p className="text-sm text-muted-foreground">
-                    We&apos;ve sent a password reset link to{' '}
+                    {t('forgotPassword.sentTo')}{' '}
                     <span className="text-foreground">{email}</span>
                   </p>
                 </div>
                 <div className="pt-4">
                   <Button onClick={onBack} variant="outline" size="lg" className="w-full">
-                    Back to Sign In
+                    {t('forgotPassword.backToSignIn')}
                   </Button>
                 </div>
                 <div className="text-center pt-2">
@@ -98,7 +100,7 @@ export function ForgotPasswordScreen({ onResetPassword, onBack }: ForgotPassword
                     onClick={() => setEmailSent(false)}
                     className="text-sm text-muted-foreground hover:text-foreground"
                   >
-                    Didn&apos;t receive the email? Try again
+                    {t('forgotPassword.didntReceive')}
                   </button>
                 </div>
               </CardContent>

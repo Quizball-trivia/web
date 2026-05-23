@@ -7,6 +7,8 @@ import { motion } from "motion/react";
 
 import { useLeaderboard, useUserRank } from "@/lib/queries/leaderboard.queries";
 import type { LeaderboardType } from "@/lib/domain/leaderboard";
+import { useLocale } from "@/contexts/LocaleContext";
+import type { MessageKey } from "@/lib/i18n/messages";
 
 import { LeaderboardTable } from "./components/LeaderboardTable";
 import { LeaderboardPodium } from "./components/LeaderboardPodium";
@@ -23,13 +25,14 @@ const poppinsTitle = {
   lineHeight: 1,
 } as const;
 
-const TABS: { value: LeaderboardType; label: string }[] = [
-  { value: "global", label: "Global" },
-  { value: "country", label: "Country" },
+const TABS: { value: LeaderboardType; labelKey: MessageKey }[] = [
+  { value: "global", labelKey: "leaderboard.tabGlobal" },
+  { value: "country", labelKey: "leaderboard.tabCountry" },
 ];
 
 export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
   const router = useRouter();
+  const { t } = useLocale();
   const [activeTab, setActiveTab] = useState<LeaderboardType>("global");
 
   const { data: entries, isLoading, isError } = useLeaderboard(activeTab, currentPlayerId);
@@ -63,10 +66,10 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
               className="text-4xl sm:text-5xl md:text-6xl uppercase text-white"
               style={poppinsTitle}
             >
-              Leaderboard
+              {t("leaderboard.title")}
             </h1>
             <p className="mt-2 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-white/40">
-              Compete for glory and prizes
+              {t("leaderboard.subtitle")}
             </p>
           </div>
 
@@ -98,7 +101,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
           transition={{ duration: 0.35, delay: 0.1 }}
           className="flex items-center justify-center gap-3 pt-1"
           role="tablist"
-          aria-label="Leaderboard scope"
+          aria-label={t("leaderboard.tablistAriaLabel")}
         >
           {TABS.map((tab) => {
             const isActive = activeTab === tab.value;
@@ -115,7 +118,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
                     : "border-2 border-brand-green text-white hover:bg-brand-green/10"
                 }`}
               >
-                {tab.label}
+                {t(tab.labelKey)}
               </button>
             );
           })}
@@ -130,7 +133,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
           >
             <Loader2 className="size-8 text-brand-yellow animate-spin" />
             <p className="text-xs font-black uppercase tracking-[0.2em] text-white/40">
-              Loading rankings…
+              {t("leaderboard.loading")}
             </p>
           </motion.div>
         )}
@@ -138,7 +141,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
         {isError && (
           <div className="rounded-[10px] border-2 border-brand-red-soft/40 bg-brand-red-soft/10 px-4 py-6 text-center">
             <p className="text-sm font-fun font-black uppercase tracking-wide text-brand-red-soft">
-              Failed to load leaderboard data.
+              {t("leaderboard.loadFailed")}
             </p>
           </div>
         )}
@@ -165,7 +168,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
                 className="text-2xl sm:text-3xl uppercase text-white"
                 style={poppinsTitle}
               >
-                Rankings
+                {t("leaderboard.rankings")}
               </h2>
 
               <LeaderboardTable

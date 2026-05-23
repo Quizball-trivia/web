@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ModalCloseButton } from '@/components/shared/ModalCloseButton';
 import { FcGoogle } from 'react-icons/fc';
 import { Button } from '@/components/ui/button';
 import { Brain, Goal, Trophy, Crown, Star, Globe, Flame, Shield, Repeat, Award, Flag, Swords, type LucideIcon } from 'lucide-react';
@@ -12,6 +13,8 @@ import { AppLogo } from '@/components/AppLogo';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { motion, AnimatePresence } from 'motion/react';
 import { socialLogin } from '@/lib/auth/auth.service';
+import { useLocale } from '@/contexts/LocaleContext';
+import type { MessageKey } from '@/lib/i18n/messages';
 import { LeaderboardPodium } from '@/features/leaderboard/components/LeaderboardPodium';
 import { LeaderboardTable } from '@/features/leaderboard/components/LeaderboardTable';
 import type { LeaderboardEntry } from '@/lib/domain/leaderboard';
@@ -28,17 +31,17 @@ import {
 } from '@/features/possession/components/BarBattleFlightOverlay';
 import { GOAL_CELEBRATION_MS, GOAL_SHOT_TO_CELEBRATION_MS } from '@/features/possession/realtimePossession.helpers';
 
-const SUBHEADING_PHRASES = [
-  "Back your football knowledge.",
-  "Beat your mates and climb.",
-  "Turn answers into goals.",
-  "Move up the table.",
-  "Take on leagues, legends, and rivalries.",
-  "Play quick matches. Build your rank.",
-  "From trivia wins to real bragging rights.",
-  "Know the game. Win the duel.",
-  "Start strong. Finish top.",
-  "Every right answer moves you on.",
+const SUBHEADING_PHRASE_KEYS: MessageKey[] = [
+  "welcome.phraseBack",
+  "welcome.phraseBeat",
+  "welcome.phraseTurn",
+  "welcome.phraseMove",
+  "welcome.phraseTakeOn",
+  "welcome.phrasePlay",
+  "welcome.phraseFromTrivia",
+  "welcome.phraseKnow",
+  "welcome.phraseStartStrong",
+  "welcome.phraseEveryRight",
 ];
 
 // Style mapping for known categories (matched by slug or lowercased name)
@@ -310,6 +313,7 @@ function getDuelsCount(): number {
 }
 
 export function WelcomeScreen() {
+  const { t } = useLocale();
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [loginOpen, setLoginOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
@@ -388,7 +392,7 @@ export function WelcomeScreen() {
   // Subheading rotation
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentPhraseIndex((prev) => (prev + 1) % SUBHEADING_PHRASES.length);
+      setCurrentPhraseIndex((prev) => (prev + 1) % SUBHEADING_PHRASE_KEYS.length);
     }, 3000);
     return () => clearInterval(timer);
   }, []);
@@ -594,7 +598,7 @@ export function WelcomeScreen() {
                 {wcDaysLeft}
               </span>
               <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-brand-yellow">
-                until kickoff
+                {t('welcome.untilKickoff')}
               </span>
             </div>
           )}
@@ -741,7 +745,7 @@ export function WelcomeScreen() {
                           animate={{ scale: [1, 3, 1], y: [10, -16, 0], opacity: [0.94, 1, 1] }}
                           transition={{ duration: 1.45, times: [0, 0.38, 1], ease: 'easeInOut' }}
                         >
-                          <Image src="/assets/brand/large-ball.png" alt="" width={256} height={256} className="size-12 object-contain drop-shadow-[0_0_14px_rgba(255,255,255,0.32)] md:size-14" />
+                          <Image src="https://lfbwhxvwubzeqkztghok.supabase.co/storage/v1/object/public/imgs/world-cup-style-ball-cartoon-transparent.png" alt="" width={256} height={256} unoptimized className="size-12 object-contain drop-shadow-[0_0_14px_rgba(255,255,255,0.32)] md:size-14" />
                         </motion.div>
                       </motion.div>
                     </motion.div>
@@ -802,11 +806,11 @@ export function WelcomeScreen() {
                 <AvatarDisplay customization={demoPlayers.crowd[2].avatarCustomization} size="sm" className="rounded-full" />
               </div>
             </div>
-            <span className="text-brand-slate font-bold text-sm">{duelsCount.toLocaleString()}+ duels played so far</span>
+            <span className="text-brand-slate font-bold text-sm">{t('welcome.duelsPlayedSoFar', { count: duelsCount.toLocaleString() })}</span>
           </div>
 
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-[1.1] mb-4 text-white">
-            Football trivia that feels like matchday.
+            {t('welcome.heroTitle')}
           </h1>
 
           <div className="h-8 mb-8 flex items-center justify-center lg:justify-start">
@@ -818,7 +822,7 @@ export function WelcomeScreen() {
                 exit={{ opacity: 0, y: -10 }}
                 className="text-lg font-bold text-brand-green"
               >
-                {SUBHEADING_PHRASES[currentPhraseIndex]}
+                {t(SUBHEADING_PHRASE_KEYS[currentPhraseIndex]!)}
               </motion.p>
             </AnimatePresence>
           </div>
@@ -827,7 +831,7 @@ export function WelcomeScreen() {
             onClick={handleKickOff}
             className="h-14 min-w-[280px] rounded-[20px] bg-brand-green px-10 font-poppins text-lg font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none sm:w-auto"
           >
-            Kick off
+            {t('welcome.kickOff')}
             </Button>
         </motion.div>
       </main>
@@ -842,10 +846,10 @@ export function WelcomeScreen() {
         <section className="px-6 py-12 md:py-20">
           <div className="max-w-5xl mx-auto">
             <h2 className="text-center text-2xl md:text-3xl font-black text-white mb-3">
-              Pick your football lane
+              {t('welcome.categoriesTitle')}
             </h2>
             <p className="text-center text-sm md:text-base text-white/60 font-medium mb-10">
-              {allCategories.length} ways to test your football brain, from elite leagues to cult storylines.
+              {t('welcome.categoriesSubtitle', { count: allCategories.length })}
             </p>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
@@ -856,7 +860,7 @@ export function WelcomeScreen() {
                   <motion.button
                     key={cat.id}
                     type="button"
-                    aria-label={`Open ${cat.name}`}
+                    aria-label={t('welcome.openCategory', { name: cat.name })}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -907,7 +911,7 @@ export function WelcomeScreen() {
                   onClick={() => setCategoriesOpen(true)}
                   className="h-12 px-8 rounded-2xl text-sm font-black uppercase tracking-wide border-2 border-white/20 bg-transparent text-white hover:bg-white/10 hover:border-white/30 shadow-none hover:shadow-none"
                 >
-                  Browse all {allCategories.length} categories
+                  {t('welcome.browseAllCategories', { count: allCategories.length })}
                 </Button>
               </div>
             )}
@@ -926,10 +930,10 @@ export function WelcomeScreen() {
             className="text-center mb-10"
           >
             <h2 className="text-2xl md:text-3xl font-black text-white mb-3">
-              Rise through the tiers
+              {t('welcome.tierRoadTitle')}
             </h2>
             <p className="text-sm md:text-base text-white/60 font-medium">
-              Begin at Academy and work your way to GOAT.
+              {t('welcome.tierRoadSubtitle')}
             </p>
           </motion.div>
 
@@ -994,7 +998,7 @@ export function WelcomeScreen() {
               onClick={() => setLoginOpen(true)}
               className="h-14 rounded-[20px] bg-brand-green px-10 font-poppins text-lg font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none"
             >
-              Start climbing
+              {t('welcome.startClimbing')}
             </Button>
           </motion.div>
         </div>
@@ -1010,10 +1014,10 @@ export function WelcomeScreen() {
             className="text-center mb-10"
           >
             <h2 className="text-2xl md:text-3xl font-black text-white mb-3">
-              See where you stack up
+              {t('welcome.leaderboardTitle')}
             </h2>
             <p className="text-sm md:text-base text-white/60 font-medium">
-              Join the table, earn rank points, and chase the top spots.
+              {t('welcome.leaderboardSubtitle')}
             </p>
           </motion.div>
 
@@ -1054,7 +1058,7 @@ export function WelcomeScreen() {
               onClick={() => setLoginOpen(true)}
               className="h-14 rounded-[20px] bg-brand-green px-10 font-poppins text-lg font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none"
             >
-              View the full table
+              {t('welcome.viewFullTable')}
             </Button>
           </motion.div>
         </div>
@@ -1066,11 +1070,11 @@ export function WelcomeScreen() {
           <div className="flex flex-wrap justify-center gap-8 md:gap-16">
             <div className="flex items-center gap-2 font-bold text-brand-yellow">
               <Brain className="size-4" />
-              <span className="text-sm">10k+ verified questions</span>
+              <span className="text-sm">{t('welcome.verifiedQuestions')}</span>
             </div>
             <div className="flex items-center gap-2 font-bold text-brand-yellow">
               <Swords className="size-4" />
-              <span className="text-sm">{duelsCount.toLocaleString()}+ duels played</span>
+              <span className="text-sm">{t('welcome.duelsPlayed', { count: duelsCount.toLocaleString() })}</span>
             </div>
           </div>
           <div className="mt-6 flex items-center justify-center gap-4 text-sm">
@@ -1078,22 +1082,22 @@ export function WelcomeScreen() {
               href="/terms"
               className="font-bold text-white/40 hover:text-brand-cyan transition-colors"
             >
-              Terms of Service
+              {t('welcome.termsOfService')}
             </Link>
             <span className="text-white/20">|</span>
             <Link
               href="/privacy"
               className="font-bold text-white/40 hover:text-brand-cyan transition-colors"
             >
-              Privacy Policy
+              {t('welcome.privacyPolicy')}
             </Link>
           </div>
           <div className="mt-4 space-y-2 text-center">
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-white/35">
-              &copy; 2026 QuizBall
+              {t('welcome.copyright')}
             </p>
             <p className="mx-auto max-w-2xl text-[11px] leading-relaxed text-white/30 md:text-xs">
-              QuizBall is an independent football trivia game. Club, league, tournament, and player references are used for editorial identification only. QuizBall is not affiliated with, endorsed by, or sponsored by any club, league, federation, or competition organizer.
+              {t('welcome.footerLegal')}
             </p>
           </div>
         </div>
@@ -1103,9 +1107,9 @@ export function WelcomeScreen() {
       <Dialog open={categoriesOpen} onOpenChange={setCategoriesOpen}>
         <DialogContent className="max-w-2xl w-[95vw] rounded-2xl p-5 md:p-8 bg-surface-page border-surface-page max-h-[85vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black text-center text-white">All categories</DialogTitle>
+            <DialogTitle className="text-2xl font-black text-center text-white">{t('welcome.allCategoriesTitle')}</DialogTitle>
             <DialogDescription className="text-center text-white/50">
-              Explore the full QuizBall category list.
+              {t('welcome.allCategoriesDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="overflow-y-auto flex-1 -mx-1 px-1 mt-2">
@@ -1116,7 +1120,7 @@ export function WelcomeScreen() {
                   <motion.button
                     key={cat.id}
                     type="button"
-                    aria-label={`Open ${cat.name}`}
+                    aria-label={t('welcome.openCategory', { name: cat.name })}
                     className="group relative min-h-[64px] cursor-pointer overflow-hidden rounded-xl border border-white/10 px-3 py-2.5 flex items-center justify-center transition-all duration-200 hover:brightness-110 hover:border-white/20"
                     style={{ backgroundColor: style.color }}
                     onClick={() => { setCategoriesOpen(false); setLoginOpen(true); }}
@@ -1137,23 +1141,34 @@ export function WelcomeScreen() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Login Dialog ── */}
+      {/* ── Login Dialog — pinned to Figma node 620-7831 (Play with a Friend
+           card). Royal-blue surface, red X close, yellow Google CTA.
+           Hide shadcn's built-in close X (last direct <button> child of
+           DialogContent) and render our own red square one instead.
+           focus:outline-none / focus-visible:ring-0 kills the green-ish focus
+           ring that shadcn paints on every primitive inside the dialog. ── */}
       <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
-        <DialogContent className="max-w-md w-full rounded-2xl p-8 bg-surface-page border-surface-page">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold mb-4 text-center text-white">Sign in to QuizBall</DialogTitle>
-            <DialogDescription className="text-center text-white/50">
-              Use your Google account to save progress, rank up, and play online.
+        <DialogContent
+          className="max-w-md w-[92vw] rounded-[24px] border-0 p-8 sm:p-10 [&>button:last-child]:hidden focus:outline-none focus-visible:outline-none focus-visible:ring-0 ring-0"
+          style={{ backgroundColor: '#1645FF' }}
+        >
+          <ModalCloseButton onClose={() => setLoginOpen(false)} />
+
+          <DialogHeader className="text-center">
+            <DialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
+              {t('welcome.loginTitle')}
+            </DialogTitle>
+            <DialogDescription className="mt-3 text-center font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-[14px]">
+              {t('welcome.loginDescription')}
             </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col gap-4 mt-2">
-            <Button
-              className="flex h-14 items-center justify-center gap-3 rounded-[20px] bg-brand-yellow font-poppins text-lg font-semibold uppercase tracking-wide text-black shadow-none transition-colors hover:bg-brand-gold hover:shadow-none"
-              onClick={handleGoogleLogin}
-            >
-              <FcGoogle className="size-6" /> Continue with Google
-            </Button>
-          </div>
+          <Button
+            onClick={handleGoogleLogin}
+            className="mt-6 flex h-14 w-full items-center justify-center gap-3 rounded-[28px] bg-brand-yellow font-poppins text-base font-semibold uppercase tracking-wide text-black shadow-none transition-colors hover:bg-brand-yellow-deep hover:shadow-none sm:h-[60px] sm:text-lg focus-visible:ring-0 focus-visible:outline-none"
+          >
+            <FcGoogle className="size-6" />
+            {t('welcome.continueWithGoogle')}
+          </Button>
         </DialogContent>
       </Dialog>
     </div>

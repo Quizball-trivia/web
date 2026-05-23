@@ -32,6 +32,8 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   const match = useRealtimeMatchStore((state) => state.match);
   const error = useRealtimeMatchStore((state) => state.error);
   const clearError = useRealtimeMatchStore((state) => state.clearError);
+  const pendingLobbyHandoffCode = useRealtimeMatchStore((state) => state.pendingLobbyHandoffCode);
+  const clearLobbyHandoff = useRealtimeMatchStore((state) => state.clearLobbyHandoff);
   const startSession = useGameSessionStore((state) => state.startSession);
 
   // Queries
@@ -56,6 +58,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   const analyticsTrackedRef = useRef(false);
   const [settingsErrorVersion, setSettingsErrorVersion] = useState(0);
   const [isStartingMatch, setIsStartingMatch] = useState(false);
+  const [handoffTimedOutCode, setHandoffTimedOutCode] = useState<string | null>(null);
 
   const clearStartMatchTimeout = useCallback(() => {
     if (!startMatchTimeoutRef.current) return;
@@ -64,6 +67,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   }, []);
 
   const lobbyCode = lobby?.inviteCode ?? (roomCode === "new" ? "" : roomCode);
+  const normalizedRoomCode = roomCode && roomCode !== "new" ? roomCode.toUpperCase() : null;
   const members = lobby?.members ?? [];
   const me = members.find((member) => member.userId === selfUserId);
   const otherMembers = members.filter((member) => member.userId !== selfUserId);
@@ -89,12 +93,27 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     return () => clearTimeout(stopTimer);
   }, [clearStartMatchTimeout, lobby, draft, match]);
 
+  useEffect(() => {
+    if (!normalizedRoomCode || pendingLobbyHandoffCode !== normalizedRoomCode) return;
+
+    if (lobby?.inviteCode?.toUpperCase() === normalizedRoomCode) {
+      clearLobbyHandoff();
+      setHandoffTimedOutCode(null);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setHandoffTimedOutCode(normalizedRoomCode);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, [clearLobbyHandoff, lobby?.inviteCode, normalizedRoomCode, pendingLobbyHandoffCode]);
+
   // 2. Socket Initialization
   useEffect(() => {
     if (leavingRef.current) return;
     if (createdRef.current) return;
     const socket = getSocket();
-    const targetCode = roomCode === "new" ? null : roomCode.toUpperCase();
+    const targetCode = normalizedRoomCode;
     const currentCode = lobby?.inviteCode?.toUpperCase() ?? null;
 
     if (isHost) {
@@ -108,6 +127,16 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
 
     if (!roomCode || roomCode === "new") return;
     if (currentCode && currentCode === targetCode) return;
+    if (
+      targetCode &&
+      pendingLobbyHandoffCode === targetCode &&
+      handoffTimedOutCode !== targetCode
+    ) {
+      logger.info("Waiting for lobby handoff state before joining by code", {
+        inviteCode: `${targetCode.slice(0, 2)}***`,
+      });
+      return;
+    }
 
     const joinKey = `join:${targetCode ?? roomCode.toUpperCase()}`;
     if (initActionRef.current === joinKey) return;
@@ -117,7 +146,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     logger.info("Socket emit lobby:join_by_code", {
       inviteCode: `${roomCode.slice(0, 2)}***`,
     });
-  }, [isHost, roomCode, lobby?.inviteCode, lobby]);
+  }, [handoffTimedOutCode, isHost, lobby?.inviteCode, lobby, normalizedRoomCode, pendingLobbyHandoffCode, roomCode]);
 
   // 2.5. Track lobby creation/join success when lobby is confirmed
   useEffect(() => {

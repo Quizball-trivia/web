@@ -15,6 +15,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { QuitGameDialog } from "./QuitGameDialog";
+import { useLocale } from "@/contexts/LocaleContext";
 
 interface EmojiQuestion {
   id: string;
@@ -69,6 +70,7 @@ const MOCK_QUESTIONS: EmojiQuestion[] = [
 ];
 
 export function EmojiGuessGame({ onBack, onComplete }: EmojiGuessGameProps) {
+  const { t } = useLocale();
   const [questions] = useState<EmojiQuestion[]>(MOCK_QUESTIONS);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState("");
@@ -160,7 +162,7 @@ export function EmojiGuessGame({ onBack, onComplete }: EmojiGuessGameProps) {
               </button>
               <div className="flex items-center gap-2">
                 <Sparkles className="size-5 text-brand-cyan" />
-                <h1 className="text-lg md:text-xl font-black uppercase text-white">Emoji Guess</h1>
+                <h1 className="text-lg md:text-xl font-black uppercase text-white">{t("dailyGames.emojiGuess")}</h1>
               </div>
             </div>
           </div>
@@ -225,7 +227,7 @@ export function EmojiGuessGame({ onBack, onComplete }: EmojiGuessGameProps) {
               <div className="space-y-4">
                 <Input
                   type="text"
-                  placeholder="Type your answer..."
+                  placeholder={t("dailyGames.typeYourAnswerPlaceholder")}
                   value={userAnswer}
                   onChange={(e) => setUserAnswer(e.target.value)}
                   onKeyDown={handleKeyDown}

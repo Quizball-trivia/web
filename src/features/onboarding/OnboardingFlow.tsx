@@ -8,6 +8,7 @@ import { AvatarPreview } from '@/components/AvatarPreview';
 import type { AvatarCustomization } from '@/types/game';
 import { AVATAR_COLORS } from '@/lib/avatars';
 import { DEFAULT_HAIR_ID, DEFAULT_JERSEY_ID, DEFAULT_SKIN_ID } from '@/lib/avatars/parts';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface OnboardingFlowProps {
   onComplete: (data: OnboardingData) => void;
@@ -45,6 +46,7 @@ type OnboardingStep = 'language' | 'club' | 'profile';
 const STEP_ORDER: OnboardingStep[] = ['language', 'club', 'profile'];
 
 export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingFlowProps) {
+  const { t } = useLocale();
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('language');
   const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
   const [preferredLanguage, setPreferredLanguage] = useState('');
@@ -103,7 +105,7 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
           <button
             type="button"
             onClick={goBack}
-            aria-label="Go back"
+            aria-label={t("onboarding.goBack")}
             className={`flex size-9 shrink-0 items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/5 transition-colors ${
               currentIndex > 0 ? '' : 'invisible'
             }`}
@@ -113,7 +115,7 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
 
           <div
             role="progressbar"
-            aria-label="Onboarding progress"
+            aria-label={t("onboarding.progress")}
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={Math.round(progress)}
@@ -142,10 +144,10 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
               transition={{ duration: 0.3 }}
             >
               <h1 className="mt-8 md:mt-10 text-center font-poppins text-[28px] md:text-[40px] font-semibold uppercase leading-none">
-                Choose Language
+                {t("onboarding.chooseLanguage")}
               </h1>
               <p className="mt-2 md:mt-3 text-center font-poppins text-[12px] md:text-[14px] font-semibold uppercase text-white/50">
-                Select the language for your QuizBall experience
+                {t("onboarding.chooseLanguageHint")}
               </p>
 
               <div className="mt-7 md:mt-9 space-y-2.5 md:space-y-3">
@@ -182,7 +184,7 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
                 disabled={!canAdvance}
                 className={`mt-8 md:mt-10 ${PRIMARY_CTA_CLASS}`}
               >
-                Let&apos;s Go
+                {t("onboarding.letsGo")}
               </button>
             </motion.div>
           )}
@@ -198,7 +200,7 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
               transition={{ duration: 0.3 }}
             >
               <h1 className="mt-8 md:mt-10 text-center font-poppins text-[28px] md:text-[40px] font-semibold uppercase leading-none">
-                Pick Your Club
+                {t("onboarding.pickYourClub")}
               </h1>
 
               <div className="mt-7 md:mt-9">
@@ -211,7 +213,7 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
                 disabled={!canAdvance}
                 className={`mt-8 md:mt-10 ${PRIMARY_CTA_CLASS}`}
               >
-                Let&apos;s Go
+                {t("onboarding.letsGo")}
               </button>
             </motion.div>
           )}
@@ -227,23 +229,23 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
               transition={{ duration: 0.3 }}
             >
               <h1 className="mt-8 md:mt-10 text-center font-poppins text-[28px] md:text-[40px] font-semibold uppercase leading-none">
-                Create Your Profile
+                {t("onboarding.createYourProfile")}
               </h1>
               <p className="mt-2 md:mt-3 text-center font-poppins text-[12px] md:text-[14px] font-semibold uppercase text-white/50">
-                Pick a username and your avatar
+                {t("onboarding.pickUsernameAvatar")}
               </p>
 
               <input
                 type="text"
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
-                placeholder="Enter your username"
+                placeholder={t("onboarding.enterUsername")}
                 maxLength={20}
                 className="mt-7 md:mt-9 h-[56px] md:h-[64px] w-full rounded-[18px] bg-brand-blue px-5 text-center font-poppins text-[18px] md:text-[24px] font-semibold uppercase text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-white"
               />
 
               <p className="mt-6 md:mt-8 text-center font-poppins text-[12px] md:text-[14px] font-semibold uppercase text-white/50">
-                Choose your avatar
+                {t("onboarding.chooseAvatar")}
               </p>
 
               <div className="mt-3 md:mt-4 flex justify-between gap-2">
@@ -254,7 +256,7 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
                       key={color}
                       type="button"
                       onClick={() => setAvatar(color)}
-                      aria-label={`Select ${color} avatar`}
+                      aria-label={t("onboarding.selectAvatar", { color })}
                       aria-pressed={isSelected}
                       className={`relative flex size-14 md:size-[78px] items-center justify-center overflow-hidden rounded-full bg-brand-blue transition-transform ${
                         isSelected ? 'ring-2 ring-white scale-[1.06]' : 'hover:brightness-110'
@@ -284,7 +286,7 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
                 {isSubmitting ? (
                   <span className="inline-flex items-center gap-2">
                     <Loader2 className="size-5 animate-spin" />
-                    Saving…
+                    {t("onboarding.saving")}
                   </span>
                 ) : (
                   <>Let&apos;s Go</>
