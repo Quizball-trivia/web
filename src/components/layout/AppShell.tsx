@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { NotificationsDropdown } from "@/components/layout/NotificationsDropdown";
+import { ChallengeInvitePrompt } from "@/components/layout/ChallengeInvitePrompt";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -135,6 +136,10 @@ export function AppShell({ children }: AppShellProps) {
   const sessionState = useRealtimeMatchStore((state) => state.sessionState);
   const rejoinMatch = useRealtimeMatchStore((state) => state.rejoinMatch);
   const forfeitPending = useRealtimeMatchStore((state) => state.forfeitPending);
+  const challengeInviteCount = useRealtimeMatchStore((state) => state.challengeInvites.length);
+  const suppressLobbyBannerUntil = useRealtimeMatchStore((state) => state.suppressLobbyBannerUntil);
+  const suppressLobbyBannerReason = useRealtimeMatchStore((state) => state.suppressLobbyBannerReason);
+  const clearLobbyBannerSuppression = useRealtimeMatchStore((state) => state.clearLobbyBannerSuppression);
   const clearRejoinAvailable = useRealtimeMatchStore((state) => state.clearRejoinAvailable);
   const resetRealtime = useRealtimeMatchStore((state) => state.reset);
   const startSession = useGameSessionStore((state) => state.startSession);
@@ -150,17 +155,28 @@ export function AppShell({ children }: AppShellProps) {
   const showHeader = HEADER_PATHS.some((p) => p === "/" ? currentPath === "/" : currentPath.startsWith(p));
   const showNav = !HIDE_NAV_PATHS.some((path) => currentPath.startsWith(path));
   const inLobbyRoom = currentPath.startsWith("/friend/room");
+  const lobbyBannerSuppressed =
+    suppressLobbyBannerReason !== null ||
+    (suppressLobbyBannerUntil !== null && suppressLobbyBannerUntil > Date.now());
   const showLobbyBanner =
     !!lobby &&
     lobby.status === "waiting" &&
     lobby.mode === "friendly" &&
     Boolean(lobby.inviteCode) &&
-    !inLobbyRoom;
+    !inLobbyRoom &&
+    !lobbyBannerSuppressed;
   const showRankedLobbyBanner =
     !!lobby &&
     lobby.status === "waiting" &&
     lobby.mode === "ranked" &&
     !currentPath.startsWith("/game");
+
+  useEffect(() => {
+    if (inLobbyRoom && suppressLobbyBannerReason !== null) {
+      clearLobbyBannerSuppression();
+    }
+  }, [clearLobbyBannerSuppression, inLobbyRoom, suppressLobbyBannerReason]);
+
   const draftOpponent = lobby?.members.find((member) => member.userId !== authUser?.id);
   const activeDraftBanner = lobby?.status === "active" && draft
     ? {
@@ -212,7 +228,7 @@ export function AppShell({ children }: AppShellProps) {
   const sessionStateLabel = sessionState?.state ?? "NO_SESSION";
   const navbarCoins = storeWallet?.coins ?? 0;
   const navbarTickets = storeWallet?.tickets ?? 0;
-  const socialBadgeCount = incomingFriendRequestCount;
+  const socialBadgeCount = incomingFriendRequestCount + challengeInviteCount;
 
   useEffect(() => {
     const socket = getSocket();
@@ -342,6 +358,7 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="relative min-h-screen text-foreground">
+      <ChallengeInvitePrompt />
       <div
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
@@ -733,23 +750,68 @@ export function AppShell({ children }: AppShellProps) {
             <div className="px-4 pt-6 pb-5">
               <div className="flex items-center justify-between mb-3 relative">
                 <div className="flex items-center gap-2 z-10">
-                  <Link href="/profile" className="flex items-center gap-2">
-                    <div className="size-12 rounded-full overflow-hidden">
-                      <AvatarDisplay
-                        customization={playerStats.avatarCustomization || { base: playerStats.avatar }}
-                        size="sm"
-                        countryCode={authUser?.country}
-                      />
-                    </div>
-                    <div className="text-left">
-                      <div className="text-sm font-black uppercase tracking-[0.03em] text-white">
-                        {playerStats.username}
-                      </div>
-                      <div className="mt-1 inline-flex items-center rounded-full bg-brand-yellow px-2.5 py-0.5 text-[11px] font-black uppercase leading-none text-black">
-                        {playerStats.rankPoints ?? 0} RP
-                      </div>
-                    </div>
-                  </Link>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex items-center gap-2 rounded-full focus:outline-none">
+                        <div className="size-12 rounded-full overflow-hidden">
+                          <AvatarDisplay
+                            customization={playerStats.avatarCustomization || { base: playerStats.avatar }}
+                            size="sm"
+                            countryCode={authUser?.country}
+                          />
+                        </div>
+                        <div className="text-left">
+                          <div className="text-sm font-black uppercase tracking-[0.03em] text-white">
+                            {playerStats.username}
+                          </div>
+                          <div className="mt-1 inline-flex items-center rounded-full bg-brand-yellow px-2.5 py-0.5 text-[11px] font-black uppercase leading-none text-black">
+                            {playerStats.rankPoints ?? 0} RP
+                          </div>
+                        </div>
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      className="w-64 rounded-[20px] border-0 p-3 text-white font-poppins shadow-[0_18px_48px_rgba(0,0,0,0.45)]"
+                      style={{ backgroundColor: '#1645FF' }}
+                      align="start"
+                      forceMount
+                    >
+                      <DropdownMenuLabel className="font-normal px-2 pb-3">
+                        <div className="flex flex-col space-y-1">
+                          <p className="font-poppins text-base font-semibold leading-none text-white">
+                            {playerStats.username}
+                          </p>
+                          <p className="font-poppins text-xs font-medium leading-none text-white/70">
+                            {t("accountMenu.levelAndRp", {
+                              level: playerStats.level,
+                              rp: playerStats.rankPoints ?? 0,
+                            })}
+                          </p>
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuItem
+                        className="rounded-[12px] px-3 py-2.5 font-poppins text-sm font-semibold text-white focus:bg-white/15 focus:text-white"
+                        onClick={() => router.push("/profile")}
+                      >
+                        <User className="mr-2 h-4 w-4 text-brand-yellow" />
+                        <span>{t("navigation.profile")}</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="rounded-[12px] px-3 py-2.5 font-poppins text-sm font-semibold text-white focus:bg-white/15 focus:text-white"
+                        onClick={() => router.push("/settings")}
+                      >
+                        <Settings className="mr-2 h-4 w-4 text-brand-yellow" />
+                        <span>{t("navigation.settings")}</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setShowLogoutConfirm(true)}
+                        className="mt-2 justify-center rounded-[16px] bg-brand-red-soft px-3 py-3 font-poppins text-sm font-semibold uppercase text-white transition-colors focus:bg-brand-red-deep focus:text-white hover:bg-brand-red-deep"
+                      >
+                        <LogOut className="mr-2 h-4 w-4 text-white" />
+                        <span>{t("accountMenu.logOut")}</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
                 <div className="flex items-center gap-2 z-10">
@@ -1046,23 +1108,28 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Logout Confirmation Dialog */}
       <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
-        <AlertDialogContent className="border-border bg-[var(--overlay-bg)]">
+        <AlertDialogContent
+          className="max-w-md w-[92vw] rounded-[24px] border-0 p-8 font-poppins shadow-none sm:p-10"
+          style={{ backgroundColor: '#1645FF' }}
+        >
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-foreground">{t("accountMenu.logOutQuestion")}</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
+              {t("accountMenu.logOutQuestion")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="mt-3 text-center font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-[14px]">
               {t("accountMenu.logOutDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="border-border bg-card text-foreground hover:bg-muted">
-              {t("common.cancel")}
-            </AlertDialogCancel>
+          <AlertDialogFooter className="mt-6 flex-col gap-2 sm:flex-col sm:space-x-0">
             <AlertDialogAction
               onClick={handleLogout}
-              className="border-destructive/25 bg-destructive/15 text-red-400 hover:bg-destructive/25"
+              className="w-full rounded-[16px] border-0 bg-brand-red-soft from-brand-red-soft to-brand-red-soft px-3 py-3 font-poppins text-sm font-semibold uppercase tracking-wide text-white shadow-none hover:bg-brand-red-soft/90 hover:from-brand-red-soft/90 hover:to-brand-red-soft/90 hover:shadow-none focus-visible:ring-0"
             >
               {t("accountMenu.logOut")}
             </AlertDialogAction>
+            <AlertDialogCancel className="mt-0 w-full rounded-[16px] border-0 bg-white/15 px-3 py-3 font-poppins text-sm font-semibold uppercase tracking-wide text-white shadow-none hover:bg-white/25 hover:text-white focus-visible:ring-0">
+              {t("common.cancel")}
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

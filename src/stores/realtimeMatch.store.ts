@@ -21,6 +21,7 @@ import type {
   MatchStartPayload,
   OpponentInfo,
   ErrorPayload,
+  LobbyChallengeInvitePayload,
   PresenceOnlineCountPayload,
   SessionStatePayload,
 } from '@/lib/realtime/socket.types';
@@ -97,8 +98,15 @@ export interface DevPossessionAnimation {
   attackerSeat: 1 | 2;
 }
 
+export type LobbyChallengeInvite = LobbyChallengeInvitePayload;
+type LobbyBannerSuppressionReason = 'challenge';
+
 interface RealtimeState {
   lobby: LobbyState | null;
+  challengeInvites: LobbyChallengeInvite[];
+  pendingLobbyHandoffCode: string | null;
+  suppressLobbyBannerUntil: number | null;
+  suppressLobbyBannerReason: LobbyBannerSuppressionReason | null;
   draft: DraftStatus | null;
   match: MatchStatus | null;
   onlineUsers: number | null;
@@ -116,6 +124,12 @@ interface RealtimeState {
   error: ErrorPayload | null;
   setSelfUserId: (userId: string | null) => void;
   setLobby: (lobby: LobbyState) => void;
+  addChallengeInvite: (invite: LobbyChallengeInvite) => void;
+  removeChallengeInvite: (invitationId: string) => void;
+  beginLobbyHandoff: (inviteCode: string) => void;
+  clearLobbyHandoff: () => void;
+  suppressLobbyBanner: (durationMs?: number, reason?: LobbyBannerSuppressionReason) => void;
+  clearLobbyBannerSuppression: () => void;
   setDraftStart: (draft: DraftState) => void;
   setDraftBan: (actorId: string, categoryId: string) => void;
   setDraftComplete: (halfOneCategoryId: string) => void;
@@ -160,6 +174,10 @@ interface RealtimeState {
 
 const initialState = {
   lobby: null,
+  challengeInvites: [],
+  pendingLobbyHandoffCode: null,
+  suppressLobbyBannerUntil: null,
+  suppressLobbyBannerReason: null,
   draft: null,
   match: null,
   onlineUsers: null,
@@ -190,6 +208,47 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       memberCount: lobby.members.length,
     });
     set({ lobby });
+  },
+  addChallengeInvite: (invite) => {
+    logger.info('Realtime store add challenge invite', {
+      invitationId: invite.invitationId,
+      lobbyId: invite.lobbyId,
+      fromUserId: invite.fromUser.id,
+    });
+    set((state) => {
+      const withoutDuplicate = state.challengeInvites.filter(
+        (item) => item.invitationId !== invite.invitationId,
+      );
+      return { challengeInvites: [invite, ...withoutDuplicate] };
+    });
+  },
+  removeChallengeInvite: (invitationId) => {
+    logger.info('Realtime store remove challenge invite', { invitationId });
+    set((state) => ({
+      challengeInvites: state.challengeInvites.filter((invite) => invite.invitationId !== invitationId),
+    }));
+  },
+  beginLobbyHandoff: (inviteCode) => {
+    set({
+      pendingLobbyHandoffCode: inviteCode.toUpperCase(),
+      suppressLobbyBannerUntil: Date.now() + 8000,
+      suppressLobbyBannerReason: 'challenge',
+    });
+  },
+  clearLobbyHandoff: () => {
+    set({ pendingLobbyHandoffCode: null });
+  },
+  suppressLobbyBanner: (durationMs = 5000, reason = 'challenge') => {
+    set({
+      suppressLobbyBannerUntil: Date.now() + durationMs,
+      suppressLobbyBannerReason: reason,
+    });
+  },
+  clearLobbyBannerSuppression: () => {
+    set({
+      suppressLobbyBannerUntil: null,
+      suppressLobbyBannerReason: null,
+    });
   },
   setDraftStart: (draft) => {
     logger.info('Realtime store set draft start', {

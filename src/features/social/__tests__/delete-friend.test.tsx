@@ -8,19 +8,33 @@ import { LocaleProvider } from '@/contexts/LocaleContext';
 import * as socialQueries from '@/lib/queries/social.queries';
 import * as socialRepo from '@/lib/repositories/social.repo';
 
+const { mockPush, mockSocket } = vi.hoisted(() => ({
+  mockPush: vi.fn(),
+  mockSocket: {
+    emit: vi.fn(),
+    on: vi.fn(),
+    off: vi.fn(),
+  },
+}));
+
 // Mock toast
 vi.mock('sonner', () => ({
   toast: {
     success: vi.fn(),
     error: vi.fn(),
+    info: vi.fn(),
   },
 }));
 
 // Mock router
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
-    push: vi.fn(),
+    push: mockPush,
   }),
+}));
+
+vi.mock('@/lib/realtime/socket-client', () => ({
+  getSocket: () => mockSocket,
 }));
 
 // Mock queries
@@ -191,5 +205,15 @@ describe('Delete Friend Feature', () => {
     await waitFor(() => {
       expect(queryClientSpy).toHaveBeenCalled();
     });
+  });
+
+  it('emits lobby challenge instead of navigating to profile', () => {
+    renderScreen();
+
+    fireEvent.click(screen.getByText('Challenge'));
+
+    expect(mockSocket.emit).toHaveBeenCalledWith('lobby:challenge', { toUserId: 'friend-id-123' });
+    expect(mockPush).not.toHaveBeenCalledWith('/profile/friend-id-123');
+    expect(toast.info).toHaveBeenCalledWith('Creating challenge...');
   });
 });
