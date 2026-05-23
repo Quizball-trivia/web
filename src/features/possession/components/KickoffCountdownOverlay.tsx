@@ -1,15 +1,19 @@
 'use client';
 
+import { useEffect } from 'react';
 import { motion } from 'motion/react';
 
 import { AvatarPreview } from '@/components/AvatarPreview';
 import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
+import { playBgm } from '@/lib/sounds/gameSounds';
 import type { AvatarCustomization } from '@/types/game';
+
+type CountdownPhase = 'kickoff' | 'resume';
 
 interface KickoffCountdownOverlayProps {
   countdownDisplay: number;
-  label?: string;
+  phase?: CountdownPhase;
   finished?: boolean;
   durationMs?: number;
   runKey?: string | number;
@@ -24,7 +28,7 @@ interface KickoffCountdownOverlayProps {
 
 export function KickoffCountdownOverlay({
   countdownDisplay,
-  label = 'Kickoff',
+  phase = 'kickoff',
   finished = false,
   durationMs = 5_000,
   runKey = 'kickoff',
@@ -39,7 +43,14 @@ export function KickoffCountdownOverlay({
   const { t } = useLocale();
   const playerCustomization = playerAvatarCustomization ?? { base: playerAvatarBase };
   const opponentCustomization = opponentAvatarCustomization ?? { base: opponentAvatarBase };
-  const resolvedLabel = label === 'Kickoff' ? t('possession.kickoff') : label;
+  const isKickoff = phase === 'kickoff';
+  const headerLabel = isKickoff ? t('possession.kickoffIn') : t('possession.resumingIn');
+  const resolvedLabel = isKickoff ? t('possession.kickoff') : t('possession.resuming');
+
+  useEffect(() => {
+    if (!isKickoff) return;
+    playBgm('kickoff');
+  }, [isKickoff]);
 
   return (
     <div
@@ -70,7 +81,7 @@ export function KickoffCountdownOverlay({
 
         <div className="flex flex-col items-center justify-center">
           <div className="font-fun text-[9px] font-black uppercase tracking-[0.28em] text-brand-yellow sm:text-[11px]">
-            {label}
+            {headerLabel}
           </div>
           <motion.div
             key={countdownDisplay}

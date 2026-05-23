@@ -27,7 +27,7 @@ import type {
 } from '@/lib/realtime/socket.types';
 
 /** Client-side fallback countdown until the server's match:countdown event arrives with the real value. */
-const DEFAULT_COUNTDOWN_MS = 5000;
+const DEFAULT_COUNTDOWN_MS = 10000;
 
 export interface DraftStatus {
   lobbyId: string;
@@ -229,6 +229,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
     }));
   },
   beginLobbyHandoff: (inviteCode) => {
+    if (typeof inviteCode !== 'string' || inviteCode.length === 0) return;
     set({
       pendingLobbyHandoffCode: inviteCode.toUpperCase(),
       suppressLobbyBannerUntil: Date.now() + 8000,

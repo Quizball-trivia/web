@@ -57,7 +57,7 @@ interface RealtimePossessionMatchControllerResult {
   showMainUI: boolean;
   showStartCountdown: boolean;
   countdownDisplay: number;
-  countdownLabel: string;
+  countdownPhase: 'kickoff' | 'resume';
   penaltyCountdownActive: boolean;
   penaltyCountdownDisplay: number;
   muted: boolean;
@@ -315,7 +315,7 @@ export function useRealtimePossessionMatchController({
   const showMainUI = !overlayModel.isHalftime;
   const showStartCountdown = state.startCountdownActive;
   const countdownDisplay = Math.max(1, state.countdownSeconds);
-  const countdownLabel = state.countdownReason === 'resume' ? 'Reconnected. Resuming in' : 'Kickoff in';
+  const countdownPhase: 'kickoff' | 'resume' = state.countdownReason === 'resume' ? 'resume' : 'kickoff';
   const playerPoints = state.playerScore;
   const opponentPoints = state.opponentScore;
   const questionInHalf = possessionState?.normalQuestionsAnsweredInHalf ?? 0;
@@ -644,7 +644,7 @@ export function useRealtimePossessionMatchController({
     showMainUI,
     showStartCountdown,
     countdownDisplay,
-    countdownLabel,
+    countdownPhase,
     penaltyCountdownActive: overlayModel.penaltyCountdownActive,
     penaltyCountdownDisplay: overlayModel.penaltyCountdownDisplay,
     muted,

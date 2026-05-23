@@ -22,12 +22,18 @@ export function ChallengeInvitePrompt() {
   const [dismissedInviteIds, setDismissedInviteIds] = useState<Set<string>>(() => new Set());
   const invite = invites.find((item) => !dismissedInviteIds.has(item.invitationId)) ?? null;
   const fromName = invite?.fromUser.username ?? t("notifications.unknownUser");
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!invite) return;
+    const id = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, [invite]);
   const expiresLabel = useMemo(() => {
     if (!invite) return "";
-    const ms = new Date(invite.expiresAt).getTime() - Date.now();
+    const ms = new Date(invite.expiresAt).getTime() - now;
     const minutes = Math.max(1, Math.ceil(ms / 60000));
     return t("notifications.challengeExpiresIn", { minutes });
-  }, [invite, t]);
+  }, [invite, now, t]);
 
   useEffect(() => {
     if (!pendingAcceptId) return;

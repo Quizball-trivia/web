@@ -273,7 +273,7 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
       socket.off("lobby:challenge_status", handleStatus);
       socket.off("error", handleError);
     };
-  }, [beginLobbyHandoff, pendingChallengeAction, router]);
+  }, [beginLobbyHandoff, pendingChallengeAction, router, setOpen]);
 
   const handleAcceptChallenge = (invite: LobbyChallengeInvite) => {
     if (pendingChallengeAction) return;

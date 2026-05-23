@@ -58,7 +58,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
     isReady,
     showStartCountdown,
     countdownDisplay,
-    countdownLabel,
+    countdownPhase,
     penaltyCountdownActive,
     penaltyCountdownDisplay,
     muted,
@@ -108,15 +108,15 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
         {showPendingKickoff ? (
           <KickoffCountdownOverlay
             countdownDisplay={countdownDisplay}
-            label={countdownLabel === 'Kickoff in' ? 'Kickoff' : countdownLabel}
-            runKey={countdownLabel}
+            phase={countdownPhase}
+            runKey={countdownPhase}
             playerName={props.playerUsername}
             opponentName={props.opponentUsername}
             playerAvatarBase={props.playerAvatar}
             opponentAvatarBase={props.opponentAvatar}
             playerAvatarCustomization={props.playerAvatarCustomization}
             opponentAvatarCustomization={props.opponentAvatarCustomization}
-            className="min-h-dvh w-full bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
+            className="h-dvh min-h-dvh w-screen bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
           />
         ) : (
           <LoadingScreen fullScreen={false} className="h-auto min-h-0" />
@@ -145,19 +145,19 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="pointer-events-none absolute inset-0 z-30"
+            className="pointer-events-none fixed inset-0 z-[90]"
           >
             <KickoffCountdownOverlay
               countdownDisplay={countdownDisplay}
-              label={countdownLabel === 'Kickoff in' ? 'Kickoff' : countdownLabel}
-              runKey={countdownLabel}
+              phase={countdownPhase}
+              runKey={countdownPhase}
               playerName={props.playerUsername}
               opponentName={props.opponentUsername}
               playerAvatarBase={props.playerAvatar}
               opponentAvatarBase={props.opponentAvatar}
               playerAvatarCustomization={props.playerAvatarCustomization}
               opponentAvatarCustomization={props.opponentAvatarCustomization}
-              className="min-h-full w-full bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
+              className="h-dvh min-h-dvh w-screen bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
             />
           </motion.div>
         )}
