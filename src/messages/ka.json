@@ -2,6 +2,7 @@
   "common": {
     "back": "უკან",
     "cancel": "გაუქმება",
+    "close": "დახურვა",
     "change": "შეცვლა",
     "confirm": "დადასტურება",
     "continue": "გაგრძელება",
@@ -348,6 +349,7 @@
     "statRPTooltip": "მიმდინარე რანგის ქულები"
   },
   "dailyGames": {
+    "questionCounter": "კითხვა {current}/{total}",
     "emojiGuess": "ემოჯი გამოცნობა",
     "dailyRewards": "დღიური ჯილდოები",
     "cluesChallenge": "მინიშნებების გამოწვევა",

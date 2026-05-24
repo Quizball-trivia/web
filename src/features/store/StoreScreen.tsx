@@ -31,6 +31,8 @@ import { usePlayer } from "@/contexts/PlayerContext";
 import { updateMe } from "@/lib/api/endpoints";
 import type { AvatarCustomization } from "@/types/game";
 
+const STRIPE_PURCHASES_ENABLED = false;
+
 function formatUsd(priceCents: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -459,47 +461,51 @@ export function StoreScreen() {
       <div className="flex-1 overflow-auto">
         <div className="container mx-auto max-w-5xl py-8 space-y-14 px-4 md:px-0">
 
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 200, damping: 20 }}
-          >
-            <FeaturedBundleCard
-              onBuy={() => {
-                if (!featuredBundleSlug) {
-                  toast.error(t("store.noCoinBundle"));
-                  return;
-                }
-                const product = productsBySlug.get(featuredBundleSlug);
-                setBuyModal({
-                  name: t("store.unlockBundle"),
-                  price: product ? formatUsd(product.priceCents) : "$0.00",
-                  productSlug: featuredBundleSlug,
-                  mode: "stripe",
-                });
-              }}
-            />
-          </motion.section>
+          {STRIPE_PURCHASES_ENABLED && (
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 200, damping: 20 }}
+            >
+              <FeaturedBundleCard
+                onBuy={() => {
+                  if (!featuredBundleSlug) {
+                    toast.error(t("store.noCoinBundle"));
+                    return;
+                  }
+                  const product = productsBySlug.get(featuredBundleSlug);
+                  setBuyModal({
+                    name: t("store.unlockBundle"),
+                    price: product ? formatUsd(product.priceCents) : "$0.00",
+                    productSlug: featuredBundleSlug,
+                    mode: "stripe",
+                  });
+                }}
+              />
+            </motion.section>
+          )}
 
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.1 }}
-          >
-            <SectionHeader title={t("store.coinsTitle")} subtitle={t("store.coinsSubtitle")} />
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-              {coinBundles.map((bundle, i) => (
-                <motion.div
-                  key={bundle.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.1 + i * 0.05 }}
-                >
-                  <BundleCard {...bundle} />
-                </motion.div>
-              ))}
-            </div>
-          </motion.section>
+          {STRIPE_PURCHASES_ENABLED && (
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.1 }}
+            >
+              <SectionHeader title={t("store.coinsTitle")} subtitle={t("store.coinsSubtitle")} />
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+                {coinBundles.map((bundle, i) => (
+                  <motion.div
+                    key={bundle.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.1 + i * 0.05 }}
+                  >
+                    <BundleCard {...bundle} />
+                  </motion.div>
+                ))}
+              </div>
+            </motion.section>
+          )}
 
           <motion.section
             initial={{ opacity: 0, y: 20 }}

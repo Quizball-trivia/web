@@ -13,6 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { QuitGameDialog } from "./QuitGameDialog";
+import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
 import { useLocale } from "@/contexts/LocaleContext";
 import {
   DndContext,
@@ -248,34 +249,14 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
   }
 
   return (
-    <div className="fixed inset-0 z-40 bg-surface-deep font-fun flex flex-col">
-      <div className="bg-surface-card border-b-[3px] border-surface-deep">
-        <div className="max-w-2xl lg:max-w-3xl mx-auto px-3 md:px-4 lg:px-6 py-2.5 md:py-3 lg:py-4">
-          <div className="flex items-center gap-3 lg:gap-4 mb-3">
-            <button onClick={() => setShowQuitDialog(true)} className="flex items-center justify-center size-9 lg:size-11 rounded-xl hover:bg-surface-card-tint active:scale-95 transition-all text-white">
-              <ArrowLeft className="size-5 lg:size-6" />
-            </button>
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <Calendar className="size-5 lg:size-6 text-brand-cyan" />
-                <h1 className="text-lg lg:text-xl font-black uppercase text-white">{t("dailyGames.putInOrder")}</h1>
-              </div>
-              <p className="text-xs lg:text-sm text-brand-slate mt-0.5">{round.category}</p>
-            </div>
-            <span className="inline-flex items-center gap-1 lg:gap-1.5 px-2.5 py-1 lg:px-3 lg:py-1.5 rounded-lg text-xs lg:text-sm font-bold bg-surface-card-tint text-white">
-              <Coins className="size-3 lg:size-4 text-brand-gold" />
-              {totalCoins}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="flex-1 h-2 lg:h-2.5 bg-white/10 rounded-full overflow-hidden">
-              <div className="h-full bg-brand-green-light rounded-full transition-all duration-300" style={{ width: `${((currentRound + 1) / session.roundCount) * 100}%` }} />
-            </div>
-            <span className="text-xs lg:text-sm text-brand-slate whitespace-nowrap font-bold">{currentRound + 1}/{session.roundCount}</span>
-          </div>
-        </div>
-      </div>
+    <div className="fixed inset-0 z-40 bg-[#131F24] font-poppins flex flex-col text-white">
+      <DailyChallengeHeader
+        onQuit={() => setShowQuitDialog(true)}
+        currentIndex={currentRound}
+        total={session.roundCount}
+        hideTimer
+        centerLabel={`Round ${currentRound + 1}/${session.roundCount}`}
+      />
 
       <div className="flex-1 overflow-y-auto">
         <div className="min-h-full p-3 md:p-4 lg:p-6 lg:flex lg:flex-col lg:justify-center">

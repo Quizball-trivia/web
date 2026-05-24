@@ -6,6 +6,7 @@ import { CheckCircle2 } from "lucide-react";
 import type { ImposterSession } from "@/lib/domain/dailyChallenge";
 import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
 import { QuitGameDialog } from "./QuitGameDialog";
+import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
 
 const poppins = {
   fontFamily: "'Poppins', sans-serif",
@@ -108,34 +109,14 @@ export function ImposterGame({
     return null;
   }
 
-  const displayTimer = timeLeft >= 10 ? `${timeLeft}` : `0${timeLeft}`;
-
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-[#131F24] text-white">
-      {/* Header pills */}
-      <div className="px-4 pt-4">
-        <div className="mx-auto max-w-3xl flex items-stretch gap-2.5">
-          <button
-            onClick={() => setShowQuitDialog(true)}
-            className="flex items-center justify-center rounded-[16px] bg-brand-blue px-4 text-white h-[40px] sm:h-[52px]"
-            style={poppins}
-          >
-            ✕
-          </button>
-          <div
-            className="flex flex-1 items-center justify-center rounded-[16px] bg-brand-blue px-5 text-white h-[40px] sm:h-[52px]"
-            style={{ ...poppins, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
-          >
-            QUESTION {currentQuestionIndex + 1}/{session.questionCount}
-          </div>
-          <div
-            className="flex w-[64px] items-center justify-center rounded-[16px] bg-brand-blue text-white h-[40px] sm:h-[52px] sm:w-[92px] tabular-nums"
-            style={{ ...poppins, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
-          >
-            {displayTimer}
-          </div>
-        </div>
-      </div>
+      <DailyChallengeHeader
+        onQuit={() => setShowQuitDialog(true)}
+        currentIndex={currentQuestionIndex}
+        total={session.questionCount}
+        timeLeft={timeLeft}
+      />
 
       {/* Content */}
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 py-4 overflow-y-auto">

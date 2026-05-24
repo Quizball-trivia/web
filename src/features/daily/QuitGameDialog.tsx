@@ -2,12 +2,11 @@
 
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
 import { useLocale } from "@/contexts/LocaleContext";
 
 interface QuitGameDialogProps {
@@ -30,25 +29,41 @@ export function QuitGameDialog({
   const resolvedDescription = description ?? t("dailyQuit.description");
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="max-w-xs bg-surface-card border-0 rounded-3xl p-6 font-fun text-center">
-        <AlertDialogTitle className="text-lg font-black text-white">
+      <AlertDialogContent
+        className="w-[min(92vw,440px)] max-w-[440px] p-8 sm:p-10 text-center rounded-[20px] border-[3px] font-poppins shadow-none"
+        style={{
+          background: 'linear-gradient(to bottom, #1645FF 35%, #1A35A1)',
+          borderColor: '#1A35A1',
+        }}
+      >
+        <AlertDialogTitle className="text-white font-semibold uppercase text-2xl sm:text-3xl">
           {resolvedTitle}
         </AlertDialogTitle>
-        <AlertDialogDescription className="text-brand-slate text-sm font-semibold">
+        <AlertDialogDescription className="mt-3 text-white/60 text-sm sm:text-base font-medium">
           {resolvedDescription}
         </AlertDialogDescription>
-        <div className="flex flex-col gap-2 mt-3">
-          <AlertDialogCancel
-            className="w-full py-2.5 rounded-xl bg-brand-green-light border-b-[3px] border-b-[#46A302] text-white font-black text-sm hover:bg-brand-green-light active:border-b-[2px] active:translate-y-[1px] transition-all"
+        <div className="mt-6 flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            style={{ boxShadow: '0 1.76px 6.334px 1.32px rgba(56, 182, 14, 0.25)' }}
+            className={cn(
+              "w-full h-14 rounded-[20px] uppercase font-poppins font-semibold text-white text-base transition-colors",
+              "bg-brand-green hover:bg-brand-green-deep",
+            )}
           >
             {t("dailyQuit.keepPlaying")}
-          </AlertDialogCancel>
-          <AlertDialogAction
+          </button>
+          <button
+            type="button"
             onClick={onQuit}
-            className="w-full py-2.5 rounded-xl bg-transparent border-2 border-brand-red-soft/40 text-brand-red-soft font-black text-sm hover:bg-brand-red-soft/10 active:translate-y-[1px] transition-all"
+            className={cn(
+              "w-full h-14 rounded-[20px] uppercase font-poppins font-semibold text-white text-base transition-colors",
+              "border-[3px] border-brand-red bg-transparent hover:bg-brand-red/10",
+            )}
           >
             {t("dailyQuit.quitGame")}
-          </AlertDialogAction>
+          </button>
         </div>
       </AlertDialogContent>
     </AlertDialog>
