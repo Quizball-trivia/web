@@ -233,6 +233,7 @@ export function GameStageRouter() {
           <RealtimePartyQuizScreen
             onQuit={handleQuit}
             onForfeit={handleForfeit}
+            mobileStandingsPlacement="below-options"
           />
         );
       }

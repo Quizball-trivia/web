@@ -338,6 +338,44 @@ describe('GameStageRouter', () => {
     expect(router.replace).not.toHaveBeenCalledWith('/play');
   });
 
+  it('renders party quiz results for completed party quiz replays', () => {
+    gameSessionState.stage = 'idle';
+    gameSessionState.config = null as never;
+    realtimeMatchState.match = {
+      ...realtimeMatchState.match,
+      mode: 'friendly',
+      variant: 'friendly_party_quiz',
+      finalResults: {
+        matchId: 'match-party-1',
+        variant: 'friendly_party_quiz',
+        winnerId: 'opp-1',
+        winnerDecisionMethod: 'total_points',
+        players: {
+          'self-1': { totalPoints: 120, goals: 0, correctAnswers: 4 },
+          'opp-1': { totalPoints: 180, goals: 0, correctAnswers: 6 },
+        },
+        standings: [
+          { userId: 'opp-1', rank: 1, totalPoints: 180, correctAnswers: 6, avgTimeMs: null },
+          { userId: 'self-1', rank: 2, totalPoints: 120, correctAnswers: 4, avgTimeMs: null },
+        ],
+        totalQuestions: 10,
+        durationMs: 60_000,
+        resultVersion: 123,
+        unlockedAchievements: {},
+        rankedOutcome: null,
+      },
+    } as typeof realtimeMatchState.match & {
+      mode: 'friendly';
+      finalResults: unknown;
+    };
+
+    render(<GameStageRouter />);
+
+    expect(screen.getByText('Party Quiz Results')).toBeInTheDocument();
+    expect(screen.queryByText(/Realtime Results/)).not.toBeInTheDocument();
+    expect(router.replace).not.toHaveBeenCalledWith('/play');
+  });
+
   it('keeps result dots and opponent RP when client totals are reset', () => {
     gameSessionState.stage = 'finalResults';
     gameSessionState.config = { ...gameSessionState.config, matchType: 'ranked' };

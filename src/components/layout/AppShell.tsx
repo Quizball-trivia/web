@@ -206,6 +206,7 @@ export function AppShell({ children }: AppShellProps) {
     ? {
         matchId: match.matchId,
         mode: match.mode,
+        variant: match.variant,
         opponent: match.opponent,
       }
     : null;
@@ -219,6 +220,7 @@ export function AppShell({ children }: AppShellProps) {
         : "You lost the match";
   const forfeitPendingDescription = forfeitPending?.message ?? "Finalizing result...";
   const completedByForfeit = match?.finalResults?.winnerDecisionMethod === "forfeit";
+  const completedPartyQuiz = completedMatchBanner?.variant === "friendly_party_quiz";
   const rejoinReconnectsLeft = rejoinMatch?.remainingReconnects ?? remainingReconnects ?? 0;
   const lobbyCode = lobby?.inviteCode ?? "";
   const showLobbyDebug = process.env.NODE_ENV !== "production";
@@ -549,11 +551,19 @@ export function AppShell({ children }: AppShellProps) {
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-white">
-                          {t("appShell.matchFinishedAgainst")}{" "}
-                          <span className="text-white">{completedMatchBanner?.opponent.username ?? t("appShell.opponentFallback")}</span>
+                          {completedPartyQuiz ? (
+                            t("appShell.partyQuizFinished")
+                          ) : (
+                            <>
+                              {t("appShell.matchFinishedAgainst")}{" "}
+                              <span className="text-white">{completedMatchBanner?.opponent.username ?? t("appShell.opponentFallback")}</span>
+                            </>
+                          )}
                         </p>
                           <p className="text-xs text-white/70">
-                            {completedByForfeit
+                            {completedPartyQuiz
+                              ? t("appShell.partyQuizFinishedDesc")
+                              : completedByForfeit
                               ? t("appShell.completedByForfeit")
                               : t("appShell.viewFinalResult")}
                           </p>
@@ -873,11 +883,21 @@ export function AppShell({ children }: AppShellProps) {
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-white">
-                        {t("appShell.matchFinishedVs")}{" "}
-                        <span className="text-white">{completedMatchBanner?.opponent.username ?? t("appShell.opponentFallback")}</span>
+                        {completedPartyQuiz ? (
+                          t("appShell.partyQuizFinished")
+                        ) : (
+                          <>
+                            {t("appShell.matchFinishedVs")}{" "}
+                            <span className="text-white">{completedMatchBanner?.opponent.username ?? t("appShell.opponentFallback")}</span>
+                          </>
+                        )}
                       </p>
                         <p className="text-xs text-white/70">
-                          {completedByForfeit ? t("appShell.completedByForfeitCompact") : t("appShell.matchFinishedCompactDesc")}
+                          {completedPartyQuiz
+                            ? t("appShell.partyQuizFinishedCompactDesc")
+                            : completedByForfeit
+                              ? t("appShell.completedByForfeitCompact")
+                              : t("appShell.matchFinishedCompactDesc")}
                         </p>
                     </div>
                   </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { AnimatePresence, motion } from 'motion/react';
 import { Crown, X } from 'lucide-react';
@@ -11,6 +11,7 @@ import { QuitMatchModal } from '@/features/game/components/QuitMatchModal';
 import { useRealtimeGameLogic } from '@/features/game/hooks/useRealtimeGameLogic';
 import { PossessionQuestionPanel } from '@/components/game/PossessionQuestionPanel';
 import { RoundTransitionOverlay } from '@/components/game/RoundTransitionOverlay';
+import { playBgm } from '@/lib/sounds/gameSounds';
 import type { AnswerStateArray, Phase } from '@/lib/types/game.types';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import type { MatchParticipant } from '@/lib/realtime/socket.types';
@@ -25,6 +26,7 @@ import type { AvatarCustomization } from '@/types/game';
 interface RealtimePartyQuizScreenProps {
   onQuit: () => void;
   onForfeit: () => void;
+  mobileStandingsPlacement?: 'bottom-bar' | 'below-options';
 }
 
 interface PartyStandingViewModel {
@@ -39,6 +41,13 @@ interface PartyStandingViewModel {
   isSelf: boolean;
   rankShift: number;
   roundDelta: number | null;
+}
+
+interface ScoreFlight {
+  id: string;
+  points: number;
+  from: { x: number; y: number };
+  to: { x: number; y: number };
 }
 
 // ---------------------------------------------------------------------------
@@ -184,12 +193,14 @@ function getRankStyle(rank: number): {
 export function RealtimePartyQuizScreen({
   onQuit,
   onForfeit,
+  mobileStandingsPlacement = 'bottom-bar',
 }: RealtimePartyQuizScreenProps) {
   const { state, actions } = useRealtimeGameLogic({ transitionDelayMs: 950 });
   const partyState = useRealtimeMatchStore((store) => store.match?.partyState ?? null);
   const participants = useRealtimeMatchStore((store) => store.match?.participants);
   const currentQuestion = useRealtimeMatchStore((store) => store.match?.currentQuestion ?? null);
   const answerAck = useRealtimeMatchStore((store) => store.match?.answerAck ?? null);
+  const finalResults = useRealtimeMatchStore((store) => store.match?.finalResults ?? null);
   const selfUserId = useRealtimeMatchStore((store) => store.selfUserId);
   const forfeitPending = useRealtimeMatchStore((store) => store.forfeitPending);
   const [showQuitModal, setShowQuitModal] = useState(false);
@@ -197,9 +208,57 @@ export function RealtimePartyQuizScreen({
   const [playerSplashPoints, setPlayerSplashPoints] = useState(0);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [preRoundRankingOrder, setPreRoundRankingOrder] = useState<string[]>([]);
+  const [scoreFlights, setScoreFlights] = useState<ScoreFlight[]>([]);
   const splashQuestionRef = useRef<number | null>(null);
+  const scoreFlightIdRef = useRef(0);
+  const spawnedFlightKeysRef = useRef(new Set<string>());
   const rankingOrderRef = useRef<string[]>(partyState?.rankingOrder ?? []);
   const participantMap = useMemo(() => buildParticipantMap(participants ?? []), [participants]);
+
+  const spawnScoreFlight = useCallback((params: {
+    userId: string;
+    qIndex: number;
+    selectedIndex: number | null | undefined;
+    points: number;
+    keyPrefix: string;
+  }) => {
+    if (params.points <= 0 || params.selectedIndex == null) return;
+    const flightKey = `${params.keyPrefix}:${params.qIndex}:${params.userId}`;
+    if (spawnedFlightKeysRef.current.has(flightKey)) return;
+
+    const source = document.querySelector<HTMLElement>(
+      `[data-mcq-option-index="${params.selectedIndex}"]`,
+    );
+    const target = Array.from(document.querySelectorAll<HTMLElement>('[data-party-score-anchor]'))
+      .find((element) => element.dataset.partyScoreAnchor === params.userId);
+    if (!source || !target) return;
+
+    const sourceRect = source.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    if (sourceRect.width <= 0 || sourceRect.height <= 0 || targetRect.width <= 0 || targetRect.height <= 0) {
+      return;
+    }
+
+    spawnedFlightKeysRef.current.add(flightKey);
+    const id = `party-score-flight-${scoreFlightIdRef.current++}`;
+    const flight: ScoreFlight = {
+      id,
+      points: params.points,
+      from: {
+        x: sourceRect.left + sourceRect.width / 2,
+        y: sourceRect.top + sourceRect.height / 2,
+      },
+      to: {
+        x: targetRect.left + targetRect.width / 2,
+        y: targetRect.top + targetRect.height / 2,
+      },
+    };
+
+    setScoreFlights((current) => [...current, flight]);
+    window.setTimeout(() => {
+      setScoreFlights((current) => current.filter((item) => item.id !== id));
+    }, 950);
+  }, []);
 
   useEffect(() => {
     rankingOrderRef.current = partyState?.rankingOrder ?? [];
@@ -243,12 +302,45 @@ export function RealtimePartyQuizScreen({
     setPlayerSplashPoints(answerAck.pointsEarned);
   }, [answerAck]);
 
+  useEffect(() => {
+    if (!answerAck || !answerAck.isCorrect || !selfUserId) return;
+    spawnScoreFlight({
+      userId: selfUserId,
+      qIndex: answerAck.qIndex,
+      selectedIndex: answerAck.selectedIndex,
+      points: answerAck.pointsEarned,
+      keyPrefix: 'ack',
+    });
+  }, [answerAck, selfUserId, spawnScoreFlight]);
+
   // Reset splash ref when question changes
   useEffect(() => {
     if (currentQuestion?.qIndex == null) {
       splashQuestionRef.current = null;
     }
   }, [currentQuestion?.qIndex]);
+
+  useEffect(() => {
+    const qIndex = state.roundResult?.qIndex;
+    if (qIndex == null) return;
+
+    for (const [userId, player] of Object.entries(state.roundResult?.players ?? {})) {
+      if (userId === selfUserId && answerAck?.qIndex === qIndex) continue;
+      if (!player.isCorrect || player.pointsEarned <= 0) continue;
+      spawnScoreFlight({
+        userId,
+        qIndex,
+        selectedIndex: player.selectedIndex,
+        points: player.pointsEarned,
+        keyPrefix: 'round',
+      });
+    }
+  }, [answerAck?.qIndex, selfUserId, spawnScoreFlight, state.roundResult]);
+
+  useEffect(() => {
+    if (!state.startCountdownActive || state.countdownReason === 'resume') return;
+    playBgm('kickoff');
+  }, [state.countdownReason, state.startCountdownActive]);
 
   // ---------------------------------------------------------------------------
   // Derived values
@@ -319,9 +411,17 @@ export function RealtimePartyQuizScreen({
         const rankShift = previousRank - player.rank;
         const roundDelta = roundPlayers[player.userId]?.pointsEarned ?? null;
 
+        const ackForCurrentQuestion = answerAck?.qIndex === currentQuestion?.qIndex ? answerAck : null;
+        const optimisticSelfTotal = player.userId === selfUserId && ackForCurrentQuestion
+          ? ackForCurrentQuestion.myTotalPoints
+          : null;
+        const optimisticSelfDelta = player.userId === selfUserId && ackForCurrentQuestion
+          ? ackForCurrentQuestion.pointsEarned
+          : null;
+
         return {
           userId: player.userId,
-          totalPoints: player.totalPoints,
+          totalPoints: optimisticSelfTotal ?? player.totalPoints,
           answered: player.answered,
           rank: player.rank,
           username: participant?.username ?? 'Player',
@@ -330,10 +430,10 @@ export function RealtimePartyQuizScreen({
           isSelf: player.userId === selfUserId,
           isLeader: player.userId === partyState.leaderUserId,
           rankShift,
-          roundDelta,
+          roundDelta: optimisticSelfDelta ?? roundDelta,
         };
       });
-  }, [participantMap, partyState, preRoundRankingOrder, selfUserId, state.roundResult?.players]);
+  }, [answerAck, currentQuestion?.qIndex, participantMap, partyState, preRoundRankingOrder, selfUserId, state.roundResult?.players]);
 
   const transitionVisible = state.roundResultHoldDone;
   const transitionQuestionNumber = Math.min(
@@ -341,6 +441,8 @@ export function RealtimePartyQuizScreen({
     questionNumber + (state.roundResolved ? 1 : 0),
   );
   const transitionCategoryName = question?.categoryName ?? 'Football';
+  const isFinalQuestionResolved = state.roundResolved && questionNumber >= totalQuestions;
+  const showFinalizingResults = isFinalQuestionResolved && transitionVisible && !finalResults;
 
   // Map each player to a stable rank-tint color for the pick chips.
   const rankColorByUserId = useMemo(() => {
@@ -371,6 +473,8 @@ export function RealtimePartyQuizScreen({
       };
     });
   }, [participantMap, rankColorByUserId, selfUserId, state.roundResult]);
+
+  const showMobileStandingsBelowOptions = mobileStandingsPlacement === 'below-options';
 
   // ---------------------------------------------------------------------------
   // Pre-match / loading
@@ -482,7 +586,10 @@ export function RealtimePartyQuizScreen({
       {/* ================================================================= */}
       {/* Main content */}
       {/* ================================================================= */}
-      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-5xl flex-col px-3 pb-20 pt-4 sm:px-5 lg:px-8 lg:pb-6">
+      <div className={cn(
+        'relative z-10 mx-auto flex min-h-dvh w-full max-w-5xl flex-col px-3 pt-4 sm:px-5 lg:px-8 lg:pb-6',
+        showMobileStandingsBelowOptions ? 'pb-6' : 'pb-20',
+      )}>
 
         {/* ─── 2-column layout: question + standings ─── */}
         <div className="grid flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -514,10 +621,123 @@ export function RealtimePartyQuizScreen({
                 onPlayerSplashComplete={() => setShowPlayerSplash(false)}
                 onAnswer={actions.submitAnswer}
               />
+
+              {showMobileStandingsBelowOptions && (
+                <div className="mt-3 space-y-2 px-4 lg:hidden">
+                  <div className="flex items-center justify-between px-1">
+                    <div className="font-fun text-[10px] font-black uppercase tracking-[0.26em] text-white/45">
+                      Standings
+                    </div>
+                    <div className="font-poppins text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">
+                      Live scores
+                    </div>
+                  </div>
+                  <div className="grid gap-2">
+                    {standings.map((player) => {
+                      const dotStatus = getStandingDotStatus({
+                        roundResolved: state.roundResolved,
+                        answered: player.answered,
+                        showOptions: state.showOptions,
+                      });
+                      const hasAnswered = dotStatus === 'correct';
+                      const rankStyle = getRankStyle(player.rank);
+                      return (
+                        <motion.div
+                          key={player.userId}
+                          layout
+                          layoutId={`mobile-inline-standing-${player.userId}`}
+                          className={cn(
+                            'flex min-h-12 items-center gap-2 rounded-[18px] border-2 bg-surface-page/40 px-2.5 py-1.5 backdrop-blur-sm',
+                            rankStyle.border,
+                            player.isSelf && rankStyle.tint,
+                          )}
+                          style={player.isSelf ? { boxShadow: rankStyle.selfGlow } : undefined}
+                        >
+                          <span
+                            className={cn(
+                              'flex h-8 w-8 shrink-0 items-center justify-center rounded-[12px] text-sm font-black tabular-nums text-white',
+                              rankStyle.pillBg,
+                            )}
+                            style={{ boxShadow: rankStyle.glow }}
+                          >
+                            {player.rank}
+                          </span>
+                          <div
+                            className="relative shrink-0"
+                            data-party-score-anchor={player.userId}
+                          >
+                            <AvatarDisplay
+                              customization={player.avatarCustomization ?? { base: player.avatarUrl ?? undefined }}
+                              size="xs"
+                              className="size-8"
+                            />
+                            {hasAnswered && !player.isSelf && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="absolute -right-0.5 -bottom-0.5 flex size-4 items-center justify-center rounded-full bg-brand-green-light ring-2 ring-surface-page-alt"
+                              >
+                                <svg viewBox="0 0 12 12" className="size-2.5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M2 6l3 3 5-5" />
+                                </svg>
+                              </motion.div>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5">
+                              <span className="truncate font-poppins text-sm font-black text-white">
+                                {player.username}
+                              </span>
+                              {player.isSelf && (
+                                <span className="rounded-full bg-brand-orange px-1.5 py-0.5 font-poppins text-[8px] font-black uppercase tracking-[0.08em] text-white">
+                                  You
+                                </span>
+                              )}
+                              {player.isLeader && <Crown className="size-3.5 shrink-0 text-brand-yellow-deep" />}
+                            </div>
+                          </div>
+                          <span className="shrink-0 font-poppins text-sm font-black tabular-nums text-white">
+                            {player.totalPoints}
+                          </span>
+                          <span
+                            className={cn(
+                              'size-2.5 rounded-full shrink-0',
+                              dotStatus === 'correct' && 'bg-brand-green-light',
+                              dotStatus === 'answering' && 'bg-brand-cyan animate-pulse',
+                              dotStatus === 'resolved' && 'bg-brand-purple animate-pulse',
+                              dotStatus === 'idle' && 'bg-white/20',
+                            )}
+                          />
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </motion.div>
 
             <AnimatePresence>
-              {transitionVisible && (
+              {showFinalizingResults ? (
+                <motion.div
+                  key="party-finalizing-results"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="absolute inset-0 z-20 flex items-center justify-center rounded-[28px] bg-surface-page-alt/90 px-6 backdrop-blur-sm"
+                >
+                  <div className="w-full max-w-sm rounded-[24px] border border-white/10 bg-surface-page/80 px-6 py-7 text-center shadow-2xl">
+                    <div className="font-fun text-[10px] font-black uppercase tracking-[0.26em] text-brand-yellow">
+                      Match Complete
+                    </div>
+                    <LoadingScreen
+                      fullScreen={false}
+                      text="Calculating final scores..."
+                      className="h-auto min-h-0 bg-transparent py-0"
+                    />
+                  </div>
+                </motion.div>
+              ) : transitionVisible && (
                 <RoundTransitionOverlay
                   title={`Question ${transitionQuestionNumber}`}
                   categoryName={transitionCategoryName}
@@ -567,12 +787,14 @@ export function RealtimePartyQuizScreen({
                     </span>
 
                     {/* Avatar */}
-                    <AvatarDisplay
-                      customization={player.avatarCustomization ?? { base: player.avatarUrl ?? undefined }}
-                      size="sm"
-                      shape="circle"
-                      className="shrink-0 bg-transparent"
-                    />
+                    <div className="shrink-0" data-party-score-anchor={player.userId}>
+                      <AvatarDisplay
+                        customization={player.avatarCustomization ?? { base: player.avatarUrl ?? undefined }}
+                        size="sm"
+                        shape="circle"
+                        className="bg-transparent"
+                      />
+                    </div>
 
                     {/* Name + leader crown */}
                     <div className="min-w-0 flex-1">
@@ -634,6 +856,7 @@ export function RealtimePartyQuizScreen({
       </div>
 
       {/* ─── Mobile bottom standings bar ─── */}
+      {!showMobileStandingsBelowOptions && (
       <div className="lg:hidden fixed bottom-0 inset-x-0 z-10 bg-gradient-to-t from-surface-page-alt via-surface-page-alt/95 to-transparent pt-6 pb-3 px-3">
         <div className="flex gap-2 overflow-x-auto scrollbar-none">
           {standings.map((player) => {
@@ -663,7 +886,7 @@ export function RealtimePartyQuizScreen({
                 >
                   {player.rank}
                 </span>
-                <div className="relative">
+                <div className="relative" data-party-score-anchor={player.userId}>
                   <AvatarDisplay
                     customization={player.avatarCustomization ?? { base: player.avatarUrl ?? undefined }}
                     size="xs"
@@ -701,6 +924,43 @@ export function RealtimePartyQuizScreen({
           })}
         </div>
       </div>
+      )}
+
+      <AnimatePresence>
+        {scoreFlights.map((flight) => (
+          <motion.div
+            key={flight.id}
+            initial={{
+              opacity: 0,
+              scale: 0.55,
+              x: flight.from.x,
+              y: flight.from.y,
+              rotate: -7,
+            }}
+            animate={{
+              opacity: [0, 1, 1, 0],
+              scale: [0.55, 1.18, 1, 0.45],
+              x: [flight.from.x, (flight.from.x + flight.to.x) / 2, flight.to.x],
+              y: [flight.from.y, Math.min(flight.from.y, flight.to.y) - 44, flight.to.y],
+              rotate: [0, -5, 3],
+            }}
+            exit={{ opacity: 0 }}
+            transition={{
+              duration: 0.85,
+              times: [0, 0.22, 0.72, 1],
+              ease: 'easeOut',
+            }}
+            className="pointer-events-none fixed left-0 top-0 z-50 -translate-x-1/2 -translate-y-1/2 select-none font-poppins text-4xl font-black text-brand-yellow"
+            style={{
+              WebkitTextStroke: '2px #000000',
+              paintOrder: 'stroke fill',
+              textShadow: '0 6px 0 rgba(0,0,0,0.35), 0 0 16px rgba(255,229,0,0.35)',
+            }}
+          >
+            +{flight.points}
+          </motion.div>
+        ))}
+      </AnimatePresence>
 
       {/* Quit modal */}
       <QuitMatchModal

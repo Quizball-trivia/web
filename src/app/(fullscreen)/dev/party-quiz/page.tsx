@@ -534,6 +534,7 @@ function DevPartyQuizContent() {
           <RealtimePartyQuizScreen
             onQuit={() => setMode('lobby')}
             onForfeit={() => setMode('lobby')}
+            mobileStandingsPlacement="below-options"
           />
         )}
       </div>

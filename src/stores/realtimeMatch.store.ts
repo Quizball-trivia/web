@@ -27,7 +27,8 @@ import type {
 } from '@/lib/realtime/socket.types';
 
 /** Client-side fallback countdown until the server's match:countdown event arrives with the real value. */
-const DEFAULT_COUNTDOWN_MS = 10000;
+const DEFAULT_COUNTDOWN_MS = 5000;
+const PARTY_QUIZ_DEFAULT_COUNTDOWN_MS = 5000;
 
 export interface DraftStatus {
   lobbyId: string;
@@ -316,7 +317,9 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         opponent: payload.opponent,
         myRecentForm: payload.myRecentForm,
         participants: payload.participants,
-        countdownEndsAt: Date.now() + DEFAULT_COUNTDOWN_MS,
+        countdownEndsAt: Date.now() + (payload.variant === 'friendly_party_quiz'
+          ? PARTY_QUIZ_DEFAULT_COUNTDOWN_MS
+          : DEFAULT_COUNTDOWN_MS),
         countdownReason: 'kickoff',
         currentQuestion: null,
         pendingQuestion: null,
@@ -836,10 +839,18 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
     });
   },
   setFinalResults: (payload) => {
-    logger.info('Realtime store set final results', { matchId: payload.matchId, winnerId: payload.winnerId });
+    logger.info('Realtime store set final results', {
+      matchId: payload.matchId,
+      winnerId: payload.winnerId,
+      variant: payload.variant,
+    });
     set((state) => {
       if (!state.match) {
         const rejoin = state.rejoinMatch?.matchId === payload.matchId ? state.rejoinMatch : null;
+        const replayVariant =
+          rejoin?.variant
+          ?? payload.variant
+          ?? (payload.standings ? 'friendly_party_quiz' : payload.rankedOutcome ? 'ranked_sim' : 'friendly_possession');
         const userIds = Object.keys(payload.players);
         const fallbackParticipants: MatchParticipant[] = userIds.map((userId, index) => ({
           userId,
@@ -872,7 +883,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
           match: {
             matchId: payload.matchId,
             mode: rejoin?.mode ?? (payload.rankedOutcome ? 'ranked' : 'friendly'),
-            variant: rejoin?.variant ?? (payload.rankedOutcome ? 'ranked_sim' : 'friendly_possession'),
+            variant: replayVariant,
             mySeat: participants.find((participant) => participant.userId === state.selfUserId)?.seat ?? null,
             opponent,
             participants,
@@ -931,6 +942,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         forfeitPending: null,
         match: {
           ...state.match,
+          variant: payload.variant ?? (payload.standings ? 'friendly_party_quiz' : state.match.variant),
           opponent,
           participants,
           countdownEndsAt: null,

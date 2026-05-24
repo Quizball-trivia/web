@@ -109,7 +109,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
           <KickoffCountdownOverlay
             countdownDisplay={countdownDisplay}
             phase={countdownPhase}
-            durationMs={countdownPhase === 'kickoff' ? 10_000 : 5_000}
+            durationMs={5_000}
             runKey={countdownPhase}
             playerName={props.playerUsername}
             opponentName={props.opponentUsername}
@@ -151,7 +151,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
             <KickoffCountdownOverlay
               countdownDisplay={countdownDisplay}
               phase={countdownPhase}
-              durationMs={countdownPhase === 'kickoff' ? 10_000 : 5_000}
+              durationMs={5_000}
               runKey={countdownPhase}
               playerName={props.playerUsername}
               opponentName={props.opponentUsername}
