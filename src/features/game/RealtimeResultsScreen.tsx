@@ -14,7 +14,7 @@ import { applyXpReward, getMatchXpReward } from '@/lib/domain/matchXp';
 
 import { getTierVisual } from '@/utils/tierVisuals';
 import { getRankedTierProgress, getNextTierBand, tierFromRp } from '@/utils/rankedTier';
-import { trackMatchCompleted, trackDivisionPromoted, trackLevelUp } from '@/lib/analytics/game-events';
+import { trackMatchResultsViewed, trackDivisionPromoted, trackLevelUp } from '@/lib/analytics/game-events';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import type { AvatarCustomization } from '@/types/game';
 import { logger } from '@/utils/logger';
@@ -249,7 +249,7 @@ export function RealtimeResultsScreen({
   useEffect(() => {
     if (trackedMatch) return;
     setTrackedMatch(true);
-    trackMatchCompleted(matchType, playerWon, playerScore, opponentScore, rpChange ?? undefined);
+    trackMatchResultsViewed(matchType, playerWon, playerScore, opponentScore, rpChange ?? undefined);
     if (leveledUp && projectedProgression) {
       trackLevelUp(projectedProgression.level);
     }

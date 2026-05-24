@@ -30,6 +30,7 @@ import {
   type FlightSpec,
 } from '@/features/possession/components/BarBattleFlightOverlay';
 import { GOAL_CELEBRATION_MS, GOAL_SHOT_TO_CELEBRATION_MS } from '@/features/possession/realtimePossession.helpers';
+import { trackSignupStarted } from '@/lib/analytics/game-events';
 
 const SUBHEADING_PHRASE_KEYS: MessageKey[] = [
   "welcome.phraseBack",
@@ -573,6 +574,7 @@ export function WelcomeScreen() {
   const handleKickOff = () => setLoginOpen(true);
   const handleGoogleLogin = async () => {
     try {
+      trackSignupStarted('google');
       const redirectTo = `${window.location.origin}/auth/callback`;
       await socialLogin('google', redirectTo);
     } catch (error) {

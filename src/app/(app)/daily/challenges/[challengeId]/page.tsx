@@ -18,7 +18,7 @@ import { useCompleteDailyChallenge } from "@/lib/queries/dailyChallenges.queries
 import { queryKeys } from "@/lib/queries/queryKeys";
 import { usePlayer } from "@/contexts/PlayerContext";
 import type { DailyChallengeSession, DailyChallengeType } from "@/lib/domain/dailyChallenge";
-import { trackDailyChallengeCompleted } from "@/lib/analytics/game-events";
+import { trackDailyChallengeCompleted, trackDailyChallengeStarted, trackDailyChallengeQuit } from "@/lib/analytics/game-events";
 import { ApiError } from "@/lib/api/api";
 import { createDailyChallengeSession } from "@/lib/repositories/dailyChallenges.repo";
 import { toDailyChallengeSession } from "@/lib/mappers/dailyChallenge.mapper";
@@ -93,7 +93,11 @@ export default function ChallengePage() {
 
       try {
         const result = await completeMutation.mutateAsync(score);
-        trackDailyChallengeCompleted(challengeType);
+        trackDailyChallengeCompleted({
+          challengeType,
+          score,
+          xpAwarded: result.xpAwarded,
+        });
         if (result.xpAwarded > 0) {
           addXP(result.xpAwarded);
         }
@@ -110,6 +114,7 @@ export default function ChallengePage() {
     if (!challengeType) {
       return;
     }
+    trackDailyChallengeStarted(challengeType);
 
     let cancelled = false;
     queueMicrotask(() => {

@@ -822,5 +822,16 @@
     "purchaseCompleted": "შენაძენი დასრულდა. განვაახლებთ შენს განბლოკილ ნივთებს.",
     "purchaseCancelled": "შენაძენი გაუქმდა.",
     "pleaseTryAgain": "სცადე თავიდან."
+  },
+  "inAppBrowser": {
+    "title": "გახსენი ბრაუზერში",
+    "body": "შესვლა არ მუშაობს ამ აპლიკაციის შიდა ბრაუზერში. გვერდის გასახსნელად გამოიყენე Safari ან Chrome.",
+    "iosStep1": "დააჭირე მენიუს (⋯ ან გაზიარების ხატულას) ზედა მარჯვენა კუთხეში.",
+    "iosStep2": "აირჩიე „Open in Safari“.",
+    "androidStep1": "დააჭირე მენიუს (⋮) ზედა მარჯვენა კუთხეში.",
+    "androidStep2": "აირჩიე „Open in browser“ ან „Open in Chrome“.",
+    "genericInstructions": "გასახსნელად გამოიყენე Safari, Chrome ან Firefox.",
+    "orCopyLink": "ან დააკოპირე ბმული",
+    "openInBrowser": "ბრაუზერში გახსნა"
   }
 }

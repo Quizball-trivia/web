@@ -11,6 +11,7 @@ import { apiFetch } from "@/lib/api/client";
 import { useAuthStore } from "@/stores/auth.store";
 import { DEFAULT_HAIR_ID, DEFAULT_JERSEY_ID, DEFAULT_SKIN_ID } from "@/lib/avatars/parts";
 import type { AvatarCustomization } from "@/types/game";
+import { trackOnboardingCompleted, trackSignupCompleted } from "@/lib/analytics/game-events";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -45,6 +46,8 @@ export default function OnboardingPage() {
       setAuthenticated(completedUser);
 
       storage.set(STORAGE_KEYS.ONBOARDING_COMPLETE, true);
+      trackOnboardingCompleted();
+      trackSignupCompleted('google');
       router.replace("/");
       toast.success("Welcome to QuizBall!", {
         description: "Your football trivia journey begins now!",

@@ -1,5 +1,13 @@
 import { create } from 'zustand';
 import { logger } from '@/utils/logger';
+import {
+  trackMatchStarted,
+  trackMatchCompleted,
+  trackMatchDisconnected,
+  trackMatchReconnected,
+  trackMatchForfeit,
+  trackAnswerSubmitted,
+} from '@/lib/analytics/game-events';
 import type {
   DraftCategory,
   DraftState,
@@ -298,6 +306,18 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
   },
     setMatchStart: (payload) => {
       logger.info('Realtime store set match start', { matchId: payload.matchId, opponentId: payload.opponent.id });
+      try {
+        const isAiOpponent = !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(payload.opponent.id ?? '');
+        trackMatchStarted({
+          matchId: payload.matchId,
+          mode: payload.mode,
+          variant: payload.variant,
+          opponentIsAi: isAiOpponent,
+          opponentRp: payload.opponent.rp,
+        });
+      } catch {
+        /* analytics best-effort */
+      }
       set({
         lobby: null,
         draft: null,
@@ -641,6 +661,29 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         });
         return state;
       }
+      try {
+        const q = state.match.currentQuestion;
+        if (q && q.qIndex === payload.qIndex) {
+          const startedAt = (q as { startedAt?: number; startsAt?: number }).startedAt
+            ?? (q as { startsAt?: number }).startsAt
+            ?? 0;
+          const timeMs = startedAt ? Math.max(0, Date.now() - startedAt) : 0;
+          trackAnswerSubmitted(
+            (q as { questionId?: string; id?: string }).questionId
+              ?? (q as { id?: string }).id
+              ?? `${payload.matchId}:${payload.qIndex}`,
+            payload.isCorrect,
+            timeMs,
+            payload.qIndex,
+            (q as { difficulty?: string }).difficulty,
+            (q as { categoryName?: string; category?: string }).categoryName
+              ?? (q as { category?: string }).category,
+            payload.matchId,
+          );
+        }
+      } catch {
+        /* analytics best-effort */
+      }
       const currentQIndex = state.match.currentQuestion?.qIndex;
       if (currentQIndex !== undefined && payload.qIndex !== currentQIndex) {
         logger.warn('Ignoring stale match:answer_ack event', {
@@ -845,6 +888,31 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       variant: payload.variant,
     });
     set((state) => {
+      try {
+        const selfId = state.selfUserId;
+        const myPlayer = selfId ? payload.players[selfId] : null;
+        const oppParticipant = (payload.participants ?? state.match?.participants ?? [])
+          .find((p) => p.userId !== selfId);
+        const oppPlayer = oppParticipant ? payload.players[oppParticipant.userId] : null;
+        const myScore = myPlayer?.totalPoints ?? 0;
+        const oppScore = oppPlayer?.totalPoints ?? 0;
+        const isAiOpponent = oppParticipant
+          ? !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(oppParticipant.userId)
+          : false;
+        const won = selfId ? payload.winnerId === selfId : false;
+        trackMatchCompleted({
+          matchId: payload.matchId,
+          mode: state.match?.mode ?? (payload.rankedOutcome ? 'ranked' : 'friendly'),
+          variant: payload.variant ?? state.match?.variant,
+          won,
+          score: myScore,
+          opponentScore: oppScore,
+          rpChange: selfId ? payload.rankedOutcome?.byUserId?.[selfId]?.deltaRp : undefined,
+          opponentIsAi: isAiOpponent,
+        });
+      } catch {
+        /* analytics best-effort */
+      }
       if (!state.match) {
         const rejoin = state.rejoinMatch?.matchId === payload.matchId ? state.rejoinMatch : null;
         const replayVariant =
@@ -957,6 +1025,11 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       matchId: payload.matchId,
       reason: payload.reason,
     });
+    try {
+      trackMatchForfeit(payload.matchId, payload.reason ?? 'unknown');
+    } catch {
+      /* analytics best-effort */
+    }
     set({
       forfeitPending: {
         ...payload,
@@ -974,18 +1047,41 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
   },
   setMatchPaused: ({ graceMs, remainingReconnects }) => {
     logger.info('Realtime store set match paused', { graceMs, remainingReconnects });
-    set({
-      matchPaused: true,
-      pauseUntil: Date.now() + graceMs,
-      remainingReconnects,
+    set((state) => {
+      try {
+        if (state.match) {
+          trackMatchDisconnected(state.match.matchId, 0, state.match.currentQuestionPhase ?? undefined);
+        }
+      } catch {
+        /* analytics best-effort */
+      }
+      return {
+        matchPaused: true,
+        pauseUntil: Date.now() + graceMs,
+        remainingReconnects,
+      };
     });
   },
   clearMatchPaused: () => {
     logger.info('Realtime store clear match paused');
-    set({
-      matchPaused: false,
-      pauseUntil: null,
-      remainingReconnects: null,
+    set((state) => {
+      try {
+        if (state.match && state.matchPaused && state.pauseUntil) {
+          // remaining grace was (pauseUntil - now), so downtime = graceTotal - remaining.
+          // We don't have graceTotal here, fallback to time-since-pause = 0 wouldn't help;
+          // instead estimate downtime as elapsed grace consumed.
+          const remainingMs = Math.max(0, state.pauseUntil - Date.now());
+          const downtimeSec = Math.max(0, Math.round((Date.now() - (state.pauseUntil - remainingMs)) / 1000));
+          trackMatchReconnected(state.match.matchId, downtimeSec);
+        }
+      } catch {
+        /* analytics best-effort */
+      }
+      return {
+        matchPaused: false,
+        pauseUntil: null,
+        remainingReconnects: null,
+      };
     });
   },
   setDraftPaused: ({ lobbyId, opponentId, graceMs }) => {
