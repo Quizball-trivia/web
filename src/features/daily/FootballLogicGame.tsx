@@ -3,13 +3,20 @@
 /* eslint-disable @next/next/no-img-element -- Football Logic clue images are CMS-provided runtime URLs. */
 
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, Clock } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import type { FootballLogicSession } from "@/lib/domain/dailyChallenge";
 import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
 import { findAcceptedAnswer } from "./daily-challenge.utils";
 import { QuitGameDialog } from "./QuitGameDialog";
+
+const poppins = {
+  fontFamily: "'Poppins', sans-serif",
+  fontWeight: 600,
+  letterSpacing: '0',
+  lineHeight: 1,
+} as const;
 
 interface FootballLogicGameProps {
   session: FootballLogicSession;
@@ -97,108 +104,145 @@ export function FootballLogicGame({
     return null;
   }
 
+  const displayTimer = timeLeft >= 10 ? `${timeLeft}` : `0${timeLeft}`;
+
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-deep font-poppins text-white">
-      <div className="border-b border-white/10 bg-black/15">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
+    <div className="fixed inset-0 z-40 flex flex-col bg-[#131F24] text-white">
+      {/* Header pills */}
+      <div className="px-4 pt-4">
+        <div className="mx-auto max-w-4xl flex items-stretch gap-2.5">
           <button
             onClick={() => setShowQuitDialog(true)}
-            className="flex size-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 transition hover:bg-white/10"
+            className="flex items-center justify-center rounded-[16px] bg-brand-blue px-4 text-white h-[40px] sm:h-[52px]"
+            style={poppins}
           >
-            <ArrowLeft className="size-5" />
+            ✕
           </button>
-          <div className="text-center">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/45">
-              {session.title}
-            </p>
-            <p className="text-sm font-semibold text-white/80">
-              {currentQuestionIndex + 1} / {session.questionCount}
-            </p>
+          <div
+            className="flex flex-1 items-center justify-center rounded-[16px] bg-brand-blue px-5 text-white h-[40px] sm:h-[52px]"
+            style={{ ...poppins, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
+          >
+            QUESTION {currentQuestionIndex + 1}/{session.questionCount}
           </div>
-          <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-center">
-            <div className="flex items-center gap-2 text-sm font-semibold">
-              <Clock className="size-4 text-brand-yellow-soft" />
-              <span>{timeLeft}s</span>
-            </div>
+          <div
+            className="flex w-[64px] items-center justify-center rounded-[16px] bg-brand-blue text-white h-[40px] sm:h-[52px] sm:w-[92px] tabular-nums"
+            style={{ ...poppins, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
+          >
+            {displayTimer}
           </div>
         </div>
       </div>
 
-      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center px-4 py-6">
-        <div className="mb-6 h-2 overflow-hidden rounded-full bg-white/10">
+      {/* Content */}
+      <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center px-4 py-4 overflow-y-auto">
+        {/* Question card */}
+        {currentQuestion.prompt && (
           <div
-            className="h-full rounded-full bg-[#F38FFF] transition-all"
-            style={{ width: `${((currentQuestionIndex + 1) / session.questionCount) * 100}%` }}
-          />
+            className="rounded-[24px] bg-surface-page px-5 py-5 text-white sm:px-6 sm:py-6"
+            style={{
+              fontFamily: "'Poppins', sans-serif",
+              fontWeight: 700,
+              fontSize: 'clamp(15px, 1.9vw, 26px)',
+            }}
+          >
+            <p className="leading-snug">{currentQuestion.prompt}</p>
+          </div>
+        )}
+
+        {/* Image clues — yellow bordered cards */}
+        <div className="mt-3 grid gap-2.5 md:grid-cols-2">
+          <div
+            className="overflow-hidden rounded-[16px] p-2"
+            style={{
+              border: '2px solid rgba(255,229,0,0.3)',
+              boxShadow: '0 0 6.334px 1.32px rgba(255,229,0,0.1)',
+            }}
+          >
+            <img
+              src={currentQuestion.imageAUrl}
+              alt="Football logic clue A"
+              className="h-56 w-full rounded-[12px] object-cover"
+            />
+          </div>
+          <div
+            className="overflow-hidden rounded-[16px] p-2"
+            style={{
+              border: '2px solid rgba(255,229,0,0.3)',
+              boxShadow: '0 0 6.334px 1.32px rgba(255,229,0,0.1)',
+            }}
+          >
+            <img
+              src={currentQuestion.imageBUrl}
+              alt="Football logic clue B"
+              className="h-56 w-full rounded-[12px] object-cover"
+            />
+          </div>
         </div>
 
-        <div className="rounded-[28px] border border-white/10 bg-surface-input/90 p-6 shadow-[0_24px_60px_rgba(0,0,0,0.28)]">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-white/55">
-              {currentQuestion.category}
-            </span>
-            <span className="text-sm font-semibold capitalize text-white/55">
-              {currentQuestion.difficulty}
-            </span>
-          </div>
+        {/* Input + submit */}
+        <div className="mt-4 flex flex-col gap-2.5 md:flex-row">
+          <Input
+            value={answer}
+            disabled={resolved}
+            onChange={(event) => setAnswer(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                submitAnswer();
+              }
+            }}
+            placeholder={copy.typeYourAnswer}
+            className="h-[48px] sm:h-[56px] rounded-[16px] bg-surface-page text-white text-center placeholder:text-white/35 flex-1"
+            style={{ ...poppins, fontSize: 'clamp(14px, 1.7vw, 22px)', fontWeight: 500, border: '2px solid rgba(255,255,255,0.1)' }}
+            autoFocus
+          />
+          <button
+            type="button"
+            disabled={resolved}
+            onClick={submitAnswer}
+            className="flex items-center justify-center rounded-[16px] px-6 h-[48px] sm:h-[56px] transition-shadow duration-150"
+            style={{
+              ...poppins,
+              fontSize: 'clamp(13px, 1.7vw, 20px)',
+              textTransform: 'uppercase',
+              backgroundColor: '#38B60E',
+              color: '#FFFFFF',
+              boxShadow: '0 1.76px 6.334px 1.32px rgba(56,182,14,0.25)',
+              cursor: resolved ? 'default' : 'pointer',
+              opacity: resolved ? 0.5 : 1,
+            }}
+          >
+            {copy.submit}
+          </button>
+        </div>
 
-          {currentQuestion.prompt ? (
-            <h1 className="mb-6 text-2xl font-semibold leading-tight md:text-3xl">
-              {currentQuestion.prompt}
-            </h1>
-          ) : null}
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="overflow-hidden rounded-[24px] border border-white/10 bg-black/20 p-3">
-              <img
-                src={currentQuestion.imageAUrl}
-                alt="Football logic clue A"
-                className="h-64 w-full rounded-[18px] object-cover"
-              />
-            </div>
-            <div className="overflow-hidden rounded-[24px] border border-white/10 bg-black/20 p-3">
-              <img
-                src={currentQuestion.imageBUrl}
-                alt="Football logic clue B"
-                className="h-64 w-full rounded-[18px] object-cover"
-              />
-            </div>
-          </div>
-
-          <div className="mt-6 flex flex-col gap-3 md:flex-row">
-            <Input
-              value={answer}
-              disabled={resolved}
-              onChange={(event) => setAnswer(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  submitAnswer();
-                }
-              }}
-              placeholder={copy.typeYourAnswer}
-              className="h-14 rounded-2xl border-white/10 bg-white/[0.04] text-lg text-white placeholder:text-white/35"
-            />
-            <button
-              type="button"
-              disabled={resolved}
-              onClick={submitAnswer}
-              className="rounded-2xl bg-brand-green px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-green disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {copy.submit}
-            </button>
-          </div>
-
-          {resolved ? (
-            <div className="mt-4 space-y-1">
-              <p className={`text-sm font-semibold ${lastWasCorrect ? "text-brand-green-light" : "text-brand-red-light"}`}>
+        {/* Result feedback */}
+        {resolved && (
+          <div
+            className="mt-3 rounded-[16px] px-4 py-3"
+            style={{
+              backgroundColor: lastWasCorrect ? 'rgba(56,182,14,0.15)' : 'rgba(251,49,1,0.15)',
+              border: lastWasCorrect ? '2px solid rgba(56,182,14,0.5)' : '2px solid rgba(251,49,1,0.5)',
+            }}
+          >
+            <div className="flex items-center justify-center gap-2" style={{ ...poppins, fontSize: 'clamp(13px, 1.7vw, 20px)', color: lastWasCorrect ? '#58CC02' : '#FB3101' }}>
+              {lastWasCorrect ? <CheckCircle2 className="size-5" /> : <XCircle className="size-5" />}
+              <span>
                 {lastWasCorrect ? copy.correct : `${copy.answerPrefix}: ${currentQuestion.displayAnswer}`}
-              </p>
-              {currentQuestion.explanation ? (
-                <p className="text-sm text-white/55">{currentQuestion.explanation}</p>
-              ) : null}
+              </span>
             </div>
-          ) : null}
+            {currentQuestion.explanation && (
+              <p className="mt-1 text-center text-sm text-white/55" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                {currentQuestion.explanation}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Score */}
+        <div className="mt-4 flex items-center justify-between text-sm" style={poppins}>
+          <span className="text-white/55">Score</span>
+          <span className="text-white">{correctCount}</span>
         </div>
       </div>
 

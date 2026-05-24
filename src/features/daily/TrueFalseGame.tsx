@@ -1,11 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
 
 import type { TrueFalseSession } from "@/lib/domain/dailyChallenge";
 import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
 import { QuitGameDialog } from "./QuitGameDialog";
+
+const poppins = {
+  fontFamily: "'Poppins', sans-serif",
+  fontWeight: 600,
+  letterSpacing: '0',
+  lineHeight: 1,
+} as const;
 
 interface TrueFalseGameProps {
   session: TrueFalseSession;
@@ -110,136 +117,136 @@ export function TrueFalseGame({
     return null;
   }
 
+  const displayTimer = timeLeft >= 10 ? `${timeLeft}` : `0${timeLeft}`;
+
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-deep font-poppins text-white">
-      <div className="border-b border-white/10 bg-black/15">
-        <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-3">
+    <div className="fixed inset-0 z-40 flex flex-col bg-[#131F24] text-white">
+      {/* Header pills */}
+      <div className="px-4 pt-4">
+        <div className="mx-auto max-w-3xl flex items-stretch gap-2.5">
           <button
             onClick={() => setShowQuitDialog(true)}
-            className="flex size-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 transition hover:bg-white/10"
+            className="flex items-center justify-center rounded-[16px] bg-brand-blue px-4 text-white h-[40px] sm:h-[52px]"
+            style={poppins}
           >
-            <ArrowLeft className="size-5" />
+            ✕
           </button>
-          <div className="text-center">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/45">
-              {session.title}
-            </p>
-            <p className="text-sm font-semibold text-white/80">
-              {currentQuestionIndex + 1} / {session.questionCount}
-            </p>
+          <div
+            className="flex flex-1 items-center justify-center rounded-[16px] bg-brand-blue px-5 text-white h-[40px] sm:h-[52px]"
+            style={{ ...poppins, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
+          >
+            QUESTION {currentQuestionIndex + 1}/{session.questionCount}
           </div>
-          <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-center">
-            <div className="flex items-center gap-2 text-sm font-semibold">
-              <Clock className="size-4 text-brand-yellow-soft" />
-              <span>{timeLeft}s</span>
-            </div>
+          <div
+            className="flex w-[64px] items-center justify-center rounded-[16px] bg-brand-blue text-white h-[40px] sm:h-[52px] sm:w-[92px] tabular-nums"
+            style={{ ...poppins, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
+          >
+            {displayTimer}
           </div>
         </div>
       </div>
 
-      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 py-6">
-        <div className="mb-6 h-2 overflow-hidden rounded-full bg-white/10">
-          <div
-            className="h-full rounded-full bg-brand-green-light transition-all"
-            style={{ width: `${((currentQuestionIndex + 1) / session.questionCount) * 100}%` }}
-          />
+      {/* Content */}
+      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 py-4">
+        {/* Question card */}
+        <div
+          className="flex items-center rounded-[24px] bg-surface-page px-5 py-5 text-white sm:px-6 sm:py-6"
+          style={{
+            fontFamily: "'Poppins', sans-serif",
+            fontWeight: 700,
+            fontSize: 'clamp(15px, 1.9vw, 26px)',
+            minHeight: 'clamp(108px, 15vw, 176px)',
+          }}
+        >
+          <p className="leading-snug">{currentQuestion.prompt}</p>
         </div>
 
-        <div
-          className={[
-            "rounded-[28px] border bg-surface-input/90 p-6 shadow-[0_24px_60px_rgba(0,0,0,0.28)] transition",
-            resultTone === "correct"
-              ? "border-brand-green-light/70 shadow-[0_24px_70px_rgba(88,204,2,0.18)]"
-              : resultTone === "wrong"
-                ? "border-brand-red-light/70 shadow-[0_24px_70px_rgba(255,107,107,0.16)]"
-                : resultTone === "timeout"
-                  ? "border-brand-yellow-soft/60"
-                  : "border-white/10",
-          ].join(" ")}
-        >
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-white/55">
-              {currentQuestion.category}
-            </span>
-            <span className="text-sm font-semibold capitalize text-white/55">
-              {currentQuestion.difficulty}
-            </span>
-          </div>
-
-          <h1 className="mb-8 text-2xl font-semibold leading-tight md:text-3xl">
-            {currentQuestion.prompt}
-          </h1>
-
-          {showResult ? (
-            <div
-              className={[
-                "mb-5 flex items-center justify-between gap-4 rounded-2xl border px-4 py-3 text-sm font-semibold",
-                resultTone === "correct"
-                  ? "border-brand-green-light/60 bg-brand-green-light/15 text-[#8BF15B]"
-                  : resultTone === "wrong"
-                    ? "border-brand-red-light/60 bg-brand-red-light/15 text-brand-red-light"
-                    : "border-brand-yellow-soft/50 bg-brand-yellow-soft/12 text-brand-yellow-soft",
-              ].join(" ")}
-            >
+        {/* Result feedback */}
+        {showResult && (
+          <div
+            className="mt-3 flex items-center justify-between gap-4 rounded-[16px] px-4 py-3"
+            style={{
+              ...poppins,
+              fontSize: 'clamp(13px, 1.7vw, 20px)',
+              backgroundColor: resultTone === "correct"
+                ? 'rgba(56,182,14,0.15)'
+                : resultTone === "wrong"
+                  ? 'rgba(251,49,1,0.15)'
+                  : 'rgba(255,150,0,0.15)',
+              border: resultTone === "correct"
+                ? '2px solid rgba(56,182,14,0.5)'
+                : resultTone === "wrong"
+                  ? '2px solid rgba(251,49,1,0.5)'
+                  : '2px solid rgba(255,150,0,0.5)',
+              color: resultTone === "correct"
+                ? '#58CC02'
+                : resultTone === "wrong"
+                  ? '#FB3101'
+                  : '#FF9600',
+            }}
+          >
+            <div className="flex items-center gap-2">
+              {resultTone === "correct" ? <CheckCircle2 className="size-5" /> : resultTone === "wrong" ? <XCircle className="size-5" /> : null}
               <span>
-                {resultTone === "correct"
-                  ? "Correct"
-                  : resultTone === "wrong"
-                    ? "Wrong"
-                    : "Time's up"}
-              </span>
-              <span className="text-white/70">
-                Answer: {currentQuestion.correctAnswer ? currentQuestion.trueLabel : currentQuestion.falseLabel}
+                {resultTone === "correct" ? "Correct!" : resultTone === "wrong" ? "Wrong" : "Time's up"}
               </span>
             </div>
-          ) : null}
-
-          <div className="grid gap-4 md:grid-cols-2">
-            {[
-              { value: true, label: currentQuestion.trueLabel },
-              { value: false, label: currentQuestion.falseLabel },
-            ].map((option) => {
-              const isSelected = selectedAnswer === option.value;
-              const shouldShowCorrect = showResult && option.value === currentQuestion.correctAnswer;
-              const shouldShowWrong = showResult && isSelected && option.value !== currentQuestion.correctAnswer;
-
-              return (
-                <button
-                  key={String(option.value)}
-                  type="button"
-                  disabled={showResult}
-                  onClick={() => handleAnswer(option.value)}
-                  className={[
-                    "rounded-[24px] border px-5 py-6 text-left text-xl font-semibold transition",
-                    shouldShowCorrect
-                      ? "border-brand-green-light bg-brand-green-light text-black shadow-[0_14px_35px_rgba(88,204,2,0.28)]"
-                      : shouldShowWrong
-                        ? "border-brand-red-light bg-brand-red-light text-black shadow-[0_14px_35px_rgba(255,107,107,0.22)]"
-                        : isSelected
-                          ? "border-brand-cyan bg-brand-cyan/15 text-white"
-                          : showResult
-                            ? "border-white/10 bg-white/[0.02] text-white/35"
-                            : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]",
-                  ].join(" ")}
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <span>{option.label}</span>
-                    {showResult && shouldShowCorrect ? (
-                      <CheckCircle2 className="size-7 text-black" />
-                    ) : null}
-                    {showResult && shouldShowWrong ? (
-                      <XCircle className="size-7 text-black" />
-                    ) : null}
-                  </div>
-                </button>
-              );
-            })}
+            <span className="text-white/70" style={{ fontSize: 'clamp(11px, 1.4vw, 16px)' }}>
+              Answer: {currentQuestion.correctAnswer ? currentQuestion.trueLabel : currentQuestion.falseLabel}
+            </span>
           </div>
+        )}
+
+        {/* Answer buttons — 2 column grid matching ranked style */}
+        <div className="mt-3 grid grid-cols-2 gap-2.5">
+          {[
+            { value: true, label: currentQuestion.trueLabel },
+            { value: false, label: currentQuestion.falseLabel },
+          ].map((option) => {
+            const isSelected = selectedAnswer === option.value;
+            const shouldShowCorrect = showResult && option.value === currentQuestion.correctAnswer;
+            const shouldShowWrong = showResult && isSelected && option.value !== currentQuestion.correctAnswer;
+
+            return (
+              <button
+                key={String(option.value)}
+                type="button"
+                disabled={showResult}
+                onClick={() => handleAnswer(option.value)}
+                className="relative flex items-center justify-center overflow-hidden rounded-[16px] px-3 transition-shadow duration-150 h-[60px] sm:h-[78px] md:h-[94px]"
+                style={{
+                  ...poppins,
+                  fontSize: 'clamp(14px, 2vw, 28px)',
+                  textTransform: 'uppercase',
+                  color: shouldShowWrong ? '#FB3101' : '#FFFFFF',
+                  backgroundColor: shouldShowCorrect ? '#38B60E' : 'transparent',
+                  border: shouldShowCorrect
+                    ? 'none'
+                    : shouldShowWrong
+                      ? '2px solid #FB3101'
+                      : '2px solid #FFE500',
+                  boxShadow: shouldShowCorrect
+                    ? '0 1.76px 6.334px 1.32px rgba(56,182,14,0.25)'
+                    : shouldShowWrong
+                      ? '0 1.76px 6.334px 1.32px rgba(251,49,1,0.25)'
+                      : '0 0 6.334px 1.32px rgba(255,229,0,0.25)',
+                  cursor: showResult ? 'default' : 'pointer',
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <span>{option.label}</span>
+                  {showResult && shouldShowCorrect && <CheckCircle2 className="size-6" />}
+                  {showResult && shouldShowWrong && <XCircle className="size-6" />}
+                </div>
+              </button>
+            );
+          })}
         </div>
 
-        <div className="mt-5 flex items-center justify-between text-sm text-white/55">
-          <span>{copy.correctAnswers}</span>
-          <span className="font-semibold text-white">{correctCount}</span>
+        {/* Score */}
+        <div className="mt-4 flex items-center justify-between text-sm" style={poppins}>
+          <span className="text-white/55">{copy.correctAnswers}</span>
+          <span className="text-white">{correctCount}</span>
         </div>
       </div>
 
