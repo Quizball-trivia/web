@@ -1,11 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, CheckCircle2, Clock } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 
 import type { ImposterSession } from "@/lib/domain/dailyChallenge";
 import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
 import { QuitGameDialog } from "./QuitGameDialog";
+
+const poppins = {
+  fontFamily: "'Poppins', sans-serif",
+  fontWeight: 600,
+  letterSpacing: '0',
+  lineHeight: 1,
+} as const;
 
 interface ImposterGameProps {
   session: ImposterSession;
@@ -101,111 +108,125 @@ export function ImposterGame({
     return null;
   }
 
+  const displayTimer = timeLeft >= 10 ? `${timeLeft}` : `0${timeLeft}`;
+
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-deep font-poppins text-white">
-      <div className="border-b border-white/10 bg-black/15">
-        <div className="mx-auto flex w-full max-w-4xl items-center justify-between px-4 py-3">
+    <div className="fixed inset-0 z-40 flex flex-col bg-[#131F24] text-white">
+      {/* Header pills */}
+      <div className="px-4 pt-4">
+        <div className="mx-auto max-w-3xl flex items-stretch gap-2.5">
           <button
             onClick={() => setShowQuitDialog(true)}
-            className="flex size-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 transition hover:bg-white/10"
+            className="flex items-center justify-center rounded-[16px] bg-brand-blue px-4 text-white h-[40px] sm:h-[52px]"
+            style={poppins}
           >
-            <ArrowLeft className="size-5" />
+            ✕
           </button>
-          <div className="text-center">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/45">
-              {session.title}
-            </p>
-            <p className="text-sm font-semibold text-white/80">
-              {currentQuestionIndex + 1} / {session.questionCount}
-            </p>
+          <div
+            className="flex flex-1 items-center justify-center rounded-[16px] bg-brand-blue px-5 text-white h-[40px] sm:h-[52px]"
+            style={{ ...poppins, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
+          >
+            QUESTION {currentQuestionIndex + 1}/{session.questionCount}
           </div>
-          <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-center">
-            <div className="flex items-center gap-2 text-sm font-semibold">
-              <Clock className="size-4 text-brand-yellow-soft" />
-              <span>{timeLeft}s</span>
-            </div>
+          <div
+            className="flex w-[64px] items-center justify-center rounded-[16px] bg-brand-blue text-white h-[40px] sm:h-[52px] sm:w-[92px] tabular-nums"
+            style={{ ...poppins, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
+          >
+            {displayTimer}
           </div>
         </div>
       </div>
 
-      <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center px-4 py-6">
-        <div className="mb-6 h-2 overflow-hidden rounded-full bg-white/10">
-          <div
-            className="h-full rounded-full bg-brand-cyan transition-all"
-            style={{ width: `${((currentQuestionIndex + 1) / session.questionCount) * 100}%` }}
-          />
-        </div>
-
-        <div className="rounded-[28px] border border-white/10 bg-surface-input/90 p-6 shadow-[0_24px_60px_rgba(0,0,0,0.28)]">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-white/55">
-              {currentQuestion.category}
-            </span>
-            <span className="text-sm font-semibold capitalize text-white/55">
-              {currentQuestion.difficulty}
-            </span>
-          </div>
-
-          <h1 className="mb-2 text-2xl font-semibold leading-tight md:text-3xl">
-            {currentQuestion.prompt}
-          </h1>
-          <p className="mb-8 text-sm text-white/55">
+      {/* Content */}
+      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 py-4 overflow-y-auto">
+        {/* Question card */}
+        <div
+          className="flex flex-col rounded-[24px] bg-surface-page px-5 py-5 text-white sm:px-6 sm:py-6"
+          style={{
+            fontFamily: "'Poppins', sans-serif",
+            fontWeight: 700,
+            fontSize: 'clamp(15px, 1.9vw, 26px)',
+            minHeight: 'clamp(80px, 12vw, 140px)',
+          }}
+        >
+          <p className="leading-snug">{currentQuestion.prompt}</p>
+          <p className="mt-2 text-white/50" style={{ fontSize: 'clamp(11px, 1.3vw, 16px)', fontWeight: 500 }}>
             {copy.imposterInstruction}
           </p>
+        </div>
 
-          <div className="grid gap-3 md:grid-cols-2">
-            {currentQuestion.options.map((option) => {
-              const isSelected = selectedOptionIds.includes(option.id);
-              const isCorrect = currentQuestion.correctOptionIds.includes(option.id);
+        {/* Options — 2 column grid, yellow border like ranked MC */}
+        <div className="mt-3 grid grid-cols-2 gap-2.5">
+          {currentQuestion.options.map((option) => {
+            const isSelected = selectedOptionIds.includes(option.id);
+            const isCorrect = currentQuestion.correctOptionIds.includes(option.id);
+            const isRevealCorrect = resolved && isCorrect;
+            const isRevealWrong = resolved && isSelected && !isCorrect;
 
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  disabled={resolved}
-                  onClick={() => toggleOption(option.id)}
-                  className={[
-                    "rounded-[20px] border px-4 py-4 text-left transition",
-                    resolved && isCorrect
-                      ? "border-brand-green-light bg-brand-green-light/15"
-                      : resolved && isSelected && !isCorrect
-                        ? "border-brand-red-light bg-brand-red-light/15"
-                        : isSelected
-                          ? "border-brand-cyan bg-brand-cyan/15"
-                          : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]",
-                  ].join(" ")}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-lg font-semibold">{option.text}</span>
-                    <span
-                      className={[
-                        "flex size-6 items-center justify-center rounded-full border text-xs",
-                        isSelected || (resolved && isCorrect)
-                          ? "border-white/20 bg-white/15 text-white"
-                          : "border-white/15 text-transparent",
-                      ].join(" ")}
-                    >
-                      <CheckCircle2 className="size-4" />
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+            return (
+              <button
+                key={option.id}
+                type="button"
+                disabled={resolved}
+                onClick={() => toggleOption(option.id)}
+                className="relative flex items-center justify-center overflow-hidden rounded-[16px] px-3 transition-shadow duration-150 h-[60px] sm:h-[78px] md:h-[94px]"
+                style={{
+                  ...poppins,
+                  fontSize: 'clamp(13px, 1.7vw, 22px)',
+                  textTransform: 'uppercase',
+                  color: isRevealWrong ? '#FB3101' : '#FFFFFF',
+                  backgroundColor: isRevealCorrect ? '#38B60E' : 'transparent',
+                  border: isRevealCorrect
+                    ? 'none'
+                    : isRevealWrong
+                      ? '2px solid #FB3101'
+                      : isSelected
+                        ? '2px solid #1CB0F6'
+                        : '2px solid #FFE500',
+                  boxShadow: isRevealCorrect
+                    ? '0 1.76px 6.334px 1.32px rgba(56,182,14,0.25)'
+                    : isRevealWrong
+                      ? '0 1.76px 6.334px 1.32px rgba(251,49,1,0.25)'
+                      : isSelected
+                        ? '0 0 6.334px 1.32px rgba(28,176,246,0.25)'
+                        : '0 0 6.334px 1.32px rgba(255,229,0,0.25)',
+                  cursor: resolved ? 'default' : 'pointer',
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-center leading-tight">{option.text}</span>
+                  {(isSelected || isRevealCorrect) && (
+                    <CheckCircle2 className="size-5 shrink-0" />
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
 
-          <div className="mt-8 flex items-center justify-between gap-3">
-            <p className="text-sm text-white/55">
-              {copy.score}: <span className="font-semibold text-white">{correctCount}</span>
-            </p>
-            <button
-              type="button"
-              disabled={resolved}
-              onClick={handleResolve}
-              className="rounded-2xl bg-brand-green px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-green disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {copy.submitSelection}
-            </button>
-          </div>
+        {/* Submit + score */}
+        <div className="mt-4 flex items-center justify-between">
+          <p className="text-sm text-white/55" style={poppins}>
+            {copy.score}: <span className="text-white">{correctCount}</span>
+          </p>
+          <button
+            type="button"
+            disabled={resolved}
+            onClick={handleResolve}
+            className="flex items-center justify-center rounded-[16px] px-6 h-[40px] sm:h-[48px] transition-shadow duration-150"
+            style={{
+              ...poppins,
+              fontSize: 'clamp(13px, 1.7vw, 20px)',
+              textTransform: 'uppercase',
+              backgroundColor: '#38B60E',
+              color: '#FFFFFF',
+              boxShadow: '0 1.76px 6.334px 1.32px rgba(56,182,14,0.25)',
+              cursor: resolved ? 'default' : 'pointer',
+              opacity: resolved ? 0.5 : 1,
+            }}
+          >
+            {copy.submitSelection}
+          </button>
         </div>
       </div>
 

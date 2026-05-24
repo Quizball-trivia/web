@@ -1,11 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, Clock } from "lucide-react";
 
 import type { HighLowSession } from "@/lib/domain/dailyChallenge";
 import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
 import { QuitGameDialog } from "./QuitGameDialog";
+
+const poppins = {
+  fontFamily: "'Poppins', sans-serif",
+  fontWeight: 600,
+  letterSpacing: '0',
+  lineHeight: 1,
+} as const;
 
 interface HighLowGameProps {
   session: HighLowSession;
@@ -116,103 +122,126 @@ export function HighLowGame({
     return null;
   }
 
+  const displayTimer = timeLeft >= 10 ? `${timeLeft}` : `0${timeLeft}`;
+
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-deep font-poppins text-white">
-      <div className="border-b border-white/10 bg-black/15">
-        <div className="mx-auto flex w-full max-w-4xl items-center justify-between px-4 py-3">
+    <div className="fixed inset-0 z-40 flex flex-col bg-[#131F24] text-white">
+      {/* Header pills */}
+      <div className="px-4 pt-4">
+        <div className="mx-auto max-w-3xl flex items-stretch gap-2.5">
           <button
             onClick={() => setShowQuitDialog(true)}
-            className="flex size-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 transition hover:bg-white/10"
+            className="flex items-center justify-center rounded-[16px] bg-brand-blue px-4 text-white h-[40px] sm:h-[52px]"
+            style={poppins}
           >
-            <ArrowLeft className="size-5" />
+            ✕
           </button>
-          <div className="text-center">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/45">
-              {session.title}
-            </p>
-            <p className="text-sm font-semibold text-white/80">
-              {copy.round} {currentRoundIndex + 1} / {session.roundCount}
-            </p>
+          <div
+            className="flex flex-1 items-center justify-center rounded-[16px] bg-brand-blue px-5 text-white h-[40px] sm:h-[52px]"
+            style={{ ...poppins, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
+          >
+            {copy.round} {currentRoundIndex + 1}/{session.roundCount}
           </div>
-          <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-center">
-            <div className="flex items-center gap-2 text-sm font-semibold">
-              <Clock className="size-4 text-brand-yellow-soft" />
-              <span>{timeLeft}s</span>
-            </div>
+          <div
+            className="flex w-[64px] items-center justify-center rounded-[16px] bg-brand-blue text-white h-[40px] sm:h-[52px] sm:w-[92px] tabular-nums"
+            style={{ ...poppins, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
+          >
+            {displayTimer}
           </div>
         </div>
       </div>
 
-      <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center px-4 py-6">
-        <div className="mb-6 h-2 overflow-hidden rounded-full bg-white/10">
-          <div
-            className="h-full rounded-full bg-brand-yellow-soft transition-all"
-            style={{ width: `${((currentRoundIndex + 1) / session.roundCount) * 100}%` }}
-          />
-        </div>
-
-        <div className="rounded-[28px] border border-white/10 bg-surface-input/90 p-6 shadow-[0_24px_60px_rgba(0,0,0,0.28)]">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-white/55">
-              {currentRound.category}
-            </span>
-            <span className="text-sm font-semibold capitalize text-white/55">
-              {currentRound.difficulty}
-            </span>
-          </div>
-
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/45">
+      {/* Content */}
+      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 py-4">
+        {/* Question card */}
+        <div
+          className="rounded-[24px] bg-surface-page px-5 py-5 text-white sm:px-6 sm:py-6"
+          style={{
+            fontFamily: "'Poppins', sans-serif",
+            fontWeight: 700,
+            fontSize: 'clamp(15px, 1.9vw, 26px)',
+          }}
+        >
+          <p className="text-white/50 uppercase tracking-wider mb-1" style={{ fontSize: 'clamp(10px, 1.2vw, 14px)', fontWeight: 600 }}>
             {currentRound.statLabel}
           </p>
-          <h1 className="mt-2 mb-6 text-2xl font-semibold leading-tight md:text-3xl">
-            {currentRound.prompt}
-          </h1>
+          <p className="leading-snug">{currentRound.prompt}</p>
+        </div>
 
-          <div className="mb-4 text-sm text-white/55">
-            {copy.matchup} {currentMatchupIndex + 1} / {currentRound.matchups.length}
+        {/* Matchup counter */}
+        <div className="mt-3 text-center text-sm text-white/50" style={poppins}>
+          {copy.matchup} {currentMatchupIndex + 1}/{currentRound.matchups.length}
+        </div>
+
+        {/* VS buttons — two big yellow-bordered cards */}
+        <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2.5">
+          <button
+            type="button"
+            disabled={roundResolved}
+            onClick={() => handlePick("left")}
+            className="flex flex-col items-center justify-center rounded-[16px] px-4 py-6 transition-shadow duration-150 sm:py-8"
+            style={{
+              border: '2px solid #FFE500',
+              boxShadow: '0 0 6.334px 1.32px rgba(255,229,0,0.25)',
+              cursor: roundResolved ? 'default' : 'pointer',
+              opacity: roundResolved ? 0.6 : 1,
+            }}
+          >
+            <span className="text-white/45 uppercase tracking-wider mb-2" style={{ ...poppins, fontSize: 'clamp(9px, 1vw, 12px)' }}>
+              {copy.pick}
+            </span>
+            <span style={{ ...poppins, fontSize: 'clamp(18px, 2.5vw, 32px)', fontWeight: 700 }}>
+              {currentMatchup.leftName}
+            </span>
+          </button>
+
+          <span className="text-white/35" style={{ ...poppins, fontSize: 'clamp(14px, 1.6vw, 20px)' }}>VS</span>
+
+          <button
+            type="button"
+            disabled={roundResolved}
+            onClick={() => handlePick("right")}
+            className="flex flex-col items-center justify-center rounded-[16px] px-4 py-6 transition-shadow duration-150 sm:py-8"
+            style={{
+              border: '2px solid #FFE500',
+              boxShadow: '0 0 6.334px 1.32px rgba(255,229,0,0.25)',
+              cursor: roundResolved ? 'default' : 'pointer',
+              opacity: roundResolved ? 0.6 : 1,
+            }}
+          >
+            <span className="text-white/45 uppercase tracking-wider mb-2" style={{ ...poppins, fontSize: 'clamp(9px, 1vw, 12px)' }}>
+              {copy.pick}
+            </span>
+            <span style={{ ...poppins, fontSize: 'clamp(18px, 2.5vw, 32px)', fontWeight: 700 }}>
+              {currentMatchup.rightName}
+            </span>
+          </button>
+        </div>
+
+        {/* Result / instruction */}
+        {roundResolved ? (
+          <div
+            className="mt-3 flex items-center justify-center gap-2 rounded-[16px] px-4 py-3"
+            style={{
+              ...poppins,
+              fontSize: 'clamp(13px, 1.7vw, 20px)',
+              backgroundColor: roundPassed ? 'rgba(56,182,14,0.15)' : 'rgba(251,49,1,0.15)',
+              border: roundPassed ? '2px solid rgba(56,182,14,0.5)' : '2px solid rgba(251,49,1,0.5)',
+              color: roundPassed ? '#58CC02' : '#FB3101',
+            }}
+          >
+            {roundPassed ? copy.chainComplete : copy.roundFailed}
           </div>
+        ) : (
+          <p className="mt-3 text-center text-sm text-white/50" style={poppins}>
+            {copy.higherValueInstruction}
+          </p>
+        )}
 
-          <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
-            <button
-              type="button"
-              disabled={roundResolved}
-              onClick={() => handlePick("left")}
-              className="rounded-[24px] border border-white/10 bg-white/[0.04] px-5 py-8 text-left transition hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <span className="block text-sm uppercase tracking-[0.2em] text-white/45">
-                {copy.pick}
-              </span>
-              <span className="mt-3 block text-3xl font-semibold">
-                {currentMatchup.leftName}
-              </span>
-            </button>
-
-            <div className="text-center text-lg font-semibold text-white/35">VS</div>
-
-            <button
-              type="button"
-              disabled={roundResolved}
-              onClick={() => handlePick("right")}
-              className="rounded-[24px] border border-white/10 bg-white/[0.04] px-5 py-8 text-left transition hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <span className="block text-sm uppercase tracking-[0.2em] text-white/45">
-                {copy.pick}
-              </span>
-              <span className="mt-3 block text-3xl font-semibold">
-                {currentMatchup.rightName}
-              </span>
-            </button>
-          </div>
-
-          {roundResolved ? (
-            <p className={`mt-5 text-sm font-semibold ${roundPassed ? "text-brand-green-light" : "text-brand-red-light"}`}>
-              {roundPassed ? copy.chainComplete : copy.roundFailed}
-            </p>
-          ) : (
-            <p className="mt-5 text-sm text-white/55">
-              {copy.higherValueInstruction}
-            </p>
-          )}
+        {/* Score */}
+        <div className="mt-4 flex items-center justify-between text-sm" style={poppins}>
+          <span className="text-white/55">Score</span>
+          <span className="text-white">{roundScore}</span>
         </div>
       </div>
 
