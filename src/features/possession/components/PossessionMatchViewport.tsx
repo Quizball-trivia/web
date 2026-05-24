@@ -41,12 +41,12 @@ interface PossessionMatchViewportProps {
 }
 
 function usePitchBallMetrics(orientation: 'portrait' | 'landscape', pitchProps: PitchProps) {
-  const ref = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [ballSizePx, setBallSizePx] = useState(32);
   const [ballCenterPx, setBallCenterPx] = useState({ x: 0, y: 0 });
 
   useLayoutEffect(() => {
-    const el = ref.current;
+    const el = containerRef.current;
     if (!el) return;
 
     const update = () => {
@@ -80,7 +80,7 @@ function usePitchBallMetrics(orientation: 'portrait' | 'landscape', pitchProps: 
     return () => observer.disconnect();
   }, [orientation, pitchProps.centerPossessionTrack, pitchProps.mirrored, pitchProps.playerPosition]);
 
-  return { ref, ballSizePx, ballCenterPx };
+  return { containerRef, ballSizePx, ballCenterPx };
 }
 
 function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
@@ -132,22 +132,30 @@ function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
 export function PossessionMatchViewport({ model, children }: PossessionMatchViewportProps) {
   const { showMainUI, hud, pitchProps, goalCelebration, penaltySplash, muted } = model;
   const celebrationOwnsBall = Boolean(goalCelebration);
-  const desktopPitch = usePitchBallMetrics('portrait', pitchProps);
-  const mobilePitch = usePitchBallMetrics('landscape', pitchProps);
+  const {
+    containerRef: desktopPitchRef,
+    ballSizePx: desktopBallSizePx,
+    ballCenterPx: desktopBallCenterPx,
+  } = usePitchBallMetrics('portrait', pitchProps);
+  const {
+    containerRef: mobilePitchRef,
+    ballSizePx: mobileBallSizePx,
+    ballCenterPx: mobileBallCenterPx,
+  } = usePitchBallMetrics('landscape', pitchProps);
 
   return (
     <>
       {showMainUI && (
         <div className="hidden lg:flex lg:w-[42%] lg:items-center lg:py-4 relative">
-          <div ref={desktopPitch.ref} className="relative h-full w-full max-h-[calc(100dvh-2rem)]">
+          <div ref={desktopPitchRef} className="relative h-full w-full max-h-[calc(100dvh-2rem)]">
             <PitchVisualization {...pitchProps} orientation="portrait" hideBall={celebrationOwnsBall} />
             <AnimatePresence>
               {goalCelebration && (
                 <GoalCelebrationOverlay
                   scorerName={goalCelebration.scorerName}
                   isMeScorer={goalCelebration.isMeScorer}
-                  ballSizePx={desktopPitch.ballSizePx}
-                  ballCenterPx={desktopPitch.ballCenterPx}
+                  ballSizePx={desktopBallSizePx}
+                  ballCenterPx={desktopBallCenterPx}
                   muted={muted}
                 />
               )}
@@ -170,15 +178,15 @@ export function PossessionMatchViewport({ model, children }: PossessionMatchView
               <PossessionHUD {...hud.props} />
             )}
 
-            <div ref={mobilePitch.ref} className="lg:hidden relative">
+            <div ref={mobilePitchRef} className="lg:hidden relative">
               <PitchVisualization {...pitchProps} orientation="landscape" hideBall={celebrationOwnsBall} />
               <AnimatePresence>
                 {goalCelebration && (
                   <GoalCelebrationOverlay
                     scorerName={goalCelebration.scorerName}
                     isMeScorer={goalCelebration.isMeScorer}
-                    ballSizePx={mobilePitch.ballSizePx}
-                    ballCenterPx={mobilePitch.ballCenterPx}
+                    ballSizePx={mobileBallSizePx}
+                    ballCenterPx={mobileBallCenterPx}
                     muted={muted}
                   />
                 )}

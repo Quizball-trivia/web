@@ -1264,7 +1264,7 @@ export function MatchmakingMapScreen({
   );
   const searchCamera = isMobile ? MOBILE_CAMERA : DESKTOP_CAMERA;
 
-  const opponentPin = useMemo<FakePlayer | null>(() => {
+  const opponentPin: FakePlayer | null = (() => {
     if (!rankedFoundOpponent) return null;
     const resolved = resolveOpponentLocation(rankedFoundOpponent, t("matchmaking.unknownCity"), t("matchmaking.unknownCountry"));
     const [oppX, oppY] = projectPoint(resolved.lon, resolved.lat);
@@ -1290,7 +1290,7 @@ export function MatchmakingMapScreen({
       delay: 0,
       source: resolved.source ?? "resolved",
     };
-  }, [rankedFoundOpponent]);
+  })();
   const opponentRawGeo = useMemo(() => {
     if (!rankedFoundOpponent) return null;
     const geoObj =

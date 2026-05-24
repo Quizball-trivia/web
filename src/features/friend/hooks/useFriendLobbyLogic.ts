@@ -12,6 +12,7 @@ import { logger } from "@/utils/logger";
 import type { LobbySettings as LobbySettingsState } from "@/lib/realtime/socket.types";
 import { useCategoriesList } from "@/lib/queries/categories.queries";
 import { copyToClipboard } from "@/utils/clipboard";
+import { trackFriendInviteSent } from "@/lib/analytics/game-events";
 import { useHeadToHead } from "@/lib/queries/stats.queries";
 import { trackLobbyCreated, trackLobbyJoined } from "@/lib/analytics/game-events";
 
@@ -98,7 +99,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
 
     if (lobby?.inviteCode?.toUpperCase() === normalizedRoomCode) {
       clearLobbyHandoff();
-      setHandoffTimedOutCode(null);
+      queueMicrotask(() => setHandoffTimedOutCode(null));
       return;
     }
 
@@ -256,7 +257,10 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   const copyCode = async () => {
     if (!lobbyCode) return;
     const success = await copyToClipboard(lobbyCode);
-    if (success) toast.success("Room Code copied!");
+    if (success) {
+      trackFriendInviteSent('link_copy', lobby?.lobbyId);
+      toast.success("Room Code copied!");
+    }
   };
 
   const handleReadyToggle = () => {

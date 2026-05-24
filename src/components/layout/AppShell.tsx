@@ -149,7 +149,17 @@ export function AppShell({ children }: AppShellProps) {
     () => readRankedGeoHintDebug()
   );
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [nowTick, setNowTick] = useState(() => Date.now());
   useRealtimeConnection({ enabled: Boolean(authUser), selfUserId: authUser?.id ?? null });
+
+  // Tick once per second so any time-comparison render values
+  // (e.g. lobby banner suppression deadline) stay fresh without
+  // calling Date.now() during render.
+  useEffect(() => {
+    if (suppressLobbyBannerUntil === null) return;
+    const id = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [suppressLobbyBannerUntil]);
 
   const currentPath = pathname ?? "/";
   const showHeader = HEADER_PATHS.some((p) => p === "/" ? currentPath === "/" : currentPath.startsWith(p));
@@ -157,7 +167,7 @@ export function AppShell({ children }: AppShellProps) {
   const inLobbyRoom = currentPath.startsWith("/friend/room");
   const lobbyBannerSuppressed =
     suppressLobbyBannerReason !== null ||
-    (suppressLobbyBannerUntil !== null && suppressLobbyBannerUntil > Date.now());
+    (suppressLobbyBannerUntil !== null && suppressLobbyBannerUntil > nowTick);
   const showLobbyBanner =
     !!lobby &&
     lobby.status === "waiting" &&

@@ -58,7 +58,10 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
     hasHydratedRef.current = true;
     const stored = normalizeLocale(storage.get(STORAGE_KEYS.LOCALE, 'en'));
     if (stored !== 'en') {
-      setLocaleState(stored);
+      // Intentional sync hydration from localStorage — SSR emits 'en',
+      // then we upgrade on mount. Defer to microtask so React doesn't
+      // flag it as a cascading render.
+      queueMicrotask(() => setLocaleState(stored));
     }
   }, []);
 
