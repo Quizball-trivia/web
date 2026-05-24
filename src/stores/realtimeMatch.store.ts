@@ -15,6 +15,7 @@ import type {
   MatchAnswerAckPayload,
   MatchCluesGuessAckPayload,
   MatchCountdownGuessAckPayload,
+  MatchOpponentCountdownProgressPayload,
   MatchFinalResultsPayload,
   MatchForfeitPendingPayload,
   MatchPartyStatePayload,
@@ -71,6 +72,9 @@ export interface MatchStatus {
   questions: Record<number, MatchQuestionState>;
   answerAck: MatchAnswerAckPayload | null;
   countdownGuessAck: MatchCountdownGuessAckPayload | null;
+  /** Live opponent countdown found-count, updated by the server when the
+   *  opponent lands an answer. Replaces the legacy simulated counter. */
+  opponentCountdownFoundCount: number;
   cluesGuessAck: MatchCluesGuessAckPayload | null;
   opponentAnswered: boolean;
   opponentSelectedIndex: number | null;
@@ -150,6 +154,7 @@ interface RealtimeState {
   setPartyState: (payload: MatchPartyStatePayload) => void;
   setAnswerAck: (payload: MatchAnswerAckPayload) => void;
   setCountdownGuessAck: (payload: MatchCountdownGuessAckPayload) => void;
+  setOpponentCountdownProgress: (payload: MatchOpponentCountdownProgressPayload) => void;
   setCluesGuessAck: (payload: MatchCluesGuessAckPayload) => void;
   setOpponentAnswered: (payload?: {
     matchId?: string;
@@ -346,6 +351,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         questions: {},
         answerAck: null,
         countdownGuessAck: null,
+        opponentCountdownFoundCount: 0,
         cluesGuessAck: null,
         opponentAnswered: false,
         opponentSelectedIndex: null,
@@ -602,6 +608,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
           countdownReason: payload.qIndex > 0 ? null : state.match.countdownReason,
           answerAck: null,
           countdownGuessAck: null,
+        opponentCountdownFoundCount: 0,
           cluesGuessAck: null,
           opponentAnswered: false,
           opponentSelectedIndex: null,
@@ -635,6 +642,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
           countdownReason: pending.qIndex > 0 ? null : state.match.countdownReason,
           answerAck: null,
           countdownGuessAck: null,
+        opponentCountdownFoundCount: 0,
           cluesGuessAck: null,
           opponentAnswered: false,
           opponentSelectedIndex: null,
@@ -701,6 +709,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
           ...state.match,
           answerAck: payload,
           countdownGuessAck: null,
+        opponentCountdownFoundCount: 0,
           cluesGuessAck: null,
           myTotalPoints: payload.myTotalPoints,
           opponentAnswered: payload.oppAnswered,
@@ -744,6 +753,28 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         match: {
           ...state.match,
           countdownGuessAck: payload,
+        },
+      };
+    });
+  },
+  setOpponentCountdownProgress: (payload) => {
+    logger.info('Realtime store set opponent countdown progress', {
+      matchId: payload.matchId,
+      qIndex: payload.qIndex,
+      foundCount: payload.foundCount,
+    });
+    set((state) => {
+      if (!state.match) return state;
+      if (state.match.matchId !== payload.matchId) return state;
+      const currentQIndex = state.match.currentQuestion?.qIndex;
+      if (currentQIndex !== undefined && payload.qIndex !== currentQIndex) return state;
+      // Monotonic: only advance, never go backwards.
+      if (payload.foundCount <= state.match.opponentCountdownFoundCount) return state;
+      return {
+        ...state,
+        match: {
+          ...state.match,
+          opponentCountdownFoundCount: payload.foundCount,
         },
       };
     });
@@ -861,6 +892,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
           ...state.match,
           lastRoundResult: payload,
           countdownGuessAck: null,
+        opponentCountdownFoundCount: 0,
           cluesGuessAck: null,
           myTotalPoints: myTotals?.totalPoints ?? state.match.myTotalPoints,
           oppTotalPoints: opponentTotals?.totalPoints ?? state.match.oppTotalPoints,
@@ -962,6 +994,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
             questions: {},
             answerAck: null,
             countdownGuessAck: null,
+        opponentCountdownFoundCount: 0,
             cluesGuessAck: null,
             opponentAnswered: false,
             opponentSelectedIndex: null,

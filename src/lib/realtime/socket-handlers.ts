@@ -16,6 +16,7 @@ import type {
   ForceLogoutPayload,
   MatchCluesGuessAckPayload,
   MatchCountdownGuessAckPayload,
+  MatchOpponentCountdownProgressPayload,
   LobbyState,
   MatchAnswerAckPayload,
   MatchFinalResultsPayload,
@@ -338,6 +339,15 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       foundCount: data.foundCount,
     });
     store.setCountdownGuessAck(data);
+  });
+
+  socket.on('match:opponent_countdown_progress', (data: MatchOpponentCountdownProgressPayload) => {
+    logger.info('Socket event match:opponent_countdown_progress', {
+      matchId: data.matchId,
+      qIndex: data.qIndex,
+      foundCount: data.foundCount,
+    });
+    store.setOpponentCountdownProgress(data);
   });
 
   socket.on('match:clues_guess_ack', (data: MatchCluesGuessAckPayload) => {

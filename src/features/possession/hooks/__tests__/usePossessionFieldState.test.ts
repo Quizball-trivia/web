@@ -76,6 +76,7 @@ function makeMatch(possessionDiff: number, overrides: Partial<MatchStatus['posse
     questions: {},
     answerAck: null,
     countdownGuessAck: null,
+    opponentCountdownFoundCount: 0,
     cluesGuessAck: null,
     opponentAnswered: false,
     opponentSelectedIndex: null,
