@@ -143,6 +143,30 @@ export async function socialLogin(
   window.location.href = data.url;
 }
 
+/**
+ * Exchange a Google ID token (from GIS) for a Quizball session.
+ * Bypasses the classic OAuth redirect (which is blocked inside in-app
+ * browsers like Messenger/Instagram) by posting the JWT credential
+ * directly to our backend, which verifies it with Supabase server-side.
+ */
+export async function socialLoginWithIdToken(
+  provider: "google" | "apple",
+  idToken: string,
+  nonce?: string,
+): Promise<AuthResponse["user"] | null> {
+  logger.info("Auth social login token start", { provider });
+  const data = await api.POST("/api/v1/auth/social-login-token", {
+    body: { provider, id_token: idToken, ...(nonce ? { nonce } : {}) },
+    auth: false,
+  });
+  const response = data as AuthResponse;
+  if (response?.access_token && response?.refresh_token) {
+    setTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
+  }
+  logger.info("Auth social login token success");
+  return response.user ?? null;
+}
+
 export function parseOAuthHash(
   hash: string,
 ): { accessToken: string; refreshToken: string } | null {

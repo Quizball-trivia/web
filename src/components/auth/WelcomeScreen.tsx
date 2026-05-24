@@ -12,7 +12,11 @@ import { useAllCategoriesList } from '@/lib/queries/categories.queries';
 import { AppLogo } from '@/components/AppLogo';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { motion, AnimatePresence } from 'motion/react';
-import { socialLogin } from '@/lib/auth/auth.service';
+import Script from 'next/script';
+import { socialLogin, socialLoginWithIdToken } from '@/lib/auth/auth.service';
+import { signInWithGoogleIdentity } from '@/lib/auth/google-identity';
+import { useAuthStore } from '@/stores/auth.store';
+import { useInAppBrowser } from '@/hooks/useInAppBrowser';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { MessageKey } from '@/lib/i18n/messages';
 import { LeaderboardPodium } from '@/features/leaderboard/components/LeaderboardPodium';
@@ -572,15 +576,41 @@ export function WelcomeScreen() {
   }, [landingScore.left, landingScore.right]);
 
   const handleKickOff = () => setLoginOpen(true);
+  const bootstrap = useAuthStore((state) => state.bootstrap);
+  const { isInApp: isInsideInAppBrowser } = useInAppBrowser();
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? '';
+
   const handleGoogleLogin = async () => {
+    trackSignupStarted('google');
+
+    // Inside in-app browsers (Messenger, Instagram), the classic OAuth
+    // redirect hits Google's `disallowed_useragent` 403. Prefer Google
+    // Identity Services (popup-based, returns a JWT credential) which
+    // uses a different endpoint that isn't UA-gated.
+    if (googleClientId) {
+      try {
+        const { idToken, nonce } = await signInWithGoogleIdentity(googleClientId);
+        await socialLoginWithIdToken('google', idToken, nonce);
+        await bootstrap({ force: true });
+        return;
+      } catch (gisError) {
+        console.warn('GIS sign-in unavailable, falling back to redirect', gisError);
+        // Fall through to redirect path. If we're inside a known in-app
+        // browser, the redirect will hit the 403 and the overlay will
+        // appear telling the user to open in Safari.
+      }
+    }
+
     try {
-      trackSignupStarted('google');
       const redirectTo = `${window.location.origin}/auth/callback`;
       await socialLogin('google', redirectTo);
     } catch (error) {
       console.error('Google login failed', error);
     }
   };
+
+  // Silence unused-var lint when we keep the in-app detection for later.
+  void isInsideInAppBrowser;
 
   const stadiumScene = {
     showGoal: landingGoalVisible,
@@ -589,6 +619,17 @@ export function WelcomeScreen() {
 
   return (
     <div className="min-h-screen w-full bg-surface-page font-sans text-foreground flex flex-col overflow-x-hidden">
+      {/* Load Google Identity Services so handleGoogleLogin can use the
+          popup/JWT flow (bypasses the OAuth-redirect `disallowed_useragent`
+          block inside in-app browsers like Messenger). */}
+      {googleClientId ? (
+        <Script
+          src="https://accounts.google.com/gsi/client"
+          strategy="afterInteractive"
+          async
+          defer
+        />
+      ) : null}
       {/* ── Navbar ── */}
       <header className="flex h-16 md:h-20 items-center justify-between px-6 md:px-12 lg:px-20 shrink-0 bg-surface-page/80 backdrop-blur-md sticky top-0 z-50">
         <AppLogo size="md" className="!justify-start" />
