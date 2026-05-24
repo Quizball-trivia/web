@@ -15,6 +15,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { QuitGameDialog } from "./QuitGameDialog";
+import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
 import { useLocale } from "@/contexts/LocaleContext";
 
 interface EmojiQuestion {
@@ -148,52 +149,13 @@ export function EmojiGuessGame({ onBack, onComplete }: EmojiGuessGameProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-40 bg-surface-deep font-fun flex flex-col">
-      {/* Header */}
-      <div className="bg-surface-card border-b-[3px] border-surface-deep">
-        <div className="max-w-2xl mx-auto px-3 md:px-4 py-2.5 md:py-3">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowQuitDialog(true)}
-                className="flex items-center justify-center size-9 rounded-xl hover:bg-surface-card-tint active:scale-95 transition-all text-white"
-              >
-                <ArrowLeft className="size-5" />
-              </button>
-              <div className="flex items-center gap-2">
-                <Sparkles className="size-5 text-brand-cyan" />
-                <h1 className="text-lg md:text-xl font-black uppercase text-white">{t("dailyGames.emojiGuess")}</h1>
-              </div>
-            </div>
-          </div>
-
-          <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-brand-green-light rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.3 }}
-            />
-          </div>
-
-          <div className="flex items-center justify-between mt-3">
-            <div className="text-xs text-brand-slate font-bold">
-              Question {currentQuestionIndex + 1}/{questions.length}
-            </div>
-            <div className="flex items-center gap-3">
-              {streak > 0 && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-brand-orange/15 border border-brand-orange/30 text-brand-orange">
-                  🔥 {streak} streak
-                </span>
-              )}
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-surface-card-tint text-brand-cyan">
-                <Coins className="size-3" />
-                {score}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="fixed inset-0 z-40 bg-[#131F24] font-poppins flex flex-col text-white">
+      <DailyChallengeHeader
+        onQuit={() => setShowQuitDialog(true)}
+        currentIndex={currentQuestionIndex}
+        total={questions.length}
+        hideTimer
+      />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col items-center justify-center p-4 pb-20 overflow-y-auto">

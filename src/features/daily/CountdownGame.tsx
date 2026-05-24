@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 
 import { Input } from "@/components/ui/input";
 import { QuitGameDialog } from "./QuitGameDialog";
+import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
 import { Check, CheckCircle2, Clock, Timer, Lightbulb, Trophy, ArrowRight, ArrowLeft } from "lucide-react";
 import type { CountdownSession } from "@/lib/domain/dailyChallenge";
 import { useLocale } from "@/contexts/LocaleContext";
@@ -317,44 +318,14 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
   }
 
   return (
-    <div className="fixed inset-0 z-40 bg-surface-deep font-fun flex flex-col">
-      {/* Header */}
-      <div className="bg-surface-card border-b-[3px] border-surface-deep">
-        <div className="max-w-2xl mx-auto px-3 md:px-4 py-2.5 md:py-3">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowQuitDialog(true)}
-                className="flex items-center justify-center size-9 rounded-xl hover:bg-surface-card-tint active:scale-95 transition-all text-white"
-              >
-                <ArrowLeft className="size-5" />
-              </button>
-              <div className="flex items-center gap-2">
-                <Timer className="size-6 text-brand-cyan" />
-                <h1 className="text-lg md:text-xl font-black uppercase text-white">{t("dailyGames.countdown")}</h1>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-surface-card-tint text-white">
-                Round {currentRound + 1}/{totalRounds}
-              </span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-brand-cyan/15 text-brand-cyan">
-                <Trophy className="size-3" />
-                {allRoundAnswers.reduce((sum, arr) => sum + arr.length, 0) +
-                  foundAnswers.length}
-              </span>
-            </div>
-          </div>
-
-          <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-brand-green-light rounded-full transition-all duration-300"
-              style={{ width: `${((currentRound + 1) / totalRounds) * 100}%` }}
-            />
-          </div>
-        </div>
-      </div>
+    <div className="fixed inset-0 z-40 bg-[#131F24] font-poppins flex flex-col text-white">
+      <DailyChallengeHeader
+        onQuit={() => setShowQuitDialog(true)}
+        currentIndex={currentRound}
+        total={totalRounds}
+        timeLeft={timeRemaining}
+        centerLabel={`Round ${currentRound + 1}/${totalRounds}`}
+      />
 
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">

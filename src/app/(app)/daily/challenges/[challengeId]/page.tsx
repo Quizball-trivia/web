@@ -23,6 +23,7 @@ import { ApiError } from "@/lib/api/api";
 import { createDailyChallengeSession } from "@/lib/repositories/dailyChallenges.repo";
 import { toDailyChallengeSession } from "@/lib/mappers/dailyChallenge.mapper";
 import { useLocale } from "@/contexts/LocaleContext";
+import { LoadingScreen } from "@/components/shared/LoadingScreen";
 
 function isDailyChallengeType(value: string): value is DailyChallengeType {
   return value in DAILY_CHALLENGE_VISUALS;
@@ -233,12 +234,9 @@ export default function ChallengePage() {
 
   if (isSessionLoading || !session) {
     return (
-      <div className="fixed inset-0 z-40 bg-surface-deep font-fun flex items-center justify-center">
-        <div className="bg-surface-card rounded-xl border-b-4 border-surface-card-deeper p-6 text-center">
-          <p className="text-white font-black uppercase">Loading challenge</p>
-          <p className="text-sm text-brand-slate mt-2">Fetching today&apos;s live challenge session.</p>
-        </div>
-      </div>
+      <LoadingScreen
+        className="bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
+      />
     );
   }
 

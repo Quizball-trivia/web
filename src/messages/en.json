@@ -2,6 +2,7 @@
   "common": {
     "back": "Back",
     "cancel": "Cancel",
+    "close": "Close",
     "change": "Change",
     "confirm": "Confirm",
     "continue": "Continue",
@@ -348,6 +349,7 @@
     "statRPTooltip": "Current Rank Points"
   },
   "dailyGames": {
+    "questionCounter": "Question {current}/{total}",
     "emojiGuess": "Emoji Guess",
     "dailyRewards": "Daily Rewards",
     "cluesChallenge": "Clues Challenge",
