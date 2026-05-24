@@ -3,6 +3,7 @@ import { Plus, Lock, Globe, ArrowRight, Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { getSocket } from "@/lib/realtime/socket-client";
+import { trackFriendInviteAccepted } from "@/lib/analytics/game-events";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { useLocale } from "@/contexts/LocaleContext";
 
@@ -67,8 +68,10 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
       setIsJoining(false);
       toast.error(t("friend.joinTimedOut"));
     }, 8000);
-    getSocket().emit("lobby:join_by_code", { inviteCode: inviteCode.toUpperCase() });
-    toast.info(t("friend.joiningCode", { code: inviteCode.toUpperCase() }));
+    const code = inviteCode.toUpperCase();
+    trackFriendInviteAccepted(code);
+    getSocket().emit("lobby:join_by_code", { inviteCode: code });
+    toast.info(t("friend.joiningCode", { code }));
   };
 
   useEffect(() => {

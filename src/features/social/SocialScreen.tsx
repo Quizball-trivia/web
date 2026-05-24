@@ -26,6 +26,7 @@ import { getSocket } from "@/lib/realtime/socket-client";
 import type { ErrorPayload, LobbyChallengeCreatedPayload } from "@/lib/realtime/socket.types";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { queryKeys } from "@/lib/queries/queryKeys";
+import { trackChallengeInviteSent } from "@/lib/analytics/game-events";
 import {
   useFriendRequests,
   useSocialFriends,
@@ -459,6 +460,7 @@ export function SocialScreen() {
     if (pendingChallengeId) return;
     setPendingChallengeId(friendUserId);
     suppressLobbyBanner(8000, "challenge");
+    trackChallengeInviteSent(friendUserId);
     getSocket().emit("lobby:challenge", { toUserId: friendUserId });
     toast.info(t("socialScreen.challengeSending"));
   };
