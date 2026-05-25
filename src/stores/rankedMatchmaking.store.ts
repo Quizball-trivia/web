@@ -31,7 +31,11 @@ export const useRankedMatchmakingStore = create<RankedMatchmakingState>((set) =>
     set((state) => {
       const keepExistingStart = state.rankedSearching && state.rankedSearchStartedAt !== null;
       if (!keepExistingStart) {
-        trackMatchmakingStarted('ranked');
+        try {
+          trackMatchmakingStarted('ranked');
+        } catch (error) {
+          logger.error('Analytics trackMatchmakingStarted failed', error);
+        }
       }
       return {
         rankedSearchDurationMs: durationMs,
@@ -46,12 +50,22 @@ export const useRankedMatchmakingStore = create<RankedMatchmakingState>((set) =>
     logger.info('Ranked matchmaking store set match found', { opponentId: opponent.id, formLen: myRecentForm?.length ?? 0 });
     set((state) => {
       const waitMs = state.rankedSearchStartedAt ? Date.now() - state.rankedSearchStartedAt : 0;
-      // Heuristic: AI opponents have synthetic id strings — real users have UUIDs.
-      const isAiOpponent = !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(opponent.id ?? '');
-      if (isAiOpponent) {
-        trackMatchmakingAiFallback('ranked', waitMs);
-      } else {
-        trackMatchmakingHumanFound('ranked', waitMs);
+      // Prefer an explicit isAiOpponent field when the backend provides it;
+      // fall back to a UUID-regex heuristic on the id otherwise. TODO: have
+      // backend always set isAiOpponent on the match_found payload so this
+      // branch can drop the regex.
+      const explicitFlag = (opponent as { isAiOpponent?: boolean }).isAiOpponent;
+      const isAiOpponent = typeof explicitFlag === 'boolean'
+        ? explicitFlag
+        : !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(opponent.id ?? '');
+      try {
+        if (isAiOpponent) {
+          trackMatchmakingAiFallback('ranked', waitMs);
+        } else {
+          trackMatchmakingHumanFound('ranked', waitMs);
+        }
+      } catch (error) {
+        logger.error('Analytics matchmaking-found event failed', error);
       }
       return {
         rankedFoundOpponent: opponent,
@@ -65,7 +79,11 @@ export const useRankedMatchmakingStore = create<RankedMatchmakingState>((set) =>
     set((state) => {
       const waitMs = state.rankedSearchStartedAt ? Date.now() - state.rankedSearchStartedAt : 0;
       if (state.rankedSearching) {
-        trackMatchmakingCancelled('ranked', waitMs);
+        try {
+          trackMatchmakingCancelled('ranked', waitMs);
+        } catch (error) {
+          logger.error('Analytics trackMatchmakingCancelled failed', error);
+        }
       }
       return {
         rankedSearchDurationMs: null,

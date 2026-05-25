@@ -57,7 +57,7 @@ function isFlightPhaseKind(kind: string | undefined): boolean {
 
 function findScoreAnchor(side: Side): DOMRect | null {
   if (typeof document === 'undefined') return null;
-  return findVisibleRect(`[data-splash-anchor="${side}"]`);
+  return findVisibleRect(`[data-splash-anchor="${side}"]`) ?? findSpecialQuestionPanelAnchor(side);
 }
 
 function findPitchAvatar(side: Side): DOMRect | null {
@@ -88,6 +88,34 @@ function findVisibleRect(selector: string): DOMRect | null {
     return rect;
   }
   return null;
+}
+
+function rectFromPoint(x: number, y: number): DOMRect {
+  if (typeof DOMRect !== 'undefined') {
+    return new DOMRect(x, y, 1, 1);
+  }
+  return {
+    x,
+    y,
+    width: 1,
+    height: 1,
+    top: y,
+    right: x + 1,
+    bottom: y + 1,
+    left: x,
+    toJSON: () => ({}),
+  } as DOMRect;
+}
+
+function findSpecialQuestionPanelAnchor(side: Side): DOMRect | null {
+  const panelRect = findVisibleRect('[data-special-question-panel="true"]');
+  if (!panelRect) return null;
+  const inset = Math.min(24, Math.max(8, panelRect.width * 0.04));
+  const x = side === 'player'
+    ? panelRect.left + inset
+    : panelRect.right - inset;
+  const y = panelRect.top + panelRect.height / 2;
+  return rectFromPoint(x, y);
 }
 
 function hasUsableAnchors(): boolean {
@@ -189,6 +217,7 @@ export function usePossessionBarBattleFlights() {
   // block flights for a new match.
   const playerFiredQRef = useRef<string | null>(null);
   const opponentFiredQRef = useRef<string | null>(null);
+  const pendingFlightKeysRef = useRef<Set<string>>(new Set());
 
   const currentQIndex = match?.currentQuestion?.qIndex ?? null;
   const currentMatchId = match?.matchId ?? null;
@@ -271,6 +300,65 @@ export function usePossessionBarBattleFlights() {
     window.setTimeout(addFlight, 50);
   }, []);
 
+  const enqueueFlightFromDom = useCallback((params: {
+    side: Side;
+    roundKey: string;
+    points: number;
+    failed?: boolean;
+    logLabel: string;
+    questionKind?: string;
+  }) => {
+    const pendingKey = `${params.side}:${params.roundKey}`;
+    if (pendingFlightKeysRef.current.has(pendingKey)) return;
+
+    const markFired = () => {
+      if (params.side === 'player') {
+        playerFiredQRef.current = params.roundKey;
+      } else {
+        opponentFiredQRef.current = params.roundKey;
+      }
+    };
+
+    const tryStart = (remainingRetries: number) => {
+      const sourceRect = findScoreAnchor(params.side);
+      const targetRect = findPitchAvatar(params.side);
+      if (sourceRect && targetRect) {
+        pendingFlightKeysRef.current.delete(pendingKey);
+        const otherAvatarRect = findPitchAvatar(params.side === 'player' ? 'opponent' : 'player');
+        const pitchRect = findPitchField();
+        markFired();
+        enqueueFlight({
+          side: params.side,
+          sourceRect,
+          targetRect,
+          opponentRect: otherAvatarRect,
+          pitchRect,
+          points: params.points,
+          failed: params.failed,
+        });
+        return;
+      }
+
+      if (remainingRetries > 0 && typeof window !== 'undefined') {
+        window.setTimeout(() => tryStart(remainingRetries - 1), 80);
+        return;
+      }
+
+      pendingFlightKeysRef.current.delete(pendingKey);
+      // Fallback to ArenaScoreSplash when DOM anchors are missing.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSuppressScoreSplash(false);
+      logger.warn(`${params.logLabel} skipped: anchor missing`, {
+        questionKind: params.questionKind,
+        sourceFound: !!sourceRect,
+        targetFound: !!targetRect,
+      });
+    };
+
+    pendingFlightKeysRef.current.add(pendingKey);
+    tryStart(2);
+  }, [enqueueFlight]);
+
   // ── Player flight on answerAck ──────────────────────────────────────────
   // Fires regardless of correctness — wrong/zero-point answers get a "failed"
   // flight that falls off the bottom of the screen instead of reaching the
@@ -285,31 +373,15 @@ export function usePossessionBarBattleFlights() {
     const ackKey = `${answerAck.matchId}:${answerAck.qIndex}`;
     if (playerFiredQRef.current === ackKey) return;
 
-    const sourceRect = findScoreAnchor('player');
-    const targetRect = findPitchAvatar('player');
-    if (!sourceRect || !targetRect) {
-      // Fallback to ArenaScoreSplash when DOM anchors are missing.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSuppressScoreSplash(false);
-      logger.warn('Bar-battle player flight skipped: anchor missing', {
-        sourceFound: !!sourceRect,
-        targetFound: !!targetRect,
-      });
-      return;
-    }
-    const oppAvatarRect = findPitchAvatar('opponent');
-    const pitchRect = findPitchField();
-    playerFiredQRef.current = ackKey;
-    enqueueFlight({
+    enqueueFlightFromDom({
       side: 'player',
-      sourceRect,
-      targetRect,
-      opponentRect: oppAvatarRect,
-      pitchRect,
+      roundKey: ackKey,
       points,
       failed,
+      logLabel: 'Bar-battle player flight',
+      questionKind: answerAck.questionKind,
     });
-  }, [enabled, answerAck, enqueueFlight]);
+  }, [enabled, answerAck, enqueueFlightFromDom]);
 
   // Fallback: if the client missed its immediate answer_ack, fire the same
   // player flight from the authoritative round_result so the user still sees
@@ -317,7 +389,6 @@ export function usePossessionBarBattleFlights() {
   const roundResult = match?.lastRoundResult ?? null;
   useEffect(() => {
     if (!enabled || !roundResult || !selfUserId) return;
-    if (roundResult.qIndex !== currentQIndex) return;
     const phaseKind = roundResult.phaseKind ?? phaseKindFromState;
     if (!isFlightPhaseKind(phaseKind)) return;
     const roundKey = `${roundResult.matchId}:${roundResult.qIndex}`;
@@ -329,37 +400,20 @@ export function usePossessionBarBattleFlights() {
       : 0;
     if (!playerRound || points <= 0) return;
 
-    const sourceRect = findScoreAnchor('player');
-    const targetRect = findPitchAvatar('player');
-    if (!sourceRect || !targetRect) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSuppressScoreSplash(false);
-      logger.warn('Bar-battle player fallback flight skipped: anchor missing', {
-        sourceFound: !!sourceRect,
-        targetFound: !!targetRect,
-      });
-      return;
-    }
-
-    const oppAvatarRect = findPitchAvatar('opponent');
-    const pitchRect = findPitchField();
-    playerFiredQRef.current = roundKey;
-    enqueueFlight({
+    enqueueFlightFromDom({
       side: 'player',
-      sourceRect,
-      targetRect,
-      opponentRect: oppAvatarRect,
-      pitchRect,
+      roundKey,
       points,
+      logLabel: 'Bar-battle player fallback flight',
+      questionKind: roundResult.questionKind,
     });
-  }, [currentQIndex, enabled, enqueueFlight, phaseKindFromState, roundResult, selfUserId]);
+  }, [enabled, enqueueFlightFromDom, phaseKindFromState, roundResult, selfUserId]);
 
   // Same fallback for the opponent. Special questions may only expose final
   // opponent scoring through round_result, so keep the flight feedback even
   // when match:opponent_answered was not emitted or arrived too early.
   useEffect(() => {
     if (!enabled || !roundResult || !selfUserId) return;
-    if (roundResult.qIndex !== currentQIndex) return;
     const phaseKind = roundResult.phaseKind ?? phaseKindFromState;
     if (!isFlightPhaseKind(phaseKind)) return;
     const roundKey = `${roundResult.matchId}:${roundResult.qIndex}`;
@@ -371,30 +425,14 @@ export function usePossessionBarBattleFlights() {
       : 0;
     if (!opponentRound || points <= 0) return;
 
-    const sourceRect = findScoreAnchor('opponent');
-    const targetRect = findPitchAvatar('opponent');
-    if (!sourceRect || !targetRect) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSuppressScoreSplash(false);
-      logger.warn('Bar-battle opponent fallback flight skipped: anchor missing', {
-        sourceFound: !!sourceRect,
-        targetFound: !!targetRect,
-      });
-      return;
-    }
-
-    const selfAvatarRect = findPitchAvatar('player');
-    const pitchRect = findPitchField();
-    opponentFiredQRef.current = roundKey;
-    enqueueFlight({
+    enqueueFlightFromDom({
       side: 'opponent',
-      sourceRect,
-      targetRect,
-      opponentRect: selfAvatarRect,
-      pitchRect,
+      roundKey,
       points,
+      logLabel: 'Bar-battle opponent fallback flight',
+      questionKind: roundResult.questionKind,
     });
-  }, [currentQIndex, enabled, enqueueFlight, phaseKindFromState, roundResult, selfUserId]);
+  }, [enabled, enqueueFlightFromDom, phaseKindFromState, roundResult, selfUserId]);
 
   // ── Opponent flight on opponent answer ──────────────────────────────────
   const opponentAnswered = match?.opponentAnswered ?? false;
@@ -410,34 +448,17 @@ export function usePossessionBarBattleFlights() {
     if (currentKey == null) return;
     if (opponentFiredQRef.current === currentKey) return;
 
-    const sourceRect = findScoreAnchor('opponent');
-    const targetRect = findPitchAvatar('opponent');
-    if (!sourceRect || !targetRect) {
-      // Fallback to ArenaScoreSplash when DOM anchors are missing.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSuppressScoreSplash(false);
-      logger.warn('Bar-battle opponent flight skipped: anchor missing', {
-        sourceFound: !!sourceRect,
-        targetFound: !!targetRect,
-      });
-      return;
-    }
-    const selfAvatarRect = findPitchAvatar('player');
-    const pitchRect = findPitchField();
-    opponentFiredQRef.current = currentKey;
     const failed = opponentAnsweredCorrectly !== true || opponentRecentPoints <= 0;
-    enqueueFlight({
+    enqueueFlightFromDom({
       side: 'opponent',
-      sourceRect,
-      targetRect,
-      opponentRect: selfAvatarRect,
-      pitchRect,
+      roundKey: currentKey,
       points: opponentRecentPoints,
       failed,
+      logLabel: 'Bar-battle opponent flight',
     });
   }, [
     enabled,
-    enqueueFlight,
+    enqueueFlightFromDom,
     opponentAnswered,
     opponentAnsweredCorrectly,
     opponentRecentPoints,

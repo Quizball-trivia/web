@@ -32,19 +32,23 @@ function syncAnalyticsUser(user: User): void {
     created_at: user.created_at,
   });
 
-  setPersonProperties(
-    {
-      nickname: user.nickname,
-      country: user.country,
-      favorite_club: user.favorite_club,
-      preferred_language: user.preferred_language,
-      level: user.progression?.level,
-    },
-    {
-      signup_date: user.created_at,
-      first_email: user.email,
-    },
-  );
+  try {
+    setPersonProperties(
+      {
+        nickname: user.nickname,
+        country: user.country,
+        favorite_club: user.favorite_club,
+        preferred_language: user.preferred_language,
+        level: user.progression?.level,
+      },
+      {
+        signup_date: user.created_at,
+        first_email: user.email,
+      },
+    );
+  } catch (error) {
+    logger.error('Analytics setPersonProperties failed', error);
+  }
 
   setNewRelicUser(user.id, {
     email: user.email,
@@ -117,6 +121,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: async () => {
     try {
       trackLogout();
+    } catch (error) {
+      logger.error('Analytics trackLogout failed', error);
+    }
+    try {
       await logoutService();
     } catch {
       // Best-effort; store state still resets.

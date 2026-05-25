@@ -28,7 +28,11 @@ export function LobbyHeader({
     if (!lobbyCode) return;
     const success = await copyToClipboard(lobbyCode);
     if (success) {
-      trackFriendInviteSent('link_copy');
+      try {
+        trackFriendInviteSent('link_copy');
+      } catch (error) {
+        console.error('Analytics trackFriendInviteSent failed', error);
+      }
       toast.success(t("friend.roomCodeCopied"));
     }
   };

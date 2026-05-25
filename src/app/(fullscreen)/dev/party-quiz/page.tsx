@@ -277,7 +277,7 @@ function makeFinalResults(memberCount: number, totalsByUser: Record<string, numb
 
 // ─── Stub socket ───────────────────────────────────────────────────────────
 
-function createStubSocket() {
+function createStubSocket(onMatchAnswer: (payload: { matchId: string; qIndex: number; selectedIndex: number | null; timeMs: number }) => void) {
   /* eslint-disable @typescript-eslint/no-explicit-any */
   const stub: any = {
     id: 'dev-party-stub',
@@ -285,6 +285,11 @@ function createStubSocket() {
     active: true,
     auth: {},
     emit: (...args: unknown[]) => {
+      const [event, payload] = args;
+      if (event === 'match:answer' && payload && typeof payload === 'object') {
+        onMatchAnswer(payload as { matchId: string; qIndex: number; selectedIndex: number | null; timeMs: number });
+        return stub;
+      }
       console.debug('[dev/party-quiz] socket.emit ignored', args);
       return stub;
     },
@@ -329,11 +334,43 @@ function DevPartyQuizContent() {
   const [restartKey, setRestartKey] = useState(0);
   const [totals, setTotals] = useState<Record<string, number>>({});
   const totalsRef = useRef<Record<string, number>>({});
+  const qIndexRef = useRef(0);
+  const playerCountRef = useRef(3);
+  const revealedRef = useRef(false);
+  const simulationTimersRef = useRef<number[]>([]);
+  const matchAnswerHandlerRef = useRef<(payload: { matchId: string; qIndex: number; selectedIndex: number | null; timeMs: number }) => void>(() => undefined);
   const stateVersionRef = useRef(0);
+
+  useEffect(() => {
+    qIndexRef.current = qIndex;
+  }, [qIndex]);
+
+  useEffect(() => {
+    playerCountRef.current = playerCount;
+  }, [playerCount]);
+
+  useEffect(() => {
+    revealedRef.current = revealed;
+  }, [revealed]);
+
+  function clearSimulationTimers() {
+    for (const timerId of simulationTimersRef.current) {
+      window.clearTimeout(timerId);
+    }
+    simulationTimersRef.current = [];
+  }
+
+  function scheduleSimulationStep(callback: () => void, delayMs: number) {
+    const timerId = window.setTimeout(() => {
+      simulationTimersRef.current = simulationTimersRef.current.filter((id) => id !== timerId);
+      callback();
+    }, delayMs);
+    simulationTimersRef.current.push(timerId);
+  }
 
   // Install stub socket + mock auth user on mount.
   useEffect(() => {
-    const stub = createStubSocket();
+    const stub = createStubSocket((payload) => matchAnswerHandlerRef.current(payload));
     __setSocketOverride(stub);
     const prevAuth = useAuthStore.getState();
     useAuthStore.setState({
@@ -349,6 +386,7 @@ function DevPartyQuizContent() {
     useRealtimeMatchStore.getState().setSelfUserId(SELF_ID);
 
     return () => {
+      clearSimulationTimers();
       __setSocketOverride(null);
       useAuthStore.setState({ ...prevAuth });
       useRealtimeMatchStore.getState().reset();
@@ -365,6 +403,7 @@ function DevPartyQuizContent() {
   // ─── Seed match state ────────────────────────────────────────────────────
   useEffect(() => {
     if (mode !== 'match') return;
+    clearSimulationTimers();
     const store = useRealtimeMatchStore.getState();
     stateVersionRef.current = 0;
     // `restartKey` re-runs this effect after Play Again from the podium.
@@ -387,85 +426,180 @@ function DevPartyQuizContent() {
   }, [mode, playerCount, restartKey]);
 
   // ─── Match controls ──────────────────────────────────────────────────────
-  function revealRound(everyoneCorrect: boolean) {
-    if (revealed) return;
-    const memberIds = PLAYER_IDS.slice(0, playerCount);
-    const correctIds = new Set<string>();
-    const pointsByUser: Record<string, number> = {};
-
-    for (const id of memberIds) {
-      const isCorrect = everyoneCorrect || Math.random() > 0.4;
-      if (isCorrect) {
-        correctIds.add(id);
-        const earned = 60 + Math.floor(Math.random() * 40);
-        pointsByUser[id] = earned;
-        totalsRef.current[id] = (totalsRef.current[id] ?? 0) + earned;
-      }
-    }
-
-    setTotals({ ...totalsRef.current });
-    const store = useRealtimeMatchStore.getState();
-    stateVersionRef.current += 1;
-    store.setRoundResult(makeRoundResult(qIndex, playerCount, correctIds, pointsByUser, totalsRef.current));
-    store.setPartyState(
-      makePartyState(
-        playerCount,
-        qIndex,
-        Object.fromEntries(
-          memberIds.map((id) => [
-            id,
-            {
-              userId: id,
-              totalPoints: totalsRef.current[id] ?? 0,
-              correctAnswers: 0,
-              answered: true,
-              rank: 0,
-              avgTimeMs: 4500,
-            },
-          ]),
-        ),
-        stateVersionRef.current,
-      ),
+  function makeDevPlayerScoreState(
+    memberIds: string[],
+    answeredIds: Set<string>,
+  ): Record<string, MatchPartyPlayerState> {
+    return Object.fromEntries(
+      memberIds.map((id) => [
+        id,
+        {
+          userId: id,
+          totalPoints: totalsRef.current[id] ?? 0,
+          correctAnswers: 0,
+          answered: answeredIds.has(id),
+          rank: 0,
+          avgTimeMs: 4500,
+        },
+      ]),
     );
-    setRevealed(true);
   }
 
-  function nextQuestion() {
-    if (qIndex >= TOTAL_QUESTIONS - 1) {
+  function advanceToNextQuestion(fromQIndex: number = qIndexRef.current) {
+    if (fromQIndex >= TOTAL_QUESTIONS - 1) {
       const store = useRealtimeMatchStore.getState();
-      store.setFinalResults(makeFinalResults(playerCount, totalsRef.current));
+      store.setFinalResults(makeFinalResults(playerCountRef.current, totalsRef.current));
       setShowResults(true);
       return;
     }
-    const newIndex = qIndex + 1;
+
+    const newIndex = fromQIndex + 1;
+    const memberIds = PLAYER_IDS.slice(0, playerCountRef.current);
     const store = useRealtimeMatchStore.getState();
     stateVersionRef.current += 1;
     store.setPartyState(
       makePartyState(
-        playerCount,
+        playerCountRef.current,
         newIndex,
-        Object.fromEntries(
-          PLAYER_IDS.slice(0, playerCount).map((id) => [
-            id,
-            {
-              userId: id,
-              totalPoints: totalsRef.current[id] ?? 0,
-              correctAnswers: 0,
-              answered: false,
-              rank: 0,
-              avgTimeMs: 4500,
-            },
-          ]),
-        ),
+        makeDevPlayerScoreState(memberIds, new Set()),
         stateVersionRef.current,
       ),
     );
     store.setMatchQuestion(makeQuestion(newIndex));
     store.setQuestionPhase('reveal');
-    window.setTimeout(() => useRealtimeMatchStore.getState().setQuestionPhase('playing'), REVEAL_DELAY_MS);
+    scheduleSimulationStep(() => useRealtimeMatchStore.getState().setQuestionPhase('playing'), REVEAL_DELAY_MS);
     setQIndex(newIndex);
     setRevealed(false);
   }
+
+  function simulateRound(params: {
+    everyoneCorrect: boolean;
+    autoAdvance?: boolean;
+    selectedIndex?: number | null;
+  }) {
+    if (revealedRef.current) return;
+    clearSimulationTimers();
+
+    const currentQIndex = qIndexRef.current;
+    const currentPlayerCount = playerCountRef.current;
+    const memberIds = PLAYER_IDS.slice(0, currentPlayerCount);
+    const sample = SAMPLE_QUESTIONS[currentQIndex % SAMPLE_QUESTIONS.length]!;
+    const selectedIndex = params.selectedIndex ?? sample.correctIndex;
+    const selfCorrect = selectedIndex === sample.correctIndex;
+    const correctIds = new Set<string>();
+    const pointsByUser: Record<string, number> = {};
+
+    for (const [idx, id] of memberIds.entries()) {
+      const isCorrect = id === SELF_ID
+        ? selfCorrect
+        : params.everyoneCorrect || Math.random() > 0.4;
+      if (isCorrect) {
+        correctIds.add(id);
+        const earned = Math.max(20, 100 - idx * 8);
+        pointsByUser[id] = earned;
+      }
+    }
+
+    const store = useRealtimeMatchStore.getState();
+    if (selfCorrect) {
+      totalsRef.current[SELF_ID] = (totalsRef.current[SELF_ID] ?? 0) + (pointsByUser[SELF_ID] ?? 0);
+      setTotals({ ...totalsRef.current });
+      store.setAnswerAck({
+        matchId: MATCH_ID,
+        qIndex: currentQIndex,
+        questionKind: 'multipleChoice',
+        selectedIndex,
+        isCorrect: true,
+        correctIndex: sample.correctIndex,
+        myTotalPoints: totalsRef.current[SELF_ID] ?? 0,
+        oppAnswered: false,
+        pointsEarned: pointsByUser[SELF_ID] ?? 0,
+        phaseKind: 'normal',
+        phaseRound: currentQIndex + 1,
+      });
+      stateVersionRef.current += 1;
+      store.setPartyState(
+        makePartyState(
+          currentPlayerCount,
+          currentQIndex,
+          makeDevPlayerScoreState(memberIds, new Set([SELF_ID])),
+          stateVersionRef.current,
+        ),
+      );
+    }
+
+    scheduleSimulationStep(() => {
+      for (const id of memberIds) {
+        if (id === SELF_ID) continue;
+        const points = pointsByUser[id] ?? 0;
+        if (points > 0) {
+          totalsRef.current[id] = (totalsRef.current[id] ?? 0) + points;
+        }
+      }
+
+      if (!selfCorrect) {
+        store.setAnswerAck({
+          matchId: MATCH_ID,
+          qIndex: currentQIndex,
+          questionKind: 'multipleChoice',
+          selectedIndex,
+          isCorrect: false,
+          correctIndex: sample.correctIndex,
+          myTotalPoints: totalsRef.current[SELF_ID] ?? 0,
+          oppAnswered: false,
+          pointsEarned: 0,
+          phaseKind: 'normal',
+          phaseRound: currentQIndex + 1,
+        });
+      }
+
+      setTotals({ ...totalsRef.current });
+      stateVersionRef.current += 1;
+      store.setRoundResult(makeRoundResult(currentQIndex, currentPlayerCount, correctIds, pointsByUser, totalsRef.current));
+      store.setPartyState(
+        makePartyState(
+          currentPlayerCount,
+          currentQIndex,
+          makeDevPlayerScoreState(memberIds, new Set(memberIds)),
+          stateVersionRef.current,
+        ),
+      );
+      setRevealed(true);
+      revealedRef.current = true;
+
+      if (params.autoAdvance) {
+        scheduleSimulationStep(() => advanceToNextQuestion(currentQIndex), 3200);
+      }
+    }, selfCorrect ? 700 : 150);
+  }
+
+  function revealRound(everyoneCorrect: boolean) {
+    simulateRound({ everyoneCorrect });
+  }
+
+  function nextQuestion() {
+    advanceToNextQuestion();
+  }
+
+  function simulateCorrectRoundAndAdvance() {
+    const sample = SAMPLE_QUESTIONS[qIndexRef.current % SAMPLE_QUESTIONS.length]!;
+    simulateRound({
+      everyoneCorrect: true,
+      autoAdvance: true,
+      selectedIndex: sample.correctIndex,
+    });
+  }
+
+  useEffect(() => {
+    matchAnswerHandlerRef.current = (payload) => {
+      if (payload.matchId !== MATCH_ID || payload.qIndex !== qIndexRef.current) return;
+      simulateRound({
+        everyoneCorrect: true,
+        autoAdvance: true,
+        selectedIndex: payload.selectedIndex,
+      });
+    };
+  });
 
   function endNow() {
     // If nothing has been scored yet, sprinkle in some sample scores so the
@@ -483,6 +617,10 @@ function DevPartyQuizContent() {
     store.setFinalResults(makeFinalResults(playerCount, totals));
     setShowResults(true);
   }
+
+  /*
+   * Functions below are render/control helpers.
+   */
 
   function toggleReady(idx: number) {
     setReadyFlags((prev) => {
@@ -502,6 +640,7 @@ function DevPartyQuizContent() {
   const finalResults = useRealtimeMatchStore((state) => state.match?.finalResults ?? null);
 
   const restartMatch = () => {
+    clearSimulationTimers();
     const store = useRealtimeMatchStore.getState();
     store.reset();
     store.setSelfUserId(SELF_ID);
@@ -525,6 +664,7 @@ function DevPartyQuizContent() {
             selfUserId={SELF_ID}
             onPlayAgain={restartMatch}
             onMainMenu={() => {
+              clearSimulationTimers();
               useRealtimeMatchStore.getState().reset();
               setShowResults(false);
               setMode('lobby');
@@ -535,6 +675,7 @@ function DevPartyQuizContent() {
             onQuit={() => setMode('lobby')}
             onForfeit={() => setMode('lobby')}
             mobileStandingsPlacement="below-options"
+            disableBgm
           />
         )}
       </div>
@@ -639,6 +780,14 @@ function DevPartyQuizContent() {
                 <span className="tabular-nums text-white">{qIndex + 1}/{TOTAL_QUESTIONS}</span>
               </div>
               <div className="mt-2 flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={simulateCorrectRoundAndAdvance}
+                  disabled={revealed || showResults}
+                  className="rounded-lg bg-brand-yellow py-2 text-xs font-black uppercase tracking-wider text-surface-page hover:bg-brand-yellow/90 disabled:opacity-40"
+                >
+                  Sim correct round → next
+                </button>
                 <button
                   type="button"
                   onClick={() => revealRound(false)}

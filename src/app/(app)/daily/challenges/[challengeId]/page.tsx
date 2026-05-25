@@ -93,11 +93,15 @@ export default function ChallengePage() {
 
       try {
         const result = await completeMutation.mutateAsync(score);
-        trackDailyChallengeCompleted({
-          challengeType,
-          score,
-          xpAwarded: result.xpAwarded,
-        });
+        try {
+          trackDailyChallengeCompleted({
+            challengeType,
+            score,
+            xpAwarded: result.xpAwarded,
+          });
+        } catch (error) {
+          console.error('Analytics trackDailyChallengeCompleted failed', error);
+        }
         if (result.xpAwarded > 0) {
           addXP(result.xpAwarded);
         }
@@ -114,7 +118,11 @@ export default function ChallengePage() {
     if (!challengeType) {
       return;
     }
-    trackDailyChallengeStarted(challengeType);
+    try {
+      trackDailyChallengeStarted(challengeType);
+    } catch (error) {
+      console.error('Analytics trackDailyChallengeStarted failed', error);
+    }
 
     let cancelled = false;
     queueMicrotask(() => {

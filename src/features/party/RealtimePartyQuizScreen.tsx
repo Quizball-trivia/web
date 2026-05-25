@@ -27,6 +27,7 @@ interface RealtimePartyQuizScreenProps {
   onQuit: () => void;
   onForfeit: () => void;
   mobileStandingsPlacement?: 'bottom-bar' | 'below-options';
+  disableBgm?: boolean;
 }
 
 interface PartyStandingViewModel {
@@ -194,6 +195,7 @@ export function RealtimePartyQuizScreen({
   onQuit,
   onForfeit,
   mobileStandingsPlacement = 'bottom-bar',
+  disableBgm = false,
 }: RealtimePartyQuizScreenProps) {
   const { state, actions } = useRealtimeGameLogic({ transitionDelayMs: 950 });
   const partyState = useRealtimeMatchStore((store) => store.match?.partyState ?? null);
@@ -338,9 +340,10 @@ export function RealtimePartyQuizScreen({
   }, [answerAck?.qIndex, selfUserId, spawnScoreFlight, state.roundResult]);
 
   useEffect(() => {
+    if (disableBgm) return;
     if (!state.startCountdownActive || state.countdownReason === 'resume') return;
     playBgm('kickoff');
-  }, [state.countdownReason, state.startCountdownActive]);
+  }, [disableBgm, state.countdownReason, state.startCountdownActive]);
 
   // ---------------------------------------------------------------------------
   // Derived values
@@ -927,39 +930,43 @@ export function RealtimePartyQuizScreen({
       )}
 
       <AnimatePresence>
-        {scoreFlights.map((flight) => (
-          <motion.div
-            key={flight.id}
-            initial={{
-              opacity: 0,
-              scale: 0.55,
-              x: flight.from.x,
-              y: flight.from.y,
-              rotate: -7,
-            }}
-            animate={{
-              opacity: [0, 1, 1, 0],
-              scale: [0.55, 1.18, 1, 0.45],
-              x: [flight.from.x, (flight.from.x + flight.to.x) / 2, flight.to.x],
-              y: [flight.from.y, Math.min(flight.from.y, flight.to.y) - 44, flight.to.y],
-              rotate: [0, -5, 3],
-            }}
-            exit={{ opacity: 0 }}
-            transition={{
-              duration: 0.85,
-              times: [0, 0.22, 0.72, 1],
-              ease: 'easeOut',
-            }}
-            className="pointer-events-none fixed left-0 top-0 z-50 -translate-x-1/2 -translate-y-1/2 select-none font-poppins text-4xl font-black text-brand-yellow"
-            style={{
-              WebkitTextStroke: '2px #000000',
-              paintOrder: 'stroke fill',
-              textShadow: '0 6px 0 rgba(0,0,0,0.35), 0 0 16px rgba(255,229,0,0.35)',
-            }}
-          >
-            +{flight.points}
-          </motion.div>
-        ))}
+        {scoreFlights.map((flight) => {
+          const apexX = flight.from.x + (flight.to.x - flight.from.x) * 0.5;
+          const apexY = Math.min(flight.from.y, flight.to.y) - 110;
+          return (
+            <motion.div
+              key={flight.id}
+              initial={{
+                opacity: 0,
+                scale: 0.5,
+                x: flight.from.x,
+                y: flight.from.y,
+                rotate: -7,
+              }}
+              animate={{
+                opacity: [0, 1, 1, 1, 0],
+                scale: [0.5, 1.2, 1.05, 0.85, 0.55],
+                x: [flight.from.x, flight.from.x, apexX, flight.to.x, flight.to.x],
+                y: [flight.from.y, flight.from.y, apexY, flight.to.y, flight.to.y],
+                rotate: [0, -6, -3, 2, 4],
+              }}
+              exit={{ opacity: 0 }}
+              transition={{
+                duration: 1.6,
+                times: [0, 0.18, 0.55, 0.88, 1],
+                ease: [0.32, 0.72, 0.32, 1],
+              }}
+              className="pointer-events-none fixed left-0 top-0 z-50 -translate-x-1/2 -translate-y-1/2 select-none font-poppins text-4xl font-black text-brand-yellow"
+              style={{
+                WebkitTextStroke: '2px #000000',
+                paintOrder: 'stroke fill',
+                textShadow: '0 6px 0 rgba(0,0,0,0.35), 0 0 16px rgba(255,229,0,0.35)',
+              }}
+            >
+              +{flight.points}
+            </motion.div>
+          );
+        })}
       </AnimatePresence>
 
       {/* Quit modal */}

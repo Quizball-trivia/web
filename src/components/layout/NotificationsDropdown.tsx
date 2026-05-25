@@ -279,14 +279,22 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
   const handleAcceptChallenge = (invite: LobbyChallengeInvite) => {
     if (pendingChallengeAction) return;
     setPendingChallengeAction({ invitationId: invite.invitationId, action: "accept" });
-    trackChallengeInviteAccepted(invite.invitationId);
+    try {
+      trackChallengeInviteAccepted(invite.invitationId);
+    } catch (error) {
+      console.error('Analytics trackChallengeInviteAccepted failed', error);
+    }
     getSocket().emit("lobby:challenge_accept", { invitationId: invite.invitationId });
   };
 
   const handleDeclineChallenge = (invite: LobbyChallengeInvite) => {
     if (pendingChallengeAction) return;
     setPendingChallengeAction({ invitationId: invite.invitationId, action: "decline" });
-    trackChallengeInviteDeclined(invite.invitationId);
+    try {
+      trackChallengeInviteDeclined(invite.invitationId);
+    } catch (error) {
+      console.error('Analytics trackChallengeInviteDeclined failed', error);
+    }
     getSocket().emit("lobby:challenge_decline", { invitationId: invite.invitationId });
     removeChallengeInvite(invite.invitationId);
     setPendingChallengeAction(null);

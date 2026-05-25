@@ -69,7 +69,11 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
       toast.error(t("friend.joinTimedOut"));
     }, 8000);
     const code = inviteCode.toUpperCase();
-    trackFriendInviteAccepted(code);
+    try {
+      trackFriendInviteAccepted(code);
+    } catch (error) {
+      console.error('Analytics trackFriendInviteAccepted failed', error);
+    }
     getSocket().emit("lobby:join_by_code", { inviteCode: code });
     toast.info(t("friend.joiningCode", { code }));
   };

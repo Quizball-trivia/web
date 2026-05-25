@@ -1,27 +1,5 @@
-/**
- * Google Identity Services (GIS) integration.
- *
- * GIS is Google's modern Sign-in library. It uses `accounts.google.com/gsi/...`
- * endpoints (popup + JWT credential) instead of the classic
- * `accounts.google.com/o/oauth2/v2/auth` redirect, which is blocked by
- * `disallowed_useragent` (Error 403) inside embedded webviews like Facebook
- * Messenger and Instagram. By using GIS we can sign users in without leaving
- * the in-app browser.
- *
- * Flow:
- *   1. Load https://accounts.google.com/gsi/client (Next <Script>)
- *   2. Generate a cryptographic nonce, store its hash in window.google config
- *   3. Call `google.accounts.id.initialize({ client_id, callback, nonce: hash })`
- *   4. Call `google.accounts.id.prompt()` to show the One Tap / popup
- *   5. Callback fires with `{ credential: idToken }`
- *   6. POST { provider: 'google', id_token, nonce } to /auth/v1/social-login-token
- *   7. Server verifies the JWT with Google and creates a Supabase session.
- *
- * If GIS fails to load (CDN blocked) or fails to render (some webview
- * versions detect the UA and bail), callers should fall back to the classic
- * redirect-based `socialLogin('google', ...)` and finally to the in-app
- * browser overlay.
- */
+// GIS popup/JWT sign-in. Used to bypass `disallowed_useragent` in
+// embedded webviews; caller falls back to the classic redirect on error.
 
 interface GoogleCredentialResponse {
   credential: string;

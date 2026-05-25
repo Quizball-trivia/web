@@ -1,9 +1,5 @@
 import { trackEvent } from '@/lib/posthog';
 
-// ────────────────────────────────────────────────────────────────────────────
-// Auth / lifecycle
-// ────────────────────────────────────────────────────────────────────────────
-
 export function trackSignupStarted(method: 'google' | 'email' = 'google') {
   trackEvent('signup_started', { method });
 }
@@ -39,10 +35,6 @@ export function trackInAppBrowserBlocked(browser: string, isIOS: boolean, isAndr
   });
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// Matchmaking
-// ────────────────────────────────────────────────────────────────────────────
-
 export function trackMatchmakingStarted(mode: string, variant?: string) {
   trackEvent('matchmaking_started', { mode, variant });
 }
@@ -58,10 +50,6 @@ export function trackMatchmakingHumanFound(mode: string, wait_ms: number) {
 export function trackMatchmakingCancelled(mode: string, wait_ms: number) {
   trackEvent('matchmaking_cancelled', { mode, wait_ms });
 }
-
-// ────────────────────────────────────────────────────────────────────────────
-// Match lifecycle
-// ────────────────────────────────────────────────────────────────────────────
 
 export function trackMatchStarted(props: {
   matchId: string;
@@ -112,12 +100,6 @@ export function trackMatchCompleted(props: {
   });
 }
 
-/**
- * Legacy event — kept for backwards compatibility with the existing
- * `match_results_viewed` data in PostHog. New code should also call
- * `trackMatchCompleted` (the lifecycle event) — this one only fires on the
- * results screen impression, which is downstream of match completion.
- */
 export function trackMatchResultsViewed(
   matchType: 'ranked' | 'friendly',
   won: boolean,
@@ -156,10 +138,6 @@ export function trackMatchReconnected(matchId: string, downtimeSec: number) {
     downtime_sec: downtimeSec,
   });
 }
-
-// ────────────────────────────────────────────────────────────────────────────
-// Question / answer
-// ────────────────────────────────────────────────────────────────────────────
 
 export function trackAnswerSubmitted(
   questionId: string,
@@ -202,10 +180,6 @@ export function trackLifelineUsed(matchId: string | undefined, type: '5050' | 'c
   });
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// Match-phase progression
-// ────────────────────────────────────────────────────────────────────────────
-
 export function trackDraftStarted(matchId: string) {
   trackEvent('draft_started', { match_id: matchId });
 }
@@ -226,10 +200,6 @@ export function trackPenaltyTaken(matchId: string, scored: boolean, attemptNumbe
   });
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// Navigation / mode selection
-// ────────────────────────────────────────────────────────────────────────────
-
 export function trackModeSelected(mode: string) {
   trackEvent('mode_selected', { mode });
 }
@@ -240,10 +210,6 @@ export function trackCategorySelected(categoryId: string, categoryName: string) 
     category_name: categoryName,
   });
 }
-
-// ────────────────────────────────────────────────────────────────────────────
-// Friend / party / challenge
-// ────────────────────────────────────────────────────────────────────────────
 
 export function trackLobbyCreated(mode: string) {
   trackEvent('lobby_created', { mode });
@@ -294,10 +260,6 @@ export function trackChallengeInviteDeclined(invitationId: string) {
   trackEvent('challenge_invite_declined', { invitation_id: invitationId });
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// Daily challenges
-// ────────────────────────────────────────────────────────────────────────────
-
 export function trackDailyChallengeStarted(challengeType: string) {
   trackEvent('daily_challenge_started', { challenge_type: challengeType });
 }
@@ -327,10 +289,6 @@ export function trackDailyChallengeCompleted(props: {
     coins_awarded: props.coinsAwarded,
   });
 }
-
-// ────────────────────────────────────────────────────────────────────────────
-// Store / economy
-// ────────────────────────────────────────────────────────────────────────────
 
 export function trackStoreViewed() {
   trackEvent('store_viewed');
@@ -372,10 +330,6 @@ export function trackItemPurchased(itemId: string, itemName: string, cost: numbe
   });
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// Profile / settings
-// ────────────────────────────────────────────────────────────────────────────
-
 export function trackNicknameChanged() {
   trackEvent('nickname_changed');
 }
@@ -391,10 +345,6 @@ export function trackLanguageSwitched(from: string, to: string) {
 export function trackSettingsOpened() {
   trackEvent('settings_opened');
 }
-
-// ────────────────────────────────────────────────────────────────────────────
-// Progression
-// ────────────────────────────────────────────────────────────────────────────
 
 export function trackLevelUp(newLevel: number) {
   trackEvent('level_up', {
@@ -416,10 +366,6 @@ export function trackAchievementUnlocked(achievementId: string, achievementName:
   });
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// Errors / quality
-// ────────────────────────────────────────────────────────────────────────────
-
 export function trackSocketConnectionFailed(error: string) {
   trackEvent('socket_connection_failed', { error });
 }
@@ -435,10 +381,6 @@ export function trackApiError(endpoint: string, status: number, code?: string) {
 export function trackMatchLoadError(matchId: string | undefined, errorCode: string) {
   trackEvent('match_load_error', { match_id: matchId, error_code: errorCode });
 }
-
-// ────────────────────────────────────────────────────────────────────────────
-// Backwards-compat aliases — old call sites still use these names
-// ────────────────────────────────────────────────────────────────────────────
 
 export function trackGameStart(mode: string, category?: string) {
   trackEvent('game_started', {

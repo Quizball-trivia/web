@@ -153,10 +153,7 @@ export default function RootLayout({
         style={{ fontFamily: "'Nunito Variable', sans-serif" }}
         suppressHydrationWarning
       >
-        {/* JSON-LD lives in <body> rather than <head> so it doesn't collide
-            with Facebook Messenger's `pcm.js` injection (which Meta drops
-            into <head> on every page loaded in its in-app browser).
-            Google accepts JSON-LD in either location. */}
+        {/* JSON-LD in <body> not <head> to avoid hydration collision with Messenger's pcm.js injection. */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

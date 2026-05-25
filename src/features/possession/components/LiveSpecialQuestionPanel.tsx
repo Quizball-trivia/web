@@ -72,12 +72,14 @@ function SpecialScoreFlightAnchors() {
       <div
         aria-hidden="true"
         data-splash-anchor="player"
-        className="pointer-events-none absolute left-[-12px] top-28 z-10 size-px"
+        className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2"
+        style={{ minWidth: 1, minHeight: 1 }}
       />
       <div
         aria-hidden="true"
         data-splash-anchor="opponent"
-        className="pointer-events-none absolute right-[-12px] top-28 z-10 size-px"
+        className="pointer-events-none absolute right-3 top-1/2 z-10 -translate-y-1/2"
+        style={{ minWidth: 1, minHeight: 1 }}
       />
     </>
   );
@@ -1542,7 +1544,7 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
   }
 
   return (
-    <div className="relative px-4 sm:px-4 lg:px-0">
+    <div className="relative px-4 sm:px-4 lg:px-0" data-special-question-panel="true">
       <SpecialScoreFlightAnchors />
       {/* QUESTION X/Y + timer header — exact same pill dimensions as
           PossessionQuestionPanel (MCQ) so the special panels feel like

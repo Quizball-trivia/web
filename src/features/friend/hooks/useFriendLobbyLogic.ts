@@ -258,7 +258,11 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     if (!lobbyCode) return;
     const success = await copyToClipboard(lobbyCode);
     if (success) {
-      trackFriendInviteSent('link_copy', lobby?.lobbyId);
+      try {
+        trackFriendInviteSent('link_copy', lobby?.lobbyId);
+      } catch (error) {
+        logger.error('Analytics trackFriendInviteSent failed', error);
+      }
       toast.success("Room Code copied!");
     }
   };

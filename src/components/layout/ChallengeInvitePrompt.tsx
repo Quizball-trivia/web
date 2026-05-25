@@ -66,13 +66,21 @@ export function ChallengeInvitePrompt() {
     if (!invite || pendingAction) return;
     setPendingAction("accept");
     setPendingAcceptId(invite.invitationId);
-    trackChallengeInviteAccepted(invite.invitationId);
+    try {
+      trackChallengeInviteAccepted(invite.invitationId);
+    } catch (error) {
+      console.error('Analytics trackChallengeInviteAccepted failed', error);
+    }
     getSocket().emit("lobby:challenge_accept", { invitationId: invite.invitationId });
   };
 
   const handleDismiss = () => {
     if (!invite || pendingAction) return;
-    trackChallengeInviteDeclined(invite.invitationId);
+    try {
+      trackChallengeInviteDeclined(invite.invitationId);
+    } catch (error) {
+      console.error('Analytics trackChallengeInviteDeclined failed', error);
+    }
     setDismissedInviteIds((current) => {
       const next = new Set(current);
       next.add(invite.invitationId);

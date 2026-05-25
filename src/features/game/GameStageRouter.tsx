@@ -314,8 +314,16 @@ export function GameStageRouter() {
         ?? opponentParticipant?.rankPoints
       );
 
-      const playerDisplayScore = myStats?.goals ?? 0;
-      const opponentDisplayScore = opponentStats?.goals ?? 0;
+      // Regulation goals are 0 when the match went to penalty shootout. To
+      // avoid the "0:0 VICTORY" confusion, include penalty goals in the
+      // displayed score whenever penalties decided it.
+      const wentToPenalties = (final?.winnerDecisionMethod === 'penalty_goals')
+        || (myStats?.penaltyGoals ?? 0) > 0
+        || (opponentStats?.penaltyGoals ?? 0) > 0;
+      const playerDisplayScore = (myStats?.goals ?? 0)
+        + (wentToPenalties ? (myStats?.penaltyGoals ?? 0) : 0);
+      const opponentDisplayScore = (opponentStats?.goals ?? 0)
+        + (wentToPenalties ? (opponentStats?.penaltyGoals ?? 0) : 0);
       const knownQuestionCount = realtimeMatch?.questions
         ? Math.max(0, ...Object.keys(realtimeMatch.questions).map((key) => Number(key) + 1).filter(Number.isFinite))
         : 0;
