@@ -216,9 +216,10 @@ export function RealtimePartyQuizScreen({
   mobileStandingsPlacement = 'bottom-bar',
   disableBgm = false,
 }: RealtimePartyQuizScreenProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const partyState = useRealtimeMatchStore((store) => store.match?.partyState ?? null);
   const participants = useRealtimeMatchStore((store) => store.match?.participants);
+  const matchCategoryName = useRealtimeMatchStore((store) => store.match?.categoryName ?? null);
   const currentQuestion = useRealtimeMatchStore((store) => store.match?.currentQuestion ?? null);
   const answerAck = useRealtimeMatchStore((store) => store.match?.answerAck ?? null);
   const finalResults = useRealtimeMatchStore((store) => store.match?.finalResults ?? null);
@@ -740,7 +741,10 @@ export function RealtimePartyQuizScreen({
     totalQuestions,
     questionNumber + (state.roundResolved ? 1 : 0),
   );
-  const transitionCategoryName = question?.categoryName ?? 'Football';
+  const matchCategoryNameResolved = matchCategoryName
+    ? matchCategoryName[locale] ?? matchCategoryName.en
+    : undefined;
+  const transitionCategoryName = question?.categoryName ?? matchCategoryNameResolved ?? 'Football';
   const isFinalQuestionResolved = state.roundResolved && questionNumber >= totalQuestions;
   const showFinalizingResults = isFinalQuestionResolved && transitionVisible && !finalResults;
 
@@ -829,16 +833,25 @@ export function RealtimePartyQuizScreen({
         {forfeitPending && (
           <motion.div
             key="party-forfeit-pending"
-            initial={{ opacity: 0, y: -16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-            className="absolute left-1/2 top-4 z-40 w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 rounded-[20px] bg-brand-blue px-5 py-4 shadow-2xl"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 z-50 flex items-center justify-center bg-surface-page-alt/75 px-4 backdrop-blur-[2px]"
           >
-            <div className="text-center font-poppins">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-yellow">Finalizing Match</div>
-              <div className="mt-1 text-base font-semibold uppercase text-white">{forfeitPendingTitle}</div>
-              <div className="mt-1 text-xs font-semibold text-white/70">{forfeitPending.message}</div>
-            </div>
+            <motion.div
+              initial={{ y: -12, scale: 0.96, opacity: 0 }}
+              animate={{ y: 0, scale: 1, opacity: 1 }}
+              exit={{ y: -12, scale: 0.96, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+              className="w-full max-w-sm rounded-[20px] bg-brand-blue px-6 py-6 text-center shadow-2xl"
+            >
+              <div className="font-poppins text-[11px] font-semibold uppercase tracking-[0.28em] text-brand-yellow">
+                {t('possession.finalizingMatch')}
+              </div>
+              <div className="mt-2 font-poppins text-xl font-semibold uppercase text-white">{forfeitPendingTitle}</div>
+              <div className="mt-1 font-poppins text-sm font-semibold text-white/70">{forfeitPending.message}</div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

@@ -65,6 +65,8 @@ export interface MatchStatus {
   /** Recipient's last 3 match results (most recent first) — surfaced to the showdown screen's form strip. */
   myRecentForm?: Array<'W' | 'L' | 'D'>;
   participants: MatchParticipant[];
+  /** Resolved first-half category (i18n). Available immediately on match:start so the round-1 intro doesn't flash a placeholder. */
+  categoryName?: Record<string, string>;
   countdownEndsAt: number | null;
   countdownReason: 'kickoff' | 'resume' | null;
   currentQuestion: ResolvedMatchQuestionPayload | null;
@@ -345,6 +347,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         opponent: payload.opponent,
         myRecentForm: payload.myRecentForm,
         participants: payload.participants,
+        categoryName: payload.categoryName,
         countdownEndsAt: Date.now() + (payload.variant === 'friendly_party_quiz'
           ? PARTY_QUIZ_DEFAULT_COUNTDOWN_MS
           : DEFAULT_COUNTDOWN_MS),
