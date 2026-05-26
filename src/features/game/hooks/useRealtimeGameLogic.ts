@@ -295,10 +295,11 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
   const correctIndex = useMemo(() => {
     if (!match || !currentQuestion) return undefined;
     const stored = match.questions[currentQuestion.qIndex]?.correctIndex;
+    const currentPayloadCorrectIndex = currentQuestion.correctIndex;
     const revealCorrectIndex = roundResult?.reveal?.kind === 'multipleChoice'
       ? roundResult.reveal.correctIndex
       : undefined;
-    return stored ?? answerAck?.correctIndex ?? revealCorrectIndex;
+    return stored ?? currentPayloadCorrectIndex ?? answerAck?.correctIndex ?? revealCorrectIndex;
   }, [answerAck?.correctIndex, roundResult, match, currentQuestion]);
 
   const playerScore = match?.myTotalPoints ?? 0;

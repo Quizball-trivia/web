@@ -95,13 +95,14 @@ function getButtonState(
   answerStates: AnswerStateArray,
   correctIndex: number | undefined,
   showOptions: boolean,
+  revealCorrectAnswer: boolean,
 ): 'default' | 'selected-correct' | 'selected-wrong' | 'reveal-correct' {
   const state = answerStates[index];
   if (state === 'correct') return 'selected-correct';
   if (state === 'wrong') return 'selected-wrong';
 
   // After round resolves, reveal the correct answer (even if not selected by player)
-  if (!showOptions && correctIndex === index) return 'reveal-correct';
+  if (revealCorrectAnswer && !showOptions && correctIndex === index) return 'reveal-correct';
 
   return 'default';
 }
@@ -232,7 +233,14 @@ export function PossessionQuestionPanel({
         aria-hidden={!showOptions}
       >
         {question.options.map((opt, i) => {
-          const buttonState = getButtonState(i, selectedAnswer, answerStates, correctIndex, showOptions);
+          const buttonState = getButtonState(
+            i,
+            selectedAnswer,
+            answerStates,
+            correctIndex,
+            showOptions,
+            phase === 'reveal',
+          );
           const isWinningAnswer = buttonState === 'selected-correct' || buttonState === 'reveal-correct';
           const isWrongPick = buttonState === 'selected-wrong';
 
