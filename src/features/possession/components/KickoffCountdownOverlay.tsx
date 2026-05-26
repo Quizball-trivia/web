@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { motion } from 'motion/react';
 
 import { AvatarPreview } from '@/components/AvatarPreview';
+import { MatchCountdownPuck } from '@/components/shared/MatchCountdownPuck';
 import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
 import { playBgm } from '@/lib/sounds/gameSounds';
@@ -79,31 +80,13 @@ export function KickoffCountdownOverlay({
           avatarCustomization={playerCustomization}
         />
 
-        <div className="flex flex-col items-center justify-center">
-          <div className="font-fun text-[9px] font-black uppercase tracking-[0.28em] text-brand-yellow sm:text-[11px]">
-            {headerLabel}
-          </div>
-          <motion.div
-            key={countdownDisplay}
-            initial={{ y: -22, scale: 1.55, opacity: 0 }}
-            animate={{ y: 0, scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 460, damping: 17 }}
-            className="mt-2 flex size-24 items-center justify-center rounded-full border-4 border-brand-cyan bg-brand-blue shadow-[0_0_60px_rgba(28,176,246,0.45)] sm:size-36"
-          >
-            <span className="font-fun text-5xl font-black leading-none tabular-nums text-white sm:text-7xl">
-              {countdownDisplay}
-            </span>
-          </motion.div>
-          <div className="mt-3 h-1 w-20 overflow-hidden rounded-full bg-white/15 sm:w-28">
-            <motion.div
-              key={`bar-${runKey}`}
-              initial={{ width: '0%' }}
-              animate={{ width: '100%' }}
-              transition={{ duration: durationMs / 1000, ease: 'linear' }}
-              className="h-full rounded-full bg-brand-yellow"
-            />
-          </div>
-        </div>
+        <MatchCountdownPuck
+          label={headerLabel}
+          seconds={countdownDisplay}
+          durationMs={durationMs}
+          runKey={runKey}
+          size="lg"
+        />
 
         <KickoffPlayerCard
           align="right"
