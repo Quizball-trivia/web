@@ -132,12 +132,12 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
         {t("friendPlay.orJoin")}
       </div>
 
-      {/* Room Code (input, span 2 cols) + Join (button, span 1 col) */}
-      <div className="mt-3 grid w-full grid-cols-3 gap-3">
+      {/* Room Code (input) + Join (button) — flex so the button can size to its text content (Georgian "შემოერთება" is wider than English "Join") */}
+      <div className="mt-3 flex w-full items-stretch gap-3">
         <input
           placeholder={t("friendPlay.roomCodePlaceholder")}
           className={cn(
-            "col-span-2 h-14 rounded-2xl px-5 text-center text-base font-black uppercase",
+            "min-w-0 flex-1 h-14 rounded-2xl px-5 text-center text-base font-black uppercase",
             "tracking-[0.15em] text-white placeholder:text-white/55",
             "transition-all focus:ring-2 focus:ring-white/40 focus:outline-none",
             "md:h-16 md:text-lg",
@@ -152,8 +152,8 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
           disabled={!roomCode.trim() || isJoining}
           onClick={handleJoinRoom}
           className={cn(
-            "col-span-1 h-14 rounded-2xl text-base font-black uppercase tracking-wide text-white",
-            "transition-all md:h-16 md:text-lg",
+            "shrink-0 h-14 rounded-2xl px-5 text-base font-black uppercase tracking-wide text-white",
+            "transition-all md:h-16 md:text-lg md:px-7 whitespace-nowrap",
             roomCode.trim()
               ? "hover:brightness-95 active:translate-y-[2px]"
               : "opacity-60 cursor-not-allowed",

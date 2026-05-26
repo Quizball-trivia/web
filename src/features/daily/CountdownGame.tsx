@@ -318,7 +318,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
   }
 
   return (
-    <div className="fixed inset-0 z-40 bg-[#131F24] font-poppins flex flex-col text-white">
+    <div className="fixed inset-0 z-40 bg-surface-deep font-poppins flex flex-col text-white">
       <DailyChallengeHeader
         onQuit={() => setShowQuitDialog(true)}
         currentIndex={currentRound}

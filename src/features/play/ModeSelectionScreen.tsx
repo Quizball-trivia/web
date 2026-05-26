@@ -196,7 +196,7 @@ export function ModeSelectionScreen({
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <h1
-                  className="text-[1.55rem] leading-none uppercase text-white whitespace-nowrap"
+                  className="text-[1.55rem] leading-[1.05] uppercase text-white break-words [hyphens:auto]"
                   style={rankedTitleStyle}
                 >
                   {t('play.rankedMatch')}

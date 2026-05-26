@@ -35,6 +35,7 @@ import type {
   ResolvedPutInOrderQuestionItem,
 } from '@/lib/realtime/socket.types';
 import { getI18nText } from '@/lib/utils/i18n';
+import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { calculateCluesDisplayPoints } from '@/utils/cluesScoring';
 import { useLocale } from '@/contexts/LocaleContext';
 
@@ -71,12 +72,14 @@ function SpecialScoreFlightAnchors() {
       <div
         aria-hidden="true"
         data-splash-anchor="player"
-        className="pointer-events-none absolute left-[-12px] top-28 z-10 size-px"
+        className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2"
+        style={{ minWidth: 1, minHeight: 1 }}
       />
       <div
         aria-hidden="true"
         data-splash-anchor="opponent"
-        className="pointer-events-none absolute right-[-12px] top-28 z-10 size-px"
+        className="pointer-events-none absolute right-3 top-1/2 z-10 -translate-y-1/2"
+        style={{ minWidth: 1, minHeight: 1 }}
       />
     </>
   );
@@ -123,22 +126,6 @@ function QuestionKindBadge({ kind }: { kind: LiveSpecialQuestion['kind'] }) {
 
 function clampCount(value: number, total: number): number {
   return Math.max(0, Math.min(total, value));
-}
-
-function seededUnit(seed: string): number {
-  let hash = 2166136261;
-  for (let index = 0; index < seed.length; index += 1) {
-    hash ^= seed.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-  return ((hash >>> 0) % 10000) / 10000;
-}
-
-function getSimulatedOpponentCountdownTarget(matchId: string, qIndex: number, total: number): number {
-  if (total <= 0) return 0;
-  const roll = seededUnit(`${matchId}:${qIndex}:countdown-opponent-target`);
-  const ratio = 0.2 + roll * 0.55;
-  return clampCount(Math.round(total * ratio), total);
 }
 
 type SpecialSummaryTone = 'cyan' | 'orange' | 'green';
@@ -322,62 +309,27 @@ function CountdownPanel({
   const { t } = useLocale();
   const [guess, setGuess] = useState('');
   const [foundAnswers, setFoundAnswers] = useState<string[]>([]);
-  const [opponentLiveFoundCount, setOpponentLiveFoundCount] = useState(0);
   const [showAllCorrectAnswers, setShowAllCorrectAnswers] = useState(false);
   const resolvedLocale = question.resolvedLocale ?? 'en';
   const lastSubmittedRef = useRef('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Real-time opponent found count comes from the server via
+  // `match:opponent_countdown_progress` and is stored in the realtime
+  // match store. After the round resolves, snap to the authoritative
+  // final count from the round_result payload.
+  const opponentLiveFoundCount = useRealtimeMatchStore(
+    (state) => state.match?.opponentCountdownFoundCount ?? 0,
+  );
+
   useEffect(() => {
     queueMicrotask(() => {
       setGuess('');
       setFoundAnswers([]);
-      setOpponentLiveFoundCount(0);
       setShowAllCorrectAnswers(false);
     });
     lastSubmittedRef.current = '';
   }, [qIndex]);
-
-  useEffect(() => {
-    if (roundResolved || !showOptions) {
-      if (roundResolved) {
-        queueMicrotask(() => {
-          setOpponentLiveFoundCount(opponentRound?.foundCount ?? 0);
-        });
-      }
-      return;
-    }
-
-    const total = question.answerSlotCount;
-    const target = getSimulatedOpponentCountdownTarget(matchId, qIndex, total);
-    let current = 0;
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    let cancelled = false;
-
-    queueMicrotask(() => {
-      setOpponentLiveFoundCount(0);
-    });
-
-    const scheduleNext = () => {
-      if (cancelled || current >= target) return;
-      const roll = seededUnit(`${matchId}:${qIndex}:countdown-opponent-step:${current}`);
-      const delayMs = 700 + Math.round(roll * 1100) + current * 180;
-      timer = setTimeout(() => {
-        if (cancelled) return;
-        current += 1;
-        setOpponentLiveFoundCount(current);
-        scheduleNext();
-      }, delayMs);
-    };
-
-    const initialDelay = 800 + Math.round(seededUnit(`${matchId}:${qIndex}:countdown-opponent-start`) * 900);
-    timer = setTimeout(scheduleNext, initialDelay);
-
-    return () => {
-      cancelled = true;
-      if (timer) clearTimeout(timer);
-    };
-  }, [matchId, opponentRound?.foundCount, qIndex, question.answerSlotCount, roundResolved, showOptions]);
 
   useEffect(() => {
     if (!countdownGuessAck?.accepted || countdownGuessAck.qIndex !== qIndex) return;
@@ -1592,7 +1544,7 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
   }
 
   return (
-    <div className="relative px-4 sm:px-4 lg:px-0">
+    <div className="relative px-4 sm:px-4 lg:px-0" data-special-question-panel="true">
       <SpecialScoreFlightAnchors />
       {/* QUESTION X/Y + timer header — exact same pill dimensions as
           PossessionQuestionPanel (MCQ) so the special panels feel like

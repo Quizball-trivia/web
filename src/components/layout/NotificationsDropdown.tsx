@@ -26,6 +26,7 @@ import { getSocket } from "@/lib/realtime/socket-client";
 import type { ErrorPayload, LobbyChallengeStatusPayload } from "@/lib/realtime/socket.types";
 import { useRealtimeMatchStore, type LobbyChallengeInvite } from "@/stores/realtimeMatch.store";
 import type { MessageKey } from "@/lib/i18n/messages";
+import { trackChallengeInviteAccepted, trackChallengeInviteDeclined } from "@/lib/analytics/game-events";
 
 type TranslateFn = (key: MessageKey, params?: Record<string, string | number>) => string;
 
@@ -278,12 +279,22 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
   const handleAcceptChallenge = (invite: LobbyChallengeInvite) => {
     if (pendingChallengeAction) return;
     setPendingChallengeAction({ invitationId: invite.invitationId, action: "accept" });
+    try {
+      trackChallengeInviteAccepted(invite.invitationId);
+    } catch (error) {
+      console.error('Analytics trackChallengeInviteAccepted failed', error);
+    }
     getSocket().emit("lobby:challenge_accept", { invitationId: invite.invitationId });
   };
 
   const handleDeclineChallenge = (invite: LobbyChallengeInvite) => {
     if (pendingChallengeAction) return;
     setPendingChallengeAction({ invitationId: invite.invitationId, action: "decline" });
+    try {
+      trackChallengeInviteDeclined(invite.invitationId);
+    } catch (error) {
+      console.error('Analytics trackChallengeInviteDeclined failed', error);
+    }
     getSocket().emit("lobby:challenge_decline", { invitationId: invite.invitationId });
     removeChallengeInvite(invite.invitationId);
     setPendingChallengeAction(null);

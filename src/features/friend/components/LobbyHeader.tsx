@@ -6,6 +6,7 @@ import { copyToClipboard } from "@/utils/clipboard";
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
 import { useLocale } from "@/contexts/LocaleContext";
+import { trackFriendInviteSent } from "@/lib/analytics/game-events";
 
 interface LobbyHeaderProps {
   lobbyName?: string | null;
@@ -26,7 +27,14 @@ export function LobbyHeader({
   const copyCode = async () => {
     if (!lobbyCode) return;
     const success = await copyToClipboard(lobbyCode);
-    if (success) toast.success(t("friend.roomCodeCopied"));
+    if (success) {
+      try {
+        trackFriendInviteSent('link_copy');
+      } catch (error) {
+        console.error('Analytics trackFriendInviteSent failed', error);
+      }
+      toast.success(t("friend.roomCodeCopied"));
+    }
   };
 
   const roster = members.length > 0 ? members : me ? [me] : [];

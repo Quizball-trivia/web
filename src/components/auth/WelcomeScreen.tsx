@@ -12,7 +12,10 @@ import { useAllCategoriesList } from '@/lib/queries/categories.queries';
 import { AppLogo } from '@/components/AppLogo';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { motion, AnimatePresence } from 'motion/react';
-import { socialLogin } from '@/lib/auth/auth.service';
+import Script from 'next/script';
+import { socialLogin, socialLoginWithIdToken } from '@/lib/auth/auth.service';
+import { signInWithGoogleIdentity } from '@/lib/auth/google-identity';
+import { useAuthStore } from '@/stores/auth.store';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { MessageKey } from '@/lib/i18n/messages';
 import { LeaderboardPodium } from '@/features/leaderboard/components/LeaderboardPodium';
@@ -30,6 +33,7 @@ import {
   type FlightSpec,
 } from '@/features/possession/components/BarBattleFlightOverlay';
 import { GOAL_CELEBRATION_MS, GOAL_SHOT_TO_CELEBRATION_MS } from '@/features/possession/realtimePossession.helpers';
+import { trackSignupStarted } from '@/lib/analytics/game-events';
 
 const SUBHEADING_PHRASE_KEYS: MessageKey[] = [
   "welcome.phraseBack",
@@ -571,7 +575,23 @@ export function WelcomeScreen() {
   }, [landingScore.left, landingScore.right]);
 
   const handleKickOff = () => setLoginOpen(true);
+  const bootstrap = useAuthStore((state) => state.bootstrap);
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? '';
+
   const handleGoogleLogin = async () => {
+    trackSignupStarted('google');
+
+    if (googleClientId) {
+      try {
+        const { idToken, nonce } = await signInWithGoogleIdentity(googleClientId);
+        await socialLoginWithIdToken('google', idToken, nonce);
+        await bootstrap({ force: true });
+        return;
+      } catch (gisError) {
+        console.warn('GIS sign-in unavailable, falling back to redirect', gisError);
+      }
+    }
+
     try {
       const redirectTo = `${window.location.origin}/auth/callback`;
       await socialLogin('google', redirectTo);
@@ -587,6 +607,14 @@ export function WelcomeScreen() {
 
   return (
     <div className="min-h-screen w-full bg-surface-page font-sans text-foreground flex flex-col overflow-x-hidden">
+      {googleClientId ? (
+        <Script
+          src="https://accounts.google.com/gsi/client"
+          strategy="afterInteractive"
+          async
+          defer
+        />
+      ) : null}
       {/* ── Navbar ── */}
       <header className="flex h-16 md:h-20 items-center justify-between px-6 md:px-12 lg:px-20 shrink-0 bg-surface-page/80 backdrop-blur-md sticky top-0 z-50">
         <AppLogo size="md" className="!justify-start" />
@@ -857,14 +885,10 @@ export function WelcomeScreen() {
                 const style = getCategoryStyle(cat.slug, cat.name, i);
                 const IconComponent = style.icon;
                 return (
-                  <motion.button
+                  <button
                     key={cat.id}
                     type="button"
                     aria-label={t('welcome.openCategory', { name: cat.name })}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.04 }}
                     className="group relative min-h-[124px] md:min-h-[138px] cursor-pointer overflow-hidden rounded-2xl border border-white/10 p-4 md:p-5 transition-all duration-200 hover:scale-[1.04] hover:-translate-y-1 hover:brightness-110 hover:border-white/20 hover:shadow-[0_8px_32px_rgba(0,0,0,0.35)]"
                     style={{ backgroundColor: style.color }}
                     onClick={() => setLoginOpen(true)}
@@ -899,7 +923,7 @@ export function WelcomeScreen() {
                     <div className="relative z-10 flex h-full items-center justify-center text-center text-sm md:text-base font-black uppercase tracking-wide leading-tight text-white drop-shadow-[0_2px_14px_rgba(0,0,0,0.45)]">
                       {cat.name}
                     </div>
-                  </motion.button>
+                  </button>
                 );
               })}
             </div>
@@ -907,9 +931,8 @@ export function WelcomeScreen() {
             {remainingCategories.length > 0 && (
               <div className="mt-8 text-center">
                 <Button
-                  variant="outline"
                   onClick={() => setCategoriesOpen(true)}
-                  className="h-12 px-8 rounded-2xl text-sm font-black uppercase tracking-wide border-2 border-white/20 bg-transparent text-white hover:bg-white/10 hover:border-white/30 shadow-none hover:shadow-none"
+                  className="h-14 min-w-[280px] rounded-[20px] bg-brand-green px-10 font-poppins text-base font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none"
                 >
                   {t('welcome.browseAllCategories', { count: allCategories.length })}
                 </Button>

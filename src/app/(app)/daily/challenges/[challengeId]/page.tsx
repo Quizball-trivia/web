@@ -18,7 +18,7 @@ import { useCompleteDailyChallenge } from "@/lib/queries/dailyChallenges.queries
 import { queryKeys } from "@/lib/queries/queryKeys";
 import { usePlayer } from "@/contexts/PlayerContext";
 import type { DailyChallengeSession, DailyChallengeType } from "@/lib/domain/dailyChallenge";
-import { trackDailyChallengeCompleted } from "@/lib/analytics/game-events";
+import { trackDailyChallengeCompleted, trackDailyChallengeStarted, trackDailyChallengeQuit } from "@/lib/analytics/game-events";
 import { ApiError } from "@/lib/api/api";
 import { createDailyChallengeSession } from "@/lib/repositories/dailyChallenges.repo";
 import { toDailyChallengeSession } from "@/lib/mappers/dailyChallenge.mapper";
@@ -93,7 +93,15 @@ export default function ChallengePage() {
 
       try {
         const result = await completeMutation.mutateAsync(score);
-        trackDailyChallengeCompleted(challengeType);
+        try {
+          trackDailyChallengeCompleted({
+            challengeType,
+            score,
+            xpAwarded: result.xpAwarded,
+          });
+        } catch (error) {
+          console.error('Analytics trackDailyChallengeCompleted failed', error);
+        }
         if (result.xpAwarded > 0) {
           addXP(result.xpAwarded);
         }
@@ -109,6 +117,11 @@ export default function ChallengePage() {
   useEffect(() => {
     if (!challengeType) {
       return;
+    }
+    try {
+      trackDailyChallengeStarted(challengeType);
+    } catch (error) {
+      console.error('Analytics trackDailyChallengeStarted failed', error);
     }
 
     let cancelled = false;

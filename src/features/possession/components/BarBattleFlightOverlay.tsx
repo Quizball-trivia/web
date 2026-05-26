@@ -21,6 +21,7 @@
  * parent via the `onArrive` callback.
  */
 
+import { useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 
 export type FlightSide = 'player' | 'opponent';
@@ -61,8 +62,37 @@ export function BarBattleFlightOverlay({
   flights,
   onArrive,
 }: BarBattleFlightOverlayProps) {
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const node = overlayRef.current;
+    if (!node) return;
+
+    const initialX = window.scrollX;
+    const initialY = window.scrollY;
+    const apply = () => {
+      const dx = initialX - window.scrollX;
+      const dy = initialY - window.scrollY;
+      node.style.setProperty('--scroll-pin-x', `${dx}px`);
+      node.style.setProperty('--scroll-pin-y', `${dy}px`);
+    };
+    apply();
+
+    const onScroll = () => apply();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
-    <div className="pointer-events-none fixed inset-0 z-[60] overflow-hidden">
+    <div
+      ref={overlayRef}
+      className="pointer-events-none fixed inset-0 z-[60] overflow-hidden"
+      style={{
+        '--scroll-pin-x': '0px',
+        '--scroll-pin-y': '0px',
+      } as React.CSSProperties}
+    >
       <AnimatePresence>
         {flights.map((flight) => (
           <Flight key={flight.id} flight={flight} onArrive={onArrive} />
@@ -71,6 +101,10 @@ export function BarBattleFlightOverlay({
     </div>
   );
 }
+
+
+
+const SCROLL_PIN_TRANSFORM = 'translate3d(var(--scroll-pin-x, 0px), var(--scroll-pin-y, 0px), 0)';
 
 function Flight({
   flight,
@@ -148,6 +182,12 @@ function FlightSprite({
   const isTrail = mode === 'trail';
 
   return (
+    <div
+      className="pointer-events-none absolute left-0 top-0 will-change-transform"
+      style={{
+        transform: SCROLL_PIN_TRANSFORM,
+      }}
+    >
     <motion.div
       className="absolute"
       style={{
@@ -194,6 +234,7 @@ function FlightSprite({
     >
       <PlusNText points={flight.points} dim={isTrail} />
     </motion.div>
+    </div>
   );
 }
 
@@ -216,6 +257,12 @@ function FailedFlight({
   const fallY = viewportH - flight.source.y + 200;
 
   return (
+    <div
+      className="pointer-events-none absolute left-0 top-0 will-change-transform"
+      style={{
+        transform: SCROLL_PIN_TRANSFORM,
+      }}
+    >
     <motion.div
       className="absolute"
       style={{
@@ -251,6 +298,7 @@ function FailedFlight({
     >
       <PlusNText points={flight.points} dim />
     </motion.div>
+    </div>
   );
 }
 

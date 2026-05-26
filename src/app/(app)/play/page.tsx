@@ -19,8 +19,6 @@ import type { ListQuestionsQuery } from "@/lib/repositories/questions.repo";
 import { QUESTION_COUNT } from "@/lib/constants/game";
 import { queryKeys } from "@/lib/queries/queryKeys";
 import { trackModeSelected } from "@/lib/analytics/game-events";
-// import { useTrainingCompletion } from "@/features/training/hooks/useTrainingCompletion";
-// import { TrainingOfferModal } from "@/features/training/components/TrainingOfferModal";
 import { shuffleArray } from "@/lib/utils";
 
 export default function PlayPage() {
@@ -32,9 +30,6 @@ export default function PlayPage() {
   const { data: matchStatsSummary = null } = useMatchStatsSummary();
   const { data: rankedProfile, isLoading: rankedProfileLoading } = useRankedProfile();
   const { data: storeWallet } = useStoreWallet();
-  // Training gate is intentionally disabled for now.
-  // const { isComplete: isTrainingComplete, markComplete: markTrainingComplete } = useTrainingCompletion();
-  // const [showTrainingModal, setShowTrainingModal] = useState(false);
   const { data: categoriesData } = useCategoriesList({
     limit: 100,
     page: 1,
@@ -123,19 +118,6 @@ export default function PlayPage() {
     router.push("/game");
   };
 
-  // const handlePlayTraining = () => {
-  //   setShowTrainingModal(false);
-  //   resetRealtime();
-  //   startSession({ mode: "training", matchType: "ranked" });
-  //   router.push("/game");
-  // };
-  //
-  // const handleSkipTraining = () => {
-  //   setShowTrainingModal(false);
-  //   markTrainingComplete();
-  //   void startMatch({ mode: "ranked", matchType: "ranked" });
-  // };
-
   return (
     <div className="relative min-h-full overflow-hidden">
       <div className="relative z-10">
@@ -152,26 +134,12 @@ export default function PlayPage() {
             }
             void startMatch({ mode: "quizball", matchType: "friendly" });
           }}
-          // onRankedIntercept={() => {
-          //   if (!isTrainingComplete()) {
-          //     setShowTrainingModal(true);
-          //     return true;
-          //   }
-          //   return false;
-          // }}
           ticketsRemaining={storeWallet?.tickets ?? 0}
           matchStatsSummary={matchStatsSummary}
           rankedProfile={rankedProfile ?? null}
           rankedProfileLoading={rankedProfileLoading}
         />
       </div>
-
-      {/* {showTrainingModal && (
-        <TrainingOfferModal
-          onPlayTraining={handlePlayTraining}
-          onSkip={handleSkipTraining}
-        />
-      )} */}
     </div>
   );
 }

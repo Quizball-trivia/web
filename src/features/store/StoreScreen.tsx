@@ -12,7 +12,13 @@ import { ApiError } from "@/lib/api/api";
 import { createStoreCheckout, purchaseStoreWithCoins } from "@/lib/repositories/store.repo";
 import { queryKeys } from "@/lib/queries/queryKeys";
 import { useStoreProducts, useStoreWallet, useStoreInventory } from "@/lib/queries/store.queries";
-import { trackItemPurchased } from "@/lib/analytics/game-events";
+import {
+  trackItemPurchased,
+  trackStoreViewed,
+  trackPurchaseModalOpened,
+  trackPurchaseCancelled,
+  trackAvatarPartEquipped,
+} from "@/lib/analytics/game-events";
 import { useLocale } from "@/contexts/LocaleContext";
 import {
   HAIR_PARTS,
@@ -286,7 +292,7 @@ export function StoreScreen() {
     onSuccess: (_data, productSlug) => {
       const product = productsBySlug.get(productSlug);
       const productName = product?.name?.en ?? product?.slug ?? productSlug;
-      trackItemPurchased(productSlug, productName, product?.priceCents ?? 0);
+      trackItemPurchased(productSlug, productName, product?.priceCents ?? 0, 'coins');
       toast.success(t("store.purchaseCompleted"));
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
@@ -314,6 +320,10 @@ export function StoreScreen() {
       toast.error(t("store.purchaseFailed"));
     },
   });
+
+  useEffect(() => {
+    trackStoreViewed();
+  }, []);
 
   useEffect(() => {
     const purchaseStatus = searchParams.get("purchase");
@@ -414,11 +424,15 @@ export function StoreScreen() {
       [part.slot]: part.id,
     };
     const isOwned = ownedPartIds.has(part.id);
+    const modalMode: BuyModalState["mode"] = isOwned ? "equip" : part.productSlug ? "coins" : "none";
+    if (part.productSlug) {
+      trackPurchaseModalOpened(part.productSlug, modalMode);
+    }
     setBuyModal({
       name: translatePartName(part.name),
       price: isOwned ? "" : part.priceCoins ? t("store.coinsPrice", { amount: part.priceCoins.toLocaleString() }) : "—",
       productSlug: part.productSlug,
-      mode: isOwned ? "equip" : part.productSlug ? "coins" : "none",
+      mode: modalMode,
       avatarPart: part,
       previewCustomization,
     });
@@ -429,6 +443,7 @@ export function StoreScreen() {
     if (buyModal.mode === "equip" && buyModal.avatarPart) {
       const part = buyModal.avatarPart;
       void persistCustomization({ ...currentCustomization, [part.slot]: part.id });
+      trackAvatarPartEquipped(part.slot, part.id);
       toast.success(t("store.equipped", { name: translatePartName(part.name) }));
       setBuyModal(null);
       return;
@@ -651,7 +666,11 @@ export function StoreScreen() {
 
           <PurchaseConfirmModal
             open={!!buyModal}
-            onClose={() => { if (!purchasePending) setBuyModal(null); }}
+            onClose={() => {
+              if (purchasePending) return;
+              if (buyModal?.productSlug) trackPurchaseCancelled(buyModal.productSlug);
+              setBuyModal(null);
+            }}
             onConfirm={handleConfirm}
             isPending={purchasePending}
             name={buyModal?.name ?? ""}

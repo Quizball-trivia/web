@@ -23,6 +23,7 @@ import { useLocale } from "@/contexts/LocaleContext";
 import { resetOwnOnboarding, updateMe } from "@/lib/api/endpoints";
 import { requestAccountDeletion } from "@/lib/repositories/users.repo";
 import { type Locale } from "@/lib/i18n/messages";
+import { trackLanguageSwitched } from "@/lib/analytics/game-events";
 
 interface UserPreferences {
   soundEnabled: boolean;
@@ -134,6 +135,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
     }
 
     const newLocale = locale === 'en' ? 'ka' : 'en';
+    trackLanguageSwitched(locale, newLocale);
     setLocale(newLocale);
     setIsLanguageSaving(true);
 

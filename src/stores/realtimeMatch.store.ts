@@ -1,5 +1,13 @@
 import { create } from 'zustand';
 import { logger } from '@/utils/logger';
+import {
+  trackMatchStarted,
+  trackMatchCompleted,
+  trackMatchDisconnected,
+  trackMatchReconnected,
+  trackMatchForfeit,
+  trackAnswerSubmitted,
+} from '@/lib/analytics/game-events';
 import type {
   DraftCategory,
   DraftState,
@@ -7,6 +15,7 @@ import type {
   MatchAnswerAckPayload,
   MatchCluesGuessAckPayload,
   MatchCountdownGuessAckPayload,
+  MatchOpponentCountdownProgressPayload,
   MatchFinalResultsPayload,
   MatchForfeitPendingPayload,
   MatchPartyStatePayload,
@@ -27,7 +36,8 @@ import type {
 } from '@/lib/realtime/socket.types';
 
 /** Client-side fallback countdown until the server's match:countdown event arrives with the real value. */
-const DEFAULT_COUNTDOWN_MS = 10000;
+const DEFAULT_COUNTDOWN_MS = 5000;
+const PARTY_QUIZ_DEFAULT_COUNTDOWN_MS = 5000;
 
 export interface DraftStatus {
   lobbyId: string;
@@ -55,6 +65,8 @@ export interface MatchStatus {
   /** Recipient's last 3 match results (most recent first) — surfaced to the showdown screen's form strip. */
   myRecentForm?: Array<'W' | 'L' | 'D'>;
   participants: MatchParticipant[];
+  /** Resolved first-half category (i18n). Available immediately on match:start so the round-1 intro doesn't flash a placeholder. */
+  categoryName?: Record<string, string>;
   countdownEndsAt: number | null;
   countdownReason: 'kickoff' | 'resume' | null;
   currentQuestion: ResolvedMatchQuestionPayload | null;
@@ -62,6 +74,9 @@ export interface MatchStatus {
   questions: Record<number, MatchQuestionState>;
   answerAck: MatchAnswerAckPayload | null;
   countdownGuessAck: MatchCountdownGuessAckPayload | null;
+  /** Live opponent countdown found-count, updated by the server when the
+   *  opponent lands an answer. Replaces the legacy simulated counter. */
+  opponentCountdownFoundCount: number;
   cluesGuessAck: MatchCluesGuessAckPayload | null;
   opponentAnswered: boolean;
   opponentSelectedIndex: number | null;
@@ -114,6 +129,7 @@ interface RealtimeState {
   selfUserId: string | null;
   matchPaused: boolean;
   pauseUntil: number | null;
+  pausedAt: number | null;
   remainingReconnects: number | null;
   draftPaused: boolean;
   draftPauseUntil: number | null;
@@ -141,6 +157,7 @@ interface RealtimeState {
   setPartyState: (payload: MatchPartyStatePayload) => void;
   setAnswerAck: (payload: MatchAnswerAckPayload) => void;
   setCountdownGuessAck: (payload: MatchCountdownGuessAckPayload) => void;
+  setOpponentCountdownProgress: (payload: MatchOpponentCountdownProgressPayload) => void;
   setCluesGuessAck: (payload: MatchCluesGuessAckPayload) => void;
   setOpponentAnswered: (payload?: {
     matchId?: string;
@@ -185,6 +202,7 @@ const initialState = {
   selfUserId: null,
   matchPaused: false,
   pauseUntil: null,
+  pausedAt: null,
   remainingReconnects: null,
   draftPaused: false,
   draftPauseUntil: null,
@@ -297,11 +315,24 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
   },
     setMatchStart: (payload) => {
       logger.info('Realtime store set match start', { matchId: payload.matchId, opponentId: payload.opponent.id });
+      try {
+        const isAiOpponent = !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(payload.opponent.id ?? '');
+        trackMatchStarted({
+          matchId: payload.matchId,
+          mode: payload.mode,
+          variant: payload.variant,
+          opponentIsAi: isAiOpponent,
+          opponentRp: payload.opponent.rp,
+        });
+      } catch {
+        /* analytics best-effort */
+      }
       set({
         lobby: null,
         draft: null,
         matchPaused: false,
         pauseUntil: null,
+        pausedAt: null,
         remainingReconnects: null,
         draftPaused: false,
         draftPauseUntil: null,
@@ -316,13 +347,17 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         opponent: payload.opponent,
         myRecentForm: payload.myRecentForm,
         participants: payload.participants,
-        countdownEndsAt: Date.now() + DEFAULT_COUNTDOWN_MS,
+        categoryName: payload.categoryName,
+        countdownEndsAt: Date.now() + (payload.variant === 'friendly_party_quiz'
+          ? PARTY_QUIZ_DEFAULT_COUNTDOWN_MS
+          : DEFAULT_COUNTDOWN_MS),
         countdownReason: 'kickoff',
         currentQuestion: null,
         pendingQuestion: null,
         questions: {},
         answerAck: null,
         countdownGuessAck: null,
+        opponentCountdownFoundCount: 0,
         cluesGuessAck: null,
         opponentAnswered: false,
         opponentSelectedIndex: null,
@@ -355,6 +390,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         ...state,
         matchPaused: payload.reason === 'resume' ? false : state.matchPaused,
         pauseUntil: payload.reason === 'resume' ? null : state.pauseUntil,
+        pausedAt: payload.reason === 'resume' ? null : state.pausedAt,
         remainingReconnects: payload.reason === 'resume' ? null : state.remainingReconnects,
         match: {
           ...state.match,
@@ -530,7 +566,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
               ...state.match.questions,
               [payload.qIndex]: {
                 payload,
-                correctIndex: state.match.questions[payload.qIndex]?.correctIndex,
+                correctIndex: payload.correctIndex ?? state.match.questions[payload.qIndex]?.correctIndex,
               },
             },
           },
@@ -555,7 +591,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
               ...state.match.questions,
               [payload.qIndex]: {
                 payload,
-                correctIndex: state.match.questions[payload.qIndex]?.correctIndex,
+                correctIndex: payload.correctIndex ?? state.match.questions[payload.qIndex]?.correctIndex,
               },
             },
           },
@@ -579,6 +615,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
           countdownReason: payload.qIndex > 0 ? null : state.match.countdownReason,
           answerAck: null,
           countdownGuessAck: null,
+        opponentCountdownFoundCount: 0,
           cluesGuessAck: null,
           opponentAnswered: false,
           opponentSelectedIndex: null,
@@ -590,7 +627,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
             ...state.match.questions,
             [payload.qIndex]: {
               payload,
-              correctIndex: state.match.questions[payload.qIndex]?.correctIndex,
+              correctIndex: payload.correctIndex ?? state.match.questions[payload.qIndex]?.correctIndex,
             },
           },
         },
@@ -612,6 +649,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
           countdownReason: pending.qIndex > 0 ? null : state.match.countdownReason,
           answerAck: null,
           countdownGuessAck: null,
+        opponentCountdownFoundCount: 0,
           cluesGuessAck: null,
           opponentAnswered: false,
           opponentSelectedIndex: null,
@@ -638,6 +676,24 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         });
         return state;
       }
+      try {
+        const q = state.match.currentQuestion;
+        if (q && q.qIndex === payload.qIndex) {
+          const startedAt = q.playableAt ? new Date(q.playableAt).getTime() : 0;
+          const timeMs = startedAt ? Math.max(0, Date.now() - startedAt) : 0;
+          trackAnswerSubmitted(
+            q.question.id,
+            payload.isCorrect,
+            timeMs,
+            payload.qIndex,
+            q.question.difficulty,
+            q.question.categoryName,
+            payload.matchId,
+          );
+        }
+      } catch {
+        /* analytics best-effort */
+      }
       const currentQIndex = state.match.currentQuestion?.qIndex;
       if (currentQIndex !== undefined && payload.qIndex !== currentQIndex) {
         logger.warn('Ignoring stale match:answer_ack event', {
@@ -655,6 +711,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
           ...state.match,
           answerAck: payload,
           countdownGuessAck: null,
+        opponentCountdownFoundCount: 0,
           cluesGuessAck: null,
           myTotalPoints: payload.myTotalPoints,
           opponentAnswered: payload.oppAnswered,
@@ -662,7 +719,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
             ...state.match.questions,
             [payload.qIndex]: {
               payload: fallbackQuestion,
-              correctIndex: payload.correctIndex ?? state.match.questions[payload.qIndex]?.correctIndex,
+              correctIndex: state.match.questions[payload.qIndex]?.correctIndex,
             },
           },
         },
@@ -698,6 +755,28 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         match: {
           ...state.match,
           countdownGuessAck: payload,
+        },
+      };
+    });
+  },
+  setOpponentCountdownProgress: (payload) => {
+    logger.info('Realtime store set opponent countdown progress', {
+      matchId: payload.matchId,
+      qIndex: payload.qIndex,
+      foundCount: payload.foundCount,
+    });
+    set((state) => {
+      if (!state.match) return state;
+      if (state.match.matchId !== payload.matchId) return state;
+      const currentQIndex = state.match.currentQuestion?.qIndex;
+      if (currentQIndex !== undefined && payload.qIndex !== currentQIndex) return state;
+      // Monotonic: only advance, never go backwards.
+      if (payload.foundCount <= state.match.opponentCountdownFoundCount) return state;
+      return {
+        ...state,
+        match: {
+          ...state.match,
+          opponentCountdownFoundCount: payload.foundCount,
         },
       };
     });
@@ -815,6 +894,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
           ...state.match,
           lastRoundResult: payload,
           countdownGuessAck: null,
+        opponentCountdownFoundCount: 0,
           cluesGuessAck: null,
           myTotalPoints: myTotals?.totalPoints ?? state.match.myTotalPoints,
           oppTotalPoints: opponentTotals?.totalPoints ?? state.match.oppTotalPoints,
@@ -836,10 +916,49 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
     });
   },
   setFinalResults: (payload) => {
-    logger.info('Realtime store set final results', { matchId: payload.matchId, winnerId: payload.winnerId });
+    logger.info('Realtime store set final results', {
+      matchId: payload.matchId,
+      winnerId: payload.winnerId,
+      variant: payload.variant,
+    });
     set((state) => {
+      // Only emit completion analytics for the currently active match so
+      // late-arriving payloads (e.g. from a replaced/rejoined session)
+      // can't fire telemetry for a stale match.
+      const isActiveMatch = state.match?.matchId === payload.matchId;
+      if (isActiveMatch) {
+        try {
+          const selfId = state.selfUserId;
+          const myPlayer = selfId ? payload.players[selfId] : null;
+          const oppParticipant = (payload.participants ?? state.match?.participants ?? [])
+            .find((p) => p.userId !== selfId);
+          const oppPlayer = oppParticipant ? payload.players[oppParticipant.userId] : null;
+          const myScore = myPlayer?.totalPoints ?? 0;
+          const oppScore = oppPlayer?.totalPoints ?? 0;
+          const isAiOpponent = oppParticipant
+            ? !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(oppParticipant.userId)
+            : false;
+          const won = selfId ? payload.winnerId === selfId : false;
+          trackMatchCompleted({
+            matchId: payload.matchId,
+            mode: state.match?.mode ?? (payload.rankedOutcome ? 'ranked' : 'friendly'),
+            variant: payload.variant ?? state.match?.variant,
+            won,
+            score: myScore,
+            opponentScore: oppScore,
+            rpChange: selfId ? payload.rankedOutcome?.byUserId?.[selfId]?.deltaRp : undefined,
+            opponentIsAi: isAiOpponent,
+          });
+        } catch {
+          /* analytics best-effort */
+        }
+      }
       if (!state.match) {
         const rejoin = state.rejoinMatch?.matchId === payload.matchId ? state.rejoinMatch : null;
+        const replayVariant =
+          rejoin?.variant
+          ?? payload.variant
+          ?? (payload.standings ? 'friendly_party_quiz' : payload.rankedOutcome ? 'ranked_sim' : 'friendly_possession');
         const userIds = Object.keys(payload.players);
         const fallbackParticipants: MatchParticipant[] = userIds.map((userId, index) => ({
           userId,
@@ -863,6 +982,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
           ...state,
           matchPaused: false,
           pauseUntil: null,
+          pausedAt: null,
           remainingReconnects: null,
           draftPaused: false,
           draftPauseUntil: null,
@@ -872,7 +992,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
           match: {
             matchId: payload.matchId,
             mode: rejoin?.mode ?? (payload.rankedOutcome ? 'ranked' : 'friendly'),
-            variant: rejoin?.variant ?? (payload.rankedOutcome ? 'ranked_sim' : 'friendly_possession'),
+            variant: replayVariant,
             mySeat: participants.find((participant) => participant.userId === state.selfUserId)?.seat ?? null,
             opponent,
             participants,
@@ -883,6 +1003,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
             questions: {},
             answerAck: null,
             countdownGuessAck: null,
+        opponentCountdownFoundCount: 0,
             cluesGuessAck: null,
             opponentAnswered: false,
             opponentSelectedIndex: null,
@@ -923,6 +1044,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         ...state,
         matchPaused: false,
         pauseUntil: null,
+        pausedAt: null,
         remainingReconnects: null,
         draftPaused: false,
         draftPauseUntil: null,
@@ -931,6 +1053,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         forfeitPending: null,
         match: {
           ...state.match,
+          variant: payload.variant ?? (payload.standings ? 'friendly_party_quiz' : state.match.variant),
           opponent,
           participants,
           countdownEndsAt: null,
@@ -945,6 +1068,11 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       matchId: payload.matchId,
       reason: payload.reason,
     });
+    try {
+      trackMatchForfeit(payload.matchId, payload.reason ?? 'unknown');
+    } catch {
+      /* analytics best-effort */
+    }
     set({
       forfeitPending: {
         ...payload,
@@ -952,6 +1080,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       },
       matchPaused: false,
       pauseUntil: null,
+      pausedAt: null,
       remainingReconnects: null,
       rejoinMatch: null,
     });
@@ -962,18 +1091,39 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
   },
   setMatchPaused: ({ graceMs, remainingReconnects }) => {
     logger.info('Realtime store set match paused', { graceMs, remainingReconnects });
-    set({
-      matchPaused: true,
-      pauseUntil: Date.now() + graceMs,
-      remainingReconnects,
+    set((state) => {
+      try {
+        if (state.match) {
+          trackMatchDisconnected(state.match.matchId, 0, state.match.currentQuestionPhase ?? undefined);
+        }
+      } catch {
+        /* analytics best-effort */
+      }
+      return {
+        matchPaused: true,
+        pauseUntil: Date.now() + graceMs,
+        pausedAt: Date.now(),
+        remainingReconnects,
+      };
     });
   },
   clearMatchPaused: () => {
     logger.info('Realtime store clear match paused');
-    set({
-      matchPaused: false,
-      pauseUntil: null,
-      remainingReconnects: null,
+    set((state) => {
+      try {
+        if (state.match && state.matchPaused && state.pausedAt) {
+          const downtimeSec = Math.max(0, Math.round((Date.now() - state.pausedAt) / 1000));
+          trackMatchReconnected(state.match.matchId, downtimeSec);
+        }
+      } catch {
+        /* analytics best-effort */
+      }
+      return {
+        matchPaused: false,
+        pauseUntil: null,
+        pausedAt: null,
+        remainingReconnects: null,
+      };
     });
   },
   setDraftPaused: ({ lobbyId, opponentId, graceMs }) => {
@@ -1074,6 +1224,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       match: null,
       matchPaused: false,
       pauseUntil: null,
+      pausedAt: null,
       remainingReconnects: null,
       draftPaused: false,
       draftPauseUntil: null,

@@ -291,7 +291,15 @@
     "tied": "Party quiz finished in a tie!",
     "winnerFallback": "Winner",
     "playAgain": "Play Again",
-    "mainMenu": "Main Menu"
+    "mainMenu": "Main Menu",
+    "returningToLobby": "Returning to lobby…",
+    "statRank": "Rank",
+    "statCorrect": "Correct",
+    "statPoints": "Points",
+    "standings": "Standings",
+    "liveScores": "Live scores",
+    "matchComplete": "Match Complete",
+    "calculatingFinalScores": "Calculating final scores…"
   },
   "tournaments": {
     "liveTournament": "Live Tournament",
@@ -561,6 +569,7 @@
     "goals": "Goals",
     "xp": "XP",
     "levelAndXpToNext": "· Lvl {level} · {xp} to next",
+    "levelUp": "· Level up! Now Lvl {level}",
     "noXpEarned": "No XP earned"
   },
   "friendHub": {
@@ -755,6 +764,9 @@
     "opponentFallback": "Opponent",
     "matchFinishedAgainst": "Match finished against",
     "matchFinishedVs": "Match finished vs",
+    "partyQuizFinished": "Party quiz finished",
+    "partyQuizFinishedDesc": "Final scores are ready",
+    "partyQuizFinishedCompactDesc": "Final scores are ready",
     "viewResults": "View Results",
     "draftActiveAgainst": "Draft active against",
     "draftActiveVs": "Draft active vs",
@@ -819,5 +831,16 @@
     "purchaseCompleted": "Purchase completed. Refreshing your unlocks.",
     "purchaseCancelled": "Purchase cancelled.",
     "pleaseTryAgain": "Please try again."
+  },
+  "inAppBrowser": {
+    "title": "Open in your browser",
+    "body": "Sign-in doesn't work inside this app's built-in browser. Open the page in Safari or Chrome to continue.",
+    "iosStep1": "Tap the menu (⋯ or share icon) at the top right.",
+    "iosStep2": "Choose \"Open in Safari\".",
+    "androidStep1": "Tap the menu (⋮) at the top right.",
+    "androidStep2": "Choose \"Open in browser\" or \"Open in Chrome\".",
+    "genericInstructions": "Open this link in Safari, Chrome, or Firefox to continue.",
+    "orCopyLink": "Or copy the link",
+    "openInBrowser": "Open in browser"
   }
 }

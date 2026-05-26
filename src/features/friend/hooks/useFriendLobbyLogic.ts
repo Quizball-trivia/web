@@ -12,6 +12,7 @@ import { logger } from "@/utils/logger";
 import type { LobbySettings as LobbySettingsState } from "@/lib/realtime/socket.types";
 import { useCategoriesList } from "@/lib/queries/categories.queries";
 import { copyToClipboard } from "@/utils/clipboard";
+import { trackFriendInviteSent } from "@/lib/analytics/game-events";
 import { useHeadToHead } from "@/lib/queries/stats.queries";
 import { trackLobbyCreated, trackLobbyJoined } from "@/lib/analytics/game-events";
 
@@ -59,6 +60,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   const [settingsErrorVersion, setSettingsErrorVersion] = useState(0);
   const [isStartingMatch, setIsStartingMatch] = useState(false);
   const [handoffTimedOutCode, setHandoffTimedOutCode] = useState<string | null>(null);
+  const [optimisticReady, setOptimisticReady] = useState<boolean | null>(null);
 
   const clearStartMatchTimeout = useCallback(() => {
     if (!startMatchTimeoutRef.current) return;
@@ -98,7 +100,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
 
     if (lobby?.inviteCode?.toUpperCase() === normalizedRoomCode) {
       clearLobbyHandoff();
-      setHandoffTimedOutCode(null);
+      queueMicrotask(() => setHandoffTimedOutCode(null));
       return;
     }
 
@@ -256,13 +258,22 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   const copyCode = async () => {
     if (!lobbyCode) return;
     const success = await copyToClipboard(lobbyCode);
-    if (success) toast.success("Room Code copied!");
+    if (success) {
+      try {
+        trackFriendInviteSent('link_copy', lobby?.lobbyId);
+      } catch (error) {
+        logger.error('Analytics trackFriendInviteSent failed', error);
+      }
+      toast.success("Room Code copied!");
+    }
   };
 
   const handleReadyToggle = () => {
     if (!me) return;
-    getSocket().emit("lobby:ready", { ready: !me.isReady });
-    logger.info("Socket emit lobby:ready", { ready: !me.isReady });
+    const nextReady = !(optimisticReady ?? me.isReady);
+    setOptimisticReady(nextReady);
+    getSocket().emit("lobby:ready", { ready: nextReady });
+    logger.info("Socket emit lobby:ready", { ready: nextReady });
   };
 
   const handleUpdateSettings = useCallback((updates: Partial<LobbySettingsState> & { isPublic?: boolean }) => {
@@ -336,6 +347,10 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     };
   }, [clearStartMatchTimeout]);
 
+  const derivedOptimisticReady = optimisticReady !== null && me?.isReady !== optimisticReady
+    ? optimisticReady
+    : null;
+
   return {
     lobby,
     members,
@@ -346,6 +361,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     allCategories,
     settingsErrorVersion,
     isStartingMatch,
+    optimisticReady: derivedOptimisticReady,
     actions: {
       copyCode,
       handleReadyToggle,

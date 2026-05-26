@@ -148,13 +148,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <head>
+      <body
+        className="antialiased"
+        style={{ fontFamily: "'Nunito Variable', sans-serif" }}
+        suppressHydrationWarning
+      >
+        {/* JSON-LD in <body> not <head> to avoid hydration collision with Messenger's pcm.js injection. */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-      </head>
-      <body className="antialiased" style={{ fontFamily: "'Nunito Variable', sans-serif" }}>
         <Providers>{children}</Providers>
         <Analytics />
       </body>

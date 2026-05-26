@@ -4,7 +4,8 @@ import { clearTokens } from "@/lib/auth/tokenStorage";
 import { logout as logoutService, refresh } from "@/lib/auth/auth.service";
 import type { User } from "@/lib/types";
 import { logger } from "@/utils/logger";
-import { identifyUser, resetUser } from "@/lib/posthog";
+import { identifyUser, resetUser, setPersonProperties } from "@/lib/posthog";
+import { trackLogout } from "@/lib/analytics/game-events";
 import { setNewRelicUser } from "@/lib/newrelic-browser";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 
@@ -30,6 +31,24 @@ function syncAnalyticsUser(user: User): void {
     nickname: user.nickname,
     created_at: user.created_at,
   });
+
+  try {
+    setPersonProperties(
+      {
+        nickname: user.nickname,
+        country: user.country,
+        favorite_club: user.favorite_club,
+        preferred_language: user.preferred_language,
+        level: user.progression?.level,
+      },
+      {
+        signup_date: user.created_at,
+        first_email: user.email,
+      },
+    );
+  } catch (error) {
+    logger.error('Analytics setPersonProperties failed', error);
+  }
 
   setNewRelicUser(user.id, {
     email: user.email,
@@ -100,6 +119,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
   logout: async () => {
+    try {
+      trackLogout();
+    } catch (error) {
+      logger.error('Analytics trackLogout failed', error);
+    }
     try {
       await logoutService();
     } catch {

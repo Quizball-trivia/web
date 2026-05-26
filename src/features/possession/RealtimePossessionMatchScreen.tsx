@@ -109,7 +109,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
           <KickoffCountdownOverlay
             countdownDisplay={countdownDisplay}
             phase={countdownPhase}
-            durationMs={countdownPhase === 'kickoff' ? 10_000 : 5_000}
+            durationMs={5_000}
             runKey={countdownPhase}
             playerName={props.playerUsername}
             opponentName={props.opponentUsername}
@@ -151,7 +151,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
             <KickoffCountdownOverlay
               countdownDisplay={countdownDisplay}
               phase={countdownPhase}
-              durationMs={countdownPhase === 'kickoff' ? 10_000 : 5_000}
+              durationMs={5_000}
               runKey={countdownPhase}
               playerName={props.playerUsername}
               opponentName={props.opponentUsername}
@@ -224,15 +224,15 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
               animate={{ y: 0, scale: 1, opacity: 1 }}
               exit={{ y: -12, scale: 0.96, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-              className="w-full max-w-sm rounded-2xl border border-brand-red-soft/25 bg-surface-deep/95 px-5 py-4 text-center shadow-2xl"
+              className="w-full max-w-sm rounded-[20px] bg-brand-blue px-6 py-6 text-center shadow-2xl"
             >
-              <div className="font-fun text-[10px] font-bold uppercase tracking-[0.28em] text-brand-red-soft/70">
+              <div className="font-poppins text-[11px] font-semibold uppercase tracking-[0.28em] text-brand-yellow">
                 {t('possession.finalizingMatch')}
               </div>
-              <div className="mt-2 font-fun text-base font-black text-white">
+              <div className="mt-2 font-poppins text-xl font-semibold uppercase text-white">
                 {forfeitPendingTitle}
               </div>
-              <div className="mt-1 font-fun text-sm font-bold text-white/60">
+              <div className="mt-1 font-poppins text-sm font-semibold text-white/70">
                 {forfeitPending.message}
               </div>
             </motion.div>
@@ -255,22 +255,22 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
               animate={{ y: 0, scale: 1, opacity: 1 }}
               exit={{ y: -12, scale: 0.96, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-              className="w-full max-w-sm rounded-2xl border border-white/10 bg-surface-deep/95 px-5 py-4 text-center shadow-2xl"
+              className="w-full max-w-sm rounded-[20px] bg-brand-blue px-6 py-6 text-center shadow-2xl"
             >
-              <div className="font-fun text-[10px] font-bold uppercase tracking-[0.28em] text-white/50">
+              <div className="font-poppins text-[11px] font-semibold uppercase tracking-[0.28em] text-white/60">
                 {t('possession.matchPaused')}
               </div>
-              <div className="mt-2 font-fun text-base font-black text-white">
+              <div className="mt-2 font-poppins text-xl font-semibold uppercase text-white">
                 {t('possession.opponentDisconnected')}
               </div>
-              <div className="mt-1 font-fun text-sm font-bold text-white/60">
+              <div className="mt-1 font-poppins text-sm font-semibold text-white/70">
                 {t('possession.waitingForReconnect')}
               </div>
-              <div className="mt-3 inline-flex items-center justify-center rounded-full bg-brand-blue px-5 py-2 font-fun text-2xl font-black tabular-nums text-white">
+              <div className="mt-4 inline-flex items-center justify-center rounded-full bg-black/30 px-6 py-2 font-poppins text-3xl font-semibold tabular-nums text-white">
                 {pauseSeconds}
               </div>
               {reconnectCopy && (
-                <div className="mt-3 font-fun text-xs font-bold uppercase tracking-wide text-brand-yellow">
+                <div className="mt-3 font-poppins text-xs font-semibold uppercase tracking-wide text-brand-yellow">
                   {reconnectCopy}
                 </div>
               )}

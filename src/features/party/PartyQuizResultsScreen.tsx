@@ -1,21 +1,25 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { AnimatePresence, motion } from 'motion/react';
 
 import { AvatarDisplay } from '@/components/AvatarDisplay';
+import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import type { AchievementUnlockPayload, MatchFinalResultsPayload, MatchParticipant, MatchStandingPayload } from '@/lib/realtime/socket.types';
 import { cn } from '@/lib/utils';
 import { AchievementUnlockStrip } from '@/features/game/components/AchievementUnlockStrip';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { AvatarCustomization } from '@/types/game';
+import { applyXpReward, getMatchXpReward } from '@/lib/domain/matchXp';
+import type { UserProgression } from '@/lib/domain/progression';
 
 interface PartyQuizResultsScreenProps {
   finalResults: MatchFinalResultsPayload;
   participants: MatchParticipant[];
   selfUserId: string;
   unlockedAchievements?: AchievementUnlockPayload[];
+  preMatchProgression?: UserProgression | null;
   onPlayAgain: () => void;
   onMainMenu: () => void;
 }
@@ -175,7 +179,7 @@ function PodiumBlock({ standing, displayIndex }: { standing: StandingRow; displa
       >
         <span
           className={cn(
-            'flex h-6 min-w-8 shrink-0 items-center justify-center rounded-[9px] bg-surface-page px-2 font-poppins text-[11px] font-extrabold tabular-nums text-white sm:h-7 sm:min-w-9 sm:rounded-[10px] sm:text-xs',
+            'flex h-10 min-w-12 shrink-0 items-center justify-center rounded-[12px] bg-surface-page px-3 font-poppins text-lg font-extrabold tabular-nums text-white sm:h-11 sm:min-w-14 sm:rounded-[14px] sm:text-xl',
             'ring-2',
           )}
           style={{
@@ -188,15 +192,15 @@ function PodiumBlock({ standing, displayIndex }: { standing: StandingRow; displa
         </span>
 
         <div
-          className={cn('w-full max-w-full truncate px-1 text-center font-poppins text-[9px] font-semibold uppercase leading-tight tracking-wider sm:text-xs', nameTextOnBlock)}
+          className={cn('w-full max-w-full truncate px-1 text-center font-poppins text-base font-semibold uppercase leading-tight tracking-wider sm:text-xl', nameTextOnBlock)}
         >
           {standing.username}
         </div>
-        <div className={cn('font-poppins text-lg font-extrabold tabular-nums leading-none sm:text-2xl', scoreTextOnBlock)}>
+        <div className={cn('font-poppins text-3xl font-extrabold tabular-nums leading-none sm:text-4xl', scoreTextOnBlock)}>
           {standing.totalPoints}
         </div>
         {standing.isSelf && (
-          <span className="rounded-full bg-brand-orange px-2 py-[2px] font-poppins text-[8px] font-semibold uppercase leading-none tracking-wider text-white sm:text-[9px]">
+          <span className="rounded-full bg-brand-orange px-3 py-[3px] font-poppins text-[11px] font-semibold uppercase leading-none tracking-wider text-white sm:text-xs">
             You
           </span>
         )}
@@ -277,10 +281,17 @@ export function PartyQuizResultsScreen({
   participants,
   selfUserId,
   unlockedAchievements = [],
+  preMatchProgression = null,
   onPlayAgain,
   onMainMenu,
 }: PartyQuizResultsScreenProps) {
   const { t } = useLocale();
+  const [isReturningToLobby, setIsReturningToLobby] = useState(false);
+  const handlePlayAgain = () => {
+    if (isReturningToLobby) return;
+    setIsReturningToLobby(true);
+    onPlayAgain();
+  };
   const standings = useMemo<StandingRow[]>(() => {
     const participantMap = new Map(participants.map((participant) => [participant.userId, participant]));
     const payloadStandingMap = new Map((finalResults.standings ?? []).map((standing) => [standing.userId, standing]));
@@ -326,6 +337,19 @@ export function PartyQuizResultsScreen({
   const podium = standings.filter((standing) => standing.rank <= 3);
   const rest = standings.filter((standing) => standing.rank > 3);
   const selfWon = finalResults.winnerId === selfUserId;
+  const selfStanding = standings.find((standing) => standing.userId === selfUserId) ?? null;
+  const isDraw = finalResults.winnerId === null;
+  const matchResult: 'win' | 'loss' | 'draw' = isDraw ? 'draw' : selfWon ? 'win' : 'loss';
+  const xpEarned = getMatchXpReward({ mode: 'friendly', result: matchResult });
+  const projectedProgression = preMatchProgression
+    ? applyXpReward(preMatchProgression, xpEarned)
+    : null;
+  const leveledUp = Boolean(
+    preMatchProgression && projectedProgression && projectedProgression.level > preMatchProgression.level
+  );
+  const xpToNextLevelAfterMatch = projectedProgression
+    ? Math.max(0, projectedProgression.xpForNextLevel - projectedProgression.currentLevelXp)
+    : 0;
 
   const resultLabel = selfWon
     ? t('partyResults.youWonPartyQuiz')
@@ -386,6 +410,59 @@ export function PartyQuizResultsScreen({
 
         <AchievementUnlockStrip achievements={unlockedAchievements} className="mt-6" />
 
+        {/* ─── Personal stats + XP footer ─── */}
+        {(selfStanding || xpEarned > 0) && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.55 }}
+            className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-surface-card/70"
+          >
+            {selfStanding && (
+              <div className="grid grid-cols-3 divide-x divide-white/10">
+                <PartyStatCell
+                  label={t('partyResults.statRank')}
+                  value={`#${selfStanding.rank}`}
+                />
+                <PartyStatCell
+                  label={t('partyResults.statCorrect')}
+                  value={String(selfStanding.correctAnswers ?? 0)}
+                />
+                <PartyStatCell
+                  label={t('partyResults.statPoints')}
+                  value={String(selfStanding.totalPoints ?? 0)}
+                />
+              </div>
+            )}
+            <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 border-t border-white/10 px-5 py-3.5 text-center">
+              {xpEarned > 0 ? (
+                <>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-white/55">
+                    {t('results.xp')}
+                  </span>
+                  <span className="text-[18px] font-semibold tabular-nums text-brand-green">
+                    +{xpEarned}
+                  </span>
+                  {projectedProgression && (
+                    <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-cyan">
+                      {leveledUp
+                        ? t('results.levelUp', { level: projectedProgression.level })
+                        : t('results.levelAndXpToNext', {
+                            level: projectedProgression.level,
+                            xp: xpToNextLevelAfterMatch,
+                          })}
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-white/40">
+                  {t('results.noXpEarned')}
+                </span>
+              )}
+            </div>
+          </motion.div>
+        )}
+
         {/* ─── Action buttons (flat, Poppins) ─── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -395,19 +472,48 @@ export function PartyQuizResultsScreen({
         >
           <button
             type="button"
-            onClick={onPlayAgain}
-            className="flex-1 rounded-2xl bg-brand-green px-5 py-3.5 font-poppins text-base font-semibold uppercase tracking-wider text-white transition-colors hover:bg-brand-green-deep"
+            onClick={handlePlayAgain}
+            disabled={isReturningToLobby}
+            className="flex-1 rounded-2xl bg-brand-green px-5 py-3.5 font-poppins text-base font-semibold uppercase tracking-wider text-white transition-colors hover:bg-brand-green-deep disabled:opacity-60"
           >
             {t('partyResults.playAgain')}
           </button>
           <button
             type="button"
             onClick={onMainMenu}
-            className="flex-1 rounded-2xl border-2 border-white/15 bg-transparent px-5 py-3.5 font-poppins text-base font-semibold uppercase tracking-wider text-white/80 transition-colors hover:bg-white/5"
+            disabled={isReturningToLobby}
+            className="flex-1 rounded-2xl border-2 border-white/15 bg-transparent px-5 py-3.5 font-poppins text-base font-semibold uppercase tracking-wider text-white/80 transition-colors hover:bg-white/5 disabled:opacity-60"
           >
             {t('partyResults.mainMenu')}
           </button>
         </motion.div>
+      </div>
+      <AnimatePresence>
+        {isReturningToLobby && (
+          <motion.div
+            key="party-returning-to-lobby"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] bg-surface-page-alt/90 backdrop-blur-sm"
+          >
+            <LoadingScreen text={t('partyResults.returningToLobby')} fullScreen />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function PartyStatCell({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center px-2 py-3">
+      <div className="font-poppins text-[10px] font-bold uppercase tracking-[0.18em] text-white/50">
+        {label}
+      </div>
+      <div className="mt-1 font-poppins text-2xl font-extrabold tabular-nums text-white">
+        {value}
       </div>
     </div>
   );

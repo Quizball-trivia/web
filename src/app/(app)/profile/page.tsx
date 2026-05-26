@@ -17,6 +17,7 @@ import { toProfileRecentMatch } from "@/features/profile/ProfileWeb";
 import { useEffect } from "react";
 import { useMyAchievements } from "@/lib/queries/users.queries";
 import { decodeAvatarCustomization } from "@/lib/avatars";
+import { trackNicknameChanged, trackFavoriteClubChanged } from "@/lib/analytics/game-events";
 
 export default function ProfilePage() {
   const searchParams = useSearchParams();
@@ -65,6 +66,11 @@ export default function ProfilePage() {
       if (authUser) {
         setAuthenticated({ ...authUser, nickname: updated.nickname ?? name });
       }
+      try {
+        trackNicknameChanged();
+      } catch (analyticsError) {
+        console.error('Analytics tracking failed', analyticsError);
+      }
       toast.success(t("profile.nicknameUpdated"));
     } catch (error) {
       toast.error(t("profile.nicknameUpdateFailed"), {
@@ -108,6 +114,11 @@ export default function ProfilePage() {
       const updated = await updateMe({ favorite_club: club });
       if (authUser) {
         setAuthenticated({ ...authUser, favorite_club: updated.favorite_club });
+      }
+      try {
+        trackFavoriteClubChanged(club);
+      } catch (analyticsError) {
+        console.error('Analytics tracking failed', analyticsError);
       }
       toast.success(t("profile.favoriteClubUpdated"));
     } catch (error) {

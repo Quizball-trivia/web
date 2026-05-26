@@ -416,5 +416,32 @@ describe('realtimeMatch.store — setMatchState shouldClearQuestion', () => {
       expect(state.match?.opponent.id).toBe(USER_B);
       expect(state.rejoinMatch).toBeNull();
     });
+
+    it('hydrates a completed party quiz replay as a party quiz match', () => {
+      const store = useRealtimeMatchStore.getState();
+      store.setSelfUserId(USER_A);
+
+      store.setFinalResults({
+        matchId: MATCH_ID,
+        variant: 'friendly_party_quiz',
+        winnerId: USER_B,
+        players: {
+          [USER_A]: { totalPoints: 100, correctAnswers: 2, avgTimeMs: null },
+          [USER_B]: { totalPoints: 200, correctAnswers: 4, avgTimeMs: null },
+        },
+        standings: [
+          { userId: USER_B, rank: 1, totalPoints: 200, correctAnswers: 4, avgTimeMs: null },
+          { userId: USER_A, rank: 2, totalPoints: 100, correctAnswers: 2, avgTimeMs: null },
+        ],
+        durationMs: 60_000,
+        resultVersion: 124,
+        winnerDecisionMethod: 'total_points',
+      });
+
+      const state = useRealtimeMatchStore.getState();
+      expect(state.match?.matchId).toBe(MATCH_ID);
+      expect(state.match?.variant).toBe('friendly_party_quiz');
+      expect(state.match?.finalResults?.standings).toHaveLength(2);
+    });
   });
 });

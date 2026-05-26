@@ -951,28 +951,6 @@ export function PitchVisualization({
                   />
                 </motion.g>
 
-                {/* Zone indicator only — the per-avatar possession % and name
-                    labels were redundant with the top scoreboard and clustered
-                    awkwardly on mobile (the "50% Me" overlap). The scoreboard
-                    already shows points/possession, so the pitch stays clean. */}
-                <g transform={textTf(0, 0)}>
-                  <text
-                    x="250"
-                    y="210"
-                    textAnchor="middle"
-                    fill="rgba(255,255,255,0.35)"
-                    fontSize="7"
-                    fontWeight="700"
-                    fontFamily="system-ui"
-                  >
-                    {playerPosition < 33.33
-                      ? 'DEFENSIVE ZONE'
-                      : playerPosition < 66.67
-                        ? 'MIDFIELD ZONE'
-                        : 'ATTACKING ZONE'}
-                  </text>
-                </g>
-
               </g>
             </>
           )}

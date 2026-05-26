@@ -16,7 +16,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [
     entry("/", "daily", 1),
-    entry("/auth/welcome", "weekly", 0.9),
     entry("/leaderboard", "hourly", 0.8),
     entry("/play", "weekly", 0.7),
     entry("/store", "weekly", 0.5),

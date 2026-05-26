@@ -113,7 +113,8 @@ function ModernRoundTransitionOverlay({ title, categoryName, subtitle }: RoundTr
           initial={{ y: 12, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 380, damping: 26, delay: 0.05 }}
-          className="font-poppins text-[11px] font-semibold uppercase tracking-[0.28em] text-white/55 mb-3"
+          className="font-poppins text-[16px] sm:text-[18px] md:text-[20px] font-bold uppercase tracking-[0.22em] text-brand-yellow mb-4"
+          style={{ textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}
         >
           {categoryName}
         </motion.div>

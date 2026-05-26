@@ -149,7 +149,17 @@ export function AppShell({ children }: AppShellProps) {
     () => readRankedGeoHintDebug()
   );
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [nowTick, setNowTick] = useState(() => Date.now());
   useRealtimeConnection({ enabled: Boolean(authUser), selfUserId: authUser?.id ?? null });
+
+  // Tick once per second so any time-comparison render values
+  // (e.g. lobby banner suppression deadline) stay fresh without
+  // calling Date.now() during render.
+  useEffect(() => {
+    if (suppressLobbyBannerUntil === null) return;
+    const id = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [suppressLobbyBannerUntil]);
 
   const currentPath = pathname ?? "/";
   const showHeader = HEADER_PATHS.some((p) => p === "/" ? currentPath === "/" : currentPath.startsWith(p));
@@ -157,7 +167,7 @@ export function AppShell({ children }: AppShellProps) {
   const inLobbyRoom = currentPath.startsWith("/friend/room");
   const lobbyBannerSuppressed =
     suppressLobbyBannerReason !== null ||
-    (suppressLobbyBannerUntil !== null && suppressLobbyBannerUntil > Date.now());
+    (suppressLobbyBannerUntil !== null && suppressLobbyBannerUntil > nowTick);
   const showLobbyBanner =
     !!lobby &&
     lobby.status === "waiting" &&
@@ -206,6 +216,7 @@ export function AppShell({ children }: AppShellProps) {
     ? {
         matchId: match.matchId,
         mode: match.mode,
+        variant: match.variant,
         opponent: match.opponent,
       }
     : null;
@@ -219,6 +230,7 @@ export function AppShell({ children }: AppShellProps) {
         : "You lost the match";
   const forfeitPendingDescription = forfeitPending?.message ?? "Finalizing result...";
   const completedByForfeit = match?.finalResults?.winnerDecisionMethod === "forfeit";
+  const completedPartyQuiz = completedMatchBanner?.variant === "friendly_party_quiz";
   const rejoinReconnectsLeft = rejoinMatch?.remainingReconnects ?? remainingReconnects ?? 0;
   const lobbyCode = lobby?.inviteCode ?? "";
   const showLobbyDebug = process.env.NODE_ENV !== "production";
@@ -254,7 +266,7 @@ export function AppShell({ children }: AppShellProps) {
 
   const handleLogout = async () => {
     await logout();
-    router.replace("/auth/welcome");
+    router.replace("/");
   };
 
   const isPathActive = (path: string, exact?: boolean) => {
@@ -549,11 +561,19 @@ export function AppShell({ children }: AppShellProps) {
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-white">
-                          {t("appShell.matchFinishedAgainst")}{" "}
-                          <span className="text-white">{completedMatchBanner?.opponent.username ?? t("appShell.opponentFallback")}</span>
+                          {completedPartyQuiz ? (
+                            t("appShell.partyQuizFinished")
+                          ) : (
+                            <>
+                              {t("appShell.matchFinishedAgainst")}{" "}
+                              <span className="text-white">{completedMatchBanner?.opponent.username ?? t("appShell.opponentFallback")}</span>
+                            </>
+                          )}
                         </p>
                           <p className="text-xs text-white/70">
-                            {completedByForfeit
+                            {completedPartyQuiz
+                              ? t("appShell.partyQuizFinishedDesc")
+                              : completedByForfeit
                               ? t("appShell.completedByForfeit")
                               : t("appShell.viewFinalResult")}
                           </p>
@@ -873,11 +893,21 @@ export function AppShell({ children }: AppShellProps) {
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-white">
-                        {t("appShell.matchFinishedVs")}{" "}
-                        <span className="text-white">{completedMatchBanner?.opponent.username ?? t("appShell.opponentFallback")}</span>
+                        {completedPartyQuiz ? (
+                          t("appShell.partyQuizFinished")
+                        ) : (
+                          <>
+                            {t("appShell.matchFinishedVs")}{" "}
+                            <span className="text-white">{completedMatchBanner?.opponent.username ?? t("appShell.opponentFallback")}</span>
+                          </>
+                        )}
                       </p>
                         <p className="text-xs text-white/70">
-                          {completedByForfeit ? t("appShell.completedByForfeitCompact") : t("appShell.matchFinishedCompactDesc")}
+                          {completedPartyQuiz
+                            ? t("appShell.partyQuizFinishedCompactDesc")
+                            : completedByForfeit
+                              ? t("appShell.completedByForfeitCompact")
+                              : t("appShell.matchFinishedCompactDesc")}
                         </p>
                     </div>
                   </div>
@@ -1059,21 +1089,6 @@ export function AppShell({ children }: AppShellProps) {
           )}
           {children}
         </main>
-
-        {/* Sticky Play Button - Only on Home Screen */}
-        {currentPath === "/" && (
-          <div className="fixed bottom-16 left-0 right-0 z-30 bg-background border-t border-border/50">
-            <div className="px-4 pt-3.5 pb-3 flex justify-center">
-              <Button
-                onClick={() => router.push("/play")}
-                size="lg"
-                className="w-11/12 h-12 shadow-lg shadow-primary/20"
-              >
-                {t("common.play")}
-              </Button>
-            </div>
-          </div>
-        )}
 
         {/* Bottom Navigation */}
         {showNav && (

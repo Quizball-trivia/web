@@ -273,6 +273,8 @@ export interface MatchStartPayload {
   /** Recipient's own last 3 match results (most recent first). Used by the showdown form-strip. */
   myRecentForm?: Array<'W' | 'L' | 'D'>;
   participants: MatchParticipant[];
+  /** Resolved first-half category name (i18n). Lets the client skip the placeholder/flicker on the round-1 intro. */
+  categoryName?: Record<string, string>;
 }
 
 export interface MatchCountdownPayload {
@@ -289,6 +291,8 @@ export interface MatchQuestionPayload {
   question: GameQuestionDTO;
   playableAt?: string;
   deadlineAt: string;
+  /** MCQ correct index sent ahead so the client can show instant tap feedback. Server validates independently. */
+  correctIndex?: number;
   phaseKind?: MatchPhaseKind;
   phaseRound?: number | null;
   shooterSeat?: 1 | 2 | null;
@@ -340,6 +344,13 @@ export interface MatchCountdownGuessAckPayload {
   foundCount: number;
   acceptedDisplay?: Record<string, string>;
   acceptedDisplays?: Array<Record<string, string>>;
+}
+
+export interface MatchOpponentCountdownProgressPayload {
+  matchId: string;
+  qIndex: number;
+  opponentUserId: string;
+  foundCount: number;
 }
 
 export interface MatchCluesGuessAckPayload {
@@ -468,6 +479,7 @@ export interface RankedMatchOutcomePayload {
 
 export interface MatchFinalResultsPayload {
   matchId: string;
+  variant?: 'friendly_possession' | 'friendly_party_quiz' | 'ranked_sim';
   winnerId: string | null;
   players: Record<string, MatchFinalResultPlayer>;
   participants?: MatchParticipant[];
@@ -790,6 +802,7 @@ export interface ServerToClientEvents {
   'match:opponent_answered': (data: MatchOpponentAnsweredPayload) => void;
   'match:answer_ack': (data: MatchAnswerAckPayload) => void;
   'match:countdown_guess_ack': (data: MatchCountdownGuessAckPayload) => void;
+  'match:opponent_countdown_progress': (data: MatchOpponentCountdownProgressPayload) => void;
   'match:clues_guess_ack': (data: MatchCluesGuessAckPayload) => void;
   'match:round_result': (data: MatchRoundResultPayload) => void;
   'match:final_results': (data: MatchFinalResultsPayload) => void;

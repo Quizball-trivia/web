@@ -11,6 +11,7 @@ import { useLocale } from "@/contexts/LocaleContext";
 import { getSocket } from "@/lib/realtime/socket-client";
 import type { ErrorPayload, LobbyChallengeStatusPayload } from "@/lib/realtime/socket.types";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
+import { trackChallengeInviteAccepted, trackChallengeInviteDeclined } from "@/lib/analytics/game-events";
 
 export function ChallengeInvitePrompt() {
   const router = useRouter();
@@ -28,12 +29,12 @@ export function ChallengeInvitePrompt() {
     const id = setInterval(() => setNow(Date.now()), 30_000);
     return () => clearInterval(id);
   }, [invite]);
-  const expiresLabel = useMemo(() => {
+  const expiresLabel = (() => {
     if (!invite) return "";
     const ms = new Date(invite.expiresAt).getTime() - now;
     const minutes = Math.max(1, Math.ceil(ms / 60000));
     return t("notifications.challengeExpiresIn", { minutes });
-  }, [invite, now, t]);
+  })();
 
   useEffect(() => {
     if (!pendingAcceptId) return;
@@ -65,11 +66,21 @@ export function ChallengeInvitePrompt() {
     if (!invite || pendingAction) return;
     setPendingAction("accept");
     setPendingAcceptId(invite.invitationId);
+    try {
+      trackChallengeInviteAccepted(invite.invitationId);
+    } catch (error) {
+      console.error('Analytics trackChallengeInviteAccepted failed', error);
+    }
     getSocket().emit("lobby:challenge_accept", { invitationId: invite.invitationId });
   };
 
   const handleDismiss = () => {
     if (!invite || pendingAction) return;
+    try {
+      trackChallengeInviteDeclined(invite.invitationId);
+    } catch (error) {
+      console.error('Analytics trackChallengeInviteDeclined failed', error);
+    }
     setDismissedInviteIds((current) => {
       const next = new Set(current);
       next.add(invite.invitationId);
