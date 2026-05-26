@@ -19,6 +19,7 @@ import type { MatchParticipant } from '@/lib/realtime/socket.types';
 import { cn } from '@/lib/utils';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import type { AvatarCustomization } from '@/types/game';
+import { useLocale } from '@/contexts/LocaleContext';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -214,6 +215,7 @@ export function RealtimePartyQuizScreen({
   mobileStandingsPlacement = 'bottom-bar',
   disableBgm = false,
 }: RealtimePartyQuizScreenProps) {
+  const { t } = useLocale();
   const { state, actions } = useRealtimeGameLogic({ transitionDelayMs: 950 });
   const partyState = useRealtimeMatchStore((store) => store.match?.partyState ?? null);
   const participants = useRealtimeMatchStore((store) => store.match?.participants);
@@ -910,10 +912,10 @@ export function RealtimePartyQuizScreen({
                 <div className="mt-3 space-y-2 px-4 lg:hidden">
                   <div className="flex items-center justify-between px-1">
                     <div className="font-fun text-[10px] font-black uppercase tracking-[0.26em] text-white/45">
-                      Standings
+                      {t('partyResults.standings')}
                     </div>
                     <div className="font-poppins text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">
-                      Live scores
+                      {t('partyResults.liveScores')}
                     </div>
                   </div>
                   <div className="grid gap-2">
@@ -1032,7 +1034,7 @@ export function RealtimePartyQuizScreen({
                     className="w-full max-w-sm rounded-[20px] bg-brand-blue px-6 py-7 text-center shadow-2xl"
                   >
                     <div className="font-poppins text-[11px] font-semibold uppercase tracking-[0.28em] text-brand-yellow">
-                      Match Complete
+                      {t('partyResults.matchComplete')}
                     </div>
                     <LoadingScreen
                       fullScreen={false}
@@ -1045,7 +1047,7 @@ export function RealtimePartyQuizScreen({
                       transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                       className="mt-2 font-poppins text-sm font-semibold uppercase tracking-wide text-white"
                     >
-                      Calculating final scores…
+                      {t('partyResults.calculatingFinalScores')}
                     </motion.p>
                   </motion.div>
                 </motion.div>
@@ -1066,7 +1068,7 @@ export function RealtimePartyQuizScreen({
           {/* ─── Desktop standings sidebar ─── */}
           <div className="hidden lg:block">
             <div className="text-[10px] font-fun font-black uppercase tracking-[0.26em] text-white/45 px-1 mb-2">
-              Standings
+              {t('partyResults.standings')}
             </div>
             <div className="space-y-1.5">
               {standings.map((player) => {

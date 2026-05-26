@@ -295,7 +295,11 @@
     "returningToLobby": "ლობიში დაბრუნება…",
     "statRank": "ადგილი",
     "statCorrect": "სწორი",
-    "statPoints": "ქულები"
+    "statPoints": "ქულები",
+    "standings": "რეიტინგი",
+    "liveScores": "ცოცხალი ქულები",
+    "matchComplete": "მატჩი დასრულდა",
+    "calculatingFinalScores": "ფინალური ქულების დათვლა…"
   },
   "tournaments": {
     "liveTournament": "ცოცხალი ტურნირი",
