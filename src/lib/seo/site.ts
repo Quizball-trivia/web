@@ -12,8 +12,8 @@ const rawUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://quizball.io";
 
 export const SITE_URL = rawUrl.startsWith("http") ? rawUrl : `https://${rawUrl}`;
 
-// True only on the production deployment (Vercel sets VERCEL_ENV to
-// "production" | "preview" | "development"). Used by metadata/robots to
-// prevent indexing of preview deployments at *.vercel.app.
-export const IS_PRODUCTION_DEPLOYMENT =
-  process.env.VERCEL_ENV === undefined || process.env.VERCEL_ENV === "production";
+// True only on the actual production deployment. Vercel sets VERCEL_ENV to
+// "production" | "preview" | "development" at build time; any other value
+// (including missing, i.e. local builds) must NOT be indexable so preview
+// deployments and local dev servers never leak into search engines.
+export const IS_PRODUCTION_DEPLOYMENT = process.env.VERCEL_ENV === "production";

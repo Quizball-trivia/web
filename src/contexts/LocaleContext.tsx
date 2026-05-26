@@ -73,11 +73,12 @@ export function LocaleProvider({ children, initialLocale }: LocaleProviderProps)
   const hasHydratedRef = useRef(false);
 
   // Re-sync when the URL locale changes (clicking the EN/KA switcher).
+  // Functional updater lets us drop `locale` from the deps — React only
+  // schedules the update when the value actually differs.
   useEffect(() => {
-    if (pathLocale && pathLocale !== locale) {
-      setLocaleState(pathLocale);
-    }
-  }, [pathLocale, locale]);
+    if (!pathLocale) return;
+    setLocaleState((prev) => (prev !== pathLocale ? pathLocale : prev));
+  }, [pathLocale]);
 
   useEffect(() => {
     if (hasHydratedRef.current) return;

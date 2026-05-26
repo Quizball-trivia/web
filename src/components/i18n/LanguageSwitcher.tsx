@@ -63,7 +63,7 @@ export function LanguageSwitcher({ locale, className }: LanguageSwitcherProps) {
             hrefLang={code}
             lang={code}
             aria-label={FULL_NAME[code]}
-            aria-current={active ? "true" : undefined}
+            aria-current={active ? "page" : undefined}
             className={cn(
               "inline-flex items-center gap-1.5 rounded-[10px] px-2.5 py-1.5 transition-colors",
               active

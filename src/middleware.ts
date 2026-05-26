@@ -12,7 +12,7 @@ const REDIRECT_FROM_ROOT: Record<string, string> = {
 };
 
 export function middleware(req: NextRequest) {
-  const { pathname, search } = req.nextUrl;
+  const { pathname } = req.nextUrl;
 
   const redirectTarget = REDIRECT_FROM_ROOT[pathname];
   if (redirectTarget) {
@@ -23,8 +23,10 @@ export function middleware(req: NextRequest) {
 
   // Expose the request path to the root layout so it can set <html lang>
   // correctly. headers() in App Router can't see the request URL on its own.
+  // Pathname only — localeFromPathname only inspects the first segment so
+  // including the query string would just be noise.
   const res = NextResponse.next();
-  res.headers.set("x-pathname", pathname + search);
+  res.headers.set("x-pathname", pathname);
   return res;
 }
 

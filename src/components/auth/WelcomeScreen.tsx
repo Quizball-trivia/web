@@ -336,6 +336,10 @@ export function WelcomeScreen() {
   const [landingTargetGoal, setLandingTargetGoal] = useState<LandingGoalSide>('right');
   const [landingShotMode, setLandingShotMode] = useState<React.ComponentProps<typeof PitchVisualization>['shotMode']>(undefined);
   const [landingFlights, setLandingFlights] = useState<FlightSpec[]>([]);
+  // Tracks the 1.5s timer that reveals the in-app-browser instructions panel.
+  // Held in a ref so we can cancel it when the user closes the dialog or the
+  // component unmounts — otherwise the panel can flash open after dismissal.
+  const inAppBrowserTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const leftScoreAnchorRef = useRef<HTMLDivElement | null>(null);
   const rightScoreAnchorRef = useRef<HTMLDivElement | null>(null);
   const landingPitchRef = useRef<HTMLDivElement | null>(null);
@@ -417,6 +421,17 @@ export function WelcomeScreen() {
       setCurrentPhraseIndex((prev) => (prev + 1) % SUBHEADING_PHRASE_KEYS.length);
     }, 3000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Cancel the pending in-app-browser instructions timer on unmount so it
+  // can't fire setState against a torn-down component.
+  useEffect(() => {
+    return () => {
+      if (inAppBrowserTimerRef.current !== null) {
+        clearTimeout(inAppBrowserTimerRef.current);
+        inAppBrowserTimerRef.current = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -604,7 +619,11 @@ export function WelcomeScreen() {
     // instructions panel if we're still here after ~1.5s (OS ignored it).
     if (isInAppBrowser()) {
       tryOpenInExternalBrowser(window.location.href);
-      window.setTimeout(() => {
+      if (inAppBrowserTimerRef.current !== null) {
+        clearTimeout(inAppBrowserTimerRef.current);
+      }
+      inAppBrowserTimerRef.current = setTimeout(() => {
+        inAppBrowserTimerRef.current = null;
         if (typeof document !== 'undefined' && !document.hidden) {
           setShowOpenInBrowser(true);
         }
@@ -1215,7 +1234,13 @@ export function WelcomeScreen() {
         open={loginOpen}
         onOpenChange={(open) => {
           setLoginOpen(open);
-          if (!open) setShowOpenInBrowser(false);
+          if (!open) {
+            setShowOpenInBrowser(false);
+            if (inAppBrowserTimerRef.current !== null) {
+              clearTimeout(inAppBrowserTimerRef.current);
+              inAppBrowserTimerRef.current = null;
+            }
+          }
         }}
       >
         <DialogContent
@@ -1226,6 +1251,10 @@ export function WelcomeScreen() {
             onClose={() => {
               setLoginOpen(false);
               setShowOpenInBrowser(false);
+              if (inAppBrowserTimerRef.current !== null) {
+                clearTimeout(inAppBrowserTimerRef.current);
+                inAppBrowserTimerRef.current = null;
+              }
             }}
           />
 

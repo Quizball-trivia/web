@@ -1,10 +1,10 @@
 import type { NextConfig } from "next";
 
 // Only the canonical production deployment should be indexable. Vercel
-// sets VERCEL_ENV at build time — "production" on quizball.io,
-// "preview" on branch deploys, "development" locally.
-const IS_PRODUCTION_DEPLOYMENT =
-  process.env.VERCEL_ENV === undefined || process.env.VERCEL_ENV === "production";
+// sets VERCEL_ENV at build time — "production" on quizball.io, "preview"
+// on branch deploys, "development" locally. Any other value (including
+// missing) gets noindex headers.
+const IS_PRODUCTION_DEPLOYMENT = process.env.VERCEL_ENV === "production";
 
 const nextConfig: NextConfig = {
   images: {

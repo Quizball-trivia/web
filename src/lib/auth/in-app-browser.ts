@@ -27,19 +27,33 @@ export function isInAppBrowser(): boolean {
 // instructions in case the OS silently ignores it).
 export function tryOpenInExternalBrowser(url: string): boolean {
   if (typeof window === 'undefined') return false;
+
+  // Validate the input is a real http(s) URL — refuse to inject anything
+  // weird (javascript:, data:, intent: already-formed payloads, etc.) into
+  // window.location.href.
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    return false;
+  }
+
+  // Compose body from host + path + query only. Drop the fragment — the
+  // android intent:// syntax uses `#` as a separator, so a stray hash would
+  // break the payload.
+  const body = `${parsed.host}${parsed.pathname}${parsed.search}`;
   const platform = getPlatform();
 
   if (platform === 'ios') {
-    // Strip the scheme — x-safari-https:// adds its own https.
-    const stripped = url.replace(/^https?:\/\//, '');
-    window.location.href = `x-safari-https://${stripped}`;
+    window.location.href = `x-safari-https://${body}`;
     return true;
   }
 
   if (platform === 'android') {
-    // host + path live in the URL body; Chrome reattaches the https scheme.
-    const stripped = url.replace(/^https?:\/\//, '');
-    window.location.href = `intent://${stripped}#Intent;scheme=https;package=com.android.chrome;end`;
+    window.location.href = `intent://${body}#Intent;scheme=https;package=com.android.chrome;end`;
     return true;
   }
 
