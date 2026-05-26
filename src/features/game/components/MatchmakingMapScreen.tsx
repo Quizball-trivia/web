@@ -169,9 +169,11 @@ interface FakePlayer {
 
 const PIN_W = 24;
 const PIN_H = 34;
-const PIN_ORIGIN_Y = 22;
-const PIN_ORIGIN_Y_PCT = (PIN_ORIGIN_Y / PIN_H) * 100;
-const PIN_AVATAR_Y_PCT = ((-7.5 + PIN_ORIGIN_Y) / PIN_H) * 100;
+const PIN_VIEWBOX_MIN_Y = -22;
+const PIN_TIP_Y = 8;
+const PIN_AVATAR_CENTER_Y = -7.5;
+const PIN_ORIGIN_Y_PCT = ((PIN_TIP_Y - PIN_VIEWBOX_MIN_Y) / PIN_H) * 100;
+const PIN_AVATAR_Y_PCT = ((PIN_AVATAR_CENTER_Y - PIN_VIEWBOX_MIN_Y) / PIN_H) * 100;
 const PIN_SCREEN_WIDTH = "clamp(20px, min(2.4vw, 4.3vh), 30px)";
 
 function MapPlayerPin({
@@ -437,40 +439,44 @@ const CITY_DATA: {
 ];
 
 const EXTRA_SEARCH_LOCATIONS: Pick<(typeof CITY_DATA)[number], "lon" | "lat" | "city" | "country" | "flag">[] = [
-  { lon: -74.0, lat: 40.71, city: "New York", country: "USA", flag: "🇺🇸" },
-  { lon: -119.5, lat: 35.0, city: "Los Angeles", country: "USA", flag: "🇺🇸" },
+  // These are display-safe, realistic land points. The 110m topo map has coarse
+  // coastlines, so coastal cities can look like they are floating in the ocean.
+  { lon: -96.8, lat: 32.78, city: "Dallas", country: "USA", flag: "🇺🇸" },
+  { lon: -84.39, lat: 33.75, city: "Atlanta", country: "USA", flag: "🇺🇸" },
   { lon: -87.63, lat: 41.88, city: "Chicago", country: "USA", flag: "🇺🇸" },
-  { lon: -81.5, lat: 26.5, city: "Miami", country: "USA", flag: "🇺🇸" },
-  { lon: -122.5, lat: 50.0, city: "Vancouver", country: "Canada", flag: "🇨🇦" },
-  { lon: -79.38, lat: 43.65, city: "Toronto", country: "Canada", flag: "🇨🇦" },
-  { lon: -60.0, lat: -34.5, city: "Buenos Aires", country: "Argentina", flag: "🇦🇷" },
-  { lon: -71.5, lat: -33.5, city: "Santiago", country: "Chile", flag: "🇨🇱" },
+  { lon: -94.58, lat: 39.1, city: "Kansas City", country: "USA", flag: "🇺🇸" },
+  { lon: -114.07, lat: 51.05, city: "Calgary", country: "Canada", flag: "🇨🇦" },
+  { lon: -97.14, lat: 49.9, city: "Winnipeg", country: "Canada", flag: "🇨🇦" },
+  { lon: -64.19, lat: -31.42, city: "Cordoba", country: "Argentina", flag: "🇦🇷" },
+  { lon: -68.84, lat: -32.89, city: "Mendoza", country: "Argentina", flag: "🇦🇷" },
+  { lon: -70.66, lat: -33.45, city: "Santiago", country: "Chile", flag: "🇨🇱" },
   { lon: -74.07, lat: 4.71, city: "Bogota", country: "Colombia", flag: "🇨🇴" },
-  { lon: -47.5, lat: -22.5, city: "Sao Paulo", country: "Brazil", flag: "🇧🇷" },
-  { lon: -44.5, lat: -22.0, city: "Rio de Janeiro", country: "Brazil", flag: "🇧🇷" },
-  { lon: -0.13, lat: 51.51, city: "London", country: "UK", flag: "🇬🇧" },
+  { lon: -46.63, lat: -23.55, city: "Sao Paulo", country: "Brazil", flag: "🇧🇷" },
+  { lon: -43.94, lat: -19.92, city: "Belo Horizonte", country: "Brazil", flag: "🇧🇷" },
+  { lon: -1.9, lat: 52.5, city: "Birmingham", country: "UK", flag: "🇬🇧" },
   { lon: -2.24, lat: 53.48, city: "Manchester", country: "UK", flag: "🇬🇧" },
   { lon: 2.35, lat: 48.86, city: "Paris", country: "France", flag: "🇫🇷" },
+  { lon: 4.83, lat: 45.76, city: "Lyon", country: "France", flag: "🇫🇷" },
   { lon: 13.4, lat: 52.52, city: "Berlin", country: "Germany", flag: "🇩🇪" },
-  { lon: 4.9, lat: 52.37, city: "Amsterdam", country: "Netherlands", flag: "🇳🇱" },
+  { lon: 5.12, lat: 52.09, city: "Utrecht", country: "Netherlands", flag: "🇳🇱" },
   { lon: -3.7, lat: 40.42, city: "Madrid", country: "Spain", flag: "🇪🇸" },
-  { lon: 2.17, lat: 41.39, city: "Barcelona", country: "Spain", flag: "🇪🇸" },
-  { lon: 12.5, lat: 41.9, city: "Rome", country: "Italy", flag: "🇮🇹" },
+  { lon: -0.38, lat: 39.47, city: "Valencia", country: "Spain", flag: "🇪🇸" },
+  { lon: 11.34, lat: 44.49, city: "Bologna", country: "Italy", flag: "🇮🇹" },
   { lon: 9.19, lat: 45.46, city: "Milan", country: "Italy", flag: "🇮🇹" },
-  { lon: -8.0, lat: 39.5, city: "Lisbon", country: "Portugal", flag: "🇵🇹" },
-  { lon: 30.0, lat: 39.5, city: "Istanbul", country: "Turkey", flag: "🇹🇷" },
+  { lon: -8.42, lat: 40.2, city: "Coimbra", country: "Portugal", flag: "🇵🇹" },
+  { lon: 32.86, lat: 39.93, city: "Ankara", country: "Turkey", flag: "🇹🇷" },
   { lon: 37.62, lat: 55.75, city: "Moscow", country: "Russia", flag: "🇷🇺" },
   { lon: 31.24, lat: 30.04, city: "Cairo", country: "Egypt", flag: "🇪🇬" },
-  { lon: 4.5, lat: 7.5, city: "Lagos", country: "Nigeria", flag: "🇳🇬" },
-  { lon: 19.5, lat: -32.5, city: "Cape Town", country: "South Africa", flag: "🇿🇦" },
-  { lon: 54.0, lat: 24.0, city: "Dubai", country: "UAE", flag: "🇦🇪" },
-  { lon: 74.0, lat: 19.5, city: "Mumbai", country: "India", flag: "🇮🇳" },
-  { lon: 100.5, lat: 13.75, city: "Bangkok", country: "Thailand", flag: "🇹🇭" },
-  { lon: 120.0, lat: 31.5, city: "Shanghai", country: "China", flag: "🇨🇳" },
-  { lon: 138.5, lat: 36.0, city: "Tokyo", country: "Japan", flag: "🇯🇵" },
-  { lon: 127.5, lat: 36.5, city: "Seoul", country: "South Korea", flag: "🇰🇷" },
-  { lon: 149.5, lat: -33.0, city: "Sydney", country: "Australia", flag: "🇦🇺" },
-  { lon: 143.5, lat: -37.0, city: "Melbourne", country: "Australia", flag: "🇦🇺" },
+  { lon: 7.49, lat: 9.06, city: "Abuja", country: "Nigeria", flag: "🇳🇬" },
+  { lon: 28.05, lat: -26.2, city: "Johannesburg", country: "South Africa", flag: "🇿🇦" },
+  { lon: 55.75, lat: 24.21, city: "Al Ain", country: "UAE", flag: "🇦🇪" },
+  { lon: 77.21, lat: 28.61, city: "Delhi", country: "India", flag: "🇮🇳" },
+  { lon: 98.98, lat: 18.79, city: "Chiang Mai", country: "Thailand", flag: "🇹🇭" },
+  { lon: 104.06, lat: 30.67, city: "Chengdu", country: "China", flag: "🇨🇳" },
+  { lon: 138.18, lat: 36.65, city: "Nagano", country: "Japan", flag: "🇯🇵" },
+  { lon: 127.38, lat: 36.35, city: "Daejeon", country: "South Korea", flag: "🇰🇷" },
+  { lon: 133.88, lat: -23.7, city: "Alice Springs", country: "Australia", flag: "🇦🇺" },
+  { lon: 149.13, lat: -35.28, city: "Canberra", country: "Australia", flag: "🇦🇺" },
 ];
 
 const SEARCH_PLAYER_NAMES = [
