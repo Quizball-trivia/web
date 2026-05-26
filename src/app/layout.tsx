@@ -4,7 +4,7 @@ import "@fontsource/poppins/600.css";
 import "flag-icons/css/flag-icons.min.css";
 import { Providers } from "./providers";
 import { Analytics } from "@vercel/analytics/next";
-import { SITE_URL, SITE_NAME, SITE_TAGLINE, SITE_DESCRIPTION } from "@/lib/seo/site";
+import { SITE_URL, SITE_NAME, SITE_TAGLINE, SITE_DESCRIPTION, IS_PRODUCTION_DEPLOYMENT } from "@/lib/seo/site";
 import "../styles/globals.css";
 
 export const metadata: Metadata = {
@@ -33,20 +33,25 @@ export const metadata: Metadata = {
   creator: SITE_NAME,
   publisher: SITE_NAME,
   category: "games",
-  // Allow search engines to index + follow links. Earlier we emitted
-  // `noindex, nofollow` site-wide which prevented every page from
-  // appearing in Google Search results ("No page information" snippet).
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-      "max-video-preview": -1,
-    },
-  },
+  // Only the production deployment (quizball.io) should be indexed.
+  // Preview/branch deployments at *.vercel.app emit noindex so Google
+  // doesn't surface them as duplicate content.
+  robots: IS_PRODUCTION_DEPLOYMENT
+    ? {
+        index: true,
+        follow: true,
+        googleBot: {
+          index: true,
+          follow: true,
+          "max-image-preview": "large",
+          "max-snippet": -1,
+          "max-video-preview": -1,
+        },
+      }
+    : {
+        index: false,
+        follow: false,
+      },
   alternates: {
     canonical: "/",
   },
