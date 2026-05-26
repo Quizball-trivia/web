@@ -8,12 +8,14 @@ import { PlayerProvider } from "@/contexts/PlayerContext";
 import { Toaster } from "@/components/ui/sonner";
 import { LocaleProvider } from "@/contexts/LocaleContext";
 import { PostHogPageView } from "@/components/PostHogProvider";
+import type { Locale } from "@/lib/i18n/messages";
 
 type ProvidersProps = {
   children: React.ReactNode;
+  initialLocale?: Locale;
 };
 
-export function Providers({ children }: ProvidersProps) {
+export function Providers({ children, initialLocale }: ProvidersProps) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -30,7 +32,7 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-        <LocaleProvider>
+        <LocaleProvider initialLocale={initialLocale}>
           <PlayerProvider>
             <PostHogPageView />
             {children}

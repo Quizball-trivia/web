@@ -15,8 +15,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import Script from 'next/script';
 import { socialLogin, socialLoginWithIdToken } from '@/lib/auth/auth.service';
 import { signInWithGoogleIdentity } from '@/lib/auth/google-identity';
+import { getPlatform, isInAppBrowser, tryOpenInExternalBrowser } from '@/lib/auth/in-app-browser';
 import { useAuthStore } from '@/stores/auth.store';
 import { useLocale } from '@/contexts/LocaleContext';
+import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import type { MessageKey } from '@/lib/i18n/messages';
 import { LeaderboardPodium } from '@/features/leaderboard/components/LeaderboardPodium';
 import { LeaderboardTable } from '@/features/leaderboard/components/LeaderboardTable';
@@ -317,9 +319,10 @@ function getDuelsCount(): number {
 }
 
 export function WelcomeScreen() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [showOpenInBrowser, setShowOpenInBrowser] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [duelsCount] = useState(() => getDuelsCount());
   const [wcDaysLeft] = useState(() => getDaysUntilWorldCup());
@@ -333,29 +336,48 @@ export function WelcomeScreen() {
   const [landingTargetGoal, setLandingTargetGoal] = useState<LandingGoalSide>('right');
   const [landingShotMode, setLandingShotMode] = useState<React.ComponentProps<typeof PitchVisualization>['shotMode']>(undefined);
   const [landingFlights, setLandingFlights] = useState<FlightSpec[]>([]);
+  // Tracks the 1.5s timer that reveals the in-app-browser instructions panel.
+  // Held in a ref so we can cancel it when the user closes the dialog or the
+  // component unmounts — otherwise the panel can flash open after dismissal.
+  const inAppBrowserTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const leftScoreAnchorRef = useRef<HTMLDivElement | null>(null);
   const rightScoreAnchorRef = useRef<HTMLDivElement | null>(null);
   const landingPitchRef = useRef<HTMLDivElement | null>(null);
   const landingFlightSeqRef = useRef(0);
   const landingPositionRef = useRef(50);
   const landingTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const [demoPlayers] = useState(() => {
+  // Start with a deterministic loadout so SSR and client first paint match
+  // (Math.random in useState breaks hydration). Re-shuffle after mount so
+  // returning visitors see variety without affecting the SEO-critical HTML.
+  const [demoPlayers, setDemoPlayers] = useState<{
+    left: DemoPlayer;
+    right: DemoPlayer;
+    crowd: DemoPlayer[];
+  }>(() => {
+    const make = (index: number, fallbackName: string): DemoPlayer => ({
+      name: DEMO_PLAYER_NAMES[index] ?? fallbackName,
+      avatarCustomization: DEMO_AVATAR_LOADOUTS[index % DEMO_AVATAR_LOADOUTS.length],
+    });
+    return {
+      left: make(0, "Mason"),
+      right: make(1, "Thiago"),
+      crowd: [make(2, "Santi"), make(3, "Jamal"), make(4, "Enzo")],
+    };
+  });
+
+  useEffect(() => {
     const shuffledNames = [...DEMO_PLAYER_NAMES].sort(() => Math.random() - 0.5);
     const shuffledLoadouts = [...DEMO_AVATAR_LOADOUTS].sort(() => Math.random() - 0.5);
-    const makePlayer = (index: number, fallbackName: string): DemoPlayer => ({
+    const make = (index: number, fallbackName: string): DemoPlayer => ({
       name: shuffledNames[index] ?? fallbackName,
       avatarCustomization: shuffledLoadouts[index] ?? DEMO_AVATAR_LOADOUTS[index % DEMO_AVATAR_LOADOUTS.length],
     });
-    return {
-      left: makePlayer(0, "Mason"),
-      right: makePlayer(1, "Thiago"),
-      crowd: [
-        makePlayer(2, "Santi"),
-        makePlayer(3, "Jamal"),
-        makePlayer(4, "Enzo"),
-      ],
-    };
-  });
+    setDemoPlayers({
+      left: make(0, "Mason"),
+      right: make(1, "Thiago"),
+      crowd: [make(2, "Santi"), make(3, "Jamal"), make(4, "Enzo")],
+    });
+  }, []);
 
   // Fetch real leaderboard
   const { data: leaderboardData } = useLeaderboard('global');
@@ -399,6 +421,17 @@ export function WelcomeScreen() {
       setCurrentPhraseIndex((prev) => (prev + 1) % SUBHEADING_PHRASE_KEYS.length);
     }, 3000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Cancel the pending in-app-browser instructions timer on unmount so it
+  // can't fire setState against a torn-down component.
+  useEffect(() => {
+    return () => {
+      if (inAppBrowserTimerRef.current !== null) {
+        clearTimeout(inAppBrowserTimerRef.current);
+        inAppBrowserTimerRef.current = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -581,6 +614,23 @@ export function WelcomeScreen() {
   const handleGoogleLogin = async () => {
     trackSignupStarted('google');
 
+    // In-app browsers (Messenger, Instagram, etc.) — Google blocks OAuth in
+    // these webviews. Fire the bounce URL silently; only show the manual
+    // instructions panel if we're still here after ~1.5s (OS ignored it).
+    if (isInAppBrowser()) {
+      tryOpenInExternalBrowser(window.location.href);
+      if (inAppBrowserTimerRef.current !== null) {
+        clearTimeout(inAppBrowserTimerRef.current);
+      }
+      inAppBrowserTimerRef.current = setTimeout(() => {
+        inAppBrowserTimerRef.current = null;
+        if (typeof document !== 'undefined' && !document.hidden) {
+          setShowOpenInBrowser(true);
+        }
+      }, 1500);
+      return;
+    }
+
     if (googleClientId) {
       try {
         const { idToken, nonce } = await signInWithGoogleIdentity(googleClientId);
@@ -618,18 +668,21 @@ export function WelcomeScreen() {
       {/* ── Navbar ── */}
       <header className="flex h-16 md:h-20 items-center justify-between px-6 md:px-12 lg:px-20 shrink-0 bg-surface-page/80 backdrop-blur-md sticky top-0 z-50">
         <AppLogo size="md" className="!justify-start" />
-        <div className="flex items-center gap-2.5">
-          <Image src="/assets/brand/world-cup-trophy.webp" alt="Trophy" width={96} height={96} className="h-10 md:h-12 w-auto object-contain" />
-          {wcDaysLeft > 0 && (
-            <div className="flex flex-col leading-none">
-              <span className="text-lg md:text-xl font-black tabular-nums text-white">
-                {wcDaysLeft}
-              </span>
-              <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-brand-yellow">
-                {t('welcome.untilKickoff')}
-              </span>
-            </div>
-          )}
+        <div className="flex items-center gap-3 md:gap-4">
+          <LanguageSwitcher locale={locale} />
+          <div className="flex items-center gap-2.5">
+            <Image src="/assets/brand/world-cup-trophy.webp" alt="Trophy" width={96} height={96} className="h-10 md:h-12 w-auto object-contain" />
+            {wcDaysLeft > 0 && (
+              <div className="flex flex-col leading-none">
+                <span className="text-lg md:text-xl font-black tabular-nums text-white">
+                  {wcDaysLeft}
+                </span>
+                <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-brand-yellow">
+                  {t('welcome.untilKickoff')}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -1100,16 +1153,23 @@ export function WelcomeScreen() {
               <span className="text-sm">{t('welcome.duelsPlayed', { count: duelsCount.toLocaleString() })}</span>
             </div>
           </div>
-          <div className="mt-6 flex items-center justify-center gap-4 text-sm">
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-sm md:gap-4">
             <Link
-              href="/terms"
+              href={`/${locale}/about`}
+              className="font-bold text-white/40 hover:text-brand-cyan transition-colors"
+            >
+              {t('welcome.aboutUs')}
+            </Link>
+            <span className="text-white/20">|</span>
+            <Link
+              href={`/${locale}/terms`}
               className="font-bold text-white/40 hover:text-brand-cyan transition-colors"
             >
               {t('welcome.termsOfService')}
             </Link>
             <span className="text-white/20">|</span>
             <Link
-              href="/privacy"
+              href={`/${locale}/privacy`}
               className="font-bold text-white/40 hover:text-brand-cyan transition-colors"
             >
               {t('welcome.privacyPolicy')}
@@ -1170,30 +1230,126 @@ export function WelcomeScreen() {
            DialogContent) and render our own red square one instead.
            focus:outline-none / focus-visible:ring-0 kills the green-ish focus
            ring that shadcn paints on every primitive inside the dialog. ── */}
-      <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
+      <Dialog
+        open={loginOpen}
+        onOpenChange={(open) => {
+          setLoginOpen(open);
+          if (!open) {
+            setShowOpenInBrowser(false);
+            if (inAppBrowserTimerRef.current !== null) {
+              clearTimeout(inAppBrowserTimerRef.current);
+              inAppBrowserTimerRef.current = null;
+            }
+          }
+        }}
+      >
         <DialogContent
           className="max-w-md w-[92vw] rounded-[24px] border-0 p-8 sm:p-10 [&>button:last-child]:hidden focus:outline-none focus-visible:outline-none focus-visible:ring-0 ring-0"
           style={{ backgroundColor: '#1645FF' }}
         >
-          <ModalCloseButton onClose={() => setLoginOpen(false)} />
+          <ModalCloseButton
+            onClose={() => {
+              setLoginOpen(false);
+              setShowOpenInBrowser(false);
+              if (inAppBrowserTimerRef.current !== null) {
+                clearTimeout(inAppBrowserTimerRef.current);
+                inAppBrowserTimerRef.current = null;
+              }
+            }}
+          />
 
-          <DialogHeader className="text-center">
-            <DialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
-              {t('welcome.loginTitle')}
-            </DialogTitle>
-            <DialogDescription className="mt-3 text-center font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-[14px]">
-              {t('welcome.loginDescription')}
-            </DialogDescription>
-          </DialogHeader>
-          <Button
-            onClick={handleGoogleLogin}
-            className="mt-6 flex h-14 w-full items-center justify-center gap-3 rounded-[28px] bg-brand-yellow font-poppins text-base font-semibold uppercase tracking-wide text-black shadow-none transition-colors hover:bg-brand-yellow-deep hover:shadow-none sm:h-[60px] sm:text-lg focus-visible:ring-0 focus-visible:outline-none"
-          >
-            <FcGoogle className="size-6" />
-            {t('welcome.continueWithGoogle')}
-          </Button>
+          {showOpenInBrowser ? (
+            <InAppBrowserInstructions
+              platform={getPlatform()}
+              onTryAgain={() => tryOpenInExternalBrowser(window.location.href)}
+            />
+          ) : (
+            <>
+              <DialogHeader className="text-center">
+                <DialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
+                  {t('welcome.loginTitle')}
+                </DialogTitle>
+                <DialogDescription className="mt-3 text-center font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-[14px]">
+                  {t('welcome.loginDescription')}
+                </DialogDescription>
+              </DialogHeader>
+              <Button
+                onClick={handleGoogleLogin}
+                className="mt-6 flex h-14 w-full items-center justify-center gap-3 rounded-[28px] bg-brand-yellow font-poppins text-base font-semibold uppercase tracking-wide text-black shadow-none transition-colors hover:bg-brand-yellow-deep hover:shadow-none sm:h-[60px] sm:text-lg focus-visible:ring-0 focus-visible:outline-none"
+              >
+                <FcGoogle className="size-6" />
+                {t('welcome.continueWithGoogle')}
+              </Button>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function InAppBrowserInstructions({
+  platform,
+  onTryAgain,
+}: {
+  platform: 'ios' | 'android' | 'other';
+  onTryAgain: () => void;
+}) {
+  const { t } = useLocale();
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (typeof window === 'undefined') return;
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard blocked in some webviews — no-op */
+    }
+  };
+
+  return (
+    <>
+      <DialogHeader className="text-center">
+        <DialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
+          {t('inAppBrowser.title')}
+        </DialogTitle>
+        <DialogDescription className="mt-3 text-center font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-[14px]">
+          {t('inAppBrowser.body')}
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="mt-5 rounded-2xl bg-black/20 p-4 text-left font-poppins text-[13px] font-medium leading-relaxed text-white/90 sm:text-[14px]">
+        {platform === 'ios' ? (
+          <ol className="list-decimal space-y-2 pl-5">
+            <li>{t('inAppBrowser.iosStep1')}</li>
+            <li>{t('inAppBrowser.iosStep2')}</li>
+          </ol>
+        ) : platform === 'android' ? (
+          <ol className="list-decimal space-y-2 pl-5">
+            <li>{t('inAppBrowser.androidStep1')}</li>
+            <li>{t('inAppBrowser.androidStep2')}</li>
+          </ol>
+        ) : (
+          <p>{t('inAppBrowser.genericInstructions')}</p>
+        )}
+      </div>
+
+      <Button
+        onClick={onTryAgain}
+        className="mt-4 flex h-12 w-full items-center justify-center rounded-[20px] bg-brand-yellow font-poppins text-sm font-semibold uppercase tracking-wide text-black shadow-none transition-colors hover:bg-brand-yellow-deep hover:shadow-none focus-visible:ring-0 focus-visible:outline-none"
+      >
+        {t('inAppBrowser.openInBrowser')}
+      </Button>
+
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="mt-2 text-center font-poppins text-[12px] font-medium text-white/70 underline-offset-2 hover:underline"
+      >
+        {copied ? t('inAppBrowser.linkCopied') : t('inAppBrowser.orCopyLink')}
+      </button>
+    </>
   );
 }

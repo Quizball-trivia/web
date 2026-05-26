@@ -468,6 +468,7 @@
     "leaderboardSubtitle": "შემოუერთდი ცხრილს, მიიღე რანგის ქულები და მისდიე ლიდერებს.",
     "viewFullTable": "სრული ცხრილის ნახვა",
     "verifiedQuestions": "10ათ+ შემოწმებული კითხვა",
+    "aboutUs": "ჩვენ შესახებ",
     "termsOfService": "მომსახურების პირობები",
     "privacyPolicy": "კონფიდენციალურობის პოლიტიკა",
     "copyright": "© 2026 QuizBall",
@@ -841,6 +842,7 @@
     "androidStep2": "აირჩიე „Open in browser“ ან „Open in Chrome“.",
     "genericInstructions": "გასახსნელად გამოიყენე Safari, Chrome ან Firefox.",
     "orCopyLink": "ან დააკოპირე ბმული",
+    "linkCopied": "ბმული დაკოპირდა — ჩასვი Safari/Chrome-ში",
     "openInBrowser": "ბრაუზერში გახსნა"
   }
 }
