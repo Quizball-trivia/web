@@ -1117,6 +1117,13 @@ export function WelcomeScreen() {
           </div>
           <div className="mt-6 flex items-center justify-center gap-4 text-sm">
             <Link
+              href="/about"
+              className="font-bold text-white/40 hover:text-brand-cyan transition-colors"
+            >
+              {t('welcome.aboutUs')}
+            </Link>
+            <span className="text-white/20">|</span>
+            <Link
               href="/terms"
               className="font-bold text-white/40 hover:text-brand-cyan transition-colors"
             >
