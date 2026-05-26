@@ -127,6 +127,7 @@ interface RealtimeState {
   selfUserId: string | null;
   matchPaused: boolean;
   pauseUntil: number | null;
+  pausedAt: number | null;
   remainingReconnects: number | null;
   draftPaused: boolean;
   draftPauseUntil: number | null;
@@ -199,6 +200,7 @@ const initialState = {
   selfUserId: null,
   matchPaused: false,
   pauseUntil: null,
+  pausedAt: null,
   remainingReconnects: null,
   draftPaused: false,
   draftPauseUntil: null,
@@ -328,6 +330,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         draft: null,
         matchPaused: false,
         pauseUntil: null,
+        pausedAt: null,
         remainingReconnects: null,
         draftPaused: false,
         draftPauseUntil: null,
@@ -384,6 +387,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         ...state,
         matchPaused: payload.reason === 'resume' ? false : state.matchPaused,
         pauseUntil: payload.reason === 'resume' ? null : state.pauseUntil,
+        pausedAt: payload.reason === 'resume' ? null : state.pausedAt,
         remainingReconnects: payload.reason === 'resume' ? null : state.remainingReconnects,
         match: {
           ...state.match,
@@ -920,30 +924,36 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       variant: payload.variant,
     });
     set((state) => {
-      try {
-        const selfId = state.selfUserId;
-        const myPlayer = selfId ? payload.players[selfId] : null;
-        const oppParticipant = (payload.participants ?? state.match?.participants ?? [])
-          .find((p) => p.userId !== selfId);
-        const oppPlayer = oppParticipant ? payload.players[oppParticipant.userId] : null;
-        const myScore = myPlayer?.totalPoints ?? 0;
-        const oppScore = oppPlayer?.totalPoints ?? 0;
-        const isAiOpponent = oppParticipant
-          ? !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(oppParticipant.userId)
-          : false;
-        const won = selfId ? payload.winnerId === selfId : false;
-        trackMatchCompleted({
-          matchId: payload.matchId,
-          mode: state.match?.mode ?? (payload.rankedOutcome ? 'ranked' : 'friendly'),
-          variant: payload.variant ?? state.match?.variant,
-          won,
-          score: myScore,
-          opponentScore: oppScore,
-          rpChange: selfId ? payload.rankedOutcome?.byUserId?.[selfId]?.deltaRp : undefined,
-          opponentIsAi: isAiOpponent,
-        });
-      } catch {
-        /* analytics best-effort */
+      // Only emit completion analytics for the currently active match so
+      // late-arriving payloads (e.g. from a replaced/rejoined session)
+      // can't fire telemetry for a stale match.
+      const isActiveMatch = state.match?.matchId === payload.matchId;
+      if (isActiveMatch) {
+        try {
+          const selfId = state.selfUserId;
+          const myPlayer = selfId ? payload.players[selfId] : null;
+          const oppParticipant = (payload.participants ?? state.match?.participants ?? [])
+            .find((p) => p.userId !== selfId);
+          const oppPlayer = oppParticipant ? payload.players[oppParticipant.userId] : null;
+          const myScore = myPlayer?.totalPoints ?? 0;
+          const oppScore = oppPlayer?.totalPoints ?? 0;
+          const isAiOpponent = oppParticipant
+            ? !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(oppParticipant.userId)
+            : false;
+          const won = selfId ? payload.winnerId === selfId : false;
+          trackMatchCompleted({
+            matchId: payload.matchId,
+            mode: state.match?.mode ?? (payload.rankedOutcome ? 'ranked' : 'friendly'),
+            variant: payload.variant ?? state.match?.variant,
+            won,
+            score: myScore,
+            opponentScore: oppScore,
+            rpChange: selfId ? payload.rankedOutcome?.byUserId?.[selfId]?.deltaRp : undefined,
+            opponentIsAi: isAiOpponent,
+          });
+        } catch {
+          /* analytics best-effort */
+        }
       }
       if (!state.match) {
         const rejoin = state.rejoinMatch?.matchId === payload.matchId ? state.rejoinMatch : null;
@@ -974,6 +984,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
           ...state,
           matchPaused: false,
           pauseUntil: null,
+          pausedAt: null,
           remainingReconnects: null,
           draftPaused: false,
           draftPauseUntil: null,
@@ -1035,6 +1046,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         ...state,
         matchPaused: false,
         pauseUntil: null,
+        pausedAt: null,
         remainingReconnects: null,
         draftPaused: false,
         draftPauseUntil: null,
@@ -1070,6 +1082,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       },
       matchPaused: false,
       pauseUntil: null,
+      pausedAt: null,
       remainingReconnects: null,
       rejoinMatch: null,
     });
@@ -1091,6 +1104,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       return {
         matchPaused: true,
         pauseUntil: Date.now() + graceMs,
+        pausedAt: Date.now(),
         remainingReconnects,
       };
     });
@@ -1099,12 +1113,8 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
     logger.info('Realtime store clear match paused');
     set((state) => {
       try {
-        if (state.match && state.matchPaused && state.pauseUntil) {
-          // remaining grace was (pauseUntil - now), so downtime = graceTotal - remaining.
-          // We don't have graceTotal here, fallback to time-since-pause = 0 wouldn't help;
-          // instead estimate downtime as elapsed grace consumed.
-          const remainingMs = Math.max(0, state.pauseUntil - Date.now());
-          const downtimeSec = Math.max(0, Math.round((Date.now() - (state.pauseUntil - remainingMs)) / 1000));
+        if (state.match && state.matchPaused && state.pausedAt) {
+          const downtimeSec = Math.max(0, Math.round((Date.now() - state.pausedAt) / 1000));
           trackMatchReconnected(state.match.matchId, downtimeSec);
         }
       } catch {
@@ -1113,6 +1123,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       return {
         matchPaused: false,
         pauseUntil: null,
+        pausedAt: null,
         remainingReconnects: null,
       };
     });
@@ -1215,6 +1226,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       match: null,
       matchPaused: false,
       pauseUntil: null,
+      pausedAt: null,
       remainingReconnects: null,
       draftPaused: false,
       draftPauseUntil: null,
