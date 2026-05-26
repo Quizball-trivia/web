@@ -68,7 +68,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
       setIsJoining(false);
       toast.error(t("friend.joinTimedOut"));
     }, 8000);
-    const code = inviteCode.toUpperCase();
+    const code = inviteCode.trim().toUpperCase();
     try {
       trackFriendInviteAccepted(code);
     } catch (error) {

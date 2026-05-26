@@ -66,7 +66,11 @@ export default function ProfilePage() {
       if (authUser) {
         setAuthenticated({ ...authUser, nickname: updated.nickname ?? name });
       }
-      trackNicknameChanged();
+      try {
+        trackNicknameChanged();
+      } catch (analyticsError) {
+        console.error('Analytics tracking failed', analyticsError);
+      }
       toast.success(t("profile.nicknameUpdated"));
     } catch (error) {
       toast.error(t("profile.nicknameUpdateFailed"), {
@@ -111,7 +115,11 @@ export default function ProfilePage() {
       if (authUser) {
         setAuthenticated({ ...authUser, favorite_club: updated.favorite_club });
       }
-      trackFavoriteClubChanged(club);
+      try {
+        trackFavoriteClubChanged(club);
+      } catch (analyticsError) {
+        console.error('Analytics tracking failed', analyticsError);
+      }
       toast.success(t("profile.favoriteClubUpdated"));
     } catch (error) {
       toast.error(t("profile.favoriteClubUpdateFailed"), {

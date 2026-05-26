@@ -62,25 +62,11 @@ export function BarBattleFlightOverlay({
   flights,
   onArrive,
 }: BarBattleFlightOverlayProps) {
-  return (
-    <div className="pointer-events-none fixed inset-0 z-[60] overflow-hidden">
-      <AnimatePresence>
-        {flights.map((flight) => (
-          <Flight key={flight.id} flight={flight} onArrive={onArrive} />
-        ))}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-
-
-function useScrollPinTransform(): React.RefObject<HTMLDivElement | null> {
-  const ref = useRef<HTMLDivElement | null>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const node = ref.current;
+    const node = overlayRef.current;
     if (!node) return;
 
     const initialX = window.scrollX;
@@ -98,13 +84,26 @@ function useScrollPinTransform(): React.RefObject<HTMLDivElement | null> {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  return ref;
+  return (
+    <div
+      ref={overlayRef}
+      className="pointer-events-none fixed inset-0 z-[60] overflow-hidden"
+      style={{
+        '--scroll-pin-x': '0px',
+        '--scroll-pin-y': '0px',
+      } as React.CSSProperties}
+    >
+      <AnimatePresence>
+        {flights.map((flight) => (
+          <Flight key={flight.id} flight={flight} onArrive={onArrive} />
+        ))}
+      </AnimatePresence>
+    </div>
+  );
 }
 
-const scrollPinStyle = {
-  '--scroll-pin-x': '0px',
-  '--scroll-pin-y': '0px',
-} as React.CSSProperties;
+
+
 const SCROLL_PIN_TRANSFORM = 'translate3d(var(--scroll-pin-x, 0px), var(--scroll-pin-y, 0px), 0)';
 
 function Flight({
@@ -181,14 +180,11 @@ function FlightSprite({
   const dy = flight.target.y - flight.source.y;
   const totalDuration = SOURCE_HOLD_S + FLIGHT_DURATION_S + lag;
   const isTrail = mode === 'trail';
-  const scrollPinRef = useScrollPinTransform();
 
   return (
     <div
-      ref={scrollPinRef}
       className="pointer-events-none absolute left-0 top-0 will-change-transform"
       style={{
-        ...scrollPinStyle,
         transform: SCROLL_PIN_TRANSFORM,
       }}
     >
@@ -259,14 +255,11 @@ function FailedFlight({
   // additional `viewportHeight - source.y + buffer` pixels downward).
   const viewportH = typeof window !== 'undefined' ? window.innerHeight : 900;
   const fallY = viewportH - flight.source.y + 200;
-  const scrollPinRef = useScrollPinTransform();
 
   return (
     <div
-      ref={scrollPinRef}
       className="pointer-events-none absolute left-0 top-0 will-change-transform"
       style={{
-        ...scrollPinStyle,
         transform: SCROLL_PIN_TRANSFORM,
       }}
     >

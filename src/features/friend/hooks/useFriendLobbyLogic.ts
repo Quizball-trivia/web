@@ -347,12 +347,9 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     };
   }, [clearStartMatchTimeout]);
 
-  useEffect(() => {
-    if (optimisticReady === null) return;
-    if (me?.isReady === optimisticReady) {
-      setOptimisticReady(null);
-    }
-  }, [me?.isReady, optimisticReady]);
+  const derivedOptimisticReady = optimisticReady !== null && me?.isReady !== optimisticReady
+    ? optimisticReady
+    : null;
 
   return {
     lobby,
@@ -364,7 +361,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     allCategories,
     settingsErrorVersion,
     isStartingMatch,
-    optimisticReady,
+    optimisticReady: derivedOptimisticReady,
     actions: {
       copyCode,
       handleReadyToggle,

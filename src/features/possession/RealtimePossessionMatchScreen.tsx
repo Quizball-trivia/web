@@ -224,15 +224,15 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
               animate={{ y: 0, scale: 1, opacity: 1 }}
               exit={{ y: -12, scale: 0.96, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-              className="w-full max-w-sm rounded-[20px] bg-brand-blue px-6 py-6 text-center shadow-2xl"
+              className="w-full max-w-sm rounded-2xl border-b-4 border-surface-card-deep bg-brand-blue px-6 py-6 text-center shadow-2xl"
             >
-              <div className="font-poppins text-[11px] font-semibold uppercase tracking-[0.28em] text-brand-yellow">
+              <div className="font-fun text-[11px] font-semibold uppercase tracking-[0.28em] text-brand-yellow">
                 {t('possession.finalizingMatch')}
               </div>
-              <div className="mt-2 font-poppins text-xl font-semibold uppercase text-white">
+              <div className="mt-2 font-fun text-xl font-semibold uppercase text-white">
                 {forfeitPendingTitle}
               </div>
-              <div className="mt-1 font-poppins text-sm font-semibold text-white/70">
+              <div className="mt-1 font-fun text-sm font-semibold text-white/70">
                 {forfeitPending.message}
               </div>
             </motion.div>
@@ -255,22 +255,22 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
               animate={{ y: 0, scale: 1, opacity: 1 }}
               exit={{ y: -12, scale: 0.96, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-              className="w-full max-w-sm rounded-[20px] bg-brand-blue px-6 py-6 text-center shadow-2xl"
+              className="w-full max-w-sm rounded-2xl border-b-4 border-surface-card-deep bg-brand-blue px-6 py-6 text-center shadow-2xl"
             >
-              <div className="font-poppins text-[11px] font-semibold uppercase tracking-[0.28em] text-white/60">
+              <div className="font-fun text-[11px] font-semibold uppercase tracking-[0.28em] text-white/60">
                 {t('possession.matchPaused')}
               </div>
-              <div className="mt-2 font-poppins text-xl font-semibold uppercase text-white">
+              <div className="mt-2 font-fun text-xl font-semibold uppercase text-white">
                 {t('possession.opponentDisconnected')}
               </div>
-              <div className="mt-1 font-poppins text-sm font-semibold text-white/70">
+              <div className="mt-1 font-fun text-sm font-semibold text-white/70">
                 {t('possession.waitingForReconnect')}
               </div>
-              <div className="mt-4 inline-flex items-center justify-center rounded-full bg-black/30 px-6 py-2 font-poppins text-3xl font-semibold tabular-nums text-white">
+              <div className="mt-4 inline-flex items-center justify-center rounded-full bg-black/30 px-6 py-2 font-fun text-3xl font-semibold tabular-nums text-white">
                 {pauseSeconds}
               </div>
               {reconnectCopy && (
-                <div className="mt-3 font-poppins text-xs font-semibold uppercase tracking-wide text-brand-yellow">
+                <div className="mt-3 font-fun text-xs font-semibold uppercase tracking-wide text-brand-yellow">
                   {reconnectCopy}
                 </div>
               )}

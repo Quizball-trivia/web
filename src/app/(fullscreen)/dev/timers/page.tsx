@@ -50,7 +50,7 @@ const TIMER_PRESETS: TimerPreset[] = [
     id: 'forfeit',
     mode: 'Shared',
     label: 'Opponent forfeit overlay',
-    description: 'Static finalizing-results modal. No timer — shown while server confirms forfeit result.',
+    description: 'Static finalizing-results modal — 8s countdown shown while server confirms forfeit result.',
     durationMs: 8_000,
     source: 'RealtimePossessionMatchScreen / RealtimePartyQuizScreen forfeitPending block',
   },

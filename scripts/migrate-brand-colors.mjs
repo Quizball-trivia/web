@@ -60,7 +60,7 @@ function main() {
   const results = [];
   for (const file of walk(SRC)) {
     const { changed, mapped, skipped } = migrateFile(file, write);
-    if (changed || mapped > 0) {
+    if (changed || mapped > 0 || skipped > 0) {
       results.push({ file: path.relative(ROOT, file), mapped, skipped });
     }
   }

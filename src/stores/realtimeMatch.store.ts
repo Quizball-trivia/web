@@ -676,20 +676,15 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       try {
         const q = state.match.currentQuestion;
         if (q && q.qIndex === payload.qIndex) {
-          const startedAt = (q as { startedAt?: number; startsAt?: number }).startedAt
-            ?? (q as { startsAt?: number }).startsAt
-            ?? 0;
+          const startedAt = q.playableAt ? new Date(q.playableAt).getTime() : 0;
           const timeMs = startedAt ? Math.max(0, Date.now() - startedAt) : 0;
           trackAnswerSubmitted(
-            (q as { questionId?: string; id?: string }).questionId
-              ?? (q as { id?: string }).id
-              ?? `${payload.matchId}:${payload.qIndex}`,
+            q.question.id,
             payload.isCorrect,
             timeMs,
             payload.qIndex,
-            (q as { difficulty?: string }).difficulty,
-            (q as { categoryName?: string; category?: string }).categoryName
-              ?? (q as { category?: string }).category,
+            q.question.difficulty,
+            q.question.categoryName,
             payload.matchId,
           );
         }

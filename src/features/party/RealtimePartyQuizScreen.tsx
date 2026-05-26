@@ -405,6 +405,11 @@ export function RealtimePartyQuizScreen({
   useEffect(() => {
     setDisplayedTotalsByUserId({});
     pendingDisplayedTotalsRef.current.clear();
+    spawnedFlightKeysRef.current.clear();
+    liveDeltaShownKeysRef.current.clear();
+    liveFlightShownKeysRef.current.clear();
+    previousPartyTotalsRef.current.clear();
+    previousPartyAnsweredRef.current.clear();
   }, [partyState?.matchId]);
 
   useEffect(() => {
