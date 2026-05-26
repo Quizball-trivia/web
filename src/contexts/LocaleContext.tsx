@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import {
   getCategoryTranslation,
   getQuestionTranslation,
@@ -44,26 +45,51 @@ const DEFAULT_LOCALE_CONTEXT: LocaleContextType = {
 
 const LocaleContext = createContext<LocaleContextType>(DEFAULT_LOCALE_CONTEXT);
 
-export function LocaleProvider({ children }: { children: React.ReactNode }) {
+interface LocaleProviderProps {
+  children: React.ReactNode;
+  // Server-supplied locale from URL (e.g. /ka/about → "ka"). When provided,
+  // it takes precedence over localStorage so SEO pages render in the URL's
+  // language on the FIRST paint, not after client hydration.
+  initialLocale?: Locale;
+}
+
+// Extract the locale prefix from a URL path. Returns null when the path has
+// no recognized locale segment (e.g. /play, /auth, /settings).
+function localeFromPath(pathname: string | null): Locale | null {
+  if (!pathname) return null;
+  const first = pathname.replace(/^\/+/, '').split('/')[0];
+  return isSupportedLocale(first) ? first : null;
+}
+
+export function LocaleProvider({ children, initialLocale }: LocaleProviderProps) {
   const preferredLanguage = useAuthStore((state) => state.user?.preferred_language);
   const lastSyncedPreferredLanguage = useRef<string | null | undefined>(undefined);
-  // First render must match the SSR pass — localStorage isn't available on the
-  // server, so the server emits English. We hydrate to the stored locale in an
-  // effect after mount to avoid a hydration mismatch on the first paint.
-  const [locale, setLocaleState] = useState<Locale>('en');
+  // usePathname updates on every client-side navigation, so we can derive the
+  // active SEO locale from the URL in real time. initialLocale only seeds the
+  // very first render — after that the pathname is the source of truth.
+  const pathname = usePathname();
+  const pathLocale = localeFromPath(pathname);
+  const [locale, setLocaleState] = useState<Locale>(initialLocale ?? pathLocale ?? 'en');
   const hasHydratedRef = useRef(false);
+
+  // Re-sync when the URL locale changes (clicking the EN/KA switcher).
+  useEffect(() => {
+    if (pathLocale && pathLocale !== locale) {
+      setLocaleState(pathLocale);
+    }
+  }, [pathLocale, locale]);
 
   useEffect(() => {
     if (hasHydratedRef.current) return;
     hasHydratedRef.current = true;
+    // If the route already supplied a locale (localized SEO pages), trust it
+    // and skip the localStorage upgrade — the URL is the source of truth.
+    if (initialLocale || pathLocale) return;
     const stored = normalizeLocale(storage.get(STORAGE_KEYS.LOCALE, 'en'));
     if (stored !== 'en') {
-      // Intentional sync hydration from localStorage — SSR emits 'en',
-      // then we upgrade on mount. Defer to microtask so React doesn't
-      // flag it as a cascading render.
       queueMicrotask(() => setLocaleState(stored));
     }
-  }, []);
+  }, [initialLocale, pathLocale]);
 
   useEffect(() => {
     if (!hasHydratedRef.current) return;

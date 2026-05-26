@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import "@fontsource-variable/nunito";
 import "@fontsource/poppins/600.css";
 import "flag-icons/css/flag-icons.min.css";
 import { Providers } from "./providers";
 import { Analytics } from "@vercel/analytics/next";
 import { SITE_URL, SITE_NAME, SITE_TAGLINE, SITE_DESCRIPTION, IS_PRODUCTION_DEPLOYMENT } from "@/lib/seo/site";
+import { localeFromPathname } from "@/lib/i18n/locale";
 import "../styles/globals.css";
 
 export const metadata: Metadata = {
@@ -146,13 +148,21 @@ const jsonLd = [
   },
 ];
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Derive <html lang> from URL so /ka/* routes get lang="ka" server-side
+  // without forcing the entire app under [locale]. middleware.ts sets
+  // x-pathname so we can read it here (Next doesn't expose the request URL
+  // to the root layout otherwise).
+  const headerList = await headers();
+  const pathname = headerList.get("x-pathname") ?? "/";
+  const locale = localeFromPathname(pathname);
+
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang={locale} className="dark" suppressHydrationWarning>
       <body
         className="antialiased"
         style={{ fontFamily: "'Nunito Variable', sans-serif" }}
@@ -163,7 +173,7 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <Providers>{children}</Providers>
+        <Providers initialLocale={locale}>{children}</Providers>
         <Analytics />
       </body>
     </html>

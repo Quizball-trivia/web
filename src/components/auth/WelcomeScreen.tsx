@@ -18,6 +18,7 @@ import { signInWithGoogleIdentity } from '@/lib/auth/google-identity';
 import { getPlatform, isInAppBrowser, tryOpenInExternalBrowser } from '@/lib/auth/in-app-browser';
 import { useAuthStore } from '@/stores/auth.store';
 import { useLocale } from '@/contexts/LocaleContext';
+import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import type { MessageKey } from '@/lib/i18n/messages';
 import { LeaderboardPodium } from '@/features/leaderboard/components/LeaderboardPodium';
 import { LeaderboardTable } from '@/features/leaderboard/components/LeaderboardTable';
@@ -318,7 +319,7 @@ function getDuelsCount(): number {
 }
 
 export function WelcomeScreen() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [loginOpen, setLoginOpen] = useState(false);
   const [showOpenInBrowser, setShowOpenInBrowser] = useState(false);
@@ -341,23 +342,38 @@ export function WelcomeScreen() {
   const landingFlightSeqRef = useRef(0);
   const landingPositionRef = useRef(50);
   const landingTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const [demoPlayers] = useState(() => {
+  // Start with a deterministic loadout so SSR and client first paint match
+  // (Math.random in useState breaks hydration). Re-shuffle after mount so
+  // returning visitors see variety without affecting the SEO-critical HTML.
+  const [demoPlayers, setDemoPlayers] = useState<{
+    left: DemoPlayer;
+    right: DemoPlayer;
+    crowd: DemoPlayer[];
+  }>(() => {
+    const make = (index: number, fallbackName: string): DemoPlayer => ({
+      name: DEMO_PLAYER_NAMES[index] ?? fallbackName,
+      avatarCustomization: DEMO_AVATAR_LOADOUTS[index % DEMO_AVATAR_LOADOUTS.length],
+    });
+    return {
+      left: make(0, "Mason"),
+      right: make(1, "Thiago"),
+      crowd: [make(2, "Santi"), make(3, "Jamal"), make(4, "Enzo")],
+    };
+  });
+
+  useEffect(() => {
     const shuffledNames = [...DEMO_PLAYER_NAMES].sort(() => Math.random() - 0.5);
     const shuffledLoadouts = [...DEMO_AVATAR_LOADOUTS].sort(() => Math.random() - 0.5);
-    const makePlayer = (index: number, fallbackName: string): DemoPlayer => ({
+    const make = (index: number, fallbackName: string): DemoPlayer => ({
       name: shuffledNames[index] ?? fallbackName,
       avatarCustomization: shuffledLoadouts[index] ?? DEMO_AVATAR_LOADOUTS[index % DEMO_AVATAR_LOADOUTS.length],
     });
-    return {
-      left: makePlayer(0, "Mason"),
-      right: makePlayer(1, "Thiago"),
-      crowd: [
-        makePlayer(2, "Santi"),
-        makePlayer(3, "Jamal"),
-        makePlayer(4, "Enzo"),
-      ],
-    };
-  });
+    setDemoPlayers({
+      left: make(0, "Mason"),
+      right: make(1, "Thiago"),
+      crowd: [make(2, "Santi"), make(3, "Jamal"), make(4, "Enzo")],
+    });
+  }, []);
 
   // Fetch real leaderboard
   const { data: leaderboardData } = useLeaderboard('global');
@@ -633,18 +649,21 @@ export function WelcomeScreen() {
       {/* ── Navbar ── */}
       <header className="flex h-16 md:h-20 items-center justify-between px-6 md:px-12 lg:px-20 shrink-0 bg-surface-page/80 backdrop-blur-md sticky top-0 z-50">
         <AppLogo size="md" className="!justify-start" />
-        <div className="flex items-center gap-2.5">
-          <Image src="/assets/brand/world-cup-trophy.webp" alt="Trophy" width={96} height={96} className="h-10 md:h-12 w-auto object-contain" />
-          {wcDaysLeft > 0 && (
-            <div className="flex flex-col leading-none">
-              <span className="text-lg md:text-xl font-black tabular-nums text-white">
-                {wcDaysLeft}
-              </span>
-              <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-brand-yellow">
-                {t('welcome.untilKickoff')}
-              </span>
-            </div>
-          )}
+        <div className="flex items-center gap-3 md:gap-4">
+          <LanguageSwitcher locale={locale} />
+          <div className="flex items-center gap-2.5">
+            <Image src="/assets/brand/world-cup-trophy.webp" alt="Trophy" width={96} height={96} className="h-10 md:h-12 w-auto object-contain" />
+            {wcDaysLeft > 0 && (
+              <div className="flex flex-col leading-none">
+                <span className="text-lg md:text-xl font-black tabular-nums text-white">
+                  {wcDaysLeft}
+                </span>
+                <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-brand-yellow">
+                  {t('welcome.untilKickoff')}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -1115,23 +1134,23 @@ export function WelcomeScreen() {
               <span className="text-sm">{t('welcome.duelsPlayed', { count: duelsCount.toLocaleString() })}</span>
             </div>
           </div>
-          <div className="mt-6 flex items-center justify-center gap-4 text-sm">
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-sm md:gap-4">
             <Link
-              href="/about"
+              href={`/${locale}/about`}
               className="font-bold text-white/40 hover:text-brand-cyan transition-colors"
             >
               {t('welcome.aboutUs')}
             </Link>
             <span className="text-white/20">|</span>
             <Link
-              href="/terms"
+              href={`/${locale}/terms`}
               className="font-bold text-white/40 hover:text-brand-cyan transition-colors"
             >
               {t('welcome.termsOfService')}
             </Link>
             <span className="text-white/20">|</span>
             <Link
-              href="/privacy"
+              href={`/${locale}/privacy`}
               className="font-bold text-white/40 hover:text-brand-cyan transition-colors"
             >
               {t('welcome.privacyPolicy')}

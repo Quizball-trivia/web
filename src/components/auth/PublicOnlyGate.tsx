@@ -3,13 +3,17 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth.store";
-import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { getAuthenticatedEntryRoute } from "@/lib/auth/onboarding";
 
 type PublicOnlyGateProps = {
   children: React.ReactNode;
 };
 
+// Renders children while auth status is loading or unauthenticated so the
+// public landing/legal pages have real content in the server-rendered HTML
+// (crawlers don't wait for client bootstrap). If bootstrap resolves to
+// `authenticated`, redirect to the in-app entry route — authed users see a
+// brief flash of the landing, which is acceptable and rare.
 export default function PublicOnlyGate({ children }: PublicOnlyGateProps) {
   const router = useRouter();
   const status = useAuthStore((state) => state.status);
@@ -28,10 +32,6 @@ export default function PublicOnlyGate({ children }: PublicOnlyGateProps) {
       router.replace(getAuthenticatedEntryRoute(user));
     }
   }, [status, user, router]);
-
-  if (status === "loading") {
-    return <LoadingScreen fullScreen />;
-  }
 
   if (status === "authenticated") {
     return null;
