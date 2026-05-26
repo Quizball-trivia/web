@@ -119,7 +119,7 @@ export function TrueFalseGame({
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-[#131F24] text-white">
+    <div className="fixed inset-0 z-40 flex flex-col bg-surface-deep text-white">
       <DailyChallengeHeader
         onQuit={() => setShowQuitDialog(true)}
         currentIndex={currentQuestionIndex}
