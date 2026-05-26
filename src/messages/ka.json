@@ -841,6 +841,7 @@
     "androidStep2": "აირჩიე „Open in browser“ ან „Open in Chrome“.",
     "genericInstructions": "გასახსნელად გამოიყენე Safari, Chrome ან Firefox.",
     "orCopyLink": "ან დააკოპირე ბმული",
+    "linkCopied": "ბმული დაკოპირდა — ჩასვი Safari/Chrome-ში",
     "openInBrowser": "ბრაუზერში გახსნა"
   }
 }

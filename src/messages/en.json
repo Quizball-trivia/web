@@ -841,6 +841,7 @@
     "androidStep2": "Choose \"Open in browser\" or \"Open in Chrome\".",
     "genericInstructions": "Open this link in Safari, Chrome, or Firefox to continue.",
     "orCopyLink": "Or copy the link",
+    "linkCopied": "Link copied — paste it in Safari/Chrome",
     "openInBrowser": "Open in browser"
   }
 }

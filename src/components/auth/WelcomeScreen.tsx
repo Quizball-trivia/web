@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import Script from 'next/script';
 import { socialLogin, socialLoginWithIdToken } from '@/lib/auth/auth.service';
 import { signInWithGoogleIdentity } from '@/lib/auth/google-identity';
+import { getPlatform, isInAppBrowser, tryOpenInExternalBrowser } from '@/lib/auth/in-app-browser';
 import { useAuthStore } from '@/stores/auth.store';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { MessageKey } from '@/lib/i18n/messages';
@@ -320,6 +321,7 @@ export function WelcomeScreen() {
   const { t } = useLocale();
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [showOpenInBrowser, setShowOpenInBrowser] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [duelsCount] = useState(() => getDuelsCount());
   const [wcDaysLeft] = useState(() => getDaysUntilWorldCup());
@@ -580,6 +582,19 @@ export function WelcomeScreen() {
 
   const handleGoogleLogin = async () => {
     trackSignupStarted('google');
+
+    // In-app browsers (Messenger, Instagram, etc.) — Google blocks OAuth in
+    // these webviews. Fire the bounce URL silently; only show the manual
+    // instructions panel if we're still here after ~1.5s (OS ignored it).
+    if (isInAppBrowser()) {
+      tryOpenInExternalBrowser(window.location.href);
+      window.setTimeout(() => {
+        if (typeof document !== 'undefined' && !document.hidden) {
+          setShowOpenInBrowser(true);
+        }
+      }, 1500);
+      return;
+    }
 
     if (googleClientId) {
       try {
@@ -1170,30 +1185,116 @@ export function WelcomeScreen() {
            DialogContent) and render our own red square one instead.
            focus:outline-none / focus-visible:ring-0 kills the green-ish focus
            ring that shadcn paints on every primitive inside the dialog. ── */}
-      <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
+      <Dialog
+        open={loginOpen}
+        onOpenChange={(open) => {
+          setLoginOpen(open);
+          if (!open) setShowOpenInBrowser(false);
+        }}
+      >
         <DialogContent
           className="max-w-md w-[92vw] rounded-[24px] border-0 p-8 sm:p-10 [&>button:last-child]:hidden focus:outline-none focus-visible:outline-none focus-visible:ring-0 ring-0"
           style={{ backgroundColor: '#1645FF' }}
         >
-          <ModalCloseButton onClose={() => setLoginOpen(false)} />
+          <ModalCloseButton
+            onClose={() => {
+              setLoginOpen(false);
+              setShowOpenInBrowser(false);
+            }}
+          />
 
-          <DialogHeader className="text-center">
-            <DialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
-              {t('welcome.loginTitle')}
-            </DialogTitle>
-            <DialogDescription className="mt-3 text-center font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-[14px]">
-              {t('welcome.loginDescription')}
-            </DialogDescription>
-          </DialogHeader>
-          <Button
-            onClick={handleGoogleLogin}
-            className="mt-6 flex h-14 w-full items-center justify-center gap-3 rounded-[28px] bg-brand-yellow font-poppins text-base font-semibold uppercase tracking-wide text-black shadow-none transition-colors hover:bg-brand-yellow-deep hover:shadow-none sm:h-[60px] sm:text-lg focus-visible:ring-0 focus-visible:outline-none"
-          >
-            <FcGoogle className="size-6" />
-            {t('welcome.continueWithGoogle')}
-          </Button>
+          {showOpenInBrowser ? (
+            <InAppBrowserInstructions
+              platform={getPlatform()}
+              onTryAgain={() => tryOpenInExternalBrowser(window.location.href)}
+            />
+          ) : (
+            <>
+              <DialogHeader className="text-center">
+                <DialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
+                  {t('welcome.loginTitle')}
+                </DialogTitle>
+                <DialogDescription className="mt-3 text-center font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-[14px]">
+                  {t('welcome.loginDescription')}
+                </DialogDescription>
+              </DialogHeader>
+              <Button
+                onClick={handleGoogleLogin}
+                className="mt-6 flex h-14 w-full items-center justify-center gap-3 rounded-[28px] bg-brand-yellow font-poppins text-base font-semibold uppercase tracking-wide text-black shadow-none transition-colors hover:bg-brand-yellow-deep hover:shadow-none sm:h-[60px] sm:text-lg focus-visible:ring-0 focus-visible:outline-none"
+              >
+                <FcGoogle className="size-6" />
+                {t('welcome.continueWithGoogle')}
+              </Button>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function InAppBrowserInstructions({
+  platform,
+  onTryAgain,
+}: {
+  platform: 'ios' | 'android' | 'other';
+  onTryAgain: () => void;
+}) {
+  const { t } = useLocale();
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (typeof window === 'undefined') return;
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard blocked in some webviews — no-op */
+    }
+  };
+
+  return (
+    <>
+      <DialogHeader className="text-center">
+        <DialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
+          {t('inAppBrowser.title')}
+        </DialogTitle>
+        <DialogDescription className="mt-3 text-center font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-[14px]">
+          {t('inAppBrowser.body')}
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="mt-5 rounded-2xl bg-black/20 p-4 text-left font-poppins text-[13px] font-medium leading-relaxed text-white/90 sm:text-[14px]">
+        {platform === 'ios' ? (
+          <ol className="list-decimal space-y-2 pl-5">
+            <li>{t('inAppBrowser.iosStep1')}</li>
+            <li>{t('inAppBrowser.iosStep2')}</li>
+          </ol>
+        ) : platform === 'android' ? (
+          <ol className="list-decimal space-y-2 pl-5">
+            <li>{t('inAppBrowser.androidStep1')}</li>
+            <li>{t('inAppBrowser.androidStep2')}</li>
+          </ol>
+        ) : (
+          <p>{t('inAppBrowser.genericInstructions')}</p>
+        )}
+      </div>
+
+      <Button
+        onClick={onTryAgain}
+        className="mt-4 flex h-12 w-full items-center justify-center rounded-[20px] bg-brand-yellow font-poppins text-sm font-semibold uppercase tracking-wide text-black shadow-none transition-colors hover:bg-brand-yellow-deep hover:shadow-none focus-visible:ring-0 focus-visible:outline-none"
+      >
+        {t('inAppBrowser.openInBrowser')}
+      </Button>
+
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="mt-2 text-center font-poppins text-[12px] font-medium text-white/70 underline-offset-2 hover:underline"
+      >
+        {copied ? t('inAppBrowser.linkCopied') : t('inAppBrowser.orCopyLink')}
+      </button>
+    </>
   );
 }
