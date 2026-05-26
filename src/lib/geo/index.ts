@@ -19,3 +19,11 @@ export {
   COUNTRY_LOCATION_FALLBACKS,
 } from "./countries";
 export { getGeoObject, resolveOpponentLocation } from "./resolveLocation";
+export {
+  MAP_W,
+  MAP_H,
+  PROJ_SCALE,
+  PROJ_CENTER,
+  clamp,
+  projectPoint,
+} from "./projection";
