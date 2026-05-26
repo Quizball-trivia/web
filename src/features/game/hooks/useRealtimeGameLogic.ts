@@ -39,6 +39,8 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
   const matchPausedRef = useRef(matchPaused);
   const answerAckRetryCountRef = useRef(0);
   const answerPayloadRef = useRef<{ matchId: string; qIndex: number; selectedIndex: number; timeMs: number } | null>(null);
+  const answerSubmitElapsedRef = useRef<number | null>(null);
+  const trackedAckQIndexRef = useRef<number | null>(null);
 
   useEffect(() => {
     matchPausedRef.current = matchPaused;
@@ -95,6 +97,8 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     setSelectedAnswerQIndex(undefined);
     answerAckRetryCountRef.current = 0;
     answerPayloadRef.current = null;
+    answerSubmitElapsedRef.current = null;
+    trackedAckQIndexRef.current = null;
     setShowOptions(false);
     setTimeRemaining(initialTimeRemaining);
 
@@ -295,11 +299,10 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
   const correctIndex = useMemo(() => {
     if (!match || !currentQuestion) return undefined;
     const stored = match.questions[currentQuestion.qIndex]?.correctIndex;
-    const currentPayloadCorrectIndex = currentQuestion.correctIndex;
     const revealCorrectIndex = roundResult?.reveal?.kind === 'multipleChoice'
       ? roundResult.reveal.correctIndex
       : undefined;
-    return stored ?? currentPayloadCorrectIndex ?? answerAck?.correctIndex ?? revealCorrectIndex;
+    return stored ?? answerAck?.correctIndex ?? revealCorrectIndex;
   }, [answerAck?.correctIndex, roundResult, match, currentQuestion]);
 
   const playerScore = match?.myTotalPoints ?? 0;
@@ -313,11 +316,6 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     if (questionPhase !== 'playing') return; // Prevent answers during reveal
     if (timeRemaining <= 0) return;
 
-    logger.info('Submitting answer with resolved correct index sources', {
-      correctIndex,
-      storedQuestionCorrectIndex: match.questions[currentQuestion.qIndex]?.correctIndex,
-    });
-
     setSelectedAnswer(index);
     setSelectedAnswerQIndex(currentQuestion.qIndex);
 
@@ -330,17 +328,6 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
       : QUESTION_PLAYING_MS;
     const elapsed = Math.min(maxWindowMs, Math.max(0, now - startedAt));
 
-    if (correctIndex !== undefined) {
-      trackAnswerSubmitted(
-        String(currentQuestion.qIndex),
-        index === correctIndex,
-        Math.round(elapsed),
-        currentQuestion.qIndex,
-        currentQuestion.question.difficulty,
-        currentQuestion.question.categoryName,
-      );
-    }
-
     const payload = {
       matchId: match.matchId,
       qIndex: currentQuestion.qIndex,
@@ -348,6 +335,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
       timeMs: Math.round(elapsed),
     };
     answerPayloadRef.current = payload;
+    answerSubmitElapsedRef.current = Math.round(elapsed);
     getSocket().emit('match:answer', payload);
     logger.info('Socket emit match:answer', payload);
   };
@@ -404,6 +392,22 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     selectedAnswerQIndex,
     startCountdownActive,
   ]);
+
+  useEffect(() => {
+    if (!answerAck || !currentQuestion) return;
+    if (answerAck.qIndex !== currentQuestion.qIndex) return;
+    if (trackedAckQIndexRef.current === answerAck.qIndex) return;
+    if (answerSubmitElapsedRef.current === null) return;
+    trackedAckQIndexRef.current = answerAck.qIndex;
+    trackAnswerSubmitted(
+      String(currentQuestion.qIndex),
+      answerAck.isCorrect,
+      answerSubmitElapsedRef.current,
+      currentQuestion.qIndex,
+      currentQuestion.question.difficulty,
+      currentQuestion.question.categoryName,
+    );
+  }, [answerAck, currentQuestion]);
 
   return {
     state: {
