@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import type { AvatarCustomization } from '@/types/game';
 import { useLocale } from '@/contexts/LocaleContext';
+import { usePossessionFirstQuestionIntro } from '@/features/possession/hooks/usePossessionRoundTransition';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -216,7 +217,6 @@ export function RealtimePartyQuizScreen({
   disableBgm = false,
 }: RealtimePartyQuizScreenProps) {
   const { t } = useLocale();
-  const { state, actions } = useRealtimeGameLogic({ transitionDelayMs: 950 });
   const partyState = useRealtimeMatchStore((store) => store.match?.partyState ?? null);
   const participants = useRealtimeMatchStore((store) => store.match?.participants);
   const currentQuestion = useRealtimeMatchStore((store) => store.match?.currentQuestion ?? null);
@@ -224,10 +224,21 @@ export function RealtimePartyQuizScreen({
   const finalResults = useRealtimeMatchStore((store) => store.match?.finalResults ?? null);
   const selfUserId = useRealtimeMatchStore((store) => store.selfUserId);
   const forfeitPending = useRealtimeMatchStore((store) => store.forfeitPending);
+  const countdownEndsAt = useRealtimeMatchStore((store) => store.match?.countdownEndsAt ?? null);
+  // First-question intro: starts true on mount, waits for kickoff countdown
+  // to finish, then shows the overlay for FIRST_QUESTION_INTRO_MS. The
+  // hook also passes through as `blockReveal` below so the question +
+  // options don't render-then-hide (which was causing the visible flash).
+  const firstQuestionIntroVisible = usePossessionFirstQuestionIntro({
+    countdownEndsAt,
+    currentQuestionIndex: currentQuestion?.qIndex ?? null,
+  });
+  const { state, actions } = useRealtimeGameLogic({
+    transitionDelayMs: 950,
+    blockReveal: firstQuestionIntroVisible,
+  });
   const [showQuitModal, setShowQuitModal] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
-  const [firstQuestionIntroVisible, setFirstQuestionIntroVisible] = useState(false);
-  const firstQuestionIntroShownRef = useRef(false);
   const [preRoundRankingOrder, setPreRoundRankingOrder] = useState<string[]>([]);
   const [scoreFlights, setScoreFlights] = useState<ScoreFlight[]>([]);
   const [liveScoreDeltas, setLiveScoreDeltas] = useState<Record<string, number>>({});
@@ -414,20 +425,6 @@ export function RealtimePartyQuizScreen({
       window.clearTimeout(timeoutId);
     }
     liveDeltaTimeoutsRef.current.clear();
-  }, [currentQuestion?.qIndex]);
-
-  // First-question intro: round transitions only fire after a round resolves,
-  // so question 1 never gets one. Show the same overlay briefly when the first
-  // question arrives.
-  useEffect(() => {
-    if (firstQuestionIntroShownRef.current) return;
-    if (currentQuestion?.qIndex !== 0) return;
-    firstQuestionIntroShownRef.current = true;
-    setFirstQuestionIntroVisible(true);
-    const timer = window.setTimeout(() => {
-      setFirstQuestionIntroVisible(false);
-    }, 1400);
-    return () => window.clearTimeout(timer);
   }, [currentQuestion?.qIndex]);
 
   useLayoutEffect(() => {
