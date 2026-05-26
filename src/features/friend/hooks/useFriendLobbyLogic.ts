@@ -60,6 +60,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   const [settingsErrorVersion, setSettingsErrorVersion] = useState(0);
   const [isStartingMatch, setIsStartingMatch] = useState(false);
   const [handoffTimedOutCode, setHandoffTimedOutCode] = useState<string | null>(null);
+  const [optimisticReady, setOptimisticReady] = useState<boolean | null>(null);
 
   const clearStartMatchTimeout = useCallback(() => {
     if (!startMatchTimeoutRef.current) return;
@@ -269,8 +270,10 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
 
   const handleReadyToggle = () => {
     if (!me) return;
-    getSocket().emit("lobby:ready", { ready: !me.isReady });
-    logger.info("Socket emit lobby:ready", { ready: !me.isReady });
+    const nextReady = !(optimisticReady ?? me.isReady);
+    setOptimisticReady(nextReady);
+    getSocket().emit("lobby:ready", { ready: nextReady });
+    logger.info("Socket emit lobby:ready", { ready: nextReady });
   };
 
   const handleUpdateSettings = useCallback((updates: Partial<LobbySettingsState> & { isPublic?: boolean }) => {
@@ -344,6 +347,13 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     };
   }, [clearStartMatchTimeout]);
 
+  useEffect(() => {
+    if (optimisticReady === null) return;
+    if (me?.isReady === optimisticReady) {
+      setOptimisticReady(null);
+    }
+  }, [me?.isReady, optimisticReady]);
+
   return {
     lobby,
     members,
@@ -354,6 +364,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     allCategories,
     settingsErrorVersion,
     isStartingMatch,
+    optimisticReady,
     actions: {
       copyCode,
       handleReadyToggle,

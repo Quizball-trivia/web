@@ -24,8 +24,14 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
     allCategories,
     settingsErrorVersion,
     isStartingMatch,
+    optimisticReady,
     actions
   } = useFriendLobbyLogic({ roomCode, isHost });
+  const displayedReady = optimisticReady ?? me?.isReady ?? false;
+  // Host has local `isStartingMatch`; non-host members infer "preparing"
+  // from the broadcast lobby status flipping to "active" (server emits this
+  // right after creating the match, before the match-start countdown fires).
+  const matchIsStarting = isStartingMatch || lobby?.status === "active";
 
   const settings = lobby?.settings;
   const isCurrentHost = Boolean(me?.isHost) || isHost;
@@ -111,8 +117,8 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
                 onClick={actions.handleReadyToggle}
                 disabled={!lobby}
                 className={cn(
-                  "w-full h-14 rounded-[20px] uppercase transition-colors flex items-center justify-center gap-2 disabled:opacity-60",
-                  me?.isReady
+                  "w-full min-h-14 rounded-[20px] uppercase transition-colors flex items-center justify-center gap-3 py-3 px-4 disabled:opacity-60 active:scale-[0.98]",
+                  displayedReady
                     ? "bg-black/30 text-white/70 hover:bg-black/40"
                     : "bg-surface-page text-white hover:bg-surface-page/90"
                 )}
@@ -123,16 +129,16 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
                   letterSpacing: '0.04em',
                 }}
               >
-                {me?.isReady ? (
-                  <>
-                    <CheckCircle2 className="size-5 text-brand-green-light" /> {t("friend.readyTapToUnready")}
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="size-5 text-brand-yellow" strokeWidth={2.5} />
-                    {t("friend.markReady")}
-                  </>
-                )}
+                <CheckCircle2
+                  className={cn(
+                    "size-7 shrink-0",
+                    displayedReady ? "text-brand-green-light" : "text-brand-yellow"
+                  )}
+                  strokeWidth={displayedReady ? 2 : 2.5}
+                />
+                <span className="text-center leading-tight">
+                  {displayedReady ? t("friend.readyTapToUnready") : t("friend.markReady")}
+                </span>
               </button>
 
               {(settings?.gameMode === "friendly_possession" || settings?.gameMode === "friendly_party_quiz") && (
@@ -140,11 +146,11 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
                   onClick={actions.handleStartMatch}
                   disabled={!canStartMatch}
                   className={cn(
-                    "w-full h-14 rounded-[20px] uppercase transition-colors flex items-center justify-center gap-2",
+                    "w-full h-14 rounded-[20px] uppercase transition-all flex items-center justify-center gap-2 active:scale-[0.98]",
                     canStartMatch
-                      ? "bg-brand-blue text-white hover:bg-brand-blue/90 border-2 border-white/20"
+                      ? "bg-brand-green text-white hover:bg-brand-green-deep"
                       : "bg-black/20 text-white/35 cursor-not-allowed",
-                    isStartingMatch && "cursor-wait"
+                    isStartingMatch && "cursor-wait opacity-90"
                   )}
                   style={{
                     fontFamily: poppins,
@@ -164,8 +170,9 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
                 </button>
               )}
 
-              {isStartingMatch && (
-                <div className="bg-black/30 rounded-[14px] py-2 px-3 text-center animate-pulse">
+              {matchIsStarting && (
+                <div className="bg-black/30 rounded-[14px] py-2 px-3 text-center animate-pulse flex items-center justify-center gap-2">
+                  <Loader2 className="size-4 animate-spin text-brand-yellow" />
                   <span
                     className="text-brand-yellow uppercase"
                     style={{ fontFamily: poppins, fontWeight: 600, fontSize: 11, letterSpacing: '0.1em' }}
@@ -178,7 +185,7 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
               <button
                 onClick={actions.handleLeaveLobby}
                 disabled={!lobby}
-                className="w-full h-12 rounded-[20px] border-2 border-brand-red-soft bg-transparent text-brand-red-soft uppercase transition-colors hover:bg-brand-red-soft/15 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full h-12 rounded-[20px] bg-brand-red text-white uppercase transition-all hover:bg-brand-red/90 disabled:opacity-50 flex items-center justify-center gap-2 active:scale-[0.98]"
                 style={{ fontFamily: poppins, fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
               >
                 <LogOut className="size-4" />
