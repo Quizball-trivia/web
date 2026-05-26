@@ -563,7 +563,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
               ...state.match.questions,
               [payload.qIndex]: {
                 payload,
-                correctIndex: state.match.questions[payload.qIndex]?.correctIndex,
+                correctIndex: payload.correctIndex ?? state.match.questions[payload.qIndex]?.correctIndex,
               },
             },
           },
@@ -588,7 +588,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
               ...state.match.questions,
               [payload.qIndex]: {
                 payload,
-                correctIndex: state.match.questions[payload.qIndex]?.correctIndex,
+                correctIndex: payload.correctIndex ?? state.match.questions[payload.qIndex]?.correctIndex,
               },
             },
           },
@@ -624,7 +624,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
             ...state.match.questions,
             [payload.qIndex]: {
               payload,
-              correctIndex: state.match.questions[payload.qIndex]?.correctIndex,
+              correctIndex: payload.correctIndex ?? state.match.questions[payload.qIndex]?.correctIndex,
             },
           },
         },

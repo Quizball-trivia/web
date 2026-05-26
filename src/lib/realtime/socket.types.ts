@@ -289,6 +289,8 @@ export interface MatchQuestionPayload {
   question: GameQuestionDTO;
   playableAt?: string;
   deadlineAt: string;
+  /** MCQ correct index sent ahead so the client can show instant tap feedback. Server validates independently. */
+  correctIndex?: number;
   phaseKind?: MatchPhaseKind;
   phaseRound?: number | null;
   shooterSeat?: 1 | 2 | null;

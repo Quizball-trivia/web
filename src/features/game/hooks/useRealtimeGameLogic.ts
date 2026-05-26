@@ -298,11 +298,15 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
 
   const correctIndex = useMemo(() => {
     if (!match || !currentQuestion) return undefined;
+    // Server ships correctIndex on the question payload so the client can
+    // show instant tap feedback (Trivia Crack pattern). Server validates
+    // selectedIndex independently when scoring — leak is intentional UX.
     const stored = match.questions[currentQuestion.qIndex]?.correctIndex;
+    const currentPayloadCorrectIndex = currentQuestion.correctIndex;
     const revealCorrectIndex = roundResult?.reveal?.kind === 'multipleChoice'
       ? roundResult.reveal.correctIndex
       : undefined;
-    return stored ?? answerAck?.correctIndex ?? revealCorrectIndex;
+    return stored ?? currentPayloadCorrectIndex ?? answerAck?.correctIndex ?? revealCorrectIndex;
   }, [answerAck?.correctIndex, roundResult, match, currentQuestion]);
 
   const playerScore = match?.myTotalPoints ?? 0;
