@@ -285,6 +285,7 @@ export function GameStageRouter() {
             participants={realtimeMatch?.participants ?? []}
             selfUserId={selfUserId}
             unlockedAchievements={unlockedAchievements}
+            preMatchProgression={stableProgression}
             onPlayAgain={() => {
               if (!realtimeMatch?.matchId) {
                 logger.warn("Play Again clicked for friendly party quiz without an active match id");

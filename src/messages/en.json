@@ -291,7 +291,11 @@
     "tied": "Party quiz finished in a tie!",
     "winnerFallback": "Winner",
     "playAgain": "Play Again",
-    "mainMenu": "Main Menu"
+    "mainMenu": "Main Menu",
+    "returningToLobby": "Returning to lobby…",
+    "statRank": "Rank",
+    "statCorrect": "Correct",
+    "statPoints": "Points"
   },
   "tournaments": {
     "liveTournament": "Live Tournament",
@@ -561,6 +565,7 @@
     "goals": "Goals",
     "xp": "XP",
     "levelAndXpToNext": "· Lvl {level} · {xp} to next",
+    "levelUp": "· Level up! Now Lvl {level}",
     "noXpEarned": "No XP earned"
   },
   "friendHub": {

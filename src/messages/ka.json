@@ -291,7 +291,11 @@
     "tied": "ფარტი ქვიზი ფრიად დასრულდა!",
     "winnerFallback": "გამარჯვებული",
     "playAgain": "თავიდან თამაში",
-    "mainMenu": "მთავარი მენიუ"
+    "mainMenu": "მთავარი მენიუ",
+    "returningToLobby": "ლობიში დაბრუნება…",
+    "statRank": "ადგილი",
+    "statCorrect": "სწორი",
+    "statPoints": "ქულები"
   },
   "tournaments": {
     "liveTournament": "ცოცხალი ტურნირი",
@@ -561,6 +565,7 @@
     "goals": "გოლები",
     "xp": "XP",
     "levelAndXpToNext": "· დონე {level} · {xp} შემდეგამდე",
+    "levelUp": "· დონის ამაღლება! ახლა დონე {level}",
     "noXpEarned": "XP არ მიგიღია"
   },
   "friendHub": {
@@ -755,7 +760,7 @@
     "opponentFallback": "მოწინააღმდეგე",
     "matchFinishedAgainst": "მატჩი დასრულდა",
     "matchFinishedVs": "მატჩი დასრულდა",
-    "partyQuizFinished": "Party quiz დასრულდა",
+    "partyQuizFinished": "ფარტი ქვიზი დასრულდა",
     "partyQuizFinishedDesc": "საბოლოო ქულები მზადაა",
     "partyQuizFinishedCompactDesc": "საბოლოო ქულები მზადაა",
     "viewResults": "შედეგების ნახვა",

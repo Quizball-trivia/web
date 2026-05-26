@@ -1,17 +1,18 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { AnimatePresence, motion } from 'motion/react';
 import { Crown, X } from 'lucide-react';
 
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
+import { MatchCountdownPuck } from '@/components/shared/MatchCountdownPuck';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { QuitMatchModal } from '@/features/game/components/QuitMatchModal';
 import { useRealtimeGameLogic } from '@/features/game/hooks/useRealtimeGameLogic';
 import { PossessionQuestionPanel } from '@/components/game/PossessionQuestionPanel';
 import { RoundTransitionOverlay } from '@/components/game/RoundTransitionOverlay';
-import { playBgm } from '@/lib/sounds/gameSounds';
+import { playBgm, stopBgm } from '@/lib/sounds/gameSounds';
 import type { AnswerStateArray, Phase } from '@/lib/types/game.types';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import type { MatchParticipant } from '@/lib/realtime/socket.types';
@@ -46,9 +47,12 @@ interface PartyStandingViewModel {
 
 interface ScoreFlight {
   id: string;
+  userId: string;
   points: number;
   from: { x: number; y: number };
   to: { x: number; y: number };
+  failed?: boolean;
+  targetTotal?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -122,8 +126,21 @@ const RANK_HEX: Record<number, string> = {
   6: '#CE82FF',
 };
 
+const PARTY_SUCCESS_FLIGHT_MS = 1150;
+const PARTY_FAILED_FLIGHT_MS = 2000;
+
 function getRankHex(rank: number): string {
   return RANK_HEX[rank] ?? RANK_HEX[6]!;
+}
+
+function isUsableScoreAnchor(element: HTMLElement): boolean {
+  const rect = element.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return false;
+  if (rect.bottom < 0 || rect.right < 0) return false;
+  if (rect.top > window.innerHeight || rect.left > window.innerWidth) return false;
+
+  const styles = window.getComputedStyle(element);
+  return styles.display !== 'none' && styles.visibility !== 'hidden' && Number(styles.opacity) > 0;
 }
 
 // Per-rank styling — outlined card + pill colour rotate through the brand
@@ -206,16 +223,108 @@ export function RealtimePartyQuizScreen({
   const selfUserId = useRealtimeMatchStore((store) => store.selfUserId);
   const forfeitPending = useRealtimeMatchStore((store) => store.forfeitPending);
   const [showQuitModal, setShowQuitModal] = useState(false);
-  const [showPlayerSplash, setShowPlayerSplash] = useState(false);
-  const [playerSplashPoints, setPlayerSplashPoints] = useState(0);
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const [firstQuestionIntroVisible, setFirstQuestionIntroVisible] = useState(false);
+  const firstQuestionIntroShownRef = useRef(false);
   const [preRoundRankingOrder, setPreRoundRankingOrder] = useState<string[]>([]);
   const [scoreFlights, setScoreFlights] = useState<ScoreFlight[]>([]);
+  const [liveScoreDeltas, setLiveScoreDeltas] = useState<Record<string, number>>({});
+  const [displayedTotalsByUserId, setDisplayedTotalsByUserId] = useState<Record<string, number>>({});
   const splashQuestionRef = useRef<number | null>(null);
   const scoreFlightIdRef = useRef(0);
   const spawnedFlightKeysRef = useRef(new Set<string>());
+  const liveDeltaShownKeysRef = useRef(new Set<string>());
+  const liveFlightShownKeysRef = useRef(new Set<string>());
+  const liveDeltaTimeoutsRef = useRef(new Map<string, number>());
+  const previousPartyTotalsRef = useRef(new Map<string, number>());
+  const previousPartyAnsweredRef = useRef(new Map<string, boolean>());
+  const pendingDisplayedTotalsRef = useRef(new Map<string, number>());
   const rankingOrderRef = useRef<string[]>(partyState?.rankingOrder ?? []);
   const participantMap = useMemo(() => buildParticipantMap(participants ?? []), [participants]);
+
+  const commitDisplayedTotal = useCallback((userId: string, totalPoints: number) => {
+    pendingDisplayedTotalsRef.current.delete(userId);
+    setDisplayedTotalsByUserId((current) => {
+      if (current[userId] === totalPoints) return current;
+      return { ...current, [userId]: totalPoints };
+    });
+  }, []);
+
+  const findScoreAnchor = useCallback((userId: string): HTMLElement | null => {
+    const anchors = Array.from(document.querySelectorAll<HTMLElement>('[data-party-score-anchor]'))
+      .filter((element) => element.dataset.partyScoreAnchor === userId && isUsableScoreAnchor(element));
+    if (anchors.length === 0) return null;
+
+    const preferredPlacement = window.innerWidth >= 1024
+      ? 'desktop'
+      : mobileStandingsPlacement === 'below-options'
+        ? 'mobile-inline'
+        : 'mobile-bottom';
+    return anchors.find((element) => element.dataset.partyScoreAnchorPlacement === preferredPlacement)
+      ?? anchors[0]
+      ?? null;
+  }, [mobileStandingsPlacement]);
+
+  const spawnScoreFlightFromRects = useCallback((params: {
+    userId: string;
+    qIndex: number;
+    points: number;
+    keyPrefix: string;
+    sourceRect: DOMRect;
+    targetRect: DOMRect;
+    failed?: boolean;
+    holdTotal?: number;
+    targetTotal?: number;
+  }) => {
+    const failed = params.failed === true || params.points <= 0;
+    if (!failed && params.points <= 0) return false;
+    const flightKey = `${params.keyPrefix}:${params.qIndex}:${params.userId}`;
+    if (spawnedFlightKeysRef.current.has(flightKey)) return true;
+    if (
+      params.sourceRect.width <= 0 ||
+      params.sourceRect.height <= 0 ||
+      params.targetRect.width <= 0 ||
+      params.targetRect.height <= 0
+    ) {
+      return false;
+    }
+
+    spawnedFlightKeysRef.current.add(flightKey);
+    const id = `party-score-flight-${scoreFlightIdRef.current++}`;
+    const flight: ScoreFlight = {
+      id,
+      userId: params.userId,
+      points: Math.max(0, params.points),
+      from: {
+        x: params.sourceRect.left + params.sourceRect.width / 2,
+        y: params.sourceRect.top + params.sourceRect.height / 2,
+      },
+      to: {
+        x: params.targetRect.left + params.targetRect.width / 2,
+        y: params.targetRect.top + params.targetRect.height / 2,
+      },
+      failed,
+      targetTotal: params.targetTotal,
+    };
+
+    if (params.targetTotal != null && params.holdTotal != null) {
+      const holdTotal = params.holdTotal;
+      pendingDisplayedTotalsRef.current.set(params.userId, params.targetTotal);
+      setDisplayedTotalsByUserId((current) => ({ ...current, [params.userId]: holdTotal }));
+    }
+
+    setScoreFlights((current) => [...current, flight]);
+    window.setTimeout(() => {
+      if (params.targetTotal != null) {
+        commitDisplayedTotal(
+          params.userId,
+          pendingDisplayedTotalsRef.current.get(params.userId) ?? params.targetTotal,
+        );
+      }
+      setScoreFlights((current) => current.filter((item) => item.id !== id));
+    }, failed ? PARTY_FAILED_FLIGHT_MS + 120 : PARTY_SUCCESS_FLIGHT_MS + 120);
+    return true;
+  }, []);
 
   const spawnScoreFlight = useCallback((params: {
     userId: string;
@@ -223,48 +332,168 @@ export function RealtimePartyQuizScreen({
     selectedIndex: number | null | undefined;
     points: number;
     keyPrefix: string;
+    failed?: boolean;
+    holdTotal?: number;
+    targetTotal?: number;
   }) => {
-    if (params.points <= 0 || params.selectedIndex == null) return;
+    const failed = params.failed === true || params.points <= 0;
+    if (params.selectedIndex == null) return;
     const flightKey = `${params.keyPrefix}:${params.qIndex}:${params.userId}`;
     if (spawnedFlightKeysRef.current.has(flightKey)) return;
 
     const source = document.querySelector<HTMLElement>(
       `[data-mcq-option-index="${params.selectedIndex}"]`,
     );
-    const target = Array.from(document.querySelectorAll<HTMLElement>('[data-party-score-anchor]'))
-      .find((element) => element.dataset.partyScoreAnchor === params.userId);
+    const target = findScoreAnchor(params.userId);
     if (!source || !target) return;
 
-    const sourceRect = source.getBoundingClientRect();
-    const targetRect = target.getBoundingClientRect();
-    if (sourceRect.width <= 0 || sourceRect.height <= 0 || targetRect.width <= 0 || targetRect.height <= 0) {
-      return;
-    }
-
-    spawnedFlightKeysRef.current.add(flightKey);
-    const id = `party-score-flight-${scoreFlightIdRef.current++}`;
-    const flight: ScoreFlight = {
-      id,
+    return spawnScoreFlightFromRects({
+      userId: params.userId,
+      qIndex: params.qIndex,
       points: params.points,
-      from: {
-        x: sourceRect.left + sourceRect.width / 2,
-        y: sourceRect.top + sourceRect.height / 2,
-      },
-      to: {
-        x: targetRect.left + targetRect.width / 2,
-        y: targetRect.top + targetRect.height / 2,
-      },
-    };
+      keyPrefix: params.keyPrefix,
+      sourceRect: source.getBoundingClientRect(),
+      targetRect: target.getBoundingClientRect(),
+      failed,
+      holdTotal: params.holdTotal,
+      targetTotal: params.targetTotal,
+    });
+  }, [findScoreAnchor, spawnScoreFlightFromRects]);
 
-    setScoreFlights((current) => [...current, flight]);
-    window.setTimeout(() => {
-      setScoreFlights((current) => current.filter((item) => item.id !== id));
-    }, 950);
-  }, []);
+  const spawnLiveScoreFlight = useCallback((params: {
+    userId: string;
+    qIndex: number;
+    points: number;
+    failed?: boolean;
+    holdTotal?: number;
+    targetTotal?: number;
+  }) => {
+    const source = document.querySelector<HTMLElement>('[data-party-live-score-source]');
+    const target = findScoreAnchor(params.userId);
+    if (!source || !target) return false;
+
+    return spawnScoreFlightFromRects({
+      userId: params.userId,
+      qIndex: params.qIndex,
+      points: params.points,
+      keyPrefix: 'live',
+      sourceRect: source.getBoundingClientRect(),
+      targetRect: target.getBoundingClientRect(),
+      failed: params.failed,
+      holdTotal: params.holdTotal,
+      targetTotal: params.targetTotal,
+    });
+  }, [findScoreAnchor, spawnScoreFlightFromRects]);
 
   useEffect(() => {
     rankingOrderRef.current = partyState?.rankingOrder ?? [];
   }, [partyState?.rankingOrder]);
+
+  useEffect(() => {
+    setDisplayedTotalsByUserId({});
+    pendingDisplayedTotalsRef.current.clear();
+  }, [partyState?.matchId]);
+
+  useEffect(() => {
+    return () => {
+      for (const timeoutId of liveDeltaTimeoutsRef.current.values()) {
+        window.clearTimeout(timeoutId);
+      }
+      liveDeltaTimeoutsRef.current.clear();
+    };
+  }, []);
+
+  useEffect(() => {
+    setLiveScoreDeltas({});
+    liveDeltaShownKeysRef.current.clear();
+    liveFlightShownKeysRef.current.clear();
+    previousPartyAnsweredRef.current.clear();
+    for (const timeoutId of liveDeltaTimeoutsRef.current.values()) {
+      window.clearTimeout(timeoutId);
+    }
+    liveDeltaTimeoutsRef.current.clear();
+  }, [currentQuestion?.qIndex]);
+
+  // First-question intro: round transitions only fire after a round resolves,
+  // so question 1 never gets one. Show the same overlay briefly when the first
+  // question arrives.
+  useEffect(() => {
+    if (firstQuestionIntroShownRef.current) return;
+    if (currentQuestion?.qIndex !== 0) return;
+    firstQuestionIntroShownRef.current = true;
+    setFirstQuestionIntroVisible(true);
+    const timer = window.setTimeout(() => {
+      setFirstQuestionIntroVisible(false);
+    }, 1400);
+    return () => window.clearTimeout(timer);
+  }, [currentQuestion?.qIndex]);
+
+  useLayoutEffect(() => {
+    if (!partyState) return;
+
+    const qIndex = currentQuestion?.qIndex ?? partyState.currentQuestionIndex;
+    const previousTotals = previousPartyTotalsRef.current;
+    const previousAnswered = previousPartyAnsweredRef.current;
+    const nextTotals = new Map<string, number>();
+    const nextAnswered = new Map<string, boolean>();
+    const nextDeltas: Record<string, number> = {};
+
+    for (const player of partyState.players) {
+      nextTotals.set(player.userId, player.totalPoints);
+      nextAnswered.set(player.userId, player.answered);
+      const previousTotal = previousTotals.get(player.userId);
+      const hadPreviousState = previousTotal != null || previousAnswered.has(player.userId);
+      const wasAnswered = previousAnswered.get(player.userId) ?? false;
+      const delta = previousTotal == null ? 0 : player.totalPoints - previousTotal;
+      const becameAnswered = hadPreviousState && player.answered && !wasAnswered;
+      const deltaKey = `${qIndex}:${player.userId}`;
+
+      if (
+        qIndex != null &&
+        player.userId !== selfUserId &&
+        (delta > 0 || becameAnswered) &&
+        !state.roundResolved &&
+        !liveDeltaShownKeysRef.current.has(deltaKey)
+      ) {
+        const failed = delta <= 0;
+        liveDeltaShownKeysRef.current.add(deltaKey);
+        if (delta > 0) {
+          nextDeltas[player.userId] = delta;
+        }
+        const animated = spawnLiveScoreFlight({
+          userId: player.userId,
+          qIndex,
+          points: Math.max(0, delta),
+          failed,
+          holdTotal: previousTotal ?? player.totalPoints - Math.max(0, delta),
+          targetTotal: delta > 0 ? player.totalPoints : undefined,
+        });
+        if (animated) {
+          liveFlightShownKeysRef.current.add(deltaKey);
+        } else if (delta > 0) {
+          commitDisplayedTotal(player.userId, player.totalPoints);
+        }
+
+        const existingTimeout = liveDeltaTimeoutsRef.current.get(player.userId);
+        if (existingTimeout) window.clearTimeout(existingTimeout);
+
+        const timeoutId = window.setTimeout(() => {
+          setLiveScoreDeltas((current) => {
+            const { [player.userId]: _removed, ...rest } = current;
+            return rest;
+          });
+          liveDeltaTimeoutsRef.current.delete(player.userId);
+        }, 1500);
+        liveDeltaTimeoutsRef.current.set(player.userId, timeoutId);
+      }
+    }
+
+    previousPartyTotalsRef.current = nextTotals;
+    previousPartyAnsweredRef.current = nextAnswered;
+    if (Object.keys(nextDeltas).length > 0) {
+      setLiveScoreDeltas((current) => ({ ...current, ...nextDeltas }));
+    }
+  }, [commitDisplayedTotal, currentQuestion?.qIndex, partyState, selfUserId, spawnLiveScoreFlight, state.roundResolved]);
 
   // Snapshot the ranking order before each round for rank-shift calculation
   useEffect(() => {
@@ -283,37 +512,66 @@ export function RealtimePartyQuizScreen({
     return () => clearInterval(intervalId);
   }, [state.matchPaused, state.pauseUntil]);
 
-  // Optimistic score splash on correct answer
-  useEffect(() => {
+  // Instant local flight for party quiz. The server still authoritatively
+  // confirms totals, but party questions include correctIndex so the click can
+  // feel as immediate as ranked possession.
+  useLayoutEffect(() => {
     if (state.selectedAnswer === null || typeof state.correctIndex !== 'number') return;
     if (state.selectedAnswerQIndex == null) return;
     if (splashQuestionRef.current === state.selectedAnswerQIndex) return;
-    if (state.selectedAnswer !== state.correctIndex) return;
+    if (!selfUserId) return;
 
     splashQuestionRef.current = state.selectedAnswerQIndex;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- reveal splash is triggered from an incoming round-state transition
-    setPlayerSplashPoints(Math.max(0, Math.min(100, state.timeRemaining * 10)));
-    setShowPlayerSplash(true);
-  }, [state.correctIndex, state.selectedAnswer, state.selectedAnswerQIndex, state.timeRemaining]);
-
-  // Server ack refines optimistic splash points
-  useEffect(() => {
-    if (!answerAck || !answerAck.isCorrect) return;
-    if (splashQuestionRef.current !== answerAck.qIndex) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- server ack refines the optimistic splash points
-    setPlayerSplashPoints(answerAck.pointsEarned);
-  }, [answerAck]);
-
-  useEffect(() => {
-    if (!answerAck || !answerAck.isCorrect || !selfUserId) return;
+    const isCorrect = state.selectedAnswer === state.correctIndex;
+    const points = isCorrect ? Math.max(0, Math.min(100, state.timeRemaining * 10)) : 0;
+    const currentTotal = partyState?.players.find((player) => player.userId === selfUserId)?.totalPoints ?? 0;
+    const holdTotal = displayedTotalsByUserId[selfUserId] ?? currentTotal;
     spawnScoreFlight({
+      userId: selfUserId,
+      qIndex: state.selectedAnswerQIndex,
+      selectedIndex: state.selectedAnswer,
+      points,
+      keyPrefix: 'optimistic',
+      failed: !isCorrect || points <= 0,
+      holdTotal,
+      targetTotal: points > 0 ? holdTotal + points : undefined,
+    });
+  }, [
+    displayedTotalsByUserId,
+    partyState?.players,
+    selfUserId,
+    spawnScoreFlight,
+    state.correctIndex,
+    state.selectedAnswer,
+    state.selectedAnswerQIndex,
+    state.timeRemaining,
+  ]);
+
+  useEffect(() => {
+    if (!answerAck || !selfUserId) return;
+    const optimisticKey = `optimistic:${answerAck.qIndex}:${selfUserId}`;
+    if (spawnedFlightKeysRef.current.has(optimisticKey)) {
+      if (answerAck.pointsEarned > 0) {
+        pendingDisplayedTotalsRef.current.set(selfUserId, answerAck.myTotalPoints);
+      }
+      return;
+    }
+    const failed = !answerAck.isCorrect || answerAck.pointsEarned <= 0;
+    const holdTotal = Math.max(0, answerAck.myTotalPoints - Math.max(0, answerAck.pointsEarned));
+    const animated = spawnScoreFlight({
       userId: selfUserId,
       qIndex: answerAck.qIndex,
       selectedIndex: answerAck.selectedIndex,
       points: answerAck.pointsEarned,
       keyPrefix: 'ack',
+      failed,
+      holdTotal,
+      targetTotal: answerAck.pointsEarned > 0 ? answerAck.myTotalPoints : undefined,
     });
-  }, [answerAck, selfUserId, spawnScoreFlight]);
+    if (!animated && answerAck.pointsEarned > 0) {
+      commitDisplayedTotal(selfUserId, answerAck.myTotalPoints);
+    }
+  }, [answerAck, commitDisplayedTotal, selfUserId, spawnScoreFlight]);
 
   // Reset splash ref when question changes
   useEffect(() => {
@@ -327,23 +585,52 @@ export function RealtimePartyQuizScreen({
     if (qIndex == null) return;
 
     for (const [userId, player] of Object.entries(state.roundResult?.players ?? {})) {
-      if (userId === selfUserId && answerAck?.qIndex === qIndex) continue;
-      if (!player.isCorrect || player.pointsEarned <= 0) continue;
-      spawnScoreFlight({
+      const ackFlightKey = `ack:${qIndex}:${userId}`;
+      const optimisticFlightKey = `optimistic:${qIndex}:${userId}`;
+      if (
+        userId === selfUserId &&
+        (
+          (answerAck?.qIndex === qIndex && spawnedFlightKeysRef.current.has(ackFlightKey)) ||
+          spawnedFlightKeysRef.current.has(optimisticFlightKey)
+        )
+      ) {
+        continue;
+      }
+      const failed = !player.isCorrect || player.pointsEarned <= 0;
+      if (liveFlightShownKeysRef.current.has(`${qIndex}:${userId}`)) continue;
+      const targetTotal = player.totalPoints;
+      const holdTotal = Math.max(0, targetTotal - Math.max(0, player.pointsEarned));
+      const animated = spawnScoreFlight({
         userId,
         qIndex,
         selectedIndex: player.selectedIndex,
         points: player.pointsEarned,
         keyPrefix: 'round',
+        failed,
+        holdTotal,
+        targetTotal: player.pointsEarned > 0 ? targetTotal : undefined,
       });
+      if (!animated && player.pointsEarned > 0) {
+        commitDisplayedTotal(userId, targetTotal);
+      }
     }
-  }, [answerAck?.qIndex, selfUserId, spawnScoreFlight, state.roundResult]);
+  }, [answerAck?.qIndex, commitDisplayedTotal, selfUserId, spawnScoreFlight, state.roundResult]);
 
   useEffect(() => {
     if (disableBgm) return;
     if (!state.startCountdownActive || state.countdownReason === 'resume') return;
     playBgm('kickoff');
   }, [disableBgm, state.countdownReason, state.startCountdownActive]);
+
+  useEffect(() => {
+    if (disableBgm) return;
+    return () => stopBgm(400);
+  }, [disableBgm]);
+
+  useEffect(() => {
+    if (!finalResults) return;
+    stopBgm(600);
+  }, [finalResults]);
 
   // ---------------------------------------------------------------------------
   // Derived values
@@ -413,18 +700,24 @@ export function RealtimePartyQuizScreen({
         const previousRank = previousRanks.get(player.userId) ?? player.rank;
         const rankShift = previousRank - player.rank;
         const roundDelta = roundPlayers[player.userId]?.pointsEarned ?? null;
-
-        const ackForCurrentQuestion = answerAck?.qIndex === currentQuestion?.qIndex ? answerAck : null;
-        const optimisticSelfTotal = player.userId === selfUserId && ackForCurrentQuestion
-          ? ackForCurrentQuestion.myTotalPoints
-          : null;
-        const optimisticSelfDelta = player.userId === selfUserId && ackForCurrentQuestion
-          ? ackForCurrentQuestion.pointsEarned
+        const pendingTargetTotal = pendingDisplayedTotalsRef.current.get(player.userId);
+        const previousTotal = previousPartyTotalsRef.current.get(player.userId);
+        const shouldHoldIncomingTotal =
+          pendingTargetTotal != null ||
+          (
+            !state.roundResolved &&
+            previousTotal != null &&
+            player.totalPoints > previousTotal
+          );
+        const displayedTotal = displayedTotalsByUserId[player.userId]
+          ?? (shouldHoldIncomingTotal ? previousTotal ?? player.totalPoints : player.totalPoints);
+        const liveDelta = player.userId !== selfUserId
+          ? liveScoreDeltas[player.userId] ?? null
           : null;
 
         return {
           userId: player.userId,
-          totalPoints: optimisticSelfTotal ?? player.totalPoints,
+          totalPoints: displayedTotal,
           answered: player.answered,
           rank: player.rank,
           username: participant?.username ?? 'Player',
@@ -433,10 +726,10 @@ export function RealtimePartyQuizScreen({
           isSelf: player.userId === selfUserId,
           isLeader: player.userId === partyState.leaderUserId,
           rankShift,
-          roundDelta: optimisticSelfDelta ?? roundDelta,
+          roundDelta: shouldHoldIncomingTotal ? null : liveDelta ?? roundDelta,
         };
       });
-  }, [answerAck, currentQuestion?.qIndex, participantMap, partyState, preRoundRankingOrder, selfUserId, state.roundResult?.players]);
+  }, [displayedTotalsByUserId, liveScoreDeltas, participantMap, partyState, preRoundRankingOrder, selfUserId, state.roundResult?.players]);
 
   const transitionVisible = state.roundResultHoldDone;
   const transitionQuestionNumber = Math.min(
@@ -487,14 +780,11 @@ export function RealtimePartyQuizScreen({
     return (
       <div className="flex min-h-dvh w-full items-center justify-center bg-surface-page-alt">
         {state.startCountdownActive ? (
-          <div className="flex flex-col items-center gap-2">
-            <div className="font-fun text-xs font-bold uppercase tracking-[0.28em] text-white/60">Quiz starts in</div>
-            <div className="flex size-28 items-center justify-center rounded-full border-4 border-brand-cyan/60 bg-surface-deep shadow-[0_0_40px_rgba(28,176,246,0.25)]">
-              <span className="font-fun text-5xl font-black leading-none tabular-nums text-white">
-                {Math.max(1, state.countdownSeconds)}
-              </span>
-            </div>
-          </div>
+          <MatchCountdownPuck
+            label="Quiz starts in"
+            seconds={Math.max(1, state.countdownSeconds)}
+            size="md"
+          />
         ) : (
           <LoadingScreen fullScreen={false} className="h-auto min-h-0" />
         )}
@@ -520,22 +810,13 @@ export function RealtimePartyQuizScreen({
             className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center"
           >
             <div className="absolute inset-0 bg-surface-page-alt/45 backdrop-blur-[1.5px]" />
-            <motion.div
-              key={`party-countdown-${state.countdownSeconds}`}
-              initial={{ scale: 0.72, opacity: 0.4 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 340, damping: 22 }}
-              className="relative flex flex-col items-center gap-2"
-            >
-              <div className="font-fun text-xs font-bold uppercase tracking-[0.28em] text-white/70">
-                {state.countdownReason === 'resume' ? 'Reconnected. Resuming in' : 'Quiz starts in'}
-              </div>
-              <div className="flex size-32 items-center justify-center rounded-full border-4 border-brand-cyan/70 bg-surface-deep shadow-[0_0_50px_rgba(28,176,246,0.3)]">
-                <span className="font-fun text-6xl font-black leading-none tabular-nums text-white">
-                  {Math.max(1, state.countdownSeconds)}
-                </span>
-              </div>
-            </motion.div>
+            <div className="relative">
+              <MatchCountdownPuck
+                label={state.countdownReason === 'resume' ? 'Reconnected. Resuming in' : 'Quiz starts in'}
+                seconds={Math.max(1, state.countdownSeconds)}
+                size="md"
+              />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -547,12 +828,12 @@ export function RealtimePartyQuizScreen({
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16 }}
-            className="absolute left-1/2 top-4 z-40 w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 rounded-2xl border border-brand-red-soft/25 bg-surface-deep/95 px-4 py-3 shadow-2xl backdrop-blur"
+            className="absolute left-1/2 top-4 z-40 w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 rounded-[20px] bg-brand-blue px-5 py-4 shadow-2xl"
           >
-            <div className="text-center font-fun">
-              <div className="text-[10px] uppercase tracking-[0.22em] text-brand-red-soft/70">Finalizing Match</div>
-              <div className="mt-1 text-sm font-black text-white">{forfeitPendingTitle}</div>
-              <div className="mt-1 text-xs font-bold text-white/60">{forfeitPending.message}</div>
+            <div className="text-center font-poppins">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-yellow">Finalizing Match</div>
+              <div className="mt-1 text-base font-semibold uppercase text-white">{forfeitPendingTitle}</div>
+              <div className="mt-1 text-xs font-semibold text-white/70">{forfeitPending.message}</div>
             </div>
           </motion.div>
         )}
@@ -566,12 +847,12 @@ export function RealtimePartyQuizScreen({
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16 }}
-            className="absolute left-1/2 top-4 z-30 w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 rounded-2xl border border-white/10 bg-surface-deep/95 px-4 py-3 shadow-2xl backdrop-blur"
+            className="absolute left-1/2 top-4 z-30 w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 rounded-[20px] bg-brand-blue px-5 py-3 shadow-2xl"
           >
-            <div className="text-center font-fun">
-              <div className="text-[10px] uppercase tracking-[0.22em] text-white/50">Match Paused</div>
-              <div className="mt-1 text-sm font-black text-white">Waiting for a player to reconnect</div>
-              <div className="mt-1 text-xs font-bold text-brand-purple">Resumes automatically in {pauseSeconds}s</div>
+            <div className="text-center font-poppins">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/60">Match Paused</div>
+              <div className="mt-1 text-base font-semibold uppercase text-white">Waiting for a player to reconnect</div>
+              <div className="mt-1 text-xs font-semibold text-brand-yellow">Resumes automatically in {pauseSeconds}s</div>
             </div>
           </motion.div>
         )}
@@ -597,13 +878,16 @@ export function RealtimePartyQuizScreen({
         {/* ─── 2-column layout: question + standings ─── */}
         <div className="grid flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
           {/* Question panel — same UI as ranked possession match (without pitch) */}
-          <div className="relative min-h-[30rem] md:min-h-[34rem] lg:min-h-[38rem]">
+          <div
+            className="relative min-h-[30rem] md:min-h-[34rem] lg:min-h-[38rem]"
+            data-party-live-score-source
+          >
             <motion.div
-              animate={{ opacity: transitionVisible ? 0 : 1 }}
-              transition={{ duration: transitionVisible ? 0 : 0.6 }}
+              animate={{ opacity: (transitionVisible || firstQuestionIntroVisible) ? 0 : 1 }}
+              transition={{ duration: (transitionVisible || firstQuestionIntroVisible) ? 0 : 0.6 }}
               initial={false}
-              aria-hidden={transitionVisible}
-              className={transitionVisible ? 'pointer-events-none' : ''}
+              aria-hidden={transitionVisible || firstQuestionIntroVisible}
+              className={(transitionVisible || firstQuestionIntroVisible) ? 'pointer-events-none' : ''}
             >
               <PossessionQuestionPanel
                 phase={uiPhase}
@@ -619,9 +903,6 @@ export function RealtimePartyQuizScreen({
                 answerStates={answerStates}
                 opponentAnswer={null}
                 partyPicks={partyPicks}
-                showPlayerSplash={showPlayerSplash}
-                playerSplashPoints={playerSplashPoints}
-                onPlayerSplashComplete={() => setShowPlayerSplash(false)}
                 onAnswer={actions.submitAnswer}
               />
 
@@ -668,6 +949,7 @@ export function RealtimePartyQuizScreen({
                           <div
                             className="relative shrink-0"
                             data-party-score-anchor={player.userId}
+                            data-party-score-anchor-placement="mobile-inline"
                           >
                             <AvatarDisplay
                               customization={player.avatarCustomization ?? { base: player.avatarUrl ?? undefined }}
@@ -702,6 +984,20 @@ export function RealtimePartyQuizScreen({
                           <span className="shrink-0 font-poppins text-sm font-black tabular-nums text-white">
                             {player.totalPoints}
                           </span>
+                          <AnimatePresence mode="wait">
+                            {player.roundDelta != null && player.roundDelta > 0 && (
+                              <motion.span
+                                key={`mobile-inline-delta-${player.userId}-${player.totalPoints}`}
+                                initial={{ opacity: 0, scale: 0.75, y: 4 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.8, y: -4 }}
+                                transition={{ duration: 0.22 }}
+                                className="shrink-0 font-poppins text-xs font-black text-brand-green-light"
+                              >
+                                +{player.roundDelta}
+                              </motion.span>
+                            )}
+                          </AnimatePresence>
                           <span
                             className={cn(
                               'size-2.5 rounded-full shrink-0',
@@ -727,25 +1023,43 @@ export function RealtimePartyQuizScreen({
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.25 }}
-                  className="absolute inset-0 z-20 flex items-center justify-center rounded-[28px] bg-surface-page-alt/90 px-6 backdrop-blur-sm"
+                  className="absolute inset-0 z-20 flex items-center justify-center rounded-[28px] bg-surface-page-alt/85 px-6 backdrop-blur-sm"
                 >
-                  <div className="w-full max-w-sm rounded-[24px] border border-white/10 bg-surface-page/80 px-6 py-7 text-center shadow-2xl">
-                    <div className="font-fun text-[10px] font-black uppercase tracking-[0.26em] text-brand-yellow">
+                  <motion.div
+                    initial={{ y: -12, scale: 0.96, opacity: 0 }}
+                    animate={{ y: 0, scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+                    className="w-full max-w-sm rounded-[20px] bg-brand-blue px-6 py-7 text-center shadow-2xl"
+                  >
+                    <div className="font-poppins text-[11px] font-semibold uppercase tracking-[0.28em] text-brand-yellow">
                       Match Complete
                     </div>
                     <LoadingScreen
                       fullScreen={false}
-                      text="Calculating final scores..."
-                      className="h-auto min-h-0 bg-transparent py-0"
+                      text=""
+                      className="h-auto min-h-0 bg-transparent py-2"
                     />
-                  </div>
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                      className="mt-2 font-poppins text-sm font-semibold uppercase tracking-wide text-white"
+                    >
+                      Calculating final scores…
+                    </motion.p>
+                  </motion.div>
                 </motion.div>
-              ) : transitionVisible && (
+              ) : transitionVisible ? (
                 <RoundTransitionOverlay
                   title={`Question ${transitionQuestionNumber}`}
                   categoryName={transitionCategoryName}
                 />
-              )}
+              ) : firstQuestionIntroVisible ? (
+                <RoundTransitionOverlay
+                  title="Question 1"
+                  categoryName={transitionCategoryName}
+                />
+              ) : null}
             </AnimatePresence>
           </div>
 
@@ -790,7 +1104,11 @@ export function RealtimePartyQuizScreen({
                     </span>
 
                     {/* Avatar */}
-                    <div className="shrink-0" data-party-score-anchor={player.userId}>
+                    <div
+                      className="shrink-0"
+                      data-party-score-anchor={player.userId}
+                      data-party-score-anchor-placement="desktop"
+                    >
                       <AvatarDisplay
                         customization={player.avatarCustomization ?? { base: player.avatarUrl ?? undefined }}
                         size="sm"
@@ -889,7 +1207,11 @@ export function RealtimePartyQuizScreen({
                 >
                   {player.rank}
                 </span>
-                <div className="relative" data-party-score-anchor={player.userId}>
+                <div
+                  className="relative"
+                  data-party-score-anchor={player.userId}
+                  data-party-score-anchor-placement="mobile-bottom"
+                >
                   <AvatarDisplay
                     customization={player.avatarCustomization ?? { base: player.avatarUrl ?? undefined }}
                     size="xs"
@@ -922,6 +1244,20 @@ export function RealtimePartyQuizScreen({
                 <span className="text-xs font-black tabular-nums text-white/70">
                   {player.totalPoints}
                 </span>
+                <AnimatePresence mode="wait">
+                  {player.roundDelta != null && player.roundDelta > 0 && (
+                    <motion.span
+                      key={`mobile-bottom-delta-${player.userId}-${player.totalPoints}`}
+                      initial={{ opacity: 0, scale: 0.75, y: 4 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.8, y: -4 }}
+                      transition={{ duration: 0.22 }}
+                      className="text-[10px] font-black text-brand-green-light"
+                    >
+                      +{player.roundDelta}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </motion.div>
             );
           })}
@@ -931,40 +1267,62 @@ export function RealtimePartyQuizScreen({
 
       <AnimatePresence>
         {scoreFlights.map((flight) => {
-          const apexX = flight.from.x + (flight.to.x - flight.from.x) * 0.5;
-          const apexY = Math.min(flight.from.y, flight.to.y) - 110;
+          const failed = flight.failed === true || flight.points <= 0;
+          const dx = flight.to.x - flight.from.x;
+          const dy = flight.to.y - flight.from.y;
+          const fallY = (typeof window !== 'undefined' ? window.innerHeight : 900) - flight.from.y + 180;
           return (
-            <motion.div
+            <div
               key={flight.id}
-              initial={{
-                opacity: 0,
-                scale: 0.5,
-                x: flight.from.x,
-                y: flight.from.y,
-                rotate: -7,
-              }}
-              animate={{
-                opacity: [0, 1, 1, 1, 0],
-                scale: [0.5, 1.2, 1.05, 0.85, 0.55],
-                x: [flight.from.x, flight.from.x, apexX, flight.to.x, flight.to.x],
-                y: [flight.from.y, flight.from.y, apexY, flight.to.y, flight.to.y],
-                rotate: [0, -6, -3, 2, 4],
-              }}
-              exit={{ opacity: 0 }}
-              transition={{
-                duration: 1.6,
-                times: [0, 0.18, 0.55, 0.88, 1],
-                ease: [0.32, 0.72, 0.32, 1],
-              }}
-              className="pointer-events-none fixed left-0 top-0 z-50 -translate-x-1/2 -translate-y-1/2 select-none font-poppins text-4xl font-black text-brand-yellow"
+              className="pointer-events-none fixed z-50 select-none"
               style={{
-                WebkitTextStroke: '2px #000000',
-                paintOrder: 'stroke fill',
-                textShadow: '0 6px 0 rgba(0,0,0,0.35), 0 0 16px rgba(255,229,0,0.35)',
+                left: flight.from.x,
+                top: flight.from.y,
+                transform: 'translate(-50%, -50%)',
               }}
             >
-              +{flight.points}
-            </motion.div>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.5, x: 0, y: 0, rotate: -7 }}
+                animate={failed
+                  ? {
+                    opacity: [0, 1, 1, 1, 0.75, 0],
+                    scale: [0.5, 1.18, 1, 1, 0.9, 0.55],
+                    x: [0, 0, 0, dx, dx + 6, dx - 24],
+                    y: [0, 0, 0, dy, dy + 14, fallY],
+                    rotate: [0, -6, 0, 4, 14, 42],
+                  }
+                  : {
+                    opacity: [0, 1, 1, 1, 0],
+                    scale: [0.55, 1.15, 1, 0.72, 0.55],
+                    x: [0, 0, dx, dx, dx],
+                    y: [0, 0, dy, dy, dy],
+                    rotate: [0, -5, -2, 1, 2],
+                  }}
+                exit={{ opacity: 0 }}
+                transition={failed
+                  ? {
+                    duration: PARTY_FAILED_FLIGHT_MS / 1000,
+                    times: [0, 0.12, 0.28, 0.52, 0.6, 1],
+                    ease: [0.36, 0, 0.66, 1],
+                  }
+                  : {
+                    duration: PARTY_SUCCESS_FLIGHT_MS / 1000,
+                    times: [0, 0.12, 0.82, 0.94, 1],
+                    ease: [0.24, 0.72, 0.24, 1],
+                  }}
+                className="font-poppins text-4xl font-black text-brand-yellow"
+                style={{
+                  WebkitTextStroke: '2px #000000',
+                  paintOrder: 'stroke fill',
+                  color: failed ? 'rgba(255, 229, 0, 0.85)' : '#FFE500',
+                  textShadow: failed
+                    ? '0 4px 0 rgba(0,0,0,0.6), 0 8px 14px rgba(0,0,0,0.3)'
+                    : '0 6px 0 rgba(0,0,0,0.35), 0 0 16px rgba(255,229,0,0.35)',
+                }}
+              >
+                +{flight.points}
+              </motion.div>
+            </div>
           );
         })}
       </AnimatePresence>
