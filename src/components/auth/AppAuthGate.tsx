@@ -30,7 +30,7 @@ export default function AppAuthGate({ children }: AppAuthGateProps) {
   useEffect(() => {
     if (isDevelopmentDevRoute) return;
     if (status === "anonymous") {
-      router.replace("/auth/welcome");
+      router.replace("/");
     }
   }, [isDevelopmentDevRoute, status, router]);
 

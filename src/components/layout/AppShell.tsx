@@ -266,7 +266,7 @@ export function AppShell({ children }: AppShellProps) {
 
   const handleLogout = async () => {
     await logout();
-    router.replace("/auth/welcome");
+    router.replace("/");
   };
 
   const isPathActive = (path: string, exact?: boolean) => {
@@ -1089,21 +1089,6 @@ export function AppShell({ children }: AppShellProps) {
           )}
           {children}
         </main>
-
-        {/* Sticky Play Button - Only on Home Screen */}
-        {currentPath === "/" && (
-          <div className="fixed bottom-16 left-0 right-0 z-30 bg-background border-t border-border/50">
-            <div className="px-4 pt-3.5 pb-3 flex justify-center">
-              <Button
-                onClick={() => router.push("/play")}
-                size="lg"
-                className="w-11/12 h-12 shadow-lg shadow-primary/20"
-              >
-                {t("common.play")}
-              </Button>
-            </div>
-          </div>
-        )}
 
         {/* Bottom Navigation */}
         {showNav && (
