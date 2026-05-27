@@ -2,11 +2,10 @@
 
 import { motion } from 'motion/react';
 
-import { AchievementUnlockStrip } from '@/components/match/AchievementUnlockStrip';
 import { useLocale } from '@/contexts/LocaleContext';
 
-import { MatchStatsDropdown } from './results/ResultsStatsPanel';
 import { RankedProgressionPanel } from './results/RankedProgressionPanel';
+import { ResultsActions } from './results/ResultsActions';
 import { ResultsHero } from './results/ResultsHero';
 import type { RealtimeResultsScreenProps } from './results/results.types';
 import { useMatchResultViewModel } from './results/useMatchResultViewModel';
@@ -128,41 +127,24 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
           tierTransitionPhase={tierTransitionPhase}
         />
 
-        <AchievementUnlockStrip achievements={unlockedAchievements} />
-
-        {/* ── Action buttons (stacked vertically) + match stats dropdown ─── */}
-        <div className="mx-auto flex w-full max-w-[498px] flex-col items-stretch gap-3 pt-2 md:gap-4">
-          <MatchStatsDropdown
-            accuracy={accuracy}
-            playerCorrect={playerCorrect}
-            opponentCorrect={opponentCorrect}
-            totalQuestions={totalQuestions}
-            playerScore={playerScore}
-            opponentScore={opponentScore}
-            xpEarned={xpEarned}
-            level={projectedProgression?.level ?? null}
-            xpToNextLevel={projectedProgression ? xpToNextLevelAfterMatch : null}
-            playerQuestionResults={playerQuestionResults}
-            opponentQuestionResults={opponentQuestionResults}
-            t={t}
-          />
-
-          <button
-            onClick={onPlayAgain}
-            className="flex h-[64px] w-full items-center justify-center rounded-[20px] bg-brand-green font-poppins font-semibold uppercase text-white text-[1.5rem] transition-colors hover:bg-brand-green md:h-[80px] md:text-[28px]"
-          >
-            {t('results.playAgain')}
-          </button>
-          <button
-            onClick={onMainMenu}
-            className="flex h-[64px] w-full items-center justify-center rounded-[20px] border-[3px] border-brand-green bg-transparent font-poppins font-semibold uppercase text-white text-[1.5rem] transition-colors hover:bg-brand-green/10 md:h-[80px] md:text-[28px]"
-          >
-            {t('results.mainMenu')}
-          </button>
-        </div>
+        <ResultsActions
+          t={t}
+          unlockedAchievements={unlockedAchievements}
+          accuracy={accuracy}
+          playerCorrect={playerCorrect}
+          opponentCorrect={opponentCorrect}
+          totalQuestions={totalQuestions}
+          playerScore={playerScore}
+          opponentScore={opponentScore}
+          xpEarned={xpEarned}
+          level={projectedProgression?.level ?? null}
+          xpToNextLevel={projectedProgression ? xpToNextLevelAfterMatch : null}
+          playerQuestionResults={playerQuestionResults}
+          opponentQuestionResults={opponentQuestionResults}
+          onPlayAgain={onPlayAgain}
+          onMainMenu={onMainMenu}
+        />
       </motion.div>
     </div>
   );
 }
-
-
