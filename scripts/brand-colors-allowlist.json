@@ -4,7 +4,6 @@
     "src/app/(app)/daily/challenges/page.tsx",
     "src/app/(fullscreen)/ban-page/page.tsx",
     "src/components/auth/WelcomeScreen.tsx",
-    "src/components/layout/AppShell.tsx",
     "src/components/shared/HomeRecentMatches.tsx",
     "src/features/friend/components/LobbySettings.tsx",
     "src/features/game/RealtimeResultsScreen.tsx",
