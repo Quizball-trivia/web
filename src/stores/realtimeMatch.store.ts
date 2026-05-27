@@ -35,7 +35,6 @@ import type {
   RejoinMatchStatus,
 } from './realtime-match/types';
 import {
-  computeNextDraftTurn,
   constructFallbackMatchFromResults,
   extractPlayerTotals,
   hasTimingRefresh as hasQuestionTimingRefresh,
@@ -49,6 +48,7 @@ import {
   shouldClearLobbyOnSessionChange,
   shouldClearQuestionOnStateChange,
 } from './realtime-match/reducers';
+import { createDraftSlice, draftInitialState } from './realtime-match/draft.slice';
 import { createPresenceSlice, presenceInitialState } from './realtime-match/presence.slice';
 
 // Re-export public types so existing consumer imports keep resolving
@@ -75,11 +75,11 @@ const initialState = {
   pendingLobbyHandoffCode: null,
   suppressLobbyBannerUntil: null,
   suppressLobbyBannerReason: null,
-  draft: null,
   match: null,
   onlineUsers: null,
   sessionState: null,
   selfUserId: null,
+  ...draftInitialState,
   ...presenceInitialState,
   devPossessionAnimation: null,
   error: null,
@@ -89,6 +89,7 @@ export const useRealtimeMatchStore = create<RealtimeState>()((...args) => {
   const [set] = args;
   return {
   ...initialState,
+  ...createDraftSlice(...args),
   ...createPresenceSlice(...args),
   setSelfUserId: (userId) => {
     logger.info('Realtime store set self user id', { selfUserId: userId });
@@ -143,50 +144,6 @@ export const useRealtimeMatchStore = create<RealtimeState>()((...args) => {
       suppressLobbyBannerUntil: null,
       suppressLobbyBannerReason: null,
     });
-  },
-  setDraftStart: (draft) => {
-    logger.info('Realtime store set draft start', {
-      lobbyId: draft.lobbyId,
-      categoryCount: draft.categories.length,
-    });
-    set({
-      draftPaused: false,
-      draftPauseUntil: null,
-      draftDisconnectedUserId: null,
-      draft: {
-        lobbyId: draft.lobbyId,
-        categories: draft.categories,
-        bans: {},
-        turnUserId: draft.turnUserId,
-        halfOneCategoryId: null,
-      },
-    });
-  },
-  setDraftBan: (actorId, categoryId) =>
-    set((state) => {
-      if (!state.draft) return state;
-      const nextTurn = computeNextDraftTurn(state.lobby?.members, actorId);
-      logger.info('Realtime store set draft ban', { actorId, categoryId, nextTurnUserId: nextTurn });
-      return {
-        ...state,
-        draft: {
-          ...state.draft,
-          bans: { ...state.draft.bans, [actorId]: categoryId },
-          turnUserId: nextTurn,
-        },
-      };
-    }),
-  setDraftComplete: (halfOneCategoryId) => {
-    logger.info('Realtime store set draft complete', { halfOneCategoryId });
-    set((state) => ({
-      ...state,
-      draft: state.draft
-        ? {
-            ...state.draft,
-            halfOneCategoryId,
-          }
-        : null,
-    }));
   },
     setMatchStart: (payload) => {
       logger.info('Realtime store set match start', { matchId: payload.matchId, opponentId: payload.opponent.id });
@@ -870,16 +827,6 @@ export const useRealtimeMatchStore = create<RealtimeState>()((...args) => {
       };
     });
   },
-  revertDraftBan: (actorId) =>
-    set((state) => {
-      if (!state.draft) return state;
-      const remainingBans = { ...state.draft.bans };
-      delete remainingBans[actorId];
-      return {
-        ...state,
-        draft: { ...state.draft, bans: remainingBans, turnUserId: actorId },
-      };
-    }),
   triggerDevPossessionAnimation: ({ result, attackerSeat }) => {
     const id = Date.now();
     logger.info('Realtime store trigger dev possession animation', { id, result, attackerSeat });

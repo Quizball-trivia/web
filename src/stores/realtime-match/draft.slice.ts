@@ -1,0 +1,82 @@
+import type { StateCreator } from 'zustand';
+import { logger } from '@/utils/logger';
+import type { DraftState } from '@/lib/realtime/socket.types';
+import type { DraftStatus, RealtimeState } from './types';
+import { computeNextDraftTurn } from './reducers';
+
+/**
+ * Draft / ban phase state. Owns the active draft snapshot. setDraftStart
+ * additionally clears the presence-slice draft-pause fields (cross-slice
+ * write — safe under Zustand's typed StateCreator since `set` accepts a
+ * partial of the full RealtimeState).
+ */
+export interface DraftSlice {
+  draft: DraftStatus | null;
+  setDraftStart: (draft: DraftState) => void;
+  setDraftBan: (actorId: string, categoryId: string) => void;
+  setDraftComplete: (halfOneCategoryId: string) => void;
+  revertDraftBan: (actorId: string) => void;
+}
+
+export const draftInitialState = {
+  draft: null,
+} as const satisfies Pick<DraftSlice, 'draft'>;
+
+export const createDraftSlice: StateCreator<RealtimeState, [], [], DraftSlice> = (set) => ({
+  ...draftInitialState,
+
+  setDraftStart: (draft) => {
+    logger.info('Realtime store set draft start', {
+      lobbyId: draft.lobbyId,
+      categoryCount: draft.categories.length,
+    });
+    set({
+      draftPaused: false,
+      draftPauseUntil: null,
+      draftDisconnectedUserId: null,
+      draft: {
+        lobbyId: draft.lobbyId,
+        categories: draft.categories,
+        bans: {},
+        turnUserId: draft.turnUserId,
+        halfOneCategoryId: null,
+      },
+    });
+  },
+
+  setDraftBan: (actorId, categoryId) =>
+    set((state) => {
+      if (!state.draft) return state;
+      const nextTurn = computeNextDraftTurn(state.lobby?.members, actorId);
+      logger.info('Realtime store set draft ban', { actorId, categoryId, nextTurnUserId: nextTurn });
+      return {
+        draft: {
+          ...state.draft,
+          bans: { ...state.draft.bans, [actorId]: categoryId },
+          turnUserId: nextTurn,
+        },
+      };
+    }),
+
+  setDraftComplete: (halfOneCategoryId) => {
+    logger.info('Realtime store set draft complete', { halfOneCategoryId });
+    set((state) => ({
+      draft: state.draft
+        ? {
+            ...state.draft,
+            halfOneCategoryId,
+          }
+        : null,
+    }));
+  },
+
+  revertDraftBan: (actorId) =>
+    set((state) => {
+      if (!state.draft) return state;
+      const remainingBans = { ...state.draft.bans };
+      delete remainingBans[actorId];
+      return {
+        draft: { ...state.draft, bans: remainingBans, turnUserId: actorId },
+      };
+    }),
+});
