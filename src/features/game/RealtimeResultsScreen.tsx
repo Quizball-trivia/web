@@ -15,71 +15,7 @@ import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { logger } from '@/utils/logger';
 import { useLocale } from '@/contexts/LocaleContext';
 
-/** Animated number that ticks from `from` → `to` after a delay, with a pop + glow */
-function AnimatedCounter({
-  from,
-  to,
-  delay = 1.5,
-  className,
-}: {
-  from: number;
-  to: number;
-  delay?: number;
-  className?: string;
-}) {
-  return (
-    <AnimatedCounterInner
-      key={`${from}-${to}-${delay}`}
-      from={from}
-      to={to}
-      delay={delay}
-      className={className}
-    />
-  );
-}
-
-function AnimatedCounterInner({
-  from,
-  to,
-  delay = 1.5,
-  className,
-}: {
-  from: number;
-  to: number;
-  delay?: number;
-  className?: string;
-}) {
-  const [value, setValue] = useState(() => from);
-  const [popped, setPopped] = useState(false);
-
-  useEffect(() => {
-    if (from === to) return;
-
-    const timer = setTimeout(() => {
-      setValue(to);
-      setPopped(true);
-    }, delay * 1000);
-    return () => clearTimeout(timer);
-  }, [from, to, delay]);
-
-  return (
-    <motion.span
-      className={className}
-      animate={popped ? {
-        scale: [1, 1.4, 1],
-        textShadow: [
-          '0 0 0px transparent',
-          '0 0 24px currentColor',
-          '0 0 0px transparent',
-        ],
-      } : {}}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
-    >
-      {value}
-    </motion.span>
-  );
-}
-
+import { AnimatedCounter } from './results/AnimatedCounter';
 import type { RealtimeResultsScreenProps } from './results/results.types';
 
 export function RealtimeResultsScreen({
