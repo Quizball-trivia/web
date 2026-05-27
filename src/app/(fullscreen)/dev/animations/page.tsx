@@ -22,7 +22,9 @@ import { useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
 import { RealtimePossessionMatchScreen } from '@/features/possession/RealtimePossessionMatchScreen';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
+import type { Socket } from 'socket.io-client';
 import { __setSocketOverride } from '@/lib/realtime/socket-client';
+import type { ClientToServerEvents, ServerToClientEvents } from '@/lib/realtime/socket.types';
 import type {
   MatchRoundResultPayload,
   MatchStartPayload,
@@ -581,12 +583,12 @@ function makeCluesRoundResult(
 
 // ─── Minimal stub socket — emits go nowhere, .on / .off no-op ──────────────
 
-function createStubSocket() {
+function createStubSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
   // Only the methods the production code touches: emit/on/off/once/connected.
-  // We type-cast to `any` because socket.io-client's exhaustive type union is
-  // not worth replicating — emit() is fire-and-forget and we discard it.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const stub: any = {
+  // We cast through `unknown` because socket.io-client's exhaustive Socket
+  // surface is not worth replicating — emit() is fire-and-forget and we
+  // discard it. Same pattern used in src/lib/realtime/__tests__/socket-handlers.test.ts.
+  const stub = {
     id: 'stub',
     connected: true,
     active: true,
@@ -613,7 +615,7 @@ function createStubSocket() {
     disconnect: () => stub,
     listenersAny: () => [],
     listeners: () => [],
-  };
+  } as unknown as Socket<ServerToClientEvents, ClientToServerEvents>;
   return stub;
 }
 
