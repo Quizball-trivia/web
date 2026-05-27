@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ModalCloseButton } from '@/components/shared/ModalCloseButton';
 import { FcGoogle } from 'react-icons/fc';
@@ -14,6 +15,7 @@ import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { motion, AnimatePresence } from 'motion/react';
 import Script from 'next/script';
 import { socialLogin, socialLoginWithIdToken } from '@/lib/auth/auth.service';
+import { getAuthenticatedEntryRoute } from '@/lib/auth/onboarding';
 import { signInWithGoogleIdentity } from '@/lib/auth/google-identity';
 import { getPlatform, isInAppBrowser, tryOpenInExternalBrowser } from '@/lib/auth/in-app-browser';
 import { useAuthStore } from '@/stores/auth.store';
@@ -320,6 +322,7 @@ function getDuelsCount(): number {
 
 export function WelcomeScreen() {
   const { t, locale } = useLocale();
+  const router = useRouter();
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [loginOpen, setLoginOpen] = useState(false);
   const [showOpenInBrowser, setShowOpenInBrowser] = useState(false);
@@ -638,6 +641,7 @@ export function WelcomeScreen() {
         const { idToken, nonce } = await signInWithGoogleIdentity(googleClientId);
         await socialLoginWithIdToken('google', idToken, nonce);
         await bootstrap({ force: true });
+        router.replace(getAuthenticatedEntryRoute(useAuthStore.getState().user));
         return;
       } catch (gisError) {
         console.warn('GIS sign-in unavailable, falling back to redirect', gisError);
