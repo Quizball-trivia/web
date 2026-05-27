@@ -440,3 +440,117 @@ describe('LiveSpecialQuestionPanel countdown auto-submit', () => {
     expect(emitMock).not.toHaveBeenCalledWith('match:countdown_guess', expect.anything());
   });
 });
+
+// Pre-split regression coverage for clues + put-in-order to pin behavior
+// that the existing suite doesn't already cover. Added before the Tier 2 #8
+// split of LiveSpecialQuestionPanel into per-kind sub-panels — these stay
+// green through the extraction.
+describe('LiveSpecialQuestionPanel clues input (pre-split regression)', () => {
+  beforeEach(() => {
+    emitMock.mockClear();
+  });
+
+  function renderClues(overrides: Partial<Parameters<typeof LiveSpecialQuestionPanel>[0]> = {}) {
+    return render(
+      <LiveSpecialQuestionPanel
+        matchId="match-1"
+        qIndex={4}
+        totalQuestions={12}
+        question={cluesQuestion}
+        showOptions
+        timeRemaining={50}
+        questionDurationSeconds={50}
+        roundResolved={false}
+        answerAck={null}
+        roundResult={null}
+        myRound={null}
+        opponentRound={null}
+        countdownGuessAck={null}
+        cluesGuessAck={null}
+        {...overrides}
+      />
+    );
+  }
+
+  it('emits a guess on submit-button click with the typed answer and timeMs', async () => {
+    renderClues({ timeRemaining: 38 });
+
+    fireEvent.change(screen.getByPlaceholderText('TYPE YOUR ANSWER'), {
+      target: { value: 'Roman Bürki' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /submit answer/i }));
+
+    await waitFor(() => {
+      expect(emitMock).toHaveBeenCalledWith('match:clues_answer', {
+        kind: 'guess',
+        matchId: 'match-1',
+        qIndex: 4,
+        guess: 'Roman Bürki',
+        timeMs: 12000,
+      });
+    });
+  });
+
+  it('emits a give-up payload on give-up-button click regardless of input', async () => {
+    renderClues({ timeRemaining: 30 });
+
+    fireEvent.click(screen.getByRole('button', { name: /give up/i }));
+
+    await waitFor(() => {
+      expect(emitMock).toHaveBeenCalledWith('match:clues_answer', {
+        kind: 'giveUp',
+        matchId: 'match-1',
+        qIndex: 4,
+        giveUp: true,
+        timeMs: 20000,
+      });
+    });
+  });
+
+  it('locks input and submit once a clues answerAck arrives', async () => {
+    renderClues({
+      answerAck: {
+        matchId: 'match-1',
+        qIndex: 4,
+        questionKind: 'clues',
+        selectedIndex: null,
+        isCorrect: false,
+        myTotalPoints: 80,
+        oppAnswered: false,
+        pointsEarned: 0,
+        // submittedOrderIds is put-in-order-only; clues ack carries no field
+      } as never,
+    });
+
+    // The submit-answer button + the text input both become disabled.
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /submit answer/i })).toBeDisabled();
+      expect(screen.getByPlaceholderText('TYPE YOUR ANSWER')).toBeDisabled();
+    });
+  });
+});
+
+describe('LiveSpecialQuestionPanel put-in-order duplicate-submit guard', () => {
+  beforeEach(() => {
+    emitMock.mockClear();
+  });
+
+  it('does not double-emit on rapid double-click of submit', async () => {
+    renderPutInOrder({ timeRemaining: 8 });
+
+    const submitBtn = screen.getByRole('button', { name: /submit order/i });
+    fireEvent.click(submitBtn);
+    fireEvent.click(submitBtn);
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(emitMock).toHaveBeenCalledWith(
+        'match:put_in_order_answer',
+        expect.objectContaining({ matchId: 'match-1', qIndex: 2 }),
+      );
+    });
+    // Total emits should be exactly one, regardless of how many clicks landed.
+    const emits = emitMock.mock.calls.filter(([event]) => event === 'match:put_in_order_answer');
+    expect(emits).toHaveLength(1);
+  });
+});
