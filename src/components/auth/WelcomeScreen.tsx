@@ -372,10 +372,12 @@ export function WelcomeScreen() {
       name: shuffledNames[index] ?? fallbackName,
       avatarCustomization: shuffledLoadouts[index] ?? DEMO_AVATAR_LOADOUTS[index % DEMO_AVATAR_LOADOUTS.length],
     });
-    setDemoPlayers({
-      left: make(0, "Mason"),
-      right: make(1, "Thiago"),
-      crowd: [make(2, "Santi"), make(3, "Jamal"), make(4, "Enzo")],
+    queueMicrotask(() => {
+      setDemoPlayers({
+        left: make(0, "Mason"),
+        right: make(1, "Thiago"),
+        crowd: [make(2, "Santi"), make(3, "Jamal"), make(4, "Enzo")],
+      });
     });
   }, []);
 
