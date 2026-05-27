@@ -1,61 +1,35 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ArrowUpDown, CheckCircle2, Send, XCircle } from 'lucide-react';
-import {
-  DndContext,
-  KeyboardSensor,
-  PointerSensor,
-  closestCenter,
-  type DragEndEvent,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  arrayMove,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { AnimatePresence, motion } from 'motion/react';
-import { Input } from '@/components/ui/input';
-import { getSocket } from '@/lib/realtime/socket-client';
-import type {
-  MatchAnswerAckPayload,
-  MatchCluesAnswerPayload,
-  MatchCluesGuessAckPayload,
-  MatchCountdownGuessAckPayload,
-  MatchRoundResultPayload,
-  MatchRoundResultPlayer,
-  ResolvedCluesQuestion,
-  ResolvedCountdownQuestion,
-  ResolvedPutInOrderQuestion,
-  ResolvedPutInOrderQuestionItem,
-} from '@/lib/realtime/socket.types';
-import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
-import { calculateCluesDisplayPoints } from '@/utils/cluesScoring';
+/**
+ * LiveSpecialQuestionPanel — orchestrator shell.
+ *
+ * Routes the active special-question payload to one of three per-kind
+ * sub-panels and renders the shared question header (QUESTION x/y +
+ * timer pill) above it. The sub-panels live in `./live-special/` and
+ * own all of their own state, socket emits, and result-card rendering;
+ * this file only:
+ *
+ *   1. unpacks the wrapper props,
+ *   2. computes the display question number + timer label,
+ *   3. selects which sub-panel to render based on `question.kind`,
+ *   4. wraps the lot in the splash-anchor container so points-flight
+ *      animations have stable DOM anchors regardless of which sub-panel
+ *      is active.
+ *
+ * Public API (component + props interface) is unchanged from before the
+ * split — `import { LiveSpecialQuestionPanel } from
+ * '@/features/possession/components/LiveSpecialQuestionPanel'` still
+ * works, and the prop shape matches what callers passed pre-split.
+ */
+import type { ReactNode } from 'react';
 import { useLocale } from '@/contexts/LocaleContext';
+import { LiveCluesPanel } from './live-special/LiveCluesPanel';
+import { LiveCountdownPanel } from './live-special/LiveCountdownPanel';
+import { LivePutInOrderPanel } from './live-special/LivePutInOrderPanel';
 import {
-  QuestionKindBadge,
-  SpecialResultSummary,
   SpecialScoreFlightAnchors,
-  clampCount,
-  putInOrderPointsFromCount,
-  resolveI18nText,
-  resolvePutInOrderPoints,
-  type LiveSpecialQuestion,
   type LiveSpecialQuestionPanelProps,
-  type SpecialSummarySide,
-  type SpecialSummaryStatus,
-  type SpecialSummaryTone,
 } from './live-special/shared';
-import { LiveCountdownPanel } from "./live-special/LiveCountdownPanel";
-
-import { LivePutInOrderPanel } from "./live-special/LivePutInOrderPanel";
-
-import { LiveCluesPanel } from "./live-special/LiveCluesPanel";
 
 export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
   const { t } = useLocale();
