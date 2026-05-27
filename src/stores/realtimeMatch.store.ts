@@ -40,6 +40,21 @@ import type {
   RealtimeState,
   RejoinMatchStatus,
 } from './realtime-match/types';
+import {
+  computeNextDraftTurn,
+  constructFallbackMatchFromResults,
+  extractPlayerTotals,
+  hasTimingRefresh as hasQuestionTimingRefresh,
+  isStaleAnswerAck,
+  isStaleStateEvent,
+  mergeOpponentFromFinalParticipants,
+  parseCountdownDeadline,
+  resolvePartyPlayers,
+  shouldBufferQuestion,
+  shouldClearCountdownOnStateChange,
+  shouldClearLobbyOnSessionChange,
+  shouldClearQuestionOnStateChange,
+} from './realtime-match/reducers';
 
 // Re-export public types so existing consumer imports keep resolving
 // (`import type { MatchStatus, DraftStatus, ... } from '@/stores/realtimeMatch.store'`).
@@ -160,7 +175,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
   setDraftBan: (actorId, categoryId) =>
     set((state) => {
       if (!state.draft) return state;
-      const nextTurn = state.lobby?.members.find((m) => m.userId !== actorId)?.userId ?? null;
+      const nextTurn = computeNextDraftTurn(state.lobby?.members, actorId);
       logger.info('Realtime store set draft ban', { actorId, categoryId, nextTurnUserId: nextTurn });
       return {
         ...state,
@@ -253,15 +268,14 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
     });
     set((state) => {
       if (!state.match || state.match.matchId !== payload.matchId) return state;
-      const startsAtMs = Number.isFinite(new Date(payload.startsAt).getTime())
-        ? new Date(payload.startsAt).getTime()
-        : Date.now() + Math.max(0, payload.seconds) * 1000;
+      const startsAtMs = parseCountdownDeadline(payload.startsAt, payload.seconds, Date.now());
+      const isResume = payload.reason === 'resume';
       return {
         ...state,
-        matchPaused: payload.reason === 'resume' ? false : state.matchPaused,
-        pauseUntil: payload.reason === 'resume' ? null : state.pauseUntil,
-        pausedAt: payload.reason === 'resume' ? null : state.pausedAt,
-        remainingReconnects: payload.reason === 'resume' ? null : state.remainingReconnects,
+        matchPaused: isResume ? false : state.matchPaused,
+        pauseUntil: isResume ? null : state.pauseUntil,
+        pausedAt: isResume ? null : state.pausedAt,
+        remainingReconnects: isResume ? null : state.remainingReconnects,
         match: {
           ...state.match,
           countdownEndsAt: startsAtMs,
@@ -282,30 +296,21 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
     });
     set((state) => {
       if (!state.match || state.match.matchId !== payload.matchId) return state;
-      // Reject out-of-order state events via stateVersion
       const incomingVersion = payload.stateVersion ?? 0;
-      if (incomingVersion > 0 && incomingVersion <= state.match.stateVersion) {
+      if (isStaleStateEvent(incomingVersion, state.match.stateVersion)) {
         logger.warn('Ignoring stale match:state event', {
           incoming: incomingVersion,
           current: state.match.stateVersion,
         });
         return state;
       }
-      
-      const isSecondHalfKickoff =
-        state.match.possessionState?.phase === 'HALFTIME'
-        && payload.phase === 'NORMAL_PLAY'
-        && payload.half === 2;
-      const shouldClearQuestion =
-        isSecondHalfKickoff ||
-        (
-          (payload.phase === 'COMPLETED' || payload.phase === 'HALFTIME')
-          && !state.match.lastRoundResult
-        );
-      const shouldClearCountdown =
-        payload.phase !== 'NORMAL_PLAY' ||
-        payload.normalQuestionsAnsweredInHalf > 0 ||
-        payload.phaseRound > 1;
+
+      const shouldClearQuestion = shouldClearQuestionOnStateChange(
+        state.match.possessionState?.phase,
+        payload,
+        Boolean(state.match.lastRoundResult),
+      );
+      const shouldClearCountdown = shouldClearCountdownOnStateChange(payload);
       return {
         ...state,
         match: {
@@ -340,7 +345,9 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       if (!state.match || state.match.matchId !== payload.matchId) return state;
       const incomingVersion = payload.stateVersion ?? 0;
       const currentVersion = state.match.stateVersion;
-      if (currentVersion > 0 && incomingVersion > 0 && incomingVersion <= currentVersion) {
+      // party_state additionally requires currentVersion > 0 — version 0 means
+      // we've never received a state event yet and any party_state may arrive.
+      if (currentVersion > 0 && isStaleStateEvent(incomingVersion, currentVersion)) {
         logger.warn('Ignoring stale match:party_state event', {
           incoming: incomingVersion,
           current: currentVersion,
@@ -348,13 +355,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         return state;
       }
 
-      const selfUserId = state.selfUserId;
-      const myPlayer = selfUserId
-        ? payload.players.find((player) => player.userId === selfUserId)
-        : undefined;
-      const firstOpponent = selfUserId
-        ? payload.players.find((player) => player.userId !== selfUserId)
-        : payload.players[0];
+      const { myPlayer, firstOpponent } = resolvePartyPlayers(payload.players, state.selfUserId);
 
       return {
         ...state,
@@ -396,22 +397,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       }
 
       if (payload.qIndex === currentQIndex) {
-        const currentDeadlineMs = state.match.currentQuestion?.deadlineAt
-          ? new Date(state.match.currentQuestion.deadlineAt).getTime()
-          : Number.NaN;
-        const incomingDeadlineMs = payload.deadlineAt ? new Date(payload.deadlineAt).getTime() : Number.NaN;
-        const hasTimingRefresh = Boolean(
-          state.match.currentQuestion &&
-          (
-            state.match.currentQuestion.deadlineAt !== payload.deadlineAt ||
-            state.match.currentQuestion.playableAt !== payload.playableAt
-          ) &&
-          (
-            !Number.isFinite(currentDeadlineMs) ||
-            !Number.isFinite(incomingDeadlineMs) ||
-            incomingDeadlineMs >= currentDeadlineMs
-          )
-        );
+        const hasTimingRefresh = hasQuestionTimingRefresh(state.match.currentQuestion, payload);
         if ((!state.matchPaused && !hasTimingRefresh) || !state.match.currentQuestion) {
           logger.warn('Ignoring duplicate match:question event for active question', {
             qIndex: payload.qIndex,
@@ -446,7 +432,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       // Buffer question if we're still showing the last round result.
       // Exception: when server state is HALFTIME, accept question immediately to avoid
       // getting stuck if phase transition and question packets arrive out of order.
-      if (state.match.lastRoundResult && state.match.possessionState?.phase !== 'HALFTIME') {
+      if (shouldBufferQuestion(Boolean(state.match.lastRoundResult), state.match.possessionState?.phase)) {
         logger.info('Buffering match:question as pendingQuestion (result still showing)', {
           qIndex: payload.qIndex,
         });
@@ -565,7 +551,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         /* analytics best-effort */
       }
       const currentQIndex = state.match.currentQuestion?.qIndex;
-      if (currentQIndex !== undefined && payload.qIndex !== currentQIndex) {
+      if (isStaleAnswerAck(payload, currentQIndex)) {
         logger.warn('Ignoring stale match:answer_ack event', {
           received: payload.qIndex,
           current: currentQIndex,
@@ -753,11 +739,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       const existing = state.match.questions[payload.qIndex];
       const fallbackQuestion = existing?.payload ?? state.match.currentQuestion;
       if (!fallbackQuestion) return state;
-      const myId = state.selfUserId;
-      const myTotals = myId ? payload.players[myId] : undefined;
-      const opponentTotals = myId
-        ? Object.entries(payload.players).find(([userId]) => userId !== myId)?.[1]
-        : undefined;
+      const { myTotals, opponentTotals } = extractPlayerTotals(payload.players, state.selfUserId);
       return {
         ...state,
         match: {
@@ -825,29 +807,6 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       }
       if (!state.match) {
         const rejoin = state.rejoinMatch?.matchId === payload.matchId ? state.rejoinMatch : null;
-        const replayVariant =
-          rejoin?.variant
-          ?? payload.variant
-          ?? (payload.standings ? 'friendly_party_quiz' : payload.rankedOutcome ? 'ranked_sim' : 'friendly_possession');
-        const userIds = Object.keys(payload.players);
-        const fallbackParticipants: MatchParticipant[] = userIds.map((userId, index) => ({
-          userId,
-          username: userId === state.selfUserId ? 'You' : `Player ${index + 1}`,
-          avatarUrl: null,
-          avatarCustomization: null,
-          seat: index + 1,
-        }));
-        const participants = rejoin?.participants ?? payload.participants ?? fallbackParticipants;
-        const opponentParticipant =
-          participants.find((participant) => participant.userId !== state.selfUserId) ?? participants[0];
-        const opponent = rejoin?.opponent ?? {
-          id: opponentParticipant?.userId ?? 'opponent',
-          username: opponentParticipant?.username ?? 'Opponent',
-          avatarUrl: opponentParticipant?.avatarUrl ?? null,
-          avatarCustomization: opponentParticipant?.avatarCustomization ?? null,
-          ...(opponentParticipant?.rankPoints != null ? { rp: opponentParticipant.rankPoints } : {}),
-        };
-
         return {
           ...state,
           matchPaused: false,
@@ -859,35 +818,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
           draftDisconnectedUserId: null,
           rejoinMatch: null,
           forfeitPending: null,
-          match: {
-            matchId: payload.matchId,
-            mode: rejoin?.mode ?? (payload.rankedOutcome ? 'ranked' : 'friendly'),
-            variant: replayVariant,
-            mySeat: participants.find((participant) => participant.userId === state.selfUserId)?.seat ?? null,
-            opponent,
-            participants,
-            countdownEndsAt: null,
-            countdownReason: null,
-            currentQuestion: null,
-            pendingQuestion: null,
-            questions: {},
-            answerAck: null,
-            countdownGuessAck: null,
-        opponentCountdownFoundCount: 0,
-            cluesGuessAck: null,
-            opponentAnswered: false,
-            opponentSelectedIndex: null,
-            myTotalPoints: state.selfUserId ? payload.players[state.selfUserId]?.totalPoints ?? 0 : 0,
-            oppTotalPoints: opponentParticipant ? payload.players[opponentParticipant.userId]?.totalPoints ?? 0 : 0,
-            opponentRecentPoints: 0,
-            lastRoundResult: null,
-            finalResults: payload,
-            currentQuestionPhase: 'reveal',
-            opponentAnsweredCorrectly: null,
-            possessionState: null,
-            partyState: null,
-            stateVersion: 0,
-          },
+          match: constructFallbackMatchFromResults(payload, state.selfUserId, rejoin),
         };
       }
       if (state.match.matchId !== payload.matchId) {
@@ -898,18 +829,12 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
         return state;
       }
       const participants = payload.participants ?? state.match.participants;
-      const opponentParticipant =
-        participants.find((participant) => participant.userId !== state.selfUserId) ?? participants[0];
-      const opponent = payload.participants && opponentParticipant
-        ? {
-            ...state.match.opponent,
-            id: opponentParticipant.userId,
-            username: opponentParticipant.username,
-            avatarUrl: opponentParticipant.avatarUrl,
-            avatarCustomization: opponentParticipant.avatarCustomization,
-            ...(opponentParticipant.rankPoints != null ? { rp: opponentParticipant.rankPoints } : {}),
-          }
-        : state.match.opponent;
+      const opponent = mergeOpponentFromFinalParticipants(
+        payload.participants,
+        participants,
+        state.selfUserId,
+        state.match.opponent,
+      );
       return {
         ...state,
         matchPaused: false,
@@ -1047,13 +972,7 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
   setSessionState: (payload) => {
     logger.info('Realtime store set session state', payload);
     set((state) => {
-      const lobbyId = state.lobby?.lobbyId ?? null;
-      const sessionLobbyIds = new Set(
-        [payload.waitingLobbyId, ...payload.openLobbyIds].filter(
-          (id): id is string => typeof id === 'string' && id.length > 0,
-        ),
-      );
-      const shouldClearLobby = lobbyId !== null && !sessionLobbyIds.has(lobbyId);
+      const shouldClearLobby = shouldClearLobbyOnSessionChange(state.lobby?.lobbyId ?? null, payload);
       return {
         sessionState: payload,
         ...(shouldClearLobby
