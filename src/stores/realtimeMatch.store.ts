@@ -7,7 +7,6 @@ import {
 } from '@/lib/analytics/game-events';
 import type {
   DraftState,
-  LobbyState,
   MatchAnswerAckPayload,
   MatchCluesGuessAckPayload,
   MatchCountdownGuessAckPayload,
@@ -21,7 +20,6 @@ import type {
   MatchCountdownPayload,
   MatchStartPayload,
   ErrorPayload,
-  PresenceOnlineCountPayload,
   SessionStatePayload,
 } from '@/lib/realtime/socket.types';
 import type {
@@ -45,10 +43,10 @@ import {
   resolvePartyPlayers,
   shouldBufferQuestion,
   shouldClearCountdownOnStateChange,
-  shouldClearLobbyOnSessionChange,
   shouldClearQuestionOnStateChange,
 } from './realtime-match/reducers';
 import { createDraftSlice, draftInitialState } from './realtime-match/draft.slice';
+import { createLobbySlice, lobbyInitialState } from './realtime-match/lobby.slice';
 import { createPresenceSlice, presenceInitialState } from './realtime-match/presence.slice';
 
 // Re-export public types so existing consumer imports keep resolving
@@ -70,15 +68,8 @@ const DEFAULT_COUNTDOWN_MS = 5000;
 const PARTY_QUIZ_DEFAULT_COUNTDOWN_MS = 5000;
 
 const initialState = {
-  lobby: null,
-  challengeInvites: [],
-  pendingLobbyHandoffCode: null,
-  suppressLobbyBannerUntil: null,
-  suppressLobbyBannerReason: null,
   match: null,
-  onlineUsers: null,
-  sessionState: null,
-  selfUserId: null,
+  ...lobbyInitialState,
   ...draftInitialState,
   ...presenceInitialState,
   devPossessionAnimation: null,
@@ -89,62 +80,9 @@ export const useRealtimeMatchStore = create<RealtimeState>()((...args) => {
   const [set] = args;
   return {
   ...initialState,
+  ...createLobbySlice(...args),
   ...createDraftSlice(...args),
   ...createPresenceSlice(...args),
-  setSelfUserId: (userId) => {
-    logger.info('Realtime store set self user id', { selfUserId: userId });
-    set({ selfUserId: userId });
-  },
-  setLobby: (lobby) => {
-    logger.info('Realtime store set lobby', {
-      lobbyId: lobby.lobbyId,
-      status: lobby.status,
-      memberCount: lobby.members.length,
-    });
-    set({ lobby });
-  },
-  addChallengeInvite: (invite) => {
-    logger.info('Realtime store add challenge invite', {
-      invitationId: invite.invitationId,
-      lobbyId: invite.lobbyId,
-      fromUserId: invite.fromUser.id,
-    });
-    set((state) => {
-      const withoutDuplicate = state.challengeInvites.filter(
-        (item) => item.invitationId !== invite.invitationId,
-      );
-      return { challengeInvites: [invite, ...withoutDuplicate] };
-    });
-  },
-  removeChallengeInvite: (invitationId) => {
-    logger.info('Realtime store remove challenge invite', { invitationId });
-    set((state) => ({
-      challengeInvites: state.challengeInvites.filter((invite) => invite.invitationId !== invitationId),
-    }));
-  },
-  beginLobbyHandoff: (inviteCode) => {
-    if (typeof inviteCode !== 'string' || inviteCode.length === 0) return;
-    set({
-      pendingLobbyHandoffCode: inviteCode.toUpperCase(),
-      suppressLobbyBannerUntil: Date.now() + 8000,
-      suppressLobbyBannerReason: 'challenge',
-    });
-  },
-  clearLobbyHandoff: () => {
-    set({ pendingLobbyHandoffCode: null });
-  },
-  suppressLobbyBanner: (durationMs = 5000, reason = 'challenge') => {
-    set({
-      suppressLobbyBannerUntil: Date.now() + durationMs,
-      suppressLobbyBannerReason: reason,
-    });
-  },
-  clearLobbyBannerSuppression: () => {
-    set({
-      suppressLobbyBannerUntil: null,
-      suppressLobbyBannerReason: null,
-    });
-  },
     setMatchStart: (payload) => {
       logger.info('Realtime store set match start', { matchId: payload.matchId, opponentId: payload.opponent.id });
       try {
@@ -802,28 +740,6 @@ export const useRealtimeMatchStore = create<RealtimeState>()((...args) => {
           countdownReason: null,
           finalResults: payload,
         },
-      };
-    });
-  },
-  setOnlineUsers: (data) => {
-    logger.info('Realtime store set online users', { onlineUsers: data.onlineUsers });
-    set({ onlineUsers: data.onlineUsers });
-  },
-  setSessionState: (payload) => {
-    logger.info('Realtime store set session state', payload);
-    set((state) => {
-      const shouldClearLobby = shouldClearLobbyOnSessionChange(state.lobby?.lobbyId ?? null, payload);
-      return {
-        sessionState: payload,
-        ...(shouldClearLobby
-          ? {
-              lobby: null,
-              draft: null,
-              draftPaused: false,
-              draftPauseUntil: null,
-              draftDisconnectedUserId: null,
-            }
-          : {}),
       };
     });
   },
