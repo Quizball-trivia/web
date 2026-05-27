@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { MatchmakingMapScreen } from "@/features/game/components/MatchmakingMapScreen";
+import { MatchmakingMapScreen } from "@/components/match/MatchmakingMapScreen";
 import { useTraining } from "../TrainingMatchProvider";
 import { BOT_AVATAR, BOT_NAME } from "../constants";
 

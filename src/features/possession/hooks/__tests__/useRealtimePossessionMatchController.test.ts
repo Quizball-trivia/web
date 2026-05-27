@@ -62,7 +62,7 @@ const mockGameLogicState = {
   timeRemaining: 8,
 };
 
-vi.mock('@/features/game/hooks/useRealtimeGameLogic', () => ({
+vi.mock('@/lib/match/useRealtimeGameLogic', () => ({
   useRealtimeGameLogic: () => ({
     state: mockGameLogicState,
     actions: {

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { MatchmakingMapScreen } from "./components/MatchmakingMapScreen";
+import { MatchmakingMapScreen } from "@/components/match/MatchmakingMapScreen";
 import { ShowdownScreen } from "@/components/ShowdownScreen";
 import { RankedCategoryBlockingScreen } from "@/features/play/RankedCategoryBlockingScreen";
 import { RealtimeResultsScreen } from "./RealtimeResultsScreen";
@@ -11,7 +11,7 @@ import { RealtimePartyQuizScreen } from "@/features/party/RealtimePartyQuizScree
 import { PartyQuizResultsScreen } from "@/features/party/PartyQuizResultsScreen";
 import { getSocket } from "@/lib/realtime/socket-client";
 import { logger } from "@/utils/logger";
-import { useGameStageTransitions } from "@/features/game/hooks/useGameStageTransitions";
+import { useGameStageTransitions } from "@/lib/match/useGameStageTransitions";
 import { resolveAvatarUrl } from "@/lib/avatars";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { tierFromRp } from "@/utils/rankedTier";

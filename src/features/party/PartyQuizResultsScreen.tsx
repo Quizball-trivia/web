@@ -8,7 +8,7 @@ import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import type { AchievementUnlockPayload, MatchFinalResultsPayload, MatchParticipant, MatchStandingPayload } from '@/lib/realtime/socket.types';
 import { cn } from '@/lib/utils';
-import { AchievementUnlockStrip } from '@/features/game/components/AchievementUnlockStrip';
+import { AchievementUnlockStrip } from '@/components/match/AchievementUnlockStrip';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { AvatarCustomization } from '@/types/game';
 import { applyXpReward, getMatchXpReward } from '@/lib/domain/matchXp';

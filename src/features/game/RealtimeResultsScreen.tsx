@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { useHeadToHead } from '@/lib/queries/stats.queries';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import type { AchievementUnlockPayload, RankedMatchOutcomePayload } from '@/lib/realtime/socket.types';
-import { AchievementUnlockStrip } from './components/AchievementUnlockStrip';
+import { AchievementUnlockStrip } from '@/components/match/AchievementUnlockStrip';
 import type { UserProgression } from '@/lib/domain';
 import { applyXpReward, getMatchXpReward } from '@/lib/domain/matchXp';
 

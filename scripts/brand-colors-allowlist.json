@@ -8,7 +8,7 @@
     "src/components/shared/HomeRecentMatches.tsx",
     "src/features/friend/components/LobbySettings.tsx",
     "src/features/game/RealtimeResultsScreen.tsx",
-    "src/features/game/components/MatchmakingMapScreen.tsx",
+    "src/components/match/MatchmakingMapScreen.tsx",
     "src/features/play/ModeSelectionScreen.tsx",
     "src/features/profile/ProfileWeb.tsx",
     "src/features/tournaments/GameHubScreen.tsx",

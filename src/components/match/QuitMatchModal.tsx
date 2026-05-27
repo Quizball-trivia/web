@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { getClub } from '@/lib/clubs';
-import { getRandomFamousPlayer } from '../data/clubFamousPlayers';
+import { getRandomFamousPlayer } from './clubFamousPlayers';
 import { useLocale } from '@/contexts/LocaleContext';
 
 interface QuitMatchModalProps {

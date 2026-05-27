@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveSearchTimerStartedAt } from "../components/MatchmakingMapScreen";
+import { resolveSearchTimerStartedAt } from "../MatchmakingMapScreen";
 
 describe("resolveSearchTimerStartedAt", () => {
   it("uses the local screen start before the server ack arrives", () => {

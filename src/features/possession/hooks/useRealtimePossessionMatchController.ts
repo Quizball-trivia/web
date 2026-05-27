@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState, type ComponentProps } from 'react';
-import { useRealtimeGameLogic } from '@/features/game/hooks/useRealtimeGameLogic';
+import { useRealtimeGameLogic } from '@/lib/match/useRealtimeGameLogic';
 import { useGameSounds } from '@/lib/sounds/useGameSounds';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { logger } from '@/utils/logger';

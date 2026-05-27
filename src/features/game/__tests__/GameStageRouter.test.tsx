@@ -137,7 +137,7 @@ vi.mock('@/lib/realtime/socket-client', () => ({
   getSocket: () => socket,
 }));
 
-vi.mock('@/features/game/hooks/useGameStageTransitions', () => ({
+vi.mock('@/lib/match/useGameStageTransitions', () => ({
   useGameStageTransitions: () => {},
 }));
 
@@ -153,7 +153,7 @@ vi.mock('@/lib/avatars', () => ({
   resolveAvatarUrl: (value: string | null | undefined) => value ?? 'avatar-fallback',
 }));
 
-vi.mock('@/features/game/components/MatchmakingMapScreen', () => ({
+vi.mock('@/components/match/MatchmakingMapScreen', () => ({
   MatchmakingMapScreen: () => <div>Matchmaking Map</div>,
 }));
 

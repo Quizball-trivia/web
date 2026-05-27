@@ -1,6 +1,6 @@
 // Barrel re-exports for the geo dataset + opponent-location resolver.
 // The data and resolution logic was extracted from
-// `src/features/game/components/MatchmakingMapScreen.tsx` so that
+// `src/components/match/MatchmakingMapScreen.tsx` so that
 // component can stay focused on rendering and animation. Anything that
 // just needs to resolve a player's location to a map pin should import
 // from `@/lib/geo`, not the screen component.
