@@ -325,7 +325,7 @@ export function TrainingBanningStage() {
                               stiffness: 400,
                               damping: 14,
                             }}
-                            className="bg-brand-red-soft px-5 py-2.5 rounded-2xl border-b-4 border-[#CC3E3E] shadow-lg"
+                            className="bg-brand-red-soft px-5 py-2.5 rounded-2xl border-b-4 border-brand-red-soft-deep shadow-lg"
                           >
                             <span className="text-base font-black text-white uppercase tracking-wide">
                               BANNED

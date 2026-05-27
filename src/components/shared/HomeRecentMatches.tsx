@@ -15,7 +15,7 @@ const rowBorder = (result: string) => {
 
 const rpPillTone = (result: string) => {
   if (result === 'win') return 'bg-brand-green-deep text-white';
-  if (result === 'loss') return 'bg-[#B8401D] text-white';
+  if (result === 'loss') return 'bg-brand-red-rust text-white';
   return 'bg-brand-slate-deep text-white';
 };
 
@@ -105,7 +105,7 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
         {!isLoading && !error && visibleMatches.map((match) => (
           <div
             key={match.id}
-            className={`flex items-center gap-3 rounded-[16px] min-h-[58px] md:min-h-[62px] px-4 md:px-5 border-2 bg-[#041217] ${rowBorder(match.result)}`}
+            className={`flex items-center gap-3 rounded-[16px] min-h-[58px] md:min-h-[62px] px-4 md:px-5 border-2 bg-surface-row-deep ${rowBorder(match.result)}`}
           >
             {/* Avatar */}
             <div className="relative size-8 md:size-10 shrink-0 rounded-full bg-white/20 flex items-center justify-center">
@@ -144,7 +144,7 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
                 {match.scoreBadge && (
                   <span className={`rounded-[8px] px-2 py-1 font-poppins text-[9px] md:text-[10px] font-semibold uppercase ${
                     match.scoreBadgeVariant === 'red'
-                      ? 'bg-[#4D1C1B] text-brand-red-light'
+                      ? 'bg-brand-red-rust-deep text-brand-red-light'
                       : 'bg-white/10 text-white/70'
                   }`}>
                     {match.scoreBadge}

@@ -399,7 +399,7 @@ export function ModeSelectionScreen({
               </div>
               <div className="h-3 w-3/4 animate-pulse rounded-full bg-white/12" />
               <div className="mt-2 h-2 w-full animate-pulse rounded-full bg-white/8" />
-              <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#07200C]">
+              <div className="mt-4 h-3 overflow-hidden rounded-full bg-surface-mode-trough">
                 <div className="h-full w-1/4 animate-pulse rounded-full bg-brand-green-light/55" />
               </div>
               <div className="mt-2 flex items-center justify-between">
@@ -436,7 +436,7 @@ export function ModeSelectionScreen({
                 </div>
                 <h4 className="text-[10px] font-black leading-tight text-white uppercase truncate">{getI18nText(objective.title, locale)}</h4>
                 <p className="mt-0.5 line-clamp-2 min-h-[22px] text-[9px] leading-tight text-white/80">{getI18nText(objective.description, locale)}</p>
-                <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#07200C]">
+                <div className="mt-4 h-3 overflow-hidden rounded-full bg-surface-mode-trough">
                   <div className="h-full rounded-full bg-brand-green-light" style={{ width: `${progressPercent}%` }} />
                 </div>
                 <div className="mt-2 flex items-center justify-between text-[9px] font-black uppercase">
@@ -451,7 +451,7 @@ export function ModeSelectionScreen({
           {objectivesLoading && [0, 1, 2].map((item) => (
             <div
               key={item}
-              className="shrink-0 w-[260px] rounded-[10px] bg-[#1A3A1A]/80 p-4 md:w-[300px]"
+              className="shrink-0 w-[260px] rounded-[10px] bg-surface-mode-card/80 p-4 md:w-[300px]"
             >
               <div className="mb-3 flex items-center gap-3">
                 <div className="size-12 shrink-0 animate-pulse rounded-[10px] bg-white/10" />
@@ -460,7 +460,7 @@ export function ModeSelectionScreen({
                   <div className="mt-2 h-2 w-full animate-pulse rounded-full bg-white/8" />
                 </div>
               </div>
-              <div className="mb-2.5 h-3 overflow-hidden rounded-full bg-[#0F260F]">
+              <div className="mb-2.5 h-3 overflow-hidden rounded-full bg-surface-mode-trough-deep">
                 <div className="h-full w-1/4 animate-pulse rounded-full bg-brand-green-light/55" />
               </div>
               <div className="flex items-center justify-between">
@@ -472,7 +472,7 @@ export function ModeSelectionScreen({
           {!objectivesLoading && !hasPreviewObjectives && (
             <Link
               href="/objectives"
-              className="shrink-0 w-[260px] rounded-[10px] bg-[#1A3A1A] p-4 transition-all hover:bg-[#224422] md:w-[300px]"
+              className="shrink-0 w-[260px] rounded-[10px] bg-surface-mode-card p-4 transition-all hover:bg-surface-mode-card-hover md:w-[300px]"
             >
               <div className="mb-3 flex items-center gap-3">
                 <Image src="/assets/obj_icon.png" alt="" width={45} height={44} className="size-12 object-contain" />
@@ -481,7 +481,7 @@ export function ModeSelectionScreen({
                   <p className="truncate text-[11px] font-bold uppercase text-white/60">{t('play.objectivesUnavailableHint')}</p>
                 </div>
               </div>
-              <div className="mb-2.5 h-3 overflow-hidden rounded-full bg-[#0F260F]">
+              <div className="mb-2.5 h-3 overflow-hidden rounded-full bg-surface-mode-trough-deep">
                 <div className="h-full w-[8%] rounded-full bg-brand-green-light" />
               </div>
               <div className="flex items-center justify-between">
@@ -500,7 +500,7 @@ export function ModeSelectionScreen({
                 key={objective.id}
                 href="/objectives"
                 className={cn(
-                  "shrink-0 w-[260px] rounded-[10px] bg-[#1A3A1A] p-4 transition-all hover:bg-[#224422] md:w-[300px]",
+                  "shrink-0 w-[260px] rounded-[10px] bg-surface-mode-card p-4 transition-all hover:bg-surface-mode-card-hover md:w-[300px]",
                   objective.completed && "ring-1 ring-brand-green-light/30"
                 )}
               >
@@ -511,7 +511,7 @@ export function ModeSelectionScreen({
                     <p className="truncate text-[11px] font-bold uppercase text-white/60">{getI18nText(objective.description, locale)}</p>
                   </div>
                 </div>
-                <div className="mb-2.5 h-3 overflow-hidden rounded-full bg-[#0F260F]">
+                <div className="mb-2.5 h-3 overflow-hidden rounded-full bg-surface-mode-trough-deep">
                   <div className="h-full rounded-full bg-brand-green-light" style={{ width: `${progressPercent}%` }} />
                 </div>
                 <div className="flex items-center justify-between">

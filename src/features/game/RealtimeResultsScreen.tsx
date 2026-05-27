@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { useHeadToHead } from '@/lib/queries/stats.queries';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import type { AchievementUnlockPayload, RankedMatchOutcomePayload } from '@/lib/realtime/socket.types';
-import { AchievementUnlockStrip } from './components/AchievementUnlockStrip';
+import { AchievementUnlockStrip } from '@/components/match/AchievementUnlockStrip';
 import type { UserProgression } from '@/lib/domain';
 import { applyXpReward, getMatchXpReward } from '@/lib/domain/matchXp';
 
@@ -445,14 +445,14 @@ export function RealtimeResultsScreen({
                   >
                       <div className="mb-2 flex items-center justify-between">
                         <div className="text-xs font-black uppercase tracking-wide text-brand-green-light md:text-sm">Placement Progress</div>
-                        <div className="text-xs font-black text-[#85E000] md:text-sm">{placementPlayed}/{placementRequired}</div>
+                        <div className="text-xs font-black text-brand-green-bright md:text-sm">{placementPlayed}/{placementRequired}</div>
                       </div>
                       <div className="relative mb-2 h-3 md:h-4 bg-white/10 rounded-full overflow-hidden">
                       <motion.div
                         initial={{ width: `${(Math.max(0, placementPlayed - 1) / placementRequired) * 100}%` }}
                         animate={{ width: `${(placementPlayed / placementRequired) * 100}%` }}
                         transition={{ duration: 0.7, ease: 'easeOut' }}
-                        className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-brand-green-light to-[#85E000]"
+                        className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-brand-green-light to-brand-green-bright"
                       >
                         <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/25 to-transparent h-1/2" />
                       </motion.div>

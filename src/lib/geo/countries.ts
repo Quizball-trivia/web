@@ -1,0 +1,414 @@
+import type { OpponentLocationCandidate } from "./cities";
+
+/**
+ * When the backend gives us a country but no coordinates, this map
+ * decides which city to drop the pin on. Keys are normalized country
+ * slugs (lowercase, underscore-separated) — see COUNTRY_CODE_TO_KEY
+ * and COUNTRY_ALIASES for the input formats we accept.
+ */
+export const COUNTRY_LOCATION_FALLBACKS: Record<string, OpponentLocationCandidate> = {
+  usa: { lon: -104.99, lat: 39.74, city: "Denver", country: "USA", flag: "🇺🇸" },
+  mexico: {
+    lon: -99.1,
+    lat: 19.4,
+    city: "Mexico City",
+    country: "Mexico",
+    flag: "🇲🇽",
+  },
+  brazil: {
+    lon: -47.88,
+    lat: -15.79,
+    city: "Brasilia",
+    country: "Brazil",
+    flag: "🇧🇷",
+  },
+  uk: { lon: -1.9, lat: 52.5, city: "Birmingham", country: "UK", flag: "🇬🇧" },
+  france: {
+    lon: 4.83,
+    lat: 45.76,
+    city: "Lyon",
+    country: "France",
+    flag: "🇫🇷",
+  },
+  germany: {
+    lon: 11.58,
+    lat: 48.14,
+    city: "Munich",
+    country: "Germany",
+    flag: "🇩🇪",
+  },
+  turkey: {
+    lon: 32.86,
+    lat: 39.93,
+    city: "Ankara",
+    country: "Turkey",
+    flag: "🇹🇷",
+  },
+  saudi_arabia: {
+    lon: 46.71,
+    lat: 24.71,
+    city: "Riyadh",
+    country: "Saudi Arabia",
+    flag: "🇸🇦",
+  },
+  india: {
+    lon: 77.21,
+    lat: 28.61,
+    city: "Delhi",
+    country: "India",
+    flag: "🇮🇳",
+  },
+  thailand: {
+    lon: 98.98,
+    lat: 18.79,
+    city: "Chiang Mai",
+    country: "Thailand",
+    flag: "🇹🇭",
+  },
+  china: {
+    lon: 104.06,
+    lat: 30.67,
+    city: "Chengdu",
+    country: "China",
+    flag: "🇨🇳",
+  },
+  japan: {
+    lon: 141.35,
+    lat: 43.06,
+    city: "Sapporo",
+    country: "Japan",
+    flag: "🇯🇵",
+  },
+  australia: {
+    lon: 133.88,
+    lat: -23.7,
+    city: "Alice Springs",
+    country: "Australia",
+    flag: "🇦🇺",
+  },
+  kenya: {
+    lon: 36.82,
+    lat: -1.29,
+    city: "Nairobi",
+    country: "Kenya",
+    flag: "🇰🇪",
+  },
+  nigeria: {
+    lon: 7.49,
+    lat: 9.06,
+    city: "Abuja",
+    country: "Nigeria",
+    flag: "🇳🇬",
+  },
+  argentina: {
+    lon: -64.19,
+    lat: -31.42,
+    city: "Cordoba",
+    country: "Argentina",
+    flag: "🇦🇷",
+  },
+  spain: {
+    lon: -3.7,
+    lat: 40.42,
+    city: "Madrid",
+    country: "Spain",
+    flag: "🇪🇸",
+  },
+  italy: { lon: 12.5, lat: 41.9, city: "Rome", country: "Italy", flag: "🇮🇹" },
+  portugal: {
+    lon: -8.62,
+    lat: 41.16,
+    city: "Porto",
+    country: "Portugal",
+    flag: "🇵🇹",
+  },
+  netherlands: {
+    lon: 5.12,
+    lat: 52.09,
+    city: "Utrecht",
+    country: "Netherlands",
+    flag: "🇳🇱",
+  },
+  russia: {
+    lon: 37.62,
+    lat: 55.75,
+    city: "Moscow",
+    country: "Russia",
+    flag: "🇷🇺",
+  },
+  canada: {
+    lon: -113.49,
+    lat: 53.55,
+    city: "Edmonton",
+    country: "Canada",
+    flag: "🇨🇦",
+  },
+  georgia: {
+    lon: 44.79,
+    lat: 41.72,
+    city: "Tbilisi",
+    country: "Georgia",
+    flag: "🇬🇪",
+  },
+};
+
+/**
+ * ISO-3166-1 alpha-2 codes (plus a couple of legacy variants the API
+ * still emits) mapped to our internal country slug.
+ */
+export const COUNTRY_CODE_TO_KEY: Record<string, string> = {
+  US: "usa",
+  MX: "mexico",
+  BR: "brazil",
+  GB: "uk",
+  UK: "uk",
+  FR: "france",
+  DE: "germany",
+  TR: "turkey",
+  SA: "saudi_arabia",
+  IN: "india",
+  TH: "thailand",
+  CN: "china",
+  JP: "japan",
+  AU: "australia",
+  KE: "kenya",
+  NG: "nigeria",
+  AR: "argentina",
+  ES: "spain",
+  IT: "italy",
+  PT: "portugal",
+  NL: "netherlands",
+  RU: "russia",
+  CA: "canada",
+  GE: "georgia",
+};
+
+/**
+ * Free-text variants of each country we accept — used after lowercasing
+ * + stripping punctuation. Flag emojis are included so payloads with
+ * just an emoji still resolve to the right country.
+ */
+export const COUNTRY_ALIASES: Record<string, string[]> = {
+  usa: [
+    "usa",
+    "united states",
+    "united states of america",
+    "america",
+    "u s a",
+    "🇺🇸",
+  ],
+  mexico: ["mexico", "mexican", "🇲🇽"],
+  brazil: ["brazil", "brasil", "🇧🇷"],
+  uk: ["uk", "united kingdom", "britain", "england", "🇬🇧"],
+  france: ["france", "french", "🇫🇷"],
+  germany: ["germany", "german", "deutschland", "🇩🇪"],
+  turkey: ["turkey", "turkiye", "🇹🇷"],
+  saudi_arabia: ["saudi", "saudi arabia", "🇸🇦"],
+  india: ["india", "indian", "🇮🇳"],
+  thailand: ["thailand", "thai", "🇹🇭"],
+  china: ["china", "chinese", "🇨🇳"],
+  japan: ["japan", "japanese", "🇯🇵"],
+  australia: ["australia", "australian", "🇦🇺"],
+  kenya: ["kenya", "kenyan", "🇰🇪"],
+  nigeria: ["nigeria", "nigerian", "🇳🇬"],
+  argentina: ["argentina", "argentinian", "🇦🇷"],
+  spain: ["spain", "spanish", "espana", "🇪🇸"],
+  italy: ["italy", "italian", "italia", "🇮🇹"],
+  portugal: ["portugal", "portuguese", "🇵🇹"],
+  netherlands: ["netherlands", "dutch", "holland", "🇳🇱"],
+  russia: ["russia", "russian", "🇷🇺"],
+  canada: ["canada", "canadian", "🇨🇦"],
+  georgia: ["georgia", "georgian", "sakartvelo", "🇬🇪"],
+};
+
+/**
+ * City-name hints we use to infer a country when the payload only
+ * mentions a city (or includes one alongside the country). Keys are
+ * the country slug; values are city names that strongly imply it.
+ */
+export const CITY_ALIASES: Record<string, string[]> = {
+  usa: [
+    "new york",
+    "nyc",
+    "denver",
+    "chicago",
+    "los angeles",
+    "miami",
+    "seattle",
+    "dallas",
+    "houston",
+    "phoenix",
+    "atlanta",
+    "boston",
+  ],
+  mexico: ["mexico city", "guadalajara", "monterrey"],
+  brazil: ["brasilia", "sao paulo", "rio de janeiro", "rio"],
+  uk: ["london", "birmingham", "manchester", "liverpool"],
+  france: ["paris", "lyon", "marseille"],
+  germany: ["munich", "berlin", "hamburg", "frankfurt"],
+  turkey: ["ankara", "istanbul"],
+  saudi_arabia: ["riyadh", "jeddah"],
+  india: ["delhi", "mumbai", "bangalore", "bengaluru"],
+  thailand: ["chiang mai", "bangkok"],
+  china: ["chengdu", "beijing", "shanghai", "guangzhou"],
+  japan: ["sapporo", "tokyo", "osaka"],
+  australia: ["alice springs", "sydney", "melbourne", "perth"],
+  kenya: ["nairobi"],
+  nigeria: ["abuja", "lagos"],
+  argentina: ["cordoba", "buenos aires"],
+  spain: ["madrid", "barcelona", "valencia"],
+  italy: ["rome", "milan", "naples"],
+  portugal: ["porto", "lisbon"],
+  netherlands: ["utrecht", "amsterdam", "rotterdam"],
+  russia: ["moscow", "saint petersburg"],
+  canada: ["edmonton", "toronto", "vancouver", "montreal"],
+  georgia: ["tbilisi", "batumi", "kutaisi"],
+};
+
+/**
+ * Direct city → coordinate lookups for cases where the country
+ * fallback isn't precise enough. Keys are lowercase city names.
+ */
+export const CITY_LOCATION_OVERRIDES: Record<string, OpponentLocationCandidate> = {
+  "new york": {
+    lon: -74.0,
+    lat: 40.71,
+    city: "New York",
+    country: "USA",
+    flag: "🇺🇸",
+  },
+  denver: {
+    lon: -104.99,
+    lat: 39.74,
+    city: "Denver",
+    country: "USA",
+    flag: "🇺🇸",
+  },
+  chicago: {
+    lon: -87.63,
+    lat: 41.88,
+    city: "Chicago",
+    country: "USA",
+    flag: "🇺🇸",
+  },
+  "los angeles": {
+    lon: -118.24,
+    lat: 34.05,
+    city: "Los Angeles",
+    country: "USA",
+    flag: "🇺🇸",
+  },
+  "mexico city": {
+    lon: -99.1,
+    lat: 19.4,
+    city: "Mexico City",
+    country: "Mexico",
+    flag: "🇲🇽",
+  },
+  brasilia: {
+    lon: -47.88,
+    lat: -15.79,
+    city: "Brasilia",
+    country: "Brazil",
+    flag: "🇧🇷",
+  },
+  birmingham: {
+    lon: -1.9,
+    lat: 52.5,
+    city: "Birmingham",
+    country: "UK",
+    flag: "🇬🇧",
+  },
+  lyon: { lon: 4.83, lat: 45.76, city: "Lyon", country: "France", flag: "🇫🇷" },
+  munich: {
+    lon: 11.58,
+    lat: 48.14,
+    city: "Munich",
+    country: "Germany",
+    flag: "🇩🇪",
+  },
+  ankara: {
+    lon: 32.86,
+    lat: 39.93,
+    city: "Ankara",
+    country: "Turkey",
+    flag: "🇹🇷",
+  },
+  riyadh: {
+    lon: 46.71,
+    lat: 24.71,
+    city: "Riyadh",
+    country: "Saudi Arabia",
+    flag: "🇸🇦",
+  },
+  delhi: {
+    lon: 77.21,
+    lat: 28.61,
+    city: "Delhi",
+    country: "India",
+    flag: "🇮🇳",
+  },
+  "chiang mai": {
+    lon: 98.98,
+    lat: 18.79,
+    city: "Chiang Mai",
+    country: "Thailand",
+    flag: "🇹🇭",
+  },
+  chengdu: {
+    lon: 104.06,
+    lat: 30.67,
+    city: "Chengdu",
+    country: "China",
+    flag: "🇨🇳",
+  },
+  sapporo: {
+    lon: 141.35,
+    lat: 43.06,
+    city: "Sapporo",
+    country: "Japan",
+    flag: "🇯🇵",
+  },
+  nairobi: {
+    lon: 36.82,
+    lat: -1.29,
+    city: "Nairobi",
+    country: "Kenya",
+    flag: "🇰🇪",
+  },
+  abuja: {
+    lon: 7.49,
+    lat: 9.06,
+    city: "Abuja",
+    country: "Nigeria",
+    flag: "🇳🇬",
+  },
+  moscow: {
+    lon: 37.62,
+    lat: 55.75,
+    city: "Moscow",
+    country: "Russia",
+    flag: "🇷🇺",
+  },
+  tbilisi: {
+    lon: 44.79,
+    lat: 41.72,
+    city: "Tbilisi",
+    country: "Georgia",
+    flag: "🇬🇪",
+  },
+  batumi: {
+    lon: 41.64,
+    lat: 41.65,
+    city: "Batumi",
+    country: "Georgia",
+    flag: "🇬🇪",
+  },
+  kutaisi: {
+    lon: 42.7,
+    lat: 42.27,
+    city: "Kutaisi",
+    country: "Georgia",
+    flag: "🇬🇪",
+  },
+};

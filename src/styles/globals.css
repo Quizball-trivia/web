@@ -47,6 +47,7 @@
 
   /* Brand accent palette — neutrals + secondary brand colors. */
   --brand-green-light: 88 98% 40%;  /* #58CC02 — bright lime, success accents */
+  --brand-green-bright: 84 100% 44%; /* #85E000 — placement counter / progress gradient stop */
   --brand-orange: 36 100% 50%;      /* #FF9600 — warm accent / warning */
   --brand-purple: 273 100% 75%;     /* #CE82FF — special-mode accent */
   --brand-gold: 51 100% 50%;        /* #FFD700 — RP / leaderboard highlight */
@@ -64,6 +65,17 @@
   --surface-deep: 197 32% 14%;      /* #131F24 — overlay surface (×68) */
   --surface-darkest: 215 31% 6%;    /* #0D1117 — deepest surface (×5) */
   --surface-input: 207 27% 13%;     /* #17222A — input field bg (×5) */
+  --surface-row-deep: 200 60% 5%;   /* #041217 — recent-matches row body */
+  --surface-map-panel: 213 30% 16%; /* #1C2733 — matchmaking map overlay panel */
+  --surface-map-panel-deep: 212 33% 12%; /* #131C27 — match-found failure card */
+  --surface-mode-card: 120 38% 17%; /* #1A3A1A — mode-card body */
+  --surface-mode-card-hover: 120 33% 20%; /* #224422 — mode-card hover state */
+  --surface-mode-trough: 131 65% 8%; /* #07200C — mode-card progress trough */
+  --surface-mode-trough-deep: 120 45% 11%; /* #0F260F — mode-card trough (deeper) */
+  --surface-tournament-trough: 30 24% 8%; /* #1A1510 — gold-mode trough surface */
+  --surface-tournament-panel-from: 34 48% 11%; /* #2A1F0F — gold-mode panel gradient start */
+  --surface-tournament-panel-via: 35 27% 10%; /* #1F1A12 — gold-mode panel gradient mid */
+  --surface-auth-input: 197 41% 9%; /* #0d1a1f — auth input off-state bg */
 
   /* Brand color shade/tint variants. */
   --brand-green-deep: 102 86% 31%;  /* #2D950B — brand-green hover/active (×6) */
@@ -76,7 +88,14 @@
 
   /* Brand accent variants. */
   --brand-orange-light: 22 100% 62%; /* #FF8A3D — softer orange */
+  --brand-orange-deep: 35 100% 43%; /* #DB8200 — orange button press shadow */
   --brand-gold-deep: 43 89% 38%;    /* #B8860B — darker gold */
+  --brand-gold-press: 40 100% 40%; /* #CC8800 — gold CTA press shadow */
+  --brand-gold-ink: 47 100% 30%;   /* #9A7900 — daily XP pill text */
+  --brand-gold-fill-deep: 53 100% 32%; /* #A18F00 — daily XP bar fill */
+  --brand-red-rust: 15 73% 42%;    /* #B8401D — loss-pill surface */
+  --brand-red-rust-deep: 1 49% 21%; /* #4D1C1B — RP-loss pill surface */
+  --brand-red-soft-deep: 0 60% 52%; /* #CC3E3E — red-soft button press shadow */
   --brand-slate-deep: 197 19% 28%;  /* #3A4F56 — darker slate */
   --brand-slate-light: 200 22% 68%; /* #9CB6C2 — light slate / muted text on dark surfaces */
 
@@ -114,6 +133,7 @@
   --color-brand-yellow: hsl(var(--brand-yellow));
   --color-brand-green: hsl(var(--brand-green));
   --color-brand-green-light: hsl(var(--brand-green-light));
+  --color-brand-green-bright: hsl(var(--brand-green-bright));
   --color-brand-red: hsl(var(--brand-red));
   --color-brand-red-soft: hsl(var(--brand-red-soft));
   --color-brand-cyan: hsl(var(--brand-cyan));
@@ -134,6 +154,17 @@
   --color-surface-deep: hsl(var(--surface-deep));
   --color-surface-darkest: hsl(var(--surface-darkest));
   --color-surface-input: hsl(var(--surface-input));
+  --color-surface-row-deep: hsl(var(--surface-row-deep));
+  --color-surface-map-panel: hsl(var(--surface-map-panel));
+  --color-surface-map-panel-deep: hsl(var(--surface-map-panel-deep));
+  --color-surface-mode-card: hsl(var(--surface-mode-card));
+  --color-surface-mode-card-hover: hsl(var(--surface-mode-card-hover));
+  --color-surface-mode-trough: hsl(var(--surface-mode-trough));
+  --color-surface-mode-trough-deep: hsl(var(--surface-mode-trough-deep));
+  --color-surface-tournament-trough: hsl(var(--surface-tournament-trough));
+  --color-surface-tournament-panel-from: hsl(var(--surface-tournament-panel-from));
+  --color-surface-tournament-panel-via: hsl(var(--surface-tournament-panel-via));
+  --color-surface-auth-input: hsl(var(--surface-auth-input));
 
   /* Brand variants */
   --color-brand-green-deep: hsl(var(--brand-green-deep));
@@ -146,7 +177,14 @@
 
   /* Brand accent variants */
   --color-brand-orange-light: hsl(var(--brand-orange-light));
+  --color-brand-orange-deep: hsl(var(--brand-orange-deep));
   --color-brand-gold-deep: hsl(var(--brand-gold-deep));
+  --color-brand-gold-press: hsl(var(--brand-gold-press));
+  --color-brand-gold-ink: hsl(var(--brand-gold-ink));
+  --color-brand-gold-fill-deep: hsl(var(--brand-gold-fill-deep));
+  --color-brand-red-rust: hsl(var(--brand-red-rust));
+  --color-brand-red-rust-deep: hsl(var(--brand-red-rust-deep));
+  --color-brand-red-soft-deep: hsl(var(--brand-red-soft-deep));
   --color-brand-slate-deep: hsl(var(--brand-slate-deep));
   --color-brand-slate-light: hsl(var(--brand-slate-light));
 

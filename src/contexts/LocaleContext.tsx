@@ -74,10 +74,14 @@ export function LocaleProvider({ children, initialLocale }: LocaleProviderProps)
 
   // Re-sync when the URL locale changes (clicking the EN/KA switcher).
   // Functional updater lets us drop `locale` from the deps — React only
-  // schedules the update when the value actually differs.
+  // schedules the update when the value actually differs. queueMicrotask
+  // defers the dispatch off the effect tick (same pattern as the hydration
+  // effect below) to satisfy the cascading-renders lint rule.
   useEffect(() => {
     if (!pathLocale) return;
-    setLocaleState((prev) => (prev !== pathLocale ? pathLocale : prev));
+    queueMicrotask(() => {
+      setLocaleState((prev) => (prev !== pathLocale ? pathLocale : prev));
+    });
   }, [pathLocale]);
 
   useEffect(() => {

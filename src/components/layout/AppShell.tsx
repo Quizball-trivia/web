@@ -429,7 +429,7 @@ export function AppShell({ children }: AppShellProps) {
                 {/* Coins */}
                 <Link
                   href="/store"
-                  className="flex items-center gap-1 pl-1.5 pr-3.5 py-1 rounded-full bg-brand-yellow hover:bg-[#FFD000] transition-all active:scale-95"
+                  className="flex items-center gap-1 pl-1.5 pr-3.5 py-1 rounded-full bg-brand-yellow hover:bg-brand-yellow-deep transition-all active:scale-95"
                 >
                   <Image
                     src="/assets/coin-1.png"
@@ -838,7 +838,7 @@ export function AppShell({ children }: AppShellProps) {
                   {/* Coins */}
                   <Link
                     href="/store"
-                    className="flex h-8 min-w-[72px] items-center gap-1.5 rounded-full bg-brand-yellow pl-1 pr-3 transition-colors hover:bg-[#FFD000] active:scale-95"
+                    className="flex h-8 min-w-[72px] items-center gap-1.5 rounded-full bg-brand-yellow pl-1 pr-3 transition-colors hover:bg-brand-yellow-deep active:scale-95"
                   >
                     <span className="flex size-6 shrink-0 items-center justify-center">
                       <img src="/assets/coin-1.png" alt="Coins" className="size-6 object-contain" />

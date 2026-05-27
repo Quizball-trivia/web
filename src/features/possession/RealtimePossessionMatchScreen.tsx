@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Volume2, VolumeX } from 'lucide-react';
-import { QuitMatchModal } from '@/features/game/components/QuitMatchModal';
+import { QuitMatchModal } from '@/components/match/QuitMatchModal';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';

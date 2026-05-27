@@ -636,7 +636,7 @@ export function LobbySettings({
         {/* Ranked Sim Info */}
         {mode === 'ranked_sim' && (
           <div className="p-5 rounded-xl bg-brand-orange/10 border-b-[3px] border-brand-orange/20 flex flex-col items-center text-center gap-2">
-            <div className="size-14 rounded-full bg-brand-orange border-4 border-b-[6px] border-[#DB8200] flex items-center justify-center">
+            <div className="size-14 rounded-full bg-brand-orange border-4 border-b-[6px] border-brand-orange-deep flex items-center justify-center">
               <Trophy className="size-7 text-white" strokeWidth={2.5} />
             </div>
             <h4 className="text-base font-black text-brand-orange">{t("friend.rankedSimHeader")}</h4>

@@ -115,8 +115,8 @@ function QuestionKindBadge({ kind }: { kind: LiveSpecialQuestion['kind'] }) {
       style={{ transformOrigin: 'center' }}
     >
       <span
-        className="text-surface-page uppercase whitespace-nowrap"
-        style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 14 }}
+        className="font-poppins text-surface-page uppercase whitespace-nowrap"
+        style={{ fontWeight: 600, fontSize: 14 }}
       >
         {labels[kind]}
       </span>
@@ -188,12 +188,10 @@ function SpecialResultSummary({
         const isOpp = side.label === 'Opp';
         const singleAnswerRound = side.total <= 1;
         const bigStyle = {
-          fontFamily: "'Poppins', sans-serif",
           fontWeight: 700,
           fontSize: 'clamp(22px, 6vw, 36px)',
         } as const;
         const tailStyle = {
-          fontFamily: "'Poppins', sans-serif",
           fontWeight: 500,
           fontSize: 'clamp(11px, 2.5vw, 16px)',
         } as const;
@@ -203,19 +201,19 @@ function SpecialResultSummary({
             <div className={`mt-1 flex items-end gap-1 tabular-nums text-brand-yellow ${isOpp ? 'justify-end' : ''}`}>
               {singleAnswerRound ? (
                 <>
-                  <span className="leading-none" style={bigStyle}>
+                  <span className="font-poppins leading-none" style={bigStyle}>
                     {side.points ?? 0}
                   </span>
-                  <span className="pb-1 leading-none text-brand-yellow/70" style={tailStyle}>
+                  <span className="font-poppins pb-1 leading-none text-brand-yellow/70" style={tailStyle}>
                     {t('possession.pts')}
                   </span>
                 </>
               ) : (
                 <>
-                  <span className="leading-none" style={bigStyle}>
+                  <span className="font-poppins leading-none" style={bigStyle}>
                     {safeCount == null ? '-' : safeCount}
                   </span>
-                  <span className="pb-1 leading-none text-brand-yellow/70" style={tailStyle}>
+                  <span className="font-poppins pb-1 leading-none text-brand-yellow/70" style={tailStyle}>
                     /{safeTotal}
                   </span>
                 </>
@@ -225,9 +223,8 @@ function SpecialResultSummary({
               <p className="truncate text-[10px] font-fun font-black uppercase text-white/50">{side.detail}</p>
               {!singleAnswerRound && pointsText && (
                 <span
-                  className="shrink-0 tabular-nums text-brand-yellow"
+                  className="font-poppins shrink-0 tabular-nums text-brand-yellow"
                   style={{
-                    fontFamily: "'Poppins', sans-serif",
                     fontWeight: 700,
                     fontSize: 'clamp(15px, 3.5vw, 20px)',
                     letterSpacing: '0.02em',
@@ -473,9 +470,8 @@ function CountdownPanel({
               placeholder={t('possession.typeYourAnswerPlaceholder')}
               disabled={inputLocked}
               aria-label={t('possession.typeYourAnswerAriaLabel')}
-              className="h-14 w-full rounded-[14px] border-none bg-brand-blue px-5 pr-14 text-center text-base uppercase text-white outline-none placeholder:text-white/55 placeholder:uppercase placeholder:tracking-[0.08em] focus:outline-none disabled:opacity-50"
+              className="font-poppins h-14 w-full rounded-[14px] border-none bg-brand-blue px-5 pr-14 text-center text-base uppercase text-white outline-none placeholder:text-white/55 placeholder:uppercase placeholder:tracking-[0.08em] focus:outline-none disabled:opacity-50"
               style={{
-                fontFamily: "'Poppins', sans-serif",
                 fontWeight: 600,
                 letterSpacing: '0.08em',
                 boxShadow: '0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)',
@@ -610,7 +606,7 @@ function SortableItem({
         } ${isDragging ? 'scale-[1.02] shadow-xl' : ''}`}
       >
         <div
-          className={`flex h-14 w-20 shrink-0 items-center justify-center rounded-[30px] text-white sm:h-16 sm:w-24 ${
+          className={`font-poppins flex h-14 w-20 shrink-0 items-center justify-center rounded-[30px] text-white sm:h-16 sm:w-24 ${
             isRevealed
               ? isCorrect
                 ? 'bg-brand-green shadow-[0_0_10px_rgba(56,182,14,0.35)]'
@@ -618,7 +614,6 @@ function SortableItem({
               : 'bg-brand-green shadow-[0_0_10px_rgba(56,182,14,0.35)]'
           }`}
           style={{
-            fontFamily: "'Poppins', sans-serif",
             fontWeight: 700,
             fontSize: 24,
           }}
@@ -1359,13 +1354,12 @@ function CluesPanel({
                   )}
                 </div>
                 <span
-                  className={`inline-flex shrink-0 items-center justify-center rounded-[20px] border-[2px] border-brand-green tabular-nums ${
+                  className={`font-poppins inline-flex shrink-0 items-center justify-center rounded-[20px] border-[2px] border-brand-green tabular-nums ${
                     revealed
                       ? 'bg-brand-green text-white shadow-[0_0_10px_rgba(56,182,14,0.35)]'
                       : 'bg-surface-page text-brand-green'
                   }`}
                   style={{
-                    fontFamily: "'Poppins', sans-serif",
                     fontWeight: 600,
                     fontSize: 18,
                     letterSpacing: '0.02em',
@@ -1419,9 +1413,8 @@ function CluesPanel({
               disabled={inputLocked}
               autoFocus
               aria-label={t('possession.typeYourAnswerAriaLabel')}
-              className="h-14 w-full rounded-[20px] border-none bg-brand-blue px-5 text-center text-base uppercase text-white outline-none placeholder:text-white/55 placeholder:uppercase placeholder:tracking-[0.08em] focus:outline-none disabled:opacity-50"
+              className="font-poppins h-14 w-full rounded-[20px] border-none bg-brand-blue px-5 text-center text-base uppercase text-white outline-none placeholder:text-white/55 placeholder:uppercase placeholder:tracking-[0.08em] focus:outline-none disabled:opacity-50"
               style={{
-                fontFamily: "'Poppins', sans-serif",
                 fontWeight: 600,
                 letterSpacing: '0.08em',
                 boxShadow: '0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)',
@@ -1434,9 +1427,8 @@ function CluesPanel({
               onClick={() => emitGuess()}
               disabled={!guess.trim() || inputLocked}
               aria-label={t('possession.submitAnswer')}
-              className="h-14 rounded-[20px] bg-brand-green text-white outline-none transition-colors hover:bg-brand-green-deep disabled:cursor-not-allowed disabled:opacity-40"
+              className="font-poppins h-14 rounded-[20px] bg-brand-green text-white outline-none transition-colors hover:bg-brand-green-deep disabled:cursor-not-allowed disabled:opacity-40"
               style={{
-                fontFamily: "'Poppins', sans-serif",
                 fontWeight: 600,
                 fontSize: 16,
                 letterSpacing: '0.06em',
@@ -1450,9 +1442,8 @@ function CluesPanel({
               onClick={() => emitGuess({ giveUp: true })}
               disabled={inputLocked}
               aria-label={t('possession.giveUp')}
-              className="h-14 rounded-[20px] bg-brand-red-soft text-white outline-none transition-colors hover:bg-brand-red-deep disabled:opacity-40"
+              className="font-poppins h-14 rounded-[20px] bg-brand-red-soft text-white outline-none transition-colors hover:bg-brand-red-deep disabled:opacity-40"
               style={{
-                fontFamily: "'Poppins', sans-serif",
                 fontWeight: 600,
                 fontSize: 16,
                 letterSpacing: '0.06em',
@@ -1553,14 +1544,14 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
       {!roundResolved && (
         <div className="mt-1.5 mb-2 flex items-stretch gap-2.5">
           <div
-            className="flex flex-1 items-center justify-center rounded-[16px] bg-brand-blue px-5 text-white h-[40px] sm:h-[52px] md:h-[62px] lg:h-[72px]"
-            style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
+            className="font-poppins flex flex-1 items-center justify-center rounded-[16px] bg-brand-blue px-5 text-white h-[40px] sm:h-[52px] md:h-[62px] lg:h-[72px]"
+            style={{ fontWeight: 600, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
           >
             QUESTION {displayQuestionNum}/{totalQuestions}
           </div>
           <div
-            className="flex w-[64px] items-center justify-center rounded-[16px] bg-brand-blue text-white h-[40px] sm:h-[52px] sm:w-[92px] md:h-[62px] md:w-[116px] lg:h-[72px] lg:w-[136px] tabular-nums"
-            style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
+            className="font-poppins flex w-[64px] items-center justify-center rounded-[16px] bg-brand-blue text-white h-[40px] sm:h-[52px] sm:w-[92px] md:h-[62px] md:w-[116px] lg:h-[72px] lg:w-[136px] tabular-nums"
+            style={{ fontWeight: 600, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
             aria-label={t('possession.timeRemaining')}
           >
             {timerLabel}

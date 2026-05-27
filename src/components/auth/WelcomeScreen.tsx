@@ -372,10 +372,12 @@ export function WelcomeScreen() {
       name: shuffledNames[index] ?? fallbackName,
       avatarCustomization: shuffledLoadouts[index] ?? DEMO_AVATAR_LOADOUTS[index % DEMO_AVATAR_LOADOUTS.length],
     });
-    setDemoPlayers({
-      left: make(0, "Mason"),
-      right: make(1, "Thiago"),
-      crowd: [make(2, "Santi"), make(3, "Jamal"), make(4, "Enzo")],
+    queueMicrotask(() => {
+      setDemoPlayers({
+        left: make(0, "Mason"),
+        right: make(1, "Thiago"),
+        crowd: [make(2, "Santi"), make(3, "Jamal"), make(4, "Enzo")],
+      });
     });
   }, []);
 
@@ -1038,7 +1040,7 @@ export function WelcomeScreen() {
                       className={`relative z-10 flex items-center justify-center shrink-0 rounded-full border-2 mb-2 ${
                         isTop
                           ? 'size-14 md:size-16 text-2xl md:text-3xl bg-gradient-to-br from-fuchsia-500/30 to-fuchsia-400/10 border-fuchsia-400/50 shadow-[0_0_20px_rgba(217,70,239,0.3)]'
-                          : 'size-10 md:size-12 text-lg md:text-xl border-white/15 bg-[#0d1a1f]'
+                          : 'size-10 md:size-12 text-lg md:text-xl border-white/15 bg-surface-auth-input'
                       }`}
                     >
                       {visual?.emoji}
