@@ -3,12 +3,11 @@
 import { motion } from 'motion/react';
 
 import { AchievementUnlockStrip } from '@/components/match/AchievementUnlockStrip';
-import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { useLocale } from '@/contexts/LocaleContext';
 
-import { AnimatedCounter } from './results/AnimatedCounter';
 import { MatchStatsDropdown } from './results/ResultsStatsPanel';
 import { RankedProgressionPanel } from './results/RankedProgressionPanel';
+import { ResultsHero } from './results/ResultsHero';
 import type { RealtimeResultsScreenProps } from './results/results.types';
 import { useMatchResultViewModel } from './results/useMatchResultViewModel';
 
@@ -86,115 +85,24 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
         animate={{ scale: 1, opacity: 1 }}
         className="relative z-10 w-full max-w-[1280px] space-y-4 font-poppins md:space-y-6"
       >
-        <div className="pb-2 text-center">
-          <h1
-            className="font-poppins text-[3rem] font-black uppercase tracking-[0] md:text-[3.75rem]"
-            style={{
-              lineHeight: '1.3',
-              color: playerWon ? '#22C55E' : isDraw ? '#FACC15' : '#FB3101',
-            }}
-          >
-            {resultHeading}
-          </h1>
-        </div>
-
-        <div className="mx-auto w-full max-w-[1100px]">
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6">
-            {/* Player (Left) */}
-            <div className="flex items-center gap-3 justify-self-start sm:gap-4">
-              <div className="flex size-24 shrink-0 items-center justify-center">
-                <AvatarDisplay
-                  customization={playerAvatarCustomization ?? { base: playerAvatar }}
-                  size="lg"
-                  shape="square"
-                />
-              </div>
-              <div className="hidden min-w-0 sm:block">
-                <div
-                  className="truncate font-poppins font-semibold uppercase text-white text-base sm:text-lg md:text-xl"
-                >
-                  {playerUsername}
-                </div>
-                {(preMatchRankedProfile?.rp != null || playerTier) && (
-                  <div className="mt-2 flex items-center gap-2">
-                    {preMatchRankedProfile?.rp != null && (
-                      <span
-                        className="inline-flex h-[22px] items-center rounded-[20px] px-3 font-poppins font-semibold uppercase tabular-nums text-[12px] sm:text-[13px] md:text-[15px]"
-                        style={{ backgroundColor: '#FFE500', color: '#071013' }}
-                      >
-                        {preMatchRankedProfile.rp} RP
-                      </span>
-                    )}
-                    {playerTier && (
-                      <span
-                        className="font-poppins font-semibold uppercase text-[12px] sm:text-[13px] md:text-[15px]"
-                        style={{ color: '#FFE500' }}
-                      >
-                        {playerTier}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Center score pill */}
-            <div className="flex flex-col items-center">
-              <div
-                className="flex h-[44px] min-w-[110px] items-center justify-center rounded-[20px] bg-brand-blue px-5 font-poppins font-semibold tabular-nums text-white text-2xl sm:h-[51px] sm:min-w-[133px] sm:px-6 sm:text-[36px]"
-              >
-                <AnimatedCounter from={0} to={playerScore} delay={0.25} />
-                <span className="mx-1 sm:mx-1.5">:</span>
-                <AnimatedCounter from={0} to={opponentScore} delay={0.25} />
-              </div>
-              <div
-                className="mt-2 whitespace-nowrap font-poppins font-semibold uppercase text-white text-xs sm:text-sm md:text-[20px]"
-                style={{ opacity: 0.5 }}
-              >
-                {totalGamesLabel}
-              </div>
-            </div>
-
-            {/* Opponent (Right) */}
-            <div className="flex flex-row-reverse items-center gap-3 justify-self-end sm:gap-4">
-              <div className="flex size-24 shrink-0 items-center justify-center">
-                <AvatarDisplay
-                  customization={opponentAvatarCustomization ?? { base: opponentAvatar }}
-                  size="lg"
-                  className="-scale-x-100"
-                  shape="square"
-                />
-              </div>
-              <div className="hidden min-w-0 text-right sm:block">
-                <div
-                  className="truncate font-poppins font-semibold uppercase text-white text-base sm:text-lg md:text-xl"
-                >
-                  {opponentUsername}
-                </div>
-                {(opponentDisplayRp != null || opponentTier) && (
-                  <div className="mt-2 flex flex-row-reverse items-center gap-2">
-                    {opponentDisplayRp != null && (
-                      <span
-                        className="inline-flex h-[22px] items-center rounded-[20px] px-3 font-poppins font-semibold uppercase tabular-nums text-[12px] sm:text-[13px] md:text-[15px]"
-                        style={{ backgroundColor: '#FFE500', color: '#071013' }}
-                      >
-                        {opponentDisplayRp} RP
-                      </span>
-                    )}
-                    {opponentTier && (
-                      <span
-                        className="font-poppins font-semibold uppercase text-[12px] sm:text-[13px] md:text-[15px]"
-                        style={{ color: '#FFE500' }}
-                      >
-                        {opponentTier}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+        <ResultsHero
+          playerWon={playerWon}
+          isDraw={isDraw}
+          resultHeading={resultHeading}
+          playerUsername={playerUsername}
+          playerAvatar={playerAvatar}
+          playerAvatarCustomization={playerAvatarCustomization}
+          opponentUsername={opponentUsername}
+          opponentAvatar={opponentAvatar}
+          opponentAvatarCustomization={opponentAvatarCustomization}
+          playerScore={playerScore}
+          opponentScore={opponentScore}
+          totalGamesLabel={totalGamesLabel}
+          preMatchRankedProfile={preMatchRankedProfile}
+          playerTier={playerTier}
+          opponentTier={opponentTier}
+          opponentDisplayRp={opponentDisplayRp}
+        />
 
         <RankedProgressionPanel
           matchType={matchType}
