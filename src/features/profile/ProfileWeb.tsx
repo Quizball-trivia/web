@@ -186,7 +186,7 @@ export function ProfileWeb({
   };
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-5 lg:px-6 lg:py-7 space-y-4 lg:space-y-5 font-fun">
+    <div className="container mx-auto max-w-6xl px-4 py-5 lg:px-6 lg:py-7 space-y-4 lg:space-y-5 font-poppins">
 
       {/* ─── 1. Hero ─── */}
       <motion.div
@@ -200,7 +200,7 @@ export function ProfileWeb({
             <button
               type="button"
               onClick={() => setIsAvatarPickerOpen(true)}
-              className="group relative size-36 lg:size-40 rounded-[12px] bg-brand-blue flex items-end justify-center overflow-hidden shrink-0 transition-transform active:translate-y-[2px]"
+              className="group relative size-36 lg:size-40 rounded-[12px] bg-brand-blue flex items-end justify-center overflow-hidden shrink-0"
               aria-label={t("profileScreen.changeAvatar")}
             >
               <AvatarPreview
@@ -245,10 +245,10 @@ export function ProfileWeb({
                     disabled={isUpdating}
                     onKeyDown={(e) => e.key === 'Enter' && handleNameChange()}
                   />
-                  <button onClick={handleNameChange} disabled={isUpdating} className="size-10 rounded-[8px] bg-brand-green flex items-center justify-center text-white active:translate-y-[2px] transition-transform">
+                  <button onClick={handleNameChange} disabled={isUpdating} className="size-10 rounded-[8px] bg-brand-green flex items-center justify-center text-white">
                     <Check className="size-5" />
                   </button>
-                  <button onClick={() => setIsEditingName(false)} disabled={isUpdating} className="size-10 rounded-[8px] bg-white/[0.06] flex items-center justify-center text-white/70 active:translate-y-[2px] transition-transform">
+                  <button onClick={() => setIsEditingName(false)} disabled={isUpdating} className="size-10 rounded-[8px] bg-white/[0.06] flex items-center justify-center text-white/70">
                     <X className="size-5" />
                   </button>
                 </div>
@@ -712,12 +712,12 @@ export function ProfileWeb({
                 className="rounded-[10px] p-5"
                 style={{ backgroundColor: '#1B2F36' }}
               >
-                <h3 className="text-[11px] font-fun font-black uppercase tracking-[0.22em] text-white/45 mb-4">
+                <h3 className="text-[11px] font-poppins font-black uppercase tracking-[0.22em] text-white/45 mb-4">
                   Head to Head
                 </h3>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-fun font-black uppercase tracking-wide text-white">{t("profileScreen.yourWins")}</span>
+                    <span className="text-xs font-poppins font-black uppercase tracking-wide text-white">{t("profileScreen.yourWins")}</span>
                     <span
                       className="text-xl tabular-nums text-brand-green"
                       style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
@@ -726,7 +726,7 @@ export function ProfileWeb({
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-fun font-black uppercase tracking-wide text-white">{t("profileScreen.theirWins")}</span>
+                    <span className="text-xs font-poppins font-black uppercase tracking-wide text-white">{t("profileScreen.theirWins")}</span>
                     <span
                       className="text-xl tabular-nums text-brand-red-soft"
                       style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
@@ -735,7 +735,7 @@ export function ProfileWeb({
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-fun font-black uppercase tracking-wide text-white">{t("profileScreen.draws")}</span>
+                    <span className="text-xs font-poppins font-black uppercase tracking-wide text-white">{t("profileScreen.draws")}</span>
                     <span
                       className="text-xl tabular-nums text-white/55"
                       style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
@@ -745,8 +745,8 @@ export function ProfileWeb({
                   </div>
                   <div className="h-px bg-white/8" />
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-fun font-black uppercase tracking-[0.2em] text-white/40">{t("profileScreen.totalMatches")}</span>
-                    <span className="text-sm font-fun font-black tabular-nums text-white">{headToHead.total}</span>
+                    <span className="text-[10px] font-poppins font-black uppercase tracking-[0.2em] text-white/40">{t("profileScreen.totalMatches")}</span>
+                    <span className="text-sm font-poppins font-black tabular-nums text-white">{headToHead.total}</span>
                   </div>
                 </div>
               </motion.div>
@@ -787,15 +787,15 @@ export function ProfileWeb({
                 </>
               )}
               {!recentMatchesLoading && recentMatchesError && (
-                <div className="p-4 rounded-[16px] border-2 border-brand-red-soft/40 bg-brand-red-soft/10 text-sm font-fun font-black uppercase tracking-wide text-brand-red-soft">
+                <div className="p-4 rounded-[16px] border-2 border-brand-red-soft/40 bg-brand-red-soft/10 text-sm font-poppins font-black uppercase tracking-wide text-brand-red-soft">
                   {recentMatchesError}
                 </div>
               )}
               {!recentMatchesLoading && !recentMatchesError && recentMatches.length === 0 && (
                 <div className="p-6 text-center rounded-[16px] border-2 border-brand-slate-deep bg-[#041217]">
                   <div className="text-2xl mb-2">⚽</div>
-                  <div className="text-sm font-fun font-black uppercase tracking-wide text-white/55">No recent matches yet.</div>
-                  <div className="text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white/30 mt-1">Play a match and it&apos;ll show up here.</div>
+                  <div className="text-sm font-poppins font-black uppercase tracking-wide text-white/55">No recent matches yet.</div>
+                  <div className="text-[10px] font-poppins font-black uppercase tracking-[0.18em] text-white/30 mt-1">Play a match and it&apos;ll show up here.</div>
                 </div>
               )}
               {!recentMatchesLoading && !recentMatchesError && visibleMatches.map((match, index) => {
