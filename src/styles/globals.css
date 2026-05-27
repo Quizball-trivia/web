@@ -47,6 +47,7 @@
 
   /* Brand accent palette — neutrals + secondary brand colors. */
   --brand-green-light: 88 98% 40%;  /* #58CC02 — bright lime, success accents */
+  --brand-green-bright: 84 100% 44%; /* #85E000 — placement counter / progress gradient stop */
   --brand-orange: 36 100% 50%;      /* #FF9600 — warm accent / warning */
   --brand-purple: 273 100% 75%;     /* #CE82FF — special-mode accent */
   --brand-gold: 51 100% 50%;        /* #FFD700 — RP / leaderboard highlight */
@@ -74,6 +75,7 @@
   --surface-tournament-trough: 30 24% 8%; /* #1A1510 — gold-mode trough surface */
   --surface-tournament-panel-from: 34 48% 11%; /* #2A1F0F — gold-mode panel gradient start */
   --surface-tournament-panel-via: 35 27% 10%; /* #1F1A12 — gold-mode panel gradient mid */
+  --surface-auth-input: 197 41% 9%; /* #0d1a1f — auth input off-state bg */
 
   /* Brand color shade/tint variants. */
   --brand-green-deep: 102 86% 31%;  /* #2D950B — brand-green hover/active (×6) */
@@ -131,6 +133,7 @@
   --color-brand-yellow: hsl(var(--brand-yellow));
   --color-brand-green: hsl(var(--brand-green));
   --color-brand-green-light: hsl(var(--brand-green-light));
+  --color-brand-green-bright: hsl(var(--brand-green-bright));
   --color-brand-red: hsl(var(--brand-red));
   --color-brand-red-soft: hsl(var(--brand-red-soft));
   --color-brand-cyan: hsl(var(--brand-cyan));
@@ -161,6 +164,7 @@
   --color-surface-tournament-trough: hsl(var(--surface-tournament-trough));
   --color-surface-tournament-panel-from: hsl(var(--surface-tournament-panel-from));
   --color-surface-tournament-panel-via: hsl(var(--surface-tournament-panel-via));
+  --color-surface-auth-input: hsl(var(--surface-auth-input));
 
   /* Brand variants */
   --color-brand-green-deep: hsl(var(--brand-green-deep));

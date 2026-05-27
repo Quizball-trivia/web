@@ -260,7 +260,7 @@ export function GameHubScreen() {
                     initial={{ width: 0 }}
                     animate={{ width: `${eventPercent}%` }}
                     transition={{ duration: 1, ease: 'easeOut', delay: 0.3 }}
-                    className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-brand-green-light to-[#85E000]"
+                    className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-brand-green-light to-brand-green-bright"
                   >
                     <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/30 to-transparent h-1/2" />
                   </motion.div>

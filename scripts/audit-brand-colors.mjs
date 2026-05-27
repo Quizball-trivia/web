@@ -155,6 +155,8 @@ export const KNOWN_TOKENS = new Map([
   ['b8401d', 'brand-red-rust'],
   ['4d1c1b', 'brand-red-rust-deep'],
   ['cc3e3e', 'brand-red-soft-deep'],
+  ['85e000', 'brand-green-bright'],
+  ['0d1a1f', 'surface-auth-input'],
 ]);
 
 const SKIP_DIRS = new Set(['node_modules', '.next', 'dist', '.git', 'public', '.turbo']);
