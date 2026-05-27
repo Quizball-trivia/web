@@ -3,9 +3,6 @@ import { logger } from '@/utils/logger';
 import {
   trackMatchStarted,
   trackMatchCompleted,
-  trackMatchDisconnected,
-  trackMatchReconnected,
-  trackMatchForfeit,
   trackAnswerSubmitted,
 } from '@/lib/analytics/game-events';
 import type {
@@ -16,10 +13,7 @@ import type {
   MatchCountdownGuessAckPayload,
   MatchOpponentCountdownProgressPayload,
   MatchFinalResultsPayload,
-  MatchForfeitPendingPayload,
   MatchPartyStatePayload,
-  DraftOpponentDisconnectedPayload,
-  MatchRejoinAvailablePayload,
   MatchParticipant,
   MatchStatePayload,
   ResolvedMatchQuestionPayload,
@@ -55,6 +49,7 @@ import {
   shouldClearLobbyOnSessionChange,
   shouldClearQuestionOnStateChange,
 } from './realtime-match/reducers';
+import { createPresenceSlice, presenceInitialState } from './realtime-match/presence.slice';
 
 // Re-export public types so existing consumer imports keep resolving
 // (`import type { MatchStatus, DraftStatus, ... } from '@/stores/realtimeMatch.store'`).
@@ -85,21 +80,16 @@ const initialState = {
   onlineUsers: null,
   sessionState: null,
   selfUserId: null,
-  matchPaused: false,
-  pauseUntil: null,
-  pausedAt: null,
-  remainingReconnects: null,
-  draftPaused: false,
-  draftPauseUntil: null,
-  draftDisconnectedUserId: null,
-  rejoinMatch: null,
-  forfeitPending: null,
+  ...presenceInitialState,
   devPossessionAnimation: null,
   error: null,
 };
 
-export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
+export const useRealtimeMatchStore = create<RealtimeState>()((...args) => {
+  const [set] = args;
+  return {
   ...initialState,
+  ...createPresenceSlice(...args),
   setSelfUserId: (userId) => {
     logger.info('Realtime store set self user id', { selfUserId: userId });
     set({ selfUserId: userId });
@@ -858,113 +848,6 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
       };
     });
   },
-  setForfeitPending: (payload) => {
-    logger.info('Realtime store set forfeit pending', {
-      matchId: payload.matchId,
-      reason: payload.reason,
-    });
-    try {
-      trackMatchForfeit(payload.matchId, payload.reason ?? 'unknown');
-    } catch {
-      /* analytics best-effort */
-    }
-    set({
-      forfeitPending: {
-        ...payload,
-        createdAt: Date.now(),
-      },
-      matchPaused: false,
-      pauseUntil: null,
-      pausedAt: null,
-      remainingReconnects: null,
-      rejoinMatch: null,
-    });
-  },
-  clearForfeitPending: () => {
-    logger.info('Realtime store clear forfeit pending');
-    set({ forfeitPending: null });
-  },
-  setMatchPaused: ({ graceMs, remainingReconnects }) => {
-    logger.info('Realtime store set match paused', { graceMs, remainingReconnects });
-    set((state) => {
-      try {
-        if (state.match) {
-          trackMatchDisconnected(state.match.matchId, 0, state.match.currentQuestionPhase ?? undefined);
-        }
-      } catch {
-        /* analytics best-effort */
-      }
-      return {
-        matchPaused: true,
-        pauseUntil: Date.now() + graceMs,
-        pausedAt: Date.now(),
-        remainingReconnects,
-      };
-    });
-  },
-  clearMatchPaused: () => {
-    logger.info('Realtime store clear match paused');
-    set((state) => {
-      try {
-        if (state.match && state.matchPaused && state.pausedAt) {
-          const downtimeSec = Math.max(0, Math.round((Date.now() - state.pausedAt) / 1000));
-          trackMatchReconnected(state.match.matchId, downtimeSec);
-        }
-      } catch {
-        /* analytics best-effort */
-      }
-      return {
-        matchPaused: false,
-        pauseUntil: null,
-        pausedAt: null,
-        remainingReconnects: null,
-      };
-    });
-  },
-  setDraftPaused: ({ lobbyId, opponentId, graceMs }) => {
-    logger.info('Realtime store set draft paused', { lobbyId, opponentId, graceMs });
-    set((state) => {
-      if (state.draft?.lobbyId !== lobbyId && state.lobby?.lobbyId !== lobbyId) return state;
-      return {
-        ...state,
-        draftPaused: true,
-        draftPauseUntil: Date.now() + graceMs,
-        draftDisconnectedUserId: opponentId,
-      };
-    });
-  },
-  clearDraftPaused: () => {
-    logger.info('Realtime store clear draft paused');
-    set({
-      draftPaused: false,
-      draftPauseUntil: null,
-      draftDisconnectedUserId: null,
-    });
-  },
-  setRejoinAvailable: (payload) => {
-    logger.info('Realtime store set rejoin available', {
-      matchId: payload.matchId,
-      mode: payload.mode,
-      graceMs: payload.graceMs,
-      remainingReconnects: payload.remainingReconnects,
-    });
-    set({
-      rejoinMatch: {
-        matchId: payload.matchId,
-        mode: payload.mode,
-        variant: payload.variant,
-        opponent: payload.opponent,
-        participants: payload.participants,
-        graceMs: payload.graceMs,
-        remainingReconnects: payload.remainingReconnects,
-        createdAt: Date.now(),
-      },
-    });
-  },
-  clearRejoinAvailable: () => {
-    logger.info('Realtime store clear rejoin available');
-    set({ rejoinMatch: null });
-  },
   setOnlineUsers: (data) => {
     logger.info('Realtime store set online users', { onlineUsers: data.onlineUsers });
     set({ onlineUsers: data.onlineUsers });
@@ -1044,4 +927,5 @@ export const useRealtimeMatchStore = create<RealtimeState>((set) => ({
     // Keep identity across UI resets so round-result mapping remains stable.
     set((state) => ({ ...initialState, selfUserId: state.selfUserId }));
   },
-}));
+  };
+});
