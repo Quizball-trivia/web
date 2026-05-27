@@ -6,17 +6,12 @@ import { AnimatePresence, motion } from 'motion/react';
 
 import { cn } from '@/lib/utils';
 import { useHeadToHead } from '@/lib/queries/stats.queries';
-import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
-import type { AchievementUnlockPayload, RankedMatchOutcomePayload } from '@/lib/realtime/socket.types';
 import { AchievementUnlockStrip } from '@/components/match/AchievementUnlockStrip';
-import type { UserProgression } from '@/lib/domain';
 import { applyXpReward, getMatchXpReward } from '@/lib/domain/matchXp';
-
 import { getTierVisual } from '@/utils/tierVisuals';
 import { getRankedTierProgress, getNextTierBand, tierFromRp } from '@/utils/rankedTier';
 import { trackMatchResultsViewed, trackDivisionPromoted, trackLevelUp } from '@/lib/analytics/game-events';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
-import type { AvatarCustomization } from '@/types/game';
 import { logger } from '@/utils/logger';
 import { useLocale } from '@/contexts/LocaleContext';
 
@@ -85,35 +80,7 @@ function AnimatedCounterInner({
   );
 }
 
-interface RealtimeResultsScreenProps {
-  matchType: 'ranked' | 'friendly';
-  playerUsername: string;
-  playerAvatar: string;
-  playerAvatarCustomization?: AvatarCustomization | null;
-  opponentUsername: string;
-  opponentAvatar: string;
-  opponentAvatarCustomization?: AvatarCustomization | null;
-  playerScore: number;
-  opponentScore: number;
-  playerCorrect: number;
-  opponentCorrect: number;
-  totalQuestions: number;
-  /** Per-question outcome arrays (length === totalQuestions). `null` = unanswered. */
-  playerQuestionResults?: Array<'correct' | 'wrong' | null>;
-  opponentQuestionResults?: Array<'correct' | 'wrong' | null>;
-  selfUserId: string;
-  finalWinnerId?: string | null;
-  winnerDecisionMethod?: 'goals' | 'penalty_goals' | 'total_points' | 'total_points_fallback' | 'forfeit' | null;
-  preMatchRp?: number;
-  opponentId: string;
-  opponentRankPoints?: number | null;
-  rankedOutcome?: RankedMatchOutcomePayload | null;
-  preMatchRankedProfile?: RankedProfileResponse | null;
-  preMatchProgression?: UserProgression | null;
-  unlockedAchievements?: AchievementUnlockPayload[];
-  onPlayAgain: () => void;
-  onMainMenu: () => void;
-}
+import type { RealtimeResultsScreenProps } from './results/results.types';
 
 export function RealtimeResultsScreen({
   matchType,
