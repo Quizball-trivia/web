@@ -134,6 +134,27 @@ export const KNOWN_TOKENS = new Map([
   ['9fb1c3', 'brand-slate-light'],
   ['b9c7cd', 'brand-slate-light'],
   ['8fa3b8', 'brand-slate-light'],
+
+  // Surface tokens added for the #13 cleanup
+  ['041217', 'surface-row-deep'],
+  ['1c2733', 'surface-map-panel'],
+  ['131c27', 'surface-map-panel-deep'],
+  ['1a3a1a', 'surface-mode-card'],
+  ['224422', 'surface-mode-card-hover'],
+  ['07200c', 'surface-mode-trough'],
+  ['0f260f', 'surface-mode-trough-deep'],
+  ['1a1510', 'surface-tournament-trough'],
+  ['2a1f0f', 'surface-tournament-panel-from'],
+  ['1f1a12', 'surface-tournament-panel-via'],
+
+  // Brand variant tokens added for the #13 cleanup
+  ['db8200', 'brand-orange-deep'],
+  ['cc8800', 'brand-gold-press'],
+  ['9a7900', 'brand-gold-ink'],
+  ['a18f00', 'brand-gold-fill-deep'],
+  ['b8401d', 'brand-red-rust'],
+  ['4d1c1b', 'brand-red-rust-deep'],
+  ['cc3e3e', 'brand-red-soft-deep'],
 ]);
 
 const SKIP_DIRS = new Set(['node_modules', '.next', 'dist', '.git', 'public', '.turbo']);

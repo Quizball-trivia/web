@@ -85,7 +85,7 @@ function ChallengeCard({
             : "Completed today. Come back after the UTC reset."}
         </p>
         <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 lg:hidden">
-          <span className="inline-flex h-6 items-center gap-1 rounded-full bg-white/70 px-2.5 text-[10px] font-black text-[#9A7900]">
+          <span className="inline-flex h-6 items-center gap-1 rounded-full bg-white/70 px-2.5 text-[10px] font-black text-brand-gold-ink">
             {challenge.coinReward}
             <Image src="/assets/coin-1.png" alt="" width={16} height={16} className="size-4 object-contain" />
           </span>
@@ -172,7 +172,7 @@ export default function DailyChallengesPage() {
               <p className="inline-block whitespace-nowrap font-poppins text-sm md:text-[0.95rem] font-semibold uppercase leading-none tracking-[-0.02em] text-white">
                 Today&apos;s Progress
               </p>
-              <div className="mt-3 h-[18px] w-[15ch] max-w-full overflow-hidden rounded-[5px] bg-[#A18F00]">
+              <div className="mt-3 h-[18px] w-[15ch] max-w-full overflow-hidden rounded-[5px] bg-brand-gold-fill-deep">
                 <div
                   className="h-full rounded-[5px] bg-brand-yellow transition-all duration-500"
                   style={{ width: `${progressPct}%` }}
@@ -221,7 +221,7 @@ export default function DailyChallengesPage() {
             <p className="font-poppins text-[8px] font-black uppercase tracking-[0.12em] text-white">
               Today&apos;s Progress
             </p>
-            <div className="mt-2 h-[7px] w-[74px] overflow-hidden rounded-full bg-[#A18F00]">
+            <div className="mt-2 h-[7px] w-[74px] overflow-hidden rounded-full bg-brand-gold-fill-deep">
               <div
                 className="h-full rounded-full bg-brand-yellow transition-all duration-500"
                 style={{ width: `${progressPct}%` }}

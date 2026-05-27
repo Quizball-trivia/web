@@ -183,7 +183,7 @@ export function GameHubScreen() {
             </button>
           </div>
 
-          <div className="bg-gradient-to-br from-[#2A1F0F] via-[#1F1A12] to-[#1A1510] rounded-3xl border-4 border-brand-gold-deep overflow-hidden relative">
+          <div className="bg-gradient-to-br from-surface-tournament-panel-from via-surface-tournament-panel-via to-surface-tournament-trough rounded-3xl border-4 border-brand-gold-deep overflow-hidden relative">
             {/* Decorative gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-r from-brand-gold/5 via-transparent to-brand-gold/5 opacity-30" />
 
@@ -255,7 +255,7 @@ export function GameHubScreen() {
                   </span>
                 </div>
 
-                <div className="relative h-3 bg-[#1A1510] rounded-full overflow-hidden border border-brand-gold-deep/20">
+                <div className="relative h-3 bg-surface-tournament-trough rounded-full overflow-hidden border border-brand-gold-deep/20">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${eventPercent}%` }}
@@ -270,7 +270,7 @@ export function GameHubScreen() {
               </div>
 
               {/* CTA Button */}
-              <button className="w-full md:w-auto px-8 py-4 rounded-2xl bg-gradient-to-b from-brand-gold to-brand-orange border-b-4 border-[#CC8800] text-[#1A1510] font-black text-base uppercase hover:from-brand-orange hover:to-brand-gold active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-3 group shadow-lg shadow-brand-gold/20">
+              <button className="w-full md:w-auto px-8 py-4 rounded-2xl bg-gradient-to-b from-brand-gold to-brand-orange border-b-4 border-brand-gold-press text-surface-tournament-trough font-black text-base uppercase hover:from-brand-orange hover:to-brand-gold active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-3 group shadow-lg shadow-brand-gold/20">
                 Continue Quest
                 <div className="flex items-center gap-2">
                   <span className="text-xl">🪙</span>

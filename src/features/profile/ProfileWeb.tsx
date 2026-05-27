@@ -775,7 +775,7 @@ export function ProfileWeb({
               {recentMatchesLoading && (
                 <>
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center gap-3 rounded-[16px] min-h-[58px] md:min-h-[62px] px-4 md:px-5 border-2 border-brand-slate-deep bg-[#041217] animate-pulse">
+                    <div key={i} className="flex items-center gap-3 rounded-[16px] min-h-[58px] md:min-h-[62px] px-4 md:px-5 border-2 border-brand-slate-deep bg-surface-row-deep animate-pulse">
                       <div className="size-8 md:size-10 rounded-full bg-white/10" />
                       <div className="flex-1 space-y-1.5">
                         <div className="h-3.5 w-24 bg-white/10 rounded" />
@@ -792,7 +792,7 @@ export function ProfileWeb({
                 </div>
               )}
               {!recentMatchesLoading && !recentMatchesError && recentMatches.length === 0 && (
-                <div className="p-6 text-center rounded-[16px] border-2 border-brand-slate-deep bg-[#041217]">
+                <div className="p-6 text-center rounded-[16px] border-2 border-brand-slate-deep bg-surface-row-deep">
                   <div className="text-2xl mb-2">⚽</div>
                   <div className="text-sm font-poppins font-black uppercase tracking-wide text-white/55">No recent matches yet.</div>
                   <div className="text-[10px] font-poppins font-black uppercase tracking-[0.18em] text-white/30 mt-1">Play a match and it&apos;ll show up here.</div>
@@ -802,7 +802,7 @@ export function ProfileWeb({
                 const isWin = match.result === 'Win';
                 const isLoss = match.result === 'Loss';
                 const borderColor = isWin ? 'border-brand-green' : isLoss ? 'border-brand-red-deep' : 'border-brand-slate-deep';
-                const rpPillTone = isWin ? 'bg-brand-green-deep text-white' : isLoss ? 'bg-[#B8401D] text-white' : 'bg-brand-slate-deep text-white';
+                const rpPillTone = isWin ? 'bg-brand-green-deep text-white' : isLoss ? 'bg-brand-red-rust text-white' : 'bg-brand-slate-deep text-white';
                 const competitionLabel = match.competition === 'friendly'
                   ? t('profileScreen.modeFriendly')
                   : match.competition === 'placement'
@@ -817,7 +817,7 @@ export function ProfileWeb({
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.05 * index, duration: 0.3 }}
-                    className={`flex items-center gap-3 rounded-[16px] min-h-[58px] md:min-h-[62px] px-4 md:px-5 border-2 bg-[#041217] ${borderColor}`}
+                    className={`flex items-center gap-3 rounded-[16px] min-h-[58px] md:min-h-[62px] px-4 md:px-5 border-2 bg-surface-row-deep ${borderColor}`}
                   >
                     {/* Avatar */}
                     <div className="relative size-8 md:size-10 shrink-0 rounded-full bg-white/20 overflow-hidden flex items-center justify-center">
@@ -856,7 +856,7 @@ export function ProfileWeb({
                         {match.scoreFormatted.badge && (
                           <span className={`rounded-[8px] px-2 py-1 font-poppins text-[9px] md:text-[10px] font-semibold uppercase ${
                             match.scoreFormatted.badgeVariant === 'red'
-                              ? 'bg-[#4D1C1B] text-brand-red-light'
+                              ? 'bg-brand-red-rust-deep text-brand-red-light'
                               : 'bg-white/10 text-white/70'
                           }`}>
                             {match.scoreFormatted.badge}

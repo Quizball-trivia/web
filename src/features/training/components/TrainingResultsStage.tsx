@@ -33,8 +33,8 @@ export function TrainingResultsStage() {
           playerWon
             ? "bg-brand-green-light border-brand-green"
             : isDraw
-              ? "bg-brand-orange border-[#DB8200]"
-              : "bg-brand-red-soft border-[#CC3E3E]"
+              ? "bg-brand-orange border-brand-orange-deep"
+              : "bg-brand-red-soft border-brand-red-soft-deep"
         }`}
       >
         <span className="text-2xl font-black text-white uppercase tracking-wider">

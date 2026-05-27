@@ -1,17 +1,9 @@
 {
   "description": "Files that still contain inline hex Tailwind class strings (bg-[#hex], text-[#hex] etc). Remove a file from this list when you migrate it to brand tokens. New code MUST NOT introduce hex classes — files outside this list are blocked by the audit test.",
   "files": [
-    "src/app/(app)/daily/challenges/page.tsx",
     "src/app/(fullscreen)/ban-page/page.tsx",
     "src/components/auth/WelcomeScreen.tsx",
-    "src/components/shared/HomeRecentMatches.tsx",
-    "src/features/friend/components/LobbySettings.tsx",
     "src/features/game/RealtimeResultsScreen.tsx",
-    "src/components/match/MatchmakingMapScreen.tsx",
-    "src/features/play/ModeSelectionScreen.tsx",
-    "src/features/profile/ProfileWeb.tsx",
-    "src/features/tournaments/GameHubScreen.tsx",
-    "src/features/training/components/TrainingBanningStage.tsx",
-    "src/features/training/components/TrainingResultsStage.tsx"
+    "src/features/tournaments/GameHubScreen.tsx"
   ]
 }

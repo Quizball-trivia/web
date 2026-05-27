@@ -622,7 +622,7 @@ export function MatchmakingMapScreen({
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
         onClick={handleToggleMusicMute}
-        className="absolute top-12 left-4 z-20 size-10 rounded-full bg-[#1C2733]/80 border border-white/10 flex items-center justify-center text-white/60 hover:text-white active:scale-95 transition-all backdrop-blur-sm"
+        className="absolute top-12 left-4 z-20 size-10 rounded-full bg-surface-map-panel/80 border border-white/10 flex items-center justify-center text-white/60 hover:text-white active:scale-95 transition-all backdrop-blur-sm"
         title={musicMuted ? t("matchmaking.unmuteMusic") : t("matchmaking.muteMusic")}
       >
         {musicMuted ? (
@@ -710,7 +710,7 @@ export function MatchmakingMapScreen({
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 1.0, duration: 0.5, ease: "backOut" }}
-                className="w-full max-w-[22rem] mx-auto bg-[#1C2733]/95 backdrop-blur-md rounded-2xl border-b-4 border-surface-darkest p-4 sm:p-5 flex flex-col items-center gap-3 text-center"
+                className="w-full max-w-[22rem] mx-auto bg-surface-map-panel/95 backdrop-blur-md rounded-2xl border-b-4 border-surface-darkest p-4 sm:p-5 flex flex-col items-center gap-3 text-center"
               >
                 {/* Opponent avatar */}
                 <div className="relative">
@@ -725,7 +725,7 @@ export function MatchmakingMapScreen({
                       size="sm"
                     />
                   </motion.div>
-                  <div className="absolute -bottom-0.5 -right-0.5 size-5 rounded-full bg-brand-green-light border-2 border-[#1C2733]" />
+                  <div className="absolute -bottom-0.5 -right-0.5 size-5 rounded-full bg-brand-green-light border-2 border-surface-map-panel" />
                 </div>
 
                 <div className="text-center">
@@ -781,7 +781,7 @@ export function MatchmakingMapScreen({
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15, duration: 0.25 }}
-                  className="w-full max-w-[24rem] rounded-2xl border border-brand-red-soft/25 bg-[#131C27]/92 p-4 text-center shadow-[0_16px_40px_rgba(0,0,0,0.32)]"
+                  className="w-full max-w-[24rem] rounded-2xl border border-brand-red-soft/25 bg-surface-map-panel-deep/92 p-4 text-center shadow-[0_16px_40px_rgba(0,0,0,0.32)]"
                 >
                   <div className="mx-auto mb-2 flex size-10 items-center justify-center rounded-full bg-brand-red-soft/16 text-brand-red-light">
                     <TriangleAlert className="size-5" />
