@@ -1,0 +1,294 @@
+'use client';
+
+/**
+ * Ranked progression UI for the post-match results screen.
+ *
+ * Stacks two distinct ranked-only blocks under the avatar/score row:
+ *
+ *  1. **Placement track** — only while the player is mid-placements. Shows
+ *     a green progress bar and a copy line. On the final placement match
+ *     it flips to a "rank reveal" with the emoji + tier label + RP.
+ *  2. **Tier progress bar** — shown once the player is placed and the
+ *     server returned an RP delta. The big NEW RANK counter animates
+ *     from oldRP → newRP, the Δ chip pops in, and the bar fills /
+ *     resets across tier transitions.
+ *
+ * The private `TierEndMarker` helper renders the yellow polygon + cap on
+ * each end of the bar (Figma "Polygon 1" rotated -180°).
+ */
+
+import { AnimatePresence, motion } from 'motion/react';
+import { cn } from '@/lib/utils';
+import { useLocale } from '@/contexts/LocaleContext';
+import { AnimatedCounter } from './AnimatedCounter';
+import type { MatchResultViewModel } from './useMatchResultViewModel';
+
+type LocaleT = ReturnType<typeof useLocale>['t'];
+
+type RankedFields = Pick<
+  MatchResultViewModel,
+  | 'showRankedRpCard'
+  | 'rpChange'
+  | 'oldRP'
+  | 'newRP'
+  | 'rpTierInfo'
+  | 'oldRpTierInfo'
+  | 'tierChanged'
+  | 'tierPromoted'
+  | 'nextTierBand'
+  | 'isPlacementMatch'
+  | 'placementPlayed'
+  | 'placementRequired'
+  | 'placementMatchesLeft'
+  | 'justPlaced'
+  | 'hasServerReveal'
+  | 'revealTier'
+  | 'revealTierVisual'
+  | 'showRankReveal'
+  | 'tierTransitionPhase'
+>;
+
+export function RankedProgressionPanel({
+  matchType,
+  t,
+  ...vm
+}: RankedFields & {
+  matchType: 'ranked' | 'friendly';
+  t: LocaleT;
+}) {
+  const {
+    showRankedRpCard,
+    rpChange,
+    oldRP,
+    newRP,
+    rpTierInfo,
+    oldRpTierInfo,
+    tierChanged,
+    tierPromoted,
+    nextTierBand,
+    isPlacementMatch,
+    placementPlayed,
+    placementRequired,
+    placementMatchesLeft,
+    justPlaced,
+    hasServerReveal,
+    revealTier,
+    revealTierVisual,
+    showRankReveal,
+    tierTransitionPhase,
+  } = vm;
+
+  return (
+    <>
+      {matchType === 'ranked' && (
+        <>
+          {isPlacementMatch && (
+            <AnimatePresence mode="wait">
+              {!showRankReveal ? (
+                <motion.div
+                  key="placement-progress"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ delay: 0.3 }}
+                  className="border-t border-white/10 pt-3 md:pt-4"
+                >
+                    <div className="mb-2 flex items-center justify-between">
+                      <div className="text-xs font-black uppercase tracking-wide text-brand-green-light md:text-sm">Placement Progress</div>
+                      <div className="text-xs font-black text-brand-green-bright md:text-sm">{placementPlayed}/{placementRequired}</div>
+                    </div>
+                    <div className="relative mb-2 h-3 md:h-4 bg-white/10 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: `${(Math.max(0, placementPlayed - 1) / placementRequired) * 100}%` }}
+                      animate={{ width: `${(placementPlayed / placementRequired) * 100}%` }}
+                      transition={{ duration: 0.7, ease: 'easeOut' }}
+                      className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-brand-green-light to-brand-green-bright"
+                    >
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/25 to-transparent h-1/2" />
+                    </motion.div>
+                  </div>
+                    <div className="text-[11px] font-semibold text-white/60 md:text-xs">
+                    {justPlaced
+                      ? 'Placements complete! Revealing your rank...'
+                      : `Complete placements to unlock your rank. ${placementMatchesLeft} match${placementMatchesLeft === 1 ? '' : 'es'} left.`
+                    }
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="rank-reveal"
+                  initial={{ opacity: 0, scale: 0.6 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ type: 'spring', damping: 12, stiffness: 150 }}
+                  className={cn(
+                    'border-t border-white/10 pt-4 md:pt-6 text-center relative overflow-hidden',
+                    hasServerReveal && revealTierVisual.glow
+                  )}
+                >
+                  {hasServerReveal ? (
+                    <>
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: [0, 0.3, 0.15] }}
+                        transition={{ duration: 1.5 }}
+                        className="absolute inset-0 bg-gradient-to-b from-emerald-500/10 via-emerald-500/5 to-transparent pointer-events-none"
+                      />
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: [0, 1.3, 1] }}
+                        transition={{ duration: 0.6, delay: 0.15 }}
+                        className="mb-2 text-4xl md:text-5xl"
+                      >
+                        {revealTierVisual.emoji}
+                      </motion.div>
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                      >
+                        <div className="mb-1 text-[11px] font-bold uppercase tracking-wider text-white/40 md:text-xs">Your Rank</div>
+                        <div className={cn('text-xl font-black md:text-2xl', revealTierVisual.color)}>{revealTier}</div>
+                        <div className="text-sm font-bold text-white/60 mt-1">{newRP} RP</div>
+                      </motion.div>
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center gap-3 py-2">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+                        className="size-10 rounded-full border-3 border-white/10 border-t-[#58CC02]"
+                      />
+                      <div className="text-xs font-bold text-white/50 md:text-sm">Calculating your rank...</div>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          )}
+
+        </>
+      )}
+
+      {/* ── Tier progress (ranked only) ─────────────────────────────────
+          Top: centred NEW RANK display with the big RP number + Δ chip.
+          Bottom: a flat green progress bar flanked by YELLOW end-cap pegs.
+          Above each peg sits an inverted yellow POLYGON (downward triangle,
+          58×32 per Figma) with the matching tier label centred above the
+          polygon. */}
+      {showRankedRpCard && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mx-auto w-full max-w-[720px] pt-6 md:pt-8"
+        >
+          <div className="flex flex-col items-center text-center">
+            <div
+              className="font-poppins font-semibold uppercase text-white text-[11px] sm:text-[13px] md:text-[14px]"
+              style={{ opacity: 0.6 }}
+            >
+              {t('results.newRank')}
+            </div>
+            <div className="mt-1 flex items-baseline gap-2 sm:gap-3">
+              <span className="font-poppins font-semibold tabular-nums leading-none text-brand-green text-[28px] sm:text-[36px] md:text-[44px]">
+                <AnimatedCounter from={oldRP} to={newRP} delay={0.5} />
+                <span className="ml-1 text-[18px] sm:text-[24px] md:text-[28px]">RP</span>
+              </span>
+              {rpChange !== 0 && (
+                <motion.span
+                  initial={{ opacity: 0, y: -6, scale: 0.6 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ delay: 0.9, type: 'spring', stiffness: 260, damping: 14 }}
+                  className="font-poppins font-semibold leading-none text-[18px] sm:text-[22px] md:text-[26px]"
+                  style={{
+                    color: rpChange > 0 ? '#FFE500' : '#FF4B4B',
+                    textShadow: '0 3px 0 rgba(0,0,0,0.55)',
+                  }}
+                >
+                  {rpChange > 0 ? '+' : ''}{rpChange}
+                </motion.span>
+              )}
+            </div>
+          </div>
+
+          {/* Bar + markers row. Each marker column (label · polygon · cap)
+              is the width of the cap; the polygon and label overflow it
+              horizontally and are centred over the cap. The bar runs
+              cap-to-cap between the two markers. `items-end` aligns the
+              short bar with the bottom of each marker column. */}
+          <div className="mt-6 flex items-end md:mt-8">
+            <TierEndMarker label={rpTierInfo.tier} />
+            <div
+              className="relative h-[18px] flex-1 overflow-hidden md:h-[24px]"
+              style={{ backgroundColor: '#1F5D0E' }}
+            >
+              <motion.div
+                initial={{ width: `${oldRpTierInfo.progress}%` }}
+                animate={{
+                  width: tierChanged && tierTransitionPhase === 'fill'
+                    ? (tierPromoted ? '100%' : '0%')
+                    : `${rpTierInfo.progress}%`,
+                }}
+                transition={tierTransitionPhase === 'settled' && tierChanged
+                  ? { duration: 0.8, ease: 'easeOut' }
+                  : { duration: 1.2, ease: 'easeInOut', delay: 0.5 }
+                }
+                className="absolute inset-y-0 left-0 bg-brand-green"
+              />
+            </div>
+            <TierEndMarker label={nextTierBand?.tier ?? t('results.nextStage')} />
+          </div>
+
+          <div
+            className="mt-3 text-center font-poppins font-semibold uppercase text-white text-[12px] sm:text-[14px] md:text-[16px]"
+            style={{ opacity: 0.55 }}
+          >
+            {rpTierInfo.pointsToNext !== null
+              ? t('results.rpToNextTier', { points: rpTierInfo.pointsToNext })
+              : t('results.maxTierReached')}
+          </div>
+        </motion.div>
+      )}
+    </>
+  );
+}
+
+/**
+ * Tier marker at one end of the rank-progress bar.
+ *
+ * Stacks (top → bottom): tier label · inverted yellow polygon (downward
+ * triangle, Figma "Polygon 1" rotated -180°) · vertical yellow end-cap peg.
+ *
+ * Column width matches the cap width so the cap sits flush with the bar's
+ * end. The polygon and label are wider — they overflow the column
+ * horizontally but stay centred over the cap (so the polygon visually
+ * "points down" at the cap). There's a small gap between polygon and cap
+ * so the polygon hovers rather than touching the cap.
+ */
+function TierEndMarker({ label }: { label: string }) {
+  return (
+    <div
+      className="relative flex flex-shrink-0 flex-col items-center"
+      style={{ width: 'clamp(8px, 1.2vw, 10px)' }}
+    >
+      <span
+        className="whitespace-nowrap font-poppins font-semibold uppercase tracking-wide text-white text-[12px] sm:text-[13px] md:text-[14px]"
+        style={{ opacity: 0.78 }}
+      >
+        {label}
+      </span>
+      <div
+        className="mt-2 bg-brand-yellow"
+        style={{
+          width: 'clamp(26px, 4.2vw, 40px)',
+          height: 'clamp(14px, 2.4vw, 22px)',
+          clipPath: 'polygon(0 0, 100% 0, 50% 100%)',
+        }}
+      />
+      <div
+        className="mt-2 bg-brand-yellow"
+        style={{ width: '100%', height: 'clamp(26px, 4vw, 34px)' }}
+      />
+    </div>
+  );
+}
