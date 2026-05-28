@@ -332,6 +332,8 @@ describe('WelcomeScreen — email signin / signup', () => {
     await waitFor(() => expect(registerMock).toHaveBeenCalledWith({
       email: 'new@example.com',
       password: 'secret',
+      redirect_to: `${window.location.origin}/auth/callback`,
+      locale: 'en',
     }));
     expect(trackSignupStartedMock).toHaveBeenCalledWith('email');
     await waitFor(() => expect(trackSignupCompletedMock).toHaveBeenCalledWith('email'));

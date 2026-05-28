@@ -38,7 +38,7 @@ import type { AuthPanelMode } from './welcome.types';
 import { authErrorMessage } from './welcome.helpers';
 
 export function useWelcomeAuthController() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const bootstrap = useAuthStore((state) => state.bootstrap);
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? '';
 
@@ -173,7 +173,13 @@ export function useWelcomeAuthController() {
       try {
         if (authMode === 'signup') {
           trackSignupStarted('email');
-          const result = await register({ email: authEmail, password: authPassword });
+          const redirectTo = `${window.location.origin}/auth/callback`;
+          const result = await register({
+            email: authEmail,
+            password: authPassword,
+            redirect_to: redirectTo,
+            locale,
+          });
           if (!result.tokensSet) {
             setAuthNotice(t('welcome.checkEmail'));
             return;
@@ -193,7 +199,7 @@ export function useWelcomeAuthController() {
         setAuthSubmitting(false);
       }
     },
-    [authConfirmPassword, authEmail, authMode, authPassword, bootstrap, resetAuthFeedback, resetAuthForm, t],
+    [authConfirmPassword, authEmail, authMode, authPassword, bootstrap, locale, resetAuthFeedback, resetAuthForm, t],
   );
 
   const handlePhoneAuth = useCallback(

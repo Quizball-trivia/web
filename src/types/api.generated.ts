@@ -22,6 +22,10 @@ export interface paths {
                         /** Format: email */
                         email: string;
                         password: string;
+                        /** Format: uri */
+                        redirect_to?: string;
+                        /** @enum {string} */
+                        locale?: "en" | "ka";
                     };
                 };
             };

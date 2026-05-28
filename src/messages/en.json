@@ -497,7 +497,7 @@
     "sendCode": "Send code",
     "verifyCode": "Verify code",
     "passwordMismatch": "Passwords do not match.",
-    "checkEmail": "Check your email to confirm your account, then sign in.",
+    "checkEmail": "If this email can use password sign-up, we sent a confirmation link. If you joined with Google, sign in with Google first.",
     "phoneCodeSent": "We sent a code to your Georgian mobile number.",
     "emailAuthFailed": "Email authentication failed. Please try again.",
     "phoneAuthFailed": "Phone authentication failed. Georgian mobile numbers only for now."
