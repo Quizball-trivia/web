@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
+import { useShallow } from 'zustand/shallow';
+import { useRealtimeMatchStore, type MatchQuestionState } from '@/stores/realtimeMatch.store';
 import { getSocket } from '@/lib/realtime/socket-client';
 import { logger } from '@/utils/logger';
 import { QUESTION_REVEAL_MS } from '@/features/possession/types/possession.types';
@@ -13,6 +14,7 @@ const GOAL_CELEBRATION_EXTRA_MS = GOAL_CELEBRATION_MS; // keep promotion blocked
 const ANSWER_ACK_RETRY_MS = 900;
 const ANSWER_ACK_MAX_RETRIES = 2;
 const SPECIAL_QUESTION_KINDS = new Set(['countdown', 'putInOrder', 'clues']);
+const EMPTY_QUESTIONS: Record<number, MatchQuestionState> = {};
 
 interface UseRealtimeGameLogicOptions {
   /** Extra delay (ms) between hiding options and promoting the next question. Used for round transition overlay. */
@@ -23,7 +25,21 @@ interface UseRealtimeGameLogicOptions {
 
 export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) {
   const { transitionDelayMs = 0, blockReveal = false } = options;
-  const match = useRealtimeMatchStore((state) => state.match);
+  const matchSlice = useRealtimeMatchStore(useShallow((state) => ({
+    matchId: state.match?.matchId ?? null,
+    currentQuestion: state.match?.currentQuestion ?? null,
+    currentQuestionPhase: state.match?.currentQuestionPhase ?? 'reveal',
+    countdownEndsAt: state.match?.countdownEndsAt ?? null,
+    countdownReason: state.match?.countdownReason ?? null,
+    answerAck: state.match?.answerAck ?? null,
+    lastRoundResult: state.match?.lastRoundResult ?? null,
+    opponentAnswered: state.match?.opponentAnswered ?? false,
+    pendingQuestion: state.match?.pendingQuestion ?? null,
+    opponentId: state.match?.opponent.id ?? null,
+    questions: state.match?.questions ?? EMPTY_QUESTIONS,
+    myTotalPoints: state.match?.myTotalPoints ?? 0,
+    oppTotalPoints: state.match?.oppTotalPoints ?? 0,
+  })));
   const selfUserId = useRealtimeMatchStore((state) => state.selfUserId);
   const matchPaused = useRealtimeMatchStore((state) => state.matchPaused);
   const pauseUntil = useRealtimeMatchStore((state) => state.pauseUntil);
@@ -46,10 +62,10 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     matchPausedRef.current = matchPaused;
   }, [matchPaused]);
 
-  const currentQuestion = match?.currentQuestion ?? null;
+  const currentQuestion = matchSlice.currentQuestion;
   const isLastAttackQuestion = currentQuestion?.phaseKind === 'last_attack';
   const currentQuestionIndex = currentQuestion?.qIndex;
-  const questionPhase = match?.currentQuestionPhase ?? 'reveal';
+  const questionPhase = matchSlice.currentQuestionPhase;
   const playableAtMs = currentQuestion?.playableAt
     ? new Date(currentQuestion.playableAt).getTime()
     : null;
@@ -62,8 +78,8 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
   const normalizedQuestionDeadlineAtMs = questionDeadlineAtMs !== null && Number.isFinite(questionDeadlineAtMs)
     ? questionDeadlineAtMs
     : null;
-  const countdownEndsAt = match?.countdownEndsAt ?? null;
-  const countdownReason = match?.countdownReason ?? null;
+  const countdownEndsAt = matchSlice.countdownEndsAt;
+  const countdownReason = matchSlice.countdownReason;
   const countdownRemainingMs = useMemo(() => {
     if (!countdownEndsAt) return 0;
     return Math.max(0, countdownEndsAt - nowMs);
@@ -183,18 +199,18 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     return () => clearInterval(interval);
   }, [currentQuestion, matchPaused, normalizedPlayableAtMs, normalizedQuestionDeadlineAtMs, showOptions, startCountdownActive]);
 
-  const answerAck = match?.answerAck && match.currentQuestion?.qIndex === match.answerAck.qIndex
-    ? match.answerAck
+  const answerAck = matchSlice.answerAck && matchSlice.currentQuestion?.qIndex === matchSlice.answerAck.qIndex
+    ? matchSlice.answerAck
     : null;
 
-  const roundResult = match?.lastRoundResult && match.currentQuestion?.qIndex === match.lastRoundResult.qIndex
-    ? match.lastRoundResult
+  const roundResult = matchSlice.lastRoundResult && matchSlice.currentQuestion?.qIndex === matchSlice.lastRoundResult.qIndex
+    ? matchSlice.lastRoundResult
     : null;
   const isSpecialRound = roundResult?.questionKind
     ? SPECIAL_QUESTION_KINDS.has(roundResult.questionKind)
     : false;
   const roundResultHoldMs = ROUND_RESULT_HOLD_MS + (isSpecialRound ? SPECIAL_RESULT_EXTRA_MS : 0);
-  const opponentAnswered = match?.opponentAnswered ?? false;
+  const opponentAnswered = matchSlice.opponentAnswered;
 
   const roundResolved = Boolean(roundResult);
 
@@ -239,7 +255,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
   // Guarded by ref so we only emit once per resolved qIndex.
   const lastReadyAckQIndexRef = useRef<number | null>(null);
   const resolvedQIndexForAck = roundResult?.qIndex ?? null;
-  const matchIdForAck = match?.matchId ?? null;
+  const matchIdForAck = matchSlice.matchId;
   useEffect(() => {
     if (!transitionElapsed) return;
     if (matchIdForAck === null || resolvedQIndexForAck === null) return;
@@ -259,7 +275,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
   // Handles: (a) non-transition promotes (effectiveDelay=0), (b) post-transition promotes,
   // and (c) late-arriving questions in both cases. The gate stays open (transitionElapsed=true)
   // until the question actually changes, so stragglers are caught immediately.
-  const hasPendingQuestion = Boolean(match?.pendingQuestion);
+  const hasPendingQuestion = Boolean(matchSlice.pendingQuestion);
   useEffect(() => {
     if (!hasPendingQuestion || showOptions || matchPaused || startCountdownActive) return;
     // During transition gap: wait for transition delay to elapse
@@ -271,7 +287,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
   const isAnswered = selectedAnswer !== null || showResult;
   const showOptionsVisible = showOptions && !startCountdownActive;
 
-  const opponentId = match?.opponent.id ?? null;
+  const opponentId = matchSlice.opponentId;
   const myRoundResult = useMemo(() => {
     if (!roundResult) return null;
     if (selfUserId && roundResult.players[selfUserId]) {
@@ -297,23 +313,23 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
   }, [roundResult, selfUserId, opponentId]);
 
   const correctIndex = useMemo(() => {
-    if (!match || !currentQuestion) return undefined;
+    if (!matchSlice.matchId || !currentQuestion) return undefined;
     // Server ships correctIndex on the question payload so the client can
     // show instant tap feedback (Trivia Crack pattern). Server validates
     // selectedIndex independently when scoring — leak is intentional UX.
-    const stored = match.questions[currentQuestion.qIndex]?.correctIndex;
+    const stored = matchSlice.questions[currentQuestion.qIndex]?.correctIndex;
     const currentPayloadCorrectIndex = currentQuestion.correctIndex;
     const revealCorrectIndex = roundResult?.reveal?.kind === 'multipleChoice'
       ? roundResult.reveal.correctIndex
       : undefined;
     return stored ?? currentPayloadCorrectIndex ?? answerAck?.correctIndex ?? revealCorrectIndex;
-  }, [answerAck?.correctIndex, roundResult, match, currentQuestion]);
+  }, [answerAck?.correctIndex, roundResult, matchSlice.matchId, matchSlice.questions, currentQuestion]);
 
-  const playerScore = match?.myTotalPoints ?? 0;
-  const opponentScore = match?.oppTotalPoints ?? 0;
+  const playerScore = matchSlice.myTotalPoints;
+  const opponentScore = matchSlice.oppTotalPoints;
 
   const submitAnswer = (index: number) => {
-    if (!match || !currentQuestion) return;
+    if (!matchSlice.matchId || !currentQuestion) return;
     if (isAnswered) return;
     if (matchPaused) return;
     if (startCountdownActive) return;
@@ -333,7 +349,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     const elapsed = Math.min(maxWindowMs, Math.max(0, now - startedAt));
 
     const payload = {
-      matchId: match.matchId,
+      matchId: matchSlice.matchId,
       qIndex: currentQuestion.qIndex,
       selectedIndex: index,
       timeMs: Math.round(elapsed),
@@ -346,7 +362,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
 
   useEffect(() => {
     if (selectedAnswer === null || selectedAnswerQIndex === undefined) return;
-    if (!match || !currentQuestion) return;
+    if (!matchSlice.matchId || !currentQuestion) return;
     if (selectedAnswerQIndex !== currentQuestion.qIndex) return;
     if (answerAck || roundResult) return;
     if (matchPaused || startCountdownActive) return;
@@ -358,7 +374,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
       }
 
       const latestMatch = useRealtimeMatchStore.getState().match;
-      if (!latestMatch || latestMatch.matchId !== match.matchId) {
+      if (!latestMatch || latestMatch.matchId !== matchSlice.matchId) {
         clearInterval(retryTimer);
         return;
       }
@@ -389,7 +405,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
   }, [
     answerAck,
     currentQuestion,
-    match,
+    matchSlice.matchId,
     matchPaused,
     roundResult,
     selectedAnswer,

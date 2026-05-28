@@ -30,7 +30,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   // Stores
   const lobby = useRealtimeMatchStore((state) => state.lobby);
   const draft = useRealtimeMatchStore((state) => state.draft);
-  const match = useRealtimeMatchStore((state) => state.match);
+  const hasActiveMatch = useRealtimeMatchStore((s) => s.match != null);
   const error = useRealtimeMatchStore((state) => state.error);
   const clearError = useRealtimeMatchStore((state) => state.clearError);
   const pendingLobbyHandoffCode = useRealtimeMatchStore((state) => state.pendingLobbyHandoffCode);
@@ -82,7 +82,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
 
   // 1. Reset local guards after leaving a lobby/match
   useEffect(() => {
-    if (lobby || draft || match) return;
+    if (lobby || draft || hasActiveMatch) return;
     if (leavingRef.current) return;
     startedRef.current = false;
     createdRef.current = false;
@@ -93,7 +93,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
       setIsStartingMatch(false);
     }, 0);
     return () => clearTimeout(stopTimer);
-  }, [clearStartMatchTimeout, lobby, draft, match]);
+  }, [clearStartMatchTimeout, lobby, draft, hasActiveMatch]);
 
   useEffect(() => {
     if (!normalizedRoomCode || pendingLobbyHandoffCode !== normalizedRoomCode) return;
@@ -213,10 +213,10 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   }, [lobby?.lobbyId, lobby?.inviteCode, selfUserId, isHost, lobby]);
 
   useEffect(() => {
-    if (!draft && !match) return;
+    if (!draft && !hasActiveMatch) return;
     clearStartMatchTimeout();
     router.push("/game");
-  }, [clearStartMatchTimeout, draft, match, router]);
+  }, [clearStartMatchTimeout, draft, hasActiveMatch, router]);
 
   useEffect(() => {
     if (!error) return;

@@ -13,6 +13,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useShallow } from 'zustand/shallow';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLocale } from '@/contexts/LocaleContext';
 import { usePlayer } from '@/contexts/PlayerContext';
@@ -44,7 +45,13 @@ export function useAppShellViewModel() {
   const logout = useAuthStore((state) => state.logout);
   const lobby = useRealtimeMatchStore((state) => state.lobby);
   const draft = useRealtimeMatchStore((state) => state.draft);
-  const match = useRealtimeMatchStore((state) => state.match);
+  const matchBanner = useRealtimeMatchStore(useShallow((s) => ({
+    matchId: s.match?.matchId ?? null,
+    mode: s.match?.mode ?? null,
+    variant: s.match?.variant ?? null,
+    opponent: s.match?.opponent ?? null,
+    finalResults: s.match?.finalResults ?? null,
+  })));
   const remainingReconnects = useRealtimeMatchStore((state) => state.remainingReconnects);
   const sessionState = useRealtimeMatchStore((state) => state.sessionState);
   const rejoinMatch = useRealtimeMatchStore((state) => state.rejoinMatch);
@@ -116,25 +123,25 @@ export function useAppShellViewModel() {
         opponent: rejoinMatch.opponent,
         source: 'rejoin' as const,
       }
-    : match && !match.finalResults
+    : matchBanner.matchId && !matchBanner.finalResults
       ? {
-          matchId: match.matchId,
-          mode: match.mode,
-          opponent: match.opponent,
+          matchId: matchBanner.matchId,
+          mode: matchBanner.mode!,
+          opponent: matchBanner.opponent!,
           source: 'active' as const,
         }
       : null;
   const showRejoinBanner = !!activeMatchBanner && !currentPath.startsWith('/game');
-  const completedMatchBanner = match?.finalResults
+  const completedMatchBanner = matchBanner.finalResults
     ? {
-        matchId: match.matchId,
-        mode: match.mode,
-        variant: match.variant,
-        opponent: match.opponent,
+        matchId: matchBanner.matchId!,
+        mode: matchBanner.mode!,
+        variant: matchBanner.variant!,
+        opponent: matchBanner.opponent!,
       }
     : null;
   const showCompletedMatchBanner = !!completedMatchBanner && !currentPath.startsWith('/game');
-  const showForfeitPendingBanner = !!forfeitPending && !match?.finalResults && !currentPath.startsWith('/game');
+  const showForfeitPendingBanner = !!forfeitPending && !matchBanner.finalResults && !currentPath.startsWith('/game');
   const forfeitPendingTitle =
     forfeitPending?.reason === 'opponent_forfeit'
       ? 'Opponent forfeited'
@@ -142,7 +149,7 @@ export function useAppShellViewModel() {
         ? 'Opponent did not reconnect'
         : 'You lost the match';
   const forfeitPendingDescription = forfeitPending?.message ?? 'Finalizing result...';
-  const completedByForfeit = match?.finalResults?.winnerDecisionMethod === 'forfeit';
+  const completedByForfeit = matchBanner.finalResults?.winnerDecisionMethod === 'forfeit';
   const completedPartyQuiz = completedMatchBanner?.variant === 'friendly_party_quiz';
   const rejoinReconnectsLeft = rejoinMatch?.remainingReconnects ?? remainingReconnects ?? 0;
   const lobbyCode = lobby?.inviteCode ?? '';

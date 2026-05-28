@@ -61,6 +61,15 @@ function makeRoundResult(
   };
 }
 
+function matchFieldParams(match: MatchStatus) {
+  return {
+    possessionState: match.possessionState,
+    mySeat: match.mySeat,
+    matchId: match.matchId,
+    variant: match.variant,
+  };
+}
+
 function makeMatch(possessionDiff: number, overrides: Partial<MatchStatus['possessionState']> = {}): MatchStatus {
   return {
     matchId: MATCH_ID,
@@ -135,7 +144,7 @@ describe('usePossessionFieldState', () => {
     };
 
     const { result, rerender } = renderHook((props: { match: MatchStatus }) => usePossessionFieldState({
-      match: props.match,
+      ...matchFieldParams(props.match),
       localQuestion: makeQuestion(0),
       roundResult: null,
       questionPhase: 'playing',
@@ -166,7 +175,7 @@ describe('usePossessionFieldState', () => {
 
   it('resets the field to center when the second half starts', async () => {
     const { result, rerender } = renderHook((props: { match: MatchStatus }) => usePossessionFieldState({
-      match: props.match,
+      ...matchFieldParams(props.match),
       localQuestion: makeQuestion(6),
       roundResult: null,
       questionPhase: 'playing',
@@ -202,7 +211,7 @@ describe('usePossessionFieldState', () => {
       match: MatchStatus;
       roundResult: MatchRoundResultPayload | null;
     }) => usePossessionFieldState({
-      match: props.match,
+      ...matchFieldParams(props.match),
       localQuestion: makeQuestion(5),
       roundResult: props.roundResult,
       questionPhase: 'playing',
@@ -246,7 +255,7 @@ describe('usePossessionFieldState', () => {
       match: MatchStatus;
       roundResult: MatchRoundResultPayload | null;
     }) => usePossessionFieldState({
-      match: props.match,
+      ...matchFieldParams(props.match),
       localQuestion: makeQuestion(5),
       roundResult: props.roundResult,
       questionPhase: 'playing',
@@ -296,7 +305,7 @@ describe('usePossessionFieldState', () => {
       match: MatchStatus;
       roundResult: MatchRoundResultPayload | null;
     }) => usePossessionFieldState({
-      match: props.match,
+      ...matchFieldParams(props.match),
       localQuestion: makeQuestion(5, 'normal', 1),
       roundResult: props.roundResult,
       questionPhase: 'playing',
@@ -347,7 +356,7 @@ describe('usePossessionFieldState', () => {
       match: MatchStatus;
       roundResult: MatchRoundResultPayload | null;
     }) => usePossessionFieldState({
-      match: props.match,
+      ...matchFieldParams(props.match),
       localQuestion: makeQuestion(5, 'normal', 1),
       roundResult: props.roundResult,
       questionPhase: 'playing',
@@ -396,7 +405,7 @@ describe('usePossessionFieldState', () => {
       match: MatchStatus;
       localQuestion: ResolvedMatchQuestionPayload;
     }) => usePossessionFieldState({
-      match: props.match,
+      ...matchFieldParams(props.match),
       localQuestion: props.localQuestion,
       roundResult: null,
       questionPhase: 'playing',

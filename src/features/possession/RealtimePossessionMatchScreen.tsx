@@ -48,7 +48,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
   // classic variant. Manages its own state internally.
   const barBattleFlights = usePossessionBarBattleFlights();
   const matchPaused = useRealtimeMatchStore((state) => state.matchPaused);
-  const match = useRealtimeMatchStore((state) => state.match);
+  const hasMatch = useRealtimeMatchStore((state) => state.match != null);
   const pauseUntil = useRealtimeMatchStore((state) => state.pauseUntil);
   const remainingReconnects = useRealtimeMatchStore((state) => state.remainingReconnects);
   const forfeitPending = useRealtimeMatchStore((state) => state.forfeitPending);
@@ -101,7 +101,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
         : 'Match forfeited';
 
   if (!isReady) {
-    const showPendingKickoff = showStartCountdown || Boolean(match);
+    const showPendingKickoff = showStartCountdown || hasMatch;
 
     return (
       <div className="flex min-h-dvh w-full items-center justify-center bg-surface-page-alt">

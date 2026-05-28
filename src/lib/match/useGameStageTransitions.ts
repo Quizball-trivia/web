@@ -9,7 +9,8 @@ import type {
 } from "@/lib/realtime/socket.types";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
-import type { DraftStatus, MatchStatus } from "@/stores/realtimeMatch.store";
+import type { DraftStatus } from "@/stores/realtimeMatch.store";
+import type { GameStageRealtimeMatchSlice } from "@/features/game/hooks/useGameStageState";
 import type { GameConfig, GameStage } from "@/types/game.runtime";
 import { logger } from "@/utils/logger";
 import { GOAL_VISUAL_SEQUENCE_MS } from "@/lib/constants/game";
@@ -192,7 +193,7 @@ interface GameStageTransitionOptions {
   config: GameConfig | null;
   socket: Socket<ServerToClientEvents, ClientToServerEvents>;
   realtimeDraft: DraftStatus | null;
-  realtimeMatch: MatchStatus | null;
+  realtimeMatch: GameStageRealtimeMatchSlice;
   setStage: (stage: GameStage) => void;
 }
 
@@ -547,10 +548,10 @@ export function useGameStageTransitions({
 
   useEffect(() => {
     if (!isMultiplayer) return;
-    if (realtimeMatch && getStageOrdinal(stage) < getStageOrdinal("playing")) {
+    if (realtimeMatch.matchId && getStageOrdinal(stage) < getStageOrdinal("playing")) {
       setStage("playing");
     }
-  }, [isMultiplayer, realtimeMatch, setStage, stage]);
+  }, [isMultiplayer, realtimeMatch.matchId, setStage, stage]);
 
   useEffect(() => {
     const qIndex = realtimeMatch?.lastRoundResult?.qIndex ?? null;
@@ -566,7 +567,7 @@ export function useGameStageTransitions({
       return;
     }
     const hasFinalResults = Boolean(realtimeMatch?.finalResults);
-    const phaseCompleted = realtimeMatch?.possessionState?.phase === "COMPLETED";
+    const phaseCompleted = realtimeMatch.possessionStatePhase === "COMPLETED";
     if (!hasFinalResults && !phaseCompleted) {
       clearFinalStageTimer();
       return;
@@ -609,7 +610,7 @@ export function useGameStageTransitions({
     realtimeMatch?.lastRoundResult?.deltas?.goalScoredBySeat,
     realtimeMatch?.lastRoundResult?.phaseKind,
     realtimeMatch?.lastRoundResult?.qIndex,
-    realtimeMatch?.possessionState?.phase,
+    realtimeMatch.possessionStatePhase,
     setStage,
     stage,
   ]);

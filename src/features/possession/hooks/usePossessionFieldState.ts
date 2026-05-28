@@ -7,7 +7,8 @@ import type {
   MatchRoundResultPlayer,
   ResolvedMatchQuestionPayload,
 } from '@/lib/realtime/socket.types';
-import type { DevPossessionAnimation, MatchStatus } from '@/stores/realtimeMatch.store';
+import type { MatchStatePayload, MatchVariant } from '@/lib/realtime/socket.types';
+import type { DevPossessionAnimation } from '@/stores/realtimeMatch.store';
 import { PitchVisualization } from '../components/PitchVisualization';
 import { usePossessionAnimationOrchestrator } from './usePossessionAnimationOrchestrator';
 import { getZone } from './usePossessionMovement';
@@ -48,7 +49,10 @@ export interface PossessionFieldState {
 }
 
 interface UsePossessionFieldStateParams {
-  match: MatchStatus | null;
+  possessionState: MatchStatePayload | null;
+  mySeat: number | null;
+  matchId: string | null;
+  variant: MatchVariant | null;
   localQuestion: ResolvedMatchQuestionPayload | null;
   roundResult: MatchRoundResultPayload | null;
   questionPhase: 'reveal' | 'playing';
@@ -68,7 +72,7 @@ interface UsePossessionFieldStateParams {
 }
 
 function getSeatGoals(params: {
-  possessionState: MatchStatus['possessionState'];
+  possessionState: MatchStatePayload | null;
   mySeat: number | null;
 }) {
   const { possessionState, mySeat } = params;
@@ -90,7 +94,10 @@ function getSeatGoals(params: {
 }
 
 export function usePossessionFieldState({
-  match,
+  possessionState,
+  mySeat,
+  matchId,
+  variant,
   localQuestion,
   roundResult,
   questionPhase,
@@ -108,8 +115,6 @@ export function usePossessionFieldState({
   isHalftime,
   unopposedBarPulse = false,
 }: UsePossessionFieldStateParams): PossessionFieldState {
-  const possessionState = match?.possessionState ?? null;
-  const mySeat = match?.mySeat ?? null;
   const shooterSeat = possessionState?.shooterSeat ?? null;
   const phaseKind = localQuestion?.phaseKind ?? possessionState?.phaseKind ?? 'normal';
   const isPenaltyQuestion = phaseKind === 'penalty';
@@ -132,9 +137,9 @@ export function usePossessionFieldState({
     shotBallOriginX,
     visualMyPossessionPct,
   } = usePossessionAnimationOrchestrator({
-    matchId: match?.matchId ?? null,
+    matchId,
     possessionState,
-    matchVariant: match?.variant ?? null,
+    matchVariant: variant,
     mySeat,
     shooterSeat,
     phaseKind,
@@ -222,10 +227,10 @@ export function usePossessionFieldState({
 
   const penaltyShotDelayMs = useMemo(() => {
     if (!isPenaltyQuestion || !penaltyRoundResult || !myRound || !opponentRound || !immediatePenaltyResult) return 0;
-    if (match?.variant !== 'ranked_sim') return 0;
+    if (variant !== 'ranked_sim') return 0;
 
     return PENALTY_SCORE_FLIGHT_HANDOFF_MS;
-  }, [immediatePenaltyResult, isPenaltyQuestion, match?.variant, myRound, opponentRound, penaltyRoundResult]);
+  }, [immediatePenaltyResult, isPenaltyQuestion, variant, myRound, opponentRound, penaltyRoundResult]);
 
   const penaltyResultKey = penaltyRoundResult && immediatePenaltyResult
     ? `${penaltyRoundResult.matchId}:${penaltyRoundResult.qIndex}:${immediatePenaltyResult}`
@@ -319,7 +324,7 @@ export function usePossessionFieldState({
   // PitchVisualization → BarBattleOverlay falls back to the classic
   // (non-anchored) layout — same observable behavior as the previous
   // in-component store read.
-  const matchVariant = match?.variant;
+  const matchVariant = variant;
   const barBattleVariant: 'ranked_sim' | 'friendly_possession' | undefined =
     matchVariant === 'ranked_sim' || matchVariant === 'friendly_possession'
       ? matchVariant

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useShallow } from "zustand/shallow";
 import { useGameSessionStore } from "@/stores/gameSession.store";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
@@ -14,6 +15,33 @@ import { usePossessionMatchStore } from "@/stores/possessionMatch.store";
 import { tierFromRp } from "@/utils/rankedTier";
 import type { UserProgression } from "@/lib/domain";
 import type { AvatarCustomization } from "@/types/game";
+import type {
+  MatchFinalResultsPayload,
+  MatchParticipant,
+  MatchRoundResultPayload,
+  MatchStatePayload,
+  MatchVariant,
+  OpponentInfo as RealtimeOpponentInfo,
+} from "@/lib/realtime/socket.types";
+import type { MatchQuestionState } from "@/stores/realtimeMatch.store";
+
+const EMPTY_PARTICIPANTS: MatchParticipant[] = [];
+const EMPTY_QUESTIONS: Record<number, MatchQuestionState> = {};
+
+/** Narrow match fields used by game stage routing (not full MatchStatus). */
+export type GameStageRealtimeMatchSlice = {
+  matchId: string | null;
+  mode: "friendly" | "ranked" | null;
+  variant: MatchVariant | null;
+  opponent: RealtimeOpponentInfo | null;
+  participants: MatchParticipant[];
+  finalResults: MatchFinalResultsPayload | null;
+  questions: Record<number, MatchQuestionState>;
+  currentQuestionTotal: number | null;
+  myRecentForm?: Array<"W" | "L" | "D">;
+  lastRoundResult: MatchRoundResultPayload | null;
+  possessionStatePhase: MatchStatePayload["phase"] | null;
+};
 
 type OpponentInfo = {
   id: string;
@@ -32,7 +60,19 @@ export function useGameStageState() {
   const authUser = useAuthStore((state) => state.user);
   const realtimeLobby = useRealtimeMatchStore((state) => state.lobby);
   const realtimeDraft = useRealtimeMatchStore((state) => state.draft);
-  const realtimeMatch = useRealtimeMatchStore((state) => state.match);
+  const realtimeMatch = useRealtimeMatchStore(useShallow((s) => ({
+    matchId: s.match?.matchId ?? null,
+    mode: s.match?.mode ?? null,
+    variant: s.match?.variant ?? null,
+    opponent: s.match?.opponent ?? null,
+    participants: s.match?.participants ?? EMPTY_PARTICIPANTS,
+    finalResults: s.match?.finalResults ?? null,
+    questions: s.match?.questions ?? EMPTY_QUESTIONS,
+    currentQuestionTotal: s.match?.currentQuestion?.total ?? null,
+    myRecentForm: s.match?.myRecentForm,
+    lastRoundResult: s.match?.lastRoundResult ?? null,
+    possessionStatePhase: s.match?.possessionState?.phase ?? null,
+  })));
   const realtimeError = useRealtimeMatchStore((state) => state.error);
   const sessionState = useRealtimeMatchStore((state) => state.sessionState);
   const connectedSelfUserId = useRealtimeMatchStore((state) => state.selfUserId);
@@ -92,7 +132,7 @@ export function useGameStageState() {
 
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const opponent = useMemo<OpponentInfo>(() => {
-    if (realtimeMatch?.opponent) {
+    if (realtimeMatch.opponent) {
       return {
         id: realtimeMatch.opponent.id,
         username: realtimeMatch.opponent.username,
@@ -114,13 +154,13 @@ export function useGameStageState() {
       }
     }
     return defaultOpponent;
-  }, [defaultOpponent, isMultiplayer, realtimeLobby, realtimeMatch?.opponent, selfUserId]);
+  }, [defaultOpponent, isMultiplayer, realtimeLobby, realtimeMatch.opponent, selfUserId]);
 
-  const matchType = config?.matchType || (realtimeMatch?.mode === "ranked" ? "ranked" : "friendly");
-  const matchVariant = realtimeMatch?.variant ?? null;
-  const activeRankedMatchId = matchType === "ranked" ? realtimeMatch?.matchId ?? null : null;
+  const matchType = config?.matchType || (realtimeMatch.mode === "ranked" ? "ranked" : "friendly");
+  const matchVariant = realtimeMatch.variant;
+  const activeRankedMatchId = matchType === "ranked" ? realtimeMatch.matchId : null;
   const isPartyQuizMatch = matchVariant === "friendly_party_quiz";
-  const activeMatchId = realtimeMatch?.matchId ?? null;
+  const activeMatchId = realtimeMatch.matchId;
 
   const playerGameAvatar = useMemo(
     () =>

@@ -634,7 +634,7 @@ function DevAnimationsContent() {
   const router = useRouter();
 
   const store = useRealtimeMatchStore.getState;
-  const match = useRealtimeMatchStore((s) => s.match);
+  const matchId = useRealtimeMatchStore((s) => s.match?.matchId ?? null);
   const matchPhase = useRealtimeMatchStore((s) => s.match?.possessionState?.phase ?? null);
   const currentQIndex = useRealtimeMatchStore((s) => s.match?.currentQuestion?.qIndex ?? null);
 
@@ -1929,7 +1929,7 @@ function DevAnimationsContent() {
         </div>
 
         <div className="mb-3 rounded-xl bg-surface-deep px-3 py-2 text-[10px] text-white/70 font-mono">
-          <div>match: {match?.matchId ?? '—'}</div>
+          <div>match: {matchId ?? '—'}</div>
           <div>phase: {matchPhase ?? '—'}</div>
           <div>qIndex: {currentQIndex ?? '—'} / {TOTAL_QUESTIONS}</div>
           <div>score: {scoreRef.current.meTotal} : {scoreRef.current.oppTotal}</div>
