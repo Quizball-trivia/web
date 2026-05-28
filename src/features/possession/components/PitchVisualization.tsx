@@ -4,21 +4,27 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import type { AvatarCustomization } from '@/types/game';
-import { BarBattleOverlay, type BarBattleState } from './BarBattleOverlay';
+import { BarBattleOverlay } from './BarBattleOverlay';
 import {
   GOAL_SHOT_TO_FIELD_RESET_MS,
   PENALTY_BALL_GOAL_FLIGHT_MS,
   PENALTY_BALL_SAVE_FLIGHT_MS,
   PENALTY_KICK_CONTACT_MS,
 } from '../realtimePossession.helpers';
-
-// Same cartoon-style ball asset the LoadingScreen bounces — keeps every
-// in-game ball (pitch, shot, goal celebration) visually consistent with
-// the brand's loading state.
-const PITCH_BALL_IMAGE_URL =
-  'https://lfbwhxvwubzeqkztghok.supabase.co/storage/v1/object/public/imgs/world-cup-style-ball-cartoon-transparent.png';
-
-type GoalSide = 'left' | 'right';
+import type {
+  GoalCoordinates,
+  PenaltyMode,
+  PitchVisualizationProps,
+  ShotMode,
+} from './pitch/pitch.types';
+import {
+  LEFT_GOAL,
+  PITCH_BALL_IMAGE_URL,
+  RIGHT_GOAL,
+  isMotionPoint,
+  mapLandscapeMotionToCss,
+  toShotVariant,
+} from './pitch/pitch.helpers';
 
 // ─── Reusable marker sub-component for player/opponent avatars on the pitch ──
 interface PitchMarkerProps {
@@ -114,123 +120,6 @@ function PitchMarker({
       </motion.g>
     </motion.g>
   );
-}
-
-interface GoalCoordinates {
-  penSpotX: number;
-  goalLineX: number;
-  goalTarget: { x: number; y: number };
-  saveTarget: { x: number; y: number };
-  penY: number;
-  netX: number;
-  goalTextX: number;
-  /** +1 = rightward (into right goal), -1 = leftward (into left goal) */
-  inward: 1 | -1;
-}
-
-const RIGHT_GOAL: GoalCoordinates = {
-  penSpotX: 360,
-  goalLineX: 485,
-  goalTarget: { x: 492, y: 107 },
-  saveTarget: { x: 483, y: 115 },
-  penY: 115,
-  netX: 485,
-  goalTextX: 490,
-  inward: 1,
-};
-
-const LEFT_GOAL: GoalCoordinates = {
-  penSpotX: 140,
-  goalLineX: 15,
-  goalTarget: { x: 8, y: 107 },
-  saveTarget: { x: 17, y: 115 },
-  penY: 115,
-  netX: 6,
-  goalTextX: 10,
-  inward: -1,
-};
-
-interface PenaltyMode {
-  isPlayerShooter: boolean;
-  result: 'pending' | 'goal' | 'saved' | null;
-  phase: 'setup' | 'playing' | 'result';
-}
-
-interface ShotMode {
-  result: 'pending' | 'goal' | 'saved' | 'miss';
-  /** Captured ball X position at shot start (SVG coords). Stays fixed during animation. */
-  ballOriginX: number;
-  /** Whether the player is attacking (shooting) or defending (goalkeeping) */
-  isPlayerAttacker: boolean;
-  /** Optional animation variant index used to diversify shot visuals. */
-  variant?: number;
-  /** Unique per-shot identifier — forces shot-effect reset when consecutive shots share attacker/result/goal/variant. */
-  shotId?: number | string;
-}
-
-interface PitchVisualizationProps {
-  playerPosition: number; // 0–100
-  playerAvatarUrl: string;
-  opponentAvatarUrl: string;
-  playerAvatarCustomization?: AvatarCustomization | null;
-  opponentAvatarCustomization?: AvatarCustomization | null;
-  playerName?: string;
-  opponentName?: string;
-  myMomentum?: number; // 0-6
-  oppMomentum?: number; // 0-6
-  penaltyMode?: PenaltyMode;
-  shotMode?: ShotMode;
-  /** Camera zoom into the goal area (penalty/shot). Field stays anchored. */
-  zoomToGoal?: boolean;
-  /** Flip pitch orientation for 2nd half */
-  mirrored?: boolean;
-  /** Which goal shots/penalties animate toward */
-  targetGoal?: GoalSide;
-  /** Ball sits on player icon (true) or opponent icon (false). Drives kick-off logic. */
-  ballOnPlayer?: boolean;
-  /** Pitch layout orientation. Portrait wraps all content in a 90° rotation matrix. */
-  orientation?: 'landscape' | 'portrait';
-  /** Bar battle animation state — rendered inside the possession zone */
-  barBattle?: BarBattleState | null;
-  /** Force a bar-battle variant without changing global realtime match state. */
-  barBattleVariant?: 'ranked_sim' | 'friendly_possession';
-  /** Align the possession boundary to the stadium art's true center line. */
-  centerPossessionTrack?: boolean;
-  /** Dev prototype: keep avatars planted and animate only the ball for shot/goal results. */
-  simpleShotAnimation?: boolean;
-  /** Optional shot avatar size override for compact demos where the production marker reads too small. */
-  shotAvatarUnitSize?: number;
-  /** Keep landing/demo avatars upright during shots while preserving the shared ball path. */
-  disableShotActorResultMotion?: boolean;
-  /** Hide the pitch-owned ball while a full-screen celebration owns the visible ball. */
-  hideBall?: boolean;
-}
-
-function toShotVariant(value: number | undefined): 0 | 1 | 2 | 3 | 4 {
-  const normalized = ((value ?? 0) % 5 + 5) % 5;
-  if (normalized === 1 || normalized === 2 || normalized === 3 || normalized === 4) return normalized;
-  return 0;
-}
-
-function isMotionPoint(value: unknown): value is { x: number | number[]; y: number | number[] } {
-  const maybePoint = value as { x?: unknown; y?: unknown } | null;
-  return (
-    typeof maybePoint === 'object'
-    && maybePoint !== null
-    && (typeof maybePoint.x === 'number' || Array.isArray(maybePoint.x))
-    && (typeof maybePoint.y === 'number' || Array.isArray(maybePoint.y))
-  );
-}
-
-function mapLandscapeMotionToCss(motionValue: Record<string, number[]>, isPortrait: boolean) {
-  if (!isPortrait) return motionValue;
-
-  const x = motionValue.y;
-  const y = motionValue.x?.map((value) => -value);
-  return {
-    ...(x ? { x } : {}),
-    ...(y ? { y } : {}),
-  };
 }
 
 export function PitchVisualization({
