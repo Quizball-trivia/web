@@ -2,49 +2,29 @@
 
 /* eslint-disable @next/next/no-img-element -- Small navbar currency icons are static decorative assets. */
 
-import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { NotificationsDropdown } from "@/components/layout/NotificationsDropdown";
 import { ChallengeInvitePrompt } from "@/components/layout/ChallengeInvitePrompt";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Settings,
-  LogOut,
-  ArrowRight,
-  X,
-} from "lucide-react";
+import { ArrowRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Gamepad2, User } from "lucide-react";
+import { Gamepad2 } from "lucide-react";
 import type { MessageKey } from "@/lib/i18n/messages";
 
 import type { AppShellProps } from "./app-shell/appShell.types";
 import { MOBILE_NAV_ITEMS, formatRejoinCopy } from "./app-shell/appShell.helpers";
 import { useAppShellViewModel } from "./app-shell/useAppShellViewModel";
+import { AppShellPageChrome } from "./app-shell/AppShellPageChrome";
+import { AppShellLogoutDialog } from "./app-shell/AppShellLogoutDialog";
+import { AppShellCurrencyPills } from "./app-shell/AppShellCurrencyPills";
+import { AppShellLobbyDebugBadge } from "./app-shell/AppShellLobbyDebugBadge";
+import { AppShellProfileMenu } from "./app-shell/AppShellProfileMenu";
 
 export function AppShell({ children }: AppShellProps) {
   const vm = useAppShellViewModel();
   const {
     t,
-    router,
     playerStats,
     authUser,
     currentPath,
@@ -95,18 +75,7 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <div className="relative min-h-screen text-foreground">
       <ChallengeInvitePrompt />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0"
-        style={{
-          background:
-            "radial-gradient(circle at top center, rgba(28,176,246,0.08), transparent 32%), radial-gradient(circle at bottom left, rgba(88,204,2,0.06), transparent 28%)",
-        }}
-      />
+      <AppShellPageChrome />
       {/* DESKTOP LAYOUT (>= xl) — tablets including iPad Pro portrait get the mobile shell */}
       <div className="relative z-10 hidden h-dvh overflow-hidden xl:flex">
         <Sidebar currentPath={currentPath} socialBadgeCount={socialBadgeCount} />
@@ -119,140 +88,27 @@ export function AppShell({ children }: AppShellProps) {
 
             <div className="flex items-center gap-4">
               {showLobbyDebug && (
-                <div
-                  className={cn(
-                    "hidden lg:flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-semibold",
-                    lobbyDebugMismatch
-                      ? "border-amber-500/40 bg-amber-500/15 text-amber-300"
-                      : "border-slate-500/40 bg-slate-500/15 text-slate-200"
-                  )}
-                  title="Temporary lobby/session debug badge"
-                >
-                  <span>LobbyDbg</span>
-                  <span>local:{localWaitingLobbyId ? localWaitingLobbyId.slice(0, 6) : "-"}</span>
-                  <span>session:{sessionWaitingLobbyId ? sessionWaitingLobbyId.slice(0, 6) : "-"}</span>
-                  <span>state:{sessionStateLabel}</span>
-                  <span>
-                    loc:{rankedGeoHintDebug?.city ?? "-"},
-                    {rankedGeoHintDebug?.countryCode ?? rankedGeoHintDebug?.country ?? "-"}
-                  </span>
-                  <span>
-                    ll:
-                    {typeof rankedGeoHintDebug?.latitude === "number"
-                      ? rankedGeoHintDebug.latitude.toFixed(2)
-                      : "-"},
-                    {typeof rankedGeoHintDebug?.longitude === "number"
-                      ? rankedGeoHintDebug.longitude.toFixed(2)
-                      : "-"}
-                  </span>
-                  <span>src:{rankedGeoHintDebug?.source ?? "-"}</span>
-                </div>
+                <AppShellLobbyDebugBadge
+                  lobbyDebugMismatch={lobbyDebugMismatch}
+                  localWaitingLobbyId={localWaitingLobbyId}
+                  sessionWaitingLobbyId={sessionWaitingLobbyId}
+                  sessionStateLabel={sessionStateLabel}
+                  rankedGeoHintDebug={rankedGeoHintDebug}
+                />
               )}
-              {/* Currencies */}
-              <div className="flex items-center gap-3 mr-4">
-                {/* Coins */}
-                <Link
-                  href="/store"
-                  className="flex items-center gap-1 pl-1.5 pr-3.5 py-1 rounded-full bg-brand-yellow hover:bg-brand-yellow-deep transition-all active:scale-95"
-                >
-                  <Image
-                    src="/assets/coin-1.png"
-                    alt="Coins"
-                    width={24}
-                    height={24}
-                    className="size-6"
-                  />
-                  <span className="text-sm font-black text-black">
-                    {navbarCoins.toLocaleString()}
-                  </span>
-                </Link>
-
-                {/* Tickets */}
-                <Link
-                  href="/store"
-                  className="flex items-center gap-1.5 pl-2 pr-3.5 py-1 rounded-full bg-brand-green-light hover:bg-brand-green-light transition-all active:scale-95"
-                >
-                  <Image
-                    src="/assets/ticket-1.png"
-                    alt="Tickets"
-                    width={20}
-                    height={20}
-                    className="size-5"
-                  />
-                  <span className="text-sm font-black text-white">
-                    {navbarTickets}
-                  </span>
-                </Link>
-              </div>
+              <AppShellCurrencyPills variant="desktop" coins={navbarCoins} tickets={navbarTickets} />
 
               <div className="h-6 w-px bg-border/50" />
 
               {/* Notifications */}
               <NotificationsDropdown badgeCount={socialBadgeCount} />
 
-              {/* User Profile + Menu */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-3 rounded-full px-1 py-1 hover:bg-white/5 transition-colors focus:outline-none">
-                    <div className="rounded-full bg-brand-blue p-1.5">
-                      <AvatarDisplay
-                        customization={playerStats.avatarCustomization || { base: playerStats.avatar }}
-                        size="sm"
-                        countryCode={authUser?.country}
-                      />
-                    </div>
-                    <div className="text-left">
-                      <div className="text-sm font-black uppercase tracking-wide text-white">
-                        {playerStats.username}
-                      </div>
-                      <div className="mt-0.5 inline-flex items-center rounded-full bg-brand-yellow px-2.5 py-0.5 text-xs font-black text-black">
-                        {playerStats.rankPoints ?? 0}RP
-                      </div>
-                    </div>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="w-64 rounded-[20px] border-0 p-3 text-white font-poppins shadow-[0_18px_48px_rgba(0,0,0,0.45)]"
-                  style={{ backgroundColor: '#1645FF' }}
-                  align="end"
-                  forceMount
-                >
-                  <DropdownMenuLabel className="font-normal px-2 pb-3">
-                    <div className="flex flex-col space-y-1">
-                      <p className="font-poppins text-base font-semibold leading-none text-white">
-                        {playerStats.username}
-                      </p>
-                      <p className="font-poppins text-xs font-medium leading-none text-white/70">
-                        {t("accountMenu.levelAndRp", {
-                          level: playerStats.level,
-                          rp: playerStats.rankPoints ?? 0,
-                        })}
-                      </p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuItem
-                    className="rounded-[12px] px-3 py-2.5 font-poppins text-sm font-semibold text-white focus:bg-white/15 focus:text-white"
-                    onClick={() => router.push("/profile")}
-                  >
-                    <User className="mr-2 h-4 w-4 text-brand-yellow" />
-                    <span>{t("navigation.profile")}</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="rounded-[12px] px-3 py-2.5 font-poppins text-sm font-semibold text-white focus:bg-white/15 focus:text-white"
-                    onClick={() => router.push("/settings")}
-                  >
-                    <Settings className="mr-2 h-4 w-4 text-brand-yellow" />
-                    <span>{t("navigation.settings")}</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setShowLogoutConfirm(true)}
-                    className="mt-2 justify-center rounded-[16px] bg-brand-red-soft px-3 py-3 font-poppins text-sm font-semibold uppercase text-white transition-colors focus:bg-brand-red-deep focus:text-white hover:bg-brand-red-deep"
-                  >
-                    <LogOut className="mr-2 h-4 w-4 text-white" />
-                    <span>{t("accountMenu.logOut")}</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <AppShellProfileMenu
+                variant="desktop"
+                playerStats={playerStats}
+                authUserCountry={authUser?.country}
+                onRequestLogout={() => setShowLogoutConfirm(true)}
+              />
             </div>
           </header>
 
@@ -494,95 +350,16 @@ export function AppShell({ children }: AppShellProps) {
             <div className="px-4 pt-6 pb-5">
               <div className="flex items-center justify-between mb-3 relative">
                 <div className="flex items-center gap-2 z-10">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="flex items-center gap-2 rounded-full focus:outline-none">
-                        <div className="size-12 rounded-full overflow-hidden">
-                          <AvatarDisplay
-                            customization={playerStats.avatarCustomization || { base: playerStats.avatar }}
-                            size="sm"
-                            countryCode={authUser?.country}
-                          />
-                        </div>
-                        <div className="text-left">
-                          <div className="text-sm font-black uppercase tracking-[0.03em] text-white">
-                            {playerStats.username}
-                          </div>
-                          <div className="mt-1 inline-flex items-center rounded-full bg-brand-yellow px-2.5 py-0.5 text-[11px] font-black uppercase leading-none text-black">
-                            {playerStats.rankPoints ?? 0} RP
-                          </div>
-                        </div>
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      className="w-64 rounded-[20px] border-0 p-3 text-white font-poppins shadow-[0_18px_48px_rgba(0,0,0,0.45)]"
-                      style={{ backgroundColor: '#1645FF' }}
-                      align="start"
-                      forceMount
-                    >
-                      <DropdownMenuLabel className="font-normal px-2 pb-3">
-                        <div className="flex flex-col space-y-1">
-                          <p className="font-poppins text-base font-semibold leading-none text-white">
-                            {playerStats.username}
-                          </p>
-                          <p className="font-poppins text-xs font-medium leading-none text-white/70">
-                            {t("accountMenu.levelAndRp", {
-                              level: playerStats.level,
-                              rp: playerStats.rankPoints ?? 0,
-                            })}
-                          </p>
-                        </div>
-                      </DropdownMenuLabel>
-                      <DropdownMenuItem
-                        className="rounded-[12px] px-3 py-2.5 font-poppins text-sm font-semibold text-white focus:bg-white/15 focus:text-white"
-                        onClick={() => router.push("/profile")}
-                      >
-                        <User className="mr-2 h-4 w-4 text-brand-yellow" />
-                        <span>{t("navigation.profile")}</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="rounded-[12px] px-3 py-2.5 font-poppins text-sm font-semibold text-white focus:bg-white/15 focus:text-white"
-                        onClick={() => router.push("/settings")}
-                      >
-                        <Settings className="mr-2 h-4 w-4 text-brand-yellow" />
-                        <span>{t("navigation.settings")}</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => setShowLogoutConfirm(true)}
-                        className="mt-2 justify-center rounded-[16px] bg-brand-red-soft px-3 py-3 font-poppins text-sm font-semibold uppercase text-white transition-colors focus:bg-brand-red-deep focus:text-white hover:bg-brand-red-deep"
-                      >
-                        <LogOut className="mr-2 h-4 w-4 text-white" />
-                        <span>{t("accountMenu.logOut")}</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <AppShellProfileMenu
+                    variant="mobile"
+                    playerStats={playerStats}
+                    authUserCountry={authUser?.country}
+                    onRequestLogout={() => setShowLogoutConfirm(true)}
+                  />
                 </div>
 
                 <div className="flex items-center gap-2 z-10">
-                  {/* Coins */}
-                  <Link
-                    href="/store"
-                    className="flex h-8 min-w-[72px] items-center gap-1.5 rounded-full bg-brand-yellow pl-1 pr-3 transition-colors hover:bg-brand-yellow-deep active:scale-95"
-                  >
-                    <span className="flex size-6 shrink-0 items-center justify-center">
-                      <img src="/assets/coin-1.png" alt="Coins" className="size-6 object-contain" />
-                    </span>
-                    <span className="text-sm font-black text-black tabular-nums">
-                      {navbarCoins.toLocaleString()}
-                    </span>
-                  </Link>
-
-                  {/* Tickets */}
-                  <Link
-                    href="/store"
-                    className="flex h-8 min-w-[72px] items-center gap-1.5 rounded-full bg-brand-green-light pl-1 pr-3 transition-colors hover:bg-brand-green-light active:scale-95"
-                  >
-                    <span className="flex size-6 shrink-0 items-center justify-center">
-                      <img src="/assets/ticket-1.png" alt="Tickets" className="size-5 object-contain" />
-                    </span>
-                    <span className="text-sm font-black text-white tabular-nums">{navbarTickets}</span>
-                  </Link>
-
+                  <AppShellCurrencyPills variant="mobile" coins={navbarCoins} tickets={navbarTickets} />
                   <NotificationsDropdown badgeCount={socialBadgeCount} />
                 </div>
               </div>
@@ -845,33 +622,11 @@ export function AppShell({ children }: AppShellProps) {
         )}
       </div>
 
-      {/* Logout Confirmation Dialog */}
-      <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
-        <AlertDialogContent
-          className="max-w-md w-[92vw] rounded-[24px] border-0 p-8 font-poppins shadow-none sm:p-10"
-          style={{ backgroundColor: '#1645FF' }}
-        >
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
-              {t("accountMenu.logOutQuestion")}
-            </AlertDialogTitle>
-            <AlertDialogDescription className="mt-3 text-center font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-[14px]">
-              {t("accountMenu.logOutDescription")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="mt-6 flex-col gap-2 sm:flex-col sm:space-x-0">
-            <AlertDialogAction
-              onClick={handleLogout}
-              className="w-full rounded-[16px] border-0 bg-brand-red-soft from-brand-red-soft to-brand-red-soft px-3 py-3 font-poppins text-sm font-semibold uppercase tracking-wide text-white shadow-none hover:bg-brand-red-soft/90 hover:from-brand-red-soft/90 hover:to-brand-red-soft/90 hover:shadow-none focus-visible:ring-0"
-            >
-              {t("accountMenu.logOut")}
-            </AlertDialogAction>
-            <AlertDialogCancel className="mt-0 w-full rounded-[16px] border-0 bg-white/15 px-3 py-3 font-poppins text-sm font-semibold uppercase tracking-wide text-white shadow-none hover:bg-white/25 hover:text-white focus-visible:ring-0">
-              {t("common.cancel")}
-            </AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <AppShellLogoutDialog
+        open={showLogoutConfirm}
+        onOpenChange={setShowLogoutConfirm}
+        onConfirm={handleLogout}
+      />
     </div>
   );
 }
