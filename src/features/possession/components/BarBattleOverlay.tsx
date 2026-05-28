@@ -1,34 +1,20 @@
 'use client';
 
-import { useId } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
-import type { BarBattlePhase, BarBattleState } from './bar-battle/barBattle.types';
+import type { BarBattleState } from './bar-battle/barBattle.types';
 import { BarBattleScoreText } from './bar-battle/BarBattleScoreText';
 import { BarBattleCollisionFlash } from './bar-battle/BarBattleCollisionFlash';
 import { BarBattleBar } from './bar-battle/BarBattleBar';
 import { BarBattleStackedBar } from './bar-battle/BarBattleStackedBar';
 import {
-  AVATAR_BAR_OFFSET,
-  BAR_GAP,
-  BAR_GAP_ANCHORED,
   BAR_H,
-  BAR_H_ANCHORED,
-  BAR_RX,
-  BAR_RX_ANCHORED,
-  BAR_W,
-  BAR_W_ANCHORED,
   BLUE,
   BLUE_DARK,
   CY,
-  CY_ANCHORED,
-  FIELD_MAX_X,
-  FIELD_MIN_X,
   RED,
   RED_DARK,
-  clampCenterX,
-  pointsToBarCount,
 } from './bar-battle/barBattle.helpers';
+import { useBarBattleViewModel } from './bar-battle/useBarBattleViewModel';
 
 // Re-export the public types so external consumers can keep importing
 // from this file path. Tests and the dev page do this.
@@ -61,181 +47,70 @@ export function BarBattleOverlay({
   isPortrait = false,
   variant,
 }: BarBattleOverlayProps) {
-  const uid = useId();
-  
+  // Resolve the active variant. The store-read is still here as a
+  // fallback so existing callers (notably the dev page) keep working;
+  // step 6 of this refactor swaps the fallback out for a required
+  // prop and moves the store-read up to the production caller.
+  //
+  // `match.variant` is the broader LobbyGameMode union; only the
+  // ranked-sim / friendly-possession arms are visually meaningful here,
+  // so narrow to the BarBattleVariant union — any other value falls
+  // through to the classic (non-anchored) layout.
   const storeMatchVariant = useRealtimeMatchStore((s) => s.match?.variant);
-  const matchVariant = variant ?? storeMatchVariant;
-  const isAnchored = matchVariant === 'ranked_sim'
-    && playerAvatarX != null
-    && opponentAvatarX != null;
+  const matchVariant: 'ranked_sim' | 'friendly_possession' | undefined =
+    variant
+    ?? (storeMatchVariant === 'ranked_sim' || storeMatchVariant === 'friendly_possession'
+      ? storeMatchVariant
+      : undefined);
 
-  const { phase, playerBars, opponentBars, playerPoints, opponentPoints, remainingDelta, dividerX } = battle;
-  if (phase === 'done') return null;
-  const chargeLunges = battle.chargeMode !== 'pulse';
-  const blueGrad = `${uid}-blue`;
-  const redGrad = `${uid}-red`;
-  const battleClip = `${uid}-battle-clip`;
-
-  // Pick the active bar dimensions based on variant. Anchored bars are smaller
-  // so they fit cleanly below the avatar circle without bleeding into the field.
-  const barW = isAnchored ? BAR_W_ANCHORED : BAR_W;
-  const barH = isAnchored ? BAR_H_ANCHORED : BAR_H;
-  const barGap = isAnchored ? BAR_GAP_ANCHORED : BAR_GAP;
-  const barRx = isAnchored ? BAR_RX_ANCHORED : BAR_RX;
-  const cy = isAnchored ? CY_ANCHORED : CY;
-
-  const minBars = Math.min(playerBars, opponentBars);
-  const playerDir = mirrored ? 1 : -1;
-  const opponentDir = mirrored ? -1 : 1;
-  const playerLayoutBars = playerBars > 0 ? playerBars : pointsToBarCount(playerPoints);
-  const opponentLayoutBars = opponentBars > 0 ? opponentBars : pointsToBarCount(opponentPoints);
-
-  // In portrait, SVG X maps to screen Y. The bar lane must extend away from
-  // the opposing avatar, which flips when the second half mirrors the pitch.
-  const portraitPlayerDir = playerAvatarX != null && opponentAvatarX != null && playerAvatarX > opponentAvatarX ? 1 : -1;
-  const portraitOpponentDir = opponentAvatarX != null && playerAvatarX != null && opponentAvatarX > playerAvatarX ? 1 : -1;
-  const playerPreferredBarDir = isAnchored && isPortrait ? portraitPlayerDir : playerDir;
-  const opponentPreferredBarDir = isAnchored && isPortrait ? portraitOpponentDir : opponentDir;
-
-  const compactW = barW * 2.2;
-  const normalRowX = (avatarX: number, dir: number, count: number) => {
-    if (count <= 0) return [];
-    const firstX = avatarX + dir * AVATAR_BAR_OFFSET;
-    const maxStep = count <= 1
-      ? barW + barGap
-      : dir > 0
-        ? ((FIELD_MAX_X - barW) - firstX) / (count - 1)
-        : (firstX - FIELD_MIN_X) / (count - 1);
-    const step = Math.min(barW + barGap, maxStep);
-    if (step < barW) return null;
-    return Array.from({ length: count }, (_, i) => firstX + dir * i * step);
-  };
-  const buildAnchoredLayout = (
-    avatarX: number | undefined,
-    dir: number,
-    count: number
-  ) => {
-    const fallbackBarX = avatarX == null
-      ? dividerX
-      : clampCenterX(avatarX + dir * AVATAR_BAR_OFFSET + barW / 2, barW);
-    if (!isAnchored || avatarX == null || count <= 0) {
-      return {
-        compact: false,
-        dir,
-        rowX: (_i: number) => fallbackBarX - barW / 2,
-        compactX: fallbackBarX,
-        splashX: fallbackBarX,
-        landingX: fallbackBarX,
-      };
-    }
-
-    const xs = normalRowX(avatarX, dir, count);
-    const compactX = clampCenterX(avatarX + dir * (AVATAR_BAR_OFFSET + compactW / 2), compactW);
-    if (xs === null) {
-      return {
-        compact: true,
-        dir,
-        rowX: (_i: number) => compactX,
-        compactX,
-        splashX: compactX,
-        landingX: compactX,
-      };
-    }
-    const splashX = (xs[0] + xs[xs.length - 1] + barW) / 2;
-    const landingX = xs[0] + barW / 2;
-
-    return {
-      compact: false,
-      dir,
-      rowX: (i: number) => xs[i] ?? avatarX,
-      compactX,
-      splashX,
-      landingX,
-    };
-  };
-
-  const playerLayout = buildAnchoredLayout(playerAvatarX, playerPreferredBarDir, playerLayoutBars);
-  const opponentLayout = buildAnchoredLayout(opponentAvatarX, opponentPreferredBarDir, opponentLayoutBars);
-  const playerBarDir = playerLayout.dir;
-  const opponentBarDir = opponentLayout.dir;
-  const playerStackCount = (phase === 'result' || phase === 'charge') && remainingDelta > 0 ? remainingDelta : playerBars;
-  const opponentStackCount = (phase === 'result' || phase === 'charge') && remainingDelta < 0 ? -remainingDelta : opponentBars;
-
-  // Spawn position:
-  //   - classic: cluster just outside the divider on each player's side
-  //   - avatar-anchored: extend OUTWARD from each avatar (bars sit BEHIND the
-  //     avatar in landscape x; in portrait that maps to above/below in screen).
-  //     Bar i=0 is closest to avatar, i=N furthest away.
-  const playerBarStartX = (i: number) => {
-    if (isAnchored) {
-      return playerLayout.rowX(i);
-    }
-    const barAreaOffset = 28;
-    return dividerX + playerDir * (barAreaOffset + i * (barW + barGap));
-  };
-  const opponentBarStartX = (i: number) => {
-    if (isAnchored) {
-      return opponentLayout.rowX(i);
-    }
-    const barAreaOffset = 28;
-    return dividerX + opponentDir * (barAreaOffset + i * (barW + barGap));
-  };
-
-  // Battle / result positions:
-  //   - classic: bars march to centre, clash, surviving ones push the divider
-  //   - avatar-anchored: pairs annihilate IN PLACE (no marching), so the bars
-  //     stay behind their owner. Surviving bars also stay (the AVATAR moves
-  //     instead, driven by possessionDiff update from the playground).
-  const playerMarchX = (i: number) =>
-    isAnchored
-      ? playerBarStartX(i)
-      : dividerX + playerDir * ((i + 1) * (barW + barGap));
-  const opponentMarchX = (i: number) =>
-    isAnchored
-      ? opponentBarStartX(i)
-      : dividerX + opponentDir * ((i + 1) * (barW + barGap));
-
-  const pushPerBar = 16;
-  const pushSign = remainingDelta > 0 ? opponentDir : playerDir;
-  const pushDist = Math.abs(remainingDelta) * pushPerBar;
-  const newDividerX = Math.max(40, Math.min(460, dividerX + pushDist * pushSign));
-
-  const playerPushX = (i: number) =>
-    isAnchored
-      ? playerBarStartX(i)
-      : newDividerX + playerDir * ((i + 1) * (barW + barGap));
-  const opponentPushX = (i: number) =>
-    isAnchored
-      ? opponentBarStartX(i)
-      : newDividerX + opponentDir * ((i + 1) * (barW + barGap));
-
-  // Score splash position:
-  //   - classic: hard-coded x=100/400 above the off-centre bar area
-  //   - avatar-anchored: splash enters from the far edge and lands at the
-  //     clamped row center, where it morphs into bars.
-  const FAR_LEFT_X = 30;
-  const FAR_RIGHT_X = 470;
-  const playerSplashLandX = isAnchored && playerBars > 0
-    ? playerLayout.splashX
-    : playerAvatarX != null
-      ? playerAvatarX + playerBarDir * AVATAR_BAR_OFFSET
-    : dividerX + playerDir * (28 + (playerBars * (barW + barGap)) / 2);
-  const opponentSplashLandX = isAnchored && opponentBars > 0
-    ? opponentLayout.splashX
-    : opponentAvatarX != null
-      ? opponentAvatarX + opponentBarDir * AVATAR_BAR_OFFSET
-    : dividerX + opponentDir * (28 + (opponentBars * (barW + barGap)) / 2);
-  const playerTextX = isAnchored
-    ? (playerBarDir < 0 ? FAR_LEFT_X : FAR_RIGHT_X)
-    : (mirrored ? 400 : 100);
-  const opponentTextX = isAnchored
-    ? (opponentBarDir < 0 ? FAR_LEFT_X : FAR_RIGHT_X)
-    : (mirrored ? 100 : 400);
-  const playerTextTargetX = isAnchored ? playerSplashLandX : playerSplashLandX;
-  const opponentTextTargetX = isAnchored ? opponentSplashLandX : opponentSplashLandX;
-
-  const playerScoreVisible = phase !== 'opponent-score';
-  const opponentScoreVisible = phase !== 'player-score';
+  const vm = useBarBattleViewModel({
+    battle,
+    mirrored,
+    playerAvatarX,
+    opponentAvatarX,
+    isPortrait,
+    matchVariant,
+  });
+  if (vm.isDone) return null;
+  const {
+    blueGrad,
+    redGrad,
+    battleClip,
+    isAnchored,
+    barW,
+    barH,
+    barRx,
+    cy,
+    chargeLunges,
+    phase,
+    playerBars,
+    opponentBars,
+    playerPoints,
+    opponentPoints,
+    remainingDelta,
+    dividerX,
+    minBars,
+    playerBarDir,
+    opponentBarDir,
+    playerLayout,
+    opponentLayout,
+    playerStackCount,
+    opponentStackCount,
+    playerBarStartX,
+    opponentBarStartX,
+    playerMarchX,
+    opponentMarchX,
+    playerPushX,
+    opponentPushX,
+    playerSplashLandX,
+    opponentSplashLandX,
+    playerTextX,
+    opponentTextX,
+    playerTextTargetX,
+    opponentTextTargetX,
+    playerScoreVisible,
+    opponentScoreVisible,
+  } = vm;
 
   return (
     <g>
