@@ -29,6 +29,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useShallow } from 'zustand/shallow';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import type { FlightSpec } from '../components/BarBattleFlightOverlay';
 import { logger } from '@/utils/logger';
@@ -205,10 +206,21 @@ function computeFallbackBarLaneTarget(
 }
 
 export function usePossessionBarBattleFlights() {
-  const match = useRealtimeMatchStore((s) => s.match);
+  const barBattleMatch = useRealtimeMatchStore(useShallow((s) => ({
+    variant: s.match?.variant ?? null,
+    matchId: s.match?.matchId ?? null,
+    currentQIndex: s.match?.currentQuestion?.qIndex ?? null,
+    currentPhaseKind: s.match?.currentQuestion?.phaseKind ?? null,
+    possessionPhaseKind: s.match?.possessionState?.phaseKind ?? null,
+    answerAck: s.match?.answerAck ?? null,
+    lastRoundResult: s.match?.lastRoundResult ?? null,
+    opponentAnswered: s.match?.opponentAnswered ?? false,
+    opponentAnsweredCorrectly: s.match?.opponentAnsweredCorrectly ?? null,
+    opponentRecentPoints: s.match?.opponentRecentPoints ?? 0,
+  })));
   const selfUserId = useRealtimeMatchStore((s) => s.selfUserId);
   // Only fire flights for ranked-sim matches (the new bar-battle layout).
-  const enabled = match?.variant === 'ranked_sim';
+  const enabled = barBattleMatch.variant === 'ranked_sim';
 
   const [flights, setFlights] = useState<FlightSpec[]>([]);
   const [suppressScoreSplash, setSuppressScoreSplash] = useState(false);
@@ -219,8 +231,8 @@ export function usePossessionBarBattleFlights() {
   const opponentFiredQRef = useRef<string | null>(null);
   const pendingFlightKeysRef = useRef<Set<string>>(new Set());
 
-  const currentQIndex = match?.currentQuestion?.qIndex ?? null;
-  const currentMatchId = match?.matchId ?? null;
+  const currentQIndex = barBattleMatch.currentQIndex;
+  const currentMatchId = barBattleMatch.matchId;
   const currentKey = currentMatchId != null && currentQIndex != null
     ? `${currentMatchId}:${currentQIndex}`
     : null;
@@ -264,8 +276,8 @@ export function usePossessionBarBattleFlights() {
     };
   }, [enabled, currentQIndex]);
 
-  const phaseKindFromState = match?.currentQuestion?.phaseKind
-    ?? match?.possessionState?.phaseKind
+  const phaseKindFromState = barBattleMatch.currentPhaseKind
+    ?? barBattleMatch.possessionPhaseKind
     ?? 'normal';
 
   const enqueueFlight = useCallback((params: {
@@ -363,7 +375,7 @@ export function usePossessionBarBattleFlights() {
   // Fires regardless of correctness — wrong/zero-point answers get a "failed"
   // flight that falls off the bottom of the screen instead of reaching the
   // pitch, so the player always sees their splash react to the answer.
-  const answerAck = match?.answerAck;
+  const answerAck = barBattleMatch.answerAck;
   useEffect(() => {
     if (!enabled || !answerAck) return;
     const points = resolveFlightPoints(answerAck.pointsEarned, answerAck.questionKind, answerAck.foundCount);
@@ -386,7 +398,7 @@ export function usePossessionBarBattleFlights() {
   // Fallback: if the client missed its immediate answer_ack, fire the same
   // player flight from the authoritative round_result so the user still sees
   // their own scoring motion.
-  const roundResult = match?.lastRoundResult ?? null;
+  const roundResult = barBattleMatch.lastRoundResult;
   useEffect(() => {
     if (!enabled || !roundResult || !selfUserId) return;
     const phaseKind = roundResult.phaseKind ?? phaseKindFromState;
@@ -435,9 +447,9 @@ export function usePossessionBarBattleFlights() {
   }, [enabled, enqueueFlightFromDom, phaseKindFromState, roundResult, selfUserId]);
 
   // ── Opponent flight on opponent answer ──────────────────────────────────
-  const opponentAnswered = match?.opponentAnswered ?? false;
-  const opponentAnsweredCorrectly = match?.opponentAnsweredCorrectly ?? null;
-  const opponentRecentPoints = match?.opponentRecentPoints ?? 0;
+  const opponentAnswered = barBattleMatch.opponentAnswered;
+  const opponentAnsweredCorrectly = barBattleMatch.opponentAnsweredCorrectly;
+  const opponentRecentPoints = barBattleMatch.opponentRecentPoints;
   useEffect(() => {
     if (!enabled) return;
     if (!opponentAnswered) return;
