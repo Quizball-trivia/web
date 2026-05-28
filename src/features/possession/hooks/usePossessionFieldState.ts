@@ -314,6 +314,17 @@ export function usePossessionFieldState({
 
   const { zone, color: zoneColor } = useMemo(() => getZone(visualMyPossessionPct), [visualMyPossessionPct]);
 
+  // Narrow match.variant to the BarBattle variants the overlay knows
+  // about. Anything else (party-quiz etc.) flows in as undefined, so
+  // PitchVisualization → BarBattleOverlay falls back to the classic
+  // (non-anchored) layout — same observable behavior as the previous
+  // in-component store read.
+  const matchVariant = match?.variant;
+  const barBattleVariant: 'ranked_sim' | 'friendly_possession' | undefined =
+    matchVariant === 'ranked_sim' || matchVariant === 'friendly_possession'
+      ? matchVariant
+      : undefined;
+
   const pitchProps = useMemo((): PitchProps => ({
     playerPosition: visualMyPossessionPct,
     playerAvatarUrl: playerAvatar,
@@ -335,9 +346,11 @@ export function usePossessionFieldState({
     mirrored,
     targetGoal,
     ballOnPlayer,
+    barBattleVariant,
   }), [
     attackerIsMe,
     ballOnPlayer,
+    barBattleVariant,
     delayedIsShooter,
     isPenaltyQuestion,
     isShotQuestion,

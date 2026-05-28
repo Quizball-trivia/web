@@ -140,6 +140,10 @@ const en: LocaleCopy = {
         title: "5. Third-Party Services",
         body: 'We may employ third party companies and individuals to facilitate our Service ("Service Providers"), to provide the Service on our behalf, or to assist us in analyzing how our Service is used. These third parties have access to your Personal Data only to perform these tasks on our behalf and are obligated not to disclose or use it for any other purpose.',
       },
+      {
+        title: "6. Data Retention and Deletion",
+        body: "You can request deletion of your QuizBall account and associated personal data by signing in, opening Settings, going to Account & Safety, and selecting Delete Account. Your account is disabled immediately and scheduled for deletion. You may also contact us at privacy@quizball.com for help with deletion requests.",
+      },
     ],
   },
   landing: {
@@ -252,6 +256,10 @@ const ka: LocaleCopy = {
       {
         title: "5. მესამე მხარის მომსახურებები",
         body: "ჩვენ შეიძლება დავიქირაოთ მესამე მხარის კომპანიები და ფიზიკური პირები ჩვენი მომსახურების ხელშეწყობისთვის („მომსახურების მომწოდებლები“), ჩვენი სახელით მომსახურების გასაწევად ან ჩვენი მომსახურების გამოყენების ანალიზში დასახმარებლად. ამ მესამე მხარეებს აქვთ წვდომა თქვენს პერსონალურ მონაცემებზე მხოლოდ ამ დავალებების ჩვენი სახელით შესასრულებლად და ვალდებულნი არიან არ გაამჟღავნონ ან გამოიყენონ ისინი სხვა მიზნით.",
+      },
+      {
+        title: "6. მონაცემთა შენახვა და წაშლა",
+        body: "თქვენ შეგიძლიათ მოითხოვოთ თქვენი QuizBall ანგარიშისა და მასთან დაკავშირებული პერსონალური მონაცემების წაშლა: შედით ანგარიშში, გახსენით Settings, გადადით Account & Safety განყოფილებაში და აირჩიეთ Delete Account. თქვენი ანგარიში დაუყოვნებლივ გაითიშება და დაიგეგმება წაშლისთვის. წაშლის მოთხოვნებთან დაკავშირებით დახმარებისთვის ასევე შეგიძლიათ დაგვიკავშირდეთ მისამართზე privacy@quizball.com.",
       },
     ],
   },
