@@ -26,6 +26,8 @@ import {
   toShotVariant,
 } from './pitch/pitch.helpers';
 import { PitchMarker } from './pitch/PitchMarker';
+import { PitchSvgDefs } from './pitch/PitchSvgDefs';
+import { PitchBackground } from './pitch/PitchBackground';
 
 export function PitchVisualization({
   playerPosition,
@@ -484,39 +486,7 @@ export function PitchVisualization({
           viewBox={isPortrait ? '-30 0 290 500' : '0 -30 500 290'}
           className={isPortrait ? 'w-full h-full' : 'w-full h-auto'}
         >
-          <defs>
-            <clipPath id={uid('fieldClip')}>
-              {/* Square clip — matches Figma's sharp-cornered stadium frame. */}
-              <rect x="0" y="-30" width="500" height="290" />
-            </clipPath>
-            <filter id={uid('blueGlow')} x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feFlood floodColor="#1CB0F6" floodOpacity="0.5" result="color" />
-              <feComposite in="color" in2="blur" operator="in" result="glow" />
-              <feMerge><feMergeNode in="glow" /><feMergeNode in="SourceGraphic" /></feMerge>
-            </filter>
-            <filter id={uid('redGlow')} x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feFlood floodColor="#FF4B4B" floodOpacity="0.5" result="color" />
-              <feComposite in="color" in2="blur" operator="in" result="glow" />
-              <feMerge><feMergeNode in="glow" /><feMergeNode in="SourceGraphic" /></feMerge>
-            </filter>
-            <filter id={uid('ballGlow')} x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feFlood floodColor="#ffffff" floodOpacity="0.6" result="color" />
-              <feComposite in="color" in2="blur" operator="in" result="glow" />
-              <feMerge><feMergeNode in="glow" /><feMergeNode in="SourceGraphic" /></feMerge>
-            </filter>
-            {/* Dual momentum meter clip */}
-            <clipPath id={uid('meterClip')}>
-              <rect x="125" y="34" width="250" height="9" rx="4.5" />
-            </clipPath>
-            {/* Goal net pattern (penalty only) */}
-            <pattern id={uid('penNet')} x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
-              <line x1="0" y1="0" x2="0" y2="6" stroke="rgba(255,255,255,0.12)" strokeWidth="0.4" />
-              <line x1="0" y1="0" x2="6" y2="0" stroke="rgba(255,255,255,0.12)" strokeWidth="0.4" />
-            </pattern>
-          </defs>
+          <PitchSvgDefs uid={uid} />
 
           {/* Portrait mode: wrap all content in a 90° rotation matrix.
               matrix(0,-1,1,0,0,500) maps landscape (x,y) → portrait (y, 500-x):
@@ -525,19 +495,7 @@ export function PitchVisualization({
               Animations operate in local coord space, parent transform maps to viewport. */}
           <g transform={isPortrait ? 'matrix(0,-1,1,0,0,500)' : undefined}>
 
-          {/* Field background — stadium image stretches to fill the full
-              500×290 viewBox so the green + yellow boundary lines reach the
-              edges of the Figma-matched aspect frame. */}
-          <image href="/assets/stadium-green.png" x="0" y="-30" width="500" height="290" preserveAspectRatio="none" clipPath={`url(#${uid('fieldClip')})`} />
-
-          {/* Zone bands — hidden during penalties */}
-          {!isPenalty && (
-            <>
-              {zoneBands.map((z, i) => (
-                <rect key={i} x={z.x} y="-30" width={z.w} height="290" fill={z.fill} rx={z.rx} />
-              ))}
-            </>
-          )}
+          <PitchBackground uid={uid} isPenalty={isPenalty} zoneBands={zoneBands} />
 
           {/* Pitch markings removed — stadium-green.png has its own lines */}
 
