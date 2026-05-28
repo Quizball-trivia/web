@@ -6,6 +6,8 @@ import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import type { BarBattlePhase, BarBattleState } from './bar-battle/barBattle.types';
 import { BarBattleScoreText } from './bar-battle/BarBattleScoreText';
 import { BarBattleCollisionFlash } from './bar-battle/BarBattleCollisionFlash';
+import { BarBattleBar } from './bar-battle/BarBattleBar';
+import { BarBattleStackedBar } from './bar-battle/BarBattleStackedBar';
 import {
   AVATAR_BAR_OFFSET,
   BAR_GAP,
@@ -24,8 +26,6 @@ import {
   FIELD_MIN_X,
   RED,
   RED_DARK,
-  STACK_CANCEL_FLASH_S,
-  STACK_CANCEL_STEP_S,
   clampCenterX,
   pointsToBarCount,
 } from './bar-battle/barBattle.helpers';
@@ -33,379 +33,6 @@ import {
 // Re-export the public types so external consumers can keep importing
 // from this file path. Tests and the dev page do this.
 export type { BarBattlePhase, BarBattleState } from './bar-battle/barBattle.types';
-
-// ─── Single bar (capsule with gradient + inner shine) ────────────────────────
-
-function Bar({
-  spawnX,
-  marchX,
-  pushX,
-  color,
-  darkColor,
-  gradientId,
-  index,
-  phase,
-  cancelled,
-  cancelOrder,
-  survived,
-  chargeOrder,
-  chargeHitOffsetX = 0,
-  cy = CY,
-  barW = BAR_W,
-  barH = BAR_H,
-  barRx = BAR_RX,
-  morphFromX,
-  morphFromY,
-}: {
-  spawnX: number;
-  marchX: number;
-  pushX: number;
-  color: string;
-  darkColor: string;
-  gradientId: string;
-  index: number;
-  phase: BarBattlePhase;
-  cancelled: boolean;
-  cancelOrder: number;
-  survived: boolean;
-  chargeOrder: number;
-  chargeHitOffsetX?: number;
-  /** Vertical centre for the bar; classic uses CY=115, anchored uses CY_ANCHORED. */
-  cy?: number;
-  barW?: number;
-  barH?: number;
-  barRx?: number;
-  /** When set, the bar starts at this point and animates out to (spawnX, cy)
-   *  — used by the anchored variant so the splash's landing point visually
-   *  fragments into bars. */
-  morphFromX?: number;
-  morphFromY?: number;
-}) {
-  const y = cy - barH / 2;
-  const BAR_W = barW;
-  const BAR_H = barH;
-  const BAR_RX = barRx;
-  // Where the bar starts before spring-animating to its row position. Classic
-  // bars start at (spawnX, y). Anchored bars start at the splash's landing
-  // point so the splash visually scatters INTO the bars.
-  const initialX = morphFromX ?? spawnX;
-  const initialYOffset = morphFromY != null ? morphFromY - y : 0;
-
-  const showBar = phase === 'bars' || phase === 'battle' || phase === 'charge' || phase === 'result';
-  const isMarching = phase === 'battle' || phase === 'charge' || phase === 'result';
-  const isBattling = phase === 'battle' && cancelled;
-  const isCharging = phase === 'charge' && survived;
-  const isResult = phase === 'result';
-
-  if (!showBar) return null;
-
-  const spawnDelay = index * 0.06;
-  const cancelDelay = cancelOrder * 0.1;
-
-  void color;
-  void darkColor;
-
-  // Cancelled bar — march in then flash white and vanish
-  if (isBattling) {
-    return (
-      <motion.g key={`bar-battle-${index}`}>
-        <motion.rect
-          x={0} y={y} width={BAR_W} height={BAR_H} rx={BAR_RX}
-          fill={`url(#${gradientId})`}
-          initial={{ opacity: 0.95, x: spawnX }}
-          animate={{
-            x: marchX,
-            opacity: [0.95, 0.95, 0],
-            scaleY: [1, 1, 1.3],
-            scaleX: [1, 1, 0.15],
-          }}
-          transition={{
-            x: { type: 'spring', stiffness: 100, damping: 18, mass: 0.6 },
-            opacity: { duration: 0.25, delay: cancelDelay, ease: 'easeOut' },
-            scaleY: { duration: 0.25, delay: cancelDelay, ease: 'easeOut' },
-            scaleX: { duration: 0.25, delay: cancelDelay, ease: 'easeOut' },
-          }}
-        />
-        {/* White flash on cancel */}
-        <motion.rect
-          x={0} y={y - 2} width={BAR_W} height={BAR_H + 4} rx={BAR_RX}
-          fill="white"
-          initial={{ opacity: 0, x: marchX }}
-          animate={{ opacity: [0, 0.9, 0], scaleX: [1, 1.6, 0.3] }}
-          transition={{ duration: 0.2, delay: cancelDelay + 0.05, ease: 'easeOut' }}
-        />
-      </motion.g>
-    );
-  }
-
-  // Survived bar — push to new position with satisfying bounce
-  if (isResult && survived) {
-    return (
-      <motion.rect
-        key={`bar-result-${index}`}
-        x={0} y={y} width={BAR_W} height={BAR_H} rx={BAR_RX}
-        fill={`url(#${gradientId})`}
-        initial={{ opacity: 0.95, x: marchX }}
-        animate={{ x: pushX, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 80, damping: 12, mass: 0.7 }}
-      />
-    );
-  }
-
-  if (isResult && cancelled) return null;
-  if (phase === 'charge' && cancelled) return null;
-
-  // Spawning / standing bar. In the anchored variant we morph from the
-  // splash's landing point (initialX, initialYOffset) outward to (spawnX, 0),
-  // making the splash visually fragment into bars. In classic mode initialX
-  // === spawnX, so no extra movement happens.
-  const chargeDelay = chargeOrder * 0.075;
-  const targetX = isMarching ? marchX : spawnX;
-  const isChargeImpact = isCharging && chargeHitOffsetX !== 0;
-
-  return (
-    <motion.g
-      key={`bar-spawn-${index}`}
-      initial={{ x: initialX, y: initialYOffset }}
-      animate={{
-        x: isChargeImpact
-          ? [targetX, targetX, targetX + chargeHitOffsetX, targetX + chargeHitOffsetX * 0.2]
-          : targetX,
-        y: 0,
-      }}
-      transition={{
-        x: isChargeImpact
-          ? { duration: 0.46, delay: chargeDelay + 0.04, times: [0, 0.38, 0.72, 1], ease: [0.22, 1, 0.36, 1] }
-          : isMarching
-            ? { type: 'spring', stiffness: 100, damping: 18, mass: 0.6, delay: spawnDelay * 0.25 }
-            : { type: 'spring', stiffness: 180, damping: 16, mass: 0.6, delay: spawnDelay },
-        y: { type: 'spring', stiffness: 180, damping: 16, mass: 0.6, delay: spawnDelay },
-      }}
-    >
-      <motion.rect
-        x={0} y={y} width={BAR_W} height={BAR_H} rx={BAR_RX}
-        fill={`url(#${gradientId})`}
-        initial={{ opacity: 0, scaleY: 0.05, scaleX: 0.4 }}
-        animate={{
-          opacity: isCharging ? [0.95, 1, 0.95] : 0.95,
-          scaleY: isCharging ? [1, 1.1, 1] : 1,
-          scaleX: isCharging ? [1, 1.16, 1] : 1,
-        }}
-        transition={isCharging
-          ? { duration: 0.34, delay: chargeDelay, ease: 'easeOut' }
-          : {
-              opacity: { duration: 0.25, delay: spawnDelay, ease: 'easeOut' },
-              scaleY: { type: 'spring', stiffness: 240, damping: 14, delay: spawnDelay },
-              scaleX: { type: 'spring', stiffness: 240, damping: 14, delay: spawnDelay },
-            }}
-        style={{
-          filter: isCharging ? 'drop-shadow(0 0 7px rgba(255,229,0,0.75))' : undefined,
-          transformOrigin: `${BAR_W / 2}px ${cy}px`,
-        }}
-      />
-      {isCharging && (
-        <motion.rect
-          x={-2}
-          y={y - 3}
-          width={BAR_W + 4}
-          height={BAR_H + 6}
-          rx={BAR_RX + 2}
-          fill="#FFE500"
-          initial={{ opacity: 0, scaleY: 0.08, scaleX: 0.65 }}
-          animate={{ opacity: [0, 0.88, 0], scaleY: [0.08, 1.18, 1], scaleX: [0.65, 1.4, 1] }}
-          transition={{ duration: 0.42, delay: chargeDelay, ease: [0.22, 1, 0.36, 1] }}
-          style={{ transformOrigin: `${BAR_W / 2}px ${cy}px` }}
-        />
-      )}
-    </motion.g>
-  );
-}
-
-// Single bar with a "×N" label for rows that cannot fit behind the avatar.
-function StackedBar({
-  spawnX,
-  marchX,
-  pushX,
-  gradientId,
-  count,
-  cancelCount = 0,
-  phase,
-  cancelled,
-  survived,
-  chargeOrder,
-  chargeHitOffsetX = 0,
-  cy = CY,
-  barW = BAR_W,
-  barH = BAR_H,
-  barRx = BAR_RX,
-  morphFromX,
-  morphFromY,
-  isPortrait = false,
-}: {
-  spawnX: number;
-  marchX: number;
-  pushX: number;
-  gradientId: string;
-  count: number;
-  cancelCount?: number;
-  phase: BarBattlePhase;
-  cancelled: boolean;
-  survived: boolean;
-  chargeOrder: number;
-  chargeHitOffsetX?: number;
-  cy?: number;
-  barW?: number;
-  barH?: number;
-  barRx?: number;
-  morphFromX?: number;
-  morphFromY?: number;
-  isPortrait?: boolean;
-}) {
-  const W = barW * 2.2;
-  const H = barH;
-  const y = cy - H / 2;
-  const initialX = morphFromX ?? spawnX;
-  const initialYOffset = morphFromY != null ? morphFromY - y : 0;
-
-  const showBar = phase === 'bars' || phase === 'battle' || phase === 'charge' || phase === 'result';
-  const isMarching = phase === 'battle' || phase === 'charge' || phase === 'result';
-  const isBattling = phase === 'battle' && cancelCount > 0;
-  const isCharging = phase === 'charge' && survived;
-  const isResult = phase === 'result';
-  const textRotate = isPortrait ? `rotate(90, 0, ${cy})` : undefined;
-  if (!showBar) return null;
-
-  if (isBattling) {
-    const hitCount = Math.max(1, Math.min(cancelCount, 12));
-    const finalHitDelay = (hitCount - 1) * STACK_CANCEL_STEP_S;
-    const vanishAt = finalHitDelay + STACK_CANCEL_FLASH_S;
-    const shouldDisappear = cancelled && !survived;
-
-    return (
-      <motion.g
-        initial={{ x: spawnX }}
-        animate={{ x: marchX }}
-        transition={{ type: 'spring', stiffness: 100, damping: 18, mass: 0.6 }}
-      >
-        <motion.rect
-          x={-W / 2} y={y} width={W} height={H} rx={barRx}
-          fill={`url(#${gradientId})`}
-          initial={{ opacity: 0.95 }}
-          animate={shouldDisappear
-            ? { opacity: [0.95, 0.95, 0], scaleY: [1, 1, 1.3], scaleX: [1, 1, 0.15] }
-            : { opacity: 0.95, scaleY: [1, 1.04, 1], scaleX: [1, 1.05, 1] }}
-          transition={shouldDisappear
-            ? {
-                opacity: { duration: vanishAt + 0.18, times: [0, 0.82, 1], ease: 'easeOut' },
-                scaleY: { duration: vanishAt + 0.18, times: [0, 0.82, 1], ease: 'easeOut' },
-                scaleX: { duration: vanishAt + 0.18, times: [0, 0.82, 1], ease: 'easeOut' },
-              }
-            : {
-                scaleY: { duration: vanishAt + 0.12, ease: 'easeOut' },
-                scaleX: { duration: vanishAt + 0.12, ease: 'easeOut' },
-              }}
-        />
-        {Array.from({ length: hitCount }).map((_, i) => (
-          <motion.rect
-            key={`stack-hit-${i}`}
-            data-testid="stack-cancel-hit"
-            x={-W / 2}
-            y={y - 2}
-            width={W}
-            height={H + 4}
-            rx={barRx}
-            fill="white"
-            initial={{ opacity: 0, scaleX: 1 }}
-            animate={{ opacity: [0, 0.9, 0], scaleX: [1, 1.6, 0.3] }}
-            transition={{ duration: 0.2, delay: i * STACK_CANCEL_STEP_S + 0.05, ease: 'easeOut' }}
-            style={{ transformOrigin: `0px ${cy}px` }}
-          />
-        ))}
-        <motion.text
-          x={0}
-          y={cy + 4}
-          textAnchor="middle"
-          fill="white"
-          fontSize={H * 0.45}
-          fontWeight="900"
-          fontFamily="'Poppins', system-ui, sans-serif"
-          transform={textRotate}
-          initial={{ opacity: 1 }}
-          animate={shouldDisappear ? { opacity: [1, 1, 0] } : { opacity: 1 }}
-          transition={shouldDisappear ? { duration: vanishAt + 0.18, times: [0, 0.82, 1], ease: 'easeOut' } : undefined}
-          style={{ paintOrder: 'stroke fill', stroke: 'rgba(0,0,0,0.55)', strokeWidth: 1.5 }}
-        >
-          ×{count}
-        </motion.text>
-      </motion.g>
-    );
-  }
-
-  if (isResult && cancelled && !survived) return null;
-  if (phase === 'charge' && cancelled && !survived) return null;
-
-  const targetX = isMarching && !isResult ? marchX : isResult && survived ? pushX : spawnX;
-  const chargeDelay = chargeOrder * 0.075;
-  const isChargeImpact = isCharging && chargeHitOffsetX !== 0;
-
-  return (
-    <motion.g
-      initial={{ opacity: 0, x: initialX, y: initialYOffset, scale: 0.4 }}
-      animate={{
-        opacity: isCharging ? [0.95, 1, 0.95] : 0.95,
-        x: isChargeImpact
-          ? [targetX, targetX, targetX + chargeHitOffsetX, targetX + chargeHitOffsetX * 0.2]
-          : targetX,
-        y: 0,
-        scale: isCharging ? [1, 1.08, 1] : 1,
-      }}
-      transition={{
-        opacity: isCharging
-          ? { duration: 0.42, delay: chargeDelay, ease: 'easeOut' }
-          : { duration: 0.25, ease: 'easeOut' },
-        scale: isCharging
-          ? { duration: 0.42, delay: chargeDelay, ease: 'easeOut' }
-          : { type: 'spring', stiffness: 220, damping: 14 },
-        x: isChargeImpact
-          ? { duration: 0.46, delay: chargeDelay + 0.04, times: [0, 0.38, 0.72, 1], ease: [0.22, 1, 0.36, 1] }
-          : { type: 'spring', stiffness: 140, damping: 18, mass: 0.7 },
-        y: { type: 'spring', stiffness: 180, damping: 16, mass: 0.6 },
-      }}
-      style={{ filter: isCharging ? 'drop-shadow(0 0 9px rgba(255,229,0,0.7))' : undefined }}
-    >
-      <rect
-        x={-W / 2} y={y} width={W} height={H} rx={barRx}
-        fill={`url(#${gradientId})`}
-      />
-      {isCharging && (
-        <motion.rect
-          x={-W / 2 - 3}
-          y={y - 3}
-          width={W + 6}
-          height={H + 6}
-          rx={barRx + 2}
-          fill="#FFE500"
-          initial={{ opacity: 0, scaleY: 0.1, scaleX: 0.75 }}
-          animate={{ opacity: [0, 0.75, 0], scaleY: [0.1, 1.12, 1], scaleX: [0.75, 1.18, 1] }}
-          transition={{ duration: 0.46, delay: chargeDelay, ease: [0.22, 1, 0.36, 1] }}
-        />
-      )}
-      <text
-        x={0}
-        y={cy + 4}
-        textAnchor="middle"
-        fill="white"
-        fontSize={H * 0.45}
-        fontWeight="900"
-        fontFamily="'Poppins', system-ui, sans-serif"
-        transform={textRotate}
-        style={{ paintOrder: 'stroke fill', stroke: 'rgba(0,0,0,0.55)', strokeWidth: 1.5 }}
-      >
-        ×{count}
-      </text>
-    </motion.g>
-  );
-}
 
 // ─── Main overlay ────────────────────────────────────────────────────────────
 
@@ -674,7 +301,7 @@ export function BarBattleOverlay({
 
       <g clipPath={`url(#${battleClip})`}>
         {playerLayout.compact ? (
-          <StackedBar
+          <BarBattleStackedBar
             key={`p-stack-${battle.key}`}
             spawnX={playerLayout.compactX}
             marchX={playerLayout.compactX}
@@ -718,7 +345,7 @@ export function BarBattleOverlay({
               : 0;
 
             return (
-              <Bar
+              <BarBattleBar
                 key={`p-${battle.key}-${i}`}
                 spawnX={playerBarStartX(i)}
                 marchX={playerMarchX(i)}
@@ -745,7 +372,7 @@ export function BarBattleOverlay({
         )}
 
         {opponentLayout.compact ? (
-          <StackedBar
+          <BarBattleStackedBar
             key={`o-stack-${battle.key}`}
             spawnX={opponentLayout.compactX}
             marchX={opponentLayout.compactX}
@@ -789,7 +416,7 @@ export function BarBattleOverlay({
               : 0;
 
             return (
-              <Bar
+              <BarBattleBar
                 key={`o-${battle.key}-${i}`}
                 spawnX={opponentBarStartX(i)}
                 marchX={opponentMarchX(i)}
