@@ -39,7 +39,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   Settings,
-  Home,
   LogOut,
   ArrowRight,
   X,
@@ -47,78 +46,18 @@ import {
 import { cn } from "@/lib/utils";
 import { getSocket } from "@/lib/realtime/socket-client";
 import { useRealtimeConnection } from "@/lib/realtime/useRealtimeConnection";
-import { Medal, Gem, User, Gamepad2, UserRound } from "lucide-react";
+import { Gamepad2, User } from "lucide-react";
 import type { MessageKey } from "@/lib/i18n/messages";
 
-const MOBILE_NAV_ITEMS = [
-  { path: "/", labelKey: "navigation.home", icon: Home },
-  { path: "/leaderboard", labelKey: "navigation.leaderboard", icon: Medal },
-  { path: "/social", labelKey: "navigation.social", icon: UserRound },
-  { path: "/store", labelKey: "navigation.store", icon: Gem },
-  { path: "/profile", labelKey: "navigation.profile", icon: User },
-] as const;
-
-const HIDE_NAV_PATHS = ["/game", "/onboarding"];
-const HEADER_PATHS = ["/", "/play", "/events", "/leaderboard", "/social", "/profile", "/store", "/career", "/daily"];
-
-type AppShellProps = {
-  children: React.ReactNode;
-};
-
-type RankedGeoHintDebug = {
-  city?: string;
-  region?: string;
-  country?: string;
-  countryCode?: string;
-  latitude?: number;
-  longitude?: number;
-  source?: string;
-};
-
-function isRankedGeoHintDebug(value: unknown): value is RankedGeoHintDebug {
-  if (!value || typeof value !== "object") return false;
-  const candidate = value as Partial<RankedGeoHintDebug>;
-  const isMaybeString = (input: unknown) => input === undefined || typeof input === "string";
-  const isMaybeNumber = (input: unknown) => input === undefined || typeof input === "number";
-  return (
-    isMaybeString(candidate.city) &&
-    isMaybeString(candidate.region) &&
-    isMaybeString(candidate.country) &&
-    isMaybeString(candidate.countryCode) &&
-    isMaybeNumber(candidate.latitude) &&
-    isMaybeNumber(candidate.longitude) &&
-    isMaybeString(candidate.source)
-  );
-}
-
-function readRankedGeoHintDebug(): RankedGeoHintDebug | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = window.localStorage.getItem("ranked_geo_hint_v1");
-    if (!raw) return null;
-    const parsed: unknown = JSON.parse(raw);
-    return isRankedGeoHintDebug(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-type TranslateFn = (key: MessageKey, params?: Record<string, string | number>) => string;
-
-function formatRejoinCopy(t: TranslateFn, remainingReconnects: number, compact = false): string {
-  if (remainingReconnects <= 0) {
-    return compact
-      ? t("appShell.rejoinNowLastMobile")
-      : t("appShell.rejoinNowLastDesktop");
-  }
-
-  const label = remainingReconnects === 1
-    ? t("appShell.reconnect")
-    : t("appShell.reconnects");
-  return compact
-    ? t("appShell.rejoinShortMany", { count: remainingReconnects, label })
-    : t("appShell.rejoinNowToContinue", { count: remainingReconnects, label });
-}
+import type { AppShellProps, RankedGeoHintDebug } from "./app-shell/appShell.types";
+import {
+  HEADER_PATHS,
+  HIDE_NAV_PATHS,
+  MOBILE_NAV_ITEMS,
+  formatRejoinCopy,
+  isPathActive as isPathActiveHelper,
+  readRankedGeoHintDebug,
+} from "./app-shell/appShell.helpers";
 
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
@@ -269,12 +208,7 @@ export function AppShell({ children }: AppShellProps) {
     router.replace("/");
   };
 
-  const isPathActive = (path: string, exact?: boolean) => {
-    if (path === "/") return currentPath === "/";
-    const basePath = path.split("?")[0];
-    if (exact) return currentPath === basePath;
-    return currentPath === basePath || currentPath.startsWith(`${basePath}/`);
-  };
+  const isPathActive = (path: string, exact?: boolean) => isPathActiveHelper(currentPath, path, exact);
 
   const handleReturnToLobby = () => {
     if (!lobbyCode) return;
