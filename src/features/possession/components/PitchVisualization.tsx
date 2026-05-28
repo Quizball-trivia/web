@@ -1,13 +1,15 @@
 'use client';
 
 import { motion, AnimatePresence } from 'motion/react';
-import { AvatarDisplay } from '@/components/AvatarDisplay';
 import type { PitchVisualizationProps } from './pitch/pitch.types';
-import { PITCH_BALL_IMAGE_URL } from './pitch/pitch.helpers';
 import { PitchMarker } from './pitch/PitchMarker';
 import { PitchSvgDefs } from './pitch/PitchSvgDefs';
 import { PitchBackground } from './pitch/PitchBackground';
 import { PossessionTrackScene } from './pitch/PossessionTrackScene';
+import { PitchBall } from './pitch/PitchBall';
+import { PitchGoalNetRipple } from './pitch/PitchGoalNetRipple';
+import { PitchHtmlActors } from './pitch/PitchHtmlActors';
+import { PitchVignette } from './pitch/PitchVignette';
 import { usePitchSceneModel } from './pitch/usePitchSceneModel';
 
 export function PitchVisualization(props: PitchVisualizationProps) {
@@ -205,73 +207,52 @@ export function PitchVisualization(props: PitchVisualizationProps) {
 
           {/* === UNIFIED BALL — single persistent <motion.g> that never unmounts === */}
           {!hideBall && !renderHtmlPitchActors && !renderSimpleShotBall && (
-            <motion.g
-              key="ball"
-              initial={false}
-              animate={{
-                x: ballTarget.x,
-                y: ballTarget.y,
-                opacity: ballOpacity,
-              }}
+            <PitchBall
+              variant="unified"
+              animate={{ x: ballTarget.x, y: ballTarget.y, opacity: ballOpacity }}
               transition={ballTransition}
-            >
-              <motion.circle cx="0" cy="0" r={ballGlowR} fill="rgba(255,255,255,0.1)" filter={`url(#${uid('ballGlow')})`} />
-              <foreignObject x={-ballBoxOffset} y={-ballBoxOffset} width={ballBox} height={ballBox}>
-                <img src={PITCH_BALL_IMAGE_URL} alt="" style={ballImageStyle} />
-              </foreignObject>
-            </motion.g>
+              ballGlowR={ballGlowR}
+              ballBox={ballBox}
+              ballBoxOffset={ballBoxOffset}
+              ballImageStyle={ballImageStyle}
+              uid={uid}
+            />
           )}
 
           {!hideBall && !renderHtmlPitchActors && renderSimpleShotBall && (
-            <motion.g
-              key={`simple-shot-ball-${shotMode?.isPlayerAttacker ? 'player' : 'opponent'}-${shotMode?.result}-${targetGoal ?? 'right'}`}
-              initial={{
-                x: simpleShotOriginX,
-                y: simpleShotOriginY,
-                scale: 1,
-                opacity: 1,
-              }}
+            <PitchBall
+              variant="simple-shot"
+              simpleShotKey={`simple-shot-ball-${shotMode?.isPlayerAttacker ? 'player' : 'opponent'}-${shotMode?.result}-${targetGoal ?? 'right'}`}
+              initialPosition={{ x: simpleShotOriginX, y: simpleShotOriginY }}
               animate={simpleShotBallAnimate}
               transition={ballTransition}
-            >
-              <motion.circle cx="0" cy="0" r={ballGlowR} fill="rgba(255,255,255,0.1)" filter={`url(#${uid('ballGlow')})`} />
-              <foreignObject x={-ballBoxOffset} y={-ballBoxOffset} width={ballBox} height={ballBox}>
-                <img src={PITCH_BALL_IMAGE_URL} alt="" style={ballImageStyle} />
-              </foreignObject>
-            </motion.g>
+              ballGlowR={ballGlowR}
+              ballBox={ballBox}
+              ballBoxOffset={ballBoxOffset}
+              ballImageStyle={ballImageStyle}
+              uid={uid}
+            />
           )}
 
           {/* === Decorative overlays — separate AnimatePresence === */}
           <AnimatePresence>
-            {/* Penalty goal: net ripple */}
             {isGoal && (
-              <motion.g key="pen-goal-decor">
-                <motion.rect
-                  x={goal.netX} y="92" width="9" height="46" rx="1"
-                  fill={`url(#${uid('penNet')})`}
-                  initial={{ opacity: 0 }}
-                  animate={{
-                    opacity: [0, 0.8, 0.4, 0],
-                    x: [goal.netX, goal.netX + 2 * goal.inward, goal.netX + goal.inward, goal.netX],
-                  }}
-                  transition={{ duration: 0.5, delay: 0.35 }}
-                />
-              </motion.g>
+              <PitchGoalNetRipple
+                uniqueKey="pen-goal-decor"
+                netX={goal.netX}
+                inward={goal.inward}
+                patternId={uid('penNet')}
+                delay={0.35}
+              />
             )}
-            {/* Shot goal: net ripple */}
             {isShotGoal && (
-              <motion.g key="shot-goal-decor">
-                <motion.rect
-                  x={goal.netX} y="92" width="9" height="46" rx="1"
-                  fill={`url(#${uid('penNet')})`}
-                  initial={{ opacity: 0 }}
-                  animate={{
-                    opacity: [0, 0.8, 0.4, 0],
-                    x: [goal.netX, goal.netX + 2 * goal.inward, goal.netX + goal.inward, goal.netX],
-                  }}
-                  transition={{ duration: 0.5, delay: shotGoalNetDelay }}
-                />
-              </motion.g>
+              <PitchGoalNetRipple
+                uniqueKey="shot-goal-decor"
+                netX={goal.netX}
+                inward={goal.inward}
+                patternId={uid('penNet')}
+                delay={shotGoalNetDelay}
+              />
             )}
           </AnimatePresence>
 
@@ -279,103 +260,34 @@ export function PitchVisualization(props: PitchVisualizationProps) {
           </g>
         </svg>
         {renderHtmlPitchActors && (
-          <>
-            <motion.div
-              data-pitch-avatar="player"
-              initial={false}
-              animate={playerActorPosition}
-              transition={{ type: 'spring', stiffness: 160, damping: 12, mass: 0.7 }}
-              className="pointer-events-none absolute z-20"
-              style={{
-                width: actorAvatarSize,
-                aspectRatio: '1 / 1',
-                transform: 'translate(-50%, -50%)',
-              }}
-            >
-              <motion.div
-                animate={playerHtmlActorMotion}
-                transition={playerHtmlActorTransition}
-                className="size-full rounded-full"
-                style={!isPortrait && useMarkerActors && htmlActorResultActive && playerHtmlIsShooter ? { transformOrigin: '50% 100%' } : undefined}
-              >
-                <div
-                  aria-label={playerAvatarAlt}
-                  className="size-full overflow-hidden rounded-full"
-                  style={{ transform: mirrored ? 'scaleX(-1)' : undefined }}
-                >
-                  <AvatarDisplay customization={playerAvatarCustomization ?? {}} size="xs" className="size-full" />
-                </div>
-              </motion.div>
-            </motion.div>
-
-            <motion.div
-              data-pitch-avatar="opponent"
-              initial={false}
-              animate={opponentActorPosition}
-              transition={{ type: 'spring', stiffness: 160, damping: 12, mass: 0.7 }}
-              className="pointer-events-none absolute z-20"
-              style={{
-                width: actorAvatarSize,
-                aspectRatio: '1 / 1',
-                transform: 'translate(-50%, -50%)',
-              }}
-            >
-              <motion.div
-                animate={opponentHtmlActorMotion}
-                transition={opponentHtmlActorTransition}
-                className="size-full rounded-full"
-                style={!isPortrait && useMarkerActors && htmlActorResultActive && opponentHtmlIsShooter ? { transformOrigin: '50% 100%' } : undefined}
-              >
-                <div
-                  aria-label={opponentAvatarAlt}
-                  className="size-full overflow-hidden rounded-full"
-                  style={{ transform: mirrored ? undefined : 'scaleX(-1)' }}
-                >
-                  <AvatarDisplay customization={opponentAvatarCustomization ?? {}} size="xs" className="size-full" />
-                </div>
-              </motion.div>
-            </motion.div>
-
-            {!hideBall && ballActorPosition && (
-              <motion.div
-                key="portrait-html-ball"
-                initial={false}
-                animate={{
-                  ...ballActorPosition,
-                  opacity: ballOpacity,
-                }}
-                transition={ballTransition}
-                className="pointer-events-none absolute z-30"
-                style={{
-                  width: actorBallSize,
-                  aspectRatio: '1 / 1',
-                  transform: 'translate(-50%, -50%)',
-                }}
-              >
-                <div className="absolute inset-[-18%] rounded-full bg-white/10 blur-sm" />
-                <img
-                  src={PITCH_BALL_IMAGE_URL}
-                  alt=""
-                  className="relative size-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.32)]"
-                />
-              </motion.div>
-            )}
-          </>
+          <PitchHtmlActors
+            playerActorPosition={playerActorPosition}
+            opponentActorPosition={opponentActorPosition}
+            ballActorPosition={ballActorPosition}
+            actorAvatarSize={actorAvatarSize}
+            actorBallSize={actorBallSize}
+            playerAvatarAlt={playerAvatarAlt}
+            opponentAvatarAlt={opponentAvatarAlt}
+            playerAvatarCustomization={playerAvatarCustomization}
+            opponentAvatarCustomization={opponentAvatarCustomization}
+            mirrored={mirrored}
+            isPortrait={isPortrait}
+            hideBall={hideBall}
+            ballOpacity={ballOpacity}
+            ballTransition={ballTransition}
+            playerHtmlActorMotion={playerHtmlActorMotion}
+            opponentHtmlActorMotion={opponentHtmlActorMotion}
+            playerHtmlActorTransition={playerHtmlActorTransition}
+            opponentHtmlActorTransition={opponentHtmlActorTransition}
+            useMarkerActors={useMarkerActors}
+            htmlActorResultActive={htmlActorResultActive}
+            playerHtmlIsShooter={playerHtmlIsShooter}
+            opponentHtmlIsShooter={opponentHtmlIsShooter}
+          />
         )}
         </motion.div>
 
-        {/* Vignette overlay during camera zoom */}
-        <AnimatePresence>
-          {shouldZoomToGoal && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 pointer-events-none"
-              style={{ background: vignetteGradient }}
-            />
-          )}
-        </AnimatePresence>
+        <PitchVignette visible={shouldZoomToGoal} gradient={vignetteGradient} />
       </div>
     </div>
   );
