@@ -1,6 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
-import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
+import { describe, expect, it } from 'vitest';
 import { BarBattleOverlay, type BarBattleState } from '../BarBattleOverlay';
 
 function rankedBattle(overrides: Partial<BarBattleState> = {}): BarBattleState {
@@ -17,14 +16,8 @@ function rankedBattle(overrides: Partial<BarBattleState> = {}): BarBattleState {
   };
 }
 
-describe('BarBattleOverlay — store-fallback variant resolution (existing behavior)', () => {
-  afterEach(() => {
-    useRealtimeMatchStore.setState({ match: null });
-  });
-
+describe('BarBattleOverlay — anchored layout (variant="ranked_sim")', () => {
   it('places zero-point flight targets in the avatar bar lane instead of the avatar center', () => {
-    useRealtimeMatchStore.setState({ match: { variant: 'ranked_sim' } as never });
-
     render(
       <svg>
         <BarBattleOverlay
@@ -33,6 +26,7 @@ describe('BarBattleOverlay — store-fallback variant resolution (existing behav
           playerAvatarX={200}
           opponentAvatarX={300}
           isPortrait
+          variant="ranked_sim"
         />
       </svg>,
     );
@@ -42,8 +36,6 @@ describe('BarBattleOverlay — store-fallback variant resolution (existing behav
   });
 
   it('places second-half portrait opponent bars behind the opponent instead of toward the player', () => {
-    useRealtimeMatchStore.setState({ match: { variant: 'ranked_sim' } as never });
-
     render(
       <svg>
         <BarBattleOverlay
@@ -60,6 +52,7 @@ describe('BarBattleOverlay — store-fallback variant resolution (existing behav
           playerAvatarX={300}
           opponentAvatarX={200}
           isPortrait
+          variant="ranked_sim"
         />
       </svg>,
     );
@@ -69,8 +62,6 @@ describe('BarBattleOverlay — store-fallback variant resolution (existing behav
   });
 
   it('repeats compact stack cancel hits for each represented bar', () => {
-    useRealtimeMatchStore.setState({ match: { variant: 'ranked_sim' } as never });
-
     render(
       <svg>
         <BarBattleOverlay
@@ -87,6 +78,7 @@ describe('BarBattleOverlay — store-fallback variant resolution (existing behav
           playerAvatarX={100}
           opponentAvatarX={360}
           isPortrait
+          variant="ranked_sim"
         />
       </svg>,
     );
@@ -95,12 +87,8 @@ describe('BarBattleOverlay — store-fallback variant resolution (existing behav
   });
 });
 
-describe('BarBattleOverlay — prop-driven variant resolution', () => {
-  afterEach(() => {
-    useRealtimeMatchStore.setState({ match: null });
-  });
-
-  it('runs the anchored variant when variant prop is "ranked_sim" without any store state', () => {
+describe('BarBattleOverlay — variant prop resolution', () => {
+  it('runs the anchored variant when variant prop is "ranked_sim"', () => {
     render(
       <svg>
         <BarBattleOverlay
@@ -120,42 +108,6 @@ describe('BarBattleOverlay — prop-driven variant resolution', () => {
     expect(screen.getByTestId('bar-target-opponent')).toBeInTheDocument();
   });
 
-  it('resolves to the same anchored target whether variant comes from the store or the prop', () => {
-    // Store-seeded baseline
-    useRealtimeMatchStore.setState({ match: { variant: 'ranked_sim' } as never });
-    const { container: storeContainer, unmount } = render(
-      <svg>
-        <BarBattleOverlay
-          battle={rankedBattle()}
-          mirrored={false}
-          playerAvatarX={200}
-          opponentAvatarX={300}
-          isPortrait
-        />
-      </svg>,
-    );
-    const storeCx = storeContainer
-      .querySelector('[data-testid="bar-target-opponent"]')
-      ?.getAttribute('cx');
-    unmount();
-    useRealtimeMatchStore.setState({ match: null });
-
-    // Prop-driven repeat
-    render(
-      <svg>
-        <BarBattleOverlay
-          battle={rankedBattle()}
-          mirrored={false}
-          playerAvatarX={200}
-          opponentAvatarX={300}
-          isPortrait
-          variant="ranked_sim"
-        />
-      </svg>,
-    );
-    expect(screen.getByTestId('bar-target-opponent')).toHaveAttribute('cx', storeCx ?? '');
-  });
-
   it('runs the classic (non-anchored) variant when variant prop is "friendly_possession"', () => {
     render(
       <svg>
@@ -169,13 +121,11 @@ describe('BarBattleOverlay — prop-driven variant resolution', () => {
         />
       </svg>,
     );
-    // Classic mode does NOT render the flight target anchors.
     expect(screen.queryByTestId('bar-target-player')).not.toBeInTheDocument();
     expect(screen.queryByTestId('bar-target-opponent')).not.toBeInTheDocument();
   });
 
-  it('takes the explicit variant prop over the store value when both are set', () => {
-    useRealtimeMatchStore.setState({ match: { variant: 'friendly_possession' } as never });
+  it('runs the classic variant when variant prop is omitted (no implicit store fallback)', () => {
     render(
       <svg>
         <BarBattleOverlay
@@ -184,20 +134,16 @@ describe('BarBattleOverlay — prop-driven variant resolution', () => {
           playerAvatarX={200}
           opponentAvatarX={300}
           isPortrait
-          variant="ranked_sim"
         />
       </svg>,
     );
-    // Anchored = ranked_sim wins.
-    expect(screen.getByTestId('bar-target-player')).toBeInTheDocument();
+    // Without the variant prop the overlay must NOT enter anchored mode
+    // (the previous in-component store read would have done so).
+    expect(screen.queryByTestId('bar-target-player')).not.toBeInTheDocument();
   });
 });
 
 describe('BarBattleOverlay — edge cases', () => {
-  afterEach(() => {
-    useRealtimeMatchStore.setState({ match: null });
-  });
-
   it('renders nothing when the phase is "done"', () => {
     const { container } = render(
       <svg>
@@ -210,8 +156,6 @@ describe('BarBattleOverlay — edge cases', () => {
         />
       </svg>,
     );
-    // The overlay short-circuits to null. The wrapping <svg> stays, but no
-    // bar-battle <g> contents land inside it.
     expect(container.querySelector('[data-testid="bar-target-player"]')).toBeNull();
     expect(container.querySelector('linearGradient')).toBeNull();
   });
@@ -279,14 +223,11 @@ describe('BarBattleOverlay — edge cases', () => {
         />
       </svg>,
     );
-    // Classic splash uses an SVG text node with the "+N" content.
     const texts = Array.from(container.querySelectorAll('text')).map((t) => t.textContent ?? '');
     expect(texts.some((t) => t.includes('+70'))).toBe(true);
   });
 
   it('falls back to no anchored mode if avatar X positions are missing (variant ranked_sim, no avatars)', () => {
-    // Without avatar X, anchored mode short-circuits and the overlay should
-    // still render without the bar-target circles.
     const { container } = render(
       <svg>
         <BarBattleOverlay

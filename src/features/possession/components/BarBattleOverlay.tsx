@@ -1,6 +1,5 @@
 'use client';
 
-import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import type { BarBattleState } from './bar-battle/barBattle.types';
 import { BLUE, BLUE_DARK, RED, RED_DARK } from './bar-battle/barBattle.helpers';
 import { BarBattleScoreTexts } from './bar-battle/BarBattleScoreTexts';
@@ -26,7 +25,10 @@ interface BarBattleOverlayProps {
    *  `matrix(0,-1,1,0,0,500)`) for portrait layout. Used so splash text
    *  can counter-rotate and stay upright. */
   isPortrait?: boolean;
-  /** Override the match variant for isolated demos that should not mutate the realtime store. */
+  /** Active match variant. `ranked_sim` switches the overlay to the
+   *  avatar-anchored layout; any other value (or undefined) uses the
+   *  classic layout. Must be passed by the caller — the overlay no
+   *  longer reads it from the realtime store directly. */
   variant?: 'ranked_sim' | 'friendly_possession';
 }
 
@@ -38,29 +40,13 @@ export function BarBattleOverlay({
   isPortrait = false,
   variant,
 }: BarBattleOverlayProps) {
-  // Resolve the active variant. The store-read is still here as a
-  // fallback so existing callers (notably the dev page) keep working;
-  // step 6 of this refactor swaps the fallback out for a required
-  // prop and moves the store-read up to the production caller.
-  //
-  // `match.variant` is the broader LobbyGameMode union; only the
-  // ranked-sim / friendly-possession arms are visually meaningful here,
-  // so narrow to the BarBattleVariant union — any other value falls
-  // through to the classic (non-anchored) layout.
-  const storeMatchVariant = useRealtimeMatchStore((s) => s.match?.variant);
-  const matchVariant: 'ranked_sim' | 'friendly_possession' | undefined =
-    variant
-    ?? (storeMatchVariant === 'ranked_sim' || storeMatchVariant === 'friendly_possession'
-      ? storeMatchVariant
-      : undefined);
-
   const vm = useBarBattleViewModel({
     battle,
     mirrored,
     playerAvatarX,
     opponentAvatarX,
     isPortrait,
-    matchVariant,
+    matchVariant: variant,
   });
   if (vm.isDone) return null;
   const { blueGrad, redGrad, battleClip, isAnchored, cy, playerLayout, opponentLayout } = vm;
