@@ -1,14 +1,16 @@
 import { trackEvent } from '@/lib/posthog';
 
-export function trackSignupStarted(method: 'google' | 'email' = 'google') {
+type AuthMethod = 'google' | 'facebook' | 'email' | 'phone';
+
+export function trackSignupStarted(method: AuthMethod = 'google') {
   trackEvent('signup_started', { method });
 }
 
-export function trackSignupCompleted(method: 'google' | 'email' = 'google') {
+export function trackSignupCompleted(method: AuthMethod = 'google') {
   trackEvent('signup_completed', { method });
 }
 
-export function trackLoginCompleted(method: 'google' | 'email' = 'google') {
+export function trackLoginCompleted(method: AuthMethod = 'google') {
   trackEvent('login_completed', { method });
 }
 

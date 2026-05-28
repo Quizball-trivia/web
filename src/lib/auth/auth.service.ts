@@ -31,6 +31,16 @@ type SocialLoginPayload =
     paths["/api/v1/auth/social-login"]["post"]["requestBody"]
   >["content"]["application/json"];
 
+type GeorgianPhoneOtpStartPayload =
+  NonNullable<
+    paths["/api/v1/auth/phone/ge/start"]["post"]["requestBody"]
+  >["content"]["application/json"];
+
+type GeorgianPhoneOtpVerifyPayload =
+  NonNullable<
+    paths["/api/v1/auth/phone/ge/verify"]["post"]["requestBody"]
+  >["content"]["application/json"];
+
 export async function login(email: string, password: string): Promise<AuthResponse["user"] | null> {
   logger.info("Auth login start", { email });
   const data = await api.POST("/api/v1/auth/login", {
@@ -164,6 +174,30 @@ export async function socialLoginWithIdToken(
     setTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
   }
   logger.info("Auth social login token success");
+  return response.user ?? null;
+}
+
+export async function startGeorgianPhoneOtp(phone: string): Promise<void> {
+  logger.info("Auth Georgian phone OTP start");
+  await api.POST("/api/v1/auth/phone/ge/start", {
+    body: { phone } satisfies GeorgianPhoneOtpStartPayload,
+    auth: false,
+  });
+}
+
+export async function verifyGeorgianPhoneOtp(
+  phone: string,
+  token: string,
+): Promise<AuthResponse["user"] | null> {
+  logger.info("Auth Georgian phone OTP verify");
+  const data = await api.POST("/api/v1/auth/phone/ge/verify", {
+    body: { phone, token } satisfies GeorgianPhoneOtpVerifyPayload,
+    auth: false,
+  });
+  const response = data as AuthResponse;
+  if (response?.access_token && response?.refresh_token) {
+    setTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
+  }
   return response.user ?? null;
 }
 
