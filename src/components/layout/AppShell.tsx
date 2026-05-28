@@ -4,16 +4,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { usePlayer } from "@/contexts/PlayerContext";
-import { useLocale } from "@/contexts/LocaleContext";
-import { useAuthStore } from "@/stores/auth.store";
-import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
-import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
-import { useGameSessionStore } from "@/stores/gameSession.store";
-import { useStoreWallet } from "@/lib/queries/store.queries";
-import { useIncomingFriendRequestCount } from "@/lib/queries/social.queries";
 import { Button } from "@/components/ui/button";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -34,7 +24,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -44,263 +33,64 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getSocket } from "@/lib/realtime/socket-client";
-import { useRealtimeConnection } from "@/lib/realtime/useRealtimeConnection";
 import { Gamepad2, User } from "lucide-react";
 import type { MessageKey } from "@/lib/i18n/messages";
 
-import type { AppShellProps, RankedGeoHintDebug } from "./app-shell/appShell.types";
-import {
-  HEADER_PATHS,
-  HIDE_NAV_PATHS,
-  MOBILE_NAV_ITEMS,
-  formatRejoinCopy,
-  isPathActive as isPathActiveHelper,
-  readRankedGeoHintDebug,
-} from "./app-shell/appShell.helpers";
+import type { AppShellProps } from "./app-shell/appShell.types";
+import { MOBILE_NAV_ITEMS, formatRejoinCopy } from "./app-shell/appShell.helpers";
+import { useAppShellViewModel } from "./app-shell/useAppShellViewModel";
 
 export function AppShell({ children }: AppShellProps) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const { t } = useLocale();
-  const { player: playerStats } = usePlayer();
-  const { data: storeWallet } = useStoreWallet();
-  const { data: incomingFriendRequestCount = 0 } = useIncomingFriendRequestCount();
-  const authUser = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
-  const lobby = useRealtimeMatchStore((state) => state.lobby);
-  const draft = useRealtimeMatchStore((state) => state.draft);
-  const match = useRealtimeMatchStore((state) => state.match);
-  const remainingReconnects = useRealtimeMatchStore((state) => state.remainingReconnects);
-  const sessionState = useRealtimeMatchStore((state) => state.sessionState);
-  const rejoinMatch = useRealtimeMatchStore((state) => state.rejoinMatch);
-  const forfeitPending = useRealtimeMatchStore((state) => state.forfeitPending);
-  const challengeInviteCount = useRealtimeMatchStore((state) => state.challengeInvites.length);
-  const suppressLobbyBannerUntil = useRealtimeMatchStore((state) => state.suppressLobbyBannerUntil);
-  const suppressLobbyBannerReason = useRealtimeMatchStore((state) => state.suppressLobbyBannerReason);
-  const clearLobbyBannerSuppression = useRealtimeMatchStore((state) => state.clearLobbyBannerSuppression);
-  const clearRejoinAvailable = useRealtimeMatchStore((state) => state.clearRejoinAvailable);
-  const resetRealtime = useRealtimeMatchStore((state) => state.reset);
-  const startSession = useGameSessionStore((state) => state.startSession);
-  const setGameStage = useGameSessionStore((state) => state.setStage);
-  const [socketConnected, setSocketConnected] = useState(() => getSocket().connected);
-  const [rankedGeoHintDebug, setRankedGeoHintDebug] = useState<RankedGeoHintDebug | null>(
-    () => readRankedGeoHintDebug()
-  );
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [nowTick, setNowTick] = useState(() => Date.now());
-  useRealtimeConnection({ enabled: Boolean(authUser), selfUserId: authUser?.id ?? null });
-
-  // Tick once per second so any time-comparison render values
-  // (e.g. lobby banner suppression deadline) stay fresh without
-  // calling Date.now() during render.
-  useEffect(() => {
-    if (suppressLobbyBannerUntil === null) return;
-    const id = setInterval(() => setNowTick(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, [suppressLobbyBannerUntil]);
-
-  const currentPath = pathname ?? "/";
-  const showHeader = HEADER_PATHS.some((p) => p === "/" ? currentPath === "/" : currentPath.startsWith(p));
-  const showNav = !HIDE_NAV_PATHS.some((path) => currentPath.startsWith(path));
-  const inLobbyRoom = currentPath.startsWith("/friend/room");
-  const lobbyBannerSuppressed =
-    suppressLobbyBannerReason !== null ||
-    (suppressLobbyBannerUntil !== null && suppressLobbyBannerUntil > nowTick);
-  const showLobbyBanner =
-    !!lobby &&
-    lobby.status === "waiting" &&
-    lobby.mode === "friendly" &&
-    Boolean(lobby.inviteCode) &&
-    !inLobbyRoom &&
-    !lobbyBannerSuppressed;
-  const showRankedLobbyBanner =
-    !!lobby &&
-    lobby.status === "waiting" &&
-    lobby.mode === "ranked" &&
-    !currentPath.startsWith("/game");
-
-  useEffect(() => {
-    if (inLobbyRoom && suppressLobbyBannerReason !== null) {
-      clearLobbyBannerSuppression();
-    }
-  }, [clearLobbyBannerSuppression, inLobbyRoom, suppressLobbyBannerReason]);
-
-  const draftOpponent = lobby?.members.find((member) => member.userId !== authUser?.id);
-  const activeDraftBanner = lobby?.status === "active" && draft
-    ? {
-        lobbyId: lobby.lobbyId,
-        mode: lobby.mode,
-        opponent: draftOpponent,
-      }
-    : null;
-  const showDraftBanner = !!activeDraftBanner && !currentPath.startsWith("/game");
-  const activeMatchBanner = rejoinMatch
-    ? {
-        matchId: rejoinMatch.matchId,
-        mode: rejoinMatch.mode,
-        opponent: rejoinMatch.opponent,
-        source: "rejoin" as const,
-      }
-    : match && !match.finalResults
-      ? {
-          matchId: match.matchId,
-          mode: match.mode,
-          opponent: match.opponent,
-          source: "active" as const,
-        }
-      : null;
-  const showRejoinBanner = !!activeMatchBanner && !currentPath.startsWith("/game");
-  const completedMatchBanner = match?.finalResults
-    ? {
-        matchId: match.matchId,
-        mode: match.mode,
-        variant: match.variant,
-        opponent: match.opponent,
-      }
-    : null;
-  const showCompletedMatchBanner = !!completedMatchBanner && !currentPath.startsWith("/game");
-  const showForfeitPendingBanner = !!forfeitPending && !match?.finalResults && !currentPath.startsWith("/game");
-  const forfeitPendingTitle =
-    forfeitPending?.reason === "opponent_forfeit"
-      ? "Opponent forfeited"
-      : forfeitPending?.reason === "opponent_reconnect_limit"
-        ? "Opponent did not reconnect"
-        : "You lost the match";
-  const forfeitPendingDescription = forfeitPending?.message ?? "Finalizing result...";
-  const completedByForfeit = match?.finalResults?.winnerDecisionMethod === "forfeit";
-  const completedPartyQuiz = completedMatchBanner?.variant === "friendly_party_quiz";
-  const rejoinReconnectsLeft = rejoinMatch?.remainingReconnects ?? remainingReconnects ?? 0;
-  const lobbyCode = lobby?.inviteCode ?? "";
-  const showLobbyDebug = process.env.NODE_ENV !== "production";
-  const localWaitingLobbyId = lobby?.status === "waiting" ? lobby.lobbyId : null;
-  const sessionWaitingLobbyId = sessionState?.waitingLobbyId ?? null;
-  const lobbyDebugMismatch = localWaitingLobbyId !== sessionWaitingLobbyId;
-  const sessionStateLabel = sessionState?.state ?? "NO_SESSION";
-  const navbarCoins = storeWallet?.coins ?? 0;
-  const navbarTickets = storeWallet?.tickets ?? 0;
-  const socialBadgeCount = incomingFriendRequestCount + challengeInviteCount;
-
-  useEffect(() => {
-    const socket = getSocket();
-    const handleConnect = () => setSocketConnected(true);
-    const handleDisconnect = () => setSocketConnected(false);
-    socket.on("connect", handleConnect);
-    socket.on("disconnect", handleDisconnect);
-    return () => {
-      socket.off("connect", handleConnect);
-      socket.off("disconnect", handleDisconnect);
-    };
-  }, []);
-
-  useEffect(() => {
-    const sync = () => setRankedGeoHintDebug(readRankedGeoHintDebug());
-    window.addEventListener("storage", sync);
-    const intervalId = window.setInterval(sync, 1500);
-    return () => {
-      window.removeEventListener("storage", sync);
-      window.clearInterval(intervalId);
-    };
-  }, []);
-
-  const handleLogout = async () => {
-    await logout();
-    router.replace("/");
-  };
-
-  const isPathActive = (path: string, exact?: boolean) => isPathActiveHelper(currentPath, path, exact);
-
-  const handleReturnToLobby = () => {
-    if (!lobbyCode) return;
-    router.push(`/friend/room/${lobbyCode}`);
-  };
-
-  const handleReturnToRankedLobby = () => {
-    startSession({
-      mode: "ranked",
-      matchType: "ranked",
-      questionCount: 10,
-      opponentId: draftOpponent?.userId ?? "opponent",
-      opponentUsername: draftOpponent?.username ?? "Opponent",
-      opponentAvatar: draftOpponent?.avatarUrl ?? undefined,
-    });
-    setGameStage("matchmaking");
-    router.push("/game");
-  };
-
-  const handleLeaveLobby = () => {
-    getSocket().emit("lobby:leave");
-    resetRealtime();
-    useRankedMatchmakingStore.getState().clearRankedMatchmaking();
-  };
-
-  const handleRejoinMatch = () => {
-    if (!activeMatchBanner) return;
-
-    const matchId = activeMatchBanner.matchId;
-
-    startSession({
-      mode: activeMatchBanner.mode === "ranked" ? "ranked" : "quizball",
-      matchType: activeMatchBanner.mode === "ranked" ? "ranked" : "friendly",
-      questionCount: 10,
-      opponentId: activeMatchBanner.opponent.id,
-      opponentUsername: activeMatchBanner.opponent.username,
-      opponentAvatar: activeMatchBanner.opponent.avatarUrl ?? undefined,
-    });
-    // Avoid re-entering matchmaking queue on rejoin.
-    setGameStage("playing");
-
-    if (activeMatchBanner.source === "rejoin") {
-      getSocket().emit("match:rejoin", { matchId });
-      clearRejoinAvailable();
-    }
-
-    router.push("/game");
-  };
-
-  const handleReturnToDraft = () => {
-    if (!activeDraftBanner) return;
-
-    startSession({
-      mode: activeDraftBanner.mode === "ranked" ? "ranked" : "quizball",
-      matchType: activeDraftBanner.mode === "ranked" ? "ranked" : "friendly",
-      questionCount: 10,
-      opponentId: activeDraftBanner.opponent?.userId ?? "opponent",
-      opponentUsername: activeDraftBanner.opponent?.username ?? "Opponent",
-      opponentAvatar: activeDraftBanner.opponent?.avatarUrl ?? undefined,
-      skipDraftShowdown: true,
-    });
-    setGameStage("categoryBlocking");
-    router.push("/game");
-  };
-
-  const handleForfeitRejoin = () => {
-    if (!activeMatchBanner) {
-      clearRejoinAvailable();
-      return;
-    }
-    getSocket().emit("match:forfeit", { matchId: activeMatchBanner.matchId });
-  };
-
-  const handleViewCompletedMatch = () => {
-    if (!completedMatchBanner) return;
-
-    startSession({
-      mode: completedMatchBanner.mode === "ranked" ? "ranked" : "quizball",
-      matchType: completedMatchBanner.mode === "ranked" ? "ranked" : "friendly",
-      questionCount: 10,
-      opponentId: completedMatchBanner.opponent.id,
-      opponentUsername: completedMatchBanner.opponent.username,
-      opponentAvatar: completedMatchBanner.opponent.avatarUrl ?? undefined,
-    });
-    setGameStage("finalResults");
-    router.push("/game");
-  };
-
-  const handleDismissCompletedMatch = () => {
-    resetRealtime();
-    useRankedMatchmakingStore.getState().clearRankedMatchmaking();
-  };
+  const vm = useAppShellViewModel();
+  const {
+    t,
+    router,
+    playerStats,
+    authUser,
+    currentPath,
+    showHeader,
+    showNav,
+    isPathActive,
+    lobby,
+    lobbyCode,
+    draftOpponent,
+    activeDraftBanner,
+    activeMatchBanner,
+    completedMatchBanner,
+    forfeitPending,
+    forfeitPendingTitle,
+    forfeitPendingDescription,
+    completedByForfeit,
+    completedPartyQuiz,
+    rejoinReconnectsLeft,
+    showLobbyBanner,
+    showRankedLobbyBanner,
+    showDraftBanner,
+    showRejoinBanner,
+    showCompletedMatchBanner,
+    showForfeitPendingBanner,
+    navbarCoins,
+    navbarTickets,
+    socialBadgeCount,
+    socketConnected,
+    showLobbyDebug,
+    lobbyDebugMismatch,
+    localWaitingLobbyId,
+    sessionWaitingLobbyId,
+    sessionStateLabel,
+    rankedGeoHintDebug,
+    showLogoutConfirm,
+    setShowLogoutConfirm,
+    handleLogout,
+    handleReturnToLobby,
+    handleReturnToRankedLobby,
+    handleLeaveLobby,
+    handleRejoinMatch,
+    handleReturnToDraft,
+    handleForfeitRejoin,
+    handleViewCompletedMatch,
+    handleDismissCompletedMatch,
+  } = vm;
 
   return (
     <div className="relative min-h-screen text-foreground">
