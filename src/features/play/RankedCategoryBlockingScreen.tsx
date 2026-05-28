@@ -276,7 +276,7 @@ export function RankedCategoryBlockingScreen() {
   const rankedFoundOpponent = useRankedMatchmakingStore((state) => state.rankedFoundOpponent);
   const rankedFoundMyRecentForm = useRankedMatchmakingStore((state) => state.rankedFoundMyRecentForm);
   const matchOpponent = useRealtimeMatchStore((state) => state.match?.opponent);
-  const realtimeMatchState = useRealtimeMatchStore((state) => state.match);
+  const myRecentForm = useRealtimeMatchStore((s) => s.match?.myRecentForm);
   const skipDraftShowdown = useGameSessionStore((state) => state.config?.skipDraftShowdown === true);
   const { data: rankedProfile } = useRankedProfile();
   const [timeLeft, setTimeLeft] = useState(15);
@@ -393,7 +393,7 @@ export function RankedCategoryBlockingScreen() {
           tier: playerTier,
           countryCode: authUser?.country ?? undefined,
           favoriteClub: authUser?.favorite_club ?? null,
-          recentForm: realtimeMatchState?.myRecentForm ?? rankedFoundMyRecentForm ?? undefined,
+          recentForm: myRecentForm ?? rankedFoundMyRecentForm ?? undefined,
         }}
         opponentInfo={{
           username: opponentUsername,
