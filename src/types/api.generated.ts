@@ -214,7 +214,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Reset password */
+        /**
+         * Reset password
+         * @description Sets a new password for the session identified by the Authorization Bearer token (a Supabase recovery session, or a logged-in user adding/changing a password). The token is read from the Authorization header, not the body.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -225,7 +228,6 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        access_token: string;
                         new_password: string;
                     };
                 };
