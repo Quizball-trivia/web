@@ -14,17 +14,7 @@ import { AppLogo } from '@/components/AppLogo';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { motion, AnimatePresence } from 'motion/react';
 import Script from 'next/script';
-import {
-  login,
-  register,
-  socialLogin,
-  socialLoginWithIdToken,
-  startGeorgianPhoneOtp,
-  verifyGeorgianPhoneOtp,
-} from '@/lib/auth/auth.service';
-import { signInWithGoogleIdentity } from '@/lib/auth/google-identity';
-import { getPlatform, isInAppBrowser, tryOpenInExternalBrowser } from '@/lib/auth/in-app-browser';
-import { useAuthStore } from '@/stores/auth.store';
+import { getPlatform, tryOpenInExternalBrowser } from '@/lib/auth/in-app-browser';
 import { useLocale } from '@/contexts/LocaleContext';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { LeaderboardPodium } from '@/features/leaderboard/components/LeaderboardPodium';
@@ -40,9 +30,8 @@ import {
   type FlightSpec,
 } from '@/features/possession/components/BarBattleFlightOverlay';
 import { GOAL_CELEBRATION_MS, GOAL_SHOT_TO_CELEBRATION_MS } from '@/features/possession/realtimePossession.helpers';
-import { trackLoginCompleted, trackSignupCompleted, trackSignupStarted } from '@/lib/analytics/game-events';
 
-import type { AuthPanelMode, DemoPlayer, LandingGoalSide, LandingScenario } from './welcome/welcome.types';
+import type { DemoPlayer, LandingGoalSide, LandingScenario } from './welcome/welcome.types';
 import {
   DEMO_AVATAR_LOADOUTS,
   DEMO_LEADERBOARD,
@@ -64,7 +53,6 @@ import {
   SUBHEADING_PHRASE_KEYS,
 } from './welcome/welcome.content';
 import {
-  authErrorMessage,
   getCategoryStyle,
   getDaysUntilWorldCup,
   getDuelsCount,
@@ -75,6 +63,7 @@ import {
   isWelcomeCategoryExcluded,
   landingPointsToBars,
 } from './welcome/welcome.helpers';
+import { useWelcomeAuthController } from './welcome/useWelcomeAuthController';
 
 const LANDING_SCORE_HANDOFF_MS = FLIGHT_TOTAL_MS + 420;
 
@@ -108,18 +97,34 @@ function CategoryArtwork({
 export function WelcomeScreen() {
   const { t, locale } = useLocale();
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
-  const [loginOpen, setLoginOpen] = useState(false);
-  const [showOpenInBrowser, setShowOpenInBrowser] = useState(false);
-  const [authMode, setAuthMode] = useState<AuthPanelMode>('signin');
-  const [authEmail, setAuthEmail] = useState('');
-  const [authPassword, setAuthPassword] = useState('');
-  const [authConfirmPassword, setAuthConfirmPassword] = useState('');
-  const [authPhone, setAuthPhone] = useState('');
-  const [authOtp, setAuthOtp] = useState('');
-  const [authSubmitting, setAuthSubmitting] = useState(false);
-  const [authNotice, setAuthNotice] = useState<string | null>(null);
-  const [authError, setAuthError] = useState<string | null>(null);
-  const [phoneOtpSent, setPhoneOtpSent] = useState(false);
+  const auth = useWelcomeAuthController();
+  const {
+    loginOpen,
+    setLoginOpen,
+    showOpenInBrowser,
+    handleLoginDialogOpenChange,
+    handleCloseLoginDialog,
+    handleKickOff,
+    authMode,
+    handleAuthModeChange,
+    authEmail,
+    setAuthEmail,
+    authPassword,
+    setAuthPassword,
+    authConfirmPassword,
+    setAuthConfirmPassword,
+    authPhone,
+    setAuthPhone,
+    authOtp,
+    setAuthOtp,
+    authSubmitting,
+    authNotice,
+    authError,
+    phoneOtpSent,
+    handleGoogleLogin,
+    handleEmailAuth,
+    handlePhoneAuth,
+  } = auth;
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [duelsCount] = useState(() => getDuelsCount());
   const [wcDaysLeft] = useState(() => getDaysUntilWorldCup());
@@ -133,10 +138,6 @@ export function WelcomeScreen() {
   const [landingTargetGoal, setLandingTargetGoal] = useState<LandingGoalSide>('right');
   const [landingShotMode, setLandingShotMode] = useState<React.ComponentProps<typeof PitchVisualization>['shotMode']>(undefined);
   const [landingFlights, setLandingFlights] = useState<FlightSpec[]>([]);
-  // Tracks the 1.5s timer that reveals the in-app-browser instructions panel.
-  // Held in a ref so we can cancel it when the user closes the dialog or the
-  // component unmounts — otherwise the panel can flash open after dismissal.
-  const inAppBrowserTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const leftScoreAnchorRef = useRef<HTMLDivElement | null>(null);
   const rightScoreAnchorRef = useRef<HTMLDivElement | null>(null);
   const landingPitchRef = useRef<HTMLDivElement | null>(null);
@@ -220,17 +221,6 @@ export function WelcomeScreen() {
       setCurrentPhraseIndex((prev) => (prev + 1) % SUBHEADING_PHRASE_KEYS.length);
     }, 3000);
     return () => clearInterval(timer);
-  }, []);
-
-  // Cancel the pending in-app-browser instructions timer on unmount so it
-  // can't fire setState against a torn-down component.
-  useEffect(() => {
-    return () => {
-      if (inAppBrowserTimerRef.current !== null) {
-        clearTimeout(inAppBrowserTimerRef.current);
-        inAppBrowserTimerRef.current = null;
-      }
-    };
   }, []);
 
   useEffect(() => {
@@ -406,122 +396,7 @@ export function WelcomeScreen() {
     return () => clearTimeout(timer);
   }, [landingScore.left, landingScore.right]);
 
-  const handleKickOff = () => setLoginOpen(true);
-  const bootstrap = useAuthStore((state) => state.bootstrap);
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? '';
-
-  const resetAuthFeedback = () => {
-    setAuthError(null);
-    setAuthNotice(null);
-  };
-
-  const resetAuthForm = () => {
-    resetAuthFeedback();
-    setAuthPassword('');
-    setAuthConfirmPassword('');
-    setAuthOtp('');
-    setPhoneOtpSent(false);
-    setAuthSubmitting(false);
-  };
-
-  const handleGoogleLogin = async () => {
-    trackSignupStarted('google');
-
-    // In-app browsers (Messenger, Instagram, etc.) — Google blocks OAuth in
-    // these webviews. Fire the bounce URL silently; only show the manual
-    // instructions panel if we're still here after ~1.5s (OS ignored it).
-    if (isInAppBrowser()) {
-      tryOpenInExternalBrowser(window.location.href);
-      if (inAppBrowserTimerRef.current !== null) {
-        clearTimeout(inAppBrowserTimerRef.current);
-      }
-      inAppBrowserTimerRef.current = setTimeout(() => {
-        inAppBrowserTimerRef.current = null;
-        if (typeof document !== 'undefined' && !document.hidden) {
-          setShowOpenInBrowser(true);
-        }
-      }, 1500);
-      return;
-    }
-
-    if (googleClientId) {
-      try {
-        const { idToken, nonce } = await signInWithGoogleIdentity(googleClientId);
-        await socialLoginWithIdToken('google', idToken, nonce);
-        await bootstrap({ force: true });
-        return;
-      } catch (gisError) {
-        console.warn('GIS sign-in unavailable, falling back to redirect', gisError);
-      }
-    }
-
-    try {
-      const redirectTo = `${window.location.origin}/auth/callback`;
-      await socialLogin('google', redirectTo);
-    } catch (error) {
-      console.error('Google login failed', error);
-    }
-  };
-
-  const handleEmailAuth = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    resetAuthFeedback();
-
-    if (authMode === 'signup' && authPassword !== authConfirmPassword) {
-      setAuthError(t('welcome.passwordMismatch'));
-      return;
-    }
-
-    setAuthSubmitting(true);
-    try {
-      if (authMode === 'signup') {
-        trackSignupStarted('email');
-        const result = await register({ email: authEmail, password: authPassword });
-        if (!result.tokensSet) {
-          setAuthNotice(t('welcome.checkEmail'));
-          return;
-        }
-        trackSignupCompleted('email');
-      } else {
-        await login(authEmail, authPassword);
-        trackLoginCompleted('email');
-      }
-
-      await bootstrap({ force: true });
-      setLoginOpen(false);
-      resetAuthForm();
-    } catch (error) {
-      setAuthError(authErrorMessage(error, t('welcome.emailAuthFailed')));
-    } finally {
-      setAuthSubmitting(false);
-    }
-  };
-
-  const handlePhoneAuth = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    resetAuthFeedback();
-    setAuthSubmitting(true);
-
-    try {
-      if (!phoneOtpSent) {
-        trackSignupStarted('phone');
-        await startGeorgianPhoneOtp(authPhone);
-        setPhoneOtpSent(true);
-        setAuthNotice(t('welcome.phoneCodeSent'));
-        return;
-      }
-
-      await verifyGeorgianPhoneOtp(authPhone, authOtp);
-      trackLoginCompleted('phone');
-      await bootstrap({ force: true });
-      setLoginOpen(false);
-      resetAuthForm();
-    } catch (error) {
-      setAuthError(authErrorMessage(error, t('welcome.phoneAuthFailed')));
-    } finally {
-      setAuthSubmitting(false);
-    }
-  };
 
   const stadiumScene = {
     showGoal: landingGoalVisible,
@@ -1105,32 +980,12 @@ export function WelcomeScreen() {
            ring that shadcn paints on every primitive inside the dialog. ── */}
       <Dialog
         open={loginOpen}
-        onOpenChange={(open) => {
-          setLoginOpen(open);
-          if (!open) {
-            setShowOpenInBrowser(false);
-            resetAuthForm();
-            if (inAppBrowserTimerRef.current !== null) {
-              clearTimeout(inAppBrowserTimerRef.current);
-              inAppBrowserTimerRef.current = null;
-            }
-          }
-        }}
+        onOpenChange={handleLoginDialogOpenChange}
       >
         <DialogContent
           className="max-h-[92vh] max-w-md w-[92vw] overflow-y-auto rounded-[24px] border-0 bg-brand-blue p-8 sm:p-10 [&>button:last-child]:hidden focus:outline-none focus-visible:outline-none focus-visible:ring-0 ring-0"
         >
-          <ModalCloseButton
-            onClose={() => {
-              setLoginOpen(false);
-              setShowOpenInBrowser(false);
-              resetAuthForm();
-              if (inAppBrowserTimerRef.current !== null) {
-                clearTimeout(inAppBrowserTimerRef.current);
-                inAppBrowserTimerRef.current = null;
-              }
-            }}
-          />
+          <ModalCloseButton onClose={handleCloseLoginDialog} />
 
           {showOpenInBrowser ? (
             <InAppBrowserInstructions
@@ -1170,10 +1025,7 @@ export function WelcomeScreen() {
                   <button
                     key={mode}
                     type="button"
-                    onClick={() => {
-                      setAuthMode(mode);
-                      resetAuthForm();
-                    }}
+                    onClick={() => handleAuthModeChange(mode)}
                     className={`h-10 rounded-full font-poppins text-xs font-bold uppercase tracking-wide transition-colors ${
                       authMode === mode
                         ? 'bg-white text-brand-blue'
@@ -1200,12 +1052,7 @@ export function WelcomeScreen() {
                       <Input
                         type="tel"
                         value={authPhone}
-                        onChange={(event) => {
-                          setAuthPhone(event.target.value);
-                          setPhoneOtpSent(false);
-                          setAuthOtp('');
-                          resetAuthFeedback();
-                        }}
+                        onChange={(event) => setAuthPhone(event.target.value)}
                         placeholder={t('welcome.phonePlaceholder')}
                         className="h-12 rounded-2xl border-white/15 bg-white/10 pl-11 font-poppins text-white placeholder:text-white/40 focus-visible:ring-white/25"
                         disabled={authSubmitting}
