@@ -16,6 +16,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   login,
   register,
@@ -36,9 +37,16 @@ import {
 
 import type { AuthPanelMode } from './welcome.types';
 import { authErrorMessage } from './welcome.helpers';
+import {
+  validateLogin,
+  validateSignup,
+  hasErrors,
+  type AuthFieldErrors,
+} from '@/lib/auth/validation';
 
 export function useWelcomeAuthController() {
   const { t, locale } = useLocale();
+  const router = useRouter();
   const bootstrap = useAuthStore((state) => state.bootstrap);
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? '';
 
@@ -53,6 +61,7 @@ export function useWelcomeAuthController() {
   const [authSubmitting, setAuthSubmitting] = useState(false);
   const [authNotice, setAuthNotice] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [authFieldErrors, setAuthFieldErrors] = useState<AuthFieldErrors>({});
   const [phoneOtpSent, setPhoneOtpSent] = useState(false);
 
   // Tracks the 1.5s timer that reveals the in-app-browser instructions panel.
@@ -74,6 +83,7 @@ export function useWelcomeAuthController() {
   const resetAuthFeedback = useCallback(() => {
     setAuthError(null);
     setAuthNotice(null);
+    setAuthFieldErrors({});
   }, []);
 
   const resetAuthForm = useCallback(() => {
@@ -164,8 +174,13 @@ export function useWelcomeAuthController() {
       event.preventDefault();
       resetAuthFeedback();
 
-      if (authMode === 'signup' && authPassword !== authConfirmPassword) {
-        setAuthError(t('welcome.passwordMismatch'));
+      // Validate with the shared helper BEFORE any API call.
+      const fieldErrors =
+        authMode === 'signup'
+          ? validateSignup(authEmail, authPassword, authConfirmPassword)
+          : validateLogin(authEmail, authPassword);
+      if (hasErrors(fieldErrors)) {
+        setAuthFieldErrors(fieldErrors);
         return;
       }
 
@@ -181,6 +196,7 @@ export function useWelcomeAuthController() {
             locale,
           });
           if (!result.tokensSet) {
+            // Neutral confirmation when Supabase requires email confirmation.
             setAuthNotice(t('welcome.checkEmail'));
             return;
           }
@@ -194,13 +210,25 @@ export function useWelcomeAuthController() {
         setLoginOpen(false);
         resetAuthForm();
       } catch (error) {
-        setAuthError(authErrorMessage(error, t('welcome.emailAuthFailed')));
+        // Sign-in failures get a single generic message (no account enumeration,
+        // and a hint toward Google for Google-created accounts). Sign-up keeps
+        // the more specific upstream message.
+        if (authMode === 'signin') {
+          setAuthError(t('welcome.loginError'));
+        } else {
+          setAuthError(authErrorMessage(error, t('welcome.emailAuthFailed')));
+        }
       } finally {
         setAuthSubmitting(false);
       }
     },
     [authConfirmPassword, authEmail, authMode, authPassword, bootstrap, locale, resetAuthFeedback, resetAuthForm, t],
   );
+
+  const handleForgotPassword = useCallback(() => {
+    setLoginOpen(false);
+    router.push('/auth/forgot-password');
+  }, [router]);
 
   const handlePhoneAuth = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
@@ -268,11 +296,13 @@ export function useWelcomeAuthController() {
     authSubmitting,
     authNotice,
     authError,
+    authFieldErrors,
     phoneOtpSent,
 
     // Submit handlers
     handleGoogleLogin,
     handleEmailAuth,
     handlePhoneAuth,
+    handleForgotPassword,
   };
 }

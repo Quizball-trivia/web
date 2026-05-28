@@ -13,14 +13,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Bell, ChevronLeft, Globe, LogOut, Shield, Trash2, Volume2, HelpCircle, RotateCcw } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Bell, ChevronLeft, Globe, KeyRound, LogOut, Shield, Trash2, Volume2, HelpCircle, RotateCcw } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { SettingsSection } from "./components/SettingsSection";
 import { SettingsToggle } from "./components/SettingsToggle";
+import { PasswordForm } from "@/features/auth/PasswordForm";
 import { toast } from "sonner";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { useLocale } from "@/contexts/LocaleContext";
 import { resetOwnOnboarding, updateMe } from "@/lib/api/endpoints";
+import { resetPassword } from "@/lib/auth/auth.service";
 import { requestAccountDeletion } from "@/lib/repositories/users.repo";
 import { type Locale } from "@/lib/i18n/messages";
 import { trackLanguageSwitched } from "@/lib/analytics/game-events";
@@ -56,6 +65,8 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
   const isInitialMount = useRef(true);
   const deletionConfirmWord = t("settings.deleteAccountConfirmWord");
@@ -92,6 +103,22 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const handleLogout = async () => {
     await logout();
     window.location.href = "/"; // Force full reload/redirect
+  };
+
+  // Add or change the password on the current Supabase account. Works for
+  // Google-created users too — it effectively adds a password to the same
+  // account (uses the logged-in user's token via the api client).
+  const handleUpdatePassword = async (newPassword: string) => {
+    setIsUpdatingPassword(true);
+    try {
+      await resetPassword(newPassword);
+      toast.success(t("settings.changePasswordSuccess"));
+      setPasswordDialogOpen(false);
+    } catch {
+      toast.error(t("settings.changePasswordFailed"));
+    } finally {
+      setIsUpdatingPassword(false);
+    }
   };
 
   const handleDeleteAccount = async () => {
@@ -230,6 +257,31 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
               role="button"
               tabIndex={0}
               aria-haspopup="dialog"
+              className="group flex items-center justify-between p-3 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              onClick={() => setPasswordDialogOpen(true)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setPasswordDialogOpen(true);
+                }
+              }}
+            >
+               <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/15 transition-colors">
+                     <KeyRound className="size-4" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-sm">{t("settings.addOrChangePassword")}</div>
+                    <div className="text-xs text-muted-foreground">{t("settings.addOrChangePasswordDescription")}</div>
+                  </div>
+               </div>
+               <ChevronLeft className="size-4 rotate-180 text-muted-foreground" />
+            </div>
+
+            <div
+              role="button"
+              tabIndex={0}
+              aria-haspopup="dialog"
               className="group flex items-center justify-between p-3 hover:bg-destructive/10 transition-colors cursor-pointer border-b border-border/40 last:border-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40"
               onClick={() => {
                 setDeleteConfirmation("");
@@ -310,6 +362,33 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
              </div>
          </SettingsSection>
       </div>
+
+      <Dialog
+        open={passwordDialogOpen}
+        onOpenChange={(open) => {
+          if (isUpdatingPassword) return;
+          setPasswordDialogOpen(open);
+        }}
+      >
+        <DialogContent className="max-w-md rounded-[24px] border-0 bg-brand-blue p-8 sm:p-10">
+          <DialogHeader>
+            <DialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
+              {t("settings.changePasswordTitle")}
+            </DialogTitle>
+            <DialogDescription className="mt-3 text-center font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-[14px]">
+              {t("settings.changePasswordModalDescription")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-6">
+            <PasswordForm
+              onSubmit={handleUpdatePassword}
+              submitting={isUpdatingPassword}
+              submitLabel={t("settings.changePasswordSubmit")}
+              submittingLabel={t("resetPassword.submitting")}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog
         open={deleteDialogOpen}

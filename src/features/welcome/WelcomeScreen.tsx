@@ -46,10 +46,12 @@ export function WelcomeScreen() {
     authSubmitting,
     authNotice,
     authError,
+    authFieldErrors,
     phoneOtpSent,
     handleGoogleLogin,
     handleEmailAuth,
     handlePhoneAuth,
+    handleForgotPassword,
   } = auth;
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [duelsCount] = useState(() => getDuelsCount());
@@ -122,6 +124,7 @@ export function WelcomeScreen() {
         authSubmitting={authSubmitting}
         authNotice={authNotice}
         authError={authError}
+        authFieldErrors={authFieldErrors}
         phoneOtpSent={phoneOtpSent}
         onOpenChange={handleLoginDialogOpenChange}
         onClose={handleCloseLoginDialog}
@@ -134,6 +137,7 @@ export function WelcomeScreen() {
         onOtpChange={setAuthOtp}
         onEmailSubmit={handleEmailAuth}
         onPhoneSubmit={handlePhoneAuth}
+        onForgotPassword={handleForgotPassword}
       />
     </div>
   );

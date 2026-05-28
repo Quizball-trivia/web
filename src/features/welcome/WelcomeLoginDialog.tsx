@@ -9,6 +9,7 @@ import { WelcomeGoogleButton } from './WelcomeGoogleButton';
 import { WelcomeEmailAuthForm } from './WelcomeEmailAuthForm';
 import { WelcomePhoneAuthForm } from './WelcomePhoneAuthForm';
 import type { AuthPanelMode } from './welcome.types';
+import type { AuthFieldErrors } from '@/lib/auth/validation';
 
 interface WelcomeLoginDialogProps {
   open: boolean;
@@ -22,6 +23,7 @@ interface WelcomeLoginDialogProps {
   authSubmitting: boolean;
   authNotice: string | null;
   authError: string | null;
+  authFieldErrors: AuthFieldErrors;
   phoneOtpSent: boolean;
   onOpenChange: (open: boolean) => void;
   onClose: () => void;
@@ -34,6 +36,7 @@ interface WelcomeLoginDialogProps {
   onOtpChange: (value: string) => void;
   onEmailSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
   onPhoneSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+  onForgotPassword: () => void;
 }
 
 export function WelcomeLoginDialog({
@@ -48,6 +51,7 @@ export function WelcomeLoginDialog({
   authSubmitting,
   authNotice,
   authError,
+  authFieldErrors,
   phoneOtpSent,
   onOpenChange,
   onClose,
@@ -60,6 +64,7 @@ export function WelcomeLoginDialog({
   onOtpChange,
   onEmailSubmit,
   onPhoneSubmit,
+  onForgotPassword,
 }: WelcomeLoginDialogProps) {
   const { t } = useLocale();
 
@@ -133,10 +138,12 @@ export function WelcomeLoginDialog({
                 password={authPassword}
                 confirmPassword={authConfirmPassword}
                 submitting={authSubmitting}
+                fieldErrors={authFieldErrors}
                 onEmailChange={onEmailChange}
                 onPasswordChange={onPasswordChange}
                 onConfirmPasswordChange={onConfirmPasswordChange}
                 onSubmit={onEmailSubmit}
+                onForgotPassword={onForgotPassword}
               />
             )}
 
