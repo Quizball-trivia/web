@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useShallow } from 'zustand/shallow';
-import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
+import { useRealtimeMatchStore, type MatchQuestionState } from '@/stores/realtimeMatch.store';
 import { getSocket } from '@/lib/realtime/socket-client';
 import { logger } from '@/utils/logger';
 import { QUESTION_REVEAL_MS } from '@/features/possession/types/possession.types';
@@ -14,6 +14,7 @@ const GOAL_CELEBRATION_EXTRA_MS = GOAL_CELEBRATION_MS; // keep promotion blocked
 const ANSWER_ACK_RETRY_MS = 900;
 const ANSWER_ACK_MAX_RETRIES = 2;
 const SPECIAL_QUESTION_KINDS = new Set(['countdown', 'putInOrder', 'clues']);
+const EMPTY_QUESTIONS: Record<number, MatchQuestionState> = {};
 
 interface UseRealtimeGameLogicOptions {
   /** Extra delay (ms) between hiding options and promoting the next question. Used for round transition overlay. */
@@ -35,7 +36,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     opponentAnswered: state.match?.opponentAnswered ?? false,
     pendingQuestion: state.match?.pendingQuestion ?? null,
     opponentId: state.match?.opponent.id ?? null,
-    questions: state.match?.questions ?? {},
+    questions: state.match?.questions ?? EMPTY_QUESTIONS,
     myTotalPoints: state.match?.myTotalPoints ?? 0,
     oppTotalPoints: state.match?.oppTotalPoints ?? 0,
   })));

@@ -25,6 +25,9 @@ import type {
 } from "@/lib/realtime/socket.types";
 import type { MatchQuestionState } from "@/stores/realtimeMatch.store";
 
+const EMPTY_PARTICIPANTS: MatchParticipant[] = [];
+const EMPTY_QUESTIONS: Record<number, MatchQuestionState> = {};
+
 /** Narrow match fields used by game stage routing (not full MatchStatus). */
 export type GameStageRealtimeMatchSlice = {
   matchId: string | null;
@@ -62,9 +65,9 @@ export function useGameStageState() {
     mode: s.match?.mode ?? null,
     variant: s.match?.variant ?? null,
     opponent: s.match?.opponent ?? null,
-    participants: s.match?.participants ?? [],
+    participants: s.match?.participants ?? EMPTY_PARTICIPANTS,
     finalResults: s.match?.finalResults ?? null,
-    questions: s.match?.questions ?? {},
+    questions: s.match?.questions ?? EMPTY_QUESTIONS,
     currentQuestionTotal: s.match?.currentQuestion?.total ?? null,
     myRecentForm: s.match?.myRecentForm,
     lastRoundResult: s.match?.lastRoundResult ?? null,

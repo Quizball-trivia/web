@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type ComponentProps } from '
 import { useShallow } from 'zustand/shallow';
 import { useRealtimeGameLogic } from '@/lib/match/useRealtimeGameLogic';
 import { useGameSounds } from '@/lib/sounds/useGameSounds';
-import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
+import { useRealtimeMatchStore, type MatchQuestionState } from '@/stores/realtimeMatch.store';
 import { logger } from '@/utils/logger';
 import { HalftimeScreen } from '../components/HalftimeScreen';
 import type { PossessionViewportModel } from '../components/PossessionMatchViewport';
@@ -32,6 +32,8 @@ import type { FeedDirection } from '../types/possession.types';
 import type { AvatarCustomization } from '@/types/game';
 
 type HalftimeModel = ComponentProps<typeof HalftimeScreen>;
+
+const EMPTY_QUESTIONS: Record<number, MatchQuestionState> = {};
 
 interface UseRealtimePossessionMatchControllerParams {
   playerAvatar: string;
@@ -109,7 +111,7 @@ export function useRealtimePossessionMatchController({
     opponentRecentPoints: store.match?.opponentRecentPoints ?? 0,
     opponentSelectedIndex: store.match?.opponentSelectedIndex ?? null,
     mySeat: store.match?.mySeat ?? null,
-    questions: store.match?.questions ?? {},
+    questions: store.match?.questions ?? EMPTY_QUESTIONS,
     myTotalPoints: store.match?.myTotalPoints ?? 0,
     oppTotalPoints: store.match?.oppTotalPoints ?? 0,
   })));
