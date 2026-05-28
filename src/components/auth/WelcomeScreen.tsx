@@ -4,15 +4,12 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ModalCloseButton } from '@/components/shared/ModalCloseButton';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Brain, Swords, Loader2, Mail, Phone, type LucideIcon } from 'lucide-react';
+import { Brain, Swords, type LucideIcon } from 'lucide-react';
 import { AppLogo } from '@/components/AppLogo';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { motion, AnimatePresence } from 'motion/react';
 import Script from 'next/script';
-import { getPlatform, tryOpenInExternalBrowser } from '@/lib/auth/in-app-browser';
 import { useLocale } from '@/contexts/LocaleContext';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { LeaderboardPodium } from '@/features/leaderboard/components/LeaderboardPodium';
@@ -33,8 +30,7 @@ import { useWelcomeAuthController } from './welcome/useWelcomeAuthController';
 import { useWelcomeStadiumSim } from './welcome/useWelcomeStadiumSim';
 import { useWelcomeCategoriesData } from './welcome/useWelcomeCategoriesData';
 import { CategoryArtwork } from './welcome/CategoryArtwork';
-import { InAppBrowserInstructions } from './welcome/InAppBrowserInstructions';
-import { WelcomeGoogleButton } from './welcome/WelcomeGoogleButton';
+import { WelcomeLoginDialog } from './welcome/WelcomeLoginDialog';
 
 export function WelcomeScreen() {
   const { t, locale } = useLocale();
@@ -672,191 +668,31 @@ export function WelcomeScreen() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Login Dialog — pinned to Figma node 620-7831 (Play with a Friend
-           card). Royal-blue surface, red X close, yellow Google CTA.
-           Hide shadcn's built-in close X (last direct <button> child of
-           DialogContent) and render our own red square one instead.
-           focus:outline-none / focus-visible:ring-0 kills the green-ish focus
-           ring that shadcn paints on every primitive inside the dialog. ── */}
-      <Dialog
+      <WelcomeLoginDialog
         open={loginOpen}
+        showOpenInBrowser={showOpenInBrowser}
+        authMode={authMode}
+        authEmail={authEmail}
+        authPassword={authPassword}
+        authConfirmPassword={authConfirmPassword}
+        authPhone={authPhone}
+        authOtp={authOtp}
+        authSubmitting={authSubmitting}
+        authNotice={authNotice}
+        authError={authError}
+        phoneOtpSent={phoneOtpSent}
         onOpenChange={handleLoginDialogOpenChange}
-      >
-        <DialogContent
-          className="max-h-[92vh] max-w-md w-[92vw] overflow-y-auto rounded-[24px] border-0 bg-brand-blue p-8 sm:p-10 [&>button:last-child]:hidden focus:outline-none focus-visible:outline-none focus-visible:ring-0 ring-0"
-        >
-          <ModalCloseButton onClose={handleCloseLoginDialog} />
-
-          {showOpenInBrowser ? (
-            <InAppBrowserInstructions
-              platform={getPlatform()}
-              onTryAgain={() => tryOpenInExternalBrowser(window.location.href)}
-            />
-          ) : (
-            <>
-              <DialogHeader className="text-center">
-                <DialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
-                  {t('welcome.loginTitle')}
-                </DialogTitle>
-                <DialogDescription className="mt-3 text-center font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-[14px]">
-                  {t('welcome.loginDescription')}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="mt-6 space-y-3">
-                <WelcomeGoogleButton onClick={handleGoogleLogin} />
-              </div>
-
-              <div className="my-5 flex items-center gap-3">
-                <div className="h-px flex-1 bg-white/20" />
-                <span className="font-poppins text-xs font-semibold uppercase tracking-wide text-white/60">
-                  {t('welcome.authOr')}
-                </span>
-                <div className="h-px flex-1 bg-white/20" />
-              </div>
-
-              <div className="grid grid-cols-3 gap-1 rounded-full bg-black/18 p-1">
-                {(['signin', 'signup', 'phone'] as const).map((mode) => (
-                  <button
-                    key={mode}
-                    type="button"
-                    onClick={() => handleAuthModeChange(mode)}
-                    className={`h-10 rounded-full font-poppins text-xs font-bold uppercase tracking-wide transition-colors ${
-                      authMode === mode
-                        ? 'bg-white text-brand-blue'
-                        : 'text-white/75 hover:bg-white/10 hover:text-white'
-                    }`}
-                  >
-                    {mode === 'signin'
-                      ? t('welcome.signInTab')
-                      : mode === 'signup'
-                        ? t('welcome.signUpTab')
-                        : t('welcome.phoneTab')}
-                  </button>
-                ))}
-              </div>
-
-              {authMode === 'phone' ? (
-                <form className="mt-5 space-y-3" onSubmit={handlePhoneAuth}>
-                  <label className="block">
-                    <span className="mb-1.5 block font-poppins text-xs font-semibold uppercase tracking-wide text-white/70">
-                      {t('welcome.phoneLabel')}
-                    </span>
-                    <div className="relative">
-                      <Phone className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-white/45" />
-                      <Input
-                        type="tel"
-                        value={authPhone}
-                        onChange={(event) => setAuthPhone(event.target.value)}
-                        placeholder={t('welcome.phonePlaceholder')}
-                        className="h-12 rounded-2xl border-white/15 bg-white/10 pl-11 font-poppins text-white placeholder:text-white/40 focus-visible:ring-white/25"
-                        disabled={authSubmitting}
-                      />
-                    </div>
-                  </label>
-
-                  {phoneOtpSent ? (
-                    <label className="block">
-                      <span className="mb-1.5 block font-poppins text-xs font-semibold uppercase tracking-wide text-white/70">
-                        {t('welcome.otpLabel')}
-                      </span>
-                      <Input
-                        inputMode="numeric"
-                        maxLength={6}
-                        value={authOtp}
-                        onChange={(event) => setAuthOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
-                        placeholder={t('welcome.otpPlaceholder')}
-                        className="h-12 rounded-2xl border-white/15 bg-white/10 text-center font-poppins text-lg font-bold tracking-[0.5em] text-white placeholder:tracking-normal placeholder:text-white/40 focus-visible:ring-white/25"
-                        disabled={authSubmitting}
-                      />
-                    </label>
-                  ) : null}
-
-                  <Button
-                    type="submit"
-                    disabled={authSubmitting || !authPhone || (phoneOtpSent && authOtp.length !== 6)}
-                    className="h-12 w-full rounded-[28px] bg-brand-yellow font-poppins text-sm font-semibold uppercase tracking-wide text-black hover:bg-brand-yellow-deep disabled:opacity-60"
-                  >
-                    {authSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
-                    {phoneOtpSent ? t('welcome.verifyCode') : t('welcome.sendCode')}
-                  </Button>
-                </form>
-              ) : (
-                <form className="mt-5 space-y-3" onSubmit={handleEmailAuth}>
-                  <label className="block">
-                    <span className="mb-1.5 block font-poppins text-xs font-semibold uppercase tracking-wide text-white/70">
-                      {t('welcome.emailLabel')}
-                    </span>
-                    <div className="relative">
-                      <Mail className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-white/45" />
-                      <Input
-                        type="email"
-                        value={authEmail}
-                        onChange={(event) => setAuthEmail(event.target.value)}
-                        placeholder={t('welcome.emailPlaceholder')}
-                        className="h-12 rounded-2xl border-white/15 bg-white/10 pl-11 font-poppins text-white placeholder:text-white/40 focus-visible:ring-white/25"
-                        disabled={authSubmitting}
-                        autoComplete="email"
-                      />
-                    </div>
-                  </label>
-
-                  <label className="block">
-                    <span className="mb-1.5 block font-poppins text-xs font-semibold uppercase tracking-wide text-white/70">
-                      {t('welcome.passwordLabel')}
-                    </span>
-                    <Input
-                      type="password"
-                      value={authPassword}
-                      onChange={(event) => setAuthPassword(event.target.value)}
-                      placeholder={t('welcome.passwordPlaceholder')}
-                      className="h-12 rounded-2xl border-white/15 bg-white/10 font-poppins text-white placeholder:text-white/40 focus-visible:ring-white/25"
-                      disabled={authSubmitting}
-                      autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'}
-                    />
-                  </label>
-
-                  {authMode === 'signup' ? (
-                    <label className="block">
-                      <span className="mb-1.5 block font-poppins text-xs font-semibold uppercase tracking-wide text-white/70">
-                        {t('welcome.confirmPasswordLabel')}
-                      </span>
-                      <Input
-                        type="password"
-                        value={authConfirmPassword}
-                        onChange={(event) => setAuthConfirmPassword(event.target.value)}
-                        placeholder={t('welcome.confirmPasswordPlaceholder')}
-                        className="h-12 rounded-2xl border-white/15 bg-white/10 font-poppins text-white placeholder:text-white/40 focus-visible:ring-white/25"
-                        disabled={authSubmitting}
-                        autoComplete="new-password"
-                      />
-                    </label>
-                  ) : null}
-
-                  <Button
-                    type="submit"
-                    disabled={authSubmitting || !authEmail || !authPassword || (authMode === 'signup' && !authConfirmPassword)}
-                    className="h-12 w-full rounded-[28px] bg-brand-yellow font-poppins text-sm font-semibold uppercase tracking-wide text-black hover:bg-brand-yellow-deep disabled:opacity-60"
-                  >
-                    {authSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
-                    {authMode === 'signup' ? t('welcome.createAccount') : t('welcome.signInWithEmail')}
-                  </Button>
-                </form>
-              )}
-
-              {authNotice ? (
-                <p className="mt-3 rounded-2xl bg-white/10 px-4 py-3 text-center font-poppins text-xs font-semibold leading-relaxed text-white">
-                  {authNotice}
-                </p>
-              ) : null}
-              {authError ? (
-                <p className="mt-3 rounded-2xl bg-red-500/18 px-4 py-3 text-center font-poppins text-xs font-semibold leading-relaxed text-white">
-                  {authError}
-                </p>
-              ) : null}
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+        onClose={handleCloseLoginDialog}
+        onGoogleLogin={handleGoogleLogin}
+        onAuthModeChange={handleAuthModeChange}
+        onEmailChange={setAuthEmail}
+        onPasswordChange={setAuthPassword}
+        onConfirmPasswordChange={setAuthConfirmPassword}
+        onPhoneChange={setAuthPhone}
+        onOtpChange={setAuthOtp}
+        onEmailSubmit={handleEmailAuth}
+        onPhoneSubmit={handlePhoneAuth}
+      />
     </div>
   );
 }
