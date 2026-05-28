@@ -8,7 +8,7 @@ import { ModalCloseButton } from '@/components/shared/ModalCloseButton';
 import { FcGoogle } from 'react-icons/fc';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Brain, Goal, Trophy, Crown, Star, Globe, Flame, Shield, Repeat, Award, Flag, Swords, Loader2, Mail, Phone, type LucideIcon } from 'lucide-react';
+import { Brain, Swords, Loader2, Mail, Phone, type LucideIcon } from 'lucide-react';
 import { useAllCategoriesList } from '@/lib/queries/categories.queries';
 import { AppLogo } from '@/components/AppLogo';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
@@ -27,14 +27,11 @@ import { getPlatform, isInAppBrowser, tryOpenInExternalBrowser } from '@/lib/aut
 import { useAuthStore } from '@/stores/auth.store';
 import { useLocale } from '@/contexts/LocaleContext';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
-import type { MessageKey } from '@/lib/i18n/messages';
 import { LeaderboardPodium } from '@/features/leaderboard/components/LeaderboardPodium';
 import { LeaderboardTable } from '@/features/leaderboard/components/LeaderboardTable';
-import type { LeaderboardEntry } from '@/lib/domain/leaderboard';
 import { useLeaderboard } from '@/lib/queries/leaderboard.queries';
 import { RANKED_TIER_BANDS } from '@/utils/rankedTier';
 import { tierConfig, type TierName } from '@/utils/tierVisuals';
-import type { AvatarCustomization } from '@/types/game';
 import { PitchVisualization } from '@/features/possession/components/PitchVisualization';
 import type { BarBattleState } from '@/features/possession/components/BarBattleOverlay';
 import {
@@ -45,119 +42,41 @@ import {
 import { GOAL_CELEBRATION_MS, GOAL_SHOT_TO_CELEBRATION_MS } from '@/features/possession/realtimePossession.helpers';
 import { trackLoginCompleted, trackSignupCompleted, trackSignupStarted } from '@/lib/analytics/game-events';
 
-const SUBHEADING_PHRASE_KEYS: MessageKey[] = [
-  "welcome.phraseBack",
-  "welcome.phraseBeat",
-  "welcome.phraseTurn",
-  "welcome.phraseMove",
-  "welcome.phraseTakeOn",
-  "welcome.phrasePlay",
-  "welcome.phraseFromTrivia",
-  "welcome.phraseKnow",
-  "welcome.phraseStartStrong",
-  "welcome.phraseEveryRight",
-];
+import type { AuthPanelMode, DemoPlayer, LandingGoalSide, LandingScenario } from './welcome/welcome.types';
+import {
+  DEMO_AVATAR_LOADOUTS,
+  DEMO_LEADERBOARD,
+  DEMO_PLAYER_NAMES,
+  FEATURED_CATEGORY_LIMIT,
+  FEATURED_NAMES,
+  LANDING_BARS_PER_STAGGER_MS,
+  LANDING_BARS_SPAWN_BASE_MS,
+  LANDING_BATTLE_BASE_MS,
+  LANDING_BATTLE_PER_BAR_MS,
+  LANDING_CHARGE_BASE_MS,
+  LANDING_CHARGE_PER_BAR_MS,
+  LANDING_CHARGE_SHOT_OVERLAP_MS,
+  LANDING_CONVERT_MS,
+  LANDING_DONE_LINGER_MS,
+  LANDING_LOOP_REST_MS,
+  LANDING_RESULT_HOLD_MS,
+  LANDING_SCORE_FLIGHT_START_MS,
+  SUBHEADING_PHRASE_KEYS,
+} from './welcome/welcome.content';
+import {
+  authErrorMessage,
+  getCategoryStyle,
+  getDaysUntilWorldCup,
+  getDuelsCount,
+  getElementCenter,
+  getLandingAvatarX,
+  getLandingScenario,
+  getLandingTargetPosition,
+  isWelcomeCategoryExcluded,
+  landingPointsToBars,
+} from './welcome/welcome.helpers';
 
-// Style mapping for known categories (matched by slug or lowercased name)
-const CATEGORY_STYLES: Record<string, { color: string; icon: LucideIcon; flag?: string; watermarkImg?: string }> = {
-  "premier-league": { color: "#3D195B", icon: Crown, flag: "gb-eng" },
-  "champions-league": { color: "#1A71B8", icon: Star },
-  "world-cup": { color: "#D4AF37", icon: Globe, watermarkImg: "/assets/brand/world-cup-trophy.webp" },
-  "la-liga": { color: "#FFFFFF", icon: Flame, flag: "es" },
-  "serie-a": { color: "#024494", icon: Shield, flag: "it" },
-  "bundesliga": { color: "#D20515", icon: Goal, flag: "de" },
-  "ligue-1": { color: "#D8F000", icon: Award, flag: "fr" },
-  "league-1": { color: "#D8F000", icon: Award, flag: "fr" },
-  "transfer-history": { color: "#1CB0F6", icon: Repeat },
-  "transfers": { color: "#1CB0F6", icon: Repeat },
-  "legends": { color: "#FFD700", icon: Trophy, watermarkImg: "/assets/brand/ball.webp" },
-  "national-teams": { color: "#38B60E", icon: Flag },
-  "club-rivalries": { color: "#FF4B4B", icon: Swords },
-  "rivalries": { color: "#FF4B4B", icon: Swords },
-  "europa-league": { color: "#F68E1F", icon: Star },
-  "euro": { color: "#004B87", icon: Globe, flag: "eu" },
-  "copa-america": { color: "#1B75BB", icon: Globe },
-  "african-cup": { color: "#009639", icon: Globe },
-  "mls": { color: "#472D8C", icon: Shield, flag: "us" },
-  "eredivisie": { color: "#E4002B", icon: Shield, flag: "nl" },
-  "liga-portugal": { color: "#00543E", icon: Shield, flag: "pt" },
-  "scottish-premiership": { color: "#1D1D8F", icon: Shield, flag: "gb-sct" },
-  "rules": { color: "#6B7280", icon: Brain },
-  "stadiums": { color: "#059669", icon: Goal },
-  "managers": { color: "#7C3AED", icon: Crown },
-  "ballon-dor": { color: "#D4AF37", icon: Award, watermarkImg: "/assets/brand/ball.webp" },
-  "ac-milan": { color: "#B5121B", icon: Shield, flag: "it" },
-  "milan": { color: "#B5121B", icon: Shield, flag: "it" },
-  "argentina": { color: "#6CACE4", icon: Flag, flag: "ar" },
-  "arsenal": { color: "#EF0107", icon: Shield, flag: "gb-eng" },
-  "barcelona": { color: "#A50044", icon: Shield, flag: "es" },
-  "barcelona-b": { color: "#A50044", icon: Shield, flag: "es" },
-  "salvador": { color: "#0047AB", icon: Flag },
-  "el-salvador": { color: "#0047AB", icon: Flag, flag: "sv" },
-};
-
-// Categories to exclude (game modes, not real trivia categories)
-const EXCLUDED_SLUGS = new Set([
-  "daily-challenges", "daily-challenge", "countdown", "jeopardy",
-  "daily", "daily-quiz", "count-down", "football-jeopardy", "clues",
-  "true-or-false", "put-in-order", "money-drop", "high-low",
-  "high_low", "imposter", "football-logic", "career-path",
-  "career_path",
-]);
-
-const EXCLUDED_CATEGORY_PREFIXES = [
-  "daily-challenges",
-  "daily-challenge",
-];
-
-const EXCLUDED_CATEGORY_NAMES = new Set([
-  "daily challenges",
-  "clues",
-  "countdown",
-  "money drop",
-  "put in order",
-  "true or false",
-  "high low",
-  "high_low",
-  "imposter",
-  "football logic",
-  "career path",
-  "career_path",
-]);
-
-function normalizeCategoryKey(value: string) {
-  return value.toLowerCase().trim().replace(/\s+/g, '-');
-}
-
-function isWelcomeCategoryExcluded(slug: string, name: string) {
-  const normalizedSlug = normalizeCategoryKey(slug);
-  const normalizedName = normalizeCategoryKey(name);
-  const lowerName = name.toLowerCase().trim();
-
-  return (
-    EXCLUDED_SLUGS.has(normalizedSlug) ||
-    EXCLUDED_SLUGS.has(normalizedName) ||
-    EXCLUDED_CATEGORY_PREFIXES.some((prefix) => normalizedSlug.startsWith(prefix)) ||
-    EXCLUDED_CATEGORY_NAMES.has(lowerName)
-  );
-}
-
-// Main categories to feature on the landing page (matched by slug or name substring)
-const FEATURED_NAMES = [
-  "champions league",
-  "world cup",
-  "premier league",
-  "la liga",
-  "bundesliga",
-  "league 1",
-  "uefa euro",
-  "serie a",
-];
-
-const FEATURED_CATEGORY_LIMIT = 12;
-
-// Fallback colors for categories not in the mapping
-const FALLBACK_COLORS = ["#E74C3C", "#3498DB", "#2ECC71", "#9B59B6", "#F39C12", "#1ABC9C", "#E67E22", "#2980B9"];
+const LANDING_SCORE_HANDOFF_MS = FLIGHT_TOTAL_MS + 420;
 
 function CategoryArtwork({
   src,
@@ -184,155 +103,6 @@ function CategoryArtwork({
       />
     </div>
   );
-}
-
-function getCategoryStyle(slug: string, name: string, index: number) {
-  // Try exact slug match, then name-based slug, then substring match
-  const nameSlug = name.toLowerCase().replace(/\s+/g, '-');
-  const style = CATEGORY_STYLES[slug] ?? CATEGORY_STYLES[nameSlug];
-  if (style) return style;
-  // Substring match on name (e.g. "League 1" matches "ligue-1" style)
-  const lowerName = name.toLowerCase();
-  for (const [key, val] of Object.entries(CATEGORY_STYLES)) {
-    const keyWords = key.replace(/-/g, ' ');
-    if (lowerName.includes(keyWords) || keyWords.includes(lowerName)) return val;
-  }
-  return { color: FALLBACK_COLORS[index % FALLBACK_COLORS.length], icon: Star as LucideIcon };
-}
-
-const DEMO_PLAYER_NAMES = ["Mason", "Thiago", "Santi", "Jamal", "Enzo", "Rafa", "Nico", "Jude"];
-
-const DEMO_AVATAR_LOADOUTS: AvatarCustomization[] = [
-  { skin: "skin_male_white", hair: "hair_ramos", jersey: "jersey_liverpool", glasses: "glasses_aviator" },
-  { skin: "skin_male_dark", hair: "hair_ronaldo_goat", jersey: "jersey_brazil_retro", facialHair: "stache" },
-  { skin: "skin_male_white_alt", hair: "hair_hamsik", jersey: "jersey_milan", facialHair: "beard" },
-  { skin: "skin_male_dark_alt", hair: "hair_boy_basic", jersey: "jersey_argentina_retro", glasses: "glasses_round" },
-  { skin: "skin_male_white", hair: "hair_girl_basic", jersey: "jersey_barcelona", glasses: "glasses_wayfarer" },
-  { skin: "skin_male_dark", hair: "hair_ronaldo_brazil", jersey: "jersey_france_retro" },
-  { skin: "skin_male_white_alt", hair: "hair_boy_basic", jersey: "jersey_bayern", glasses: "glasses_aviator" },
-  { skin: "skin_male_dark_alt", hair: "hair_ramos", jersey: "jersey_netherlands_retro", facialHair: "beard" },
-];
-
-interface DemoPlayer {
-  name: string;
-  avatarCustomization: AvatarCustomization;
-}
-
-type AuthPanelMode = 'signin' | 'signup' | 'phone';
-
-function authErrorMessage(error: unknown, fallback: string) {
-  if (error instanceof Error && error.message !== 'Request failed') {
-    return error.message;
-  }
-  return fallback;
-}
-
-const DEMO_LEADERBOARD: LeaderboardEntry[] = [
-  { id: "1", rank: 1, username: "CR7_GOAT", avatar: "avatar-1", country: "pt", tier: "GOAT", rankPoints: 4820, isCurrentUser: false, trend: "same", trendValue: 0 },
-  { id: "2", rank: 2, username: "Messianic10", avatar: "avatar-2", country: "ar", tier: "Legend", rankPoints: 4615, isCurrentUser: false, trend: "up", trendValue: 2 },
-  { id: "3", rank: 3, username: "ZizouMagic", avatar: "avatar-3", country: "fr", tier: "Legend", rankPoints: 4490, isCurrentUser: false, trend: "down", trendValue: 1 },
-  { id: "4", rank: 4, username: "TotalFootball14", avatar: "avatar-4", country: "nl", tier: "World-Class", rankPoints: 4210, isCurrentUser: false, trend: "up", trendValue: 3 },
-  { id: "5", rank: 5, username: "KloppHeavyMetal", avatar: "avatar-5", country: "de", tier: "World-Class", rankPoints: 3980, isCurrentUser: false, trend: "down", trendValue: 2 },
-  { id: "6", rank: 6, username: "TikiTakaMaster", avatar: "avatar-6", country: "es", tier: "Captain", rankPoints: 3755, isCurrentUser: false, trend: "up", trendValue: 1 },
-  { id: "7", rank: 7, username: "Azzurri_Fan", avatar: "avatar-7", country: "it", tier: "Captain", rankPoints: 3640, isCurrentUser: false, trend: "same", trendValue: 0 },
-  { id: "8", rank: 8, username: "ThreeLions_", avatar: "avatar-8", country: "gb-eng", tier: "Key Player", rankPoints: 3510, isCurrentUser: false, trend: "up", trendValue: 4 },
-];
-
-type LandingGoalSide = 'left' | 'right';
-type LandingScenario = {
-  kind: 'left-push' | 'right-push' | 'left-goal' | 'right-goal';
-  playerPoints: number;
-  opponentPoints: number;
-};
-
-const LANDING_SCENARIOS: LandingScenario[] = [
-  { kind: 'left-push', playerPoints: 50, opponentPoints: 20 },
-  { kind: 'right-push', playerPoints: 20, opponentPoints: 50 },
-  { kind: 'left-goal', playerPoints: 70, opponentPoints: 20 },
-  { kind: 'right-goal', playerPoints: 20, opponentPoints: 70 },
-  { kind: 'left-push', playerPoints: 40, opponentPoints: 30 },
-  { kind: 'right-push', playerPoints: 30, opponentPoints: 40 },
-];
-
-const LANDING_SCORE_FLIGHT_START_MS = 120;
-const LANDING_SCORE_HANDOFF_MS = FLIGHT_TOTAL_MS + 420;
-const LANDING_CONVERT_MS = 140;
-const LANDING_BARS_SPAWN_BASE_MS = 210;
-const LANDING_BARS_PER_STAGGER_MS = 82;
-const LANDING_BATTLE_BASE_MS = 400;
-const LANDING_BATTLE_PER_BAR_MS = 235;
-const LANDING_CHARGE_BASE_MS = 660;
-const LANDING_CHARGE_PER_BAR_MS = 105;
-const LANDING_CHARGE_SHOT_OVERLAP_MS = 180;
-const LANDING_RESULT_HOLD_MS = 1150;
-const LANDING_DONE_LINGER_MS = 320;
-const LANDING_LOOP_REST_MS = 850;
-
-function landingPointsToBars(points: number): number {
-  if (points <= 0) return 0;
-  return Math.min(Math.max(Math.round(points / 10), 1), 12);
-}
-
-function clampLandingPosition(position: number): number {
-  return Math.max(22, Math.min(78, position));
-}
-
-function getLandingTargetPosition(startPosition: number, scenario: LandingScenario): number {
-  const isLeftWin = scenario.kind === 'left-push' || scenario.kind === 'left-goal';
-  const isGoalScenario = scenario.kind === 'left-goal' || scenario.kind === 'right-goal';
-  const pointDelta = Math.abs(scenario.playerPoints - scenario.opponentPoints);
-  const movement = (isGoalScenario ? 24 : 13) + Math.min(8, pointDelta / 10);
-  return clampLandingPosition(startPosition + movement * (isLeftWin ? 1 : -1));
-}
-
-function getLandingScenario(cycle: number): LandingScenario {
-  const offset = Math.floor(Math.random() * LANDING_SCENARIOS.length);
-  return LANDING_SCENARIOS[(cycle + offset) % LANDING_SCENARIOS.length];
-}
-
-function getLandingAvatarX(playerPosition: number, side: 'player' | 'opponent'): number {
-  const possessionTrackLeft = 15;
-  const possessionTrackRight = 485;
-  const possessionTrackWidth = possessionTrackRight - possessionTrackLeft;
-  const avatarSpread = 55;
-  const barZonePadding = 74;
-  const minBoundary = 24 + avatarSpread + barZonePadding;
-  const maxBoundary = 476 - avatarSpread - barZonePadding;
-  const rawBoundary = possessionTrackLeft + (playerPosition / 100) * possessionTrackWidth;
-  const boundary = Math.max(minBoundary, Math.min(maxBoundary, rawBoundary));
-  return side === 'player' ? boundary - avatarSpread : boundary + avatarSpread;
-}
-
-function getElementCenter(element: Element | null): { x: number; y: number } | null {
-  if (!element) return null;
-  const rect = element.getBoundingClientRect();
-  if (rect.width <= 0 || rect.height <= 0) return null;
-  return {
-    x: rect.left + rect.width / 2,
-    y: rect.top + rect.height / 2,
-  };
-}
-
-function getDaysUntilWorldCup(): number {
-  const WC_START = new Date(2026, 5, 11); // June 11, 2026
-  const now = new Date();
-  const diff = WC_START.getTime() - now.getTime();
-  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
-}
-
-// Deterministic pseudo-random duels count based on days since launch
-function getDuelsCount(): number {
-  const LAUNCH_DATE = Date.UTC(2026, 2, 1);
-  const BASE_COUNT = 1000;
-  const now = Date.now();
-  const daysSinceLaunch = Math.max(0, Math.floor((now - LAUNCH_DATE) / (1000 * 60 * 60 * 24)));
-  let total = BASE_COUNT;
-  for (let d = 0; d < daysSinceLaunch; d++) {
-    const seed = d * 2654435761;
-    const daily = 5 + (Math.abs(seed) % 96);
-    total += daily;
-  }
-  return total;
 }
 
 export function WelcomeScreen() {
