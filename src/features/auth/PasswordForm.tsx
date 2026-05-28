@@ -96,7 +96,7 @@ export function PasswordForm({
       <Button
         type="submit"
         disabled={submitting || invalid}
-        className="h-12 w-full rounded-2xl bg-brand-green font-poppins text-sm font-semibold uppercase tracking-wide text-white hover:bg-brand-green-deep disabled:opacity-60"
+        className="h-12 w-full rounded-[28px] bg-brand-yellow font-poppins text-sm font-semibold uppercase tracking-wide text-black hover:bg-brand-yellow-deep disabled:opacity-60"
       >
         {submitting ? <Loader2 className="size-4 animate-spin" /> : null}
         {submitting ? submittingLabel : submitLabel}

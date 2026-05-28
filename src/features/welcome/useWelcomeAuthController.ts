@@ -16,10 +16,10 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   login,
   register,
+  forgotPassword,
   socialLogin,
   socialLoginWithIdToken,
   startGeorgianPhoneOtp,
@@ -40,13 +40,13 @@ import { authErrorMessage } from './welcome.helpers';
 import {
   validateLogin,
   validateSignup,
+  validateEmail,
   hasErrors,
   type AuthFieldErrors,
 } from '@/lib/auth/validation';
 
 export function useWelcomeAuthController() {
   const { t, locale } = useLocale();
-  const router = useRouter();
   const bootstrap = useAuthStore((state) => state.bootstrap);
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? '';
 
@@ -63,6 +63,13 @@ export function useWelcomeAuthController() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [authFieldErrors, setAuthFieldErrors] = useState<AuthFieldErrors>({});
   const [phoneOtpSent, setPhoneOtpSent] = useState(false);
+
+  // In-modal forgot-password panel (reached from the sign-in "Forgot password?"
+  // link — no page navigation; stays in the blue login dialog).
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotSubmitting, setForgotSubmitting] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
+  const [forgotError, setForgotError] = useState<string | null>(null);
 
   // Tracks the 1.5s timer that reveals the in-app-browser instructions panel.
   // Held in a ref so we can cancel it when the user closes the dialog or the
@@ -93,6 +100,10 @@ export function useWelcomeAuthController() {
     setAuthOtp('');
     setPhoneOtpSent(false);
     setAuthSubmitting(false);
+    setShowForgot(false);
+    setForgotSent(false);
+    setForgotError(null);
+    setForgotSubmitting(false);
   }, [resetAuthFeedback]);
 
   const handleKickOff = useCallback(() => setLoginOpen(true), []);
@@ -225,10 +236,45 @@ export function useWelcomeAuthController() {
     [authConfirmPassword, authEmail, authMode, authPassword, bootstrap, locale, resetAuthFeedback, resetAuthForm, t],
   );
 
-  const handleForgotPassword = useCallback(() => {
-    setLoginOpen(false);
-    router.push('/auth/forgot-password');
-  }, [router]);
+  const handleShowForgot = useCallback(() => {
+    resetAuthFeedback();
+    setForgotError(null);
+    setForgotSent(false);
+    setShowForgot(true);
+  }, [resetAuthFeedback]);
+
+  const handleBackToSignIn = useCallback(() => {
+    setShowForgot(false);
+    setForgotError(null);
+    setForgotSent(false);
+  }, []);
+
+  const handleForgotSubmit = useCallback(
+    async (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      setForgotError(null);
+
+      const emailErrorKey = validateEmail(authEmail);
+      if (emailErrorKey) {
+        setForgotError(t(emailErrorKey));
+        return;
+      }
+
+      setForgotSubmitting(true);
+      try {
+        const redirectTo = `${window.location.origin}/auth/reset-password`;
+        await forgotPassword(authEmail, redirectTo);
+        // Generic success only after the request succeeds; never disclose
+        // whether the account exists.
+        setForgotSent(true);
+      } catch {
+        setForgotError(t('forgotPassword.sendFailed'));
+      } finally {
+        setForgotSubmitting(false);
+      }
+    },
+    [authEmail, t],
+  );
 
   const handlePhoneAuth = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
@@ -299,10 +345,18 @@ export function useWelcomeAuthController() {
     authFieldErrors,
     phoneOtpSent,
 
+    // Forgot-password panel (in-modal)
+    showForgot,
+    forgotSubmitting,
+    forgotSent,
+    forgotError,
+
     // Submit handlers
     handleGoogleLogin,
     handleEmailAuth,
     handlePhoneAuth,
-    handleForgotPassword,
+    handleShowForgot,
+    handleBackToSignIn,
+    handleForgotSubmit,
   };
 }

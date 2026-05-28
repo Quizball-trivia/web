@@ -8,6 +8,7 @@ import { InAppBrowserInstructions } from './InAppBrowserInstructions';
 import { WelcomeGoogleButton } from './WelcomeGoogleButton';
 import { WelcomeEmailAuthForm } from './WelcomeEmailAuthForm';
 import { WelcomePhoneAuthForm } from './WelcomePhoneAuthForm';
+import { WelcomeForgotPasswordForm } from './WelcomeForgotPasswordForm';
 import type { AuthPanelMode } from './welcome.types';
 import type { AuthFieldErrors } from '@/lib/auth/validation';
 
@@ -25,6 +26,10 @@ interface WelcomeLoginDialogProps {
   authError: string | null;
   authFieldErrors: AuthFieldErrors;
   phoneOtpSent: boolean;
+  showForgot: boolean;
+  forgotSubmitting: boolean;
+  forgotSent: boolean;
+  forgotError: string | null;
   onOpenChange: (open: boolean) => void;
   onClose: () => void;
   onGoogleLogin: () => void;
@@ -36,7 +41,9 @@ interface WelcomeLoginDialogProps {
   onOtpChange: (value: string) => void;
   onEmailSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
   onPhoneSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
-  onForgotPassword: () => void;
+  onShowForgot: () => void;
+  onBackToSignIn: () => void;
+  onForgotSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
 }
 
 export function WelcomeLoginDialog({
@@ -53,6 +60,10 @@ export function WelcomeLoginDialog({
   authError,
   authFieldErrors,
   phoneOtpSent,
+  showForgot,
+  forgotSubmitting,
+  forgotSent,
+  forgotError,
   onOpenChange,
   onClose,
   onGoogleLogin,
@@ -64,7 +75,9 @@ export function WelcomeLoginDialog({
   onOtpChange,
   onEmailSubmit,
   onPhoneSubmit,
-  onForgotPassword,
+  onShowForgot,
+  onBackToSignIn,
+  onForgotSubmit,
 }: WelcomeLoginDialogProps) {
   const { t } = useLocale();
 
@@ -78,6 +91,23 @@ export function WelcomeLoginDialog({
             platform={getPlatform()}
             onTryAgain={() => tryOpenInExternalBrowser(window.location.href)}
           />
+        ) : showForgot ? (
+          <>
+            <DialogHeader className="text-center">
+              <DialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
+                {t('forgotPassword.title')}
+              </DialogTitle>
+            </DialogHeader>
+            <WelcomeForgotPasswordForm
+              email={authEmail}
+              submitting={forgotSubmitting}
+              sent={forgotSent}
+              error={forgotError}
+              onEmailChange={onEmailChange}
+              onSubmit={onForgotSubmit}
+              onBackToSignIn={onBackToSignIn}
+            />
+          </>
         ) : (
           <>
             <DialogHeader className="text-center">
@@ -143,7 +173,7 @@ export function WelcomeLoginDialog({
                 onPasswordChange={onPasswordChange}
                 onConfirmPasswordChange={onConfirmPasswordChange}
                 onSubmit={onEmailSubmit}
-                onForgotPassword={onForgotPassword}
+                onForgotPassword={onShowForgot}
               />
             )}
 

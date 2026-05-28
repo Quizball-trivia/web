@@ -6,7 +6,6 @@ import { AlertCircle, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AppLogo } from '@/components/AppLogo';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { PasswordForm } from '@/features/auth/PasswordForm';
@@ -100,22 +99,23 @@ export function ResetPasswordScreen() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="w-full max-w-md"
+          className="w-full max-w-md rounded-[24px] bg-brand-blue p-8 sm:p-10"
         >
-          <Card className="border-brand-red-soft/40 bg-surface-card">
-            <CardContent className="pt-6">
-              <div className="flex flex-col items-center gap-4 text-center">
-                <div className="flex size-16 items-center justify-center rounded-full bg-brand-red-soft/10">
-                  <AlertCircle className="size-8 text-brand-red-soft" />
-                </div>
-                <p className="text-muted-foreground">{t('resetPassword.invalidLink')}</p>
-                <Button onClick={() => router.replace('/auth/forgot-password')} className="mt-2 gap-2">
-                  <ArrowLeft className="size-4" />
-                  {t('resetPassword.requestNewLink')}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="flex flex-col items-center gap-4 text-center">
+            <div className="flex size-14 items-center justify-center rounded-full bg-white/12">
+              <AlertCircle className="size-7 text-white" />
+            </div>
+            <p className="font-poppins text-sm font-medium leading-relaxed text-white/85">
+              {t('resetPassword.invalidLink')}
+            </p>
+            <Button
+              onClick={() => router.replace('/')}
+              className="h-12 w-full gap-2 rounded-[28px] bg-brand-yellow font-poppins text-sm font-semibold uppercase tracking-wide text-black hover:bg-brand-yellow-deep"
+            >
+              <ArrowLeft className="size-4" />
+              {t('resetPassword.requestNewLink')}
+            </Button>
+          </div>
         </motion.div>
       </div>
     );
@@ -127,25 +127,23 @@ export function ResetPasswordScreen() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md rounded-[24px] bg-brand-blue p-8 sm:p-10"
       >
-        <Card className="bg-surface-card">
-          <CardHeader className="items-center text-center">
-            <AppLogo size="md" />
-            <CardTitle className="mt-4 text-white">{t('resetPassword.title')}</CardTitle>
-            <CardDescription className="text-white/60">
-              {t('resetPassword.description')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <PasswordForm
-              onSubmit={handleSubmit}
-              submitting={submitting}
-              submitLabel={t('resetPassword.submit')}
-              submittingLabel={t('resetPassword.submitting')}
-            />
-          </CardContent>
-        </Card>
+        <div className="flex flex-col items-center text-center">
+          <AppLogo size="md" />
+          <h1 className="mt-4 font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
+            {t('resetPassword.title')}
+          </h1>
+          <p className="mt-2 font-poppins text-[13px] font-medium leading-snug text-white/80">
+            {t('resetPassword.description')}
+          </p>
+        </div>
+        <PasswordForm
+          onSubmit={handleSubmit}
+          submitting={submitting}
+          submitLabel={t('resetPassword.submit')}
+          submittingLabel={t('resetPassword.submitting')}
+        />
       </motion.div>
     </div>
   );
