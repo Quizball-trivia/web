@@ -174,7 +174,7 @@ export function GameStageRouter() {
       rankedSearchStartedAt,
       rankedSearchDurationMs,
       hasLobby: Boolean(realtimeLobby),
-      hasMatch: Boolean(realtimeMatch),
+      hasMatch: Boolean(realtimeMatch.matchId),
       errorCode: realtimeError?.code ?? null,
     }),
     [
@@ -205,7 +205,7 @@ export function GameStageRouter() {
     if (stage === "matchmaking") {
       // Friendly matches skip matchmaking — match data arrives before navigation.
       // Show bouncing ball instead of the map/searching screen for that brief transition frame.
-      if (realtimeMatch) {
+      if (realtimeMatch.matchId) {
         return <LoadingScreen />;
       }
       return (
@@ -330,7 +330,7 @@ export function GameStageRouter() {
         : 0;
       const firstPositiveQuestionCount = [
         final?.totalQuestions,
-        realtimeMatch?.currentQuestion?.total,
+        realtimeMatch.currentQuestionTotal,
         clientTotalQuestions,
       ].find((value): value is number => typeof value === 'number' && value > 0);
       const totalQuestionsPlayed = firstPositiveQuestionCount
@@ -390,7 +390,7 @@ export function GameStageRouter() {
               setStage("matchmaking");
               return;
             }
-            if (!realtimeMatch?.matchId) {
+            if (!realtimeMatch.matchId) {
               logger.warn("Play Again clicked for friendly without an active match id");
               return;
             }
