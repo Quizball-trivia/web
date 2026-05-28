@@ -3,56 +3,34 @@
 import { useId } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
+import type { BarBattlePhase, BarBattleState } from './bar-battle/barBattle.types';
+import {
+  AVATAR_BAR_OFFSET,
+  BAR_GAP,
+  BAR_GAP_ANCHORED,
+  BAR_H,
+  BAR_H_ANCHORED,
+  BAR_RX,
+  BAR_RX_ANCHORED,
+  BAR_W,
+  BAR_W_ANCHORED,
+  BLUE,
+  BLUE_DARK,
+  CY,
+  CY_ANCHORED,
+  FIELD_MAX_X,
+  FIELD_MIN_X,
+  RED,
+  RED_DARK,
+  STACK_CANCEL_FLASH_S,
+  STACK_CANCEL_STEP_S,
+  clampCenterX,
+  pointsToBarCount,
+} from './bar-battle/barBattle.helpers';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-export type BarBattlePhase =
-  | 'player-score'
-  | 'opponent-score'
-  | 'both-score'
-  | 'convert'
-  | 'bars'
-  | 'battle'
-  | 'charge'
-  | 'result'
-  | 'done';
-
-export interface BarBattleState {
-  key: number;
-  phase: BarBattlePhase;
-  playerBars: number;
-  opponentBars: number;
-  playerPoints: number;
-  opponentPoints: number;
-  remainingDelta: number;
-  dividerX: number;
-  /** `pulse` uses the charge glow without lunging the final bar into the avatar. */
-  chargeMode?: 'lunge' | 'pulse';
-}
-
-// ─── Visual constants ────────────────────────────────────────────────────────
-
-const BAR_W = 14;
-const BAR_H = 62;
-const BAR_GAP = 5;
-const BAR_RX = 7; // Full capsule ends
-const CY = 115;
-
-const BAR_W_ANCHORED = 10;
-const BAR_H_ANCHORED = 90;
-const BAR_GAP_ANCHORED = 4;
-const BAR_RX_ANCHORED = 6;
-const CY_ANCHORED = 115;
-const AVATAR_BAR_OFFSET = 58;
-
-const BLUE = '#1CB0F6';
-const RED = '#FF4B4B';
-const BLUE_DARK = '#0E8ACC';
-const RED_DARK = '#CC2E2E';
-const FIELD_MIN_X = 24;
-const FIELD_MAX_X = 476;
-const STACK_CANCEL_STEP_S = 0.14;
-const STACK_CANCEL_FLASH_S = 0.24;
+// Re-export the public types so external consumers can keep importing
+// from this file path. Tests and the dev page do this.
+export type { BarBattlePhase, BarBattleState } from './bar-battle/barBattle.types';
 
 // ─── Score text ──────────────────────────────────────────────────────────────
 
@@ -607,9 +585,6 @@ export function BarBattleOverlay({
   const minBars = Math.min(playerBars, opponentBars);
   const playerDir = mirrored ? 1 : -1;
   const opponentDir = mirrored ? -1 : 1;
-  const pointsToBarCount = (points: number) => (
-    points > 0 ? Math.min(Math.max(Math.round(points / 10), 1), 12) : 0
-  );
   const playerLayoutBars = playerBars > 0 ? playerBars : pointsToBarCount(playerPoints);
   const opponentLayoutBars = opponentBars > 0 ? opponentBars : pointsToBarCount(opponentPoints);
 
@@ -621,8 +596,6 @@ export function BarBattleOverlay({
   const opponentPreferredBarDir = isAnchored && isPortrait ? portraitOpponentDir : opponentDir;
 
   const compactW = barW * 2.2;
-  const clampCenterX = (x: number, width: number) =>
-    Math.max(FIELD_MIN_X + width / 2, Math.min(FIELD_MAX_X - width / 2, x));
   const normalRowX = (avatarX: number, dir: number, count: number) => {
     if (count <= 0) return [];
     const firstX = avatarX + dir * AVATAR_BAR_OFFSET;
