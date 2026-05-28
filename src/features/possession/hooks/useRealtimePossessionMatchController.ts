@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState, type ComponentProps } from 'react';
+import { useShallow } from 'zustand/shallow';
 import { useRealtimeGameLogic } from '@/lib/match/useRealtimeGameLogic';
 import { useGameSounds } from '@/lib/sounds/useGameSounds';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
@@ -90,27 +91,48 @@ export function useRealtimePossessionMatchController({
   onForfeit,
 }: UseRealtimePossessionMatchControllerParams): RealtimePossessionMatchControllerResult {
   const { playSfx, playBgm, stopBgm, toggleMute: toggleMuteSound, isMuted } = useGameSounds();
-  const match = useRealtimeMatchStore((store) => store.match);
+  const possessionMatch = useRealtimeMatchStore(useShallow((store) => ({
+    matchId: store.match?.matchId ?? null,
+    variant: store.match?.variant ?? null,
+    mode: store.match?.mode ?? null,
+    currentQuestion: store.match?.currentQuestion ?? null,
+    currentQuestionPhase: store.match?.currentQuestionPhase ?? 'reveal',
+    countdownEndsAt: store.match?.countdownEndsAt ?? null,
+    countdownReason: store.match?.countdownReason ?? null,
+    possessionState: store.match?.possessionState ?? null,
+    pendingQuestion: store.match?.pendingQuestion ?? null,
+    answerAck: store.match?.answerAck ?? null,
+    countdownGuessAck: store.match?.countdownGuessAck ?? null,
+    cluesGuessAck: store.match?.cluesGuessAck ?? null,
+    opponent: store.match?.opponent ?? null,
+    opponentAnsweredCorrectly: store.match?.opponentAnsweredCorrectly ?? null,
+    opponentRecentPoints: store.match?.opponentRecentPoints ?? 0,
+    opponentSelectedIndex: store.match?.opponentSelectedIndex ?? null,
+    mySeat: store.match?.mySeat ?? null,
+    questions: store.match?.questions ?? {},
+    myTotalPoints: store.match?.myTotalPoints ?? 0,
+    oppTotalPoints: store.match?.oppTotalPoints ?? 0,
+  })));
   const devPossessionAnimation = useRealtimeMatchStore((store) => store.devPossessionAnimation);
   const clearDevPossessionAnimation = useRealtimeMatchStore((store) => store.clearDevPossessionAnimation);
   const realtimeError = useRealtimeMatchStore((store) => store.error);
   const meUserId = useRealtimeMatchStore((store) => store.selfUserId);
-  const shouldPulseUnopposedBars = unopposedBarPulse || match?.variant === 'ranked_sim';
+  const shouldPulseUnopposedBars = unopposedBarPulse || possessionMatch.variant === 'ranked_sim';
 
   const [muted, setMuted] = useState(false);
   const [quitModalOpen, setQuitModalOpen] = useState(false);
 
   const firstQuestionIntro = usePossessionFirstQuestionIntro({
-    countdownEndsAt: match?.countdownEndsAt,
-    currentQuestionIndex: match?.currentQuestion?.qIndex ?? null,
+    countdownEndsAt: possessionMatch.countdownEndsAt,
+    currentQuestionIndex: possessionMatch.currentQuestion?.qIndex ?? null,
   });
-  const possessionState = match?.possessionState ?? null;
+  const possessionState = possessionMatch.possessionState;
   const secondHalfQuestionIntro = usePossessionSecondHalfQuestionIntro({
     phase: possessionState?.phase,
     half: possessionState?.half,
     normalQuestionsAnsweredInHalf: possessionState?.normalQuestionsAnsweredInHalf,
-    currentQuestionIndex: match?.currentQuestion?.qIndex ?? null,
-    currentQuestionPhase: match?.currentQuestionPhase,
+    currentQuestionIndex: possessionMatch.currentQuestion?.qIndex ?? null,
+    currentQuestionPhase: possessionMatch.currentQuestionPhase,
   });
 
   const { state, actions } = useRealtimeGameLogic({
@@ -119,7 +141,7 @@ export function useRealtimePossessionMatchController({
   });
 
   const phase = possessionState?.phase;
-  const mySeat = match?.mySeat ?? null;
+  const mySeat = possessionMatch.mySeat;
   const duelMySeat = mySeat === 1 || mySeat === 2 ? mySeat : null;
   const localQuestion = state.currentQuestion;
   const localQuestionIndex = localQuestion?.qIndex ?? null;
@@ -128,14 +150,14 @@ export function useRealtimePossessionMatchController({
   const isPenaltyQuestion = phaseKind === 'penalty';
   const isLastAttackQuestion = phaseKind === 'last_attack';
   const isShotQuestion = phaseKind === 'shot';
-  const pendingQuestion = match?.pendingQuestion ?? null;
-  const answerAck = match?.answerAck && match.answerAck.qIndex === localQuestionIndex
-    ? match.answerAck
+  const pendingQuestion = possessionMatch.pendingQuestion;
+  const answerAck = possessionMatch.answerAck && possessionMatch.answerAck.qIndex === localQuestionIndex
+    ? possessionMatch.answerAck
     : null;
-  const countdownGuessAck = match?.countdownGuessAck ?? null;
-  const cluesGuessAck = match?.cluesGuessAck ?? null;
-  const opponentAnsweredCorrectly = match?.opponentAnsweredCorrectly ?? null;
-  const opponentUserId = match?.opponent.id ?? null;
+  const countdownGuessAck = possessionMatch.countdownGuessAck;
+  const cluesGuessAck = possessionMatch.cluesGuessAck;
+  const opponentAnsweredCorrectly = possessionMatch.opponentAnsweredCorrectly;
+  const opponentUserId = possessionMatch.opponent?.id ?? null;
 
   useEffect(() => {
     setMuted(isMuted());
@@ -153,19 +175,19 @@ export function useRealtimePossessionMatchController({
   // arms a fade-out that can fire mid-match and silence the loop.
   useEffect(() => {
     if (disableBgm) return;
-    if (match?.variant !== 'ranked_sim') return;
+    if (possessionMatch.variant !== 'ranked_sim') return;
     playBgm('ranked');
     return () => stopBgm(400);
-  }, [disableBgm, match?.variant, playBgm, stopBgm]);
+  }, [disableBgm, possessionMatch.variant, playBgm, stopBgm]);
 
   useEffect(() => {
     if (phase === 'COMPLETED') stopBgm(600);
   }, [phase, stopBgm]);
 
   useEffect(() => {
-    if (!match?.matchId || !possessionState) return;
+    if (!possessionMatch.matchId || !possessionState) return;
     logger.info('Possession debug state transition', {
-      matchId: match.matchId,
+      matchId: possessionMatch.matchId,
       phase: possessionState.phase,
       half: possessionState.half,
       possessionDiff: possessionState.possessionDiff,
@@ -177,12 +199,12 @@ export function useRealtimePossessionMatchController({
       goals: possessionState.goals,
       penaltyGoals: possessionState.penaltyGoals,
     });
-  }, [match?.matchId, possessionState]);
+  }, [possessionMatch.matchId, possessionState]);
 
   useEffect(() => {
-    if (!match?.matchId || !localQuestion) return;
+    if (!possessionMatch.matchId || !localQuestion) return;
     logger.info('Possession debug question event', {
-      matchId: match.matchId,
+      matchId: possessionMatch.matchId,
       qIndex: localQuestion.qIndex,
       phaseKind: localQuestion.phaseKind,
       phaseRound: localQuestion.phaseRound,
@@ -194,7 +216,7 @@ export function useRealtimePossessionMatchController({
       categoryName: localQuestion.question.categoryName,
       difficulty: localQuestion.question.difficulty,
     });
-  }, [localQuestion, match?.matchId]);
+  }, [localQuestion, possessionMatch.matchId]);
 
   const myRound = useMemo(() => {
     if (!state.roundResult) return null;
@@ -248,7 +270,10 @@ export function useRealtimePossessionMatchController({
   });
 
   const fieldState = usePossessionFieldState({
-    match,
+    possessionState,
+    mySeat,
+    matchId: possessionMatch.matchId,
+    variant: possessionMatch.variant,
     localQuestion,
     roundResult: state.roundResult,
     questionPhase: state.questionPhase,
@@ -275,7 +300,7 @@ export function useRealtimePossessionMatchController({
     selectedAnswerQIndex: state.selectedAnswerQIndex ?? null,
     opponentAnswered: state.opponentAnswered,
     opponentAnsweredCorrectly,
-    opponentRecentPoints: match?.opponentRecentPoints ?? null,
+    opponentRecentPoints: possessionMatch.opponentRecentPoints,
     answerAck,
     roundResult: state.roundResult,
     myRound,
@@ -294,7 +319,7 @@ export function useRealtimePossessionMatchController({
   const barBattle = useBarBattle({
     answerAck,
     opponentAnswered: state.opponentAnswered,
-    opponentRecentPoints: match?.opponentRecentPoints ?? null,
+    opponentRecentPoints: possessionMatch.opponentRecentPoints,
     opponentAnsweredCorrectly,
     roundResult: state.roundResult,
     myRound,
@@ -305,7 +330,7 @@ export function useRealtimePossessionMatchController({
   });
 
   const { handleHalftimeBan, handleHalftimeBanPhaseShown } = useHalftimeBanController({
-    matchId: match?.matchId,
+    matchId: possessionMatch.matchId,
     halftimeActive,
     overlayIsHalftime: overlayModel.isHalftime,
     halftimeDeadlineAt: possessionState?.halftime.deadlineAt,
@@ -344,12 +369,12 @@ export function useRealtimePossessionMatchController({
   const opponentAnswer = useMemo(() => {
     if (!isMultipleChoiceQuestion) return null;
     if (state.selectedAnswer === null) return null;
-    if (state.opponentAnswered && match?.opponentSelectedIndex != null) {
-      return match.opponentSelectedIndex;
+    if (state.opponentAnswered && possessionMatch.opponentSelectedIndex != null) {
+      return possessionMatch.opponentSelectedIndex;
     }
     if (state.roundResolved) return opponentRound?.selectedIndex ?? null;
     return null;
-  }, [isMultipleChoiceQuestion, match?.opponentSelectedIndex, opponentRound?.selectedIndex, state.opponentAnswered, state.roundResolved, state.selectedAnswer]);
+  }, [isMultipleChoiceQuestion, possessionMatch.opponentSelectedIndex, opponentRound?.selectedIndex, state.opponentAnswered, state.roundResolved, state.selectedAnswer]);
 
   const questionProgress = useMemo(() => getQuestionProgress({
     phase,
@@ -436,7 +461,7 @@ export function useRealtimePossessionMatchController({
     state.roundResult,
   ]);
 
-  const viewportModel: PossessionViewportModel | null = !match || !possessionState
+  const viewportModel: PossessionViewportModel | null = !possessionMatch.matchId || !possessionState
     ? null
     : {
       showMainUI,
@@ -530,7 +555,7 @@ export function useRealtimePossessionMatchController({
       muted,
     };
 
-  const questionAreaModel: PossessionQuestionAreaModel | null = !match || !possessionState
+  const questionAreaModel: PossessionQuestionAreaModel | null = !possessionMatch.matchId || !possessionState
     ? null
     : {
       feed,
@@ -568,7 +593,7 @@ export function useRealtimePossessionMatchController({
           ? {
             kind: 'special',
             props: {
-              matchId: match.matchId,
+              matchId: possessionMatch.matchId,
               qIndex: localQuestion.qIndex,
               totalQuestions: localQuestion.total ?? 12,
               question: specialQuestion,
@@ -590,7 +615,7 @@ export function useRealtimePossessionMatchController({
       transitionSnapshot: overlayModel.transitionSnapshot,
     };
 
-  const halftimeModel: HalftimeModel | null = !match || !possessionState || !overlayModel.isHalftime
+  const halftimeModel: HalftimeModel | null = !possessionMatch.matchId || !possessionState || !overlayModel.isHalftime
     ? null
     : {
       visible: true,
@@ -640,7 +665,7 @@ export function useRealtimePossessionMatchController({
   }, [toggleMuteSound]);
 
   return {
-    isReady: Boolean(match && possessionState),
+    isReady: Boolean(possessionMatch.matchId && possessionState),
     showMainUI,
     showStartCountdown,
     countdownDisplay,
