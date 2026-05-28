@@ -4,6 +4,8 @@ import { useId } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import type { BarBattlePhase, BarBattleState } from './bar-battle/barBattle.types';
+import { BarBattleScoreText } from './bar-battle/BarBattleScoreText';
+import { BarBattleCollisionFlash } from './bar-battle/BarBattleCollisionFlash';
 import {
   AVATAR_BAR_OFFSET,
   BAR_GAP,
@@ -31,83 +33,6 @@ import {
 // Re-export the public types so external consumers can keep importing
 // from this file path. Tests and the dev page do this.
 export type { BarBattlePhase, BarBattleState } from './bar-battle/barBattle.types';
-
-// ─── Score text ──────────────────────────────────────────────────────────────
-
-function ScoreText({
-  points,
-  x,
-  color,
-  phase,
-  targetX,
-  visible,
-  splashY = CY - BAR_H / 2 - 16,
-  convertY = CY - 6,
-  isPortrait = false,
-}: {
-  points: number;
-  x: number;
-  color: string;
-  phase: BarBattlePhase;
-  targetX: number;
-  visible: boolean;
-  /** Y position where the splash text appears. */
-  splashY?: number;
-  /** Y position the text flies to during the convert phase. */
-  convertY?: number;
-  /** Counter-rotate the text 90° CW (in screen) so it stays upright when
-   *  the parent SVG <g> is rotated 90° CCW by `matrix(0,-1,1,0,0,500)` for
-   *  portrait layout. */
-  isPortrait?: boolean;
-}) {
-  if (!visible || points <= 0) return null;
-
-  const y = splashY;
-  const isConverting = phase === 'convert';
-  const isGone = phase === 'bars' || phase === 'battle' || phase === 'result' || phase === 'done';
-
-  if (isGone) return null;
-
-  
-  const dxConvert = targetX - x;
-  const dyConvert = convertY - y;
-  const textRotate = isPortrait ? `rotate(90, ${x}, ${y})` : undefined;
-
-  return (
-    <motion.g
-      initial={{ x: 0, y: 14, opacity: 0, scale: 0.2 }}
-      animate={
-        isConverting
-          ? {
-              opacity: [1, 0.85, 0],
-              x: [0, dxConvert / 2, dxConvert],
-              y: [0, dyConvert / 2, dyConvert],
-              scale: [1.1, 0.55, 0.15],
-            }
-          : { x: 0, y: 0, opacity: 1, scale: 1.1 }
-      }
-      transition={
-        isConverting
-          ? { duration: 0.5, ease: [0.4, 0, 0.15, 1] }
-          : { type: 'spring', stiffness: 200, damping: 12, mass: 0.8 }
-      }
-    >
-      <text
-        x={x}
-        y={y}
-        textAnchor="middle"
-        fill={color}
-        fontSize="20"
-        fontWeight="900"
-        fontFamily="'Poppins', system-ui, sans-serif"
-        transform={textRotate}
-        style={{ paintOrder: 'stroke fill', stroke: 'rgba(0,0,0,0.8)', strokeWidth: 3.5 }}
-      >
-        +{points}
-      </text>
-    </motion.g>
-  );
-}
 
 // ─── Single bar (capsule with gradient + inner shine) ────────────────────────
 
@@ -482,56 +407,6 @@ function StackedBar({
   );
 }
 
-// ─── Collision flash ─────────────────────────────────────────────────────────
-
-function CollisionFlash({
-  x,
-  active,
-  count,
-  cy = CY,
-  ry = 38,
-  sparkOffsets = [-24, -12, 0, 12, 24],
-}: {
-  x: number;
-  active: boolean;
-  count: number;
-  cy?: number;
-  ry?: number;
-  sparkOffsets?: number[];
-}) {
-  return (
-    <AnimatePresence>
-      {active && count > 0 && (
-        <motion.g key="collision-flash">
-          {/* Wide glow pulse */}
-          <motion.ellipse
-            cx={x} cy={cy} rx={6} ry={ry}
-            fill="white"
-            initial={{ opacity: 0, scaleX: 0.5 }}
-            animate={{ opacity: [0, 0.5, 0.25, 0], scaleX: [0.5, 3, 2, 0.5] }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
-          />
-          {/* Sparks */}
-          {sparkOffsets.map((yOff, i) => (
-            <motion.circle
-              key={`spark-${i}`}
-              cx={x} cy={cy + yOff} r={2.5}
-              fill="white"
-              initial={{ opacity: 0, x: 0 }}
-              animate={{
-                opacity: [0, 1, 0],
-                x: [(i % 2 === 0 ? -1 : 1) * 3, (i % 2 === 0 ? -1 : 1) * 28],
-                y: [0, yOff * 0.4],
-              }}
-              transition={{ duration: 0.35, delay: 0.03 + i * 0.04, ease: 'easeOut' }}
-            />
-          ))}
-        </motion.g>
-      )}
-    </AnimatePresence>
-  );
-}
-
 // ─── Main overlay ────────────────────────────────────────────────────────────
 
 interface BarBattleOverlayProps {
@@ -771,7 +646,7 @@ export function BarBattleOverlay({
         const convertY = CY - 6;
         return (
           <>
-            <ScoreText
+            <BarBattleScoreText
               points={playerPoints}
               x={playerTextX}
               color={BLUE}
@@ -782,7 +657,7 @@ export function BarBattleOverlay({
               convertY={convertY}
               isPortrait={isPortrait}
             />
-            <ScoreText
+            <BarBattleScoreText
               points={opponentPoints}
               x={opponentTextX}
               color={RED}
@@ -941,7 +816,7 @@ export function BarBattleOverlay({
         )}
 
         {/* Collision flash — flash position follows the bar row's Y */}
-        <CollisionFlash
+        <BarBattleCollisionFlash
           x={dividerX}
           active={phase === 'battle'}
           count={minBars}
