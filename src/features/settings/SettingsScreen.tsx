@@ -31,6 +31,7 @@ import { useLocale } from "@/contexts/LocaleContext";
 import { resetOwnOnboarding, updateMe } from "@/lib/api/endpoints";
 import { startGeorgianPhoneLink, resetPassword, verifyGeorgianPhoneLink } from "@/lib/auth/auth.service";
 import { normalizeGeorgianPhone, validateGeorgianPhone, validateOtp } from "@/lib/auth/validation";
+import { useGeorgianPhoneAuthAvailability } from "@/lib/auth/useGeorgianPhoneAuthAvailability";
 import { ApiError } from "@/lib/api/api";
 import { requestAccountDeletion } from "@/lib/repositories/users.repo";
 import { type Locale } from "@/lib/i18n/messages";
@@ -57,6 +58,7 @@ interface SettingsScreenProps {
 export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const { logout, user, setAuthenticated } = useAuthStore();
   const { locale, setLocale, t } = useLocale();
+  const phoneAuthAvailability = useGeorgianPhoneAuthAvailability();
 
   // Preferences state - initialized from storage
   const [soundEnabled, setSoundEnabled] = useState(DEFAULT_PREFERENCES.soundEnabled);
@@ -82,6 +84,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const canConfirmDeletion = deleteConfirmation === deletionConfirmWord && !isDeletingAccount;
   const canUseDevReset = user?.role === "admin";
   const currentPhone = user?.phone_number ?? null;
+  const canUseGeorgianPhoneAuth = phoneAuthAvailability.isAvailable;
 
   // Load preferences from storage on mount - intentional initialization pattern
   useEffect(() => {
@@ -109,6 +112,12 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
     };
     storage.set(STORAGE_KEYS.USER_PREFERENCES, prefs);
   }, [soundEnabled, musicEnabled, invitesEnabled, questAlertsEnabled]);
+
+  useEffect(() => {
+    if (!canUseGeorgianPhoneAuth && phoneDialogOpen) {
+      setPhoneDialogOpen(false);
+    }
+  }, [canUseGeorgianPhoneAuth, phoneDialogOpen]);
 
   const handleLogout = async () => {
     await logout();
@@ -140,6 +149,9 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   };
 
   const openPhoneDialog = () => {
+    if (!canUseGeorgianPhoneAuth) {
+      return;
+    }
     resetPhoneDialogState();
     setPhoneDialogOpen(true);
   };
@@ -322,22 +334,23 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
 
          {/* Account & Safety */}
          <SettingsSection title={t("settings.accountAndSafety")} icon={<Shield className="size-5" />}>
-            <div
-              role="button"
-              tabIndex={0}
-              aria-haspopup="dialog"
-              className="group flex items-center justify-between p-3 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-              onClick={openPhoneDialog}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  openPhoneDialog();
-                }
-              }}
-            >
-               <div className="flex items-center gap-3">
+            {canUseGeorgianPhoneAuth ? (
+              <div
+                role="button"
+                tabIndex={0}
+                aria-haspopup="dialog"
+                className="group flex items-center justify-between p-3 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                onClick={openPhoneDialog}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    openPhoneDialog();
+                  }
+                }}
+              >
+                <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/15 transition-colors">
-                     <Phone className="size-4" />
+                    <Phone className="size-4" />
                   </div>
                   <div>
                     <div className="font-medium text-sm">{t("settings.addOrChangePhone")}</div>
@@ -347,9 +360,10 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                         : t("settings.phoneNotLinkedDescription")}
                     </div>
                   </div>
-               </div>
-               <ChevronLeft className="size-4 rotate-180 text-muted-foreground" />
-            </div>
+                </div>
+                <ChevronLeft className="size-4 rotate-180 text-muted-foreground" />
+              </div>
+            ) : null}
 
             <div
               role="button"
@@ -462,7 +476,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
       </div>
 
       <Dialog
-        open={phoneDialogOpen}
+        open={canUseGeorgianPhoneAuth && phoneDialogOpen}
         onOpenChange={(open) => {
           if (isUpdatingPhone) return;
           if (open) {

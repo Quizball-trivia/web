@@ -67,6 +67,8 @@ export function useWelcomeAuthController() {
   const [authFieldErrors, setAuthFieldErrors] = useState<AuthFieldErrors>({});
   const [phoneOtpSent, setPhoneOtpSent] = useState(false);
 
+  const [showAdvancedAuth, setShowAdvancedAuth] = useState(false);
+
   // In-modal forgot-password panel (reached from the sign-in "Forgot password?"
   // link — no page navigation; stays in the blue login dialog).
   const [showForgot, setShowForgot] = useState(false);
@@ -109,6 +111,17 @@ export function useWelcomeAuthController() {
     setForgotSubmitting(false);
   }, [resetAuthFeedback]);
 
+  // Switching tabs uses resetAuthForm (keeps the panel open); only closing the
+  // dialog collapses it.
+  const resetAuthDialog = useCallback(() => {
+    resetAuthForm();
+    setShowAdvancedAuth(false);
+  }, [resetAuthForm]);
+
+  const toggleAdvancedAuth = useCallback(() => {
+    setShowAdvancedAuth((current) => !current);
+  }, []);
+
   const handleKickOff = useCallback(() => setLoginOpen(true), []);
 
   const handleLoginDialogOpenChange = useCallback(
@@ -116,25 +129,25 @@ export function useWelcomeAuthController() {
       setLoginOpen(open);
       if (!open) {
         setShowOpenInBrowser(false);
-        resetAuthForm();
+        resetAuthDialog();
         if (inAppBrowserTimerRef.current !== null) {
           clearTimeout(inAppBrowserTimerRef.current);
           inAppBrowserTimerRef.current = null;
         }
       }
     },
-    [resetAuthForm],
+    [resetAuthDialog],
   );
 
   const handleCloseLoginDialog = useCallback(() => {
     setLoginOpen(false);
     setShowOpenInBrowser(false);
-    resetAuthForm();
+    resetAuthDialog();
     if (inAppBrowserTimerRef.current !== null) {
       clearTimeout(inAppBrowserTimerRef.current);
       inAppBrowserTimerRef.current = null;
     }
-  }, [resetAuthForm]);
+  }, [resetAuthDialog]);
 
   const handleAuthModeChange = useCallback(
     (mode: AuthPanelMode) => {
@@ -214,8 +227,8 @@ export function useWelcomeAuthController() {
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       resetAuthFeedback();
+      setShowAdvancedAuth(true);
 
-      // Validate with the shared helper BEFORE any API call.
       const fieldErrors =
         authMode === 'signup'
           ? validateSignup(authEmail, authPassword, authConfirmPassword)
@@ -314,6 +327,7 @@ export function useWelcomeAuthController() {
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       resetAuthFeedback();
+      setShowAdvancedAuth(true);
       const validationErrorKey = phoneOtpSent ? validateOtp(authOtp) : validateGeorgianPhone(authPhone);
       if (validationErrorKey) {
         setAuthError(t(validationErrorKey));
@@ -325,7 +339,6 @@ export function useWelcomeAuthController() {
       try {
         const normalizedPhone = normalizeGeorgianPhone(authPhone);
         if (!phoneOtpSent) {
-          trackSignupStarted('phone');
           await startGeorgianPhoneOtp(normalizedPhone);
           setAuthPhone(normalizedPhone);
           setPhoneOtpSent(true);
@@ -386,6 +399,10 @@ export function useWelcomeAuthController() {
     authError,
     authFieldErrors,
     phoneOtpSent,
+
+    // "More sign-in options" disclosure
+    showAdvancedAuth,
+    toggleAdvancedAuth,
 
     // Forgot-password panel (in-modal)
     showForgot,

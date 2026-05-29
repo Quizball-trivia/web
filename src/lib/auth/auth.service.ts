@@ -42,6 +42,9 @@ type GeorgianPhoneOtpStartPayload =
     paths["/api/v1/auth/phone/ge/start"]["post"]["requestBody"]
   >["content"]["application/json"];
 
+export type GeorgianPhoneAvailabilityResponse =
+  paths["/api/v1/auth/phone/ge/availability"]["get"]["responses"][200]["content"]["application/json"];
+
 type GeorgianPhoneOtpVerifyPayload =
   NonNullable<
     paths["/api/v1/auth/phone/ge/verify"]["post"]["requestBody"]
@@ -223,6 +226,15 @@ export async function startGeorgianPhoneOtp(phone: string): Promise<void> {
     body: { phone } satisfies GeorgianPhoneOtpStartPayload,
     auth: false,
   });
+}
+
+export async function getGeorgianPhoneAuthAvailability(
+  signal?: AbortSignal,
+): Promise<GeorgianPhoneAvailabilityResponse> {
+  return api.GET("/api/v1/auth/phone/ge/availability", {
+    auth: false,
+    signal,
+  }) as Promise<GeorgianPhoneAvailabilityResponse>;
 }
 
 export async function verifyGeorgianPhoneOtp(

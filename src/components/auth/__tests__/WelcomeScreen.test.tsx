@@ -74,6 +74,15 @@ vi.mock('@/lib/auth/auth.service', () => ({
   verifyGeorgianPhoneOtp: (phone: string, code: string) => verifyGeorgianPhoneOtpMock(phone, code),
 }));
 
+const georgianPhoneAvailabilityMock = vi.fn(() => ({
+  country: 'GE',
+  isAvailable: true,
+  isLoading: false,
+}));
+vi.mock('@/lib/auth/useGeorgianPhoneAuthAvailability', () => ({
+  useGeorgianPhoneAuthAvailability: () => georgianPhoneAvailabilityMock(),
+}));
+
 // Google Identity — clientId comes from process.env; the screen calls
 // `signInWithGoogleIdentity` if present. Stub it to a sentinel so we can
 // assert it ran with the right id.
@@ -177,6 +186,10 @@ function openLoginDialog() {
   fireEvent.click(kickoff);
 }
 
+function openAuthOptions() {
+  fireEvent.click(screen.getByText(/welcome\.moreSignInOptions/));
+}
+
 function clickContinueWithGoogle() {
   const btn = screen.getByText(/welcome\.continueWithGoogle/);
   fireEvent.click(btn);
@@ -207,6 +220,12 @@ beforeEach(() => {
   startGeorgianPhoneOtpMock.mockResolvedValue(undefined);
   verifyGeorgianPhoneOtpMock.mockReset();
   verifyGeorgianPhoneOtpMock.mockResolvedValue({ id: 'u1' });
+  georgianPhoneAvailabilityMock.mockReset();
+  georgianPhoneAvailabilityMock.mockReturnValue({
+    country: 'GE',
+    isAvailable: true,
+    isLoading: false,
+  });
   forgotPasswordMock.mockReset();
   forgotPasswordMock.mockResolvedValue(undefined);
   signInWithGoogleIdentityMock.mockReset();
@@ -255,6 +274,8 @@ describe('WelcomeScreen — landing chrome', () => {
     openLoginDialog();
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText(/welcome\.loginTitle/)).toBeInTheDocument();
+    expect(screen.getByText(/welcome\.moreSignInOptions/)).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText(/welcome\.emailPlaceholder/)).not.toBeInTheDocument();
   });
 
   it('closes the login dialog via the modal close button and resets the in-app-browser panel', () => {
@@ -319,6 +340,7 @@ describe('WelcomeScreen — email signin / signup', () => {
   it('submits email signin and bootstraps on success', async () => {
     render(<WelcomeScreen />);
     openLoginDialog();
+    openAuthOptions();
     setEmailFields('user@example.com', 'secret');
     const submit = screen.getByText(/welcome\.signInWithEmail/);
     fireEvent.click(submit);
@@ -330,6 +352,7 @@ describe('WelcomeScreen — email signin / signup', () => {
   it('switches to signup tab and submits register', async () => {
     render(<WelcomeScreen />);
     openLoginDialog();
+    openAuthOptions();
     fireEvent.click(screen.getByText(/welcome\.signUpTab/));
     setEmailFields('new@example.com', 'secret12', 'secret12');
     const submit = screen.getByText(/welcome\.createAccount/);
@@ -349,6 +372,7 @@ describe('WelcomeScreen — email signin / signup', () => {
     registerMock.mockResolvedValueOnce({ user: null as unknown as { id: string }, tokensSet: false });
     render(<WelcomeScreen />);
     openLoginDialog();
+    openAuthOptions();
     fireEvent.click(screen.getByText(/welcome\.signUpTab/));
     setEmailFields('new@example.com', 'secret12', 'secret12');
     fireEvent.click(screen.getByText(/welcome\.createAccount/));
@@ -359,6 +383,7 @@ describe('WelcomeScreen — email signin / signup', () => {
   it('shows the password-mismatch error in signup mode without calling register', () => {
     render(<WelcomeScreen />);
     openLoginDialog();
+    openAuthOptions();
     fireEvent.click(screen.getByText(/welcome\.signUpTab/));
     setEmailFields('new@example.com', 'secret12', 'different12');
     fireEvent.click(screen.getByText(/welcome\.createAccount/));
@@ -369,6 +394,7 @@ describe('WelcomeScreen — email signin / signup', () => {
   it('blocks signup with a too-short password before calling register', () => {
     render(<WelcomeScreen />);
     openLoginDialog();
+    openAuthOptions();
     fireEvent.click(screen.getByText(/welcome\.signUpTab/));
     setEmailFields('new@example.com', 'short', 'short');
     fireEvent.click(screen.getByText(/welcome\.createAccount/));
@@ -380,6 +406,7 @@ describe('WelcomeScreen — email signin / signup', () => {
     loginMock.mockRejectedValueOnce(new Error('Bad credentials, bro'));
     render(<WelcomeScreen />);
     openLoginDialog();
+    openAuthOptions();
     setEmailFields('user@example.com', 'wrongpass');
     fireEvent.click(screen.getByText(/welcome\.signInWithEmail/));
     // Always the generic message — never the raw upstream error.
@@ -392,6 +419,7 @@ describe('WelcomeScreen — email signin / signup', () => {
     registerMock.mockRejectedValueOnce(new Error('Email already registered'));
     render(<WelcomeScreen />);
     openLoginDialog();
+    openAuthOptions();
     fireEvent.click(screen.getByText(/welcome\.signUpTab/));
     setEmailFields('new@example.com', 'secret12', 'secret12');
     fireEvent.click(screen.getByText(/welcome\.createAccount/));
@@ -401,6 +429,7 @@ describe('WelcomeScreen — email signin / signup', () => {
   it('opens the in-modal forgot panel and submits with redirect_to, showing generic success', async () => {
     render(<WelcomeScreen />);
     openLoginDialog();
+    openAuthOptions();
     // Enter an email in sign-in mode, then open the forgot panel.
     const emailInput = screen.getByPlaceholderText(/welcome\.emailPlaceholder/);
     fireEvent.change(emailInput, { target: { value: 'user@example.com' } });
@@ -427,6 +456,7 @@ describe('WelcomeScreen — email signin / signup', () => {
     }));
     render(<WelcomeScreen />);
     openLoginDialog();
+    openAuthOptions();
     setEmailFields('user@example.com', 'secret');
     const submit = screen.getByText(/welcome\.signInWithEmail/).closest('button');
     expect(submit).not.toBeNull();
@@ -437,15 +467,31 @@ describe('WelcomeScreen — email signin / signup', () => {
 });
 
 describe('WelcomeScreen — phone OTP', () => {
+  it('hides the phone tab when Georgian phone auth is not available', () => {
+    georgianPhoneAvailabilityMock.mockReturnValue({
+      country: 'US',
+      isAvailable: false,
+      isLoading: false,
+    });
+
+    render(<WelcomeScreen />);
+    openLoginDialog();
+    openAuthOptions();
+
+    expect(screen.queryByText(/welcome\.phoneTab/)).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText(/welcome\.phonePlaceholder/)).not.toBeInTheDocument();
+  });
+
   it('starts the OTP flow on first submit then verifies on second', async () => {
     render(<WelcomeScreen />);
     openLoginDialog();
+    openAuthOptions();
     fireEvent.click(screen.getByText(/welcome\.phoneTab/));
     const phoneInput = screen.getByPlaceholderText(/welcome\.phonePlaceholder/);
     fireEvent.change(phoneInput, { target: { value: '+995555000111' } });
     const sendButton = screen.getByText(/welcome\.sendCode/);
     fireEvent.click(sendButton);
-    expect(trackSignupStartedMock).toHaveBeenCalledWith('phone');
+    expect(trackSignupStartedMock).not.toHaveBeenCalledWith('phone');
     await waitFor(() => expect(startGeorgianPhoneOtpMock).toHaveBeenCalledWith('+995555000111'));
     await waitFor(() => expect(screen.getByText(/welcome\.phoneCodeSent/)).toBeInTheDocument());
 
@@ -463,6 +509,7 @@ describe('WelcomeScreen — phone OTP', () => {
     startGeorgianPhoneOtpMock.mockRejectedValueOnce(new Error('SMS blocked here'));
     render(<WelcomeScreen />);
     openLoginDialog();
+    openAuthOptions();
     fireEvent.click(screen.getByText(/welcome\.phoneTab/));
     const phoneInput = screen.getByPlaceholderText(/welcome\.phonePlaceholder/);
     fireEvent.change(phoneInput, { target: { value: '+995555000111' } });
@@ -475,6 +522,7 @@ describe('WelcomeScreen — mode-switch reset behavior', () => {
   it('switching tabs resets feedback and disables stale OTP state', () => {
     render(<WelcomeScreen />);
     openLoginDialog();
+    openAuthOptions();
     fireEvent.click(screen.getByText(/welcome\.phoneTab/));
     const phoneInput = screen.getByPlaceholderText(/welcome\.phonePlaceholder/);
     fireEvent.change(phoneInput, { target: { value: '+1' } });

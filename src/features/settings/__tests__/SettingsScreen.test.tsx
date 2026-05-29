@@ -7,6 +7,11 @@ import { startGeorgianPhoneLink, verifyGeorgianPhoneLink } from '@/lib/auth/auth
 
 const logoutMock = vi.fn();
 const setAuthenticatedMock = vi.fn();
+const georgianPhoneAvailabilityMock = vi.fn(() => ({
+  country: 'GE',
+  isAvailable: true,
+  isLoading: false,
+}));
 
 vi.mock('@/stores/auth.store', () => ({
   useAuthStore: () => ({
@@ -100,6 +105,10 @@ vi.mock('@/lib/auth/auth.service', () => ({
   verifyGeorgianPhoneLink: vi.fn(),
 }));
 
+vi.mock('@/lib/auth/useGeorgianPhoneAuthAvailability', () => ({
+  useGeorgianPhoneAuthAvailability: () => georgianPhoneAvailabilityMock(),
+}));
+
 vi.mock('sonner', () => ({
   toast: {
     success: vi.fn(),
@@ -110,6 +119,11 @@ vi.mock('sonner', () => ({
 describe('SettingsScreen account deletion', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    georgianPhoneAvailabilityMock.mockReturnValue({
+      country: 'GE',
+      isAvailable: true,
+      isLoading: false,
+    });
     vi.mocked(startGeorgianPhoneLink).mockReset();
     vi.mocked(verifyGeorgianPhoneLink).mockReset();
   });
@@ -209,5 +223,18 @@ describe('SettingsScreen account deletion', () => {
       phone_number: '+995577123456',
       phone_verified_at: '2026-05-28T20:00:00.000Z',
     }));
+  });
+
+  it('hides phone setup outside Georgia', () => {
+    georgianPhoneAvailabilityMock.mockReturnValue({
+      country: 'US',
+      isAvailable: false,
+      isLoading: false,
+    });
+
+    render(<SettingsScreen onBack={vi.fn()} />);
+
+    expect(screen.queryByText('Add or change phone')).not.toBeInTheDocument();
+    expect(screen.queryByText('No phone number linked yet')).not.toBeInTheDocument();
   });
 });

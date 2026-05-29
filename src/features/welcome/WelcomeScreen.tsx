@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Script from 'next/script';
 import { useLeaderboard } from '@/lib/queries/leaderboard.queries';
 import { BarBattleFlightOverlay } from '@/features/possession/components/BarBattleFlightOverlay';
+import { useGeorgianPhoneAuthAvailability } from '@/lib/auth/useGeorgianPhoneAuthAvailability';
 
 import { DEMO_LEADERBOARD } from './welcome.content';
 import {
@@ -48,6 +49,8 @@ export function WelcomeScreen() {
     authError,
     authFieldErrors,
     phoneOtpSent,
+    showAdvancedAuth,
+    toggleAdvancedAuth,
     showForgot,
     forgotSubmitting,
     forgotSent,
@@ -71,8 +74,16 @@ export function WelcomeScreen() {
   const leaderboardEntries = leaderboardData ?? DEMO_LEADERBOARD;
 
   const { allCategories, featuredCategories, remainingCategories } = useWelcomeCategoriesData();
+  const phoneAuthAvailability = useGeorgianPhoneAuthAvailability();
+  const canUseGeorgianPhoneAuth = phoneAuthAvailability.isAvailable;
 
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? '';
+
+  useEffect(() => {
+    if (!canUseGeorgianPhoneAuth && authMode === 'phone') {
+      handleAuthModeChange('signin');
+    }
+  }, [authMode, canUseGeorgianPhoneAuth, handleAuthModeChange]);
 
   return (
     <div className="min-h-screen w-full bg-surface-page font-sans text-foreground flex flex-col overflow-x-hidden">
@@ -133,10 +144,12 @@ export function WelcomeScreen() {
         authError={authError}
         authFieldErrors={authFieldErrors}
         phoneOtpSent={phoneOtpSent}
+        showAdvancedAuth={showAdvancedAuth}
         showForgot={showForgot}
         forgotSubmitting={forgotSubmitting}
         forgotSent={forgotSent}
         forgotError={forgotError}
+        showPhoneAuth={canUseGeorgianPhoneAuth}
         onOpenChange={handleLoginDialogOpenChange}
         onClose={handleCloseLoginDialog}
         onGoogleLogin={handleGoogleLogin}
@@ -149,6 +162,7 @@ export function WelcomeScreen() {
         onOtpChange={setAuthOtp}
         onEmailSubmit={handleEmailAuth}
         onPhoneSubmit={handlePhoneAuth}
+        onToggleAdvancedAuth={toggleAdvancedAuth}
         onShowForgot={handleShowForgot}
         onBackToSignIn={handleBackToSignIn}
         onForgotSubmit={handleForgotSubmit}
@@ -156,4 +170,3 @@ export function WelcomeScreen() {
     </div>
   );
 }
-
