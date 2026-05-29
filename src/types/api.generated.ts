@@ -353,6 +353,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/phone/ge/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check Georgian phone auth availability
+         * @description Detects the request country and reports whether Georgian phone sign-in should be shown to the client.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Availability resolved */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GeorgianPhoneAvailabilityResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/phone/ge/start": {
         parameters: {
             query?: never;
@@ -5050,6 +5089,10 @@ export interface components {
         PhoneLinkStartResponse: components["schemas"]["MessageResponse"] & {
             phone: string;
             otp_required: boolean;
+        };
+        GeorgianPhoneAvailabilityResponse: {
+            country: string | null;
+            phone_auth_available: boolean;
         };
         SmsOfficeStatusResponse: {
             reference: string;

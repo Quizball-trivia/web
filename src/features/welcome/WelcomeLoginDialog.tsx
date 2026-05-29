@@ -1,5 +1,6 @@
 'use client';
 
+import { ChevronDown } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ModalCloseButton } from '@/components/shared/ModalCloseButton';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -27,10 +28,13 @@ interface WelcomeLoginDialogProps {
   authError: string | null;
   authFieldErrors: AuthFieldErrors;
   phoneOtpSent: boolean;
+  showAdvancedAuth: boolean;
   showForgot: boolean;
   forgotSubmitting: boolean;
   forgotSent: boolean;
   forgotError: string | null;
+  showPhoneAuth: boolean;
+  onToggleAdvancedAuth: () => void;
   onOpenChange: (open: boolean) => void;
   onClose: () => void;
   onGoogleLogin: () => void;
@@ -62,10 +66,13 @@ export function WelcomeLoginDialog({
   authError,
   authFieldErrors,
   phoneOtpSent,
+  showAdvancedAuth,
   showForgot,
   forgotSubmitting,
   forgotSent,
   forgotError,
+  showPhoneAuth,
+  onToggleAdvancedAuth,
   onOpenChange,
   onClose,
   onGoogleLogin,
@@ -83,6 +90,11 @@ export function WelcomeLoginDialog({
   onForgotSubmit,
 }: WelcomeLoginDialogProps) {
   const { t } = useLocale();
+  const authModes: AuthPanelMode[] = showPhoneAuth
+    ? ['signin', 'signup', 'phone']
+    : ['signin', 'signup'];
+  const effectiveAuthMode: AuthPanelMode =
+    showPhoneAuth || authMode !== 'phone' ? authMode : 'signin';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -128,58 +140,78 @@ export function WelcomeLoginDialog({
 
             <div className="my-5 flex items-center gap-3">
               <div className="h-px flex-1 bg-white/20" />
-              <span className="font-poppins text-xs font-semibold uppercase tracking-wide text-white/60">
-                {t('welcome.authOr')}
-              </span>
+              <button
+                type="button"
+                aria-expanded={showAdvancedAuth}
+                aria-controls="welcome-auth-options"
+                onClick={onToggleAdvancedAuth}
+                className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 font-poppins text-xs font-semibold uppercase tracking-wide text-white/75 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/45"
+              >
+                <span>
+                  {showAdvancedAuth ? t('welcome.hideSignInOptions') : t('welcome.moreSignInOptions')}
+                </span>
+                <ChevronDown
+                  className={`size-4 transition-transform ${showAdvancedAuth ? 'rotate-180' : ''}`}
+                  aria-hidden="true"
+                />
+              </button>
               <div className="h-px flex-1 bg-white/20" />
             </div>
 
-            <div className="grid grid-cols-3 gap-1 rounded-full bg-black/18 p-1">
-              {(['signin', 'signup', 'phone'] as const).map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => onAuthModeChange(mode)}
-                  className={`h-10 rounded-full font-poppins text-xs font-bold uppercase tracking-wide transition-colors ${
-                    authMode === mode
-                      ? 'bg-white text-brand-blue'
-                      : 'text-white/75 hover:bg-white/10 hover:text-white'
+            {showAdvancedAuth ? (
+              <div id="welcome-auth-options" className="space-y-4">
+                <div
+                  className={`grid gap-1 rounded-full bg-black/18 p-1 ${
+                    showPhoneAuth ? 'grid-cols-3' : 'grid-cols-2'
                   }`}
                 >
-                  {mode === 'signin'
-                    ? t('welcome.signInTab')
-                    : mode === 'signup'
-                      ? t('welcome.signUpTab')
-                      : t('welcome.phoneTab')}
-                </button>
-              ))}
-            </div>
+                  {authModes.map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => onAuthModeChange(mode)}
+                      className={`h-10 rounded-full font-poppins text-xs font-bold uppercase tracking-wide transition-colors ${
+                        effectiveAuthMode === mode
+                          ? 'bg-white text-brand-blue'
+                          : 'text-white/75 hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      {mode === 'signin'
+                        ? t('welcome.signInTab')
+                        : mode === 'signup'
+                          ? t('welcome.signUpTab')
+                          : t('welcome.phoneTab')}
+                    </button>
+                  ))}
+                </div>
 
-            {authMode === 'phone' ? (
-              <WelcomePhoneAuthForm
-                phone={authPhone}
-                otp={authOtp}
-                otpSent={phoneOtpSent}
-                submitting={authSubmitting}
-                onPhoneChange={onPhoneChange}
-                onOtpChange={onOtpChange}
-                onSubmit={onPhoneSubmit}
-              />
-            ) : (
-              <WelcomeEmailAuthForm
-                mode={authMode}
-                email={authEmail}
-                password={authPassword}
-                confirmPassword={authConfirmPassword}
-                submitting={authSubmitting}
-                fieldErrors={authFieldErrors}
-                onEmailChange={onEmailChange}
-                onPasswordChange={onPasswordChange}
-                onConfirmPasswordChange={onConfirmPasswordChange}
-                onSubmit={onEmailSubmit}
-                onForgotPassword={onShowForgot}
-              />
-            )}
+                {effectiveAuthMode === 'phone' ? (
+                  <WelcomePhoneAuthForm
+                    phone={authPhone}
+                    otp={authOtp}
+                    otpSent={phoneOtpSent}
+                    submitting={authSubmitting}
+                    onPhoneChange={onPhoneChange}
+                    onOtpChange={onOtpChange}
+                    onSubmit={onPhoneSubmit}
+                  />
+                ) : (
+                  <WelcomeEmailAuthForm
+                    mode={effectiveAuthMode}
+                    email={authEmail}
+                    password={authPassword}
+                    confirmPassword={authConfirmPassword}
+                    submitting={authSubmitting}
+                    fieldErrors={authFieldErrors}
+                    onEmailChange={onEmailChange}
+                    onPasswordChange={onPasswordChange}
+                    onConfirmPasswordChange={onConfirmPasswordChange}
+                    onSubmit={onEmailSubmit}
+                    onForgotPassword={onShowForgot}
+                  />
+                )}
+              </div>
+            ) : null}
 
             {authNotice ? (
               <p className="mt-3 rounded-2xl bg-white/10 px-4 py-3 text-center font-poppins text-xs font-semibold leading-relaxed text-white">
