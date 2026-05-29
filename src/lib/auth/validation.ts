@@ -14,6 +14,7 @@ export const PASSWORD_MIN = 8;
 export const PASSWORD_MAX = 128;
 
 const EMAIL_SCHEMA = z.string().trim().min(1).email().max(254);
+const GEORGIAN_MOBILE_RE = /^\+9955\d{8}$/;
 
 /** Normalize an email for submission: trimmed + lowercased. */
 export function normalizeEmail(email: string): string {
@@ -24,6 +25,27 @@ export function validateEmail(email: string): MessageKey | null {
   const value = email.trim();
   if (value.length === 0) return 'authValidation.emailRequired';
   if (!EMAIL_SCHEMA.safeParse(value).success) return 'authValidation.emailInvalid';
+  return null;
+}
+
+export function normalizeGeorgianPhone(phone: string): string {
+  const compact = phone.replace(/[\s()-]/g, '');
+  if (compact.startsWith('+')) return compact;
+  if (compact.startsWith('995')) return `+${compact}`;
+  if (compact.startsWith('5')) return `+995${compact}`;
+  return compact;
+}
+
+export function validateGeorgianPhone(phone: string): MessageKey | null {
+  const normalized = normalizeGeorgianPhone(phone);
+  if (normalized.trim().length === 0) return 'authValidation.phoneRequired';
+  if (!GEORGIAN_MOBILE_RE.test(normalized)) return 'authValidation.phoneInvalidGeorgian';
+  return null;
+}
+
+export function validateOtp(otp: string): MessageKey | null {
+  if (otp.trim().length === 0) return 'authValidation.otpRequired';
+  if (!/^\d{6}$/.test(otp)) return 'authValidation.otpInvalid';
   return null;
 }
 

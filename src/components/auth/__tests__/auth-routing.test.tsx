@@ -33,6 +33,8 @@ describe("auth onboarding routing", () => {
     expect(getAuthenticatedEntryRoute({
       id: "u1",
       email: null,
+      phone_number: null,
+      phone_verified_at: null,
       role: "user",
       nickname: null,
       country: null,
@@ -57,6 +59,8 @@ describe("auth onboarding routing", () => {
     expect(isOnboardingComplete({
       id: "u1",
       email: null,
+      phone_number: null,
+      phone_verified_at: null,
       role: "user",
       nickname: null,
       country: null,
@@ -82,6 +86,8 @@ describe("auth onboarding routing", () => {
       user: {
         id: "u1",
         email: null,
+        phone_number: null,
+        phone_verified_at: null,
         role: "user",
         nickname: null,
         country: null,
@@ -118,6 +124,8 @@ describe("auth onboarding routing", () => {
       user: {
         id: "u1",
         email: null,
+        phone_number: null,
+        phone_verified_at: null,
         role: "user",
         nickname: null,
         country: null,

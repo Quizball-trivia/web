@@ -47,6 +47,21 @@ type GeorgianPhoneOtpVerifyPayload =
     paths["/api/v1/auth/phone/ge/verify"]["post"]["requestBody"]
   >["content"]["application/json"];
 
+type GeorgianPhoneLinkStartPayload =
+  NonNullable<
+    paths["/api/v1/auth/phone/ge/link/start"]["post"]["requestBody"]
+  >["content"]["application/json"];
+
+type GeorgianPhoneLinkStartResponse =
+  paths["/api/v1/auth/phone/ge/link/start"]["post"]["responses"][200]["content"]["application/json"];
+
+type GeorgianPhoneLinkVerifyPayload =
+  NonNullable<
+    paths["/api/v1/auth/phone/ge/link/verify"]["post"]["requestBody"]
+  >["content"]["application/json"];
+
+type UserResponse = components["schemas"]["UserResponse"];
+
 export async function login(email: string, password: string): Promise<AuthResponse["user"] | null> {
   const normalizedEmail = normalizeEmail(email);
   logger.info("Auth login start", { email: normalizedEmail });
@@ -224,6 +239,20 @@ export async function verifyGeorgianPhoneOtp(
     setTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
   }
   return response.user ?? null;
+}
+
+export async function startGeorgianPhoneLink(phone: string): Promise<GeorgianPhoneLinkStartResponse> {
+  logger.info("Auth Georgian phone link start");
+  return api.POST("/api/v1/auth/phone/ge/link/start", {
+    body: { phone } satisfies GeorgianPhoneLinkStartPayload,
+  }) as Promise<GeorgianPhoneLinkStartResponse>;
+}
+
+export async function verifyGeorgianPhoneLink(phone: string, token: string): Promise<UserResponse> {
+  logger.info("Auth Georgian phone link verify");
+  return api.POST("/api/v1/auth/phone/ge/link/verify", {
+    body: { phone, token } satisfies GeorgianPhoneLinkVerifyPayload,
+  }) as Promise<UserResponse>;
 }
 
 export function parseOAuthHash(

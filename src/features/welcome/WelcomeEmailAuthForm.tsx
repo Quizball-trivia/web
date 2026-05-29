@@ -41,7 +41,7 @@ export function WelcomeEmailAuthForm({
 
   const fieldError = (key: AuthFieldErrors[keyof AuthFieldErrors] | undefined) =>
     key ? (
-      <span className="mt-1 block font-poppins text-xs text-brand-red-light">{t(key)}</span>
+      <span className="mt-1.5 block font-poppins text-xs font-bold text-brand-red-light">{t(key)}</span>
     ) : null;
 
   return (
@@ -78,11 +78,6 @@ export function WelcomeEmailAuthForm({
           disabled={submitting}
           autoComplete={isSignup ? 'new-password' : 'current-password'}
         />
-        {isSignup ? (
-          <span className="mt-1.5 block font-poppins text-xs text-white/45">
-            {t('authValidation.passwordHelper')}
-          </span>
-        ) : null}
         {fieldError(fieldErrors.password)}
       </label>
 

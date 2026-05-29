@@ -37,6 +37,7 @@ export function PasswordForm({
     [password, confirmPassword],
   );
   const invalid = hasErrors(errors);
+  const missingRequiredFields = !password || !confirmPassword;
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -63,11 +64,8 @@ export function PasswordForm({
             autoComplete="new-password"
           />
         </div>
-        <span className="mt-1.5 block font-poppins text-xs text-white/45">
-          {t('authValidation.passwordHelper')}
-        </span>
         {touched && errors.password ? (
-          <span className="mt-1 block font-poppins text-xs text-brand-red-soft">
+          <span className="mt-1.5 block font-poppins text-xs font-bold text-brand-red-light">
             {t(errors.password)}
           </span>
         ) : null}
@@ -87,7 +85,7 @@ export function PasswordForm({
           autoComplete="new-password"
         />
         {touched && errors.confirmPassword ? (
-          <span className="mt-1 block font-poppins text-xs text-brand-red-soft">
+          <span className="mt-1.5 block font-poppins text-xs font-bold text-brand-red-light">
             {t(errors.confirmPassword)}
           </span>
         ) : null}
@@ -95,7 +93,7 @@ export function PasswordForm({
 
       <Button
         type="submit"
-        disabled={submitting || invalid}
+        disabled={submitting || missingRequiredFields}
         className="h-12 w-full rounded-[28px] bg-brand-yellow font-poppins text-sm font-semibold uppercase tracking-wide text-black hover:bg-brand-yellow-deep disabled:opacity-60"
       >
         {submitting ? <Loader2 className="size-4 animate-spin" /> : null}

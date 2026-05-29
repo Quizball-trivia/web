@@ -6,6 +6,7 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { getPlatform, tryOpenInExternalBrowser } from '@/lib/auth/in-app-browser';
 import { InAppBrowserInstructions } from './InAppBrowserInstructions';
 import { WelcomeGoogleButton } from './WelcomeGoogleButton';
+import { WelcomeFacebookButton } from './WelcomeFacebookButton';
 import { WelcomeEmailAuthForm } from './WelcomeEmailAuthForm';
 import { WelcomePhoneAuthForm } from './WelcomePhoneAuthForm';
 import { WelcomeForgotPasswordForm } from './WelcomeForgotPasswordForm';
@@ -33,6 +34,7 @@ interface WelcomeLoginDialogProps {
   onOpenChange: (open: boolean) => void;
   onClose: () => void;
   onGoogleLogin: () => void;
+  onFacebookLogin: () => void;
   onAuthModeChange: (mode: AuthPanelMode) => void;
   onEmailChange: (value: string) => void;
   onPasswordChange: (value: string) => void;
@@ -67,6 +69,7 @@ export function WelcomeLoginDialog({
   onOpenChange,
   onClose,
   onGoogleLogin,
+  onFacebookLogin,
   onAuthModeChange,
   onEmailChange,
   onPasswordChange,
@@ -120,6 +123,7 @@ export function WelcomeLoginDialog({
             </DialogHeader>
             <div className="mt-6 space-y-3">
               <WelcomeGoogleButton onClick={onGoogleLogin} />
+              <WelcomeFacebookButton onClick={onFacebookLogin} />
             </div>
 
             <div className="my-5 flex items-center gap-3">

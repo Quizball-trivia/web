@@ -41,6 +41,9 @@ import {
   validateLogin,
   validateSignup,
   validateEmail,
+  validateGeorgianPhone,
+  validateOtp,
+  normalizeGeorgianPhone,
   hasErrors,
   type AuthFieldErrors,
 } from '@/lib/auth/validation';
@@ -180,6 +183,33 @@ export function useWelcomeAuthController() {
     }
   }, [bootstrap, googleClientId]);
 
+  const handleFacebookLogin = useCallback(async () => {
+    trackSignupStarted('facebook');
+
+    // Same in-app-browser guard as Google: Facebook also blocks OAuth inside
+    // Messenger/Instagram webviews, so bounce to the external browser.
+    if (isInAppBrowser()) {
+      tryOpenInExternalBrowser(window.location.href);
+      if (inAppBrowserTimerRef.current !== null) {
+        clearTimeout(inAppBrowserTimerRef.current);
+      }
+      inAppBrowserTimerRef.current = setTimeout(() => {
+        inAppBrowserTimerRef.current = null;
+        if (typeof document !== 'undefined' && !document.hidden) {
+          setShowOpenInBrowser(true);
+        }
+      }, 1500);
+      return;
+    }
+
+    try {
+      const redirectTo = `${window.location.origin}/auth/callback`;
+      await socialLogin('facebook', redirectTo);
+    } catch (error) {
+      console.error('Facebook login failed', error);
+    }
+  }, []);
+
   const handleEmailAuth = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -209,6 +239,10 @@ export function useWelcomeAuthController() {
           if (!result.tokensSet) {
             // Neutral confirmation when Supabase requires email confirmation.
             setAuthNotice(t('welcome.checkEmail'));
+            setAuthMode('signin');
+            setAuthPassword('');
+            setAuthConfirmPassword('');
+            setAuthFieldErrors({});
             return;
           }
           trackSignupCompleted('email');
@@ -280,18 +314,26 @@ export function useWelcomeAuthController() {
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       resetAuthFeedback();
+      const validationErrorKey = phoneOtpSent ? validateOtp(authOtp) : validateGeorgianPhone(authPhone);
+      if (validationErrorKey) {
+        setAuthError(t(validationErrorKey));
+        return;
+      }
+
       setAuthSubmitting(true);
 
       try {
+        const normalizedPhone = normalizeGeorgianPhone(authPhone);
         if (!phoneOtpSent) {
           trackSignupStarted('phone');
-          await startGeorgianPhoneOtp(authPhone);
+          await startGeorgianPhoneOtp(normalizedPhone);
+          setAuthPhone(normalizedPhone);
           setPhoneOtpSent(true);
           setAuthNotice(t('welcome.phoneCodeSent'));
           return;
         }
 
-        await verifyGeorgianPhoneOtp(authPhone, authOtp);
+        await verifyGeorgianPhoneOtp(normalizedPhone, authOtp);
         trackLoginCompleted('phone');
         await bootstrap({ force: true });
         setLoginOpen(false);
@@ -353,6 +395,7 @@ export function useWelcomeAuthController() {
 
     // Submit handlers
     handleGoogleLogin,
+    handleFacebookLogin,
     handleEmailAuth,
     handlePhoneAuth,
     handleShowForgot,

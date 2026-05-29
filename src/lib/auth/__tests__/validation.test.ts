@@ -8,6 +8,9 @@ import {
   validateLogin,
   validateSignup,
   validateNewPassword,
+  normalizeGeorgianPhone,
+  validateGeorgianPhone,
+  validateOtp,
   hasErrors,
   PASSWORD_MIN,
   PASSWORD_MAX,
@@ -29,6 +32,27 @@ describe('auth validation', () => {
     });
     it('accepts a valid address (with surrounding whitespace)', () => {
       expect(validateEmail('  player@quizball.io ')).toBeNull();
+    });
+  });
+
+  describe('phone validation', () => {
+    it('normalizes Georgian mobile formats', () => {
+      expect(normalizeGeorgianPhone('+995 577 123 456')).toBe('+995577123456');
+      expect(normalizeGeorgianPhone('995577123456')).toBe('+995577123456');
+      expect(normalizeGeorgianPhone('577123456')).toBe('+995577123456');
+    });
+
+    it('requires a Georgian mobile number', () => {
+      expect(validateGeorgianPhone('')).toBe('authValidation.phoneRequired');
+      expect(validateGeorgianPhone('+12025550123')).toBe('authValidation.phoneInvalidGeorgian');
+      expect(validateGeorgianPhone('+995322123456')).toBe('authValidation.phoneInvalidGeorgian');
+      expect(validateGeorgianPhone('+995577123456')).toBeNull();
+    });
+
+    it('validates six digit OTP codes', () => {
+      expect(validateOtp('')).toBe('authValidation.otpRequired');
+      expect(validateOtp('12345')).toBe('authValidation.otpInvalid');
+      expect(validateOtp('123456')).toBeNull();
     });
   });
 

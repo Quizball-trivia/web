@@ -53,6 +53,7 @@ export function WelcomeScreen() {
     forgotSent,
     forgotError,
     handleGoogleLogin,
+    handleFacebookLogin,
     handleEmailAuth,
     handlePhoneAuth,
     handleShowForgot,
@@ -139,6 +140,7 @@ export function WelcomeScreen() {
         onOpenChange={handleLoginDialogOpenChange}
         onClose={handleCloseLoginDialog}
         onGoogleLogin={handleGoogleLogin}
+        onFacebookLogin={handleFacebookLogin}
         onAuthModeChange={handleAuthModeChange}
         onEmailChange={setAuthEmail}
         onPasswordChange={setAuthPassword}
