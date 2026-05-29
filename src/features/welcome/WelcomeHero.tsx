@@ -148,6 +148,7 @@ export function WelcomeHero({ sim, duelsCount, onKickOff }: WelcomeHeroProps) {
                   targetGoal={landingTargetGoal}
                   centerPossessionTrack
                   orientation="landscape"
+                  svgIdPrefix="welcome-hero-pitch"
                 />
               </div>
 
@@ -162,18 +163,18 @@ export function WelcomeHero({ sim, duelsCount, onKickOff }: WelcomeHeroProps) {
                     className="pointer-events-none absolute inset-0 flex items-center justify-center"
                   >
                     <motion.div
-                      initial={{ opacity: 0, y: 14, scale: 0.94 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.3 }}
+                      initial={{ opacity: 0, scale: 0.94 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.35, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
                       className="relative w-[78%] max-w-[520px]"
                     >
                       <Image src="/assets/goal.png" alt="Goal celebration" width={760} height={538} className="w-full h-auto object-contain" />
                       <motion.div
                         className="absolute left-1/2 top-1/2 flex size-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center md:size-24"
                         initial={{ scale: 1, y: 10, opacity: 0.94 }}
-                        animate={{ scale: [1, 3, 1], y: [10, -16, 0], opacity: [0.94, 1, 1] }}
-                        transition={{ duration: 1.45, times: [0, 0.38, 1], ease: 'easeInOut' }}
+                        animate={{ scale: [1, 4.6, 1], y: [10, -32, 0], opacity: [0.94, 1, 1] }}
+                        transition={{ duration: 1.85, times: [0, 0.45, 1], ease: 'easeInOut' }}
                       >
                         <Image src="https://lfbwhxvwubzeqkztghok.supabase.co/storage/v1/object/public/imgs/world-cup-style-ball-cartoon-transparent.png" alt="" width={256} height={256} unoptimized className="size-12 object-contain drop-shadow-[0_0_14px_rgba(255,255,255,0.32)] md:size-14" />
                       </motion.div>

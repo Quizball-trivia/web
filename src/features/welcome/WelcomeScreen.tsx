@@ -14,6 +14,7 @@ import {
 import { useWelcomeAuthController } from './useWelcomeAuthController';
 import { useWelcomeStadiumSim } from './useWelcomeStadiumSim';
 import { useWelcomeCategoriesData } from './useWelcomeCategoriesData';
+import { peekPostAuthRedirect } from '@/lib/auth/postAuthRedirect';
 import { WelcomeLoginDialog } from './WelcomeLoginDialog';
 import { WelcomeNavbar } from './WelcomeNavbar';
 import { WelcomeHero } from './WelcomeHero';
@@ -84,6 +85,12 @@ export function WelcomeScreen() {
       handleAuthModeChange('signin');
     }
   }, [authMode, canUseGeorgianPhoneAuth, handleAuthModeChange]);
+
+  useEffect(() => {
+    if (peekPostAuthRedirect()) {
+      setLoginOpen(true);
+    }
+  }, [setLoginOpen]);
 
   return (
     <div className="min-h-screen w-full bg-surface-page font-sans text-foreground flex flex-col overflow-x-hidden">

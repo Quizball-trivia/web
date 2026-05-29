@@ -76,4 +76,6 @@ export interface PitchVisualizationProps {
   disableShotActorResultMotion?: boolean;
   /** Hide the pitch-owned ball while a full-screen celebration owns the visible ball. */
   hideBall?: boolean;
+  /** Optional stable SVG id prefix. Caller must keep it unique on a page. */
+  svgIdPrefix?: string;
 }

@@ -143,6 +143,13 @@ export const COUNTRY_LOCATION_FALLBACKS: Record<string, OpponentLocationCandidat
     country: "Canada",
     flag: "🇨🇦",
   },
+  morocco: {
+    lon: -7.59,
+    lat: 33.57,
+    city: "Casablanca",
+    country: "Morocco",
+    flag: "🇲🇦",
+  },
   georgia: {
     lon: 44.79,
     lat: 41.72,
@@ -180,6 +187,7 @@ export const COUNTRY_CODE_TO_KEY: Record<string, string> = {
   NL: "netherlands",
   RU: "russia",
   CA: "canada",
+  MA: "morocco",
   GE: "georgia",
 };
 
@@ -218,6 +226,7 @@ export const COUNTRY_ALIASES: Record<string, string[]> = {
   netherlands: ["netherlands", "dutch", "holland", "🇳🇱"],
   russia: ["russia", "russian", "🇷🇺"],
   canada: ["canada", "canadian", "🇨🇦"],
+  morocco: ["morocco", "moroccan", "casablanca", "rabat", "marrakesh", "marrakech", "🇲🇦"],
   georgia: ["georgia", "georgian", "sakartvelo", "🇬🇪"],
 };
 
@@ -262,6 +271,7 @@ export const CITY_ALIASES: Record<string, string[]> = {
   netherlands: ["utrecht", "amsterdam", "rotterdam"],
   russia: ["moscow", "saint petersburg"],
   canada: ["edmonton", "toronto", "vancouver", "montreal"],
+  morocco: ["casablanca", "rabat", "marrakesh", "marrakech"],
   georgia: ["tbilisi", "batumi", "kutaisi"],
 };
 
@@ -389,6 +399,20 @@ export const CITY_LOCATION_OVERRIDES: Record<string, OpponentLocationCandidate> 
     city: "Moscow",
     country: "Russia",
     flag: "🇷🇺",
+  },
+  casablanca: {
+    lon: -7.59,
+    lat: 33.57,
+    city: "Casablanca",
+    country: "Morocco",
+    flag: "🇲🇦",
+  },
+  rabat: {
+    lon: -6.84,
+    lat: 34.02,
+    city: "Rabat",
+    country: "Morocco",
+    flag: "🇲🇦",
   },
   tbilisi: {
     lon: 44.79,

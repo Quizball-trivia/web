@@ -219,6 +219,8 @@ export function constructFallbackMatchFromResults(
       avatarUrl: opponentParticipant?.avatarUrl ?? null,
       avatarCustomization: opponentParticipant?.avatarCustomization ?? null,
       ...(opponentParticipant?.rankPoints != null ? { rp: opponentParticipant.rankPoints } : {}),
+      ...(opponentParticipant?.country ? { country: opponentParticipant.country } : {}),
+      ...(opponentParticipant?.countryCode ? { countryCode: opponentParticipant.countryCode } : {}),
     };
 
   return {
@@ -249,6 +251,7 @@ export function constructFallbackMatchFromResults(
     possessionState: null,
     partyState: null,
     stateVersion: 0,
+    serverTimeOffsetMs: null,
   };
 }
 
@@ -274,6 +277,8 @@ export function mergeOpponentFromFinalParticipants(
     avatarUrl: opponentParticipant.avatarUrl,
     avatarCustomization: opponentParticipant.avatarCustomization,
     ...(opponentParticipant.rankPoints != null ? { rp: opponentParticipant.rankPoints } : {}),
+    ...(opponentParticipant.country ? { country: opponentParticipant.country } : {}),
+    ...(opponentParticipant.countryCode ? { countryCode: opponentParticipant.countryCode } : {}),
   };
 }
 

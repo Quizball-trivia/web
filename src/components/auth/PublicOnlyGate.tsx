@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth.store";
-import { getAuthenticatedEntryRoute } from "@/lib/auth/onboarding";
+import { getPostAuthEntryRoute } from "@/lib/auth/postAuthRedirect";
 
 type PublicOnlyGateProps = {
   children: React.ReactNode;
@@ -29,7 +29,7 @@ export default function PublicOnlyGate({ children }: PublicOnlyGateProps) {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.replace(getAuthenticatedEntryRoute(user));
+      router.replace(getPostAuthEntryRoute(user));
     }
   }, [status, user, router]);
 

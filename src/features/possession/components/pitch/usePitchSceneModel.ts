@@ -47,6 +47,7 @@ export function usePitchSceneModel({
   simpleShotAnimation = false,
   shotAvatarUnitSize,
   disableShotActorResultMotion = false,
+  svgIdPrefix,
 }: PitchVisualizationProps) {
   const isPenalty = !!penaltyMode;
   const isShot = !!shotMode;
@@ -63,7 +64,8 @@ export function usePitchSceneModel({
 
   // Scoped SVG IDs to avoid collisions when multiple instances render
   const reactId = useId();
-  const uid = (name: string) => `${reactId}-${name}`;
+  const uidPrefix = svgIdPrefix ?? reactId;
+  const uid = (name: string) => `${uidPrefix}-${name}`;
   const playerAvatarAlt = playerName ? `${playerName} avatar` : 'player avatar';
   const opponentAvatarAlt = opponentName ? `${opponentName} avatar` : 'opponent avatar';
 

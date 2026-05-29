@@ -225,6 +225,13 @@ describe('PitchVisualization — orientation + mirror + barBattle', () => {
 });
 
 describe('PitchVisualization — scoped SVG ids', () => {
+  it('uses an explicit SVG id prefix when provided', () => {
+    const { container } = renderPitch({ svgIdPrefix: 'test-pitch' });
+
+    expect(container.querySelector('#test-pitch-fieldClip')).toBeInTheDocument();
+    expect(container.querySelector('image')?.getAttribute('clip-path')).toBe('url(#test-pitch-fieldClip)');
+  });
+
   it('uses unique scoped ids per instance so multiple pitches do not clash', () => {
     const { container } = render(
       <>

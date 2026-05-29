@@ -8,6 +8,7 @@ import { CountryFlag } from '@/components/CountryFlag';
 import type { AvatarCustomization } from '@/types/game';
 import { getTierAccent } from '@/utils/tierVisuals';
 import { getClub } from '@/lib/clubs';
+import { normalizeCountryCode } from '@/lib/geo/countryCode';
 import { useIsMobile } from '@/hooks/useMobile';
 import { cn } from '@/lib/utils';
 
@@ -74,7 +75,7 @@ function PlayerSide({
    *  appear to look down at the player below. */
   reversed?: boolean;
 }) {
-  const countryCode = info.countryCode ?? (info.country?.length === 2 ? info.country : null);
+  const countryCode = normalizeCountryCode(info.countryCode ?? info.country);
   const club = getClub(info.favoriteClub ?? null);
   const tierAccent = info.tier ? getTierAccent(info.tier) : '#FFE500';
 

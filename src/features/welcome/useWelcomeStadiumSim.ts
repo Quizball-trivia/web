@@ -258,14 +258,16 @@ export function useWelcomeStadiumSim() {
           left: score.left + (playerIsAttacker ? 1 : 0),
           right: score.right + (playerIsAttacker ? 0 : 1),
         }));
-        setStadiumPhase(2);
-      });
-      schedule(t + GOAL_SHOT_TO_CELEBRATION_MS + GOAL_CELEBRATION_MS, () => {
-        setLandingGoalVisible(false);
+        // Snap avatars back to center as the celebration starts (matches the
+        // ranked match), instead of leaving them pushed out until it ends.
         setLandingShotMode(undefined);
         setLandingBattle(null);
         landingPositionRef.current = 50;
         setLandingPlayerPosition(50);
+        setStadiumPhase(2);
+      });
+      schedule(t + GOAL_SHOT_TO_CELEBRATION_MS + GOAL_CELEBRATION_MS, () => {
+        setLandingGoalVisible(false);
         setLandingBallOnPlayer(true);
         setStadiumPhase(3);
         setStadiumCycle((cycle) => cycle + 1);

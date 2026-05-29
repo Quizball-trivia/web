@@ -11,6 +11,7 @@ export const STORAGE_KEYS = {
   PLAYER_STATE: 'quizball_player_state',
   USER_PREFERENCES: 'quizball_user_preferences',
   STORE_WALLET: 'quizball_store_wallet',
+  POST_AUTH_REDIRECT: 'quizball_post_auth_redirect',
 
   // Game state
   DAILY_CHALLENGE_STATE: 'quizball_daily_challenge',

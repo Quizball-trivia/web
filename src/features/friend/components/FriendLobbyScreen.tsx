@@ -19,6 +19,8 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
     lobby,
     members,
     lobbyCode,
+    isResolvingInvite,
+    targetInviteCode,
     me,
     h2hSummary,
     allCategories,
@@ -67,6 +69,40 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
         : t("friend.waitingBothReady");
 
   const poppins = "'Poppins', sans-serif";
+
+  if (isResolvingInvite) {
+    const code = targetInviteCode ?? lobbyCode;
+
+    return (
+      <div className="container mx-auto max-w-5xl py-6 animate-in fade-in">
+        <div className="flex min-h-[420px] flex-col items-center justify-center gap-5 rounded-[20px] border border-white/10 bg-white/[0.03] px-6 text-center">
+          <Loader2 className="size-9 animate-spin text-brand-yellow" />
+          <div className="space-y-2">
+            <h1
+              className="text-white uppercase"
+              style={{ fontFamily: poppins, fontWeight: 700, fontSize: 24, letterSpacing: '0.04em' }}
+            >
+              {t("friend.joiningCode", { code })}
+            </h1>
+            <p
+              className="text-white/55 uppercase"
+              style={{ fontFamily: poppins, fontWeight: 600, fontSize: 12, letterSpacing: '0.08em' }}
+            >
+              {code}
+            </p>
+          </div>
+          <button
+            onClick={actions.handleLeaveLobby}
+            className="flex h-12 items-center justify-center gap-2 rounded-[16px] bg-brand-red px-5 text-white uppercase transition-all hover:bg-brand-red/90 active:scale-[0.98]"
+            style={{ fontFamily: poppins, fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
+          >
+            <LogOut className="size-4" />
+            {t("friend.leaveLobby")}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto max-w-5xl py-6 animate-in fade-in space-y-6">

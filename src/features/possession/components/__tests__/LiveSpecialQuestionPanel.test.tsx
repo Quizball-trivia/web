@@ -518,7 +518,7 @@ describe('LiveSpecialQuestionPanel clues input (pre-split regression)', () => {
         myTotalPoints: 80,
         oppAnswered: false,
         pointsEarned: 0,
-        // submittedOrderIds is put-in-order-only; clues ack carries no field
+        cluesDisplayAnswer: { en: 'Roman Burki' },
       } as never,
     });
 
@@ -527,6 +527,13 @@ describe('LiveSpecialQuestionPanel clues input (pre-split regression)', () => {
       expect(screen.getByRole('button', { name: /submit answer/i })).toBeDisabled();
       expect(screen.getByPlaceholderText('TYPE YOUR ANSWER')).toBeDisabled();
     });
+
+    expect(screen.getByText('Roman Burki')).toBeInTheDocument();
+    expect(screen.getByText('Left in 2022')).toBeInTheDocument();
+    expect(screen.queryByText('???')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /submit answer/i }));
+    expect(emitMock).not.toHaveBeenCalledWith('match:clues_answer', expect.anything());
   });
 });
 

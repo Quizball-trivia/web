@@ -9,7 +9,10 @@ import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
 import { useGameSessionStore } from "@/stores/gameSession.store";
 import { logger } from "@/utils/logger";
-import type { LobbySettings as LobbySettingsState } from "@/lib/realtime/socket.types";
+import type {
+  LobbyJoinByCodeResult,
+  LobbySettings as LobbySettingsState,
+} from "@/lib/realtime/socket.types";
 import { useCategoriesList } from "@/lib/queries/categories.queries";
 import { copyToClipboard } from "@/utils/clipboard";
 import { trackFriendInviteSent } from "@/lib/analytics/game-events";
@@ -51,6 +54,8 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   const startedRef = useRef(false);
   const createdRef = useRef(false);
   const leavingRef = useRef(false);
+  const inviteJoinCancelledRef = useRef(false);
+  const terminalInviteJoinFailureRef = useRef(false);
   const prevOpponentIdRef = useRef<string | null>(null);
   const prevLobbyIdRef = useRef<string | null>(null);
   const initActionRef = useRef<string | null>(null);
@@ -60,6 +65,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   const [settingsErrorVersion, setSettingsErrorVersion] = useState(0);
   const [isStartingMatch, setIsStartingMatch] = useState(false);
   const [handoffTimedOutCode, setHandoffTimedOutCode] = useState<string | null>(null);
+  const [joinRetryNonce, setJoinRetryNonce] = useState(0);
   const [optimisticReady, setOptimisticReady] = useState<boolean | null>(null);
 
   const clearStartMatchTimeout = useCallback(() => {
@@ -68,9 +74,13 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     startMatchTimeoutRef.current = null;
   }, []);
 
-  const lobbyCode = lobby?.inviteCode ?? (roomCode === "new" ? "" : roomCode);
   const normalizedRoomCode = roomCode && roomCode !== "new" ? roomCode.toUpperCase() : null;
-  const members = lobby?.members ?? [];
+  const expectsInviteLobby = Boolean(normalizedRoomCode && !isHost);
+  const lobbyMatchesInvite = !expectsInviteLobby || lobby?.inviteCode?.toUpperCase() === normalizedRoomCode;
+  const activeLobby = lobbyMatchesInvite ? lobby : null;
+  const isResolvingInvite = expectsInviteLobby && !activeLobby;
+  const lobbyCode = activeLobby?.inviteCode ?? (roomCode === "new" ? "" : normalizedRoomCode ?? roomCode);
+  const members = activeLobby?.members ?? [];
   const me = members.find((member) => member.userId === selfUserId);
   const otherMembers = members.filter((member) => member.userId !== selfUserId);
   const opponent = otherMembers[0];
@@ -80,9 +90,15 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     otherMembers.length === 1 ? opponent?.userId : undefined
   );
 
+  useEffect(() => {
+    inviteJoinCancelledRef.current = false;
+    terminalInviteJoinFailureRef.current = false;
+  }, [normalizedRoomCode]);
+
   // 1. Reset local guards after leaving a lobby/match
   useEffect(() => {
-    if (lobby || draft || hasActiveMatch) return;
+    if (isResolvingInvite) return;
+    if (activeLobby || draft || hasActiveMatch) return;
     if (leavingRef.current) return;
     startedRef.current = false;
     createdRef.current = false;
@@ -93,7 +109,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
       setIsStartingMatch(false);
     }, 0);
     return () => clearTimeout(stopTimer);
-  }, [clearStartMatchTimeout, lobby, draft, hasActiveMatch]);
+  }, [clearStartMatchTimeout, activeLobby, draft, hasActiveMatch, isResolvingInvite]);
 
   useEffect(() => {
     if (!normalizedRoomCode || pendingLobbyHandoffCode !== normalizedRoomCode) return;
@@ -101,6 +117,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     if (lobby?.inviteCode?.toUpperCase() === normalizedRoomCode) {
       clearLobbyHandoff();
       queueMicrotask(() => setHandoffTimedOutCode(null));
+      queueMicrotask(() => setJoinRetryNonce(0));
       return;
     }
 
@@ -110,9 +127,25 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     return () => clearTimeout(timer);
   }, [clearLobbyHandoff, lobby?.inviteCode, normalizedRoomCode, pendingLobbyHandoffCode]);
 
+  useEffect(() => {
+    if (!isResolvingInvite || !normalizedRoomCode) return;
+    if (terminalInviteJoinFailureRef.current) return;
+    if (joinRetryNonce >= 3) return;
+
+    const timer = setTimeout(() => {
+      if (leavingRef.current || inviteJoinCancelledRef.current) return;
+      initActionRef.current = null;
+      createdRef.current = false;
+      setJoinRetryNonce((current) => current + 1);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, [isResolvingInvite, joinRetryNonce, normalizedRoomCode]);
+
   // 2. Socket Initialization
   useEffect(() => {
     if (leavingRef.current) return;
+    if (inviteJoinCancelledRef.current) return;
+    if (terminalInviteJoinFailureRef.current) return;
     if (createdRef.current) return;
     const socket = getSocket();
     const targetCode = normalizedRoomCode;
@@ -144,45 +177,51 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     if (initActionRef.current === joinKey) return;
     initActionRef.current = joinKey;
     createdRef.current = true;
-    socket.emit("lobby:join_by_code", { inviteCode: roomCode });
+    socket.emit("lobby:join_by_code", { inviteCode: roomCode }, (result: LobbyJoinByCodeResult) => {
+      if (leavingRef.current || inviteJoinCancelledRef.current) return;
+      if (result.ok || result.retryable) return;
+      terminalInviteJoinFailureRef.current = true;
+      inviteJoinCancelledRef.current = true;
+      createdRef.current = true;
+    });
     logger.info("Socket emit lobby:join_by_code", {
       inviteCode: `${roomCode.slice(0, 2)}***`,
     });
-  }, [handoffTimedOutCode, isHost, lobby?.inviteCode, lobby, normalizedRoomCode, pendingLobbyHandoffCode, roomCode]);
+  }, [handoffTimedOutCode, isHost, joinRetryNonce, lobby?.inviteCode, lobby, normalizedRoomCode, pendingLobbyHandoffCode, roomCode]);
 
   // 2.5. Track lobby creation/join success when lobby is confirmed
   useEffect(() => {
-    if (!lobby || analyticsTrackedRef.current) return;
+    if (!activeLobby || analyticsTrackedRef.current) return;
     analyticsTrackedRef.current = true;
 
     if (isHost) {
       trackLobbyCreated("friendly");
     } else {
-      trackLobbyJoined(lobby.lobbyId, lobby.inviteCode ?? roomCode);
+      trackLobbyJoined(activeLobby.lobbyId, activeLobby.inviteCode ?? roomCode);
     }
-  }, [lobby, isHost, roomCode]);
+  }, [activeLobby, isHost, roomCode]);
 
   // 3. Navigation & Session Logic
   useEffect(() => {
-    if (!lobby || startedRef.current) return;
+    if (!activeLobby || startedRef.current) return;
     startedRef.current = true;
     // Derive questionCount from lobby settings, fallback to 10 if missing or invalid
-    const settingsCount = (lobby.settings as unknown as Record<string, unknown>)?.questionCount;
+    const settingsCount = (activeLobby.settings as unknown as Record<string, unknown>)?.questionCount;
     const derivedCount =
       typeof settingsCount === "number" && settingsCount > 0 ? settingsCount : 10;
     startSession({ mode: "quizball", matchType: "friendly", questionCount: derivedCount });
-  }, [lobby, startSession]);
+  }, [activeLobby, startSession]);
 
   // Explicitly notify the remaining player when an opponent leaves a waiting lobby.
   useEffect(() => {
-    if (!lobby || leavingRef.current) {
+    if (!activeLobby || leavingRef.current) {
       prevOpponentIdRef.current = null;
       prevLobbyIdRef.current = null;
       return;
     }
 
     // Reset opponent tracking when lobby identity changes
-    const currentLobbyId = lobby.lobbyId;
+    const currentLobbyId = activeLobby.lobbyId;
     if (prevLobbyIdRef.current !== currentLobbyId) {
       prevOpponentIdRef.current = null;
       prevLobbyIdRef.current = currentLobbyId;
@@ -192,7 +231,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     const currentOpponentId = opponent?.userId ?? null;
 
     if (
-      lobby.status === "waiting" &&
+      activeLobby.status === "waiting" &&
       prevOpponentId &&
       !currentOpponentId
     ) {
@@ -200,17 +239,17 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     }
 
     prevOpponentIdRef.current = currentOpponentId;
-  }, [lobby, opponent?.userId, lobby?.lobbyId]);
+  }, [activeLobby, opponent?.userId]);
 
   useEffect(() => {
-    if (!lobby) return;
+    if (!activeLobby) return;
     logger.info("Lobby state in UI", {
-      lobbyId: lobby.lobbyId,
-      inviteCode: lobby.inviteCode ?? null,
+      lobbyId: activeLobby.lobbyId,
+      inviteCode: activeLobby.inviteCode ?? null,
       selfUserId,
       isHost,
     });
-  }, [lobby?.lobbyId, lobby?.inviteCode, selfUserId, isHost, lobby]);
+  }, [activeLobby, selfUserId, isHost]);
 
   useEffect(() => {
     if (!draft && !hasActiveMatch) return;
@@ -231,8 +270,9 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
       error.code === "NOT_IN_LOBBY" ||
       error.code === "TRANSITION_IN_PROGRESS";
     const isTransientSettingsBusy = error.code === "LOBBY_SETTINGS_LOCKED";
+    const isInviteTransitionBusy = isResolvingInvite && error.code === "TRANSITION_IN_PROGRESS";
 
-    if (isLobbySettingsError) {
+    if (isLobbySettingsError && !isInviteTransitionBusy) {
       timer = setTimeout(() => {
         setSettingsErrorVersion((current) => current + 1);
       }, 0);
@@ -241,7 +281,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     const stopStartingTimer = setTimeout(() => {
       setIsStartingMatch(false);
     }, 0);
-    if (!isTransientSettingsBusy) {
+    if (!isTransientSettingsBusy && !isInviteTransitionBusy) {
       toast.error(error.message);
     }
     clearError();
@@ -252,7 +292,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
       }
       clearTimeout(stopStartingTimer);
     };
-  }, [clearError, clearStartMatchTimeout, error]);
+  }, [clearError, clearStartMatchTimeout, error, isResolvingInvite]);
 
   // 3. Actions
   const copyCode = async () => {
@@ -260,7 +300,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     const success = await copyToClipboard(lobbyCode);
     if (success) {
       try {
-        trackFriendInviteSent('link_copy', lobby?.lobbyId);
+        trackFriendInviteSent('link_copy', activeLobby?.lobbyId);
       } catch (error) {
         logger.error('Analytics trackFriendInviteSent failed', error);
       }
@@ -277,14 +317,14 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   };
 
   const handleUpdateSettings = useCallback((updates: Partial<LobbySettingsState> & { isPublic?: boolean }) => {
-    if (!lobby) return;
+    if (!activeLobby) return;
 
     const nextSettings = {
-      ...lobby.settings,
+      ...activeLobby.settings,
       ...updates,
     };
     const emit = {
-      lobbyId: lobby.lobbyId,
+      lobbyId: activeLobby.lobbyId,
       gameMode: nextSettings.gameMode,
       friendlyRandom: nextSettings.friendlyRandom,
       friendlyCategoryAId: nextSettings.friendlyCategoryAId,
@@ -293,12 +333,12 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     };
 
     const settingsUnchanged =
-      emit.gameMode === lobby.settings.gameMode &&
-      emit.friendlyRandom === lobby.settings.friendlyRandom &&
-      emit.friendlyCategoryAId === lobby.settings.friendlyCategoryAId;
+      emit.gameMode === activeLobby.settings.gameMode &&
+      emit.friendlyRandom === activeLobby.settings.friendlyRandom &&
+      emit.friendlyCategoryAId === activeLobby.settings.friendlyCategoryAId;
 
     const visibilityUnchanged =
-      updates.isPublic === undefined || updates.isPublic === lobby.isPublic;
+      updates.isPublic === undefined || updates.isPublic === activeLobby.isPublic;
 
     if (settingsUnchanged && visibilityUnchanged) {
       return;
@@ -306,7 +346,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
 
     getSocket().emit("lobby:update_settings", emit);
     logger.info("Socket emit lobby:update_settings", emit);
-  }, [lobby]);
+  }, [activeLobby]);
 
   const handleStartMatch = () => {
     if (isStartingMatch) return;
@@ -319,12 +359,13 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
 
     getSocket().emit("lobby:start");
     logger.info("Socket emit lobby:start", {
-      lobbyId: lobby?.lobbyId ?? null,
+      lobbyId: activeLobby?.lobbyId ?? null,
     });
   };
 
   const handleLeaveLobby = () => {
     leavingRef.current = true;
+    inviteJoinCancelledRef.current = true;
     createdRef.current = true;
     startedRef.current = true;
     initActionRef.current = null;
@@ -352,9 +393,11 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     : null;
 
   return {
-    lobby,
+    lobby: activeLobby,
     members,
     lobbyCode,
+    isResolvingInvite,
+    targetInviteCode: normalizedRoomCode,
     me,
     opponent,
     h2hSummary: opponent ? h2hSummary ?? null : null,
