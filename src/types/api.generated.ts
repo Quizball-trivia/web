@@ -22,6 +22,10 @@ export interface paths {
                         /** Format: email */
                         email: string;
                         password: string;
+                        /** Format: uri */
+                        redirect_to?: string;
+                        /** @enum {string} */
+                        locale?: "en" | "ka";
                     };
                 };
             };
@@ -210,7 +214,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Reset password */
+        /**
+         * Reset password
+         * @description Sets a new password for the session identified by the Authorization Bearer token (a Supabase recovery session, or a logged-in user adding/changing a password). The token is read from the Authorization header, not the body.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -221,7 +228,6 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        access_token: string;
                         new_password: string;
                     };
                 };
@@ -462,6 +468,189 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/phone/ge/link/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start linking a Georgian phone number
+         * @description Starts a Supabase phone-change OTP for the authenticated account. Use this from Settings so Google/email users link a phone to the same account.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        phone: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Verification code sent or already linked */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PhoneLinkStartResponse"];
+                    };
+                };
+                /** @description Unsupported or invalid phone number */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Phone number already linked elsewhere */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/phone/ge/link/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Verify linked Georgian phone number
+         * @description Verifies the phone-change OTP and stores the verified phone number on the current QuizBall user.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        phone: string;
+                        token: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Phone number linked */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: email */
+                            email: string | null;
+                            phone_number: string | null;
+                            /** Format: date-time */
+                            phone_verified_at: string | null;
+                            /** @enum {string} */
+                            role: "admin" | "user";
+                            nickname: string | null;
+                            country: string | null;
+                            /** Format: uri */
+                            avatar_url: string | null;
+                            avatar_customization: {
+                                /** @enum {string} */
+                                skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
+                                /** @enum {string} */
+                                jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                                /** @enum {string} */
+                                hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
+                                /** @enum {string} */
+                                glasses?: "glasses_wayfarer" | "glasses_round" | "glasses_aviator";
+                                /** @enum {string} */
+                                facialHair?: "stache" | "beard";
+                            } | null;
+                            favorite_club: string | null;
+                            preferred_language: string | null;
+                            onboarding_complete: boolean;
+                            progression: {
+                                level: number;
+                                totalXp: number;
+                                currentLevelXp: number;
+                                xpForNextLevel: number;
+                                progressPct: number;
+                            };
+                            /** Format: date-time */
+                            created_at: string;
+                        };
+                    };
+                };
+                /** @description Invalid request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Invalid OTP or not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Phone number already linked elsewhere */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/sms/supabase-hook": {
         parameters: {
             query?: never;
@@ -524,6 +713,120 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/sms/smsoffice-callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * SMSOffice delivery callback
+         * @description Receives SMSOffice delivery status updates. Responds with plain text OK.
+         */
+        get: {
+            parameters: {
+                query: {
+                    reference: string;
+                    status: string;
+                    reason?: string;
+                    destination: string;
+                    timestamp?: string;
+                    operator?: string;
+                    secret?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Callback accepted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid callback secret */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/sms/smsoffice-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check SMSOffice message status
+         * @description Polls SMSOffice message status by destination and reference. Intended for manual/internal verification.
+         */
+        get: {
+            parameters: {
+                query: {
+                    destination: string;
+                    reference: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description SMSOffice status */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SmsOfficeStatusResponse"];
+                    };
+                };
+                /** @description Invalid status authorization */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description SMS provider failed */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4730,6 +5033,7 @@ export interface components {
         AuthUser: {
             /** Format: email */
             email: string | null;
+            phone: string | null;
             provider_sub: string;
         };
         AuthResponse: {
@@ -4742,6 +5046,16 @@ export interface components {
         };
         MessageResponse: {
             message: string;
+        };
+        PhoneLinkStartResponse: components["schemas"]["MessageResponse"] & {
+            phone: string;
+            otp_required: boolean;
+        };
+        SmsOfficeStatusResponse: {
+            reference: string;
+            destination: string;
+            status: string;
+            message: string | null;
         };
         SocialLoginResponse: {
             /** Format: uri */
@@ -4997,6 +5311,9 @@ export interface components {
             id: string;
             /** Format: email */
             email: string | null;
+            phone_number: string | null;
+            /** Format: date-time */
+            phone_verified_at: string | null;
             /** @enum {string} */
             role: "admin" | "user";
             nickname: string | null;

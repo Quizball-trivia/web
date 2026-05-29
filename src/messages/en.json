@@ -85,7 +85,29 @@
     "about": "About",
     "version": "Version 0.9.1 (Beta)",
     "guest": "Guest",
-    "dev": "dev"
+    "dev": "dev",
+    "addOrChangePhone": "Add or change phone",
+    "addOrChangePhoneDescription": "Link a Georgian mobile number for SMS sign-in",
+    "phoneCurrentDescription": "Linked number: {phone}",
+    "phoneNotLinkedDescription": "No phone number linked yet",
+    "changePhoneTitle": "Add or change phone",
+    "changePhoneModalDescription": "Link a Georgian mobile number to this account. Use Settings after Google or email sign-in so it stays one account.",
+    "changePhoneOtpDescription": "Enter the 6-digit code we sent to {phone}.",
+    "phoneSendCode": "Send code",
+    "phoneVerifyCode": "Verify phone",
+    "phoneCodeSent": "We sent a code to {phone}.",
+    "phoneLinkSuccess": "Phone number linked. You can now sign in with this number.",
+    "phoneLinkFailed": "Couldn't update your phone number. Please try again.",
+    "phoneAlreadyLinked": "This phone number is already linked to your account.",
+    "phoneLinkedElsewhere": "This phone number is already linked to another account.",
+    "phoneOtpFailed": "That code didn't work. Check it and try again.",
+    "addOrChangePassword": "Add or change password",
+    "addOrChangePasswordDescription": "Set a password so you can sign in with email",
+    "changePasswordTitle": "Add or change password",
+    "changePasswordModalDescription": "Enter a new password for your account. If you signed up with Google, this adds a password to the same account.",
+    "changePasswordSuccess": "Password updated. You can now sign in with email and password.",
+    "changePasswordFailed": "Couldn't update your password. Please try again.",
+    "changePasswordSubmit": "Update password"
   },
   "languageSelector": {
     "title": "Language",
@@ -478,6 +500,7 @@
     "loginTitle": "Sign in to QuizBall",
     "loginDescription": "Save progress, rank up, and play online with your account.",
     "continueWithGoogle": "Continue with Google",
+    "continueWithFacebook": "Continue with Facebook",
     "authOr": "or",
     "signInTab": "Sign in",
     "signUpTab": "Sign up",
@@ -497,10 +520,12 @@
     "sendCode": "Send code",
     "verifyCode": "Verify code",
     "passwordMismatch": "Passwords do not match.",
-    "checkEmail": "Check your email to confirm your account, then sign in.",
+    "checkEmail": "We sent a confirmation link to your email. If you already have an account, sign in instead. If you joined with Google, continue with Google.",
     "phoneCodeSent": "We sent a code to your Georgian mobile number.",
     "emailAuthFailed": "Email authentication failed. Please try again.",
-    "phoneAuthFailed": "Phone authentication failed. Georgian mobile numbers only for now."
+    "phoneAuthFailed": "Phone authentication failed. Georgian mobile numbers only for now.",
+    "forgotPassword": "Forgot password?",
+    "loginError": "Email or password is incorrect. If you joined with Google, use Continue with Google."
   },
   "appAuthGate": {
     "warmingUp": "Warming Up...",
@@ -571,7 +596,10 @@
     "checkEmail": "Check your email",
     "sentTo": "We've sent a password reset link to",
     "backToSignIn": "Back to Sign In",
-    "didntReceive": "Didn't receive the email? Try again"
+    "didntReceive": "Didn't receive the email? Try again",
+    "genericSuccess": "If an account exists for that email, we sent password reset instructions.",
+    "sending": "Sending...",
+    "sendFailed": "Couldn't send reset instructions. Please try again."
   },
   "sidebar": {
     "toggle": "Toggle Sidebar",
@@ -867,5 +895,34 @@
     "orCopyLink": "Or copy the link",
     "linkCopied": "Link copied — paste it in Safari/Chrome",
     "openInBrowser": "Open in browser"
+  },
+  "authValidation": {
+    "emailRequired": "Email is required.",
+    "emailInvalid": "Enter a valid email address.",
+    "passwordRequired": "Password is required.",
+    "passwordTooShort": "Use at least 8 characters.",
+    "passwordTooLong": "Password is too long (max 128 characters).",
+    "confirmPasswordRequired": "Confirm your password.",
+    "passwordMismatch": "Passwords do not match.",
+    "passwordHelper": "Use at least 8 characters.",
+    "phoneRequired": "Phone number is required.",
+    "phoneInvalidGeorgian": "Enter a Georgian mobile number, like +995 5XX XXX XXX.",
+    "otpRequired": "Verification code is required.",
+    "otpInvalid": "Enter the 6-digit verification code."
+  },
+  "resetPassword": {
+    "title": "Set a new password",
+    "description": "Enter a new password for your account.",
+    "newPasswordLabel": "New password",
+    "newPasswordPlaceholder": "Enter new password",
+    "confirmPasswordLabel": "Confirm password",
+    "confirmPasswordPlaceholder": "Repeat new password",
+    "submit": "Update password",
+    "submitting": "Updating...",
+    "success": "Password updated. You can now sign in with email and password.",
+    "failed": "Couldn't update your password. Please try again.",
+    "verifying": "Verifying your reset link...",
+    "invalidLink": "This reset link is invalid or has expired. Request a new one.",
+    "requestNewLink": "Request a new link"
   }
 }

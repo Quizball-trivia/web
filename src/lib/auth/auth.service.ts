@@ -1,5 +1,6 @@
 import { clearTokens, getRefreshToken, setTokens } from "@/lib/auth/tokenStorage";
 import { api } from "@/lib/api/api";
+import { normalizeEmail } from "@/lib/auth/validation";
 import { logger } from "@/utils/logger";
 import type { components, paths } from "@/types/api.generated";
 
@@ -26,6 +27,11 @@ type ForgotPasswordPayload =
     paths["/api/v1/auth/forgot-password"]["post"]["requestBody"]
   >["content"]["application/json"];
 
+type ResetPasswordPayload =
+  NonNullable<
+    paths["/api/v1/auth/reset-password"]["post"]["requestBody"]
+  >["content"]["application/json"];
+
 type SocialLoginPayload =
   NonNullable<
     paths["/api/v1/auth/social-login"]["post"]["requestBody"]
@@ -41,10 +47,26 @@ type GeorgianPhoneOtpVerifyPayload =
     paths["/api/v1/auth/phone/ge/verify"]["post"]["requestBody"]
   >["content"]["application/json"];
 
+type GeorgianPhoneLinkStartPayload =
+  NonNullable<
+    paths["/api/v1/auth/phone/ge/link/start"]["post"]["requestBody"]
+  >["content"]["application/json"];
+
+type GeorgianPhoneLinkStartResponse =
+  paths["/api/v1/auth/phone/ge/link/start"]["post"]["responses"][200]["content"]["application/json"];
+
+type GeorgianPhoneLinkVerifyPayload =
+  NonNullable<
+    paths["/api/v1/auth/phone/ge/link/verify"]["post"]["requestBody"]
+  >["content"]["application/json"];
+
+type UserResponse = components["schemas"]["UserResponse"];
+
 export async function login(email: string, password: string): Promise<AuthResponse["user"] | null> {
-  logger.info("Auth login start", { email });
+  const normalizedEmail = normalizeEmail(email);
+  logger.info("Auth login start", { email: normalizedEmail });
   const data = await api.POST("/api/v1/auth/login", {
-    body: { email, password } satisfies LoginPayload,
+    body: { email: normalizedEmail, password } satisfies LoginPayload,
     auth: false,
   });
   const response = data as AuthResponse;
@@ -127,12 +149,30 @@ export async function logout(): Promise<void> {
   }
 }
 
-export async function forgotPassword(email: string): Promise<void> {
-  logger.info("Auth forgot password", { email });
+export async function forgotPassword(email: string, redirectTo: string): Promise<void> {
+  const normalizedEmail = normalizeEmail(email);
+  logger.info("Auth forgot password", { email: normalizedEmail });
   await api.POST("/api/v1/auth/forgot-password", {
-    body: { email } satisfies ForgotPasswordPayload,
+    body: { email: normalizedEmail, redirect_to: redirectTo } satisfies ForgotPasswordPayload,
     auth: false,
   });
+}
+
+/**
+ * Update the password for the currently-authenticated Supabase session.
+ * Used by both the reset-password page (after a recovery link establishes a
+ * session) and the Settings change/add-password modal. The api client injects
+ * the Bearer token automatically; an explicit accessToken can override it
+ * (e.g. immediately after parsing a recovery link, before token storage
+ * settles).
+ */
+export async function resetPassword(newPassword: string, accessToken?: string): Promise<void> {
+  logger.info("Auth reset password start");
+  await api.POST("/api/v1/auth/reset-password", {
+    body: { new_password: newPassword } satisfies ResetPasswordPayload,
+    ...(accessToken ? { headers: { Authorization: `Bearer ${accessToken}` } } : {}),
+  });
+  logger.info("Auth reset password success");
 }
 
 export async function socialLogin(
@@ -199,6 +239,20 @@ export async function verifyGeorgianPhoneOtp(
     setTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
   }
   return response.user ?? null;
+}
+
+export async function startGeorgianPhoneLink(phone: string): Promise<GeorgianPhoneLinkStartResponse> {
+  logger.info("Auth Georgian phone link start");
+  return api.POST("/api/v1/auth/phone/ge/link/start", {
+    body: { phone } satisfies GeorgianPhoneLinkStartPayload,
+  }) as Promise<GeorgianPhoneLinkStartResponse>;
+}
+
+export async function verifyGeorgianPhoneLink(phone: string, token: string): Promise<UserResponse> {
+  logger.info("Auth Georgian phone link verify");
+  return api.POST("/api/v1/auth/phone/ge/link/verify", {
+    body: { phone, token } satisfies GeorgianPhoneLinkVerifyPayload,
+  }) as Promise<UserResponse>;
 }
 
 export function parseOAuthHash(

@@ -6,9 +6,12 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { getPlatform, tryOpenInExternalBrowser } from '@/lib/auth/in-app-browser';
 import { InAppBrowserInstructions } from './InAppBrowserInstructions';
 import { WelcomeGoogleButton } from './WelcomeGoogleButton';
+import { WelcomeFacebookButton } from './WelcomeFacebookButton';
 import { WelcomeEmailAuthForm } from './WelcomeEmailAuthForm';
 import { WelcomePhoneAuthForm } from './WelcomePhoneAuthForm';
+import { WelcomeForgotPasswordForm } from './WelcomeForgotPasswordForm';
 import type { AuthPanelMode } from './welcome.types';
+import type { AuthFieldErrors } from '@/lib/auth/validation';
 
 interface WelcomeLoginDialogProps {
   open: boolean;
@@ -22,10 +25,16 @@ interface WelcomeLoginDialogProps {
   authSubmitting: boolean;
   authNotice: string | null;
   authError: string | null;
+  authFieldErrors: AuthFieldErrors;
   phoneOtpSent: boolean;
+  showForgot: boolean;
+  forgotSubmitting: boolean;
+  forgotSent: boolean;
+  forgotError: string | null;
   onOpenChange: (open: boolean) => void;
   onClose: () => void;
   onGoogleLogin: () => void;
+  onFacebookLogin: () => void;
   onAuthModeChange: (mode: AuthPanelMode) => void;
   onEmailChange: (value: string) => void;
   onPasswordChange: (value: string) => void;
@@ -34,6 +43,9 @@ interface WelcomeLoginDialogProps {
   onOtpChange: (value: string) => void;
   onEmailSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
   onPhoneSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+  onShowForgot: () => void;
+  onBackToSignIn: () => void;
+  onForgotSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
 }
 
 export function WelcomeLoginDialog({
@@ -48,10 +60,16 @@ export function WelcomeLoginDialog({
   authSubmitting,
   authNotice,
   authError,
+  authFieldErrors,
   phoneOtpSent,
+  showForgot,
+  forgotSubmitting,
+  forgotSent,
+  forgotError,
   onOpenChange,
   onClose,
   onGoogleLogin,
+  onFacebookLogin,
   onAuthModeChange,
   onEmailChange,
   onPasswordChange,
@@ -60,6 +78,9 @@ export function WelcomeLoginDialog({
   onOtpChange,
   onEmailSubmit,
   onPhoneSubmit,
+  onShowForgot,
+  onBackToSignIn,
+  onForgotSubmit,
 }: WelcomeLoginDialogProps) {
   const { t } = useLocale();
 
@@ -73,6 +94,23 @@ export function WelcomeLoginDialog({
             platform={getPlatform()}
             onTryAgain={() => tryOpenInExternalBrowser(window.location.href)}
           />
+        ) : showForgot ? (
+          <>
+            <DialogHeader className="text-center">
+              <DialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
+                {t('forgotPassword.title')}
+              </DialogTitle>
+            </DialogHeader>
+            <WelcomeForgotPasswordForm
+              email={authEmail}
+              submitting={forgotSubmitting}
+              sent={forgotSent}
+              error={forgotError}
+              onEmailChange={onEmailChange}
+              onSubmit={onForgotSubmit}
+              onBackToSignIn={onBackToSignIn}
+            />
+          </>
         ) : (
           <>
             <DialogHeader className="text-center">
@@ -85,6 +123,7 @@ export function WelcomeLoginDialog({
             </DialogHeader>
             <div className="mt-6 space-y-3">
               <WelcomeGoogleButton onClick={onGoogleLogin} />
+              <WelcomeFacebookButton onClick={onFacebookLogin} />
             </div>
 
             <div className="my-5 flex items-center gap-3">
@@ -133,10 +172,12 @@ export function WelcomeLoginDialog({
                 password={authPassword}
                 confirmPassword={authConfirmPassword}
                 submitting={authSubmitting}
+                fieldErrors={authFieldErrors}
                 onEmailChange={onEmailChange}
                 onPasswordChange={onPasswordChange}
                 onConfirmPasswordChange={onConfirmPasswordChange}
                 onSubmit={onEmailSubmit}
+                onForgotPassword={onShowForgot}
               />
             )}
 

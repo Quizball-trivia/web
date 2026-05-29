@@ -37,6 +37,7 @@ vi.mock('next/link', () => ({
   ),
 }));
 
+
 // Locale — echo the key with optional params suffix so tests can assert on the
 // translation key without depending on the i18n JSON.
 vi.mock('@/contexts/LocaleContext', () => ({
@@ -61,9 +62,11 @@ const socialLoginMock = vi.fn(async (_provider: string, _redirect: string) => un
 const socialLoginWithIdTokenMock = vi.fn(async (_provider: string, _idToken: string, _nonce: string) => undefined);
 const startGeorgianPhoneOtpMock = vi.fn(async (_phone: string) => undefined);
 const verifyGeorgianPhoneOtpMock = vi.fn(async (_phone: string, _code: string) => ({ id: 'u1' }));
+const forgotPasswordMock = vi.fn(async (_email: string, _redirectTo: string) => undefined);
 vi.mock('@/lib/auth/auth.service', () => ({
   login: (email: string, password: string) => loginMock(email, password),
   register: (payload: { email: string; password: string }) => registerMock(payload),
+  forgotPassword: (email: string, redirectTo: string) => forgotPasswordMock(email, redirectTo),
   socialLogin: (provider: string, redirect: string) => socialLoginMock(provider, redirect),
   socialLoginWithIdToken: (provider: string, idToken: string, nonce: string) =>
     socialLoginWithIdTokenMock(provider, idToken, nonce),
@@ -204,6 +207,8 @@ beforeEach(() => {
   startGeorgianPhoneOtpMock.mockResolvedValue(undefined);
   verifyGeorgianPhoneOtpMock.mockReset();
   verifyGeorgianPhoneOtpMock.mockResolvedValue({ id: 'u1' });
+  forgotPasswordMock.mockReset();
+  forgotPasswordMock.mockResolvedValue(undefined);
   signInWithGoogleIdentityMock.mockReset();
   signInWithGoogleIdentityMock.mockResolvedValue({ idToken: 'tok', nonce: 'nonce' });
   isInAppBrowserMock.mockReturnValue(false);
@@ -326,12 +331,14 @@ describe('WelcomeScreen — email signin / signup', () => {
     render(<WelcomeScreen />);
     openLoginDialog();
     fireEvent.click(screen.getByText(/welcome\.signUpTab/));
-    setEmailFields('new@example.com', 'secret', 'secret');
+    setEmailFields('new@example.com', 'secret12', 'secret12');
     const submit = screen.getByText(/welcome\.createAccount/);
     fireEvent.click(submit);
     await waitFor(() => expect(registerMock).toHaveBeenCalledWith({
       email: 'new@example.com',
-      password: 'secret',
+      password: 'secret12',
+      redirect_to: `${window.location.origin}/auth/callback`,
+      locale: 'en',
     }));
     expect(trackSignupStartedMock).toHaveBeenCalledWith('email');
     await waitFor(() => expect(trackSignupCompletedMock).toHaveBeenCalledWith('email'));
@@ -343,7 +350,7 @@ describe('WelcomeScreen — email signin / signup', () => {
     render(<WelcomeScreen />);
     openLoginDialog();
     fireEvent.click(screen.getByText(/welcome\.signUpTab/));
-    setEmailFields('new@example.com', 'secret', 'secret');
+    setEmailFields('new@example.com', 'secret12', 'secret12');
     fireEvent.click(screen.getByText(/welcome\.createAccount/));
     await waitFor(() => expect(screen.getByText(/welcome\.checkEmail/)).toBeInTheDocument());
     expect(bootstrapMock).not.toHaveBeenCalled();
@@ -353,29 +360,64 @@ describe('WelcomeScreen — email signin / signup', () => {
     render(<WelcomeScreen />);
     openLoginDialog();
     fireEvent.click(screen.getByText(/welcome\.signUpTab/));
-    setEmailFields('new@example.com', 'secret', 'different');
+    setEmailFields('new@example.com', 'secret12', 'different12');
     fireEvent.click(screen.getByText(/welcome\.createAccount/));
-    expect(screen.getByText(/welcome\.passwordMismatch/)).toBeInTheDocument();
+    expect(screen.getByText(/authValidation\.passwordMismatch/)).toBeInTheDocument();
     expect(registerMock).not.toHaveBeenCalled();
   });
 
-  it('surfaces the auth-service error message on a failed login', async () => {
+  it('blocks signup with a too-short password before calling register', () => {
+    render(<WelcomeScreen />);
+    openLoginDialog();
+    fireEvent.click(screen.getByText(/welcome\.signUpTab/));
+    setEmailFields('new@example.com', 'short', 'short');
+    fireEvent.click(screen.getByText(/welcome\.createAccount/));
+    expect(screen.getByText(/authValidation\.passwordTooShort/)).toBeInTheDocument();
+    expect(registerMock).not.toHaveBeenCalled();
+  });
+
+  it('shows a generic error on a failed login (no account enumeration)', async () => {
     loginMock.mockRejectedValueOnce(new Error('Bad credentials, bro'));
     render(<WelcomeScreen />);
     openLoginDialog();
-    setEmailFields('user@example.com', 'wrong');
+    setEmailFields('user@example.com', 'wrongpass');
     fireEvent.click(screen.getByText(/welcome\.signInWithEmail/));
-    await waitFor(() => expect(screen.getByText('Bad credentials, bro')).toBeInTheDocument());
+    // Always the generic message — never the raw upstream error.
+    await waitFor(() => expect(screen.getByText(/welcome\.loginError/)).toBeInTheDocument());
+    expect(screen.queryByText('Bad credentials, bro')).not.toBeInTheDocument();
     expect(bootstrapMock).not.toHaveBeenCalled();
   });
 
-  it('falls back to a translated error when the auth-service error is generic', async () => {
-    loginMock.mockRejectedValueOnce(new Error('Request failed'));
+  it('surfaces the upstream error message on a failed signup', async () => {
+    registerMock.mockRejectedValueOnce(new Error('Email already registered'));
     render(<WelcomeScreen />);
     openLoginDialog();
-    setEmailFields('user@example.com', 'wrong');
-    fireEvent.click(screen.getByText(/welcome\.signInWithEmail/));
-    await waitFor(() => expect(screen.getByText(/welcome\.emailAuthFailed/)).toBeInTheDocument());
+    fireEvent.click(screen.getByText(/welcome\.signUpTab/));
+    setEmailFields('new@example.com', 'secret12', 'secret12');
+    fireEvent.click(screen.getByText(/welcome\.createAccount/));
+    await waitFor(() => expect(screen.getByText('Email already registered')).toBeInTheDocument());
+  });
+
+  it('opens the in-modal forgot panel and submits with redirect_to, showing generic success', async () => {
+    render(<WelcomeScreen />);
+    openLoginDialog();
+    // Enter an email in sign-in mode, then open the forgot panel.
+    const emailInput = screen.getByPlaceholderText(/welcome\.emailPlaceholder/);
+    fireEvent.change(emailInput, { target: { value: 'user@example.com' } });
+    fireEvent.click(screen.getByText(/welcome\.forgotPassword/));
+
+    // Forgot panel renders its own header + send button (still in the modal).
+    expect(screen.getByText(/forgotPassword\.title/)).toBeInTheDocument();
+    fireEvent.click(screen.getByText(/forgotPassword\.sendResetLink/));
+
+    await waitFor(() =>
+      expect(forgotPasswordMock).toHaveBeenCalledWith(
+        'user@example.com',
+        `${window.location.origin}/auth/reset-password`,
+      ),
+    );
+    // Generic success only after the request resolves.
+    await waitFor(() => expect(screen.getByText(/forgotPassword\.genericSuccess/)).toBeInTheDocument());
   });
 
   it('disables submit while submitting', async () => {

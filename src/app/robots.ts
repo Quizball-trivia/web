@@ -14,7 +14,12 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/dev/", "/api/", "/auth/", "/profile/", "/settings/", "/onboarding/", "/game"],
+        // Only truly-never-crawl paths belong here. App product pages
+        // (/play, /profile, /settings, /leaderboard, /store, ...) are NOT
+        // disallowed: they carry a `noindex` tag (see src/lib/seo/app-routes.ts),
+        // and Google can only honor that noindex if it's allowed to crawl the
+        // page. Disallowing them here would make the noindex invisible.
+        disallow: ["/dev/", "/api/", "/auth/", "/onboarding/", "/game"],
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,

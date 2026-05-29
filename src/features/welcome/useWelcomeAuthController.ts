@@ -19,6 +19,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   login,
   register,
+  forgotPassword,
   socialLogin,
   socialLoginWithIdToken,
   startGeorgianPhoneOtp,
@@ -36,9 +37,19 @@ import {
 
 import type { AuthPanelMode } from './welcome.types';
 import { authErrorMessage } from './welcome.helpers';
+import {
+  validateLogin,
+  validateSignup,
+  validateEmail,
+  validateGeorgianPhone,
+  validateOtp,
+  normalizeGeorgianPhone,
+  hasErrors,
+  type AuthFieldErrors,
+} from '@/lib/auth/validation';
 
 export function useWelcomeAuthController() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const bootstrap = useAuthStore((state) => state.bootstrap);
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? '';
 
@@ -53,7 +64,15 @@ export function useWelcomeAuthController() {
   const [authSubmitting, setAuthSubmitting] = useState(false);
   const [authNotice, setAuthNotice] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [authFieldErrors, setAuthFieldErrors] = useState<AuthFieldErrors>({});
   const [phoneOtpSent, setPhoneOtpSent] = useState(false);
+
+  // In-modal forgot-password panel (reached from the sign-in "Forgot password?"
+  // link — no page navigation; stays in the blue login dialog).
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotSubmitting, setForgotSubmitting] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
+  const [forgotError, setForgotError] = useState<string | null>(null);
 
   // Tracks the 1.5s timer that reveals the in-app-browser instructions panel.
   // Held in a ref so we can cancel it when the user closes the dialog or the
@@ -74,6 +93,7 @@ export function useWelcomeAuthController() {
   const resetAuthFeedback = useCallback(() => {
     setAuthError(null);
     setAuthNotice(null);
+    setAuthFieldErrors({});
   }, []);
 
   const resetAuthForm = useCallback(() => {
@@ -83,6 +103,10 @@ export function useWelcomeAuthController() {
     setAuthOtp('');
     setPhoneOtpSent(false);
     setAuthSubmitting(false);
+    setShowForgot(false);
+    setForgotSent(false);
+    setForgotError(null);
+    setForgotSubmitting(false);
   }, [resetAuthFeedback]);
 
   const handleKickOff = useCallback(() => setLoginOpen(true), []);
@@ -159,13 +183,45 @@ export function useWelcomeAuthController() {
     }
   }, [bootstrap, googleClientId]);
 
+  const handleFacebookLogin = useCallback(async () => {
+    trackSignupStarted('facebook');
+
+    // Same in-app-browser guard as Google: Facebook also blocks OAuth inside
+    // Messenger/Instagram webviews, so bounce to the external browser.
+    if (isInAppBrowser()) {
+      tryOpenInExternalBrowser(window.location.href);
+      if (inAppBrowserTimerRef.current !== null) {
+        clearTimeout(inAppBrowserTimerRef.current);
+      }
+      inAppBrowserTimerRef.current = setTimeout(() => {
+        inAppBrowserTimerRef.current = null;
+        if (typeof document !== 'undefined' && !document.hidden) {
+          setShowOpenInBrowser(true);
+        }
+      }, 1500);
+      return;
+    }
+
+    try {
+      const redirectTo = `${window.location.origin}/auth/callback`;
+      await socialLogin('facebook', redirectTo);
+    } catch (error) {
+      console.error('Facebook login failed', error);
+    }
+  }, []);
+
   const handleEmailAuth = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       resetAuthFeedback();
 
-      if (authMode === 'signup' && authPassword !== authConfirmPassword) {
-        setAuthError(t('welcome.passwordMismatch'));
+      // Validate with the shared helper BEFORE any API call.
+      const fieldErrors =
+        authMode === 'signup'
+          ? validateSignup(authEmail, authPassword, authConfirmPassword)
+          : validateLogin(authEmail, authPassword);
+      if (hasErrors(fieldErrors)) {
+        setAuthFieldErrors(fieldErrors);
         return;
       }
 
@@ -173,9 +229,20 @@ export function useWelcomeAuthController() {
       try {
         if (authMode === 'signup') {
           trackSignupStarted('email');
-          const result = await register({ email: authEmail, password: authPassword });
+          const redirectTo = `${window.location.origin}/auth/callback`;
+          const result = await register({
+            email: authEmail,
+            password: authPassword,
+            redirect_to: redirectTo,
+            locale,
+          });
           if (!result.tokensSet) {
+            // Neutral confirmation when Supabase requires email confirmation.
             setAuthNotice(t('welcome.checkEmail'));
+            setAuthMode('signin');
+            setAuthPassword('');
+            setAuthConfirmPassword('');
+            setAuthFieldErrors({});
             return;
           }
           trackSignupCompleted('email');
@@ -188,30 +255,85 @@ export function useWelcomeAuthController() {
         setLoginOpen(false);
         resetAuthForm();
       } catch (error) {
-        setAuthError(authErrorMessage(error, t('welcome.emailAuthFailed')));
+        // Sign-in failures get a single generic message (no account enumeration,
+        // and a hint toward Google for Google-created accounts). Sign-up keeps
+        // the more specific upstream message.
+        if (authMode === 'signin') {
+          setAuthError(t('welcome.loginError'));
+        } else {
+          setAuthError(authErrorMessage(error, t('welcome.emailAuthFailed')));
+        }
       } finally {
         setAuthSubmitting(false);
       }
     },
-    [authConfirmPassword, authEmail, authMode, authPassword, bootstrap, resetAuthFeedback, resetAuthForm, t],
+    [authConfirmPassword, authEmail, authMode, authPassword, bootstrap, locale, resetAuthFeedback, resetAuthForm, t],
+  );
+
+  const handleShowForgot = useCallback(() => {
+    resetAuthFeedback();
+    setForgotError(null);
+    setForgotSent(false);
+    setShowForgot(true);
+  }, [resetAuthFeedback]);
+
+  const handleBackToSignIn = useCallback(() => {
+    setShowForgot(false);
+    setForgotError(null);
+    setForgotSent(false);
+  }, []);
+
+  const handleForgotSubmit = useCallback(
+    async (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      setForgotError(null);
+
+      const emailErrorKey = validateEmail(authEmail);
+      if (emailErrorKey) {
+        setForgotError(t(emailErrorKey));
+        return;
+      }
+
+      setForgotSubmitting(true);
+      try {
+        const redirectTo = `${window.location.origin}/auth/reset-password`;
+        await forgotPassword(authEmail, redirectTo);
+        // Generic success only after the request succeeds; never disclose
+        // whether the account exists.
+        setForgotSent(true);
+      } catch {
+        setForgotError(t('forgotPassword.sendFailed'));
+      } finally {
+        setForgotSubmitting(false);
+      }
+    },
+    [authEmail, t],
   );
 
   const handlePhoneAuth = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       resetAuthFeedback();
+      const validationErrorKey = phoneOtpSent ? validateOtp(authOtp) : validateGeorgianPhone(authPhone);
+      if (validationErrorKey) {
+        setAuthError(t(validationErrorKey));
+        return;
+      }
+
       setAuthSubmitting(true);
 
       try {
+        const normalizedPhone = normalizeGeorgianPhone(authPhone);
         if (!phoneOtpSent) {
           trackSignupStarted('phone');
-          await startGeorgianPhoneOtp(authPhone);
+          await startGeorgianPhoneOtp(normalizedPhone);
+          setAuthPhone(normalizedPhone);
           setPhoneOtpSent(true);
           setAuthNotice(t('welcome.phoneCodeSent'));
           return;
         }
 
-        await verifyGeorgianPhoneOtp(authPhone, authOtp);
+        await verifyGeorgianPhoneOtp(normalizedPhone, authOtp);
         trackLoginCompleted('phone');
         await bootstrap({ force: true });
         setLoginOpen(false);
@@ -262,11 +384,22 @@ export function useWelcomeAuthController() {
     authSubmitting,
     authNotice,
     authError,
+    authFieldErrors,
     phoneOtpSent,
+
+    // Forgot-password panel (in-modal)
+    showForgot,
+    forgotSubmitting,
+    forgotSent,
+    forgotError,
 
     // Submit handlers
     handleGoogleLogin,
+    handleFacebookLogin,
     handleEmailAuth,
     handlePhoneAuth,
+    handleShowForgot,
+    handleBackToSignIn,
+    handleForgotSubmit,
   };
 }
