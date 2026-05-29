@@ -58,9 +58,11 @@ export function LiveCluesPanel({
   const timedRevealCount = roundResolved
     ? clueCount
     : Math.min(clueCount, Math.max(1, Math.floor((questionDurationSeconds - timeRemaining) / secondsPerClue) + 1));
-  const revealedClues = roundResolved ? clueCount : Math.max(manualRevealCount, timedRevealCount);
+  const revealedClues = submitted || roundResolved ? clueCount : Math.max(manualRevealCount, timedRevealCount);
   const displayAnswer = roundResult?.reveal.kind === 'clues'
     ? resolveI18nText(roundResult.reveal.displayAnswer, resolvedLocale)
+    : answerAck?.questionKind === 'clues' && answerAck.qIndex === qIndex && answerAck.cluesDisplayAnswer
+      ? resolveI18nText(answerAck.cluesDisplayAnswer, resolvedLocale)
     : null;
   const inputLocked = !showOptions || submitted || pendingGuess || roundResolved;
   const playerAnswerCount = roundResolved
@@ -171,7 +173,7 @@ export function LiveCluesPanel({
         }}
       />
 
-      {roundResolved && displayAnswer && (
+      {(submitted || roundResolved) && displayAnswer && (
         <motion.div
           aria-live="polite"
           initial={{ opacity: 0, y: 8 }}

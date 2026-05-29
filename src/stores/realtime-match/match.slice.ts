@@ -137,6 +137,7 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
         possessionState: null,
         partyState: null,
         stateVersion: 0,
+        serverTimeOffsetMs: null,
       },
     });
   },
@@ -161,6 +162,7 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
           ...state.match,
           countdownEndsAt: startsAtMs,
           countdownReason: payload.reason ?? 'kickoff',
+          serverTimeOffsetMs: payload.serverTimeOffsetMs ?? state.match.serverTimeOffsetMs,
         },
       };
     });
@@ -299,6 +301,7 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
             ...state.match,
             currentQuestion: payload,
             pendingQuestion: null,
+            serverTimeOffsetMs: payload.serverTimeOffsetMs ?? state.match.serverTimeOffsetMs,
             questions: {
               ...state.match.questions,
               [payload.qIndex]: {
@@ -323,6 +326,7 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
             pendingQuestion: payload,
             countdownEndsAt: payload.qIndex > 0 ? null : state.match.countdownEndsAt,
             countdownReason: payload.qIndex > 0 ? null : state.match.countdownReason,
+            serverTimeOffsetMs: payload.serverTimeOffsetMs ?? state.match.serverTimeOffsetMs,
             questions: {
               ...state.match.questions,
               [payload.qIndex]: {
@@ -348,6 +352,7 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
           pendingQuestion: null,
           countdownEndsAt: payload.qIndex > 0 ? null : state.match.countdownEndsAt,
           countdownReason: payload.qIndex > 0 ? null : state.match.countdownReason,
+          serverTimeOffsetMs: payload.serverTimeOffsetMs ?? state.match.serverTimeOffsetMs,
           answerAck: null,
           countdownGuessAck: null,
           opponentCountdownFoundCount: 0,
@@ -392,6 +397,7 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
           lastRoundResult: null,
           currentQuestionPhase: 'reveal',
           opponentAnsweredCorrectly: null,
+          serverTimeOffsetMs: pending.serverTimeOffsetMs ?? state.match.serverTimeOffsetMs,
         },
       };
     });
@@ -416,7 +422,8 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
         const q = state.match.currentQuestion;
         if (q && q.qIndex === payload.qIndex) {
           const startedAt = q.playableAt ? new Date(q.playableAt).getTime() : 0;
-          const timeMs = startedAt ? Math.max(0, Date.now() - startedAt) : 0;
+          const syncedNowMs = Date.now() + (q.serverTimeOffsetMs ?? state.match.serverTimeOffsetMs ?? 0);
+          const timeMs = startedAt ? Math.max(0, syncedNowMs - startedAt) : 0;
           trackAnswerSubmitted(
             q.question.id,
             payload.isCorrect,

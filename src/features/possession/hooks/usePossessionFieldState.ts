@@ -46,6 +46,8 @@ export interface PossessionFieldState {
   penaltyDisplayResult: PenaltyResult;
   uiPhase: Phase;
   pitchProps: PitchProps;
+  /** True when I currently hold the 2× speed streak. */
+  speedStreakMine: boolean;
 }
 
 interface UsePossessionFieldStateParams {
@@ -375,6 +377,9 @@ export function usePossessionFieldState({
     visualMyPossessionPct,
   ]);
 
+  const speedStreakMine =
+    mySeat != null && roundResult?.deltas?.speedStreakHolderSeat === mySeat;
+
   return {
     mySeat,
     phaseKind,
@@ -400,5 +405,6 @@ export function usePossessionFieldState({
     penaltyDisplayResult,
     uiPhase,
     pitchProps,
+    speedStreakMine,
   };
 }

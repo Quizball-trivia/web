@@ -98,7 +98,7 @@ export function WelcomeLoginDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] max-w-md w-[92vw] overflow-y-auto rounded-[24px] border-0 bg-brand-blue p-8 sm:p-10 [&>button:last-child]:hidden focus:outline-none focus-visible:outline-none focus-visible:ring-0 ring-0">
+      <DialogContent className="max-h-[92vh] max-w-md w-[92vw] overflow-y-auto overflow-x-hidden rounded-[24px] border-0 bg-brand-blue p-5 sm:p-8 md:p-10 [&>button:last-child]:hidden focus:outline-none focus-visible:outline-none focus-visible:ring-0 ring-0">
         <ModalCloseButton onClose={onClose} />
 
         {showOpenInBrowser ? (

@@ -18,10 +18,11 @@ type SoundName = keyof typeof SOUND_FILES;
 type BgmName = keyof typeof BGM_FILES;
 
 // ─── Volume defaults ─────────────────────────────────────────────
-const SFX_VOLUME = 0.4;
-// BGM sits below SFX so whistle/kick/pass stay audible over it.
-const BGM_VOLUME = 0.12;
-const KICKOFF_BGM_VOLUME = 0.5;
+export const GAME_SOUND_VOLUME = {
+  sfx: 0.3,
+  rankedBgm: 0.08,
+  kickoffBgm: 0.32,
+} as const;
 // Flip to true to re-enable the ranked BGM loop. Wiring stays in place
 // so this is a one-liner to revive whenever we want music back.
 const BGM_ENABLED = false;
@@ -33,7 +34,7 @@ function getSound(name: SoundName): Howl {
   if (!sounds[name]) {
     sounds[name] = new Howl({
       src: [SOUND_FILES[name]],
-      volume: SFX_VOLUME,
+      volume: GAME_SOUND_VOLUME.sfx,
       preload: true,
     });
   }
@@ -93,11 +94,15 @@ const bgmInstances: Partial<Record<BgmName, Howl>> = {};
 let activeBgm: BgmName | null = null;
 let kickoffAudioFallback: HTMLAudioElement | null = null;
 
+function getBgmVolume(name: BgmName): number {
+  return name === 'kickoff' ? GAME_SOUND_VOLUME.kickoffBgm : GAME_SOUND_VOLUME.rankedBgm;
+}
+
 function getBgm(name: BgmName): Howl {
   if (!bgmInstances[name]) {
     bgmInstances[name] = new Howl({
       src: [BGM_FILES[name]],
-      volume: name === 'kickoff' ? KICKOFF_BGM_VOLUME : BGM_VOLUME,
+      volume: getBgmVolume(name),
       loop: true,
       preload: true,
       ...(name === 'kickoff' ? { format: ['m4a'], html5: true } : {}),
@@ -122,14 +127,14 @@ export function playBgm(name: BgmName) {
     // otherwise the lingering fade event will fire on the new playback and
     // silence the track mid-loop.
     sound.off('fade');
-    sound.volume(name === 'kickoff' ? KICKOFF_BGM_VOLUME : BGM_VOLUME);
+    sound.volume(getBgmVolume(name));
     if (!sound.playing()) sound.play();
     activeBgm = name;
   } catch {
     if (name !== 'kickoff' || typeof Audio === 'undefined') return;
     kickoffAudioFallback ??= new Audio(BGM_FILES.kickoff);
     kickoffAudioFallback.loop = true;
-    kickoffAudioFallback.volume = KICKOFF_BGM_VOLUME;
+    kickoffAudioFallback.volume = getBgmVolume(name);
     void kickoffAudioFallback.play().catch(() => {});
     activeBgm = name;
   }
@@ -153,7 +158,7 @@ export function stopBgm(fadeMs = 0) {
   if (fadeMs > 0 && sound.playing()) {
     const current = sound.volume();
     sound.once('fade', () => sound.stop());
-    sound.fade(typeof current === 'number' ? current : BGM_VOLUME, 0, fadeMs);
+    sound.fade(typeof current === 'number' ? current : getBgmVolume(activeBgm), 0, fadeMs);
   } else {
     sound.stop();
   }

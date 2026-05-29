@@ -51,6 +51,12 @@ function getQueryClient(): QueryClient | null {
   return _queryClient;
 }
 
+function computeServerTimeOffsetMs(serverNow: string | undefined, receivedAtMs = Date.now()): number | undefined {
+  if (!serverNow) return undefined;
+  const serverNowMs = new Date(serverNow).getTime();
+  return Number.isFinite(serverNowMs) ? serverNowMs - receivedAtMs : undefined;
+}
+
 export function registerSocketHandlers(queryClient?: QueryClient): void {
   // Update the module-level ref so existing handlers pick up the new client
   if (queryClient) {
@@ -211,13 +217,15 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   });
 
   socket.on('match:countdown', (data: MatchCountdownPayload) => {
+    const serverTimeOffsetMs = computeServerTimeOffsetMs(data.serverNow);
     logger.info('Socket event match:countdown', {
       matchId: data.matchId,
       seconds: data.seconds,
       startsAt: data.startsAt,
       reason: data.reason,
+      serverTimeOffsetMs,
     });
-    store.setMatchCountdown(data);
+    store.setMatchCountdown({ ...data, serverTimeOffsetMs });
   });
 
   socket.on('match:state', (data: MatchStatePayload) => {
@@ -244,12 +252,14 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   });
 
   socket.on('match:question', (data: MatchQuestionPayload) => {
+    const serverTimeOffsetMs = computeServerTimeOffsetMs(data.serverNow);
     logger.info('Socket event match:question', {
       matchId: data.matchId,
       qIndex: data.qIndex,
       total: data.total,
       deadlineAt: data.deadlineAt,
       questionKind: data.question.kind,
+      serverTimeOffsetMs,
     });
 
     // Resolve i18n fields to the user's preferred locale.
@@ -263,6 +273,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       : undefined;
     const resolvedData = {
       ...data,
+      serverTimeOffsetMs,
       question:
         data.question.kind === 'multipleChoice'
           ? {

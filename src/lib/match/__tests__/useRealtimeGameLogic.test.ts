@@ -304,4 +304,71 @@ describe('useRealtimeGameLogic — roundResultHoldDone for goals', () => {
     expect(result.current.state.roundResultHoldDone).toBe(true);
     expect(result.current.state.showOptions).toBe(false);
   });
+
+  it('uses server time offset when deciding when answer options become playable', async () => {
+    vi.setSystemTime(new Date('2026-05-29T12:00:00.000Z'));
+    seedMatch();
+    const store = useRealtimeMatchStore.getState();
+    const localNow = Date.now();
+    const serverTimeOffsetMs = 5_000;
+    const serverNow = localNow + serverTimeOffsetMs;
+
+    const { result } = renderHook(() =>
+      useRealtimeGameLogic({ transitionDelayMs: 1600 })
+    );
+
+    act(() => store.setMatchQuestion({
+      ...makeQuestion(7),
+      playableAt: new Date(serverNow + 1_000).toISOString(),
+      deadlineAt: new Date(serverNow + 11_000).toISOString(),
+      serverTimeOffsetMs,
+    }));
+
+    expect(result.current.state.showOptions).toBe(false);
+
+    await act(async () => { vi.advanceTimersByTime(999); });
+    expect(result.current.state.showOptions).toBe(false);
+
+    await act(async () => { vi.advanceTimersByTime(1); });
+    expect(result.current.state.showOptions).toBe(true);
+  });
+
+  it('does not expose opponent answered UI before the local question is playable', async () => {
+    vi.setSystemTime(new Date('2026-05-29T12:30:00.000Z'));
+    seedMatch();
+    const store = useRealtimeMatchStore.getState();
+    const localNow = Date.now();
+    const serverTimeOffsetMs = 5_000;
+    const serverNow = localNow + serverTimeOffsetMs;
+
+    const { result } = renderHook(() =>
+      useRealtimeGameLogic({ transitionDelayMs: 1600 })
+    );
+
+    act(() => store.setMatchQuestion({
+      ...makeQuestion(8),
+      playableAt: new Date(serverNow + 1_000).toISOString(),
+      deadlineAt: new Date(serverNow + 11_000).toISOString(),
+      serverTimeOffsetMs,
+    }));
+
+    act(() => store.setOpponentAnswered({
+      matchId: MATCH_ID,
+      qIndex: 8,
+      opponentTotalPoints: 80,
+      pointsEarned: 80,
+      isCorrect: true,
+      selectedIndex: 0,
+    }));
+
+    expect(result.current.state.showOptions).toBe(false);
+    expect(result.current.state.opponentAnswered).toBe(false);
+    expect(result.current.state.opponentScore).toBe(0);
+
+    await act(async () => { vi.advanceTimersByTime(1_000); });
+
+    expect(result.current.state.showOptions).toBe(true);
+    expect(result.current.state.opponentAnswered).toBe(true);
+    expect(result.current.state.opponentScore).toBe(80);
+  });
 });

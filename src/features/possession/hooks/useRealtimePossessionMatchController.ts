@@ -532,6 +532,7 @@ export function useRealtimePossessionMatchController({
               onQuit: openQuitModal,
               opponentAnswered: state.opponentAnswered,
               opponentAnsweredCorrectly,
+              speedStreakMine: fieldState.speedStreakMine,
             },
           },
       pitchProps: {

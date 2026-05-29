@@ -3,6 +3,7 @@
 import { type ComponentProps, type ReactNode, useLayoutEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { GoalCelebrationOverlay } from './GoalCelebrationOverlay';
+import { GoalProgressBar } from './GoalProgressBar';
 import { PenaltyHUD } from './PenaltyHUD';
 import { PitchVisualization } from './PitchVisualization';
 import { PossessionHUD } from './PossessionHUD';
@@ -146,7 +147,10 @@ export function PossessionMatchViewport({ model, children }: PossessionMatchView
   return (
     <>
       {showMainUI && (
-        <div className="hidden lg:flex lg:w-[42%] lg:items-center lg:py-4 relative">
+        <div className="hidden lg:flex lg:w-[42%] lg:items-center lg:gap-3 lg:py-4 relative">
+          <div className="h-full max-h-[calc(100dvh-2rem)] py-6">
+            <GoalProgressBar position={pitchProps.playerPosition} orientation="vertical" />
+          </div>
           <div ref={desktopPitchRef} className="relative h-full w-full max-h-[calc(100dvh-2rem)]">
             <PitchVisualization {...pitchProps} orientation="portrait" hideBall={celebrationOwnsBall} />
             <AnimatePresence>
@@ -194,6 +198,10 @@ export function PossessionMatchViewport({ model, children }: PossessionMatchView
               <AnimatePresence>
                 <PenaltySplash model={penaltySplash} />
               </AnimatePresence>
+            </div>
+
+            <div className="lg:hidden">
+              <GoalProgressBar position={pitchProps.playerPosition} orientation="horizontal" />
             </div>
           </>
         )}

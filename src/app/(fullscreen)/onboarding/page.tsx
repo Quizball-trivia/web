@@ -12,6 +12,7 @@ import { useAuthStore } from "@/stores/auth.store";
 import { DEFAULT_HAIR_ID, DEFAULT_JERSEY_ID, DEFAULT_SKIN_ID } from "@/lib/avatars/parts";
 import type { AvatarCustomization } from "@/types/game";
 import { trackOnboardingCompleted } from "@/lib/analytics/game-events";
+import { consumePostAuthRedirect } from "@/lib/auth/postAuthRedirect";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -51,7 +52,7 @@ export default function OnboardingPage() {
       } catch (error) {
         logger.error('Analytics trackOnboardingCompleted failed', error);
       }
-      router.replace("/");
+      router.replace(consumePostAuthRedirect() ?? "/play");
       toast.success("Welcome to QuizBall!", {
         description: "Your football trivia journey begins now!",
       });

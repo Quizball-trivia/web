@@ -8,7 +8,7 @@ import { parseOAuthHash, refreshWithToken } from '@/lib/auth/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
 import { logger } from '@/utils/logger';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
-import { getAuthenticatedEntryRoute } from '@/lib/auth/onboarding';
+import { getPostAuthEntryRoute } from '@/lib/auth/postAuthRedirect';
 import { useLocale } from '@/contexts/LocaleContext';
 
 export function OAuthCallbackScreen() {
@@ -85,14 +85,14 @@ export function OAuthCallbackScreen() {
           throw new Error(t('oauthCallback.sessionLoadError'));
         }
         logger.info('OAuth callback bootstrap success');
-        router.replace(getAuthenticatedEntryRoute(authenticatedUser));
+        router.replace(getPostAuthEntryRoute(authenticatedUser));
       } catch (err) {
         logger.error('OAuth callback failed', err);
         setError(err instanceof Error ? err.message : t('oauthCallback.authenticationFailedDefault'));
       }
     };
     processCallback();
-  }, [bootstrap, router]);
+  }, [bootstrap, router, t]);
 
   if (error) {
     return (

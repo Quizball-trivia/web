@@ -21,8 +21,9 @@
  * parent via the `onArrive` callback.
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import { Zap } from 'lucide-react';
 
 export type FlightSide = 'player' | 'opponent';
 
@@ -35,6 +36,12 @@ export interface FlightSpec {
   /** When true, the flight falls off-screen instead of reaching the target
    *  (visualises a 0-point round — wrong answer, no possession earned). */
   failed?: boolean;
+  /** 2× speed-streak boost: the +N detours through this point (the 2× badge),
+   *  where the number doubles, then continues to the target. */
+  boostVia?: { x: number; y: number };
+  /** When 'badge', this flight carries the "2×" token from the answer source
+   *  to the HUD badge slot (target) and lands there instead of "+N" to pitch. */
+  kind?: 'score' | 'badge';
 }
 
 interface BarBattleFlightOverlayProps {
@@ -113,10 +120,67 @@ function Flight({
   flight: FlightSpec;
   onArrive: (id: number) => void;
 }) {
+  if (flight.kind === 'badge') {
+    return <Badge2xFlight flight={flight} onArrive={onArrive} />;
+  }
   if (flight.failed || flight.points <= 0) {
     return <FailedFlight flight={flight} onArrive={onArrive} />;
   }
   return <SuccessFlight flight={flight} onArrive={onArrive} />;
+}
+
+/** The "2×" token flying from the answer source to the HUD badge slot, where
+ *  it lands and the sticky badge takes over. Mirrors the +N flight motion. */
+function Badge2xFlight({
+  flight,
+  onArrive,
+}: {
+  flight: FlightSpec;
+  onArrive: (id: number) => void;
+}) {
+  const dx = flight.target.x - flight.source.x;
+  const dy = flight.target.y - flight.source.y;
+  const total = SOURCE_HOLD_S + FLIGHT_DURATION_S;
+  return (
+    <div className="pointer-events-none absolute left-0 top-0 will-change-transform" style={{ transform: SCROLL_PIN_TRANSFORM }}>
+      <motion.div
+        className="absolute"
+        style={{ left: flight.source.x, top: flight.source.y, transform: 'translate(-50%, -50%)', willChange: 'transform' }}
+        initial={{ x: 0, y: 0, opacity: 0, scale: 0.4 }}
+        animate={{
+          opacity: [0, 1, 1, 1],
+          // overshoot a touch bigger en route, settle to exact badge size (1).
+          scale: [0.4, 1.3, 1.1, 1],
+          x: [0, 0, 0, dx],
+          y: [0, 0, 0, dy],
+        }}
+        exit={{ opacity: 0, transition: { duration: 0.12 } }}
+        transition={{
+          opacity: { duration: total, times: [0, 0.2, 0.5, 1], ease: 'easeOut' },
+          scale: { duration: total, times: [0, 0.25, 0.5, 1], ease: 'easeOut' },
+          x: { duration: total, times: [0, 0.4, SOURCE_HOLD_S / total, 1], ease: [0.4, 0, 0.15, 1] },
+          y: { duration: total, times: [0, 0.4, SOURCE_HOLD_S / total, 1], ease: [0.4, 0, 0.15, 1] },
+        }}
+        onAnimationComplete={() => onArrive(flight.id)}
+      >
+        <Badge2xToken />
+      </motion.div>
+    </div>
+  );
+}
+
+// Matches the sticky badge in PossessionHUD (same padding/sizes) so the token
+// lands at the exact size + position the badge takes over at.
+function Badge2xToken() {
+  return (
+    <div
+      className="flex items-center gap-1 rounded-xl bg-brand-yellow px-2.5 py-1 shadow-[0_3px_10px_rgba(0,0,0,0.35)] sm:gap-1.5 sm:px-3 sm:py-1.5"
+      style={{ fontFamily: "'Poppins', system-ui, sans-serif" }}
+    >
+      <Zap className="size-4 fill-black text-black sm:size-5" />
+      <span className="text-lg font-black leading-none text-black sm:text-2xl">2×</span>
+    </div>
+  );
 }
 
 /** Successful +N flight — flies from source to target with a comet trail. */
@@ -181,6 +245,20 @@ function FlightSprite({
   const totalDuration = SOURCE_HOLD_S + FLIGHT_DURATION_S + lag;
   const isTrail = mode === 'trail';
 
+  // 2× boost flights detour through the badge and double the number there.
+  if (flight.boostVia) {
+    return (
+      <BoostFlightSprite
+        flight={flight}
+        mode={mode}
+        lag={lag}
+        maxOpacity={maxOpacity}
+        settledScale={settledScale}
+        onArrive={onArrive}
+      />
+    );
+  }
+
   return (
     <div
       className="pointer-events-none absolute left-0 top-0 will-change-transform"
@@ -234,6 +312,79 @@ function FlightSprite({
     >
       <PlusNText points={flight.points} dim={isTrail} />
     </motion.div>
+    </div>
+  );
+}
+
+// Timing for the boost detour (seconds): hold at source, fly to badge, pause
+// while the number doubles, then fly to the target.
+const BOOST_HOLD_S = 0.3;
+const BOOST_TO_BADGE_S = 0.45;
+const BOOST_PAUSE_S = 0.35;
+const BOOST_TO_TARGET_S = 0.6;
+
+/** +N flight that detours through the 2× badge, doubling the number there
+ *  before continuing to the pitch. The badge itself stays put. */
+function BoostFlightSprite({
+  flight,
+  mode,
+  lag = 0,
+  maxOpacity = 1,
+  settledScale = 1,
+  onArrive,
+}: {
+  flight: FlightSpec;
+  mode: 'main' | 'trail';
+  lag?: number;
+  maxOpacity?: number;
+  settledScale?: number;
+  onArrive?: (id: number) => void;
+}) {
+  const via = flight.boostVia!;
+  const [doubled, setDoubled] = useState(false);
+  const isTrail = mode === 'trail';
+
+  // Offsets relative to the source (the motion div is anchored at source).
+  const bx = via.x - flight.source.x;
+  const by = via.y - flight.source.y;
+  const tx = flight.target.x - flight.source.x;
+  const ty = flight.target.y - flight.source.y;
+
+  const total = BOOST_HOLD_S + BOOST_TO_BADGE_S + BOOST_PAUSE_S + BOOST_TO_TARGET_S + lag;
+  // keyframe time fractions: [start, atBadge, afterPause, atTarget]
+  const tBadge = (BOOST_HOLD_S + BOOST_TO_BADGE_S) / total;
+  const tPause = (BOOST_HOLD_S + BOOST_TO_BADGE_S + BOOST_PAUSE_S) / total;
+
+  return (
+    <div className="pointer-events-none absolute left-0 top-0 will-change-transform" style={{ transform: SCROLL_PIN_TRANSFORM }}>
+      <motion.div
+        className="absolute"
+        style={{ left: flight.source.x, top: flight.source.y, transform: 'translate(-50%, -50%)', willChange: 'transform' }}
+        initial={{ x: 0, y: 0, opacity: 0, scale: 0.4 }}
+        animate={{
+          opacity: [0, maxOpacity, maxOpacity, maxOpacity, isTrail ? 0 : maxOpacity],
+          // pop bigger at the badge, then settle
+          scale: [0.4, 1, 1.5 * settledScale, settledScale, settledScale],
+          x: [0, 0, bx, bx, tx],
+          y: [0, 0, by, by, ty],
+        }}
+        exit={{ opacity: 0, scale: 0.4, transition: { duration: 0.18 } }}
+        transition={{
+          opacity: { duration: total, times: [0, 0.12, tBadge, tPause, 1], ease: 'easeOut', delay: lag },
+          scale: { duration: total, times: [0, 0.12, tBadge, tPause, 1], ease: 'easeOut', delay: lag },
+          x: { duration: total, times: [0, BOOST_HOLD_S / total, tBadge, tPause, 1], ease: [0.4, 0, 0.15, 1], delay: lag },
+          y: { duration: total, times: [0, BOOST_HOLD_S / total, tBadge, tPause, 1], ease: [0.4, 0, 0.15, 1], delay: lag },
+        }}
+        onUpdate={(latest) => {
+          // Flip to the doubled number once we've reached the badge.
+          if (!doubled && typeof latest.x === 'number' && Math.abs((latest.x as number) - bx) < 4 && Math.abs((latest.y as number) - by) < 4) {
+            setDoubled(true);
+          }
+        }}
+        onAnimationComplete={() => onArrive?.(flight.id)}
+      >
+        <PlusNText points={doubled ? flight.points * 2 : flight.points} dim={isTrail} />
+      </motion.div>
     </div>
   );
 }

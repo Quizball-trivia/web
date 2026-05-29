@@ -69,6 +69,8 @@ export interface MatchStatus {
   possessionState: MatchStatePayload | null;
   partyState: MatchPartyStatePayload | null;
   stateVersion: number;
+  /** Estimated offset from local Date.now() to server time, derived from realtime payloads. */
+  serverTimeOffsetMs?: number | null;
 }
 
 export interface RejoinMatchStatus {

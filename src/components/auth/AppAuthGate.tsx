@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth.store";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { isOnboardingComplete } from "@/lib/auth/onboarding";
+import { consumePostAuthRedirect, rememberPostAuthRedirect } from "@/lib/auth/postAuthRedirect";
 import { useLocale } from "@/contexts/LocaleContext";
 
 type AppAuthGateProps = {
@@ -30,9 +31,10 @@ export default function AppAuthGate({ children }: AppAuthGateProps) {
   useEffect(() => {
     if (isDevelopmentDevRoute) return;
     if (status === "anonymous") {
+      rememberPostAuthRedirect(pathname);
       router.replace("/");
     }
-  }, [isDevelopmentDevRoute, status, router]);
+  }, [isDevelopmentDevRoute, pathname, status, router]);
 
   useEffect(() => {
     if (isDevelopmentDevRoute) return;
@@ -43,12 +45,13 @@ export default function AppAuthGate({ children }: AppAuthGateProps) {
     const completed = isOnboardingComplete(user);
 
     if (!completed && !onOnboardingPage) {
+      rememberPostAuthRedirect(currentPath);
       router.replace("/onboarding");
       return;
     }
 
     if (completed && onOnboardingPage) {
-      router.replace("/play");
+      router.replace(consumePostAuthRedirect() ?? "/play");
     }
   }, [isDevelopmentDevRoute, pathname, router, status, user]);
 

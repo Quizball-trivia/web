@@ -16,7 +16,8 @@
  *     Deduped by `answerAck.qIndex`.
  *   - Opponent flight: fires when `opponentAnswered` flips true with
  *     `opponentAnsweredCorrectly === true && opponentRecentPoints > 0`,
- *     gated similarly. Deduped by the current question's qIndex.
+ *     gated similarly and delayed until the local question is playable.
+ *     Deduped by the current question's qIndex.
  *
  * Returns the active flights list + handlers ready to feed into
  * `BarBattleFlightOverlay`.
@@ -69,6 +70,20 @@ function findPitchAvatar(side: Side): DOMRect | null {
 function findPitchBarTarget(side: Side): DOMRect | null {
   if (typeof document === 'undefined') return null;
   return findVisibleRect(`[data-pitch-bar-target="${side}"]`);
+}
+
+// The 2× speed-streak badge in the HUD. When visible, the +N flight detours
+// through it and the number doubles (the badge stays put).
+function findSpeedStreakBadge(side: Side): DOMRect | null {
+  if (typeof document === 'undefined') return null;
+  return findVisibleRect(`[data-speed-streak-badge="${side}"]`);
+}
+
+// The always-present resting slot for the 2× badge — the target the incoming
+// "2× earned" flight lands at.
+function findSpeedStreakSlot(side: Side): DOMRect | null {
+  if (typeof document === 'undefined') return null;
+  return findVisibleRect(`[data-speed-streak-slot="${side}"]`);
 }
 
 function findPitchField(): DOMRect | null {
@@ -209,7 +224,9 @@ export function usePossessionBarBattleFlights() {
   const barBattleMatch = useRealtimeMatchStore(useShallow((s) => ({
     variant: s.match?.variant ?? null,
     matchId: s.match?.matchId ?? null,
+    mySeat: s.match?.mySeat ?? null,
     currentQIndex: s.match?.currentQuestion?.qIndex ?? null,
+    currentQuestionPhase: s.match?.currentQuestionPhase ?? 'reveal',
     currentPhaseKind: s.match?.currentQuestion?.phaseKind ?? null,
     possessionPhaseKind: s.match?.possessionState?.phaseKind ?? null,
     answerAck: s.match?.answerAck ?? null,
@@ -292,6 +309,9 @@ export function usePossessionBarBattleFlights() {
     const id = ++flightSeqRef.current;
     const addFlight = () => {
       const barTargetRect = findPitchBarTarget(params.side);
+      // If the 2× streak badge is showing for this side, route the +N through
+      // it so the number visibly doubles mid-flight.
+      const badgeRect = !params.failed ? findSpeedStreakBadge(params.side) : null;
       setFlights((prev) => [...prev, {
         id,
         side: params.side,
@@ -301,6 +321,7 @@ export function usePossessionBarBattleFlights() {
           : computeFallbackBarLaneTarget(params.targetRect, params.opponentRect, params.pitchRect),
         points: params.points,
         failed: params.failed,
+        boostVia: badgeRect ? clampFlightPoint(rectCentre(badgeRect)) : undefined,
       }]);
     };
 
@@ -358,7 +379,6 @@ export function usePossessionBarBattleFlights() {
 
       pendingFlightKeysRef.current.delete(pendingKey);
       // Fallback to ArenaScoreSplash when DOM anchors are missing.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSuppressScoreSplash(false);
       logger.warn(`${params.logLabel} skipped: anchor missing`, {
         questionKind: params.questionKind,
@@ -426,6 +446,7 @@ export function usePossessionBarBattleFlights() {
   // when match:opponent_answered was not emitted or arrived too early.
   useEffect(() => {
     if (!enabled || !roundResult || !selfUserId) return;
+    if (barBattleMatch.currentQuestionPhase !== 'playing') return;
     const phaseKind = roundResult.phaseKind ?? phaseKindFromState;
     if (!isFlightPhaseKind(phaseKind)) return;
     const roundKey = `${roundResult.matchId}:${roundResult.qIndex}`;
@@ -444,7 +465,7 @@ export function usePossessionBarBattleFlights() {
       logLabel: 'Bar-battle opponent fallback flight',
       questionKind: roundResult.questionKind,
     });
-  }, [enabled, enqueueFlightFromDom, phaseKindFromState, roundResult, selfUserId]);
+  }, [barBattleMatch.currentQuestionPhase, enabled, enqueueFlightFromDom, phaseKindFromState, roundResult, selfUserId]);
 
   // ── Opponent flight on opponent answer ──────────────────────────────────
   const opponentAnswered = barBattleMatch.opponentAnswered;
@@ -453,6 +474,7 @@ export function usePossessionBarBattleFlights() {
   useEffect(() => {
     if (!enabled) return;
     if (!opponentAnswered) return;
+    if (barBattleMatch.currentQuestionPhase !== 'playing') return;
     // Fire flights for both correct and wrong opponent answers. The wrong/
     // zero-point case renders a "failed" flight that falls off-screen.
     if (currentQIndex == null) return;
@@ -474,10 +496,50 @@ export function usePossessionBarBattleFlights() {
     opponentAnswered,
     opponentAnsweredCorrectly,
     opponentRecentPoints,
+    barBattleMatch.currentQuestionPhase,
     currentQIndex,
     currentKey,
     phaseKindFromState,
   ]);
+
+  // ── 2× badge fly-in when the player newly earns the streak ──────────────
+  // When speedStreakHolderSeat flips to my seat, fly a "2×" token from the
+  // answer source to the HUD badge slot, where the sticky badge takes over.
+  const mySeat = barBattleMatch.mySeat;
+  const prevHolderRef = useRef<1 | 2 | null>(null);
+  const badgeFiredKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!enabled) return;
+    const holder = roundResult?.deltas?.speedStreakHolderSeat ?? null;
+    const prev = prevHolderRef.current;
+    prevHolderRef.current = holder;
+    if (mySeat == null || holder !== mySeat || prev === mySeat) return;
+    // Newly earned by me this round → fly the 2× token to the HUD slot.
+    const roundKey = `${roundResult?.matchId}:${roundResult?.qIndex}`;
+    if (badgeFiredKeyRef.current === roundKey) return;
+
+    const launch = (retries: number) => {
+      const sourceRect = findScoreAnchor('player');
+      const slotRect = findSpeedStreakSlot('player');
+      if (sourceRect && slotRect) {
+        badgeFiredKeyRef.current = roundKey;
+        const id = ++flightSeqRef.current;
+        setFlights((prev2) => [...prev2, {
+          id,
+          side: 'player',
+          kind: 'badge',
+          source: clampFlightPoint(rectCentre(sourceRect)),
+          target: clampFlightPoint(rectCentre(slotRect)),
+          points: 0,
+        }]);
+        return;
+      }
+      if (retries > 0 && typeof window !== 'undefined') {
+        window.setTimeout(() => launch(retries - 1), 80);
+      }
+    };
+    launch(4);
+  }, [enabled, roundResult, mySeat]);
 
   // Drop flights from the list once they finish animating. The overlay
   // handles enter/exit; we just keep state lean.

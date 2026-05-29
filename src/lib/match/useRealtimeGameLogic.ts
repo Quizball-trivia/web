@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useShallow } from 'zustand/shallow';
 import { useRealtimeMatchStore, type MatchQuestionState } from '@/stores/realtimeMatch.store';
 import { getSocket } from '@/lib/realtime/socket-client';
@@ -39,6 +39,8 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     questions: state.match?.questions ?? EMPTY_QUESTIONS,
     myTotalPoints: state.match?.myTotalPoints ?? 0,
     oppTotalPoints: state.match?.oppTotalPoints ?? 0,
+    opponentRecentPoints: state.match?.opponentRecentPoints ?? 0,
+    serverTimeOffsetMs: state.match?.serverTimeOffsetMs ?? null,
   })));
   const selfUserId = useRealtimeMatchStore((state) => state.selfUserId);
   const matchPaused = useRealtimeMatchStore((state) => state.matchPaused);
@@ -63,6 +65,8 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
   }, [matchPaused]);
 
   const currentQuestion = matchSlice.currentQuestion;
+  const serverTimeOffsetMs = matchSlice.serverTimeOffsetMs;
+  const getSyncedNowMs = useCallback(() => Date.now() + (serverTimeOffsetMs ?? 0), [serverTimeOffsetMs]);
   const isLastAttackQuestion = currentQuestion?.phaseKind === 'last_attack';
   const currentQuestionIndex = currentQuestion?.qIndex;
   const questionPhase = matchSlice.currentQuestionPhase;
@@ -90,17 +94,17 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
 
   useEffect(() => {
     if (!countdownEndsAt) return;
-    const tick = () => setNowMs(Date.now());
+    const tick = () => setNowMs(getSyncedNowMs());
     tick();
-    if (countdownEndsAt <= Date.now()) return;
+    if (countdownEndsAt <= getSyncedNowMs()) return;
     const intervalId = setInterval(() => {
       tick();
-      if (Date.now() >= countdownEndsAt) {
+      if (getSyncedNowMs() >= countdownEndsAt) {
         clearInterval(intervalId);
       }
     }, 100);
     return () => clearInterval(intervalId);
-  }, [countdownEndsAt]);
+  }, [countdownEndsAt, getSyncedNowMs]);
 
   useEffect(() => {
     const initialTimeRemaining = normalizedPlayableAtMs !== null && normalizedQuestionDeadlineAtMs !== null
@@ -142,7 +146,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     if (currentQuestionIndex === undefined || matchPausedRef.current || startCountdownActive || blockReveal) return;
 
     const revealDelayMs = normalizedPlayableAtMs !== null
-      ? Math.max(0, normalizedPlayableAtMs - Date.now())
+      ? Math.max(0, normalizedPlayableAtMs - getSyncedNowMs())
       : QUESTION_REVEAL_MS;
     const revealTimer = setTimeout(() => {
       if (matchPausedRef.current) return;
@@ -151,17 +155,17 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     }, revealDelayMs);
 
     return () => clearTimeout(revealTimer);
-  }, [blockReveal, currentQuestionIndex, matchPaused, normalizedPlayableAtMs, setQuestionPhase, startCountdownActive]);
+  }, [blockReveal, currentQuestionIndex, getSyncedNowMs, matchPaused, normalizedPlayableAtMs, setQuestionPhase, startCountdownActive]);
 
   // Timer countdown effect — purely client-driven from when options appear
   const optionsShownAtRef = useRef<number | null>(null);
   useEffect(() => {
     if (showOptions) {
-      optionsShownAtRef.current = normalizedPlayableAtMs ?? Date.now();
+      optionsShownAtRef.current = normalizedPlayableAtMs ?? getSyncedNowMs();
     } else {
       optionsShownAtRef.current = null;
     }
-  }, [normalizedPlayableAtMs, showOptions]);
+  }, [getSyncedNowMs, normalizedPlayableAtMs, showOptions]);
 
   useEffect(() => {
     if (!showOptions || !currentQuestion) return;
@@ -169,7 +173,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
 
     if (normalizedQuestionDeadlineAtMs !== null) {
       const tick = () => {
-        const now = Date.now();
+        const now = getSyncedNowMs();
         const effectiveNow = normalizedPlayableAtMs !== null ? Math.max(now, normalizedPlayableAtMs) : now;
         const remainingMs = normalizedQuestionDeadlineAtMs - effectiveNow;
         if (remainingMs > 0) {
@@ -184,10 +188,10 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
       return () => clearInterval(interval);
     }
 
-    const startedAt = optionsShownAtRef.current ?? Date.now();
+    const startedAt = optionsShownAtRef.current ?? getSyncedNowMs();
 
     const interval = setInterval(() => {
-      const elapsedMs = Date.now() - startedAt;
+      const elapsedMs = getSyncedNowMs() - startedAt;
       const remainingMs = QUESTION_PLAYING_MS - elapsedMs;
       if (remainingMs > 0) {
         setTimeRemaining(Math.ceil(remainingMs / 1000));
@@ -197,7 +201,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     }, 100);
 
     return () => clearInterval(interval);
-  }, [currentQuestion, matchPaused, normalizedPlayableAtMs, normalizedQuestionDeadlineAtMs, showOptions, startCountdownActive]);
+  }, [currentQuestion, getSyncedNowMs, matchPaused, normalizedPlayableAtMs, normalizedQuestionDeadlineAtMs, showOptions, startCountdownActive]);
 
   const answerAck = matchSlice.answerAck && matchSlice.currentQuestion?.qIndex === matchSlice.answerAck.qIndex
     ? matchSlice.answerAck
@@ -211,6 +215,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     : false;
   const roundResultHoldMs = ROUND_RESULT_HOLD_MS + (isSpecialRound ? SPECIAL_RESULT_EXTRA_MS : 0);
   const opponentAnswered = matchSlice.opponentAnswered;
+  const visibleOpponentAnswered = opponentAnswered && questionPhase === 'playing' && !startCountdownActive;
 
   const roundResolved = Boolean(roundResult);
 
@@ -326,7 +331,16 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
   }, [answerAck?.correctIndex, roundResult, matchSlice.matchId, matchSlice.questions, currentQuestion]);
 
   const playerScore = matchSlice.myTotalPoints;
-  const opponentScore = matchSlice.oppTotalPoints;
+  const holdEarlyOpponentScore = questionPhase !== 'playing' && (opponentAnswered || roundResolved);
+  const earlyOpponentPoints = Math.max(
+    0,
+    roundResult
+      ? opponentRoundResult?.pointsEarned ?? 0
+      : matchSlice.opponentRecentPoints
+  );
+  const opponentScore = holdEarlyOpponentScore
+    ? Math.max(0, matchSlice.oppTotalPoints - earlyOpponentPoints)
+    : matchSlice.oppTotalPoints;
 
   const submitAnswer = (index: number) => {
     if (!matchSlice.matchId || !currentQuestion) return;
@@ -339,10 +353,10 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     setSelectedAnswer(index);
     setSelectedAnswerQIndex(currentQuestion.qIndex);
 
-    const startedAt = normalizedPlayableAtMs ?? optionsShownAtRef.current ?? Date.now();
+    const startedAt = normalizedPlayableAtMs ?? optionsShownAtRef.current ?? getSyncedNowMs();
     const now = normalizedQuestionDeadlineAtMs != null
-      ? Math.min(Date.now(), normalizedQuestionDeadlineAtMs)
-      : Date.now();
+      ? Math.min(getSyncedNowMs(), normalizedQuestionDeadlineAtMs)
+      : getSyncedNowMs();
     const maxWindowMs = normalizedQuestionDeadlineAtMs != null
       ? Math.max(0, normalizedQuestionDeadlineAtMs - startedAt)
       : QUESTION_PLAYING_MS;
@@ -441,7 +455,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
       roundResult,
       isAnswered,
       correctIndex,
-      opponentAnswered,
+      opponentAnswered: visibleOpponentAnswered,
       myRoundResult,
       opponentRoundResult,
       playerScore,

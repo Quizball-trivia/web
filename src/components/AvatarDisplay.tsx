@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { AvatarCustomization } from '../types/game';
 import { customizationFromAvatarValue } from '@/lib/avatars';
 import { AVATAR_SLOTS, getAvatarPart, getSkinPart } from '@/lib/avatars/parts';
+import { normalizeCountryCode } from '@/lib/geo/countryCode';
 import { cn } from '@/lib/utils';
 
 interface AvatarDisplayProps {
@@ -22,26 +23,6 @@ const flagSizeClasses = {
   lg: 'size-10 border-2',
   xl: 'size-12 border-2',
   xxl: 'size-14 border-2.5',
-};
-
-const COUNTRY_CODE_MAP: Record<string, string> = {
-  ka: 'ge',
-  georgian: 'ge',
-  'ka-ge': 'ge',
-  geo: 'ge',
-  georgia: 'ge',
-  en: 'gb',
-  eng: 'gb',
-  'en-gb': 'gb',
-  'en-us': 'us',
-  gb: 'gb',
-  uk: 'gb',
-  gbr: 'gb',
-  'great britain': 'gb',
-  'united kingdom': 'gb',
-  us: 'us',
-  usa: 'us',
-  'united states': 'us',
 };
 
 const sizeClasses: Record<NonNullable<AvatarDisplayProps['size']>, string> = {
@@ -76,9 +57,7 @@ export function AvatarDisplay({
   countryCode,
   shape = 'circle',
 }: AvatarDisplayProps) {
-  const normalizedCountryCode = countryCode
-    ? COUNTRY_CODE_MAP[countryCode.trim().toLowerCase()] || countryCode.trim().toLowerCase()
-    : null;
+  const normalizedCountryCode = normalizeCountryCode(countryCode);
 
   const merged = resolveCustomization(customization);
   const skinAsset = getSkinPart(merged.skin).asset;

@@ -2,8 +2,9 @@ import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { DEFAULT_AVATAR_PRIMARY, DEFAULT_AVATAR_SECONDARY } from "@/lib/avatars";
 import type { HeadToHeadSummary } from "@/lib/domain";
 import type { LobbyMember } from "@/lib/realtime/socket.types";
+import { buildFriendInviteUrl } from "@/lib/auth/postAuthRedirect";
 import { copyToClipboard } from "@/utils/clipboard";
-import { Copy } from "lucide-react";
+import { Copy, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLocale } from "@/contexts/LocaleContext";
 import { trackFriendInviteSent } from "@/lib/analytics/game-events";
@@ -34,6 +35,21 @@ export function LobbyHeader({
         console.error('Analytics trackFriendInviteSent failed', error);
       }
       toast.success(t("friend.roomCodeCopied"));
+    }
+  };
+
+  const copyInviteLink = async () => {
+    if (!lobbyCode) return;
+    const inviteUrl = buildFriendInviteUrl(lobbyCode);
+    if (!inviteUrl) return;
+    const success = await copyToClipboard(inviteUrl);
+    if (success) {
+      try {
+        trackFriendInviteSent('link_copy');
+      } catch (error) {
+        console.error('Analytics trackFriendInviteSent failed', error);
+      }
+      toast.success(t("friend.inviteLinkCopied"));
     }
   };
 
@@ -74,6 +90,14 @@ export function LobbyHeader({
                 disabled={!lobbyCode}
               >
                 <Copy className="size-3.5" />
+              </button>
+              <button
+                onClick={copyInviteLink}
+                aria-label={t("friend.copyInviteLink")}
+                className="text-white/55 transition-colors hover:text-brand-cyan"
+                disabled={!lobbyCode}
+              >
+                <Link2 className="size-3.5" />
               </button>
             </div>
           </div>
