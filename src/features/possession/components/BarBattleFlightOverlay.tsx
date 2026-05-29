@@ -145,7 +145,14 @@ function Badge2xFlight({
     <div className="pointer-events-none absolute left-0 top-0 will-change-transform" style={{ transform: SCROLL_PIN_TRANSFORM }}>
       <motion.div
         className="absolute"
-        style={{ left: flight.source.x, top: flight.source.y, transform: 'translate(-50%, -50%)', willChange: 'transform' }}
+        style={{
+          left: flight.source.x,
+          top: flight.source.y,
+          width: 0,
+          height: 0,
+          transformOrigin: '0 0',
+          willChange: 'transform',
+        }}
         initial={{ x: 0, y: 0, opacity: 0, scale: 0.4 }}
         animate={{
           opacity: [0, 1, 1, 1],
@@ -163,7 +170,9 @@ function Badge2xFlight({
         }}
         onAnimationComplete={() => onArrive(flight.id)}
       >
-        <Badge2xToken />
+        <div className="absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2">
+          <Badge2xToken />
+        </div>
       </motion.div>
     </div>
   );
@@ -174,7 +183,7 @@ function Badge2xFlight({
 function Badge2xToken() {
   return (
     <div
-      className="flex items-center gap-1 rounded-xl bg-brand-yellow px-2.5 py-1 shadow-[0_3px_10px_rgba(0,0,0,0.35)] sm:gap-1.5 sm:px-3 sm:py-1.5"
+      className="inline-flex w-max items-center gap-1 whitespace-nowrap rounded-xl bg-brand-yellow px-2.5 py-1 shadow-[0_3px_10px_rgba(0,0,0,0.35)] sm:gap-1.5 sm:px-3 sm:py-1.5"
       style={{ fontFamily: "'Poppins', system-ui, sans-serif" }}
     >
       <Zap className="size-4 fill-black text-black sm:size-5" />

@@ -152,49 +152,52 @@ export function PossessionHUD({
 const SPEED_STREAK_FLIGHT_MS = 1020;
 
 function SpeedStreakBadge({ active }: { active: boolean }) {
+  if (!active) return null;
+  return <SpeedStreakBadgeActive />;
+}
+
+function SpeedStreakBadgeActive() {
   // Don't reveal the sticky badge until the flying 2× token has had time to
   // arrive — otherwise it sits here while the token is still in the air.
   const [landed, setLanded] = useState(false);
   useEffect(() => {
-    if (!active) {
-      setLanded(false);
-      return;
-    }
     const timer = setTimeout(() => setLanded(true), SPEED_STREAK_FLIGHT_MS);
     return () => clearTimeout(timer);
-  }, [active]);
-
-  if (!active) return null;
+  }, []);
 
   // ONE box, always present while the streak is active, reserving the badge's
   // size via an invisible spacer. Both the flight-target anchor AND the visible
   // badge are absolutely centered in this same box → the token lands exactly
   // where the badge appears (no jump). The badge only fades in once landed.
   return (
-    <div className="relative inline-flex items-center">
+    <div className="relative inline-flex items-center justify-center">
       {/* Invisible spacer: holds the exact badge dimensions so the box (and its
           center) are correct from the moment the streak is earned. */}
-      <div aria-hidden className="invisible flex items-center gap-1 rounded-xl px-2.5 py-1 sm:gap-1.5 sm:px-3 sm:py-1.5">
+      <div aria-hidden className="invisible inline-flex w-max items-center gap-1 whitespace-nowrap rounded-xl px-2.5 py-1 sm:gap-1.5 sm:px-3 sm:py-1.5">
         <Zap className="size-4 sm:size-5" />
         <span className="font-poppins text-lg font-black leading-none sm:text-2xl">2×</span>
       </div>
       {/* center-of-badge anchor — the flight token lands here */}
       <span
         data-speed-streak-slot="player"
-        className="pointer-events-none absolute left-1/2 top-1/2 size-0.5 -translate-x-1/2 -translate-y-1/2"
+        className="pointer-events-none absolute left-1/2 top-1/2 size-px -translate-x-1/2 -translate-y-1/2"
       />
       <AnimatePresence>
         {landed && (
           <motion.div
-            data-speed-streak-badge="player"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.4, transition: { duration: 0.2 } }}
             transition={{ type: 'spring', stiffness: 320, damping: 18 }}
-            className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-xl bg-brand-yellow px-2.5 py-1 shadow-[0_3px_10px_rgba(0,0,0,0.35)] sm:gap-1.5 sm:px-3 sm:py-1.5"
+            className="absolute inset-0 flex items-center justify-center"
           >
-            <Zap className="size-4 fill-black text-black sm:size-5" />
-            <span className="font-poppins text-lg font-black leading-none text-black sm:text-2xl">2×</span>
+            <div
+              data-speed-streak-badge="player"
+              className="inline-flex w-max items-center gap-1 whitespace-nowrap rounded-xl bg-brand-yellow px-2.5 py-1 shadow-[0_3px_10px_rgba(0,0,0,0.35)] sm:gap-1.5 sm:px-3 sm:py-1.5"
+            >
+              <Zap className="size-4 fill-black text-black sm:size-5" />
+              <span className="font-poppins text-lg font-black leading-none text-black sm:text-2xl">2×</span>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
