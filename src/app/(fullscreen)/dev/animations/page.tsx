@@ -42,10 +42,20 @@ const DEV_PUT_ORDER_OPPONENT_DELAY_MS = 900;
 const DEV_PUT_ORDER_ROUND_RESULT_DELAY_MS = 2100;
 const DEV_SPECIAL_ROUND_RESULT_DELAY_MS = 1600;
 const DEV_COUNTDOWN_ROUND_RESULT_DELAY_MS = 3200;
+const DEV_PENALTY_ROUND_RESULT_DELAY_MS = 4800;
+const DEV_PENALTY_SCRIPT_KICK_GAP_MS = 9200;
 
 function pointsToBars(points: number): number {
   if (points <= 0) return 0;
   return Math.min(Math.max(Math.round(points / POINTS_PER_BAR), 1), MAX_BARS);
+}
+
+function nextSeat(seat: 1 | 2): 1 | 2 {
+  return seat === 1 ? 2 : 1;
+}
+
+function penaltyPhaseRoundForKickIndex(kickIndex: number): number {
+  return Math.ceil((kickIndex + 1) / 2);
 }
 
 const SAMPLE_QUESTIONS: Array<{
@@ -236,6 +246,7 @@ function makeMatchState(
     penaltyGoals?: { seat1: number; seat2: number };
     shooterSeat?: 1 | 2 | null;
     phaseKind?: 'normal' | 'last_attack' | 'penalty';
+    phaseRound?: number;
     possessionDiff?: number;
     speedStreakHolderSeat?: 1 | 2 | null;
   } = { stateVersion: 1 }
@@ -252,7 +263,7 @@ function makeMatchState(
     goals: opts.goals ?? { seat1: 0, seat2: 0 },
     penaltyGoals: opts.penaltyGoals ?? { seat1: 0, seat2: 0 },
     phaseKind: opts.phaseKind ?? 'normal',
-    phaseRound: 1,
+    phaseRound: opts.phaseRound ?? 1,
     shooterSeat: opts.shooterSeat ?? null,
     halftime: {
       deadlineAt: null,
@@ -341,6 +352,7 @@ const PENALTY_QINDEX_BASE = 1000;
 function makePenaltyQuestion(qIndex: number, shooterSeat: 1 | 2): ResolvedMatchQuestionPayload {
   const sample = SAMPLE_QUESTIONS[qIndex % SAMPLE_QUESTIONS.length];
   const now = Date.now();
+  const kickIndex = Math.max(0, qIndex - PENALTY_QINDEX_BASE);
   return {
     matchId: MATCH_ID,
     qIndex,
@@ -348,7 +360,7 @@ function makePenaltyQuestion(qIndex: number, shooterSeat: 1 | 2): ResolvedMatchQ
     playableAt: new Date(now - 1000).toISOString(),
     deadlineAt: new Date(now + 60_000).toISOString(),
     phaseKind: 'penalty',
-    phaseRound: ((qIndex - PENALTY_QINDEX_BASE) % 10) + 1,
+    phaseRound: penaltyPhaseRoundForKickIndex(kickIndex),
     attackerSeat: shooterSeat,
     shooterSeat,
     question: {
@@ -370,14 +382,16 @@ function makePenaltyRoundResult(
   points: { me: number; opp: number }
 ): MatchRoundResultPayload {
   const sample = SAMPLE_QUESTIONS[qIndex % SAMPLE_QUESTIONS.length];
-  // Field-state derives penaltyOutcome straight from deltas.penaltyOutcome,
-  // so per-player correctness is decorative here — pick a plausible combo:
-  // goal = shooter correct, keeper wrong; saved = keeper correct.
-  const shooterCorrect = outcome === 'goal';
-  const keeperCorrect = outcome === 'saved';
-  const shooterIsMe = shooterSeat === 1;
-  const meCorrect = shooterIsMe ? shooterCorrect : keeperCorrect;
-  const oppCorrect = shooterIsMe ? keeperCorrect : shooterCorrect;
+  const kickIndex = Math.max(0, qIndex - PENALTY_QINDEX_BASE);
+  const keeperSeat = nextSeat(shooterSeat);
+  const meCorrect = points.me > 0;
+  const oppCorrect = points.opp > 0;
+  const timeForSeat = (seat: 1 | 2, correct: boolean) => {
+    if (!correct) return 6000;
+    if (outcome === 'goal') return seat === shooterSeat ? 1400 : 2600;
+    return seat === keeperSeat ? 1400 : 2600;
+  };
+
   return {
     matchId: MATCH_ID,
     qIndex,
@@ -388,7 +402,7 @@ function makePenaltyRoundResult(
         totalPoints: scores.meTotal + points.me,
         pointsEarned: points.me,
         isCorrect: meCorrect,
-        timeMs: meCorrect ? 2500 : 6000,
+        timeMs: timeForSeat(1, meCorrect),
         selectedIndex: meCorrect ? sample.correctIndex : (sample.correctIndex + 1) % 4,
         submittedOrderIds: [],
       },
@@ -396,20 +410,37 @@ function makePenaltyRoundResult(
         totalPoints: scores.oppTotal + points.opp,
         pointsEarned: points.opp,
         isCorrect: oppCorrect,
-        timeMs: oppCorrect ? 3000 : 6000,
+        timeMs: timeForSeat(2, oppCorrect),
         selectedIndex: oppCorrect ? sample.correctIndex : (sample.correctIndex + 2) % 4,
         submittedOrderIds: [],
       },
     },
     phaseKind: 'penalty',
-    phaseRound: null,
+    phaseRound: penaltyPhaseRoundForKickIndex(kickIndex),
     shooterSeat,
     attackerSeat: shooterSeat,
     deltas: {
       possessionDelta: 0,
-      goalScoredBySeat: null,
+      goalScoredBySeat: outcome === 'goal' ? shooterSeat : null,
       penaltyOutcome: outcome,
     },
+  };
+}
+
+type PenaltyKickOptions = {
+  resetTimers?: boolean;
+  emitOpponentAnswered?: boolean;
+  points?: { me: number; opp: number };
+  answerAckDelayMs?: number;
+  opponentAnsweredDelayMs?: number;
+  roundResultDelayMs?: number;
+};
+
+function defaultPenaltyPoints(shooterSeat: 1 | 2, outcome: 'goal' | 'saved'): { me: number; opp: number } {
+  const winningSeat = outcome === 'goal' ? shooterSeat : nextSeat(shooterSeat);
+  return {
+    me: winningSeat === 1 ? 100 : 90,
+    opp: winningSeat === 2 ? 100 : 90,
   };
 }
 
@@ -614,7 +645,6 @@ function createStubSocket(): Socket<ServerToClientEvents, ClientToServerEvents> 
     active: true,
     auth: {},
     emit: (...args: unknown[]) => {
-      // eslint-disable-next-line no-console
       console.debug('[dev/animations] socket.emit ignored', args);
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent<DevSocketEmitDetail>('dev:socket-emit', {
@@ -1841,93 +1871,6 @@ function DevAnimationsContent() {
     );
   }
 
-  function loadPutInOrderPartialScenario() {
-    pendingTimers.current.forEach((t) => window.clearTimeout(t));
-    pendingTimers.current = [];
-
-    const s = store();
-    const activeQIndex = s.match?.currentQuestion?.qIndex ?? -1;
-    const qIndex = Math.min(activeQIndex + 1, TOTAL_QUESTIONS - 1);
-    const myOrder = ['pele', 'maradona', 'mbappe', 'messi', 'ronaldo'];
-    const opponentOrder = ['pele', 'ronaldo', 'maradona', 'messi', 'mbappe'];
-
-    stateVersion.current += 1;
-    s.setMatchState(makeMatchState('NORMAL_PLAY', {
-      stateVersion: stateVersion.current,
-      goals: goalsRef.current,
-      possessionDiff: possessionDiffRef.current,
-    }));
-
-    useRealtimeMatchStore.setState((prev) =>
-      prev.match
-        ? {
-            ...prev,
-            match: {
-              ...prev.match,
-              lastRoundResult: null,
-              answerAck: null,
-              countdownGuessAck: null,
-              cluesGuessAck: null,
-              opponentAnswered: false,
-              opponentSelectedIndex: null,
-              opponentRecentPoints: 0,
-              opponentAnsweredCorrectly: null,
-              currentQuestionPhase: 'reveal',
-            },
-          }
-        : prev
-    );
-
-    s.setMatchQuestion(makeQuestion(qIndex, 'putInOrder'));
-    setNextQuestionKind('putInOrder');
-    setRemountKey((k) => k + 1);
-
-    pendingTimers.current.push(
-      window.setTimeout(() => {
-        const result = makePutInOrderRoundResult(qIndex, myOrder, scoreRef.current, {
-          opponentOrderedItemIds: opponentOrder,
-        });
-        const me = result.players[SELF_ID];
-        const opp = result.players[OPP_ID];
-        if (!me || !opp) return;
-
-        s.setAnswerAck({
-          matchId: MATCH_ID,
-          qIndex,
-          questionKind: 'putInOrder',
-          selectedIndex: null,
-          isCorrect: me.isCorrect,
-          myTotalPoints: me.totalPoints,
-          oppAnswered: false,
-          pointsEarned: me.pointsEarned,
-          phaseKind: 'normal',
-          phaseRound: result.phaseRound ?? null,
-          foundCount: me.foundCount,
-        });
-
-        pendingTimers.current.push(
-          window.setTimeout(() => {
-            s.setOpponentAnswered({
-              matchId: MATCH_ID,
-              qIndex,
-              opponentTotalPoints: opp.totalPoints,
-              pointsEarned: opp.pointsEarned,
-              isCorrect: opp.isCorrect,
-              selectedIndex: null,
-            });
-          }, DEV_PUT_ORDER_OPPONENT_DELAY_MS)
-        );
-
-        pendingTimers.current.push(
-          window.setTimeout(() => {
-            s.setRoundResult(result);
-          }, DEV_PUT_ORDER_ROUND_RESULT_DELAY_MS)
-        );
-        schedulePostRoundPossessionState(result, DEV_PUT_ORDER_ROUND_RESULT_DELAY_MS);
-      }, 900)
-    );
-  }
-
   function enterPenaltyShootout() {
     setMobilePanelOpen(false);
     pendingTimers.current.forEach((t) => window.clearTimeout(t));
@@ -1949,14 +1892,28 @@ function DevAnimationsContent() {
     setRemountKey((k) => k + 1);
   }
 
-  function takePenaltyKick(shooterSeat: 1 | 2, outcome: 'goal' | 'saved') {
+  function takePenaltyKick(
+    shooterSeat: 1 | 2,
+    outcome: 'goal' | 'saved',
+    options: PenaltyKickOptions = {}
+  ) {
     setMobilePanelOpen(false);
-    pendingTimers.current.forEach((t) => window.clearTimeout(t));
-    pendingTimers.current = [];
+    if (options.resetTimers ?? true) {
+      pendingTimers.current.forEach((t) => window.clearTimeout(t));
+      pendingTimers.current = [];
+    }
 
     const s = store();
-    const qIndex = PENALTY_QINDEX_BASE + penaltyKickIndexRef.current;
+    const kickIndex = penaltyKickIndexRef.current;
+    const kickNumber = kickIndex + 1;
+    const phaseRound = penaltyPhaseRoundForKickIndex(kickIndex);
+    const qIndex = PENALTY_QINDEX_BASE + kickIndex;
     penaltyKickIndexRef.current += 1;
+    const answerAckDelayMs = options.answerAckDelayMs ?? 2500;
+    const opponentAnsweredDelayMs = options.opponentAnsweredDelayMs ?? 3500;
+    const roundResultDelayMs = options.roundResultDelayMs ?? DEV_PENALTY_ROUND_RESULT_DELAY_MS;
+    const emitOpponentAnswered = options.emitOpponentAnswered ?? false;
+    const nextShooterSeat = nextSeat(shooterSeat);
 
     stateVersion.current += 1;
     s.setMatchState(
@@ -1966,6 +1923,7 @@ function DevAnimationsContent() {
         goals: goalsRef.current,
         penaltyGoals: penaltyGoalsRef.current,
         phaseKind: 'penalty',
+        phaseRound,
         shooterSeat,
       })
     );
@@ -1992,11 +1950,7 @@ function DevAnimationsContent() {
 
     s.setMatchQuestion(makePenaltyQuestion(qIndex, shooterSeat));
 
-    const winningSeat = outcome === 'goal' ? shooterSeat : (shooterSeat === 1 ? 2 : 1);
-    const points = {
-      me: winningSeat === 1 ? Math.max(myPoints, 80) : 0,
-      opp: winningSeat === 2 ? Math.max(oppPoints, 80) : 0,
-    };
+    const points = options.points ?? defaultPenaltyPoints(shooterSeat, outcome);
     const result = makePenaltyRoundResult(qIndex, shooterSeat, outcome, scoreRef.current, points);
     const me = result.players[SELF_ID];
     const opp = result.players[OPP_ID];
@@ -2019,24 +1973,26 @@ function DevAnimationsContent() {
             oppAnswered: false,
             pointsEarned: me.pointsEarned,
             phaseKind: 'penalty',
-            phaseRound: null,
+            phaseRound,
             shooterSeat,
           });
-        }, 2500)
+        }, answerAckDelayMs)
       );
 
-      pendingTimers.current.push(
-        window.setTimeout(() => {
-          s.setOpponentAnswered({
-            matchId: MATCH_ID,
-            qIndex,
-            opponentTotalPoints: opp.totalPoints,
-            pointsEarned: opp.pointsEarned,
-            isCorrect: opp.isCorrect,
-            selectedIndex: opp.selectedIndex,
-          });
-        }, 3500)
-      );
+      if (emitOpponentAnswered) {
+        pendingTimers.current.push(
+          window.setTimeout(() => {
+            s.setOpponentAnswered({
+              matchId: MATCH_ID,
+              qIndex,
+              opponentTotalPoints: opp.totalPoints,
+              pointsEarned: opp.pointsEarned,
+              isCorrect: opp.isCorrect,
+              selectedIndex: opp.selectedIndex,
+            });
+          }, opponentAnsweredDelayMs)
+        );
+      }
 
       pendingTimers.current.push(
         window.setTimeout(() => {
@@ -2055,10 +2011,69 @@ function DevAnimationsContent() {
               goals: goalsRef.current,
               penaltyGoals: penaltyGoalsRef.current,
               phaseKind: 'penalty',
-              shooterSeat,
+              phaseRound: penaltyPhaseRoundForKickIndex(kickNumber),
+              shooterSeat: nextShooterSeat,
             })
           );
-        }, 4800)
+        }, roundResultDelayMs)
+      );
+    });
+  }
+
+  function runPenaltyShootoutScript() {
+    setMobilePanelOpen(false);
+    pendingTimers.current.forEach((t) => window.clearTimeout(t));
+    pendingTimers.current = [];
+
+    stateVersion.current = 0;
+    scoreRef.current = { meTotal: 0, oppTotal: 0 };
+    goalsRef.current = { seat1: 6, seat2: 6 };
+    penaltyGoalsRef.current = { seat1: 0, seat2: 0 };
+    penaltyKickIndexRef.current = 0;
+    possessionDiffRef.current = 0;
+
+    const s = store();
+    s.reset();
+    s.setSelfUserId(SELF_ID);
+    s.setMatchStart(makeStartPayload());
+    useRealtimeMatchStore.setState((prev) =>
+      prev.match ? { ...prev, match: { ...prev.match, countdownEndsAt: null } } : prev
+    );
+
+    stateVersion.current += 1;
+    s.setMatchState(
+      makeMatchState('PENALTY_SHOOTOUT', {
+        stateVersion: stateVersion.current,
+        half: 2,
+        goals: goalsRef.current,
+        penaltyGoals: penaltyGoalsRef.current,
+        phaseKind: 'penalty',
+        phaseRound: 1,
+        shooterSeat: null,
+      })
+    );
+    setRemountKey((k) => k + 1);
+
+    const script: Array<{
+      shooterSeat: 1 | 2;
+      outcome: 'goal' | 'saved';
+      points: { me: number; opp: number };
+    }> = [
+      { shooterSeat: 2, outcome: 'goal', points: { me: 90, opp: 100 } },
+      { shooterSeat: 1, outcome: 'saved', points: { me: 90, opp: 100 } },
+      { shooterSeat: 2, outcome: 'saved', points: { me: 100, opp: 90 } },
+      { shooterSeat: 1, outcome: 'goal', points: { me: 100, opp: 90 } },
+    ];
+
+    script.forEach((kick, index) => {
+      pendingTimers.current.push(
+        window.setTimeout(() => {
+          takePenaltyKick(kick.shooterSeat, kick.outcome, {
+            resetTimers: false,
+            emitOpponentAnswered: false,
+            points: kick.points,
+          });
+        }, 600 + index * DEV_PENALTY_SCRIPT_KICK_GAP_MS)
       );
     });
   }
@@ -2251,14 +2266,15 @@ function DevAnimationsContent() {
         </Group>
 
         <Group label="Penalty shootout sim">
+          <Btn variant="green" onClick={runPenaltyShootoutScript}>run 4-kick full script</Btn>
           <Btn variant="yellow" onClick={() => takePenaltyKick(1, 'goal')}>kick · me scores ⚽</Btn>
           <Btn onClick={() => takePenaltyKick(1, 'saved')}>kick · me saved 🧤</Btn>
           <Btn variant="yellow" onClick={() => takePenaltyKick(2, 'goal')}>kick · opp scores ⚽</Btn>
           <Btn onClick={() => takePenaltyKick(2, 'saved')}>kick · opp saved 🧤</Btn>
           <p className="mt-1 text-[9px] text-brand-slate">
-            Each click fires one penalty kick — sets state with the shooter,
-            pushes the question, then answer ack → opp answered → round
-            result. Penalty goals accumulate across kicks until you re-enter.
+            Full script starts from 6-6, alternates shooters, omits
+            opponent_answered like production penalties, then sends the next
+            shooter state right after each goal/save result.
           </p>
         </Group>
 

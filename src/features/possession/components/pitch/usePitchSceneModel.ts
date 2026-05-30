@@ -131,14 +131,21 @@ export function usePitchSceneModel({
     ? normalPlayerX + (mirrored ? -14 : 14)
     : normalOpponentX + (mirrored ? 14 : -14);
 
+  // Keeper sits ON the goal line (x=15/485 — the very pitch edge). Centered there
+  // with translate(-50%,-50%), half the avatar would hang past the green into the
+  // dark border. Inset it toward the field interior so the whole body stays on the
+  // pitch. `goalLineX - INSET * inward` moves inward for both goals.
+  const KEEPER_GOAL_LINE_INSET = isPortrait ? 26 : 18;
+  const keeperX = goal.goalLineX - KEEPER_GOAL_LINE_INSET * goal.inward;
+
   // Final positions (penalty/shot overrides normal)
   const playerX = isPenalty
-    ? (penaltyMode.isPlayerShooter ? goal.penSpotX : goal.goalLineX)
+    ? (penaltyMode.isPlayerShooter ? goal.penSpotX : keeperX)
     : isShot && shotMode
       ? (shotMode.isPlayerAttacker ? shotMode.ballOriginX : goal.goalLineX)
       : normalPlayerX;
   const opponentX = isPenalty
-    ? (penaltyMode.isPlayerShooter ? goal.goalLineX : goal.penSpotX)
+    ? (penaltyMode.isPlayerShooter ? keeperX : goal.penSpotX)
     : isShot && shotMode
       ? (shotMode.isPlayerAttacker ? goal.goalLineX : shotMode.ballOriginX)
       : normalOpponentX;

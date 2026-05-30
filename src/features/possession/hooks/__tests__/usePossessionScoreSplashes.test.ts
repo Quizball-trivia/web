@@ -295,4 +295,52 @@ describe('usePossessionScoreSplashes', () => {
     expect(result.current.playerSplashVariant).toBe('points');
     expect(result.current.playerSplashPoints).toBe(70);
   });
+
+  it('falls back to round result for opponent penalty splash when opponent_answered is absent', async () => {
+    const penaltyQuestion: ResolvedMatchQuestionPayload = {
+      ...QUESTION,
+      phaseKind: 'penalty',
+      shooterSeat: 2,
+    };
+    const penaltyRound: MatchRoundResultPayload = {
+      ...ROUND_RESULT,
+      phaseKind: 'penalty',
+      shooterSeat: 2,
+      deltas: {
+        possessionDelta: 0,
+        penaltyOutcome: 'goal',
+        goalScoredBySeat: 2,
+      },
+      players: {
+        ...ROUND_RESULT.players,
+        opponent: {
+          ...ROUND_RESULT.players.opponent,
+          totalPoints: 130,
+          pointsEarned: 90,
+          isCorrect: true,
+        },
+      },
+    };
+
+    const { result } = renderHook(() => usePossessionScoreSplashes({
+      localQuestion: penaltyQuestion,
+      phaseKind: 'penalty',
+      isHalftime: false,
+      selectedAnswer: null,
+      selectedAnswerQIndex: null,
+      opponentAnswered: false,
+      opponentAnsweredCorrectly: null,
+      opponentRecentPoints: 0,
+      answerAck: null,
+      roundResult: penaltyRound,
+      myRound: penaltyRound.players.player,
+      opponentRound: penaltyRound.players.opponent,
+    }));
+
+    await act(async () => {});
+
+    expect(result.current.showOpponentSplash).toBe(true);
+    expect(result.current.opponentSplashVariant).toBe('points');
+    expect(result.current.opponentSplashPoints).toBe(90);
+  });
 });

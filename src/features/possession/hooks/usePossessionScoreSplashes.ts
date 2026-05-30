@@ -36,6 +36,10 @@ function resolveFeedbackPoints(
   return pointsEarned;
 }
 
+function isScoreSplashPhaseKind(kind: string | undefined): boolean {
+  return kind === 'normal' || kind === 'last_attack' || kind === 'penalty';
+}
+
 export function usePossessionScoreSplashes({
   localQuestion,
   phaseKind,
@@ -83,7 +87,7 @@ export function usePossessionScoreSplashes({
     if (!answerAck) return;
     const points = resolveFeedbackPoints(answerAck.pointsEarned, answerAck.questionKind, answerAck.foundCount);
     if (points <= 0) return;
-    if (phaseKind !== 'normal' && phaseKind !== 'last_attack') return;
+    if (!isScoreSplashPhaseKind(phaseKind)) return;
     const isMultipleChoiceAck = answerAck.questionKind === 'multipleChoice';
     if (isMultipleChoiceAck && (selectedAnswer === null || selectedAnswerQIndex !== answerAck.qIndex)) return;
     if (shownSplashQRef.current.player === answerAck.qIndex) return;
@@ -105,7 +109,7 @@ export function usePossessionScoreSplashes({
   useEffect(() => {
     if (!roundResult || !myRound) return;
     const resolvedPhaseKind = roundResult.phaseKind ?? phaseKind;
-    if (resolvedPhaseKind !== 'normal' && resolvedPhaseKind !== 'last_attack') return;
+    if (!isScoreSplashPhaseKind(resolvedPhaseKind)) return;
     if (shownSplashQRef.current.player === roundResult.qIndex) return;
     const points = resolveFeedbackPoints(myRound.pointsEarned, roundResult.questionKind, myRound.foundCount);
     if (points <= 0) return;
@@ -121,7 +125,7 @@ export function usePossessionScoreSplashes({
   useEffect(() => {
     if (!opponentAnswered && !roundResult) return;
     const resolvedPhaseKind = roundResult?.phaseKind ?? phaseKind;
-    if (resolvedPhaseKind !== 'normal' && resolvedPhaseKind !== 'last_attack') return;
+    if (!isScoreSplashPhaseKind(resolvedPhaseKind)) return;
 
     const activeQIndex = localQuestion?.qIndex ?? roundResult?.qIndex ?? null;
     if (activeQIndex === null || shownSplashQRef.current.opponent === activeQIndex) return;

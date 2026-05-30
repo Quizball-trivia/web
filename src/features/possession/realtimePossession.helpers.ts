@@ -27,6 +27,10 @@ export const PENALTY_KICK_CONTACT_MS = 450;
 export const PENALTY_BALL_GOAL_FLIGHT_MS = 620;
 export const PENALTY_BALL_SAVE_FLIGHT_MS = 660;
 export const PENALTY_RESULT_DISPLAY_DELAY_MS = PENALTY_KICK_CONTACT_MS + PENALTY_BALL_SAVE_FLIGHT_MS;
+// Keep in sync with PenaltySplash's transition duration.
+export const PENALTY_RESULT_SPLASH_MS = 1850;
+export const PENALTY_RESULT_SEQUENCE_HOLD_MS =
+  PENALTY_SCORE_FLIGHT_HANDOFF_MS + PENALTY_RESULT_DISPLAY_DELAY_MS + PENALTY_RESULT_SPLASH_MS;
 export const FIRST_QUESTION_INTRO_MS = 2000;
 
 export type FeedResult = 'goal' | 'saved' | 'miss' | null;

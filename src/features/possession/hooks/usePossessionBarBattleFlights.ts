@@ -12,7 +12,7 @@
  *
  * Triggers (when `match.variant === 'ranked_sim'`):
  *   - Player flight: fires when `answerAck` arrives with `pointsEarned > 0`,
- *     gated on phaseKind === normal or last_attack.
+ *     gated on phaseKind === normal, last_attack, or penalty.
  *     Deduped by `answerAck.qIndex`.
  *   - Opponent flight: fires when `opponentAnswered` flips true with
  *     `opponentAnsweredCorrectly === true && opponentRecentPoints > 0`,

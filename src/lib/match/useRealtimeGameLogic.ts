@@ -4,7 +4,10 @@ import { useRealtimeMatchStore, type MatchQuestionState } from '@/stores/realtim
 import { getSocket } from '@/lib/realtime/socket-client';
 import { logger } from '@/utils/logger';
 import { QUESTION_REVEAL_MS } from '@/features/possession/types/possession.types';
-import { GOAL_CELEBRATION_MS } from '@/features/possession/realtimePossession.helpers';
+import {
+  GOAL_CELEBRATION_MS,
+  PENALTY_RESULT_SEQUENCE_HOLD_MS,
+} from '@/features/possession/realtimePossession.helpers';
 import { trackAnswerSubmitted } from '@/lib/analytics/game-events';
 
 const QUESTION_PLAYING_MS = 10000; // 10 second playing phase
@@ -215,15 +218,20 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
   const isSpecialRound = roundResult?.questionKind
     ? SPECIAL_QUESTION_KINDS.has(roundResult.questionKind)
     : false;
-  const roundResultHoldMs = ROUND_RESULT_HOLD_MS + (isSpecialRound ? SPECIAL_RESULT_EXTRA_MS : 0);
+  const currentPhaseKind = currentQuestion?.phaseKind ?? 'normal';
+  const roundPhaseKind = roundResult?.phaseKind ?? currentPhaseKind;
+  const isPenaltyRound = roundPhaseKind === 'penalty';
+  const baseRoundResultHoldMs = ROUND_RESULT_HOLD_MS + (isSpecialRound ? SPECIAL_RESULT_EXTRA_MS : 0);
+  const roundResultHoldMs = isPenaltyRound
+    ? Math.max(baseRoundResultHoldMs, PENALTY_RESULT_SEQUENCE_HOLD_MS)
+    : baseRoundResultHoldMs;
   const opponentAnswered = matchSlice.opponentAnswered;
   const visibleOpponentAnswered = opponentAnswered && questionPhase === 'playing' && !startCountdownActive;
 
   const roundResolved = Boolean(roundResult);
 
-  const currentPhaseKind = currentQuestion?.phaseKind ?? 'normal';
   const isGoalRound = Boolean(roundResult?.deltas?.goalScoredBySeat);
-  const isLastAttackRound = currentPhaseKind === 'last_attack';
+  const isLastAttackRound = roundPhaseKind === 'last_attack';
   const goalExtra = isGoalRound ? GOAL_CELEBRATION_EXTRA_MS : 0;
   const effectiveDelay =
     currentPhaseKind === 'normal'
@@ -241,13 +249,13 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
 
     const holdTimer = setTimeout(() => {
       setShowOptions(false);
-      if (effectiveDelay > 0 || isGoalRound || isLastAttackRound) {
+      if (effectiveDelay > 0 || isGoalRound || isLastAttackRound || isPenaltyRound) {
         setRoundResultHoldDone(true);
       }
     }, roundResultHoldMs);
 
     return () => clearTimeout(holdTimer);
-  }, [roundResolved, showOptions, matchPaused, currentQuestionIndex, roundResultHoldMs, startCountdownActive, effectiveDelay, isGoalRound, isLastAttackRound]);
+  }, [roundResolved, showOptions, matchPaused, currentQuestionIndex, roundResultHoldMs, startCountdownActive, effectiveDelay, isGoalRound, isLastAttackRound, isPenaltyRound]);
 
   // Transition delay timer — when the overlay is showing, count down the delay.
   // Sets transitionElapsed=true which opens the gate for promotion.

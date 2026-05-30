@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { ROUND_RESULT_HOLD_MS, useRealtimeGameLogic } from '../useRealtimeGameLogic';
+import { PENALTY_RESULT_SEQUENCE_HOLD_MS } from '@/features/possession/realtimePossession.helpers';
 import type {
   MatchRoundResultPayload,
   MatchStatePayload,
@@ -57,7 +58,8 @@ function seedMatch() {
 
 function makeQuestion(
   qIndex: number,
-  phaseKind: 'normal' | 'last_attack' = 'normal'
+  phaseKind: 'normal' | 'last_attack' | 'penalty' = 'normal',
+  shooterSeat: 1 | 2 | null = null
 ): ResolvedMatchQuestionPayload {
   const question: ResolvedMatchQuestionPayload['question'] = {
     kind: 'multipleChoice',
@@ -74,6 +76,7 @@ function makeQuestion(
     question,
     deadlineAt: new Date(Date.now() + 10_000).toISOString(),
     phaseKind,
+    shooterSeat,
   };
 }
 
@@ -83,6 +86,7 @@ function makeRoundResult(
     phaseKind?: 'normal' | 'last_attack' | 'penalty';
     goalScoredBySeat?: 1 | 2 | null;
     penaltyOutcome?: 'goal' | 'saved' | null;
+    shooterSeat?: 1 | 2 | null;
   } = {}
 ): MatchRoundResultPayload {
   return {
@@ -99,6 +103,7 @@ function makeRoundResult(
     },
     phaseKind: opts.phaseKind ?? 'normal',
     phaseRound: 6,
+    shooterSeat: opts.shooterSeat ?? null,
     deltas: {
       possessionDelta: 10,
       goalScoredBySeat: opts.goalScoredBySeat ?? null,
@@ -141,10 +146,11 @@ function makeMatchState(
  */
 function makeQuestionWithImmediatePlay(
   qIndex: number,
-  phaseKind: 'normal' | 'last_attack' = 'normal'
+  phaseKind: 'normal' | 'last_attack' | 'penalty' = 'normal',
+  shooterSeat: 1 | 2 | null = null
 ): ResolvedMatchQuestionPayload {
   return {
-    ...makeQuestion(qIndex, phaseKind),
+    ...makeQuestion(qIndex, phaseKind, shooterSeat),
     playableAt: new Date(Date.now() - 1000).toISOString(), // already playable
   };
 }
@@ -248,6 +254,39 @@ describe('useRealtimeGameLogic — roundResultHoldDone for goals', () => {
 
     // 3. Advance past hold
     await act(async () => { vi.advanceTimersByTime(ROUND_RESULT_HOLD_MS + 50); });
+
+    expect(result.current.state.roundResultHoldDone).toBe(true);
+    expect(result.current.state.showOptions).toBe(false);
+  });
+
+  it('keeps penalty results mounted long enough for the kick and result splash before advancing', async () => {
+    seedMatch();
+    const store = useRealtimeMatchStore.getState();
+
+    const { result } = renderHook(() =>
+      useRealtimeGameLogic({ transitionDelayMs: 1600 })
+    );
+
+    act(() => store.setMatchQuestion(makeQuestionWithImmediatePlay(13, 'penalty', 2)));
+    await act(async () => { vi.advanceTimersByTime(50); });
+    expect(result.current.state.showOptions).toBe(true);
+
+    act(() => {
+      store.setRoundResult(makeRoundResult(13, {
+        phaseKind: 'penalty',
+        goalScoredBySeat: null,
+        penaltyOutcome: 'saved',
+        shooterSeat: 2,
+      }));
+    });
+
+    await act(async () => { vi.advanceTimersByTime(ROUND_RESULT_HOLD_MS + 50); });
+    expect(result.current.state.roundResultHoldDone).toBe(false);
+    expect(result.current.state.showOptions).toBe(true);
+
+    await act(async () => {
+      vi.advanceTimersByTime(PENALTY_RESULT_SEQUENCE_HOLD_MS - ROUND_RESULT_HOLD_MS + 50);
+    });
 
     expect(result.current.state.roundResultHoldDone).toBe(true);
     expect(result.current.state.showOptions).toBe(false);

@@ -117,11 +117,16 @@ export function usePossessionFieldState({
   isHalftime,
   unopposedBarPulse = false,
 }: UsePossessionFieldStateParams): PossessionFieldState {
-  const shooterSeat = possessionState?.shooterSeat ?? null;
   const phaseKind = localQuestion?.phaseKind ?? possessionState?.phaseKind ?? 'normal';
   const isPenaltyQuestion = phaseKind === 'penalty';
   const isLastAttackQuestion = phaseKind === 'last_attack';
   const isShotQuestion = phaseKind === 'shot';
+  const penaltyRoundResult = roundResult && (roundResult.phaseKind ?? phaseKind) === 'penalty'
+    ? roundResult
+    : null;
+  const shooterSeat = isPenaltyQuestion
+    ? (penaltyRoundResult?.shooterSeat ?? localQuestion?.shooterSeat ?? possessionState?.shooterSeat ?? null)
+    : null;
 
   const questionDurationSeconds = getQuestionDurationSeconds(localQuestion);
 
@@ -205,11 +210,10 @@ export function usePossessionFieldState({
     ? (activeAttackAnimation?.result ?? 'pending')
     : optimisticShotResult;
 
-  const resultShooterIsMe = roundResult?.shooterSeat != null && roundResult.shooterSeat === mySeat;
-
-  const penaltyRoundResult = roundResult && (roundResult.phaseKind ?? phaseKind) === 'penalty'
-    ? roundResult
+  const resultShooterSeat = penaltyRoundResult
+    ? (penaltyRoundResult.shooterSeat ?? localQuestion?.shooterSeat ?? shooterSeat)
     : null;
+  const resultShooterIsMe = resultShooterSeat != null && resultShooterSeat === mySeat;
 
   const immediatePenaltyResult: PenaltyResult = useMemo(() => {
     if (!isPenaltyQuestion || !penaltyRoundResult) return null;
@@ -368,7 +372,6 @@ export function usePossessionFieldState({
     playerAvatar,
     playerUsername,
     questionPhase,
-    roundResolved,
     shotAnimationVariant,
     shotBallOriginX,
     shotResult,

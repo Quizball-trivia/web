@@ -99,4 +99,82 @@ describe('usePossessionBarBattleFlights', () => {
       failed: false,
     });
   });
+
+  it('fires the opponent score flight from a penalty round result when opponent_answered is not emitted', async () => {
+    useRealtimeMatchStore.getState().setSelfUserId('user-a');
+    useRealtimeMatchStore.setState({
+      match: {
+        variant: 'ranked_sim',
+        matchId: MATCH_ID,
+        mySeat: 1,
+        currentQuestionPhase: 'playing',
+        currentQuestion: {
+          matchId: MATCH_ID,
+          qIndex: 20,
+          total: 20,
+          phaseKind: 'penalty',
+          phaseRound: 1,
+          shooterSeat: 2,
+          question: {
+            kind: 'multipleChoice',
+            id: 'penalty-q',
+            prompt: 'Penalty question',
+            options: ['A', 'B', 'C', 'D'],
+            categoryName: 'General',
+          },
+          deadlineAt: new Date(Date.now() + 10_000).toISOString(),
+        },
+        lastRoundResult: {
+          matchId: MATCH_ID,
+          qIndex: 20,
+          questionKind: 'multipleChoice',
+          reveal: { kind: 'multipleChoice', correctIndex: 0 },
+          players: {
+            'user-a': {
+              selectedIndex: 1,
+              isCorrect: false,
+              timeMs: 3000,
+              pointsEarned: 0,
+              totalPoints: 100,
+              submittedOrderIds: [],
+            },
+            'user-b': {
+              selectedIndex: 0,
+              isCorrect: true,
+              timeMs: 1800,
+              pointsEarned: 90,
+              totalPoints: 190,
+              submittedOrderIds: [],
+            },
+          },
+          phaseKind: 'penalty',
+          phaseRound: 1,
+          shooterSeat: 2,
+          deltas: {
+            possessionDelta: 0,
+            goalScoredBySeat: 2,
+            penaltyOutcome: 'goal',
+          },
+        },
+        possessionState: {
+          phaseKind: 'penalty',
+          shooterSeat: 1,
+        },
+        opponentAnswered: false,
+      } as never,
+    });
+
+    const { result } = renderHook(() => usePossessionBarBattleFlights());
+
+    await act(async () => {
+      vi.advanceTimersByTime(250);
+    });
+
+    expect(result.current.flights).toHaveLength(1);
+    expect(result.current.flights[0]).toMatchObject({
+      side: 'opponent',
+      points: 90,
+      failed: undefined,
+    });
+  });
 });
