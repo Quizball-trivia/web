@@ -9,6 +9,7 @@ import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import type { AchievementUnlockPayload, MatchFinalResultsPayload, MatchParticipant, MatchStandingPayload } from '@/lib/realtime/socket.types';
 import { cn } from '@/lib/utils';
 import { AchievementUnlockStrip } from '@/components/match/AchievementUnlockStrip';
+import { AppShellPageChrome } from '@/components/layout/app-shell/AppShellPageChrome';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { AvatarCustomization } from '@/types/game';
 import { applyXpReward, getMatchXpReward } from '@/lib/domain/matchXp';
@@ -122,9 +123,9 @@ function getRankClasses(rank: number): { border: string; pillBg: string; pillTex
 // ─── Podium block (top 3) ──────────────────────────────────────────────────
 
 const PODIUM_HEIGHT_CLASS: Record<1 | 2 | 3, string> = {
-  1: 'h-40 sm:h-52',
-  2: 'h-32 sm:h-40',
-  3: 'h-24 sm:h-32',
+  1: 'min-h-44 sm:min-h-52',
+  2: 'min-h-36 sm:min-h-44',
+  3: 'min-h-32 sm:min-h-40',
 };
 
 // Visual column order on the podium: 2nd on left, 1st in middle, 3rd on right.
@@ -168,8 +169,8 @@ function PodiumBlock({ standing, displayIndex }: { standing: StandingRow; displa
       <div
         data-testid={`party-podium-block-${rank}`}
         className={cn(
-          'relative flex w-full min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl',
-          'gap-1 px-2 py-2 sm:gap-1.5 sm:px-3 sm:py-3',
+          'relative flex w-full min-w-0 flex-col items-center justify-end rounded-2xl',
+          'gap-1 px-2 py-3 sm:gap-1.5 sm:px-3 sm:py-4',
           heightClass,
         )}
         style={{
@@ -179,7 +180,7 @@ function PodiumBlock({ standing, displayIndex }: { standing: StandingRow; displa
       >
         <span
           className={cn(
-            'flex h-10 min-w-12 shrink-0 items-center justify-center rounded-[12px] bg-surface-page px-3 font-poppins text-lg font-extrabold tabular-nums text-white sm:h-11 sm:min-w-14 sm:rounded-[14px] sm:text-xl',
+            'flex h-9 min-w-11 shrink-0 items-center justify-center rounded-[12px] bg-surface-page px-2.5 font-poppins text-base font-extrabold tabular-nums text-white sm:h-11 sm:min-w-14 sm:rounded-[14px] sm:text-xl',
             'ring-2',
           )}
           style={{
@@ -192,7 +193,7 @@ function PodiumBlock({ standing, displayIndex }: { standing: StandingRow; displa
         </span>
 
         <div
-          className={cn('w-full max-w-full truncate px-1 text-center font-poppins text-base font-semibold uppercase leading-tight tracking-wider sm:text-xl', nameTextOnBlock)}
+          className={cn('w-full min-w-0 truncate text-center font-poppins text-sm font-bold uppercase leading-tight tracking-wide sm:text-lg', nameTextOnBlock)}
         >
           {standing.username}
         </div>
@@ -361,6 +362,7 @@ export function PartyQuizResultsScreen({
 
   return (
     <div className="relative min-h-dvh overflow-hidden bg-surface-page-alt text-white">
+      <AppShellPageChrome />
       <AnimatePresence>{selfWon && <CelebrationBurst />}</AnimatePresence>
 
       <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 py-6 sm:px-6 sm:py-10">
@@ -418,7 +420,7 @@ export function PartyQuizResultsScreen({
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.55 }}
-            className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-surface-card/70"
+            className="mt-6 overflow-hidden rounded-2xl border border-white/10"
           >
             {selfStanding && (
               <div className="grid grid-cols-3 divide-x divide-white/10">
@@ -436,13 +438,13 @@ export function PartyQuizResultsScreen({
                 />
               </div>
             )}
-            <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 border-t border-white/10 px-5 py-3.5 text-center">
+            <div className="flex flex-wrap items-center justify-center gap-x-2 border-t border-white/10 px-4 py-2.5 text-center">
               {xpEarned > 0 ? (
                 <>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-white/55">
+                  <span className="text-xs font-bold uppercase tracking-wider text-white/55">
                     {t('results.xp')}
                   </span>
-                  <span className="text-[18px] font-semibold tabular-nums text-brand-green">
+                  <span className="text-xl font-extrabold tabular-nums text-brand-green">
                     +{xpEarned}
                   </span>
                   {projectedProgression && (
@@ -510,11 +512,11 @@ export function PartyQuizResultsScreen({
 
 function PartyStatCell({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col items-center justify-center px-2 py-3">
+    <div className="flex flex-col items-center justify-center px-2 py-2.5">
       <div className="font-poppins text-[10px] font-bold uppercase tracking-[0.18em] text-white/50">
         {label}
       </div>
-      <div className="mt-1 font-poppins text-2xl font-extrabold tabular-nums text-white">
+      <div className="mt-0.5 font-poppins text-[1.65rem] font-extrabold tabular-nums leading-tight text-white">
         {value}
       </div>
     </div>
