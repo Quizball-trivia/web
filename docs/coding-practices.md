@@ -1,4 +1,3 @@
-```markdown
 # QuizBall Frontend Coding Practices (Next.js App Router)
 
 This document defines coding standards and architecture rules for the QuizBall frontend (**Next.js App Router**, **TypeScript**, **Tailwind**, **TanStack Query**, **Zustand**, **OpenAPI-generated types**).
@@ -394,4 +393,3 @@ Manual test checklist (report as PASS/FAIL/NOT RUN):
 - **Replaced async custom hooks** (useEffect fetch patterns) with **TanStack Query** rules
 - **Added repo/mapper/query architecture** so Codex doesn’t spaghetti-wire API into UI
 - **Codified the “hydrate Zustand for gameplay” pattern** (super important)
-```

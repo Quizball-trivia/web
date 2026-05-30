@@ -260,7 +260,7 @@ export function WelcomeHero({ sim, duelsCount, onKickOff }: WelcomeHeroProps) {
 
         <Button
           onClick={onKickOff}
-          className="h-14 min-w-[280px] rounded-[20px] bg-brand-green px-10 font-poppins text-lg font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none sm:w-auto"
+          className="h-16 min-w-[320px] rounded-[22px] bg-brand-green px-12 font-poppins text-2xl font-bold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none sm:w-auto"
         >
           {t('welcome.kickOff')}
         </Button>

@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- Category artwork URLs come from realtime/backend payloads. */
 
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -81,15 +81,18 @@ function BanCategoryCardComponent({
   const imageUrl = category.imageUrl ?? null;
   const hasImage = Boolean(imageUrl);
   const [imageLoaded, setImageLoaded] = useState(false);
+  // Reset the fade-in state when the image source changes, the React-recommended
+  // "adjust state during render" way — avoids a setState-in-effect cascade.
+  const [loadedImageUrl, setLoadedImageUrl] = useState(imageUrl);
+  if (loadedImageUrl !== imageUrl) {
+    setLoadedImageUrl(imageUrl);
+    setImageLoaded(false);
+  }
   const interactive = !disabled && !isBanned && !!onClick;
   const entranceTransition = useMemo(
     () => ({ ...CARD_SPRING, delay: 0.2 + animationIndex * 0.08 }),
     [animationIndex],
   );
-
-  useEffect(() => {
-    setImageLoaded(false);
-  }, [imageUrl]);
 
   return (
     <motion.div

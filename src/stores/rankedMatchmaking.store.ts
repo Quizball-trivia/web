@@ -75,8 +75,8 @@ export const useRankedMatchmakingStore = create<RankedMatchmakingState>((set) =>
   setRankedMatchFound: ({ opponent, myRecentForm }) => {
     logger.info('Ranked matchmaking store set match found', { opponentId: opponent.id, formLen: myRecentForm?.length ?? 0 });
     set((state) => {
-      if (state.rankedCancelRequestedAt !== null || !state.rankedSearching) {
-        logger.warn('Ignoring ranked match_found outside active search', {
+      if (state.rankedCancelRequestedAt !== null) {
+        logger.warn('Ignoring ranked match_found after cancel request', {
           opponentId: opponent.id,
           rankedSearching: state.rankedSearching,
           cancelledAt: state.rankedCancelRequestedAt,

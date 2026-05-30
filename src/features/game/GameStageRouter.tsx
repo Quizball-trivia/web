@@ -12,6 +12,7 @@ import { PartyQuizResultsScreen } from "@/features/party/PartyQuizResultsScreen"
 import { getSocket } from "@/lib/realtime/socket-client";
 import { logger } from "@/utils/logger";
 import { useGameStageTransitions } from "@/lib/match/useGameStageTransitions";
+import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
 import { resolveAvatarUrl } from "@/lib/avatars";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { tierFromRp } from "@/utils/rankedTier";
@@ -90,7 +91,7 @@ export function GameStageRouter() {
     clearRankedMatchmaking();
     resetGameSession();
     router.push("/play");
-  }, [clearRankedMatchmaking, realtimeMatch?.finalResults, resetGameSession, resetRealtime, router, socket]);
+  }, [clearRankedMatchmaking, realtimeMatch.finalResults, resetGameSession, resetRealtime, router, socket]);
 
   useEffect(() => {
     const inviteCode = realtimeLobby?.inviteCode;

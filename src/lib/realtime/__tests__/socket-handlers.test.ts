@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
+import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
 import { __setSocketOverride } from '../socket-client';
 import type { Socket } from 'socket.io-client';
 import type { ServerToClientEvents, ClientToServerEvents } from '../socket.types';
@@ -73,6 +74,14 @@ describe('registerSocketHandlers', () => {
     // Reset store to clean state
     useRealtimeMatchStore.getState().reset();
     useRealtimeMatchStore.setState({ selfUserId: null });
+    useRankedMatchmakingStore.setState({
+      rankedSearchDurationMs: null,
+      rankedSearchStartedAt: null,
+      rankedFoundOpponent: null,
+      rankedFoundMyRecentForm: null,
+      rankedSearching: false,
+      rankedCancelRequestedAt: null,
+    });
     getMeMock.mockClear();
     authState.setAuthenticated.mockClear();
 
@@ -152,6 +161,33 @@ describe('registerSocketHandlers', () => {
     const draft = useRealtimeMatchStore.getState().draft;
     expect(draft).not.toBeNull();
     expect(draft!.bans).toHaveProperty('user-456');
+  });
+
+  it('ignores ranked lobby state that arrives after local matchmaking cancel', () => {
+    registerSocketHandlers();
+    useRankedMatchmakingStore.getState().markRankedCancelRequested();
+
+    mockSocket.fire('lobby:state', {
+      lobbyId: 'ranked-late',
+      mode: 'ranked',
+      status: 'waiting',
+      inviteCode: null,
+      displayName: 'Ranked',
+      isPublic: false,
+      hostUserId: 'self-1',
+      settings: {
+        gameMode: 'ranked_sim',
+        friendlyRandom: true,
+        friendlyCategoryAId: null,
+        friendlyCategoryBId: null,
+      },
+      members: [
+        { userId: 'self-1', username: 'Self', avatarUrl: null, isReady: true, isHost: true },
+        { userId: 'opp-1', username: 'Opponent', avatarUrl: null, isReady: true, isHost: false },
+      ],
+    });
+
+    expect(useRealtimeMatchStore.getState().lobby).toBeNull();
   });
 
   it('patches ranked profile cache from match:final_results when rankedOutcome exists for self', () => {

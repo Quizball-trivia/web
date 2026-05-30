@@ -259,7 +259,7 @@ describe('GameStageRouter', () => {
     };
     realtimeMatchState.match = {
       ...realtimeMatchState.match,
-      matchId: null,
+      matchId: '',
     };
 
     render(<GameStageRouter />);
