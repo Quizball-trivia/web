@@ -211,6 +211,54 @@ describe('LiveSpecialQuestionPanel put-in-order submission', () => {
     });
   });
 
+  it('keeps submitted opponent order count consistent with authoritative found count', async () => {
+    renderPutInOrder({
+      question: fourItemPutInOrderQuestion,
+      roundResolved: true,
+      roundResult: {
+        matchId: 'match-1',
+        qIndex: 2,
+        questionKind: 'putInOrder',
+        reveal: {
+          kind: 'putInOrder',
+          correctOrder: fourItemPutInOrderQuestion.items.map((item, index) => ({
+            id: item.id,
+            label: { en: item.label },
+            details: item.details ? { en: item.details } : null,
+            emoji: item.emoji ?? null,
+            sortValue: index + 1,
+          })),
+        },
+        players: {},
+        phaseKind: 'normal',
+        phaseRound: 1,
+        deltas: { possessionDelta: 0, goalScoredBySeat: null, penaltyOutcome: null },
+      },
+      myRound: {
+        totalPoints: 20,
+        pointsEarned: 20,
+        isCorrect: false,
+        timeMs: 1000,
+        selectedIndex: null,
+        foundCount: 1,
+        submittedOrderIds: ['pele', 'ronaldo', 'messi', 'maradona'],
+      },
+      opponentRound: {
+        totalPoints: 20,
+        pointsEarned: 20,
+        isCorrect: false,
+        timeMs: 1000,
+        selectedIndex: null,
+        foundCount: 1,
+        submittedOrderIds: ['pele', 'ronaldo', 'maradona', 'messi'],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText('2/4')).not.toBeInTheDocument();
+    });
+  });
+
   it('renders a no-submit opponent as 0/N with all rows wrong', async () => {
     renderPutInOrder({
       question: fourItemPutInOrderQuestion,

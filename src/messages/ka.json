@@ -933,6 +933,8 @@
     "startMatch": "მატჩის დაწყება",
     "pts": "ქულა",
     "orderResults": "შედეგების დალაგება",
+    "positionsMatched": "დამთხვევა",
+    "orderPending": "მოლოდინში",
     "typeYourAnswerPlaceholder": "ჩაწერეთ თქვენი პასუხი",
     "typeYourAnswerAriaLabel": "ჩაწერეთ თქვენი პასუხი",
     "submitAnswer": "პასუხის გაგზავნა",

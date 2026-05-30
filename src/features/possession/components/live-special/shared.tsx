@@ -208,7 +208,7 @@ export function SpecialResultSummary({
               )}
             </div>
             <div className={`mt-1 flex min-h-4 items-center gap-2 ${isOpp ? 'flex-row-reverse' : 'justify-between'}`}>
-              <p className="truncate text-[10px] font-fun font-black uppercase text-white/50">{side.detail}</p>
+              <p className="min-w-0 text-[10px] font-fun font-black uppercase leading-tight text-white/50 [overflow-wrap:anywhere]">{side.detail}</p>
               {!singleAnswerRound && pointsText && (
                 <span
                   className="font-poppins shrink-0 tabular-nums text-brand-yellow"

@@ -14,7 +14,7 @@ interface GoalProgressBarProps {
   fillColor?: string;
 }
 
-const FILL_COLOR = '#38B60E';
+const FILL_COLOR = '#FFE500';
 const GOAL_COLOR = '#FB3101';
 
 /**

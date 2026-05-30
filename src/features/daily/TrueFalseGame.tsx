@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
 
 import type { TrueFalseSession } from "@/lib/domain/dailyChallenge";
+import { shuffleArray } from "@/lib/utils";
 import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
 import { useLocale } from "@/contexts/LocaleContext";
 import { QuitGameDialog } from "./QuitGameDialog";
@@ -42,6 +43,16 @@ export function TrueFalseGame({
   const { t } = useLocale();
 
   const currentQuestion = session.questions[currentQuestionIndex];
+  const answerOptions = useMemo(
+    () =>
+      currentQuestion
+        ? shuffleArray([
+            { value: true, label: currentQuestion.trueLabel },
+            { value: false, label: currentQuestion.falseLabel },
+          ])
+        : [],
+    [currentQuestion]
+  );
   const isAnswerCorrect = useMemo(
     () =>
       selectedAnswer !== null && currentQuestion
@@ -80,9 +91,12 @@ export function TrueFalseGame({
       }
 
       setSelectedAnswer(answer);
-      // The correct button's column decides which side the splash flies from:
-      // TRUE is the left cell, FALSE the right cell.
-      const from: "left" | "right" = currentQuestion.correctAnswer ? "left" : "right";
+      // The correct button's column decides which side the splash flies from.
+      // Options are shuffled, so derive the side from the rendered position.
+      const correctIndex = answerOptions.findIndex(
+        (option) => option.value === currentQuestion.correctAnswer
+      );
+      const from: "left" | "right" = correctIndex === 0 ? "left" : "right";
       if (answer !== null && answer === currentQuestion.correctAnswer) {
         setCorrectCount((previous) => previous + 1);
         fire("correct", from);
@@ -91,7 +105,7 @@ export function TrueFalseGame({
       }
       setShowResult(true);
     },
-    [currentQuestion, showResult, fire]
+    [currentQuestion, showResult, fire, answerOptions]
   );
 
   useEffect(() => {
@@ -174,10 +188,7 @@ export function TrueFalseGame({
 
         {/* Answer buttons — 2 column grid matching ranked style */}
         <div className="mt-3 grid grid-cols-2 gap-2.5">
-          {[
-            { value: true, label: currentQuestion.trueLabel },
-            { value: false, label: currentQuestion.falseLabel },
-          ].map((option) => {
+          {answerOptions.map((option) => {
             const isSelected = selectedAnswer === option.value;
             const shouldShowCorrect = showResult && option.value === currentQuestion.correctAnswer;
             const shouldShowWrong = showResult && isSelected && option.value !== currentQuestion.correctAnswer;

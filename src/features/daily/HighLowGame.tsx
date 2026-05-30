@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { HighLowSession } from "@/lib/domain/dailyChallenge";
+import { shuffleArray } from "@/lib/utils";
 import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
 import { QuitGameDialog } from "./QuitGameDialog";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
@@ -41,6 +42,24 @@ export function HighLowGame({
   const currentRound = session.rounds[currentRoundIndex];
   const currentMatchup = currentRound?.matchups[currentMatchupIndex];
 
+  // Randomize which option renders on the left so the higher value isn't always
+  // positionally predictable. Stable per matchup (keyed on its id) so it doesn't
+  // reshuffle on timer ticks. Correctness compares values, so display side is cosmetic.
+  const displaySides = useMemo(() => {
+    if (!currentMatchup) {
+      return null;
+    }
+    const swap = shuffleArray([false, true])[0];
+    const original = {
+      left: { name: currentMatchup.leftName, value: currentMatchup.leftValue },
+      right: { name: currentMatchup.rightName, value: currentMatchup.rightValue },
+    };
+    return swap
+      ? { left: original.right, right: original.left }
+      : original;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentMatchup?.id]);
+
   const advanceRound = useCallback(() => {
     if (currentRoundIndex >= session.rounds.length - 1) {
       setFinished(true);
@@ -68,25 +87,30 @@ export function HighLowGame({
     [roundResolved]
   );
 
-  const handlePick = (side: "left" | "right") => {
-    if (!currentMatchup || roundResolved) {
+  const handlePick = (displaySide: "left" | "right") => {
+    if (!currentMatchup || !displaySides || roundResolved) {
       return;
     }
 
-    const higherSide =
-      currentMatchup.leftValue > currentMatchup.rightValue ? "left" : "right";
-    const isCorrect = side === higherSide;
+    const pickedValue =
+      displaySide === "left" ? displaySides.left.value : displaySides.right.value;
+    const otherValue =
+      displaySide === "left" ? displaySides.right.value : displaySides.left.value;
+    const isCorrect = pickedValue >= otherValue;
+    // Which on-screen column holds the higher value (for the splash origin).
+    const higherDisplaySide =
+      displaySides.left.value >= displaySides.right.value ? "left" : "right";
 
     if (!isCorrect) {
       // Wrong: splash flies in from the side that was actually higher.
-      fire("wrong", higherSide);
+      fire("wrong", higherDisplaySide);
       resolveRound(false);
       return;
     }
 
     if (currentMatchupIndex >= currentRound.matchups.length - 1) {
       // Whole chain cleared: correct splash from the winning side.
-      fire("correct", higherSide);
+      fire("correct", higherDisplaySide);
       resolveRound(true);
       return;
     }
@@ -128,7 +152,7 @@ export function HighLowGame({
     return () => window.clearTimeout(timeout);
   }, [advanceRound, roundResolved]);
 
-  if (!currentRound || !currentMatchup) {
+  if (!currentRound || !currentMatchup || !displaySides) {
     return null;
   }
 
@@ -182,7 +206,7 @@ export function HighLowGame({
               {copy.pick}
             </span>
             <span style={{ ...poppins, fontSize: 'clamp(18px, 2.5vw, 32px)', fontWeight: 700 }}>
-              {currentMatchup.leftName}
+              {displaySides.left.name}
             </span>
           </button>
 
@@ -204,7 +228,7 @@ export function HighLowGame({
               {copy.pick}
             </span>
             <span style={{ ...poppins, fontSize: 'clamp(18px, 2.5vw, 32px)', fontWeight: 700 }}>
-              {currentMatchup.rightName}
+              {displaySides.right.name}
             </span>
           </button>
         </div>

@@ -887,6 +887,8 @@
     "startMatch": "Start match",
     "pts": "PTS",
     "orderResults": "Order Results",
+    "positionsMatched": "Matched",
+    "orderPending": "Pending",
     "typeYourAnswerPlaceholder": "TYPE YOUR ANSWER",
     "typeYourAnswerAriaLabel": "Type your answer",
     "submitAnswer": "Submit answer",

@@ -170,13 +170,16 @@ export function WelcomeHero({ sim, duelsCount, onKickOff }: WelcomeHeroProps) {
                       className="relative w-[78%] max-w-[520px]"
                     >
                       <Image src="/assets/goal.png" alt="Goal celebration" width={760} height={538} className="w-full h-auto object-contain" />
+                      {/* Rendered at peak size and scaled 1/4.6 -> 1 -> 1/4.6 so
+                          the ball stays crisp at the apex (real pixels, not an
+                          upscaled tiny render). */}
                       <motion.div
-                        className="absolute left-1/2 top-1/2 flex size-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center md:size-24"
-                        initial={{ scale: 1, y: 10, opacity: 0.94 }}
-                        animate={{ scale: [1, 4.6, 1], y: [10, -32, 0], opacity: [0.94, 1, 1] }}
+                        className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center"
+                        initial={{ scale: 1 / 4.6, y: 10, opacity: 0.94 }}
+                        animate={{ scale: [1 / 4.6, 1, 1 / 4.6], y: [10, -32, 0], opacity: [0.94, 1, 1] }}
                         transition={{ duration: 1.85, times: [0, 0.45, 1], ease: 'easeInOut' }}
                       >
-                        <Image src="https://lfbwhxvwubzeqkztghok.supabase.co/storage/v1/object/public/imgs/world-cup-style-ball-cartoon-transparent.png" alt="" width={256} height={256} unoptimized className="size-12 object-contain drop-shadow-[0_0_14px_rgba(255,255,255,0.32)] md:size-14" />
+                        <Image src="/assets/brand/goal-ball.png" alt="" width={512} height={512} className="size-[221px] object-contain drop-shadow-[0_0_14px_rgba(255,255,255,0.32)] md:size-[258px]" />
                       </motion.div>
                     </motion.div>
                   </motion.div>

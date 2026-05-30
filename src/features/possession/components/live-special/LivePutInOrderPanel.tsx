@@ -158,6 +158,22 @@ function PutInOrderCompactColumn({
   const totalCount = totalCountOverride ?? itemIds.length;
   const accentClass = tone === 'green' ? 'text-brand-green' : 'text-brand-red-soft';
 
+  // Pre-compute which item indices render as "correct position" so the JSX map
+  // below stays pure (no counter mutation during render). Only the first
+  // `matchedCountOverride` position-matches are highlighted; the rest show as
+  // wrong even if they happen to sit in a matching slot.
+  const correctPositionIndices = new Set<number>();
+  if (!forceAllWrong) {
+    let counted = 0;
+    itemIds.forEach((itemId, index) => {
+      if (correctById.get(itemId)?.index !== index) return;
+      const withinAuthoritativeCount =
+        typeof matchedCountOverride !== 'number' || counted < matchedCountOverride;
+      if (withinAuthoritativeCount) correctPositionIndices.add(index);
+      counted += 1;
+    });
+  }
+
   return (
     <div className="grid min-w-0 grid-rows-[1.1rem_auto] gap-1.5">
       <div className="grid grid-cols-[minmax(0,1fr)_2.5rem] items-center gap-2">
@@ -179,7 +195,7 @@ function PutInOrderCompactColumn({
           {itemIds.map((itemId, index) => {
             const item = itemById.get(itemId);
             const correctInfo = correctById.get(itemId);
-            const isCorrectPosition = !forceAllWrong && correctInfo?.index === index;
+            const isCorrectPosition = correctPositionIndices.has(index);
             return (
               <div
                 key={`${title}-${itemId}-${index}`}
@@ -533,7 +549,7 @@ export function LivePutInOrderPanel({
           points: putOrderPlayerPoints,
           badge: putOrderPlayerBadge,
           status: putOrderPlayerStatus,
-          detail: 'positions matched',
+          detail: t('possession.positionsMatched'),
         }}
         opponent={{
           label: 'Opp',
@@ -542,7 +558,7 @@ export function LivePutInOrderPanel({
           points: putOrderOpponentPoints,
           badge: putOrderOpponentBadge,
           status: putOrderOpponentStatus,
-          detail: roundResolved ? 'positions matched' : 'order pending',
+          detail: roundResolved ? t('possession.positionsMatched') : t('possession.orderPending'),
         }}
       />
 
@@ -552,8 +568,8 @@ export function LivePutInOrderPanel({
           opponentOrderIds={opponentResultOrderIds}
           playerForceAllWrong={playerDidNotSubmit}
           opponentForceAllWrong={opponentDidNotSubmit}
-          playerMatchedCount={playerDidNotSubmit ? 0 : undefined}
-          opponentMatchedCount={opponentDidNotSubmit ? 0 : undefined}
+          playerMatchedCount={playerDidNotSubmit ? 0 : playerCorrectCount}
+          opponentMatchedCount={opponentDidNotSubmit ? 0 : opponentCorrectCount}
           totalCount={correctOrderIds.length}
           correctById={correctById}
           itemById={itemById}

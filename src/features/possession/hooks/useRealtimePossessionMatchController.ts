@@ -464,6 +464,18 @@ export function useRealtimePossessionMatchController({
     state.roundResult,
   ]);
 
+  // "Who am I?" (clues) pushes the pitch off-screen on mobile. Once the answer
+  // is acked, surface a key that changes per question so the viewport can scroll
+  // the pitch back into view for the result + fly animation.
+  //
+  // NOTE: put-in-order is deliberately excluded — its correct-answer reveal
+  // renders below the pitch, and scrolling up hides it. Left as-is until we have
+  // a layout that can show both the reveal and the pitch animation together.
+  const autoScrollKey =
+    answerAck && answerAck.questionKind === 'clues'
+      ? `${answerAck.questionKind}:${answerAck.qIndex}`
+      : null;
+
   const viewportModel: PossessionViewportModel | null = !possessionMatch.matchId || !possessionState
     ? null
     : {
@@ -557,6 +569,7 @@ export function useRealtimePossessionMatchController({
         }
         : null,
       muted,
+      autoScrollKey,
     };
 
   const questionAreaModel: PossessionQuestionAreaModel | null = !possessionMatch.matchId || !possessionState

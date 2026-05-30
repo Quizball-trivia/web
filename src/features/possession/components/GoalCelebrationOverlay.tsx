@@ -4,6 +4,10 @@ import Image from 'next/image';
 import { motion } from 'motion/react';
 import { useLocale } from '@/contexts/LocaleContext';
 
+/** How much the ball grows at the apex of its rise. The image is rendered at
+ *  this multiple of its resting size so the peak frame uses real pixels. */
+const GOAL_BALL_PEAK_SCALE = 4.6;
+
 interface GoalCelebrationOverlayProps {
   scorerName?: string;
   isMeScorer?: boolean;
@@ -119,21 +123,30 @@ export function GoalCelebrationOverlay({ ballSizePx = 32, ballCenterPx }: GoalCe
 
       {/* Ball: rises + enlarges, then HOLDS up while the GOAL text shows. On
           exit it descends slowly while scaling back down, overlapping with the
-          text fade, and ends in its starting position. */}
+          text fade, and ends in its starting position.
+
+          The image is rendered at its PEAK display size (ballSizePx * peak) and
+          the animation scales from small -> 1 -> small. This way the browser
+          always has full-resolution pixels at the peak instead of upscaling a
+          tiny render, which kept the ball crisp as it rises. */}
       <motion.div
         className="absolute z-30 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center"
         style={{
-          width: ballSizePx,
-          height: ballSizePx,
+          width: ballSizePx * GOAL_BALL_PEAK_SCALE,
+          height: ballSizePx * GOAL_BALL_PEAK_SCALE,
           left: ballCenterPx ? ballCenterPx.x : '50%',
           top: ballCenterPx ? ballCenterPx.y : '50%',
         }}
-        initial={{ scale: 1, y: 10, opacity: 0.94 }}
-        animate={{ scale: [1, 4.6, 1], y: [10, -32, 0], opacity: [0.94, 1, 1] }}
-        exit={{ opacity: 1, scale: 1, transition: { duration: 0.25 } }}
+        initial={{ scale: 1 / GOAL_BALL_PEAK_SCALE, y: 10, opacity: 0.94 }}
+        animate={{
+          scale: [1 / GOAL_BALL_PEAK_SCALE, 1, 1 / GOAL_BALL_PEAK_SCALE],
+          y: [10, -32, 0],
+          opacity: [0.94, 1, 1],
+        }}
+        exit={{ opacity: 1, scale: 1 / GOAL_BALL_PEAK_SCALE, transition: { duration: 0.25 } }}
         transition={{ duration: 1.85, times: [0, 0.45, 1], ease: 'easeInOut' }}
       >
-        <Image src="https://lfbwhxvwubzeqkztghok.supabase.co/storage/v1/object/public/imgs/world-cup-style-ball-cartoon-transparent.png" alt="" width={256} height={256} unoptimized className="size-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.32)]" />
+        <Image src="/assets/brand/goal-ball.png" alt="" width={512} height={512} className="size-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.32)]" />
       </motion.div>
     </motion.div>
   );

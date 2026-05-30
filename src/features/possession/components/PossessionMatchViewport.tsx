@@ -1,6 +1,6 @@
 'use client';
 
-import { type ComponentProps, type ReactNode, useLayoutEffect, useRef, useState } from 'react';
+import { type ComponentProps, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { GoalCelebrationOverlay } from './GoalCelebrationOverlay';
@@ -35,6 +35,13 @@ export interface PossessionViewportModel {
   goalCelebration: GoalCelebrationState | null;
   penaltySplash: PenaltySplashModel | null;
   muted: boolean;
+  /**
+   * Changes whenever the player answers a tall special question (put-in-order /
+   * clues), where the pitch is scrolled off-screen on mobile. The viewport
+   * scrolls the pitch back into view so the result + fly animation are visible.
+   * Null when no scroll is needed.
+   */
+  autoScrollKey?: string | null;
 }
 
 interface PossessionMatchViewportProps {
@@ -133,7 +140,7 @@ function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
 }
 
 export function PossessionMatchViewport({ model, children }: PossessionMatchViewportProps) {
-  const { showMainUI, hud, pitchProps, goalCelebration, penaltySplash, muted } = model;
+  const { showMainUI, hud, pitchProps, goalCelebration, penaltySplash, muted, autoScrollKey } = model;
   const celebrationOwnsBall = Boolean(goalCelebration);
   const {
     containerRef: desktopPitchRef,
@@ -145,6 +152,16 @@ export function PossessionMatchViewport({ model, children }: PossessionMatchView
     ballSizePx: mobileBallSizePx,
     ballCenterPx: mobileBallCenterPx,
   } = usePitchBallMetrics('landscape', pitchProps);
+
+  // After answering a tall special question, scroll the pitch back into view so
+  // the result + fly animation are visible. Mobile only — the `lg:hidden` pitch
+  // is the one in the scrollable column; on desktop the pitch is always visible.
+  useEffect(() => {
+    if (!autoScrollKey) return;
+    const pitch = mobilePitchRef.current;
+    if (!pitch || pitch.offsetParent === null) return; // hidden (desktop layout)
+    pitch.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [autoScrollKey, mobilePitchRef]);
 
   return (
     <>

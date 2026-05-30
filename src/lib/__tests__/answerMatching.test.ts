@@ -39,6 +39,18 @@ describe("answerMatching", () => {
     expect(fuzzyMatchesAnswer("capelo", ["Fabio Capello"])).toBe(true);
   });
 
+  it("accepts common club abbreviations in either direction", () => {
+    const groups = [
+      { display: "Manchester United", acceptedAnswers: ["Man United", "Man Utd"] },
+      { display: "Manchester City", acceptedAnswers: ["Man City"] },
+    ];
+
+    expect(countdownMatch("Manchester United", groups, [])).toBe("Manchester United");
+    expect(countdownMatch("Manchester Utd", groups, [])).toBe("Manchester United");
+    expect(countdownMatch("Man United", groups, [])).toBe("Manchester United");
+    expect(countdownMatch("Manchester", groups, [])).toBeNull();
+  });
+
   it("rejects duplicated short aliases", () => {
     const groups = [
       { display: "Marco Silva", acceptedAnswers: ["Marco Silva", "mar"] },
