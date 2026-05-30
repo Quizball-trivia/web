@@ -88,11 +88,13 @@ describe('gameSounds', () => {
 
     expect(HowlMock).toHaveBeenCalledWith(expect.objectContaining({
       format: ['m4a'],
-      html5: true,
       loop: true,
       preload: true,
       src: ['/sounds/gameplay_soundtrack.m4a'],
       volume: 0.025,
+    }));
+    expect(HowlMock).toHaveBeenCalledWith(expect.not.objectContaining({
+      html5: true,
     }));
     expect(howlInstances[0]?.volume).toHaveBeenCalledWith(0.025);
     expect(howlInstances[0]?.play).toHaveBeenCalledTimes(1);
@@ -106,11 +108,13 @@ describe('gameSounds', () => {
     playBgm('search');
 
     expect(HowlMock).toHaveBeenCalledWith(expect.objectContaining({
-      html5: true,
       loop: true,
       preload: true,
       src: ['/sounds/quizball-search.mp3'],
       volume: 0.025,
+    }));
+    expect(HowlMock).toHaveBeenCalledWith(expect.not.objectContaining({
+      html5: true,
     }));
     expect(howlInstances[0]?.volume).toHaveBeenCalledWith(0.025);
     expect(howlInstances[0]?.play).toHaveBeenCalledTimes(1);

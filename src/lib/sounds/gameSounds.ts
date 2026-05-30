@@ -120,8 +120,7 @@ function getBgm(name: BgmName): Howl {
       volume: getBgmVolume(name),
       loop: true,
       preload: true,
-      ...(name === 'kickoff' ? { format: ['m4a'], html5: true } : {}),
-      ...(name === 'search' ? { html5: true } : {}),
+      ...(name === 'kickoff' ? { format: ['m4a'] } : {}),
     });
   }
   return bgmInstances[name]!;
