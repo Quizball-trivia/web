@@ -171,11 +171,13 @@ export function ModeSelectionScreen({
         <div className="relative z-10 p-4 md:p-7">
           {/* ── Desktop layout ── */}
           <div className="hidden lg:flex items-start gap-6">
-            {/* Left: Title + Play */}
+            {/* Left: Title + Play. Title is capped at the trophy's left edge
+                (~40% of the card) so long locales (e.g. Georgian) wrap onto a
+                second line instead of running under the absolute trophy. */}
             <div className="flex-1 min-w-0">
               <h1
-                className="text-[clamp(1.75rem,3vw,2.75rem)] uppercase text-white break-words [hyphens:auto]"
-                style={rankedTitleStyle}
+                className="max-w-[20rem] text-[clamp(1.75rem,3vw,2.75rem)] uppercase text-white break-words [hyphens:auto]"
+                style={{ ...rankedTitleStyle, lineHeight: 1.15 }}
               >
                 {t('play.rankedMatch')}
               </h1>

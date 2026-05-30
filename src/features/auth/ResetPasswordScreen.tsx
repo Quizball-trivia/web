@@ -51,9 +51,14 @@ export function ResetPasswordScreen() {
           return;
         }
 
-        const refreshed = await refreshWithToken(tokens.refreshToken);
-        // Clear tokens from the URL regardless, so they don't linger in history.
-        window.history.replaceState({}, document.title, window.location.pathname);
+        let refreshed: boolean;
+        try {
+          refreshed = await refreshWithToken(tokens.refreshToken);
+        } finally {
+          // Clear tokens from the URL regardless of refresh outcome (success,
+          // failure, or throw), so they don't linger in browser history.
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
 
         if (!refreshed) {
           logger.warn('Reset password: failed to establish recovery session');

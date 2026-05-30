@@ -82,6 +82,7 @@ export function usePartyScoreFlights({
   const liveDeltaShownKeysRef = useRef(new Set<string>());
   const liveFlightShownKeysRef = useRef(new Set<string>());
   const liveDeltaTimeoutsRef = useRef(new Map<string, number>());
+  const flightTimersRef = useRef(new Set<number>());
   const previousPartyTotalsRef = useRef(new Map<string, number>());
   const previousPartyAnsweredRef = useRef(new Map<string, boolean>());
   const pendingDisplayedTotalsRef = useRef(new Map<string, number>());
@@ -158,7 +159,8 @@ export function usePartyScoreFlights({
     }
 
     setScoreFlights((current) => [...current, flight]);
-    window.setTimeout(() => {
+    const timeoutId = window.setTimeout(() => {
+      flightTimersRef.current.delete(timeoutId);
       if (params.targetTotal != null) {
         commitDisplayedTotal(
           params.userId,
@@ -167,6 +169,7 @@ export function usePartyScoreFlights({
       }
       setScoreFlights((current) => current.filter((item) => item.id !== id));
     }, failed ? PARTY_FAILED_FLIGHT_MS + 120 : PARTY_SUCCESS_FLIGHT_MS + 120);
+    flightTimersRef.current.add(timeoutId);
     return true;
   }, [commitDisplayedTotal]);
 
@@ -237,6 +240,12 @@ export function usePartyScoreFlights({
     liveFlightShownKeysRef.current.clear();
     previousPartyTotalsRef.current.clear();
     previousPartyAnsweredRef.current.clear();
+    // Cancel any in-flight commit timers so a flight scheduled in the previous
+    // match can't fire a stale total into the new match.
+    for (const timeoutId of flightTimersRef.current) {
+      window.clearTimeout(timeoutId);
+    }
+    flightTimersRef.current.clear();
   }, [partyState?.matchId]);
 
   useEffect(() => {
@@ -245,6 +254,10 @@ export function usePartyScoreFlights({
         window.clearTimeout(timeoutId);
       }
       liveDeltaTimeoutsRef.current.clear();
+      for (const timeoutId of flightTimersRef.current) {
+        window.clearTimeout(timeoutId);
+      }
+      flightTimersRef.current.clear();
     };
   }, []);
 

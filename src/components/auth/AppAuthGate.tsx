@@ -7,6 +7,7 @@ import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { isOnboardingComplete } from "@/lib/auth/onboarding";
 import { consumePostAuthRedirect, rememberPostAuthRedirect } from "@/lib/auth/postAuthRedirect";
 import { useLocale } from "@/contexts/LocaleContext";
+import { stopBgm } from "@/lib/sounds/gameSounds";
 
 type AppAuthGateProps = {
   children: React.ReactNode;
@@ -31,6 +32,7 @@ export default function AppAuthGate({ children }: AppAuthGateProps) {
   useEffect(() => {
     if (isDevelopmentDevRoute) return;
     if (status === "anonymous") {
+      stopBgm(0);
       rememberPostAuthRedirect(pathname);
       router.replace("/");
     }

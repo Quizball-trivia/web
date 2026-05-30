@@ -25,6 +25,9 @@ export function DailyChallengeCompleteModal({
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
       <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="daily-challenge-complete-title"
         initial={{ opacity: 0, scale: 0.9, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 280, damping: 22 }}
@@ -34,7 +37,7 @@ export function DailyChallengeCompleteModal({
           <Trophy className="size-8 text-brand-yellow" />
         </div>
 
-        <h2 className="font-poppins text-[22px] font-semibold uppercase text-white sm:text-[26px]">
+        <h2 id="daily-challenge-complete-title" className="font-poppins text-[22px] font-semibold uppercase text-white sm:text-[26px]">
           {t("dailyGames.challengeComplete")}
         </h2>
         <p className="mt-1 font-poppins text-sm font-medium text-white/80">{title}</p>

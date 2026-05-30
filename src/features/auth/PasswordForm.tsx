@@ -39,11 +39,14 @@ export function PasswordForm({
   const invalid = hasErrors(errors);
   const missingRequiredFields = !password || !confirmPassword;
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setTouched(true);
     if (invalid || submitting) return;
-    void onSubmit(password);
+    // Await so a rejecting onSubmit (the JSDoc invites callers to throw to
+    // surface a submit error) is handled here rather than becoming an
+    // unhandled promise rejection. The parent owns the `submitting` lifecycle.
+    await onSubmit(password);
   };
 
   return (

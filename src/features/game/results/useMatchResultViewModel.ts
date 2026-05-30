@@ -18,7 +18,7 @@
  * pins the fire-once contract end-to-end via the wrapper.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useHeadToHead } from '@/lib/queries/stats.queries';
 import { applyXpReward, getMatchXpReward } from '@/lib/domain/matchXp';
 import { getTierVisual } from '@/utils/tierVisuals';
@@ -198,14 +198,17 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
   ]);
 
   // --- Analytics: track match outcome once on mount ---
-  // Guarded by a `trackedMatch` state flag so the empty-deps effect
-  // can't fire twice (Strict Mode double-invocation, fast refresh, etc).
-  // Do NOT add to the dep array — the closure-captured values at first
-  // render are what we want to report.
-  const [trackedMatch, setTrackedMatch] = useState(false);
+  // Guarded by a `trackedMatch` ref so the empty-deps effect can't fire
+  // twice within a mount (Strict Mode effect double-invocation, fast
+  // refresh, etc). A ref (vs state) updates synchronously, so the second
+  // Strict Mode invocation sees the flag already set. Matches the
+  // `trackedStartRef` pattern used in OnboardingFlow. Do NOT add to the
+  // dep array — the closure-captured values at first render are what we
+  // want to report.
+  const trackedMatchRef = useRef(false);
   useEffect(() => {
-    if (trackedMatch) return;
-    setTrackedMatch(true);
+    if (trackedMatchRef.current) return;
+    trackedMatchRef.current = true;
     trackMatchResultsViewed(matchType, playerWon, playerScore, opponentScore, rpChange ?? undefined);
     if (leveledUp && projectedProgression) {
       trackLevelUp(projectedProgression.level);
