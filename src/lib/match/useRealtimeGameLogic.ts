@@ -41,6 +41,8 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     oppTotalPoints: state.match?.oppTotalPoints ?? 0,
     opponentRecentPoints: state.match?.opponentRecentPoints ?? 0,
     serverTimeOffsetMs: state.match?.serverTimeOffsetMs ?? null,
+    mode: state.match?.mode ?? null,
+    variant: state.match?.variant ?? null,
   })));
   const selfUserId = useRealtimeMatchStore((state) => state.selfUserId);
   const matchPaused = useRealtimeMatchStore((state) => state.matchPaused);
@@ -433,15 +435,22 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     if (trackedAckQIndexRef.current === answerAck.qIndex) return;
     if (answerSubmitElapsedRef.current === null) return;
     trackedAckQIndexRef.current = answerAck.qIndex;
-    trackAnswerSubmitted(
-      String(currentQuestion.qIndex),
-      answerAck.isCorrect,
-      answerSubmitElapsedRef.current,
-      currentQuestion.qIndex,
-      currentQuestion.question.difficulty,
-      currentQuestion.question.categoryName,
-    );
-  }, [answerAck, currentQuestion]);
+    trackAnswerSubmitted({
+      questionId: currentQuestion.question.id,
+      isCorrect: answerAck.isCorrect,
+      timeMs: answerSubmitElapsedRef.current,
+      questionIndex: currentQuestion.qIndex,
+      difficulty: currentQuestion.question.difficulty,
+      categoryName: currentQuestion.question.categoryName,
+      matchId: matchSlice.matchId ?? undefined,
+      questionKind: currentQuestion.question.kind,
+      phaseKind: currentQuestion.phaseKind ?? answerAck.phaseKind,
+      mode: matchSlice.mode ?? undefined,
+      variant: matchSlice.variant ?? undefined,
+      pointsEarned: answerAck.pointsEarned,
+      selectedIndex: answerAck.selectedIndex,
+    });
+  }, [answerAck, currentQuestion, matchSlice.matchId, matchSlice.mode, matchSlice.variant]);
 
   return {
     state: {

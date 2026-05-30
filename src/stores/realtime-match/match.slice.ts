@@ -424,15 +424,21 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
           const startedAt = q.playableAt ? new Date(q.playableAt).getTime() : 0;
           const syncedNowMs = Date.now() + (q.serverTimeOffsetMs ?? state.match.serverTimeOffsetMs ?? 0);
           const timeMs = startedAt ? Math.max(0, syncedNowMs - startedAt) : 0;
-          trackAnswerSubmitted(
-            q.question.id,
-            payload.isCorrect,
+          trackAnswerSubmitted({
+            questionId: q.question.id,
+            isCorrect: payload.isCorrect,
             timeMs,
-            payload.qIndex,
-            q.question.difficulty,
-            q.question.categoryName,
-            payload.matchId,
-          );
+            questionIndex: payload.qIndex,
+            difficulty: q.question.difficulty,
+            categoryName: q.question.categoryName,
+            matchId: payload.matchId,
+            questionKind: q.question.kind,
+            phaseKind: q.phaseKind ?? payload.phaseKind,
+            mode: state.match.mode,
+            variant: state.match.variant,
+            pointsEarned: payload.pointsEarned,
+            selectedIndex: payload.selectedIndex,
+          });
         }
       } catch {
         /* analytics best-effort */
@@ -687,6 +693,14 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
             opponentScore: oppScore,
             rpChange: selfId ? payload.rankedOutcome?.byUserId?.[selfId]?.deltaRp : undefined,
             opponentIsAi: isAiOpponent,
+            durationSec: Math.round(payload.durationMs / 1000),
+            questionsAnswered: payload.totalQuestions,
+            correctAnswers: myPlayer?.correctAnswers,
+            goalsFor: myPlayer?.goals,
+            goalsAgainst: oppPlayer?.goals,
+            penaltyGoalsFor: myPlayer?.penaltyGoals,
+            penaltyGoalsAgainst: oppPlayer?.penaltyGoals,
+            winnerDecisionMethod: payload.winnerDecisionMethod ?? null,
           });
         } catch {
           /* analytics best-effort */

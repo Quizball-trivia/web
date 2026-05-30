@@ -1,5 +1,6 @@
 import { API_BASE_URL } from "@/lib/config";
 import { getAccessToken } from "@/lib/auth/tokenStorage";
+import { trackApiError } from "@/lib/analytics/game-events";
 import type { paths } from "@/types/api.generated";
 
 export type HttpMethod = "get" | "post" | "put" | "patch" | "delete";
@@ -169,6 +170,17 @@ async function request<M extends HttpMethod, P extends PathsWithMethod<M>>(
   const data = await parseResponse(response);
 
   if (!response.ok) {
+    // Analytics: capture API failures for funnel/error analysis.
+    // `code` from the standard error envelope `{code, message, …}` falls
+    // back to undefined when the response shape is different.
+    try {
+      const codeFromBody = data && typeof data === 'object' && 'code' in data && typeof (data as { code: unknown }).code === 'string'
+        ? (data as { code: string }).code
+        : undefined;
+      trackApiError(String(path), response.status, codeFromBody);
+    } catch {
+      /* analytics best-effort */
+    }
     throw new ApiError("Request failed", response.status, data);
   }
 

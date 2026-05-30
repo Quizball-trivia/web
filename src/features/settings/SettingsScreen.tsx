@@ -28,6 +28,7 @@ import { PasswordForm } from "@/features/auth/PasswordForm";
 import { toast } from "sonner";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { useLocale } from "@/contexts/LocaleContext";
+import { trackSettingsOpened } from "@/lib/analytics/game-events";
 import { resetOwnOnboarding, updateMe } from "@/lib/api/endpoints";
 import { startGeorgianPhoneLink, resetPassword, verifyGeorgianPhoneLink } from "@/lib/auth/auth.service";
 import { normalizeGeorgianPhone, validateGeorgianPhone, validateOtp } from "@/lib/auth/validation";
@@ -59,6 +60,14 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const { logout, user, setAuthenticated } = useAuthStore();
   const { locale, setLocale, t } = useLocale();
   const phoneAuthAvailability = useGeorgianPhoneAuthAvailability();
+
+  // Analytics: fire once per mount so re-renders don't double-count.
+  const settingsOpenedTrackedRef = useRef(false);
+  useEffect(() => {
+    if (settingsOpenedTrackedRef.current) return;
+    settingsOpenedTrackedRef.current = true;
+    try { trackSettingsOpened(); } catch { /* best-effort */ }
+  }, []);
 
   // Preferences state - initialized from storage
   const [soundEnabled, setSoundEnabled] = useState(DEFAULT_PREFERENCES.soundEnabled);

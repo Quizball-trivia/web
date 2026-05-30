@@ -10,6 +10,7 @@ import { CategorySummary } from "@/lib/domain";
 import type { LobbyGameMode, LobbySettings as LobbySettingsState, LobbyState } from "@/lib/realtime/socket.types";
 import { logger } from "@/utils/logger";
 import { useLocale } from "@/contexts/LocaleContext";
+import { trackCategorySelected } from "@/lib/analytics/game-events";
 
 interface LobbySettingsProps {
   isHost: boolean;
@@ -327,6 +328,13 @@ export function LobbySettings({
 
     const next = selectedCategoryId === catId ? null : catId;
     setSelectedCategoryId(next);
+    // Analytics: only emit when a category is being selected (not when
+    // the user un-selects). The selection set is single-category here, so
+    // each `next != null` corresponds to one user pick.
+    if (next) {
+      const picked = categories.find((c) => c.id === next);
+      try { trackCategorySelected(next, picked?.name ?? next); } catch { /* best-effort */ }
+    }
 
     // Emit category update only from explicit user interactions.
     const pending = pendingChangesRef.current;

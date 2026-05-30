@@ -1,11 +1,13 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { Award, Flame, Star, Trophy, Users, Zap, type LucideIcon } from 'lucide-react';
 import { motion } from 'motion/react';
 
 import type { AchievementUnlockPayload } from '@/lib/realtime/socket.types';
 import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
+import { trackAchievementUnlocked } from '@/lib/analytics/game-events';
 
 function resolveI18n(field: Record<string, string>, locale: string): string {
   return field[locale] ?? field.en ?? Object.values(field)[0] ?? '';
@@ -39,6 +41,26 @@ export function AchievementUnlockStrip({
   className,
 }: AchievementUnlockStripProps) {
   const { locale, t } = useLocale();
+  // Fire `achievement_unlocked` once per (achievement.id, mount) so that
+  // re-renders or post-results refetches don't double-count. We use a ref
+  // set keyed by id and only emit for newly-seen ids.
+  const trackedRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    for (const achievement of achievements) {
+      if (!achievement.unlocked) continue;
+      if (trackedRef.current.has(achievement.id)) continue;
+      trackedRef.current.add(achievement.id);
+      try {
+        trackAchievementUnlocked(
+          achievement.id,
+          achievement.title.en ?? Object.values(achievement.title)[0] ?? achievement.id,
+        );
+      } catch {
+        /* analytics best-effort */
+      }
+    }
+  }, [achievements]);
+
   if (achievements.length === 0) return null;
 
   return (

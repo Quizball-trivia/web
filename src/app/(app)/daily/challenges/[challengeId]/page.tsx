@@ -83,8 +83,24 @@ export default function ChallengePage() {
   }, [queryClient]);
 
   const handleBack = useCallback(() => {
+    // Treat "back" before completion as a quit. handleComplete sets
+    // completeOnceRef.current = true; we only fire `daily_challenge_quit`
+    // when no completion has been recorded for this session.
+    if (challengeType && !completeOnceRef.current) {
+      try {
+        trackDailyChallengeQuit({
+          challengeType,
+          // Per-game progress isn't exposed at the page level (each game
+          // owns its own state). Leaving the optional fields off keeps
+          // the event durable; product can derive partial completion from
+          // session-start timing + return events.
+        });
+      } catch {
+        /* analytics best-effort */
+      }
+    }
     router.replace("/daily/challenges");
-  }, [router]);
+  }, [challengeType, router]);
 
   const handleComplete = useCallback(
     (score: number) => {

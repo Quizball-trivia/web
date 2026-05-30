@@ -17,6 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { MoneyDropSession } from "@/lib/domain/dailyChallenge";
 import { useLocale } from "@/contexts/LocaleContext";
+import { trackLifelineUsed } from "@/lib/analytics/game-events";
 
 interface MoneyDropGameProps {
   session: MoneyDropSession;
@@ -311,6 +312,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
   const handleFiftyFifty = () => {
     if (fiftyFiftyUsed || showResult || hasConfirmed) return;
     setFiftyFiftyUsed(true);
+    trackLifelineUsed(undefined, '5050');
     const wrongAnswers = currentQuestion.options
       .map((_, idx) => idx)
       .filter((idx) => idx !== currentQuestion.correctAnswerIndex);
@@ -327,6 +329,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
     // Only consume the lifeline when this question actually has clue content.
     if (hasClue) {
       setClueUsed(true);
+      trackLifelineUsed(undefined, 'clue');
     }
     setShowClue(true);
   };
@@ -336,6 +339,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
     timeoutHandledRef.current = true;
     deadlineRef.current = null;
     setChangeQuestionUsed(true);
+    trackLifelineUsed(undefined, 'skip');
     setCurrentQuestionIndex((prev) => prev + 1);
     setBets([0, 0, 0, 0]);
     setHiddenAnswers([]);

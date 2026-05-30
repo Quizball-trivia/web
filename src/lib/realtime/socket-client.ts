@@ -3,7 +3,12 @@ import { API_BASE_URL } from '@/lib/config';
 import { getAccessToken } from '@/lib/auth/tokenStorage';
 import { refresh } from '@/lib/auth/auth.service';
 import { logger } from '@/utils/logger';
+import { trackSocketConnectionFailed, trackSocketReconnected } from '@/lib/analytics/game-events';
 import type { ClientToServerEvents, ServerToClientEvents } from './socket.types';
+
+// Socket-uptime accounting for analytics: timestamp of the most recent
+// disconnect (if any) so we can compute downtime on the next connect.
+let lastDisconnectAtMs: number | null = null;
 
 let socketInstance: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
 let socketOverride: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
@@ -126,12 +131,20 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
   });
   socket.on('connect', () => {
     logger.info('Socket connected', { socketId: socket.id });
+    // Analytics: only count as a reconnect when we had a prior disconnect.
+    if (lastDisconnectAtMs !== null) {
+      const downtimeSec = Math.max(0, Math.round((Date.now() - lastDisconnectAtMs) / 1000));
+      lastDisconnectAtMs = null;
+      try { trackSocketReconnected(downtimeSec); } catch { /* best-effort */ }
+    }
   });
   socket.on('disconnect', (reason) => {
     logger.warn('Socket disconnected', { reason });
+    lastDisconnectAtMs = Date.now();
   });
   socket.on('connect_error', (error) => {
     logger.warn('Socket connect error', { message: error.message });
+    try { trackSocketConnectionFailed(error.message); } catch { /* best-effort */ }
     if (isAuthConnectError(error.message)) {
       void recoverSocketAuthAndReconnect(socket);
     }
