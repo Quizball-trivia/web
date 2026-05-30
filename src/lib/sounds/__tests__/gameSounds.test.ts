@@ -66,10 +66,23 @@ describe('gameSounds', () => {
     expect(howlInstances[0]?.play).toHaveBeenCalledTimes(1);
   });
 
+  it('uses a louder volume for ranked correct-answer sounds', async () => {
+    const { playSfx } = await import('../gameSounds');
+
+    playSfx('correctRanked');
+
+    expect(HowlMock).toHaveBeenCalledWith(expect.objectContaining({
+      preload: true,
+      src: ['/sounds/correct_ranked.mp3'],
+      volume: 0.45,
+    }));
+    expect(howlInstances[0]?.play).toHaveBeenCalledTimes(1);
+  });
+
   it('uses lowered kickoff soundtrack volume', async () => {
     const { GAME_SOUND_VOLUME, playBgm } = await import('../gameSounds');
 
-    expect(GAME_SOUND_VOLUME.kickoffBgm).toBe(0.32);
+    expect(GAME_SOUND_VOLUME.kickoffBgm).toBe(0.025);
 
     playBgm('kickoff');
 
@@ -79,9 +92,27 @@ describe('gameSounds', () => {
       loop: true,
       preload: true,
       src: ['/sounds/gameplay_soundtrack.m4a'],
-      volume: 0.32,
+      volume: 0.025,
     }));
-    expect(howlInstances[0]?.volume).toHaveBeenCalledWith(0.32);
+    expect(howlInstances[0]?.volume).toHaveBeenCalledWith(0.025);
+    expect(howlInstances[0]?.play).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses minimal matchmaking search music volume', async () => {
+    const { GAME_SOUND_VOLUME, playBgm } = await import('../gameSounds');
+
+    expect(GAME_SOUND_VOLUME.searchBgm).toBe(0.025);
+
+    playBgm('search');
+
+    expect(HowlMock).toHaveBeenCalledWith(expect.objectContaining({
+      html5: true,
+      loop: true,
+      preload: true,
+      src: ['/sounds/quizball-search.mp3'],
+      volume: 0.025,
+    }));
+    expect(howlInstances[0]?.volume).toHaveBeenCalledWith(0.025);
     expect(howlInstances[0]?.play).toHaveBeenCalledTimes(1);
   });
 });

@@ -24,9 +24,9 @@ type BgmName = keyof typeof BGM_FILES;
 // ─── Volume defaults ─────────────────────────────────────────────
 export const GAME_SOUND_VOLUME = {
   sfx: 0.3,
-  rankedBgm: 0.08,
-  kickoffBgm: 0.08,
-  searchBgm: 0.12,
+  rankedBgm: 0.025,
+  kickoffBgm: 0.025,
+  searchBgm: 0.025,
 } as const;
 // Flip to true to re-enable the ranked BGM loop. Wiring stays in place
 // so this is a one-liner to revive whenever we want music back.
@@ -37,6 +37,7 @@ const sounds: Partial<Record<SoundName, Howl>> = {};
 
 // Per-sound volume overrides (default is GAME_SOUND_VOLUME.sfx).
 const SOUND_VOLUME: Partial<Record<SoundName, number>> = {
+  correctRanked: 0.45,
   dailyCorrect: 0.55,
   imposterReveal: 0.7,
 };

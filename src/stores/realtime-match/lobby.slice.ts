@@ -79,7 +79,10 @@ export const createLobbySlice: StateCreator<RealtimeState, [], [], LobbySlice> =
       status: lobby.status,
       memberCount: lobby.members.length,
     });
-    set({ lobby });
+    set({
+      lobby,
+      forfeitPending: null,
+    });
   },
 
   addChallengeInvite: (invite) => {

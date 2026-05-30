@@ -694,6 +694,23 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
       }
       if (!state.match) {
         const rejoin = state.rejoinMatch?.matchId === payload.matchId ? state.rejoinMatch : null;
+        const sessionBelongsToPayload = state.sessionState?.activeMatchId === payload.matchId;
+        const hasNewRealtimeContext = Boolean(state.lobby || state.draft);
+        const hasDifferentSessionActivity = Boolean(
+          state.sessionState &&
+          !sessionBelongsToPayload &&
+          state.sessionState.state !== 'IDLE',
+        );
+        if (hasNewRealtimeContext || hasDifferentSessionActivity) {
+          logger.warn('Ignoring stale match:final_results event without active match', {
+            payloadMatchId: payload.matchId,
+            lobbyId: state.lobby?.lobbyId ?? null,
+            draftLobbyId: state.draft?.lobbyId ?? null,
+            sessionState: state.sessionState?.state ?? null,
+            sessionActiveMatchId: state.sessionState?.activeMatchId ?? null,
+          });
+          return state;
+        }
         return {
           matchPaused: false,
           pauseUntil: null,

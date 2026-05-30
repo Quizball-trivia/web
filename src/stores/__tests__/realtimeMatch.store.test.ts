@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useRealtimeMatchStore } from '../realtimeMatch.store';
 import type {
+  LobbyState,
+  MatchFinalResultsPayload,
   MatchRoundResultPayload,
   MatchStatePayload,
   ResolvedMatchQuestionPayload,
@@ -11,6 +13,8 @@ import type {
 // ---------------------------------------------------------------------------
 
 const MATCH_ID = 'match-1';
+const OLD_MATCH_ID = 'match-old';
+const NEW_LOBBY_ID = 'lobby-new';
 const USER_A = 'user-a';
 const USER_B = 'user-b';
 
@@ -100,6 +104,42 @@ function makeMatchState(
       bans: { seat1: null, seat2: null },
     },
     stateVersion: opts.stateVersion ?? 1,
+  };
+}
+
+function makeFinalResults(matchId = MATCH_ID): MatchFinalResultsPayload {
+  return {
+    matchId,
+    winnerId: USER_B,
+    players: {
+      [USER_A]: { totalPoints: 100, correctAnswers: 2, avgTimeMs: null },
+      [USER_B]: { totalPoints: 200, correctAnswers: 4, avgTimeMs: null },
+    },
+    durationMs: 60_000,
+    resultVersion: 123,
+    winnerDecisionMethod: 'forfeit',
+  };
+}
+
+function makeLobby(lobbyId = NEW_LOBBY_ID): LobbyState {
+  return {
+    lobbyId,
+    mode: 'ranked',
+    status: 'active',
+    inviteCode: null,
+    displayName: 'Ranked match',
+    isPublic: false,
+    hostUserId: USER_A,
+    settings: {
+      gameMode: 'ranked_sim',
+      friendlyRandom: false,
+      friendlyCategoryAId: null,
+      friendlyCategoryBId: null,
+    },
+    members: [
+      { userId: USER_A, username: 'me', avatarUrl: null, isReady: true, isHost: true },
+      { userId: USER_B, username: 'opponent', avatarUrl: null, isReady: true, isHost: false },
+    ],
   };
 }
 
@@ -415,6 +455,49 @@ describe('realtimeMatch.store — setMatchState shouldClearQuestion', () => {
       expect(state.match?.finalResults?.winnerDecisionMethod).toBe('forfeit');
       expect(state.match?.opponent.id).toBe(USER_B);
       expect(state.rejoinMatch).toBeNull();
+    });
+
+    it('hydrates forfeit final results when no newer realtime context is active', () => {
+      const store = useRealtimeMatchStore.getState();
+      store.setSelfUserId(USER_A);
+      store.setForfeitPending({
+        matchId: OLD_MATCH_ID,
+        reason: 'reconnect_limit',
+        message: 'Finalizing result...',
+      });
+
+      store.setFinalResults(makeFinalResults(OLD_MATCH_ID));
+
+      const state = useRealtimeMatchStore.getState();
+      expect(state.match?.matchId).toBe(OLD_MATCH_ID);
+      expect(state.match?.finalResults?.winnerDecisionMethod).toBe('forfeit');
+      expect(state.forfeitPending).toBeNull();
+    });
+
+    it('ignores stale final results from a forfeited match when a new draft is active', () => {
+      const store = useRealtimeMatchStore.getState();
+      store.setSelfUserId(USER_A);
+      store.setForfeitPending({
+        matchId: OLD_MATCH_ID,
+        reason: 'reconnect_limit',
+        message: 'Finalizing result...',
+      });
+      store.setLobby(makeLobby());
+      store.setDraftStart({
+        lobbyId: NEW_LOBBY_ID,
+        categories: [
+          { id: 'cat-1', name: 'Premier League', icon: null },
+          { id: 'cat-2', name: 'World Cup', icon: null },
+        ],
+        turnUserId: USER_A,
+      });
+
+      store.setFinalResults(makeFinalResults(OLD_MATCH_ID));
+
+      const state = useRealtimeMatchStore.getState();
+      expect(state.match).toBeNull();
+      expect(state.draft?.lobbyId).toBe(NEW_LOBBY_ID);
+      expect(state.forfeitPending).toBeNull();
     });
 
     it('hydrates a completed party quiz replay as a party quiz match', () => {

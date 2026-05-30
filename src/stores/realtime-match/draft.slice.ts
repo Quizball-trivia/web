@@ -34,6 +34,7 @@ export const createDraftSlice: StateCreator<RealtimeState, [], [], DraftSlice> =
       draftPaused: false,
       draftPauseUntil: null,
       draftDisconnectedUserId: null,
+      forfeitPending: null,
       draft: {
         lobbyId: draft.lobbyId,
         categories: draft.categories,
