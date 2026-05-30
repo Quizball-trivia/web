@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Trophy, Star, Clock, TrendingUp, ArrowUpRight } from 'lucide-react';
+import { useLocale } from '@/contexts/LocaleContext';
 import { cn } from '@/lib/utils';
 
 export const CHALLENGES = [
@@ -51,6 +52,7 @@ function getTimeRemaining(expiryDate: Date): string {
 }
 
 export function GameHubScreen() {
+  const { t } = useLocale();
   const [bossEventExpiry] = useState<Date>(() => new Date(Date.now() + 1000 * 60 * 60 * 48));
 
   const QUESTS = [
@@ -363,7 +365,7 @@ export function GameHubScreen() {
 
                   {!isLocked && (
                     <div className="flex items-center gap-2 text-xs font-black">
-                      <span className={tierColors.text}>Start Challenge</span>
+                      <span className={tierColors.text}>{t('tournaments.startChallenge')}</span>
                       <ArrowUpRight className={cn('size-4', tierColors.text)} />
                     </div>
                   )}

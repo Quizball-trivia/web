@@ -376,10 +376,10 @@ export function SocialScreen() {
     mutationFn: (targetUserId: string) => createFriendRequest({ targetUserId }),
     onSuccess: async () => {
       await invalidateSocialQueries();
-      toast.success("Friend request sent");
+      toast.success(t('social.toastRequestSent'));
     },
     onError: (error) => {
-      toast.error(getApiErrorMessage(error, "Failed to send request"));
+      toast.error(getApiErrorMessage(error, t('social.toastFailedSend')));
     },
   });
 
@@ -387,10 +387,10 @@ export function SocialScreen() {
     mutationFn: (requestId: string) => acceptFriendRequest(requestId),
     onSuccess: async () => {
       await invalidateSocialQueries();
-      toast.success("Friend request accepted");
+      toast.success(t('social.toastRequestAccepted'));
     },
     onError: (error) => {
-      toast.error(getApiErrorMessage(error, "Failed to accept request"));
+      toast.error(getApiErrorMessage(error, t('social.toastFailedAccept')));
     },
   });
 
@@ -398,10 +398,10 @@ export function SocialScreen() {
     mutationFn: (requestId: string) => declineFriendRequest(requestId),
     onSuccess: async () => {
       await invalidateSocialQueries();
-      toast.success("Friend request declined");
+      toast.success(t('social.toastRequestDeclined'));
     },
     onError: (error) => {
-      toast.error(getApiErrorMessage(error, "Failed to decline request"));
+      toast.error(getApiErrorMessage(error, t('social.toastFailedDecline')));
     },
   });
 
@@ -409,10 +409,10 @@ export function SocialScreen() {
     mutationFn: (friendUserId: string) => removeFriend(friendUserId),
     onSuccess: async () => {
       await invalidateSocialQueries();
-      toast.success("Friend removed");
+      toast.success(t('social.toastFriendRemoved'));
     },
     onError: (error) => {
-      toast.error(getApiErrorMessage(error, "Failed to remove friend"));
+      toast.error(getApiErrorMessage(error, t('social.toastFailedRemove')));
     },
   });
 
@@ -503,10 +503,10 @@ export function SocialScreen() {
   const friendsLoading = friendsQuery.isLoading || requestsQuery.isLoading;
   const friendsError =
     friendsQuery.isError || requestsQuery.isError
-      ? "Failed to load friends. Please try again."
+      ? t('social.errorFriendsLoad')
       : null;
   const isSearching = debouncedQuery.length > 0 && searchQuery.isLoading;
-  const searchError = searchQuery.isError ? "Search failed. Please try again." : null;
+  const searchError = searchQuery.isError ? t('social.errorSearchFailed') : null;
   const hasNoSocialData =
     friendsQuery.isSuccess &&
     requestsQuery.isSuccess &&

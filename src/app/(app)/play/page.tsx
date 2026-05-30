@@ -20,9 +20,11 @@ import { QUESTION_COUNT } from "@/lib/constants/game";
 import { queryKeys } from "@/lib/queries/queryKeys";
 import { trackModeSelected } from "@/lib/analytics/game-events";
 import { shuffleArray } from "@/lib/utils";
+import { useLocale } from "@/contexts/LocaleContext";
 
 export default function PlayPage() {
   const router = useRouter();
+  const { t } = useLocale();
   const startSession = useGameSessionStore((state) => state.startSession);
   const resetRealtime = useRealtimeMatchStore((state) => state.reset);
   const queryClient = useQueryClient();
@@ -79,7 +81,7 @@ export default function PlayPage() {
     const selectedCategory = defaultCategory;
 
     if (!selectedCategory) {
-      toast.error("Unable to load categories. Please try again.");
+      toast.error(t('play.toastCategoriesLoadFail'));
       return;
     }
 
@@ -98,12 +100,12 @@ export default function PlayPage() {
         categoryName: selectedCategory.name,
       }));
     } catch {
-      toast.error("Unable to load questions. Please try again.");
+      toast.error(t('play.toastQuestionsLoadFail'));
       return;
     }
 
     if (questions.length === 0) {
-      toast.error("No questions available for this category.");
+      toast.error(t('play.toastNoQuestions'));
       return;
     }
 

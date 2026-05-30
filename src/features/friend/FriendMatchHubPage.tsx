@@ -122,7 +122,7 @@ export function FriendMatchHubPage() {
     joinTimeoutRef.current = setTimeout(() => {
       clearJoinRetryTimer();
       resetJoinNavigationState();
-      toast.error("Join is taking too long. Please refresh and try again.");
+      toast.error(t('friend.toastJoinTooLong'));
     }, 8000);
     
     // Leave → join: ideally we'd wait for a server ack on lobby:leave, but the
@@ -136,7 +136,7 @@ export function FriendMatchHubPage() {
     }
     setTimeout(() => {
       socket.emit("lobby:join_by_code", { inviteCode: targetCode });
-      toast.info(`Joining ${targetCode}...`);
+      toast.info(t('friend.toastJoiningCode', { code: targetCode }));
     }, lobby?.lobbyId ? LOBBY_LEAVE_JOIN_DELAY_MS : 0);
   };
 
@@ -161,7 +161,7 @@ export function FriendMatchHubPage() {
           clearJoinTimeout();
           clearJoinRetryTimer();
           queueMicrotask(resetJoinNavigationState);
-          toast.error("Could not join lobby right now. Please try again.");
+          toast.error(t('friend.toastJoinFailed'));
           return;
         }
         joinRetryCountRef.current += 1;
@@ -192,7 +192,7 @@ export function FriendMatchHubPage() {
       });
       if (error.code === "LOBBY_NOT_FOUND" && isJoiningCode) {
         void queryClient.invalidateQueries({ queryKey: lobbiesKeys.public() });
-        toast.error("That lobby just closed. Lobby list refreshed.");
+        toast.error(t('friend.toastLobbyClosed'));
       }
       queueMicrotask(resetJoinNavigationState);
       clearJoinTimeout();

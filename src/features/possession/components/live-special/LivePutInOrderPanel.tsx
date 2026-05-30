@@ -336,6 +336,7 @@ export function LivePutInOrderPanel({
   myRound: MatchRoundResultPlayer | null;
   opponentRound: MatchRoundResultPlayer | null;
 }) {
+  const { t } = useLocale();
   const [userOrder, setUserOrder] = useState<ResolvedPutInOrderQuestionItem[]>(() => [...question.items]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submissionStartedRef = useRef(false);
@@ -586,7 +587,7 @@ export function LivePutInOrderPanel({
           disabled={inputLocked}
           className="w-full rounded-[10px] bg-brand-green py-3 text-sm font-fun font-black uppercase tracking-wide text-white transition-transform hover:bg-brand-green-deep active:translate-y-[2px] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {submitted ? 'Submitted' : 'Submit Order'}
+          {submitted ? t('possession.submittedOrder') : t('possession.submitOrder')}
         </button>
       )}
     </div>

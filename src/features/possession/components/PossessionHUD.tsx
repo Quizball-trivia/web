@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Zap, X } from 'lucide-react';
 import { AnimatedPointsCounter } from './AnimatedPointsCounter';
+import { FLIGHT_TOTAL_MS } from './BarBattleFlightOverlay';
 import { MatchHudAvatar, MatchHudIconButton } from './MatchHudPrimitives';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { AvatarCustomization } from '@/types/game';
@@ -101,7 +102,7 @@ export function PossessionHUD({
 
         <div className="flex min-w-[52px] shrink-0 flex-col items-center justify-center sm:min-w-[104px]">
           <div className="mb-1 hidden text-[10px] font-black uppercase tracking-[0.18em] text-white/45 sm:block">
-            {half === 1 ? 'First Half' : 'Second Half'}
+            {half === 1 ? t('possession.firstHalf') : t('possession.secondHalf')}
           </div>
           <div
             className="flex h-9 min-w-[52px] items-center justify-center rounded-[16px] bg-brand-blue px-2 text-white tabular-nums sm:h-[44px] sm:min-w-[78px] sm:px-4"
@@ -148,46 +149,61 @@ export function PossessionHUD({
  * animation (the +N ghost gets multiplied here before flying to the pitch).
  */
 // Time for the incoming "2×" flight token to travel from the answer source to
-// this slot (matches SOURCE_HOLD_S + FLIGHT_DURATION_S in BarBattleFlightOverlay).
-const SPEED_STREAK_FLIGHT_MS = 1020;
+// this slot. Derived from the overlay's own flight duration so the two can't
+// drift (single source of truth).
+const SPEED_STREAK_FLIGHT_MS = FLIGHT_TOTAL_MS;
 
 function SpeedStreakBadge({ active }: { active: boolean }) {
-  if (!active) return null;
-  return <SpeedStreakBadgeActive />;
-}
-
-function SpeedStreakBadgeActive() {
-  // Don't reveal the sticky badge until the flying 2× token has had time to
-  // arrive — otherwise it sits here while the token is still in the air.
+  // Reveal the sticky badge only after the flying 2× token has had time to
+  // arrive (so it doesn't sit here while the token is still mid-air).
   const [landed, setLanded] = useState(false);
   useEffect(() => {
+    if (!active) {
+      setLanded(false);
+      return;
+    }
     const timer = setTimeout(() => setLanded(true), SPEED_STREAK_FLIGHT_MS);
     return () => clearTimeout(timer);
-  }, []);
+  }, [active]);
 
-  // ONE box, always present while the streak is active, reserving the badge's
-  // size via an invisible spacer. Both the flight-target anchor AND the visible
-  // badge are absolutely centered in this same box → the token lands exactly
-  // where the badge appears (no jump). The badge only fades in once landed.
+  const show = active && landed;
+
+  // The wrapper + AnimatePresence stay mounted across the whole streak (and
+  // beyond) so the badge's EXIT animation can run when the streak breaks —
+  // if we unmounted the wrapper on `!active`, the badge would just vanish.
+  // While shown, an invisible spacer reserves the badge's box so the
+  // flight-target anchor sits at the true badge center (no landing jump).
   return (
     <div className="relative inline-flex items-center justify-center">
-      {/* Invisible spacer: holds the exact badge dimensions so the box (and its
-          center) are correct from the moment the streak is earned. */}
-      <div aria-hidden className="invisible inline-flex w-max items-center gap-1 whitespace-nowrap rounded-xl px-2.5 py-1 sm:gap-1.5 sm:px-3 sm:py-1.5">
-        <Zap className="size-4 sm:size-5" />
-        <span className="font-poppins text-lg font-black leading-none sm:text-2xl">2×</span>
-      </div>
+      {/* Spacer reserves the badge-sized box for the WHOLE active streak — not
+          just after reveal — so the flight target (data-speed-streak-slot) is
+          measured at the true badge center while the token is still in flight
+          (otherwise it centers on a zero-size box and the landing jumps). */}
+      {active && (
+        <div aria-hidden className="invisible inline-flex w-max items-center gap-1 whitespace-nowrap rounded-xl px-2.5 py-1 sm:gap-1.5 sm:px-3 sm:py-1.5">
+          <Zap className="size-4 sm:size-5" />
+          <span className="font-poppins text-lg font-black leading-none sm:text-2xl">2×</span>
+        </div>
+      )}
       {/* center-of-badge anchor — the flight token lands here */}
       <span
         data-speed-streak-slot="player"
         className="pointer-events-none absolute left-1/2 top-1/2 size-px -translate-x-1/2 -translate-y-1/2"
       />
       <AnimatePresence>
-        {landed && (
+        {show && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.4, transition: { duration: 0.2 } }}
+            initial={{ opacity: 0, scale: 0.8, y: 0, rotate: 0 }}
+            animate={{ opacity: 1, scale: 1, y: 0, rotate: 0 }}
+            // Lose the streak: the badge unsticks and drops away under gravity
+            // (mirrors the failed/zero-point flight fall), tilting as it falls.
+            exit={{
+              opacity: [1, 1, 0],
+              y: [0, -10, 260],
+              rotate: [0, -8, 22],
+              scale: [1, 1.05, 0.8],
+              transition: { duration: 0.7, times: [0, 0.16, 1], ease: [0.45, 0, 0.9, 1] },
+            }}
             transition={{ type: 'spring', stiffness: 320, damping: 18 }}
             className="absolute inset-0 flex items-center justify-center"
           >

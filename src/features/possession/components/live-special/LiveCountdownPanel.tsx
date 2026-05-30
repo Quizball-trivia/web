@@ -209,22 +209,22 @@ export function LiveCountdownPanel({
         visible={hasPlayerCountFeedback}
         tone="green"
         player={{
-          label: 'You',
+          label: t('possession.you'),
           count: playerFoundCount,
           total: question.answerSlotCount,
           points: countdownPlayerPoints,
-          badge: roundResolved ? (myRound?.isCorrect ? 'Won' : 'Did not win') : 'Found',
+          badge: roundResolved ? (myRound?.isCorrect ? t('possession.won') : t('possession.didNotWin')) : t('possession.found'),
           status: roundResolved ? (myRound?.isCorrect ? 'positive' : 'negative') : 'positive',
-          detail: roundResolved ? 'accepted answers' : 'accepted so far',
+          detail: roundResolved ? t('possession.acceptedAnswers') : t('possession.acceptedSoFar'),
         }}
         opponent={{
-          label: 'Opp',
+          label: t('possession.opp'),
           count: opponentFoundCount,
           total: question.answerSlotCount,
           points: countdownOpponentPoints,
-          badge: roundResolved ? (opponentRound?.isCorrect ? 'Won' : 'Did not win') : (opponentFoundCount > 0 ? 'Finding' : 'Waiting'),
+          badge: roundResolved ? (opponentRound?.isCorrect ? t('possession.won') : t('possession.didNotWin')) : (opponentFoundCount > 0 ? t('possession.finding') : t('possession.waiting')),
           status: roundResolved ? (opponentRound?.isCorrect ? 'positive' : 'negative') : (opponentFoundCount > 0 ? 'positive' : 'pending'),
-          detail: roundResolved ? 'accepted answers' : 'accepted so far',
+          detail: roundResolved ? t('possession.acceptedAnswers') : t('possession.acceptedSoFar'),
         }}
       />
 
@@ -267,7 +267,7 @@ export function LiveCountdownPanel({
           </div>
           <p className="mt-1.5 flex items-center gap-1 text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white/40">
 
-            Auto-matches as you type · Enter for short answers
+            {t('possession.autoMatchesTip')}
           </p>
         </div>
       )}
@@ -276,29 +276,29 @@ export function LiveCountdownPanel({
       <div className="px-1.5 sm:px-0">
         <div className="mb-2 flex items-center justify-between gap-2 px-1">
           <h3 className="text-[11px] font-fun font-black uppercase tracking-[0.22em] text-white/55">
-            {roundResolved ? 'Answer Results' : 'Answers Found'}
+            {roundResolved ? t('possession.answerResults') : t('possession.answersFound')}
           </h3>
         </div>
         {(roundResolved ? revealedAnswers : foundAnswers).length === 0 ? (
           <p className="py-6 text-center text-xs font-fun font-black uppercase tracking-[0.18em] text-white/30">
-            {roundResolved ? 'No answers found this round.' : ''}
+            {roundResolved ? t('possession.noAnswersFoundRound') : ''}
           </p>
         ) : (
           roundResolved ? (
             <div className="space-y-3">
               {showCountdownOwnership ? (
                 <>
-                  <CountdownAnswerGroup label="You" answers={countdownAnswerBreakdown.playerAnswers} tone="green" />
-                  <CountdownAnswerGroup label="Opponent" answers={countdownAnswerBreakdown.opponentAnswers} tone="red" />
+                  <CountdownAnswerGroup label={t('possession.you')} answers={countdownAnswerBreakdown.playerAnswers} tone="green" />
+                  <CountdownAnswerGroup label={t('possession.opponent')} answers={countdownAnswerBreakdown.opponentAnswers} tone="red" />
                   {countdownAnswerBreakdown.unclaimedAnswers.length > 0 && (
                     <div className="flex flex-wrap items-center gap-2 text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white/35">
-                      <span>{countdownAnswerBreakdown.unclaimedAnswers.length} more correct answers not found</span>
+                      <span>{t('possession.moreCorrectAnswersUnfound', { n: countdownAnswerBreakdown.unclaimedAnswers.length })}</span>
                       <button
                         type="button"
                         onClick={() => setShowAllCorrectAnswers((current) => !current)}
                         className="rounded-[7px] border border-brand-green/30 px-2 py-1 text-[10px] font-fun font-black uppercase tracking-[0.14em] text-brand-green transition-colors hover:bg-brand-green/10"
                       >
-                        {showAllCorrectAnswers ? 'Hide all' : 'See all'}
+                        {showAllCorrectAnswers ? t('possession.hideAll') : t('possession.seeAll')}
                       </button>
                     </div>
                   )}

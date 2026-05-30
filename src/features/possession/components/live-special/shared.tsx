@@ -89,10 +89,11 @@ export function SpecialScoreFlightAnchors() {
 }
 
 export function QuestionKindBadge({ kind }: { kind: LiveSpecialQuestion['kind'] }) {
+  const { t } = useLocale();
   const labels: Record<LiveSpecialQuestion['kind'], string> = {
-    countdown: 'Countdown',
-    putInOrder: 'Put In Order',
-    clues: 'Who Am I?',
+    countdown: t('possession.kindCountdown'),
+    putInOrder: t('possession.kindPutInOrder'),
+    clues: t('possession.kindWhoAmI'),
   };
   // Drop-from-above intro: badge starts at -1000px (well off-screen on
   // every realistic viewport), accelerates downward via easeIn for a
@@ -131,7 +132,7 @@ export type SpecialSummaryTone = 'cyan' | 'orange' | 'green';
 export type SpecialSummaryStatus = 'positive' | 'negative' | 'pending' | 'neutral';
 
 export interface SpecialSummarySide {
-  label: 'You' | 'Opp';
+  label: string;
   count: number | null;
   total: number;
   points: number | null;

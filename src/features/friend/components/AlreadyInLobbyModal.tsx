@@ -8,6 +8,7 @@ import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
 import { toast } from "sonner";
 import { logger } from "@/utils/logger";
+import { useLocale } from "@/contexts/LocaleContext";
 
 interface AlreadyInLobbyModalProps {
   currentLobbyCode: string | null;
@@ -21,6 +22,7 @@ export function AlreadyInLobbyModal({
   onClose,
 }: AlreadyInLobbyModalProps) {
   const router = useRouter();
+  const { t } = useLocale();
   const error = useRealtimeMatchStore(state => state.error);
   const lobby = useRealtimeMatchStore(state => state.lobby);
   const clearError = useRealtimeMatchStore(state => state.clearError);
@@ -61,7 +63,7 @@ export function AlreadyInLobbyModal({
     resetRealtime();
     useRankedMatchmakingStore.getState().clearRankedMatchmaking();
     clearError();
-    toast.info("Left previous lobby. Try joining again.");
+    toast.info(t('friend.toastLeftPreviousLobby'));
     if (onClose) onClose();
   };
 

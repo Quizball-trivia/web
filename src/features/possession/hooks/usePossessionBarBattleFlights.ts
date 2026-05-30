@@ -229,6 +229,7 @@ export function usePossessionBarBattleFlights() {
     currentQuestionPhase: s.match?.currentQuestionPhase ?? 'reveal',
     currentPhaseKind: s.match?.currentQuestion?.phaseKind ?? null,
     possessionPhaseKind: s.match?.possessionState?.phaseKind ?? null,
+    speedStreakHolderSeat: s.match?.possessionState?.speedStreakHolderSeat ?? null,
     answerAck: s.match?.answerAck ?? null,
     lastRoundResult: s.match?.lastRoundResult ?? null,
     opponentAnswered: s.match?.opponentAnswered ?? false,
@@ -503,28 +504,38 @@ export function usePossessionBarBattleFlights() {
   ]);
 
   // ── 2× badge fly-in when the player newly earns the streak ──────────────
-  // When speedStreakHolderSeat flips to my seat, fly a "2×" token from the
-  // answer source to the HUD badge slot, where the sticky badge takes over.
+  // Driven by the LIVE match-state holder (the source of truth that survives
+  // across questions), not the transient round result. When the holder
+  // transitions to my seat, fly a "2×" token from the answer source to the HUD
+  // badge slot, where the sticky badge takes over.
   const mySeat = barBattleMatch.mySeat;
+  const liveHolderSeat = barBattleMatch.speedStreakHolderSeat;
   const prevHolderRef = useRef<1 | 2 | null>(null);
-  const badgeFiredKeyRef = useRef<string | null>(null);
+  const seenFirstHolderRef = useRef(false);
   useEffect(() => {
-    if (!enabled) return;
-    const holder = roundResult?.deltas?.speedStreakHolderSeat ?? null;
+    if (!enabled) {
+      prevHolderRef.current = liveHolderSeat;
+      return;
+    }
+    // First observation (mount / reconnect / state resync): seed the ref to the
+    // current live holder and DON'T fire — otherwise an already-held streak
+    // would look like a fresh null→me earn and trigger a fake fly-in.
+    if (!seenFirstHolderRef.current) {
+      seenFirstHolderRef.current = true;
+      prevHolderRef.current = liveHolderSeat;
+      return;
+    }
     const prev = prevHolderRef.current;
-    prevHolderRef.current = holder;
-    if (mySeat == null || holder !== mySeat || prev === mySeat) return;
-    // Newly earned by me this round → fly the 2× token to the HUD slot.
-    const roundKey = `${roundResult?.matchId}:${roundResult?.qIndex}`;
-    if (badgeFiredKeyRef.current === roundKey) return;
+    prevHolderRef.current = liveHolderSeat;
+    // Only fly the token on a fresh null/opponent → me transition.
+    if (mySeat == null || liveHolderSeat !== mySeat || prev === mySeat) return;
 
     const launch = (retries: number) => {
       const sourceRect = findScoreAnchor('player');
       const slotRect = findSpeedStreakSlot('player');
       if (sourceRect && slotRect) {
-        badgeFiredKeyRef.current = roundKey;
         const id = ++flightSeqRef.current;
-        setFlights((prev2) => [...prev2, {
+        setFlights((prevFlights) => [...prevFlights, {
           id,
           side: 'player',
           kind: 'badge',
@@ -539,7 +550,7 @@ export function usePossessionBarBattleFlights() {
       }
     };
     launch(4);
-  }, [enabled, roundResult, mySeat]);
+  }, [enabled, liveHolderSeat, mySeat]);
 
   // Drop flights from the list once they finish animating. The overlay
   // handles enter/exit; we just keep state lean.

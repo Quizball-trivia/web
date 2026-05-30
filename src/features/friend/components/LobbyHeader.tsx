@@ -4,7 +4,7 @@ import type { HeadToHeadSummary } from "@/lib/domain";
 import type { LobbyMember } from "@/lib/realtime/socket.types";
 import { buildFriendInviteUrl } from "@/lib/auth/postAuthRedirect";
 import { copyToClipboard } from "@/utils/clipboard";
-import { Copy, Link2 } from "lucide-react";
+import { Check, Copy, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLocale } from "@/contexts/LocaleContext";
 import { trackFriendInviteSent } from "@/lib/analytics/game-events";
@@ -165,6 +165,15 @@ export function LobbyHeader({
                       size="md"
                       className="rounded-full"
                     />
+                    {member.isReady ? (
+                      <span
+                        aria-label={t("friend.ready")}
+                        title={t("friend.ready")}
+                        className="absolute -top-2 left-1/2 z-20 flex size-7 -translate-x-1/2 items-center justify-center rounded-full border-2 border-surface-card bg-brand-green text-white shadow-[0_4px_12px_rgba(88,204,2,0.45)]"
+                      >
+                        <Check className="size-4" strokeWidth={3.5} />
+                      </span>
+                    ) : null}
                     {member.isHost ? (
                       <span
                         className="absolute -top-2 -right-2 rounded-full bg-brand-orange px-1.5 py-[2px] uppercase text-white"

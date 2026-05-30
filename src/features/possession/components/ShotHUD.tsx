@@ -89,7 +89,7 @@ export function ShotHUD({
             {phase === 'shot' ? timeRemaining : '\u2014'}
           </motion.div>
           <div className="-mt-0.5 hidden text-[10px] font-black tracking-[0.18em] text-brand-orange/70 sm:block">
-            {isPlayerAttacker ? 'YOU SHOOT' : 'YOU SAVE'}
+            {isPlayerAttacker ? t('possession.youShoot') : t('possession.youSave')}
           </div>
         </div>
         <div className="flex min-w-0 flex-1 items-center justify-end gap-1 sm:gap-3">

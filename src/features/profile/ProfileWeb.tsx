@@ -161,8 +161,8 @@ export function ProfileWeb({
       }
       setIsEditingName(false);
     } catch (error) {
-      toast.error('Failed to update name', {
-        description: error instanceof Error ? error.message : 'Failed to update name',
+      toast.error(t('profile.failedToUpdateName'), {
+        description: error instanceof Error ? error.message : t('profile.failedToUpdateName'),
       });
     }
   };
@@ -177,8 +177,8 @@ export function ProfileWeb({
       await onAvatarChange(nextUrl);
       setIsAvatarPickerOpen(false);
     } catch (error) {
-      toast.error('Failed to update avatar', {
-        description: error instanceof Error ? error.message : 'Please try again.',
+      toast.error(t('profile.failedToUpdateAvatar'), {
+        description: error instanceof Error ? error.message : t('profile.tryAgain'),
       });
     } finally {
       setIsSavingAvatar(false);
@@ -214,7 +214,7 @@ export function ProfileWeb({
                 className="hidden lg:block translate-y-5"
               />
               <span className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-[10px] font-black uppercase tracking-[0.18em] opacity-0 group-hover:opacity-100 transition-opacity">
-                Edit
+                {t('profile.avatarPicker.edit')}
               </span>
             </button>
           ) : (
@@ -634,7 +634,7 @@ export function ProfileWeb({
                                 await onClubChange?.(val);
                                 setIsEditingClub(false);
                               } catch {
-                                toast.error('Failed to update club');
+                                toast.error(t('profile.failedToUpdateClub'));
                               }
                             }}
                           />
@@ -642,7 +642,7 @@ export function ProfileWeb({
                       ) : (
                         <>
                           <span className="font-poppins text-sm font-semibold uppercase text-white truncate max-w-[160px]">
-                            {favoriteClub || 'Not set'}
+                            {favoriteClub || t('profile.notSet')}
                           </span>
                           <button
                             onClick={() => setIsEditingClub(true)}
@@ -666,7 +666,7 @@ export function ProfileWeb({
                           try {
                             await onLanguageChange?.('ka');
                           } catch {
-                            toast.error('Failed to update language');
+                            toast.error(t('profile.failedToUpdateLanguage'));
                           }
                         }}
                         disabled={isUpdating}
@@ -684,7 +684,7 @@ export function ProfileWeb({
                           try {
                             await onLanguageChange?.('en');
                           } catch {
-                            toast.error('Failed to update language');
+                            toast.error(t('profile.failedToUpdateLanguage'));
                           }
                         }}
                         disabled={isUpdating}

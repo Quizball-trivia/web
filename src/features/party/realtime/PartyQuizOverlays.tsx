@@ -50,7 +50,7 @@ export function PartyQuizOverlays({
             <div className="absolute inset-0 bg-surface-page-alt/45 backdrop-blur-[1.5px]" />
             <div className="relative">
               <MatchCountdownPuck
-                label={countdownReason === 'resume' ? 'Reconnected. Resuming in' : 'Quiz starts in'}
+                label={countdownReason === 'resume' ? t('partyResults.resumingIn') : t('partyResults.quizStartsIn')}
                 seconds={Math.max(1, countdownSeconds)}
                 size="md"
               />
@@ -96,9 +96,9 @@ export function PartyQuizOverlays({
             className="absolute left-1/2 top-4 z-30 w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 rounded-[20px] bg-brand-blue px-5 py-3 shadow-2xl"
           >
             <div className="text-center font-poppins">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/60">Match Paused</div>
-              <div className="mt-1 text-base font-semibold uppercase text-white">Waiting for a player to reconnect</div>
-              <div className="mt-1 text-xs font-semibold text-brand-yellow">Resumes automatically in {pauseSeconds}s</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/60">{t('partyResults.matchPaused')}</div>
+              <div className="mt-1 text-base font-semibold uppercase text-white">{t('partyResults.waitingForReconnect')}</div>
+              <div className="mt-1 text-xs font-semibold text-brand-yellow">{t('partyResults.resumesInSeconds', { seconds: pauseSeconds })}</div>
             </div>
           </motion.div>
         )}

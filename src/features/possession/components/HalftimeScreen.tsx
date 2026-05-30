@@ -325,12 +325,12 @@ export function HalftimeScreen({
                     className="mt-4 sm:mt-6 text-xs sm:text-sm font-bold uppercase tracking-widest text-white/50 text-center"
                   >
                     {bothBansSubmitted
-                      ? `2nd half category: ${remainingCategory?.name ?? 'Deciding...'}`
+                      ? t('possession.halftime.secondHalfCategory', { name: remainingCategory?.name ?? t('possession.halftime.deciding') })
                       : myBan
-                        ? 'Waiting for opponent ban...'
+                        ? t('possession.halftime.banWaitingOpponent')
                         : !canBan
-                          ? 'Opponent is choosing a ban...'
-                          : 'Choose one category to ban'}
+                          ? t('possession.halftime.banOpponentChoosing')
+                          : t('possession.halftime.banChooseCategory')}
                   </motion.div>
                 </motion.div>
               )}

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { OnboardingFlow } from "@/features/onboarding/OnboardingFlow";
 import { logger } from "@/utils/logger";
+import { useLocale } from "@/contexts/LocaleContext";
 import { updateMe } from "@/lib/api/endpoints";
 import { apiFetch } from "@/lib/api/client";
 import { useAuthStore } from "@/stores/auth.store";
@@ -16,6 +17,7 @@ import { consumePostAuthRedirect } from "@/lib/auth/postAuthRedirect";
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { t } = useLocale();
   const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -53,13 +55,13 @@ export default function OnboardingPage() {
         logger.error('Analytics trackOnboardingCompleted failed', error);
       }
       router.replace(consumePostAuthRedirect() ?? "/play");
-      toast.success("Welcome to QuizBall!", {
-        description: "Your football trivia journey begins now!",
+      toast.success(t('onboarding.toastWelcome'), {
+        description: t('onboarding.toastWelcomeDescription'),
       });
     } catch (error) {
       logger.error("Failed to save onboarding data", error);
-      toast.error("Failed to save your preferences", {
-        description: error instanceof Error ? error.message : "Please try again.",
+      toast.error(t('onboarding.toastSaveFailed'), {
+        description: error instanceof Error ? error.message : t('onboarding.toastSaveFailedDescription'),
       });
     } finally {
       setIsSubmitting(false);

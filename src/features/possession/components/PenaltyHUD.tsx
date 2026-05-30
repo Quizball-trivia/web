@@ -74,7 +74,7 @@ export function PenaltyHUD({
         </div>
         <div className="flex min-w-[44px] shrink-0 flex-col items-center justify-center sm:min-w-[100px]">
           <div className="mb-1 hidden text-[10px] font-black uppercase tracking-[0.18em] text-brand-orange sm:block">
-            {isPenaltySuddenDeath ? 'Sudden Death' : `Pen ${penaltyRound}/${MAX_PENALTY_ROUNDS}`}
+            {isPenaltySuddenDeath ? t('possession.suddenDeath') : t('possession.penaltyRound', { round: penaltyRound, max: MAX_PENALTY_ROUNDS })}
           </div>
           <motion.div
             animate={timeRemaining <= 2 && phase === 'penalty-playing' ? { scale: [1, 1.1, 1] } : {}}
@@ -90,7 +90,7 @@ export function PenaltyHUD({
             {phase === 'penalty-playing' ? timeRemaining : '\u2014'}
           </motion.div>
           <div className="-mt-0.5 hidden text-[10px] font-black tracking-[0.18em] text-brand-orange/70 sm:block">
-            {isPlayerShooter ? 'YOU SHOOT' : 'YOU SAVE'}
+            {isPlayerShooter ? t('possession.youShoot') : t('possession.youSave')}
           </div>
         </div>
         <div className="flex min-w-0 flex-1 items-center justify-end gap-1 sm:gap-3">
@@ -118,7 +118,7 @@ export function PenaltyHUD({
             <div key={`pp-${i}`} className={`size-3 rounded-full border-2 ${i < penaltyPlayerScore ? 'bg-brand-green-light border-brand-green-light' : 'bg-transparent border-white/20'}`} />
           ))}
         </div>
-        <div className="text-[10px] font-black text-white/30 tracking-wider">PENS</div>
+        <div className="text-[10px] font-black text-white/30 tracking-wider">{t('possession.pens')}</div>
         <div className="flex gap-1.5">
           {Array.from({ length: MAX_PENALTY_ROUNDS }).map((_, i) => (
             <div key={`op-${i}`} className={`size-3 rounded-full border-2 ${i < penaltyOpponentScore ? 'bg-brand-red-soft border-brand-red-soft' : 'bg-transparent border-white/20'}`} />

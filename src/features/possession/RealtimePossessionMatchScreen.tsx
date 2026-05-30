@@ -91,14 +91,16 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
     remainingReconnects == null
       ? null
       : remainingReconnects <= 0
-        ? 'This is their last reconnect.'
-        : `${remainingReconnects} ${remainingReconnects === 1 ? 'reconnect' : 'reconnects'} left.`;
+        ? t('forfeit.lastReconnect')
+        : remainingReconnects === 1
+          ? t('forfeit.reconnectsLeftOne', { n: remainingReconnects })
+          : t('forfeit.reconnectsLeftOther', { n: remainingReconnects });
   const forfeitPendingTitle =
     forfeitPending?.reason === 'opponent_forfeit'
-      ? 'Opponent forfeited'
+      ? t('forfeit.opponentForfeited')
       : forfeitPending?.reason === 'opponent_reconnect_limit'
-        ? 'Opponent did not reconnect'
-        : 'Match forfeited';
+        ? t('forfeit.opponentDidNotReconnect')
+        : t('forfeit.matchForfeited');
 
   if (!isReady) {
     const showPendingKickoff = showStartCountdown || hasMatch;
@@ -131,9 +133,9 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
       <MatchHudIconButton
         onClick={toggleMuted}
         className="absolute left-[calc(env(safe-area-inset-left)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.25rem)] z-[70] sm:left-[calc(env(safe-area-inset-left)+0.5rem)] sm:top-[calc(env(safe-area-inset-top)+0.5rem)]"
-        aria-label={muted ? 'Unmute audio' : 'Mute audio'}
+        aria-label={muted ? t('possession.unmuteAudio') : t('possession.muteAudio')}
         aria-pressed={muted}
-        title={muted ? 'Unmute' : 'Mute'}
+        title={muted ? t('common.unmute') : t('common.mute')}
       >
         {muted ? <VolumeX className="size-4 sm:size-5" /> : <Volume2 className="size-4 sm:size-5" />}
       </MatchHudIconButton>

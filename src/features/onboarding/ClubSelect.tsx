@@ -1,6 +1,7 @@
 import React from 'react';
 import Select from 'react-select';
 import clubs from '@/data/top5leagues-clubs.json';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface ClubSelectProps {
   value: string;
@@ -8,12 +9,13 @@ interface ClubSelectProps {
 }
 
 export default function ClubSelect({ value, onChange }: ClubSelectProps) {
+  const { t } = useLocale();
   return (
     <Select
       options={clubs}
       value={clubs.find((c) => c.value === value) || null}
       onChange={(option) => onChange(option ? option.value : '')}
-      placeholder="Search and select your club"
+      placeholder={t('onboarding.searchAndSelectClub')}
       isClearable
       classNamePrefix="react-select"
       menuPortalTarget={typeof document !== 'undefined' ? document.body : undefined}

@@ -222,7 +222,7 @@ export function HighLowGame({
 
         {/* Score */}
         <div className="mt-4 flex items-center justify-between text-sm" style={poppins}>
-          <span className="text-white/55">Score</span>
+          <span className="text-white/55">{copy.score}</span>
           <span className="text-white">{roundScore}</span>
         </div>
       </div>

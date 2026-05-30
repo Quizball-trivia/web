@@ -25,6 +25,7 @@ import { getTierVisual } from '@/utils/tierVisuals';
 import { getRankedTierProgress, getNextTierBand, tierFromRp } from '@/utils/rankedTier';
 import { trackMatchResultsViewed, trackDivisionPromoted, trackLevelUp } from '@/lib/analytics/game-events';
 import { logger } from '@/utils/logger';
+import { useLocale } from '@/contexts/LocaleContext';
 import type { RankedMatchOutcomePayload } from '@/lib/realtime/socket.types';
 import type { RealtimeResultsScreenProps } from './results.types';
 
@@ -78,6 +79,7 @@ export interface MatchResultViewModel {
 }
 
 export function useMatchResultViewModel(props: RealtimeResultsScreenProps): MatchResultViewModel {
+  const { t } = useLocale();
   const {
     matchType,
     playerScore,
@@ -242,7 +244,7 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
   const resultHeading: 'VICTORY' | 'DEFEAT' | 'DRAW' = isDraw ? 'DRAW' : playerWon ? 'VICTORY' : 'DEFEAT';
   const totalGamesLabel = totalMatches > 0
     ? `${totalMatches} GAME${totalMatches === 1 ? '' : 'S'} PLAYED`
-    : 'MATCH COMPLETE';
+    : t('results.matchComplete');
 
   const playerTier = matchType === 'ranked' && preMatchRankedProfile?.placementStatus === 'placed'
     ? tierFromRp(oldRpBase)

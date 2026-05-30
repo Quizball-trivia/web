@@ -237,6 +237,7 @@ function makeMatchState(
     shooterSeat?: 1 | 2 | null;
     phaseKind?: 'normal' | 'last_attack' | 'penalty';
     possessionDiff?: number;
+    speedStreakHolderSeat?: 1 | 2 | null;
   } = { stateVersion: 1 }
 ): MatchStatePayload {
   return {
@@ -244,6 +245,7 @@ function makeMatchState(
     phase,
     half: opts.half ?? 1,
     possessionDiff: opts.possessionDiff ?? 0,
+    speedStreakHolderSeat: opts.speedStreakHolderSeat ?? null,
     normalQuestionsAnsweredInHalf: 0,
     attackerSeat: 1,
     kickOffSeat: 1,
@@ -1498,7 +1500,14 @@ function DevAnimationsContent() {
     const s = store();
     const q = s.match?.currentQuestion;
     if (!q) return;
-    // Light the badge by setting a holder-only round result (no flight).
+    // Set the live holder in match state (drives the sticky badge) AND a
+    // round result that flips holder null→me (triggers the badge fly-in flight).
+    stateVersion.current += 1;
+    s.setMatchState(makeMatchState('NORMAL_PLAY', {
+      stateVersion: stateVersion.current,
+      possessionDiff: possessionDiffRef.current,
+      speedStreakHolderSeat: 1,
+    }));
     s.setRoundResult({
       ...makeRoundResult(q.qIndex, 'me-correct', scoreRef.current, { me: 0, opp: 0 }, true),
       players: {},
@@ -1506,6 +1515,18 @@ function DevAnimationsContent() {
     pendingTimers.current.push(
       window.setTimeout(() => fireOutcome('both-correct', true), 1100),
     );
+  }
+
+  // Dev demo for losing the 2× streak: clear the holder in match state so the
+  // sticky badge unsticks and drops away.
+  function loseStreakDemo() {
+    const s = store();
+    stateVersion.current += 1;
+    s.setMatchState(makeMatchState('NORMAL_PLAY', {
+      stateVersion: stateVersion.current,
+      possessionDiff: possessionDiffRef.current,
+      speedStreakHolderSeat: null,
+    }));
   }
 
   function previewShot(result: 'saved' | 'miss', attackerSeat: 1 | 2) {
@@ -2219,6 +2240,7 @@ function DevAnimationsContent() {
           <Btn variant="yellow" onClick={() => fireOutcome('goal-me')}>⚽ goal · me</Btn>
           <Btn variant="yellow" onClick={() => fireOutcome('goal-opp')}>⚽ goal · opp</Btn>
           <Btn variant="yellow" onClick={fireBoostDemo}>⚡ 2× boost flight · me</Btn>
+          <Btn onClick={loseStreakDemo}>💥 lose 2× streak</Btn>
           <Btn onClick={() => previewShot('miss', 1)}>miss left · me attacks</Btn>
           <Btn onClick={() => previewShot('miss', 2)}>miss left · opp attacks</Btn>
         </Group>

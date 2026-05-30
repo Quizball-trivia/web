@@ -96,33 +96,33 @@ export function OAuthCallbackScreen() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-surface-page p-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="w-full max-w-md"
+          className="w-full max-w-md rounded-[24px] bg-brand-blue p-8 sm:p-10"
         >
-          <Card className="border-destructive/50">
-            <CardContent className="pt-6">
-              <div className="flex flex-col items-center text-center gap-4">
-                <div className="size-16 rounded-full bg-destructive/10 flex items-center justify-center">
-                  <AlertCircle className="size-8 text-destructive" />
-                </div>
-                <div className="space-y-2">
-                  <h2 className="text-xl font-semibold">{t('oauthCallback.authenticationFailed')}</h2>
-                  <p className="text-muted-foreground">{error}</p>
-                </div>
-                <Button
-                  onClick={() => router.replace('/')}
-                  className="mt-4 gap-2"
-                >
-                  <ArrowLeft className="size-4" />
-                  {t('oauthCallback.backToLogin')}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="flex flex-col items-center gap-4 text-center">
+            <div className="flex size-16 items-center justify-center rounded-full bg-white/12">
+              <AlertCircle className="size-8 text-white" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
+                {t('oauthCallback.authenticationFailed')}
+              </h2>
+              <p className="font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-sm">
+                {error}
+              </p>
+            </div>
+            <Button
+              onClick={() => router.replace('/')}
+              className="mt-2 h-12 w-full gap-2 rounded-[28px] bg-brand-yellow font-poppins text-sm font-semibold uppercase tracking-wide text-black hover:bg-brand-yellow-deep"
+            >
+              <ArrowLeft className="size-4" />
+              {t('oauthCallback.backToLogin')}
+            </Button>
+          </div>
         </motion.div>
       </div>
     );

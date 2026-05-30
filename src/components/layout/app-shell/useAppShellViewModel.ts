@@ -144,11 +144,11 @@ export function useAppShellViewModel() {
   const showForfeitPendingBanner = !!forfeitPending && !matchBanner.finalResults && !currentPath.startsWith('/game');
   const forfeitPendingTitle =
     forfeitPending?.reason === 'opponent_forfeit'
-      ? 'Opponent forfeited'
+      ? t('forfeit.opponentForfeited')
       : forfeitPending?.reason === 'opponent_reconnect_limit'
-        ? 'Opponent did not reconnect'
-        : 'You lost the match';
-  const forfeitPendingDescription = forfeitPending?.message ?? 'Finalizing result...';
+        ? t('forfeit.opponentDidNotReconnect')
+        : t('forfeit.youLostMatch');
+  const forfeitPendingDescription = forfeitPending?.message ?? t('forfeit.finalizingResult');
   const completedByForfeit = matchBanner.finalResults?.winnerDecisionMethod === 'forfeit';
   const completedPartyQuiz = completedMatchBanner?.variant === 'friendly_party_quiz';
   const rejoinReconnectsLeft = rejoinMatch?.remainingReconnects ?? remainingReconnects ?? 0;

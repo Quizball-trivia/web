@@ -195,7 +195,7 @@ export function LiveCluesPanel({
               <p className={`text-[10px] font-fun font-black uppercase tracking-[0.18em] ${
                 cluesPlayerCorrect ? 'text-brand-green' : 'text-brand-red-soft'
               }`}>
-                {cluesPlayerCorrect ? 'Correct answer' : 'The answer was'}
+                {cluesPlayerCorrect ? t('possession.correctAnswerLabel') : t('possession.theAnswerWas')}
               </p>
               <p className="truncate text-sm font-fun font-black uppercase tracking-wide text-white">
                 {displayAnswer}

@@ -94,7 +94,7 @@ export function RankedProgressionPanel({
                   className="border-t border-white/10 pt-3 md:pt-4"
                 >
                     <div className="mb-2 flex items-center justify-between">
-                      <div className="text-xs font-black uppercase tracking-wide text-brand-green-light md:text-sm">Placement Progress</div>
+                      <div className="text-xs font-black uppercase tracking-wide text-brand-green-light md:text-sm">{t('results.placementProgress')}</div>
                       <div className="text-xs font-black text-brand-green-bright md:text-sm">{placementPlayed}/{placementRequired}</div>
                     </div>
                     <div className="relative mb-2 h-3 md:h-4 bg-white/10 rounded-full overflow-hidden">
@@ -109,8 +109,8 @@ export function RankedProgressionPanel({
                   </div>
                     <div className="text-[11px] font-semibold text-white/60 md:text-xs">
                     {justPlaced
-                      ? 'Placements complete! Revealing your rank...'
-                      : `Complete placements to unlock your rank. ${placementMatchesLeft} match${placementMatchesLeft === 1 ? '' : 'es'} left.`
+                      ? t('results.placementsComplete')
+                      : t('results.placementsRemaining', { n: placementMatchesLeft })
                     }
                   </div>
                 </motion.div>
@@ -146,7 +146,7 @@ export function RankedProgressionPanel({
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4 }}
                       >
-                        <div className="mb-1 text-[11px] font-bold uppercase tracking-wider text-white/40 md:text-xs">Your Rank</div>
+                        <div className="mb-1 text-[11px] font-bold uppercase tracking-wider text-white/40 md:text-xs">{t('results.yourRank')}</div>
                         <div className={cn('text-xl font-black md:text-2xl', revealTierVisual.color)}>{revealTier}</div>
                         <div className="text-sm font-bold text-white/60 mt-1">{newRP} RP</div>
                       </motion.div>
@@ -158,7 +158,7 @@ export function RankedProgressionPanel({
                         transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
                         className="size-10 rounded-full border-3 border-white/10 border-t-[#58CC02]"
                       />
-                      <div className="text-xs font-bold text-white/50 md:text-sm">Calculating your rank...</div>
+                      <div className="text-xs font-bold text-white/50 md:text-sm">{t('results.calculatingRank')}</div>
                     </div>
                   )}
                 </motion.div>

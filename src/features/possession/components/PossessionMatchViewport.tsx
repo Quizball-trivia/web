@@ -2,6 +2,7 @@
 
 import { type ComponentProps, type ReactNode, useLayoutEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import { useLocale } from '@/contexts/LocaleContext';
 import { GoalCelebrationOverlay } from './GoalCelebrationOverlay';
 import { GoalProgressBar } from './GoalProgressBar';
 import { PenaltyHUD } from './PenaltyHUD';
@@ -85,6 +86,7 @@ function usePitchBallMetrics(orientation: 'portrait' | 'landscape', pitchProps: 
 }
 
 function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
+  const { t } = useLocale();
   if (!model?.visible) return null;
 
   const { localQuestionIndex, result, resultShooterIsMe } = model;
@@ -108,7 +110,7 @@ function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
       {result === 'goal' ? (
         <img
           src="/assets/goal.png"
-          alt="Goal"
+          alt={t('common.altGoal')}
           className="h-auto w-[min(64vw,260px)] object-contain drop-shadow-[0_10px_0_rgba(0,0,0,0.65)]"
         />
       ) : (
@@ -118,13 +120,13 @@ function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
             textShadow: '0 0 30px rgba(255,75,75,0.5), 0 4px 0 rgba(200,40,40,0.8)',
           }}
         >
-          SAVED!
+          {t('possession.savedExclaim')}
         </div>
       )}
       <div className="mt-1 text-sm font-bold font-fun uppercase tracking-widest text-white/60">
         {result === 'goal'
-          ? (resultShooterIsMe ? 'You scored!' : 'Opponent scored')
-          : (resultShooterIsMe ? 'Keeper saves it!' : 'You saved it!')}
+          ? (resultShooterIsMe ? t('possession.youScored') : t('possession.opponentScored'))
+          : (resultShooterIsMe ? t('possession.keeperSavesIt') : t('possession.youSavedIt'))}
       </div>
     </motion.div>
   );

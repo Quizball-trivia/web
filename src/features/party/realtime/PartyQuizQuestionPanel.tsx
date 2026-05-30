@@ -252,12 +252,12 @@ export function PartyQuizQuestionPanel({
           </motion.div>
         ) : transitionVisible ? (
           <RoundTransitionOverlay
-            title={`Question ${transitionQuestionNumber}`}
+            title={t('partyResults.questionN', { n: transitionQuestionNumber })}
             categoryName={transitionCategoryName}
           />
         ) : firstQuestionIntroVisible ? (
           <RoundTransitionOverlay
-            title="Question 1"
+            title={t('partyResults.questionN', { n: 1 })}
             categoryName={transitionCategoryName}
           />
         ) : null}

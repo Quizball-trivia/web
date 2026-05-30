@@ -518,6 +518,8 @@ export interface MatchStatePayload {
   phase: MatchPhase;
   half: 1 | 2;
   possessionDiff: number;
+  /** Live 2× speed-streak holder (drives the sticky HUD badge). null = none. */
+  speedStreakHolderSeat?: 1 | 2 | null;
   normalQuestionsAnsweredInHalf: number;
   attackerSeat: 1 | 2 | null;
   kickOffSeat: 1 | 2;

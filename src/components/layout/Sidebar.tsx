@@ -89,13 +89,20 @@ export function Sidebar({ currentPath, socialBadgeCount = 0, className }: Sideba
       </ScrollArea>
 
       <div className="flex items-center justify-center px-6 pb-8 pt-4">
-        <Image
-          src="/assets/brand/world-cup-trophy.webp"
-          alt="World Cup Trophy"
-          width={96}
-          height={96}
-          className="h-16 w-auto object-contain opacity-95"
-        />
+        <div className="relative">
+          {/* Beta badge — flags that this is a pre-release build. Matches the
+              ranked question-kind badge style (tilted yellow pill). */}
+          <span className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 -rotate-[6deg] rounded-[14px] bg-brand-yellow px-4 py-1.5 font-poppins text-base font-black uppercase tracking-wide text-surface-page shadow-[0_3px_10px_rgba(0,0,0,0.4)]">
+            {t('common.beta')}
+          </span>
+          <Image
+            src="/assets/brand/world-cup-trophy.webp"
+            alt="World Cup Trophy"
+            width={96}
+            height={96}
+            className="h-16 w-auto object-contain opacity-95"
+          />
+        </div>
       </div>
     </aside>
   );

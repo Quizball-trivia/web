@@ -377,8 +377,11 @@ export function usePossessionFieldState({
     visualMyPossessionPct,
   ]);
 
+  // Sticky across questions: read the live streak holder from match state (not
+  // the transient round result). The round-result delta only drives the
+  // one-shot fly-in / score-doubling moment, handled in the flight overlay.
   const speedStreakMine =
-    mySeat != null && roundResult?.deltas?.speedStreakHolderSeat === mySeat;
+    mySeat != null && possessionState?.speedStreakHolderSeat === mySeat;
 
   return {
     mySeat,

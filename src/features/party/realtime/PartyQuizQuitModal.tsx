@@ -7,6 +7,7 @@
  */
 
 import { QuitMatchModal } from '@/components/match/QuitMatchModal';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface PartyQuizQuitModalProps {
   open: boolean;
@@ -16,17 +17,16 @@ interface PartyQuizQuitModalProps {
 }
 
 export function PartyQuizQuitModal({ open, onOpenChange, onQuit, onForfeit }: PartyQuizQuitModalProps) {
+  const { t } = useLocale();
   return (
     <QuitMatchModal
       open={open}
       onOpenChange={onOpenChange}
-      description="Leave temporarily and rejoin before the timer ends, or forfeit the party quiz now."
-      secondaryConfirmLabel="Leave Temporarily"
+      description={t('quitMatch.partyDescription')}
       onSecondaryConfirm={() => {
         onOpenChange(false);
         onQuit();
       }}
-      confirmLabel="Forfeit Match"
       onConfirm={() => {
         onOpenChange(false);
         onForfeit();

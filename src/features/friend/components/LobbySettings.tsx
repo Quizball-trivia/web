@@ -514,11 +514,11 @@ export function LobbySettings({
                 {isPublic ? <Eye className="size-4 text-white" /> : <EyeOff className="size-4 text-brand-slate" />}
               </div>
               <div className="text-left">
-                <div className="text-sm font-black text-white">{isPublic ? 'Public' : 'Private'}</div>
+                <div className="text-sm font-black text-white">{isPublic ? t('friend.lobbyVisibilityPublic') : t('friend.lobbyVisibilityPrivate')}</div>
                 <div className="text-[10px] font-bold text-brand-slate">
                   {isPublic
-                    ? 'Anyone can find & join this lobby'
-                    : 'Only players with the code can join'}
+                    ? t('friend.lobbyVisibilityPublicHint')
+                    : t('friend.lobbyVisibilityPrivateHint')}
                 </div>
               </div>
             </div>

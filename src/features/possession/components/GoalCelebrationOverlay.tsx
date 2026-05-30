@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { motion } from 'motion/react';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface GoalCelebrationOverlayProps {
   scorerName?: string;
@@ -13,6 +14,7 @@ interface GoalCelebrationOverlayProps {
 }
 
 export function GoalCelebrationOverlay({ ballSizePx = 32, ballCenterPx }: GoalCelebrationOverlayProps) {
+  const { t } = useLocale();
   const accentColor = '#FFE500'; // Always yellow splash
 
   return (
@@ -102,7 +104,7 @@ export function GoalCelebrationOverlay({ ballSizePx = 32, ballCenterPx }: GoalCe
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             style={{ clipPath: 'inset(0 0 50% 0)' }}
           >
-            <Image src="/assets/goal.png" alt="Goal celebration" width={760} height={538} className="max-h-full w-auto object-contain" />
+            <Image src="/assets/goal.png" alt={t('common.altGoalCelebration')} width={760} height={538} className="max-h-full w-auto object-contain" />
           </motion.div>
           <motion.div
             className="absolute inset-0 flex items-center justify-center"

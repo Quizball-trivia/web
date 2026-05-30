@@ -82,7 +82,7 @@ export function useRealtimePartyQuizViewModel({
   mobileStandingsPlacement = 'bottom-bar',
   disableBgm = false,
 }: Pick<RealtimePartyQuizScreenProps, 'mobileStandingsPlacement' | 'disableBgm'>): RealtimePartyQuizViewModel {
-  const { locale } = useLocale();
+  const { locale, t } = useLocale();
   const partyState = useRealtimeMatchStore((store) => store.match?.partyState ?? null);
   const participants = useRealtimeMatchStore((store) => store.match?.participants);
   const matchCategoryName = useRealtimeMatchStore((store) => store.match?.categoryName ?? null);
@@ -175,10 +175,10 @@ export function useRealtimePartyQuizViewModel({
     : 0;
   const forfeitPendingTitle =
     forfeitPending?.reason === 'opponent_forfeit'
-      ? 'Opponent forfeited'
+      ? t('forfeit.opponentForfeited')
       : forfeitPending?.reason === 'opponent_reconnect_limit'
-        ? 'Opponent did not reconnect'
-        : 'Match forfeited';
+        ? t('forfeit.opponentDidNotReconnect')
+        : t('forfeit.matchForfeited');
 
   const question: GameQuestion | null = useMemo(() => {
     if (!currentQuestion || currentQuestion.question.kind !== 'multipleChoice') return null;

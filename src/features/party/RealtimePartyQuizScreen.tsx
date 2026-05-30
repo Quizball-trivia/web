@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { MatchCountdownPuck } from '@/components/shared/MatchCountdownPuck';
+import { useLocale } from '@/contexts/LocaleContext';
 import { cn } from '@/lib/utils';
 
 import type { RealtimePartyQuizScreenProps } from './realtime/partyQuizScreen.types';
@@ -45,6 +46,7 @@ export function RealtimePartyQuizScreen({
     partyPicks,
     scoreFlights,
   } = useRealtimePartyQuizViewModel({ mobileStandingsPlacement, disableBgm });
+  const { t } = useLocale();
 
   // ---------------------------------------------------------------------------
   // Pre-match / loading
@@ -55,7 +57,7 @@ export function RealtimePartyQuizScreen({
       <div className="flex min-h-dvh w-full items-center justify-center bg-surface-page-alt">
         {state.startCountdownActive ? (
           <MatchCountdownPuck
-            label="Quiz starts in"
+            label={t('partyResults.quizStartsIn')}
             seconds={Math.max(1, state.countdownSeconds)}
             size="md"
           />
@@ -86,7 +88,7 @@ export function RealtimePartyQuizScreen({
       <button
         onClick={() => setShowQuitModal(true)}
         className="absolute right-3 top-3 z-40 rounded-full p-2 text-white/45 transition-colors hover:bg-white/5 hover:text-white/80 sm:right-4 sm:top-4"
-        title="Leave match"
+        title={t('partyResults.leaveMatch')}
       >
         <X className="size-5" />
       </button>

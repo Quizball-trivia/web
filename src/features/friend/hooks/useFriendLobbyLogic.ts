@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useLocale } from "@/contexts/LocaleContext";
 import { useRealtimeConnection } from "@/lib/realtime/useRealtimeConnection";
 import { getSocket } from "@/lib/realtime/socket-client";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
@@ -26,6 +27,7 @@ interface UseFriendLobbyLogicProps {
 
 export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicProps) {
   const router = useRouter();
+  const { t } = useLocale();
   const { player } = usePlayer();
   const authUser = useAuthStore((state) => state.user);
   const selfUserId = authUser?.id ?? player.id;
@@ -235,7 +237,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
       prevOpponentId &&
       !currentOpponentId
     ) {
-      toast.info("Opponent left the lobby.");
+      toast.info(t('friend.toastOpponentLeft'));
     }
 
     prevOpponentIdRef.current = currentOpponentId;
@@ -304,7 +306,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
       } catch (error) {
         logger.error('Analytics trackFriendInviteSent failed', error);
       }
-      toast.success("Room Code copied!");
+      toast.success(t('friend.toastRoomCodeCopied'));
     }
   };
 
@@ -354,7 +356,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     clearStartMatchTimeout();
     startMatchTimeoutRef.current = setTimeout(() => {
       setIsStartingMatch(false);
-      toast.error("Match start is taking too long. Please try again.");
+      toast.error(t('friend.toastMatchStartTooLong'));
     }, 12000);
 
     getSocket().emit("lobby:start");

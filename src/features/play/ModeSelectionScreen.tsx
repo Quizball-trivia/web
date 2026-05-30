@@ -126,7 +126,7 @@ export function ModeSelectionScreen({
         {/* Ranked icon — watermark anchored slightly right of card centre so
             the big "RANKED MATCH" title on the left doesn't overlap it. */}
         <Image
-          src="/assets/ranked-icon.webp"
+          src="/assets/brand/ranked-hands-trophy.svg"
           alt=""
           width={260}
           height={260}
@@ -139,7 +139,7 @@ export function ModeSelectionScreen({
             {/* Left: Title + Play */}
             <div className="flex-1 min-w-0">
               <h1
-                className="text-[2.75rem] uppercase text-white"
+                className="text-[clamp(1.75rem,3vw,2.75rem)] uppercase text-white break-words [hyphens:auto]"
                 style={rankedTitleStyle}
               >
                 {t('play.rankedMatch')}
@@ -235,7 +235,7 @@ export function ModeSelectionScreen({
             <div className="mt-3 flex items-end justify-between gap-3">
               <div className="flex flex-col items-start gap-2">
                 <Image
-                  src="/assets/ranked-icon.webp"
+                  src="/assets/brand/ranked-hands-trophy.svg"
                   alt=""
                   width={160}
                   height={160}
@@ -286,7 +286,7 @@ export function ModeSelectionScreen({
           />
           <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
             <h3
-              className="whitespace-nowrap text-[0.95rem] leading-[1] uppercase text-white md:text-4xl"
+              className="text-[0.95rem] leading-[1.05] uppercase text-white break-words [hyphens:auto] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
               style={friendlyTitleStyle}
             >
               {t('play.friendlyMatch')}
@@ -340,7 +340,7 @@ export function ModeSelectionScreen({
           />
           <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
             <h3
-              className="whitespace-nowrap text-[0.95rem] leading-[1] uppercase text-black md:text-4xl"
+              className="text-[0.95rem] leading-[1.05] uppercase text-black break-words [hyphens:auto] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
               style={dailyTitleStyle}
             >
               {t('play.dailyChallenge')}
