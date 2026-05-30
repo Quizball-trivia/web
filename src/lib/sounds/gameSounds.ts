@@ -126,6 +126,15 @@ function getBgm(name: BgmName): Howl {
   return bgmInstances[name]!;
 }
 
+/** Prepare a background track without starting playback. */
+export function preloadBgm(name: BgmName) {
+  try {
+    getBgm(name);
+  } catch {
+    // Keep audio best-effort. Missing/blocked audio should never break UI.
+  }
+}
+
 /**
  * Start a looping background track at the default low volume.
  * Idempotent: calling with the currently-playing track is a no-op.
