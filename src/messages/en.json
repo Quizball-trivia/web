@@ -760,11 +760,13 @@
     "placementsRemaining": "Complete placements to unlock your rank. {n} matches left.",
     "matchComplete": "MATCH COMPLETE"
   },
+  "presence": {
+    "onlineLoading": "Online...",
+    "online": "{count} online"
+  },
   "friendHub": {
     "title": "Friend Match",
     "subtitle": "Jump into an open room or start your own.",
-    "playersOnlineLoading": "Players online...",
-    "playersOnline": "{count} players online",
     "sessionRecovering": "Cleaning up a previous session... this will only take a moment.",
     "sessionTransitioning": "Getting things ready... please wait a moment.",
     "browseRooms": "Browse Rooms",

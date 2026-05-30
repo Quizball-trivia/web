@@ -9,6 +9,7 @@ import { useRealtimeConnection } from "@/lib/realtime/useRealtimeConnection";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
+import { useSiteOnlineStore } from "@/hooks/usePresencePing";
 import { useQueryClient } from "@tanstack/react-query";
 import { lobbiesKeys } from "@/lib/queries/lobbies.queries";
 import { Users } from "lucide-react";
@@ -36,7 +37,7 @@ export function FriendMatchHubPage() {
   
   const lobby = useRealtimeMatchStore(state => state.lobby);
   const sessionState = useRealtimeMatchStore(state => state.sessionState);
-  const onlineUsers = useRealtimeMatchStore(state => state.onlineUsers);
+  const siteOnline = useSiteOnlineStore(state => state.siteOnline);
   const error = useRealtimeMatchStore(state => state.error);
   const clearRealtimeError = useRealtimeMatchStore(state => state.clearError);
   
@@ -234,9 +235,9 @@ export function FriendMatchHubPage() {
          >
             <Users className="size-4 text-brand-green" />
             <span>
-              {onlineUsers === null
-                ? t("friendHub.playersOnlineLoading")
-                : t("friendHub.playersOnline", { count: onlineUsers.toLocaleString() })}
+              {siteOnline === null
+                ? t("presence.onlineLoading")
+                : t("presence.online", { count: siteOnline.toLocaleString() })}
             </span>
          </div>
       </div>

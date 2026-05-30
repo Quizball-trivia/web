@@ -701,7 +701,7 @@ export interface paths {
         put?: never;
         /**
          * Supabase Send SMS hook for SMSOffice
-         * @description Called by Supabase Auth Send SMS hook. Sends only Georgian phone OTP messages through SMSOffice.
+         * @description Called by Supabase Auth Send SMS hook. Sends only Georgian phone OTP messages through SMSOffice. Authenticated by the shared hook secret in the Authorization Bearer header.
          */
         post: {
             parameters: {
@@ -767,7 +767,7 @@ export interface paths {
         };
         /**
          * SMSOffice delivery callback
-         * @description Receives SMSOffice delivery status updates. Responds with plain text OK.
+         * @description Receives SMSOffice delivery status updates. Responds with plain text OK. Authenticated by the shared callback secret in the `secret` query parameter.
          */
         get: {
             parameters: {
@@ -791,7 +791,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": string;
+                    };
                 };
                 /** @description Invalid callback secret */
                 401: {
@@ -821,7 +823,7 @@ export interface paths {
         };
         /**
          * Check SMSOffice message status
-         * @description Polls SMSOffice message status by destination and reference. Intended for manual/internal verification.
+         * @description Polls SMSOffice message status by destination and reference. Intended for manual/internal verification. Authenticated by the shared hook secret in the Authorization Bearer header.
          */
         get: {
             parameters: {
@@ -3093,6 +3095,84 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/presence/ping": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Heartbeat presence ping
+         * @description Records the caller (anonymous or logged-in) as currently online and returns the site-wide online count. Public — accepts requests without authentication.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Online count */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OnlineCountResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/presence/online": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get site-wide online count
+         * @description Returns the current count of visitors online site-wide.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Online count */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OnlineCountResponse"];
                     };
                 };
             };
@@ -5650,6 +5730,9 @@ export interface components {
                     };
                 }[];
             };
+        };
+        OnlineCountResponse: {
+            online: number;
         };
         CategoryResponse: {
             /** Format: uuid */

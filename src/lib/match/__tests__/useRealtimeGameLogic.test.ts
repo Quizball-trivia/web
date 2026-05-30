@@ -226,7 +226,7 @@ describe('useRealtimeGameLogic — roundResultHoldDone for goals', () => {
     expect(result.current.state.showOptions).toBe(false);
   });
 
-  it('does NOT set roundResultHoldDone for last_attack non-goal round', async () => {
+  it('sets roundResultHoldDone for last_attack non-goal round so penalties/halftime can wait for the extra-question animation', async () => {
     seedMatch();
     const store = useRealtimeMatchStore.getState();
 
@@ -249,8 +249,7 @@ describe('useRealtimeGameLogic — roundResultHoldDone for goals', () => {
     // 3. Advance past hold
     await act(async () => { vi.advanceTimersByTime(ROUND_RESULT_HOLD_MS + 50); });
 
-    // No goal → roundResultHoldDone stays false (effectiveDelay=0 and no goal)
-    expect(result.current.state.roundResultHoldDone).toBe(false);
+    expect(result.current.state.roundResultHoldDone).toBe(true);
     expect(result.current.state.showOptions).toBe(false);
   });
 

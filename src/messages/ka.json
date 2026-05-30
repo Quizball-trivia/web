@@ -806,11 +806,13 @@
     "previousPage": "წინა გვერდზე გადასვლა",
     "nextPage": "შემდეგ გვერდზე გადასვლა"
   },
+  "presence": {
+    "onlineLoading": "ონლაინში...",
+    "online": "{count} ონლაინში"
+  },
   "friendHub": {
     "title": "მეგობრული მატჩი",
     "subtitle": "შედი ღია ოთახში ან შექმენი შენი საკუთარი.",
-    "playersOnlineLoading": "მოთამაშეები ონლაინში...",
-    "playersOnline": "{count} მოთამაშე ონლაინში",
     "sessionRecovering": "წინა სესიის გასუფთავება... ამას მხოლოდ ერთი წამი დასჭირდება.",
     "sessionTransitioning": "მზადება... გთხოვთ, მოიცადოთ.",
     "browseRooms": "ოთახების დათვალიერება",

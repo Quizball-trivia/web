@@ -12,7 +12,7 @@
  *
  * Triggers (when `match.variant === 'ranked_sim'`):
  *   - Player flight: fires when `answerAck` arrives with `pointsEarned > 0`,
- *     gated on phaseKind === normal.
+ *     gated on phaseKind === normal or last_attack.
  *     Deduped by `answerAck.qIndex`.
  *   - Opponent flight: fires when `opponentAnswered` flips true with
  *     `opponentAnsweredCorrectly === true && opponentRecentPoints > 0`,
@@ -54,7 +54,7 @@ function resolveFlightPoints(
 }
 
 function isFlightPhaseKind(kind: string | undefined): boolean {
-  return kind === 'normal' || kind === 'penalty';
+  return kind === 'normal' || kind === 'last_attack' || kind === 'penalty';
 }
 
 function findScoreAnchor(side: Side): DOMRect | null {

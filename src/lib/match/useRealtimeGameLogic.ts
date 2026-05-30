@@ -223,6 +223,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
 
   const currentPhaseKind = currentQuestion?.phaseKind ?? 'normal';
   const isGoalRound = Boolean(roundResult?.deltas?.goalScoredBySeat);
+  const isLastAttackRound = currentPhaseKind === 'last_attack';
   const goalExtra = isGoalRound ? GOAL_CELEBRATION_EXTRA_MS : 0;
   const effectiveDelay =
     currentPhaseKind === 'normal'
@@ -240,13 +241,13 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
 
     const holdTimer = setTimeout(() => {
       setShowOptions(false);
-      if (effectiveDelay > 0 || isGoalRound) {
+      if (effectiveDelay > 0 || isGoalRound || isLastAttackRound) {
         setRoundResultHoldDone(true);
       }
     }, roundResultHoldMs);
 
     return () => clearTimeout(holdTimer);
-  }, [roundResolved, showOptions, matchPaused, currentQuestionIndex, roundResultHoldMs, startCountdownActive, effectiveDelay, isGoalRound]);
+  }, [roundResolved, showOptions, matchPaused, currentQuestionIndex, roundResultHoldMs, startCountdownActive, effectiveDelay, isGoalRound, isLastAttackRound]);
 
   // Transition delay timer — when the overlay is showing, count down the delay.
   // Sets transitionElapsed=true which opens the gate for promotion.
