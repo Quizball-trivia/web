@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import {
   motion,
   AnimatePresence,
@@ -8,7 +8,7 @@ import {
   useTransform,
   animate,
 } from "motion/react";
-import { RotateCcw, TriangleAlert, Volume2, VolumeX } from "lucide-react";
+import { RotateCcw, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import type { OpponentInfo } from "@/lib/realtime/socket.types";
@@ -29,7 +29,7 @@ import {
 } from "@/lib/geo";
 import { MapPlayerPin, type FakePlayer } from "./components/MapPlayerPin";
 import { logger } from "@/utils/logger";
-import { isMuted } from "@/lib/sounds/gameSounds";
+import { stopBgm } from "@/lib/sounds/gameSounds";
 import { useLocale } from "@/contexts/LocaleContext";
 import {
   ComposableMap,
@@ -166,6 +166,11 @@ function pickRandom<T>(items: readonly T[], indexFallback: number): T {
   return items[Math.floor(Math.random() * items.length)] ?? items[indexFallback % items.length];
 }
 
+// Cap the number of animated pins. Each pin renders a multi-layer avatar
+// inside the continuously-panning map overlay. Keep this deliberately low so
+// the search screen stays smooth on mobile while the map is animating.
+const MAX_SEARCH_PINS = 12;
+
 function generateFakePlayers(): FakePlayer[] {
   const cityPool = shuffled([
     ...CITY_DATA.map(({ lon, lat, city, country, flag }) => ({
@@ -176,7 +181,7 @@ function generateFakePlayers(): FakePlayer[] {
       flag,
     })),
     ...EXTRA_SEARCH_LOCATIONS,
-  ]).slice(0, CITY_DATA.length + 6);
+  ]).slice(0, MAX_SEARCH_PINS);
   const names = shuffled(SEARCH_PLAYER_NAMES);
   const avatarCustomizations = shuffled(CITY_DATA.map((c) => c.customization));
 
@@ -200,6 +205,31 @@ function generateFakePlayers(): FakePlayer[] {
     };
   });
 }
+
+// Static world map — never depends on changing state, so memo() prevents the
+// ~170 country paths from being re-created on every parent re-render.
+const MemoizedGeographies = memo(function MemoizedGeographies() {
+  return (
+    <Geographies geography={worldTopo}>
+      {({ geographies }) =>
+        geographies.map((geo) => (
+          <Geography
+            key={geo.rsmKey}
+            geography={geo}
+            fill="#1C2733"
+            stroke="#2D3F4E"
+            strokeWidth={0.5}
+            style={{
+              default: { outline: "none" },
+              hover: { outline: "none" },
+              pressed: { outline: "none" },
+            }}
+          />
+        ))
+      }
+    </Geographies>
+  );
+});
 
 // ── Pan constants ──
 // The map starts showing Americas and pans right across Europe, Asia
@@ -230,51 +260,24 @@ export function MatchmakingMapScreen({
 }: MatchmakingMapScreenProps) {
   const { t } = useLocale();
   const fakePlayers = useMemo(() => generateFakePlayers(), []);
-  const localGeoHint = readCachedGeoHint();
-  const [visiblePins, setVisiblePins] = useState<Set<number>>(new Set());
-  const [searchTime, setSearchTime] = useState(0);
+  const localGeoHint = useMemo(() => readCachedGeoHint(), []);
   const [preparingMatchStuck, setPreparingMatchStuck] = useState(false);
-  const [highlightedPin, setHighlightedPin] = useState<number | null>(null);
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== "undefined"
-      ? window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`).matches
-      : false,
-  );
   const showFoundState = matchType === "ranked" && rankedFoundOpponent !== null;
   const showPreparationFailure =
     showFoundState &&
     (preparingMatchStuck ||
       debugInfo?.errorCode === "MATCH_PREPARATION_FAILED");
-  // Matchmaking search music removed — the previous track was copyrighted.
-  // Leaving the mute button + state in place so it can be re-enabled with a
-  // licensed track without touching the rest of the screen.
-  const [musicMuted, setMusicMuted] = useState(() => isMuted());
-  const scanRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const unknownCity = t("matchmaking.unknownCity");
+  const unknownCountry = t("matchmaking.unknownCountry");
+  const opponentFallback = t("matchmaking.opponentFallback");
 
-  const handleToggleMusicMute = () => {
-    setMusicMuted((prev) => !prev);
-  };
-
-  const panAnimRef = useRef<ReturnType<typeof animate> | null>(null);
-  const fallbackSearchStartedAtRef = useRef<number | null>(null);
-
-  // Motion values for map pan/zoom.
-  const mapX = useMotionValue(DESKTOP_CAMERA.startX);
-  const mapY = useMotionValue(0);
-  const mapScale = useMotionValue(DESKTOP_CAMERA.searchScale);
-  const mapOverlayX = useTransform(
-    mapX,
-    (value) => `${(value / MAP_W) * 100}%`,
-  );
-  const mapOverlayY = useTransform(
-    mapY,
-    (value) => `${(value / MAP_H) * 100}%`,
-  );
-  const searchCamera = isMobile ? MOBILE_CAMERA : DESKTOP_CAMERA;
-
-  const opponentPin: FakePlayer | null = (() => {
+  const opponentPin: FakePlayer | null = useMemo(() => {
     if (!rankedFoundOpponent) return null;
-    const resolved = resolveOpponentLocation(rankedFoundOpponent, t("matchmaking.unknownCity"), t("matchmaking.unknownCountry"));
+    const resolved = resolveOpponentLocation(
+      rankedFoundOpponent,
+      unknownCity,
+      unknownCountry,
+    );
     const [oppX, oppY] = projectPoint(resolved.lon, resolved.lat);
     return {
       id:
@@ -291,14 +294,14 @@ export function MatchmakingMapScreen({
       avatarUrl:
         rankedFoundOpponent.avatarUrl ?? getAvatarAsset("blue"),
       avatarCustomization: rankedFoundOpponent.avatarCustomization ?? null,
-      name: rankedFoundOpponent.username || t("matchmaking.opponentFallback"),
+      name: rankedFoundOpponent.username || opponentFallback,
       flag: resolved.flag,
       city: resolved.city,
       country: resolved.country,
       delay: 0,
       source: resolved.source ?? "resolved",
     };
-  })();
+  }, [opponentFallback, rankedFoundOpponent, unknownCity, unknownCountry]);
   const opponentRawGeo = useMemo(() => {
     if (!rankedFoundOpponent) return null;
     const geoObj =
@@ -400,210 +403,22 @@ export function MatchmakingMapScreen({
     showFoundState,
   ]);
 
-  const opponentPinId = opponentPin?.id ?? null;
-  const mapPlayers = useMemo(
-    () => (opponentPin ? [...fakePlayers, opponentPin] : fakePlayers),
-    [fakePlayers, opponentPin],
-  );
-
-  // Sync mobile camera defaults with viewport.
+  // Keep matchmaking light: do not start a background loop on this screen.
+  // The map animation is already doing continuous work, and streaming the
+  // search BGM was causing noticeable jank on some devices.
   useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`);
-    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mql.addEventListener("change", onChange);
-    return () => mql.removeEventListener("change", onChange);
+    stopBgm(250);
+    return () => stopBgm(250);
   }, []);
-
-  // Continuous rightward panning while searching
-  useEffect(() => {
-    if (showFoundState) return;
-
-    mapX.set(searchCamera.startX);
-    mapY.set(searchCamera.searchY);
-    mapScale.set(searchCamera.searchScale);
-
-    panAnimRef.current = animate(
-      mapX,
-      searchCamera.startX - searchCamera.panRange,
-      {
-        duration: searchCamera.panRange / searchCamera.panSpeed,
-        ease: "easeInOut",
-        repeat: Infinity,
-        repeatType: "mirror",
-      },
-    );
-
-    return () => {
-      panAnimRef.current?.stop();
-    };
-  }, [showFoundState, searchCamera, mapX, mapY, mapScale]);
-
-  // Zoom to opponent when found
-  useEffect(() => {
-    if (!showFoundState || !opponentPin) return;
-
-    // Stop pan animation
-    panAnimRef.current?.stop();
-
-    // Zoom into opponent location
-    const targetScale = isMobile ? 4.4 : 3.2;
-    const targetX = MAP_W / 2 - opponentPin.x * targetScale;
-    const focusY = isMobile ? MAP_H * 0.42 : MAP_H / 2;
-    const targetY = focusY - opponentPin.y * targetScale;
-    const minX = MAP_W - MAP_W * targetScale;
-    const minY = MAP_H - MAP_H * targetScale;
-    const clampedTargetX = clamp(targetX, minX, 0);
-    const clampedTargetY = clamp(targetY, minY, 0);
-
-    // Animate to target
-    const zoomDuration = 1.4;
-    animate(mapScale, targetScale, {
-      duration: zoomDuration,
-      ease: [0.32, 0.72, 0, 1],
-    });
-    animate(mapX, clampedTargetX, {
-      duration: zoomDuration,
-      ease: [0.32, 0.72, 0, 1],
-    });
-    animate(mapY, clampedTargetY, {
-      duration: zoomDuration,
-      ease: [0.32, 0.72, 0, 1],
-    });
-  }, [showFoundState, opponentPin, isMobile, mapScale, mapX, mapY]);
-
-  // Stagger pin appearances
-  useEffect(() => {
-    if (showFoundState) return;
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    fakePlayers.forEach((p) => {
-      timers.push(
-        setTimeout(
-          () => setVisiblePins((prev) => new Set(prev).add(p.id)),
-          p.delay * 1000,
-        ),
-      );
-    });
-    return () => timers.forEach(clearTimeout);
-  }, [fakePlayers, showFoundState]);
-
-  // Search elapsed timer
-  useEffect(() => {
-    if (matchType !== "ranked") return;
-    if (fallbackSearchStartedAtRef.current == null) {
-      fallbackSearchStartedAtRef.current = Date.now();
-    }
-    const startedAt = resolveSearchTimerStartedAt(
-      rankedSearchStartedAt,
-      fallbackSearchStartedAtRef.current,
-    );
-    const tick = () =>
-      setSearchTime(Math.floor(Math.max(0, Date.now() - startedAt) / 1000));
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [matchType, rankedSearchStartedAt]);
-
-  // Cycle highlighted pin while searching
-  useEffect(() => {
-    if (showFoundState) {
-      if (scanRef.current) clearInterval(scanRef.current);
-      return;
-    }
-    let idx = 0;
-    scanRef.current = setInterval(() => {
-      idx = (idx + 1) % fakePlayers.length;
-      setHighlightedPin(fakePlayers[idx].id);
-    }, 350);
-    return () => {
-      if (scanRef.current) clearInterval(scanRef.current);
-    };
-  }, [showFoundState, fakePlayers, opponentPinId]);
 
   return (
     <div className="fixed inset-0 z-50 bg-surface-darkest bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat overflow-hidden font-fun select-none">
       {/* ── Map ── */}
-      <div
-        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-        style={{
-          width: `min(100vw, calc(100vh * ${MAP_W} / ${MAP_H}))`,
-          height: `min(100vh, calc(100vw * ${MAP_H} / ${MAP_W}))`,
-        }}
-      >
-        <ComposableMap
-          width={MAP_W}
-          height={MAP_H}
-          projection="geoNaturalEarth1"
-          projectionConfig={{ scale: PROJ_SCALE, center: PROJ_CENTER }}
-          style={{
-            width: "100%",
-            height: "100%",
-            position: "absolute",
-            inset: 0,
-            background: "#0D1117",
-          }}
-        >
-          <motion.g
-            style={{
-              x: mapX,
-              y: mapY,
-              scale: mapScale,
-              originX: 0,
-              originY: 0,
-              transformBox: "fill-box",
-              transformOrigin: "0px 0px",
-            }}
-          >
-            <Geographies geography={worldTopo}>
-              {({ geographies }) =>
-                geographies.map((geo) => (
-                  <Geography
-                    key={geo.rsmKey}
-                    geography={geo}
-                    fill="#1C2733"
-                    stroke="#2D3F4E"
-                    strokeWidth={0.5}
-                    style={{
-                      default: { outline: "none" },
-                      hover: { outline: "none" },
-                      pressed: { outline: "none" },
-                    }}
-                  />
-                ))
-              }
-            </Geographies>
-          </motion.g>
-        </ComposableMap>
-
-        <motion.div
-          className="absolute inset-0 z-10 overflow-visible"
-          style={{
-            x: mapOverlayX,
-            y: mapOverlayY,
-            scale: mapScale,
-            transformOrigin: "0 0",
-          }}
-          aria-hidden="true"
-        >
-          {mapPlayers.map((p) => {
-            const visible = visiblePins.has(p.id);
-            const highlighted = showFoundState
-              ? p.id === opponentPinId
-              : highlightedPin === p.id;
-            const isOpp = showFoundState && p.id === opponentPinId;
-            if (!visible && !showFoundState) return null;
-
-            return (
-              <MapPlayerPin
-                key={p.id}
-                player={p}
-                highlighted={highlighted}
-                isOpponent={isOpp}
-                showFoundState={showFoundState}
-              />
-            );
-          })}
-        </motion.div>
-      </div>
+      <MatchmakingMapViewport
+        fakePlayers={fakePlayers}
+        opponentPin={opponentPin}
+        showFoundState={showFoundState}
+      />
 
       {/* ── Overlays ── */}
       <div
@@ -615,22 +430,6 @@ export function MatchmakingMapScreen({
       />
       <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-surface-darkest to-transparent pointer-events-none" />
       <div className="absolute bottom-0 left-0 right-0 h-52 bg-gradient-to-t from-surface-darkest via-surface-darkest/90 to-transparent pointer-events-none" />
-
-      {/* ── Mute (top-left) ── */}
-      <motion.button
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        onClick={handleToggleMusicMute}
-        className="absolute top-12 left-4 z-20 size-10 rounded-full bg-surface-map-panel/80 border border-white/10 flex items-center justify-center text-white/60 hover:text-white active:scale-95 transition-all backdrop-blur-sm"
-        title={musicMuted ? t("matchmaking.unmuteMusic") : t("matchmaking.muteMusic")}
-      >
-        {musicMuted ? (
-          <VolumeX className="size-5" />
-        ) : (
-          <Volume2 className="size-5" />
-        )}
-      </motion.button>
 
       {/* Cancel X button removed — using bottom Cancel button instead */}
 
@@ -681,9 +480,10 @@ export function MatchmakingMapScreen({
               </h2>
 
               <p className="text-sm font-bold text-brand-slate">
-                {searchTime > 0
-                  ? searchTime
-                  : t("matchmaking.findingOpponent")}
+                <SearchElapsedText
+                  matchType={matchType}
+                  rankedSearchStartedAt={rankedSearchStartedAt}
+                />
               </p>
 
               <button

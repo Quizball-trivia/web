@@ -87,29 +87,34 @@ export default function ChallengePage() {
   }, [router]);
 
   const handleComplete = useCallback(
-    async (score: number) => {
+    (score: number) => {
       if (!challengeType || completeOnceRef.current) return;
       completeOnceRef.current = true;
 
-      try {
-        const result = await completeMutation.mutateAsync(score);
+      // Navigate back instantly — the completion write + cache refresh run in
+      // the background so the user isn't stuck waiting on a round-trip.
+      router.replace("/daily/challenges");
+
+      void (async () => {
         try {
-          trackDailyChallengeCompleted({
-            challengeType,
-            score,
-            xpAwarded: result.xpAwarded,
-          });
+          const result = await completeMutation.mutateAsync(score);
+          try {
+            trackDailyChallengeCompleted({
+              challengeType,
+              score,
+              xpAwarded: result.xpAwarded,
+            });
+          } catch (error) {
+            console.error('Analytics trackDailyChallengeCompleted failed', error);
+          }
+          if (result.xpAwarded > 0) {
+            addXP(result.xpAwarded);
+          }
+          await invalidateAfterComplete();
         } catch (error) {
-          console.error('Analytics trackDailyChallengeCompleted failed', error);
+          console.error('Daily challenge completion failed', error);
         }
-        if (result.xpAwarded > 0) {
-          addXP(result.xpAwarded);
-        }
-        await invalidateAfterComplete();
-        router.replace("/daily/challenges");
-      } catch {
-        completeOnceRef.current = false;
-      }
+      })();
     },
     [addXP, challengeType, completeMutation, invalidateAfterComplete, router]
   );

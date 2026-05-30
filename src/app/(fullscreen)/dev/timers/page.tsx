@@ -6,6 +6,7 @@ import { motion } from 'motion/react';
 
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { MatchCountdownPuck } from '@/components/shared/MatchCountdownPuck';
+import { ModeConfirmModal } from '@/components/shared/ModeConfirmModal';
 import { KickoffCountdownOverlay } from '@/features/possession/components/KickoffCountdownOverlay';
 import { cn } from '@/lib/utils';
 
@@ -440,6 +441,7 @@ export default function DevTimersPage() {
   const [loaderVisible, setLoaderVisible] = useState(false);
   const [loaderDurationMs, setLoaderDurationMs] = useState(5_000);
   const [loaderRunId, setLoaderRunId] = useState(0);
+  const [ticketModalOpen, setTicketModalOpen] = useState(false);
 
   const activePreset = useMemo(
     () => TIMER_PRESETS.find((preset) => preset.id === activePresetId) ?? TIMER_PRESETS[0]!,
@@ -543,6 +545,26 @@ export default function DevTimersPage() {
           </aside>
 
           <div className="grid gap-5">
+            <section className="rounded-2xl border border-brand-yellow/30 bg-surface-card/80 p-4 shadow-2xl shadow-black/10">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div className="font-poppins text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-yellow">
+                    Ranked ticket modal
+                  </div>
+                  <p className="mt-1 max-w-xl text-sm font-semibold leading-snug text-white/55">
+                    Opens the real ranked confirmation modal with zero tickets, so you can inspect the buy-tickets state without spending anything.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setTicketModalOpen(true)}
+                  className="shrink-0 rounded-xl bg-brand-yellow px-5 py-3 font-poppins text-sm font-extrabold uppercase text-black transition hover:bg-brand-yellow/90 active:translate-y-[1px]"
+                >
+                  Open 0-ticket modal
+                </button>
+              </div>
+            </section>
+
             {activePreset.id === 'kickoff' && <MatchKickoffPreview preset={activePreset} runId={timerRunId} />}
             {activePreset.id === 'disconnect' && <DisconnectGracePreview preset={activePreset} runId={timerRunId} />}
             {activePreset.id === 'forfeit' && <ForfeitPendingPreview preset={activePreset} runId={timerRunId} />}
@@ -621,6 +643,13 @@ export default function DevTimersPage() {
           </div>
         </div>
       </div>
+      <ModeConfirmModal
+        mode="ranked"
+        isOpen={ticketModalOpen}
+        onOpenChange={setTicketModalOpen}
+        onConfirm={() => setTicketModalOpen(false)}
+        ticketsRemaining={0}
+      />
     </main>
   );
 }

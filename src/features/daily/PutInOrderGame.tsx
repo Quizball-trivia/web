@@ -43,8 +43,8 @@ interface PutInOrderGameProps {
 type RoundItem = PutInOrderSession["rounds"][number]["items"][number];
 type Round = PutInOrderSession["rounds"][number];
 
-function getRoundInstruction(round: Round): string {
-  return round.instruction ?? "lowest to highest";
+function getRoundInstruction(round: Round, fallback: string): string {
+  return round.instruction ?? fallback;
 }
 
 function SortableItem({
@@ -133,7 +133,7 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
   const [showQuitDialog, setShowQuitDialog] = useState(false);
 
   const round = session.rounds[currentRound];
-  const roundInstruction = round ? getRoundInstruction(round) : "lowest to highest";
+  const roundInstruction = round ? getRoundInstruction(round, t('dailyGames.lowestToHighest')) : t('dailyGames.lowestToHighest');
   // sort_value represents rank/position (1 = first in correct order).
   const correctOrder = [...(round?.items ?? [])].sort((a, b) => a.sortValue - b.sortValue);
 
@@ -204,7 +204,7 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
               </button>
               <div className="flex items-center gap-2">
                 <Calendar className="size-6 lg:size-7 text-brand-cyan" />
-                <h1 className="text-lg md:text-xl lg:text-2xl font-black uppercase text-white">Challenge Complete!</h1>
+                <h1 className="text-lg md:text-xl lg:text-2xl font-black uppercase text-white">{t('dailyGames.challengeComplete')}</h1>
               </div>
             </div>
           </div>
@@ -217,7 +217,7 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
             </div>
 
             <h2 className="text-2xl lg:text-3xl font-black text-white mb-2">
-              {isPerfect ? <span className="flex items-center justify-center gap-2">Perfect Score! <Sparkles className="size-6 lg:size-7 text-brand-gold" /></span> : "Challenge Complete!"}
+              {isPerfect ? <span className="flex items-center justify-center gap-2">{t('dailyGames.perfectScore')} <Sparkles className="size-6 lg:size-7 text-brand-gold" /></span> : t('dailyGames.challengeComplete')}
             </h2>
             <p className="text-brand-slate lg:text-base mb-6">{session.title}</p>
 
@@ -249,7 +249,7 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
   }
 
   return (
-    <div className="fixed inset-0 z-40 bg-surface-deep font-poppins flex flex-col text-white">
+    <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat font-poppins text-white">
       <DailyChallengeHeader
         onQuit={() => setShowQuitDialog(true)}
         currentIndex={currentRound}
@@ -268,7 +268,7 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
                 </div>
                 <div className="text-sm lg:text-base">
                   <p className="mb-1 text-white">
-                    <span className="font-bold">Drag and drop</span> to arrange these items from <span className="font-bold">{roundInstruction}</span>.
+                    {t('dailyGames.dragAndDropInstruction', { instruction: roundInstruction })}
                   </p>
                   <p className="text-xs lg:text-sm text-brand-slate">{round.prompt}</p>
                 </div>
@@ -305,20 +305,20 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
                   {userOrder.every((item, idx) => isCurrentOrderCorrect(item.id, idx)) ? (
                     <>
                       <CheckCircle2 className="size-8 lg:size-10 text-brand-green-light mx-auto mb-2" />
-                      <p className="text-brand-green-light font-bold lg:text-lg mb-1">Perfect! +50 round points</p>
-                      <p className="text-xs lg:text-sm text-brand-slate">You got the chronological order correct.</p>
+                      <p className="text-brand-green-light font-bold lg:text-lg mb-1">{t('dailyGames.perfectPointsAwarded')}</p>
+                      <p className="text-xs lg:text-sm text-brand-slate">{t('dailyGames.chronologicalCorrect')}</p>
                     </>
                   ) : (
                     <>
                       <XCircle className="size-8 lg:size-10 text-brand-red-soft mx-auto mb-2" />
                       <p className="text-brand-red-soft font-bold lg:text-lg mb-1">{t("dailyGames.notQuiteRight")}</p>
-                      <p className="text-xs lg:text-sm text-brand-slate">The correct order is revealed above.</p>
+                      <p className="text-xs lg:text-sm text-brand-slate">{t('dailyGames.correctOrderRevealed')}</p>
                     </>
                   )}
                 </div>
 
                 <button onClick={handleNextRound} className="w-full py-3 lg:py-4 rounded-xl font-black text-white lg:text-lg bg-brand-green-light border-b-4 border-b-[#46A302] active:border-b-2 active:translate-y-[2px] transition-all">
-                  {currentRound + 1 >= session.roundCount ? "View Results" : "Next Round"}
+                  {currentRound + 1 >= session.roundCount ? t('dailyGames.viewResults') : t('dailyGames.nextRound')}
                 </button>
               </div>
             )}

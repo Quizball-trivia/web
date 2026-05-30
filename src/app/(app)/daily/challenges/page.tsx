@@ -65,7 +65,7 @@ function ChallengeCard({
         onClick={onClick}
         className={`relative flex h-[184px] w-full flex-col overflow-hidden rounded-[8px] p-3.5 pb-10 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow md:flex md:h-[252px] md:flex-col md:rounded-[20px] md:p-6 ${
           isCompleted
-            ? "bg-brand-yellow text-black disabled:cursor-default md:border-2 md:border-brand-green-light md:bg-brand-green-darkest md:text-white md:shadow-[0_0_0_4px_hsl(var(--brand-green-light)/0.16)]"
+            ? "bg-brand-yellow text-black opacity-65 saturate-[0.85] disabled:cursor-default md:border-2 md:border-brand-green-light md:bg-brand-green-darkest md:text-white md:shadow-[0_0_0_4px_hsl(var(--brand-green-light)/0.16)]"
             : "bg-brand-yellow text-black hover:brightness-105 active:translate-y-[2px]"
         }`}
       >

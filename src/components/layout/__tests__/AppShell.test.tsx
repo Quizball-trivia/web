@@ -318,6 +318,12 @@ describe('AppShell — route gating', () => {
     expect(screen.getAllByText('navigation.social').length).toBeGreaterThan(0);
   });
 
+  it('routes the mobile home tab directly to play', () => {
+    pathnameMock.mockReturnValue('/store');
+    renderShell();
+    expect(screen.getByText('navigation.home').closest('a')).toHaveAttribute('href', '/play');
+  });
+
   it('shows the mobile header on /', () => {
     pathnameMock.mockReturnValue('/');
     renderShell();

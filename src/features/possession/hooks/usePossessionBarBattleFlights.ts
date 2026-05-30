@@ -404,6 +404,8 @@ export function usePossessionBarBattleFlights() {
     const phaseKind = answerAck.phaseKind ?? 'normal';
     if (!isFlightPhaseKind(phaseKind)) return;
     const ackKey = `${answerAck.matchId}:${answerAck.qIndex}`;
+    if (currentKey !== ackKey) return;
+    if (barBattleMatch.currentQuestionPhase !== 'playing') return;
     if (playerFiredQRef.current === ackKey) return;
 
     enqueueFlightFromDom({
@@ -414,7 +416,7 @@ export function usePossessionBarBattleFlights() {
       logLabel: 'Bar-battle player flight',
       questionKind: answerAck.questionKind,
     });
-  }, [enabled, answerAck, enqueueFlightFromDom]);
+  }, [barBattleMatch.currentQuestionPhase, currentKey, enabled, answerAck, enqueueFlightFromDom]);
 
   // Fallback: if the client missed its immediate answer_ack, fire the same
   // player flight from the authoritative round_result so the user still sees

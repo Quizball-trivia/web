@@ -105,7 +105,8 @@ describe('daily challenge gameplay modes', () => {
     fireEvent.click(screen.getByRole('button', { name: /^submit$/i }));
 
     expect(screen.getByText('Birmingham City')).toBeInTheDocument();
-    expect(screen.getByText('Correct.')).toBeInTheDocument();
+    // A correct submit fires the fly-in result splash ("Correct!").
+    expect(screen.getByText('Correct!')).toBeInTheDocument();
   });
 
   it('renders high low matchups and resolves a correct chain', () => {
@@ -140,7 +141,8 @@ describe('daily challenge gameplay modes', () => {
     fireEvent.click(screen.getByRole('button', { name: /pick\s*michael owen/i }));
 
     expect(screen.getByText('All-time Premier League goals')).toBeInTheDocument();
-    expect(screen.getByText('Chain complete.')).toBeInTheDocument();
+    // Clearing the chain fires the correct fly-in splash ("Correct!").
+    expect(screen.getByText('Correct!')).toBeInTheDocument();
   });
 
   it('renders football logic images and resolves accepted answers', () => {

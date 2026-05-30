@@ -167,6 +167,7 @@ export function useRealtimePossessionMatchController({
 
   usePossessionMatchSounds({
     phase,
+    answerAck,
     roundResult: state.roundResult,
     devPossessionAnimation,
     playSfx,

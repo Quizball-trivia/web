@@ -193,7 +193,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
       <div className="fixed inset-0 z-40 bg-surface-deep font-fun flex items-center justify-center">
         <div className="bg-surface-card rounded-xl border-b-4 border-surface-card-deeper p-6">
           <p className="text-center text-brand-slate">
-            Loading questions...
+            {t('dailyGames.loadingQuestions')}
           </p>
         </div>
       </div>
@@ -201,7 +201,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-40 bg-surface-deep font-poppins flex flex-col text-white">
+    <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat font-poppins text-white">
       <DailyChallengeHeader
         onQuit={() => setShowQuitDialog(true)}
         currentIndex={currentQuestionIndex}
@@ -322,26 +322,26 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
                     <>
                       <CheckCircle2 className="size-6 text-brand-green-light" />
                       <span className="text-brand-green-light font-bold">
-                        Correct!
+                        {t('dailyGames.correctExclaim')}
                       </span>
                     </>
                   ) : (
                     <>
                       <XCircle className="size-6 text-brand-red-soft" />
                       <span className="text-brand-red-soft font-bold">
-                        {hasSubmitted ? "Incorrect" : "Time's Up!"}
+                        {hasSubmitted ? t('dailyGames.incorrect') : t('dailyGames.timesUp')}
                       </span>
                     </>
                   )}
                 </div>
                 {isCorrect ? (
                   <div className="text-sm text-brand-slate">
-                    +{getPoints(revealedClues)} points
+                    {t('dailyGames.pointsAwarded', { points: getPoints(revealedClues) })}
                   </div>
                 ) : (
                   <div>
                     <div className="text-sm text-brand-slate mb-1">
-                      Correct answer:
+                      {t('dailyGames.correctAnswerLabel')}
                     </div>
                     <div className="text-lg font-bold text-white">
                       {currentQuestion.displayAnswer}
@@ -360,7 +360,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
                 </button>
               ) : (
                 <div className="text-center text-sm text-brand-slate py-3">
-                  Loading results...
+                  {t('dailyGames.loadingResults')}
                 </div>
               )}
             </div>
@@ -369,8 +369,8 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
 
         {/* Hints */}
         <div className="text-center text-xs text-brand-slate space-y-1">
-          <p className="flex items-center justify-center gap-1"><Clock className="size-3.5 text-brand-cyan" /> {secondsPerClueStep} seconds per clue - answer quickly!</p>
-          <p className="flex items-center justify-center gap-1"><Lightbulb className="size-3.5 text-brand-orange" /> Fewer clues = more points</p>
+          <p className="flex items-center justify-center gap-1"><Clock className="size-3.5 text-brand-cyan" /> {t('dailyGames.cluesPerStepTip', { seconds: secondsPerClueStep })}</p>
+          <p className="flex items-center justify-center gap-1"><Lightbulb className="size-3.5 text-brand-orange" /> {t('dailyGames.fewerCluesMorePoints')}</p>
         </div>
         </div>
         </div>

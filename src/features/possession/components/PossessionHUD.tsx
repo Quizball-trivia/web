@@ -159,7 +159,7 @@ function SpeedStreakBadge({ active }: { active: boolean }) {
   const [landed, setLanded] = useState(false);
   useEffect(() => {
     if (!active) {
-      setLanded(false);
+      queueMicrotask(() => setLanded(false));
       return;
     }
     const timer = setTimeout(() => setLanded(true), SPEED_STREAK_FLIGHT_MS);
@@ -167,6 +167,7 @@ function SpeedStreakBadge({ active }: { active: boolean }) {
   }, [active]);
 
   const show = active && landed;
+  const dropDistance = 720;
 
   // The wrapper + AnimatePresence stay mounted across the whole streak (and
   // beyond) so the badge's EXIT animation can run when the streak breaks —
@@ -174,7 +175,7 @@ function SpeedStreakBadge({ active }: { active: boolean }) {
   // While shown, an invisible spacer reserves the badge's box so the
   // flight-target anchor sits at the true badge center (no landing jump).
   return (
-    <div className="relative inline-flex items-center justify-center">
+    <div className="relative z-[120] inline-flex items-center justify-center overflow-visible">
       {/* Spacer reserves the badge-sized box for the WHOLE active streak — not
           just after reveal — so the flight target (data-speed-streak-slot) is
           measured at the true badge center while the token is still in flight
@@ -199,13 +200,13 @@ function SpeedStreakBadge({ active }: { active: boolean }) {
             // (mirrors the failed/zero-point flight fall), tilting as it falls.
             exit={{
               opacity: [1, 1, 0],
-              y: [0, -10, 260],
+              y: [0, -12, dropDistance],
               rotate: [0, -8, 22],
               scale: [1, 1.05, 0.8],
-              transition: { duration: 0.7, times: [0, 0.16, 1], ease: [0.45, 0, 0.9, 1] },
+              transition: { duration: 1.05, times: [0, 0.12, 1], ease: [0.45, 0, 0.9, 1] },
             }}
             transition={{ type: 'spring', stiffness: 320, damping: 18 }}
-            className="absolute inset-0 flex items-center justify-center"
+            className="absolute inset-0 z-[120] flex items-center justify-center"
           >
             <div
               data-speed-streak-badge="player"

@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { render, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 // AvatarDisplay loads SVG/Image components that vitest doesn't resolve well.
@@ -17,6 +17,7 @@ vi.mock('../BarBattleOverlay', () => ({
 }));
 
 import { PitchVisualization } from '../PitchVisualization';
+import { usePitchSceneModel } from '../pitch/usePitchSceneModel';
 
 // ---------------------------------------------------------------------------
 // Render helper — defaults are tuned to the most common production call.
@@ -167,6 +168,25 @@ describe('PitchVisualization — shot branches', () => {
       simpleShotAnimation: true,
     });
     expect(container.querySelectorAll('img[alt=""]').length).toBeGreaterThan(0);
+  });
+
+  it('animates simple goal shots straight into the goal before the reset', () => {
+    const { result } = renderHook(() => usePitchSceneModel({
+      playerPosition: 50,
+      playerAvatarUrl: '',
+      opponentAvatarUrl: '',
+      playerName: 'P',
+      opponentName: 'O',
+      shotMode: { result: 'goal', ballOriginX: 250, isPlayerAttacker: true, shotId: 'a' },
+      targetGoal: 'right',
+      simpleShotAnimation: true,
+    }));
+
+    const top = result.current.ballActorPosition?.top;
+    expect(Array.isArray(top)).toBe(true);
+    const topFrames = top as string[];
+    expect(topFrames).toHaveLength(2);
+    expect(Number.parseFloat(topFrames[1])).toBeLessThan(Number.parseFloat(topFrames[0]));
   });
 });
 

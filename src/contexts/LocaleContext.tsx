@@ -2,29 +2,14 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import {
-  getCategoryTranslation,
-  getQuestionTranslation,
-  getCountdownTranslation,
-  getClueTranslation,
-} from '../data/locales';
 import { useAuthStore } from '@/stores/auth.store';
 import { type Locale, type MessageKey, isSupportedLocale, normalizeLocale, translate } from '@/lib/i18n/messages';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
-
-type CategoryTranslation = ReturnType<typeof getCategoryTranslation>;
-type QuestionTranslation = ReturnType<typeof getQuestionTranslation>;
-type CountdownTranslation = ReturnType<typeof getCountdownTranslation>;
-type ClueTranslation = ReturnType<typeof getClueTranslation>;
 
 interface LocaleContextType {
   locale: Locale;
   setLocale: (locale: Locale) => void;
   t: (key: MessageKey, params?: Record<string, string | number>) => string;
-  tCategory: (categoryId: string) => CategoryTranslation;
-  tQuestion: (questionId: string) => QuestionTranslation;
-  tCountdown: (countdownId: string) => CountdownTranslation;
-  tClue: (clueId: string) => ClueTranslation;
 }
 
 /**
@@ -37,10 +22,6 @@ const DEFAULT_LOCALE_CONTEXT: LocaleContextType = {
   locale: 'en',
   setLocale: () => {},
   t: (key, params) => translate('en', key, params),
-  tCategory: (categoryId) => getCategoryTranslation('en', categoryId),
-  tQuestion: (questionId) => getQuestionTranslation('en', questionId),
-  tCountdown: (countdownId) => getCountdownTranslation('en', countdownId),
-  tClue: (clueId) => getClueTranslation('en', clueId),
 };
 
 const LocaleContext = createContext<LocaleContextType>(DEFAULT_LOCALE_CONTEXT);
@@ -119,21 +100,13 @@ export function LocaleProvider({ children, initialLocale }: LocaleProviderProps)
   }, []);
 
   const t = useCallback((key: MessageKey, params?: Record<string, string | number>) => translate(locale, key, params), [locale]);
-  const tCategory = useCallback((categoryId: string) => getCategoryTranslation(locale, categoryId), [locale]);
-  const tQuestion = useCallback((questionId: string) => getQuestionTranslation(locale, questionId), [locale]);
-  const tCountdown = useCallback((countdownId: string) => getCountdownTranslation(locale, countdownId), [locale]);
-  const tClue = useCallback((clueId: string) => getClueTranslation(locale, clueId), [locale]);
 
   // Memoize context value to prevent unnecessary re-renders
   const contextValue = useMemo<LocaleContextType>(() => ({
     locale,
     setLocale,
     t,
-    tCategory,
-    tQuestion,
-    tCountdown,
-    tClue,
-  }), [locale, setLocale, t, tCategory, tQuestion, tCountdown, tClue]);
+  }), [locale, setLocale, t]);
 
   return (
     <LocaleContext.Provider value={contextValue}>

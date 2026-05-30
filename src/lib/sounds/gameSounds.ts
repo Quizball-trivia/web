@@ -7,11 +7,15 @@ const SOUND_FILES = {
   whistle: "/sounds/whistle.mp3",
   kick: "/sounds/kick.mp3",
   pass: "/sounds/pass.mp3",
+  correctRanked: "/sounds/correct_ranked.mp3",
+  dailyCorrect: "/sounds/mixkit-unlock-game-notification-253.wav",
+  imposterReveal: "/sounds/imposter.wav",
 } as const;
 
 const BGM_FILES = {
   ranked: "/sounds/ranked_demo.wav",
   kickoff: "/sounds/gameplay_soundtrack.m4a",
+  search: "/sounds/quizball-search.mp3",
 } as const;
 
 type SoundName = keyof typeof SOUND_FILES;
@@ -21,7 +25,8 @@ type BgmName = keyof typeof BGM_FILES;
 export const GAME_SOUND_VOLUME = {
   sfx: 0.3,
   rankedBgm: 0.08,
-  kickoffBgm: 0.32,
+  kickoffBgm: 0.08,
+  searchBgm: 0.12,
 } as const;
 // Flip to true to re-enable the ranked BGM loop. Wiring stays in place
 // so this is a one-liner to revive whenever we want music back.
@@ -30,12 +35,19 @@ const BGM_ENABLED = false;
 // ─── Howl instances (lazy-loaded) ────────────────────────────────
 const sounds: Partial<Record<SoundName, Howl>> = {};
 
+// Per-sound volume overrides (default is GAME_SOUND_VOLUME.sfx).
+const SOUND_VOLUME: Partial<Record<SoundName, number>> = {
+  dailyCorrect: 0.55,
+  imposterReveal: 0.7,
+};
+
 function getSound(name: SoundName): Howl {
   if (!sounds[name]) {
     sounds[name] = new Howl({
       src: [SOUND_FILES[name]],
-      volume: GAME_SOUND_VOLUME.sfx,
+      volume: SOUND_VOLUME[name] ?? GAME_SOUND_VOLUME.sfx,
       preload: true,
+      ...(SOUND_FILES[name].endsWith(".wav") ? { html5: true } : {}),
     });
   }
   return sounds[name]!;
@@ -95,7 +107,9 @@ let activeBgm: BgmName | null = null;
 let kickoffAudioFallback: HTMLAudioElement | null = null;
 
 function getBgmVolume(name: BgmName): number {
-  return name === 'kickoff' ? GAME_SOUND_VOLUME.kickoffBgm : GAME_SOUND_VOLUME.rankedBgm;
+  if (name === 'kickoff') return GAME_SOUND_VOLUME.kickoffBgm;
+  if (name === 'search') return GAME_SOUND_VOLUME.searchBgm;
+  return GAME_SOUND_VOLUME.rankedBgm;
 }
 
 function getBgm(name: BgmName): Howl {
@@ -106,6 +120,7 @@ function getBgm(name: BgmName): Howl {
       loop: true,
       preload: true,
       ...(name === 'kickoff' ? { format: ['m4a'], html5: true } : {}),
+      ...(name === 'search' ? { html5: true } : {}),
     });
   }
   return bgmInstances[name]!;
@@ -116,7 +131,7 @@ function getBgm(name: BgmName): Howl {
  * Idempotent: calling with the currently-playing track is a no-op.
  */
 export function playBgm(name: BgmName) {
-  if (!BGM_ENABLED && name !== 'kickoff') return;
+  if (!BGM_ENABLED && name !== 'kickoff' && name !== 'search') return;
   try {
     if (activeBgm === name && bgmInstances[name]?.playing()) return;
     for (const [key, instance] of Object.entries(bgmInstances)) {

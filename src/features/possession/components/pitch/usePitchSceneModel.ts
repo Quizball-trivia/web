@@ -157,6 +157,7 @@ export function usePitchSceneModel({
   const simpleShotKey = useSimpleShotAnimation && isShot && shotMode
     ? `${shotMode.shotId ?? 0}:${shotMode.isPlayerAttacker ? 'player' : 'opponent'}:${shotMode.result}:${targetGoal ?? 'right'}:${shotMode.variant ?? 0}`
     : null;
+  const shotVariant = toShotVariant(shotMode?.variant);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reset on key change
@@ -170,7 +171,16 @@ export function usePitchSceneModel({
     return () => clearTimeout(timer);
   }, [isShotGoal, simpleShotKey, useSimpleShotAnimation]);
 
-  const simpleShotGoalTarget = { x: goal.goalTarget.x, y: goal.goalTarget.y - 6 };
+  const simpleShotGoalTarget = {
+    x: [
+      simpleShotOriginX,
+      goal.goalTarget.x,
+    ],
+    y: [
+      simpleShotOriginY,
+      goal.goalTarget.y - 6,
+    ],
+  };
   const simpleShotCenterTarget = { x: possessionBoundaryX, y: 112 };
   const simpleShotTarget = (() => {
     if (simpleShotReturnToCenter) return simpleShotCenterTarget;
@@ -182,7 +192,6 @@ export function usePitchSceneModel({
   const renderSimpleShotBall = useSimpleShotAnimation && (
     (isShotGoal && !simpleShotReturnToCenter) || isShotSave || isShotMiss
   );
-  const shotVariant = toShotVariant(shotMode?.variant);
   // Ball origin — captured at shot start so it doesn't shift when positions reset
   const shotBallOriginX = useSimpleShotAnimation ? simpleShotOriginX : (isShot ? shotMode.ballOriginX : normalBallX);
   const shotBallOriginY = useSimpleShotAnimation ? simpleShotOriginY : 145; // Below shooter's feet (avatar at 115 + radius 28 + ball offset)

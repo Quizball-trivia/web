@@ -1,6 +1,6 @@
 import type { components } from "@/types/api.generated";
 
-export type GameMode = 'timeAttack' | 'moneyDrop' | 'categories' | 'survival' | 'countdown' | 'clues' | 'buzzer' | 'trueFalse' | 'emojiGuess' | 'putInOrder';
+export type GameMode = 'timeAttack' | 'moneyDrop' | 'categories' | 'survival' | 'countdown' | 'clues' | 'buzzer' | 'trueFalse' | 'putInOrder';
 
 
 export interface Achievement {

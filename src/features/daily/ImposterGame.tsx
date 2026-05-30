@@ -5,8 +5,15 @@ import { CheckCircle2 } from "lucide-react";
 
 import type { ImposterSession } from "@/lib/domain/dailyChallenge";
 import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
+import { playSfx } from "@/lib/sounds/gameSounds";
 import { QuitGameDialog } from "./QuitGameDialog";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
+import { ResultSplash } from "./components/ResultSplash";
+import { useResultSplash } from "./components/useResultSplash";
+import { DailyChallengeCompleteModal } from "./components/DailyChallengeCompleteModal";
+
+// The imposter reveal sting is ~2s long; delay the reveal to match it.
+const IMPOSTER_REVEAL_DELAY_MS = 2000;
 
 const poppins = {
   fontFamily: "'Poppins', sans-serif",
@@ -30,8 +37,11 @@ export function ImposterGame({
   const [selectedOptionIds, setSelectedOptionIds] = useState<string[]>([]);
   const [timeLeft, setTimeLeft] = useState(session.secondsPerQuestion);
   const [resolved, setResolved] = useState(false);
+  const [revealing, setRevealing] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [showQuitDialog, setShowQuitDialog] = useState(false);
+  const [finished, setFinished] = useState(false);
+  const { splashProps, fire } = useResultSplash();
   const copy = getDailyChallengeCopy();
 
   const currentQuestion = session.questions[currentQuestionIndex];
@@ -50,26 +60,41 @@ export function ImposterGame({
 
   const advance = useCallback(() => {
     if (currentQuestionIndex >= session.questions.length - 1) {
-      onComplete(correctCount);
+      setFinished(true);
       return;
     }
 
     setCurrentQuestionIndex((previous) => previous + 1);
     setSelectedOptionIds([]);
     setResolved(false);
+    setRevealing(false);
     setTimeLeft(session.secondsPerQuestion);
-  }, [correctCount, currentQuestionIndex, onComplete, session.questions.length, session.secondsPerQuestion]);
+  }, [currentQuestionIndex, session.questions.length, session.secondsPerQuestion]);
 
+  // Lock input and play the 2s reveal sting; the actual result flips after it.
   const handleResolve = useCallback(() => {
-    if (resolved) {
+    if (resolved || revealing) {
       return;
     }
+    setRevealing(true);
+    playSfx("imposterReveal");
+  }, [resolved, revealing]);
 
-    if (isCorrectSelection) {
-      setCorrectCount((previous) => previous + 1);
+  // After the sting finishes, score and reveal.
+  useEffect(() => {
+    if (!revealing || resolved) {
+      return;
     }
-    setResolved(true);
-  }, [isCorrectSelection, resolved]);
+    const timeout = window.setTimeout(() => {
+      if (isCorrectSelection) {
+        setCorrectCount((previous) => previous + 1);
+      }
+      // Submit button sits on the right → splash flies in from the right.
+      fire(isCorrectSelection ? "correct" : "wrong", "right");
+      setResolved(true);
+    }, IMPOSTER_REVEAL_DELAY_MS);
+    return () => window.clearTimeout(timeout);
+  }, [revealing, resolved, isCorrectSelection, fire]);
 
   useEffect(() => {
     if (resolved) {
@@ -77,6 +102,11 @@ export function ImposterGame({
         advance();
       }, 1400);
       return () => window.clearTimeout(timeout);
+    }
+
+    // Pause the countdown while the reveal sting is playing.
+    if (revealing) {
+      return;
     }
 
     const timer = window.setInterval(() => {
@@ -91,10 +121,10 @@ export function ImposterGame({
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [advance, handleResolve, resolved]);
+  }, [advance, handleResolve, resolved, revealing]);
 
   const toggleOption = (optionId: string) => {
-    if (resolved) {
+    if (resolved || revealing) {
       return;
     }
 
@@ -110,7 +140,7 @@ export function ImposterGame({
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-surface-deep text-white">
+    <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat text-white">
       <DailyChallengeHeader
         onQuit={() => setShowQuitDialog(true)}
         currentIndex={currentQuestionIndex}
@@ -122,7 +152,7 @@ export function ImposterGame({
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 py-4 overflow-y-auto">
         {/* Question card */}
         <div
-          className="flex flex-col rounded-[24px] bg-surface-page px-5 py-5 text-white sm:px-6 sm:py-6"
+          className="flex flex-col rounded-[24px] border border-white/10 bg-white/5 px-5 py-5 text-white backdrop-blur-sm sm:px-6 sm:py-6"
           style={{
             fontFamily: "'Poppins', sans-serif",
             fontWeight: 700,
@@ -148,7 +178,7 @@ export function ImposterGame({
               <button
                 key={option.id}
                 type="button"
-                disabled={resolved}
+                disabled={resolved || revealing}
                 onClick={() => toggleOption(option.id)}
                 className="relative flex items-center justify-center overflow-hidden rounded-[16px] px-3 transition-shadow duration-150 h-[60px] sm:h-[78px] md:h-[94px]"
                 style={{
@@ -156,21 +186,25 @@ export function ImposterGame({
                   fontSize: 'clamp(13px, 1.7vw, 22px)',
                   textTransform: 'uppercase',
                   color: isRevealWrong ? '#FB3101' : '#FFFFFF',
-                  backgroundColor: isRevealCorrect ? '#38B60E' : 'transparent',
+                  backgroundColor: isRevealCorrect
+                    ? '#38B60E'
+                    : isSelected && !resolved
+                      ? 'rgba(255,229,0,0.18)'
+                      : 'transparent',
                   border: isRevealCorrect
                     ? 'none'
                     : isRevealWrong
                       ? '2px solid #FB3101'
                       : isSelected
-                        ? '2px solid #1CB0F6'
-                        : '2px solid #FFE500',
+                        ? '3px solid #FFE500'
+                        : '2px solid rgba(255,229,0,0.4)',
                   boxShadow: isRevealCorrect
                     ? '0 1.76px 6.334px 1.32px rgba(56,182,14,0.25)'
                     : isRevealWrong
                       ? '0 1.76px 6.334px 1.32px rgba(251,49,1,0.25)'
                       : isSelected
-                        ? '0 0 6.334px 1.32px rgba(28,176,246,0.25)'
-                        : '0 0 6.334px 1.32px rgba(255,229,0,0.25)',
+                        ? '0 0 12px 2px rgba(255,229,0,0.55)'
+                        : '0 0 6.334px 1.32px rgba(255,229,0,0.18)',
                   cursor: resolved ? 'default' : 'pointer',
                 }}
               >
@@ -192,7 +226,7 @@ export function ImposterGame({
           </p>
           <button
             type="button"
-            disabled={resolved}
+            disabled={resolved || revealing}
             onClick={handleResolve}
             className="flex items-center justify-center rounded-[16px] px-6 h-[40px] sm:h-[48px] transition-shadow duration-150"
             style={{
@@ -202,8 +236,8 @@ export function ImposterGame({
               backgroundColor: '#38B60E',
               color: '#FFFFFF',
               boxShadow: '0 1.76px 6.334px 1.32px rgba(56,182,14,0.25)',
-              cursor: resolved ? 'default' : 'pointer',
-              opacity: resolved ? 0.5 : 1,
+              cursor: resolved || revealing ? 'default' : 'pointer',
+              opacity: resolved || revealing ? 0.5 : 1,
             }}
           >
             {copy.submitSelection}
@@ -215,6 +249,16 @@ export function ImposterGame({
         open={showQuitDialog}
         onOpenChange={setShowQuitDialog}
         onQuit={onBack}
+      />
+
+      <ResultSplash {...splashProps} />
+
+      <DailyChallengeCompleteModal
+        open={finished}
+        title={session.title}
+        correct={correctCount}
+        total={session.questionCount}
+        onDone={() => onComplete(correctCount)}
       />
     </div>
   );

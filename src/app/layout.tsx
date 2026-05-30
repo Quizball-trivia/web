@@ -6,7 +6,7 @@ import "flag-icons/css/flag-icons.min.css";
 import { Providers } from "./providers";
 import { Analytics } from "@vercel/analytics/next";
 import { SITE_URL, SITE_NAME, SITE_TAGLINE, SITE_DESCRIPTION, IS_PRODUCTION_DEPLOYMENT } from "@/lib/seo/site";
-import { localeFromPathname } from "@/lib/i18n/locale";
+import { explicitLocaleFromPathname, localeFromPathname } from "@/lib/i18n/locale";
 import "../styles/globals.css";
 
 export const metadata: Metadata = {
@@ -146,6 +146,9 @@ export default async function RootLayout({
   const headerList = await headers();
   const pathname = headerList.get("x-pathname") ?? "/";
   const locale = localeFromPathname(pathname);
+  // Only URL-prefixed marketing/legal routes should seed the client locale.
+  // App routes like /store and /play must hydrate from saved user choice.
+  const explicitLocale = explicitLocaleFromPathname(pathname);
 
   return (
     <html lang={locale} className="dark" suppressHydrationWarning>
@@ -159,7 +162,7 @@ export default async function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <Providers initialLocale={locale}>{children}</Providers>
+        <Providers initialLocale={explicitLocale}>{children}</Providers>
         <Analytics />
       </body>
     </html>

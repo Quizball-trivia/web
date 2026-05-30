@@ -326,10 +326,10 @@ describe('useRealtimeGameLogic — roundResultHoldDone for goals', () => {
 
     expect(result.current.state.showOptions).toBe(false);
 
-    await act(async () => { vi.advanceTimersByTime(999); });
+    await act(async () => { vi.advanceTimersByTime(500); });
     expect(result.current.state.showOptions).toBe(false);
 
-    await act(async () => { vi.advanceTimersByTime(1); });
+    await act(async () => { vi.advanceTimersByTime(500); });
     expect(result.current.state.showOptions).toBe(true);
   });
 

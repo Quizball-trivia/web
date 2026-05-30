@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getGeorgianPhoneAuthAvailability } from "@/lib/auth/auth.service";
+import { PHONE_AUTH_ENABLED } from "@/lib/config";
 
 interface GeorgianPhoneAuthAvailabilityState {
   country: string | null;
@@ -15,10 +16,23 @@ const INITIAL_STATE: GeorgianPhoneAuthAvailabilityState = {
   isLoading: true,
 };
 
+const DISABLED_STATE: GeorgianPhoneAuthAvailabilityState = {
+  country: null,
+  isAvailable: false,
+  isLoading: false,
+};
+
 export function useGeorgianPhoneAuthAvailability(): GeorgianPhoneAuthAvailabilityState {
-  const [state, setState] = useState<GeorgianPhoneAuthAvailabilityState>(INITIAL_STATE);
+  const [state, setState] = useState<GeorgianPhoneAuthAvailabilityState>(
+    PHONE_AUTH_ENABLED ? INITIAL_STATE : DISABLED_STATE,
+  );
 
   useEffect(() => {
+    // Feature-flagged off: never probe the backend or surface the phone tab.
+    if (!PHONE_AUTH_ENABLED) {
+      return;
+    }
+
     const controller = new AbortController();
     let mounted = true;
 

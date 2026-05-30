@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import type { MatchRoundResultPayload } from '@/lib/realtime/socket.types';
+import type { MatchAnswerAckPayload, MatchRoundResultPayload } from '@/lib/realtime/socket.types';
 import { useRealtimeMatchStore, type DevPossessionAnimation } from '@/stores/realtimeMatch.store';
 import {
   GOAL_ATTACK_START_DELAY_MS,
@@ -10,10 +10,11 @@ import {
 } from '../realtimePossession.helpers';
 import { getBarBattleGoalAttackDelayMs, resolveBattlePoints } from './useBarBattle';
 
-type PossessionSfxName = 'whistle' | 'kick' | 'pass';
+type PossessionSfxName = 'whistle' | 'kick' | 'pass' | 'correctRanked';
 
 interface UsePossessionMatchSoundsParams {
   phase: string | undefined;
+  answerAck: MatchAnswerAckPayload | null;
   roundResult: MatchRoundResultPayload | null;
   devPossessionAnimation: DevPossessionAnimation | null;
   playSfx: (name: PossessionSfxName) => void;
@@ -21,6 +22,7 @@ interface UsePossessionMatchSoundsParams {
 
 export function usePossessionMatchSounds({
   phase,
+  answerAck,
   roundResult,
   devPossessionAnimation,
   playSfx,
@@ -42,6 +44,15 @@ export function usePossessionMatchSounds({
       playSfxRef.current('whistle');
     }
   }, [phase]);
+
+  const correctAnswerSfxKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!answerAck?.isCorrect) return;
+    const key = `${answerAck.matchId}:${answerAck.qIndex}`;
+    if (correctAnswerSfxKeyRef.current === key) return;
+    correctAnswerSfxKeyRef.current = key;
+    playSfxRef.current('correctRanked');
+  }, [answerAck]);
 
   useEffect(() => {
     if (!roundResult) return;

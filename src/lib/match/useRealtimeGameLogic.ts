@@ -8,7 +8,7 @@ import { GOAL_CELEBRATION_MS } from '@/features/possession/realtimePossession.he
 import { trackAnswerSubmitted } from '@/lib/analytics/game-events';
 
 const QUESTION_PLAYING_MS = 10000; // 10 second playing phase
-export const ROUND_RESULT_HOLD_MS = 2500; // hold result for 2.5s before transitioning to next question
+export const ROUND_RESULT_HOLD_MS = 2000; // hold result for 2s before transitioning to next question
 const SPECIAL_RESULT_EXTRA_MS = 3000; // extra hold for special question reveals (countdown answers, correct order, clues answer)
 const GOAL_CELEBRATION_EXTRA_MS = GOAL_CELEBRATION_MS; // keep promotion blocked until the goal celebration overlay finishes
 const ANSWER_ACK_RETRY_MS = 900;

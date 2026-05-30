@@ -5,8 +5,12 @@ import { CheckCircle2, XCircle } from "lucide-react";
 
 import type { TrueFalseSession } from "@/lib/domain/dailyChallenge";
 import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
+import { useLocale } from "@/contexts/LocaleContext";
 import { QuitGameDialog } from "./QuitGameDialog";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
+import { ResultSplash } from "./components/ResultSplash";
+import { useResultSplash } from "./components/useResultSplash";
+import { DailyChallengeCompleteModal } from "./components/DailyChallengeCompleteModal";
 
 const poppins = {
   fontFamily: "'Poppins', sans-serif",
@@ -32,7 +36,10 @@ export function TrueFalseGame({
   const [showResult, setShowResult] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [showQuitDialog, setShowQuitDialog] = useState(false);
+  const [finished, setFinished] = useState(false);
+  const { splashProps, fire } = useResultSplash();
   const copy = getDailyChallengeCopy();
+  const { t } = useLocale();
 
   const currentQuestion = session.questions[currentQuestionIndex];
   const isAnswerCorrect = useMemo(
@@ -52,7 +59,7 @@ export function TrueFalseGame({
 
   const goToNextQuestion = useCallback(() => {
     if (currentQuestionIndex >= session.questions.length - 1) {
-      onComplete(correctCount);
+      setFinished(true);
       return;
     }
 
@@ -61,9 +68,7 @@ export function TrueFalseGame({
     setShowResult(false);
     setTimeLeft(session.secondsPerQuestion);
   }, [
-    correctCount,
     currentQuestionIndex,
-    onComplete,
     session.questions.length,
     session.secondsPerQuestion,
   ]);
@@ -75,12 +80,18 @@ export function TrueFalseGame({
       }
 
       setSelectedAnswer(answer);
+      // The correct button's column decides which side the splash flies from:
+      // TRUE is the left cell, FALSE the right cell.
+      const from: "left" | "right" = currentQuestion.correctAnswer ? "left" : "right";
       if (answer !== null && answer === currentQuestion.correctAnswer) {
         setCorrectCount((previous) => previous + 1);
+        fire("correct", from);
+      } else {
+        fire("wrong", from);
       }
       setShowResult(true);
     },
-    [currentQuestion, showResult]
+    [currentQuestion, showResult, fire]
   );
 
   useEffect(() => {
@@ -119,7 +130,7 @@ export function TrueFalseGame({
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-surface-deep text-white">
+    <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat text-white">
       <DailyChallengeHeader
         onQuit={() => setShowQuitDialog(true)}
         currentIndex={currentQuestionIndex}
@@ -131,7 +142,7 @@ export function TrueFalseGame({
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 py-4">
         {/* Question card */}
         <div
-          className="flex items-center rounded-[24px] bg-surface-page px-5 py-5 text-white sm:px-6 sm:py-6"
+          className="flex items-center rounded-[24px] border border-white/10 bg-white/5 px-5 py-5 text-white backdrop-blur-sm sm:px-6 sm:py-6"
           style={{
             fontFamily: "'Poppins', sans-serif",
             fontWeight: 700,
@@ -142,38 +153,21 @@ export function TrueFalseGame({
           <p className="leading-snug">{currentQuestion.prompt}</p>
         </div>
 
-        {/* Result feedback */}
-        {showResult && (
+        {/* Timeout-only inline note (correct/wrong use the fly-in splash). */}
+        {showResult && resultTone === "timeout" && (
           <div
             className="mt-3 flex items-center justify-between gap-4 rounded-[16px] px-4 py-3"
             style={{
               ...poppins,
               fontSize: 'clamp(13px, 1.7vw, 20px)',
-              backgroundColor: resultTone === "correct"
-                ? 'rgba(56,182,14,0.15)'
-                : resultTone === "wrong"
-                  ? 'rgba(251,49,1,0.15)'
-                  : 'rgba(255,150,0,0.15)',
-              border: resultTone === "correct"
-                ? '2px solid rgba(56,182,14,0.5)'
-                : resultTone === "wrong"
-                  ? '2px solid rgba(251,49,1,0.5)'
-                  : '2px solid rgba(255,150,0,0.5)',
-              color: resultTone === "correct"
-                ? '#58CC02'
-                : resultTone === "wrong"
-                  ? '#FB3101'
-                  : '#FF9600',
+              backgroundColor: 'rgba(255,150,0,0.15)',
+              border: '2px solid rgba(255,150,0,0.5)',
+              color: '#FF9600',
             }}
           >
-            <div className="flex items-center gap-2">
-              {resultTone === "correct" ? <CheckCircle2 className="size-5" /> : resultTone === "wrong" ? <XCircle className="size-5" /> : null}
-              <span>
-                {resultTone === "correct" ? "Correct!" : resultTone === "wrong" ? "Wrong" : "Time's up"}
-              </span>
-            </div>
+            <span>{t('dailyGames.timesUp')}</span>
             <span className="text-white/70" style={{ fontSize: 'clamp(11px, 1.4vw, 16px)' }}>
-              Answer: {currentQuestion.correctAnswer ? currentQuestion.trueLabel : currentQuestion.falseLabel}
+              {t('dailyGames.answerColon', { answer: currentQuestion.correctAnswer ? currentQuestion.trueLabel : currentQuestion.falseLabel })}
             </span>
           </div>
         )}
@@ -235,6 +229,16 @@ export function TrueFalseGame({
         open={showQuitDialog}
         onOpenChange={setShowQuitDialog}
         onQuit={onBack}
+      />
+
+      <ResultSplash {...splashProps} />
+
+      <DailyChallengeCompleteModal
+        open={finished}
+        title={session.title}
+        correct={correctCount}
+        total={session.questionCount}
+        onDone={() => onComplete(correctCount)}
       />
     </div>
   );

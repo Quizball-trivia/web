@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { motion } from "motion/react";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { MAP_W, MAP_H } from "@/lib/geo";
@@ -50,7 +51,10 @@ interface MapPlayerPinProps {
   showFoundState: boolean;
 }
 
-export function MapPlayerPin({
+// Memoized: the highlight timer re-renders the parent ~2×/s, but each pin owns
+// a multi-layer avatar (several <Image>s). Without memo, every pin re-rendered
+// on each tick; now only the two pins whose `highlighted` flips actually do.
+function MapPlayerPinComponent({
   player,
   highlighted,
   isOpponent,
@@ -138,3 +142,5 @@ export function MapPlayerPin({
     </div>
   );
 }
+
+export const MapPlayerPin = memo(MapPlayerPinComponent);

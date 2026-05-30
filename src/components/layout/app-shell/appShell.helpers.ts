@@ -10,7 +10,7 @@ import type { MessageKey } from '@/lib/i18n/messages';
 import type { RankedGeoHintDebug } from './appShell.types';
 
 export const MOBILE_NAV_ITEMS = [
-  { path: '/', labelKey: 'navigation.home', icon: Home },
+  { path: '/play', labelKey: 'navigation.home', icon: Home },
   { path: '/leaderboard', labelKey: 'navigation.leaderboard', icon: Medal },
   { path: '/social', labelKey: 'navigation.social', icon: UserRound },
   { path: '/store', labelKey: 'navigation.store', icon: Gem },

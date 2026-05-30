@@ -292,6 +292,8 @@
     "soloStatRight": "მიღებული XP",
     "playForTicket": "ითამაშე {count} ბილეთით",
     "playForTickets": "ითამაშე {count} ბილეთით",
+    "buyTickets": "ბილეთების ყიდვა",
+    "notEnoughTickets": "რეიტინგულის დასაწყებად ბილეთი გჭირდება.",
     "youHaveTicket": "შენ გაქვს {count} ბილეთი",
     "youHaveTickets": "შენ გაქვს {count} ბილეთი"
   },
@@ -700,7 +702,10 @@
     "rewardLabelMultiplier": "{n}x სერია",
     "rewardLabelLuckyBadge": "იღბლიანი ბეიჯი",
     "tipLabel": "რჩევა",
-    "wrong": "არასწორია"
+    "wrong": "არასწორია",
+    "correctAnswers": "სწორი პასუხები",
+    "completionGreat": "ყოჩაღ — ხვალ შევხვდებით!",
+    "backToChallenges": "გამოწვევებში დაბრუნება"
   },
   "dailyChallenge": {
     "answerPrefix": "პასუხი",

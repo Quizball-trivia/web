@@ -6,6 +6,9 @@ import type { HighLowSession } from "@/lib/domain/dailyChallenge";
 import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
 import { QuitGameDialog } from "./QuitGameDialog";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
+import { ResultSplash } from "./components/ResultSplash";
+import { useResultSplash } from "./components/useResultSplash";
+import { DailyChallengeCompleteModal } from "./components/DailyChallengeCompleteModal";
 
 const poppins = {
   fontFamily: "'Poppins', sans-serif",
@@ -30,8 +33,9 @@ export function HighLowGame({
   const [timeLeft, setTimeLeft] = useState(session.secondsPerRound);
   const [roundScore, setRoundScore] = useState(0);
   const [roundResolved, setRoundResolved] = useState(false);
-  const [roundPassed, setRoundPassed] = useState(false);
   const [showQuitDialog, setShowQuitDialog] = useState(false);
+  const [finished, setFinished] = useState(false);
+  const { splashProps, fire } = useResultSplash();
   const copy = getDailyChallengeCopy();
 
   const currentRound = session.rounds[currentRoundIndex];
@@ -39,7 +43,7 @@ export function HighLowGame({
 
   const advanceRound = useCallback(() => {
     if (currentRoundIndex >= session.rounds.length - 1) {
-      onComplete(roundScore);
+      setFinished(true);
       return;
     }
 
@@ -47,8 +51,7 @@ export function HighLowGame({
     setCurrentMatchupIndex(0);
     setTimeLeft(session.secondsPerRound);
     setRoundResolved(false);
-    setRoundPassed(false);
-  }, [currentRoundIndex, onComplete, roundScore, session.rounds.length, session.secondsPerRound]);
+  }, [currentRoundIndex, session.rounds.length, session.secondsPerRound]);
 
   const resolveRound = useCallback(
     (passed: boolean) => {
@@ -60,7 +63,6 @@ export function HighLowGame({
         setRoundScore((previous) => previous + 1);
       }
 
-      setRoundPassed(passed);
       setRoundResolved(true);
     },
     [roundResolved]
@@ -76,11 +78,15 @@ export function HighLowGame({
     const isCorrect = side === higherSide;
 
     if (!isCorrect) {
+      // Wrong: splash flies in from the side that was actually higher.
+      fire("wrong", higherSide);
       resolveRound(false);
       return;
     }
 
     if (currentMatchupIndex >= currentRound.matchups.length - 1) {
+      // Whole chain cleared: correct splash from the winning side.
+      fire("correct", higherSide);
       resolveRound(true);
       return;
     }
@@ -97,7 +103,10 @@ export function HighLowGame({
       setTimeLeft((previous) => {
         if (previous <= 1) {
           window.clearInterval(timer);
-          window.setTimeout(() => resolveRound(false), 0);
+          window.setTimeout(() => {
+            fire("wrong", "right");
+            resolveRound(false);
+          }, 0);
           return 0;
         }
         return previous - 1;
@@ -105,7 +114,7 @@ export function HighLowGame({
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [currentRound, resolveRound, roundResolved]);
+  }, [currentRound, resolveRound, roundResolved, fire]);
 
   useEffect(() => {
     if (!roundResolved) {
@@ -124,7 +133,7 @@ export function HighLowGame({
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-surface-deep text-white">
+    <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat text-white">
       <DailyChallengeHeader
         onQuit={() => setShowQuitDialog(true)}
         currentIndex={currentRoundIndex}
@@ -137,7 +146,7 @@ export function HighLowGame({
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 py-4">
         {/* Question card */}
         <div
-          className="rounded-[24px] bg-surface-page px-5 py-5 text-white sm:px-6 sm:py-6"
+          className="rounded-[24px] border border-white/10 bg-white/5 px-5 py-5 text-white backdrop-blur-sm sm:px-6 sm:py-6"
           style={{
             fontFamily: "'Poppins', sans-serif",
             fontWeight: 700,
@@ -200,21 +209,8 @@ export function HighLowGame({
           </button>
         </div>
 
-        {/* Result / instruction */}
-        {roundResolved ? (
-          <div
-            className="mt-3 flex items-center justify-center gap-2 rounded-[16px] px-4 py-3"
-            style={{
-              ...poppins,
-              fontSize: 'clamp(13px, 1.7vw, 20px)',
-              backgroundColor: roundPassed ? 'rgba(56,182,14,0.15)' : 'rgba(251,49,1,0.15)',
-              border: roundPassed ? '2px solid rgba(56,182,14,0.5)' : '2px solid rgba(251,49,1,0.5)',
-              color: roundPassed ? '#58CC02' : '#FB3101',
-            }}
-          >
-            {roundPassed ? copy.chainComplete : copy.roundFailed}
-          </div>
-        ) : (
+        {/* Instruction (result is shown via the fly-in splash). */}
+        {!roundResolved && (
           <p className="mt-3 text-center text-sm text-white/50" style={poppins}>
             {copy.higherValueInstruction}
           </p>
@@ -231,6 +227,16 @@ export function HighLowGame({
         open={showQuitDialog}
         onOpenChange={setShowQuitDialog}
         onQuit={onBack}
+      />
+
+      <ResultSplash {...splashProps} />
+
+      <DailyChallengeCompleteModal
+        open={finished}
+        title={session.title}
+        correct={roundScore}
+        total={session.roundCount}
+        onDone={() => onComplete(roundScore)}
       />
     </div>
   );

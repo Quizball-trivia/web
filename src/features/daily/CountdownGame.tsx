@@ -187,7 +187,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
     return (
       <div className="fixed inset-0 z-40 bg-surface-deep font-fun flex items-center justify-center">
         <div className="bg-surface-card rounded-xl border-b-4 border-surface-card-deeper p-6">
-          <p className="text-center text-brand-slate">Loading questions...</p>
+          <p className="text-center text-brand-slate">{t('dailyGames.loadingQuestions')}</p>
         </div>
       </div>
     );
@@ -198,15 +198,15 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
       <div className="fixed inset-0 z-40 bg-surface-deep font-fun flex items-center justify-center p-4">
         <div className="bg-surface-card rounded-xl border-b-4 border-surface-card-deeper p-6 md:p-8 max-w-md w-full text-center space-y-4">
           <div className="mb-4"><CheckCircle2 className="size-14 text-brand-green-light mx-auto" /></div>
-          <h2 className="text-2xl font-black uppercase text-white">Round {currentRound + 1} Complete!</h2>
+          <h2 className="text-2xl font-black uppercase text-white">{t('dailyGames.roundComplete', { round: currentRound + 1 })}</h2>
           <div className="space-y-2">
             <p className="text-brand-slate">{t("dailyGames.youFound")}</p>
             <div className="text-4xl text-brand-cyan font-black">{foundAnswers.length}</div>
-            <p className="text-brand-slate">answers</p>
+            <p className="text-brand-slate">{t('dailyGames.answersWord')}</p>
           </div>
           {currentRound < questions.length - 1 && (
             <div className="pt-4">
-              <p className="text-sm text-brand-slate">Next round starting...</p>
+              <p className="text-sm text-brand-slate">{t('dailyGames.nextRoundStarting')}</p>
             </div>
           )}
         </div>
@@ -215,7 +215,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
   }
 
   return (
-    <div className="fixed inset-0 z-40 bg-surface-deep font-poppins flex flex-col text-white">
+    <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat font-poppins text-white">
       <DailyChallengeHeader
         onQuit={() => setShowQuitDialog(true)}
         currentIndex={currentRound}
@@ -277,7 +277,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
               autoCapitalize="off"
             />
             <p className="text-xs text-brand-slate">
-              <Lightbulb className="size-3.5 inline-block align-text-bottom mr-1 text-brand-orange" />Tip: Don&apos;t worry about exact spelling - close matches count!
+              <Lightbulb className="size-3.5 inline-block align-text-bottom mr-1 text-brand-orange" />{t('dailyGames.spellingTip')}
             </p>
             {suggestions.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-1">
@@ -309,7 +309,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
                   <Check className="size-6 text-white" />
                 </div>
                 <div>
-                  <div className="text-sm text-brand-slate">Correct!</div>
+                  <div className="text-sm text-brand-slate">{t('dailyGames.correctExclaim')}</div>
                   <div className="text-xl font-black text-white">{recentAnswer}</div>
                 </div>
               </div>

@@ -529,7 +529,10 @@
     "rewardLabelMultiplier": "{n}x Streak",
     "rewardLabelLuckyBadge": "Lucky Badge",
     "tipLabel": "Tip",
-    "wrong": "Wrong"
+    "wrong": "Wrong",
+    "correctAnswers": "Correct Answers",
+    "completionGreat": "Great job — see you tomorrow!",
+    "backToChallenges": "Back to Challenges"
   },
   "dailyChallenge": {
     "answerPrefix": "Answer",
@@ -709,6 +712,8 @@
     "soloStatRight": "XP Earned",
     "playForTicket": "Play for {count} Ticket",
     "playForTickets": "Play for {count} Tickets",
+    "buyTickets": "Buy Tickets",
+    "notEnoughTickets": "You need a ticket to start ranked.",
     "youHaveTicket": "You have {count} Ticket",
     "youHaveTickets": "You have {count} Tickets"
   },
