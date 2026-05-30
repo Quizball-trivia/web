@@ -199,6 +199,7 @@ interface RealtimeStateSeed {
   suppressLobbyBannerReason?: string | null;
   clearLobbyBannerSuppression?: () => void;
   clearRejoinAvailable?: () => void;
+  setForfeitPending?: (payload: { matchId: string; reason: string; message: string }) => void;
   reset?: () => void;
 }
 function seedRealtime(overrides: RealtimeStateSeed = {}) {
@@ -215,6 +216,7 @@ function seedRealtime(overrides: RealtimeStateSeed = {}) {
     suppressLobbyBannerReason: null,
     clearLobbyBannerSuppression: vi.fn(),
     clearRejoinAvailable: vi.fn(),
+    setForfeitPending: vi.fn(),
     reset: vi.fn(),
     ...overrides,
   };
@@ -487,6 +489,23 @@ describe('AppShell — rejoin / completed / forfeit / draft banners', () => {
     expect(screen.getAllByText('They quit').length).toBeGreaterThan(0);
   });
 
+  it('hides the rejoin banner while forfeit is pending for that active match', () => {
+    pathnameMock.mockReturnValue('/leaderboard');
+    seedRealtime({
+      match: {
+        matchId: 'M5',
+        mode: 'ranked',
+        opponent: { id: 'opp', username: 'Opp', avatarUrl: null },
+        finalResults: null,
+      },
+      forfeitPending: { matchId: 'M5', reason: 'self_forfeit', message: 'Finalizing' },
+    });
+    renderShell();
+    expect(screen.getAllByText('forfeit.matchForfeited').length).toBeGreaterThan(0);
+    expect(screen.queryByText(/appShell.matchStillActiveAgainst/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/appShell.forfeit/)).not.toBeInTheDocument();
+  });
+
   it('shows the draft banner when lobby is active and a draft is in progress', () => {
     pathnameMock.mockReturnValue('/leaderboard');
     seedRealtime({
@@ -534,6 +553,7 @@ describe('AppShell — banner callbacks fire the right store / socket actions', 
 
   it('rejoin banner forfeit button → emits match:forfeit', () => {
     pathnameMock.mockReturnValue('/leaderboard');
+    const setForfeitPending = vi.fn();
     seedRealtime({
       rejoinMatch: {
         matchId: 'MX',
@@ -541,10 +561,16 @@ describe('AppShell — banner callbacks fire the right store / socket actions', 
         opponent: { id: 'opp', username: 'Opp', avatarUrl: null },
         remainingReconnects: 0,
       },
+      setForfeitPending,
     });
     renderShell();
     const buttons = screen.getAllByText(/appShell.forfeit/);
     fireEvent.click(buttons[0]);
+    expect(setForfeitPending).toHaveBeenCalledWith({
+      matchId: 'MX',
+      reason: 'self_forfeit',
+      message: 'forfeit.finalizingResult',
+    });
     expect(socketEmitMock).toHaveBeenCalledWith('match:forfeit', { matchId: 'MX' });
   });
 

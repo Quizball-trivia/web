@@ -568,12 +568,16 @@ export function MatchmakingMapScreen({
 
   return (
     <div className="fixed inset-0 z-50 bg-surface-darkest bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat overflow-hidden font-fun select-none">
-      {/* ── Map ── */}
+      {/* ── Map ──
+          Cover the whole screen (like QuizUp) instead of letterboxing: the map
+          box is sized to the LARGER of "fit by width" / "fit by height" so it
+          always fills the viewport, overflowing (and cropping) on the long axis
+          rather than leaving black bars. Pins share the same box via %. */}
       <div
         className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
         style={{
-          width: `min(100vw, calc(100vh * ${MAP_W} / ${MAP_H}))`,
-          height: `min(100vh, calc(100vw * ${MAP_H} / ${MAP_W}))`,
+          width: `max(100vw, calc(100vh * ${MAP_W} / ${MAP_H}))`,
+          height: `max(100vh, calc(100vw * ${MAP_H} / ${MAP_W}))`,
         }}
       >
         <ComposableMap

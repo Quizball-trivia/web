@@ -31,13 +31,13 @@ export function PenaltyStartCountdownOverlay({ display }: PenaltyStartCountdownO
         initial={{ scale: 0.6, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-        className="relative flex flex-col items-center gap-4"
+        className="relative flex w-full max-w-[90vw] flex-col items-center gap-4 px-4 text-center"
       >
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.15, duration: 0.4 }}
-          className="text-4xl font-black uppercase tracking-wider text-brand-red-soft font-fun"
+          className="w-full text-balance text-center text-[clamp(1.5rem,7vw,2.25rem)] font-black uppercase leading-tight tracking-wide text-brand-red-soft font-fun [overflow-wrap:normal] [word-break:keep-all]"
           style={{ textShadow: '0 0 30px rgba(255,75,75,0.5), 0 4px 0 rgba(200,40,40,0.8)' }}
         >
           {t('possession.penaltyShootout')}

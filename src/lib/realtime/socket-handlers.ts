@@ -112,6 +112,15 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       memberCount: data.members.length,
       memberIds: data.members.map((member) => member.userId),
     });
+    const rankedState = useRankedMatchmakingStore.getState();
+    if (data.mode === 'ranked' && rankedState.rankedCancelRequestedAt !== null && data.status !== 'closed') {
+      logger.warn('Ignoring ranked lobby state after local cancel request', {
+        lobbyId: data.lobbyId,
+        status: data.status,
+        cancelledAt: rankedState.rankedCancelRequestedAt,
+      });
+      return;
+    }
     store.setLobby(data);
   });
 

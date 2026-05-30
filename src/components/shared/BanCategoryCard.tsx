@@ -158,7 +158,7 @@ function BanCategoryCardComponent({
       <div className="relative z-10 flex h-full flex-col justify-end items-center p-3 sm:p-4">
         <h3
           className={cn(
-            'text-sm sm:text-lg md:text-xl uppercase leading-tight break-words hyphens-auto text-center w-full',
+            'text-[clamp(0.7rem,3.4vw,1.25rem)] uppercase leading-tight text-balance text-center w-full [overflow-wrap:normal] [word-break:keep-all]',
             isBanned && 'grayscale opacity-70'
           )}
           style={{

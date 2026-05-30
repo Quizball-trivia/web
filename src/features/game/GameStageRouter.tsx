@@ -151,6 +151,7 @@ export function GameStageRouter() {
 
   const handleMatchmakingExit = useCallback(() => {
     if (matchType === "ranked") {
+      useRankedMatchmakingStore.getState().markRankedCancelRequested();
       getSocket().emit("ranked:queue_leave");
       logger.info("Socket emit ranked:queue_leave");
       getSocket().emit("lobby:leave");

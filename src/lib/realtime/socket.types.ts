@@ -509,7 +509,7 @@ export interface MatchFinalResultsPayload {
 
 export interface MatchForfeitPendingPayload {
   matchId: string;
-  reason: 'reconnect_limit' | 'opponent_forfeit' | 'opponent_reconnect_limit';
+  reason: 'self_forfeit' | 'reconnect_limit' | 'opponent_forfeit' | 'opponent_reconnect_limit';
   message: string;
 }
 

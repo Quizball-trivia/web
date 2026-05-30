@@ -64,6 +64,9 @@ function createInitialRankedMatchmakingState() {
     rankedSearchDurationMs: 0,
     rankedSearchStartedAt: null,
     rankedFoundOpponent: null,
+    rankedCancelRequestedAt: null,
+    markRankedSearchRequested: vi.fn(),
+    markRankedCancelRequested: vi.fn(),
     clearRankedMatchmaking: vi.fn(),
   };
 }
@@ -126,7 +129,10 @@ vi.mock('@/stores/realtimeMatch.store', () => ({
 }));
 
 vi.mock('@/stores/rankedMatchmaking.store', () => ({
-  useRankedMatchmakingStore: (selector: (state: typeof rankedMatchmakingState) => unknown) => selector(rankedMatchmakingState),
+  useRankedMatchmakingStore: Object.assign(
+    (selector: (state: typeof rankedMatchmakingState) => unknown) => selector(rankedMatchmakingState),
+    { getState: () => rankedMatchmakingState },
+  ),
 }));
 
 vi.mock('@/lib/realtime/useRealtimeConnection', () => ({
@@ -154,7 +160,12 @@ vi.mock('@/lib/avatars', () => ({
 }));
 
 vi.mock('@/components/match/MatchmakingMapScreen', () => ({
-  MatchmakingMapScreen: () => <div>Matchmaking Map</div>,
+  MatchmakingMapScreen: (props: { onCancel: () => void }) => (
+    <div>
+      <div>Matchmaking Map</div>
+      <button type="button" onClick={props.onCancel}>Cancel Matchmaking</button>
+    </div>
+  ),
 }));
 
 vi.mock('@/components/ShowdownScreen', () => ({
@@ -236,6 +247,29 @@ describe('GameStageRouter', () => {
     render(<GameStageRouter />);
 
     expect(screen.getByText('Realtime Possession Match')).toBeInTheDocument();
+  });
+
+  it('ranked matchmaking cancel marks the search cancelled before emitting leave', () => {
+    gameSessionState.stage = 'matchmaking';
+    gameSessionState.config = {
+      mode: 'ranked',
+      matchType: 'ranked',
+      categoryName: 'Football',
+      categoryIcon: '⚽',
+    };
+    realtimeMatchState.match = {
+      ...realtimeMatchState.match,
+      matchId: null,
+    };
+
+    render(<GameStageRouter />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel Matchmaking' }));
+
+    expect(rankedMatchmakingState.markRankedCancelRequested).toHaveBeenCalledTimes(1);
+    expect(socket.emit).toHaveBeenCalledWith('ranked:queue_leave');
+    expect(socket.emit).toHaveBeenCalledWith('lobby:leave');
+    expect(router.push).toHaveBeenCalledWith('/play');
   });
 
   it('forfeit emits match:forfeit and immediately returns the forfeiting player home', () => {

@@ -56,6 +56,7 @@ export function useAppShellViewModel() {
   const sessionState = useRealtimeMatchStore((state) => state.sessionState);
   const rejoinMatch = useRealtimeMatchStore((state) => state.rejoinMatch);
   const forfeitPending = useRealtimeMatchStore((state) => state.forfeitPending);
+  const setForfeitPending = useRealtimeMatchStore((state) => state.setForfeitPending);
   const challengeInviteCount = useRealtimeMatchStore((state) => state.challengeInvites.length);
   const suppressLobbyBannerUntil = useRealtimeMatchStore((state) => state.suppressLobbyBannerUntil);
   const suppressLobbyBannerReason = useRealtimeMatchStore((state) => state.suppressLobbyBannerReason);
@@ -129,9 +130,16 @@ export function useAppShellViewModel() {
           mode: matchBanner.mode!,
           opponent: matchBanner.opponent!,
           source: 'active' as const,
-        }
-      : null;
-  const showRejoinBanner = !!activeMatchBanner && !currentPath.startsWith('/game');
+      }
+    : null;
+  const forfeitPendingForActiveMatch =
+    !!forfeitPending &&
+    !!activeMatchBanner &&
+    forfeitPending.matchId === activeMatchBanner.matchId;
+  const showRejoinBanner =
+    !!activeMatchBanner &&
+    !forfeitPendingForActiveMatch &&
+    !currentPath.startsWith('/game');
   const completedMatchBanner = matchBanner.finalResults
     ? {
         matchId: matchBanner.matchId!,
@@ -143,11 +151,13 @@ export function useAppShellViewModel() {
   const showCompletedMatchBanner = !!completedMatchBanner && !currentPath.startsWith('/game');
   const showForfeitPendingBanner = !!forfeitPending && !matchBanner.finalResults && !currentPath.startsWith('/game');
   const forfeitPendingTitle =
-    forfeitPending?.reason === 'opponent_forfeit'
-      ? t('forfeit.opponentForfeited')
-      : forfeitPending?.reason === 'opponent_reconnect_limit'
-        ? t('forfeit.opponentDidNotReconnect')
-        : t('forfeit.youLostMatch');
+    forfeitPending?.reason === 'self_forfeit'
+      ? t('forfeit.matchForfeited')
+      : forfeitPending?.reason === 'opponent_forfeit'
+        ? t('forfeit.opponentForfeited')
+        : forfeitPending?.reason === 'opponent_reconnect_limit'
+          ? t('forfeit.opponentDidNotReconnect')
+          : t('forfeit.youLostMatch');
   const forfeitPendingDescription = forfeitPending?.message ?? t('forfeit.finalizingResult');
   const completedByForfeit = matchBanner.finalResults?.winnerDecisionMethod === 'forfeit';
   const completedPartyQuiz = completedMatchBanner?.variant === 'friendly_party_quiz';
@@ -260,6 +270,11 @@ export function useAppShellViewModel() {
       clearRejoinAvailable();
       return;
     }
+    setForfeitPending({
+      matchId: activeMatchBanner.matchId,
+      reason: 'self_forfeit',
+      message: t('forfeit.finalizingResult'),
+    });
     getSocket().emit('match:forfeit', { matchId: activeMatchBanner.matchId });
   };
 

@@ -332,6 +332,7 @@ export function useGameStageTransitions({
         searchMode: "human_first",
         geoHint: rankedGeoHintRef.current,
       };
+      useRankedMatchmakingStore.getState().markRankedSearchRequested();
       socket.emit("ranked:queue_join", payload);
       logger.info("Socket emit ranked:queue_join", {
         reason,

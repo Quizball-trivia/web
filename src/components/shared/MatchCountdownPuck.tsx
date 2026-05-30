@@ -29,7 +29,7 @@ export function MatchCountdownPuck({
   const tokens = SIZE_TOKENS[size];
   return (
     <div className={cn('flex flex-col items-center', className)}>
-      <div className="font-poppins text-[10px] font-semibold uppercase tracking-[0.28em] text-brand-yellow sm:text-[11px]">
+      <div className="w-full min-w-[8rem] text-balance text-center font-poppins text-[10px] font-semibold uppercase leading-tight tracking-[0.16em] text-brand-yellow sm:text-[11px]">
         {label}
       </div>
       <motion.div
