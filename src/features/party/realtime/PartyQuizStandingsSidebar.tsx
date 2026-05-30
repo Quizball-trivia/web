@@ -57,7 +57,7 @@ export function PartyQuizStandingsSidebar({
             >
               <div
                 className={cn(
-                  'flex flex-1 items-center gap-3 rounded-2xl px-3 py-2.5 transition-colors border-2',
+                  'relative flex flex-1 items-center gap-3 rounded-2xl px-3 py-2.5 transition-colors border-2',
                   rankStyle.border,
                   player.isSelf ? rankStyle.tint : 'bg-transparent',
                 )}
@@ -127,18 +127,19 @@ export function PartyQuizStandingsSidebar({
                     dotStatus === 'idle' && 'bg-white/20',
                   )}
                 />
+
+                {/* "YOU" badge — a small tilted orange tab pinned onto the
+                    card's right edge, echoing the tilted name badges in the
+                    possession game instead of a separate floating pill. */}
+                {player.isSelf && (
+                  <span
+                    className="pointer-events-none absolute -right-2 -top-2 -rotate-[8deg] rounded-lg bg-brand-orange px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-white"
+                    style={{ boxShadow: '0 1.76px 6.334px 1.32px rgba(255,150,0,0.4)' }}
+                  >
+                    You
+                  </span>
+                )}
               </div>
-              {/* YOU pill — sits OUTSIDE the bordered card, stretches to
-                  match its height so the right edge reads as a paired
-                  action chip rather than a floating badge. */}
-              {player.isSelf && (
-                <span
-                  className="flex shrink-0 self-stretch items-center justify-center rounded-[16px] bg-brand-orange px-4 text-sm font-black uppercase tracking-wider text-white"
-                  style={{ boxShadow: '0 1.76px 6.334px 1.32px rgba(255,150,0,0.3)' }}
-                >
-                  You
-                </span>
-              )}
             </motion.div>
           );
         })}

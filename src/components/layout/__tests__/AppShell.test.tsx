@@ -263,12 +263,9 @@ function renderShell(children: React.ReactNode = <div data-testid="page-children
 describe('AppShell — children + chrome', () => {
   it('renders page children inside the shell', () => {
     renderShell(<div data-testid="page-children">My Page</div>);
-    // Children render twice — once in the desktop main, once in the mobile main.
-    // Both layouts mount because Tailwind's responsive utilities are no-ops in
-    // JSDOM. Verify both copies are present so we know the children are wired
-    // through to both layout paths.
-    expect(screen.getAllByTestId('page-children').length).toBeGreaterThanOrEqual(2);
-    expect(screen.getAllByText('My Page').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByTestId('page-children')).toBeInTheDocument();
+    expect(screen.getAllByTestId('page-children')).toHaveLength(1);
+    expect(screen.getByText('My Page')).toBeInTheDocument();
   });
 
   it('mounts the challenge invite prompt at the shell root', () => {
@@ -486,7 +483,7 @@ describe('AppShell — rejoin / completed / forfeit / draft banners', () => {
       forfeitPending: { matchId: 'M4', reason: 'opponent_forfeit', message: 'They quit' },
     });
     renderShell();
-    expect(screen.getAllByText('Opponent forfeited').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('forfeit.opponentForfeited').length).toBeGreaterThan(0);
     expect(screen.getAllByText('They quit').length).toBeGreaterThan(0);
   });
 

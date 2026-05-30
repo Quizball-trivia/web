@@ -227,7 +227,7 @@ function RankRow({ standing, displayIndex }: { standing: StandingRow; displayInd
     >
       <div
         className={cn(
-          'flex flex-1 items-center gap-3 rounded-2xl px-3 py-2.5 border-2',
+          'relative flex flex-1 items-center gap-3 rounded-2xl px-3 py-2.5 border-2',
           rs.border,
           standing.isSelf ? rs.tint : 'bg-transparent',
         )}
@@ -260,16 +260,18 @@ function RankRow({ standing, displayIndex }: { standing: StandingRow; displayInd
         <span className="font-poppins text-base font-extrabold tabular-nums text-white shrink-0">
           {standing.totalPoints}
         </span>
-      </div>
 
-      {standing.isSelf && (
-        <span
-          className="flex shrink-0 self-stretch items-center justify-center rounded-[16px] bg-brand-orange px-4 font-poppins text-sm font-extrabold uppercase tracking-wider text-white"
-          style={{ boxShadow: '0 1.76px 6.334px 1.32px rgba(255,150,0,0.3)' }}
-        >
-          You
-        </span>
-      )}
+        {/* "YOU" badge — small tilted orange tab pinned onto the card's
+            corner, matching the in-game standings sidebar. */}
+        {standing.isSelf && (
+          <span
+            className="pointer-events-none absolute -right-2 -top-2 -rotate-[8deg] rounded-lg bg-brand-orange px-2 py-0.5 font-poppins text-[11px] font-extrabold uppercase tracking-wider text-white"
+            style={{ boxShadow: '0 1.76px 6.334px 1.32px rgba(255,150,0,0.4)' }}
+          >
+            You
+          </span>
+        )}
+      </div>
     </motion.div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ShowdownScreen } from '@/components/ShowdownScreen';
 import { motion } from 'motion/react';
 import { Volume2, VolumeX } from 'lucide-react';
@@ -12,7 +12,6 @@ import { getSocket } from '@/lib/realtime/socket-client';
 import { usePlayer } from '@/contexts/PlayerContext';
 import { useAuthStore } from '@/stores/auth.store';
 import { useRankedProfile } from '@/lib/queries/ranked.queries';
-import { useCategoriesList } from '@/lib/queries/categories.queries';
 import { logger } from '@/utils/logger';
 import { cn, parseRp } from '@/lib/utils';
 import { resolveAvatarUrl } from '@/lib/avatars';
@@ -249,7 +248,7 @@ export function BanCategoryView({
                   isBanned={isBanned}
                   disabled={disabled}
                   fadedOut={fadedOut}
-                  onClick={() => onBanCategory(category.id)}
+                  onClick={onBanCategory}
                 />
               );
             })}
@@ -353,12 +352,7 @@ export function RankedCategoryBlockingScreen() {
     ? Object.entries(draft.bans).find(([userId]) => userId !== selfUserId)?.[1] ?? null
     : null;
 
-  const { data: categoriesData } = useCategoriesList({ limit: 100, is_active: 'true' });
-  const poolCategories = useMemo(() => {
-    const draftCats = draft?.categories ?? [];
-    const imageUrlMap = new Map(categoriesData?.items?.map(c => [c.id, c.imageUrl]) ?? []);
-    return draftCats.map(c => ({ ...c, imageUrl: imageUrlMap.get(c.id) ?? null }));
-  }, [draft?.categories, categoriesData?.items]);
+  const poolCategories = draft?.categories ?? [];
 
   const playerRp = rankedProfile?.rp ?? player.rankPoints;
   const opponentRp = parseRp(matchOpponent?.rp ?? rankedFoundOpponent?.rp) ?? opponentMember?.rankPoints;
@@ -370,6 +364,13 @@ export function RankedCategoryBlockingScreen() {
     ?? rankedFoundOpponent?.countryCode
     ?? rankedFoundOpponent?.country
     ?? null;
+  const handleBanCategory = useCallback((categoryId: string) => {
+    if (draftPaused) return;
+    if (!selfUserId) return;
+    useRealtimeMatchStore.getState().setDraftBan(selfUserId, categoryId);
+    getSocket().emit('draft:ban', { categoryId });
+    logger.info('Socket emit draft:ban (optimistic)', { categoryId });
+  }, [draftPaused, selfUserId]);
 
   if (!draft || !lobby) {
     return <LoadingScreen text={t('play.preparingMatch')} />;
@@ -438,13 +439,7 @@ export function RankedCategoryBlockingScreen() {
       paused={draftPaused}
       soundMuted={soundMuted}
       onToggleSound={() => setSoundMuted(toggleMute())}
-      onBanCategory={(categoryId) => {
-        if (draftPaused) return;
-        if (!selfUserId) return;
-        useRealtimeMatchStore.getState().setDraftBan(selfUserId, categoryId);
-        getSocket().emit('draft:ban', { categoryId });
-        logger.info('Socket emit draft:ban (optimistic)', { categoryId });
-      }}
+      onBanCategory={handleBanCategory}
     />
   );
 }

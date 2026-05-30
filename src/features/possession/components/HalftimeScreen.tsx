@@ -311,7 +311,7 @@ export function HalftimeScreen({
                           isBanned={isBanned}
                           isRemaining={isRemaining}
                           disabled={disabled}
-                          onClick={() => onBanCategory?.(category.id)}
+                          onClick={onBanCategory}
                         />
                       );
                     })}

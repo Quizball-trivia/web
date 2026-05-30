@@ -70,7 +70,7 @@ export function PartyQuizMobileStandingsBar({
                 />
                 {player.isSelf && (
                   <span
-                    className="absolute -top-1 -right-1 rounded-full bg-brand-orange px-1 py-[1px] text-white shadow-[0_1px_3px_rgba(0,0,0,0.35)] font-poppins font-semibold uppercase"
+                    className="absolute -top-1.5 -right-1.5 -rotate-[8deg] rounded-md bg-brand-orange px-1 py-[1px] text-white shadow-[0_1px_3px_rgba(0,0,0,0.35)] font-poppins font-black uppercase"
                     style={{ fontSize: 7, letterSpacing: '0.06em', lineHeight: 1 }}
                   >
                     You

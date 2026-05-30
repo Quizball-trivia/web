@@ -1,5 +1,8 @@
 'use client';
 
+/* eslint-disable @next/next/no-img-element -- Category artwork URLs come from realtime/backend payloads. */
+
+import { memo, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -26,6 +29,10 @@ export const BAN_CARD_TITLE_STYLE = {
   lineHeight: 1,
 } as const;
 
+const CARD_ENTRANCE_INITIAL = { opacity: 0, y: 20 } as const;
+const CARD_ENTRANCE_ANIMATE = { opacity: 1, y: 0 } as const;
+const CARD_SPRING = { type: 'spring', stiffness: 200, damping: 20 } as const;
+
 export interface BanCategoryCardCategory {
   id: string;
   name: string;
@@ -47,7 +54,7 @@ export interface BanCategoryCardProps {
   fadedOut?: boolean;
   /** Animation stagger index (ignored when 0). */
   animationIndex?: number;
-  onClick?: () => void;
+  onClick?: (categoryId: string) => void;
 }
 
 /**
@@ -59,7 +66,7 @@ export interface BanCategoryCardProps {
  *  - Poppins uppercase title centered at the bottom
  *  - Chunky active-press feedback (no border-bottom shadow — flat)
  */
-export function BanCategoryCard({
+function BanCategoryCardComponent({
   category,
   colorIndex,
   isBanned,
@@ -71,24 +78,34 @@ export function BanCategoryCard({
 }: BanCategoryCardProps) {
   const { t } = useLocale();
   const color = BAN_CARD_COLORS[colorIndex % BAN_CARD_COLORS.length];
-  const hasImage = Boolean(category.imageUrl);
+  const imageUrl = category.imageUrl ?? null;
+  const hasImage = Boolean(imageUrl);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const interactive = !disabled && !isBanned && !!onClick;
+  const entranceTransition = useMemo(
+    () => ({ ...CARD_SPRING, delay: 0.2 + animationIndex * 0.08 }),
+    [animationIndex],
+  );
+
+  useEffect(() => {
+    setImageLoaded(false);
+  }, [imageUrl]);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 + animationIndex * 0.08, type: 'spring', stiffness: 200, damping: 20 }}
+      initial={CARD_ENTRANCE_INITIAL}
+      animate={CARD_ENTRANCE_ANIMATE}
+      transition={entranceTransition}
       onClick={() => {
         if (!interactive) return;
-        onClick?.();
+        onClick?.(category.id);
       }}
       role="button"
       tabIndex={interactive ? 0 : -1}
       onKeyDown={(e) => {
         if ((e.key === 'Enter' || e.key === ' ') && interactive) {
           e.preventDefault();
-          onClick?.();
+          onClick?.(category.id);
         }
       }}
       className={cn(
@@ -102,13 +119,19 @@ export function BanCategoryCard({
       {/* Artwork — either imageUrl as cover, or emoji as centered watermark */}
       {hasImage ? (
         <>
-          <div
+          <div className="absolute inset-0" style={{ backgroundColor: color.bg }} />
+          <img
+            src={imageUrl ?? ''}
+            alt=""
+            decoding="async"
+            loading="eager"
+            onLoad={() => setImageLoaded(true)}
             className={cn(
-              'absolute inset-0 bg-cover bg-center transition-transform duration-500',
+              'absolute inset-0 h-full w-full object-cover transition-[opacity,transform,filter] duration-300 ease-out sm:duration-500',
+              imageLoaded ? 'opacity-100' : 'opacity-0',
               interactive && 'group-hover:scale-105',
               isBanned && 'grayscale'
             )}
-            style={{ backgroundImage: `url("${category.imageUrl}")` }}
           />
           <div
             className={cn(
@@ -196,3 +219,5 @@ export function BanCategoryCard({
     </motion.div>
   );
 }
+
+export const BanCategoryCard = memo(BanCategoryCardComponent);
