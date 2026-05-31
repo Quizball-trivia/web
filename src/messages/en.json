@@ -100,7 +100,7 @@
     "deleteAccount": "Delete Account",
     "deleteAccountDescription": "Disable this account and start the 30-day deletion window",
     "deleteAccountTitle": "Delete account?",
-    "deleteAccountModalDescription": "Your account will be disabled immediately and hidden from public surfaces. Support can restore it for 30 days. After that, personal data is removed in accordance with our Privacy Policy and this email can be used for a new account.",
+    "deleteAccountModalDescription": "Your account will be disabled immediately, hidden from public surfaces, and signed out. You will not be able to sign in or create a new account with the same Facebook, Google, email, or phone for 30 days while deletion is pending. Contact support during that time to restore it. After 30 days, personal data is removed and those credentials can be used again.",
     "deleteAccountConfirmWord": "DELETE",
     "deleteAccountConfirmLabel": "Type {confirmWord} to confirm",
     "deleteAccountDeleting": "Deleting...",

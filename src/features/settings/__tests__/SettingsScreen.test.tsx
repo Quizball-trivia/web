@@ -73,7 +73,7 @@ vi.mock('@/contexts/LocaleContext', () => ({
         'settings.deleteAccount': 'Delete Account',
         'settings.deleteAccountDescription': 'Disable this account and start the 30-day deletion window',
         'settings.deleteAccountTitle': 'Delete account?',
-        'settings.deleteAccountModalDescription': 'Your account will be disabled immediately.',
+        'settings.deleteAccountModalDescription': 'Your account will be disabled immediately, hidden from public surfaces, and signed out. You will not be able to sign in or create a new account with the same Facebook, Google, email, or phone for 30 days while deletion is pending. Contact support during that time to restore it. After 30 days, personal data is removed and those credentials can be used again.',
         'settings.deleteAccountConfirmLabel': 'Type DELETE to confirm',
         'settings.deleteAccountConfirmWord': 'DELETE',
         'settings.deleteAccountDeleting': 'Deleting...',
