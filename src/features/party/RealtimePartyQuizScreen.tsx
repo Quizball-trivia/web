@@ -84,11 +84,13 @@ export function RealtimePartyQuizScreen({
         pauseSeconds={pauseSeconds}
       />
 
-      {/* Floating leave button */}
+      {/* Leave button — circular, matching the ranked match HUD button, aligned
+          with the question/timer header row at the top-right. */}
       <button
         onClick={() => setShowQuitModal(true)}
-        className="absolute right-3 top-3 z-40 rounded-full p-2 text-white/45 transition-colors hover:bg-white/5 hover:text-white/80 sm:right-4 sm:top-4"
+        className="absolute right-4 top-[14px] z-40 flex size-10 items-center justify-center rounded-full border border-brand-blue/55 bg-brand-blue/25 text-white shadow-[0_8px_26px_rgba(31,81,255,0.28)] backdrop-blur-md transition-colors hover:border-brand-blue/80 hover:bg-brand-blue/35 sm:right-5 sm:top-5 sm:size-11"
         title={t('partyResults.leaveMatch')}
+        aria-label={t('partyResults.leaveMatch')}
       >
         <X className="size-5" />
       </button>

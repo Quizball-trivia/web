@@ -178,8 +178,18 @@ export function connectSocket(): Socket<ServerToClientEvents, ClientToServerEven
 }
 
 export function disconnectSocket(): void {
-  if (socketInstance?.connected) {
+  if (socketInstance && (socketInstance.connected || socketInstance.active)) {
     logger.info('Socket disconnect requested');
     socketInstance.disconnect();
   }
+}
+
+export function reconnectSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
+  const socket = getSocket();
+  if (socket.connected || socket.active) {
+    logger.info('Socket reconnect requested');
+    socket.disconnect();
+  }
+  void connectWithFreshAuth(socket);
+  return socket;
 }

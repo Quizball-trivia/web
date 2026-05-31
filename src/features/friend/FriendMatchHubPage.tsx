@@ -213,7 +213,8 @@ export function FriendMatchHubPage() {
     <div className="container mx-auto max-w-5xl px-4 py-6 animate-in fade-in space-y-6 sm:px-6 lg:px-0">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-         <div className="space-y-1">
+         {/* Centered on mobile to match the centered empty-state below; left-aligned on desktop. */}
+         <div className="space-y-1 text-center md:text-left">
             <h1
                className="uppercase text-white"
                style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: "clamp(22px, 4vw, 36px)", lineHeight: 1 }}

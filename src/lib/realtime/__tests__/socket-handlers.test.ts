@@ -190,6 +190,32 @@ describe('registerSocketHandlers', () => {
     expect(useRealtimeMatchStore.getState().lobby).toBeNull();
   });
 
+  it('ignores lobby state when the current user is not a lobby member', () => {
+    useRealtimeMatchStore.setState({ selfUserId: 'current-user' });
+    registerSocketHandlers();
+
+    mockSocket.fire('lobby:state', {
+      lobbyId: 'other-user-lobby',
+      mode: 'friendly',
+      status: 'waiting',
+      inviteCode: 'OLD123',
+      displayName: 'Other Account Lobby',
+      isPublic: true,
+      hostUserId: 'old-user',
+      settings: {
+        gameMode: 'friendly_party_quiz',
+        friendlyRandom: true,
+        friendlyCategoryAId: null,
+        friendlyCategoryBId: null,
+      },
+      members: [
+        { userId: 'old-user', username: 'Old User', avatarUrl: null, isReady: false, isHost: true },
+      ],
+    });
+
+    expect(useRealtimeMatchStore.getState().lobby).toBeNull();
+  });
+
   it('stores party dropout and clears rejoin/pause state', () => {
     registerSocketHandlers();
     useRealtimeMatchStore.getState().setRejoinAvailable({

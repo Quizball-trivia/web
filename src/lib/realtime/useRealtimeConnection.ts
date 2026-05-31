@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
-import { connectSocket, getSocket } from './socket-client';
+import { connectSocket, disconnectSocket, getSocket, reconnectSocket } from './socket-client';
 import { registerSocketHandlers } from './socket-handlers';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
+import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
 import { useQueryClient } from '@tanstack/react-query';
 import { logger } from '@/utils/logger';
 
@@ -10,16 +11,49 @@ interface RealtimeConnectionOptions {
   selfUserId: string | null;
 }
 
+let connectedRealtimeUserId: string | null = null;
+
 export function useRealtimeConnection({ enabled, selfUserId }: RealtimeConnectionOptions) {
   const queryClient = useQueryClient();
   useEffect(() => {
-    if (!enabled) return;
+    const realtimeStore = useRealtimeMatchStore.getState();
+
+    if (!enabled || !selfUserId) {
+      if (connectedRealtimeUserId !== null || realtimeStore.selfUserId !== null) {
+        logger.info('Realtime connection cleared user context', {
+          previousUserId: connectedRealtimeUserId ?? realtimeStore.selfUserId,
+        });
+        connectedRealtimeUserId = null;
+        realtimeStore.reset();
+        realtimeStore.setSelfUserId(null);
+        useRankedMatchmakingStore.getState().clearRankedMatchmaking();
+        disconnectSocket();
+      }
+      return;
+    }
 
     registerSocketHandlers(queryClient);
-    if (selfUserId) {
-      logger.info('Realtime connection set self user id', { selfUserId });
-      useRealtimeMatchStore.getState().setSelfUserId(selfUserId);
+    const storeSelfUserId = realtimeStore.selfUserId;
+    const userChanged =
+      (connectedRealtimeUserId !== null && connectedRealtimeUserId !== selfUserId) ||
+      (storeSelfUserId !== null && storeSelfUserId !== selfUserId);
+
+    if (userChanged) {
+      logger.info('Realtime connection switched user context', {
+        previousUserId: connectedRealtimeUserId ?? storeSelfUserId,
+        nextUserId: selfUserId,
+      });
+      realtimeStore.reset();
+      useRankedMatchmakingStore.getState().clearRankedMatchmaking();
+      realtimeStore.setSelfUserId(selfUserId);
+      connectedRealtimeUserId = selfUserId;
+      reconnectSocket();
+      return;
     }
+
+    logger.info('Realtime connection set self user id', { selfUserId });
+    realtimeStore.setSelfUserId(selfUserId);
+    connectedRealtimeUserId = selfUserId;
     connectSocket();
 
   }, [enabled, selfUserId, queryClient]);

@@ -91,8 +91,13 @@ export function useAppShellViewModel() {
   const lobbyBannerSuppressed =
     suppressLobbyBannerReason !== null ||
     (suppressLobbyBannerUntil !== null && suppressLobbyBannerUntil > nowTick);
+  const lobbyIncludesCurrentUser =
+    !!authUser?.id &&
+    !!lobby &&
+    lobby.members.some((member) => member.userId === authUser.id);
   const showLobbyBanner =
     !!lobby &&
+    lobbyIncludesCurrentUser &&
     lobby.status === 'waiting' &&
     lobby.mode === 'friendly' &&
     Boolean(lobby.inviteCode) &&
@@ -100,6 +105,7 @@ export function useAppShellViewModel() {
     !lobbyBannerSuppressed;
   const showRankedLobbyBanner =
     !!lobby &&
+    lobbyIncludesCurrentUser &&
     lobby.status === 'waiting' &&
     lobby.mode === 'ranked' &&
     !currentPath.startsWith('/game');

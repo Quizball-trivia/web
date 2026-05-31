@@ -954,6 +954,7 @@
       "deciding": "Deciding..."
     },
     "opponentSelected": "Opponent selected this answer",
+    "partyPickSelected": "{username} selected this answer",
     "savedExclaim": "SAVED!",
     "keeperSavesIt": "Keeper saves it!",
     "youSavedIt": "You saved it!",

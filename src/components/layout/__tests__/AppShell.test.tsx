@@ -365,7 +365,7 @@ describe('AppShell — lobby banner', () => {
         inviteCode: 'CODE42',
         lobbyId: 'L1',
         displayName: 'My Lobby',
-        members: [],
+        members: [{ userId: 'self-user' }],
       },
     });
     renderShell();
@@ -382,7 +382,23 @@ describe('AppShell — lobby banner', () => {
         inviteCode: 'CODE42',
         lobbyId: 'L1',
         displayName: 'My Lobby',
-        members: [],
+        members: [{ userId: 'self-user' }],
+      },
+    });
+    renderShell();
+    expect(screen.queryByText(/appShell.stillInLobby/)).not.toBeInTheDocument();
+  });
+
+  it('hides a stale lobby banner when the current auth user is not a member', () => {
+    pathnameMock.mockReturnValue('/leaderboard');
+    seedRealtime({
+      lobby: {
+        status: 'waiting',
+        mode: 'friendly',
+        inviteCode: 'OLD123',
+        lobbyId: 'L-old',
+        displayName: 'Other Account Lobby',
+        members: [{ userId: 'old-user' }],
       },
     });
     renderShell();
@@ -398,7 +414,7 @@ describe('AppShell — lobby banner', () => {
         inviteCode: '',
         lobbyId: 'L2',
         displayName: 'Ranked',
-        members: [],
+        members: [{ userId: 'self-user' }],
       },
     });
     renderShell();
@@ -414,7 +430,7 @@ describe('AppShell — lobby banner', () => {
         inviteCode: '',
         lobbyId: 'L2',
         displayName: 'Ranked',
-        members: [],
+        members: [{ userId: 'self-user' }],
       },
     });
     renderShell();
@@ -430,7 +446,7 @@ describe('AppShell — lobby banner', () => {
         inviteCode: 'CODE42',
         lobbyId: 'L1',
         displayName: 'My Lobby',
-        members: [],
+        members: [{ userId: 'self-user' }],
       },
       suppressLobbyBannerReason: 'just-left',
     });
@@ -604,7 +620,7 @@ describe('AppShell — banner callbacks fire the right store / socket actions', 
         inviteCode: 'ROOM1',
         lobbyId: 'L1',
         displayName: 'L',
-        members: [],
+        members: [{ userId: 'self-user' }],
       },
     });
     renderShell();
@@ -623,7 +639,7 @@ describe('AppShell — banner callbacks fire the right store / socket actions', 
         inviteCode: 'ROOM2',
         lobbyId: 'L1',
         displayName: 'L',
-        members: [],
+        members: [{ userId: 'self-user' }],
       },
       reset,
     });
@@ -711,7 +727,7 @@ describe('AppShell — banner callbacks fire the right store / socket actions', 
         inviteCode: '',
         lobbyId: 'L7',
         displayName: 'L',
-        members: [],
+        members: [{ userId: 'self-user' }],
       },
     });
     const { container } = renderShell();

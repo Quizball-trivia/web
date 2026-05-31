@@ -64,7 +64,11 @@ interface PossessionQuestionPanelProps {
 // pill with a colored stripe inside) but small enough to stack 3 on one
 // side, 2 on the other. White outer keeps every color legible — including
 // yellow on a green correct-answer fill.
-function renderPartyPickChip(pick: PartyPickInfo, side: 'left' | 'right') {
+function renderPartyPickChip(
+  pick: PartyPickInfo,
+  side: 'left' | 'right',
+  t: ReturnType<typeof useLocale>['t'],
+) {
   const fill = pick.accentColor ?? 'rgba(255,255,255,0.85)';
   const initialX = side === 'right' ? 8 : -8;
   const wrapperRadius = side === 'right' ? 'rounded-l-md' : 'rounded-r-md';
@@ -79,7 +83,7 @@ function renderPartyPickChip(pick: PartyPickInfo, side: 'left' | 'right') {
       transition={{ type: 'spring', stiffness: 380, damping: 24 }}
       className={`flex h-5 w-[8px] items-center bg-white ${wrapperRadius} ${justify}`}
       style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.35)' }}
-      aria-label={`${pick.username} selected this answer`}
+      aria-label={t('possession.partyPickSelected', { username: pick.username })}
       title={pick.username}
     >
       <span
@@ -332,11 +336,11 @@ export function PossessionQuestionPanel({
               {partyPicksForThis.length > 0 && (
                 <>
                   <div className="pointer-events-none absolute right-0 top-1/2 z-10 flex -translate-y-1/2 flex-col gap-1">
-                    {partyPicksForThis.slice(0, 3).map((pick) => renderPartyPickChip(pick, 'right'))}
+                    {partyPicksForThis.slice(0, 3).map((pick) => renderPartyPickChip(pick, 'right', t))}
                   </div>
                   {partyPicksForThis.length > 3 && (
                     <div className="pointer-events-none absolute left-0 top-1/2 z-10 flex -translate-y-1/2 flex-col gap-1">
-                      {partyPicksForThis.slice(3, 5).map((pick) => renderPartyPickChip(pick, 'left'))}
+                      {partyPicksForThis.slice(3, 5).map((pick) => renderPartyPickChip(pick, 'left', t))}
                     </div>
                   )}
                 </>

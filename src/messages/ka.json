@@ -841,7 +841,7 @@
     "failedToLoadCategories": "კატეგორიების ჩატვირთვა ვერ მოხერხდა",
     "retry": "თავიდან ცდა",
     "matchMode": "მატჩის რეჟიმი",
-    "partyQuiz": "Party Quiz",
+    "partyQuiz": "ქვიზ-ფართი",
     "lobbyVisibility": "ლობის ხილვადობა",
     "randomCategories": "შემთხვევითი კატეგორიები",
     "rankedSimulation": "რეიტინგული სიმულაცია",
@@ -1000,6 +1000,7 @@
       "deciding": "მიმდინარეობს გადაწყვეტა..."
     },
     "opponentSelected": "მოწინააღმდეგემ აირჩია ეს პასუხი",
+    "partyPickSelected": "{username}-მ აირჩია ეს პასუხი",
     "savedExclaim": "გადარჩა!",
     "keeperSavesIt": "მეკარემ გაიტანა!",
     "youSavedIt": "შენ გადაარჩინე!",

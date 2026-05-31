@@ -107,12 +107,22 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   });
 
   socket.on('lobby:state', (data: LobbyState) => {
+    const selfUserId = useRealtimeMatchStore.getState().selfUserId;
     logger.info('Socket event lobby:state', {
       lobbyId: data.lobbyId,
       status: data.status,
       memberCount: data.members.length,
       memberIds: data.members.map((member) => member.userId),
+      selfUserId,
     });
+    if (selfUserId && !data.members.some((member) => member.userId === selfUserId)) {
+      logger.warn('Ignoring lobby state that does not include current user', {
+        lobbyId: data.lobbyId,
+        selfUserId,
+        memberIds: data.members.map((member) => member.userId),
+      });
+      return;
+    }
     const rankedState = useRankedMatchmakingStore.getState();
     if (data.mode === 'ranked' && rankedState.rankedCancelRequestedAt !== null && data.status !== 'closed') {
       logger.warn('Ignoring ranked lobby state after local cancel request', {

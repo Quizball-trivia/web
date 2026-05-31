@@ -15,6 +15,8 @@ interface LobbyHeaderProps {
   me?: LobbyMember;
   members: LobbyMember[];
   h2hSummary: HeadToHeadSummary | null;
+  /** Max players for the current mode (classic 2, party quiz 6, ranked sim 2). */
+  maxMembers: number;
 }
 
 export function LobbyHeader({
@@ -23,6 +25,7 @@ export function LobbyHeader({
   me,
   members,
   h2hSummary,
+  maxMembers,
 }: LobbyHeaderProps) {
   const { t } = useLocale();
   const copyCode = async () => {
@@ -60,7 +63,7 @@ export function LobbyHeader({
   const poppins = "'Poppins', sans-serif";
 
   return (
-    <div className="mx-5 rounded-[20px] bg-surface-card/40 p-5">
+    <div className="rounded-[20px] bg-surface-card/40 p-5">
       <div className="flex flex-col gap-6">
         <div className="flex flex-row items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
@@ -115,7 +118,7 @@ export function LobbyHeader({
                 style={{ fontFamily: poppins, fontWeight: 600, fontSize: 22, lineHeight: 1 }}
               >
                 {roster.length}
-                <span className="ml-1 text-sm text-white/45">/ 6</span>
+                <span className="ml-1 text-sm text-white/45">/ {maxMembers}</span>
               </div>
             </div>
 
