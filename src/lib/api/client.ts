@@ -21,8 +21,10 @@ type ApiFetchOptions<
 const NON_REFRESHABLE_PATHS = new Set<string>([
   "/api/v1/auth/refresh",
   "/api/v1/auth/login",
+  "/api/v1/auth/login/restore",
   "/api/v1/auth/logout",
   "/api/v1/auth/register",
+  "/api/v1/auth/restore-pending-deletion",
 ]);
 
 export async function apiFetch<

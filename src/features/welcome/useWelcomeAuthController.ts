@@ -20,6 +20,9 @@ import {
   login,
   register,
   forgotPassword,
+  isPendingDeletionAuthError,
+  restorePendingDeletionWithLogin,
+  restorePendingDeletionWithToken,
   socialLogin,
   socialLoginWithIdToken,
   startGeorgianPhoneOtp,
@@ -49,6 +52,11 @@ import {
   type AuthFieldErrors,
 } from '@/lib/auth/validation';
 
+type PendingRestoreAction =
+  | { kind: 'email'; email: string; password: string }
+  | { kind: 'phone'; phone: string; token: string }
+  | { kind: 'social-token'; provider: 'google'; idToken: string; nonce?: string };
+
 export function useWelcomeAuthController() {
   const { t, locale } = useLocale();
   const bootstrap = useAuthStore((state) => state.bootstrap);
@@ -66,6 +74,9 @@ export function useWelcomeAuthController() {
   const [authNotice, setAuthNotice] = useState<string | null>(null);
   // Centered post-signup confirmation modal (check-email vs already-registered).
   const [authNoticeModal, setAuthNoticeModal] = useState<AuthNoticeVariant | null>(null);
+  const [pendingRestoreAction, setPendingRestoreAction] = useState<PendingRestoreAction | null>(null);
+  const [restoreSubmitting, setRestoreSubmitting] = useState(false);
+  const [restoreError, setRestoreError] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [authFieldErrors, setAuthFieldErrors] = useState<AuthFieldErrors>({});
   const [phoneOtpSent, setPhoneOtpSent] = useState(false);
@@ -99,6 +110,7 @@ export function useWelcomeAuthController() {
     setAuthError(null);
     setAuthNotice(null);
     setAuthFieldErrors({});
+    setRestoreError(null);
   }, []);
 
   const resetAuthForm = useCallback(() => {
@@ -112,6 +124,9 @@ export function useWelcomeAuthController() {
     setForgotSent(false);
     setForgotError(null);
     setForgotSubmitting(false);
+    setPendingRestoreAction(null);
+    setRestoreSubmitting(false);
+    setRestoreError(null);
   }, [resetAuthFeedback]);
 
   // Switching tabs uses resetAuthForm (keeps the panel open); only closing the
@@ -181,12 +196,24 @@ export function useWelcomeAuthController() {
     }
 
     if (googleClientId) {
+      let googleIdentity: { idToken: string; nonce?: string } | null = null;
       try {
-        const { idToken, nonce } = await signInWithGoogleIdentity(googleClientId);
-        await socialLoginWithIdToken('google', idToken, nonce);
+        googleIdentity = await signInWithGoogleIdentity(googleClientId);
+        await socialLoginWithIdToken('google', googleIdentity.idToken, googleIdentity.nonce);
         await bootstrap({ force: true });
         return;
       } catch (gisError) {
+        if (googleIdentity && isPendingDeletionAuthError(gisError)) {
+          setPendingRestoreAction({
+            kind: 'social-token',
+            provider: 'google',
+            idToken: googleIdentity.idToken,
+            nonce: googleIdentity.nonce,
+          });
+          setAuthNoticeModal('pending-deletion');
+          setLoginOpen(true);
+          return;
+        }
         console.warn('GIS sign-in unavailable, falling back to redirect', gisError);
       }
     }
@@ -256,7 +283,12 @@ export function useWelcomeAuthController() {
             // Centered modal instead of the easy-to-miss inline notice.
             // `alreadyRegistered` distinguishes "email already has an account"
             // (no email sent) from a genuine new signup awaiting confirmation.
-            setAuthNoticeModal(result.alreadyRegistered ? 'already-registered' : 'check-email');
+            if (result.pendingDeletion) {
+              setPendingRestoreAction({ kind: 'email', email: authEmail, password: authPassword });
+              setAuthNoticeModal('pending-deletion');
+            } else {
+              setAuthNoticeModal(result.alreadyRegistered ? 'already-registered' : 'check-email');
+            }
             setAuthMode('signin');
             setAuthPassword('');
             setAuthConfirmPassword('');
@@ -265,7 +297,16 @@ export function useWelcomeAuthController() {
           }
           trackSignupCompleted('email');
         } else {
-          await login(authEmail, authPassword);
+          try {
+            await login(authEmail, authPassword);
+          } catch (error) {
+            if (isPendingDeletionAuthError(error)) {
+              setPendingRestoreAction({ kind: 'email', email: authEmail, password: authPassword });
+              setAuthNoticeModal('pending-deletion');
+              return;
+            }
+            throw error;
+          }
           trackLoginCompleted('email');
         }
 
@@ -290,16 +331,57 @@ export function useWelcomeAuthController() {
 
   const handleCloseAuthNoticeModal = useCallback(() => {
     setAuthNoticeModal(null);
+    setPendingRestoreAction(null);
+    setRestoreSubmitting(false);
+    setRestoreError(null);
   }, []);
 
   // From the "already registered" modal: dismiss it and land the user on the
   // sign-in tab (dialog stays open) so they can log in right away.
   const handleNoticeModalGoToSignIn = useCallback(() => {
     setAuthNoticeModal(null);
+    setPendingRestoreAction(null);
+    setRestoreSubmitting(false);
+    setRestoreError(null);
     setAuthMode('signin');
     setShowAdvancedAuth(true);
     setLoginOpen(true);
   }, []);
+
+  const handleRestorePendingDeletion = useCallback(async () => {
+    if (!pendingRestoreAction || restoreSubmitting) {
+      return;
+    }
+
+    setRestoreSubmitting(true);
+    setRestoreError(null);
+    try {
+      if (pendingRestoreAction.kind === 'email') {
+        await restorePendingDeletionWithLogin(pendingRestoreAction.email, pendingRestoreAction.password);
+        trackLoginCompleted('email');
+      } else if (pendingRestoreAction.kind === 'phone') {
+        await restorePendingDeletionWithToken();
+        trackLoginCompleted('phone');
+      } else {
+        await socialLoginWithIdToken(
+          pendingRestoreAction.provider,
+          pendingRestoreAction.idToken,
+          pendingRestoreAction.nonce,
+          { restorePendingDeletion: true },
+        );
+        trackLoginCompleted(pendingRestoreAction.provider);
+      }
+
+      await bootstrap({ force: true });
+      setAuthNoticeModal(null);
+      setPendingRestoreAction(null);
+      setLoginOpen(false);
+      resetAuthForm();
+    } catch (error) {
+      setRestoreError(authErrorMessage(error, t('welcome.restoreAccountFailed')));
+      setRestoreSubmitting(false);
+    }
+  }, [bootstrap, pendingRestoreAction, resetAuthForm, restoreSubmitting, t]);
 
   const handleShowForgot = useCallback(() => {
     resetAuthFeedback();
@@ -364,7 +446,16 @@ export function useWelcomeAuthController() {
           return;
         }
 
-        await verifyGeorgianPhoneOtp(normalizedPhone, authOtp);
+        try {
+          await verifyGeorgianPhoneOtp(normalizedPhone, authOtp);
+        } catch (error) {
+          if (isPendingDeletionAuthError(error)) {
+            setPendingRestoreAction({ kind: 'phone', phone: normalizedPhone, token: authOtp });
+            setAuthNoticeModal('pending-deletion');
+            return;
+          }
+          throw error;
+        }
         trackLoginCompleted('phone');
         await bootstrap({ force: true });
         setLoginOpen(false);
@@ -417,6 +508,9 @@ export function useWelcomeAuthController() {
     authNoticeModal,
     handleCloseAuthNoticeModal,
     handleNoticeModalGoToSignIn,
+    handleRestorePendingDeletion,
+    restoreSubmitting,
+    restoreError,
     authError,
     authFieldErrors,
     phoneOtpSent,

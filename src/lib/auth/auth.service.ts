@@ -22,6 +22,10 @@ type RefreshPayload =
     paths["/api/v1/auth/refresh"]["post"]["requestBody"]
   >["content"]["application/json"];
 
+type RestorePendingDeletionPayload = {
+  refresh_token?: string;
+};
+
 type ForgotPasswordPayload =
   NonNullable<
     paths["/api/v1/auth/forgot-password"]["post"]["requestBody"]
@@ -80,11 +84,31 @@ export async function login(email: string, password: string): Promise<AuthRespon
   return response.user ?? null;
 }
 
+export async function restorePendingDeletionWithLogin(
+  email: string,
+  password: string,
+): Promise<AuthResponse["user"] | null> {
+  const normalizedEmail = normalizeEmail(email);
+  logger.info("Auth pending deletion restore with login start", { email: normalizedEmail });
+  const data = await api.POST("/api/v1/auth/login/restore", {
+    body: { email: normalizedEmail, password } satisfies LoginPayload,
+    auth: false,
+  });
+  const response = data as AuthResponse;
+  if (response?.access_token && response?.refresh_token) {
+    storeAuthTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
+  }
+  logger.info("Auth pending deletion restore with login success");
+  return response.user ?? null;
+}
+
 export type RegisterResult = {
   user: AuthResponse["user"] | null;
   tokensSet: boolean;
   /** True when the email already belongs to an existing account (no email sent). */
   alreadyRegistered: boolean;
+  /** True when the existing account is inside the deletion grace period. */
+  pendingDeletion: boolean;
 };
 
 export async function register(payload: RegisterPayload): Promise<RegisterResult> {
@@ -105,7 +129,25 @@ export async function register(payload: RegisterPayload): Promise<RegisterResult
     alreadyRegistered: Boolean(
       (response as AuthResponse & { already_registered?: boolean })?.already_registered,
     ),
+    pendingDeletion: Boolean(
+      (response as AuthResponse & { pending_deletion?: boolean })?.pending_deletion,
+    ),
   };
+}
+
+export function isPendingDeletionAuthError(error: unknown): boolean {
+  if (!(error instanceof ApiError)) {
+    return false;
+  }
+  const details = error.data && typeof error.data === "object" && "details" in error.data
+    ? (error.data as { details?: unknown }).details
+    : null;
+  return Boolean(
+    details &&
+      typeof details === "object" &&
+      "reason" in details &&
+      (details as { reason?: unknown }).reason === "pending_deletion",
+  );
 }
 
 /**
@@ -215,6 +257,15 @@ export async function refresh(): Promise<boolean> {
  * failure so a dead token never survives.
  */
 export async function refreshWithToken(refreshToken: string): Promise<boolean> {
+  const result = await refreshWithTokenDetailed(refreshToken);
+  return result.ok;
+}
+
+export type RefreshWithTokenResult =
+  | { ok: true }
+  | { ok: false; pendingDeletion: boolean };
+
+export async function refreshWithTokenDetailed(refreshToken: string): Promise<RefreshWithTokenResult> {
   try {
     logger.info("Auth refresh with token start");
     const data = await api.POST("/api/v1/auth/refresh", {
@@ -225,12 +276,13 @@ export async function refreshWithToken(refreshToken: string): Promise<boolean> {
     if (response?.access_token && response?.refresh_token) {
       storeAuthTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
       logger.info("Auth refresh with token success");
-      return true;
+      return { ok: true };
     }
     refreshTerminalDisabled = true;
     clearTokens();
-    return false;
+    return { ok: false, pendingDeletion: false };
   } catch (error) {
+    const pendingDeletion = isPendingDeletionAuthError(error);
     if (isTerminalAuthError(error)) {
       logger.warn("Auth refresh with token failed (terminal) — clearing tokens", error);
       refreshTerminalDisabled = true;
@@ -238,8 +290,22 @@ export async function refreshWithToken(refreshToken: string): Promise<boolean> {
     } else {
       logger.warn("Auth refresh with token failed (transient)", error);
     }
-    return false;
+    return { ok: false, pendingDeletion };
   }
+}
+
+export async function restorePendingDeletionWithToken(refreshToken?: string): Promise<AuthResponse["user"] | null> {
+  logger.info("Auth pending deletion restore with token start");
+  const data = await api.POST("/api/v1/auth/restore-pending-deletion", {
+    body: (refreshToken ? { refresh_token: refreshToken } : {}) satisfies RestorePendingDeletionPayload,
+    auth: false,
+  });
+  const response = data as AuthResponse;
+  if (response?.access_token && response?.refresh_token) {
+    storeAuthTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
+  }
+  logger.info("Auth pending deletion restore with token success");
+  return response.user ?? null;
 }
 
 export async function logout(): Promise<void> {
@@ -310,10 +376,16 @@ export async function socialLoginWithIdToken(
   provider: "google" | "apple",
   idToken: string,
   nonce?: string,
+  options?: { restorePendingDeletion?: boolean },
 ): Promise<AuthResponse["user"] | null> {
   logger.info("Auth social login token start", { provider });
   const data = await api.POST("/api/v1/auth/social-login-token", {
-    body: { provider, id_token: idToken, ...(nonce ? { nonce } : {}) },
+    body: {
+      provider,
+      id_token: idToken,
+      ...(nonce ? { nonce } : {}),
+      ...(options?.restorePendingDeletion ? { restore_pending_deletion: true } : {}),
+    },
     auth: false,
   });
   const response = data as AuthResponse;
@@ -344,10 +416,15 @@ export async function getGeorgianPhoneAuthAvailability(
 export async function verifyGeorgianPhoneOtp(
   phone: string,
   token: string,
+  options?: { restorePendingDeletion?: boolean },
 ): Promise<AuthResponse["user"] | null> {
   logger.info("Auth Georgian phone OTP verify");
   const data = await api.POST("/api/v1/auth/phone/ge/verify", {
-    body: { phone, token } satisfies GeorgianPhoneOtpVerifyPayload,
+    body: {
+      phone,
+      token,
+      ...(options?.restorePendingDeletion ? { restore_pending_deletion: true } : {}),
+    } satisfies GeorgianPhoneOtpVerifyPayload,
     auth: false,
   });
   const response = data as AuthResponse;

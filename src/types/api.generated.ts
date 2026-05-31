@@ -109,6 +109,68 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/login/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore pending-deletion account with email and password */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: email */
+                        email: string;
+                        password: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Account restored and login successful */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AuthResponse"];
+                    };
+                };
+                /** @description Account is not restorable */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Authentication failed */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/refresh": {
         parameters: {
             query?: never;
@@ -141,6 +203,69 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["AuthResponse"];
+                    };
+                };
+                /** @description Invalid refresh token */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/restore-pending-deletion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restore pending-deletion account with refresh token
+         * @description Used by OAuth callback flows after the provider has returned a valid Supabase refresh token. The endpoint restores only the account matching that token; it never accepts a user id.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        refresh_token?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Account restored and session established */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AuthResponse"];
+                    };
+                };
+                /** @description Missing token or account is not restorable */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
                 /** @description Invalid refresh token */
@@ -323,6 +448,7 @@ export interface paths {
                         provider: "google" | "apple";
                         id_token: string;
                         nonce?: string;
+                        restore_pending_deletion?: boolean;
                     };
                 };
             };
@@ -468,6 +594,7 @@ export interface paths {
                     "application/json": {
                         phone: string;
                         token: string;
+                        restore_pending_deletion?: boolean;
                     };
                 };
             };
@@ -778,7 +905,6 @@ export interface paths {
                     destination: string;
                     timestamp?: string;
                     operator?: string;
-                    secret?: string;
                 };
                 header?: never;
                 path?: never;
@@ -5162,6 +5288,8 @@ export interface components {
             token_type: string;
             user: components["schemas"]["AuthUser"] & unknown;
             provider: string;
+            already_registered?: boolean;
+            pending_deletion?: boolean;
         };
         MessageResponse: {
             message: string;

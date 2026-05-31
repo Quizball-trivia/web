@@ -50,6 +50,7 @@ export function LocaleProvider({ children, initialLocale }: LocaleProviderProps)
   // very first render — after that the pathname is the source of truth.
   const pathname = usePathname();
   const pathLocale = localeFromPath(pathname);
+  const localeSourceRef = useRef<'app' | 'path'>(initialLocale || pathLocale ? 'path' : 'app');
   const [locale, setLocaleState] = useState<Locale>(initialLocale ?? pathLocale ?? 'en');
   const hasHydratedRef = useRef(false);
 
@@ -61,6 +62,7 @@ export function LocaleProvider({ children, initialLocale }: LocaleProviderProps)
   useEffect(() => {
     if (!pathLocale) return;
     queueMicrotask(() => {
+      localeSourceRef.current = 'path';
       setLocaleState((prev) => (prev !== pathLocale ? pathLocale : prev));
     });
   }, [pathLocale]);
@@ -73,29 +75,63 @@ export function LocaleProvider({ children, initialLocale }: LocaleProviderProps)
     if (initialLocale || pathLocale) return;
     const stored = normalizeLocale(storage.get(STORAGE_KEYS.LOCALE, 'en'));
     if (stored !== 'en') {
-      queueMicrotask(() => setLocaleState(stored));
+      queueMicrotask(() => {
+        localeSourceRef.current = 'app';
+        setLocaleState(stored);
+      });
     }
   }, [initialLocale, pathLocale]);
 
   useEffect(() => {
     if (!hasHydratedRef.current) return;
+    if (pathLocale) return;
+    if (localeSourceRef.current === 'path') return;
     storage.set(STORAGE_KEYS.LOCALE, locale);
-  }, [locale]);
+  }, [locale, pathLocale]);
 
   useEffect(() => {
-    if (
-      preferredLanguage !== lastSyncedPreferredLanguage.current &&
-      isSupportedLocale(preferredLanguage) &&
-      preferredLanguage !== locale
-    ) {
+    if (!hasHydratedRef.current || pathLocale || localeSourceRef.current !== 'path') return;
+
+    const storedLocale = normalizeLocale(storage.get(STORAGE_KEYS.LOCALE, 'en'));
+    if (storedLocale === locale) {
+      localeSourceRef.current = 'app';
+      return;
+    }
+
+    queueMicrotask(() => {
+      localeSourceRef.current = 'app';
+      setLocaleState(storedLocale);
+    });
+  }, [locale, pathLocale]);
+
+  useEffect(() => {
+    if (!hasHydratedRef.current) return;
+    if (!isSupportedLocale(preferredLanguage)) {
+      lastSyncedPreferredLanguage.current = preferredLanguage;
+      return;
+    }
+    if (pathLocale) {
+      lastSyncedPreferredLanguage.current = preferredLanguage;
+      return;
+    }
+
+    const storedLocale = normalizeLocale(storage.get(STORAGE_KEYS.LOCALE, 'en'));
+    const preferredLanguageChanged = preferredLanguage !== lastSyncedPreferredLanguage.current;
+    const shouldApplyPreferredLanguage =
+      preferredLanguage !== locale &&
+      (preferredLanguageChanged || storedLocale === preferredLanguage);
+
+    if (shouldApplyPreferredLanguage) {
       queueMicrotask(() => {
+        localeSourceRef.current = 'app';
         setLocaleState(preferredLanguage);
       });
     }
     lastSyncedPreferredLanguage.current = preferredLanguage;
-  }, [locale, preferredLanguage]);
+  }, [locale, pathLocale, preferredLanguage]);
 
   const setLocale = useCallback((newLocale: Locale) => {
+    localeSourceRef.current = 'app';
     setLocaleState(newLocale);
   }, []);
 

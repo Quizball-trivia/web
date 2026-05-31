@@ -87,7 +87,7 @@ describe('gameSounds', () => {
   it('uses lowered kickoff soundtrack volume', async () => {
     const { GAME_SOUND_VOLUME, playBgm } = await import('../gameSounds');
 
-    expect(GAME_SOUND_VOLUME.kickoffBgm).toBe(0.025);
+    expect(GAME_SOUND_VOLUME.kickoffBgm).toBe(0.01);
 
     playBgm('kickoff');
 
@@ -96,12 +96,12 @@ describe('gameSounds', () => {
       loop: true,
       preload: true,
       src: ['/sounds/gameplay_soundtrack.m4a'],
-      volume: 0.025,
+      volume: 0.01,
     }));
     expect(HowlMock).toHaveBeenCalledWith(expect.not.objectContaining({
       html5: true,
     }));
-    expect(howlInstances[0]?.volume).toHaveBeenCalledWith(0.025);
+    expect(howlInstances[0]?.volume).toHaveBeenCalledWith(0.01);
     expect(howlInstances[0]?.play).toHaveBeenCalledTimes(1);
   });
 

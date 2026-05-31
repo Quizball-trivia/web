@@ -51,6 +51,9 @@ export function WelcomeScreen() {
     authNoticeModal,
     handleCloseAuthNoticeModal,
     handleNoticeModalGoToSignIn,
+    handleRestorePendingDeletion,
+    restoreSubmitting,
+    restoreError,
     authError,
     authFieldErrors,
     phoneOtpSent,
@@ -184,6 +187,9 @@ export function WelcomeScreen() {
         variant={authNoticeModal ?? 'check-email'}
         onClose={handleCloseAuthNoticeModal}
         onGoToSignIn={handleNoticeModalGoToSignIn}
+        onRestorePendingDeletion={handleRestorePendingDeletion}
+        restoreSubmitting={restoreSubmitting}
+        restoreError={restoreError}
       />
     </div>
   );

@@ -2,9 +2,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
-import { AlertCircle, ArrowLeft } from 'lucide-react';
+import { AlertCircle, ArrowLeft, RotateCcw } from 'lucide-react';
 import { motion } from 'motion/react';
-import { parseOAuthHash, refreshWithToken } from '@/lib/auth/auth.service';
+import {
+  parseOAuthHash,
+  refreshWithTokenDetailed,
+  restorePendingDeletionWithToken,
+} from '@/lib/auth/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
 import { logger } from '@/utils/logger';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
@@ -16,6 +20,9 @@ export function OAuthCallbackScreen() {
   const router = useRouter();
   const bootstrap = useAuthStore((state) => state.bootstrap);
   const [error, setError] = useState<string | null>(null);
+  const [pendingRestoreAvailable, setPendingRestoreAvailable] = useState(false);
+  const [restoreSubmitting, setRestoreSubmitting] = useState(false);
+  const [restoreError, setRestoreError] = useState<string | null>(null);
 
   useEffect(() => {
     const processCallback = async () => {
@@ -58,15 +65,20 @@ export function OAuthCallbackScreen() {
             ? { accessToken: queryAccessToken, refreshToken: queryRefreshToken }
             : null);
         if (tokens) {
+          const refreshed = await refreshWithTokenDetailed(tokens.refreshToken);
+          if (!refreshed.ok && refreshed.pendingDeletion) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+            setPendingRestoreAvailable(true);
+            return;
+          }
+          if (!refreshed.ok) {
+            throw new Error(t('oauthCallback.sessionEstablishError'));
+          }
           if (hash) {
             window.sessionStorage.setItem("quizball_oauth_hash", hash);
           }
           if (query) {
             window.sessionStorage.setItem("quizball_oauth_query", query);
-          }
-          const refreshed = await refreshWithToken(tokens.refreshToken);
-          if (!refreshed) {
-            throw new Error(t('oauthCallback.sessionEstablishError'));
           }
           logger.info('OAuth callback session established');
           // Clear tokens from URL (security: don't leave in browser history)
@@ -93,6 +105,74 @@ export function OAuthCallbackScreen() {
     };
     processCallback();
   }, [bootstrap, router, t]);
+
+  const handleRestore = async () => {
+    if (!pendingRestoreAvailable || restoreSubmitting) {
+      return;
+    }
+    setRestoreSubmitting(true);
+    setRestoreError(null);
+    try {
+      await restorePendingDeletionWithToken();
+      await bootstrap({ force: true });
+      const authenticatedUser = useAuthStore.getState().user;
+      if (!authenticatedUser) {
+        throw new Error(t('oauthCallback.sessionLoadError'));
+      }
+      router.replace(getPostAuthEntryRoute(authenticatedUser));
+    } catch (err) {
+      logger.error('OAuth pending deletion restore failed', err);
+      setRestoreError(err instanceof Error ? err.message : t('oauthCallback.restoreFailed'));
+      setRestoreSubmitting(false);
+    }
+  };
+
+  if (pendingRestoreAvailable) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-surface-page p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-md rounded-[24px] bg-brand-blue p-8 sm:p-10"
+        >
+          <div className="flex flex-col items-center gap-4 text-center">
+            <div className="flex size-16 items-center justify-center rounded-full bg-white/12">
+              <RotateCcw className="size-8 text-white" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
+                {t('oauthCallback.restoreAccountTitle')}
+              </h2>
+              <p className="font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-sm">
+                {t('oauthCallback.restoreAccountDescription')}
+              </p>
+            </div>
+            {restoreError ? (
+              <p className="w-full rounded-[16px] bg-red-500/15 px-4 py-3 font-poppins text-xs font-semibold text-white">
+                {restoreError}
+              </p>
+            ) : null}
+            <Button
+              onClick={handleRestore}
+              disabled={restoreSubmitting}
+              className="mt-2 h-12 w-full rounded-[28px] bg-brand-yellow font-poppins text-sm font-semibold uppercase tracking-wide text-black hover:bg-brand-yellow-deep disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {restoreSubmitting ? t('oauthCallback.restoringAccount') : t('oauthCallback.restoreAccount')}
+            </Button>
+            <Button
+              onClick={() => router.replace('/')}
+              disabled={restoreSubmitting}
+              className="h-11 w-full gap-2 rounded-[28px] bg-white/10 font-poppins text-xs font-semibold uppercase tracking-wide text-white hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <ArrowLeft className="size-4" />
+              {t('oauthCallback.backToLogin')}
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (error) {
     return (

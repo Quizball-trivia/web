@@ -14,7 +14,7 @@ vi.mock("@/lib/api/api", async () => {
 });
 
 import { api } from "@/lib/api/api";
-import { refreshSession, refresh } from "@/lib/auth/auth.service";
+import { refreshSession, refresh, restorePendingDeletionWithToken } from "@/lib/auth/auth.service";
 import { setTokens, getRefreshToken, getAccessToken, clearTokens } from "@/lib/auth/tokenStorage";
 
 const mockedPost = api.POST as unknown as ReturnType<typeof vi.fn>;
@@ -22,6 +22,22 @@ const mockedPost = api.POST as unknown as ReturnType<typeof vi.fn>;
 beforeEach(() => {
   vi.clearAllMocks();
   clearTokens();
+});
+
+describe("restorePendingDeletionWithToken", () => {
+  it("can restore from the httpOnly refresh cookie without re-sending a consumed token", async () => {
+    mockedPost.mockResolvedValueOnce({ access_token: "a", refresh_token: "r", user: { provider_sub: "u1" } });
+
+    const user = await restorePendingDeletionWithToken();
+
+    expect(mockedPost).toHaveBeenCalledWith("/api/v1/auth/restore-pending-deletion", {
+      body: {},
+      auth: false,
+    });
+    expect(user).toEqual({ provider_sub: "u1" });
+    expect(getAccessToken()).toBe("a");
+    expect(getRefreshToken()).toBe("r");
+  });
 });
 
 describe("refreshSession — terminal failure clears tokens", () => {

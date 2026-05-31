@@ -277,7 +277,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   };
 
   return (
-    <div className="container max-w-2xl mx-auto py-6 pb-20 animate-in fade-in duration-500">
+    <div className="container mx-auto max-w-2xl px-4 py-6 pb-20 animate-in fade-in duration-500 sm:px-5 xl:px-0">
       {/* Nav */}
       <div className="flex items-center gap-2 mb-6">
         <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full hover:bg-muted/50">

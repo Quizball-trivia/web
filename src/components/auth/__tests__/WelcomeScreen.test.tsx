@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ApiError } from '@/lib/api/api';
 
 // JSDOM doesn't ship with IntersectionObserver, which motion/react uses for
 // `whileInView`. Stub it before any component imports.
@@ -57,21 +58,50 @@ vi.mock('@/stores/auth.store', () => ({
 
 // Auth service — these are the six calls the screen issues.
 const loginMock = vi.fn(async (_email: string, _password: string) => ({ id: 'u1' }));
-const registerMock = vi.fn(async (_payload: { email: string; password: string }) => ({ user: { id: 'u1' }, tokensSet: true, alreadyRegistered: false }));
+type RegisterMockResult = {
+  user: { id: string } | null;
+  tokensSet: boolean;
+  alreadyRegistered: boolean;
+  pendingDeletion: boolean;
+};
+const registerMock = vi.fn(
+  async (_payload: { email: string; password: string }): Promise<RegisterMockResult> => ({
+    user: { id: 'u1' },
+    tokensSet: true,
+    alreadyRegistered: false,
+    pendingDeletion: false,
+  }),
+);
+const restorePendingDeletionWithLoginMock = vi.fn(async (_email: string, _password: string) => ({ id: 'u1' }));
 const socialLoginMock = vi.fn(async (_provider: string, _redirect: string) => undefined);
-const socialLoginWithIdTokenMock = vi.fn(async (_provider: string, _idToken: string, _nonce: string) => undefined);
+const socialLoginWithIdTokenMock = vi.fn(
+  async (_provider: string, _idToken: string, _nonce?: string, _options?: { restorePendingDeletion?: boolean }) => undefined,
+);
 const startGeorgianPhoneOtpMock = vi.fn(async (_phone: string) => undefined);
-const verifyGeorgianPhoneOtpMock = vi.fn(async (_phone: string, _code: string) => ({ id: 'u1' }));
+const verifyGeorgianPhoneOtpMock = vi.fn(
+  async (_phone: string, _code: string, _options?: { restorePendingDeletion?: boolean }) => ({ id: 'u1' }),
+);
 const forgotPasswordMock = vi.fn(async (_email: string, _redirectTo: string) => undefined);
 vi.mock('@/lib/auth/auth.service', () => ({
   login: (email: string, password: string) => loginMock(email, password),
   register: (payload: { email: string; password: string }) => registerMock(payload),
+  restorePendingDeletionWithLogin: (email: string, password: string) =>
+    restorePendingDeletionWithLoginMock(email, password),
+  isPendingDeletionAuthError: (error: unknown) =>
+    error instanceof ApiError &&
+    Boolean(
+      error.data &&
+        typeof error.data === 'object' &&
+        'details' in error.data &&
+        (error.data as { details?: { reason?: string } }).details?.reason === 'pending_deletion',
+    ),
   forgotPassword: (email: string, redirectTo: string) => forgotPasswordMock(email, redirectTo),
   socialLogin: (provider: string, redirect: string) => socialLoginMock(provider, redirect),
-  socialLoginWithIdToken: (provider: string, idToken: string, nonce: string) =>
-    socialLoginWithIdTokenMock(provider, idToken, nonce),
+  socialLoginWithIdToken: (provider: string, idToken: string, nonce: string, options?: { restorePendingDeletion?: boolean }) =>
+    socialLoginWithIdTokenMock(provider, idToken, nonce, options),
   startGeorgianPhoneOtp: (phone: string) => startGeorgianPhoneOtpMock(phone),
-  verifyGeorgianPhoneOtp: (phone: string, code: string) => verifyGeorgianPhoneOtpMock(phone, code),
+  verifyGeorgianPhoneOtp: (phone: string, code: string, options?: { restorePendingDeletion?: boolean }) =>
+    verifyGeorgianPhoneOtpMock(phone, code, options),
 }));
 
 const georgianPhoneAvailabilityMock = vi.fn(() => ({
@@ -211,7 +241,9 @@ beforeEach(() => {
   loginMock.mockReset();
   loginMock.mockResolvedValue({ id: 'u1' });
   registerMock.mockReset();
-  registerMock.mockResolvedValue({ user: { id: 'u1' }, tokensSet: true, alreadyRegistered: false });
+  registerMock.mockResolvedValue({ user: { id: 'u1' }, tokensSet: true, alreadyRegistered: false, pendingDeletion: false });
+  restorePendingDeletionWithLoginMock.mockReset();
+  restorePendingDeletionWithLoginMock.mockResolvedValue({ id: 'u1' });
   socialLoginMock.mockReset();
   socialLoginMock.mockResolvedValue(undefined);
   socialLoginWithIdTokenMock.mockReset();
@@ -293,7 +325,7 @@ describe('WelcomeScreen — Google sign-in flow', () => {
     clickContinueWithGoogle();
     expect(trackSignupStartedMock).toHaveBeenCalledWith('google');
     await waitFor(() => expect(signInWithGoogleIdentityMock).toHaveBeenCalledWith('test-google-client'));
-    expect(socialLoginWithIdTokenMock).toHaveBeenCalledWith('google', 'tok', 'nonce');
+    expect(socialLoginWithIdTokenMock).toHaveBeenCalledWith('google', 'tok', 'nonce', undefined);
     expect(bootstrapMock).toHaveBeenCalledWith({ force: true });
   });
 
@@ -369,7 +401,7 @@ describe('WelcomeScreen — email signin / signup', () => {
   });
 
   it('shows the check-email modal when register reports tokensSet=false (new signup)', async () => {
-    registerMock.mockResolvedValueOnce({ user: null as unknown as { id: string }, tokensSet: false, alreadyRegistered: false });
+    registerMock.mockResolvedValueOnce({ user: null as unknown as { id: string }, tokensSet: false, alreadyRegistered: false, pendingDeletion: false });
     render(<WelcomeScreen />);
     openLoginDialog();
     openAuthOptions();
@@ -381,7 +413,7 @@ describe('WelcomeScreen — email signin / signup', () => {
   });
 
   it('shows the already-registered modal when register reports alreadyRegistered=true', async () => {
-    registerMock.mockResolvedValueOnce({ user: null as unknown as { id: string }, tokensSet: false, alreadyRegistered: true });
+    registerMock.mockResolvedValueOnce({ user: null as unknown as { id: string }, tokensSet: false, alreadyRegistered: true, pendingDeletion: false });
     render(<WelcomeScreen />);
     openLoginDialog();
     openAuthOptions();
@@ -425,6 +457,55 @@ describe('WelcomeScreen — email signin / signup', () => {
     await waitFor(() => expect(screen.getByText(/welcome\.loginError/)).toBeInTheDocument());
     expect(screen.queryByText('Bad credentials, bro')).not.toBeInTheDocument();
     expect(bootstrapMock).not.toHaveBeenCalled();
+  });
+
+  it('shows restore modal for pending-deletion email login and disables restore while submitting', async () => {
+    loginMock.mockRejectedValueOnce(new ApiError('Request failed', 401, {
+      code: 'AUTHENTICATION_ERROR',
+      details: { reason: 'pending_deletion' },
+    }));
+    let resolveRestore: (() => void) | null = null;
+    restorePendingDeletionWithLoginMock.mockImplementationOnce(
+      () => new Promise<{ id: string }>((resolve) => {
+        resolveRestore = () => resolve({ id: 'u1' });
+      }),
+    );
+
+    render(<WelcomeScreen />);
+    openLoginDialog();
+    openAuthOptions();
+    setEmailFields('user@example.com', 'secret');
+    fireEvent.click(screen.getByText(/welcome\.signInWithEmail/));
+
+    await waitFor(() => expect(screen.getByText(/welcome\.restoreAccountTitle/)).toBeInTheDocument());
+    const restoreButton = screen.getByRole('button', { name: 'welcome.restoreAccount' }) as HTMLButtonElement;
+    fireEvent.click(restoreButton);
+    fireEvent.click(restoreButton);
+
+    await waitFor(() => expect(restorePendingDeletionWithLoginMock).toHaveBeenCalledTimes(1));
+    expect(restorePendingDeletionWithLoginMock).toHaveBeenCalledWith('user@example.com', 'secret');
+    await waitFor(() => expect(restoreButton.disabled).toBe(true));
+    act(() => resolveRestore?.());
+    await waitFor(() => expect(bootstrapMock).toHaveBeenCalledWith({ force: true }));
+  });
+
+  it('shows restore modal when signup reports a pending-deletion account', async () => {
+    registerMock.mockResolvedValueOnce({
+      user: null as unknown as { id: string },
+      tokensSet: false,
+      alreadyRegistered: true,
+      pendingDeletion: true,
+    });
+
+    render(<WelcomeScreen />);
+    openLoginDialog();
+    openAuthOptions();
+    fireEvent.click(screen.getByText(/welcome\.signUpTab/));
+    setEmailFields('existing@example.com', 'secret12', 'secret12');
+    fireEvent.click(screen.getByText(/welcome\.createAccount/));
+
+    await waitFor(() => expect(screen.getByText(/welcome\.restoreAccountTitle/)).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'welcome.restoreAccount' })).toBeInTheDocument();
   });
 
   it('surfaces the upstream error message on a failed signup', async () => {
@@ -512,7 +593,7 @@ describe('WelcomeScreen — phone OTP', () => {
     fireEvent.change(otpInput, { target: { value: '123456' } });
     const verifyButton = screen.getByText(/welcome\.verifyCode/);
     fireEvent.click(verifyButton);
-    await waitFor(() => expect(verifyGeorgianPhoneOtpMock).toHaveBeenCalledWith('+995555000111', '123456'));
+    await waitFor(() => expect(verifyGeorgianPhoneOtpMock).toHaveBeenCalledWith('+995555000111', '123456', undefined));
     expect(trackLoginCompletedMock).toHaveBeenCalledWith('phone');
     await waitFor(() => expect(bootstrapMock).toHaveBeenCalledWith({ force: true }));
   });

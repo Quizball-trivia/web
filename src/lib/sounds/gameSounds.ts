@@ -25,7 +25,10 @@ type BgmName = keyof typeof BGM_FILES;
 export const GAME_SOUND_VOLUME = {
   sfx: 0.3,
   rankedBgm: 0.025,
-  kickoffBgm: 0.025,
+  // The kickoff track is mastered ~8 dB louder than the search loop
+  // (-9.7 vs -17.8 LUFS), so it's played quieter to match search's
+  // perceived level. 0.025 * 10^(-8/20) ≈ 0.01.
+  kickoffBgm: 0.01,
   searchBgm: 0.025,
 } as const;
 // Flip to true to re-enable the ranked BGM loop. Wiring stays in place

@@ -421,7 +421,9 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
       }
       try {
         const q = state.match.currentQuestion;
-        if (q && q.qIndex === payload.qIndex) {
+        // MCQ submissions are tracked by useRealtimeGameLogic with the local
+        // submit elapsed time. Keep this store fallback for special rounds.
+        if (q && q.qIndex === payload.qIndex && q.question.kind !== 'multipleChoice') {
           const startedAt = q.playableAt ? new Date(q.playableAt).getTime() : 0;
           const syncedNowMs = Date.now() + (q.serverTimeOffsetMs ?? state.match.serverTimeOffsetMs ?? 0);
           const timeMs = startedAt ? Math.max(0, syncedNowMs - startedAt) : 0;
