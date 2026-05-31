@@ -128,7 +128,7 @@ describe('SettingsScreen account deletion', () => {
     vi.mocked(verifyGeorgianPhoneLink).mockReset();
   });
 
-  it('requires exact DELETE confirmation before submitting account deletion', async () => {
+  it('accepts DELETE confirmation case-insensitively before submitting account deletion', async () => {
     render(<SettingsScreen onBack={vi.fn()} />);
 
     fireEvent.click(screen.getByText('Delete Account'));
@@ -137,12 +137,12 @@ describe('SettingsScreen account deletion', () => {
     expect(confirmButton).toBeDisabled();
 
     const input = screen.getByLabelText('Type DELETE to confirm');
-    fireEvent.input(input, { target: { value: 'delete' } });
-    expect(input).toHaveValue('delete');
+    fireEvent.input(input, { target: { value: 'del' } });
+    expect(input).toHaveValue('del');
     expect(screen.getByRole('button', { name: 'Delete Account' })).toBeDisabled();
 
-    fireEvent.input(input, { target: { value: 'DELETE' } });
-    expect(input).toHaveValue('DELETE');
+    fireEvent.input(input, { target: { value: 'delete' } });
+    expect(input).toHaveValue('delete');
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Delete Account' })).not.toBeDisabled();
     });

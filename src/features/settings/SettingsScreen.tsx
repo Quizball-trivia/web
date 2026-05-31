@@ -90,7 +90,9 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
 
   const isInitialMount = useRef(true);
   const deletionConfirmWord = t("settings.deleteAccountConfirmWord");
-  const canConfirmDeletion = deleteConfirmation === deletionConfirmWord && !isDeletingAccount;
+  const normalizedDeleteConfirmation = deleteConfirmation.trim().toLocaleUpperCase("en-US");
+  const normalizedDeletionConfirmWord = deletionConfirmWord.trim().toLocaleUpperCase("en-US");
+  const canConfirmDeletion = normalizedDeleteConfirmation === normalizedDeletionConfirmWord && !isDeletingAccount;
   const canUseDevReset = user?.role === "admin";
   const currentPhone = user?.phone_number ?? null;
   const canUseGeorgianPhoneAuth = phoneAuthAvailability.isAvailable;
@@ -632,6 +634,8 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
               onChange={(event) => setDeleteConfirmation(event.target.value)}
               disabled={isDeletingAccount}
               autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
               placeholder={deletionConfirmWord}
               className="h-[58px] w-full rounded-[20px] border-2 border-white/20 bg-transparent px-4 text-center font-poppins text-base font-semibold uppercase tracking-wide text-white placeholder:text-white/50 focus-visible:border-white/40 focus-visible:ring-0 focus-visible:ring-offset-0"
             />
