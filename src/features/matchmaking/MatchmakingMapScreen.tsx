@@ -220,16 +220,19 @@ const DESKTOP_CAMERA = {
   searchY: 0,
 };
 const MOBILE_CAMERA = {
-  // Sweep the FULL map left→right: Americas (left edge) to Asia/Australia
-  // (right edge). mapX is in viewBox units; at scale S the valid pan range is
-  // [MAP_W*(1-S), 0]. At S=1.45 that's [-450, 0], so start at 0 (left edge /
-  // Americas) and pan the full 450 to -450 (right edge / Australia). The old
-  // -120/230 only covered a middle slice, so it lingered on Africa/Europe.
-  startX: 0,
-  panRange: 450,
-  // 90 → 450/90 = 5s/sweep (keeps the ~5s feel over the longer distance).
-  panSpeed: 90,
-  searchScale: 1.45,
+  // The inhabited landmass spans content-x ≈ 186 (Los Angeles) → 843 (Sydney);
+  // the viewBox edges (0 and 1000) are empty ocean. A content point cx is
+  // centered in the phone viewport when mapX ≈ 500 - cx*scale. So to sweep the
+  // AMERICAS → AUSTRALIA at scale 1.25:
+  //   LA centered:     mapX = 500 - 186*1.25 ≈ +267  (startX)
+  //   Sydney centered: mapX = 500 - 843*1.25 ≈ -554  (start - panRange)
+  // → panRange ≈ 820. (The previous 250 only covered the zoom overflow, not the
+  //   ~820-unit content span, so it never reached the Americas/Australia.)
+  startX: 267,
+  panRange: 820,
+  // 94 → 820/94 ≈ 8.7s/sweep (~25% slower than the previous 117 / ~7s).
+  panSpeed: 94,
+  searchScale: 1.25,
   searchY: -28,
 };
 
@@ -526,10 +529,15 @@ export function MatchmakingMapScreen({
     });
   }, [showFoundState, opponentPin, isMobile, mapScale, mapX, mapY]);
 
-  // Stagger pin appearances
+  // Pin appearances: stagger them in, then keep the map alive by randomly
+  // toggling a few pins off and back on throughout the search — so players
+  // appear to come and go (joining/leaving the pool) rather than all showing
+  // up once and freezing.
   useEffect(() => {
     if (showFoundState) return;
     const timers: ReturnType<typeof setTimeout>[] = [];
+
+    // Initial stagger-in.
     fakePlayers.forEach((p) => {
       timers.push(
         setTimeout(
@@ -538,7 +546,31 @@ export function MatchmakingMapScreen({
         ),
       );
     });
-    return () => timers.forEach(clearTimeout);
+
+    // Ongoing churn: every ~1.4s, hide one random pin and (after a beat) show
+    // another, so the set of visible pins keeps changing.
+    const churn = setInterval(() => {
+      const ids = fakePlayers.map((p) => p.id);
+      if (ids.length === 0) return;
+      const hideId = ids[Math.floor(Math.random() * ids.length)];
+      setVisiblePins((prev) => {
+        const next = new Set(prev);
+        next.delete(hideId);
+        return next;
+      });
+      // Bring a (possibly different) random pin back shortly after, so the
+      // overall count stays lively without draining.
+      const showTimer = setTimeout(() => {
+        const showId = ids[Math.floor(Math.random() * ids.length)];
+        setVisiblePins((prev) => new Set(prev).add(showId));
+      }, 500 + Math.random() * 500);
+      timers.push(showTimer);
+    }, 1400);
+
+    return () => {
+      timers.forEach(clearTimeout);
+      clearInterval(churn);
+    };
   }, [fakePlayers, showFoundState]);
 
   // Search elapsed timer
