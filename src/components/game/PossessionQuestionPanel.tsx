@@ -172,14 +172,12 @@ export function PossessionQuestionPanel({
 
   const questionPill = (
     <div
-      className={`${questionPillClass} h-[40px] min-w-0 px-3 sm:h-[52px] sm:px-5 md:h-[62px] lg:h-[72px] ${
-        partyMatchHeader
-          ? 'max-w-[58%] flex-1 sm:max-w-[62%]'
-          : 'min-w-0 flex-1 px-5'
+      className={`${questionPillClass} h-[40px] min-w-0 flex-1 px-3 sm:h-[52px] sm:px-5 md:h-[62px] lg:h-[72px] ${
+        partyMatchHeader ? '' : 'px-5'
       }`}
       style={{
         ...poppins,
-        fontSize: partyMatchHeader ? 'clamp(12px, 3.4vw, 22px)' : 'clamp(14px, 2.2vw, 26px)',
+        fontSize: partyMatchHeader ? 'clamp(12px, 3vw, 18px)' : 'clamp(14px, 2.2vw, 26px)',
       }}
     >
       {questionCounterLabel}
