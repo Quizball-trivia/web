@@ -1,7 +1,7 @@
 import { io, type Socket } from 'socket.io-client';
 import { API_BASE_URL } from '@/lib/config';
 import { getAccessToken } from '@/lib/auth/tokenStorage';
-import { refresh } from '@/lib/auth/auth.service';
+import { refreshSession } from '@/lib/auth/auth.service';
 import { logger } from '@/utils/logger';
 import { trackSocketConnectionFailed, trackSocketReconnected } from '@/lib/analytics/game-events';
 import type { ClientToServerEvents, ServerToClientEvents } from './socket.types';
@@ -14,6 +14,10 @@ let socketInstance: Socket<ServerToClientEvents, ClientToServerEvents> | null = 
 let socketOverride: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
 let connectInFlight: Promise<void> | null = null;
 let authRecoveryInFlight: Promise<void> | null = null;
+// After a terminal refresh failure there's no valid session — stop trying to
+// recover the socket until the user logs in again. Otherwise a dead session
+// loops: connect_error → refresh(fail) → reconnect → connect_error …
+let authRecoveryDisabled = false;
 const ACCESS_TOKEN_REFRESH_SKEW_MS = 30_000;
 
 function parseJwtExpMs(token: string): number | null {
@@ -41,10 +45,20 @@ async function ensureValidAccessToken(): Promise<string | null> {
     return currentToken;
   }
 
+  // Don't keep trying to recover a session that has already failed terminally.
+  if (authRecoveryDisabled) {
+    return null;
+  }
+
   logger.info('Socket token missing/expired, attempting refresh before connect');
-  const refreshed = await refresh();
-  if (!refreshed) {
-    logger.warn('Socket token refresh failed before connect');
+  const result = await refreshSession();
+  if (!result.ok) {
+    if (result.terminal) {
+      authRecoveryDisabled = true;
+      logger.warn('Socket token refresh failed terminally — staying disconnected until login');
+    } else {
+      logger.warn('Socket token refresh failed (transient) before connect');
+    }
     return null;
   }
 
@@ -65,14 +79,26 @@ function isAuthConnectError(message: string): boolean {
 async function recoverSocketAuthAndReconnect(
   socket: Socket<ServerToClientEvents, ClientToServerEvents>
 ): Promise<void> {
+  // Terminal failure already happened: there's no valid session to recover.
+  // Stay disconnected until the user logs in rather than looping reconnects.
+  if (authRecoveryDisabled) {
+    socket.disconnect();
+    return;
+  }
   if (authRecoveryInFlight) {
     return authRecoveryInFlight;
   }
 
   authRecoveryInFlight = (async () => {
-    const refreshed = await refresh();
-    if (!refreshed) {
-      logger.warn('Socket auth recovery refresh failed');
+    const result = await refreshSession();
+    if (!result.ok) {
+      if (result.terminal) {
+        authRecoveryDisabled = true;
+        logger.warn('Socket auth recovery failed terminally — staying disconnected');
+        socket.disconnect();
+      } else {
+        logger.warn('Socket auth recovery refresh failed (transient)');
+      }
       return;
     }
 
@@ -131,6 +157,9 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
   });
   socket.on('connect', () => {
     logger.info('Socket connected', { socketId: socket.id });
+    // A successful connect means we have a valid session again — re-arm auth
+    // recovery so a future expiry can be refreshed.
+    authRecoveryDisabled = false;
     // Analytics: only count as a reconnect when we had a prior disconnect.
     if (lastDisconnectAtMs !== null) {
       const downtimeSec = Math.max(0, Math.round((Date.now() - lastDisconnectAtMs) / 1000));

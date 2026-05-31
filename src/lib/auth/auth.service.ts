@@ -1,5 +1,5 @@
 import { clearTokens, getRefreshToken, setTokens } from "@/lib/auth/tokenStorage";
-import { api } from "@/lib/api/api";
+import { api, ApiError } from "@/lib/api/api";
 import { normalizeEmail } from "@/lib/auth/validation";
 import { logger } from "@/utils/logger";
 import type { components, paths } from "@/types/api.generated";
@@ -74,7 +74,7 @@ export async function login(email: string, password: string): Promise<AuthRespon
   });
   const response = data as AuthResponse;
   if (response?.access_token && response?.refresh_token) {
-    setTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
+    storeAuthTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
   }
   logger.info("Auth login success");
   return response.user ?? null;
@@ -83,6 +83,8 @@ export async function login(email: string, password: string): Promise<AuthRespon
 export type RegisterResult = {
   user: AuthResponse["user"] | null;
   tokensSet: boolean;
+  /** True when the email already belongs to an existing account (no email sent). */
+  alreadyRegistered: boolean;
 };
 
 export async function register(payload: RegisterPayload): Promise<RegisterResult> {
@@ -94,32 +96,124 @@ export async function register(payload: RegisterPayload): Promise<RegisterResult
   logger.info("Auth register success");
   const response = data as AuthResponse;
   if (response?.access_token && response?.refresh_token) {
-    setTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
+    storeAuthTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
   }
   const hasTokens = Boolean(response?.access_token);
-  return { user: response.user ?? null, tokensSet: hasTokens };
+  return {
+    user: response.user ?? null,
+    tokensSet: hasTokens,
+    alreadyRegistered: Boolean(
+      (response as AuthResponse & { already_registered?: boolean })?.already_registered,
+    ),
+  };
 }
 
-export async function refresh(): Promise<boolean> {
+/**
+ * Result of a refresh attempt.
+ * - `{ ok: true }` — a new session was obtained.
+ * - `{ ok: false, terminal: true }` — the refresh token is dead (hard 400/401).
+ *   Tokens have been cleared; the caller must treat the session as ended and
+ *   must NOT retry. This is what stops the refresh-loop error storm.
+ * - `{ ok: false, terminal: false }` — transient failure (network/5xx); the
+ *   tokens are left intact and a later attempt may succeed.
+ */
+export type RefreshResult =
+  | { ok: true }
+  | { ok: false; terminal: boolean };
+
+// Single-flight guard: many requests can 401 at once (stats, ranked, store,
+// /users/me all fire on load). Without this, each would kick off its own
+// /auth/refresh, amplifying the storm. They all await the same attempt.
+let refreshInFlight: Promise<RefreshResult> | null = null;
+let refreshTerminalDisabled = false;
+
+function storeAuthTokens(tokens: { accessToken: string; refreshToken: string }): void {
+  refreshTerminalDisabled = false;
+  setTokens(tokens);
+}
+
+function isTerminalAuthError(error: unknown): boolean {
+  // A 400 from /auth/refresh means the refresh token itself was rejected; a
+  // 401 means authentication is no longer valid. Both are terminal — retrying
+  // with the same token only reproduces the failure.
+  return error instanceof ApiError && (error.status === 400 || error.status === 401);
+}
+
+async function performRefresh(): Promise<RefreshResult> {
+  const storedRefreshToken = getRefreshToken();
+  if (refreshTerminalDisabled && !storedRefreshToken) {
+    logger.warn("Auth refresh skipped after terminal failure");
+    return { ok: false, terminal: true };
+  }
+  if (storedRefreshToken) {
+    refreshTerminalDisabled = false;
+  }
+
   try {
     logger.info("Auth refresh start");
-    const storedRefreshToken = getRefreshToken();
-    if (storedRefreshToken) {
-      return await refreshWithToken(storedRefreshToken);
-    }
-    const data = await api.POST("/api/v1/auth/refresh", { auth: false });
+    const data = storedRefreshToken
+      ? await api.POST("/api/v1/auth/refresh", {
+          body: { refresh_token: storedRefreshToken } satisfies RefreshPayload,
+          auth: false,
+        })
+      : await api.POST("/api/v1/auth/refresh", { auth: false });
+
     const response = data as AuthResponse;
     if (response?.access_token && response?.refresh_token) {
-      setTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
+      storeAuthTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
+      logger.info("Auth refresh success");
+      return { ok: true };
     }
-    logger.info("Auth refresh success");
-    return true;
+
+    // 2xx but no tokens returned — treat as terminal so we don't loop on it.
+    logger.warn("Auth refresh returned no tokens");
+    refreshTerminalDisabled = true;
+    clearTokens();
+    return { ok: false, terminal: true };
   } catch (error) {
-    logger.warn("Auth refresh failed", error);
-    return false;
+    const terminal = isTerminalAuthError(error);
+    if (terminal) {
+      // Clear the local tokens. The backend also clears the httpOnly cookies on
+      // this same failed /auth/refresh response, so the bad cookie isn't replayed.
+      logger.warn("Auth refresh failed (terminal) — clearing tokens", error);
+      refreshTerminalDisabled = true;
+      clearTokens();
+    } else {
+      logger.warn("Auth refresh failed (transient)", error);
+    }
+    return { ok: false, terminal };
   }
 }
 
+/**
+ * Refresh the session. Returns a structured {@link RefreshResult}. All callers
+ * share a single in-flight attempt (single-flight) to avoid a refresh stampede.
+ */
+export async function refreshSession(): Promise<RefreshResult> {
+  if (refreshInFlight) {
+    return refreshInFlight;
+  }
+  refreshInFlight = performRefresh().finally(() => {
+    refreshInFlight = null;
+  });
+  return refreshInFlight;
+}
+
+/**
+ * Boolean-compatible wrapper for existing callers. Returns true only on success.
+ * Tokens are still cleared on a terminal failure inside {@link refreshSession}.
+ */
+export async function refresh(): Promise<boolean> {
+  const result = await refreshSession();
+  return result.ok;
+}
+
+/**
+ * Refresh using an explicit token (e.g. one just received out-of-band).
+ * Shares the same single-flight guard via {@link refreshSession} is not used
+ * here because the token is caller-supplied; it still clears tokens on terminal
+ * failure so a dead token never survives.
+ */
 export async function refreshWithToken(refreshToken: string): Promise<boolean> {
   try {
     logger.info("Auth refresh with token start");
@@ -129,12 +223,21 @@ export async function refreshWithToken(refreshToken: string): Promise<boolean> {
     });
     const response = data as AuthResponse;
     if (response?.access_token && response?.refresh_token) {
-      setTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
+      storeAuthTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
+      logger.info("Auth refresh with token success");
+      return true;
     }
-    logger.info("Auth refresh with token success");
-    return true;
+    refreshTerminalDisabled = true;
+    clearTokens();
+    return false;
   } catch (error) {
-    logger.warn("Auth refresh with token failed", error);
+    if (isTerminalAuthError(error)) {
+      logger.warn("Auth refresh with token failed (terminal) — clearing tokens", error);
+      refreshTerminalDisabled = true;
+      clearTokens();
+    } else {
+      logger.warn("Auth refresh with token failed (transient)", error);
+    }
     return false;
   }
 }
@@ -148,6 +251,7 @@ export async function logout(): Promise<void> {
     // Best-effort; continue to clear tokens.
     logger.warn("Auth logout failed");
   } finally {
+    refreshTerminalDisabled = true;
     clearTokens();
   }
 }
@@ -214,7 +318,7 @@ export async function socialLoginWithIdToken(
   });
   const response = data as AuthResponse;
   if (response?.access_token && response?.refresh_token) {
-    setTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
+    storeAuthTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
   }
   logger.info("Auth social login token success");
   return response.user ?? null;
@@ -248,7 +352,7 @@ export async function verifyGeorgianPhoneOtp(
   });
   const response = data as AuthResponse;
   if (response?.access_token && response?.refresh_token) {
-    setTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
+    storeAuthTokens({ accessToken: response.access_token, refreshToken: response.refresh_token });
   }
   return response.user ?? null;
 }

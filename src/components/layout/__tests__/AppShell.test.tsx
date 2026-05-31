@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
@@ -106,6 +106,7 @@ const socketStub = {
   emit: socketEmitMock,
 };
 vi.mock('@/lib/realtime/socket-client', () => ({
+  connectSocket: () => socketStub,
   getSocket: () => socketStub,
 }));
 
@@ -241,6 +242,19 @@ beforeEach(() => {
   routerPushMock.mockClear();
   routerReplaceMock.mockClear();
   socketEmitMock.mockClear();
+  socketEmitMock.mockImplementation((event: string, payload?: unknown, ack?: (result: unknown) => void) => {
+    if (event === 'lobby:leave' && typeof ack === 'function') {
+      ack({
+        ok: true,
+        lobbyId: 'L1',
+        closed: false,
+        correlationId:
+          payload && typeof payload === 'object' && 'correlationId' in payload
+            ? String((payload as { correlationId: unknown }).correlationId)
+            : 'test-correlation',
+      });
+    }
+  });
   clearRankedMatchmakingMock.mockClear();
   startSessionMock.mockClear();
   setGameStageMock.mockClear();
@@ -629,7 +643,7 @@ describe('AppShell — banner callbacks fire the right store / socket actions', 
     expect(routerPushMock).toHaveBeenCalledWith('/friend/room/ROOM1');
   });
 
-  it('lobby banner Leave → emits lobby:leave, resets realtime, clears ranked matchmaking', () => {
+  it('lobby banner Leave → emits lobby:leave, resets realtime, clears ranked matchmaking', async () => {
     pathnameMock.mockReturnValue('/leaderboard');
     const reset = vi.fn();
     seedRealtime({
@@ -646,9 +660,13 @@ describe('AppShell — banner callbacks fire the right store / socket actions', 
     renderShell();
     const leaves = screen.getAllByText(/appShell.leave/);
     fireEvent.click(leaves[0]);
-    expect(socketEmitMock).toHaveBeenCalledWith('lobby:leave');
-    expect(reset).toHaveBeenCalled();
-    expect(clearRankedMatchmakingMock).toHaveBeenCalled();
+    expect(socketEmitMock).toHaveBeenCalledWith('lobby:leave', {
+      correlationId: expect.any(String),
+    }, expect.any(Function));
+    await waitFor(() => {
+      expect(reset).toHaveBeenCalled();
+      expect(clearRankedMatchmakingMock).toHaveBeenCalled();
+    });
   });
 
   it('completed-match banner View Results → routes to /game with finalResults stage', () => {

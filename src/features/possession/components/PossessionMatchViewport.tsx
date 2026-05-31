@@ -168,7 +168,7 @@ export function PossessionMatchViewport({ model, children }: PossessionMatchView
       {showMainUI && (
         <div className="hidden lg:flex lg:w-[42%] lg:items-center lg:gap-3 lg:py-4 relative">
           <div className="h-full max-h-[calc(100dvh-2rem)] py-6">
-            <GoalProgressBar position={pitchProps.playerPosition} orientation="vertical" />
+            <GoalProgressBar position={pitchProps.playerPosition} orientation="vertical" mirrored={pitchProps.mirrored} />
           </div>
           <div ref={desktopPitchRef} className="relative h-full w-full max-h-[calc(100dvh-2rem)]">
             <PitchVisualization {...pitchProps} orientation="portrait" hideBall={celebrationOwnsBall} />
@@ -220,7 +220,7 @@ export function PossessionMatchViewport({ model, children }: PossessionMatchView
             </div>
 
             <div className="lg:hidden">
-              <GoalProgressBar position={pitchProps.playerPosition} orientation="horizontal" />
+              <GoalProgressBar position={pitchProps.playerPosition} orientation="horizontal" mirrored={pitchProps.mirrored} />
             </div>
           </>
         )}

@@ -44,6 +44,7 @@ vi.mock('@/lib/realtime/useRealtimeConnection', () => ({
 }));
 
 vi.mock('@/lib/realtime/socket-client', () => ({
+  connectSocket: () => ({ emit: mocks.socketEmit }),
   getSocket: () => ({ emit: mocks.socketEmit }),
 }));
 
@@ -103,12 +104,74 @@ function makeLobby(inviteCode: string): LobbyState {
 describe('useFriendLobbyLogic invite links', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.socketEmit.mockImplementation((event: string, payload?: unknown, ack?: (result: unknown) => void) => {
+      if (typeof ack !== 'function') return;
+      const correlationId =
+        payload && typeof payload === 'object' && 'correlationId' in payload
+          ? String((payload as { correlationId: unknown }).correlationId)
+          : 'test-correlation';
+      if (event === 'lobby:create') {
+        ack({
+          ok: true,
+          lobbyId: 'created-lobby',
+          inviteCode: 'CRE8ED',
+          correlationId,
+        });
+      }
+      if (event === 'lobby:join_by_code') {
+        ack({
+          ok: true,
+          lobbyId: 'joined-lobby',
+          inviteCode:
+            payload && typeof payload === 'object' && 'inviteCode' in payload
+              ? String((payload as { inviteCode: unknown }).inviteCode)
+              : 'JOINED',
+          alreadyMember: false,
+          correlationId,
+        });
+      }
+      if (event === 'lobby:leave') {
+        ack({
+          ok: true,
+          lobbyId: 'left-lobby',
+          closed: false,
+          correlationId,
+        });
+      }
+    });
     vi.useRealTimers();
     useRealtimeMatchStore.getState().reset();
   });
 
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  it('joins a concrete invite code instead of creating a lobby even if host query state is present', async () => {
+    renderHook(() =>
+      useFriendLobbyLogic({ roomCode: 'NAYRR5', isHost: true }),
+    );
+
+    await waitFor(() => {
+      expect(mocks.socketEmit).toHaveBeenCalledWith('lobby:join_by_code', {
+        inviteCode: 'NAYRR5',
+        correlationId: expect.any(String),
+      }, expect.any(Function));
+    });
+
+    expect(mocks.socketEmit).not.toHaveBeenCalledWith('lobby:create', expect.objectContaining({ mode: 'friendly' }), expect.any(Function));
+  });
+
+  it('creates a lobby only for the new-room route', async () => {
+    renderHook(() =>
+      useFriendLobbyLogic({ roomCode: 'new', isHost: true }),
+    );
+
+    expect(mocks.socketEmit).toHaveBeenCalledWith('lobby:create', {
+      mode: 'friendly',
+      correlationId: expect.any(String),
+    }, expect.any(Function));
+    expect(mocks.socketEmit).not.toHaveBeenCalledWith('lobby:join_by_code', expect.anything(), expect.any(Function));
   });
 
   it('does not expose a stale lobby when the URL invite code points to another room', async () => {
@@ -123,6 +186,7 @@ describe('useFriendLobbyLogic invite links', () => {
     await waitFor(() => {
       expect(mocks.socketEmit).toHaveBeenCalledWith('lobby:join_by_code', {
         inviteCode: 'NAYRR5',
+        correlationId: expect.any(String),
       }, expect.any(Function));
     });
 
@@ -145,6 +209,7 @@ describe('useFriendLobbyLogic invite links', () => {
     await waitFor(() => {
       expect(mocks.socketEmit).toHaveBeenCalledWith('lobby:join_by_code', {
         inviteCode: 'NAYRR5',
+        correlationId: expect.any(String),
       }, expect.any(Function));
     });
 
@@ -165,7 +230,6 @@ describe('useFriendLobbyLogic invite links', () => {
   });
 
   it('cancels pending invite retries when the user leaves from the resolving state', async () => {
-    vi.useFakeTimers();
     act(() => {
       useRealtimeMatchStore.getState().setLobby(makeLobby('N3K5UZ'));
     });
@@ -176,17 +240,21 @@ describe('useFriendLobbyLogic invite links', () => {
 
     expect(mocks.socketEmit).toHaveBeenCalledWith('lobby:join_by_code', {
       inviteCode: 'NAYRR5',
+      correlationId: expect.any(String),
     }, expect.any(Function));
 
-    act(() => {
+    await act(async () => {
       result.current.actions.handleLeaveLobby();
-      vi.advanceTimersByTime(3000);
     });
 
     const joinCalls = mocks.socketEmit.mock.calls.filter(([event]) => event === 'lobby:join_by_code');
     expect(joinCalls).toHaveLength(1);
-    expect(mocks.socketEmit).toHaveBeenCalledWith('lobby:leave');
-    expect(mocks.routerReplace).toHaveBeenCalledWith('/play');
+    expect(mocks.socketEmit).toHaveBeenCalledWith('lobby:leave', {
+      correlationId: expect.any(String),
+    }, expect.any(Function));
+    await waitFor(() => {
+      expect(mocks.routerReplace).toHaveBeenCalledWith('/play');
+    });
   });
 
   it('exposes the lobby only after it matches the URL invite code', async () => {
@@ -205,6 +273,7 @@ describe('useFriendLobbyLogic invite links', () => {
     expect(result.current.isResolvingInvite).toBe(false);
     expect(mocks.socketEmit).not.toHaveBeenCalledWith('lobby:join_by_code', {
       inviteCode: 'NAYRR5',
+      correlationId: expect.any(String),
     }, expect.any(Function));
     await waitFor(() => {
       expect(mocks.startSession).toHaveBeenCalledWith({

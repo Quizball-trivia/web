@@ -3,12 +3,12 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button";
 import { LogOut, ArrowRight, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getSocket } from "@/lib/realtime/socket-client";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
 import { toast } from "sonner";
 import { logger } from "@/utils/logger";
 import { useLocale } from "@/contexts/LocaleContext";
+import { useLobbyCommandMachine } from "../hooks/useLobbyCommandMachine";
 
 interface AlreadyInLobbyModalProps {
   currentLobbyCode: string | null;
@@ -23,6 +23,7 @@ export function AlreadyInLobbyModal({
 }: AlreadyInLobbyModalProps) {
   const router = useRouter();
   const { t } = useLocale();
+  const lobbyCommands = useLobbyCommandMachine();
   const error = useRealtimeMatchStore(state => state.error);
   const lobby = useRealtimeMatchStore(state => state.lobby);
   const clearError = useRealtimeMatchStore(state => state.clearError);
@@ -59,12 +60,18 @@ export function AlreadyInLobbyModal({
   ]);
 
   const handleLeaveAndRetry = () => {
-    getSocket().emit("lobby:leave");
-    resetRealtime();
-    useRankedMatchmakingStore.getState().clearRankedMatchmaking();
-    clearError();
-    toast.info(t('friend.toastLeftPreviousLobby'));
-    if (onClose) onClose();
+    void lobbyCommands.leaveLobby().then((result) => {
+      if (!result) return;
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+      resetRealtime();
+      useRankedMatchmakingStore.getState().clearRankedMatchmaking();
+      clearError();
+      toast.info(t('friend.toastLeftPreviousLobby'));
+      if (onClose) onClose();
+    });
   };
 
   const handleGoToRoom = () => {
@@ -128,6 +135,7 @@ export function AlreadyInLobbyModal({
                     variant="outline"
                     className="w-full h-12 border-red-500/20 text-red-500 hover:bg-red-500/10 hover:text-red-600 hover:border-red-500/30"
                     onClick={handleLeaveAndRetry}
+                    disabled={lobbyCommands.isLeaving}
                 >
                     <LogOut className="size-4 mr-2" /> Leave & Join New
                 </Button>

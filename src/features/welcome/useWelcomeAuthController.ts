@@ -36,6 +36,7 @@ import {
 } from '@/lib/analytics/game-events';
 
 import type { AuthPanelMode } from './welcome.types';
+import type { AuthNoticeVariant } from './WelcomeAuthNoticeModal';
 import { authErrorMessage } from './welcome.helpers';
 import {
   validateLogin,
@@ -63,6 +64,8 @@ export function useWelcomeAuthController() {
   const [authOtp, setAuthOtp] = useState('');
   const [authSubmitting, setAuthSubmitting] = useState(false);
   const [authNotice, setAuthNotice] = useState<string | null>(null);
+  // Centered post-signup confirmation modal (check-email vs already-registered).
+  const [authNoticeModal, setAuthNoticeModal] = useState<AuthNoticeVariant | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [authFieldErrors, setAuthFieldErrors] = useState<AuthFieldErrors>({});
   const [phoneOtpSent, setPhoneOtpSent] = useState(false);
@@ -250,8 +253,10 @@ export function useWelcomeAuthController() {
             locale,
           });
           if (!result.tokensSet) {
-            // Neutral confirmation when Supabase requires email confirmation.
-            setAuthNotice(t('welcome.checkEmail'));
+            // Centered modal instead of the easy-to-miss inline notice.
+            // `alreadyRegistered` distinguishes "email already has an account"
+            // (no email sent) from a genuine new signup awaiting confirmation.
+            setAuthNoticeModal(result.alreadyRegistered ? 'already-registered' : 'check-email');
             setAuthMode('signin');
             setAuthPassword('');
             setAuthConfirmPassword('');
@@ -282,6 +287,19 @@ export function useWelcomeAuthController() {
     },
     [authConfirmPassword, authEmail, authMode, authPassword, bootstrap, locale, resetAuthFeedback, resetAuthForm, t],
   );
+
+  const handleCloseAuthNoticeModal = useCallback(() => {
+    setAuthNoticeModal(null);
+  }, []);
+
+  // From the "already registered" modal: dismiss it and land the user on the
+  // sign-in tab (dialog stays open) so they can log in right away.
+  const handleNoticeModalGoToSignIn = useCallback(() => {
+    setAuthNoticeModal(null);
+    setAuthMode('signin');
+    setShowAdvancedAuth(true);
+    setLoginOpen(true);
+  }, []);
 
   const handleShowForgot = useCallback(() => {
     resetAuthFeedback();
@@ -396,6 +414,9 @@ export function useWelcomeAuthController() {
     // Submit state + feedback
     authSubmitting,
     authNotice,
+    authNoticeModal,
+    handleCloseAuthNoticeModal,
+    handleNoticeModalGoToSignIn,
     authError,
     authFieldErrors,
     phoneOtpSent,

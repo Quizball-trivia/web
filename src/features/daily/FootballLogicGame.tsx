@@ -8,7 +8,7 @@ import { CheckCircle2, XCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import type { FootballLogicSession } from "@/lib/domain/dailyChallenge";
 import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
-import { findAcceptedAnswer } from "./daily-challenge.utils";
+import { fuzzyMatchesAnswer } from "@/lib/answerMatching";
 import { QuitGameDialog } from "./QuitGameDialog";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
 
@@ -59,8 +59,7 @@ export function FootballLogicGame({
       return;
     }
 
-    const matchedAnswer = findAcceptedAnswer(answer, currentQuestion.acceptedAnswers);
-    const isCorrect = matchedAnswer !== null;
+    const isCorrect = fuzzyMatchesAnswer(answer, currentQuestion.acceptedAnswers);
 
     if (isCorrect) {
       setCorrectCount((previous) => previous + 1);

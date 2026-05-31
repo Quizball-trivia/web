@@ -16,6 +16,7 @@ import { useWelcomeStadiumSim } from './useWelcomeStadiumSim';
 import { useWelcomeCategoriesData } from './useWelcomeCategoriesData';
 import { peekPostAuthRedirect } from '@/lib/auth/postAuthRedirect';
 import { WelcomeLoginDialog } from './WelcomeLoginDialog';
+import { WelcomeAuthNoticeModal } from './WelcomeAuthNoticeModal';
 import { WelcomeNavbar } from './WelcomeNavbar';
 import { WelcomeHero } from './WelcomeHero';
 import { WelcomeCategoriesSection } from './WelcomeCategoriesSection';
@@ -47,6 +48,9 @@ export function WelcomeScreen() {
     setAuthOtp,
     authSubmitting,
     authNotice,
+    authNoticeModal,
+    handleCloseAuthNoticeModal,
+    handleNoticeModalGoToSignIn,
     authError,
     authFieldErrors,
     phoneOtpSent,
@@ -173,6 +177,13 @@ export function WelcomeScreen() {
         onShowForgot={handleShowForgot}
         onBackToSignIn={handleBackToSignIn}
         onForgotSubmit={handleForgotSubmit}
+      />
+
+      <WelcomeAuthNoticeModal
+        open={authNoticeModal !== null}
+        variant={authNoticeModal ?? 'check-email'}
+        onClose={handleCloseAuthNoticeModal}
+        onGoToSignIn={handleNoticeModalGoToSignIn}
       />
     </div>
   );

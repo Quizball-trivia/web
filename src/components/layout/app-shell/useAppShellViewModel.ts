@@ -25,6 +25,7 @@ import { useStoreWallet } from '@/lib/queries/store.queries';
 import { useIncomingFriendRequestCount } from '@/lib/queries/social.queries';
 import { getSocket } from '@/lib/realtime/socket-client';
 import { useRealtimeConnection } from '@/lib/realtime/useRealtimeConnection';
+import { useLobbyCommandMachine } from '@/features/friend/hooks/useLobbyCommandMachine';
 
 import type { RankedGeoHintDebug } from './appShell.types';
 import {
@@ -73,6 +74,7 @@ export function useAppShellViewModel() {
   );
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [nowTick, setNowTick] = useState(() => Date.now());
+  const lobbyCommands = useLobbyCommandMachine();
   useRealtimeConnection({ enabled: Boolean(authUser), selfUserId: authUser?.id ?? null });
 
   // Tick once per second so any time-comparison render values
@@ -234,9 +236,12 @@ export function useAppShellViewModel() {
   };
 
   const handleLeaveLobby = () => {
-    getSocket().emit('lobby:leave');
-    resetRealtime();
-    useRankedMatchmakingStore.getState().clearRankedMatchmaking();
+    if (lobbyCommands.isLeaving) return;
+    void lobbyCommands.leaveLobby().then((result) => {
+      if (!result?.ok) return;
+      resetRealtime();
+      useRankedMatchmakingStore.getState().clearRankedMatchmaking();
+    });
   };
 
   const handleRejoinMatch = () => {

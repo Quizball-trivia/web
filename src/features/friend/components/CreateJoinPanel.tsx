@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Lock, Globe, ArrowRight, Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { getSocket } from "@/lib/realtime/socket-client";
 import { trackFriendInviteAccepted } from "@/lib/analytics/game-events";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { useLocale } from "@/contexts/LocaleContext";
+import { useLobbyCommandMachine } from "../hooks/useLobbyCommandMachine";
 
 interface CreateJoinPanelProps {
   onActionTriggered?: () => void;
@@ -22,90 +22,47 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
   const { t } = useLocale();
   const [inviteCode, setInviteCode] = useState("");
   const [isPublic, setIsPublic] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const [isJoining, setIsJoining] = useState(false);
+  const lobbyCommands = useLobbyCommandMachine();
+  const { createLobby, joinByCode, reset } = lobbyCommands;
   const lobby = useRealtimeMatchStore((state) => state.lobby);
-  const error = useRealtimeMatchStore((state) => state.error);
-  const createTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const joinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const clearCreateTimeout = () => {
-    if (!createTimeoutRef.current) return;
-    clearTimeout(createTimeoutRef.current);
-    createTimeoutRef.current = null;
-  };
-
-  const clearJoinTimeout = () => {
-    if (!joinTimeoutRef.current) return;
-    clearTimeout(joinTimeoutRef.current);
-    joinTimeoutRef.current = null;
-  };
+  const isCreating = lobbyCommands.isCreating;
+  const isJoining = lobbyCommands.isJoining;
 
   const handleCreate = () => {
-    if (isCreating) return;
+    if (lobbyCommands.isBusy) return;
     if (onActionTriggered) onActionTriggered();
-    setIsCreating(true);
-    clearCreateTimeout();
-    createTimeoutRef.current = setTimeout(() => {
-      setIsCreating(false);
-      toast.error(t("friend.createTimedOut"));
-    }, 8000);
-    getSocket().emit("lobby:create", { mode: "friendly", isPublic });
     toast.info(t("friend.creatingRoom"));
+    void createLobby({ mode: "friendly", isPublic }).then((result) => {
+      if (!result || result.ok) return;
+      toast.error(result.message);
+    });
   };
 
   const handleJoin = () => {
-    if (isJoining) return;
+    if (lobbyCommands.isBusy) return;
     if (!inviteCode || inviteCode.length < 3) {
       toast.error(t("friend.enterValidCode"));
       return;
     }
 
     if (onActionTriggered) onActionTriggered();
-    setIsJoining(true);
-    clearJoinTimeout();
-    joinTimeoutRef.current = setTimeout(() => {
-      setIsJoining(false);
-      toast.error(t("friend.joinTimedOut"));
-    }, 8000);
     const code = inviteCode.trim().toUpperCase();
     try {
       trackFriendInviteAccepted(code);
     } catch (error) {
       console.error('Analytics trackFriendInviteAccepted failed', error);
     }
-    getSocket().emit("lobby:join_by_code", { inviteCode: code });
     toast.info(t("friend.joiningCode", { code }));
+    void joinByCode(code).then((result) => {
+      if (!result || result.ok) return;
+      toast.error(result.message);
+    });
   };
 
   useEffect(() => {
     if (!lobby) return;
-    clearCreateTimeout();
-    clearJoinTimeout();
-    const timer = setTimeout(() => {
-      setIsCreating(false);
-      setIsJoining(false);
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [lobby?.lobbyId, lobby?.inviteCode, lobby]);
-
-  useEffect(() => {
-    if (!error) return;
-    clearCreateTimeout();
-    clearJoinTimeout();
-    const timer = setTimeout(() => {
-      setIsCreating(false);
-      setIsJoining(false);
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [error]);
-
-  useEffect(() => {
-    return () => {
-      clearCreateTimeout();
-      clearJoinTimeout();
-    };
-  }, []);
+    reset();
+  }, [lobby?.lobbyId, lobby?.inviteCode, lobby, reset]);
 
   return (
     <div className="grid gap-6 md:grid-cols-2 max-w-4xl">

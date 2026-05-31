@@ -57,7 +57,7 @@ vi.mock('@/stores/auth.store', () => ({
 
 // Auth service — these are the six calls the screen issues.
 const loginMock = vi.fn(async (_email: string, _password: string) => ({ id: 'u1' }));
-const registerMock = vi.fn(async (_payload: { email: string; password: string }) => ({ user: { id: 'u1' }, tokensSet: true }));
+const registerMock = vi.fn(async (_payload: { email: string; password: string }) => ({ user: { id: 'u1' }, tokensSet: true, alreadyRegistered: false }));
 const socialLoginMock = vi.fn(async (_provider: string, _redirect: string) => undefined);
 const socialLoginWithIdTokenMock = vi.fn(async (_provider: string, _idToken: string, _nonce: string) => undefined);
 const startGeorgianPhoneOtpMock = vi.fn(async (_phone: string) => undefined);
@@ -211,7 +211,7 @@ beforeEach(() => {
   loginMock.mockReset();
   loginMock.mockResolvedValue({ id: 'u1' });
   registerMock.mockReset();
-  registerMock.mockResolvedValue({ user: { id: 'u1' }, tokensSet: true });
+  registerMock.mockResolvedValue({ user: { id: 'u1' }, tokensSet: true, alreadyRegistered: false });
   socialLoginMock.mockReset();
   socialLoginMock.mockResolvedValue(undefined);
   socialLoginWithIdTokenMock.mockReset();
@@ -368,15 +368,27 @@ describe('WelcomeScreen — email signin / signup', () => {
     await waitFor(() => expect(bootstrapMock).toHaveBeenCalled());
   });
 
-  it('shows the check-email notice when register reports tokensSet=false', async () => {
-    registerMock.mockResolvedValueOnce({ user: null as unknown as { id: string }, tokensSet: false });
+  it('shows the check-email modal when register reports tokensSet=false (new signup)', async () => {
+    registerMock.mockResolvedValueOnce({ user: null as unknown as { id: string }, tokensSet: false, alreadyRegistered: false });
     render(<WelcomeScreen />);
     openLoginDialog();
     openAuthOptions();
     fireEvent.click(screen.getByText(/welcome\.signUpTab/));
     setEmailFields('new@example.com', 'secret12', 'secret12');
     fireEvent.click(screen.getByText(/welcome\.createAccount/));
-    await waitFor(() => expect(screen.getByText(/welcome\.checkEmail/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/welcome\.checkEmailTitle/)).toBeInTheDocument());
+    expect(bootstrapMock).not.toHaveBeenCalled();
+  });
+
+  it('shows the already-registered modal when register reports alreadyRegistered=true', async () => {
+    registerMock.mockResolvedValueOnce({ user: null as unknown as { id: string }, tokensSet: false, alreadyRegistered: true });
+    render(<WelcomeScreen />);
+    openLoginDialog();
+    openAuthOptions();
+    fireEvent.click(screen.getByText(/welcome\.signUpTab/));
+    setEmailFields('existing@example.com', 'secret12', 'secret12');
+    fireEvent.click(screen.getByText(/welcome\.createAccount/));
+    await waitFor(() => expect(screen.getByText(/welcome\.alreadyRegisteredTitle/)).toBeInTheDocument());
     expect(bootstrapMock).not.toHaveBeenCalled();
   });
 

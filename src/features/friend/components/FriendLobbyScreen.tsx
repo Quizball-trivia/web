@@ -36,7 +36,7 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
   const matchIsStarting = isStartingMatch || lobby?.status === "active";
 
   const settings = lobby?.settings;
-  const isCurrentHost = Boolean(me?.isHost) || isHost;
+  const isCurrentHost = Boolean(me?.isHost) || (isHost && roomCode.trim().toLowerCase() === "new");
   const allReady = members.length > 0 && members.every((member) => member.isReady);
   const isPartyMode = settings?.gameMode === "friendly_party_quiz" || members.length > 2;
   // Lobby capacity by mode: party quiz holds up to 6; classic + ranked sim are 1v1 (2).
