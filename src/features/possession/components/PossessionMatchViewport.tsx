@@ -1,8 +1,10 @@
 'use client';
 
-import { type ComponentProps, type ReactNode, useLayoutEffect, useRef, useState } from 'react';
+import { type ComponentProps, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import { useLocale } from '@/contexts/LocaleContext';
 import { GoalCelebrationOverlay } from './GoalCelebrationOverlay';
+import { GoalProgressBar } from './GoalProgressBar';
 import { PenaltyHUD } from './PenaltyHUD';
 import { PitchVisualization } from './PitchVisualization';
 import { PossessionHUD } from './PossessionHUD';
@@ -33,6 +35,13 @@ export interface PossessionViewportModel {
   goalCelebration: GoalCelebrationState | null;
   penaltySplash: PenaltySplashModel | null;
   muted: boolean;
+  /**
+   * Changes whenever the player answers a tall special question (put-in-order /
+   * clues), where the pitch is scrolled off-screen on mobile. The viewport
+   * scrolls the pitch back into view so the result + fly animation are visible.
+   * Null when no scroll is needed.
+   */
+  autoScrollKey?: string | null;
 }
 
 interface PossessionMatchViewportProps {
@@ -84,6 +93,7 @@ function usePitchBallMetrics(orientation: 'portrait' | 'landscape', pitchProps: 
 }
 
 function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
+  const { t } = useLocale();
   if (!model?.visible) return null;
 
   const { localQuestionIndex, result, resultShooterIsMe } = model;
@@ -107,7 +117,7 @@ function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
       {result === 'goal' ? (
         <img
           src="/assets/goal.png"
-          alt="Goal"
+          alt={t('common.altGoal')}
           className="h-auto w-[min(64vw,260px)] object-contain drop-shadow-[0_10px_0_rgba(0,0,0,0.65)]"
         />
       ) : (
@@ -117,20 +127,20 @@ function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
             textShadow: '0 0 30px rgba(255,75,75,0.5), 0 4px 0 rgba(200,40,40,0.8)',
           }}
         >
-          SAVED!
+          {t('possession.savedExclaim')}
         </div>
       )}
       <div className="mt-1 text-sm font-bold font-fun uppercase tracking-widest text-white/60">
         {result === 'goal'
-          ? (resultShooterIsMe ? 'You scored!' : 'Opponent scored')
-          : (resultShooterIsMe ? 'Keeper saves it!' : 'You saved it!')}
+          ? (resultShooterIsMe ? t('possession.youScored') : t('possession.opponentScored'))
+          : (resultShooterIsMe ? t('possession.keeperSavesIt') : t('possession.youSavedIt'))}
       </div>
     </motion.div>
   );
 }
 
 export function PossessionMatchViewport({ model, children }: PossessionMatchViewportProps) {
-  const { showMainUI, hud, pitchProps, goalCelebration, penaltySplash, muted } = model;
+  const { showMainUI, hud, pitchProps, goalCelebration, penaltySplash, muted, autoScrollKey } = model;
   const celebrationOwnsBall = Boolean(goalCelebration);
   const {
     containerRef: desktopPitchRef,
@@ -143,10 +153,23 @@ export function PossessionMatchViewport({ model, children }: PossessionMatchView
     ballCenterPx: mobileBallCenterPx,
   } = usePitchBallMetrics('landscape', pitchProps);
 
+  // After answering a tall special question, scroll the pitch back into view so
+  // the result + fly animation are visible. Mobile only — the `lg:hidden` pitch
+  // is the one in the scrollable column; on desktop the pitch is always visible.
+  useEffect(() => {
+    if (!autoScrollKey) return;
+    const pitch = mobilePitchRef.current;
+    if (!pitch || pitch.offsetParent === null) return; // hidden (desktop layout)
+    pitch.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [autoScrollKey, mobilePitchRef]);
+
   return (
     <>
       {showMainUI && (
-        <div className="hidden lg:flex lg:w-[42%] lg:items-center lg:py-4 relative">
+        <div className="hidden lg:flex lg:w-[42%] lg:items-center lg:gap-3 lg:py-4 relative">
+          <div className="h-full max-h-[calc(100dvh-2rem)] py-6">
+            <GoalProgressBar position={pitchProps.playerPosition} orientation="vertical" />
+          </div>
           <div ref={desktopPitchRef} className="relative h-full w-full max-h-[calc(100dvh-2rem)]">
             <PitchVisualization {...pitchProps} orientation="portrait" hideBall={celebrationOwnsBall} />
             <AnimatePresence>
@@ -194,6 +217,10 @@ export function PossessionMatchViewport({ model, children }: PossessionMatchView
               <AnimatePresence>
                 <PenaltySplash model={penaltySplash} />
               </AnimatePresence>
+            </div>
+
+            <div className="lg:hidden">
+              <GoalProgressBar position={pitchProps.playerPosition} orientation="horizontal" />
             </div>
           </>
         )}

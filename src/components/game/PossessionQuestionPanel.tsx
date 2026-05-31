@@ -1,9 +1,12 @@
 'use client';
 
 import { motion, AnimatePresence } from 'motion/react';
+import { Volume2, VolumeX, X } from 'lucide-react';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import type { AnswerStateArray, Phase } from '@/lib/types/game.types';
 import { ArenaScoreSplash } from '@/components/game/ArenaScoreSplash';
+import { MatchHudIconButton } from '@/features/possession/components/MatchHudPrimitives';
+import { useLocale } from '@/contexts/LocaleContext';
 
 const poppins = {
   fontFamily: "'Poppins', sans-serif",
@@ -57,13 +60,24 @@ interface PossessionQuestionPanelProps {
   onOpponentSplashComplete?: () => void;
 
   onAnswer: (index: number) => void;
+
+  /** Party quiz mobile: mute · question · timer · quit in one aligned row. */
+  partyMatchHeader?: {
+    muted: boolean;
+    onToggleMute: () => void;
+    onQuit: () => void;
+  };
 }
 
 // Mini-notch matching the production possession opponent notch (white outer
 // pill with a colored stripe inside) but small enough to stack 3 on one
 // side, 2 on the other. White outer keeps every color legible — including
 // yellow on a green correct-answer fill.
-function renderPartyPickChip(pick: PartyPickInfo, side: 'left' | 'right') {
+function renderPartyPickChip(
+  pick: PartyPickInfo,
+  side: 'left' | 'right',
+  t: ReturnType<typeof useLocale>['t'],
+) {
   const fill = pick.accentColor ?? 'rgba(255,255,255,0.85)';
   const initialX = side === 'right' ? 8 : -8;
   const wrapperRadius = side === 'right' ? 'rounded-l-md' : 'rounded-r-md';
@@ -78,7 +92,7 @@ function renderPartyPickChip(pick: PartyPickInfo, side: 'left' | 'right') {
       transition={{ type: 'spring', stiffness: 380, damping: 24 }}
       className={`flex h-5 w-[8px] items-center bg-white ${wrapperRadius} ${justify}`}
       style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.35)' }}
-      aria-label={`${pick.username} selected this answer`}
+      aria-label={t('possession.partyPickSelected', { username: pick.username })}
       title={pick.username}
     >
       <span
@@ -129,7 +143,9 @@ export function PossessionQuestionPanel({
   onPlayerSplashComplete,
   onOpponentSplashComplete,
   onAnswer,
+  partyMatchHeader,
 }: PossessionQuestionPanelProps) {
+  const { t } = useLocale();
   if (phase === 'goal') return null;
   if (!question) return null;
 
@@ -144,23 +160,101 @@ export function PossessionQuestionPanel({
   const displayTimer = timeRemaining ?? 0;
   const timerLabel = displayTimer >= 10 ? `${displayTimer}` : `0${displayTimer}`;
 
+  const questionPillClass =
+    'flex items-center justify-center rounded-[16px] bg-brand-blue text-white';
+  const timerPillClass =
+    'flex shrink-0 items-center justify-center rounded-[16px] bg-brand-blue text-white tabular-nums';
+
+  const questionCounterLabel = t('possession.questionCounter', {
+    current: displayQuestionNum,
+    total: totalQuestions,
+  });
+
+  const questionPill = (
+    <div
+      className={`${questionPillClass} h-[40px] min-w-0 flex-1 px-3 sm:h-[52px] sm:px-5 md:h-[62px] lg:h-[72px] ${
+        partyMatchHeader ? '' : 'px-5'
+      }`}
+      style={{
+        ...poppins,
+        fontSize: partyMatchHeader ? 'clamp(12px, 3vw, 18px)' : 'clamp(14px, 2.2vw, 26px)',
+      }}
+    >
+      {questionCounterLabel}
+    </div>
+  );
+
+  const timerPill = (
+    <div
+      className={`${timerPillClass} h-[40px] w-[64px] sm:h-[52px] sm:w-[92px] md:h-[62px] md:w-[116px] lg:h-[72px] lg:w-[136px]`}
+      style={{ ...poppins, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
+    >
+      {timerLabel}
+    </div>
+  );
+
+  const mobileTimerCircle = (
+    <div
+      className={`${timerPillClass} size-10 shrink-0 rounded-full sm:size-12`}
+      style={{ ...poppins, fontSize: 'clamp(14px, 4vw, 20px)' }}
+    >
+      {timerLabel}
+    </div>
+  );
+
   return (
-    <div className="px-4 sm:px-4 mt-1.5">
-      {/* Header pills: QUESTION X/Y + timer */}
-      <div className="flex items-stretch gap-2.5">
-        <div
-          className="flex flex-1 items-center justify-center rounded-[16px] bg-brand-blue px-5 text-white h-[40px] sm:h-[52px] md:h-[62px] lg:h-[72px]"
-          style={{ ...poppins, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
-        >
-          QUESTION {displayQuestionNum}/{totalQuestions}
+    <div className="mt-1.5 px-3 sm:px-4">
+      {partyMatchHeader ? (
+        <>
+          <div className="flex h-10 items-center gap-2 sm:h-[52px] sm:gap-2.5 lg:hidden">
+            <MatchHudIconButton
+              onClick={partyMatchHeader.onToggleMute}
+              className="shrink-0"
+              aria-label={
+                partyMatchHeader.muted ? t('possession.unmuteAudio') : t('possession.muteAudio')
+              }
+              aria-pressed={partyMatchHeader.muted}
+              title={partyMatchHeader.muted ? t('common.unmute') : t('common.mute')}
+            >
+              {partyMatchHeader.muted ? (
+                <VolumeX className="size-4 sm:size-5" />
+              ) : (
+                <Volume2 className="size-4 sm:size-5" />
+              )}
+            </MatchHudIconButton>
+
+            <div className="flex min-w-0 flex-1 items-stretch justify-start gap-2 sm:gap-2.5">
+              {questionPill}
+              {timerPill}
+            </div>
+
+            <MatchHudIconButton
+              onClick={partyMatchHeader.onQuit}
+              className="shrink-0"
+              data-testid="party-match-quit"
+              title={t('partyResults.leaveMatch')}
+              aria-label={t('partyResults.leaveMatch')}
+            >
+              <X className="size-4 sm:size-5" />
+            </MatchHudIconButton>
+          </div>
+
+          <div className="hidden items-stretch gap-2.5 lg:flex">
+            <div
+              className={`${questionPillClass} h-[40px] min-w-0 flex-1 px-5 sm:h-[52px] md:h-[62px] lg:h-[72px]`}
+              style={{ ...poppins, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
+            >
+              {questionCounterLabel}
+            </div>
+            {timerPill}
+          </div>
+        </>
+      ) : (
+        <div className="flex items-stretch gap-2.5">
+          {questionPill}
+          {timerPill}
         </div>
-        <div
-          className="flex w-[64px] items-center justify-center rounded-[16px] bg-brand-blue text-white h-[40px] sm:h-[52px] sm:w-[92px] md:h-[62px] md:w-[116px] lg:h-[72px] lg:w-[136px] tabular-nums"
-          style={{ ...poppins, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
-        >
-          {timerLabel}
-        </div>
-      </div>
+      )}
 
       {/* Question card — popLayout pops exiting question out of flow to prevent height doubling */}
       <AnimatePresence mode="popLayout" initial={false}>
@@ -313,7 +407,7 @@ export function PossessionQuestionPanel({
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 22 }}
                   className="absolute right-0 top-1/2 z-10 flex h-12 w-[10px] -translate-y-1/2 items-center justify-end rounded-l-md bg-white pr-[2px]"
-                  aria-label="Opponent selected this answer"
+                  aria-label={t('possession.opponentSelected')}
                 >
                   <span
                     className="h-9 w-[4px] rounded-l-sm"
@@ -330,11 +424,11 @@ export function PossessionQuestionPanel({
               {partyPicksForThis.length > 0 && (
                 <>
                   <div className="pointer-events-none absolute right-0 top-1/2 z-10 flex -translate-y-1/2 flex-col gap-1">
-                    {partyPicksForThis.slice(0, 3).map((pick) => renderPartyPickChip(pick, 'right'))}
+                    {partyPicksForThis.slice(0, 3).map((pick) => renderPartyPickChip(pick, 'right', t))}
                   </div>
                   {partyPicksForThis.length > 3 && (
                     <div className="pointer-events-none absolute left-0 top-1/2 z-10 flex -translate-y-1/2 flex-col gap-1">
-                      {partyPicksForThis.slice(3, 5).map((pick) => renderPartyPickChip(pick, 'left'))}
+                      {partyPicksForThis.slice(3, 5).map((pick) => renderPartyPickChip(pick, 'left', t))}
                     </div>
                   )}
                 </>

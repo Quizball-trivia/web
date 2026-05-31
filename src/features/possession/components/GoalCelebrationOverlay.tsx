@@ -2,6 +2,11 @@
 
 import Image from 'next/image';
 import { motion } from 'motion/react';
+import { useLocale } from '@/contexts/LocaleContext';
+
+/** How much the ball grows at the apex of its rise. The image is rendered at
+ *  this multiple of its resting size so the peak frame uses real pixels. */
+const GOAL_BALL_PEAK_SCALE = 4.6;
 
 interface GoalCelebrationOverlayProps {
   scorerName?: string;
@@ -13,6 +18,7 @@ interface GoalCelebrationOverlayProps {
 }
 
 export function GoalCelebrationOverlay({ ballSizePx = 32, ballCenterPx }: GoalCelebrationOverlayProps) {
+  const { t } = useLocale();
   const accentColor = '#FFE500'; // Always yellow splash
 
   return (
@@ -86,37 +92,28 @@ export function GoalCelebrationOverlay({ ballSizePx = 32, ballCenterPx }: GoalCe
         <Image src="/assets/brand/hand-right.webp" alt="" width={120} height={200} className="w-full h-auto object-contain" />
       </motion.div>
 
-      {/* Yellow splash ellipse */}
-      <motion.div
-        className="absolute z-20 pointer-events-none"
-        initial={{ opacity: 0, scale: 0.5 }}
-        animate={{ opacity: [0, 0.7, 0.4, 0], scale: [0.5, 1.2, 1.4, 1.6] }}
-        transition={{ duration: 1.2, delay: 0.1, ease: 'easeOut' }}
-      >
-        <Image src="/assets/brand/ellipse-yellow.webp" alt="" width={400} height={400} className="w-[60%] max-w-[200px] h-auto object-contain" />
-      </motion.div>
-
-      {/* Goal artwork split into two halves so the exit peels open. */}
+      {/* Goal artwork split into two halves so the exit peels open. Appears
+          after the ball has risen (delay), then peels out as the ball drops. */}
       <motion.div
         initial={{ opacity: 0, scale: 0.94 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.35, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
         className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none p-2"
       >
         <div className="relative h-full max-h-full w-full">
           <motion.div
             className="absolute inset-0 flex items-center justify-center"
             exit={{ y: '-115%', opacity: 0 }}
-            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             style={{ clipPath: 'inset(0 0 50% 0)' }}
           >
-            <Image src="/assets/goal.png" alt="Goal celebration" width={760} height={538} className="max-h-full w-auto object-contain" />
+            <Image src="/assets/goal.png" alt={t('common.altGoalCelebration')} width={760} height={538} className="max-h-full w-auto object-contain" />
           </motion.div>
           <motion.div
             className="absolute inset-0 flex items-center justify-center"
             exit={{ y: '115%', opacity: 0 }}
-            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             style={{ clipPath: 'inset(50% 0 0 0)' }}
           >
             <Image src="/assets/goal.png" alt="" width={760} height={538} className="max-h-full w-auto object-contain" />
@@ -124,34 +121,33 @@ export function GoalCelebrationOverlay({ ballSizePx = 32, ballCenterPx }: GoalCe
         </div>
       </motion.div>
 
+      {/* Ball: rises + enlarges, then HOLDS up while the GOAL text shows. On
+          exit it descends slowly while scaling back down, overlapping with the
+          text fade, and ends in its starting position.
+
+          The image is rendered at its PEAK display size (ballSizePx * peak) and
+          the animation scales from small -> 1 -> small. This way the browser
+          always has full-resolution pixels at the peak instead of upscaling a
+          tiny render, which kept the ball crisp as it rises. */}
       <motion.div
         className="absolute z-30 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center"
         style={{
-          width: ballSizePx,
-          height: ballSizePx,
+          width: ballSizePx * GOAL_BALL_PEAK_SCALE,
+          height: ballSizePx * GOAL_BALL_PEAK_SCALE,
           left: ballCenterPx ? ballCenterPx.x : '50%',
           top: ballCenterPx ? ballCenterPx.y : '50%',
         }}
-        initial={{ scale: 1, y: 10, opacity: 0.94 }}
-        animate={{ scale: [1, 3, 1], y: [10, -16, 0], opacity: [0.94, 1, 1] }}
-        exit={{ opacity: 1, scale: 1, transition: { duration: 0.25 } }}
-        transition={{ duration: 1.45, times: [0, 0.38, 1], ease: 'easeInOut' }}
+        initial={{ scale: 1 / GOAL_BALL_PEAK_SCALE, y: 10, opacity: 0.94 }}
+        animate={{
+          scale: [1 / GOAL_BALL_PEAK_SCALE, 1, 1 / GOAL_BALL_PEAK_SCALE],
+          y: [10, -32, 0],
+          opacity: [0.94, 1, 1],
+        }}
+        exit={{ opacity: 1, scale: 1 / GOAL_BALL_PEAK_SCALE, transition: { duration: 0.25 } }}
+        transition={{ duration: 1.85, times: [0, 0.45, 1], ease: 'easeInOut' }}
       >
-        <div className="absolute inset-[-6px] rounded-full bg-white/10 blur-sm" />
-        <Image src="https://lfbwhxvwubzeqkztghok.supabase.co/storage/v1/object/public/imgs/world-cup-style-ball-cartoon-transparent.png" alt="" width={256} height={256} unoptimized className="size-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.32)]" />
+        <Image src="/assets/brand/goal-ball.png" alt="" width={512} height={512} className="size-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.32)]" />
       </motion.div>
-
-      {/* Content */}
-      <div className="relative z-40 flex flex-col items-center">
-        {/* Expanding ring */}
-        <motion.div
-          initial={{ scale: 0.2, opacity: 0.8 }}
-          animate={{ scale: 3, opacity: 0 }}
-          transition={{ duration: 1, ease: 'easeOut', delay: 0.1 }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full border-4"
-          style={{ borderColor: accentColor }}
-        />
-      </div>
     </motion.div>
   );
 }

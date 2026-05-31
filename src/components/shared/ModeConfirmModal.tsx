@@ -17,6 +17,7 @@
 //     the cost in yellow.
 //   • Footer: "YOU HAVE <N> TICKETS 🎫" small caps, white/80.
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -51,7 +52,7 @@ const CONFIG = {
     titlePrefixKey: "modeConfirm.rankedTitlePrefix",
     titleRestKey: "modeConfirm.rankedTitleRest",
     descriptionKey: "modeConfirm.rankedDescription",
-    icon: "/assets/ranked-icon.webp",
+    icon: "/assets/brand/ranked-hands-trophy.svg",
     statLeftKey: "modeConfirm.rankedStatLeft",
     statRightKey: "modeConfirm.rankedStatRight",
     entryCost: 1,
@@ -96,13 +97,24 @@ export function ModeConfirmModal({
 }: ModeConfirmModalProps) {
   const { t } = useLocale();
   const isMobile = useIsMobile();
+  const router = useRouter();
 
   if (!mode) return null;
 
   const config = CONFIG[mode];
   const hasTickets = ticketsRemaining >= config.entryCost;
+  const needsTickets = config.entryCost > 0 && !hasTickets;
   const titleRest = t(config.titleRestKey);
   const description = t(config.descriptionKey);
+  const handlePrimaryClick = () => {
+    if (needsTickets) {
+      onOpenChange(false);
+      router.push("/store");
+      return;
+    }
+
+    onConfirm();
+  };
 
   const Body = (
     <div className="relative font-fun">
@@ -131,7 +143,10 @@ export function ModeConfirmModal({
           alt=""
           fill
           priority
-          className="object-contain"
+          className={cn(
+            "z-0 object-contain",
+            mode === "ranked" && "translate-y-5 scale-110 md:translate-y-7",
+          )}
         />
 
         {/* Mobile-only: top-left "PLAY FOR N TICKETS" pill from Figma */}
@@ -155,7 +170,7 @@ export function ModeConfirmModal({
         <div
           className={cn(
             "absolute right-0 rounded-full px-4 py-2 text-xs font-black uppercase whitespace-nowrap",
-            "bg-brand-yellow text-black shadow-sm md:text-sm",
+            "z-10 bg-brand-yellow text-black shadow-sm md:text-sm",
             isMobile ? "top-[42%]" : "top-[28%]",
           )}
         >
@@ -168,7 +183,7 @@ export function ModeConfirmModal({
         <div
           className={cn(
             "absolute left-0 rounded-full px-4 py-2 text-xs font-black uppercase whitespace-nowrap",
-            "bg-brand-yellow text-black shadow-sm md:text-sm",
+            "z-10 bg-brand-yellow text-black shadow-sm md:text-sm",
             isMobile ? "bottom-[10%]" : "top-1/2 -translate-y-1/2",
           )}
         >
@@ -180,19 +195,20 @@ export function ModeConfirmModal({
           pill); desktop keeps the original "PLAY FOR N TICKETS" wording. */}
       <button
         type="button"
-        onClick={() => {
-          if (!hasTickets) return;
-          onConfirm();
-        }}
-        disabled={!hasTickets}
+        onClick={handlePrimaryClick}
         className={cn(
           "w-full h-16 rounded-2xl text-lg font-black uppercase tracking-wide transition-all md:h-[72px] md:text-xl",
-          hasTickets
+          "relative z-20",
+          needsTickets
+            ? "bg-brand-yellow text-black hover:bg-brand-yellow/90 active:translate-y-[2px]"
+            : hasTickets
             ? "bg-black text-white hover:bg-black/90 active:translate-y-[2px]"
             : "bg-black/60 text-white/50 cursor-not-allowed",
         )}
       >
-        {isMobile || config.entryCost === 0 ? (
+        {needsTickets ? (
+          t("modeConfirm.buyTickets")
+        ) : isMobile || config.entryCost === 0 ? (
           t("common.play")
         ) : (
           <span className="[&_strong]:font-inherit [&_strong]:text-brand-yellow">
@@ -208,10 +224,12 @@ export function ModeConfirmModal({
       {config.entryCost > 0 && (
         <div className="mt-4 flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-wider text-white/80 md:text-xs">
           <span>
-            {t(
-              ticketsRemaining === 1 ? "modeConfirm.youHaveTicket" : "modeConfirm.youHaveTickets",
-              { count: ticketsRemaining },
-            )}
+            {needsTickets
+              ? t("modeConfirm.notEnoughTickets")
+              : t(
+                ticketsRemaining === 1 ? "modeConfirm.youHaveTicket" : "modeConfirm.youHaveTickets",
+                { count: ticketsRemaining },
+              )}
           </span>
           <Image
             src="/assets/ticket-1.png"

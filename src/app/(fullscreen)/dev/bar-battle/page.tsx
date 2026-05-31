@@ -102,8 +102,10 @@ function DevBarBattleContent() {
   const [possession, setPossession] = useState(50);
   const timers = useRef<number[]>([]);
 
-  // Seed the store so BarBattleOverlay picks up the variant (ranked_sim →
-  // avatar-anchored).
+  // Seed the realtime match store. BarBattleOverlay no longer reads the
+  // variant from the store (it's now passed as a prop), but other
+  // realtime-store consumers still expect a populated match for parity
+  // with production. Keep the side effect to mirror the live shape.
   useEffect(() => {
     const s = useRealtimeMatchStore.getState();
     s.reset();
@@ -320,6 +322,7 @@ function DevBarBattleContent() {
                   playerAvatarX={playerAvatarX}
                   opponentAvatarX={opponentAvatarX}
                   isPortrait={isPortrait}
+                  variant={variant}
                 />
               )}
             </svg>

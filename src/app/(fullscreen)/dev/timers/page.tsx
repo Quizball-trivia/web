@@ -6,7 +6,10 @@ import { motion } from 'motion/react';
 
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { MatchCountdownPuck } from '@/components/shared/MatchCountdownPuck';
+import { ModeConfirmModal } from '@/components/shared/ModeConfirmModal';
 import { KickoffCountdownOverlay } from '@/features/possession/components/KickoffCountdownOverlay';
+import { PenaltyHUD } from '@/features/possession/components/PenaltyHUD';
+import { PenaltyStartCountdownOverlay } from '@/features/possession/components/PenaltyStartCountdownOverlay';
 import { cn } from '@/lib/utils';
 
 type TimerKind =
@@ -18,6 +21,7 @@ type TimerKind =
   | 'partyMcqPill'
   | 'penaltyHud'
   | 'shotHud'
+  | 'penaltyStart'
   | 'dailyCountdown';
 
 interface TimerPreset {
@@ -85,6 +89,14 @@ const TIMER_PRESETS: TimerPreset[] = [
     description: '5-second HUD countdown during a penalty kick or save. Pulses red ≤2s.',
     durationMs: 5_000,
     source: 'features/possession/components/PenaltyHUD',
+  },
+  {
+    id: 'penaltyStart',
+    mode: 'Ranked',
+    label: 'Penalty shootout start countdown',
+    description: 'Full-screen "PENALTY SHOOTOUT — Get Ready — 5..1" overlay shown right before the shootout begins.',
+    durationMs: 5_000,
+    source: 'features/possession/components/PenaltyStartCountdownOverlay',
   },
   {
     id: 'shotHud',
@@ -308,29 +320,83 @@ function QuestionPillPreview({ preset, runId }: { preset: TimerPreset; runId: nu
 function PenaltyHudPreview({ preset, runId }: { preset: TimerPreset; runId: number }) {
   const remainingMs = useRemainingMs(preset.durationMs, runId);
   const secondsLeft = Math.max(0, Math.ceil(remainingMs / 1000));
-  const danger = secondsLeft <= 2;
+
+  // Renders the REAL PenaltyHUD so this preview matches production exactly,
+  // shown in a desktop frame and a portrait phone frame side by side.
+  const hud = (
+    <PenaltyHUD
+      penaltyPlayerScore={2}
+      penaltyOpponentScore={1}
+      playerPoints={80}
+      opponentPoints={65}
+      penaltyRound={3}
+      isPenaltySuddenDeath={false}
+      isPlayerShooter
+      playerName="TAZI"
+      opponentName="ALEX"
+      playerAvatarUrl=""
+      opponentAvatarUrl=""
+      playerAvatarCustomization={{ base: 'avatar-1' }}
+      opponentAvatarCustomization={{ base: 'avatar-2' }}
+      timeRemaining={secondsLeft}
+      phase="penalty-playing"
+    />
+  );
 
   return (
     <section className="overflow-hidden rounded-2xl border border-white/10 bg-surface-page-alt shadow-2xl shadow-black/20">
-      <PreviewFrame label="Penalty HUD timer">
-        <div className="mx-auto flex w-full max-w-lg items-center justify-center gap-6 rounded-[20px] bg-surface-card px-6 py-5">
-          <div className="text-center">
-            <div className="font-poppins text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-orange">
-              Pen 3/5
+      <PreviewFrame label="Penalty HUD timer (real component)">
+        <div className="mx-auto flex w-full max-w-4xl flex-col items-stretch gap-6 lg:flex-row">
+          {/* Web (full width) */}
+          <div className="flex-1">
+            <div className="mb-2 text-center font-poppins text-[10px] font-semibold uppercase tracking-[0.2em] text-white/40">
+              Web
             </div>
-            <motion.div
-              animate={danger ? { scale: [1, 1.1, 1] } : {}}
-              transition={danger ? { repeat: Infinity, duration: 0.6 } : {}}
-              className={cn(
-                'font-poppins text-4xl font-semibold tabular-nums transition-colors',
-                danger ? 'text-brand-red-soft' : 'text-white',
-              )}
-            >
-              {secondsLeft}
-            </motion.div>
-            <div className="-mt-0.5 font-poppins text-[10px] font-semibold tracking-[0.18em] text-brand-orange/70">
-              YOU SHOOT
+            <div className="rounded-[20px] bg-surface-card px-4 pt-4">{hud}</div>
+          </div>
+          {/* Mobile (portrait phone frame) */}
+          <div className="flex flex-col items-center">
+            <div className="mb-2 text-center font-poppins text-[10px] font-semibold uppercase tracking-[0.2em] text-white/40">
+              Mobile
             </div>
+            <div className="w-[300px] overflow-hidden rounded-[28px] border-4 border-black/40 bg-surface-card px-3 pt-4 shadow-2xl shadow-black/40">
+              {hud}
+            </div>
+          </div>
+        </div>
+      </PreviewFrame>
+      <TimerMeta preset={preset} remainingMs={remainingMs} />
+    </section>
+  );
+}
+
+function PenaltyStartPreview({ preset, runId }: { preset: TimerPreset; runId: number }) {
+  const remainingMs = useRemainingMs(preset.durationMs, runId);
+  const display = Math.max(1, Math.ceil(remainingMs / 1000));
+
+  // The overlay is `absolute inset-0`, so each frame is a relative box with a
+  // pitch-ish backdrop to mimic the in-match surface it sits over.
+  const stage = (heightClass: string) => (
+    <div className={cn("relative w-full overflow-hidden rounded-[20px] bg-[url('/assets/stadium-green.png')] bg-cover bg-center", heightClass)}>
+      <PenaltyStartCountdownOverlay display={display} />
+    </div>
+  );
+
+  return (
+    <section className="overflow-hidden rounded-2xl border border-white/10 bg-surface-page-alt shadow-2xl shadow-black/20">
+      <PreviewFrame label="Penalty shootout start countdown (real component)">
+        <div className="mx-auto flex w-full max-w-4xl flex-col items-stretch gap-6 lg:flex-row">
+          <div className="flex-1">
+            <div className="mb-2 text-center font-poppins text-[10px] font-semibold uppercase tracking-[0.2em] text-white/40">
+              Web (landscape)
+            </div>
+            {stage('h-[260px]')}
+          </div>
+          <div className="flex flex-col items-center">
+            <div className="mb-2 text-center font-poppins text-[10px] font-semibold uppercase tracking-[0.2em] text-white/40">
+              Mobile (portrait)
+            </div>
+            <div className="w-[260px]">{stage('h-[420px]')}</div>
           </div>
         </div>
       </PreviewFrame>
@@ -440,6 +506,7 @@ export default function DevTimersPage() {
   const [loaderVisible, setLoaderVisible] = useState(false);
   const [loaderDurationMs, setLoaderDurationMs] = useState(5_000);
   const [loaderRunId, setLoaderRunId] = useState(0);
+  const [ticketModalOpen, setTicketModalOpen] = useState(false);
 
   const activePreset = useMemo(
     () => TIMER_PRESETS.find((preset) => preset.id === activePresetId) ?? TIMER_PRESETS[0]!,
@@ -543,6 +610,26 @@ export default function DevTimersPage() {
           </aside>
 
           <div className="grid gap-5">
+            <section className="rounded-2xl border border-brand-yellow/30 bg-surface-card/80 p-4 shadow-2xl shadow-black/10">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div className="font-poppins text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-yellow">
+                    Ranked ticket modal
+                  </div>
+                  <p className="mt-1 max-w-xl text-sm font-semibold leading-snug text-white/55">
+                    Opens the real ranked confirmation modal with zero tickets, so you can inspect the buy-tickets state without spending anything.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setTicketModalOpen(true)}
+                  className="shrink-0 rounded-xl bg-brand-yellow px-5 py-3 font-poppins text-sm font-extrabold uppercase text-black transition hover:bg-brand-yellow/90 active:translate-y-[1px]"
+                >
+                  Open 0-ticket modal
+                </button>
+              </div>
+            </section>
+
             {activePreset.id === 'kickoff' && <MatchKickoffPreview preset={activePreset} runId={timerRunId} />}
             {activePreset.id === 'disconnect' && <DisconnectGracePreview preset={activePreset} runId={timerRunId} />}
             {activePreset.id === 'forfeit' && <ForfeitPendingPreview preset={activePreset} runId={timerRunId} />}
@@ -551,6 +638,7 @@ export default function DevTimersPage() {
               <QuestionPillPreview preset={activePreset} runId={timerRunId} />
             )}
             {activePreset.id === 'penaltyHud' && <PenaltyHudPreview preset={activePreset} runId={timerRunId} />}
+            {activePreset.id === 'penaltyStart' && <PenaltyStartPreview preset={activePreset} runId={timerRunId} />}
             {activePreset.id === 'shotHud' && <ShotHudPreview preset={activePreset} runId={timerRunId} />}
             {activePreset.id === 'dailyCountdown' && <DailyCountdownPreview preset={activePreset} runId={timerRunId} />}
 
@@ -621,6 +709,13 @@ export default function DevTimersPage() {
           </div>
         </div>
       </div>
+      <ModeConfirmModal
+        mode="ranked"
+        isOpen={ticketModalOpen}
+        onOpenChange={setTicketModalOpen}
+        onConfirm={() => setTicketModalOpen(false)}
+        ticketsRemaining={0}
+      />
     </main>
   );
 }

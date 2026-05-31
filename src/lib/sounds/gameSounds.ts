@@ -7,34 +7,49 @@ const SOUND_FILES = {
   whistle: "/sounds/whistle.mp3",
   kick: "/sounds/kick.mp3",
   pass: "/sounds/pass.mp3",
+  correctRanked: "/sounds/correct_ranked.mp3",
+  dailyCorrect: "/sounds/mixkit-unlock-game-notification-253.wav",
+  imposterReveal: "/sounds/imposter.wav",
 } as const;
 
 const BGM_FILES = {
   ranked: "/sounds/ranked_demo.wav",
   kickoff: "/sounds/gameplay_soundtrack.m4a",
+  search: "/sounds/quizball-search.mp3",
 } as const;
 
 type SoundName = keyof typeof SOUND_FILES;
 type BgmName = keyof typeof BGM_FILES;
 
 // ─── Volume defaults ─────────────────────────────────────────────
-const SFX_VOLUME = 0.4;
-// BGM sits below SFX so whistle/kick/pass stay audible over it.
-const BGM_VOLUME = 0.12;
-const KICKOFF_BGM_VOLUME = 0.5;
+export const GAME_SOUND_VOLUME = {
+  sfx: 0.3,
+  rankedBgm: 0.025,
+  kickoffBgm: 0.025,
+  searchBgm: 0.025,
+} as const;
 // Flip to true to re-enable the ranked BGM loop. Wiring stays in place
 // so this is a one-liner to revive whenever we want music back.
 const BGM_ENABLED = false;
+const MUTE_STORAGE_KEY = 'quizball_audio_muted';
 
 // ─── Howl instances (lazy-loaded) ────────────────────────────────
 const sounds: Partial<Record<SoundName, Howl>> = {};
+
+// Per-sound volume overrides (default is GAME_SOUND_VOLUME.sfx).
+const SOUND_VOLUME: Partial<Record<SoundName, number>> = {
+  correctRanked: 0.45,
+  dailyCorrect: 0.55,
+  imposterReveal: 0.7,
+};
 
 function getSound(name: SoundName): Howl {
   if (!sounds[name]) {
     sounds[name] = new Howl({
       src: [SOUND_FILES[name]],
-      volume: SFX_VOLUME,
+      volume: SOUND_VOLUME[name] ?? GAME_SOUND_VOLUME.sfx,
       preload: true,
+      ...(SOUND_FILES[name].endsWith(".wav") ? { html5: true } : {}),
     });
   }
   return sounds[name]!;
@@ -45,6 +60,8 @@ function getSound(name: SoundName): Howl {
 /** Play a one-shot sound effect */
 export function playSfx(name: SoundName) {
   try {
+    ensureMutePreferenceLoaded();
+    if (_muted || isDocumentHidden()) return;
     const sound = getSound(name);
     sound.play();
   } catch {
@@ -58,33 +75,45 @@ export function setMasterVolume(vol: number) {
 }
 
 let _muted = false;
+let mutePreferenceLoaded = false;
 
 /** Mute / unmute all sounds */
 export function setMuted(muted: boolean) {
+  ensureMutePreferenceLoaded();
   _muted = muted;
   Howler.mute(muted);
+  persistMutePreference(muted);
+  setFallbackMuted(muted);
+  if (!muted) resumeActiveBgm();
 }
 
 /** Check if currently muted */
 export function isMuted(): boolean {
+  ensureMutePreferenceLoaded();
   return _muted;
 }
 
 export function toggleMute(): boolean {
-  _muted = !_muted;
-  Howler.mute(_muted);
+  ensureMutePreferenceLoaded();
+  setMuted(!_muted);
   return _muted;
 }
 
 /** Preload all sounds (call on game start) */
 export function preloadAll() {
+  ensureMutePreferenceLoaded();
   (Object.keys(SOUND_FILES) as SoundName[]).forEach(getSound);
 }
 
 /** Unload all sounds (cleanup) */
 export function unloadAll() {
+  stopBgm(0);
   Object.values(sounds).forEach((s) => s?.unload());
   Object.keys(sounds).forEach((k) => delete sounds[k as SoundName]);
+  Object.values(bgmInstances).forEach((s) => s?.unload());
+  Object.keys(bgmInstances).forEach((k) => delete bgmInstances[k as BgmName]);
+  kickoffAudioFallback?.pause();
+  kickoffAudioFallback = null;
 }
 
 // ─── Background music (looping) ──────────────────────────────────
@@ -92,18 +121,123 @@ export function unloadAll() {
 const bgmInstances: Partial<Record<BgmName, Howl>> = {};
 let activeBgm: BgmName | null = null;
 let kickoffAudioFallback: HTMLAudioElement | null = null;
+let lifecycleHandlersInstalled = false;
+
+function readStoredMutePreference(): boolean | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(MUTE_STORAGE_KEY);
+    if (raw === null) return null;
+    return raw === 'true';
+  } catch {
+    return null;
+  }
+}
+
+function persistMutePreference(muted: boolean): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(MUTE_STORAGE_KEY, muted ? 'true' : 'false');
+  } catch {
+    // Storage can be unavailable in private browsing; audio still works in memory.
+  }
+}
+
+function ensureMutePreferenceLoaded(): void {
+  if (mutePreferenceLoaded) return;
+  mutePreferenceLoaded = true;
+  const stored = readStoredMutePreference();
+  if (stored !== null) _muted = stored;
+  Howler.mute(_muted);
+  setFallbackMuted(_muted);
+}
+
+function getBgmVolume(name: BgmName): number {
+  if (name === 'kickoff') return GAME_SOUND_VOLUME.kickoffBgm;
+  if (name === 'search') return GAME_SOUND_VOLUME.searchBgm;
+  return GAME_SOUND_VOLUME.rankedBgm;
+}
 
 function getBgm(name: BgmName): Howl {
   if (!bgmInstances[name]) {
     bgmInstances[name] = new Howl({
       src: [BGM_FILES[name]],
-      volume: name === 'kickoff' ? KICKOFF_BGM_VOLUME : BGM_VOLUME,
+      volume: getBgmVolume(name),
       loop: true,
       preload: true,
-      ...(name === 'kickoff' ? { format: ['m4a'], html5: true } : {}),
+      ...(name === 'kickoff' ? { format: ['m4a'] } : {}),
     });
   }
   return bgmInstances[name]!;
+}
+
+function isDocumentHidden(): boolean {
+  return typeof document !== 'undefined' && document.visibilityState === 'hidden';
+}
+
+function setFallbackMuted(muted: boolean): void {
+  if (kickoffAudioFallback) kickoffAudioFallback.muted = muted;
+}
+
+function pauseActiveBgmForPageHide(): void {
+  if (!activeBgm) return;
+  if (activeBgm === 'kickoff' && kickoffAudioFallback) {
+    kickoffAudioFallback.pause();
+    return;
+  }
+
+  const sound = bgmInstances[activeBgm];
+  if (!sound?.playing()) return;
+  sound.pause();
+}
+
+function resumeActiveBgm(): void {
+  if (!activeBgm || _muted || isDocumentHidden()) return;
+  if (activeBgm === 'kickoff' && kickoffAudioFallback) {
+    void kickoffAudioFallback.play().catch(() => {});
+    return;
+  }
+
+  const sound = bgmInstances[activeBgm];
+  if (!sound || sound.playing()) return;
+  // If Howler is still loading, let the existing play request finish rather
+  // than queueing another loop instance. This is the common duplicate-audio
+  // path on mobile when the page is backgrounded during startup.
+  if (sound.state() === 'loading') return;
+  sound.off('fade');
+  sound.volume(getBgmVolume(activeBgm));
+  sound.play();
+}
+
+function ensureBgmLifecycleHandlers(): void {
+  if (lifecycleHandlersInstalled || typeof window === 'undefined' || typeof document === 'undefined') {
+    return;
+  }
+  lifecycleHandlersInstalled = true;
+
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'hidden') {
+      pauseActiveBgmForPageHide();
+      return;
+    }
+    resumeActiveBgm();
+  };
+
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  window.addEventListener('pagehide', pauseActiveBgmForPageHide);
+  window.addEventListener('pageshow', resumeActiveBgm);
+  window.addEventListener('focus', resumeActiveBgm);
+}
+
+/** Prepare a background track without starting playback. */
+export function preloadBgm(name: BgmName) {
+  try {
+    ensureMutePreferenceLoaded();
+    ensureBgmLifecycleHandlers();
+    getBgm(name);
+  } catch {
+    // Keep audio best-effort. Missing/blocked audio should never break UI.
+  }
 }
 
 /**
@@ -111,9 +245,16 @@ function getBgm(name: BgmName): Howl {
  * Idempotent: calling with the currently-playing track is a no-op.
  */
 export function playBgm(name: BgmName) {
-  if (!BGM_ENABLED && name !== 'kickoff') return;
+  if (!BGM_ENABLED && name !== 'kickoff' && name !== 'search') return;
   try {
-    if (activeBgm === name && bgmInstances[name]?.playing()) return;
+    ensureMutePreferenceLoaded();
+    ensureBgmLifecycleHandlers();
+    if (activeBgm === name) {
+      const current = bgmInstances[name];
+      current?.off('fade');
+      current?.volume(getBgmVolume(name));
+      return;
+    }
     for (const [key, instance] of Object.entries(bgmInstances)) {
       if (key !== name) instance?.stop();
     }
@@ -122,16 +263,17 @@ export function playBgm(name: BgmName) {
     // otherwise the lingering fade event will fire on the new playback and
     // silence the track mid-loop.
     sound.off('fade');
-    sound.volume(name === 'kickoff' ? KICKOFF_BGM_VOLUME : BGM_VOLUME);
-    if (!sound.playing()) sound.play();
+    sound.volume(getBgmVolume(name));
     activeBgm = name;
+    if (!isDocumentHidden() && !_muted && !sound.playing()) sound.play();
   } catch {
     if (name !== 'kickoff' || typeof Audio === 'undefined') return;
     kickoffAudioFallback ??= new Audio(BGM_FILES.kickoff);
     kickoffAudioFallback.loop = true;
-    kickoffAudioFallback.volume = KICKOFF_BGM_VOLUME;
-    void kickoffAudioFallback.play().catch(() => {});
+    kickoffAudioFallback.muted = _muted;
+    kickoffAudioFallback.volume = getBgmVolume(name);
     activeBgm = name;
+    if (!isDocumentHidden() && !_muted) void kickoffAudioFallback.play().catch(() => {});
   }
 }
 
@@ -153,7 +295,7 @@ export function stopBgm(fadeMs = 0) {
   if (fadeMs > 0 && sound.playing()) {
     const current = sound.volume();
     sound.once('fade', () => sound.stop());
-    sound.fade(typeof current === 'number' ? current : BGM_VOLUME, 0, fadeMs);
+    sound.fade(typeof current === 'number' ? current : getBgmVolume(activeBgm), 0, fadeMs);
   } else {
     sound.stop();
   }

@@ -17,6 +17,11 @@ export function localeFromPathname(pathname: string): Locale {
   return isSupportedLocale(first) ? first : DEFAULT_LOCALE;
 }
 
+export function explicitLocaleFromPathname(pathname: string): Locale | undefined {
+  const first = pathname.replace(/^\/+/, "").split("/")[0];
+  return isSupportedLocale(first) ? first : undefined;
+}
+
 export const OG_LOCALE: Record<Locale, string> = {
   en: "en_US",
   ka: "ka_GE",

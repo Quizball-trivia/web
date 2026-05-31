@@ -14,6 +14,9 @@ interface RankedMatchmakingState {
   rankedFoundOpponent: OpponentInfo | null;
   rankedFoundMyRecentForm: Array<'W' | 'L' | 'D'> | null;
   rankedSearching: boolean;
+  rankedCancelRequestedAt: number | null;
+  markRankedSearchRequested: () => void;
+  markRankedCancelRequested: () => void;
   setRankedSearchStarted: (payload: { durationMs: number }) => void;
   setRankedMatchFound: (payload: { opponent: OpponentInfo; myRecentForm?: Array<'W' | 'L' | 'D'> }) => void;
   setRankedQueueLeft: () => void;
@@ -26,9 +29,32 @@ export const useRankedMatchmakingStore = create<RankedMatchmakingState>((set) =>
   rankedFoundOpponent: null,
   rankedFoundMyRecentForm: null,
   rankedSearching: false,
+  rankedCancelRequestedAt: null,
+  markRankedSearchRequested: () => {
+    logger.info('Ranked matchmaking store mark search requested');
+    set({ rankedCancelRequestedAt: null });
+  },
+  markRankedCancelRequested: () => {
+    logger.info('Ranked matchmaking store mark cancel requested');
+    set({
+      rankedSearchDurationMs: null,
+      rankedSearchStartedAt: null,
+      rankedFoundOpponent: null,
+      rankedFoundMyRecentForm: null,
+      rankedSearching: false,
+      rankedCancelRequestedAt: Date.now(),
+    });
+  },
   setRankedSearchStarted: ({ durationMs }) => {
     logger.info('Ranked matchmaking store set search started', { durationMs });
     set((state) => {
+      if (state.rankedCancelRequestedAt !== null) {
+        logger.warn('Ignoring ranked search_started after cancel request', {
+          cancelledAt: state.rankedCancelRequestedAt,
+          durationMs,
+        });
+        return state;
+      }
       const keepExistingStart = state.rankedSearching && state.rankedSearchStartedAt !== null;
       if (!keepExistingStart) {
         try {
@@ -49,6 +75,14 @@ export const useRankedMatchmakingStore = create<RankedMatchmakingState>((set) =>
   setRankedMatchFound: ({ opponent, myRecentForm }) => {
     logger.info('Ranked matchmaking store set match found', { opponentId: opponent.id, formLen: myRecentForm?.length ?? 0 });
     set((state) => {
+      if (state.rankedCancelRequestedAt !== null) {
+        logger.warn('Ignoring ranked match_found after cancel request', {
+          opponentId: opponent.id,
+          rankedSearching: state.rankedSearching,
+          cancelledAt: state.rankedCancelRequestedAt,
+        });
+        return state;
+      }
       const waitMs = state.rankedSearchStartedAt ? Date.now() - state.rankedSearchStartedAt : 0;
       // Prefer an explicit isAiOpponent field when the backend provides it;
       // fall back to a UUID-regex heuristic on the id otherwise. TODO: have
@@ -71,6 +105,7 @@ export const useRankedMatchmakingStore = create<RankedMatchmakingState>((set) =>
         rankedFoundOpponent: opponent,
         rankedFoundMyRecentForm: myRecentForm ?? null,
         rankedSearching: false,
+        rankedCancelRequestedAt: null,
       };
     });
   },
@@ -91,6 +126,7 @@ export const useRankedMatchmakingStore = create<RankedMatchmakingState>((set) =>
         rankedFoundOpponent: null,
         rankedFoundMyRecentForm: null,
         rankedSearching: false,
+        rankedCancelRequestedAt: state.rankedCancelRequestedAt ?? Date.now(),
       };
     });
   },

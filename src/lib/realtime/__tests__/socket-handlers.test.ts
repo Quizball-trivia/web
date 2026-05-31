@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
+import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
 import { __setSocketOverride } from '../socket-client';
 import type { Socket } from 'socket.io-client';
 import type { ServerToClientEvents, ClientToServerEvents } from '../socket.types';
@@ -73,6 +74,14 @@ describe('registerSocketHandlers', () => {
     // Reset store to clean state
     useRealtimeMatchStore.getState().reset();
     useRealtimeMatchStore.setState({ selfUserId: null });
+    useRankedMatchmakingStore.setState({
+      rankedSearchDurationMs: null,
+      rankedSearchStartedAt: null,
+      rankedFoundOpponent: null,
+      rankedFoundMyRecentForm: null,
+      rankedSearching: false,
+      rankedCancelRequestedAt: null,
+    });
     getMeMock.mockClear();
     authState.setAuthenticated.mockClear();
 
@@ -152,6 +161,84 @@ describe('registerSocketHandlers', () => {
     const draft = useRealtimeMatchStore.getState().draft;
     expect(draft).not.toBeNull();
     expect(draft!.bans).toHaveProperty('user-456');
+  });
+
+  it('ignores ranked lobby state that arrives after local matchmaking cancel', () => {
+    registerSocketHandlers();
+    useRankedMatchmakingStore.getState().markRankedCancelRequested();
+
+    mockSocket.fire('lobby:state', {
+      lobbyId: 'ranked-late',
+      mode: 'ranked',
+      status: 'waiting',
+      inviteCode: null,
+      displayName: 'Ranked',
+      isPublic: false,
+      hostUserId: 'self-1',
+      settings: {
+        gameMode: 'ranked_sim',
+        friendlyRandom: true,
+        friendlyCategoryAId: null,
+        friendlyCategoryBId: null,
+      },
+      members: [
+        { userId: 'self-1', username: 'Self', avatarUrl: null, isReady: true, isHost: true },
+        { userId: 'opp-1', username: 'Opponent', avatarUrl: null, isReady: true, isHost: false },
+      ],
+    });
+
+    expect(useRealtimeMatchStore.getState().lobby).toBeNull();
+  });
+
+  it('ignores lobby state when the current user is not a lobby member', () => {
+    useRealtimeMatchStore.setState({ selfUserId: 'current-user' });
+    registerSocketHandlers();
+
+    mockSocket.fire('lobby:state', {
+      lobbyId: 'other-user-lobby',
+      mode: 'friendly',
+      status: 'waiting',
+      inviteCode: 'OLD123',
+      displayName: 'Other Account Lobby',
+      isPublic: true,
+      hostUserId: 'old-user',
+      settings: {
+        gameMode: 'friendly_party_quiz',
+        friendlyRandom: true,
+        friendlyCategoryAId: null,
+        friendlyCategoryBId: null,
+      },
+      members: [
+        { userId: 'old-user', username: 'Old User', avatarUrl: null, isReady: false, isHost: true },
+      ],
+    });
+
+    expect(useRealtimeMatchStore.getState().lobby).toBeNull();
+  });
+
+  it('stores party dropout and clears rejoin/pause state', () => {
+    registerSocketHandlers();
+    useRealtimeMatchStore.getState().setRejoinAvailable({
+      matchId: 'party-1',
+      mode: 'friendly',
+      variant: 'friendly_party_quiz',
+      opponent: { id: 'opp-1', username: 'Opponent', avatarUrl: null },
+      participants: [],
+      graceMs: 60000,
+      remainingReconnects: 2,
+    });
+    useRealtimeMatchStore.getState().setMatchPaused({ graceMs: 60000, remainingReconnects: 2 });
+
+    mockSocket.fire('match:party_dropout', {
+      matchId: 'party-1',
+      reason: 'disconnect_timeout',
+      message: 'Dropped',
+    });
+
+    const state = useRealtimeMatchStore.getState();
+    expect(state.partyDropout?.matchId).toBe('party-1');
+    expect(state.rejoinMatch).toBeNull();
+    expect(state.matchPaused).toBe(false);
   });
 
   it('patches ranked profile cache from match:final_results when rankedOutcome exists for self', () => {

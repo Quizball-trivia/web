@@ -9,6 +9,7 @@ import { useRealtimeConnection } from "@/lib/realtime/useRealtimeConnection";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
+import { useSiteOnlineStore } from "@/hooks/usePresencePing";
 import { useQueryClient } from "@tanstack/react-query";
 import { lobbiesKeys } from "@/lib/queries/lobbies.queries";
 import { Users } from "lucide-react";
@@ -36,7 +37,7 @@ export function FriendMatchHubPage() {
   
   const lobby = useRealtimeMatchStore(state => state.lobby);
   const sessionState = useRealtimeMatchStore(state => state.sessionState);
-  const onlineUsers = useRealtimeMatchStore(state => state.onlineUsers);
+  const siteOnline = useSiteOnlineStore(state => state.siteOnline);
   const error = useRealtimeMatchStore(state => state.error);
   const clearRealtimeError = useRealtimeMatchStore(state => state.clearError);
   
@@ -122,7 +123,7 @@ export function FriendMatchHubPage() {
     joinTimeoutRef.current = setTimeout(() => {
       clearJoinRetryTimer();
       resetJoinNavigationState();
-      toast.error("Join is taking too long. Please refresh and try again.");
+      toast.error(t('friend.toastJoinTooLong'));
     }, 8000);
     
     // Leave → join: ideally we'd wait for a server ack on lobby:leave, but the
@@ -136,7 +137,7 @@ export function FriendMatchHubPage() {
     }
     setTimeout(() => {
       socket.emit("lobby:join_by_code", { inviteCode: targetCode });
-      toast.info(`Joining ${targetCode}...`);
+      toast.info(t('friend.toastJoiningCode', { code: targetCode }));
     }, lobby?.lobbyId ? LOBBY_LEAVE_JOIN_DELAY_MS : 0);
   };
 
@@ -161,7 +162,7 @@ export function FriendMatchHubPage() {
           clearJoinTimeout();
           clearJoinRetryTimer();
           queueMicrotask(resetJoinNavigationState);
-          toast.error("Could not join lobby right now. Please try again.");
+          toast.error(t('friend.toastJoinFailed'));
           return;
         }
         joinRetryCountRef.current += 1;
@@ -192,7 +193,7 @@ export function FriendMatchHubPage() {
       });
       if (error.code === "LOBBY_NOT_FOUND" && isJoiningCode) {
         void queryClient.invalidateQueries({ queryKey: lobbiesKeys.public() });
-        toast.error("That lobby just closed. Lobby list refreshed.");
+        toast.error(t('friend.toastLobbyClosed'));
       }
       queueMicrotask(resetJoinNavigationState);
       clearJoinTimeout();
@@ -212,7 +213,8 @@ export function FriendMatchHubPage() {
     <div className="container mx-auto max-w-5xl px-4 py-6 animate-in fade-in space-y-6 sm:px-6 lg:px-0">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-         <div className="space-y-1">
+         {/* Centered on mobile to match the centered empty-state below; left-aligned on desktop. */}
+         <div className="space-y-1 text-center md:text-left">
             <h1
                className="uppercase text-white"
                style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: "clamp(22px, 4vw, 36px)", lineHeight: 1 }}
@@ -234,9 +236,9 @@ export function FriendMatchHubPage() {
          >
             <Users className="size-4 text-brand-green" />
             <span>
-              {onlineUsers === null
-                ? t("friendHub.playersOnlineLoading")
-                : t("friendHub.playersOnline", { count: onlineUsers.toLocaleString() })}
+              {siteOnline === null
+                ? t("presence.onlineLoading")
+                : t("presence.online", { count: siteOnline.toLocaleString() })}
             </span>
          </div>
       </div>

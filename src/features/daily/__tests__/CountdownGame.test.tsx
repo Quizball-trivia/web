@@ -29,6 +29,43 @@ const session = {
   ],
 } as const;
 
+const ambiguousSession = {
+  ...session,
+  rounds: [
+    {
+      ...session.rounds[0],
+      answerGroups: [
+        {
+          id: 'a',
+          display: 'Cristiano Ronaldo',
+          acceptedAnswers: ['Cristiano Ronaldo', 'Ronaldo'],
+        },
+        {
+          id: 'b',
+          display: 'Ronaldinho',
+          acceptedAnswers: ['Ronaldinho'],
+        },
+      ],
+    },
+  ],
+} as const;
+
+const typoSession = {
+  ...session,
+  rounds: [
+    {
+      ...session.rounds[0],
+      answerGroups: [
+        {
+          id: 'a',
+          display: 'Fabio Capello',
+          acceptedAnswers: ['Fabio Capello'],
+        },
+      ],
+    },
+  ],
+} as const;
+
 describe('CountdownGame', () => {
   it('accepts aliases and shows the found answer', () => {
     render(
@@ -64,5 +101,37 @@ describe('CountdownGame', () => {
     fireEvent.click(suggestion);
 
     expect(screen.getAllByText('Cristiano Ronaldo').length).toBeGreaterThan(0);
+  });
+
+  it('does not submit an ambiguous short prefix on Enter', () => {
+    render(
+      <CountdownGame
+        session={ambiguousSession as never}
+        onBack={vi.fn()}
+        onComplete={vi.fn()}
+      />
+    );
+
+    const input = screen.getByPlaceholderText('Press Enter to submit...');
+    fireEvent.change(input, { target: { value: 'ron' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    expect(screen.getByText('No answers found yet. Start typing!')).toBeInTheDocument();
+  });
+
+  it('accepts one-letter typos in multi-word answers', () => {
+    render(
+      <CountdownGame
+        session={typoSession as never}
+        onBack={vi.fn()}
+        onComplete={vi.fn()}
+      />
+    );
+
+    const input = screen.getByPlaceholderText('Press Enter to submit...');
+    fireEvent.change(input, { target: { value: 'capelo' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    expect(screen.getAllByText('Fabio Capello').length).toBeGreaterThan(0);
   });
 });

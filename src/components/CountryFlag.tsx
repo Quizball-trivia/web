@@ -1,3 +1,5 @@
+import { normalizeCountryCode } from '@/lib/geo/countryCode';
+
 interface CountryFlagProps {
   code: string;
   shape?: '3x2' | '1x1';
@@ -8,10 +10,13 @@ interface CountryFlagProps {
 }
 
 export function CountryFlag({ code, shape = '3x2', className = '', style }: CountryFlagProps) {
+  const normalizedCode = normalizeCountryCode(code);
+  if (!normalizedCode) return null;
+
   return (
     <span
       aria-hidden
-      className={`fi fi-${code.toLowerCase()} fi-${shape} ${className}`}
+      className={`fi fi-${normalizedCode} fi-${shape} ${className}`}
       style={style}
     />
   );

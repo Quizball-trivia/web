@@ -59,9 +59,11 @@ describe('PartyQuizResultsScreen', () => {
     expect(within(secondPlace).getByText('Mid Score')).toBeInTheDocument();
     expect(within(thirdPlace).getByText('Low Score')).toBeInTheDocument();
 
-    expect(firstPlace).toHaveClass('h-40', 'sm:h-52');
-    expect(secondPlace).toHaveClass('h-32', 'sm:h-40');
-    expect(thirdPlace).toHaveClass('h-24', 'sm:h-32');
+    // Min-heights (not fixed heights) so blocks grow to fit the name + score
+    // instead of clipping; 1st remains the tallest, 3rd the shortest.
+    expect(firstPlace).toHaveClass('min-h-44', 'sm:min-h-52');
+    expect(secondPlace).toHaveClass('min-h-36', 'sm:min-h-44');
+    expect(thirdPlace).toHaveClass('min-h-32', 'sm:min-h-40');
     expect(firstPlace).toHaveStyle({ backgroundColor: '#38B60E' });
     expect(secondPlace).toHaveStyle({ backgroundColor: '#FFE500' });
     expect(thirdPlace).toHaveStyle({ backgroundColor: '#1645FF' });

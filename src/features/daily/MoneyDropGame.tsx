@@ -17,6 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { MoneyDropSession } from "@/lib/domain/dailyChallenge";
 import { useLocale } from "@/contexts/LocaleContext";
+import { trackLifelineUsed } from "@/lib/analytics/game-events";
 
 interface MoneyDropGameProps {
   session: MoneyDropSession;
@@ -142,6 +143,7 @@ function HelpButtons({
   onChangeQuestion: () => void;
   disabled?: boolean;
 }) {
+  const { t } = useLocale();
   const btnBase =
     "flex items-center justify-center gap-1 md:gap-1.5 lg:gap-2 px-3 py-2 md:px-4 md:py-2.5 lg:px-5 lg:py-3 rounded-[16px] font-poppins font-semibold text-xs md:text-sm lg:text-sm text-white transition-colors";
   const btnActive = "bg-white/8 hover:bg-white/14";
@@ -151,11 +153,11 @@ function HelpButtons({
     <div className="flex gap-2">
       <button onClick={onFiftyFifty} disabled={fiftyFiftyUsed || disabled} className={cn(btnBase, fiftyFiftyUsed ? btnUsed : btnActive)}>
         <Split className="size-3.5 lg:size-4" />
-        <span className={cn(fiftyFiftyUsed && "line-through")}>50/50</span>
+        <span className={cn(fiftyFiftyUsed && "line-through")}>{t('dailyGames.fiftyFifty')}</span>
       </button>
       <button onClick={onClue} disabled={clueUsed || clueDisabled || disabled} className={cn(btnBase, clueUsed || clueDisabled ? btnUsed : btnActive)}>
         <Lightbulb className="size-3.5 lg:size-4" />
-        <span className={cn(clueUsed && "line-through")}>Clue</span>
+        <span className={cn(clueUsed && "line-through")}>{t('dailyGames.clue')}</span>
       </button>
       <button
         onClick={onChangeQuestion}
@@ -163,7 +165,7 @@ function HelpButtons({
         className={cn(btnBase, changeQuestionUsed || changeQuestionDisabled ? btnUsed : btnActive)}
       >
         <RefreshCw className="size-3.5 lg:size-4" />
-        <span className={cn(changeQuestionUsed && "line-through")}>Skip</span>
+        <span className={cn(changeQuestionUsed && "line-through")}>{t('dailyGames.skip')}</span>
       </button>
     </div>
   );
@@ -310,6 +312,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
   const handleFiftyFifty = () => {
     if (fiftyFiftyUsed || showResult || hasConfirmed) return;
     setFiftyFiftyUsed(true);
+    trackLifelineUsed(undefined, '5050');
     const wrongAnswers = currentQuestion.options
       .map((_, idx) => idx)
       .filter((idx) => idx !== currentQuestion.correctAnswerIndex);
@@ -326,6 +329,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
     // Only consume the lifeline when this question actually has clue content.
     if (hasClue) {
       setClueUsed(true);
+      trackLifelineUsed(undefined, 'clue');
     }
     setShowClue(true);
   };
@@ -335,6 +339,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
     timeoutHandledRef.current = true;
     deadlineRef.current = null;
     setChangeQuestionUsed(true);
+    trackLifelineUsed(undefined, 'skip');
     setCurrentQuestionIndex((prev) => prev + 1);
     setBets([0, 0, 0, 0]);
     setHiddenAnswers([]);
@@ -416,10 +421,10 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
               >
                 <Lightbulb className="size-4 shrink-0 text-brand-orange" />
                 <p className="text-sm lg:text-base text-brand-slate">
-                  <span className="text-brand-orange font-bold">Clue: </span>
+                  <span className="text-brand-orange font-bold">{t('dailyGames.clue')}: </span>
                   {hasClue
                     ? currentQuestion.clue
-                    : "No clue for this round. You can use Clue on the next question."}
+                    : t('dailyGames.noClueRound')}
                 </p>
               </motion.div>
             )}
@@ -434,7 +439,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
                   {t("dailyGames.placeYourBets")}
                 </span>
                 <span className={cn("text-xs md:text-sm lg:text-base font-black tabular-nums", remaining === 0 ? "text-brand-green-light" : "text-brand-orange")}>
-                  {remaining === 0 ? "All in!" : `${remaining.toLocaleString()} remaining`}
+                  {remaining === 0 ? t('dailyGames.allIn') : t('dailyGames.remaining', { amount: remaining.toLocaleString() })}
                 </span>
               </div>
 
@@ -520,7 +525,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
                       : "bg-brand-green/30 opacity-40 cursor-not-allowed"
                   )}
                 >
-                  {isFullyAllocated ? "Confirm Bets" : `Allocate all ${currentMoney.toLocaleString()} coins`}
+                  {isFullyAllocated ? t('dailyGames.confirmBets') : t('dailyGames.allocateAllCoins', { amount: currentMoney.toLocaleString() })}
                 </button>
               )}
             </div>
@@ -529,7 +534,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
             /* ── Animation Phase ── */
             <div className="space-y-3 lg:space-y-4">
               <div className="text-center text-sm lg:text-base text-brand-slate font-bold uppercase tracking-wider mb-2">
-                Revealing the answer...
+                {t('dailyGames.revealingAnswer')}
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
                 {currentQuestion.options.map((option, index) => {
@@ -644,10 +649,10 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
                 >
                   <div className="mb-2"><Trophy className="size-10 lg:size-12 text-brand-green-light mx-auto" /></div>
                   <div className="text-brand-green-light font-black text-base md:text-lg lg:text-xl">
-                    You saved {formatMoney(bets[currentQuestion.correctAnswerIndex])}!
+                    {t('dailyGames.youSavedAmount', { amount: formatMoney(bets[currentQuestion.correctAnswerIndex]) })}
                   </div>
                   <div className="text-brand-slate text-sm lg:text-base font-bold mt-1">
-                    Lost {formatMoney(currentMoney - bets[currentQuestion.correctAnswerIndex])}
+                    {t('dailyGames.lostAmount', { amount: formatMoney(currentMoney - bets[currentQuestion.correctAnswerIndex]) })}
                   </div>
                 </motion.div>
               ) : (
@@ -659,7 +664,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
                 >
                   <div className="mb-2"><XOctagon className="size-10 lg:size-12 text-brand-red-soft mx-auto" /></div>
                   <div className="text-brand-red-soft font-black text-base md:text-lg lg:text-xl">
-                    Lost all {formatMoney(currentMoney)}
+                    {t('dailyGames.lostAllAmount', { amount: formatMoney(currentMoney) })}
                   </div>
                   <div className="text-brand-slate text-sm lg:text-base font-bold mt-1">
                     {t("dailyGames.betterLuckNextTime")}
@@ -673,8 +678,8 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
                 className="w-full py-4 lg:py-5 rounded-[20px] bg-brand-green hover:bg-brand-green-deep font-poppins font-semibold uppercase tracking-wide text-white text-base lg:text-lg transition-colors flex items-center justify-center gap-2"
               >
                 {bets[currentQuestion.correctAnswerIndex] === 0 || currentQuestionIndex >= questions.length - 1
-                  ? "View Results"
-                  : "Next Question"}
+                  ? t('dailyGames.viewResults')
+                  : t('dailyGames.nextQuestion')}
                 <ArrowRight className="size-4 lg:size-5" />
               </button>
             </div>

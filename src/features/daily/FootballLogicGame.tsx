@@ -106,7 +106,7 @@ export function FootballLogicGame({
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-surface-deep text-white">
+    <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat text-white">
       <DailyChallengeHeader
         onQuit={() => setShowQuitDialog(true)}
         currentIndex={currentQuestionIndex}
@@ -119,7 +119,7 @@ export function FootballLogicGame({
         {/* Question card */}
         {currentQuestion.prompt && (
           <div
-            className="rounded-[24px] bg-surface-page px-5 py-5 text-white sm:px-6 sm:py-6"
+            className="rounded-[24px] border border-white/10 bg-white/5 px-5 py-5 text-white backdrop-blur-sm sm:px-6 sm:py-6"
             style={{
               fontFamily: "'Poppins', sans-serif",
               fontWeight: 700,
@@ -222,7 +222,7 @@ export function FootballLogicGame({
 
         {/* Score */}
         <div className="mt-4 flex items-center justify-between text-sm" style={poppins}>
-          <span className="text-white/55">Score</span>
+          <span className="text-white/55">{copy.score}</span>
           <span className="text-white">{correctCount}</span>
         </div>
       </div>

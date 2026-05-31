@@ -21,6 +21,7 @@ import type {
   MatchAnswerAckPayload,
   MatchFinalResultsPayload,
   MatchForfeitPendingPayload,
+  MatchPartyDropoutPayload,
   MatchPartyStatePayload,
   MatchStatePayload,
   DraftOpponentDisconnectedPayload,
@@ -49,6 +50,12 @@ let _handlersRegistered = false;
 
 function getQueryClient(): QueryClient | null {
   return _queryClient;
+}
+
+function computeServerTimeOffsetMs(serverNow: string | undefined, receivedAtMs = Date.now()): number | undefined {
+  if (!serverNow) return undefined;
+  const serverNowMs = new Date(serverNow).getTime();
+  return Number.isFinite(serverNowMs) ? serverNowMs - receivedAtMs : undefined;
 }
 
 export function registerSocketHandlers(queryClient?: QueryClient): void {
@@ -100,12 +107,31 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   });
 
   socket.on('lobby:state', (data: LobbyState) => {
+    const selfUserId = useRealtimeMatchStore.getState().selfUserId;
     logger.info('Socket event lobby:state', {
       lobbyId: data.lobbyId,
       status: data.status,
       memberCount: data.members.length,
       memberIds: data.members.map((member) => member.userId),
+      selfUserId,
     });
+    if (selfUserId && !data.members.some((member) => member.userId === selfUserId)) {
+      logger.warn('Ignoring lobby state that does not include current user', {
+        lobbyId: data.lobbyId,
+        selfUserId,
+        memberIds: data.members.map((member) => member.userId),
+      });
+      return;
+    }
+    const rankedState = useRankedMatchmakingStore.getState();
+    if (data.mode === 'ranked' && rankedState.rankedCancelRequestedAt !== null && data.status !== 'closed') {
+      logger.warn('Ignoring ranked lobby state after local cancel request', {
+        lobbyId: data.lobbyId,
+        status: data.status,
+        cancelledAt: rankedState.rankedCancelRequestedAt,
+      });
+      return;
+    }
     store.setLobby(data);
   });
 
@@ -211,13 +237,15 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   });
 
   socket.on('match:countdown', (data: MatchCountdownPayload) => {
+    const serverTimeOffsetMs = computeServerTimeOffsetMs(data.serverNow);
     logger.info('Socket event match:countdown', {
       matchId: data.matchId,
       seconds: data.seconds,
       startsAt: data.startsAt,
       reason: data.reason,
+      serverTimeOffsetMs,
     });
-    store.setMatchCountdown(data);
+    store.setMatchCountdown({ ...data, serverTimeOffsetMs });
   });
 
   socket.on('match:state', (data: MatchStatePayload) => {
@@ -244,12 +272,14 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   });
 
   socket.on('match:question', (data: MatchQuestionPayload) => {
+    const serverTimeOffsetMs = computeServerTimeOffsetMs(data.serverNow);
     logger.info('Socket event match:question', {
       matchId: data.matchId,
       qIndex: data.qIndex,
       total: data.total,
       deadlineAt: data.deadlineAt,
       questionKind: data.question.kind,
+      serverTimeOffsetMs,
     });
 
     // Resolve i18n fields to the user's preferred locale.
@@ -263,6 +293,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       : undefined;
     const resolvedData = {
       ...data,
+      serverTimeOffsetMs,
       question:
         data.question.kind === 'multipleChoice'
           ? {
@@ -474,6 +505,14 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       graceMs: data.graceMs,
       remainingReconnects: data.remainingReconnects,
     });
+  });
+
+  socket.on('match:party_dropout', (data: MatchPartyDropoutPayload) => {
+    logger.warn('Socket event match:party_dropout', {
+      matchId: data.matchId,
+      reason: data.reason,
+    });
+    store.setPartyDropout(data);
   });
 
   socket.on('match:resume', (data: MatchResumePayload) => {

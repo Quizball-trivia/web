@@ -63,7 +63,7 @@ export function ShotHUD({
               <AnimatedPointsCounter value={playerPoints} accentClassName="text-brand-yellow" />
             </div>
             <div className="text-[8px] font-black uppercase leading-none tracking-[0.08em] text-white/45 sm:hidden">
-              {playerPoints} pts
+              {playerPoints} {t('possession.pointsLabel')}
             </div>
           </div>
         </div>
@@ -89,7 +89,7 @@ export function ShotHUD({
             {phase === 'shot' ? timeRemaining : '\u2014'}
           </motion.div>
           <div className="-mt-0.5 hidden text-[10px] font-black tracking-[0.18em] text-brand-orange/70 sm:block">
-            {isPlayerAttacker ? 'YOU SHOOT' : 'YOU SAVE'}
+            {isPlayerAttacker ? t('possession.youShoot') : t('possession.youSave')}
           </div>
         </div>
         <div className="flex min-w-0 flex-1 items-center justify-end gap-1 sm:gap-3">
@@ -104,7 +104,7 @@ export function ShotHUD({
               />
             </div>
             <div className="text-[8px] font-black uppercase leading-none tracking-[0.08em] text-white/45 sm:hidden">
-              {opponentPoints} pts
+              {opponentPoints} {t('possession.pointsLabel')}
             </div>
           </div>
           <MatchHudAvatar customization={opponentAvatarCustomization} side="opponent" />

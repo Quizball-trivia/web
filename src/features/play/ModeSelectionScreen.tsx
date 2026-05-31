@@ -18,12 +18,45 @@ import { colors } from '@/lib/colors';
 import { getNextTierBand } from '@/utils/rankedTier';
 
 
+/**
+ * Renders the win-rate stat line ("13% win rate · 104 ranked games") with white
+ * label text but the numeric values highlighted in brand yellow. The line is
+ * split on " · " into its two halves; in both EN and KA each half starts with
+ * its number, so we wrap the leading numeric token of each half in yellow.
+ */
+function WinRateStat({ text, className }: { text: string; className?: string }) {
+  const halves = text.split(' · ');
+  return (
+    <span className={className}>
+      {halves.map((half, i) => {
+        const match = half.match(/^(\d[\d.,]*%?)(.*)$/);
+        return (
+          <span key={i}>
+            {i > 0 && ' · '}
+            {match ? (
+              <>
+                <span className="text-brand-yellow">{match[1]}</span>
+                {match[2]}
+              </>
+            ) : (
+              half
+            )}
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
 function RpProgressBar({ current, target }: { current: number; target: number }) {
   const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
   return (
-    <div className="h-3 md:h-4 w-full rounded-[4px] bg-brand-green-deep overflow-hidden">
+    <div
+      className="h-3.5 md:h-[18px] w-full overflow-hidden rounded-[5px]"
+      style={{ backgroundColor: '#195006' }}
+    >
       <div
-        className="h-full rounded-[4px] bg-brand-yellow transition-all duration-500"
+        className="h-full rounded-[5px] bg-brand-yellow transition-all duration-500"
         style={{ width: `${pct}%` }}
       />
     </div>
@@ -123,24 +156,28 @@ export function ModeSelectionScreen({
         className="relative overflow-hidden rounded-[10px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 active:translate-y-[2px] transition-all"
         style={{ backgroundColor: colors.green.base }}
       >
-        {/* Ranked icon — watermark anchored slightly right of card centre so
-            the big "RANKED MATCH" title on the left doesn't overlap it. */}
+        {/* Ranked trophy — centred horizontally at ~52.6%, anchored from the top
+            at ~15% and sized to ~90% of card height so the wrists run off the
+            bottom edge and clip there (matches Figma node 1361:52, which sits
+            ~104% down the card). The card's overflow-hidden does the clipping. */}
         <Image
-          src="/assets/ranked-icon.webp"
+          src="/assets/brand/ranked-hands-trophy.svg"
           alt=""
-          width={260}
-          height={260}
-          className="hidden lg:block absolute left-[58%] top-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 object-contain pointer-events-none"
+          width={346}
+          height={283}
+          className="hidden lg:block absolute left-[52.6%] top-[15%] h-[90%] w-auto -translate-x-1/2 object-contain object-top pointer-events-none"
         />
 
         <div className="relative z-10 p-4 md:p-7">
           {/* ── Desktop layout ── */}
           <div className="hidden lg:flex items-start gap-6">
-            {/* Left: Title + Play */}
+            {/* Left: Title + Play. Title is capped at the trophy's left edge
+                (~40% of the card) so long locales (e.g. Georgian) wrap onto a
+                second line instead of running under the absolute trophy. */}
             <div className="flex-1 min-w-0">
               <h1
-                className="text-[2.75rem] uppercase text-white"
-                style={rankedTitleStyle}
+                className="max-w-[20rem] text-[clamp(1.75rem,3vw,2.75rem)] uppercase text-white break-words [hyphens:auto]"
+                style={{ ...rankedTitleStyle, lineHeight: 1.15 }}
               >
                 {t('play.rankedMatch')}
               </h1>
@@ -154,7 +191,7 @@ export function ModeSelectionScreen({
 
 
               <div className="mt-5">
-                <div className="flex w-[180px] items-center justify-center rounded-[8px] bg-black h-[56px] text-xl font-black uppercase tracking-wide text-white">
+                <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[16px] bg-surface-page text-xl font-black uppercase tracking-wide text-white">
                   {t('common.play')}
                 </div>
               </div>
@@ -171,11 +208,12 @@ export function ModeSelectionScreen({
                 </div>
               </div>
               {!rankedProfileLoading && (
-                <div className="mt-1.5 text-[11px] font-black uppercase tracking-wide text-white/70">
-                  {t('play.winRateLine', { rate: rankedWinRate, games: rankedGamesPlayed })}
-                </div>
+                <WinRateStat
+                  text={t('play.winRateLine', { rate: rankedWinRate, games: rankedGamesPlayed })}
+                  className="mt-2 block whitespace-nowrap text-[13px] font-black uppercase leading-snug tracking-wide text-white"
+                />
               )}
-              <div className="mt-0.5 text-sm font-black uppercase tracking-wide text-white">
+              <div className="mt-1 text-[17px] font-black uppercase tracking-wide text-white">
                 {isPlacementInProgress
                   ? t(
                       placementMatchesLeft === 1
@@ -184,7 +222,7 @@ export function ModeSelectionScreen({
                       { count: placementMatchesLeft },
                     )
                   : nextTierBand
-                    ? <>{t('play.rpToTier', { rp: Math.max(0, (nextTierTargetRp ?? 0) - displayRp) })}<span className="text-white">{nextTierBand.tier}</span></>
+                    ? <>{t('play.rpToTier', { rp: Math.max(0, (nextTierTargetRp ?? 0) - displayRp) })}<span className="text-brand-yellow">{nextTierBand.tier}</span></>
                     : t('play.maxRankReached')}
               </div>
             </div>
@@ -216,7 +254,7 @@ export function ModeSelectionScreen({
                 <div className="mt-2">
                   <RpProgressBar current={displayRp} target={nextTierTargetRp ?? 600} />
                 </div>
-                <div className="mt-1 text-[9px] font-black uppercase tracking-wide text-white/85">
+                <div className="mt-1.5 text-[12px] font-black uppercase leading-snug tracking-wide text-white">
                   {isPlacementInProgress
                     ? t(
                         placementMatchesLeft === 1
@@ -225,7 +263,7 @@ export function ModeSelectionScreen({
                         { count: placementMatchesLeft },
                       )
                     : nextTierBand
-                      ? <>{t('play.rpToTier', { rp: Math.max(0, (nextTierTargetRp ?? 0) - displayRp) })}<span className="text-white">{nextTierBand.tier}</span></>
+                      ? <>{t('play.rpToTier', { rp: Math.max(0, (nextTierTargetRp ?? 0) - displayRp) })}<span className="text-brand-yellow">{nextTierBand.tier}</span></>
                       : t('play.maxRankReached')}
                 </div>
               </div>
@@ -235,19 +273,20 @@ export function ModeSelectionScreen({
             <div className="mt-3 flex items-end justify-between gap-3">
               <div className="flex flex-col items-start gap-2">
                 <Image
-                  src="/assets/ranked-icon.webp"
+                  src="/assets/brand/ranked-hands-trophy.svg"
                   alt=""
-                  width={160}
-                  height={160}
-                  className="h-[88px] w-[88px] object-contain pointer-events-none"
+                  width={200}
+                  height={200}
+                  className="h-[176px] w-[176px] object-contain pointer-events-none"
                 />
                 {!rankedProfileLoading && (
-                  <div className="text-[10px] font-black uppercase tracking-wide text-white/80">
-                    {t('play.winRateLine', { rate: rankedWinRate, games: rankedGamesPlayed })}
-                  </div>
+                  <WinRateStat
+                    text={t('play.winRateLine', { rate: rankedWinRate, games: rankedGamesPlayed })}
+                    className="block text-[13px] font-black uppercase leading-snug tracking-wide text-white"
+                  />
                 )}
               </div>
-              <div className="mb-1 flex h-[44px] w-[120px] items-center justify-center rounded-[8px] bg-black text-[15px] font-black uppercase tracking-wide text-white">
+              <div className="mb-1 flex h-[44px] w-[120px] items-center justify-center rounded-[12px] bg-surface-page text-[15px] font-black uppercase tracking-wide text-white">
                 {t('common.play')}
               </div>
             </div>
@@ -286,7 +325,7 @@ export function ModeSelectionScreen({
           />
           <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
             <h3
-              className="whitespace-nowrap text-[0.95rem] leading-[1] uppercase text-white md:text-4xl"
+              className="text-[0.95rem] leading-[1.05] uppercase text-white break-words [hyphens:auto] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
               style={friendlyTitleStyle}
             >
               {t('play.friendlyMatch')}
@@ -340,7 +379,7 @@ export function ModeSelectionScreen({
           />
           <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
             <h3
-              className="whitespace-nowrap text-[0.95rem] leading-[1] uppercase text-black md:text-4xl"
+              className="text-[0.95rem] leading-[1.05] uppercase text-black break-words [hyphens:auto] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
               style={dailyTitleStyle}
             >
               {t('play.dailyChallenge')}
@@ -399,7 +438,7 @@ export function ModeSelectionScreen({
               </div>
               <div className="h-3 w-3/4 animate-pulse rounded-full bg-white/12" />
               <div className="mt-2 h-2 w-full animate-pulse rounded-full bg-white/8" />
-              <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#07200C]">
+              <div className="mt-4 h-3 overflow-hidden rounded-full bg-surface-mode-trough">
                 <div className="h-full w-1/4 animate-pulse rounded-full bg-brand-green-light/55" />
               </div>
               <div className="mt-2 flex items-center justify-between">
@@ -436,7 +475,7 @@ export function ModeSelectionScreen({
                 </div>
                 <h4 className="text-[10px] font-black leading-tight text-white uppercase truncate">{getI18nText(objective.title, locale)}</h4>
                 <p className="mt-0.5 line-clamp-2 min-h-[22px] text-[9px] leading-tight text-white/80">{getI18nText(objective.description, locale)}</p>
-                <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#07200C]">
+                <div className="mt-4 h-3 overflow-hidden rounded-full bg-surface-mode-trough">
                   <div className="h-full rounded-full bg-brand-green-light" style={{ width: `${progressPercent}%` }} />
                 </div>
                 <div className="mt-2 flex items-center justify-between text-[9px] font-black uppercase">
@@ -451,7 +490,7 @@ export function ModeSelectionScreen({
           {objectivesLoading && [0, 1, 2].map((item) => (
             <div
               key={item}
-              className="shrink-0 w-[260px] rounded-[10px] bg-[#1A3A1A]/80 p-4 md:w-[300px]"
+              className="shrink-0 w-[260px] rounded-[10px] bg-surface-mode-card/80 p-4 md:w-[300px]"
             >
               <div className="mb-3 flex items-center gap-3">
                 <div className="size-12 shrink-0 animate-pulse rounded-[10px] bg-white/10" />
@@ -460,7 +499,7 @@ export function ModeSelectionScreen({
                   <div className="mt-2 h-2 w-full animate-pulse rounded-full bg-white/8" />
                 </div>
               </div>
-              <div className="mb-2.5 h-3 overflow-hidden rounded-full bg-[#0F260F]">
+              <div className="mb-2.5 h-3 overflow-hidden rounded-full bg-surface-mode-trough-deep">
                 <div className="h-full w-1/4 animate-pulse rounded-full bg-brand-green-light/55" />
               </div>
               <div className="flex items-center justify-between">
@@ -472,7 +511,7 @@ export function ModeSelectionScreen({
           {!objectivesLoading && !hasPreviewObjectives && (
             <Link
               href="/objectives"
-              className="shrink-0 w-[260px] rounded-[10px] bg-[#1A3A1A] p-4 transition-all hover:bg-[#224422] md:w-[300px]"
+              className="shrink-0 w-[260px] rounded-[10px] bg-surface-mode-card p-4 transition-all hover:bg-surface-mode-card-hover md:w-[300px]"
             >
               <div className="mb-3 flex items-center gap-3">
                 <Image src="/assets/obj_icon.png" alt="" width={45} height={44} className="size-12 object-contain" />
@@ -481,7 +520,7 @@ export function ModeSelectionScreen({
                   <p className="truncate text-[11px] font-bold uppercase text-white/60">{t('play.objectivesUnavailableHint')}</p>
                 </div>
               </div>
-              <div className="mb-2.5 h-3 overflow-hidden rounded-full bg-[#0F260F]">
+              <div className="mb-2.5 h-3 overflow-hidden rounded-full bg-surface-mode-trough-deep">
                 <div className="h-full w-[8%] rounded-full bg-brand-green-light" />
               </div>
               <div className="flex items-center justify-between">
@@ -500,7 +539,7 @@ export function ModeSelectionScreen({
                 key={objective.id}
                 href="/objectives"
                 className={cn(
-                  "shrink-0 w-[260px] rounded-[10px] bg-[#1A3A1A] p-4 transition-all hover:bg-[#224422] md:w-[300px]",
+                  "shrink-0 w-[260px] rounded-[10px] bg-surface-mode-card p-4 transition-all hover:bg-surface-mode-card-hover md:w-[300px]",
                   objective.completed && "ring-1 ring-brand-green-light/30"
                 )}
               >
@@ -511,7 +550,7 @@ export function ModeSelectionScreen({
                     <p className="truncate text-[11px] font-bold uppercase text-white/60">{getI18nText(objective.description, locale)}</p>
                   </div>
                 </div>
-                <div className="mb-2.5 h-3 overflow-hidden rounded-full bg-[#0F260F]">
+                <div className="mb-2.5 h-3 overflow-hidden rounded-full bg-surface-mode-trough-deep">
                   <div className="h-full rounded-full bg-brand-green-light" style={{ width: `${progressPercent}%` }} />
                 </div>
                 <div className="flex items-center justify-between">

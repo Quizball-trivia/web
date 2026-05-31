@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, Loader2 } from 'lucide-react';
 import { AppLogo } from '@/components/AppLogo';
@@ -8,6 +8,7 @@ import { AvatarPreview } from '@/components/AvatarPreview';
 import type { AvatarCustomization } from '@/types/game';
 import { AVATAR_COLORS } from '@/lib/avatars';
 import { DEFAULT_HAIR_ID, DEFAULT_JERSEY_ID, DEFAULT_SKIN_ID } from '@/lib/avatars/parts';
+import { trackOnboardingStarted, trackOnboardingStepCompleted } from '@/lib/analytics/game-events';
 import { useLocale } from '@/contexts/LocaleContext';
 
 interface OnboardingFlowProps {
@@ -53,6 +54,14 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
   const [favoriteClub, setFavoriteClub] = useState('');
   const [username, setUsername] = useState('');
   const [avatar, setAvatar] = useState('');
+  // Analytics — fire once on mount + once per forward step transition.
+  // useRef avoids double-firing in React Strict Mode dev double-mount.
+  const trackedStartRef = useRef(false);
+  useEffect(() => {
+    if (trackedStartRef.current) return;
+    trackedStartRef.current = true;
+    trackOnboardingStarted();
+  }, []);
 
   const currentIndex = STEP_ORDER.indexOf(currentStep);
   const progress = ((currentIndex + 1) / STEP_ORDER.length) * 100;
@@ -65,11 +74,15 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
 
   const goNext = () => {
     if (currentIndex >= STEP_ORDER.length - 1) return;
+    // Track completion of the step the user is leaving, before advancing.
+    trackOnboardingStepCompleted(currentStep);
     setDirection('forward');
     setCurrentStep(STEP_ORDER[currentIndex + 1]);
   };
 
   const handleComplete = () => {
+    // Track final step completion before invoking the parent handler.
+    trackOnboardingStepCompleted(currentStep);
     onComplete({
       favoriteClub: favoriteClub.trim(),
       preferredLanguage: preferredLanguage.trim(),

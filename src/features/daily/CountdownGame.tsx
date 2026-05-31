@@ -5,9 +5,14 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { QuitGameDialog } from "./QuitGameDialog";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
-import { Check, CheckCircle2, Clock, Timer, Lightbulb, Trophy, ArrowRight, ArrowLeft } from "lucide-react";
+import { Check, CheckCircle2, Clock, Lightbulb, ArrowRight } from "lucide-react";
 import type { CountdownSession } from "@/lib/domain/dailyChallenge";
 import { useLocale } from "@/contexts/LocaleContext";
+import {
+  countdownMatch,
+  normalizeAnswer,
+  rankCountdownMatches,
+} from "@/lib/answerMatching";
 
 interface AnswerGroup {
   display: string;
@@ -25,87 +30,6 @@ interface CountdownGameProps {
   session: CountdownSession;
   onBack: () => void;
   onComplete: (score: number) => void;
-}
-
-function calculateSimilarity(str1: string, str2: string): number {
-  const s1 = str1.toLowerCase().trim();
-  const s2 = str2.toLowerCase().trim();
-
-  if (s1 === s2) return 1;
-  if (s1.includes(s2) || s2.includes(s1)) return 0.9;
-
-  const matrix: number[][] = [];
-
-  for (let i = 0; i <= s1.length; i++) {
-    matrix[i] = [i];
-  }
-
-  for (let j = 0; j <= s2.length; j++) {
-    matrix[0][j] = j;
-  }
-
-  for (let i = 1; i <= s1.length; i++) {
-    for (let j = 1; j <= s2.length; j++) {
-      if (s1.charAt(i - 1) === s2.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j] + 1
-        );
-      }
-    }
-  }
-
-  const maxLength = Math.max(s1.length, s2.length);
-  const distance = matrix[s1.length][s2.length];
-
-  return 1 - distance / maxLength;
-}
-
-function normalizeAnswer(value: string): string {
-  return value
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
-}
-
-interface RankedAnswerMatch {
-  display: string;
-  score: number;
-}
-
-function rankAnswerMatches(input: string, answerGroups: AnswerGroup[], foundAnswers: string[]): RankedAnswerMatch[] {
-  const normalizedInput = normalizeAnswer(input);
-  if (!normalizedInput) return [];
-
-  const ranked = answerGroups
-    .filter((group) => !foundAnswers.includes(group.display))
-    .map((group) => {
-      const bestScore = group.acceptedAnswers.reduce((best, alias) => {
-        const normalizedAlias = normalizeAnswer(alias);
-        if (!normalizedAlias) return best;
-        if (normalizedInput === normalizedAlias) return Math.max(best, 1);
-        if (normalizedAlias.startsWith(normalizedInput)) return Math.max(best, 0.96);
-        if (normalizedAlias.split(" ").some((token) => token.startsWith(normalizedInput))) return Math.max(best, 0.93);
-        if (normalizedInput.length >= 4) return Math.max(best, calculateSimilarity(normalizedInput, normalizedAlias));
-        return best;
-      }, 0);
-
-      return {
-        display: group.display,
-        score: bestScore,
-      };
-    })
-    .filter((entry) => entry.score >= 0.55)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 3);
-
-  return ranked;
 }
 
 export function CountdownGame({ session, onBack, onComplete }: CountdownGameProps) {
@@ -136,7 +60,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
     questions.length > 0 && currentRound < questions.length && timeRemaining > 0;
   const totalRounds = questions.length;
   const suggestions = useMemo(
-    () => rankAnswerMatches(inputValue, currentQuestion?.answerGroups ?? [], foundAnswers),
+    () => rankCountdownMatches(inputValue, currentQuestion?.answerGroups ?? [], foundAnswers),
     [currentQuestion, foundAnswers, inputValue]
   );
 
@@ -189,39 +113,16 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
 
   const checkAnswer = useCallback(
     (answer: string) => {
-      const normalizedInput = answer.toLowerCase().trim();
-
+      const normalizedInput = normalizeAnswer(answer);
       if (!normalizedInput) return false;
       if (!currentQuestion || !currentQuestion.answerGroups) {
         return false;
       }
 
-      for (const answerGroup of currentQuestion.answerGroups) {
-        if (foundAnswers.includes(answerGroup.display)) {
-          continue;
-        }
-
-        for (const acceptedAnswer of answerGroup.acceptedAnswers) {
-          const normalizedAcceptedAnswer = normalizeAnswer(acceptedAnswer);
-          const similarity = calculateSimilarity(normalizedInput, normalizedAcceptedAnswer);
-          if (normalizedInput === normalizedAcceptedAnswer || similarity >= 0.9) {
-            setFoundAnswers((prev) => [...prev, answerGroup.display]);
-            setRecentAnswer(answerGroup.display);
-            setTimeout(() => setRecentAnswer(null), 1500);
-            return true;
-          }
-        }
-      }
-
-      const [bestSuggestion, secondSuggestion] = rankAnswerMatches(answer, currentQuestion.answerGroups, foundAnswers);
-      if (
-        bestSuggestion &&
-        bestSuggestion.score >= 0.9 &&
-        (normalizeAnswer(answer).length >= 4 || bestSuggestion.score === 1) &&
-        (!secondSuggestion || bestSuggestion.score - secondSuggestion.score >= 0.08)
-      ) {
-        setFoundAnswers((prev) => [...prev, bestSuggestion.display]);
-        setRecentAnswer(bestSuggestion.display);
+      const matchedDisplay = countdownMatch(answer, currentQuestion.answerGroups, foundAnswers);
+      if (matchedDisplay) {
+        setFoundAnswers((prev) => [...prev, matchedDisplay]);
+        setRecentAnswer(matchedDisplay);
         setTimeout(() => setRecentAnswer(null), 1500);
         return true;
       }
@@ -267,13 +168,9 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
     }
 
     if (e.key === "Enter" && inputValue.trim()) {
-      if (suggestions.length > 0 && normalizeAnswer(inputValue).length < 4) {
+      if (suggestions.length === 1 && normalizeAnswer(inputValue).length < 4) {
         e.preventDefault();
-        const idx = Math.min(highlightedSuggestion, suggestions.length - 1);
-        const suggestion = suggestions[idx];
-        if (suggestion) {
-          submitSuggestion(suggestion.display);
-        }
+        submitSuggestion(suggestions[0].display);
         return;
       }
       checkAnswer(inputValue);
@@ -290,7 +187,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
     return (
       <div className="fixed inset-0 z-40 bg-surface-deep font-fun flex items-center justify-center">
         <div className="bg-surface-card rounded-xl border-b-4 border-surface-card-deeper p-6">
-          <p className="text-center text-brand-slate">Loading questions...</p>
+          <p className="text-center text-brand-slate">{t('dailyGames.loadingQuestions')}</p>
         </div>
       </div>
     );
@@ -301,15 +198,15 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
       <div className="fixed inset-0 z-40 bg-surface-deep font-fun flex items-center justify-center p-4">
         <div className="bg-surface-card rounded-xl border-b-4 border-surface-card-deeper p-6 md:p-8 max-w-md w-full text-center space-y-4">
           <div className="mb-4"><CheckCircle2 className="size-14 text-brand-green-light mx-auto" /></div>
-          <h2 className="text-2xl font-black uppercase text-white">Round {currentRound + 1} Complete!</h2>
+          <h2 className="text-2xl font-black uppercase text-white">{t('dailyGames.roundComplete', { round: currentRound + 1 })}</h2>
           <div className="space-y-2">
             <p className="text-brand-slate">{t("dailyGames.youFound")}</p>
             <div className="text-4xl text-brand-cyan font-black">{foundAnswers.length}</div>
-            <p className="text-brand-slate">answers</p>
+            <p className="text-brand-slate">{t('dailyGames.answersWord')}</p>
           </div>
           {currentRound < questions.length - 1 && (
             <div className="pt-4">
-              <p className="text-sm text-brand-slate">Next round starting...</p>
+              <p className="text-sm text-brand-slate">{t('dailyGames.nextRoundStarting')}</p>
             </div>
           )}
         </div>
@@ -318,7 +215,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
   }
 
   return (
-    <div className="fixed inset-0 z-40 bg-surface-deep font-poppins flex flex-col text-white">
+    <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat font-poppins text-white">
       <DailyChallengeHeader
         onQuit={() => setShowQuitDialog(true)}
         currentIndex={currentRound}
@@ -380,7 +277,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
               autoCapitalize="off"
             />
             <p className="text-xs text-brand-slate">
-              <Lightbulb className="size-3.5 inline-block align-text-bottom mr-1 text-brand-orange" />Tip: Don&apos;t worry about exact spelling - close matches count!
+              <Lightbulb className="size-3.5 inline-block align-text-bottom mr-1 text-brand-orange" />{t('dailyGames.spellingTip')}
             </p>
             {suggestions.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-1">
@@ -412,7 +309,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
                   <Check className="size-6 text-white" />
                 </div>
                 <div>
-                  <div className="text-sm text-brand-slate">Correct!</div>
+                  <div className="text-sm text-brand-slate">{t('dailyGames.correctExclaim')}</div>
                   <div className="text-xl font-black text-white">{recentAnswer}</div>
                 </div>
               </div>

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { isAvatarUrl } from "@/lib/avatars";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { usePlayerAvatar } from "@/hooks/usePlayerAvatar";
+import { useLocale } from "@/contexts/LocaleContext";
 import { useTraining } from "../TrainingMatchProvider";
 import { BOT_AVATAR, BOT_NAME } from "../constants";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
@@ -22,6 +23,7 @@ const CARD_COLORS = [
 ];
 
 export function TrainingBanningStage() {
+  const { t } = useLocale();
   const { match, tooltips, banCategories } = useTraining();
   const { player } = usePlayer();
   const { avatarUrl: playerResolvedAvatar, avatarCustomization } = usePlayerAvatar();
@@ -133,7 +135,7 @@ export function TrainingBanningStage() {
                 ) : isAvatarUrl(playerResolvedAvatar) ? (
                   <Image
                     src={playerResolvedAvatar}
-                    alt="You"
+                    alt={t('training.youAlt')}
                     width={56}
                     height={56}
                     unoptimized
@@ -144,7 +146,7 @@ export function TrainingBanningStage() {
                 )}
               </div>
               <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[9px] font-black bg-brand-cyan text-white px-2 py-[2px] rounded-full border-b-2 border-brand-cyan-deep uppercase tracking-wide">
-                YOU
+                {t('training.you')}
               </span>
             </div>
             <div className="hidden sm:block">
@@ -166,11 +168,11 @@ export function TrainingBanningStage() {
             </div>
             <div className="mt-2 bg-brand-red-soft px-3 py-1 rounded-full border-b-[3px] border-brand-red-deep">
               <span className="text-[10px] font-black text-white uppercase tracking-wider">
-                Ban Phase
+                {t('training.banPhase')}
               </span>
             </div>
             <span className="text-[10px] font-extrabold text-brand-slate mt-1.5 uppercase">
-              {currentActor === "player" ? "Your Turn" : "Opponent's Turn"}
+              {currentActor === "player" ? t('training.yourTurn') : t('training.opponentTurn')}
             </span>
           </div>
 
@@ -186,7 +188,7 @@ export function TrainingBanningStage() {
                 {isAvatarUrl(BOT_AVATAR) ? (
                   <Image
                     src={BOT_AVATAR}
-                    alt="Opponent"
+                    alt={t('training.opponentAlt')}
                     width={56}
                     height={56}
                     unoptimized
@@ -197,7 +199,7 @@ export function TrainingBanningStage() {
                 )}
               </div>
               <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[9px] font-black bg-brand-red-soft text-white px-2 py-[2px] rounded-full border-b-2 border-brand-red-deep uppercase tracking-wide">
-                FOE
+                {t('training.foe')}
               </span>
             </div>
             <div className="hidden sm:block text-right">
@@ -234,12 +236,12 @@ export function TrainingBanningStage() {
           className="text-center mb-8 px-6"
         >
           <h2 className="text-3xl font-black text-white uppercase tracking-tight">
-            {phase === "ban" ? "Ban a Category" : "Get Ready!"}
+            {phase === "ban" ? t('training.banACategory') : t('training.getReady')}
           </h2>
           <p className="text-sm text-brand-slate font-bold mt-1.5">
             {phase === "ban"
-              ? "Tap a card to remove it. One category remains for Half 1."
-              : "Match starting with selected Half 1 category..."}
+              ? t('training.banInstructions')
+              : t('training.matchStartingHalf1')}
           </p>
         </motion.div>
 
@@ -325,10 +327,10 @@ export function TrainingBanningStage() {
                               stiffness: 400,
                               damping: 14,
                             }}
-                            className="bg-brand-red-soft px-5 py-2.5 rounded-2xl border-b-4 border-[#CC3E3E] shadow-lg"
+                            className="bg-brand-red-soft px-5 py-2.5 rounded-2xl border-b-4 border-brand-red-soft-deep shadow-lg"
                           >
                             <span className="text-base font-black text-white uppercase tracking-wide">
-                              BANNED
+                              {t('training.bannedLabel')}
                             </span>
                           </motion.div>
                         </motion.div>
@@ -361,7 +363,7 @@ export function TrainingBanningStage() {
           className="text-center mt-1"
         >
           <span className="text-[10px] text-brand-slate font-bold">
-            ← Swipe to see all categories →
+            {t('training.swipeHint')}
           </span>
         </motion.div>
       </div>

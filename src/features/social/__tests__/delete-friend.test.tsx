@@ -31,6 +31,10 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: mockPush,
   }),
+  // LocaleContext calls usePathname() to derive the active SEO locale
+  // (see src/contexts/LocaleContext.tsx). For this test we don't care
+  // about the URL — anything non-localized falls back to "en".
+  usePathname: () => '/',
 }));
 
 vi.mock('@/lib/realtime/socket-client', () => ({

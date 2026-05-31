@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { CheckCircle2, XCircle } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import type { CareerPathSession } from "@/lib/domain/dailyChallenge";
@@ -9,6 +8,9 @@ import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
 import { findAcceptedAnswer } from "./daily-challenge.utils";
 import { QuitGameDialog } from "./QuitGameDialog";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
+import { ResultSplash } from "./components/ResultSplash";
+import { useResultSplash } from "./components/useResultSplash";
+import { DailyChallengeCompleteModal } from "./components/DailyChallengeCompleteModal";
 
 const poppins = {
   fontFamily: "'Poppins', sans-serif",
@@ -34,14 +36,15 @@ export function CareerPathGame({
   const [resolved, setResolved] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [showQuitDialog, setShowQuitDialog] = useState(false);
-  const [lastWasCorrect, setLastWasCorrect] = useState(false);
+  const [finished, setFinished] = useState(false);
+  const { splashProps, fire } = useResultSplash();
   const copy = getDailyChallengeCopy();
 
   const currentQuestion = session.questions[currentQuestionIndex];
 
   const advance = useCallback(() => {
     if (currentQuestionIndex >= session.questions.length - 1) {
-      onComplete(correctCount);
+      setFinished(true);
       return;
     }
 
@@ -49,8 +52,7 @@ export function CareerPathGame({
     setTimeLeft(session.secondsPerQuestion);
     setAnswer("");
     setResolved(false);
-    setLastWasCorrect(false);
-  }, [correctCount, currentQuestionIndex, onComplete, session.questions.length, session.secondsPerQuestion]);
+  }, [currentQuestionIndex, session.questions.length, session.secondsPerQuestion]);
 
   const submitAnswer = useCallback(() => {
     if (resolved || !currentQuestion) {
@@ -64,9 +66,10 @@ export function CareerPathGame({
       setCorrectCount((previous) => previous + 1);
     }
 
-    setLastWasCorrect(isCorrect);
+    // Submit button sits on the right → splash flies in from the right.
+    fire(isCorrect ? "correct" : "wrong", "right");
     setResolved(true);
-  }, [answer, currentQuestion, resolved]);
+  }, [answer, currentQuestion, resolved, fire]);
 
   useEffect(() => {
     if (resolved || !currentQuestion) {
@@ -104,7 +107,7 @@ export function CareerPathGame({
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-surface-deep text-white">
+    <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat text-white">
       <DailyChallengeHeader
         onQuit={() => setShowQuitDialog(true)}
         currentIndex={currentQuestionIndex}
@@ -114,27 +117,16 @@ export function CareerPathGame({
 
       {/* Content */}
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 py-4">
-        {/* Question card */}
-        <div
-          className="rounded-[24px] bg-surface-page px-5 py-5 text-white sm:px-6 sm:py-6"
-          style={{
-            fontFamily: "'Poppins', sans-serif",
-            fontWeight: 700,
-            fontSize: 'clamp(15px, 1.9vw, 26px)',
-          }}
-        >
-          <p className="leading-snug">{currentQuestion.prompt}</p>
-        </div>
-
-        {/* Club path chips */}
-        <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+        {/* Club path chips — the question itself (no separate prompt card). */}
+        <div className="flex flex-wrap items-center justify-center gap-2.5">
           {currentQuestion.clubs.map((club, index) => (
-            <div key={`${club}-${index}`} className="flex items-center gap-2">
+            <div key={`${club}-${index}`} className="flex items-center gap-2.5">
               <span
-                className="rounded-[12px] px-4 py-2.5"
+                className="rounded-[14px] px-5 py-3.5"
                 style={{
                   ...poppins,
-                  fontSize: 'clamp(12px, 1.5vw, 18px)',
+                  fontSize: 'clamp(16px, 2.2vw, 26px)',
+                  fontWeight: 700,
                   border: '2px solid #FFE500',
                   boxShadow: '0 0 6.334px 1.32px rgba(255,229,0,0.15)',
                 }}
@@ -142,7 +134,7 @@ export function CareerPathGame({
                 {club}
               </span>
               {index < currentQuestion.clubs.length - 1 && (
-                <span className="text-lg text-white/35" style={poppins}>→</span>
+                <span className="text-2xl text-white/35" style={poppins}>→</span>
               )}
             </div>
           ))}
@@ -185,28 +177,16 @@ export function CareerPathGame({
           </button>
         </div>
 
-        {/* Result feedback */}
+        {/* Reveal the answer on a wrong/timeout result (correct uses the splash). */}
         {resolved && (
-          <div
-            className="mt-3 flex items-center justify-center gap-2 rounded-[16px] px-4 py-3"
-            style={{
-              ...poppins,
-              fontSize: 'clamp(13px, 1.7vw, 20px)',
-              backgroundColor: lastWasCorrect ? 'rgba(56,182,14,0.15)' : 'rgba(251,49,1,0.15)',
-              border: lastWasCorrect ? '2px solid rgba(56,182,14,0.5)' : '2px solid rgba(251,49,1,0.5)',
-              color: lastWasCorrect ? '#58CC02' : '#FB3101',
-            }}
-          >
-            {lastWasCorrect ? <CheckCircle2 className="size-5" /> : <XCircle className="size-5" />}
-            <span>
-              {lastWasCorrect ? copy.correct : `${copy.answerPrefix}: ${currentQuestion.displayAnswer}`}
-            </span>
-          </div>
+          <p className="mt-3 text-center text-white/55" style={{ ...poppins, fontSize: 'clamp(12px, 1.4vw, 16px)' }}>
+            {`${copy.answerPrefix}: ${currentQuestion.displayAnswer}`}
+          </p>
         )}
 
         {/* Score */}
         <div className="mt-4 flex items-center justify-between text-sm" style={poppins}>
-          <span className="text-white/55">Score</span>
+          <span className="text-white/55">{copy.score}</span>
           <span className="text-white">{correctCount}</span>
         </div>
       </div>
@@ -215,6 +195,16 @@ export function CareerPathGame({
         open={showQuitDialog}
         onOpenChange={setShowQuitDialog}
         onQuit={onBack}
+      />
+
+      <ResultSplash {...splashProps} />
+
+      <DailyChallengeCompleteModal
+        open={finished}
+        title={session.title}
+        correct={correctCount}
+        total={session.questionCount}
+        onDone={() => onComplete(correctCount)}
       />
     </div>
   );

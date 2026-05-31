@@ -23,9 +23,12 @@ import { ChevronLeft, Minus, Plus, X } from 'lucide-react';
 import { FriendLobbyScreen } from '@/features/friend/components/FriendLobbyScreen';
 import { PartyQuizResultsScreen } from '@/features/party/PartyQuizResultsScreen';
 import { RealtimePartyQuizScreen } from '@/features/party/RealtimePartyQuizScreen';
+import type { Socket } from 'socket.io-client';
 import { __setSocketOverride } from '@/lib/realtime/socket-client';
+import type { ClientToServerEvents, ServerToClientEvents } from '@/lib/realtime/socket.types';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useAuthStore } from '@/stores/auth.store';
+import type { User } from '@/lib/types';
 import type {
   LobbyMember,
   LobbyState,
@@ -277,9 +280,10 @@ function makeFinalResults(memberCount: number, totalsByUser: Record<string, numb
 
 // ─── Stub socket ───────────────────────────────────────────────────────────
 
-function createStubSocket(onMatchAnswer: (payload: { matchId: string; qIndex: number; selectedIndex: number | null; timeMs: number }) => void) {
-  /* eslint-disable @typescript-eslint/no-explicit-any */
-  const stub: any = {
+function createStubSocket(
+  onMatchAnswer: (payload: { matchId: string; qIndex: number; selectedIndex: number | null; timeMs: number }) => void,
+): Socket<ServerToClientEvents, ClientToServerEvents> {
+  const stub = {
     id: 'dev-party-stub',
     connected: true,
     active: true,
@@ -302,8 +306,7 @@ function createStubSocket(onMatchAnswer: (payload: { matchId: string; qIndex: nu
     disconnect: () => stub,
     listenersAny: () => [],
     listeners: () => [],
-  };
-  /* eslint-enable @typescript-eslint/no-explicit-any */
+  } as unknown as Socket<ServerToClientEvents, ClientToServerEvents>;
   return stub;
 }
 
@@ -379,8 +382,7 @@ function DevPartyQuizContent() {
         id: SELF_ID,
         nickname: 'You',
         email: 'dev@quizball.io',
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any,
+      } as unknown as User,
       hasBootstrapped: true,
     });
     useRealtimeMatchStore.getState().setSelfUserId(SELF_ID);

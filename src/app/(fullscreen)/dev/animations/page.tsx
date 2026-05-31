@@ -22,7 +22,9 @@ import { useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
 import { RealtimePossessionMatchScreen } from '@/features/possession/RealtimePossessionMatchScreen';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
+import type { Socket } from 'socket.io-client';
 import { __setSocketOverride } from '@/lib/realtime/socket-client';
+import type { ClientToServerEvents, ServerToClientEvents } from '@/lib/realtime/socket.types';
 import type {
   MatchRoundResultPayload,
   MatchStartPayload,
@@ -40,10 +42,20 @@ const DEV_PUT_ORDER_OPPONENT_DELAY_MS = 900;
 const DEV_PUT_ORDER_ROUND_RESULT_DELAY_MS = 2100;
 const DEV_SPECIAL_ROUND_RESULT_DELAY_MS = 1600;
 const DEV_COUNTDOWN_ROUND_RESULT_DELAY_MS = 3200;
+const DEV_PENALTY_ROUND_RESULT_DELAY_MS = 4800;
+const DEV_PENALTY_SCRIPT_KICK_GAP_MS = 9200;
 
 function pointsToBars(points: number): number {
   if (points <= 0) return 0;
   return Math.min(Math.max(Math.round(points / POINTS_PER_BAR), 1), MAX_BARS);
+}
+
+function nextSeat(seat: 1 | 2): 1 | 2 {
+  return seat === 1 ? 2 : 1;
+}
+
+function penaltyPhaseRoundForKickIndex(kickIndex: number): number {
+  return Math.ceil((kickIndex + 1) / 2);
 }
 
 const SAMPLE_QUESTIONS: Array<{
@@ -105,7 +117,7 @@ function makeQuestion(qIndex: number, kind: QuestionKind = 'multipleChoice'): Re
     // 2.5s read phase before options spawn, matching the production reveal
     // window. Lets the question land first; options drop in when timer starts.
     playableAt: new Date(now + 2500).toISOString(),
-    deadlineAt: new Date(now + 2500 + QUESTION_DURATION_MS_BY_KIND[kind]).toISOString(),
+    deadlineAt: new Date(now + 2500 + (QUESTION_DURATION_MS_BY_KIND[kind] ?? QUESTION_DURATION_MS_BY_KIND.multipleChoice)).toISOString(),
     phaseKind: 'normal' as const,
     phaseRound: qIndex < 6 ? qIndex + 1 : qIndex - 5,
     attackerSeat: (qIndex % 2 === 0 ? 1 : 2) as 1 | 2,
@@ -178,6 +190,17 @@ function makeQuestion(qIndex: number, kind: QuestionKind = 'multipleChoice'): Re
   } as ResolvedMatchQuestionPayload;
 }
 
+function makePlayableQuestion(qIndex: number, kind: QuestionKind = 'multipleChoice'): ResolvedMatchQuestionPayload {
+  const question = makeQuestion(qIndex, kind);
+  const now = Date.now();
+  const durationMs = QUESTION_DURATION_MS_BY_KIND[kind] ?? QUESTION_DURATION_MS_BY_KIND.multipleChoice;
+  return {
+    ...question,
+    playableAt: new Date(now - 1000).toISOString(),
+    deadlineAt: new Date(now + durationMs - 1000).toISOString(),
+  };
+}
+
 function makeOpponentMarkerQuestion(qIndex: number): ResolvedMatchQuestionPayload {
   const now = Date.now();
   return {
@@ -223,7 +246,9 @@ function makeMatchState(
     penaltyGoals?: { seat1: number; seat2: number };
     shooterSeat?: 1 | 2 | null;
     phaseKind?: 'normal' | 'last_attack' | 'penalty';
+    phaseRound?: number;
     possessionDiff?: number;
+    speedStreakHolderSeat?: 1 | 2 | null;
   } = { stateVersion: 1 }
 ): MatchStatePayload {
   return {
@@ -231,13 +256,14 @@ function makeMatchState(
     phase,
     half: opts.half ?? 1,
     possessionDiff: opts.possessionDiff ?? 0,
+    speedStreakHolderSeat: opts.speedStreakHolderSeat ?? null,
     normalQuestionsAnsweredInHalf: 0,
     attackerSeat: 1,
     kickOffSeat: 1,
     goals: opts.goals ?? { seat1: 0, seat2: 0 },
     penaltyGoals: opts.penaltyGoals ?? { seat1: 0, seat2: 0 },
     phaseKind: opts.phaseKind ?? 'normal',
-    phaseRound: 1,
+    phaseRound: opts.phaseRound ?? 1,
     shooterSeat: opts.shooterSeat ?? null,
     halftime: {
       deadlineAt: null,
@@ -260,21 +286,24 @@ function makeRoundResult(
   qIndex: number,
   outcome: Outcome,
   scores: { meTotal: number; oppTotal: number },
-  customPoints: { me: number; opp: number }
+  customPoints: { me: number; opp: number },
+  // Dev-only 2× speed-streak preview: when true, my swing is doubled this round
+  // and I hold the streak afterwards (shows the 2× badge + bar jump together).
+  speedStreakMe = false
 ): MatchRoundResultPayload {
   const sample = SAMPLE_QUESTIONS[qIndex % SAMPLE_QUESTIONS.length];
 
   const meCorrect = outcome === 'me-correct' || outcome === 'both-correct' || outcome === 'goal-me';
   const oppCorrect = outcome === 'opp-correct' || outcome === 'both-correct' || outcome === 'goal-opp';
 
-  const goalScoredBySeat: 1 | 2 | null =
-    outcome === 'goal-me' ? 1 : outcome === 'goal-opp' ? 2 : null;
-
   // Points earned only count when that side was correct. Custom sliders let
   // you preview big-vs-small bar battles (e.g. +80 vs +10 → 8 bars vs 1).
-  const mePoints = meCorrect ? customPoints.me : 0;
+  const mePoints = (meCorrect ? customPoints.me : 0) * (speedStreakMe ? 2 : 1);
   const oppPoints = oppCorrect ? customPoints.opp : 0;
   const possessionDelta = mePoints - oppPoints;
+
+  const goalScoredBySeat: 1 | 2 | null =
+    outcome === 'goal-me' ? 1 : outcome === 'goal-opp' ? 2 : null;
 
   return {
     matchId: MATCH_ID,
@@ -289,7 +318,7 @@ function makeRoundResult(
         totalPoints: scores.meTotal + mePoints,
         pointsEarned: mePoints,
         isCorrect: meCorrect,
-        timeMs: 3000,
+        timeMs: speedStreakMe ? 1800 : 3000,
         selectedIndex: meCorrect ? sample.correctIndex : (sample.correctIndex + 1) % 4,
         submittedOrderIds: [],
       },
@@ -308,6 +337,10 @@ function makeRoundResult(
       possessionDelta,
       goalScoredBySeat,
       penaltyOutcome: null,
+      // Hold the streak afterwards (and mark it boosted this round) so the
+      // 2× badge stays lit until cleared by a goal/slower/wrong round.
+      speedStreakHolderSeat: speedStreakMe && !goalScoredBySeat ? 1 : null,
+      speedStreakBoostedSeat: speedStreakMe ? 1 : null,
     },
   };
 }
@@ -319,6 +352,7 @@ const PENALTY_QINDEX_BASE = 1000;
 function makePenaltyQuestion(qIndex: number, shooterSeat: 1 | 2): ResolvedMatchQuestionPayload {
   const sample = SAMPLE_QUESTIONS[qIndex % SAMPLE_QUESTIONS.length];
   const now = Date.now();
+  const kickIndex = Math.max(0, qIndex - PENALTY_QINDEX_BASE);
   return {
     matchId: MATCH_ID,
     qIndex,
@@ -326,7 +360,7 @@ function makePenaltyQuestion(qIndex: number, shooterSeat: 1 | 2): ResolvedMatchQ
     playableAt: new Date(now - 1000).toISOString(),
     deadlineAt: new Date(now + 60_000).toISOString(),
     phaseKind: 'penalty',
-    phaseRound: ((qIndex - PENALTY_QINDEX_BASE) % 10) + 1,
+    phaseRound: penaltyPhaseRoundForKickIndex(kickIndex),
     attackerSeat: shooterSeat,
     shooterSeat,
     question: {
@@ -348,14 +382,16 @@ function makePenaltyRoundResult(
   points: { me: number; opp: number }
 ): MatchRoundResultPayload {
   const sample = SAMPLE_QUESTIONS[qIndex % SAMPLE_QUESTIONS.length];
-  // Field-state derives penaltyOutcome straight from deltas.penaltyOutcome,
-  // so per-player correctness is decorative here — pick a plausible combo:
-  // goal = shooter correct, keeper wrong; saved = keeper correct.
-  const shooterCorrect = outcome === 'goal';
-  const keeperCorrect = outcome === 'saved';
-  const shooterIsMe = shooterSeat === 1;
-  const meCorrect = shooterIsMe ? shooterCorrect : keeperCorrect;
-  const oppCorrect = shooterIsMe ? keeperCorrect : shooterCorrect;
+  const kickIndex = Math.max(0, qIndex - PENALTY_QINDEX_BASE);
+  const keeperSeat = nextSeat(shooterSeat);
+  const meCorrect = points.me > 0;
+  const oppCorrect = points.opp > 0;
+  const timeForSeat = (seat: 1 | 2, correct: boolean) => {
+    if (!correct) return 6000;
+    if (outcome === 'goal') return seat === shooterSeat ? 1400 : 2600;
+    return seat === keeperSeat ? 1400 : 2600;
+  };
+
   return {
     matchId: MATCH_ID,
     qIndex,
@@ -366,7 +402,7 @@ function makePenaltyRoundResult(
         totalPoints: scores.meTotal + points.me,
         pointsEarned: points.me,
         isCorrect: meCorrect,
-        timeMs: meCorrect ? 2500 : 6000,
+        timeMs: timeForSeat(1, meCorrect),
         selectedIndex: meCorrect ? sample.correctIndex : (sample.correctIndex + 1) % 4,
         submittedOrderIds: [],
       },
@@ -374,20 +410,37 @@ function makePenaltyRoundResult(
         totalPoints: scores.oppTotal + points.opp,
         pointsEarned: points.opp,
         isCorrect: oppCorrect,
-        timeMs: oppCorrect ? 3000 : 6000,
+        timeMs: timeForSeat(2, oppCorrect),
         selectedIndex: oppCorrect ? sample.correctIndex : (sample.correctIndex + 2) % 4,
         submittedOrderIds: [],
       },
     },
     phaseKind: 'penalty',
-    phaseRound: null,
+    phaseRound: penaltyPhaseRoundForKickIndex(kickIndex),
     shooterSeat,
     attackerSeat: shooterSeat,
     deltas: {
       possessionDelta: 0,
-      goalScoredBySeat: null,
+      goalScoredBySeat: outcome === 'goal' ? shooterSeat : null,
       penaltyOutcome: outcome,
     },
+  };
+}
+
+type PenaltyKickOptions = {
+  resetTimers?: boolean;
+  emitOpponentAnswered?: boolean;
+  points?: { me: number; opp: number };
+  answerAckDelayMs?: number;
+  opponentAnsweredDelayMs?: number;
+  roundResultDelayMs?: number;
+};
+
+function defaultPenaltyPoints(shooterSeat: 1 | 2, outcome: 'goal' | 'saved'): { me: number; opp: number } {
+  const winningSeat = outcome === 'goal' ? shooterSeat : nextSeat(shooterSeat);
+  return {
+    me: winningSeat === 1 ? 100 : 90,
+    opp: winningSeat === 2 ? 100 : 90,
   };
 }
 
@@ -581,18 +634,17 @@ function makeCluesRoundResult(
 
 // ─── Minimal stub socket — emits go nowhere, .on / .off no-op ──────────────
 
-function createStubSocket() {
+function createStubSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
   // Only the methods the production code touches: emit/on/off/once/connected.
-  // We type-cast to `any` because socket.io-client's exhaustive type union is
-  // not worth replicating — emit() is fire-and-forget and we discard it.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const stub: any = {
+  // We cast through `unknown` because socket.io-client's exhaustive Socket
+  // surface is not worth replicating — emit() is fire-and-forget and we
+  // discard it. Same pattern used in src/lib/realtime/__tests__/socket-handlers.test.ts.
+  const stub = {
     id: 'stub',
     connected: true,
     active: true,
     auth: {},
     emit: (...args: unknown[]) => {
-      // eslint-disable-next-line no-console
       console.debug('[dev/animations] socket.emit ignored', args);
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent<DevSocketEmitDetail>('dev:socket-emit', {
@@ -613,7 +665,7 @@ function createStubSocket() {
     disconnect: () => stub,
     listenersAny: () => [],
     listeners: () => [],
-  };
+  } as unknown as Socket<ServerToClientEvents, ClientToServerEvents>;
   return stub;
 }
 
@@ -632,7 +684,7 @@ function DevAnimationsContent() {
   const router = useRouter();
 
   const store = useRealtimeMatchStore.getState;
-  const match = useRealtimeMatchStore((s) => s.match);
+  const matchId = useRealtimeMatchStore((s) => s.match?.matchId ?? null);
   const matchPhase = useRealtimeMatchStore((s) => s.match?.possessionState?.phase ?? null);
   const currentQIndex = useRealtimeMatchStore((s) => s.match?.currentQuestion?.qIndex ?? null);
 
@@ -948,6 +1000,110 @@ function DevAnimationsContent() {
     );
   }
 
+  function loadCluesOneSubmitScenario(mode: 'correct' | 'wrong' | 'giveUp', autoResolve = false) {
+    setMobilePanelOpen(false);
+    pendingTimers.current.forEach((t) => window.clearTimeout(t));
+    pendingTimers.current = [];
+
+    const s = store();
+    const activeQIndex = s.match?.currentQuestion?.qIndex ?? -1;
+    const qIndex = Math.min(activeQIndex + 1, TOTAL_QUESTIONS - 1);
+    const isCorrect = mode === 'correct';
+    const meClueIndex = isCorrect ? 0 : 2;
+    const mePoints = isCorrect ? 100 : 0;
+    const result = makeCluesRoundResult(qIndex, scoreRef.current, {
+      mePoints,
+      oppPoints: autoResolve ? (isCorrect ? 80 : 100) : 0,
+      meClueIndex,
+      oppClueIndex: autoResolve ? (isCorrect ? 1 : 0) : null,
+    });
+    const me = result.players[SELF_ID];
+    const opp = result.players[OPP_ID];
+    if (!me || !opp || result.reveal.kind !== 'clues') return;
+    const cluesDisplayAnswer = result.reveal.displayAnswer;
+
+    stateVersion.current += 1;
+    s.setMatchState(makeMatchState('NORMAL_PLAY', {
+      stateVersion: stateVersion.current,
+      goals: goalsRef.current,
+      possessionDiff: possessionDiffRef.current,
+    }));
+
+    useRealtimeMatchStore.setState((prev) =>
+      prev.match
+        ? {
+            ...prev,
+            match: {
+              ...prev.match,
+              lastRoundResult: null,
+              answerAck: null,
+              countdownGuessAck: null,
+              cluesGuessAck: null,
+              opponentAnswered: false,
+              opponentSelectedIndex: null,
+              opponentRecentPoints: 0,
+              opponentAnsweredCorrectly: null,
+              currentQuestionPhase: 'reveal',
+            },
+          }
+        : prev
+    );
+
+    s.setMatchQuestion(makePlayableQuestion(qIndex, 'clues'));
+    setNextQuestionKind('clues');
+    setRemountKey((k) => k + 1);
+
+    waitForAnchors(() => {
+      pendingTimers.current.push(
+        window.setTimeout(() => {
+          s.setAnswerAck({
+            matchId: MATCH_ID,
+            qIndex,
+            questionKind: 'clues',
+            selectedIndex: null,
+            isCorrect: me.isCorrect,
+            myTotalPoints: me.totalPoints,
+            oppAnswered: false,
+            pointsEarned: me.pointsEarned,
+            phaseKind: 'normal',
+            phaseRound: result.phaseRound ?? null,
+            clueIndex: me.clueIndex,
+            cluesDisplayAnswer,
+          });
+        }, 450)
+      );
+
+      if (!autoResolve) return;
+
+      pendingTimers.current.push(
+        window.setTimeout(() => {
+          s.setOpponentAnswered({
+            matchId: MATCH_ID,
+            qIndex,
+            opponentTotalPoints: opp.totalPoints,
+            pointsEarned: opp.pointsEarned,
+            isCorrect: opp.isCorrect,
+            selectedIndex: null,
+          });
+        }, 1200)
+      );
+
+      pendingTimers.current.push(
+        window.setTimeout(() => {
+          s.setRoundResult(result);
+        }, 2400)
+      );
+      schedulePostRoundPossessionState(result, 2400);
+    });
+
+    scoreRef.current.meTotal = me.totalPoints;
+    if (autoResolve) {
+      scoreRef.current.oppTotal = opp.totalPoints;
+      if (result.deltas?.goalScoredBySeat === 1) goalsRef.current.seat1 += 1;
+      if (result.deltas?.goalScoredBySeat === 2) goalsRef.current.seat2 += 1;
+    }
+  }
+
   function loadEdgeBarDemo(winner: 'green' | 'red') {
     setMobilePanelOpen(false);
     pendingTimers.current.forEach((t) => window.clearTimeout(t));
@@ -1149,6 +1305,9 @@ function DevAnimationsContent() {
             phaseRound: result.phaseRound ?? null,
             foundCount: me.foundCount,
             clueIndex: me.clueIndex,
+            cluesDisplayAnswer: result.questionKind === 'clues' && result.reveal.kind === 'clues'
+              ? result.reveal.displayAnswer
+              : undefined,
           });
         }, answerAckDelayMs)
       );
@@ -1233,6 +1392,7 @@ function DevAnimationsContent() {
       qIndex?: number;
       guess?: string;
       giveUp?: boolean;
+      timeMs?: number;
     };
     if (data.matchId !== MATCH_ID || typeof data.qIndex !== 'number') return;
 
@@ -1243,39 +1403,61 @@ function DevAnimationsContent() {
     const normalizedGuess = String(data.guess ?? '').trim().toLowerCase();
     const isCorrectGuess = normalizedGuess.includes('ronaldo') || normalizedGuess.includes('cristiano');
     const isGiveUp = data.kind === 'giveUp' || data.giveUp === true;
+    const clueIndex = Math.max(0, Math.min(4, Math.floor(Math.max(0, data.timeMs ?? 0) / 10_000)));
+    const mePoints = isCorrectGuess && !isGiveUp ? Math.max(20, 100 - clueIndex * 20) : 0;
+    const result = makeCluesRoundResult(data.qIndex, scoreRef.current, {
+      mePoints,
+      oppPoints: isCorrectGuess ? 60 : 100,
+      meClueIndex: clueIndex,
+      oppClueIndex: isCorrectGuess ? 2 : 0,
+    });
+    const me = result.players[SELF_ID];
+    const opp = result.players[OPP_ID];
+    if (!me || !opp || result.reveal.kind !== 'clues') return;
+    const cluesDisplayAnswer = result.reveal.displayAnswer;
 
-    if (isGiveUp) {
-      // Mirror production: pressing Give Up resolves the round as a loss
-      // for the player and emits the round_result so the reveal panel can
-      // show the correct answer with the same UI/flow as live gameplay.
-      playPrebuiltSpecialResult(
-        makeCluesRoundResult(data.qIndex, scoreRef.current, { mePoints: 0, meClueIndex: null }),
-        250
-      );
-      return;
-    }
-
-    if (!isCorrectGuess) {
-      s.setCluesGuessAck({
-        matchId: MATCH_ID,
-        qIndex: data.qIndex,
-        clueIndex: 1,
-        revealCount: 2,
-      });
-      return;
-    }
-
-    s.setCluesGuessAck({
+    s.setAnswerAck({
       matchId: MATCH_ID,
       qIndex: data.qIndex,
-      clueIndex: 2,
-      revealCount: 3,
+      questionKind: 'clues',
+      selectedIndex: null,
+      isCorrect: me.isCorrect,
+      myTotalPoints: me.totalPoints,
+      oppAnswered: false,
+      pointsEarned: me.pointsEarned,
+      phaseKind: 'normal',
+      phaseRound: result.phaseRound ?? null,
+      clueIndex: me.clueIndex,
+      cluesDisplayAnswer,
     });
 
-    playPrebuiltSpecialResult(makeCluesRoundResult(data.qIndex, scoreRef.current), 250);
+    pendingTimers.current.push(
+      window.setTimeout(() => {
+        s.setOpponentAnswered({
+          matchId: MATCH_ID,
+          qIndex: data.qIndex,
+          opponentTotalPoints: opp.totalPoints,
+          pointsEarned: opp.pointsEarned,
+          isCorrect: opp.isCorrect,
+          selectedIndex: null,
+        });
+      }, 900)
+    );
+
+    pendingTimers.current.push(
+      window.setTimeout(() => {
+        s.setRoundResult(result);
+      }, DEV_SPECIAL_ROUND_RESULT_DELAY_MS)
+    );
+    schedulePostRoundPossessionState(result, DEV_SPECIAL_ROUND_RESULT_DELAY_MS);
+
+    scoreRef.current.meTotal = me.totalPoints;
+    scoreRef.current.oppTotal = opp.totalPoints;
+    if (result.deltas?.goalScoredBySeat === 1) goalsRef.current.seat1 += 1;
+    if (result.deltas?.goalScoredBySeat === 2) goalsRef.current.seat2 += 1;
   }
 
-  function fireOutcome(outcome: Outcome) {
+  function fireOutcome(outcome: Outcome, speedStreakMe = false) {
     // Mobile: auto-dismiss the controls drawer so the animation has the
     // full viewport. Desktop is unaffected (panel is lg:translate-x-0).
     setMobilePanelOpen(false);
@@ -1284,7 +1466,7 @@ function DevAnimationsContent() {
     const s = store();
     const q = s.match?.currentQuestion;
     if (!q) return;
-    const result = makeRoundResult(q.qIndex, outcome, scoreRef.current, { me: myPoints, opp: oppPoints });
+    const result = makeRoundResult(q.qIndex, outcome, scoreRef.current, { me: myPoints, opp: oppPoints }, speedStreakMe);
     const me = result.players[SELF_ID];
     const opp = result.players[OPP_ID];
     if (!me || !opp) return;
@@ -1339,6 +1521,42 @@ function DevAnimationsContent() {
     scoreRef.current.oppTotal = opp.totalPoints;
     if (outcome === 'goal-me') goalsRef.current.seat1 += 1;
     if (outcome === 'goal-opp') goalsRef.current.seat2 += 1;
+  }
+
+  // Dev demo for the 2× boost flight: turn the badge on first (so it's visible
+  // in the HUD), then fire a boosted round — the +N flight detours through the
+  // now-visible badge and doubles before flying to the bar.
+  function fireBoostDemo() {
+    const s = store();
+    const q = s.match?.currentQuestion;
+    if (!q) return;
+    // Set the live holder in match state (drives the sticky badge) AND a
+    // round result that flips holder null→me (triggers the badge fly-in flight).
+    stateVersion.current += 1;
+    s.setMatchState(makeMatchState('NORMAL_PLAY', {
+      stateVersion: stateVersion.current,
+      possessionDiff: possessionDiffRef.current,
+      speedStreakHolderSeat: 1,
+    }));
+    s.setRoundResult({
+      ...makeRoundResult(q.qIndex, 'me-correct', scoreRef.current, { me: 0, opp: 0 }, true),
+      players: {},
+    });
+    pendingTimers.current.push(
+      window.setTimeout(() => fireOutcome('both-correct', true), 1100),
+    );
+  }
+
+  // Dev demo for losing the 2× streak: clear the holder in match state so the
+  // sticky badge unsticks and drops away.
+  function loseStreakDemo() {
+    const s = store();
+    stateVersion.current += 1;
+    s.setMatchState(makeMatchState('NORMAL_PLAY', {
+      stateVersion: stateVersion.current,
+      possessionDiff: possessionDiffRef.current,
+      speedStreakHolderSeat: null,
+    }));
   }
 
   function previewShot(result: 'saved' | 'miss', attackerSeat: 1 | 2) {
@@ -1653,93 +1871,6 @@ function DevAnimationsContent() {
     );
   }
 
-  function loadPutInOrderPartialScenario() {
-    pendingTimers.current.forEach((t) => window.clearTimeout(t));
-    pendingTimers.current = [];
-
-    const s = store();
-    const activeQIndex = s.match?.currentQuestion?.qIndex ?? -1;
-    const qIndex = Math.min(activeQIndex + 1, TOTAL_QUESTIONS - 1);
-    const myOrder = ['pele', 'maradona', 'mbappe', 'messi', 'ronaldo'];
-    const opponentOrder = ['pele', 'ronaldo', 'maradona', 'messi', 'mbappe'];
-
-    stateVersion.current += 1;
-    s.setMatchState(makeMatchState('NORMAL_PLAY', {
-      stateVersion: stateVersion.current,
-      goals: goalsRef.current,
-      possessionDiff: possessionDiffRef.current,
-    }));
-
-    useRealtimeMatchStore.setState((prev) =>
-      prev.match
-        ? {
-            ...prev,
-            match: {
-              ...prev.match,
-              lastRoundResult: null,
-              answerAck: null,
-              countdownGuessAck: null,
-              cluesGuessAck: null,
-              opponentAnswered: false,
-              opponentSelectedIndex: null,
-              opponentRecentPoints: 0,
-              opponentAnsweredCorrectly: null,
-              currentQuestionPhase: 'reveal',
-            },
-          }
-        : prev
-    );
-
-    s.setMatchQuestion(makeQuestion(qIndex, 'putInOrder'));
-    setNextQuestionKind('putInOrder');
-    setRemountKey((k) => k + 1);
-
-    pendingTimers.current.push(
-      window.setTimeout(() => {
-        const result = makePutInOrderRoundResult(qIndex, myOrder, scoreRef.current, {
-          opponentOrderedItemIds: opponentOrder,
-        });
-        const me = result.players[SELF_ID];
-        const opp = result.players[OPP_ID];
-        if (!me || !opp) return;
-
-        s.setAnswerAck({
-          matchId: MATCH_ID,
-          qIndex,
-          questionKind: 'putInOrder',
-          selectedIndex: null,
-          isCorrect: me.isCorrect,
-          myTotalPoints: me.totalPoints,
-          oppAnswered: false,
-          pointsEarned: me.pointsEarned,
-          phaseKind: 'normal',
-          phaseRound: result.phaseRound ?? null,
-          foundCount: me.foundCount,
-        });
-
-        pendingTimers.current.push(
-          window.setTimeout(() => {
-            s.setOpponentAnswered({
-              matchId: MATCH_ID,
-              qIndex,
-              opponentTotalPoints: opp.totalPoints,
-              pointsEarned: opp.pointsEarned,
-              isCorrect: opp.isCorrect,
-              selectedIndex: null,
-            });
-          }, DEV_PUT_ORDER_OPPONENT_DELAY_MS)
-        );
-
-        pendingTimers.current.push(
-          window.setTimeout(() => {
-            s.setRoundResult(result);
-          }, DEV_PUT_ORDER_ROUND_RESULT_DELAY_MS)
-        );
-        schedulePostRoundPossessionState(result, DEV_PUT_ORDER_ROUND_RESULT_DELAY_MS);
-      }, 900)
-    );
-  }
-
   function enterPenaltyShootout() {
     setMobilePanelOpen(false);
     pendingTimers.current.forEach((t) => window.clearTimeout(t));
@@ -1761,14 +1892,28 @@ function DevAnimationsContent() {
     setRemountKey((k) => k + 1);
   }
 
-  function takePenaltyKick(shooterSeat: 1 | 2, outcome: 'goal' | 'saved') {
+  function takePenaltyKick(
+    shooterSeat: 1 | 2,
+    outcome: 'goal' | 'saved',
+    options: PenaltyKickOptions = {}
+  ) {
     setMobilePanelOpen(false);
-    pendingTimers.current.forEach((t) => window.clearTimeout(t));
-    pendingTimers.current = [];
+    if (options.resetTimers ?? true) {
+      pendingTimers.current.forEach((t) => window.clearTimeout(t));
+      pendingTimers.current = [];
+    }
 
     const s = store();
-    const qIndex = PENALTY_QINDEX_BASE + penaltyKickIndexRef.current;
+    const kickIndex = penaltyKickIndexRef.current;
+    const kickNumber = kickIndex + 1;
+    const phaseRound = penaltyPhaseRoundForKickIndex(kickIndex);
+    const qIndex = PENALTY_QINDEX_BASE + kickIndex;
     penaltyKickIndexRef.current += 1;
+    const answerAckDelayMs = options.answerAckDelayMs ?? 2500;
+    const opponentAnsweredDelayMs = options.opponentAnsweredDelayMs ?? 3500;
+    const roundResultDelayMs = options.roundResultDelayMs ?? DEV_PENALTY_ROUND_RESULT_DELAY_MS;
+    const emitOpponentAnswered = options.emitOpponentAnswered ?? false;
+    const nextShooterSeat = nextSeat(shooterSeat);
 
     stateVersion.current += 1;
     s.setMatchState(
@@ -1778,6 +1923,7 @@ function DevAnimationsContent() {
         goals: goalsRef.current,
         penaltyGoals: penaltyGoalsRef.current,
         phaseKind: 'penalty',
+        phaseRound,
         shooterSeat,
       })
     );
@@ -1804,11 +1950,7 @@ function DevAnimationsContent() {
 
     s.setMatchQuestion(makePenaltyQuestion(qIndex, shooterSeat));
 
-    const winningSeat = outcome === 'goal' ? shooterSeat : (shooterSeat === 1 ? 2 : 1);
-    const points = {
-      me: winningSeat === 1 ? Math.max(myPoints, 80) : 0,
-      opp: winningSeat === 2 ? Math.max(oppPoints, 80) : 0,
-    };
+    const points = options.points ?? defaultPenaltyPoints(shooterSeat, outcome);
     const result = makePenaltyRoundResult(qIndex, shooterSeat, outcome, scoreRef.current, points);
     const me = result.players[SELF_ID];
     const opp = result.players[OPP_ID];
@@ -1831,24 +1973,26 @@ function DevAnimationsContent() {
             oppAnswered: false,
             pointsEarned: me.pointsEarned,
             phaseKind: 'penalty',
-            phaseRound: null,
+            phaseRound,
             shooterSeat,
           });
-        }, 2500)
+        }, answerAckDelayMs)
       );
 
-      pendingTimers.current.push(
-        window.setTimeout(() => {
-          s.setOpponentAnswered({
-            matchId: MATCH_ID,
-            qIndex,
-            opponentTotalPoints: opp.totalPoints,
-            pointsEarned: opp.pointsEarned,
-            isCorrect: opp.isCorrect,
-            selectedIndex: opp.selectedIndex,
-          });
-        }, 3500)
-      );
+      if (emitOpponentAnswered) {
+        pendingTimers.current.push(
+          window.setTimeout(() => {
+            s.setOpponentAnswered({
+              matchId: MATCH_ID,
+              qIndex,
+              opponentTotalPoints: opp.totalPoints,
+              pointsEarned: opp.pointsEarned,
+              isCorrect: opp.isCorrect,
+              selectedIndex: opp.selectedIndex,
+            });
+          }, opponentAnsweredDelayMs)
+        );
+      }
 
       pendingTimers.current.push(
         window.setTimeout(() => {
@@ -1867,10 +2011,69 @@ function DevAnimationsContent() {
               goals: goalsRef.current,
               penaltyGoals: penaltyGoalsRef.current,
               phaseKind: 'penalty',
-              shooterSeat,
+              phaseRound: penaltyPhaseRoundForKickIndex(kickNumber),
+              shooterSeat: nextShooterSeat,
             })
           );
-        }, 4800)
+        }, roundResultDelayMs)
+      );
+    });
+  }
+
+  function runPenaltyShootoutScript() {
+    setMobilePanelOpen(false);
+    pendingTimers.current.forEach((t) => window.clearTimeout(t));
+    pendingTimers.current = [];
+
+    stateVersion.current = 0;
+    scoreRef.current = { meTotal: 0, oppTotal: 0 };
+    goalsRef.current = { seat1: 6, seat2: 6 };
+    penaltyGoalsRef.current = { seat1: 0, seat2: 0 };
+    penaltyKickIndexRef.current = 0;
+    possessionDiffRef.current = 0;
+
+    const s = store();
+    s.reset();
+    s.setSelfUserId(SELF_ID);
+    s.setMatchStart(makeStartPayload());
+    useRealtimeMatchStore.setState((prev) =>
+      prev.match ? { ...prev, match: { ...prev.match, countdownEndsAt: null } } : prev
+    );
+
+    stateVersion.current += 1;
+    s.setMatchState(
+      makeMatchState('PENALTY_SHOOTOUT', {
+        stateVersion: stateVersion.current,
+        half: 2,
+        goals: goalsRef.current,
+        penaltyGoals: penaltyGoalsRef.current,
+        phaseKind: 'penalty',
+        phaseRound: 1,
+        shooterSeat: null,
+      })
+    );
+    setRemountKey((k) => k + 1);
+
+    const script: Array<{
+      shooterSeat: 1 | 2;
+      outcome: 'goal' | 'saved';
+      points: { me: number; opp: number };
+    }> = [
+      { shooterSeat: 2, outcome: 'goal', points: { me: 90, opp: 100 } },
+      { shooterSeat: 1, outcome: 'saved', points: { me: 90, opp: 100 } },
+      { shooterSeat: 2, outcome: 'saved', points: { me: 100, opp: 90 } },
+      { shooterSeat: 1, outcome: 'goal', points: { me: 100, opp: 90 } },
+    ];
+
+    script.forEach((kick, index) => {
+      pendingTimers.current.push(
+        window.setTimeout(() => {
+          takePenaltyKick(kick.shooterSeat, kick.outcome, {
+            resetTimers: false,
+            emitOpponentAnswered: false,
+            points: kick.points,
+          });
+        }, 600 + index * DEV_PENALTY_SCRIPT_KICK_GAP_MS)
       );
     });
   }
@@ -1927,7 +2130,7 @@ function DevAnimationsContent() {
         </div>
 
         <div className="mb-3 rounded-xl bg-surface-deep px-3 py-2 text-[10px] text-white/70 font-mono">
-          <div>match: {match?.matchId ?? '—'}</div>
+          <div>match: {matchId ?? '—'}</div>
           <div>phase: {matchPhase ?? '—'}</div>
           <div>qIndex: {currentQIndex ?? '—'} / {TOTAL_QUESTIONS}</div>
           <div>score: {scoreRef.current.meTotal} : {scoreRef.current.oppTotal}</div>
@@ -1937,7 +2140,7 @@ function DevAnimationsContent() {
         <Group label="Match flow">
           <Btn onClick={() => { start(); setRemountKey((k) => k + 1); }}>↻ reset & restart</Btn>
           <Btn variant="yellow" onClick={startKickoffToMcq}>5s kickoff → MCQ</Btn>
-          <Btn onClick={nextQuestion}>next question</Btn>
+          <Btn onClick={() => nextQuestion()}>next question</Btn>
         </Group>
 
         <Group label="Spawn question kind (drops badge)">
@@ -2029,6 +2232,18 @@ function DevAnimationsContent() {
           </p>
         </Group>
 
+        <Group label="Who Am I one-submit">
+          <Btn variant="yellow" onClick={() => loadCluesOneSubmitScenario('correct')}>correct submit · waiting</Btn>
+          <Btn variant="yellow" onClick={() => loadCluesOneSubmitScenario('wrong')}>wrong submit · waiting</Btn>
+          <Btn onClick={() => loadCluesOneSubmitScenario('giveUp')}>give up · waiting</Btn>
+          <Btn variant="green" onClick={() => loadCluesOneSubmitScenario('correct', true)}>correct → opponent resolves</Btn>
+          <Btn variant="red" onClick={() => loadCluesOneSubmitScenario('wrong', true)}>wrong → opponent scores</Btn>
+          <p className="mt-1 text-[9px] text-brand-slate">
+            Previews the new answer_ack flow: input locks, every clue opens,
+            the answer appears locally, then the round can resolve later.
+          </p>
+        </Group>
+
         <Group label="Score / shot">
           <Btn variant="yellow" onClick={() => loadPutInOrderScenario('goal')}>put-order goal sim</Btn>
           <Btn variant="yellow" onClick={() => loadPutInOrderScenario('partial')}>put-order partial sim</Btn>
@@ -2039,6 +2254,8 @@ function DevAnimationsContent() {
           <Btn variant="yellow" onClick={() => loadSpecialScenario('clues', 'partial')}>who am i partial sim</Btn>
           <Btn variant="yellow" onClick={() => fireOutcome('goal-me')}>⚽ goal · me</Btn>
           <Btn variant="yellow" onClick={() => fireOutcome('goal-opp')}>⚽ goal · opp</Btn>
+          <Btn variant="yellow" onClick={fireBoostDemo}>⚡ 2× boost flight · me</Btn>
+          <Btn onClick={loseStreakDemo}>💥 lose 2× streak</Btn>
           <Btn onClick={() => previewShot('miss', 1)}>miss left · me attacks</Btn>
           <Btn onClick={() => previewShot('miss', 2)}>miss left · opp attacks</Btn>
         </Group>
@@ -2049,14 +2266,15 @@ function DevAnimationsContent() {
         </Group>
 
         <Group label="Penalty shootout sim">
+          <Btn variant="green" onClick={runPenaltyShootoutScript}>run 4-kick full script</Btn>
           <Btn variant="yellow" onClick={() => takePenaltyKick(1, 'goal')}>kick · me scores ⚽</Btn>
           <Btn onClick={() => takePenaltyKick(1, 'saved')}>kick · me saved 🧤</Btn>
           <Btn variant="yellow" onClick={() => takePenaltyKick(2, 'goal')}>kick · opp scores ⚽</Btn>
           <Btn onClick={() => takePenaltyKick(2, 'saved')}>kick · opp saved 🧤</Btn>
           <p className="mt-1 text-[9px] text-brand-slate">
-            Each click fires one penalty kick — sets state with the shooter,
-            pushes the question, then answer ack → opp answered → round
-            result. Penalty goals accumulate across kicks until you re-enter.
+            Full script starts from 6-6, alternates shooters, omits
+            opponent_answered like production penalties, then sends the next
+            shooter state right after each goal/save result.
           </p>
         </Group>
 

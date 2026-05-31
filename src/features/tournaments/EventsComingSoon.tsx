@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from 'motion/react';
 import { Trophy, Sparkles, Zap, Star } from 'lucide-react';
+import { useLocale } from '@/contexts/LocaleContext';
 
 const floatingIcons = [
   { Icon: Trophy, x: -60, y: -80, delay: 0, color: '#FFD700', size: 28, rotate: -15 },
@@ -14,6 +15,8 @@ const floatingIcons = [
 
 export function EventsComingSoon() {
   const shouldReduce = useReducedMotion();
+  const { t } = useLocale();
+  const comingSoonText = t('tournaments.comingSoonHeading');
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 pb-24 font-fun relative overflow-hidden">
@@ -92,8 +95,8 @@ export function EventsComingSoon() {
           transition={{ delay: 0.4, duration: 0.6, ease: 'easeOut' }}
         >
           {/* Letter-by-letter stagger for "COMING SOON" */}
-          <h1 aria-label="Coming Soon" className="flex gap-1">
-            {'COMING SOON'.split('').map((char, i) => (
+          <h1 aria-label={comingSoonText} className="flex gap-1">
+            {comingSoonText.split('').map((char, i) => (
               <motion.span
                 key={i}
                 className="text-3xl sm:text-4xl font-black tracking-wider text-white"
@@ -117,7 +120,7 @@ export function EventsComingSoon() {
             animate={{ opacity: 1 }}
             transition={{ delay: 1.0, duration: 0.6 }}
           >
-            Tournaments, challenges & world events are on the way!
+            {t('tournaments.comingSoonBlurb')}
           </motion.p>
         </motion.div>
 
@@ -155,7 +158,7 @@ export function EventsComingSoon() {
           transition={{ delay: 1.4, type: 'spring', stiffness: 200, damping: 20 }}
         >
           <span className="text-brand-green-light font-bold text-sm tracking-wide">
-            Stay tuned
+            {t('tournaments.stayTuned')}
           </span>
         </motion.div>
       </div>

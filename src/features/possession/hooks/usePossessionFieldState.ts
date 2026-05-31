@@ -7,7 +7,8 @@ import type {
   MatchRoundResultPlayer,
   ResolvedMatchQuestionPayload,
 } from '@/lib/realtime/socket.types';
-import type { DevPossessionAnimation, MatchStatus } from '@/stores/realtimeMatch.store';
+import type { MatchStatePayload, MatchVariant } from '@/lib/realtime/socket.types';
+import type { DevPossessionAnimation } from '@/stores/realtimeMatch.store';
 import { PitchVisualization } from '../components/PitchVisualization';
 import { usePossessionAnimationOrchestrator } from './usePossessionAnimationOrchestrator';
 import { getZone } from './usePossessionMovement';
@@ -45,10 +46,15 @@ export interface PossessionFieldState {
   penaltyDisplayResult: PenaltyResult;
   uiPhase: Phase;
   pitchProps: PitchProps;
+  /** True when I currently hold the 2× speed streak. */
+  speedStreakMine: boolean;
 }
 
 interface UsePossessionFieldStateParams {
-  match: MatchStatus | null;
+  possessionState: MatchStatePayload | null;
+  mySeat: number | null;
+  matchId: string | null;
+  variant: MatchVariant | null;
   localQuestion: ResolvedMatchQuestionPayload | null;
   roundResult: MatchRoundResultPayload | null;
   questionPhase: 'reveal' | 'playing';
@@ -68,7 +74,7 @@ interface UsePossessionFieldStateParams {
 }
 
 function getSeatGoals(params: {
-  possessionState: MatchStatus['possessionState'];
+  possessionState: MatchStatePayload | null;
   mySeat: number | null;
 }) {
   const { possessionState, mySeat } = params;
@@ -90,7 +96,10 @@ function getSeatGoals(params: {
 }
 
 export function usePossessionFieldState({
-  match,
+  possessionState,
+  mySeat,
+  matchId,
+  variant,
   localQuestion,
   roundResult,
   questionPhase,
@@ -108,13 +117,16 @@ export function usePossessionFieldState({
   isHalftime,
   unopposedBarPulse = false,
 }: UsePossessionFieldStateParams): PossessionFieldState {
-  const possessionState = match?.possessionState ?? null;
-  const mySeat = match?.mySeat ?? null;
-  const shooterSeat = possessionState?.shooterSeat ?? null;
   const phaseKind = localQuestion?.phaseKind ?? possessionState?.phaseKind ?? 'normal';
   const isPenaltyQuestion = phaseKind === 'penalty';
   const isLastAttackQuestion = phaseKind === 'last_attack';
   const isShotQuestion = phaseKind === 'shot';
+  const penaltyRoundResult = roundResult && (roundResult.phaseKind ?? phaseKind) === 'penalty'
+    ? roundResult
+    : null;
+  const shooterSeat = isPenaltyQuestion
+    ? (penaltyRoundResult?.shooterSeat ?? localQuestion?.shooterSeat ?? possessionState?.shooterSeat ?? null)
+    : null;
 
   const questionDurationSeconds = getQuestionDurationSeconds(localQuestion);
 
@@ -132,9 +144,9 @@ export function usePossessionFieldState({
     shotBallOriginX,
     visualMyPossessionPct,
   } = usePossessionAnimationOrchestrator({
-    matchId: match?.matchId ?? null,
+    matchId,
     possessionState,
-    matchVariant: match?.variant ?? null,
+    matchVariant: variant,
     mySeat,
     shooterSeat,
     phaseKind,
@@ -198,11 +210,10 @@ export function usePossessionFieldState({
     ? (activeAttackAnimation?.result ?? 'pending')
     : optimisticShotResult;
 
-  const resultShooterIsMe = roundResult?.shooterSeat != null && roundResult.shooterSeat === mySeat;
-
-  const penaltyRoundResult = roundResult && (roundResult.phaseKind ?? phaseKind) === 'penalty'
-    ? roundResult
+  const resultShooterSeat = penaltyRoundResult
+    ? (penaltyRoundResult.shooterSeat ?? localQuestion?.shooterSeat ?? shooterSeat)
     : null;
+  const resultShooterIsMe = resultShooterSeat != null && resultShooterSeat === mySeat;
 
   const immediatePenaltyResult: PenaltyResult = useMemo(() => {
     if (!isPenaltyQuestion || !penaltyRoundResult) return null;
@@ -222,10 +233,10 @@ export function usePossessionFieldState({
 
   const penaltyShotDelayMs = useMemo(() => {
     if (!isPenaltyQuestion || !penaltyRoundResult || !myRound || !opponentRound || !immediatePenaltyResult) return 0;
-    if (match?.variant !== 'ranked_sim') return 0;
+    if (variant !== 'ranked_sim') return 0;
 
     return PENALTY_SCORE_FLIGHT_HANDOFF_MS;
-  }, [immediatePenaltyResult, isPenaltyQuestion, match?.variant, myRound, opponentRound, penaltyRoundResult]);
+  }, [immediatePenaltyResult, isPenaltyQuestion, variant, myRound, opponentRound, penaltyRoundResult]);
 
   const penaltyResultKey = penaltyRoundResult && immediatePenaltyResult
     ? `${penaltyRoundResult.matchId}:${penaltyRoundResult.qIndex}:${immediatePenaltyResult}`
@@ -314,6 +325,17 @@ export function usePossessionFieldState({
 
   const { zone, color: zoneColor } = useMemo(() => getZone(visualMyPossessionPct), [visualMyPossessionPct]);
 
+  // Narrow match.variant to the BarBattle variants the overlay knows
+  // about. Anything else (party-quiz etc.) flows in as undefined, so
+  // PitchVisualization → BarBattleOverlay falls back to the classic
+  // (non-anchored) layout — same observable behavior as the previous
+  // in-component store read.
+  const matchVariant = variant;
+  const barBattleVariant: 'ranked_sim' | 'friendly_possession' | undefined =
+    matchVariant === 'ranked_sim' || matchVariant === 'friendly_possession'
+      ? matchVariant
+      : undefined;
+
   const pitchProps = useMemo((): PitchProps => ({
     playerPosition: visualMyPossessionPct,
     playerAvatarUrl: playerAvatar,
@@ -335,9 +357,11 @@ export function usePossessionFieldState({
     mirrored,
     targetGoal,
     ballOnPlayer,
+    barBattleVariant,
   }), [
     attackerIsMe,
     ballOnPlayer,
+    barBattleVariant,
     delayedIsShooter,
     isPenaltyQuestion,
     isShotQuestion,
@@ -348,7 +372,6 @@ export function usePossessionFieldState({
     playerAvatar,
     playerUsername,
     questionPhase,
-    roundResolved,
     shotAnimationVariant,
     shotBallOriginX,
     shotResult,
@@ -356,6 +379,12 @@ export function usePossessionFieldState({
     targetGoal,
     visualMyPossessionPct,
   ]);
+
+  // Sticky across questions: read the live streak holder from match state (not
+  // the transient round result). The round-result delta only drives the
+  // one-shot fly-in / score-doubling moment, handled in the flight overlay.
+  const speedStreakMine =
+    mySeat != null && possessionState?.speedStreakHolderSeat === mySeat;
 
   return {
     mySeat,
@@ -382,5 +411,6 @@ export function usePossessionFieldState({
     penaltyDisplayResult,
     uiPhase,
     pitchProps,
+    speedStreakMine,
   };
 }

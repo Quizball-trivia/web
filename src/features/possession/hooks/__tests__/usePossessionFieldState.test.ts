@@ -11,6 +11,7 @@ import {
   GOAL_ATTACK_START_DELAY_MS,
   GOAL_FIELD_CENTER_RESET_MS,
   GOAL_SHOT_TO_CELEBRATION_MS,
+  PENALTY_ICON_SWAP_DELAY_MS,
 } from '../../realtimePossession.helpers';
 import { usePossessionFieldState } from '../usePossessionFieldState';
 
@@ -58,6 +59,38 @@ function makeRoundResult(
       penaltyOutcome: null,
       goalScoredBySeat,
     },
+  };
+}
+
+function makePenaltyRoundResult(
+  qIndex: number,
+  shooterSeat: 1 | 2,
+  outcome: 'goal' | 'saved'
+): MatchRoundResultPayload {
+  return {
+    matchId: MATCH_ID,
+    qIndex,
+    questionKind: 'multipleChoice',
+    reveal: { kind: 'multipleChoice', correctIndex: 0 },
+    players: {},
+    phaseKind: 'penalty',
+    phaseRound: 1,
+    shooterSeat,
+    attackerSeat: null,
+    deltas: {
+      possessionDelta: 0,
+      penaltyOutcome: outcome,
+      goalScoredBySeat: outcome === 'goal' ? shooterSeat : null,
+    },
+  };
+}
+
+function matchFieldParams(match: MatchStatus) {
+  return {
+    possessionState: match.possessionState,
+    mySeat: match.mySeat,
+    matchId: match.matchId,
+    variant: match.variant,
   };
 }
 
@@ -135,7 +168,7 @@ describe('usePossessionFieldState', () => {
     };
 
     const { result, rerender } = renderHook((props: { match: MatchStatus }) => usePossessionFieldState({
-      match: props.match,
+      ...matchFieldParams(props.match),
       localQuestion: makeQuestion(0),
       roundResult: null,
       questionPhase: 'playing',
@@ -166,7 +199,7 @@ describe('usePossessionFieldState', () => {
 
   it('resets the field to center when the second half starts', async () => {
     const { result, rerender } = renderHook((props: { match: MatchStatus }) => usePossessionFieldState({
-      match: props.match,
+      ...matchFieldParams(props.match),
       localQuestion: makeQuestion(6),
       roundResult: null,
       questionPhase: 'playing',
@@ -202,7 +235,7 @@ describe('usePossessionFieldState', () => {
       match: MatchStatus;
       roundResult: MatchRoundResultPayload | null;
     }) => usePossessionFieldState({
-      match: props.match,
+      ...matchFieldParams(props.match),
       localQuestion: makeQuestion(5),
       roundResult: props.roundResult,
       questionPhase: 'playing',
@@ -246,7 +279,7 @@ describe('usePossessionFieldState', () => {
       match: MatchStatus;
       roundResult: MatchRoundResultPayload | null;
     }) => usePossessionFieldState({
-      match: props.match,
+      ...matchFieldParams(props.match),
       localQuestion: makeQuestion(5),
       roundResult: props.roundResult,
       questionPhase: 'playing',
@@ -296,7 +329,7 @@ describe('usePossessionFieldState', () => {
       match: MatchStatus;
       roundResult: MatchRoundResultPayload | null;
     }) => usePossessionFieldState({
-      match: props.match,
+      ...matchFieldParams(props.match),
       localQuestion: makeQuestion(5, 'normal', 1),
       roundResult: props.roundResult,
       questionPhase: 'playing',
@@ -347,7 +380,7 @@ describe('usePossessionFieldState', () => {
       match: MatchStatus;
       roundResult: MatchRoundResultPayload | null;
     }) => usePossessionFieldState({
-      match: props.match,
+      ...matchFieldParams(props.match),
       localQuestion: makeQuestion(5, 'normal', 1),
       roundResult: props.roundResult,
       questionPhase: 'playing',
@@ -396,7 +429,7 @@ describe('usePossessionFieldState', () => {
       match: MatchStatus;
       localQuestion: ResolvedMatchQuestionPayload;
     }) => usePossessionFieldState({
-      match: props.match,
+      ...matchFieldParams(props.match),
       localQuestion: props.localQuestion,
       roundResult: null,
       questionPhase: 'playing',
@@ -452,5 +485,83 @@ describe('usePossessionFieldState', () => {
     });
 
     expect(result.current.pitchProps.targetGoal).toBe('left');
+  });
+
+  it('keeps the resolved penalty shooter/keeper roles while next shooter state arrives', async () => {
+    const myRound = {
+      selectedIndex: 1,
+      isCorrect: false,
+      timeMs: 3200,
+      pointsEarned: 0,
+      totalPoints: 100,
+      submittedOrderIds: [],
+    };
+    const opponentRound = {
+      selectedIndex: 0,
+      isCorrect: true,
+      timeMs: 1800,
+      pointsEarned: 90,
+      totalPoints: 190,
+      submittedOrderIds: [],
+    };
+    const penaltyQuestion = {
+      ...makeQuestion(8, 'penalty', null),
+      phaseRound: 1,
+      shooterSeat: 2 as const,
+    };
+
+    const { result, rerender } = renderHook((props: {
+      match: MatchStatus;
+      roundResult: MatchRoundResultPayload | null;
+    }) => usePossessionFieldState({
+      ...matchFieldParams(props.match),
+      localQuestion: penaltyQuestion,
+      roundResult: props.roundResult,
+      questionPhase: 'playing',
+      roundResolved: Boolean(props.roundResult),
+      answerAck: null,
+      opponentAnsweredCorrectly: true,
+      myRound,
+      opponentRound,
+      devPossessionAnimation: null,
+      clearDevPossessionAnimation: vi.fn(),
+      playerAvatar: '/me.png',
+      opponentAvatar: '/opp.png',
+      playerUsername: 'me',
+      opponentUsername: 'opp',
+      isHalftime: false,
+    }), {
+      initialProps: {
+        match: makeMatch(0, {
+          phase: 'PENALTY_SHOOTOUT',
+          half: 2,
+          phaseKind: 'penalty',
+          phaseRound: 1,
+          shooterSeat: 2,
+        }),
+        roundResult: null as MatchRoundResultPayload | null,
+      },
+    });
+
+    expect(result.current.pitchProps.penaltyMode?.isPlayerShooter).toBe(false);
+
+    rerender({
+      match: makeMatch(0, {
+        phase: 'PENALTY_SHOOTOUT',
+        half: 2,
+        phaseKind: 'penalty',
+        phaseRound: 1,
+        shooterSeat: 1,
+        penaltyGoals: { seat1: 0, seat2: 1 },
+      }),
+      roundResult: makePenaltyRoundResult(8, 2, 'goal'),
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(PENALTY_ICON_SWAP_DELAY_MS + 50);
+    });
+
+    expect(result.current.resultShooterIsMe).toBe(false);
+    expect(result.current.pitchProps.penaltyMode?.isPlayerShooter).toBe(false);
   });
 });

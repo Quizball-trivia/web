@@ -12,11 +12,12 @@
  *
  * Triggers (when `match.variant === 'ranked_sim'`):
  *   - Player flight: fires when `answerAck` arrives with `pointsEarned > 0`,
- *     gated on phaseKind === normal.
+ *     gated on phaseKind === normal, last_attack, or penalty.
  *     Deduped by `answerAck.qIndex`.
  *   - Opponent flight: fires when `opponentAnswered` flips true with
  *     `opponentAnsweredCorrectly === true && opponentRecentPoints > 0`,
- *     gated similarly. Deduped by the current question's qIndex.
+ *     gated similarly and delayed until the local question is playable.
+ *     Deduped by the current question's qIndex.
  *
  * Returns the active flights list + handlers ready to feed into
  * `BarBattleFlightOverlay`.
@@ -29,6 +30,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useShallow } from 'zustand/shallow';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import type { FlightSpec } from '../components/BarBattleFlightOverlay';
 import { logger } from '@/utils/logger';
@@ -52,7 +54,7 @@ function resolveFlightPoints(
 }
 
 function isFlightPhaseKind(kind: string | undefined): boolean {
-  return kind === 'normal' || kind === 'penalty';
+  return kind === 'normal' || kind === 'last_attack' || kind === 'penalty';
 }
 
 function findScoreAnchor(side: Side): DOMRect | null {
@@ -68,6 +70,20 @@ function findPitchAvatar(side: Side): DOMRect | null {
 function findPitchBarTarget(side: Side): DOMRect | null {
   if (typeof document === 'undefined') return null;
   return findVisibleRect(`[data-pitch-bar-target="${side}"]`);
+}
+
+// The 2× speed-streak badge in the HUD. When visible, the +N flight detours
+// through it and the number doubles (the badge stays put).
+function findSpeedStreakBadge(side: Side): DOMRect | null {
+  if (typeof document === 'undefined') return null;
+  return findVisibleRect(`[data-speed-streak-badge="${side}"]`);
+}
+
+// The always-present resting slot for the 2× badge — the target the incoming
+// "2× earned" flight lands at.
+function findSpeedStreakSlot(side: Side): DOMRect | null {
+  if (typeof document === 'undefined') return null;
+  return findVisibleRect(`[data-speed-streak-slot="${side}"]`);
 }
 
 function findPitchField(): DOMRect | null {
@@ -205,10 +221,24 @@ function computeFallbackBarLaneTarget(
 }
 
 export function usePossessionBarBattleFlights() {
-  const match = useRealtimeMatchStore((s) => s.match);
+  const barBattleMatch = useRealtimeMatchStore(useShallow((s) => ({
+    variant: s.match?.variant ?? null,
+    matchId: s.match?.matchId ?? null,
+    mySeat: s.match?.mySeat ?? null,
+    currentQIndex: s.match?.currentQuestion?.qIndex ?? null,
+    currentQuestionPhase: s.match?.currentQuestionPhase ?? 'reveal',
+    currentPhaseKind: s.match?.currentQuestion?.phaseKind ?? null,
+    possessionPhaseKind: s.match?.possessionState?.phaseKind ?? null,
+    speedStreakHolderSeat: s.match?.possessionState?.speedStreakHolderSeat ?? null,
+    answerAck: s.match?.answerAck ?? null,
+    lastRoundResult: s.match?.lastRoundResult ?? null,
+    opponentAnswered: s.match?.opponentAnswered ?? false,
+    opponentAnsweredCorrectly: s.match?.opponentAnsweredCorrectly ?? null,
+    opponentRecentPoints: s.match?.opponentRecentPoints ?? 0,
+  })));
   const selfUserId = useRealtimeMatchStore((s) => s.selfUserId);
   // Only fire flights for ranked-sim matches (the new bar-battle layout).
-  const enabled = match?.variant === 'ranked_sim';
+  const enabled = barBattleMatch.variant === 'ranked_sim';
 
   const [flights, setFlights] = useState<FlightSpec[]>([]);
   const [suppressScoreSplash, setSuppressScoreSplash] = useState(false);
@@ -219,8 +249,8 @@ export function usePossessionBarBattleFlights() {
   const opponentFiredQRef = useRef<string | null>(null);
   const pendingFlightKeysRef = useRef<Set<string>>(new Set());
 
-  const currentQIndex = match?.currentQuestion?.qIndex ?? null;
-  const currentMatchId = match?.matchId ?? null;
+  const currentQIndex = barBattleMatch.currentQIndex;
+  const currentMatchId = barBattleMatch.matchId;
   const currentKey = currentMatchId != null && currentQIndex != null
     ? `${currentMatchId}:${currentQIndex}`
     : null;
@@ -264,8 +294,8 @@ export function usePossessionBarBattleFlights() {
     };
   }, [enabled, currentQIndex]);
 
-  const phaseKindFromState = match?.currentQuestion?.phaseKind
-    ?? match?.possessionState?.phaseKind
+  const phaseKindFromState = barBattleMatch.currentPhaseKind
+    ?? barBattleMatch.possessionPhaseKind
     ?? 'normal';
 
   const enqueueFlight = useCallback((params: {
@@ -280,6 +310,9 @@ export function usePossessionBarBattleFlights() {
     const id = ++flightSeqRef.current;
     const addFlight = () => {
       const barTargetRect = findPitchBarTarget(params.side);
+      // If the 2× streak badge is showing for this side, route the +N through
+      // it so the number visibly doubles mid-flight.
+      const badgeRect = !params.failed ? findSpeedStreakBadge(params.side) : null;
       setFlights((prev) => [...prev, {
         id,
         side: params.side,
@@ -289,6 +322,7 @@ export function usePossessionBarBattleFlights() {
           : computeFallbackBarLaneTarget(params.targetRect, params.opponentRect, params.pitchRect),
         points: params.points,
         failed: params.failed,
+        boostVia: badgeRect ? clampFlightPoint(rectCentre(badgeRect)) : undefined,
       }]);
     };
 
@@ -346,7 +380,6 @@ export function usePossessionBarBattleFlights() {
 
       pendingFlightKeysRef.current.delete(pendingKey);
       // Fallback to ArenaScoreSplash when DOM anchors are missing.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSuppressScoreSplash(false);
       logger.warn(`${params.logLabel} skipped: anchor missing`, {
         questionKind: params.questionKind,
@@ -363,7 +396,7 @@ export function usePossessionBarBattleFlights() {
   // Fires regardless of correctness — wrong/zero-point answers get a "failed"
   // flight that falls off the bottom of the screen instead of reaching the
   // pitch, so the player always sees their splash react to the answer.
-  const answerAck = match?.answerAck;
+  const answerAck = barBattleMatch.answerAck;
   useEffect(() => {
     if (!enabled || !answerAck) return;
     const points = resolveFlightPoints(answerAck.pointsEarned, answerAck.questionKind, answerAck.foundCount);
@@ -371,6 +404,8 @@ export function usePossessionBarBattleFlights() {
     const phaseKind = answerAck.phaseKind ?? 'normal';
     if (!isFlightPhaseKind(phaseKind)) return;
     const ackKey = `${answerAck.matchId}:${answerAck.qIndex}`;
+    if (currentKey !== ackKey) return;
+    if (barBattleMatch.currentQuestionPhase !== 'playing') return;
     if (playerFiredQRef.current === ackKey) return;
 
     enqueueFlightFromDom({
@@ -381,12 +416,12 @@ export function usePossessionBarBattleFlights() {
       logLabel: 'Bar-battle player flight',
       questionKind: answerAck.questionKind,
     });
-  }, [enabled, answerAck, enqueueFlightFromDom]);
+  }, [barBattleMatch.currentQuestionPhase, currentKey, enabled, answerAck, enqueueFlightFromDom]);
 
   // Fallback: if the client missed its immediate answer_ack, fire the same
   // player flight from the authoritative round_result so the user still sees
   // their own scoring motion.
-  const roundResult = match?.lastRoundResult ?? null;
+  const roundResult = barBattleMatch.lastRoundResult;
   useEffect(() => {
     if (!enabled || !roundResult || !selfUserId) return;
     const phaseKind = roundResult.phaseKind ?? phaseKindFromState;
@@ -414,6 +449,7 @@ export function usePossessionBarBattleFlights() {
   // when match:opponent_answered was not emitted or arrived too early.
   useEffect(() => {
     if (!enabled || !roundResult || !selfUserId) return;
+    if (barBattleMatch.currentQuestionPhase !== 'playing') return;
     const phaseKind = roundResult.phaseKind ?? phaseKindFromState;
     if (!isFlightPhaseKind(phaseKind)) return;
     const roundKey = `${roundResult.matchId}:${roundResult.qIndex}`;
@@ -432,15 +468,16 @@ export function usePossessionBarBattleFlights() {
       logLabel: 'Bar-battle opponent fallback flight',
       questionKind: roundResult.questionKind,
     });
-  }, [enabled, enqueueFlightFromDom, phaseKindFromState, roundResult, selfUserId]);
+  }, [barBattleMatch.currentQuestionPhase, enabled, enqueueFlightFromDom, phaseKindFromState, roundResult, selfUserId]);
 
   // ── Opponent flight on opponent answer ──────────────────────────────────
-  const opponentAnswered = match?.opponentAnswered ?? false;
-  const opponentAnsweredCorrectly = match?.opponentAnsweredCorrectly ?? null;
-  const opponentRecentPoints = match?.opponentRecentPoints ?? 0;
+  const opponentAnswered = barBattleMatch.opponentAnswered;
+  const opponentAnsweredCorrectly = barBattleMatch.opponentAnsweredCorrectly;
+  const opponentRecentPoints = barBattleMatch.opponentRecentPoints;
   useEffect(() => {
     if (!enabled) return;
     if (!opponentAnswered) return;
+    if (barBattleMatch.currentQuestionPhase !== 'playing') return;
     // Fire flights for both correct and wrong opponent answers. The wrong/
     // zero-point case renders a "failed" flight that falls off-screen.
     if (currentQIndex == null) return;
@@ -462,10 +499,60 @@ export function usePossessionBarBattleFlights() {
     opponentAnswered,
     opponentAnsweredCorrectly,
     opponentRecentPoints,
+    barBattleMatch.currentQuestionPhase,
     currentQIndex,
     currentKey,
     phaseKindFromState,
   ]);
+
+  // ── 2× badge fly-in when the player newly earns the streak ──────────────
+  // Driven by the LIVE match-state holder (the source of truth that survives
+  // across questions), not the transient round result. When the holder
+  // transitions to my seat, fly a "2×" token from the answer source to the HUD
+  // badge slot, where the sticky badge takes over.
+  const mySeat = barBattleMatch.mySeat;
+  const liveHolderSeat = barBattleMatch.speedStreakHolderSeat;
+  const prevHolderRef = useRef<1 | 2 | null>(null);
+  const seenFirstHolderRef = useRef(false);
+  useEffect(() => {
+    if (!enabled) {
+      prevHolderRef.current = liveHolderSeat;
+      return;
+    }
+    // First observation (mount / reconnect / state resync): seed the ref to the
+    // current live holder and DON'T fire — otherwise an already-held streak
+    // would look like a fresh null→me earn and trigger a fake fly-in.
+    if (!seenFirstHolderRef.current) {
+      seenFirstHolderRef.current = true;
+      prevHolderRef.current = liveHolderSeat;
+      return;
+    }
+    const prev = prevHolderRef.current;
+    prevHolderRef.current = liveHolderSeat;
+    // Only fly the token on a fresh null/opponent → me transition.
+    if (mySeat == null || liveHolderSeat !== mySeat || prev === mySeat) return;
+
+    const launch = (retries: number) => {
+      const sourceRect = findScoreAnchor('player');
+      const slotRect = findSpeedStreakSlot('player');
+      if (sourceRect && slotRect) {
+        const id = ++flightSeqRef.current;
+        setFlights((prevFlights) => [...prevFlights, {
+          id,
+          side: 'player',
+          kind: 'badge',
+          source: clampFlightPoint(rectCentre(sourceRect)),
+          target: clampFlightPoint(rectCentre(slotRect)),
+          points: 0,
+        }]);
+        return;
+      }
+      if (retries > 0 && typeof window !== 'undefined') {
+        window.setTimeout(() => launch(retries - 1), 80);
+      }
+    };
+    launch(4);
+  }, [enabled, liveHolderSeat, mySeat]);
 
   // Drop flights from the list once they finish animating. The overlay
   // handles enter/exit; we just keep state lean.

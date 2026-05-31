@@ -13,14 +13,27 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Bell, ChevronLeft, Globe, LogOut, Shield, Trash2, Volume2, HelpCircle, RotateCcw } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Bell, ChevronLeft, Globe, KeyRound, LogOut, Phone, Shield, Trash2, Volume2, HelpCircle, RotateCcw } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { SettingsSection } from "./components/SettingsSection";
 import { SettingsToggle } from "./components/SettingsToggle";
+import { PasswordForm } from "@/features/auth/PasswordForm";
 import { toast } from "sonner";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { useLocale } from "@/contexts/LocaleContext";
+import { trackSettingsOpened } from "@/lib/analytics/game-events";
 import { resetOwnOnboarding, updateMe } from "@/lib/api/endpoints";
+import { startGeorgianPhoneLink, resetPassword, verifyGeorgianPhoneLink } from "@/lib/auth/auth.service";
+import { normalizeGeorgianPhone, validateGeorgianPhone, validateOtp } from "@/lib/auth/validation";
+import { useGeorgianPhoneAuthAvailability } from "@/lib/auth/useGeorgianPhoneAuthAvailability";
+import { ApiError } from "@/lib/api/api";
 import { requestAccountDeletion } from "@/lib/repositories/users.repo";
 import { type Locale } from "@/lib/i18n/messages";
 import { trackLanguageSwitched } from "@/lib/analytics/game-events";
@@ -46,6 +59,15 @@ interface SettingsScreenProps {
 export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const { logout, user, setAuthenticated } = useAuthStore();
   const { locale, setLocale, t } = useLocale();
+  const phoneAuthAvailability = useGeorgianPhoneAuthAvailability();
+
+  // Analytics: fire once per mount so re-renders don't double-count.
+  const settingsOpenedTrackedRef = useRef(false);
+  useEffect(() => {
+    if (settingsOpenedTrackedRef.current) return;
+    settingsOpenedTrackedRef.current = true;
+    try { trackSettingsOpened(); } catch { /* best-effort */ }
+  }, []);
 
   // Preferences state - initialized from storage
   const [soundEnabled, setSoundEnabled] = useState(DEFAULT_PREFERENCES.soundEnabled);
@@ -56,11 +78,22 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [phoneDialogOpen, setPhoneDialogOpen] = useState(false);
+  const [phoneStep, setPhoneStep] = useState<"phone" | "otp">("phone");
+  const [phoneInput, setPhoneInput] = useState("");
+  const [phoneOtp, setPhoneOtp] = useState("");
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [phoneNotice, setPhoneNotice] = useState<string | null>(null);
+  const [isUpdatingPhone, setIsUpdatingPhone] = useState(false);
 
   const isInitialMount = useRef(true);
   const deletionConfirmWord = t("settings.deleteAccountConfirmWord");
   const canConfirmDeletion = deleteConfirmation === deletionConfirmWord && !isDeletingAccount;
   const canUseDevReset = user?.role === "admin";
+  const currentPhone = user?.phone_number ?? null;
+  const canUseGeorgianPhoneAuth = phoneAuthAvailability.isAvailable;
 
   // Load preferences from storage on mount - intentional initialization pattern
   useEffect(() => {
@@ -89,9 +122,93 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
     storage.set(STORAGE_KEYS.USER_PREFERENCES, prefs);
   }, [soundEnabled, musicEnabled, invitesEnabled, questAlertsEnabled]);
 
+  useEffect(() => {
+    if (!canUseGeorgianPhoneAuth && phoneDialogOpen) {
+      setPhoneDialogOpen(false);
+    }
+  }, [canUseGeorgianPhoneAuth, phoneDialogOpen]);
+
   const handleLogout = async () => {
     await logout();
     window.location.href = "/"; // Force full reload/redirect
+  };
+
+  // Add or change the password on the current Supabase account. Works for
+  // Google-created users too — it effectively adds a password to the same
+  // account (uses the logged-in user's token via the api client).
+  const handleUpdatePassword = async (newPassword: string) => {
+    setIsUpdatingPassword(true);
+    try {
+      await resetPassword(newPassword);
+      toast.success(t("settings.changePasswordSuccess"));
+      setPasswordDialogOpen(false);
+    } catch {
+      toast.error(t("settings.changePasswordFailed"));
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
+
+  const resetPhoneDialogState = () => {
+    setPhoneStep("phone");
+    setPhoneInput(currentPhone ?? "");
+    setPhoneOtp("");
+    setPhoneError(null);
+    setPhoneNotice(null);
+  };
+
+  const openPhoneDialog = () => {
+    if (!canUseGeorgianPhoneAuth) {
+      return;
+    }
+    resetPhoneDialogState();
+    setPhoneDialogOpen(true);
+  };
+
+  const handlePhoneSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setPhoneError(null);
+    setPhoneNotice(null);
+
+    const normalizedPhone = normalizeGeorgianPhone(phoneInput);
+    const errorKey = phoneStep === "phone"
+      ? validateGeorgianPhone(phoneInput)
+      : validateOtp(phoneOtp);
+    if (errorKey) {
+      setPhoneError(t(errorKey));
+      return;
+    }
+
+    setIsUpdatingPhone(true);
+    try {
+      if (phoneStep === "phone") {
+        const result = await startGeorgianPhoneLink(normalizedPhone);
+        setPhoneInput(result.phone);
+        if (!result.otp_required) {
+          toast.success(t("settings.phoneAlreadyLinked"));
+          setPhoneDialogOpen(false);
+          return;
+        }
+        setPhoneStep("otp");
+        setPhoneNotice(t("settings.phoneCodeSent", { phone: result.phone }));
+        return;
+      }
+
+      const updated = await verifyGeorgianPhoneLink(normalizedPhone, phoneOtp);
+      setAuthenticated(updated);
+      toast.success(t("settings.phoneLinkSuccess"));
+      setPhoneDialogOpen(false);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 409) {
+        setPhoneError(t("settings.phoneLinkedElsewhere"));
+      } else if (phoneStep === "otp") {
+        setPhoneError(t("settings.phoneOtpFailed"));
+      } else {
+        setPhoneError(t("settings.phoneLinkFailed"));
+      }
+    } finally {
+      setIsUpdatingPhone(false);
+    }
   };
 
   const handleDeleteAccount = async () => {
@@ -226,6 +343,62 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
 
          {/* Account & Safety */}
          <SettingsSection title={t("settings.accountAndSafety")} icon={<Shield className="size-5" />}>
+            {canUseGeorgianPhoneAuth ? (
+              <div
+                role="button"
+                tabIndex={0}
+                aria-haspopup="dialog"
+                className="group flex items-center justify-between p-3 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                onClick={openPhoneDialog}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    openPhoneDialog();
+                  }
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/15 transition-colors">
+                    <Phone className="size-4" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-sm">{t("settings.addOrChangePhone")}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {currentPhone
+                        ? t("settings.phoneCurrentDescription", { phone: currentPhone })
+                        : t("settings.phoneNotLinkedDescription")}
+                    </div>
+                  </div>
+                </div>
+                <ChevronLeft className="size-4 rotate-180 text-muted-foreground" />
+              </div>
+            ) : null}
+
+            <div
+              role="button"
+              tabIndex={0}
+              aria-haspopup="dialog"
+              className="group flex items-center justify-between p-3 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              onClick={() => setPasswordDialogOpen(true)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setPasswordDialogOpen(true);
+                }
+              }}
+            >
+               <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/15 transition-colors">
+                     <KeyRound className="size-4" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-sm">{t("settings.addOrChangePassword")}</div>
+                    <div className="text-xs text-muted-foreground">{t("settings.addOrChangePasswordDescription")}</div>
+                  </div>
+               </div>
+               <ChevronLeft className="size-4 rotate-180 text-muted-foreground" />
+            </div>
+
             <div
               role="button"
               tabIndex={0}
@@ -311,6 +484,123 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
          </SettingsSection>
       </div>
 
+      <Dialog
+        open={canUseGeorgianPhoneAuth && phoneDialogOpen}
+        onOpenChange={(open) => {
+          if (isUpdatingPhone) return;
+          if (open) {
+            resetPhoneDialogState();
+          }
+          setPhoneDialogOpen(open);
+        }}
+      >
+        <DialogContent className="max-w-md rounded-[24px] border-0 bg-brand-blue p-8 sm:p-10">
+          <DialogHeader>
+            <DialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
+              {t("settings.changePhoneTitle")}
+            </DialogTitle>
+            <DialogDescription className="mt-3 text-center font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-[14px]">
+              {phoneStep === "otp"
+                ? t("settings.changePhoneOtpDescription", { phone: normalizeGeorgianPhone(phoneInput) })
+                : t("settings.changePhoneModalDescription")}
+            </DialogDescription>
+          </DialogHeader>
+
+          <form className="mt-6 space-y-4" onSubmit={handlePhoneSubmit}>
+            <label className="block">
+              <span className="mb-1.5 block font-poppins text-xs font-semibold uppercase tracking-wide text-white/70">
+                {t("welcome.phoneLabel")}
+              </span>
+              <div className="relative">
+                <Phone className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-white/45" />
+                <Input
+                  type="tel"
+                  value={phoneInput}
+                  onChange={(event) => {
+                    setPhoneInput(event.target.value);
+                    setPhoneError(null);
+                    setPhoneNotice(null);
+                  }}
+                  placeholder={t("welcome.phonePlaceholder")}
+                  className="h-[54px] rounded-[18px] border-2 border-white/15 bg-white/10 pl-11 font-poppins text-base font-semibold text-white placeholder:text-white/40 focus-visible:border-white/40 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  disabled={isUpdatingPhone || phoneStep === "otp"}
+                />
+              </div>
+            </label>
+
+            {phoneStep === "otp" ? (
+              <label className="block">
+                <span className="mb-1.5 block font-poppins text-xs font-semibold uppercase tracking-wide text-white/70">
+                  {t("welcome.otpLabel")}
+                </span>
+                <Input
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={phoneOtp}
+                  onChange={(event) => {
+                    setPhoneOtp(event.target.value.replace(/\D/g, "").slice(0, 6));
+                    setPhoneError(null);
+                  }}
+                  placeholder={t("welcome.otpPlaceholder")}
+                  className="h-[54px] rounded-[18px] border-2 border-white/15 bg-white/10 text-center font-poppins text-lg font-bold tracking-[0.5em] text-white placeholder:tracking-normal placeholder:text-white/40 focus-visible:border-white/40 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  disabled={isUpdatingPhone}
+                />
+              </label>
+            ) : null}
+
+            {phoneError ? (
+              <p className="font-poppins text-xs font-bold text-brand-red-light" role="alert">
+                {phoneError}
+              </p>
+            ) : null}
+            {phoneNotice ? (
+              <p className="rounded-[16px] bg-white/10 px-4 py-3 text-center font-poppins text-xs font-semibold leading-snug text-white/85">
+                {phoneNotice}
+              </p>
+            ) : null}
+
+            <Button
+              type="submit"
+              disabled={isUpdatingPhone || !phoneInput || (phoneStep === "otp" && phoneOtp.length === 0)}
+              className="h-[54px] w-full rounded-[28px] bg-brand-yellow font-poppins text-sm font-semibold uppercase tracking-wide text-black hover:bg-brand-yellow-deep disabled:opacity-60"
+            >
+              {isUpdatingPhone
+                ? t("resetPassword.submitting")
+                : phoneStep === "otp"
+                  ? t("settings.phoneVerifyCode")
+                  : t("settings.phoneSendCode")}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={passwordDialogOpen}
+        onOpenChange={(open) => {
+          if (isUpdatingPassword) return;
+          setPasswordDialogOpen(open);
+        }}
+      >
+        <DialogContent className="max-w-md rounded-[24px] border-0 bg-brand-blue p-8 sm:p-10">
+          <DialogHeader>
+            <DialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
+              {t("settings.changePasswordTitle")}
+            </DialogTitle>
+            <DialogDescription className="mt-3 text-center font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-[14px]">
+              {t("settings.changePasswordModalDescription")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-6">
+            <PasswordForm
+              onSubmit={handleUpdatePassword}
+              submitting={isUpdatingPassword}
+              submitLabel={t("settings.changePasswordSubmit")}
+              submittingLabel={t("resetPassword.submitting")}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <AlertDialog
         open={deleteDialogOpen}
         onOpenChange={(open) => {
@@ -322,8 +612,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
         }}
       >
         <AlertDialogContent
-          className="max-w-md w-[92vw] rounded-[24px] border-0 p-8 font-poppins shadow-none sm:p-10"
-          style={{ backgroundColor: '#1645FF' }}
+          className="max-w-md w-[92vw] rounded-[24px] border-0 bg-brand-blue p-8 font-poppins shadow-none sm:p-10"
         >
           <AlertDialogHeader>
             <AlertDialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">

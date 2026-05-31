@@ -29,17 +29,10 @@ import { Check, Loader2, Lock, X } from "lucide-react";
 import { purchaseStoreWithCoins } from "@/lib/repositories/store.repo";
 import { queryKeys } from "@/lib/queries/queryKeys";
 import { ApiError } from "@/lib/api/api";
+import { useLocale } from "@/contexts/LocaleContext";
 import type { AvatarCustomization } from "@/types/game";
 
 type SlotTab = "skin" | "jersey" | "hair" | "glasses" | "facialHair";
-
-const TAB_LABELS: Record<SlotTab, string> = {
-  skin: "Skin",
-  jersey: "Jersey",
-  hair: "Hair",
-  glasses: "Glasses",
-  facialHair: "Facial Hair",
-};
 
 const TAB_ORDER: SlotTab[] = ["skin", "jersey", "hair", "glasses", "facialHair"];
 
@@ -62,8 +55,17 @@ export function AvatarPicker({
 }: AvatarPickerProps) {
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
+  const { t } = useLocale();
   const { data: inventoryData } = useStoreInventory();
   const [activeTab, setActiveTab] = useState<SlotTab>("skin");
+
+  const TAB_LABELS: Record<SlotTab, string> = {
+    skin: t('profile.avatarPicker.tabSkin'),
+    jersey: t('profile.avatarPicker.tabJersey'),
+    hair: t('profile.avatarPicker.tabHair'),
+    glasses: t('profile.avatarPicker.tabGlasses'),
+    facialHair: t('profile.avatarPicker.tabFacialHair'),
+  };
   const [pendingPurchase, setPendingPurchase] = useState<{
     type: "skin" | "part";
     skin?: SkinPart;
@@ -112,19 +114,19 @@ export function AvatarPicker({
       const p = pendingPurchase;
       if (p?.type === "skin" && p.skin) {
         persist({ ...current, skin: p.skin.id });
-        toast.success(`${p.skin.name} skin equipped.`);
+        toast.success(t('profile.skinEquipped', { name: p.skin.name }));
       } else if (p?.type === "part" && p.part) {
         persist({ ...current, [p.part.slot]: p.part.id });
-        toast.success(`${p.part.name} equipped.`);
+        toast.success(t('profile.partEquipped', { name: p.part.name }));
       }
       setPendingPurchase(null);
     },
     onError: (error) => {
       if (error instanceof ApiError && error.status === 400) {
-        toast.error("Not enough coins.");
+        toast.error(t('profile.notEnoughCoins'));
         return;
       }
-      toast.error("Purchase failed. Try again.");
+      toast.error(t('profile.purchaseFailedRetry'));
     },
   });
 
@@ -345,7 +347,7 @@ export function AvatarPicker({
 
       <div className="flex justify-end pt-1">
         <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={isSaving}>
-          Close
+          {t('common.close')}
         </Button>
       </div>
 
@@ -355,12 +357,12 @@ export function AvatarPicker({
           <DialogContent className="sm:max-w-md border-border/60">
             <DialogHeader>
               <DialogTitle className="text-lg font-black uppercase tracking-wide">
-                Confirm Purchase
+                {t('profile.purchase.confirmTitle')}
               </DialogTitle>
               <DialogDescription>
                 {pendingPurchase.type === "skin"
-                  ? `Unlock ${pendingPurchase.skin?.name} skin`
-                  : `Unlock ${pendingPurchase.part?.name}`}
+                  ? t('profile.purchase.unlockSkin', { name: pendingPurchase.skin?.name ?? '' })
+                  : t('profile.purchase.unlockPart', { name: pendingPurchase.part?.name ?? '' })}
               </DialogDescription>
             </DialogHeader>
             <div className="flex flex-col items-center gap-4 py-2">
@@ -373,13 +375,13 @@ export function AvatarPicker({
                 width={140}
               />
               <div className="flex items-baseline gap-2">
-                <span className="text-[10px] uppercase tracking-[0.04em] text-white/50">Price</span>
+                <span className="text-[10px] uppercase tracking-[0.04em] text-white/50">{t('profile.purchase.price')}</span>
                 <span className="text-[24px]" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, color: PURPLE }}>
                   {pendingPurchase.type === "skin"
                     ? pendingPurchase.skin?.priceCoins
                     : pendingPurchase.part?.priceCoins}
                 </span>
-                <span className="text-[10px] uppercase tracking-[0.04em] text-white/50">coins</span>
+                <span className="text-[10px] uppercase tracking-[0.04em] text-white/50">{t('profile.purchase.coinsLabel')}</span>
               </div>
               <div className="flex w-full gap-2">
                 <Button
@@ -388,7 +390,7 @@ export function AvatarPicker({
                   onClick={() => setPendingPurchase(null)}
                   disabled={purchaseMutation.isPending}
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </Button>
                 <Button
                   className="flex-1"
@@ -405,10 +407,10 @@ export function AvatarPicker({
                   {purchaseMutation.isPending ? (
                     <span className="flex items-center gap-2">
                       <Loader2 className="size-4 animate-spin" />
-                      Processing
+                      {t('profile.purchase.processing')}
                     </span>
                   ) : (
-                    "Confirm"
+                    t('profile.purchase.confirm')
                   )}
                 </Button>
               </div>
@@ -427,7 +429,7 @@ export function AvatarPicker({
           className="max-h-[92dvh] overflow-y-auto rounded-t-3xl border-t border-border/50"
         >
           <SheetHeader className="mb-3 text-left">
-            <SheetTitle className="text-lg font-bold">Profile Avatar</SheetTitle>
+            <SheetTitle className="text-lg font-bold">{t('profile.avatarPicker.title')}</SheetTitle>
           </SheetHeader>
           {Content}
         </SheetContent>
@@ -439,9 +441,9 @@ export function AvatarPicker({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl max-h-[90dvh] overflow-y-auto border-border/50">
         <DialogHeader>
-          <DialogTitle className="text-lg font-bold">Profile Avatar</DialogTitle>
+          <DialogTitle className="text-lg font-bold">{t('profile.avatarPicker.title')}</DialogTitle>
           <DialogDescription>
-            Customize your skin, jersey, hair, glasses, and facial hair.
+            {t('profile.avatarPicker.description')}
           </DialogDescription>
         </DialogHeader>
         {Content}

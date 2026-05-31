@@ -1,14 +1,16 @@
 import { trackEvent } from '@/lib/posthog';
 
-export function trackSignupStarted(method: 'google' | 'email' = 'google') {
+type AuthMethod = 'google' | 'facebook' | 'email' | 'phone';
+
+export function trackSignupStarted(method: AuthMethod = 'google') {
   trackEvent('signup_started', { method });
 }
 
-export function trackSignupCompleted(method: 'google' | 'email' = 'google') {
+export function trackSignupCompleted(method: AuthMethod = 'google') {
   trackEvent('signup_completed', { method });
 }
 
-export function trackLoginCompleted(method: 'google' | 'email' = 'google') {
+export function trackLoginCompleted(method: AuthMethod = 'google') {
   trackEvent('login_completed', { method });
 }
 
@@ -79,6 +81,11 @@ export function trackMatchCompleted(props: {
   correctAnswers?: number;
   rpChange?: number;
   opponentIsAi?: boolean;
+  goalsFor?: number;
+  goalsAgainst?: number;
+  penaltyGoalsFor?: number;
+  penaltyGoalsAgainst?: number;
+  winnerDecisionMethod?: string | null;
 }) {
   const accuracy =
     props.questionsAnswered && props.correctAnswers !== undefined
@@ -97,6 +104,11 @@ export function trackMatchCompleted(props: {
     accuracy,
     rp_change: props.rpChange,
     opponent_is_ai: props.opponentIsAi,
+    goals_for: props.goalsFor,
+    goals_against: props.goalsAgainst,
+    penalty_goals_for: props.penaltyGoalsFor,
+    penalty_goals_against: props.penaltyGoalsAgainst,
+    winner_decision_method: props.winnerDecisionMethod,
   });
 }
 
@@ -139,23 +151,48 @@ export function trackMatchReconnected(matchId: string, downtimeSec: number) {
   });
 }
 
-export function trackAnswerSubmitted(
-  questionId: string,
-  isCorrect: boolean,
-  timeMs: number,
-  questionIndex: number,
-  difficulty?: string,
-  categoryName?: string,
-  matchId?: string,
-) {
+export type AnswerQuestionKind = 'multipleChoice' | 'countdown' | 'putInOrder' | 'clues';
+export type AnswerPhaseKind = 'normal' | 'last_attack' | 'shot' | 'penalty';
+
+export interface TrackAnswerSubmittedProps {
+  questionId: string;
+  isCorrect: boolean;
+  timeMs: number;
+  questionIndex: number;
+  difficulty?: string;
+  categoryName?: string;
+  matchId?: string;
+  /** Question kind (mcq / countdown / put-in-order / clues). Required to compute per-kind accuracy in PostHog. */
+  questionKind?: AnswerQuestionKind;
+  /** Possession phase kind at the time the answer was committed. */
+  phaseKind?: AnswerPhaseKind;
+  /** Match mode (`ranked` / `friendly`). */
+  mode?: string;
+  /** Match variant (`friendly_party_quiz`, `friendly_possession`, etc.). */
+  variant?: string;
+  /** Points earned for this answer (server-authoritative). */
+  pointsEarned?: number;
+  /** MCQ selected option index (null when the round timed out without a selection). */
+  selectedIndex?: number | null;
+}
+
+export function trackAnswerSubmitted(props: TrackAnswerSubmittedProps): void {
   trackEvent('answer_submitted', {
-    question_id: questionId,
-    is_correct: isCorrect,
-    time_ms: timeMs,
-    question_index: questionIndex,
-    difficulty,
-    category_name: categoryName,
-    match_id: matchId,
+    question_id: props.questionId,
+    is_correct: props.isCorrect,
+    time_ms: props.timeMs,
+    question_index: props.questionIndex,
+    difficulty: props.difficulty,
+    category_name: props.categoryName,
+    match_id: props.matchId,
+    question_kind: props.questionKind,
+    phase_kind: props.phaseKind,
+    mode: props.mode,
+    variant: props.variant,
+    points_earned: props.pointsEarned,
+    selected_index: props.selectedIndex,
+    /** Convenience flag for skip-rate analysis. */
+    timed_out: props.selectedIndex === null,
   });
 }
 
@@ -264,10 +301,14 @@ export function trackDailyChallengeStarted(challengeType: string) {
   trackEvent('daily_challenge_started', { challenge_type: challengeType });
 }
 
-export function trackDailyChallengeQuit(challengeType: string, questionsAnswered: number) {
+export function trackDailyChallengeQuit(props: {
+  challengeType: string;
+  /** Optional — most games don't expose progress at the route boundary. */
+  questionsAnswered?: number;
+}) {
   trackEvent('daily_challenge_quit', {
-    challenge_type: challengeType,
-    questions_answered: questionsAnswered,
+    challenge_type: props.challengeType,
+    questions_answered: props.questionsAnswered,
   });
 }
 
@@ -382,27 +423,8 @@ export function trackMatchLoadError(matchId: string | undefined, errorCode: stri
   trackEvent('match_load_error', { match_id: matchId, error_code: errorCode });
 }
 
-export function trackGameStart(mode: string, category?: string) {
-  trackEvent('game_started', {
-    game_mode: mode,
-    category,
-  });
-}
-
-export function trackGameComplete(mode: string, score: number, correctAnswers: number, totalQuestions: number) {
-  const safeAccuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
-  trackEvent('game_completed', {
-    game_mode: mode,
-    score,
-    correct_answers: correctAnswers,
-    total_questions: totalQuestions,
-    accuracy: safeAccuracy,
-  });
-}
-
-export function trackMatchJoined(matchType: 'ranked' | 'friendly', lobbyId?: string) {
-  trackEvent('match_joined', {
-    match_type: matchType,
-    lobby_id: lobbyId,
-  });
-}
+// Note: `trackGameStart`, `trackGameComplete`, `trackMatchJoined` previously
+// lived here but were never called. They duplicated `trackMatchStarted` /
+// `trackMatchCompleted` / lobby-join flow. Removed to keep the event surface
+// minimal — if a future use case appears, prefer extending the canonical
+// match_started / match_completed events instead of introducing new ones.

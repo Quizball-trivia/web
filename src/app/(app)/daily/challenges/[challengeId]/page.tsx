@@ -83,33 +83,54 @@ export default function ChallengePage() {
   }, [queryClient]);
 
   const handleBack = useCallback(() => {
+    // Treat "back" before completion as a quit. handleComplete sets
+    // completeOnceRef.current = true; we only fire `daily_challenge_quit`
+    // when no completion has been recorded for this session.
+    if (challengeType && !completeOnceRef.current) {
+      try {
+        trackDailyChallengeQuit({
+          challengeType,
+          // Per-game progress isn't exposed at the page level (each game
+          // owns its own state). Leaving the optional fields off keeps
+          // the event durable; product can derive partial completion from
+          // session-start timing + return events.
+        });
+      } catch {
+        /* analytics best-effort */
+      }
+    }
     router.replace("/daily/challenges");
-  }, [router]);
+  }, [challengeType, router]);
 
   const handleComplete = useCallback(
-    async (score: number) => {
+    (score: number) => {
       if (!challengeType || completeOnceRef.current) return;
       completeOnceRef.current = true;
 
-      try {
-        const result = await completeMutation.mutateAsync(score);
+      // Navigate back instantly — the completion write + cache refresh run in
+      // the background so the user isn't stuck waiting on a round-trip.
+      router.replace("/daily/challenges");
+
+      void (async () => {
         try {
-          trackDailyChallengeCompleted({
-            challengeType,
-            score,
-            xpAwarded: result.xpAwarded,
-          });
+          const result = await completeMutation.mutateAsync(score);
+          try {
+            trackDailyChallengeCompleted({
+              challengeType,
+              score,
+              xpAwarded: result.xpAwarded,
+            });
+          } catch (error) {
+            console.error('Analytics trackDailyChallengeCompleted failed', error);
+          }
+          if (result.xpAwarded > 0) {
+            addXP(result.xpAwarded);
+          }
+          await invalidateAfterComplete();
         } catch (error) {
-          console.error('Analytics trackDailyChallengeCompleted failed', error);
+          console.error('Daily challenge completion failed', error);
         }
-        if (result.xpAwarded > 0) {
-          addXP(result.xpAwarded);
-        }
-        await invalidateAfterComplete();
-        router.replace("/daily/challenges");
-      } catch {
-        completeOnceRef.current = false;
-      }
+      })();
     },
     [addXP, challengeType, completeMutation, invalidateAfterComplete, router]
   );

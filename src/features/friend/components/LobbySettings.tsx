@@ -10,6 +10,7 @@ import { CategorySummary } from "@/lib/domain";
 import type { LobbyGameMode, LobbySettings as LobbySettingsState, LobbyState } from "@/lib/realtime/socket.types";
 import { logger } from "@/utils/logger";
 import { useLocale } from "@/contexts/LocaleContext";
+import { trackCategorySelected } from "@/lib/analytics/game-events";
 
 interface LobbySettingsProps {
   isHost: boolean;
@@ -327,6 +328,13 @@ export function LobbySettings({
 
     const next = selectedCategoryId === catId ? null : catId;
     setSelectedCategoryId(next);
+    // Analytics: only emit when a category is being selected (not when
+    // the user un-selects). The selection set is single-category here, so
+    // each `next != null` corresponds to one user pick.
+    if (next) {
+      const picked = categories.find((c) => c.id === next);
+      try { trackCategorySelected(next, picked?.name ?? next); } catch { /* best-effort */ }
+    }
 
     // Emit category update only from explicit user interactions.
     const pending = pendingChangesRef.current;
@@ -409,7 +417,7 @@ export function LobbySettings({
   // --- Render ---
   return (
     <div className="rounded-[20px]">
-      <div className="px-5 pb-1 flex items-center justify-between">
+      <div className="px-3 pb-1 flex items-center justify-between">
         <h2
           className="uppercase text-white"
           style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 16, letterSpacing: '0.04em' }}
@@ -426,10 +434,10 @@ export function LobbySettings({
         )}
       </div>
 
-      <div className="rounded-[20px] p-5 space-y-6">
+      <div className="rounded-[20px] px-3 py-5 space-y-4">
         {/* Mode Selector */}
-        <div className="space-y-3">
-          <span className="text-[10px] font-black text-brand-slate uppercase tracking-wider">{t("friend.matchMode")}</span>
+        <div className="space-y-4">
+          <span className="text-xs font-black text-brand-slate uppercase tracking-wider">{t("friend.matchMode")}</span>
           {isPartyLocked ? (
             <div className="rounded-[14px] bg-surface-deep p-1.5">
               <div className="flex items-center justify-between rounded-[10px] bg-brand-blue px-4 py-3 text-white">
@@ -484,7 +492,7 @@ export function LobbySettings({
               </button>
             </div>
           )}
-          <p className="text-xs font-bold text-brand-slate">
+          <p className="text-xs font-bold text-white/75">
             {isPartyLocked
               ? t("friend.partyDescription")
               : mode === 'friendly_possession'
@@ -496,8 +504,8 @@ export function LobbySettings({
         </div>
 
         {/* Lobby Visibility */}
-        <div className="space-y-3">
-          <span className="text-[10px] font-black text-brand-slate uppercase tracking-wider">{t("friend.lobbyVisibility")}</span>
+        <div className="space-y-4">
+          <span className="text-xs font-black text-brand-slate uppercase tracking-wider">{t("friend.lobbyVisibility")}</span>
           <button
             onClick={handleVisibilityClick}
             disabled={!canEdit}
@@ -514,11 +522,11 @@ export function LobbySettings({
                 {isPublic ? <Eye className="size-4 text-white" /> : <EyeOff className="size-4 text-brand-slate" />}
               </div>
               <div className="text-left">
-                <div className="text-sm font-black text-white">{isPublic ? 'Public' : 'Private'}</div>
-                <div className="text-[10px] font-bold text-brand-slate">
+                <div className="text-sm font-black text-white">{isPublic ? t('friend.lobbyVisibilityPublic') : t('friend.lobbyVisibilityPrivate')}</div>
+                <div className="text-[10px] font-bold leading-snug text-white/80">
                   {isPublic
-                    ? 'Anyone can find & join this lobby'
-                    : 'Only players with the code can join'}
+                    ? t('friend.lobbyVisibilityPublicHint')
+                    : t('friend.lobbyVisibilityPrivateHint')}
                 </div>
               </div>
             </div>
@@ -536,8 +544,8 @@ export function LobbySettings({
 
         {/* Categories (Friendly Only) */}
         {isFriendlyMode && (
-          <div className="space-y-3">
-            <span className="text-[10px] font-black text-brand-slate uppercase tracking-wider">{t("friend.categoriesTitle")}</span>
+          <div className="space-y-4">
+            <span className="text-xs font-black text-brand-slate uppercase tracking-wider">{t("friend.categoriesTitle")}</span>
             <button
               onClick={handleRandomToggle}
               disabled={!canEdit}
@@ -555,7 +563,7 @@ export function LobbySettings({
                 </div>
                 <div className="text-left">
                   <div className="text-sm font-black text-white">{t("friend.randomCategories")}</div>
-                  <div className="text-[10px] font-bold text-brand-slate">
+                  <div className="text-[10px] font-bold leading-snug text-white/80">
                     {isRandom ? t("friend.randomCategoriesOn") : t("friend.randomCategoriesOff")}
                   </div>
                 </div>
@@ -573,7 +581,7 @@ export function LobbySettings({
 
             {!isRandom && (
               <>
-                <p className="text-[10px] font-bold text-brand-slate">
+                <p className="text-[10px] font-bold leading-snug text-white/80">
                   {mode === 'friendly_party_quiz'
                     ? t("friend.pickCategoryParty")
                     : t("friend.pickCategoryClassic")}
@@ -623,20 +631,13 @@ export function LobbySettings({
                 </div>
               </>
             )}
-
-            {isRandom && (
-              <div className="p-5 rounded-[14px] flex flex-col items-center text-center gap-2">
-                <Shuffle className="size-8 text-brand-yellow opacity-80" />
-                <p className="text-sm font-bold text-brand-slate">{t("friend.categoriesWillBeRandom")}</p>
-              </div>
-            )}
           </div>
         )}
 
         {/* Ranked Sim Info */}
         {mode === 'ranked_sim' && (
           <div className="p-5 rounded-xl bg-brand-orange/10 border-b-[3px] border-brand-orange/20 flex flex-col items-center text-center gap-2">
-            <div className="size-14 rounded-full bg-brand-orange border-4 border-b-[6px] border-[#DB8200] flex items-center justify-center">
+            <div className="size-14 rounded-full bg-brand-orange border-4 border-b-[6px] border-brand-orange-deep flex items-center justify-center">
               <Trophy className="size-7 text-white" strokeWidth={2.5} />
             </div>
             <h4 className="text-base font-black text-brand-orange">{t("friend.rankedSimHeader")}</h4>

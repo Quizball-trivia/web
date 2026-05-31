@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Loader2 } from "lucide-react";
 import { AvatarPreview } from "@/components/AvatarPreview";
 import { CoinIcon } from "./CoinIcon";
+import { useLocale } from "@/contexts/LocaleContext";
 import type { AvatarCustomization } from "@/types/game";
 
 const poppins = {
@@ -42,6 +43,7 @@ export function PurchaseConfirmModal({
   previewCustomization,
   confirmLabel,
 }: PurchaseConfirmModalProps) {
+  const { t } = useLocale();
   const hidePrice = !price.trim();
   return (
     <AnimatePresence>
@@ -88,7 +90,7 @@ export function PurchaseConfirmModal({
                   className="text-[10px] uppercase tracking-[0.04em] text-surface-page/55"
                   style={poppins}
                 >
-                  Price
+                  {t('profile.purchase.price')}
                 </span>
                 <span
                   className="text-[28px] tabular-nums"
@@ -109,7 +111,7 @@ export function PurchaseConfirmModal({
                 className="flex h-[48px] flex-1 items-center justify-center rounded-[16px] border-2 border-surface-page/20 bg-surface-page/5 text-[14px] uppercase text-surface-page transition-colors hover:bg-surface-page/10 disabled:opacity-40"
                 style={poppins}
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 type="button"
@@ -119,7 +121,7 @@ export function PurchaseConfirmModal({
                 style={{ ...poppins, backgroundColor: PURPLE, color: "#FFFFFF" }}
               >
                 {isPending && <Loader2 className="size-4 animate-spin" />}
-                {isPending ? "Processing" : (confirmLabel ?? "Confirm")}
+                {isPending ? t('profile.purchase.processing') : (confirmLabel ?? t('profile.purchase.confirm'))}
               </button>
             </div>
           </motion.div>

@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Volume2, VolumeX } from 'lucide-react';
-import { QuitMatchModal } from '@/features/game/components/QuitMatchModal';
+import { QuitMatchModal } from '@/components/match/QuitMatchModal';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { BarBattleFlightOverlay } from './components/BarBattleFlightOverlay';
 import { HalftimeScreen } from './components/HalftimeScreen';
 import { KickoffCountdownOverlay } from './components/KickoffCountdownOverlay';
+import { PenaltyStartCountdownOverlay } from './components/PenaltyStartCountdownOverlay';
 import { MatchHudIconButton } from './components/MatchHudPrimitives';
 import { PossessionMatchViewport } from './components/PossessionMatchViewport';
 import { PossessionQuestionArea } from './components/PossessionQuestionArea';
@@ -48,7 +49,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
   // classic variant. Manages its own state internally.
   const barBattleFlights = usePossessionBarBattleFlights();
   const matchPaused = useRealtimeMatchStore((state) => state.matchPaused);
-  const match = useRealtimeMatchStore((state) => state.match);
+  const hasMatch = useRealtimeMatchStore((state) => state.match != null);
   const pauseUntil = useRealtimeMatchStore((state) => state.pauseUntil);
   const remainingReconnects = useRealtimeMatchStore((state) => state.remainingReconnects);
   const forfeitPending = useRealtimeMatchStore((state) => state.forfeitPending);
@@ -91,17 +92,19 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
     remainingReconnects == null
       ? null
       : remainingReconnects <= 0
-        ? 'This is their last reconnect.'
-        : `${remainingReconnects} ${remainingReconnects === 1 ? 'reconnect' : 'reconnects'} left.`;
+        ? t('forfeit.lastReconnect')
+        : remainingReconnects === 1
+          ? t('forfeit.reconnectsLeftOne', { n: remainingReconnects })
+          : t('forfeit.reconnectsLeftOther', { n: remainingReconnects });
   const forfeitPendingTitle =
     forfeitPending?.reason === 'opponent_forfeit'
-      ? 'Opponent forfeited'
+      ? t('forfeit.opponentForfeited')
       : forfeitPending?.reason === 'opponent_reconnect_limit'
-        ? 'Opponent did not reconnect'
-        : 'Match forfeited';
+        ? t('forfeit.opponentDidNotReconnect')
+        : t('forfeit.matchForfeited');
 
   if (!isReady) {
-    const showPendingKickoff = showStartCountdown || Boolean(match);
+    const showPendingKickoff = showStartCountdown || hasMatch;
 
     return (
       <div className="flex min-h-dvh w-full items-center justify-center bg-surface-page-alt">
@@ -131,9 +134,9 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
       <MatchHudIconButton
         onClick={toggleMuted}
         className="absolute left-[calc(env(safe-area-inset-left)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.25rem)] z-[70] sm:left-[calc(env(safe-area-inset-left)+0.5rem)] sm:top-[calc(env(safe-area-inset-top)+0.5rem)]"
-        aria-label={muted ? 'Unmute audio' : 'Mute audio'}
+        aria-label={muted ? t('possession.unmuteAudio') : t('possession.muteAudio')}
         aria-pressed={muted}
-        title={muted ? 'Unmute' : 'Mute'}
+        title={muted ? t('common.unmute') : t('common.mute')}
       >
         {muted ? <VolumeX className="size-4 sm:size-5" /> : <Volume2 className="size-4 sm:size-5" />}
       </MatchHudIconButton>
@@ -167,45 +170,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
 
       <AnimatePresence>
         {penaltyCountdownActive && (
-          <motion.div
-            key="penalty-countdown"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center"
-          >
-            <div className="absolute inset-0 bg-surface-page-alt/60 backdrop-blur-sm" />
-            <motion.div
-              initial={{ scale: 0.6, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-              className="relative flex flex-col items-center gap-4"
-            >
-              <motion.div
-                initial={{ y: -20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.15, duration: 0.4 }}
-                className="text-4xl font-black uppercase tracking-wider text-brand-red-soft font-fun"
-                style={{ textShadow: '0 0 30px rgba(255,75,75,0.5), 0 4px 0 rgba(200,40,40,0.8)' }}
-              >
-                {t('possession.penaltyShootout')}
-              </motion.div>
-              <motion.div
-                key={`pen-cd-${penaltyCountdownDisplay}`}
-                initial={{ scale: 0.72, opacity: 0.4 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: 'spring', stiffness: 340, damping: 22 }}
-              >
-                <div className="flex size-28 items-center justify-center rounded-full border-4 border-brand-red-soft/70 bg-surface-deep shadow-[0_0_50px_rgba(255,75,75,0.3)]">
-                  <span className="text-5xl font-black leading-none tabular-nums text-white font-fun">
-                    {penaltyCountdownDisplay}
-                  </span>
-                </div>
-              </motion.div>
-              <div className="text-sm font-bold uppercase tracking-widest text-white/60 font-fun">{t('possession.getReady')}</div>
-            </motion.div>
-          </motion.div>
+          <PenaltyStartCountdownOverlay display={penaltyCountdownDisplay} />
         )}
       </AnimatePresence>
 

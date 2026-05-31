@@ -146,7 +146,7 @@ export function resolveBattlePoints(
 }
 
 function isBarBattlePhaseKind(kind: string | undefined): boolean {
-  return kind === 'normal';
+  return kind === 'normal' || kind === 'last_attack';
 }
 
 // ─── Hook ────────────────────────────────────────────────────────────────────

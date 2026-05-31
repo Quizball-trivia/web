@@ -10,8 +10,7 @@ interface LoadingScreenProps {
   fullScreen?: boolean;
 }
 
-const LOADING_BALL_IMAGE_URL =
-  'https://lfbwhxvwubzeqkztghok.supabase.co/storage/v1/object/public/imgs/world-cup-style-ball-cartoon-transparent.png';
+const LOADING_BALL_IMAGE_URL = '/assets/brand/goal-ball.png';
 
 function LoadingBallImage({ size = 64 }: { size?: number }) {
   return (

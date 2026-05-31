@@ -65,7 +65,7 @@ function ChallengeCard({
         onClick={onClick}
         className={`relative flex h-[184px] w-full flex-col overflow-hidden rounded-[8px] p-3.5 pb-10 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow md:flex md:h-[252px] md:flex-col md:rounded-[20px] md:p-6 ${
           isCompleted
-            ? "bg-brand-yellow text-black disabled:cursor-default md:border-2 md:border-brand-green-light md:bg-brand-green-darkest md:text-white md:shadow-[0_0_0_4px_hsl(var(--brand-green-light)/0.16)]"
+            ? "bg-brand-yellow text-black opacity-65 saturate-[0.85] disabled:cursor-default md:border-2 md:border-brand-green-light md:bg-brand-green-darkest md:text-white md:shadow-[0_0_0_4px_hsl(var(--brand-green-light)/0.16)]"
             : "bg-brand-yellow text-black hover:brightness-105 active:translate-y-[2px]"
         }`}
       >
@@ -85,7 +85,7 @@ function ChallengeCard({
             : "Completed today. Come back after the UTC reset."}
         </p>
         <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 lg:hidden">
-          <span className="inline-flex h-6 items-center gap-1 rounded-full bg-white/70 px-2.5 text-[10px] font-black text-[#9A7900]">
+          <span className="inline-flex h-6 items-center gap-1 rounded-full bg-white/70 px-2.5 text-[10px] font-black text-brand-gold-ink">
             {challenge.coinReward}
             <Image src="/assets/coin-1.png" alt="" width={16} height={16} className="size-4 object-contain" />
           </span>
@@ -172,7 +172,7 @@ export default function DailyChallengesPage() {
               <p className="inline-block whitespace-nowrap font-poppins text-sm md:text-[0.95rem] font-semibold uppercase leading-none tracking-[-0.02em] text-white">
                 Today&apos;s Progress
               </p>
-              <div className="mt-3 h-[18px] w-[15ch] max-w-full overflow-hidden rounded-[5px] bg-[#A18F00]">
+              <div className="mt-3 h-[18px] w-[15ch] max-w-full overflow-hidden rounded-[5px] bg-brand-gold-fill-deep">
                 <div
                   className="h-full rounded-[5px] bg-brand-yellow transition-all duration-500"
                   style={{ width: `${progressPct}%` }}
@@ -221,7 +221,7 @@ export default function DailyChallengesPage() {
             <p className="font-poppins text-[8px] font-black uppercase tracking-[0.12em] text-white">
               Today&apos;s Progress
             </p>
-            <div className="mt-2 h-[7px] w-[74px] overflow-hidden rounded-full bg-[#A18F00]">
+            <div className="mt-2 h-[7px] w-[74px] overflow-hidden rounded-full bg-brand-gold-fill-deep">
               <div
                 className="h-full rounded-full bg-brand-yellow transition-all duration-500"
                 style={{ width: `${progressPct}%` }}

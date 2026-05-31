@@ -19,6 +19,8 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
     lobby,
     members,
     lobbyCode,
+    isResolvingInvite,
+    targetInviteCode,
     me,
     h2hSummary,
     allCategories,
@@ -37,6 +39,8 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
   const isCurrentHost = Boolean(me?.isHost) || isHost;
   const allReady = members.length > 0 && members.every((member) => member.isReady);
   const isPartyMode = settings?.gameMode === "friendly_party_quiz" || members.length > 2;
+  // Lobby capacity by mode: party quiz holds up to 6; classic + ranked sim are 1v1 (2).
+  const lobbyMaxMembers = settings?.gameMode === "friendly_party_quiz" ? 6 : 2;
   const hasFriendlyCategories =
     settings?.friendlyRandom ||
     Boolean(settings?.friendlyCategoryAId);
@@ -68,8 +72,42 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
 
   const poppins = "'Poppins', sans-serif";
 
+  if (isResolvingInvite) {
+    const code = targetInviteCode ?? lobbyCode;
+
+    return (
+      <div className="container mx-auto max-w-5xl px-3 py-6 animate-in fade-in lg:px-0">
+        <div className="flex min-h-[420px] flex-col items-center justify-center gap-5 rounded-[20px] border border-white/10 bg-white/[0.03] px-6 text-center">
+          <Loader2 className="size-9 animate-spin text-brand-yellow" />
+          <div className="space-y-2">
+            <h1
+              className="text-white uppercase"
+              style={{ fontFamily: poppins, fontWeight: 700, fontSize: 24, letterSpacing: '0.04em' }}
+            >
+              {t("friend.joiningCode", { code })}
+            </h1>
+            <p
+              className="text-white/55 uppercase"
+              style={{ fontFamily: poppins, fontWeight: 600, fontSize: 12, letterSpacing: '0.08em' }}
+            >
+              {code}
+            </p>
+          </div>
+          <button
+            onClick={actions.handleLeaveLobby}
+            className="flex h-12 items-center justify-center gap-2 rounded-[16px] bg-brand-red px-5 text-white uppercase transition-all hover:bg-brand-red/90 active:scale-[0.98]"
+            style={{ fontFamily: poppins, fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
+          >
+            <LogOut className="size-4" />
+            {t("friend.leaveLobby")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto max-w-5xl py-6 animate-in fade-in space-y-6">
+    <div className="container mx-auto max-w-5xl px-3 py-6 animate-in fade-in space-y-6 lg:px-0">
 
       <LobbyHeader
         lobbyName={lobby?.displayName}
@@ -77,6 +115,7 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
         me={me}
         members={members}
         h2hSummary={h2hSummary}
+        maxMembers={lobbyMaxMembers}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -92,7 +131,7 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
 
         <div className="space-y-6">
           <div className="rounded-[20px]">
-            <div className="px-1 pb-1">
+            <div className="pb-3">
               <h2
                 className="text-white uppercase"
                 style={{ fontFamily: poppins, fontWeight: 600, fontSize: 16, letterSpacing: '0.04em' }}
@@ -101,14 +140,14 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
               </h2>
             </div>
             <div
-              className="rounded-[20px] p-5 space-y-4 lg:mt-6"
+              className="rounded-[20px] px-7 py-7 space-y-5 lg:mt-6"
               style={{
                 background: 'linear-gradient(180deg, #1645FF 35%, #1a35a1 100%)',
               }}
             >
               <p
-                className="text-white/70"
-                style={{ fontFamily: poppins, fontWeight: 500, fontSize: 13, lineHeight: 1.4 }}
+                className="text-white/90"
+                style={{ fontFamily: poppins, fontWeight: 500, fontSize: 13, lineHeight: 1.45 }}
               >
                 {readyCopy}
               </p>
@@ -196,7 +235,7 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
                 <span
                   className={cn(
                     "uppercase",
-                    allReady ? "text-brand-green-light" : "text-white/60"
+                    allReady ? "text-brand-green-light" : "text-white/80"
                   )}
                   style={{ fontFamily: poppins, fontWeight: 600, fontSize: 11, letterSpacing: '0.1em' }}
                 >

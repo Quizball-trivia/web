@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Trophy, Star, Clock, TrendingUp, ArrowUpRight } from 'lucide-react';
+import { useLocale } from '@/contexts/LocaleContext';
 import { cn } from '@/lib/utils';
 
 export const CHALLENGES = [
@@ -51,6 +52,7 @@ function getTimeRemaining(expiryDate: Date): string {
 }
 
 export function GameHubScreen() {
+  const { t } = useLocale();
   const [bossEventExpiry] = useState<Date>(() => new Date(Date.now() + 1000 * 60 * 60 * 48));
 
   const QUESTS = [
@@ -183,7 +185,7 @@ export function GameHubScreen() {
             </button>
           </div>
 
-          <div className="bg-gradient-to-br from-[#2A1F0F] via-[#1F1A12] to-[#1A1510] rounded-3xl border-4 border-brand-gold-deep overflow-hidden relative">
+          <div className="bg-gradient-to-br from-surface-tournament-panel-from via-surface-tournament-panel-via to-surface-tournament-trough rounded-3xl border-4 border-brand-gold-deep overflow-hidden relative">
             {/* Decorative gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-r from-brand-gold/5 via-transparent to-brand-gold/5 opacity-30" />
 
@@ -255,12 +257,12 @@ export function GameHubScreen() {
                   </span>
                 </div>
 
-                <div className="relative h-3 bg-[#1A1510] rounded-full overflow-hidden border border-brand-gold-deep/20">
+                <div className="relative h-3 bg-surface-tournament-trough rounded-full overflow-hidden border border-brand-gold-deep/20">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${eventPercent}%` }}
                     transition={{ duration: 1, ease: 'easeOut', delay: 0.3 }}
-                    className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-brand-green-light to-[#85E000]"
+                    className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-brand-green-light to-brand-green-bright"
                   >
                     <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/30 to-transparent h-1/2" />
                   </motion.div>
@@ -270,7 +272,7 @@ export function GameHubScreen() {
               </div>
 
               {/* CTA Button */}
-              <button className="w-full md:w-auto px-8 py-4 rounded-2xl bg-gradient-to-b from-brand-gold to-brand-orange border-b-4 border-[#CC8800] text-[#1A1510] font-black text-base uppercase hover:from-brand-orange hover:to-brand-gold active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-3 group shadow-lg shadow-brand-gold/20">
+              <button className="w-full md:w-auto px-8 py-4 rounded-2xl bg-gradient-to-b from-brand-gold to-brand-orange border-b-4 border-brand-gold-press text-surface-tournament-trough font-black text-base uppercase hover:from-brand-orange hover:to-brand-gold active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-3 group shadow-lg shadow-brand-gold/20">
                 Continue Quest
                 <div className="flex items-center gap-2">
                   <span className="text-xl">🪙</span>
@@ -363,7 +365,7 @@ export function GameHubScreen() {
 
                   {!isLocked && (
                     <div className="flex items-center gap-2 text-xs font-black">
-                      <span className={tierColors.text}>Start Challenge</span>
+                      <span className={tierColors.text}>{t('tournaments.startChallenge')}</span>
                       <ArrowUpRight className={cn('size-4', tierColors.text)} />
                     </div>
                   )}

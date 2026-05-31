@@ -161,8 +161,8 @@ export function ProfileWeb({
       }
       setIsEditingName(false);
     } catch (error) {
-      toast.error('Failed to update name', {
-        description: error instanceof Error ? error.message : 'Failed to update name',
+      toast.error(t('profile.failedToUpdateName'), {
+        description: error instanceof Error ? error.message : t('profile.failedToUpdateName'),
       });
     }
   };
@@ -177,8 +177,8 @@ export function ProfileWeb({
       await onAvatarChange(nextUrl);
       setIsAvatarPickerOpen(false);
     } catch (error) {
-      toast.error('Failed to update avatar', {
-        description: error instanceof Error ? error.message : 'Please try again.',
+      toast.error(t('profile.failedToUpdateAvatar'), {
+        description: error instanceof Error ? error.message : t('profile.tryAgain'),
       });
     } finally {
       setIsSavingAvatar(false);
@@ -186,7 +186,7 @@ export function ProfileWeb({
   };
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-5 lg:px-6 lg:py-7 space-y-4 lg:space-y-5 font-fun">
+    <div className="container mx-auto max-w-6xl px-4 py-5 lg:px-6 lg:py-7 space-y-4 lg:space-y-5 font-poppins">
 
       {/* ─── 1. Hero ─── */}
       <motion.div
@@ -200,7 +200,7 @@ export function ProfileWeb({
             <button
               type="button"
               onClick={() => setIsAvatarPickerOpen(true)}
-              className="group relative size-36 lg:size-40 rounded-[12px] bg-brand-blue flex items-end justify-center overflow-hidden shrink-0 transition-transform active:translate-y-[2px]"
+              className="group relative size-36 lg:size-40 rounded-[12px] bg-brand-blue flex items-end justify-center overflow-hidden shrink-0"
               aria-label={t("profileScreen.changeAvatar")}
             >
               <AvatarPreview
@@ -214,7 +214,7 @@ export function ProfileWeb({
                 className="hidden lg:block translate-y-5"
               />
               <span className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-[10px] font-black uppercase tracking-[0.18em] opacity-0 group-hover:opacity-100 transition-opacity">
-                Edit
+                {t('profile.avatarPicker.edit')}
               </span>
             </button>
           ) : (
@@ -245,10 +245,10 @@ export function ProfileWeb({
                     disabled={isUpdating}
                     onKeyDown={(e) => e.key === 'Enter' && handleNameChange()}
                   />
-                  <button onClick={handleNameChange} disabled={isUpdating} className="size-10 rounded-[8px] bg-brand-green flex items-center justify-center text-white active:translate-y-[2px] transition-transform">
+                  <button onClick={handleNameChange} disabled={isUpdating} className="size-10 rounded-[8px] bg-brand-green flex items-center justify-center text-white">
                     <Check className="size-5" />
                   </button>
-                  <button onClick={() => setIsEditingName(false)} disabled={isUpdating} className="size-10 rounded-[8px] bg-white/[0.06] flex items-center justify-center text-white/70 active:translate-y-[2px] transition-transform">
+                  <button onClick={() => setIsEditingName(false)} disabled={isUpdating} className="size-10 rounded-[8px] bg-white/[0.06] flex items-center justify-center text-white/70">
                     <X className="size-5" />
                   </button>
                 </div>
@@ -634,7 +634,7 @@ export function ProfileWeb({
                                 await onClubChange?.(val);
                                 setIsEditingClub(false);
                               } catch {
-                                toast.error('Failed to update club');
+                                toast.error(t('profile.failedToUpdateClub'));
                               }
                             }}
                           />
@@ -642,7 +642,7 @@ export function ProfileWeb({
                       ) : (
                         <>
                           <span className="font-poppins text-sm font-semibold uppercase text-white truncate max-w-[160px]">
-                            {favoriteClub || 'Not set'}
+                            {favoriteClub || t('profile.notSet')}
                           </span>
                           <button
                             onClick={() => setIsEditingClub(true)}
@@ -666,7 +666,7 @@ export function ProfileWeb({
                           try {
                             await onLanguageChange?.('ka');
                           } catch {
-                            toast.error('Failed to update language');
+                            toast.error(t('profile.failedToUpdateLanguage'));
                           }
                         }}
                         disabled={isUpdating}
@@ -684,7 +684,7 @@ export function ProfileWeb({
                           try {
                             await onLanguageChange?.('en');
                           } catch {
-                            toast.error('Failed to update language');
+                            toast.error(t('profile.failedToUpdateLanguage'));
                           }
                         }}
                         disabled={isUpdating}
@@ -712,12 +712,12 @@ export function ProfileWeb({
                 className="rounded-[10px] p-5"
                 style={{ backgroundColor: '#1B2F36' }}
               >
-                <h3 className="text-[11px] font-fun font-black uppercase tracking-[0.22em] text-white/45 mb-4">
+                <h3 className="text-[11px] font-poppins font-black uppercase tracking-[0.22em] text-white/45 mb-4">
                   Head to Head
                 </h3>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-fun font-black uppercase tracking-wide text-white">{t("profileScreen.yourWins")}</span>
+                    <span className="text-xs font-poppins font-black uppercase tracking-wide text-white">{t("profileScreen.yourWins")}</span>
                     <span
                       className="text-xl tabular-nums text-brand-green"
                       style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
@@ -726,7 +726,7 @@ export function ProfileWeb({
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-fun font-black uppercase tracking-wide text-white">{t("profileScreen.theirWins")}</span>
+                    <span className="text-xs font-poppins font-black uppercase tracking-wide text-white">{t("profileScreen.theirWins")}</span>
                     <span
                       className="text-xl tabular-nums text-brand-red-soft"
                       style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
@@ -735,7 +735,7 @@ export function ProfileWeb({
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-fun font-black uppercase tracking-wide text-white">{t("profileScreen.draws")}</span>
+                    <span className="text-xs font-poppins font-black uppercase tracking-wide text-white">{t("profileScreen.draws")}</span>
                     <span
                       className="text-xl tabular-nums text-white/55"
                       style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
@@ -745,8 +745,8 @@ export function ProfileWeb({
                   </div>
                   <div className="h-px bg-white/8" />
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-fun font-black uppercase tracking-[0.2em] text-white/40">{t("profileScreen.totalMatches")}</span>
-                    <span className="text-sm font-fun font-black tabular-nums text-white">{headToHead.total}</span>
+                    <span className="text-[10px] font-poppins font-black uppercase tracking-[0.2em] text-white/40">{t("profileScreen.totalMatches")}</span>
+                    <span className="text-sm font-poppins font-black tabular-nums text-white">{headToHead.total}</span>
                   </div>
                 </div>
               </motion.div>
@@ -775,7 +775,7 @@ export function ProfileWeb({
               {recentMatchesLoading && (
                 <>
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center gap-3 rounded-[16px] min-h-[58px] md:min-h-[62px] px-4 md:px-5 border-2 border-brand-slate-deep bg-[#041217] animate-pulse">
+                    <div key={i} className="flex items-center gap-3 rounded-[16px] min-h-[58px] md:min-h-[62px] px-4 md:px-5 border-2 border-brand-slate-deep bg-surface-row-deep animate-pulse">
                       <div className="size-8 md:size-10 rounded-full bg-white/10" />
                       <div className="flex-1 space-y-1.5">
                         <div className="h-3.5 w-24 bg-white/10 rounded" />
@@ -787,22 +787,22 @@ export function ProfileWeb({
                 </>
               )}
               {!recentMatchesLoading && recentMatchesError && (
-                <div className="p-4 rounded-[16px] border-2 border-brand-red-soft/40 bg-brand-red-soft/10 text-sm font-fun font-black uppercase tracking-wide text-brand-red-soft">
+                <div className="p-4 rounded-[16px] border-2 border-brand-red-soft/40 bg-brand-red-soft/10 text-sm font-poppins font-black uppercase tracking-wide text-brand-red-soft">
                   {recentMatchesError}
                 </div>
               )}
               {!recentMatchesLoading && !recentMatchesError && recentMatches.length === 0 && (
-                <div className="p-6 text-center rounded-[16px] border-2 border-brand-slate-deep bg-[#041217]">
+                <div className="p-6 text-center rounded-[16px] border-2 border-brand-slate-deep bg-surface-row-deep">
                   <div className="text-2xl mb-2">⚽</div>
-                  <div className="text-sm font-fun font-black uppercase tracking-wide text-white/55">No recent matches yet.</div>
-                  <div className="text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white/30 mt-1">Play a match and it&apos;ll show up here.</div>
+                  <div className="text-sm font-poppins font-black uppercase tracking-wide text-white/55">No recent matches yet.</div>
+                  <div className="text-[10px] font-poppins font-black uppercase tracking-[0.18em] text-white/30 mt-1">Play a match and it&apos;ll show up here.</div>
                 </div>
               )}
               {!recentMatchesLoading && !recentMatchesError && visibleMatches.map((match, index) => {
                 const isWin = match.result === 'Win';
                 const isLoss = match.result === 'Loss';
                 const borderColor = isWin ? 'border-brand-green' : isLoss ? 'border-brand-red-deep' : 'border-brand-slate-deep';
-                const rpPillTone = isWin ? 'bg-brand-green-deep text-white' : isLoss ? 'bg-[#B8401D] text-white' : 'bg-brand-slate-deep text-white';
+                const rpPillTone = isWin ? 'bg-brand-green-deep text-white' : isLoss ? 'bg-brand-red-rust text-white' : 'bg-brand-slate-deep text-white';
                 const competitionLabel = match.competition === 'friendly'
                   ? t('profileScreen.modeFriendly')
                   : match.competition === 'placement'
@@ -817,7 +817,7 @@ export function ProfileWeb({
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.05 * index, duration: 0.3 }}
-                    className={`flex items-center gap-3 rounded-[16px] min-h-[58px] md:min-h-[62px] px-4 md:px-5 border-2 bg-[#041217] ${borderColor}`}
+                    className={`flex items-center gap-3 rounded-[16px] min-h-[58px] md:min-h-[62px] px-4 md:px-5 border-2 bg-surface-row-deep ${borderColor}`}
                   >
                     {/* Avatar */}
                     <div className="relative size-8 md:size-10 shrink-0 rounded-full bg-white/20 overflow-hidden flex items-center justify-center">
@@ -856,7 +856,7 @@ export function ProfileWeb({
                         {match.scoreFormatted.badge && (
                           <span className={`rounded-[8px] px-2 py-1 font-poppins text-[9px] md:text-[10px] font-semibold uppercase ${
                             match.scoreFormatted.badgeVariant === 'red'
-                              ? 'bg-[#4D1C1B] text-brand-red-light'
+                              ? 'bg-brand-red-rust-deep text-brand-red-light'
                               : 'bg-white/10 text-white/70'
                           }`}>
                             {match.scoreFormatted.badge}

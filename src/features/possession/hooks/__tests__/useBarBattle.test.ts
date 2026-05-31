@@ -48,7 +48,8 @@ function makeGoalRoundResult(): MatchRoundResultPayload {
 function makeRoundResult(
   playerPoints: number,
   opponentPoints: number,
-  goalScoredBySeat: 1 | 2 | null = null
+  goalScoredBySeat: 1 | 2 | null = null,
+  phaseKind: 'normal' | 'last_attack' = 'normal'
 ): MatchRoundResultPayload {
   return {
     matchId: MATCH_ID,
@@ -58,7 +59,7 @@ function makeRoundResult(
       kind: 'multipleChoice',
       correctIndex: 0,
     },
-    phaseKind: 'normal',
+    phaseKind,
     phaseRound: 6,
     players: {
       me: makePlayer(playerPoints, playerPoints > 0),
@@ -358,6 +359,54 @@ describe('useBarBattle', () => {
       playerBars: 8,
       opponentBars: 3,
       remainingDelta: 5,
+    });
+  });
+
+  it('runs the bar-battle sequence for extra-question last-attack rounds', async () => {
+    const myRound = makePlayer(90, true);
+    const opponentRound = makePlayer(20, true);
+    const roundResult = makeRoundResult(90, 20, 1, 'last_attack');
+
+    const { result } = renderHook(() => useBarBattle({
+      answerAck: {
+        matchId: MATCH_ID,
+        qIndex: 5,
+        questionKind: 'multipleChoice',
+        selectedIndex: 0,
+        isCorrect: true,
+        myTotalPoints: 90,
+        oppAnswered: true,
+        pointsEarned: 90,
+        phaseKind: 'last_attack',
+        phaseRound: 1,
+      },
+      opponentAnswered: true,
+      opponentRecentPoints: 20,
+      opponentAnsweredCorrectly: true,
+      roundResult,
+      myRound,
+      opponentRound,
+      phaseKind: 'last_attack',
+      dividerX: 250,
+    }));
+
+    await act(async () => {});
+
+    expect(result.current).toMatchObject({
+      phase: 'both-score',
+      playerPoints: 90,
+      opponentPoints: 20,
+      playerBars: 9,
+      opponentBars: 2,
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(820);
+    });
+
+    expect(result.current).toMatchObject({
+      phase: 'battle',
+      remainingDelta: 7,
     });
   });
 });

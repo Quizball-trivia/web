@@ -3,6 +3,7 @@ import type { LeaderboardEntry } from "@/lib/domain/leaderboard";
 import { cn } from "@/lib/utils";
 import { getTierAccent } from "@/utils/tierVisuals";
 import { Minus, TrendingDown, TrendingUp, Trophy } from "lucide-react";
+import { useLocale } from "@/contexts/LocaleContext";
 
 interface LeaderboardTableProps {
   entries: LeaderboardEntry[];
@@ -18,14 +19,15 @@ const poppins = {
 } as const;
 
 export function LeaderboardTable({ entries, currentUserId, onEntryClick }: LeaderboardTableProps) {
+  const { t } = useLocale();
   return (
     <div>
       {/* Column labels — outside the card */}
       <div className="grid grid-cols-12 gap-2 sm:gap-4 px-3 sm:px-4 pb-3 text-[10px] sm:text-xs font-fun font-black uppercase tracking-[0.18em] text-white/45">
-        <div className="col-span-2 sm:col-span-2 text-center">Rank</div>
-        <div className="col-span-5 sm:col-span-5 text-left">Player</div>
-        <div className="col-span-2 sm:col-span-3 text-center">Tier</div>
-        <div className="col-span-3 sm:col-span-2 text-center">RP</div>
+        <div className="col-span-2 sm:col-span-2 text-center">{t('leaderboard.colRank')}</div>
+        <div className="col-span-5 sm:col-span-5 text-left">{t('leaderboard.colPlayer')}</div>
+        <div className="col-span-2 sm:col-span-3 text-center">{t('leaderboard.colTier')}</div>
+        <div className="col-span-3 sm:col-span-2 text-center">{t('leaderboard.colRP')}</div>
       </div>
 
       {/* Rows container with green outline */}

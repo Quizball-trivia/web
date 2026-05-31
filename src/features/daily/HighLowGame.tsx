@@ -1,11 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { HighLowSession } from "@/lib/domain/dailyChallenge";
+import { shuffleArray } from "@/lib/utils";
 import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
 import { QuitGameDialog } from "./QuitGameDialog";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
+import { ResultSplash } from "./components/ResultSplash";
+import { useResultSplash } from "./components/useResultSplash";
+import { DailyChallengeCompleteModal } from "./components/DailyChallengeCompleteModal";
 
 const poppins = {
   fontFamily: "'Poppins', sans-serif",
@@ -30,16 +34,35 @@ export function HighLowGame({
   const [timeLeft, setTimeLeft] = useState(session.secondsPerRound);
   const [roundScore, setRoundScore] = useState(0);
   const [roundResolved, setRoundResolved] = useState(false);
-  const [roundPassed, setRoundPassed] = useState(false);
   const [showQuitDialog, setShowQuitDialog] = useState(false);
+  const [finished, setFinished] = useState(false);
+  const { splashProps, fire } = useResultSplash();
   const copy = getDailyChallengeCopy();
 
   const currentRound = session.rounds[currentRoundIndex];
   const currentMatchup = currentRound?.matchups[currentMatchupIndex];
 
+  // Randomize which option renders on the left so the higher value isn't always
+  // positionally predictable. Stable per matchup (keyed on its id) so it doesn't
+  // reshuffle on timer ticks. Correctness compares values, so display side is cosmetic.
+  const displaySides = useMemo(() => {
+    if (!currentMatchup) {
+      return null;
+    }
+    const swap = shuffleArray([false, true])[0];
+    const original = {
+      left: { name: currentMatchup.leftName, value: currentMatchup.leftValue },
+      right: { name: currentMatchup.rightName, value: currentMatchup.rightValue },
+    };
+    return swap
+      ? { left: original.right, right: original.left }
+      : original;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentMatchup?.id]);
+
   const advanceRound = useCallback(() => {
     if (currentRoundIndex >= session.rounds.length - 1) {
-      onComplete(roundScore);
+      setFinished(true);
       return;
     }
 
@@ -47,8 +70,7 @@ export function HighLowGame({
     setCurrentMatchupIndex(0);
     setTimeLeft(session.secondsPerRound);
     setRoundResolved(false);
-    setRoundPassed(false);
-  }, [currentRoundIndex, onComplete, roundScore, session.rounds.length, session.secondsPerRound]);
+  }, [currentRoundIndex, session.rounds.length, session.secondsPerRound]);
 
   const resolveRound = useCallback(
     (passed: boolean) => {
@@ -60,27 +82,35 @@ export function HighLowGame({
         setRoundScore((previous) => previous + 1);
       }
 
-      setRoundPassed(passed);
       setRoundResolved(true);
     },
     [roundResolved]
   );
 
-  const handlePick = (side: "left" | "right") => {
-    if (!currentMatchup || roundResolved) {
+  const handlePick = (displaySide: "left" | "right") => {
+    if (!currentMatchup || !displaySides || roundResolved) {
       return;
     }
 
-    const higherSide =
-      currentMatchup.leftValue > currentMatchup.rightValue ? "left" : "right";
-    const isCorrect = side === higherSide;
+    const pickedValue =
+      displaySide === "left" ? displaySides.left.value : displaySides.right.value;
+    const otherValue =
+      displaySide === "left" ? displaySides.right.value : displaySides.left.value;
+    const isCorrect = pickedValue >= otherValue;
+    // Which on-screen column holds the higher value (for the splash origin).
+    const higherDisplaySide =
+      displaySides.left.value >= displaySides.right.value ? "left" : "right";
 
     if (!isCorrect) {
+      // Wrong: splash flies in from the side that was actually higher.
+      fire("wrong", higherDisplaySide);
       resolveRound(false);
       return;
     }
 
     if (currentMatchupIndex >= currentRound.matchups.length - 1) {
+      // Whole chain cleared: correct splash from the winning side.
+      fire("correct", higherDisplaySide);
       resolveRound(true);
       return;
     }
@@ -97,7 +127,10 @@ export function HighLowGame({
       setTimeLeft((previous) => {
         if (previous <= 1) {
           window.clearInterval(timer);
-          window.setTimeout(() => resolveRound(false), 0);
+          window.setTimeout(() => {
+            fire("wrong", "right");
+            resolveRound(false);
+          }, 0);
           return 0;
         }
         return previous - 1;
@@ -105,7 +138,7 @@ export function HighLowGame({
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [currentRound, resolveRound, roundResolved]);
+  }, [currentRound, resolveRound, roundResolved, fire]);
 
   useEffect(() => {
     if (!roundResolved) {
@@ -119,12 +152,12 @@ export function HighLowGame({
     return () => window.clearTimeout(timeout);
   }, [advanceRound, roundResolved]);
 
-  if (!currentRound || !currentMatchup) {
+  if (!currentRound || !currentMatchup || !displaySides) {
     return null;
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-surface-deep text-white">
+    <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat text-white">
       <DailyChallengeHeader
         onQuit={() => setShowQuitDialog(true)}
         currentIndex={currentRoundIndex}
@@ -137,7 +170,7 @@ export function HighLowGame({
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 py-4">
         {/* Question card */}
         <div
-          className="rounded-[24px] bg-surface-page px-5 py-5 text-white sm:px-6 sm:py-6"
+          className="rounded-[24px] border border-white/10 bg-white/5 px-5 py-5 text-white backdrop-blur-sm sm:px-6 sm:py-6"
           style={{
             fontFamily: "'Poppins', sans-serif",
             fontWeight: 700,
@@ -173,7 +206,7 @@ export function HighLowGame({
               {copy.pick}
             </span>
             <span style={{ ...poppins, fontSize: 'clamp(18px, 2.5vw, 32px)', fontWeight: 700 }}>
-              {currentMatchup.leftName}
+              {displaySides.left.name}
             </span>
           </button>
 
@@ -195,26 +228,13 @@ export function HighLowGame({
               {copy.pick}
             </span>
             <span style={{ ...poppins, fontSize: 'clamp(18px, 2.5vw, 32px)', fontWeight: 700 }}>
-              {currentMatchup.rightName}
+              {displaySides.right.name}
             </span>
           </button>
         </div>
 
-        {/* Result / instruction */}
-        {roundResolved ? (
-          <div
-            className="mt-3 flex items-center justify-center gap-2 rounded-[16px] px-4 py-3"
-            style={{
-              ...poppins,
-              fontSize: 'clamp(13px, 1.7vw, 20px)',
-              backgroundColor: roundPassed ? 'rgba(56,182,14,0.15)' : 'rgba(251,49,1,0.15)',
-              border: roundPassed ? '2px solid rgba(56,182,14,0.5)' : '2px solid rgba(251,49,1,0.5)',
-              color: roundPassed ? '#58CC02' : '#FB3101',
-            }}
-          >
-            {roundPassed ? copy.chainComplete : copy.roundFailed}
-          </div>
-        ) : (
+        {/* Instruction (result is shown via the fly-in splash). */}
+        {!roundResolved && (
           <p className="mt-3 text-center text-sm text-white/50" style={poppins}>
             {copy.higherValueInstruction}
           </p>
@@ -222,7 +242,7 @@ export function HighLowGame({
 
         {/* Score */}
         <div className="mt-4 flex items-center justify-between text-sm" style={poppins}>
-          <span className="text-white/55">Score</span>
+          <span className="text-white/55">{copy.score}</span>
           <span className="text-white">{roundScore}</span>
         </div>
       </div>
@@ -231,6 +251,16 @@ export function HighLowGame({
         open={showQuitDialog}
         onOpenChange={setShowQuitDialog}
         onQuit={onBack}
+      />
+
+      <ResultSplash {...splashProps} />
+
+      <DailyChallengeCompleteModal
+        open={finished}
+        title={session.title}
+        correct={roundScore}
+        total={session.roundCount}
+        onDone={() => onComplete(roundScore)}
       />
     </div>
   );

@@ -2,8 +2,9 @@ import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { DEFAULT_AVATAR_PRIMARY, DEFAULT_AVATAR_SECONDARY } from "@/lib/avatars";
 import type { HeadToHeadSummary } from "@/lib/domain";
 import type { LobbyMember } from "@/lib/realtime/socket.types";
+import { buildFriendInviteUrl } from "@/lib/auth/postAuthRedirect";
 import { copyToClipboard } from "@/utils/clipboard";
-import { Copy } from "lucide-react";
+import { Check, Copy, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLocale } from "@/contexts/LocaleContext";
 import { trackFriendInviteSent } from "@/lib/analytics/game-events";
@@ -14,6 +15,8 @@ interface LobbyHeaderProps {
   me?: LobbyMember;
   members: LobbyMember[];
   h2hSummary: HeadToHeadSummary | null;
+  /** Max players for the current mode (classic 2, party quiz 6, ranked sim 2). */
+  maxMembers: number;
 }
 
 export function LobbyHeader({
@@ -22,6 +25,7 @@ export function LobbyHeader({
   me,
   members,
   h2hSummary,
+  maxMembers,
 }: LobbyHeaderProps) {
   const { t } = useLocale();
   const copyCode = async () => {
@@ -37,6 +41,21 @@ export function LobbyHeader({
     }
   };
 
+  const copyInviteLink = async () => {
+    if (!lobbyCode) return;
+    const inviteUrl = buildFriendInviteUrl(lobbyCode);
+    if (!inviteUrl) return;
+    const success = await copyToClipboard(inviteUrl);
+    if (success) {
+      try {
+        trackFriendInviteSent('link_copy');
+      } catch (error) {
+        console.error('Analytics trackFriendInviteSent failed', error);
+      }
+      toast.success(t("friend.inviteLinkCopied"));
+    }
+  };
+
   const roster = members.length > 0 ? members : me ? [me] : [];
   const opponents = roster.filter((member) => member.userId !== me?.userId);
   const showHeadToHead = Boolean(h2hSummary && opponents.length === 1 && h2hSummary.total > 0);
@@ -44,7 +63,7 @@ export function LobbyHeader({
   const poppins = "'Poppins', sans-serif";
 
   return (
-    <div className="mx-5 rounded-[20px] bg-surface-card/40 p-5">
+    <div className="rounded-[20px] bg-surface-card/40 p-5">
       <div className="flex flex-col gap-6">
         <div className="flex flex-row items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
@@ -75,6 +94,14 @@ export function LobbyHeader({
               >
                 <Copy className="size-3.5" />
               </button>
+              <button
+                onClick={copyInviteLink}
+                aria-label={t("friend.copyInviteLink")}
+                className="text-white/55 transition-colors hover:text-brand-cyan"
+                disabled={!lobbyCode}
+              >
+                <Link2 className="size-3.5" />
+              </button>
             </div>
           </div>
 
@@ -91,7 +118,7 @@ export function LobbyHeader({
                 style={{ fontFamily: poppins, fontWeight: 600, fontSize: 22, lineHeight: 1 }}
               >
                 {roster.length}
-                <span className="ml-1 text-sm text-white/45">/ 6</span>
+                <span className="ml-1 text-sm text-white/45">/ {maxMembers}</span>
               </div>
             </div>
 
@@ -141,6 +168,15 @@ export function LobbyHeader({
                       size="md"
                       className="rounded-full"
                     />
+                    {member.isReady ? (
+                      <span
+                        aria-label={t("friend.ready")}
+                        title={t("friend.ready")}
+                        className="absolute -top-2 left-1/2 z-20 flex size-7 -translate-x-1/2 items-center justify-center rounded-full border-2 border-surface-card bg-brand-green text-white shadow-[0_4px_12px_rgba(88,204,2,0.45)]"
+                      >
+                        <Check className="size-4" strokeWidth={3.5} />
+                      </span>
+                    ) : null}
                     {member.isHost ? (
                       <span
                         className="absolute -top-2 -right-2 rounded-full bg-brand-orange px-1.5 py-[2px] uppercase text-white"
