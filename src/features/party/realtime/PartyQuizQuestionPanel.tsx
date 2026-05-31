@@ -53,6 +53,9 @@ interface PartyQuizQuestionPanelProps {
   showFinalizingResults: boolean;
   transitionQuestionNumber: number;
   transitionCategoryName: string;
+  muted: boolean;
+  onToggleMute: () => void;
+  onQuit: () => void;
 }
 
 export function PartyQuizQuestionPanel({
@@ -74,6 +77,9 @@ export function PartyQuizQuestionPanel({
   showFinalizingResults,
   transitionQuestionNumber,
   transitionCategoryName,
+  muted,
+  onToggleMute,
+  onQuit,
 }: PartyQuizQuestionPanelProps) {
   const { t } = useLocale();
   const overlayActive = transitionVisible || firstQuestionIntroVisible;
@@ -105,6 +111,11 @@ export function PartyQuizQuestionPanel({
           opponentAnswer={null}
           partyPicks={partyPicks}
           onAnswer={onAnswer}
+          partyMatchHeader={{
+            muted,
+            onToggleMute,
+            onQuit,
+          }}
         />
 
         {showMobileStandingsBelowOptions && (

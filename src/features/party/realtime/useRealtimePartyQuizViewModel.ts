@@ -13,11 +13,11 @@
  * pure renderer over this hook — no useState/useEffect in the screen.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRealtimeGameLogic } from '@/lib/match/useRealtimeGameLogic';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { usePossessionFirstQuestionIntro } from '@/features/possession/hooks/usePossessionRoundTransition';
-import { playBgm, stopBgm } from '@/lib/sounds/gameSounds';
+import { useGameSounds } from '@/lib/sounds/useGameSounds';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import type { Phase } from '@/lib/types/game.types';
 import type {
@@ -58,6 +58,8 @@ export interface RealtimePartyQuizViewModel {
 
   showQuitModal: boolean;
   setShowQuitModal: (open: boolean) => void;
+  muted: boolean;
+  toggleMuted: () => void;
   firstQuestionIntroVisible: boolean;
   showMobileStandingsBelowOptions: boolean;
 
@@ -102,7 +104,9 @@ export function useRealtimePartyQuizViewModel({
     blockReveal: firstQuestionIntroVisible,
   });
 
+  const { playBgm, stopBgm, toggleMute: toggleMuteSound, isMuted } = useGameSounds();
   const [showQuitModal, setShowQuitModal] = useState(false);
+  const [muted, setMuted] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [preRoundRankingOrder, setPreRoundRankingOrder] = useState<string[]>([]);
 
@@ -128,6 +132,14 @@ export function useRealtimePartyQuizViewModel({
     correctIndex: state.correctIndex,
     timeRemaining: state.timeRemaining,
   });
+
+  useEffect(() => {
+    setMuted(isMuted());
+  }, [isMuted]);
+
+  const toggleMuted = useCallback(() => {
+    setMuted(toggleMuteSound());
+  }, [toggleMuteSound]);
 
   useEffect(() => {
     rankingOrderRef.current = partyState?.rankingOrder ?? [];
@@ -318,6 +330,8 @@ export function useRealtimePartyQuizViewModel({
 
     showQuitModal,
     setShowQuitModal,
+    muted,
+    toggleMuted,
     firstQuestionIntroVisible,
     showMobileStandingsBelowOptions,
 

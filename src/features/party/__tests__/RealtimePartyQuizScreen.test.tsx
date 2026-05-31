@@ -20,9 +20,16 @@ import type {
 
 const playBgmMock = vi.fn();
 const stopBgmMock = vi.fn();
-vi.mock('@/lib/sounds/gameSounds', () => ({
-  playBgm: (...args: unknown[]) => playBgmMock(...args),
-  stopBgm: (...args: unknown[]) => stopBgmMock(...args),
+const toggleMuteMock = vi.fn(() => false);
+vi.mock('@/lib/sounds/useGameSounds', () => ({
+  useGameSounds: () => ({
+    playBgm: (...args: unknown[]) => playBgmMock(...args),
+    stopBgm: (...args: unknown[]) => stopBgmMock(...args),
+    toggleMute: toggleMuteMock,
+    isMuted: () => false,
+    playSfx: vi.fn(),
+    setBgmVolume: vi.fn(),
+  }),
 }));
 
 const usePossessionFirstQuestionIntroMock = vi.fn().mockReturnValue(false);
@@ -58,19 +65,42 @@ vi.mock('@/components/game/RoundTransitionOverlay', () => ({
 // Capture the latest props the screen forwards to PossessionQuestionPanel so
 // tests can verify the answer hand-off + party-pick chip mapping.
 const possessionPanelProps = vi.hoisted(() => ({
-  current: null as null | { onAnswer?: (index: number) => void; partyPicks?: unknown },
+  current: null as null | {
+    onAnswer?: (index: number) => void;
+    partyPicks?: unknown;
+    partyMatchHeader?: { onQuit: () => void };
+  },
 }));
 vi.mock('@/components/game/PossessionQuestionPanel', () => ({
-  PossessionQuestionPanel: (props: { onAnswer?: (index: number) => void; partyPicks?: unknown }) => {
-    possessionPanelProps.current = { onAnswer: props.onAnswer, partyPicks: props.partyPicks };
+  PossessionQuestionPanel: (props: {
+    onAnswer?: (index: number) => void;
+    partyPicks?: unknown;
+    partyMatchHeader?: { onQuit: () => void };
+  }) => {
+    possessionPanelProps.current = {
+      onAnswer: props.onAnswer,
+      partyPicks: props.partyPicks,
+      partyMatchHeader: props.partyMatchHeader,
+    };
     return (
-      <button
-        type="button"
-        data-testid="possession-panel"
-        onClick={() => props.onAnswer?.(2)}
-      >
-        possession-panel
-      </button>
+      <>
+        {props.partyMatchHeader ? (
+          <button
+            type="button"
+            data-testid="party-match-quit"
+            onClick={props.partyMatchHeader.onQuit}
+          >
+            quit
+          </button>
+        ) : null}
+        <button
+          type="button"
+          data-testid="possession-panel"
+          onClick={() => props.onAnswer?.(2)}
+        >
+          possession-panel
+        </button>
+      </>
     );
   },
 }));
@@ -378,17 +408,16 @@ describe('RealtimePartyQuizScreen — standings rendering', () => {
 });
 
 describe('RealtimePartyQuizScreen — quit modal wiring', () => {
-  it('opens the modal when the floating leave button is clicked', () => {
+  it('opens the modal when the header quit button is clicked', () => {
     renderScreen();
     expect(screen.queryByTestId('quit-modal')).not.toBeInTheDocument();
-    const leaveBtn = screen.getByTitle(/leave match/i);
-    fireEvent.click(leaveBtn);
+    fireEvent.click(screen.getByTestId('party-match-quit'));
     expect(screen.getByTestId('quit-modal')).toBeInTheDocument();
   });
 
   it('invokes onForfeit and closes the modal when the primary action is confirmed', () => {
     const { onForfeit } = renderScreen();
-    fireEvent.click(screen.getByTitle(/leave match/i));
+    fireEvent.click(screen.getByTestId('party-match-quit'));
     fireEvent.click(screen.getByTestId('quit-confirm'));
     expect(onForfeit).toHaveBeenCalledTimes(1);
     expect(screen.queryByTestId('quit-modal')).not.toBeInTheDocument();
@@ -396,7 +425,7 @@ describe('RealtimePartyQuizScreen — quit modal wiring', () => {
 
   it('invokes onQuit and closes the modal when the secondary action is confirmed', () => {
     const { onQuit } = renderScreen();
-    fireEvent.click(screen.getByTitle(/leave match/i));
+    fireEvent.click(screen.getByTestId('party-match-quit'));
     fireEvent.click(screen.getByTestId('quit-secondary'));
     expect(onQuit).toHaveBeenCalledTimes(1);
     expect(screen.queryByTestId('quit-modal')).not.toBeInTheDocument();

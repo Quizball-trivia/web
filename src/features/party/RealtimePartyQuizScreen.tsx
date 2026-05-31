@@ -1,8 +1,8 @@
 'use client';
 
-import { X } from 'lucide-react';
-
+import { Volume2, VolumeX, X } from 'lucide-react';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
+import { MatchHudIconButton } from '@/features/possession/components/MatchHudPrimitives';
 import { MatchCountdownPuck } from '@/components/shared/MatchCountdownPuck';
 import { useLocale } from '@/contexts/LocaleContext';
 import { cn } from '@/lib/utils';
@@ -29,6 +29,8 @@ export function RealtimePartyQuizScreen({
     actions,
     showQuitModal,
     setShowQuitModal,
+    muted,
+    toggleMuted,
     firstQuestionIntroVisible,
     showMobileStandingsBelowOptions,
     pauseSeconds,
@@ -84,16 +86,25 @@ export function RealtimePartyQuizScreen({
         pauseSeconds={pauseSeconds}
       />
 
-      {/* Leave button — circular, matching the ranked match HUD button, aligned
-          with the question/timer header row at the top-right. */}
-      <button
+      {/* Desktop: corner mute / quit (mobile uses inline header row in question panel) */}
+      <MatchHudIconButton
+        onClick={toggleMuted}
+        className="absolute left-[calc(env(safe-area-inset-left)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.25rem)] z-[70] hidden sm:left-[calc(env(safe-area-inset-left)+0.5rem)] sm:top-[calc(env(safe-area-inset-top)+0.5rem)] lg:flex"
+        aria-label={muted ? t('possession.unmuteAudio') : t('possession.muteAudio')}
+        aria-pressed={muted}
+        title={muted ? t('common.unmute') : t('common.mute')}
+      >
+        {muted ? <VolumeX className="size-4 sm:size-5" /> : <Volume2 className="size-4 sm:size-5" />}
+      </MatchHudIconButton>
+      <MatchHudIconButton
         onClick={() => setShowQuitModal(true)}
-        className="absolute right-4 top-[14px] z-40 flex size-10 items-center justify-center rounded-full border border-brand-blue/55 bg-brand-blue/25 text-white shadow-[0_8px_26px_rgba(31,81,255,0.28)] backdrop-blur-md transition-colors hover:border-brand-blue/80 hover:bg-brand-blue/35 sm:right-5 sm:top-5 sm:size-11"
+        className="absolute right-[calc(env(safe-area-inset-right)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.25rem)] z-[70] hidden sm:right-[calc(env(safe-area-inset-right)+0.5rem)] sm:top-[calc(env(safe-area-inset-top)+0.5rem)] lg:flex lg:fixed lg:right-[calc(env(safe-area-inset-right)+1rem)] lg:top-[calc(env(safe-area-inset-top)+1rem)]"
+        data-testid="party-match-quit-desktop"
         title={t('partyResults.leaveMatch')}
         aria-label={t('partyResults.leaveMatch')}
       >
         <X className="size-5" />
-      </button>
+      </MatchHudIconButton>
 
       {/* ================================================================= */}
       {/* Main content */}
@@ -124,6 +135,9 @@ export function RealtimePartyQuizScreen({
             showFinalizingResults={showFinalizingResults}
             transitionQuestionNumber={transitionQuestionNumber}
             transitionCategoryName={transitionCategoryName}
+            muted={muted}
+            onToggleMute={toggleMuted}
+            onQuit={() => setShowQuitModal(true)}
           />
 
           <PartyQuizStandingsSidebar
