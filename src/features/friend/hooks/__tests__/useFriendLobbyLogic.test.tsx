@@ -119,13 +119,24 @@ describe('useFriendLobbyLogic invite links', () => {
         });
       }
       if (event === 'lobby:join_by_code') {
+        const inviteCode =
+          payload && typeof payload === 'object' && 'inviteCode' in payload
+            ? String((payload as { inviteCode: unknown }).inviteCode)
+            : 'JOINED';
+        if (inviteCode === 'MISSING') {
+          ack({
+            ok: false,
+            code: 'LOBBY_NOT_FOUND',
+            message: 'Lobby not found.',
+            retryable: false,
+            correlationId,
+          });
+          return;
+        }
         ack({
           ok: true,
           lobbyId: 'joined-lobby',
-          inviteCode:
-            payload && typeof payload === 'object' && 'inviteCode' in payload
-              ? String((payload as { inviteCode: unknown }).inviteCode)
-              : 'JOINED',
+          inviteCode,
           alreadyMember: false,
           correlationId,
         });
@@ -195,6 +206,29 @@ describe('useFriendLobbyLogic invite links', () => {
     expect(result.current.lobbyCode).toBe('NAYRR5');
     expect(result.current.isResolvingInvite).toBe(true);
     expect(mocks.startSession).not.toHaveBeenCalled();
+  });
+
+  it('stops resolving and exposes a terminal invite failure when the lobby is gone', async () => {
+    const { result } = renderHook(() =>
+      useFriendLobbyLogic({ roomCode: 'MISSING', isHost: false }),
+    );
+
+    await waitFor(() => {
+      expect(mocks.socketEmit).toHaveBeenCalledWith('lobby:join_by_code', {
+        inviteCode: 'MISSING',
+        correlationId: expect.any(String),
+      }, expect.any(Function));
+    });
+
+    await waitFor(() => {
+      expect(result.current.inviteJoinFailure).toEqual({
+        code: 'MISSING',
+        message: 'Lobby not found.',
+      });
+    });
+
+    expect(result.current.isResolvingInvite).toBe(false);
+    expect(mocks.toastError).toHaveBeenCalledWith('Lobby not found.');
   });
 
   it('does not spam invite joins or toasts on transient transition locks', async () => {

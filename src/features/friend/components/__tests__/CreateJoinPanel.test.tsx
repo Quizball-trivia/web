@@ -98,4 +98,21 @@ describe("CreateJoinPanel", () => {
       correlationId: expect.any(String),
     }, expect.any(Function));
   });
+
+  it("joins when a full invite link is pasted into the code field", () => {
+    const onActionTriggered = vi.fn();
+    render(<CreateJoinPanel onActionTriggered={onActionTriggered} />);
+
+    fireEvent.change(screen.getByPlaceholderText("friend.roomCodePlaceholder"), {
+      target: { value: "https://quizball.test/friend/room/abc123?from=share" },
+    });
+    fireEvent.click(screen.getByText("friend.joinLobby"));
+
+    expect(onActionTriggered).toHaveBeenCalledOnce();
+    expect(mocks.trackFriendInviteAccepted).toHaveBeenCalledWith("ABC123");
+    expect(mocks.socketEmit).toHaveBeenCalledWith("lobby:join_by_code", {
+      inviteCode: "ABC123",
+      correlationId: expect.any(String),
+    }, expect.any(Function));
+  });
 });

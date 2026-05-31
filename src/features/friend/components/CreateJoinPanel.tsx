@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus, Lock, Globe, ArrowRight, Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { trackFriendInviteAccepted } from "@/lib/analytics/game-events";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { useLocale } from "@/contexts/LocaleContext";
+import { extractFriendInviteCode } from "@/lib/friend/inviteCode";
 import { useLobbyCommandMachine } from "../hooks/useLobbyCommandMachine";
 
 interface CreateJoinPanelProps {
@@ -25,12 +26,24 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
   const lobbyCommands = useLobbyCommandMachine();
   const { createLobby, joinByCode, reset } = lobbyCommands;
   const lobby = useRealtimeMatchStore((state) => state.lobby);
-  const isCreating = lobbyCommands.isCreating;
   const isJoining = lobbyCommands.isJoining;
 
+  // On a fast connection the socket ACK resolves in a few ms, so the real
+  // `isCreating` flag flips on and off before the user can perceive it. Hold a
+  // local pressed state for a minimum window so the spinner is always visible.
+  const [createPressed, setCreatePressed] = useState(false);
+  const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isCreating = lobbyCommands.isCreating || createPressed;
+
+  useEffect(() => () => {
+    if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
+  }, []);
+
   const handleCreate = () => {
-    if (lobbyCommands.isBusy) return;
+    if (lobbyCommands.isBusy || createPressed) return;
     if (onActionTriggered) onActionTriggered();
+    setCreatePressed(true);
+    pressTimerRef.current = setTimeout(() => setCreatePressed(false), 600);
     toast.info(t("friend.creatingRoom"));
     void createLobby({ mode: "friendly", isPublic }).then((result) => {
       if (!result || result.ok) return;
@@ -40,13 +53,13 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
 
   const handleJoin = () => {
     if (lobbyCommands.isBusy) return;
-    if (!inviteCode || inviteCode.length < 3) {
+    const code = extractFriendInviteCode(inviteCode);
+    if (!code) {
       toast.error(t("friend.enterValidCode"));
       return;
     }
 
     if (onActionTriggered) onActionTriggered();
-    const code = inviteCode.trim().toUpperCase();
     try {
       trackFriendInviteAccepted(code);
     } catch (error) {
@@ -84,7 +97,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
               {t("friend.startNewLobby")} <span className="text-brand-yellow">{t("friend.lobbySuffix")}</span>
             </h3>
             <p
-              className="text-white/55 uppercase"
+              className="text-white/80 uppercase"
               style={{
                 fontFamily: poppinsFont,
                 fontWeight: 600,
@@ -112,12 +125,12 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
                 {isPublic ? (
                   <Globe className="size-4 text-brand-yellow" />
                 ) : (
-                  <Lock className="size-4 text-white/60" />
+                  <Lock className="size-4 text-white/80" />
                 )}
                 {t("friend.publicRoom")}
               </label>
               <p
-                className="text-white/50"
+                className="text-white/75"
                 style={{
                   fontFamily: poppinsFont,
                   fontWeight: 500,
@@ -140,8 +153,9 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
           <button
             type="button"
             onClick={handleCreate}
-            disabled={isCreating}
-            className="flex h-16 w-full items-center justify-center gap-3 rounded-[20px] bg-surface-page text-white transition-colors hover:bg-surface-page/90 disabled:opacity-60"
+            disabled={lobbyCommands.isBusy || isCreating}
+            aria-busy={isCreating}
+            className="flex h-16 w-full items-center justify-center gap-3 rounded-[20px] bg-surface-page text-white transition-colors hover:bg-surface-page/90 disabled:cursor-not-allowed disabled:opacity-60"
             style={{
               fontFamily: poppinsFont,
               fontWeight: 600,
@@ -185,7 +199,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
               {t("friend.haveACode")} <span className="text-brand-yellow">{t("friend.codeSuffix")}</span>
             </h3>
             <p
-              className="text-white/55 uppercase"
+              className="text-white/80 uppercase"
               style={{
                 fontFamily: poppinsFont,
                 fontWeight: 600,
@@ -203,7 +217,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
             type="text"
             value={inviteCode}
             onChange={(e) => setInviteCode(e.target.value)}
-            maxLength={8}
+            maxLength={256}
             placeholder={t("friend.roomCodePlaceholder")}
             className="h-16 w-full rounded-[20px] border-none bg-black/25 px-6 text-center text-white uppercase outline-none placeholder:text-white/40 focus:outline-none"
             style={{

@@ -16,6 +16,7 @@ import { copyToClipboard } from "@/utils/clipboard";
 import { trackFriendInviteSent } from "@/lib/analytics/game-events";
 import { useHeadToHead } from "@/lib/queries/stats.queries";
 import { trackLobbyCreated, trackLobbyJoined } from "@/lib/analytics/game-events";
+import { normalizeFriendInviteCode } from "@/lib/friend/inviteCode";
 import { useLobbyCommandMachine } from "./useLobbyCommandMachine";
 
 interface UseFriendLobbyLogicProps {
@@ -73,6 +74,10 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   const [isStartingMatch, setIsStartingMatch] = useState(false);
   const [handoffTimedOutCode, setHandoffTimedOutCode] = useState<string | null>(null);
   const [optimisticReady, setOptimisticReady] = useState<boolean | null>(null);
+  const [inviteJoinFailureState, setInviteJoinFailure] = useState<{
+    code: string;
+    message: string;
+  } | null>(null);
 
   const clearStartMatchTimeout = useCallback(() => {
     if (!startMatchTimeoutRef.current) return;
@@ -82,11 +87,13 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
 
   const isNewRoomRoute = roomCode.trim().toLowerCase() === "new";
   const shouldCreateLobby = isHost && isNewRoomRoute;
-  const normalizedRoomCode = roomCode && !isNewRoomRoute ? roomCode.toUpperCase() : null;
+  const normalizedRoomCode = roomCode && !isNewRoomRoute ? normalizeFriendInviteCode(roomCode) : null;
+  const inviteJoinFailure =
+    inviteJoinFailureState?.code === normalizedRoomCode ? inviteJoinFailureState : null;
   const expectsInviteLobby = Boolean(normalizedRoomCode);
   const lobbyMatchesInvite = !expectsInviteLobby || lobby?.inviteCode?.toUpperCase() === normalizedRoomCode;
   const activeLobby = lobbyMatchesInvite ? lobby : null;
-  const isResolvingInvite = expectsInviteLobby && !activeLobby;
+  const isResolvingInvite = expectsInviteLobby && !activeLobby && !inviteJoinFailure;
   const lobbyCode = activeLobby?.inviteCode ?? (roomCode === "new" ? "" : normalizedRoomCode ?? roomCode);
   const members = activeLobby?.members ?? [];
   const me = members.find((member) => member.userId === selfUserId);
@@ -140,6 +147,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     if (leavingRef.current) return;
     if (inviteJoinCancelledRef.current) return;
     if (terminalInviteJoinFailureRef.current) return;
+    if (inviteJoinFailure) return;
     if (createdRef.current) return;
     const targetCode = normalizedRoomCode;
     const currentCode = lobby?.inviteCode?.toUpperCase() ?? null;
@@ -180,6 +188,10 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
       if (!result || result.ok) return;
       terminalInviteJoinFailureRef.current = true;
       inviteJoinCancelledRef.current = true;
+      setInviteJoinFailure({
+        code: targetCode ?? roomCode.toUpperCase(),
+        message: result.message,
+      });
       toast.error(result.message);
     });
     logger.info("Socket emit lobby:join_by_code via command machine", {
@@ -189,6 +201,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     createLobby,
     handoffTimedOutCode,
     isNewRoomRoute,
+    inviteJoinFailure,
     joinByCode,
     lobby?.inviteCode,
     lobby,
@@ -402,6 +415,26 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     logger.info("Socket emit lobby:leave via command machine");
   };
 
+  const handleInviteRetry = () => {
+    if (!normalizedRoomCode) return;
+    inviteJoinCancelledRef.current = false;
+    terminalInviteJoinFailureRef.current = false;
+    createdRef.current = false;
+    initActionRef.current = null;
+    setInviteJoinFailure(null);
+    resetLobbyCommand();
+  };
+
+  const handleInviteBack = () => {
+    inviteJoinCancelledRef.current = true;
+    terminalInviteJoinFailureRef.current = true;
+    createdRef.current = true;
+    initActionRef.current = null;
+    setInviteJoinFailure(null);
+    resetLobbyCommand();
+    router.replace("/play/friend?tab=create");
+  };
+
   useEffect(() => {
     return () => {
       clearStartMatchTimeout();
@@ -417,6 +450,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     members,
     lobbyCode,
     isResolvingInvite,
+    inviteJoinFailure,
     targetInviteCode: normalizedRoomCode,
     me,
     opponent,
@@ -424,6 +458,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     allCategories,
     settingsErrorVersion,
     isStartingMatch,
+    isLeaving: lobbyCommands.isLeaving,
     optimisticReady: derivedOptimisticReady,
     actions: {
       copyCode,
@@ -431,6 +466,8 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
       handleUpdateSettings,
       handleStartMatch,
       handleLeaveLobby,
+      handleInviteRetry,
+      handleInviteBack,
     },
   };
 }

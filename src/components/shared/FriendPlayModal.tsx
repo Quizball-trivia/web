@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ModalCloseButton } from "./ModalCloseButton";
 import { useLocale } from "@/contexts/LocaleContext";
+import { extractFriendInviteCode } from "@/lib/friend/inviteCode";
 
 interface FriendPlayModalProps {
   isOpen: boolean;
@@ -64,14 +65,15 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
     if (!roomCode.trim()) return;
     setIsJoining(true);
 
-    if (roomCode.length < 3) {
+    const code = extractFriendInviteCode(roomCode);
+    if (!code) {
       toast.error(t("friendPlay.invalidRoomCode"));
       setIsJoining(false);
       return;
     }
 
     onOpenChange(false);
-    router.push(`/friend/room/${roomCode.toUpperCase()}`);
+    router.push(`/friend/room/${code}`);
   };
 
   const Body = (
@@ -144,8 +146,8 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
           )}
           style={{ backgroundColor: SECONDARY_BG }}
           value={roomCode}
-          onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-          maxLength={8}
+          onChange={(e) => setRoomCode(e.target.value)}
+          maxLength={256}
         />
         <button
           type="button"

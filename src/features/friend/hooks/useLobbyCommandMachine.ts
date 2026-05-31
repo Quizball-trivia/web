@@ -6,6 +6,7 @@ import type {
   LobbyLeaveResult,
   MatchMode,
 } from "@/lib/realtime/socket.types";
+import { extractFriendInviteCode } from "@/lib/friend/inviteCode";
 import { logger } from "@/utils/logger";
 
 type LobbyCommandOperation = "create" | "join" | "leave";
@@ -239,7 +240,27 @@ export function useLobbyCommandMachine() {
   }, [emitWithAck, execute]);
 
   const joinByCode = useCallback((inviteCode: string) => {
-    const targetInviteCode = inviteCode.trim().toUpperCase();
+    const targetInviteCode = extractFriendInviteCode(inviteCode);
+    if (!targetInviteCode) {
+      const correlationId = createCorrelationId("join");
+      const error: LobbyCommandError = {
+        ok: false,
+        code: "INVALID_INVITE_CODE",
+        message: "Please enter a valid lobby code or invite link.",
+        retryable: false,
+        correlationId,
+      };
+      setMachineState({
+        status: "failed",
+        operation: "join",
+        commandKey: "join:invalid",
+        correlationId,
+        targetInviteCode: null,
+        error,
+      });
+      return Promise.resolve(error);
+    }
+
     return execute<LobbyJoinByCodeResult>({
       operation: "join",
       commandKey: `join:${targetInviteCode}`,
@@ -253,7 +274,7 @@ export function useLobbyCommandMachine() {
           correlationId
         ),
     });
-  }, [emitWithAck, execute]);
+  }, [emitWithAck, execute, setMachineState]);
 
   const leaveLobby = useCallback(() => {
     return execute<LobbyLeaveResult>({
