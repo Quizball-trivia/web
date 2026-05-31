@@ -217,7 +217,7 @@ export function RankedProgressionPanel({
               cap-to-cap between the two markers. `items-end` aligns the
               short bar with the bottom of each marker column. */}
           <div className="mt-6 flex items-end md:mt-8">
-            <TierEndMarker label={rpTierInfo.tier} />
+            <TierEndMarker label={rpTierInfo.tier} align="left" />
             <div
               className="relative h-[18px] flex-1 overflow-hidden md:h-[24px]"
               style={{ backgroundColor: '#1F5D0E' }}
@@ -236,7 +236,7 @@ export function RankedProgressionPanel({
                 className="absolute inset-y-0 left-0 bg-brand-green"
               />
             </div>
-            <TierEndMarker label={nextTierBand?.tier ?? t('results.nextStage')} />
+            <TierEndMarker label={nextTierBand?.tier ?? t('results.nextStage')} align="right" />
           </div>
 
           <div
@@ -265,20 +265,27 @@ export function RankedProgressionPanel({
  * "points down" at the cap). There's a small gap between polygon and cap
  * so the polygon hovers rather than touching the cap.
  */
-function TierEndMarker({ label }: { label: string }) {
+function TierEndMarker({ label, align }: { label: string; align: 'left' | 'right' }) {
   return (
     <div
       className="relative flex flex-shrink-0 flex-col items-center"
       style={{ width: 'clamp(8px, 1.2vw, 10px)' }}
     >
+      {/* Anchor the label to the marker's inner edge so it grows toward the
+          bar (into the screen) instead of overflowing past the viewport edge.
+          Without this, the centered label is clipped off-screen on mobile. */}
       <span
-        className="whitespace-nowrap font-poppins font-semibold uppercase tracking-wide text-white text-[12px] sm:text-[13px] md:text-[14px]"
+        className={cn(
+          'absolute bottom-full mb-2 max-w-[42vw] truncate font-poppins font-semibold uppercase tracking-wide text-white text-[11px] sm:text-[13px] md:text-[14px]',
+          align === 'left' ? 'left-0 text-left' : 'right-0 text-right',
+        )}
         style={{ opacity: 0.78 }}
+        title={label}
       >
         {label}
       </span>
       <div
-        className="mt-2 bg-brand-yellow"
+        className="bg-brand-yellow"
         style={{
           width: 'clamp(26px, 4.2vw, 40px)',
           height: 'clamp(14px, 2.4vw, 22px)',

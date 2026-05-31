@@ -6,6 +6,7 @@ import type {
   MatchStatePayload,
   ResolvedMatchQuestionPayload,
 } from '@/lib/realtime/socket.types';
+import { useLocale } from '@/contexts/LocaleContext';
 import {
   FIRST_QUESTION_INTRO_MS,
   GOAL_VISUAL_SEQUENCE_MS,
@@ -150,13 +151,14 @@ export function usePossessionRoundTransition({
   isLastAttackQuestion,
   goalCelebration,
 }: UsePossessionRoundTransitionParams): PossessionOverlayModel {
+  const { t } = useLocale();
   const [isHalftime, setIsHalftime] = useState(false);
   const [penaltyCountdownEndsAt, setPenaltyCountdownEndsAt] = useState<number | null>(null);
   const [penaltyCountdownNow, setPenaltyCountdownNow] = useState(() => Date.now());
   const [transitionSnapshot, setTransitionSnapshot] = useState<TransitionSnapshot>({
-    title: 'Question 1',
-    categoryName: 'Football',
-    subtitle: '1st Half',
+    title: t('possession.questionN', { n: 1 }),
+    categoryName: '',
+    subtitle: t('possession.firstHalf'),
   });
 
   const prevPenaltyPhaseRef = useRef(phase === 'PENALTY_SHOOTOUT');
@@ -280,25 +282,26 @@ export function usePossessionRoundTransition({
       transitionVisibleRef.current = true;
       const isExtra = pendingQuestion?.phaseKind === 'last_attack';
       const transitionQIndex = pendingQuestion?.qIndex ?? localQuestion?.qIndex;
+      const questionNumber = typeof transitionQIndex === 'number'
+        ? transitionQIndex + 1
+        : pendingQuestion?.phaseRound
+          ?? (typeof localQuestion?.phaseRound === 'number' ? localQuestion.phaseRound + 1 : 1);
       const title = firstQuestionIntro
-        ? 'Question 1'
+        ? t('possession.questionN', { n: 1 })
         : isExtra
-          ? 'Extra Question'
-          : `Question ${typeof transitionQIndex === 'number'
-            ? transitionQIndex + 1
-            : pendingQuestion?.phaseRound
-            ?? (typeof localQuestion?.phaseRound === 'number' ? localQuestion.phaseRound + 1 : 1)}`;
+          ? t('possession.extraQuestion')
+          : t('possession.questionN', { n: questionNumber });
       const categoryName = firstQuestionIntro
-        ? (localQuestion?.question.categoryName ?? 'Football')
+        ? (localQuestion?.question.categoryName ?? '')
         : (pendingQuestion?.question.categoryName
           ?? localQuestion?.question.categoryName
-          ?? 'Football');
+          ?? '');
 
       // eslint-disable-next-line react-hooks/set-state-in-effect -- layout effect commits the new label before paint, avoiding a one-frame stale "Question 1" flash.
       setTransitionSnapshot({
         title,
         categoryName,
-        subtitle: (half ?? 1) === 1 ? '1st Half' : '2nd Half',
+        subtitle: (half ?? 1) === 1 ? t('possession.firstHalf') : t('possession.secondHalf'),
       });
       return;
     }
@@ -309,9 +312,9 @@ export function usePossessionRoundTransition({
         ?? (typeof roundResult?.phaseRound === 'number' ? roundResult.phaseRound + 1 : undefined)
         ?? 1;
       setTransitionSnapshot({
-        title: `Penalty ${penaltyRound}`,
-        categoryName: 'Penalty Shootout',
-        subtitle: penaltySuddenDeath ? 'Sudden Death' : 'Shootout',
+        title: t('possession.penaltyN', { n: penaltyRound }),
+        categoryName: t('possession.penaltyShootout'),
+        subtitle: penaltySuddenDeath ? t('possession.suddenDeath') : t('possession.shootout'),
       });
       return;
     }
@@ -334,6 +337,7 @@ export function usePossessionRoundTransition({
     secondHalfQuestionIntro,
     showPenaltyTransition,
     showRoundTransition,
+    t,
   ]);
 
   return {

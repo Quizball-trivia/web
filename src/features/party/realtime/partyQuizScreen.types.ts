@@ -23,6 +23,7 @@ export interface PartyStandingViewModel {
   rank: number;
   totalPoints: number;
   answered: boolean;
+  status: 'active' | 'dropped';
   isLeader: boolean;
   isSelf: boolean;
   rankShift: number;

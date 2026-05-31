@@ -119,11 +119,14 @@ export function PartyQuizQuestionPanel({
             </div>
             <div className="grid gap-2">
               {standings.map((player) => {
-                const dotStatus = getStandingDotStatus({
-                  roundResolved,
-                  answered: player.answered,
-                  showOptions,
-                });
+                const isDropped = player.status === 'dropped';
+                const dotStatus = isDropped
+                  ? 'idle'
+                  : getStandingDotStatus({
+                      roundResolved,
+                      answered: player.answered,
+                      showOptions,
+                    });
                 const hasAnswered = dotStatus === 'correct';
                 const rankStyle = getRankStyle(player.rank);
                 return (
@@ -134,6 +137,7 @@ export function PartyQuizQuestionPanel({
                     className={cn(
                       'flex min-h-12 items-center gap-2 rounded-[18px] border-2 bg-surface-page/40 px-2.5 py-1.5 backdrop-blur-sm',
                       rankStyle.border,
+                      isDropped && 'opacity-60 grayscale',
                       player.isSelf && rankStyle.tint,
                     )}
                     style={player.isSelf ? { boxShadow: rankStyle.selfGlow } : undefined}
@@ -180,6 +184,11 @@ export function PartyQuizQuestionPanel({
                           </span>
                         )}
                         {player.isLeader && <Crown className="size-3.5 shrink-0 text-brand-yellow-deep" />}
+                        {isDropped && (
+                          <span className="rounded-full bg-white/10 px-1.5 py-0.5 font-poppins text-[8px] font-black uppercase tracking-[0.08em] text-white/70">
+                            {t('partyResults.dropped')}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <span className="shrink-0 font-poppins text-sm font-black tabular-nums text-white">

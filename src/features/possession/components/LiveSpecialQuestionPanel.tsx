@@ -119,7 +119,7 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
             className="font-poppins flex flex-1 items-center justify-center rounded-[16px] bg-brand-blue px-5 text-white h-[40px] sm:h-[52px] md:h-[62px] lg:h-[72px]"
             style={{ fontWeight: 600, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
           >
-            QUESTION {displayQuestionNum}/{totalQuestions}
+            {t('possession.questionCounter', { current: displayQuestionNum, total: totalQuestions })}
           </div>
           <div
             className="font-poppins flex w-[64px] items-center justify-center rounded-[16px] bg-brand-blue text-white h-[40px] sm:h-[52px] sm:w-[92px] md:h-[62px] md:w-[116px] lg:h-[72px] lg:w-[136px] tabular-nums"

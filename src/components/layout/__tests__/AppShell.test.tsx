@@ -194,12 +194,14 @@ interface RealtimeStateSeed {
   sessionState?: { state: string; waitingLobbyId?: string | null } | null;
   rejoinMatch?: unknown;
   forfeitPending?: { matchId: string; reason: string; message: string } | null;
+  partyDropout?: { matchId: string; reason: string; message: string } | null;
   challengeInvites?: unknown[];
   suppressLobbyBannerUntil?: number | null;
   suppressLobbyBannerReason?: string | null;
   clearLobbyBannerSuppression?: () => void;
   clearRejoinAvailable?: () => void;
   setForfeitPending?: (payload: { matchId: string; reason: string; message: string }) => void;
+  clearPartyDropout?: () => void;
   reset?: () => void;
 }
 function seedRealtime(overrides: RealtimeStateSeed = {}) {
@@ -211,12 +213,14 @@ function seedRealtime(overrides: RealtimeStateSeed = {}) {
     sessionState: null,
     rejoinMatch: null,
     forfeitPending: null,
+    partyDropout: null,
     challengeInvites: [],
     suppressLobbyBannerUntil: null,
     suppressLobbyBannerReason: null,
     clearLobbyBannerSuppression: vi.fn(),
     clearRejoinAvailable: vi.fn(),
     setForfeitPending: vi.fn(),
+    clearPartyDropout: vi.fn(),
     reset: vi.fn(),
     ...overrides,
   };
@@ -504,6 +508,23 @@ describe('AppShell — rejoin / completed / forfeit / draft banners', () => {
     expect(screen.getAllByText('forfeit.matchForfeited').length).toBeGreaterThan(0);
     expect(screen.queryByText(/appShell.matchStillActiveAgainst/)).not.toBeInTheDocument();
     expect(screen.queryByText(/appShell.forfeit/)).not.toBeInTheDocument();
+  });
+
+  it('shows party-dropout banner and hides rejoin for the dropped match', () => {
+    pathnameMock.mockReturnValue('/leaderboard');
+    seedRealtime({
+      match: {
+        matchId: 'P1',
+        mode: 'friendly',
+        opponent: { id: 'opp', username: 'Opp', avatarUrl: null },
+        finalResults: null,
+      },
+      partyDropout: { matchId: 'P1', reason: 'disconnect_timeout', message: 'You left this quiz' },
+    });
+    renderShell();
+    expect(screen.getAllByText('appShell.partyQuizLeft').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('You left this quiz').length).toBeGreaterThan(0);
+    expect(screen.queryByText(/appShell.matchStillActiveAgainst/)).not.toBeInTheDocument();
   });
 
   it('shows the draft banner when lobby is active and a draft is in progress', () => {

@@ -37,6 +37,7 @@ export function GameStageRouter() {
     realtimeMatch,
     realtimeError,
     sessionState,
+    partyDropout,
     exitCompletedMatchToLobby,
     resetRealtime,
     clearRankedMatchmaking,
@@ -61,7 +62,7 @@ export function GameStageRouter() {
   } = useGameStageState();
 
   const returningToLobbyRef = useRef(false);
-  const showingFinalResultsFromReplay = stage === "idle" && Boolean(realtimeMatch?.finalResults);
+  const showingFinalResultsFromReplay = stage === "idle" && Boolean(realtimeMatch.finalResults);
 
   useGameStageTransitions({
     isMultiplayer,
@@ -76,7 +77,7 @@ export function GameStageRouter() {
   const showdownType = matchType === "ranked" ? "ranked" : "friendly";
 
   const exitToPlay = useCallback(() => {
-    const final = realtimeMatch?.finalResults;
+    const final = realtimeMatch.finalResults;
     if (final) {
       socket.emit("match:final_results_ack", {
         matchId: final.matchId,
@@ -98,7 +99,7 @@ export function GameStageRouter() {
     if (
       stage !== "finalResults" ||
       matchType !== "friendly" ||
-      !realtimeMatch?.finalResults ||
+      !realtimeMatch.finalResults ||
       realtimeLobby?.status !== "waiting" ||
       !inviteCode
     ) {
@@ -114,17 +115,23 @@ export function GameStageRouter() {
     matchType,
     realtimeLobby?.inviteCode,
     realtimeLobby?.status,
-    realtimeMatch?.finalResults,
+    realtimeMatch.finalResults,
     resetGameSession,
     router,
     stage,
   ]);
 
   useEffect(() => {
-    if (stage === "idle" && !returningToLobbyRef.current && !realtimeMatch?.finalResults) {
+    if (stage === "idle" && !returningToLobbyRef.current && !realtimeMatch.finalResults) {
       router.replace("/play");
     }
-  }, [realtimeMatch?.finalResults, stage, router]);
+  }, [realtimeMatch.finalResults, stage, router]);
+
+  useEffect(() => {
+    if (!partyDropout || realtimeMatch.finalResults) return;
+    resetGameSession();
+    router.replace("/play");
+  }, [partyDropout, realtimeMatch.finalResults, resetGameSession, router]);
 
   const realtimeMatchId = realtimeMatch?.matchId;
   const handleQuit = useCallback(() => {
@@ -269,7 +276,7 @@ export function GameStageRouter() {
     }
 
     if (stage === "finalResults" || showingFinalResultsFromReplay) {
-      const final = realtimeMatch?.finalResults;
+      const final = realtimeMatch.finalResults;
       if (!isPartyQuizMatch && !final) {
         return (
           <LoadingScreen

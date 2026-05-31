@@ -358,6 +358,23 @@ describe('RealtimePartyQuizScreen — standings rendering', () => {
     expect(bottomAnchors.length).toBe(3);
     expect(inlineAnchors.length).toBe(0);
   });
+
+  it('keeps dropped players visible with a dropped badge', () => {
+    storeSnapshot.current = makeStore({
+      partyState: buildPartyState({
+        players: [
+          { userId: OPP_ID, totalPoints: 200, correctAnswers: 2, answered: true, rank: 1, avgTimeMs: 4500 },
+          { userId: SELF_ID, totalPoints: 150, correctAnswers: 1, answered: false, rank: 2, avgTimeMs: 5000 },
+          { userId: THIRD_ID, totalPoints: 90, correctAnswers: 1, answered: false, rank: 3, avgTimeMs: 5200, status: 'dropped' },
+        ],
+      }),
+    });
+
+    renderScreen();
+
+    expect(screen.getAllByText('Third').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Dropped').length).toBeGreaterThanOrEqual(1);
+  });
 });
 
 describe('RealtimePartyQuizScreen — quit modal wiring', () => {

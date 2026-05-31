@@ -190,6 +190,31 @@ describe('registerSocketHandlers', () => {
     expect(useRealtimeMatchStore.getState().lobby).toBeNull();
   });
 
+  it('stores party dropout and clears rejoin/pause state', () => {
+    registerSocketHandlers();
+    useRealtimeMatchStore.getState().setRejoinAvailable({
+      matchId: 'party-1',
+      mode: 'friendly',
+      variant: 'friendly_party_quiz',
+      opponent: { id: 'opp-1', username: 'Opponent', avatarUrl: null },
+      participants: [],
+      graceMs: 60000,
+      remainingReconnects: 2,
+    });
+    useRealtimeMatchStore.getState().setMatchPaused({ graceMs: 60000, remainingReconnects: 2 });
+
+    mockSocket.fire('match:party_dropout', {
+      matchId: 'party-1',
+      reason: 'disconnect_timeout',
+      message: 'Dropped',
+    });
+
+    const state = useRealtimeMatchStore.getState();
+    expect(state.partyDropout?.matchId).toBe('party-1');
+    expect(state.rejoinMatch).toBeNull();
+    expect(state.matchPaused).toBe(false);
+  });
+
   it('patches ranked profile cache from match:final_results when rankedOutcome exists for self', () => {
     const profileKey = queryKeys.ranked.profile();
     let cachedProfile: Record<string, unknown> = {

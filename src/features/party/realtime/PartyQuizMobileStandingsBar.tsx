@@ -13,6 +13,7 @@ import { AnimatePresence, motion } from 'motion/react';
 
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/contexts/LocaleContext';
 
 import type { PartyStandingViewModel } from './partyQuizScreen.types';
 import { getRankStyle, getStandingDotStatus } from './partyQuizScreen.helpers';
@@ -28,15 +29,19 @@ export function PartyQuizMobileStandingsBar({
   roundResolved,
   showOptions,
 }: PartyQuizMobileStandingsBarProps) {
+  const { t } = useLocale();
   return (
     <div className="lg:hidden fixed bottom-0 inset-x-0 z-10 bg-gradient-to-t from-surface-page-alt via-surface-page-alt/95 to-transparent pt-6 pb-3 px-3">
       <div className="flex gap-2 overflow-x-auto scrollbar-none">
         {standings.map((player) => {
-          const dotStatus = getStandingDotStatus({
-            roundResolved,
-            answered: player.answered,
-            showOptions,
-          });
+          const isDropped = player.status === 'dropped';
+          const dotStatus = isDropped
+            ? 'idle'
+            : getStandingDotStatus({
+                roundResolved,
+                answered: player.answered,
+                showOptions,
+              });
           const hasAnswered = dotStatus === 'correct';
           const rankStyle = getRankStyle(player.rank);
           return (
@@ -47,6 +52,7 @@ export function PartyQuizMobileStandingsBar({
               className={cn(
                 'flex shrink-0 items-center gap-2 rounded-full px-2.5 py-1.5 border-2 bg-transparent transition-colors',
                 rankStyle.border,
+                isDropped && 'opacity-60 grayscale',
               )}
             >
               <span
@@ -92,6 +98,11 @@ export function PartyQuizMobileStandingsBar({
               <span className="text-xs font-bold text-white truncate max-w-[80px]">
                 {player.username}
               </span>
+              {isDropped && (
+                <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-[0.08em] text-white/70">
+                  {t('partyResults.dropped')}
+                </span>
+              )}
               <span className="text-xs font-black tabular-nums text-white/70">
                 {player.totalPoints}
               </span>

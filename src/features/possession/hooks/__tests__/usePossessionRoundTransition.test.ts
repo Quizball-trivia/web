@@ -120,7 +120,7 @@ describe('usePossessionRoundTransition', () => {
     expect(result.current.transitionSnapshot).toEqual({
       title: 'Question 6',
       categoryName: 'First Category',
-      subtitle: '1st Half',
+      subtitle: 'First Half',
     });
 
     rerender({
@@ -130,7 +130,7 @@ describe('usePossessionRoundTransition', () => {
     expect(result.current.transitionSnapshot).toEqual({
       title: 'Question 6',
       categoryName: 'First Category',
-      subtitle: '1st Half',
+      subtitle: 'First Half',
     });
   });
 
@@ -323,7 +323,7 @@ describe('usePossessionRoundTransition', () => {
     expect(result.current.transitionSnapshot).toEqual({
       title: 'Question 7',
       categoryName: 'Second Half Category',
-      subtitle: '2nd Half',
+      subtitle: 'Second Half',
     });
   });
 
@@ -379,7 +379,7 @@ describe('usePossessionRoundTransition', () => {
     expect(result.current.transitionSnapshot).toEqual({
       title: 'Question 7',
       categoryName: 'Dortmund',
-      subtitle: '2nd Half',
+      subtitle: 'Second Half',
     });
   });
 
@@ -406,7 +406,7 @@ describe('usePossessionRoundTransition', () => {
     expect(result.current.transitionSnapshot).toEqual({
       title: 'Extra Question',
       categoryName: 'Extra Category',
-      subtitle: '1st Half',
+      subtitle: 'First Half',
     });
   });
 });

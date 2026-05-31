@@ -551,7 +551,8 @@
     "questionN": "კითხვა {n}",
     "quizStartsIn": "ქვიზი დაიწყება",
     "resumingIn": "კავშირი აღდგა. განახლდება",
-    "leaveMatch": "მატჩის დატოვება"
+    "leaveMatch": "მატჩის დატოვება",
+    "dropped": "გამოვარდა"
   },
   "tournaments": {
     "liveTournament": "ლაივ ტურნირი",
@@ -725,7 +726,7 @@
   },
   "play": {
     "rankedMatch": "რეიტინგული მატჩი",
-    "rankedSubtitle": "1V1 კონკურენტული",
+    "rankedSubtitle": "1V1 ონლაინ",
     "rankedPlacement": "საკვალიფიკაციო {played}/{required}",
     "rpToTier": "{rp} RP შემდეგ კატეგორიამდე: ",
     "maxRankReached": "მაქსიმალური რანგი მიღწეულია",
@@ -1001,7 +1002,11 @@
     "opponentSelected": "მოწინააღმდეგემ აირჩია ეს პასუხი",
     "savedExclaim": "გადარჩა!",
     "keeperSavesIt": "მეკარემ გაიტანა!",
-    "youSavedIt": "შენ გადაარჩინე!"
+    "youSavedIt": "შენ გადაარჩინე!",
+    "questionCounter": "კითხვა {current}/{total}",
+    "pointsLabel": "ქულა",
+    "questionN": "კითხვა {n}",
+    "penaltyN": "პენალტი {n}"
   },
   "quitMatch": {
     "leaving": "გადიხარ?",
@@ -1022,6 +1027,8 @@
     "partyQuizFinished": "Party ქვიზი დასრულდა",
     "partyQuizFinishedDesc": "საბოლოო ქულები მზადაა",
     "partyQuizFinishedCompactDesc": "საბოლოო ქულები მზადაა",
+    "partyQuizLeft": "თქვენ დატოვეთ Party ქვიზი",
+    "partyQuizLeftDesc": "შედეგების ნახვას შეძლებთ ქვიზის დასრულების შემდეგ.",
     "viewResults": "შედეგების ნახვა",
     "draftActiveAgainst": "დრაფტი აქტიურია {name}-ს წინააღმდეგ",
     "draftActiveVs": "დრაფტი აქტიურია VS {name}",

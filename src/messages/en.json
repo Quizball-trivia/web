@@ -361,7 +361,8 @@
     "questionN": "Question {n}",
     "quizStartsIn": "Quiz starts in",
     "resumingIn": "Reconnected. Resuming in",
-    "leaveMatch": "Leave match"
+    "leaveMatch": "Leave match",
+    "dropped": "Dropped"
   },
   "tournaments": {
     "liveTournament": "Live Tournament",
@@ -955,7 +956,11 @@
     "opponentSelected": "Opponent selected this answer",
     "savedExclaim": "SAVED!",
     "keeperSavesIt": "Keeper saves it!",
-    "youSavedIt": "You saved it!"
+    "youSavedIt": "You saved it!",
+    "questionCounter": "QUESTION {current}/{total}",
+    "pointsLabel": "pts",
+    "questionN": "Question {n}",
+    "penaltyN": "Penalty {n}"
   },
   "matchmaking": {
     "muteMusic": "Mute music",
@@ -1022,6 +1027,8 @@
     "partyQuizFinished": "Party quiz finished",
     "partyQuizFinishedDesc": "Final scores are ready",
     "partyQuizFinishedCompactDesc": "Final scores are ready",
+    "partyQuizLeft": "You left this party quiz",
+    "partyQuizLeftDesc": "You can view the results when the quiz ends.",
     "viewResults": "View Results",
     "draftActiveAgainst": "Draft active against",
     "draftActiveVs": "Draft active vs",

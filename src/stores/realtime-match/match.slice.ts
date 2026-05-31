@@ -105,6 +105,7 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
       draftDisconnectedUserId: null,
       rejoinMatch: null,
       forfeitPending: null,
+      partyDropout: null,
       match: {
         matchId: payload.matchId,
         mode: payload.mode,
@@ -735,6 +736,7 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
           draftDisconnectedUserId: null,
           rejoinMatch: null,
           forfeitPending: null,
+          partyDropout: null,
           match: constructFallbackMatchFromResults(payload, state.selfUserId, rejoin),
         };
       }
@@ -762,6 +764,7 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
         draftDisconnectedUserId: null,
         rejoinMatch: null,
         forfeitPending: null,
+        partyDropout: null,
         match: {
           ...state.match,
           variant: payload.variant ?? (payload.standings ? 'friendly_party_quiz' : state.match.variant),
@@ -798,6 +801,7 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
       draftPauseUntil: null,
       draftDisconnectedUserId: null,
       rejoinMatch: null,
+      partyDropout: null,
       devPossessionAnimation: null,
       error: null,
     });

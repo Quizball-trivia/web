@@ -68,7 +68,7 @@ export function PenaltyHUD({
               <AnimatedPointsCounter value={playerPoints} accentClassName="text-brand-yellow" />
             </div>
             <div className="text-[8px] font-black uppercase leading-none tracking-[0.08em] text-white/45 sm:hidden">
-              {playerPoints} pts
+              {playerPoints} {t('possession.pointsLabel')}
             </div>
           </div>
         </div>
@@ -105,7 +105,7 @@ export function PenaltyHUD({
               />
             </div>
             <div className="text-[8px] font-black uppercase leading-none tracking-[0.08em] text-white/45 sm:hidden">
-              {opponentPoints} pts
+              {opponentPoints} {t('possession.pointsLabel')}
             </div>
           </div>
           <MatchHudAvatar customization={opponentAvatarCustomization} side="opponent" />

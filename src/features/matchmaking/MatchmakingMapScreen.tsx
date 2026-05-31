@@ -213,14 +213,22 @@ function generateFakePlayers(): FakePlayer[] {
 const DESKTOP_CAMERA = {
   startX: -50,
   panRange: 350,
-  panSpeed: 18,
+  // panSpeed = units/sec; sweep duration is panRange / panSpeed. Higher = faster.
+  // 32 → ~11s/sweep (was 18 → ~19s). easeInOut keeps the speed-up smooth.
+  panSpeed: 32,
   searchScale: 1.1,
   searchY: 0,
 };
 const MOBILE_CAMERA = {
-  startX: -120,
-  panRange: 230,
-  panSpeed: 12,
+  // Sweep the FULL map left→right: Americas (left edge) to Asia/Australia
+  // (right edge). mapX is in viewBox units; at scale S the valid pan range is
+  // [MAP_W*(1-S), 0]. At S=1.45 that's [-450, 0], so start at 0 (left edge /
+  // Americas) and pan the full 450 to -450 (right edge / Australia). The old
+  // -120/230 only covered a middle slice, so it lingered on Africa/Europe.
+  startX: 0,
+  panRange: 450,
+  // 90 → 450/90 = 5s/sweep (keeps the ~5s feel over the longer distance).
+  panSpeed: 90,
   searchScale: 1.45,
   searchY: -28,
 };

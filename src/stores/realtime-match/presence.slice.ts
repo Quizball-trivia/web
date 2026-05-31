@@ -8,9 +8,10 @@ import {
 import type {
   DraftOpponentDisconnectedPayload,
   MatchForfeitPendingPayload,
+  MatchPartyDropoutPayload,
   MatchRejoinAvailablePayload,
 } from '@/lib/realtime/socket.types';
-import type { ForfeitPendingStatus, RealtimeState, RejoinMatchStatus } from './types';
+import type { ForfeitPendingStatus, PartyDropoutStatus, RealtimeState, RejoinMatchStatus } from './types';
 
 /**
  * Presence / reconnect / disconnect UI state. Owns the pause + rejoin +
@@ -28,8 +29,11 @@ export interface PresenceSlice {
   draftDisconnectedUserId: string | null;
   rejoinMatch: RejoinMatchStatus | null;
   forfeitPending: ForfeitPendingStatus | null;
+  partyDropout: PartyDropoutStatus | null;
   setForfeitPending: (payload: MatchForfeitPendingPayload) => void;
   clearForfeitPending: () => void;
+  setPartyDropout: (payload: MatchPartyDropoutPayload) => void;
+  clearPartyDropout: () => void;
   setMatchPaused: (payload: { graceMs: number; remainingReconnects: number }) => void;
   clearMatchPaused: () => void;
   setDraftPaused: (payload: DraftOpponentDisconnectedPayload) => void;
@@ -48,6 +52,7 @@ export const presenceInitialState = {
   draftDisconnectedUserId: null,
   rejoinMatch: null,
   forfeitPending: null,
+  partyDropout: null,
 } as const satisfies Pick<
   PresenceSlice,
   | 'matchPaused'
@@ -59,6 +64,7 @@ export const presenceInitialState = {
   | 'draftDisconnectedUserId'
   | 'rejoinMatch'
   | 'forfeitPending'
+  | 'partyDropout'
 >;
 
 export const createPresenceSlice: StateCreator<RealtimeState, [], [], PresenceSlice> = (set) => ({
@@ -79,6 +85,7 @@ export const createPresenceSlice: StateCreator<RealtimeState, [], [], PresenceSl
         ...payload,
         createdAt: Date.now(),
       },
+      partyDropout: null,
       matchPaused: false,
       pauseUntil: null,
       pausedAt: null,
@@ -90,6 +97,30 @@ export const createPresenceSlice: StateCreator<RealtimeState, [], [], PresenceSl
   clearForfeitPending: () => {
     logger.info('Realtime store clear forfeit pending');
     set({ forfeitPending: null });
+  },
+
+  setPartyDropout: (payload) => {
+    logger.info('Realtime store set party dropout', {
+      matchId: payload.matchId,
+      reason: payload.reason,
+    });
+    set({
+      partyDropout: {
+        ...payload,
+        createdAt: Date.now(),
+      },
+      matchPaused: false,
+      pauseUntil: null,
+      pausedAt: null,
+      remainingReconnects: null,
+      rejoinMatch: null,
+      forfeitPending: null,
+    });
+  },
+
+  clearPartyDropout: () => {
+    logger.info('Realtime store clear party dropout');
+    set({ partyDropout: null });
   },
 
   setMatchPaused: ({ graceMs, remainingReconnects }) => {
@@ -170,6 +201,7 @@ export const createPresenceSlice: StateCreator<RealtimeState, [], [], PresenceSl
         remainingReconnects: payload.remainingReconnects,
         createdAt: Date.now(),
       },
+      partyDropout: null,
     });
   },
 

@@ -41,11 +41,14 @@ export function PartyQuizStandingsSidebar({
       </div>
       <div className="space-y-1.5">
         {standings.map((player) => {
-          const dotStatus = getStandingDotStatus({
-            roundResolved,
-            answered: player.answered,
-            showOptions,
-          });
+          const isDropped = player.status === 'dropped';
+          const dotStatus = isDropped
+            ? 'idle'
+            : getStandingDotStatus({
+                roundResolved,
+                answered: player.answered,
+                showOptions,
+              });
           const rankStyle = getRankStyle(player.rank);
           return (
             <motion.div
@@ -59,6 +62,7 @@ export function PartyQuizStandingsSidebar({
                 className={cn(
                   'relative flex flex-1 items-center gap-3 rounded-2xl px-3 py-2.5 transition-colors border-2',
                   rankStyle.border,
+                  isDropped && 'opacity-60 grayscale',
                   player.isSelf ? rankStyle.tint : 'bg-transparent',
                 )}
                 style={player.isSelf ? { boxShadow: rankStyle.selfGlow } : undefined}
@@ -93,6 +97,11 @@ export function PartyQuizStandingsSidebar({
                   <div className="flex items-center gap-1.5">
                     <span className="truncate text-base font-bold text-white">{player.username}</span>
                     {player.isLeader && <Crown className="size-4 shrink-0 text-brand-yellow-deep" />}
+                    {isDropped && (
+                      <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-white/70">
+                        {t('partyResults.dropped')}
+                      </span>
+                    )}
                   </div>
                 </div>
 

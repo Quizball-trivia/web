@@ -50,6 +50,7 @@ export function AppShellBanners({ variant, vm }: AppShellBannersProps) {
     activeMatchBanner,
     completedMatchBanner,
     forfeitPending,
+    partyDropout,
     forfeitPendingTitle,
     forfeitPendingDescription,
     completedByForfeit,
@@ -65,6 +66,7 @@ export function AppShellBanners({ variant, vm }: AppShellBannersProps) {
     showRejoinBanner,
     showCompletedMatchBanner,
     showForfeitPendingBanner,
+    showPartyDropoutBanner,
     handleReturnToLobby,
     handleReturnToRankedLobby,
     handleLeaveLobby,
@@ -73,6 +75,7 @@ export function AppShellBanners({ variant, vm }: AppShellBannersProps) {
     handleForfeitRejoin,
     handleViewCompletedMatch,
     handleDismissCompletedMatch,
+    handleDismissPartyDropout,
   } = vm;
 
   const matchFinishedLabel = isDesktop ? 'appShell.matchFinishedAgainst' : 'appShell.matchFinishedVs';
@@ -108,6 +111,31 @@ export function AppShellBanners({ variant, vm }: AppShellBannersProps) {
                   <p className="text-xs text-white/70">{forfeitPendingDescription}</p>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPartyDropoutBanner && partyDropout && (
+        <div className={pad}>
+          <div className={`rounded-2xl border-2 border-brand-orange bg-brand-orange/10 ${card}`}>
+            <div className={`flex ${rowLayout}`}>
+              <div className="flex items-center gap-3">
+                <div className={`${iconSize} rounded-full bg-brand-orange/20 text-brand-orange flex items-center justify-center`}>
+                  <Gamepad2 className={iconGlyph} />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">{t('appShell.partyQuizLeft')}</p>
+                  <p className="text-xs text-white/70">{partyDropout.message || t('appShell.partyQuizLeftDesc')}</p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                className={`${btnH} bg-brand-orange text-white hover:bg-brand-orange-light`}
+                onClick={handleDismissPartyDropout}
+              >
+                {t('appShell.dismiss')} {isDesktop && xIcon}
+              </Button>
             </div>
           </div>
         </div>

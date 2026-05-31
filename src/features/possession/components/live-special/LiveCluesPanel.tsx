@@ -205,7 +205,7 @@ export function LiveCluesPanel({
           <div className="shrink-0 text-right">
             {cluesPlayerCorrect && cluesPlayerPoints != null && (
               <p className="text-[11px] font-fun font-black uppercase text-brand-green">
-                +{cluesPlayerPoints} pts
+                +{cluesPlayerPoints} {t('possession.pointsLabel')}
               </p>
             )}
             {opponentRound && (

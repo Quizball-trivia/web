@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import type { AnswerStateArray, Phase } from '@/lib/types/game.types';
 import { ArenaScoreSplash } from '@/components/game/ArenaScoreSplash';
+import { useLocale } from '@/contexts/LocaleContext';
 
 const poppins = {
   fontFamily: "'Poppins', sans-serif",
@@ -130,6 +131,7 @@ export function PossessionQuestionPanel({
   onOpponentSplashComplete,
   onAnswer,
 }: PossessionQuestionPanelProps) {
+  const { t } = useLocale();
   if (phase === 'goal') return null;
   if (!question) return null;
 
@@ -152,7 +154,7 @@ export function PossessionQuestionPanel({
           className="flex flex-1 items-center justify-center rounded-[16px] bg-brand-blue px-5 text-white h-[40px] sm:h-[52px] md:h-[62px] lg:h-[72px]"
           style={{ ...poppins, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
         >
-          QUESTION {displayQuestionNum}/{totalQuestions}
+          {t('possession.questionCounter', { current: displayQuestionNum, total: totalQuestions })}
         </div>
         <div
           className="flex w-[64px] items-center justify-center rounded-[16px] bg-brand-blue text-white h-[40px] sm:h-[52px] sm:w-[92px] md:h-[62px] md:w-[116px] lg:h-[72px] lg:w-[136px] tabular-nums"
@@ -313,7 +315,7 @@ export function PossessionQuestionPanel({
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 22 }}
                   className="absolute right-0 top-1/2 z-10 flex h-12 w-[10px] -translate-y-1/2 items-center justify-end rounded-l-md bg-white pr-[2px]"
-                  aria-label="Opponent selected this answer"
+                  aria-label={t('possession.opponentSelected')}
                 >
                   <span
                     className="h-9 w-[4px] rounded-l-sm"

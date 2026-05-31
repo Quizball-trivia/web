@@ -21,6 +21,7 @@ import type {
   MatchAnswerAckPayload,
   MatchFinalResultsPayload,
   MatchForfeitPendingPayload,
+  MatchPartyDropoutPayload,
   MatchPartyStatePayload,
   MatchStatePayload,
   DraftOpponentDisconnectedPayload,
@@ -494,6 +495,14 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       graceMs: data.graceMs,
       remainingReconnects: data.remainingReconnects,
     });
+  });
+
+  socket.on('match:party_dropout', (data: MatchPartyDropoutPayload) => {
+    logger.warn('Socket event match:party_dropout', {
+      matchId: data.matchId,
+      reason: data.reason,
+    });
+    store.setPartyDropout(data);
   });
 
   socket.on('match:resume', (data: MatchResumePayload) => {

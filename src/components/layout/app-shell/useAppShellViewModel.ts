@@ -56,7 +56,9 @@ export function useAppShellViewModel() {
   const sessionState = useRealtimeMatchStore((state) => state.sessionState);
   const rejoinMatch = useRealtimeMatchStore((state) => state.rejoinMatch);
   const forfeitPending = useRealtimeMatchStore((state) => state.forfeitPending);
+  const partyDropout = useRealtimeMatchStore((state) => state.partyDropout);
   const setForfeitPending = useRealtimeMatchStore((state) => state.setForfeitPending);
+  const clearPartyDropout = useRealtimeMatchStore((state) => state.clearPartyDropout);
   const challengeInviteCount = useRealtimeMatchStore((state) => state.challengeInvites.length);
   const suppressLobbyBannerUntil = useRealtimeMatchStore((state) => state.suppressLobbyBannerUntil);
   const suppressLobbyBannerReason = useRealtimeMatchStore((state) => state.suppressLobbyBannerReason);
@@ -136,9 +138,14 @@ export function useAppShellViewModel() {
     !!forfeitPending &&
     !!activeMatchBanner &&
     forfeitPending.matchId === activeMatchBanner.matchId;
+  const partyDropoutForActiveMatch =
+    !!partyDropout &&
+    !!activeMatchBanner &&
+    partyDropout.matchId === activeMatchBanner.matchId;
   const showRejoinBanner =
     !!activeMatchBanner &&
     !forfeitPendingForActiveMatch &&
+    !partyDropoutForActiveMatch &&
     !currentPath.startsWith('/game');
   const completedMatchBanner = matchBanner.finalResults
     ? {
@@ -150,6 +157,7 @@ export function useAppShellViewModel() {
     : null;
   const showCompletedMatchBanner = !!completedMatchBanner && !currentPath.startsWith('/game');
   const showForfeitPendingBanner = !!forfeitPending && !matchBanner.finalResults && !currentPath.startsWith('/game');
+  const showPartyDropoutBanner = !!partyDropout && !matchBanner.finalResults && !currentPath.startsWith('/game');
   const forfeitPendingTitle =
     forfeitPending?.reason === 'self_forfeit'
       ? t('forfeit.matchForfeited')
@@ -298,6 +306,10 @@ export function useAppShellViewModel() {
     useRankedMatchmakingStore.getState().clearRankedMatchmaking();
   };
 
+  const handleDismissPartyDropout = () => {
+    clearPartyDropout();
+  };
+
   return {
     // Locale / router
     t,
@@ -319,6 +331,7 @@ export function useAppShellViewModel() {
     activeMatchBanner,
     completedMatchBanner,
     forfeitPending,
+    partyDropout,
     forfeitPendingTitle,
     forfeitPendingDescription,
     completedByForfeit,
@@ -331,6 +344,7 @@ export function useAppShellViewModel() {
     showRejoinBanner,
     showCompletedMatchBanner,
     showForfeitPendingBanner,
+    showPartyDropoutBanner,
     // Currency + badges
     navbarCoins,
     navbarTickets,
@@ -357,5 +371,6 @@ export function useAppShellViewModel() {
     handleForfeitRejoin,
     handleViewCompletedMatch,
     handleDismissCompletedMatch,
+    handleDismissPartyDropout,
   };
 }

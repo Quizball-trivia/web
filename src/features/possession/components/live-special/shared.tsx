@@ -172,7 +172,7 @@ export function SpecialResultSummary({
       {sides.map((side) => {
         const safeTotal = Math.max(1, side.total);
         const safeCount = side.count == null ? null : clampCount(side.count, safeTotal);
-        const pointsText = side.points == null ? null : `${side.points > 0 ? '+' : ''}${side.points} pts`;
+        const pointsText = side.points == null ? null : `${side.points > 0 ? '+' : ''}${side.points} ${t('possession.pointsLabel')}`;
         const isOpp = side.label === 'Opp';
         const singleAnswerRound = side.total <= 1;
         const bigStyle = {

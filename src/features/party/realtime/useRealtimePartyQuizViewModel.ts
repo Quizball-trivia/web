@@ -218,6 +218,7 @@ export function useRealtimePartyQuizViewModel({
     : (partyState?.currentQuestionIndex ?? 0) + 1;
   const totalQuestions = currentQuestion?.total ?? partyState?.totalQuestions ?? 10;
 
+  /* eslint-disable react-hooks/refs -- score-flight refs intentionally hold visual totals between render frames. */
   const standings = useMemo<PartyStandingViewModel[]>(() => {
     if (!partyState) return [];
 
@@ -248,10 +249,12 @@ export function useRealtimePartyQuizViewModel({
           ? liveScoreDeltas[player.userId] ?? null
           : null;
 
+        const status = player.status ?? 'active';
         return {
           userId: player.userId,
           totalPoints: displayedTotal,
-          answered: player.answered,
+          answered: status === 'dropped' ? false : player.answered,
+          status,
           rank: player.rank,
           username: participant?.username ?? 'Player',
           avatarUrl: participant?.avatarUrl ?? null,
@@ -263,6 +266,7 @@ export function useRealtimePartyQuizViewModel({
         };
       });
   }, [displayedTotalsByUserId, liveScoreDeltas, participantMap, partyState, pendingDisplayedTotalsRef, preRoundRankingOrder, previousPartyTotalsRef, selfUserId, state.roundResolved, state.roundResult?.players]);
+  /* eslint-enable react-hooks/refs */
 
   const transitionVisible = state.roundResultHoldDone;
   const transitionQuestionNumber = Math.min(

@@ -9,6 +9,7 @@ import type {
   MatchFinalResultsPayload,
   MatchForfeitPendingPayload,
   MatchParticipant,
+  MatchPartyDropoutPayload,
   MatchPartyStatePayload,
   MatchRoundResultPayload,
   MatchStatePayload,
@@ -88,6 +89,10 @@ export interface ForfeitPendingStatus extends MatchForfeitPendingPayload {
   createdAt: number;
 }
 
+export interface PartyDropoutStatus extends MatchPartyDropoutPayload {
+  createdAt: number;
+}
+
 export interface DevPossessionAnimation {
   id: number;
   result: 'goal' | 'saved' | 'miss';
@@ -123,6 +128,7 @@ export interface RealtimeState {
   draftDisconnectedUserId: string | null;
   rejoinMatch: RejoinMatchStatus | null;
   forfeitPending: ForfeitPendingStatus | null;
+  partyDropout: PartyDropoutStatus | null;
   devPossessionAnimation: DevPossessionAnimation | null;
   error: ErrorPayload | null;
   setSelfUserId: (userId: string | null) => void;
@@ -159,6 +165,8 @@ export interface RealtimeState {
   setFinalResults: (payload: MatchFinalResultsPayload) => void;
   setForfeitPending: (payload: MatchForfeitPendingPayload) => void;
   clearForfeitPending: () => void;
+  setPartyDropout: (payload: MatchPartyDropoutPayload) => void;
+  clearPartyDropout: () => void;
   setMatchPaused: (payload: { graceMs: number; remainingReconnects: number }) => void;
   clearMatchPaused: () => void;
   setDraftPaused: (payload: import('@/lib/realtime/socket.types').DraftOpponentDisconnectedPayload) => void;
