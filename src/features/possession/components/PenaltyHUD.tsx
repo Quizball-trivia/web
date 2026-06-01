@@ -13,6 +13,8 @@ import type { AvatarCustomization } from '@/types/game';
 interface PenaltyHUDProps {
   penaltyPlayerScore: number;
   penaltyOpponentScore: number;
+  penaltyPlayerAttempts?: Array<'goal' | 'miss'>;
+  penaltyOpponentAttempts?: Array<'goal' | 'miss'>;
   playerPoints?: number;
   opponentPoints?: number;
   penaltyRound: number;
@@ -32,6 +34,8 @@ interface PenaltyHUDProps {
 export function PenaltyHUD({
   penaltyPlayerScore,
   penaltyOpponentScore,
+  penaltyPlayerAttempts,
+  penaltyOpponentAttempts,
   playerPoints = 0,
   opponentPoints = 0,
   penaltyRound,
@@ -52,16 +56,37 @@ export function PenaltyHUD({
   // Adjust-state-during-render pattern (no effect): the baseline is set the first
   // render SD is active and cleared when it ends. See react.dev — "storing
   // information from previous renders".
-  const [sdBaseline, setSdBaseline] = useState<{ player: number; opponent: number } | null>(null);
+  const [sdBaseline, setSdBaseline] = useState<{
+    playerScore: number;
+    opponentScore: number;
+    playerAttempts: number;
+    opponentAttempts: number;
+  } | null>(null);
   if (isPenaltySuddenDeath && sdBaseline === null) {
-    setSdBaseline({ player: penaltyPlayerScore, opponent: penaltyOpponentScore });
+    setSdBaseline({
+      playerScore: penaltyPlayerScore,
+      opponentScore: penaltyOpponentScore,
+      playerAttempts: penaltyPlayerAttempts?.length ?? penaltyPlayerScore,
+      opponentAttempts: penaltyOpponentAttempts?.length ?? penaltyOpponentScore,
+    });
   } else if (!isPenaltySuddenDeath && sdBaseline !== null) {
     setSdBaseline(null);
   }
 
   const baseline = isPenaltySuddenDeath ? sdBaseline : null;
-  const pipPlayerScore = baseline ? Math.max(0, penaltyPlayerScore - baseline.player) : penaltyPlayerScore;
-  const pipOpponentScore = baseline ? Math.max(0, penaltyOpponentScore - baseline.opponent) : penaltyOpponentScore;
+  const pipPlayerScore = baseline ? Math.max(0, penaltyPlayerScore - baseline.playerScore) : penaltyPlayerScore;
+  const pipOpponentScore = baseline ? Math.max(0, penaltyOpponentScore - baseline.opponentScore) : penaltyOpponentScore;
+  const playerPips = (penaltyPlayerAttempts && penaltyPlayerAttempts.length > 0)
+    ? (baseline ? penaltyPlayerAttempts.slice(baseline.playerAttempts) : penaltyPlayerAttempts)
+    : Array.from({ length: pipPlayerScore }, () => 'goal' as const);
+  const opponentPips = (penaltyOpponentAttempts && penaltyOpponentAttempts.length > 0)
+    ? (baseline ? penaltyOpponentAttempts.slice(baseline.opponentAttempts) : penaltyOpponentAttempts)
+    : Array.from({ length: pipOpponentScore }, () => 'goal' as const);
+  const pipClassName = (result: 'goal' | 'miss' | undefined) => {
+    if (result === 'goal') return 'bg-brand-green-light border-brand-green-light';
+    if (result === 'miss') return 'bg-brand-red-soft border-brand-red-soft';
+    return 'bg-transparent border-white/20';
+  };
 
   return (
     <div
@@ -134,13 +159,13 @@ export function PenaltyHUD({
       <div className="flex justify-center gap-4 px-3">
         <div className="flex gap-1.5">
           {Array.from({ length: MAX_PENALTY_ROUNDS }).map((_, i) => (
-            <div key={`pp-${i}`} className={`size-3 rounded-full border-2 ${i < pipPlayerScore ? 'bg-brand-green-light border-brand-green-light' : 'bg-transparent border-white/20'}`} />
+            <div key={`pp-${i}`} data-testid="penalty-player-pip" className={`size-3 rounded-full border-2 ${pipClassName(playerPips[i])}`} />
           ))}
         </div>
         <div className="text-[10px] font-black text-white/30 tracking-wider">{t('possession.pens')}</div>
         <div className="flex gap-1.5">
           {Array.from({ length: MAX_PENALTY_ROUNDS }).map((_, i) => (
-            <div key={`op-${i}`} className={`size-3 rounded-full border-2 ${i < pipOpponentScore ? 'bg-brand-red-soft border-brand-red-soft' : 'bg-transparent border-white/20'}`} />
+            <div key={`op-${i}`} data-testid="penalty-opponent-pip" className={`size-3 rounded-full border-2 ${pipClassName(opponentPips[i])}`} />
           ))}
         </div>
       </div>

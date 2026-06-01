@@ -8,6 +8,7 @@ import type {
 } from '@/lib/realtime/socket.types';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import type { BarBattleState } from '../components/BarBattleOverlay';
+import { PENALTY_RESULT_DISPLAY_DELAY_MS } from '../realtimePossession.helpers';
 
 // ─── Timing constants (ms) ──────────────────────────────────────────────────
 //
@@ -37,6 +38,9 @@ const DONE_LINGER_MS = 100;
 const UNOPPOSED_PULSE_RESULT_HOLD_MS = 80;
 const UNOPPOSED_PULSE_DONE_LINGER_MS = 40;
 const RANKED_SCORE_FLIGHT_HANDOFF_MS = 420;
+const PENALTY_SAVE_SHIELD_RESULT_BUFFER_MS = 180;
+const PENALTY_SAVE_SHIELD_RESULT_HOLD_MS =
+  PENALTY_RESULT_DISPLAY_DELAY_MS - CHARGE_SHOT_OVERLAP_MS + PENALTY_SAVE_SHIELD_RESULT_BUFFER_MS;
 
 const POINTS_PER_BAR = 10;
 const MAX_BARS = 20;
@@ -51,12 +55,19 @@ export function pointsToBars(points: number): number {
 interface BarBattleTimingOptions {
   includeScoreFlightHandoff?: boolean;
   includeUnopposedPulse?: boolean;
+  holdPenaltySaveShield?: boolean;
 }
 
 function getScoreHandoffMs(includeScoreFlightHandoff = false): number {
   return includeScoreFlightHandoff
     ? Math.max(BOTH_SCORE_HOLD_MS, RANKED_SCORE_FLIGHT_HANDOFF_MS)
     : BOTH_SCORE_HOLD_MS;
+}
+
+function getResultHoldMs(options: BarBattleTimingOptions): number {
+  if (options.includeUnopposedPulse) return UNOPPOSED_PULSE_RESULT_HOLD_MS;
+  if (options.holdPenaltySaveShield) return Math.max(RESULT_HOLD_MS, PENALTY_SAVE_SHIELD_RESULT_HOLD_MS);
+  return RESULT_HOLD_MS;
 }
 
 export function getBarBattleTotalMs(
@@ -87,7 +98,10 @@ function getBarBattleTimelineMs(
   const chargeMs = (includeShotCharge || shouldPulseUnopposed) && survivorCount > 0
     ? CHARGE_BASE_MS + survivorCount * CHARGE_PER_BAR_MS
     : 0;
-  const resultHoldMs = shouldPulseUnopposed ? UNOPPOSED_PULSE_RESULT_HOLD_MS : RESULT_HOLD_MS;
+  const resultHoldMs = getResultHoldMs({
+    includeUnopposedPulse: shouldPulseUnopposed,
+    holdPenaltySaveShield: options.holdPenaltySaveShield,
+  });
   const doneLingerMs = shouldPulseUnopposed ? UNOPPOSED_PULSE_DONE_LINGER_MS : DONE_LINGER_MS;
   const scoreHandoffMs = getScoreHandoffMs(options.includeScoreFlightHandoff);
   const beforeResultMs = (
@@ -315,6 +329,9 @@ export function useBarBattle({
     const isShotResolution = Boolean(
       roundResult.deltas?.goalScoredBySeat || roundResult.deltas?.penaltyOutcome
     );
+    const penaltyOutcome = kind === 'penalty'
+      ? roundResult.deltas?.penaltyOutcome ?? null
+      : null;
     const shouldPulseUnopposed = unopposedBarPulse && !isShotResolution && cancelledCount === 0 && Math.max(pBars, oBars) > 0;
 
     // If both scored 0, just clean up
@@ -332,6 +349,7 @@ export function useBarBattle({
       remainingDelta: delta,
       dividerX: snapDividerX,
       chargeMode: shouldPulseUnopposed ? 'pulse' as const : 'lunge' as const,
+      penaltyOutcome,
     };
 
     // First ensure both-score is showing with final values
@@ -379,7 +397,10 @@ export function useBarBattle({
         }, t)
       : null;
 
-    const resultHoldMs = shouldPulseUnopposed ? UNOPPOSED_PULSE_RESULT_HOLD_MS : RESULT_HOLD_MS;
+    const resultHoldMs = getResultHoldMs({
+      includeUnopposedPulse: shouldPulseUnopposed,
+      holdPenaltySaveShield: penaltyOutcome === 'saved' && survivorCount > 0,
+    });
     const doneLingerMs = shouldPulseUnopposed ? UNOPPOSED_PULSE_DONE_LINGER_MS : DONE_LINGER_MS;
 
     // Result: show remaining bars

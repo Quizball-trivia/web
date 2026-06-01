@@ -21,6 +21,7 @@ export const BAR_GAP_ANCHORED = 4;
 export const BAR_RX_ANCHORED = 6;
 export const CY_ANCHORED = 115;
 export const AVATAR_BAR_OFFSET = 58;
+export const PENALTY_KEEPER_SHIELD_OFFSET = 22;
 
 // ─── Color palette ──────────────────────────────────────────────────────────
 
@@ -49,4 +50,13 @@ export function pointsToBarCount(points: number): number {
 /** Clamp an X coordinate so the centred shape of `width` stays inside the field. */
 export function clampCenterX(x: number, width: number): number {
   return Math.max(FIELD_MIN_X + width / 2, Math.min(FIELD_MAX_X - width / 2, x));
+}
+
+export function getChargeImpactXKeyframes(
+  targetX: number,
+  chargeHitOffsetX: number,
+  holdChargeImpact = false
+): [number, number, number, number] {
+  const endOffsetX = holdChargeImpact ? chargeHitOffsetX : chargeHitOffsetX * 0.2;
+  return [targetX, targetX, targetX + chargeHitOffsetX, targetX + endOffsetX];
 }

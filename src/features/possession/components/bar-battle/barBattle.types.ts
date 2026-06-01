@@ -27,6 +27,7 @@ export interface BarBattleState {
   dividerX: number;
   /** `pulse` uses the charge glow without lunging the final bar into the avatar. */
   chargeMode?: 'lunge' | 'pulse';
+  penaltyOutcome?: 'goal' | 'saved' | null;
 }
 
 export type BarBattleVariant = 'ranked_sim' | 'friendly_possession';

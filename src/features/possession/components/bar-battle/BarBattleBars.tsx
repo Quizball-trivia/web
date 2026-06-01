@@ -62,7 +62,23 @@ export function BarBattleBars({
     blueGrad,
     redGrad,
     battleClip,
+    isPenalty,
+    playerKeeperShieldCenterX,
+    opponentKeeperShieldCenterX,
   } = vm;
+  const isPenaltySave = isPenalty && battle.penaltyOutcome === 'saved';
+  const playerChargeTargetX = isPenaltySave && remainingDelta > 0 && playerKeeperShieldCenterX != null
+    ? playerKeeperShieldCenterX
+    : playerAvatarX != null
+      ? playerAvatarX + playerBarDir * 20
+      : null;
+  const opponentChargeTargetX = isPenaltySave && remainingDelta < 0 && opponentKeeperShieldCenterX != null
+    ? opponentKeeperShieldCenterX
+    : opponentAvatarX != null
+      ? opponentAvatarX + opponentBarDir * 20
+      : null;
+  const playerShieldSaveActive = isPenaltySave && remainingDelta > 0 && playerChargeTargetX != null;
+  const opponentShieldSaveActive = isPenaltySave && remainingDelta < 0 && opponentChargeTargetX != null;
 
   return (
     <g clipPath={`url(#${battleClip})`}>
@@ -71,7 +87,7 @@ export function BarBattleBars({
           key={`p-stack-${battle.key}`}
           spawnX={playerLayout.compactX}
           marchX={playerLayout.compactX}
-          pushX={playerLayout.compactX}
+          pushX={playerShieldSaveActive && playerChargeTargetX != null ? playerChargeTargetX : playerLayout.compactX}
           gradientId={blueGrad}
           count={playerStackCount}
           cancelCount={minBars}
@@ -81,11 +97,12 @@ export function BarBattleBars({
           chargeOrder={0}
           chargeHitOffsetX={!chargeLunges
             ? 0
-            : remainingDelta > 0 && isAnchored && playerAvatarX != null
-            ? (playerAvatarX + playerBarDir * 20) - playerLayout.compactX
+            : remainingDelta > 0 && isAnchored && playerChargeTargetX != null
+            ? playerChargeTargetX - playerLayout.compactX
             : remainingDelta > 0
               ? -playerBarDir * 34
               : 0}
+          holdChargeImpact={playerShieldSaveActive}
           cy={cy}
           barW={barW}
           barH={barH}
@@ -105,17 +122,20 @@ export function BarBattleBars({
           const chargeHitOffsetX = !chargeLunges
             ? 0
             : isSurvived && survivedIndex === 0
-            ? isAnchored && playerAvatarX != null
-              ? (playerAvatarX + playerBarDir * 20) - playerBarStartX(i)
+            ? isAnchored && playerChargeTargetX != null
+              ? (playerChargeTargetX - barW / 2) - playerBarStartX(i)
               : -playerBarDir * 34
             : 0;
+          const resultPushX = playerShieldSaveActive && survivedIndex === 0 && playerChargeTargetX != null
+            ? playerChargeTargetX - barW / 2
+            : playerPushX(survivedIndex);
 
           return (
             <BarBattleBar
               key={`p-${battle.key}-${i}`}
               spawnX={playerBarStartX(i)}
               marchX={playerMarchX(i)}
-              pushX={playerPushX(survivedIndex)}
+              pushX={resultPushX}
               color={BLUE}
               darkColor={BLUE_DARK}
               gradientId={blueGrad}
@@ -126,6 +146,8 @@ export function BarBattleBars({
               survived={isSurvived}
               chargeOrder={chargeOrder}
               chargeHitOffsetX={chargeHitOffsetX}
+              holdChargeImpact={playerShieldSaveActive && isSurvived && survivedIndex === 0}
+              resultInitialX={playerShieldSaveActive && isSurvived && survivedIndex === 0 ? resultPushX : undefined}
               cy={cy}
               barW={barW}
               barH={barH}
@@ -142,7 +164,7 @@ export function BarBattleBars({
           key={`o-stack-${battle.key}`}
           spawnX={opponentLayout.compactX}
           marchX={opponentLayout.compactX}
-          pushX={opponentLayout.compactX}
+          pushX={opponentShieldSaveActive && opponentChargeTargetX != null ? opponentChargeTargetX : opponentLayout.compactX}
           gradientId={redGrad}
           count={opponentStackCount}
           cancelCount={minBars}
@@ -152,11 +174,12 @@ export function BarBattleBars({
           chargeOrder={0}
           chargeHitOffsetX={!chargeLunges
             ? 0
-            : remainingDelta < 0 && isAnchored && opponentAvatarX != null
-            ? (opponentAvatarX + opponentBarDir * 20) - opponentLayout.compactX
+            : remainingDelta < 0 && isAnchored && opponentChargeTargetX != null
+            ? opponentChargeTargetX - opponentLayout.compactX
             : remainingDelta < 0
               ? -opponentBarDir * 34
               : 0}
+          holdChargeImpact={opponentShieldSaveActive}
           cy={cy}
           barW={barW}
           barH={barH}
@@ -176,17 +199,20 @@ export function BarBattleBars({
           const chargeHitOffsetX = !chargeLunges
             ? 0
             : isSurvived && survivedIndex === 0
-            ? isAnchored && opponentAvatarX != null
-              ? (opponentAvatarX + opponentBarDir * 20) - opponentBarStartX(i)
+            ? isAnchored && opponentChargeTargetX != null
+              ? (opponentChargeTargetX - barW / 2) - opponentBarStartX(i)
               : -opponentBarDir * 34
             : 0;
+          const resultPushX = opponentShieldSaveActive && survivedIndex === 0 && opponentChargeTargetX != null
+            ? opponentChargeTargetX - barW / 2
+            : opponentPushX(survivedIndex);
 
           return (
             <BarBattleBar
               key={`o-${battle.key}-${i}`}
               spawnX={opponentBarStartX(i)}
               marchX={opponentMarchX(i)}
-              pushX={opponentPushX(survivedIndex)}
+              pushX={resultPushX}
               color={RED}
               darkColor={RED_DARK}
               gradientId={redGrad}
@@ -197,6 +223,8 @@ export function BarBattleBars({
               survived={isSurvived}
               chargeOrder={chargeOrder}
               chargeHitOffsetX={chargeHitOffsetX}
+              holdChargeImpact={opponentShieldSaveActive && isSurvived && survivedIndex === 0}
+              resultInitialX={opponentShieldSaveActive && isSurvived && survivedIndex === 0 ? resultPushX : undefined}
               cy={cy}
               barW={barW}
               barH={barH}

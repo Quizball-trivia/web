@@ -221,6 +221,7 @@ export function PitchVisualization(props: PitchVisualizationProps) {
               opponentAvatarX={opponentX}
               isPortrait={isPortrait}
               variant={barBattleVariant}
+              isPenalty
             />
           )}
 

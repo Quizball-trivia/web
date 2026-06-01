@@ -33,6 +33,8 @@ interface HalftimeScreenProps {
   opponentBan?: string | null;
   onBanCategory?: (categoryId: string) => void;
   onBanPhaseShown?: () => void;
+  /** When true this is the pre-penalty category ban — shows a "Penalties" heading. */
+  isPenaltyBan?: boolean;
 }
 
 const FALLBACK_HALFTIME_SECONDS = 20;
@@ -98,6 +100,7 @@ export function HalftimeScreen({
   opponentBan = null,
   onBanCategory,
   onBanPhaseShown,
+  isPenaltyBan = false,
 }: HalftimeScreenProps) {
   const { t } = useLocale();
   const [nowMs, setNowMs] = useState(() => Date.now());
@@ -217,7 +220,7 @@ export function HalftimeScreen({
                 className="text-xs sm:text-sm font-black uppercase tracking-[0.35em] text-brand-orange"
                 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, letterSpacing: '0.35em' }}
               >
-                {t('possession.halfTime')}
+                {isPenaltyBan ? t('possession.penaltiesBanTitle') : t('possession.halfTime')}
               </span>
             </motion.div>
 

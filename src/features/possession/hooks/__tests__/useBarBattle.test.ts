@@ -78,6 +78,23 @@ function makeRoundResult(
   };
 }
 
+function makePenaltyRoundResult(
+  playerPoints: number,
+  opponentPoints: number,
+  penaltyOutcome: 'goal' | 'saved'
+): MatchRoundResultPayload {
+  return {
+    ...makeRoundResult(playerPoints, opponentPoints),
+    phaseKind: 'penalty',
+    phaseRound: 3,
+    deltas: {
+      possessionDelta: 0,
+      goalScoredBySeat: null,
+      penaltyOutcome,
+    },
+  };
+}
+
 describe('useBarBattle', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -363,6 +380,59 @@ describe('useBarBattle', () => {
       phase: 'charge',
       playerBars: 8,
       opponentBars: 3,
+      remainingDelta: 5,
+    });
+  });
+
+  it('carries penalty save outcome into the charge animation state', async () => {
+    const myRound = makePlayer(50, true);
+    const opponentRound = makePlayer(0, false);
+    const roundResult = makePenaltyRoundResult(50, 0, 'saved');
+
+    const { result } = renderHook(() => useBarBattle({
+      answerAck: {
+        matchId: MATCH_ID,
+        qIndex: 5,
+        questionKind: 'multipleChoice',
+        selectedIndex: 0,
+        isCorrect: true,
+        myTotalPoints: 50,
+        oppAnswered: true,
+        pointsEarned: 50,
+        phaseKind: 'penalty',
+        phaseRound: 3,
+      },
+      opponentAnswered: true,
+      opponentRecentPoints: 0,
+      opponentAnsweredCorrectly: false,
+      roundResult,
+      myRound,
+      opponentRound,
+      phaseKind: 'penalty',
+      dividerX: 250,
+    }));
+
+    await act(async () => {});
+
+    act(() => {
+      vi.advanceTimersByTime(950);
+    });
+
+    expect(result.current).toMatchObject({
+      phase: 'charge',
+      penaltyOutcome: 'saved',
+      playerBars: 5,
+      remainingDelta: 5,
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(1300);
+    });
+
+    expect(result.current).toMatchObject({
+      phase: 'result',
+      penaltyOutcome: 'saved',
+      playerBars: 5,
       remainingDelta: 5,
     });
   });

@@ -44,13 +44,19 @@ type Side = 'player' | 'opponent';
 function resolveFlightPoints(
   pointsEarned: number,
   questionKind?: MatchAnswerAckPayload['questionKind'] | MatchRoundResultPayload['questionKind'],
-  foundCount?: number
+  foundCount?: number,
+  possessionPointsEarned?: number
 ): number {
-  if (pointsEarned > 0) return pointsEarned;
+  // Prefer the possession-scaled value (same source the bars use via
+  // resolvePossessionBattlePoints) so the flying +N matches the bar count. In
+  // penalties pointsEarned and possessionPointsEarned diverge, which previously
+  // made the flight show +0 while the bars showed the real points.
+  const resolvedPoints = typeof possessionPointsEarned === 'number' ? possessionPointsEarned : pointsEarned;
+  if (resolvedPoints > 0) return resolvedPoints;
   if (questionKind === 'putInOrder' && typeof foundCount === 'number' && foundCount > 0) {
     return Math.min(foundCount, 5) * 20;
   }
-  return pointsEarned;
+  return resolvedPoints;
 }
 
 function isFlightPhaseKind(kind: string | undefined): boolean {
@@ -404,10 +410,15 @@ export function usePossessionBarBattleFlights() {
   const answerAck = barBattleMatch.answerAck;
   useEffect(() => {
     if (!enabled || !answerAck) return;
-    const points = resolveFlightPoints(answerAck.pointsEarned, answerAck.questionKind, answerAck.foundCount);
-    const failed = !answerAck.isCorrect || points <= 0;
     const phaseKind = answerAck.phaseKind ?? 'normal';
     if (!isFlightPhaseKind(phaseKind)) return;
+    // Penalties: the answer_ack carries raw pointsEarned but NOT the
+    // possession-scaled value the bars use, so an optimistic flight would show
+    // a mismatched +N. Defer to the round_result fallback flight (which has
+    // possessionPointsEarned) for penalty rounds.
+    if (phaseKind === 'penalty') return;
+    const points = resolveFlightPoints(answerAck.pointsEarned, answerAck.questionKind, answerAck.foundCount);
+    const failed = !answerAck.isCorrect || points <= 0;
     const ackKey = `${answerAck.matchId}:${answerAck.qIndex}`;
     if (currentKey !== ackKey) return;
     if (barBattleMatch.currentQuestionPhase !== 'playing') return;
@@ -436,7 +447,7 @@ export function usePossessionBarBattleFlights() {
 
     const playerRound = roundResult.players[selfUserId];
     const points = playerRound
-      ? resolveFlightPoints(playerRound.pointsEarned, roundResult.questionKind, playerRound.foundCount)
+      ? resolveFlightPoints(playerRound.pointsEarned, roundResult.questionKind, playerRound.foundCount, playerRound.possessionPointsEarned)
       : 0;
     if (!playerRound || points <= 0) return;
 
@@ -454,7 +465,10 @@ export function usePossessionBarBattleFlights() {
   // when match:opponent_answered was not emitted or arrived too early.
   useEffect(() => {
     if (!enabled || !roundResult || !selfUserId) return;
-    if (barBattleMatch.currentQuestionPhase !== 'playing') return;
+    // No currentQuestionPhase guard here (matching the player fallback): in
+    // penalties the optimistic opponent flight is intentionally skipped, so this
+    // round_result fallback is the ONLY opponent flight and must fire even after
+    // the phase has advanced past 'playing'. Deduped by opponentFiredQRef.
     const phaseKind = roundResult.phaseKind ?? phaseKindFromState;
     if (!isFlightPhaseKind(phaseKind)) return;
     const roundKey = `${roundResult.matchId}:${roundResult.qIndex}`;
@@ -462,7 +476,7 @@ export function usePossessionBarBattleFlights() {
 
     const opponentRound = Object.entries(roundResult.players).find(([userId]) => userId !== selfUserId)?.[1];
     const points = opponentRound
-      ? resolveFlightPoints(opponentRound.pointsEarned, roundResult.questionKind, opponentRound.foundCount)
+      ? resolveFlightPoints(opponentRound.pointsEarned, roundResult.questionKind, opponentRound.foundCount, opponentRound.possessionPointsEarned)
       : 0;
     if (!opponentRound || points <= 0) return;
 
@@ -473,7 +487,7 @@ export function usePossessionBarBattleFlights() {
       logLabel: 'Bar-battle opponent fallback flight',
       questionKind: roundResult.questionKind,
     });
-  }, [barBattleMatch.currentQuestionPhase, enabled, enqueueFlightFromDom, phaseKindFromState, roundResult, selfUserId]);
+  }, [enabled, enqueueFlightFromDom, phaseKindFromState, roundResult, selfUserId]);
 
   // ── Opponent flight on opponent answer ──────────────────────────────────
   const opponentAnswered = barBattleMatch.opponentAnswered;
@@ -487,6 +501,10 @@ export function usePossessionBarBattleFlights() {
     // zero-point case renders a "failed" flight that falls off-screen.
     if (currentQIndex == null) return;
     if (!isFlightPhaseKind(phaseKindFromState)) return;
+    // Penalties: opponent_answered carries raw pointsEarned, not the
+    // possession-scaled value the bars use — defer to the round_result fallback
+    // so the opponent flight matches the bars (it previously showed +0).
+    if (phaseKindFromState === 'penalty') return;
     if (currentKey == null) return;
     if (opponentFiredQRef.current === currentKey) return;
 

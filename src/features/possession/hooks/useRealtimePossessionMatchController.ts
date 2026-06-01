@@ -522,6 +522,8 @@ export function useRealtimePossessionMatchController({
             props: {
               penaltyPlayerScore: fieldState.myPenaltyGoals,
               penaltyOpponentScore: fieldState.oppPenaltyGoals,
+              penaltyPlayerAttempts: fieldState.myPenaltyAttempts,
+              penaltyOpponentAttempts: fieldState.oppPenaltyAttempts,
               playerPoints,
               opponentPoints,
               penaltyRound,
@@ -688,6 +690,8 @@ export function useRealtimePossessionMatchController({
           : null,
       onBanCategory: handleHalftimeBan,
       onBanPhaseShown: handleHalftimeBanPhaseShown,
+      // Pre-penalty ban reuses the halftime ban UI but with a penalty title.
+      isPenaltyBan: possessionState.halftime.purpose === 'penalty',
     };
 
   const handleTemporaryQuit = useCallback(() => {
