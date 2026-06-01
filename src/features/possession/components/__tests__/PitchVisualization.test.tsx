@@ -105,6 +105,28 @@ describe('PitchVisualization — penalty branches', () => {
     expect(avatars).toContain('opponent');
   });
 
+  it('mounts the bar-battle slot in penalties but still omits the possession track', () => {
+    const { container } = renderPitch({
+      ...penaltyBase,
+      barBattle: {
+        key: 1,
+        phase: 'both-score',
+        playerBars: 10,
+        opponentBars: 0,
+        playerPoints: 100,
+        opponentPoints: 0,
+        remainingDelta: 10,
+        dividerX: 250,
+      },
+      barBattleVariant: 'ranked_sim',
+    });
+    // Bar battle renders over the penalty pitch...
+    expect(container.querySelector('[data-testid="bar-battle"]')).not.toBeNull();
+    // ...but the open-play possession-track background must NOT (it's meaningless
+    // over a penalty pitch — we render BarBattleOverlay directly, not the scene).
+    expect(container.querySelector('rect[x="15"][y="70"][width="470"][height="90"]')).toBeNull();
+  });
+
   it('renders the penalty goal net ripple when result is goal', () => {
     const { container } = renderPitch({
       penaltyMode: { isPlayerShooter: true, result: 'goal', phase: 'result' },

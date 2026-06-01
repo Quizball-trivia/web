@@ -11,6 +11,7 @@ import type { MatchStatePayload, MatchVariant } from '@/lib/realtime/socket.type
 import type { DevPossessionAnimation } from '@/stores/realtimeMatch.store';
 import { PitchVisualization } from '../components/PitchVisualization';
 import { usePossessionAnimationOrchestrator } from './usePossessionAnimationOrchestrator';
+import { getBarBattleGoalAttackDelayMs, resolvePossessionBattlePoints } from './useBarBattle';
 import { getZone } from './usePossessionMovement';
 import {
   getQuestionDurationSeconds,
@@ -237,7 +238,14 @@ export function usePossessionFieldState({
     if (!isPenaltyQuestion || !penaltyRoundResult || !myRound || !opponentRound || !immediatePenaltyResult) return 0;
     if (variant !== 'ranked_sim') return 0;
 
-    return PENALTY_SCORE_FLIGHT_HANDOFF_MS;
+    // Wait for the bar battle to play out before the shot/result, exactly like
+    // an open-play goal (usePossessionGoalCelebration). Using a fixed handoff
+    // fired the shot while the bars were still animating.
+    const playerPoints = resolvePossessionBattlePoints(myRound, penaltyRoundResult.questionKind);
+    const opponentPoints = resolvePossessionBattlePoints(opponentRound, penaltyRoundResult.questionKind);
+    return getBarBattleGoalAttackDelayMs(playerPoints, opponentPoints, PENALTY_SCORE_FLIGHT_HANDOFF_MS, {
+      includeScoreFlightHandoff: true,
+    });
   }, [immediatePenaltyResult, isPenaltyQuestion, variant, myRound, opponentRound, penaltyRoundResult]);
 
   const penaltyResultKey = penaltyRoundResult && immediatePenaltyResult

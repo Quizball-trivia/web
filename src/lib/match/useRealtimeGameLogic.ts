@@ -6,8 +6,12 @@ import { logger } from '@/utils/logger';
 import { QUESTION_REVEAL_MS } from '@/features/possession/types/possession.types';
 import {
   GOAL_CELEBRATION_MS,
+  PENALTY_RESULT_DISPLAY_DELAY_MS,
   PENALTY_RESULT_SEQUENCE_HOLD_MS,
+  PENALTY_RESULT_SPLASH_MS,
+  PENALTY_SCORE_FLIGHT_HANDOFF_MS,
 } from '@/features/possession/realtimePossession.helpers';
+import { getBarBattleGoalAttackDelayMs, resolvePossessionBattlePoints } from '@/features/possession/hooks/useBarBattle';
 import { trackAnswerSubmitted } from '@/lib/analytics/game-events';
 
 const QUESTION_PLAYING_MS = 10000; // 10 second playing phase
@@ -222,8 +226,25 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
   const roundPhaseKind = roundResult?.phaseKind ?? currentPhaseKind;
   const isPenaltyRound = roundPhaseKind === 'penalty';
   const baseRoundResultHoldMs = ROUND_RESULT_HOLD_MS + (isSpecialRound ? SPECIAL_RESULT_EXTRA_MS : 0);
+  // The penalty shot/result now waits for the bar battle to finish (see
+  // usePossessionFieldState.penaltyShotDelayMs), so the round must be held long
+  // enough that the SAVED!/GOAL! splash still gets its full display AFTER the
+  // (bar-battle-delayed) shot. Otherwise the next kick advances while the splash
+  // is mid-animation and it only flashes for a frame.
+  const penaltyHoldMs = useMemo(() => {
+    const selfRound = selfUserId ? roundResult?.players?.[selfUserId] : undefined;
+    const oppRound = roundResult
+      ? Object.entries(roundResult.players).find(([userId]) => userId !== selfUserId)?.[1]
+      : undefined;
+    const playerPoints = resolvePossessionBattlePoints(selfRound, roundResult?.questionKind);
+    const opponentPoints = resolvePossessionBattlePoints(oppRound, roundResult?.questionKind);
+    const shotDelayMs = getBarBattleGoalAttackDelayMs(playerPoints, opponentPoints, PENALTY_SCORE_FLIGHT_HANDOFF_MS, {
+      includeScoreFlightHandoff: true,
+    });
+    return shotDelayMs + PENALTY_RESULT_DISPLAY_DELAY_MS + PENALTY_RESULT_SPLASH_MS;
+  }, [roundResult, selfUserId]);
   const roundResultHoldMs = isPenaltyRound
-    ? Math.max(baseRoundResultHoldMs, PENALTY_RESULT_SEQUENCE_HOLD_MS)
+    ? Math.max(baseRoundResultHoldMs, PENALTY_RESULT_SEQUENCE_HOLD_MS, penaltyHoldMs)
     : baseRoundResultHoldMs;
   const opponentAnswered = matchSlice.opponentAnswered;
   const visibleOpponentAnswered = opponentAnswered && questionPhase === 'playing' && !startCountdownActive;
@@ -238,7 +259,13 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
       ? transitionDelayMs + goalExtra
       : currentPhaseKind === 'last_attack' && isGoalRound
         ? goalExtra
-        : 0;
+        // Penalty rounds get a transition window too, so the "Penalty N" round
+        // intro overlay has time to show before the next kick — without it the
+        // next question promotes instantly (effectiveDelay 0) and the overlay
+        // never appears.
+        : currentPhaseKind === 'penalty' && isPenaltyRound
+          ? transitionDelayMs
+          : 0;
 
   // Hold timer — hide options after result display, then either signal transition
   // (normal phases with delay) or let the gate effect promote directly (non-normal).

@@ -356,7 +356,7 @@ export function PossessionQuestionPanel({
           const isWrongPick = buttonState === 'selected-wrong';
 
           const isPlayerPicked = selectedAnswer === i;
-          const opponentPickedThis = !partyPicks && !isPenaltyPhase && opponentAnswer === i;
+          const opponentPickedThis = !partyPicks && opponentAnswer === i;
           const opponentPickCorrect = opponentAnswer !== null && correctIndex !== undefined
             ? opponentAnswer === correctIndex
             : null;

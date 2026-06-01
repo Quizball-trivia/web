@@ -160,7 +160,7 @@ export function resolvePossessionBattlePoints(
 }
 
 function isBarBattlePhaseKind(kind: string | undefined): boolean {
-  return kind === 'normal' || kind === 'last_attack';
+  return kind === 'normal' || kind === 'last_attack' || kind === 'penalty';
 }
 
 // ─── Hook ────────────────────────────────────────────────────────────────────

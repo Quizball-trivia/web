@@ -107,7 +107,6 @@ export function useBarBattleViewModel({
   mirrored,
   playerAvatarX,
   opponentAvatarX,
-  isPortrait,
   matchVariant,
 }: UseBarBattleViewModelArgs): BarBattleViewModel {
   const uid = useId();
@@ -136,12 +135,17 @@ export function useBarBattleViewModel({
   const playerLayoutBars = playerBars > 0 ? playerBars : pointsToBarCount(playerPoints);
   const opponentLayoutBars = opponentBars > 0 ? opponentBars : pointsToBarCount(opponentPoints);
 
-  // In portrait, SVG X maps to screen Y. The bar lane must extend away from
-  // the opposing avatar, which flips when the second half mirrors the pitch.
-  const portraitPlayerDir = playerAvatarX != null && opponentAvatarX != null && playerAvatarX > opponentAvatarX ? 1 : -1;
-  const portraitOpponentDir = opponentAvatarX != null && playerAvatarX != null && opponentAvatarX > playerAvatarX ? 1 : -1;
-  const playerPreferredBarDir = isAnchored && isPortrait ? portraitPlayerDir : playerDir;
-  const opponentPreferredBarDir = isAnchored && isPortrait ? portraitOpponentDir : opponentDir;
+  // When anchored, derive each side's bar direction from the ACTUAL avatar
+  // positions so bars always grow away from the opposing avatar — never across
+  // it. This is required for penalties, where avatars are placed by role
+  // (keeper/shooter), not by the half-based `mirrored` flag, so `playerDir`/
+  // `opponentDir` (which key off `mirrored`) would point the wrong way and lay
+  // bars in front of the opposite avatar. In portrait SVG-X maps to screen-Y,
+  // but the away-from-opponent rule is the same.
+  const positionPlayerDir = playerAvatarX != null && opponentAvatarX != null && playerAvatarX > opponentAvatarX ? 1 : -1;
+  const positionOpponentDir = opponentAvatarX != null && playerAvatarX != null && opponentAvatarX > playerAvatarX ? 1 : -1;
+  const playerPreferredBarDir = isAnchored ? positionPlayerDir : playerDir;
+  const opponentPreferredBarDir = isAnchored ? positionOpponentDir : opponentDir;
 
   const compactW = barW * 2.2;
   const normalRowX = (avatarX: number, dir: number, count: number): number[] | null => {

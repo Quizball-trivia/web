@@ -1934,13 +1934,20 @@ function DevAnimationsContent() {
       })
     );
 
+    // For kicks after the first, keep the previous round's result on the store
+    // so the next penalty question BUFFERS as pendingQuestion (real play does
+    // this) — that's what lets the "Penalty N" round-intro overlay show before
+    // promotion. The real promote-gate clears lastRoundResult on promotion.
+    const isFirstKick = kickIndex === 0;
     useRealtimeMatchStore.setState((prev) =>
       prev.match
         ? {
             ...prev,
             match: {
               ...prev.match,
-              lastRoundResult: null,
+              ...(isFirstKick
+                ? { lastRoundResult: null, currentQuestionPhase: 'reveal' as const }
+                : {}),
               answerAck: null,
               countdownGuessAck: null,
               cluesGuessAck: null,
@@ -1948,7 +1955,6 @@ function DevAnimationsContent() {
               opponentSelectedIndex: null,
               opponentRecentPoints: 0,
               opponentAnsweredCorrectly: null,
-              currentQuestionPhase: 'reveal',
             },
           }
         : prev

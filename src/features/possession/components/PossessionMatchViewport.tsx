@@ -146,6 +146,7 @@ function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
 }
 
 export function PossessionMatchViewport({ model, children }: PossessionMatchViewportProps) {
+  const { t } = useLocale();
   const { showMainUI, hud, pitchProps, goalCelebration, penaltySplash, muted, autoScrollKey } = model;
   const celebrationOwnsBall = Boolean(goalCelebration);
   const {
@@ -230,6 +231,20 @@ export function PossessionMatchViewport({ model, children }: PossessionMatchView
             {hud.kind !== 'penalty' && (
               <div className="lg:hidden">
                 <GoalProgressBar position={pitchProps.playerPosition} orientation="horizontal" mirrored={pitchProps.mirrored} />
+              </div>
+            )}
+
+            {/* Penalty: in place of the (hidden) possession meter, show who is
+                shooting vs in goal this round, so it's obvious at a glance.
+                Shown on mobile and web. */}
+            {hud.kind === 'penalty' && (
+              <div className="flex justify-center py-1.5">
+                <div
+                  className="rounded-full bg-brand-orange/15 px-4 py-1 text-xs font-black uppercase tracking-[0.18em] text-brand-orange"
+                  style={{ fontFamily: "'Poppins', sans-serif" }}
+                >
+                  {hud.props.isPlayerShooter ? t('possession.youShoot') : t('possession.youSave')}
+                </div>
               </div>
             )}
           </>

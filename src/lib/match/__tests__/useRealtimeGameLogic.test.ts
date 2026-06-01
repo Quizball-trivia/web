@@ -2,7 +2,13 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { ROUND_RESULT_HOLD_MS, useRealtimeGameLogic } from '../useRealtimeGameLogic';
-import { PENALTY_RESULT_SEQUENCE_HOLD_MS } from '@/features/possession/realtimePossession.helpers';
+import {
+  PENALTY_RESULT_DISPLAY_DELAY_MS,
+  PENALTY_RESULT_SEQUENCE_HOLD_MS,
+  PENALTY_RESULT_SPLASH_MS,
+  PENALTY_SCORE_FLIGHT_HANDOFF_MS,
+} from '@/features/possession/realtimePossession.helpers';
+import { getBarBattleGoalAttackDelayMs } from '@/features/possession/hooks/useBarBattle';
 import { trackAnswerSubmitted } from '@/lib/analytics/game-events';
 import type {
   MatchRoundResultPayload,
@@ -286,8 +292,20 @@ describe('useRealtimeGameLogic — roundResultHoldDone for goals', () => {
     expect(result.current.state.roundResultHoldDone).toBe(false);
     expect(result.current.state.showOptions).toBe(true);
 
+    // The hold is now bar-battle-aware: it waits for the shot (which waits for
+    // the bars) plus the result display + splash, so the SAVED!/GOAL! splash
+    // isn't cut off. Compute the same hold the hook does for this round's points
+    // (self USER_A earned 10, opponent USER_B earned 0).
+    const shotDelayMs = getBarBattleGoalAttackDelayMs(10, 0, PENALTY_SCORE_FLIGHT_HANDOFF_MS, {
+      includeScoreFlightHandoff: true,
+    });
+    const penaltyHoldMs = Math.max(
+      PENALTY_RESULT_SEQUENCE_HOLD_MS,
+      shotDelayMs + PENALTY_RESULT_DISPLAY_DELAY_MS + PENALTY_RESULT_SPLASH_MS,
+    );
+
     await act(async () => {
-      vi.advanceTimersByTime(PENALTY_RESULT_SEQUENCE_HOLD_MS - ROUND_RESULT_HOLD_MS + 50);
+      vi.advanceTimersByTime(penaltyHoldMs - ROUND_RESULT_HOLD_MS + 50);
     });
 
     expect(result.current.state.roundResultHoldDone).toBe(true);

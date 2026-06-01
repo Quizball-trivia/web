@@ -36,7 +36,6 @@ export function PenaltyHUD({
   opponentPoints = 0,
   penaltyRound,
   isPenaltySuddenDeath,
-  isPlayerShooter,
   playerName,
   opponentName,
   playerAvatarCustomization = null,
@@ -112,9 +111,6 @@ export function PenaltyHUD({
           >
             {phase === 'penalty-playing' ? timeRemaining : '\u2014'}
           </motion.div>
-          <div className="-mt-0.5 hidden text-[10px] font-black tracking-[0.18em] text-brand-orange/70 sm:block">
-            {isPlayerShooter ? t('possession.youShoot') : t('possession.youSave')}
-          </div>
         </div>
         <div className="flex min-w-0 flex-1 items-center justify-end gap-1 sm:gap-3">
           <div className="min-w-0 text-right">

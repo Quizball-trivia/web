@@ -269,13 +269,20 @@ export function usePossessionRoundTransition({
     && !isHalftime
     && !goalCelebration;
 
+  // Show a "Penalty N" intro between penalty rounds, mirroring the open-play
+  // round transition. The next penalty question may arrive as a buffered
+  // `pendingQuestion` OR be promoted straight to `localQuestion` (no buffering),
+  // so accept either — otherwise the overlay silently never fires and the
+  // shootout "snaps" between questions with no intro.
+  const hasNextPenaltyQuestion = pendingQuestion?.phaseKind === 'penalty'
+    || localQuestion?.phaseKind === 'penalty';
   const showPenaltyTransition = !firstQuestionIntro
     && !penaltyCountdownActive
     && !goalCelebration
     && phase !== 'COMPLETED'
     && roundResultHoldDone
     && roundResult?.phaseKind === 'penalty'
-    && pendingQuestion?.phaseKind === 'penalty';
+    && hasNextPenaltyQuestion;
 
   useLayoutEffect(() => {
     if (showRoundTransition && !transitionVisibleRef.current) {
@@ -308,7 +315,10 @@ export function usePossessionRoundTransition({
 
     if (showPenaltyTransition && !transitionVisibleRef.current) {
       transitionVisibleRef.current = true;
+      // Prefer the buffered next question, else the promoted current penalty
+      // question, else derive from the just-finished round.
       const penaltyRound = pendingQuestion?.phaseRound
+        ?? (localQuestion?.phaseKind === 'penalty' ? localQuestion.phaseRound : undefined)
         ?? (typeof roundResult?.phaseRound === 'number' ? roundResult.phaseRound + 1 : undefined)
         ?? 1;
       setTransitionSnapshot({
@@ -325,6 +335,7 @@ export function usePossessionRoundTransition({
   }, [
     firstQuestionIntro,
     half,
+    localQuestion?.phaseKind,
     localQuestion?.phaseRound,
     localQuestion?.qIndex,
     localQuestion?.question.categoryName,
