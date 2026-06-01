@@ -881,6 +881,7 @@
     "markReady": "Mark Ready",
     "startingMatch": "Starting Match...",
     "preparingMatchSpinner": "Preparing match...",
+    "matchHandoffDescription": "Taking you to the game...",
     "leaveLobby": "Leave Lobby",
     "toastJoinTooLong": "Join is taking too long. Please refresh and try again.",
     "toastJoiningCode": "Joining {code}...",

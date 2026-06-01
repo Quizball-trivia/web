@@ -373,6 +373,40 @@ describe('useRealtimeGameLogic — roundResultHoldDone for goals', () => {
     expect(result.current.state.showOptions).toBe(true);
   });
 
+  it('hides answer options while a paused match is in the resume handoff', async () => {
+    seedMatch();
+    const store = useRealtimeMatchStore.getState();
+
+    const { result } = renderHook(() =>
+      useRealtimeGameLogic({ transitionDelayMs: 1600 })
+    );
+
+    act(() => store.setMatchQuestion(makeQuestionWithImmediatePlay(9)));
+    await act(async () => { vi.advanceTimersByTime(50); });
+
+    expect(result.current.state.showOptions).toBe(true);
+
+    act(() => {
+      store.setMatchPaused({ graceMs: 60_000, remainingReconnects: 2 });
+      store.setMatchCountdown({
+        matchId: MATCH_ID,
+        seconds: 5,
+        startsAt: new Date(Date.now() + 5_000).toISOString(),
+        reason: 'resume',
+      });
+    });
+
+    expect(result.current.state.matchPaused).toBe(true);
+    expect(result.current.state.startCountdownActive).toBe(true);
+    expect(result.current.state.showOptions).toBe(false);
+
+    await act(async () => { vi.advanceTimersByTime(5_100); });
+
+    expect(result.current.state.matchPaused).toBe(true);
+    expect(result.current.state.startCountdownActive).toBe(false);
+    expect(result.current.state.showOptions).toBe(false);
+  });
+
   it('tracks MCQ answer submissions once when the answer ack arrives', async () => {
     vi.setSystemTime(new Date('2026-05-29T13:00:00.000Z'));
     seedMatch();

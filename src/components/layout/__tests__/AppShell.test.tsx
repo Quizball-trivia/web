@@ -540,6 +540,26 @@ describe('AppShell — rejoin / completed / forfeit / draft banners', () => {
     expect(screen.queryByText(/appShell.forfeit/)).not.toBeInTheDocument();
   });
 
+  it('hides the rejoin banner while a lobby room is handing off to an active match', () => {
+    pathnameMock.mockReturnValue('/friend/room/ROOM1');
+    seedRealtime({
+      match: {
+        matchId: 'M-HANDOFF',
+        mode: 'friendly',
+        opponent: { id: 'opp', username: 'Opp', avatarUrl: null },
+        finalResults: null,
+      },
+      sessionState: {
+        state: 'IN_WAITING_LOBBY',
+        waitingLobbyId: 'L1',
+      },
+    });
+    renderShell();
+    expect(screen.queryByText(/appShell.matchStillActiveAgainst/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/appShell.rejoinMatch/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/appShell.forfeit/)).not.toBeInTheDocument();
+  });
+
   it('shows party-dropout banner and hides rejoin for the dropped match', () => {
     pathnameMock.mockReturnValue('/leaderboard');
     seedRealtime({
@@ -575,6 +595,26 @@ describe('AppShell — rejoin / completed / forfeit / draft banners', () => {
     });
     renderShell();
     expect(screen.getAllByText(/appShell.draftActiveAgainst/).length).toBeGreaterThan(0);
+  });
+
+  it('hides the draft banner while still inside the lobby room handoff route', () => {
+    pathnameMock.mockReturnValue('/friend/room/ROOM1');
+    seedRealtime({
+      lobby: {
+        status: 'active',
+        mode: 'friendly',
+        inviteCode: 'ROOM1',
+        lobbyId: 'L9',
+        displayName: 'L',
+        members: [
+          { userId: 'self-user', username: 'me', avatarUrl: null },
+          { userId: 'opp', username: 'DraftOpp', avatarUrl: null },
+        ],
+      },
+      draft: { state: 'in_progress' },
+    });
+    renderShell();
+    expect(screen.queryByText(/appShell.draftActiveAgainst/)).not.toBeInTheDocument();
   });
 });
 

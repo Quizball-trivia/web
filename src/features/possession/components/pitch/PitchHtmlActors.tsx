@@ -28,7 +28,8 @@ interface PitchHtmlActorsProps {
   opponentAvatarAlt: string;
   playerAvatarCustomization: AvatarCustomization | null;
   opponentAvatarCustomization: AvatarCustomization | null;
-  mirrored: boolean;
+  playerFlipX: boolean;
+  opponentFlipX: boolean;
   isPortrait: boolean;
   hideBall: boolean;
   ballOpacity: number;
@@ -53,7 +54,8 @@ export function PitchHtmlActors({
   opponentAvatarAlt,
   playerAvatarCustomization,
   opponentAvatarCustomization,
-  mirrored,
+  playerFlipX,
+  opponentFlipX,
   isPortrait,
   hideBall,
   ballOpacity,
@@ -99,7 +101,7 @@ export function PitchHtmlActors({
           <div
             aria-label={playerAvatarAlt}
             className="size-full overflow-hidden rounded-full"
-            style={{ transform: mirrored ? 'scaleX(-1)' : undefined }}
+            style={{ transform: playerFlipX ? 'scaleX(-1)' : undefined }}
           >
             <AvatarDisplay customization={playerAvatarCustomization ?? {}} size="xs" className="size-full" />
           </div>
@@ -127,7 +129,7 @@ export function PitchHtmlActors({
           <div
             aria-label={opponentAvatarAlt}
             className="size-full overflow-hidden rounded-full"
-            style={{ transform: mirrored ? undefined : 'scaleX(-1)' }}
+            style={{ transform: opponentFlipX ? 'scaleX(-1)' : undefined }}
           >
             <AvatarDisplay customization={opponentAvatarCustomization ?? {}} size="xs" className="size-full" />
           </div>

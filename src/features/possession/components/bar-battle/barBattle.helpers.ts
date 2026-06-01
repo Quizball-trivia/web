@@ -41,9 +41,9 @@ export const STACK_CANCEL_FLASH_S = 0.24;
 
 // ─── Pure helpers ───────────────────────────────────────────────────────────
 
-/** Map raw points to a visual bar count, clamped to 1..12. Returns 0 for non-positive. */
+/** Map raw points to a visual bar count, clamped to 1..20. Returns 0 for non-positive. */
 export function pointsToBarCount(points: number): number {
-  return points > 0 ? Math.min(Math.max(Math.round(points / 10), 1), 12) : 0;
+  return points > 0 ? Math.min(Math.max(Math.round(points / 10), 1), 20) : 0;
 }
 
 /** Clamp an X coordinate so the centred shape of `width` stays inside the field. */

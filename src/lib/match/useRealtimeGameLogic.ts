@@ -301,7 +301,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
 
   const showResult = Boolean(answerAck || roundResult);
   const isAnswered = selectedAnswer !== null || showResult;
-  const showOptionsVisible = showOptions && !startCountdownActive;
+  const showOptionsVisible = showOptions && !startCountdownActive && !matchPaused;
 
   const opponentId = matchSlice.opponentId;
   const myRoundResult = useMemo(() => {

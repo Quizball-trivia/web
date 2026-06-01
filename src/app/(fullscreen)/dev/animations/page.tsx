@@ -37,7 +37,7 @@ const SELF_ID = 'dev-self';
 const OPP_ID = 'dev-opp';
 const TOTAL_QUESTIONS = 12;
 const POINTS_PER_BAR = 10;
-const MAX_BARS = 12;
+const MAX_BARS = 20;
 const DEV_PUT_ORDER_OPPONENT_DELAY_MS = 900;
 const DEV_PUT_ORDER_ROUND_RESULT_DELAY_MS = 2100;
 const DEV_SPECIAL_ROUND_RESULT_DELAY_MS = 1600;
@@ -287,9 +287,9 @@ function makeRoundResult(
   outcome: Outcome,
   scores: { meTotal: number; oppTotal: number },
   customPoints: { me: number; opp: number },
-  // Dev-only 2× speed-streak preview: when true, my swing is doubled this round
-  // and I hold the streak afterwards (shows the 2× badge + bar jump together).
-  speedStreakMe = false
+  // Dev-only 2× speed-streak preview: when set, that seat's possession swing is
+  // doubled this round while base points stay unchanged, matching production.
+  boostedSeat: 1 | 2 | null = null
 ): MatchRoundResultPayload {
   const sample = SAMPLE_QUESTIONS[qIndex % SAMPLE_QUESTIONS.length];
 
@@ -298,9 +298,11 @@ function makeRoundResult(
 
   // Points earned only count when that side was correct. Custom sliders let
   // you preview big-vs-small bar battles (e.g. +80 vs +10 → 8 bars vs 1).
-  const mePoints = (meCorrect ? customPoints.me : 0) * (speedStreakMe ? 2 : 1);
-  const oppPoints = oppCorrect ? customPoints.opp : 0;
-  const possessionDelta = mePoints - oppPoints;
+  const meBasePoints = meCorrect ? customPoints.me : 0;
+  const oppBasePoints = oppCorrect ? customPoints.opp : 0;
+  const mePossessionPoints = meBasePoints * (boostedSeat === 1 ? 2 : 1);
+  const oppPossessionPoints = oppBasePoints * (boostedSeat === 2 ? 2 : 1);
+  const possessionDelta = mePossessionPoints - oppPossessionPoints;
 
   const goalScoredBySeat: 1 | 2 | null =
     outcome === 'goal-me' ? 1 : outcome === 'goal-opp' ? 2 : null;
@@ -315,18 +317,20 @@ function makeRoundResult(
     },
     players: {
       [SELF_ID]: {
-        totalPoints: scores.meTotal + mePoints,
-        pointsEarned: mePoints,
+        totalPoints: scores.meTotal + meBasePoints,
+        pointsEarned: meBasePoints,
+        possessionPointsEarned: mePossessionPoints,
         isCorrect: meCorrect,
-        timeMs: speedStreakMe ? 1800 : 3000,
+        timeMs: boostedSeat === 1 ? 1800 : 3000,
         selectedIndex: meCorrect ? sample.correctIndex : (sample.correctIndex + 1) % 4,
         submittedOrderIds: [],
       },
       [OPP_ID]: {
-        totalPoints: scores.oppTotal + oppPoints,
-        pointsEarned: oppPoints,
+        totalPoints: scores.oppTotal + oppBasePoints,
+        pointsEarned: oppBasePoints,
+        possessionPointsEarned: oppPossessionPoints,
         isCorrect: oppCorrect,
-        timeMs: 4200,
+        timeMs: boostedSeat === 2 ? 1800 : 4200,
         selectedIndex: oppCorrect ? sample.correctIndex : (sample.correctIndex + 2) % 4,
         submittedOrderIds: [],
       },
@@ -339,8 +343,8 @@ function makeRoundResult(
       penaltyOutcome: null,
       // Hold the streak afterwards (and mark it boosted this round) so the
       // 2× badge stays lit until cleared by a goal/slower/wrong round.
-      speedStreakHolderSeat: speedStreakMe && !goalScoredBySeat ? 1 : null,
-      speedStreakBoostedSeat: speedStreakMe ? 1 : null,
+      speedStreakHolderSeat: boostedSeat && !goalScoredBySeat ? boostedSeat : null,
+      speedStreakBoostedSeat: boostedSeat,
     },
   };
 }
@@ -836,6 +840,7 @@ function DevAnimationsContent() {
             half: 1,
             goals: goalsRef.current,
             possessionDiff: newDiff,
+            speedStreakHolderSeat: result.deltas?.speedStreakHolderSeat ?? null,
           })
         );
       }, moveDelayMs)
@@ -1457,7 +1462,7 @@ function DevAnimationsContent() {
     if (result.deltas?.goalScoredBySeat === 2) goalsRef.current.seat2 += 1;
   }
 
-  function fireOutcome(outcome: Outcome, speedStreakMe = false) {
+  function fireOutcome(outcome: Outcome, boostedSeat: 1 | 2 | null = null) {
     // Mobile: auto-dismiss the controls drawer so the animation has the
     // full viewport. Desktop is unaffected (panel is lg:translate-x-0).
     setMobilePanelOpen(false);
@@ -1466,7 +1471,7 @@ function DevAnimationsContent() {
     const s = store();
     const q = s.match?.currentQuestion;
     if (!q) return;
-    const result = makeRoundResult(q.qIndex, outcome, scoreRef.current, { me: myPoints, opp: oppPoints }, speedStreakMe);
+    const result = makeRoundResult(q.qIndex, outcome, scoreRef.current, { me: myPoints, opp: oppPoints }, boostedSeat);
     const me = result.players[SELF_ID];
     const opp = result.players[OPP_ID];
     if (!me || !opp) return;
@@ -1526,24 +1531,25 @@ function DevAnimationsContent() {
   // Dev demo for the 2× boost flight: turn the badge on first (so it's visible
   // in the HUD), then fire a boosted round — the +N flight detours through the
   // now-visible badge and doubles before flying to the bar.
-  function fireBoostDemo() {
+  function fireBoostDemo(side: 'player' | 'opponent' = 'player') {
     const s = store();
     const q = s.match?.currentQuestion;
     if (!q) return;
+    const holderSeat = side === 'player' ? 1 : 2;
     // Set the live holder in match state (drives the sticky badge) AND a
-    // round result that flips holder null→me (triggers the badge fly-in flight).
+    // round result that flips holder null→seat (triggers the badge fly-in flight).
     stateVersion.current += 1;
     s.setMatchState(makeMatchState('NORMAL_PLAY', {
       stateVersion: stateVersion.current,
       possessionDiff: possessionDiffRef.current,
-      speedStreakHolderSeat: 1,
+      speedStreakHolderSeat: holderSeat,
     }));
     s.setRoundResult({
-      ...makeRoundResult(q.qIndex, 'me-correct', scoreRef.current, { me: 0, opp: 0 }, true),
+      ...makeRoundResult(q.qIndex, 'me-correct', scoreRef.current, { me: 0, opp: 0 }, holderSeat),
       players: {},
     });
     pendingTimers.current.push(
-      window.setTimeout(() => fireOutcome('both-correct', true), 1100),
+      window.setTimeout(() => fireOutcome('both-correct', holderSeat), 1100),
     );
   }
 
@@ -2184,7 +2190,7 @@ function DevAnimationsContent() {
             label="Opp" suffix={`(${pointsToBars(oppPoints)} bars)`}
           />
           <p className="mb-2 mt-1 text-[9px] text-brand-slate">
-            10 pts = 1 bar (cap 12). Only counts if that side was correct.
+            10 pts = 1 bar (boosted cap 20). Only counts if that side was correct.
           </p>
           <button
             onClick={() => {
@@ -2254,7 +2260,8 @@ function DevAnimationsContent() {
           <Btn variant="yellow" onClick={() => loadSpecialScenario('clues', 'partial')}>who am i partial sim</Btn>
           <Btn variant="yellow" onClick={() => fireOutcome('goal-me')}>⚽ goal · me</Btn>
           <Btn variant="yellow" onClick={() => fireOutcome('goal-opp')}>⚽ goal · opp</Btn>
-          <Btn variant="yellow" onClick={fireBoostDemo}>⚡ 2× boost flight · me</Btn>
+          <Btn variant="yellow" onClick={() => fireBoostDemo('player')}>⚡ 2× boost flight · me</Btn>
+          <Btn variant="yellow" onClick={() => fireBoostDemo('opponent')}>⚡ 2× boost flight · opponent</Btn>
           <Btn onClick={loseStreakDemo}>💥 lose 2× streak</Btn>
           <Btn onClick={() => previewShot('miss', 1)}>miss left · me attacks</Btn>
           <Btn onClick={() => previewShot('miss', 2)}>miss left · opp attacks</Btn>

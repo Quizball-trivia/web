@@ -48,6 +48,8 @@ export interface PossessionFieldState {
   pitchProps: PitchProps;
   /** True when I currently hold the 2× speed streak. */
   speedStreakMine: boolean;
+  /** True when the opponent currently holds the 2× speed streak. */
+  speedStreakOpponent: boolean;
 }
 
 interface UsePossessionFieldStateParams {
@@ -385,6 +387,10 @@ export function usePossessionFieldState({
   // one-shot fly-in / score-doubling moment, handled in the flight overlay.
   const speedStreakMine =
     mySeat != null && possessionState?.speedStreakHolderSeat === mySeat;
+  const speedStreakOpponent =
+    mySeat != null
+    && possessionState?.speedStreakHolderSeat != null
+    && possessionState.speedStreakHolderSeat !== mySeat;
 
   return {
     mySeat,
@@ -412,5 +418,6 @@ export function usePossessionFieldState({
     uiPhase,
     pitchProps,
     speedStreakMine,
+    speedStreakOpponent,
   };
 }

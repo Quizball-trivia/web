@@ -37,8 +37,9 @@ export function PenaltyStartCountdownOverlay({ display }: PenaltyStartCountdownO
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.15, duration: 0.4 }}
-          className="w-full text-balance text-center text-[clamp(1.5rem,7vw,2.25rem)] font-black uppercase leading-tight tracking-wide text-brand-red-soft font-fun [overflow-wrap:normal] [word-break:keep-all]"
-          style={{ textShadow: '0 0 30px rgba(255,75,75,0.5), 0 4px 0 rgba(200,40,40,0.8)' }}
+          className="w-full text-balance text-center text-[clamp(1.5rem,7vw,2.25rem)] font-black uppercase leading-tight tracking-wide text-brand-red-soft [overflow-wrap:normal] [word-break:keep-all]"
+          // family-only to preserve font-black / tracking
+          style={{ fontFamily: "'Poppins', sans-serif", textShadow: '0 0 30px rgba(255,75,75,0.5), 0 4px 0 rgba(200,40,40,0.8)' }}
         >
           {t('possession.penaltyShootout')}
         </motion.div>
@@ -49,12 +50,20 @@ export function PenaltyStartCountdownOverlay({ display }: PenaltyStartCountdownO
           transition={{ type: 'spring', stiffness: 340, damping: 22 }}
         >
           <div className="flex size-28 items-center justify-center rounded-full border-4 border-brand-red-soft/70 bg-surface-deep shadow-[0_0_50px_rgba(255,75,75,0.3)]">
-            <span className="text-5xl font-black leading-none tabular-nums text-white font-fun">
+            <span
+              className="text-5xl font-black leading-none tabular-nums text-white"
+              // family-only to preserve font-black
+              style={{ fontFamily: "'Poppins', sans-serif" }}
+            >
               {display}
             </span>
           </div>
         </motion.div>
-        <div className="text-sm font-bold uppercase tracking-widest text-white/60 font-fun">
+        <div
+          className="text-sm font-bold uppercase tracking-widest text-white/60"
+          // family-only to preserve font-bold / tracking
+          style={{ fontFamily: "'Poppins', sans-serif" }}
+        >
           {t('possession.getReady')}
         </div>
       </motion.div>

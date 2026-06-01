@@ -17,7 +17,7 @@ import {
   PENALTY_ICON_SWAP_DELAY_MS,
   computeMyPossessionPct,
 } from '../realtimePossession.helpers';
-import { getBarBattleFieldLockMs, getBarBattleGoalAttackDelayMs, resolveBattlePoints } from './useBarBattle';
+import { getBarBattleFieldLockMs, getBarBattleGoalAttackDelayMs, resolvePossessionBattlePoints } from './useBarBattle';
 import type { ShotResult } from '../types/possession.types';
 
 interface AttackAnimation {
@@ -205,16 +205,8 @@ export function usePossessionAnimationOrchestrator({
     queueMicrotask(() => {
       setReadyRoundAttackKey(null);
     });
-    const playerPoints = resolveBattlePoints(
-      myRound?.pointsEarned ?? 0,
-      roundResult?.questionKind,
-      myRound?.foundCount
-    );
-    const opponentPoints = resolveBattlePoints(
-      opponentRound?.pointsEarned ?? 0,
-      roundResult?.questionKind,
-      opponentRound?.foundCount
-    );
+    const playerPoints = resolvePossessionBattlePoints(myRound, roundResult?.questionKind);
+    const opponentPoints = resolvePossessionBattlePoints(opponentRound, roundResult?.questionKind);
     const attackDelayMs = getBarBattleGoalAttackDelayMs(
       playerPoints,
       opponentPoints,
@@ -350,16 +342,8 @@ export function usePossessionAnimationOrchestrator({
     fieldMotionLockedRef.current = true;
     setFieldMotionLocked(true);
     if (fieldReleaseTimerRef.current) clearTimeout(fieldReleaseTimerRef.current);
-    const playerPoints = resolveBattlePoints(
-      myRound?.pointsEarned ?? 0,
-      roundResult.questionKind,
-      myRound?.foundCount
-    );
-    const opponentPoints = resolveBattlePoints(
-      opponentRound?.pointsEarned ?? 0,
-      roundResult.questionKind,
-      opponentRound?.foundCount
-    );
+    const playerPoints = resolvePossessionBattlePoints(myRound, roundResult.questionKind);
+    const opponentPoints = resolvePossessionBattlePoints(opponentRound, roundResult.questionKind);
     const fieldLockMs = Math.max(
       FIELD_RESULT_COMPARE_MS + FIELD_POSSESSION_CUE_MS,
       getBarBattleFieldLockMs(playerPoints, opponentPoints, {

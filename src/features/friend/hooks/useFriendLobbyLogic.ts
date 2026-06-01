@@ -35,6 +35,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   const lobby = useRealtimeMatchStore((state) => state.lobby);
   const draft = useRealtimeMatchStore((state) => state.draft);
   const hasActiveMatch = useRealtimeMatchStore((s) => s.match != null);
+  const sessionState = useRealtimeMatchStore((state) => state.sessionState);
   const error = useRealtimeMatchStore((state) => state.error);
   const clearError = useRealtimeMatchStore((state) => state.clearError);
   const pendingLobbyHandoffCode = useRealtimeMatchStore((state) => state.pendingLobbyHandoffCode);
@@ -93,7 +94,13 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   const expectsInviteLobby = Boolean(normalizedRoomCode);
   const lobbyMatchesInvite = !expectsInviteLobby || lobby?.inviteCode?.toUpperCase() === normalizedRoomCode;
   const activeLobby = lobbyMatchesInvite ? lobby : null;
-  const isResolvingInvite = expectsInviteLobby && !activeLobby && !inviteJoinFailure;
+  const isActiveMatchHandoff =
+    expectsInviteLobby &&
+    (hasActiveMatch ||
+      Boolean(draft) ||
+      (sessionState?.state === "IN_ACTIVE_MATCH" && Boolean(sessionState.activeMatchId)));
+  const isPreparingMatch = Boolean(isStartingMatch || activeLobby?.status === "active" || isActiveMatchHandoff);
+  const isResolvingInvite = expectsInviteLobby && !activeLobby && !inviteJoinFailure && !isPreparingMatch;
   const lobbyCode = activeLobby?.inviteCode ?? (roomCode === "new" ? "" : normalizedRoomCode ?? roomCode);
   const members = activeLobby?.members ?? [];
   const me = members.find((member) => member.userId === selfUserId);
@@ -113,6 +120,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   // 1. Reset local guards after leaving a lobby/match
   useEffect(() => {
     if (isResolvingInvite) return;
+    if (isPreparingMatch) return;
     if (activeLobby || draft || hasActiveMatch) return;
     if (leavingRef.current) return;
     startedRef.current = false;
@@ -125,7 +133,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
       setIsStartingMatch(false);
     }, 0);
     return () => clearTimeout(stopTimer);
-  }, [clearStartMatchTimeout, activeLobby, draft, hasActiveMatch, isResolvingInvite, resetLobbyCommand]);
+  }, [clearStartMatchTimeout, activeLobby, draft, hasActiveMatch, isPreparingMatch, isResolvingInvite, resetLobbyCommand]);
 
   useEffect(() => {
     if (!normalizedRoomCode || pendingLobbyHandoffCode !== normalizedRoomCode) return;
@@ -148,6 +156,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     if (inviteJoinCancelledRef.current) return;
     if (terminalInviteJoinFailureRef.current) return;
     if (inviteJoinFailure) return;
+    if (isPreparingMatch || isActiveMatchHandoff || hasActiveMatch || draft) return;
     if (createdRef.current) return;
     const targetCode = normalizedRoomCode;
     const currentCode = lobby?.inviteCode?.toUpperCase() ?? null;
@@ -186,6 +195,20 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     void joinByCode(roomCode).then((result) => {
       if (leavingRef.current || inviteJoinCancelledRef.current) return;
       if (!result || result.ok) return;
+      const latestState = useRealtimeMatchStore.getState();
+      const latestHasMatchHandoff =
+        latestState.match !== null ||
+        latestState.draft !== null ||
+        (latestState.sessionState?.state === "IN_ACTIVE_MATCH" && Boolean(latestState.sessionState.activeMatchId));
+      if (latestHasMatchHandoff) {
+        logger.info("Ignoring invite join failure during match handoff", {
+          inviteCode: targetCode ? `${targetCode.slice(0, 2)}***` : null,
+          code: result.code,
+          sessionState: latestState.sessionState?.state ?? null,
+          activeMatchId: latestState.sessionState?.activeMatchId ?? null,
+        });
+        return;
+      }
       terminalInviteJoinFailureRef.current = true;
       inviteJoinCancelledRef.current = true;
       setInviteJoinFailure({
@@ -200,7 +223,10 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   }, [
     createLobby,
     handoffTimedOutCode,
+    hasActiveMatch,
+    isActiveMatchHandoff,
     isNewRoomRoute,
+    isPreparingMatch,
     inviteJoinFailure,
     joinByCode,
     lobby?.inviteCode,
@@ -209,6 +235,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     pendingLobbyHandoffCode,
     roomCode,
     shouldCreateLobby,
+    draft,
   ]);
 
   // 2.5. Track lobby creation/join success when lobby is confirmed
@@ -293,7 +320,14 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
       error.code === "TRANSITION_IN_PROGRESS";
     const isTransientSettingsBusy = error.code === "LOBBY_SETTINGS_LOCKED";
     const isInviteTransitionBusy = isResolvingInvite && error.code === "TRANSITION_IN_PROGRESS";
+    const isMatchHandoffJoinError =
+      isPreparingMatch &&
+      (error.code === "ALREADY_IN_LOBBY" || error.code === "ACTIVE_MATCH");
 
+    if (isMatchHandoffJoinError) {
+      clearError();
+      return;
+    }
     if (isLobbySettingsError && !isInviteTransitionBusy) {
       timer = setTimeout(() => {
         setSettingsErrorVersion((current) => current + 1);
@@ -314,7 +348,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
       }
       clearTimeout(stopStartingTimer);
     };
-  }, [clearError, clearStartMatchTimeout, error, isResolvingInvite]);
+  }, [clearError, clearStartMatchTimeout, error, isPreparingMatch, isResolvingInvite]);
 
   // 3. Actions
   const copyCode = async () => {
@@ -372,6 +406,8 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
 
   const handleStartMatch = () => {
     if (isStartingMatch) return;
+    inviteJoinCancelledRef.current = true;
+    terminalInviteJoinFailureRef.current = true;
     setIsStartingMatch(true);
     clearStartMatchTimeout();
     startMatchTimeoutRef.current = setTimeout(() => {
@@ -450,6 +486,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     members,
     lobbyCode,
     isResolvingInvite,
+    isPreparingMatch,
     inviteJoinFailure,
     targetInviteCode: normalizedRoomCode,
     me,

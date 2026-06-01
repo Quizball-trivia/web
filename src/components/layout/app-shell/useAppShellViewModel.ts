@@ -126,7 +126,7 @@ export function useAppShellViewModel() {
         opponent: draftOpponent,
       }
     : null;
-  const showDraftBanner = !!activeDraftBanner && !currentPath.startsWith('/game');
+  const showDraftBanner = !!activeDraftBanner && !inLobbyRoom && !currentPath.startsWith('/game');
   const activeMatchBanner = rejoinMatch
     ? {
         matchId: rejoinMatch.matchId,
@@ -154,6 +154,7 @@ export function useAppShellViewModel() {
     !!activeMatchBanner &&
     !forfeitPendingForActiveMatch &&
     !partyDropoutForActiveMatch &&
+    !inLobbyRoom &&
     !currentPath.startsWith('/game');
   const completedMatchBanner = matchBanner.finalResults
     ? {

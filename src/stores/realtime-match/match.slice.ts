@@ -155,9 +155,9 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
       const startsAtMs = parseCountdownDeadline(payload.startsAt, payload.seconds, Date.now());
       const isResume = payload.reason === 'resume';
       return {
-        matchPaused: isResume ? false : state.matchPaused,
+        matchPaused: isResume ? true : state.matchPaused,
         pauseUntil: isResume ? null : state.pauseUntil,
-        pausedAt: isResume ? null : state.pausedAt,
+        pausedAt: state.pausedAt,
         remainingReconnects: isResume ? null : state.remainingReconnects,
         match: {
           ...state.match,

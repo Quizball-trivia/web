@@ -35,6 +35,11 @@ export interface LiveSpecialQuestionPanelProps {
   matchId: string;
   qIndex: number;
   totalQuestions: number;
+  /** Penalty round display: counter shows penalty rounds instead of question x/y. */
+  isPenaltyPhase?: boolean;
+  penaltyDisplayRound?: number;
+  penaltyDisplayTotal?: number;
+  isPenaltySuddenDeath?: boolean;
   question: LiveSpecialQuestion;
   showOptions: boolean;
   timeRemaining: number;

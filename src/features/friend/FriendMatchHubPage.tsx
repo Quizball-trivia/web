@@ -96,7 +96,19 @@ export function FriendMatchHubPage() {
     handleActionTriggered();
     toast.info(t('friend.toastJoiningCode', { code: targetCode }));
     void joinByCode(targetCode).then((result) => {
-      if (!result || result.ok) return;
+      if (!result) {
+        resetJoinNavigationState();
+        return;
+      }
+      if (result.ok) {
+        // Route straight from the ack — the join result carries the invite
+        // code, so we don't have to wait on the lobby:state store update
+        // (which won't re-fire the navigation effect if the store was already
+        // populated, leaving the button doing nothing).
+        resetLobbyCommand();
+        router.push(`/friend/room/${result.inviteCode}`);
+        return;
+      }
       if (result.code === "LOBBY_NOT_FOUND") {
         void queryClient.invalidateQueries({ queryKey: lobbiesKeys.public() });
         toast.error(t('friend.toastLobbyClosed'));

@@ -81,6 +81,8 @@ export function PitchVisualization(props: PitchVisualizationProps) {
     useMarkerActors,
     playerHtmlIsShooter,
     opponentHtmlIsShooter,
+    playerFlipX,
+    opponentFlipX,
     playerHtmlActorMotion,
     opponentHtmlActorMotion,
     playerHtmlActorTransition,
@@ -270,7 +272,8 @@ export function PitchVisualization(props: PitchVisualizationProps) {
             opponentAvatarAlt={opponentAvatarAlt}
             playerAvatarCustomization={playerAvatarCustomization}
             opponentAvatarCustomization={opponentAvatarCustomization}
-            mirrored={mirrored}
+            playerFlipX={playerFlipX}
+            opponentFlipX={opponentFlipX}
             isPortrait={isPortrait}
             hideBall={hideBall}
             ballOpacity={ballOpacity}

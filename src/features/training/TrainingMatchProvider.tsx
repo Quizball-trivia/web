@@ -5,6 +5,7 @@ import { useTrainingMatch } from "./hooks/useTrainingMatch";
 import { useTrainingTooltips } from "./hooks/useTrainingTooltips";
 import { useTrainingCompletion } from "./hooks/useTrainingCompletion";
 import { useCategoriesList } from "@/lib/queries/categories.queries";
+import { usePreloadImages } from "@/lib/usePreloadImages";
 import { shuffleArray } from "@/lib/utils";
 import type { CategorySummary } from "@/lib/domain";
 import { BAN_CATEGORY_COUNT } from "./constants";
@@ -48,6 +49,10 @@ export function TrainingMatchProvider({ children, onComplete }: TrainingMatchPro
     if (items.length === 0) return [];
     return shuffleArray(items).slice(0, BAN_CATEGORY_COUNT);
   }, [categoriesData?.items]);
+
+  // Warm the ban-category images while the match plays so the ban phase is instant.
+  const banImageUrls = useMemo(() => banCategories.map((c) => c.imageUrl ?? null), [banCategories]);
+  usePreloadImages(banImageUrls);
 
   const onSkip = () => {
     completion.markComplete();

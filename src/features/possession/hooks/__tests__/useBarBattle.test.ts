@@ -11,12 +11,17 @@ import {
 
 const MATCH_ID = 'match-1';
 
-function makePlayer(pointsEarned: number, isCorrect: boolean): MatchRoundResultPlayer {
+function makePlayer(
+  pointsEarned: number,
+  isCorrect: boolean,
+  possessionPointsEarned = pointsEarned
+): MatchRoundResultPlayer {
   return {
     selectedIndex: null,
     isCorrect,
     timeMs: 3000,
     pointsEarned,
+    possessionPointsEarned,
     totalPoints: pointsEarned,
     submittedOrderIds: [],
   };
@@ -359,6 +364,53 @@ describe('useBarBattle', () => {
       playerBars: 8,
       opponentBars: 3,
       remainingDelta: 5,
+    });
+  });
+
+  it('uses boosted possession points for bar battle resolution while preserving base points', async () => {
+    const myRound = makePlayer(80, true);
+    const opponentRound = makePlayer(80, true, 160);
+    const roundResult = makeRoundResult(80, 80);
+    roundResult.players.opp = opponentRound;
+    roundResult.deltas = {
+      possessionDelta: -80,
+      goalScoredBySeat: null,
+      penaltyOutcome: null,
+      speedStreakBoostedSeat: 2,
+    };
+
+    const { result } = renderHook(() => useBarBattle({
+      answerAck: {
+        matchId: MATCH_ID,
+        qIndex: 5,
+        questionKind: 'multipleChoice',
+        selectedIndex: 0,
+        isCorrect: true,
+        myTotalPoints: 80,
+        oppAnswered: true,
+        pointsEarned: 80,
+        phaseKind: 'normal',
+        phaseRound: 6,
+      },
+      opponentAnswered: true,
+      opponentRecentPoints: 80,
+      opponentAnsweredCorrectly: true,
+      roundResult,
+      myRound,
+      opponentRound,
+      phaseKind: 'normal',
+      dividerX: 250,
+    }));
+
+    await act(async () => {});
+
+    expect(result.current).toMatchObject({
+      phase: 'both-score',
+      playerPoints: 80,
+      opponentPoints: 160,
+      playerBars: 8,
+      opponentBars: 16,
+      remainingDelta: -8,
     });
   });
 

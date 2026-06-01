@@ -76,7 +76,7 @@ export function BarBattleStackedBar({
   if (!showBar) return null;
 
   if (isBattling) {
-    const hitCount = Math.max(1, Math.min(cancelCount, 12));
+    const hitCount = Math.max(1, Math.min(cancelCount, 20));
     const finalHitDelay = (hitCount - 1) * STACK_CANCEL_STEP_S;
     const vanishAt = finalHitDelay + STACK_CANCEL_FLASH_S;
     const shouldDisappear = cancelled && !survived;

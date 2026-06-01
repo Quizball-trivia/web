@@ -10,7 +10,7 @@ import {
   GOAL_SHOT_TO_CELEBRATION_MS,
   type GoalCelebrationState,
 } from '../realtimePossession.helpers';
-import { getBarBattleGoalAttackDelayMs, resolveBattlePoints } from './useBarBattle';
+import { getBarBattleGoalAttackDelayMs, resolvePossessionBattlePoints } from './useBarBattle';
 
 interface DevPossessionAnimationLike {
   id?: number;
@@ -76,16 +76,8 @@ export function usePossessionGoalCelebration({
     const players = roundResult?.players ?? {};
     const playerRound = selfUserId ? players[selfUserId] : undefined;
     const opponentRound = Object.entries(players).find(([userId]) => userId !== selfUserId)?.[1];
-    const playerPoints = resolveBattlePoints(
-      playerRound?.pointsEarned ?? 0,
-      roundResult?.questionKind,
-      playerRound?.foundCount
-    );
-    const opponentPoints = resolveBattlePoints(
-      opponentRound?.pointsEarned ?? 0,
-      roundResult?.questionKind,
-      opponentRound?.foundCount
-    );
+    const playerPoints = resolvePossessionBattlePoints(playerRound, roundResult?.questionKind);
+    const opponentPoints = resolvePossessionBattlePoints(opponentRound, roundResult?.questionKind);
     const attackDelayMs = getBarBattleGoalAttackDelayMs(
       playerPoints,
       opponentPoints,

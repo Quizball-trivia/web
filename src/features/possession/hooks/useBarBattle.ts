@@ -39,7 +39,7 @@ const UNOPPOSED_PULSE_DONE_LINGER_MS = 40;
 const RANKED_SCORE_FLIGHT_HANDOFF_MS = 420;
 
 const POINTS_PER_BAR = 10;
-const MAX_BARS = 12;
+const MAX_BARS = 20;
 const BAR_BATTLE_LOCK_BUFFER_MS = 240;
 const UNOPPOSED_PULSE_LOCK_BUFFER_MS = 60;
 
@@ -136,13 +136,27 @@ export function getBarBattleGoalAttackDelayMs(
 export function resolveBattlePoints(
   pointsEarned: number,
   questionKind?: MatchAnswerAckPayload['questionKind'] | MatchRoundResultPayload['questionKind'],
-  foundCount?: number
+  foundCount?: number,
+  possessionPointsEarned?: number
 ): number {
-  if (pointsEarned > 0) return pointsEarned;
+  const resolvedPoints = typeof possessionPointsEarned === 'number' ? possessionPointsEarned : pointsEarned;
+  if (resolvedPoints > 0) return resolvedPoints;
   if (questionKind === 'putInOrder' && typeof foundCount === 'number' && foundCount > 0) {
     return Math.min(foundCount, 5) * 20;
   }
-  return pointsEarned;
+  return resolvedPoints;
+}
+
+export function resolvePossessionBattlePoints(
+  round: Pick<MatchRoundResultPlayer, 'pointsEarned' | 'foundCount' | 'possessionPointsEarned'> | null | undefined,
+  questionKind?: MatchRoundResultPayload['questionKind']
+): number {
+  return resolveBattlePoints(
+    round?.pointsEarned ?? 0,
+    questionKind,
+    round?.foundCount,
+    round?.possessionPointsEarned
+  );
 }
 
 function isBarBattlePhaseKind(kind: string | undefined): boolean {
@@ -249,7 +263,7 @@ export function useBarBattle({
 
     // Get opponent points from best available source
     const oppPts = opponentRound
-      ? resolveBattlePoints(opponentRound.pointsEarned, roundResult?.questionKind, opponentRound.foundCount)
+      ? resolvePossessionBattlePoints(opponentRound, roundResult?.questionKind)
       : (opponentRecentPoints ?? 0);
 
     scoreShownQRef.current.opponent = qIndex;
@@ -290,8 +304,8 @@ export function useBarBattle({
     for (const t of timersRef.current) clearTimeout(t);
     timersRef.current = [];
 
-    const myPts = resolveBattlePoints(myRound.pointsEarned, roundResult.questionKind, myRound.foundCount);
-    const oppPts = resolveBattlePoints(opponentRound.pointsEarned, roundResult.questionKind, opponentRound.foundCount);
+    const myPts = resolvePossessionBattlePoints(myRound, roundResult.questionKind);
+    const oppPts = resolvePossessionBattlePoints(opponentRound, roundResult.questionKind);
     const pBars = pointsToBars(myPts);
     const oBars = pointsToBars(oppPts);
     const delta = pBars - oBars;

@@ -26,24 +26,28 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
   const lobbyCommands = useLobbyCommandMachine();
   const { createLobby, joinByCode, reset } = lobbyCommands;
   const lobby = useRealtimeMatchStore((state) => state.lobby);
-  const isJoining = lobbyCommands.isJoining;
 
   // On a fast connection the socket ACK resolves in a few ms, so the real
-  // `isCreating` flag flips on and off before the user can perceive it. Hold a
-  // local pressed state for a minimum window so the spinner is always visible.
+  // isCreating/isJoining flags flip on and off before the user can perceive it.
+  // Hold a local pressed state for a minimum window so the spinner is always
+  // visible (optimistic feedback).
   const [createPressed, setCreatePressed] = useState(false);
-  const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [joinPressed, setJoinPressed] = useState(false);
+  const createTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const joinTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isCreating = lobbyCommands.isCreating || createPressed;
+  const isJoining = lobbyCommands.isJoining || joinPressed;
 
   useEffect(() => () => {
-    if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
+    if (createTimerRef.current) clearTimeout(createTimerRef.current);
+    if (joinTimerRef.current) clearTimeout(joinTimerRef.current);
   }, []);
 
   const handleCreate = () => {
     if (lobbyCommands.isBusy || createPressed) return;
     if (onActionTriggered) onActionTriggered();
     setCreatePressed(true);
-    pressTimerRef.current = setTimeout(() => setCreatePressed(false), 600);
+    createTimerRef.current = setTimeout(() => setCreatePressed(false), 600);
     toast.info(t("friend.creatingRoom"));
     void createLobby({ mode: "friendly", isPublic }).then((result) => {
       if (!result || result.ok) return;
@@ -52,7 +56,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
   };
 
   const handleJoin = () => {
-    if (lobbyCommands.isBusy) return;
+    if (lobbyCommands.isBusy || joinPressed) return;
     const code = extractFriendInviteCode(inviteCode);
     if (!code) {
       toast.error(t("friend.enterValidCode"));
@@ -60,6 +64,8 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
     }
 
     if (onActionTriggered) onActionTriggered();
+    setJoinPressed(true);
+    joinTimerRef.current = setTimeout(() => setJoinPressed(false), 600);
     try {
       trackFriendInviteAccepted(code);
     } catch (error) {
@@ -231,8 +237,9 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
           <button
             type="button"
             onClick={handleJoin}
-            disabled={isJoining || !inviteCode}
-            className="flex h-16 w-full items-center justify-center gap-3 rounded-[20px] bg-surface-page text-white transition-colors hover:bg-surface-page/90 disabled:opacity-50"
+            disabled={lobbyCommands.isBusy || isJoining || !inviteCode}
+            aria-busy={isJoining}
+            className="flex h-16 w-full items-center justify-center gap-3 rounded-[20px] bg-surface-page text-white transition-colors hover:bg-surface-page/90 disabled:cursor-not-allowed disabled:opacity-50"
             style={{
               fontFamily: poppinsFont,
               fontWeight: 600,

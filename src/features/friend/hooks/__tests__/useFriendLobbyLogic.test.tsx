@@ -231,6 +231,30 @@ describe('useFriendLobbyLogic invite links', () => {
     expect(mocks.toastError).toHaveBeenCalledWith('Lobby not found.');
   });
 
+  it('does not try to rejoin the invite while the lobby is handing off to an active match', async () => {
+    act(() => {
+      useRealtimeMatchStore.getState().setSessionState({
+        state: 'IN_ACTIVE_MATCH',
+        activeMatchId: 'match-1',
+        waitingLobbyId: null,
+        queueSearchId: null,
+        openLobbyIds: [],
+        resolvedAt: new Date().toISOString(),
+      });
+    });
+
+    const { result } = renderHook(() =>
+      useFriendLobbyLogic({ roomCode: 'NAYRR5', isHost: true }),
+    );
+
+    await Promise.resolve();
+
+    expect(result.current.isPreparingMatch).toBe(true);
+    expect(result.current.isResolvingInvite).toBe(false);
+    expect(result.current.inviteJoinFailure).toBeNull();
+    expect(mocks.socketEmit).not.toHaveBeenCalledWith('lobby:join_by_code', expect.anything(), expect.any(Function));
+  });
+
   it('does not spam invite joins or toasts on transient transition locks', async () => {
     act(() => {
       useRealtimeMatchStore.getState().setLobby(makeLobby('N3K5UZ'));

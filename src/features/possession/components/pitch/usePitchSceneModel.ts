@@ -449,6 +449,12 @@ export function usePitchSceneModel({
   const opponentHtmlIsKeeper = isPenalty
     ? penaltyMode.isPlayerShooter
     : (isShot && shotMode ? shotMode.isPlayerAttacker : false);
+  // Avatar facing. Base art faces RIGHT; scaleX(-1) faces it LEFT. In penalties
+  // facing is by role, not by half: the keeper (in goal, left) faces right toward
+  // the ball, the shooter (pen spot, right) faces left toward goal. Outside
+  // penalties, fall back to the half-based mirror used in open play.
+  const playerFlipX = isPenalty ? playerHtmlIsShooter : mirrored;
+  const opponentFlipX = isPenalty ? opponentHtmlIsShooter : !mirrored;
   const htmlActorMotion = (isShooter: boolean, isKeeper: boolean) => {
     if (htmlActorResultActive && isShooter) {
       if (disableShotActorResultMotion && isShot && !isPenalty) {
@@ -533,6 +539,8 @@ export function usePitchSceneModel({
     useMarkerActors,
     playerHtmlIsShooter,
     opponentHtmlIsShooter,
+    playerFlipX,
+    opponentFlipX,
     playerHtmlActorMotion,
     opponentHtmlActorMotion,
     playerHtmlActorTransition,

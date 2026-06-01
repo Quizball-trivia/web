@@ -177,4 +177,110 @@ describe('usePossessionBarBattleFlights', () => {
       failed: undefined,
     });
   });
+
+  it('flies the 2x badge token to the opponent slot when the opponent newly earns the streak', async () => {
+    appendAnchor('data-speed-streak-slot', 'opponent', rect(430, 70, 1, 1));
+    useRealtimeMatchStore.setState({
+      match: {
+        variant: 'ranked_sim',
+        matchId: MATCH_ID,
+        mySeat: 1,
+        currentQuestionPhase: 'playing',
+        currentQuestion: {
+          matchId: MATCH_ID,
+          qIndex: 7,
+          total: 12,
+          phaseKind: 'normal',
+          phaseRound: 8,
+          question: {
+            kind: 'multipleChoice',
+            id: 'q-7',
+            prompt: 'Question',
+            options: ['A', 'B', 'C', 'D'],
+            categoryName: 'General',
+          },
+          deadlineAt: new Date(Date.now() + 10_000).toISOString(),
+        },
+        possessionState: {
+          phaseKind: 'normal',
+          speedStreakHolderSeat: null,
+        },
+      } as never,
+    });
+
+    const { result } = renderHook(() => usePossessionBarBattleFlights());
+
+    await act(async () => {});
+
+    act(() => {
+      const currentMatch = useRealtimeMatchStore.getState().match;
+      useRealtimeMatchStore.setState({
+        match: currentMatch
+          ? ({
+              ...currentMatch,
+              possessionState: {
+                ...(currentMatch.possessionState as object),
+                speedStreakHolderSeat: 2,
+              },
+            } as never)
+          : currentMatch,
+      });
+    });
+
+    await act(async () => {});
+
+    expect(result.current.flights).toHaveLength(1);
+    expect(result.current.flights[0]).toMatchObject({
+      side: 'opponent',
+      kind: 'badge',
+      points: 0,
+    });
+  });
+
+  it('routes opponent score flights through the opponent 2x badge when visible', async () => {
+    appendAnchor('data-speed-streak-badge', 'opponent', rect(430, 70, 48, 28));
+    useRealtimeMatchStore.setState({
+      match: {
+        variant: 'ranked_sim',
+        matchId: MATCH_ID,
+        mySeat: 1,
+        currentQuestionPhase: 'playing',
+        currentQuestion: {
+          matchId: MATCH_ID,
+          qIndex: 8,
+          total: 12,
+          phaseKind: 'normal',
+          phaseRound: 9,
+          question: {
+            kind: 'multipleChoice',
+            id: 'q-8',
+            prompt: 'Question',
+            options: ['A', 'B', 'C', 'D'],
+            categoryName: 'General',
+          },
+          deadlineAt: new Date(Date.now() + 10_000).toISOString(),
+        },
+        possessionState: {
+          phaseKind: 'normal',
+          speedStreakHolderSeat: 2,
+        },
+        opponentAnswered: true,
+        opponentAnsweredCorrectly: true,
+        opponentRecentPoints: 80,
+      } as never,
+    });
+
+    const { result } = renderHook(() => usePossessionBarBattleFlights());
+
+    await act(async () => {
+      vi.advanceTimersByTime(250);
+    });
+
+    expect(result.current.flights).toHaveLength(1);
+    expect(result.current.flights[0]).toMatchObject({
+      side: 'opponent',
+      points: 80,
+      boostVia: { x: 454, y: 84 },
+    });
+  });
 });

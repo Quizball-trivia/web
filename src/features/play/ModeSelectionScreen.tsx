@@ -24,10 +24,10 @@ import { getNextTierBand } from '@/utils/rankedTier';
  * split on " · " into its two halves; in both EN and KA each half starts with
  * its number, so we wrap the leading numeric token of each half in yellow.
  */
-function WinRateStat({ text, className }: { text: string; className?: string }) {
+function WinRateStat({ text, className, style }: { text: string; className?: string; style?: React.CSSProperties }) {
   const halves = text.split(' · ');
   return (
-    <span className={className}>
+    <span className={className} style={style}>
       {halves.map((half, i) => {
         const match = half.match(/^(\d[\d.,]*%?)(.*)$/);
         return (
@@ -114,6 +114,9 @@ export function ModeSelectionScreen({
     letterSpacing: "0",
     lineHeight: 1,
   } as const;
+  // Shared Poppins style for body/label/button text (replaces the old
+  // font-black/font-bold Duolingo weights). Only Poppins 600 is loaded.
+  const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
   const handleConfirm = () => {
     if (!selectedMode) return;
@@ -181,7 +184,7 @@ export function ModeSelectionScreen({
               >
                 {t('play.rankedMatch')}
               </h1>
-              <div className="mt-1.5 text-lg font-black uppercase tracking-wide text-white/90">
+              <div className="mt-1.5 text-lg uppercase tracking-wide text-white/90" style={poppins}>
                 {rankedProfileLoading
                   ? t('play.rankedSubtitle')
                   : isPlacementInProgress
@@ -191,7 +194,7 @@ export function ModeSelectionScreen({
 
 
               <div className="mt-5">
-                <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[16px] bg-surface-page text-xl font-black uppercase tracking-wide text-white">
+                <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[16px] bg-surface-page text-xl uppercase tracking-wide text-white" style={poppins}>
                   {t('common.play')}
                 </div>
               </div>
@@ -200,7 +203,7 @@ export function ModeSelectionScreen({
             {/* Right: RP stats */}
             <div className="text-right shrink-0 w-[280px]">
               <div className="inline-flex flex-col items-stretch">
-                <div className="text-4xl font-black text-brand-yellow drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)] whitespace-nowrap">
+                <div className="text-4xl text-brand-yellow drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)] whitespace-nowrap" style={poppins}>
                   {displayRp}/{nextTierTargetRp ?? 600} RP
                 </div>
                 <div className="mt-2">
@@ -210,10 +213,11 @@ export function ModeSelectionScreen({
               {!rankedProfileLoading && (
                 <WinRateStat
                   text={t('play.winRateLine', { rate: rankedWinRate, games: rankedGamesPlayed })}
-                  className="mt-2 block whitespace-nowrap text-[13px] font-black uppercase leading-snug tracking-wide text-white"
+                  className="mt-2 block whitespace-nowrap text-[13px] uppercase leading-snug tracking-wide text-white"
+                  style={poppins}
                 />
               )}
-              <div className="mt-1 text-[17px] font-black uppercase tracking-wide text-white">
+              <div className="mt-1 text-[17px] uppercase tracking-wide text-white" style={poppins}>
                 {isPlacementInProgress
                   ? t(
                       placementMatchesLeft === 1
@@ -239,7 +243,7 @@ export function ModeSelectionScreen({
                 >
                   {t('play.rankedMatch')}
                 </h1>
-                <div className="mt-1.5 text-[11px] font-black uppercase tracking-wide text-white/90">
+                <div className="mt-1.5 text-[11px] uppercase tracking-wide text-white/90" style={poppins}>
                   {rankedProfileLoading
                     ? t('play.rankedSubtitle')
                     : isPlacementInProgress
@@ -248,13 +252,13 @@ export function ModeSelectionScreen({
                 </div>
               </div>
               <div className="shrink-0 text-right w-[125px]">
-                <div className="text-[1.4rem] font-black leading-none text-brand-yellow drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]">
+                <div className="text-[1.4rem] leading-none text-brand-yellow drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]" style={poppins}>
                   {displayRp}/{nextTierTargetRp ?? 600} RP
                 </div>
                 <div className="mt-2">
                   <RpProgressBar current={displayRp} target={nextTierTargetRp ?? 600} />
                 </div>
-                <div className="mt-1.5 text-[12px] font-black uppercase leading-snug tracking-wide text-white">
+                <div className="mt-1.5 text-[12px] uppercase leading-snug tracking-wide text-white" style={poppins}>
                   {isPlacementInProgress
                     ? t(
                         placementMatchesLeft === 1
@@ -282,11 +286,12 @@ export function ModeSelectionScreen({
                 {!rankedProfileLoading && (
                   <WinRateStat
                     text={t('play.winRateLine', { rate: rankedWinRate, games: rankedGamesPlayed })}
-                    className="block text-[13px] font-black uppercase leading-snug tracking-wide text-white"
+                    className="block text-[13px] uppercase leading-snug tracking-wide text-white"
+                    style={poppins}
                   />
                 )}
               </div>
-              <div className="mb-1 flex h-[44px] w-[120px] items-center justify-center rounded-[12px] bg-surface-page text-[15px] font-black uppercase tracking-wide text-white">
+              <div className="mb-1 flex h-[44px] w-[120px] items-center justify-center rounded-[12px] bg-surface-page text-[15px] uppercase tracking-wide text-white" style={poppins}>
                 {t('common.play')}
               </div>
             </div>
@@ -330,7 +335,7 @@ export function ModeSelectionScreen({
             >
               {t('play.friendlyMatch')}
             </h3>
-            <p className="mt-1 text-[10px] md:mt-1.5 md:text-base font-black uppercase text-white">{t('play.friendlySubtitle')}</p>
+            <p className="mt-1 text-[10px] md:mt-1.5 md:text-base uppercase text-white" style={poppins}>{t('play.friendlySubtitle')}</p>
 
             {/* Mobile: icon (centered, right under subtitle) + PLAY (bottom, full width) */}
             <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
@@ -342,13 +347,13 @@ export function ModeSelectionScreen({
                 className="h-[110px] w-[110px] object-contain pointer-events-none"
               />
             </div>
-            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] font-black uppercase tracking-wide text-white lg:hidden">
+            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] uppercase tracking-wide text-white lg:hidden" style={poppins}>
               {t('common.play')}
             </div>
 
             {/* Desktop: bottom-left PLAY */}
             <div className="mt-auto hidden pt-8 lg:block">
-              <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-black text-xl font-black uppercase tracking-wide text-white">
+              <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-black text-xl uppercase tracking-wide text-white" style={poppins}>
                 {t('common.play')}
               </div>
             </div>
@@ -384,7 +389,7 @@ export function ModeSelectionScreen({
             >
               {t('play.dailyChallenge')}
             </h3>
-            <p className="mt-1 text-[10px] md:mt-1.5 md:text-base font-black uppercase text-black">{t('play.dailySubtitle')}</p>
+            <p className="mt-1 text-[10px] md:mt-1.5 md:text-base uppercase text-black" style={poppins}>{t('play.dailySubtitle')}</p>
 
             {/* Mobile: icon (centered, right under subtitle) + PLAY (bottom, full width) */}
             <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
@@ -396,13 +401,13 @@ export function ModeSelectionScreen({
                 className="h-[150px] w-full object-contain pointer-events-none"
               />
             </div>
-            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] font-black uppercase tracking-wide text-white lg:hidden">
+            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] uppercase tracking-wide text-white lg:hidden" style={poppins}>
               {t('common.play')}
             </div>
 
             {/* Desktop: bottom-left PLAY */}
             <div className="mt-auto hidden pt-8 lg:block">
-              <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-black text-xl font-black uppercase tracking-wide text-white">
+              <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-black text-xl uppercase tracking-wide text-white" style={poppins}>
                 {t('common.play')}
               </div>
             </div>
@@ -417,12 +422,13 @@ export function ModeSelectionScreen({
         transition={{ delay: 0.35 }}
       >
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-black text-white uppercase">
+          <h2 className="text-base text-white uppercase" style={poppins}>
             {t('play.objectivesTitle')}
           </h2>
           <Link
             href="/objectives"
-            className="flex items-center justify-center w-[120px] h-[40px] rounded-xl border-2 border-brand-green-light text-xs font-black text-white uppercase tracking-wide hover:bg-brand-green-light/10 transition-colors"
+            style={poppins}
+            className="flex items-center justify-center w-[120px] h-[40px] rounded-xl border-2 border-brand-green-light text-xs text-white uppercase tracking-wide hover:bg-brand-green-light/10 transition-colors"
           >
             {t('common.viewAll')}
           </Link>
@@ -455,7 +461,7 @@ export function ModeSelectionScreen({
               <div className="mb-2 flex items-center justify-center">
                 <Image src="/assets/obj_icon.png" alt="" width={45} height={44} className="size-12 object-contain opacity-90" />
               </div>
-              <h4 className="text-center text-[11px] font-black leading-tight text-white uppercase">{t('play.objectivesUnavailable')}</h4>
+              <h4 className="text-center text-[11px] leading-tight text-white uppercase" style={poppins}>{t('play.objectivesUnavailable')}</h4>
               <p className="mt-1 text-center text-[10px] leading-tight text-white/75">{t('play.objectivesUnavailableHint')}</p>
             </Link>
           )}
@@ -473,12 +479,12 @@ export function ModeSelectionScreen({
                 <div className="mb-2 flex items-center justify-center">
                   <Image src="/assets/obj_icon.png" alt="" width={45} height={44} className="size-12 object-contain opacity-90" />
                 </div>
-                <h4 className="text-[10px] font-black leading-tight text-white uppercase truncate">{getI18nText(objective.title, locale)}</h4>
+                <h4 className="text-[10px] leading-tight text-white uppercase truncate" style={poppins}>{getI18nText(objective.title, locale)}</h4>
                 <p className="mt-0.5 line-clamp-2 min-h-[22px] text-[9px] leading-tight text-white/80">{getI18nText(objective.description, locale)}</p>
                 <div className="mt-4 h-3 overflow-hidden rounded-full bg-surface-mode-trough">
                   <div className="h-full rounded-full bg-brand-green-light" style={{ width: `${progressPercent}%` }} />
                 </div>
-                <div className="mt-2 flex items-center justify-between text-[9px] font-black uppercase">
+                <div className="mt-2 flex items-center justify-between text-[9px] uppercase" style={poppins}>
                   <span className="text-white">{objective.progress}/{objective.target}</span>
                   <span className="text-white/65">{t('play.objectiveRewardCoins', { count: objective.rewardCoins })}</span>
                 </div>
@@ -516,16 +522,16 @@ export function ModeSelectionScreen({
               <div className="mb-3 flex items-center gap-3">
                 <Image src="/assets/obj_icon.png" alt="" width={45} height={44} className="size-12 object-contain" />
                 <div className="min-w-0 flex-1">
-                  <h4 className="truncate text-sm font-black uppercase text-white">{t('play.objectivesUnavailable')}</h4>
-                  <p className="truncate text-[11px] font-bold uppercase text-white/60">{t('play.objectivesUnavailableHint')}</p>
+                  <h4 className="truncate text-sm uppercase text-white" style={poppins}>{t('play.objectivesUnavailable')}</h4>
+                  <p className="truncate text-[11px] uppercase text-white/60" style={poppins}>{t('play.objectivesUnavailableHint')}</p>
                 </div>
               </div>
               <div className="mb-2.5 h-3 overflow-hidden rounded-full bg-surface-mode-trough-deep">
                 <div className="h-full w-[8%] rounded-full bg-brand-green-light" />
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-white">0/1</span>
-                <span className="text-xs font-black uppercase text-white">{t('play.objectiveRewardCoinsAndXp')}</span>
+                <span className="text-xs text-white" style={poppins}>0/1</span>
+                <span className="text-xs uppercase text-white" style={poppins}>{t('play.objectiveRewardCoinsAndXp')}</span>
               </div>
             </Link>
           )}
@@ -546,16 +552,16 @@ export function ModeSelectionScreen({
                 <div className="mb-3 flex items-center gap-3">
                   <Image src="/assets/obj_icon.png" alt="" width={45} height={44} className="size-12 object-contain" />
                   <div className="min-w-0 flex-1">
-                    <h4 className="truncate text-sm font-black uppercase text-white">{getI18nText(objective.title, locale)}</h4>
-                    <p className="truncate text-[11px] font-bold uppercase text-white/60">{getI18nText(objective.description, locale)}</p>
+                    <h4 className="truncate text-sm uppercase text-white" style={poppins}>{getI18nText(objective.title, locale)}</h4>
+                    <p className="truncate text-[11px] uppercase text-white/60" style={poppins}>{getI18nText(objective.description, locale)}</p>
                   </div>
                 </div>
                 <div className="mb-2.5 h-3 overflow-hidden rounded-full bg-surface-mode-trough-deep">
                   <div className="h-full rounded-full bg-brand-green-light" style={{ width: `${progressPercent}%` }} />
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-white">{objective.progress}/{objective.target}</span>
-                  <span className="text-xs font-black uppercase text-white">{t('play.objectiveRewardCoins', { count: objective.rewardCoins })}</span>
+                  <span className="text-xs text-white" style={poppins}>{objective.progress}/{objective.target}</span>
+                  <span className="text-xs uppercase text-white" style={poppins}>{t('play.objectiveRewardCoins', { count: objective.rewardCoins })}</span>
                 </div>
               </Link>
             );

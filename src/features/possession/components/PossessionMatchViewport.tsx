@@ -122,15 +122,21 @@ function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
         />
       ) : (
         <div
-          className="font-fun text-5xl font-black uppercase tracking-wider text-brand-red-soft"
+          className="text-5xl font-black uppercase tracking-wider text-brand-red-soft"
+          // family-only to preserve font-black / tracking
           style={{
+            fontFamily: "'Poppins', sans-serif",
             textShadow: '0 0 30px rgba(255,75,75,0.5), 0 4px 0 rgba(200,40,40,0.8)',
           }}
         >
           {t('possession.savedExclaim')}
         </div>
       )}
-      <div className="mt-1 text-sm font-bold font-fun uppercase tracking-widest text-white/60">
+      <div
+        className="mt-1 text-sm font-bold uppercase tracking-widest text-white/60"
+        // family-only to preserve font-bold / tracking
+        style={{ fontFamily: "'Poppins', sans-serif" }}
+      >
         {result === 'goal'
           ? (resultShooterIsMe ? t('possession.youScored') : t('possession.opponentScored'))
           : (resultShooterIsMe ? t('possession.keeperSavesIt') : t('possession.youSavedIt'))}
@@ -168,7 +174,9 @@ export function PossessionMatchViewport({ model, children }: PossessionMatchView
       {showMainUI && (
         <div className="hidden lg:flex lg:w-[42%] lg:items-center lg:gap-3 lg:py-4 relative">
           <div className="h-full max-h-[calc(100dvh-2rem)] py-6">
-            <GoalProgressBar position={pitchProps.playerPosition} orientation="vertical" mirrored={pitchProps.mirrored} />
+            {hud.kind !== 'penalty' && (
+              <GoalProgressBar position={pitchProps.playerPosition} orientation="vertical" mirrored={pitchProps.mirrored} />
+            )}
           </div>
           <div ref={desktopPitchRef} className="relative h-full w-full max-h-[calc(100dvh-2rem)]">
             <PitchVisualization {...pitchProps} orientation="portrait" hideBall={celebrationOwnsBall} />
@@ -219,9 +227,11 @@ export function PossessionMatchViewport({ model, children }: PossessionMatchView
               </AnimatePresence>
             </div>
 
-            <div className="lg:hidden">
-              <GoalProgressBar position={pitchProps.playerPosition} orientation="horizontal" mirrored={pitchProps.mirrored} />
-            </div>
+            {hud.kind !== 'penalty' && (
+              <div className="lg:hidden">
+                <GoalProgressBar position={pitchProps.playerPosition} orientation="horizontal" mirrored={pitchProps.mirrored} />
+              </div>
+            )}
           </>
         )}
 

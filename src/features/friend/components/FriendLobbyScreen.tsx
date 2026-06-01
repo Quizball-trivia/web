@@ -20,6 +20,7 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
     members,
     lobbyCode,
     isResolvingInvite,
+    isPreparingMatch,
     inviteJoinFailure,
     targetInviteCode,
     me,
@@ -73,6 +74,30 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
         : t("friend.waitingBothReady");
 
   const poppins = "'Poppins', sans-serif";
+
+  if (isPreparingMatch) {
+    return (
+      <div className="container mx-auto max-w-5xl px-3 py-6 animate-in fade-in lg:px-0">
+        <div className="flex min-h-[420px] flex-col items-center justify-center gap-5 rounded-[20px] border border-white/10 bg-white/[0.03] px-6 text-center">
+          <Loader2 className="size-9 animate-spin text-brand-yellow" />
+          <div className="space-y-2">
+            <h1
+              className="text-white uppercase"
+              style={{ fontFamily: poppins, fontWeight: 700, fontSize: 24, letterSpacing: '0.04em' }}
+            >
+              {t("friend.preparingMatchSpinner")}
+            </h1>
+            <p
+              className="text-white/55 uppercase"
+              style={{ fontFamily: poppins, fontWeight: 600, fontSize: 12, letterSpacing: '0.08em' }}
+            >
+              {t("friend.matchHandoffDescription")}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isResolvingInvite) {
     const code = targetInviteCode ?? lobbyCode;

@@ -28,7 +28,7 @@ import type { MatchStartPayload } from '@/lib/realtime/socket.types';
 
 // Mirror the constants from useBarBattle.ts so production timing stays in sync.
 const POINTS_PER_BAR = 10;
-const MAX_BARS = 12;
+const MAX_BARS = 20;
 const BOTH_SCORE_HOLD_MS = 400;
 const CONVERT_DURATION = 500;
 const BARS_SPAWN_BASE_MS = 300;

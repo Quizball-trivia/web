@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'motion/react';
 import { X } from 'lucide-react';
 import { MAX_PENALTY_ROUNDS } from '../types/possession.types';
@@ -45,8 +46,30 @@ export function PenaltyHUD({
   onQuit,
 }: PenaltyHUDProps) {
   const { t } = useLocale();
+
+  // Sudden death restarts the pip rows: capture each side's cumulative score at
+  // the moment SD begins, then show only the SD-relative goals so the dots clear
+  // to empty and refill round by round (instead of staying at all-5-filled).
+  // Adjust-state-during-render pattern (no effect): the baseline is set the first
+  // render SD is active and cleared when it ends. See react.dev — "storing
+  // information from previous renders".
+  const [sdBaseline, setSdBaseline] = useState<{ player: number; opponent: number } | null>(null);
+  if (isPenaltySuddenDeath && sdBaseline === null) {
+    setSdBaseline({ player: penaltyPlayerScore, opponent: penaltyOpponentScore });
+  } else if (!isPenaltySuddenDeath && sdBaseline !== null) {
+    setSdBaseline(null);
+  }
+
+  const baseline = isPenaltySuddenDeath ? sdBaseline : null;
+  const pipPlayerScore = baseline ? Math.max(0, penaltyPlayerScore - baseline.player) : penaltyPlayerScore;
+  const pipOpponentScore = baseline ? Math.max(0, penaltyOpponentScore - baseline.opponent) : penaltyOpponentScore;
+
   return (
-    <div className="relative w-full font-fun space-y-2 mb-3">
+    <div
+      className="relative w-full space-y-2 mb-3"
+      // family-only to preserve font-black / tracking on descendants
+      style={{ fontFamily: "'Poppins', sans-serif" }}
+    >
       {onQuit && (
         <MatchHudIconButton
           onClick={onQuit}
@@ -115,13 +138,13 @@ export function PenaltyHUD({
       <div className="flex justify-center gap-4 px-3">
         <div className="flex gap-1.5">
           {Array.from({ length: MAX_PENALTY_ROUNDS }).map((_, i) => (
-            <div key={`pp-${i}`} className={`size-3 rounded-full border-2 ${i < penaltyPlayerScore ? 'bg-brand-green-light border-brand-green-light' : 'bg-transparent border-white/20'}`} />
+            <div key={`pp-${i}`} className={`size-3 rounded-full border-2 ${i < pipPlayerScore ? 'bg-brand-green-light border-brand-green-light' : 'bg-transparent border-white/20'}`} />
           ))}
         </div>
         <div className="text-[10px] font-black text-white/30 tracking-wider">{t('possession.pens')}</div>
         <div className="flex gap-1.5">
           {Array.from({ length: MAX_PENALTY_ROUNDS }).map((_, i) => (
-            <div key={`op-${i}`} className={`size-3 rounded-full border-2 ${i < penaltyOpponentScore ? 'bg-brand-red-soft border-brand-red-soft' : 'bg-transparent border-white/20'}`} />
+            <div key={`op-${i}`} className={`size-3 rounded-full border-2 ${i < pipOpponentScore ? 'bg-brand-red-soft border-brand-red-soft' : 'bg-transparent border-white/20'}`} />
           ))}
         </div>
       </div>

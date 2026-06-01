@@ -150,6 +150,11 @@ function rectCentre(rect: DOMRect): { x: number; y: number } {
   };
 }
 
+function sideForSeat(seat: 1 | 2 | null, mySeat: number | null): Side | null {
+  if (seat == null || mySeat == null) return null;
+  return seat === mySeat ? 'player' : 'opponent';
+}
+
 function clampFlightPoint(point: { x: number; y: number }): { x: number; y: number } {
   if (typeof window === 'undefined') return point;
   const xPadding = window.innerWidth < 640 ? 88 : 56;
@@ -505,11 +510,11 @@ export function usePossessionBarBattleFlights() {
     phaseKindFromState,
   ]);
 
-  // ── 2× badge fly-in when the player newly earns the streak ──────────────
+  // ── 2× badge fly-in when either side newly earns the streak ─────────────
   // Driven by the LIVE match-state holder (the source of truth that survives
-  // across questions), not the transient round result. When the holder
-  // transitions to my seat, fly a "2×" token from the answer source to the HUD
-  // badge slot, where the sticky badge takes over.
+  // across questions), not the transient round result. When the holder changes,
+  // fly a "2×" token from that side's answer source to its HUD badge slot,
+  // where the sticky badge takes over.
   const mySeat = barBattleMatch.mySeat;
   const liveHolderSeat = barBattleMatch.speedStreakHolderSeat;
   const prevHolderRef = useRef<1 | 2 | null>(null);
@@ -529,17 +534,19 @@ export function usePossessionBarBattleFlights() {
     }
     const prev = prevHolderRef.current;
     prevHolderRef.current = liveHolderSeat;
-    // Only fly the token on a fresh null/opponent → me transition.
-    if (mySeat == null || liveHolderSeat !== mySeat || prev === mySeat) return;
+    // Only fly the token on a fresh transition to a real holder.
+    if (liveHolderSeat == null || prev === liveHolderSeat) return;
+    const side = sideForSeat(liveHolderSeat, mySeat);
+    if (!side) return;
 
     const launch = (retries: number) => {
-      const sourceRect = findScoreAnchor('player');
-      const slotRect = findSpeedStreakSlot('player');
+      const sourceRect = findScoreAnchor(side);
+      const slotRect = findSpeedStreakSlot(side);
       if (sourceRect && slotRect) {
         const id = ++flightSeqRef.current;
         setFlights((prevFlights) => [...prevFlights, {
           id,
-          side: 'player',
+          side,
           kind: 'badge',
           source: clampFlightPoint(rectCentre(sourceRect)),
           target: clampFlightPoint(rectCentre(slotRect)),

@@ -126,8 +126,11 @@ function BanCategoryCardComponent({
           <img
             src={imageUrl ?? ''}
             alt=""
+            width={400}
+            height={500}
             decoding="async"
             loading="eager"
+            fetchPriority="high"
             onLoad={() => setImageLoaded(true)}
             className={cn(
               'absolute inset-0 h-full w-full object-cover transition-[opacity,transform,filter] duration-300 ease-out sm:duration-500',

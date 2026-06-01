@@ -3,6 +3,13 @@ import { trackEvent } from '@/lib/posthog';
 type AuthMethod = 'google' | 'facebook' | 'email' | 'phone';
 
 export function trackSignupStarted(method: AuthMethod = 'google') {
+  // Fires when a user TAPS an auth button (Google/Facebook/email-signup) — this
+  // is auth *intent*, not a real signup, and covers both new signups and
+  // returning logins (the server only knows new-vs-returning after auth).
+  // `auth_started` is the honest name; `signup_started` is kept for historical
+  // dashboards (dual-fire) and should be retired once charts are migrated.
+  // Real new-account signal = `onboarding_completed` (only new users see it).
+  trackEvent('auth_started', { method });
   trackEvent('signup_started', { method });
 }
 
