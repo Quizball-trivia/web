@@ -193,6 +193,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
         }
         setPhoneStep("otp");
         setPhoneNotice(t("settings.phoneCodeSent", { phone: result.phone }));
+        toast.success(t("settings.phoneCodeSent", { phone: result.phone }));
         return;
       }
 

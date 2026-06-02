@@ -560,7 +560,7 @@ describe('WelcomeScreen — email signin / signup', () => {
 });
 
 describe('WelcomeScreen — phone OTP', () => {
-  it('hides the phone tab when Georgian phone auth is not available', () => {
+  it('hides the phone form when Georgian phone auth is not available', () => {
     georgianPhoneAvailabilityMock.mockReturnValue({
       country: 'US',
       isAvailable: false,
@@ -571,15 +571,15 @@ describe('WelcomeScreen — phone OTP', () => {
     openLoginDialog();
     openAuthOptions();
 
-    expect(screen.queryByText(/welcome\.phoneTab/)).not.toBeInTheDocument();
+    // Phone is no longer a tab; when unavailable the phone form is absent under Sign In.
     expect(screen.queryByPlaceholderText(/welcome\.phonePlaceholder/)).not.toBeInTheDocument();
   });
 
-  it('starts the OTP flow on first submit then verifies on second', async () => {
+  it('shows the phone form under Sign In (no separate tab) and runs the OTP flow', async () => {
     render(<WelcomeScreen />);
     openLoginDialog();
     openAuthOptions();
-    fireEvent.click(screen.getByText(/welcome\.phoneTab/));
+    // Phone form is rendered directly under Sign In — no phone tab to click.
     const phoneInput = screen.getByPlaceholderText(/welcome\.phonePlaceholder/);
     fireEvent.change(phoneInput, { target: { value: '+995555000111' } });
     const sendButton = screen.getByText(/welcome\.sendCode/);
@@ -603,7 +603,6 @@ describe('WelcomeScreen — phone OTP', () => {
     render(<WelcomeScreen />);
     openLoginDialog();
     openAuthOptions();
-    fireEvent.click(screen.getByText(/welcome\.phoneTab/));
     const phoneInput = screen.getByPlaceholderText(/welcome\.phonePlaceholder/);
     fireEvent.change(phoneInput, { target: { value: '+995555000111' } });
     fireEvent.click(screen.getByText(/welcome\.sendCode/));
@@ -612,16 +611,16 @@ describe('WelcomeScreen — phone OTP', () => {
 });
 
 describe('WelcomeScreen — mode-switch reset behavior', () => {
-  it('switching tabs resets feedback and disables stale OTP state', () => {
+  it('shows phone under Sign In and hides it on Sign Up', () => {
     render(<WelcomeScreen />);
     openLoginDialog();
     openAuthOptions();
-    fireEvent.click(screen.getByText(/welcome\.phoneTab/));
-    const phoneInput = screen.getByPlaceholderText(/welcome\.phonePlaceholder/);
-    fireEvent.change(phoneInput, { target: { value: '+1' } });
-    // Switch back to signin — the email form should appear.
-    fireEvent.click(screen.getByText(/welcome\.signInTab/));
+    // Under Sign In, both email and phone forms are present.
     expect(screen.getByPlaceholderText(/welcome\.emailPlaceholder/)).toBeInTheDocument();
-    expect(screen.queryByPlaceholderText(/welcome\.otpPlaceholder/)).not.toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/welcome\.phonePlaceholder/)).toBeInTheDocument();
+    // Switch to Sign Up — phone form is hidden, email form remains.
+    fireEvent.click(screen.getByText(/welcome\.signUpTab/));
+    expect(screen.getByPlaceholderText(/welcome\.emailPlaceholder/)).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText(/welcome\.phonePlaceholder/)).not.toBeInTheDocument();
   });
 });

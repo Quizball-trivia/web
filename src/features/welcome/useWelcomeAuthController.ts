@@ -16,6 +16,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import {
   login,
   register,
@@ -443,6 +444,9 @@ export function useWelcomeAuthController() {
           setAuthPhone(normalizedPhone);
           setPhoneOtpSent(true);
           setAuthNotice(t('welcome.phoneCodeSent'));
+          toast.success(t('welcome.phoneCodeSentTitle'), {
+            description: t('welcome.phoneCodeSent'),
+          });
           return;
         }
 

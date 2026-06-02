@@ -90,11 +90,11 @@ export function WelcomeLoginDialog({
   onForgotSubmit,
 }: WelcomeLoginDialogProps) {
   const { t } = useLocale();
-  const authModes: AuthPanelMode[] = showPhoneAuth
-    ? ['signin', 'signup', 'phone']
-    : ['signin', 'signup'];
+  // Phone is no longer its own tab — it lives under Sign In, below the email
+  // form. Only two tabs remain; coerce any legacy 'phone' mode to 'signin'.
+  const authModes: AuthPanelMode[] = ['signin', 'signup'];
   const effectiveAuthMode: AuthPanelMode =
-    showPhoneAuth || authMode !== 'phone' ? authMode : 'signin';
+    authMode === 'phone' ? 'signin' : authMode;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -160,11 +160,7 @@ export function WelcomeLoginDialog({
 
             {showAdvancedAuth ? (
               <div id="welcome-auth-options" className="space-y-4">
-                <div
-                  className={`grid gap-1 rounded-full bg-black/18 p-1 ${
-                    showPhoneAuth ? 'grid-cols-3' : 'grid-cols-2'
-                  }`}
-                >
+                <div className="grid grid-cols-2 gap-1 rounded-full bg-black/18 p-1">
                   {authModes.map((mode) => (
                     <button
                       key={mode}
@@ -176,40 +172,46 @@ export function WelcomeLoginDialog({
                           : 'text-white/75 hover:bg-white/10 hover:text-white'
                       }`}
                     >
-                      {mode === 'signin'
-                        ? t('welcome.signInTab')
-                        : mode === 'signup'
-                          ? t('welcome.signUpTab')
-                          : t('welcome.phoneTab')}
+                      {mode === 'signin' ? t('welcome.signInTab') : t('welcome.signUpTab')}
                     </button>
                   ))}
                 </div>
 
-                {effectiveAuthMode === 'phone' ? (
-                  <WelcomePhoneAuthForm
-                    phone={authPhone}
-                    otp={authOtp}
-                    otpSent={phoneOtpSent}
-                    submitting={authSubmitting}
-                    onPhoneChange={onPhoneChange}
-                    onOtpChange={onOtpChange}
-                    onSubmit={onPhoneSubmit}
-                  />
-                ) : (
-                  <WelcomeEmailAuthForm
-                    mode={effectiveAuthMode}
-                    email={authEmail}
-                    password={authPassword}
-                    confirmPassword={authConfirmPassword}
-                    submitting={authSubmitting}
-                    fieldErrors={authFieldErrors}
-                    onEmailChange={onEmailChange}
-                    onPasswordChange={onPasswordChange}
-                    onConfirmPasswordChange={onConfirmPasswordChange}
-                    onSubmit={onEmailSubmit}
-                    onForgotPassword={onShowForgot}
-                  />
-                )}
+                <WelcomeEmailAuthForm
+                  mode={effectiveAuthMode}
+                  email={authEmail}
+                  password={authPassword}
+                  confirmPassword={authConfirmPassword}
+                  submitting={authSubmitting}
+                  fieldErrors={authFieldErrors}
+                  onEmailChange={onEmailChange}
+                  onPasswordChange={onPasswordChange}
+                  onConfirmPasswordChange={onConfirmPasswordChange}
+                  onSubmit={onEmailSubmit}
+                  onForgotPassword={onShowForgot}
+                />
+
+                {/* Phone sign-in lives under Sign In, not as a separate tab. */}
+                {showPhoneAuth && effectiveAuthMode === 'signin' ? (
+                  <>
+                    <div className="my-1 flex items-center gap-3">
+                      <div className="h-px flex-1 bg-white/20" />
+                      <span className="font-poppins text-[11px] font-semibold uppercase tracking-wide text-white/55">
+                        {t('welcome.orPhone')}
+                      </span>
+                      <div className="h-px flex-1 bg-white/20" />
+                    </div>
+                    <WelcomePhoneAuthForm
+                      phone={authPhone}
+                      otp={authOtp}
+                      otpSent={phoneOtpSent}
+                      submitting={authSubmitting}
+                      onPhoneChange={onPhoneChange}
+                      onOtpChange={onOtpChange}
+                      onSubmit={onPhoneSubmit}
+                    />
+                  </>
+                ) : null}
               </div>
             ) : null}
 

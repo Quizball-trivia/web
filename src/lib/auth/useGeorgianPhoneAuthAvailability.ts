@@ -22,14 +22,34 @@ const DISABLED_STATE: GeorgianPhoneAuthAvailabilityState = {
   isLoading: false,
 };
 
+// In local dev the GeoIP probe resolves to a non-GE country (localhost), which
+// would hide the phone option. Force it available so phone sign-in can be tested
+// locally. Production/staging keep the real Georgia-only gate via the backend.
+const DEV_FORCE_AVAILABLE = process.env.NODE_ENV === "development";
+
+const DEV_AVAILABLE_STATE: GeorgianPhoneAuthAvailabilityState = {
+  country: "GE",
+  isAvailable: true,
+  isLoading: false,
+};
+
 export function useGeorgianPhoneAuthAvailability(): GeorgianPhoneAuthAvailabilityState {
   const [state, setState] = useState<GeorgianPhoneAuthAvailabilityState>(
-    PHONE_AUTH_ENABLED ? INITIAL_STATE : DISABLED_STATE,
+    !PHONE_AUTH_ENABLED
+      ? DISABLED_STATE
+      : DEV_FORCE_AVAILABLE
+        ? DEV_AVAILABLE_STATE
+        : INITIAL_STATE,
   );
 
   useEffect(() => {
     // Feature-flagged off: never probe the backend or surface the phone tab.
     if (!PHONE_AUTH_ENABLED) {
+      return;
+    }
+
+    // Local dev: skip the GeoIP probe and keep phone forced-available.
+    if (DEV_FORCE_AVAILABLE) {
       return;
     }
 
