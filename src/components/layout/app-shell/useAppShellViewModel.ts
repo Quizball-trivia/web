@@ -25,6 +25,7 @@ import { useStoreWallet } from '@/lib/queries/store.queries';
 import { useIncomingFriendRequestCount } from '@/lib/queries/social.queries';
 import { getSocket } from '@/lib/realtime/socket-client';
 import { useRealtimeConnection } from '@/lib/realtime/useRealtimeConnection';
+import { logger } from '@/utils/logger';
 import { useLobbyCommandMachine } from '@/features/friend/hooks/useLobbyCommandMachine';
 
 import type { RankedGeoHintDebug } from './appShell.types';
@@ -238,11 +239,15 @@ export function useAppShellViewModel() {
 
   const handleLeaveLobby = () => {
     if (lobbyCommands.isLeaving) return;
-    void lobbyCommands.leaveLobby().then((result) => {
-      if (!result?.ok) return;
-      resetRealtime();
-      useRankedMatchmakingStore.getState().clearRankedMatchmaking();
-    });
+    void lobbyCommands.leaveLobby()
+      .then((result) => {
+        if (!result?.ok) return;
+        resetRealtime();
+        useRankedMatchmakingStore.getState().clearRankedMatchmaking();
+      })
+      .catch((error) => {
+        logger.warn('Failed to leave lobby', { error });
+      });
   };
 
   const handleRejoinMatch = () => {

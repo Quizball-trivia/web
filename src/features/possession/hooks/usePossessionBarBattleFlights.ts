@@ -11,12 +11,12 @@
  * arrives.
  *
  * Triggers (when `match.variant === 'ranked_sim'`):
- *   - Player flight: fires when `answerAck` arrives with `pointsEarned > 0`,
+ *   - Player flight: fires when `answerAck` arrives with the local score,
  *     gated on phaseKind === normal, last_attack, or penalty.
  *     Deduped by `answerAck.qIndex`.
- *   - Opponent flight: fires when `opponentAnswered` flips true with
- *     `opponentAnsweredCorrectly === true && opponentRecentPoints > 0`,
- *     gated similarly and delayed until the local question is playable.
+ *   - Opponent flight: fires when `opponentAnswered` flips true with the
+ *     opponent's local score, gated similarly and delayed until the local
+ *     question is playable.
  *     Deduped by the current question's qIndex.
  *
  * Returns the active flights list + handlers ready to feed into
@@ -412,11 +412,6 @@ export function usePossessionBarBattleFlights() {
     if (!enabled || !answerAck) return;
     const phaseKind = answerAck.phaseKind ?? 'normal';
     if (!isFlightPhaseKind(phaseKind)) return;
-    // Penalties: the answer_ack carries raw pointsEarned but NOT the
-    // possession-scaled value the bars use, so an optimistic flight would show
-    // a mismatched +N. Defer to the round_result fallback flight (which has
-    // possessionPointsEarned) for penalty rounds.
-    if (phaseKind === 'penalty') return;
     const points = resolveFlightPoints(answerAck.pointsEarned, answerAck.questionKind, answerAck.foundCount);
     const failed = !answerAck.isCorrect || points <= 0;
     const ackKey = `${answerAck.matchId}:${answerAck.qIndex}`;
@@ -449,12 +444,14 @@ export function usePossessionBarBattleFlights() {
     const points = playerRound
       ? resolveFlightPoints(playerRound.pointsEarned, roundResult.questionKind, playerRound.foundCount, playerRound.possessionPointsEarned)
       : 0;
-    if (!playerRound || points <= 0) return;
+    const failed = playerRound ? !playerRound.isCorrect || points <= 0 : false;
+    if (!playerRound || (points <= 0 && phaseKind !== 'penalty')) return;
 
     enqueueFlightFromDom({
       side: 'player',
       roundKey,
       points,
+      failed: failed ? true : undefined,
       logLabel: 'Bar-battle player fallback flight',
       questionKind: roundResult.questionKind,
     });
@@ -478,12 +475,14 @@ export function usePossessionBarBattleFlights() {
     const points = opponentRound
       ? resolveFlightPoints(opponentRound.pointsEarned, roundResult.questionKind, opponentRound.foundCount, opponentRound.possessionPointsEarned)
       : 0;
-    if (!opponentRound || points <= 0) return;
+    const failed = opponentRound ? !opponentRound.isCorrect || points <= 0 : false;
+    if (!opponentRound || (points <= 0 && phaseKind !== 'penalty')) return;
 
     enqueueFlightFromDom({
       side: 'opponent',
       roundKey,
       points,
+      failed: failed ? true : undefined,
       logLabel: 'Bar-battle opponent fallback flight',
       questionKind: roundResult.questionKind,
     });
@@ -501,10 +500,6 @@ export function usePossessionBarBattleFlights() {
     // zero-point case renders a "failed" flight that falls off-screen.
     if (currentQIndex == null) return;
     if (!isFlightPhaseKind(phaseKindFromState)) return;
-    // Penalties: opponent_answered carries raw pointsEarned, not the
-    // possession-scaled value the bars use — defer to the round_result fallback
-    // so the opponent flight matches the bars (it previously showed +0).
-    if (phaseKindFromState === 'penalty') return;
     if (currentKey == null) return;
     if (opponentFiredQRef.current === currentKey) return;
 

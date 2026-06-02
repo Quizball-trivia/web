@@ -334,8 +334,10 @@ export function useBarBattle({
       : null;
     const shouldPulseUnopposed = unopposedBarPulse && !isShotResolution && cancelledCount === 0 && Math.max(pBars, oBars) > 0;
 
-    // If both scored 0, just clean up
-    if (myPts === 0 && oppPts === 0) {
+    // If both scored 0, there is normally no bar battle to show. Penalty
+    // resolutions still need a short state so the +0 flight can target the
+    // pitch before the save/miss animation takes over.
+    if (myPts === 0 && oppPts === 0 && !(kind === 'penalty' && isShotResolution)) {
       queueMicrotask(() => setBattle(null));
       return;
     }

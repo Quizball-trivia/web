@@ -100,7 +100,215 @@ describe('usePossessionBarBattleFlights', () => {
     });
   });
 
-  it('fires the opponent score flight from a penalty round result when opponent_answered is not emitted', async () => {
+  it('fires the local penalty score flight immediately from answer_ack', async () => {
+    useRealtimeMatchStore.setState({
+      match: {
+        variant: 'ranked_sim',
+        matchId: MATCH_ID,
+        mySeat: 1,
+        currentQuestionPhase: 'playing',
+        currentQuestion: {
+          matchId: MATCH_ID,
+          qIndex: 13,
+          total: 20,
+          phaseKind: 'penalty',
+          phaseRound: 1,
+          shooterSeat: 1,
+          question: {
+            kind: 'multipleChoice',
+            id: 'penalty-ack-q',
+            prompt: 'Penalty question',
+            options: ['A', 'B', 'C', 'D'],
+            categoryName: 'General',
+          },
+          deadlineAt: new Date(Date.now() + 10_000).toISOString(),
+        },
+        answerAck: {
+          matchId: MATCH_ID,
+          qIndex: 13,
+          questionKind: 'multipleChoice',
+          selectedIndex: 0,
+          isCorrect: true,
+          correctIndex: 0,
+          myTotalPoints: 90,
+          oppAnswered: false,
+          pointsEarned: 90,
+          phaseKind: 'penalty',
+          phaseRound: 1,
+        },
+        possessionState: {
+          phaseKind: 'penalty',
+          shooterSeat: 1,
+        },
+      } as never,
+    });
+
+    const { result } = renderHook(() => usePossessionBarBattleFlights());
+
+    await act(async () => {
+      vi.advanceTimersByTime(250);
+    });
+
+    expect(result.current.flights).toHaveLength(1);
+    expect(result.current.flights[0]).toMatchObject({
+      side: 'player',
+      points: 90,
+      failed: false,
+    });
+  });
+
+  it('fires a local penalty +0 miss immediately from answer_ack', async () => {
+    useRealtimeMatchStore.setState({
+      match: {
+        variant: 'ranked_sim',
+        matchId: MATCH_ID,
+        mySeat: 1,
+        currentQuestionPhase: 'playing',
+        currentQuestion: {
+          matchId: MATCH_ID,
+          qIndex: 14,
+          total: 20,
+          phaseKind: 'penalty',
+          phaseRound: 1,
+          shooterSeat: 1,
+          question: {
+            kind: 'multipleChoice',
+            id: 'penalty-ack-zero-q',
+            prompt: 'Penalty question',
+            options: ['A', 'B', 'C', 'D'],
+            categoryName: 'General',
+          },
+          deadlineAt: new Date(Date.now() + 10_000).toISOString(),
+        },
+        answerAck: {
+          matchId: MATCH_ID,
+          qIndex: 14,
+          questionKind: 'multipleChoice',
+          selectedIndex: 1,
+          isCorrect: false,
+          correctIndex: 0,
+          myTotalPoints: 0,
+          oppAnswered: false,
+          pointsEarned: 0,
+          phaseKind: 'penalty',
+          phaseRound: 1,
+        },
+        possessionState: {
+          phaseKind: 'penalty',
+          shooterSeat: 1,
+        },
+      } as never,
+    });
+
+    const { result } = renderHook(() => usePossessionBarBattleFlights());
+
+    await act(async () => {
+      vi.advanceTimersByTime(250);
+    });
+
+    expect(result.current.flights).toHaveLength(1);
+    expect(result.current.flights[0]).toMatchObject({
+      side: 'player',
+      points: 0,
+      failed: true,
+    });
+  });
+
+  it('fires the opponent penalty score flight immediately from opponent_answered', async () => {
+    useRealtimeMatchStore.setState({
+      match: {
+        variant: 'ranked_sim',
+        matchId: MATCH_ID,
+        mySeat: 1,
+        currentQuestionPhase: 'playing',
+        currentQuestion: {
+          matchId: MATCH_ID,
+          qIndex: 15,
+          total: 20,
+          phaseKind: 'penalty',
+          phaseRound: 1,
+          shooterSeat: 2,
+          question: {
+            kind: 'multipleChoice',
+            id: 'penalty-opponent-ack-q',
+            prompt: 'Penalty question',
+            options: ['A', 'B', 'C', 'D'],
+            categoryName: 'General',
+          },
+          deadlineAt: new Date(Date.now() + 10_000).toISOString(),
+        },
+        possessionState: {
+          phaseKind: 'penalty',
+          shooterSeat: 2,
+        },
+        opponentAnswered: true,
+        opponentAnsweredCorrectly: true,
+        opponentRecentPoints: 90,
+      } as never,
+    });
+
+    const { result } = renderHook(() => usePossessionBarBattleFlights());
+
+    await act(async () => {
+      vi.advanceTimersByTime(250);
+    });
+
+    expect(result.current.flights).toHaveLength(1);
+    expect(result.current.flights[0]).toMatchObject({
+      side: 'opponent',
+      points: 90,
+      failed: false,
+    });
+  });
+
+  it('fires the opponent penalty +0 miss immediately from opponent_answered', async () => {
+    useRealtimeMatchStore.setState({
+      match: {
+        variant: 'ranked_sim',
+        matchId: MATCH_ID,
+        mySeat: 1,
+        currentQuestionPhase: 'playing',
+        currentQuestion: {
+          matchId: MATCH_ID,
+          qIndex: 16,
+          total: 20,
+          phaseKind: 'penalty',
+          phaseRound: 1,
+          shooterSeat: 2,
+          question: {
+            kind: 'multipleChoice',
+            id: 'penalty-opponent-ack-zero-q',
+            prompt: 'Penalty question',
+            options: ['A', 'B', 'C', 'D'],
+            categoryName: 'General',
+          },
+          deadlineAt: new Date(Date.now() + 10_000).toISOString(),
+        },
+        possessionState: {
+          phaseKind: 'penalty',
+          shooterSeat: 2,
+        },
+        opponentAnswered: true,
+        opponentAnsweredCorrectly: false,
+        opponentRecentPoints: 0,
+      } as never,
+    });
+
+    const { result } = renderHook(() => usePossessionBarBattleFlights());
+
+    await act(async () => {
+      vi.advanceTimersByTime(250);
+    });
+
+    expect(result.current.flights).toHaveLength(1);
+    expect(result.current.flights[0]).toMatchObject({
+      side: 'opponent',
+      points: 0,
+      failed: true,
+    });
+  });
+
+  it('fires penalty round-result flights when opponent_answered is not emitted', async () => {
     useRealtimeMatchStore.getState().setSelfUserId('user-a');
     useRealtimeMatchStore.setState({
       match: {
@@ -170,12 +378,104 @@ describe('usePossessionBarBattleFlights', () => {
       vi.advanceTimersByTime(250);
     });
 
-    expect(result.current.flights).toHaveLength(1);
-    expect(result.current.flights[0]).toMatchObject({
-      side: 'opponent',
-      points: 90,
-      failed: undefined,
+    expect(result.current.flights).toHaveLength(2);
+    expect(result.current.flights).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        side: 'player',
+        points: 0,
+        failed: true,
+      }),
+      expect.objectContaining({
+        side: 'opponent',
+        points: 90,
+        failed: undefined,
+      }),
+    ]));
+  });
+
+  it('fires failed +0 flights for both sides on a zero-zero penalty round result', async () => {
+    useRealtimeMatchStore.getState().setSelfUserId('user-a');
+    useRealtimeMatchStore.setState({
+      match: {
+        variant: 'ranked_sim',
+        matchId: MATCH_ID,
+        mySeat: 1,
+        currentQuestionPhase: 'playing',
+        currentQuestion: {
+          matchId: MATCH_ID,
+          qIndex: 21,
+          total: 20,
+          phaseKind: 'penalty',
+          phaseRound: 2,
+          shooterSeat: 1,
+          question: {
+            kind: 'multipleChoice',
+            id: 'penalty-q-zero',
+            prompt: 'Penalty question',
+            options: ['A', 'B', 'C', 'D'],
+            categoryName: 'General',
+          },
+          deadlineAt: new Date(Date.now() + 10_000).toISOString(),
+        },
+        lastRoundResult: {
+          matchId: MATCH_ID,
+          qIndex: 21,
+          questionKind: 'multipleChoice',
+          reveal: { kind: 'multipleChoice', correctIndex: 0 },
+          players: {
+            'user-a': {
+              selectedIndex: 1,
+              isCorrect: false,
+              timeMs: 3000,
+              pointsEarned: 0,
+              totalPoints: 100,
+              submittedOrderIds: [],
+            },
+            'user-b': {
+              selectedIndex: 2,
+              isCorrect: false,
+              timeMs: 3200,
+              pointsEarned: 0,
+              totalPoints: 100,
+              submittedOrderIds: [],
+            },
+          },
+          phaseKind: 'penalty',
+          phaseRound: 2,
+          shooterSeat: 1,
+          deltas: {
+            possessionDelta: 0,
+            goalScoredBySeat: null,
+            penaltyOutcome: 'saved',
+          },
+        },
+        possessionState: {
+          phaseKind: 'penalty',
+          shooterSeat: 1,
+        },
+        opponentAnswered: false,
+      } as never,
     });
+
+    const { result } = renderHook(() => usePossessionBarBattleFlights());
+
+    await act(async () => {
+      vi.advanceTimersByTime(250);
+    });
+
+    expect(result.current.flights).toHaveLength(2);
+    expect(result.current.flights).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        side: 'player',
+        points: 0,
+        failed: true,
+      }),
+      expect.objectContaining({
+        side: 'opponent',
+        points: 0,
+        failed: true,
+      }),
+    ]));
   });
 
   it('flies the 2x badge token to the opponent slot when the opponent newly earns the streak', async () => {

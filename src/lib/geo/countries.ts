@@ -424,9 +424,12 @@ export const CITY_ALIASES: Record<string, string[]> = {
   paraguay: ["asuncion"],
   bolivia: ["la paz", "sucre", "santa cruz"],
   ecuador: ["quito", "guayaquil"],
-  venezuela: ["caracas", "valencia"],
+  // "valencia" omitted — it collides with Spain's (more prominent) Valencia and
+  // would mis-route a city-only payload here.
+  venezuela: ["caracas"],
   costa_rica: ["san jose"],
-  panama: ["panama city", "santiago"],
+  // "santiago" omitted — it collides with Chile's (more prominent) Santiago.
+  panama: ["panama city"],
   dominican_republic: ["santo domingo"],
   ireland: ["dublin", "athlone", "cork", "galway"],
   belgium: ["brussels", "antwerp"],

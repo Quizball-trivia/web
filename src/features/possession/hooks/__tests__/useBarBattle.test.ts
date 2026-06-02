@@ -437,6 +437,47 @@ describe('useBarBattle', () => {
     });
   });
 
+  it('keeps zero-zero penalty resolution alive for score-flight targets', async () => {
+    const myRound = makePlayer(0, false);
+    const opponentRound = makePlayer(0, false);
+    const roundResult = makePenaltyRoundResult(0, 0, 'saved');
+
+    const { result } = renderHook(() => useBarBattle({
+      answerAck: {
+        matchId: MATCH_ID,
+        qIndex: 5,
+        questionKind: 'multipleChoice',
+        selectedIndex: 1,
+        isCorrect: false,
+        myTotalPoints: 0,
+        oppAnswered: true,
+        pointsEarned: 0,
+        phaseKind: 'penalty',
+        phaseRound: 3,
+      },
+      opponentAnswered: true,
+      opponentRecentPoints: 0,
+      opponentAnsweredCorrectly: false,
+      roundResult,
+      myRound,
+      opponentRound,
+      phaseKind: 'penalty',
+      dividerX: 250,
+    }));
+
+    await act(async () => {});
+
+    expect(result.current).toMatchObject({
+      phase: 'both-score',
+      playerPoints: 0,
+      opponentPoints: 0,
+      playerBars: 0,
+      opponentBars: 0,
+      remainingDelta: 0,
+      penaltyOutcome: 'saved',
+    });
+  });
+
   it('uses boosted possession points for bar battle resolution while preserving base points', async () => {
     const myRound = makePlayer(80, true);
     const opponentRound = makePlayer(80, true, 160);

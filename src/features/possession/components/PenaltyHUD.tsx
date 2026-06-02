@@ -76,12 +76,16 @@ export function PenaltyHUD({
   const baseline = isPenaltySuddenDeath ? sdBaseline : null;
   const pipPlayerScore = baseline ? Math.max(0, penaltyPlayerScore - baseline.playerScore) : penaltyPlayerScore;
   const pipOpponentScore = baseline ? Math.max(0, penaltyOpponentScore - baseline.opponentScore) : penaltyOpponentScore;
-  const playerPips = (penaltyPlayerAttempts && penaltyPlayerAttempts.length > 0)
+  // Only MAX_PENALTY_ROUNDS pip slots render, so keep the MOST RECENT attempts
+  // — otherwise extra sudden-death rounds would silently drop the latest results.
+  const playerPips = ((penaltyPlayerAttempts && penaltyPlayerAttempts.length > 0)
     ? (baseline ? penaltyPlayerAttempts.slice(baseline.playerAttempts) : penaltyPlayerAttempts)
-    : Array.from({ length: pipPlayerScore }, () => 'goal' as const);
-  const opponentPips = (penaltyOpponentAttempts && penaltyOpponentAttempts.length > 0)
+    : Array.from({ length: pipPlayerScore }, () => 'goal' as const)
+  ).slice(-MAX_PENALTY_ROUNDS);
+  const opponentPips = ((penaltyOpponentAttempts && penaltyOpponentAttempts.length > 0)
     ? (baseline ? penaltyOpponentAttempts.slice(baseline.opponentAttempts) : penaltyOpponentAttempts)
-    : Array.from({ length: pipOpponentScore }, () => 'goal' as const);
+    : Array.from({ length: pipOpponentScore }, () => 'goal' as const)
+  ).slice(-MAX_PENALTY_ROUNDS);
   const pipClassName = (result: 'goal' | 'miss' | undefined) => {
     if (result === 'goal') return 'bg-brand-green-light border-brand-green-light';
     if (result === 'miss') return 'bg-brand-red-soft border-brand-red-soft';
