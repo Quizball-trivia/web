@@ -3,6 +3,7 @@ import { Search, RotateCcw, Filter } from "lucide-react";
 import { usePublicLobbies } from "@/lib/queries/lobbies.queries";
 import { LobbyCard } from "./LobbyCard";
 import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useLocale } from "@/contexts/LocaleContext";
 
 interface LobbyBrowsePanelProps {
@@ -13,7 +14,7 @@ interface LobbyBrowsePanelProps {
 
 export function LobbyBrowsePanel({ onJoin, isJoiningCode, onActionTriggered }: LobbyBrowsePanelProps) {
   const { t } = useLocale();
-  const { data: lobbies, isLoading, refetch } = usePublicLobbies();
+  const { data: lobbies, isLoading, isFetching, refetch } = usePublicLobbies();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<'all' | 'open'>('open');
 
@@ -89,11 +90,13 @@ export function LobbyBrowsePanel({ onJoin, isJoiningCode, onActionTriggered }: L
              <button
                 type="button"
                 onClick={() => refetch()}
+                disabled={isFetching}
                 title={t("friend.refresh")}
                 aria-label={t("friend.refresh")}
-                className="flex aspect-square h-9 sm:h-11 items-center justify-center rounded-[20px] border-2 border-brand-green bg-transparent text-brand-green transition-colors hover:bg-brand-green/10"
+                aria-busy={isFetching}
+                className="flex aspect-square h-9 sm:h-11 items-center justify-center rounded-[20px] border-2 border-brand-green bg-transparent text-brand-green transition-colors hover:bg-brand-green/10 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
              >
-                <RotateCcw className="size-4 sm:size-5" />
+                <RotateCcw className={cn("size-4 sm:size-5", isFetching && "animate-spin")} />
              </button>
           </div>
        </div>

@@ -84,15 +84,17 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
   }, [lobby?.lobbyId, lobby?.inviteCode, lobby, reset]);
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 max-w-4xl">
+    <div className="grid items-stretch gap-6 md:grid-cols-2 max-w-4xl">
       <div
-        className="relative overflow-hidden rounded-[20px] p-6 sm:p-7"
+        className="relative flex h-full flex-col overflow-hidden rounded-[20px] p-6 sm:p-7"
         style={cardSurfaceStyle}
       >
-        <div className="space-y-6">
-          <div className="space-y-3">
+        <div className="flex h-full flex-col space-y-6">
+          <div className="flex flex-col gap-3">
+            {/* The title reserves ~2 lines of height even when it's 1 line, so
+                the subtitle below starts at the same Y across both cards. */}
             <h3
-              className="text-white uppercase"
+              className="flex min-h-[2.1em] items-start text-white uppercase"
               style={{
                 fontFamily: poppinsFont,
                 fontWeight: 600,
@@ -100,7 +102,9 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
                 lineHeight: 1.05,
               }}
             >
-              {t("friend.startNewLobby")} <span className="text-brand-yellow">{t("friend.lobbySuffix")}</span>
+              <span>
+                {t("friend.startNewLobby")} <span className="text-brand-yellow">{t("friend.lobbySuffix")}</span>
+              </span>
             </h3>
             <p
               className="text-white/80 uppercase"
@@ -116,7 +120,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
             </p>
           </div>
 
-          <div className="flex items-center justify-between gap-4 rounded-[16px] bg-black/25 px-4 py-3">
+          <div className="flex min-h-[88px] items-center justify-between gap-4 rounded-[16px] bg-black/25 px-4 py-3">
             <div className="space-y-1 flex-1">
               <label
                 htmlFor="public-mode"
@@ -161,7 +165,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
             onClick={handleCreate}
             disabled={lobbyCommands.isBusy || isCreating}
             aria-busy={isCreating}
-            className="flex h-16 w-full items-center justify-center gap-3 rounded-[20px] bg-surface-page text-white transition-colors hover:bg-surface-page/90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-auto flex h-16 w-full items-center justify-center gap-3 rounded-[20px] bg-surface-page text-white transition-colors hover:bg-surface-page/90 disabled:cursor-not-allowed disabled:opacity-60"
             style={{
               fontFamily: poppinsFont,
               fontWeight: 600,
@@ -188,13 +192,14 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
       </div>
 
       <div
-        className="relative overflow-hidden rounded-[20px] p-6 sm:p-7"
+        className="relative flex h-full flex-col overflow-hidden rounded-[20px] p-6 sm:p-7"
         style={cardSurfaceStyle}
       >
-        <div className="space-y-6">
-          <div className="space-y-3">
+        <div className="flex h-full flex-col space-y-6">
+          <div className="flex flex-col gap-3">
+            {/* Same ~2-line min-height as the left card so the subtitle aligns. */}
             <h3
-              className="text-white uppercase"
+              className="flex min-h-[2.1em] items-start text-white uppercase"
               style={{
                 fontFamily: poppinsFont,
                 fontWeight: 600,
@@ -202,7 +207,9 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
                 lineHeight: 1.05,
               }}
             >
-              {t("friend.haveACode")} <span className="text-brand-yellow">{t("friend.codeSuffix")}</span>
+              <span>
+                {t("friend.haveACode")} <span className="text-brand-yellow">{t("friend.codeSuffix")}</span>
+              </span>
             </h3>
             <p
               className="text-white/80 uppercase"
@@ -225,7 +232,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
             onChange={(e) => setInviteCode(e.target.value)}
             maxLength={256}
             placeholder={t("friend.roomCodePlaceholder")}
-            className="h-16 w-full rounded-[20px] border-none bg-black/25 px-6 text-center text-white uppercase outline-none placeholder:text-white/40 focus:outline-none"
+            className="h-[88px] w-full rounded-[20px] border-none bg-black/25 px-6 text-center text-white uppercase outline-none placeholder:text-white/40 focus:outline-none"
             style={{
               fontFamily: poppinsFont,
               fontWeight: 600,
@@ -239,7 +246,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
             onClick={handleJoin}
             disabled={lobbyCommands.isBusy || isJoining || !inviteCode}
             aria-busy={isJoining}
-            className="flex h-16 w-full items-center justify-center gap-3 rounded-[20px] bg-surface-page text-white transition-colors hover:bg-surface-page/90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-auto flex h-16 w-full items-center justify-center gap-3 rounded-[20px] bg-surface-page text-white transition-colors hover:bg-surface-page/90 disabled:cursor-not-allowed disabled:opacity-50"
             style={{
               fontFamily: poppinsFont,
               fontWeight: 600,

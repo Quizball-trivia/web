@@ -68,6 +68,33 @@ type GeorgianPhoneLinkVerifyPayload =
   >["content"]["application/json"];
 
 type UserResponse = components["schemas"]["UserResponse"];
+type RedirectOAuthProvider = Extract<SocialLoginPayload["provider"], "google" | "facebook">;
+
+const REDIRECT_OAUTH_PROVIDER_KEY = "quizball_oauth_provider";
+
+function rememberRedirectOAuthProvider(provider: SocialLoginPayload["provider"]): void {
+  if (provider !== "google" && provider !== "facebook") {
+    return;
+  }
+  try {
+    window.sessionStorage.setItem(REDIRECT_OAUTH_PROVIDER_KEY, provider);
+  } catch {
+    // Best-effort; analytics can still be skipped if storage is unavailable.
+  }
+}
+
+export function consumeRedirectOAuthProvider(): RedirectOAuthProvider | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  try {
+    const provider = window.sessionStorage.getItem(REDIRECT_OAUTH_PROVIDER_KEY);
+    window.sessionStorage.removeItem(REDIRECT_OAUTH_PROVIDER_KEY);
+    return provider === "google" || provider === "facebook" ? provider : null;
+  } catch {
+    return null;
+  }
+}
 
 export async function login(email: string, password: string): Promise<AuthResponse["user"] | null> {
   const normalizedEmail = normalizeEmail(email);
@@ -362,6 +389,7 @@ export async function socialLogin(
     logger.warn("Auth social login missing redirect URL");
     throw new Error("Missing redirect URL from social login");
   }
+  rememberRedirectOAuthProvider(provider);
   logger.info("Auth social login redirect");
   window.location.href = data.url;
 }

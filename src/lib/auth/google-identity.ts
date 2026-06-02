@@ -23,6 +23,11 @@ interface GoogleAccountsId {
   cancel(): void;
 }
 
+export interface GoogleCredential {
+  idToken: string;
+  nonce: string;
+}
+
 interface PromptMomentNotification {
   isDisplayMoment(): boolean;
   isDisplayed(): boolean;
@@ -137,4 +142,55 @@ export async function signInWithGoogleIdentity(clientId: string): Promise<{
       }
     });
   });
+}
+
+/**
+ * Render the official GIS button into `container` and invoke `onCredential`
+ * when the user completes sign-in. Unlike the One Tap `.prompt()` flow, the
+ * rendered button's click runs a Google-hosted popup that works inside
+ * embedded webviews (Instagram, etc.) — the token endpoint is not subject to
+ * the `disallowed_useragent` block that kills the classic OAuth redirect.
+ *
+ * The button is rendered transparently on top of our own styled CTA (see
+ * WelcomeGoogleButton), so the user sees our button but clicks Google's.
+ *
+ * Returns the px width the button was rendered at (caller sizes the overlay
+ * to match), or null if GIS was unavailable.
+ */
+export async function renderGoogleButton(
+  clientId: string,
+  container: HTMLElement,
+  width: number,
+  onCredential: (credential: GoogleCredential) => void,
+): Promise<boolean> {
+  const available = await waitForGoogleIdentity();
+  if (!available || !window.google) return false;
+
+  const { raw, hash } = await generateNoncePair();
+
+  window.google.accounts.id.initialize({
+    client_id: clientId,
+    nonce: hash,
+    auto_select: false,
+    cancel_on_tap_outside: false,
+    ux_mode: 'popup',
+    callback: (response) => {
+      if (response?.credential) {
+        onCredential({ idToken: response.credential, nonce: raw });
+      }
+    },
+  });
+
+  container.replaceChildren();
+  window.google.accounts.id.renderButton(container, {
+    type: 'standard',
+    theme: 'filled_blue',
+    size: 'large',
+    text: 'continue_with',
+    shape: 'pill',
+    logo_alignment: 'center',
+    width,
+  });
+
+  return true;
 }

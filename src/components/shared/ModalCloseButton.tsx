@@ -37,6 +37,11 @@ export function ModalCloseButton({ onClose, className }: ModalCloseButtonProps) 
         "absolute top-4 right-4 z-20 flex size-12 items-center justify-center",
         "rounded-xl bg-brand-red text-white shadow-sm transition-colors",
         "hover:bg-brand-red active:translate-y-[1px]",
+        // The app's default focus ring is green (--ring is a green hue), which
+        // looks like a stray glow when Radix auto-focuses this button on open.
+        // Suppress the default outline; show a tasteful white ring only on
+        // keyboard focus.
+        "outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-0",
         className,
       )}
     >

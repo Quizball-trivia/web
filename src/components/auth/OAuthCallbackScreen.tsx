@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '../ui/button';
-import { Card, CardContent } from '../ui/card';
 import { AlertCircle, ArrowLeft, RotateCcw } from 'lucide-react';
 import { motion } from 'motion/react';
 import {
+  consumeRedirectOAuthProvider,
   parseOAuthHash,
   refreshWithTokenDetailed,
   restorePendingDeletionWithToken,
@@ -13,6 +13,8 @@ import { useAuthStore } from '@/stores/auth.store';
 import { logger } from '@/utils/logger';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { getPostAuthEntryRoute } from '@/lib/auth/postAuthRedirect';
+import { isOnboardingComplete } from '@/lib/auth/onboarding';
+import { trackLoginCompleted, trackSignupCompleted } from '@/lib/analytics/game-events';
 import { useLocale } from '@/contexts/LocaleContext';
 
 export function OAuthCallbackScreen() {
@@ -95,6 +97,16 @@ export function OAuthCallbackScreen() {
         const authenticatedUser = useAuthStore.getState().user;
         if (!authenticatedUser) {
           throw new Error(t('oauthCallback.sessionLoadError'));
+        }
+        const provider = consumeRedirectOAuthProvider();
+        if (provider) {
+          // OAuth callbacks don't expose a precise new-vs-returning signal; onboarding
+          // state is the best available heuristic and matches the post-auth route.
+          if (isOnboardingComplete(authenticatedUser)) {
+            trackLoginCompleted(provider);
+          } else {
+            trackSignupCompleted(provider);
+          }
         }
         logger.info('OAuth callback bootstrap success');
         router.replace(getPostAuthEntryRoute(authenticatedUser));

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ModalCloseButton } from "@/components/shared/ModalCloseButton";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useMobile";
 import {
@@ -345,12 +346,6 @@ export function AvatarPicker({
         {activeTab === "facialHair" && renderSlotGrid("facialHair", FACIAL_HAIR_PARTS)}
       </div>
 
-      <div className="flex justify-end pt-1">
-        <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={isSaving}>
-          {t('common.close')}
-        </Button>
-      </div>
-
       {/* In-picker buy confirmation for locked items */}
       {pendingPurchase && (
         <Dialog open onOpenChange={() => setPendingPurchase(null)}>
@@ -439,10 +434,11 @@ export function AvatarPicker({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl max-h-[90dvh] overflow-y-auto border-border/50">
+      <DialogContent className="sm:max-w-3xl max-h-[90dvh] overflow-y-auto rounded-[24px] border-0 bg-brand-blue p-6 sm:p-8 [&>button:last-child]:hidden">
+        <ModalCloseButton onClose={() => onOpenChange(false)} />
         <DialogHeader>
-          <DialogTitle className="text-lg font-bold">{t('profile.avatarPicker.title')}</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="pr-14 font-poppins text-[22px] font-semibold text-white sm:text-[26px]">{t('profile.avatarPicker.title')}</DialogTitle>
+          <DialogDescription className="font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-[14px]">
             {t('profile.avatarPicker.description')}
           </DialogDescription>
         </DialogHeader>

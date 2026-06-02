@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { bootstrapUser } from "@/lib/auth/session";
 import { clearTokens } from "@/lib/auth/tokenStorage";
-import { logout as logoutService, refresh } from "@/lib/auth/auth.service";
+import { logout as logoutService, refreshSession } from "@/lib/auth/auth.service";
+import { ApiError } from "@/lib/api/api";
 import type { User } from "@/lib/types";
 import { logger } from "@/utils/logger";
 import { identifyUser, resetUser, setPersonProperties } from "@/lib/posthog";
@@ -10,6 +11,7 @@ import { setNewRelicUser } from "@/lib/newrelic-browser";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 
 type AuthStatus = "loading" | "anonymous" | "authenticated";
+const BOOTSTRAP_TRANSIENT_RETRY_MS = 300;
 
 type AuthState = {
   status: AuthStatus;
@@ -56,6 +58,19 @@ function syncAnalyticsUser(user: User): void {
   });
 }
 
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isAuthFailure(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 401;
+}
+
+function clearLocalSession(): void {
+  clearTokens();
+  storage.remove(STORAGE_KEYS.STORE_WALLET);
+}
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   status: "loading",
   user: null,
@@ -99,23 +114,45 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       logger.info("Auth bootstrap success");
       set({ status: "authenticated", user, hasBootstrapped: true });
       syncAnalyticsUser(user);
-    } catch {
-      logger.warn("Auth bootstrap failed");
-      const refreshed = await refresh();
-      if (refreshed) {
+    } catch (error) {
+      logger.warn("Auth bootstrap failed", error);
+      const refreshed = await refreshSession();
+      if (refreshed.ok) {
+        await wait(BOOTSTRAP_TRANSIENT_RETRY_MS);
         try {
           const user = await bootstrapUser();
           logger.info("Auth bootstrap after refresh success");
           set({ status: "authenticated", user, hasBootstrapped: true });
           syncAnalyticsUser(user);
           return;
-        } catch {
-          logger.warn("Auth bootstrap after refresh failed");
+        } catch (retryError) {
+          if (isAuthFailure(retryError)) {
+            logger.warn("Auth bootstrap after refresh failed terminally");
+            clearLocalSession();
+            set({ status: "anonymous", user: null, hasBootstrapped: true });
+            return;
+          }
+          logger.warn("Auth bootstrap after refresh failed transiently; keeping session", retryError);
+          set({ status: "loading" });
+          return;
         }
       }
-      clearTokens();
-      storage.remove(STORAGE_KEYS.STORE_WALLET);
-      set({ status: "anonymous", user: null, hasBootstrapped: true });
+      if (refreshed.terminal) {
+        clearLocalSession();
+        set({ status: "anonymous", user: null, hasBootstrapped: true });
+        return;
+      }
+
+      await wait(BOOTSTRAP_TRANSIENT_RETRY_MS);
+      try {
+        const user = await bootstrapUser();
+        logger.info("Auth bootstrap after transient refresh retry success");
+        set({ status: "authenticated", user, hasBootstrapped: true });
+        syncAnalyticsUser(user);
+      } catch (retryError) {
+        logger.warn("Auth bootstrap transient retry failed; keeping session", retryError);
+        set({ status: "loading" });
+      }
     }
   },
   logout: async () => {
@@ -129,8 +166,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch {
       // Best-effort; store state still resets.
     }
-    clearTokens();
-    storage.remove(STORAGE_KEYS.STORE_WALLET);
+    clearLocalSession();
     resetUser(); // Reset PostHog user
     set({ status: "anonymous", user: null, hasBootstrapped: true });
   },

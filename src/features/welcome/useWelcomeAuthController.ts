@@ -4,10 +4,10 @@
  * Controller hook for the WelcomeScreen login dialog.
  *
  * Owns:
- *  - the 11 useState fields for the dialog (open, mode, form fields,
- *    submitting, error/notice, phone-OTP-sent, in-app-browser panel)
- *  - the in-app-browser bounce timer ref + unmount cleanup
- *  - the three submit handlers (Google, email, phone OTP)
+ *  - the useState fields for the dialog (open, mode, form fields,
+ *    submitting, error/notice, phone-OTP-sent)
+ *  - the submit handlers (Google credential + redirect fallback, email,
+ *    phone OTP)
  *  - the login dialog open/close handler that resets the form
  *
  * Returns one object the dialog component reads. Behavior must stay
@@ -15,7 +15,7 @@
  * redirect, every error-message fallback preserved.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import {
   login,
@@ -29,8 +29,7 @@ import {
   startGeorgianPhoneOtp,
   verifyGeorgianPhoneOtp,
 } from '@/lib/auth/auth.service';
-import { signInWithGoogleIdentity } from '@/lib/auth/google-identity';
-import { isInAppBrowser, tryOpenInExternalBrowser } from '@/lib/auth/in-app-browser';
+import { signInWithGoogleIdentity, type GoogleCredential } from '@/lib/auth/google-identity';
 import { useAuthStore } from '@/stores/auth.store';
 import { useLocale } from '@/contexts/LocaleContext';
 import {
@@ -64,7 +63,6 @@ export function useWelcomeAuthController() {
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? '';
 
   const [loginOpen, setLoginOpen] = useState(false);
-  const [showOpenInBrowser, setShowOpenInBrowser] = useState(false);
   const [authMode, setAuthMode] = useState<AuthPanelMode>('signin');
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
@@ -90,22 +88,6 @@ export function useWelcomeAuthController() {
   const [forgotSubmitting, setForgotSubmitting] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
   const [forgotError, setForgotError] = useState<string | null>(null);
-
-  // Tracks the 1.5s timer that reveals the in-app-browser instructions panel.
-  // Held in a ref so we can cancel it when the user closes the dialog or the
-  // component unmounts — otherwise the panel can flash open after dismissal.
-  const inAppBrowserTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Cancel the pending in-app-browser instructions timer on unmount so it
-  // can't fire setState against a torn-down component.
-  useEffect(() => {
-    return () => {
-      if (inAppBrowserTimerRef.current !== null) {
-        clearTimeout(inAppBrowserTimerRef.current);
-        inAppBrowserTimerRef.current = null;
-      }
-    };
-  }, []);
 
   const resetAuthFeedback = useCallback(() => {
     setAuthError(null);
@@ -147,12 +129,7 @@ export function useWelcomeAuthController() {
     (open: boolean) => {
       setLoginOpen(open);
       if (!open) {
-        setShowOpenInBrowser(false);
         resetAuthDialog();
-        if (inAppBrowserTimerRef.current !== null) {
-          clearTimeout(inAppBrowserTimerRef.current);
-          inAppBrowserTimerRef.current = null;
-        }
       }
     },
     [resetAuthDialog],
@@ -160,12 +137,7 @@ export function useWelcomeAuthController() {
 
   const handleCloseLoginDialog = useCallback(() => {
     setLoginOpen(false);
-    setShowOpenInBrowser(false);
     resetAuthDialog();
-    if (inAppBrowserTimerRef.current !== null) {
-      clearTimeout(inAppBrowserTimerRef.current);
-      inAppBrowserTimerRef.current = null;
-    }
   }, [resetAuthDialog]);
 
   const handleAuthModeChange = useCallback(
@@ -176,25 +148,39 @@ export function useWelcomeAuthController() {
     [resetAuthForm],
   );
 
+  // Exchange a Google id_token (from the overlaid GIS button — the path that
+  // works inside in-app browsers like Instagram) for a session. The classic
+  // redirect is only a last-ditch fallback in handleGoogleLogin below.
+  const handleGoogleCredential = useCallback(
+    async (credential: GoogleCredential) => {
+      trackSignupStarted('google');
+      try {
+        await socialLoginWithIdToken('google', credential.idToken, credential.nonce);
+        await bootstrap({ force: true });
+        setLoginOpen(false);
+      } catch (error) {
+        if (isPendingDeletionAuthError(error)) {
+          setPendingRestoreAction({
+            kind: 'social-token',
+            provider: 'google',
+            idToken: credential.idToken,
+            nonce: credential.nonce,
+          });
+          setAuthNoticeModal('pending-deletion');
+          setLoginOpen(true);
+          return;
+        }
+        console.error('Google credential sign-in failed', error);
+        setAuthError(t('welcome.loginError'));
+      }
+    },
+    [bootstrap, t],
+  );
+
+  // Fallback for when the overlaid GIS button never rendered (GIS unavailable
+  // in a locked-down webview): try One Tap, then the classic redirect.
   const handleGoogleLogin = useCallback(async () => {
     trackSignupStarted('google');
-
-    // In-app browsers (Messenger, Instagram, etc.) — Google blocks OAuth in
-    // these webviews. Fire the bounce URL silently; only show the manual
-    // instructions panel if we're still here after ~1.5s (OS ignored it).
-    if (isInAppBrowser()) {
-      tryOpenInExternalBrowser(window.location.href);
-      if (inAppBrowserTimerRef.current !== null) {
-        clearTimeout(inAppBrowserTimerRef.current);
-      }
-      inAppBrowserTimerRef.current = setTimeout(() => {
-        inAppBrowserTimerRef.current = null;
-        if (typeof document !== 'undefined' && !document.hidden) {
-          setShowOpenInBrowser(true);
-        }
-      }, 1500);
-      return;
-    }
 
     if (googleClientId) {
       let googleIdentity: { idToken: string; nonce?: string } | null = null;
@@ -229,22 +215,6 @@ export function useWelcomeAuthController() {
 
   const handleFacebookLogin = useCallback(async () => {
     trackSignupStarted('facebook');
-
-    // Same in-app-browser guard as Google: Facebook also blocks OAuth inside
-    // Messenger/Instagram webviews, so bounce to the external browser.
-    if (isInAppBrowser()) {
-      tryOpenInExternalBrowser(window.location.href);
-      if (inAppBrowserTimerRef.current !== null) {
-        clearTimeout(inAppBrowserTimerRef.current);
-      }
-      inAppBrowserTimerRef.current = setTimeout(() => {
-        inAppBrowserTimerRef.current = null;
-        if (typeof document !== 'undefined' && !document.hidden) {
-          setShowOpenInBrowser(true);
-        }
-      }, 1500);
-      return;
-    }
 
     try {
       const redirectTo = `${window.location.origin}/auth/callback`;
@@ -487,10 +457,13 @@ export function useWelcomeAuthController() {
     // Dialog visibility
     loginOpen,
     setLoginOpen,
-    showOpenInBrowser,
     handleLoginDialogOpenChange,
     handleCloseLoginDialog,
     handleKickOff,
+
+    // Google client id + credential handler for the overlaid GIS button
+    googleClientId,
+    handleGoogleCredential,
 
     // Auth panel mode + form fields
     authMode,
