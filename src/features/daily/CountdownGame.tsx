@@ -272,7 +272,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
               onChange={handleInputChange}
               onKeyDown={handleInputKeyDown}
               placeholder={t("dailyGames.pressEnterPlaceholder")}
-              className="bg-surface-card-tint border-2 border-surface-card text-white placeholder:text-brand-slate focus:border-brand-cyan text-lg h-12 rounded-xl"
+              className="bg-surface-card-tint border-2 border-surface-card text-white placeholder:text-brand-slate focus:border-brand-cyan focus-visible:border-brand-cyan focus-visible:ring-brand-cyan/50 text-lg h-12 rounded-xl"
               autoComplete="off"
               autoCapitalize="off"
             />

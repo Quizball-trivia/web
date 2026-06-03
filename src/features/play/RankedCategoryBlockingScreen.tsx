@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ShowdownScreen } from '@/components/ShowdownScreen';
-import { motion } from 'motion/react';
 import { Volume2, VolumeX } from 'lucide-react';
 import { isMuted as getIsMuted, toggleMute } from '@/lib/sounds/gameSounds';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
@@ -198,10 +197,7 @@ export function BanCategoryView({
       {/* ── Content ── */}
       <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 pb-12">
         {/* Heading */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+        <div
           className="text-center mb-8 sm:mb-10 px-6"
         >
           <h2
@@ -220,10 +216,10 @@ export function BanCategoryView({
               ? 'Tap a card to remove it. One category remains for Half 1.'
               : 'Match starting with selected Half 1 category…'}
           </p>
-        </motion.div>
+        </div>
 
         {/* Category Cards — shared BanCategoryCard matches /play mode-selection style */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="w-full">
+        <div className="w-full">
           <div className="grid grid-cols-3 gap-3 sm:gap-5 px-4 sm:px-6 max-w-3xl mx-auto">
             {categories.map((category, i) => {
               const isPlayerBanned = category.id === playerBannedId;
@@ -244,7 +240,6 @@ export function BanCategoryView({
                   key={category.id}
                   category={category}
                   colorIndex={i}
-                  animationIndex={i}
                   isBanned={isBanned}
                   disabled={disabled}
                   fadedOut={fadedOut}
@@ -253,7 +248,7 @@ export function BanCategoryView({
               );
             })}
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

@@ -202,6 +202,21 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* iOS Safari auto-zooms the page when a focused form control has a font-size
+     below 16px (and never zooms back out). Enforce a 16px floor on all form
+     controls at mobile widths so focusing an input never triggers that zoom.
+     Desktop (>=768px) is unaffected, so intentional smaller `text-sm` inputs
+     there still render as designed. This is the page-level guard; individual
+     inputs should also avoid sub-16px font on mobile. Pinch-to-zoom is left
+     enabled (we do NOT disable user scaling) so accessibility is preserved. */
+  @media (max-width: 767px) {
+    input,
+    select,
+    textarea {
+      font-size: max(16px, 1em);
+    }
+  }
 }
 
 @layer components {

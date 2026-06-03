@@ -172,8 +172,8 @@ export function FootballLogicGame({
               }
             }}
             placeholder={copy.typeYourAnswer}
-            className="h-[48px] sm:h-[56px] rounded-[16px] bg-surface-page text-white text-center placeholder:text-white/35 flex-1"
-            style={{ ...poppins, fontSize: 'clamp(14px, 1.7vw, 22px)', fontWeight: 500, border: '2px solid rgba(255,255,255,0.1)' }}
+            className="h-[48px] sm:h-[56px] rounded-[16px] bg-surface-card-tint border-2 border-surface-card text-white text-center placeholder:text-brand-slate focus:border-brand-cyan focus-visible:border-brand-cyan focus-visible:ring-brand-cyan/50 flex-1"
+            style={{ ...poppins, fontSize: 'clamp(16px, 1.7vw, 22px)', fontWeight: 500 }}
             autoFocus
           />
           <button

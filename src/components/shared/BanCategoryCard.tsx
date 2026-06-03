@@ -2,8 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- Category artwork URLs come from realtime/backend payloads. */
 
-import { memo, useMemo, useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import { memo } from 'react';
 import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
 
@@ -29,10 +28,6 @@ export const BAN_CARD_TITLE_STYLE = {
   lineHeight: 1,
 } as const;
 
-const CARD_ENTRANCE_INITIAL = { opacity: 0, y: 20 } as const;
-const CARD_ENTRANCE_ANIMATE = { opacity: 1, y: 0 } as const;
-const CARD_SPRING = { type: 'spring', stiffness: 200, damping: 20 } as const;
-
 export interface BanCategoryCardCategory {
   id: string;
   name: string;
@@ -52,8 +47,6 @@ export interface BanCategoryCardProps {
   disabled: boolean;
   /** Render the card faded out (e.g. player already banned, waiting for opponent). */
   fadedOut?: boolean;
-  /** Animation stagger index (ignored when 0). */
-  animationIndex?: number;
   onClick?: (categoryId: string) => void;
 }
 
@@ -73,32 +66,16 @@ function BanCategoryCardComponent({
   isRemaining = false,
   disabled,
   fadedOut = false,
-  animationIndex = 0,
   onClick,
 }: BanCategoryCardProps) {
   const { t } = useLocale();
   const color = BAN_CARD_COLORS[colorIndex % BAN_CARD_COLORS.length];
   const imageUrl = category.imageUrl ?? null;
   const hasImage = Boolean(imageUrl);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  // Reset the fade-in state when the image source changes, the React-recommended
-  // "adjust state during render" way — avoids a setState-in-effect cascade.
-  const [loadedImageUrl, setLoadedImageUrl] = useState(imageUrl);
-  if (loadedImageUrl !== imageUrl) {
-    setLoadedImageUrl(imageUrl);
-    setImageLoaded(false);
-  }
   const interactive = !disabled && !isBanned && !!onClick;
-  const entranceTransition = useMemo(
-    () => ({ ...CARD_SPRING, delay: 0.2 + animationIndex * 0.08 }),
-    [animationIndex],
-  );
 
   return (
-    <motion.div
-      initial={CARD_ENTRANCE_INITIAL}
-      animate={CARD_ENTRANCE_ANIMATE}
-      transition={entranceTransition}
+    <div
       onClick={() => {
         if (!interactive) return;
         onClick?.(category.id);
@@ -131,10 +108,8 @@ function BanCategoryCardComponent({
             decoding="async"
             loading="eager"
             fetchPriority="high"
-            onLoad={() => setImageLoaded(true)}
             className={cn(
-              'absolute inset-0 h-full w-full object-cover transition-[opacity,transform,filter] duration-300 ease-out sm:duration-500',
-              imageLoaded ? 'opacity-100' : 'opacity-0',
+              'absolute inset-0 h-full w-full object-cover transition-[transform,filter] duration-300 ease-out sm:duration-500',
               interactive && 'group-hover:scale-105',
               isBanned && 'grayscale'
             )}
@@ -186,43 +161,29 @@ function BanCategoryCardComponent({
 
       {/* Remaining-winner checkmark (halftime second-half category) */}
       {isRemaining && (
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+        <div
           className="absolute top-2 right-2 z-20 flex size-7 items-center justify-center rounded-full bg-brand-green-light text-white shadow-lg"
         >
           <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
             <path d="M20 6 9 17l-5-5" />
           </svg>
-        </motion.div>
+        </div>
       )}
 
       {/* Banned stamp overlay — flat style to match the /play cards */}
-      <AnimatePresence>
-        {isBanned && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none"
-          >
-            <motion.div
-              initial={{ scale: 0, rotate: -20 }}
-              animate={{ scale: 1, rotate: -8 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 14 }}
-              className="rounded-lg bg-brand-red-soft px-3 py-1.5 sm:rounded-xl sm:px-5 sm:py-2"
+      {isBanned && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
+          <div className="rounded-lg bg-brand-red-soft px-3 py-1.5 sm:rounded-xl sm:px-5 sm:py-2 -rotate-[8deg]">
+            <span
+              className="text-xs uppercase tracking-[0.15em] text-white sm:text-base"
+              style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
             >
-              <span
-                className="text-xs uppercase tracking-[0.15em] text-white sm:text-base"
-                style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
-              >
-                {t('banCategory.banned')}
-              </span>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+              {t('banCategory.banned')}
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

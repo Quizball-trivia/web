@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { PitchVisualization } from './PitchVisualization';
 import { BanCategoryCard } from '@/components/shared/BanCategoryCard';
@@ -174,173 +174,141 @@ export function HalftimeScreen({
       : false;
   const canBan = myTurn;
 
+  if (!visible) {
+    return null;
+  }
+
   return (
-    <AnimatePresence>
-      {visible && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex flex-col items-center overflow-hidden"
-        >
-          {/* Background: blurred pitch + overlays */}
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 flex items-center justify-center blur-[2px] scale-[1.02]">
-              <div className="w-full max-w-lg">
-                <PitchVisualization
-                  playerPosition={playerPosition}
-                  playerAvatarUrl={playerAvatarUrl}
-                  opponentAvatarUrl={opponentAvatarUrl}
-                  playerAvatarCustomization={playerAvatarCustomization}
-                  opponentAvatarCustomization={opponentAvatarCustomization}
-                  playerName={playerName}
-                  opponentName={opponentName}
-                  myMomentum={0}
-                />
-              </div>
-            </div>
-            <div className="absolute inset-0 bg-surface-page-alt/80" />
-            <div
-              className="absolute inset-0"
-              style={{ background: 'radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.6) 100%)' }}
+    <div className="fixed inset-0 z-50 flex flex-col items-center overflow-hidden">
+      {/* Background: blurred pitch + overlays */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 flex items-center justify-center blur-[2px] scale-[1.02]">
+          <div className="w-full max-w-lg">
+            <PitchVisualization
+              playerPosition={playerPosition}
+              playerAvatarUrl={playerAvatarUrl}
+              opponentAvatarUrl={opponentAvatarUrl}
+              playerAvatarCustomization={playerAvatarCustomization}
+              opponentAvatarCustomization={opponentAvatarCustomization}
+              playerName={playerName}
+              opponentName={opponentName}
+              myMomentum={0}
             />
           </div>
+        </div>
+        <div className="absolute inset-0 bg-surface-page-alt/80" />
+        <div
+          className="absolute inset-0"
+          style={{ background: 'radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.6) 100%)' }}
+        />
+      </div>
 
-          {/* Content */}
-          <div className="relative z-10 w-full max-w-md sm:max-w-lg lg:max-w-2xl flex flex-col items-center font-poppins px-4 sm:px-6 pt-6 sm:pt-10">
+      {/* Content */}
+      <div className="relative z-10 w-full max-w-md sm:max-w-lg lg:max-w-2xl flex flex-col items-center font-poppins px-4 sm:px-6 pt-6 sm:pt-10">
+        {/* Half Time label — flat, no 3D border */}
+        <div className="mb-4 sm:mb-5">
+          <span
+            className="text-xs sm:text-sm font-black uppercase tracking-[0.35em] text-brand-orange"
+            style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, letterSpacing: '0.35em' }}
+          >
+            {isPenaltyBan ? t('possession.penaltiesBanTitle') : t('possession.halfTime')}
+          </span>
+        </div>
 
-            {/* Half Time label — flat, no 3D border */}
-            <motion.div
-              initial={{ y: -10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.3 }}
-              className="mb-4 sm:mb-5"
-            >
-              <span
-                className="text-xs sm:text-sm font-black uppercase tracking-[0.35em] text-brand-orange"
-                style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, letterSpacing: '0.35em' }}
-              >
-                {isPenaltyBan ? t('possession.penaltiesBanTitle') : t('possession.halfTime')}
+        {/* Compact score row — flat, no surrounding card
+            (avatars w/ flags | score | avatars w/ flags, timer below) */}
+        <div className="w-full flex flex-col items-center gap-3 mb-6 sm:mb-8">
+          <div className="flex items-center justify-center gap-4 sm:gap-6 w-full">
+            {/* Player */}
+            <div className="flex flex-col items-center gap-1.5 min-w-0 flex-1">
+              <AvatarDisplay
+                customization={playerAvatarCustomization ?? { base: playerAvatarUrl }}
+                size="sm"
+                countryCode={playerCountryCode}
+                className="ring-[3px] ring-brand-cyan"
+              />
+              <span className="text-xs font-black text-white truncate max-w-[120px]">
+                {playerName}
               </span>
-            </motion.div>
+            </div>
 
-            {/* Compact score row — flat, no surrounding card
-                (avatars w/ flags | score | avatars w/ flags, timer below) */}
-            <motion.div
-              initial={{ y: -10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 250, damping: 22, delay: 0.08 }}
-              className="w-full flex flex-col items-center gap-3 mb-6 sm:mb-8"
-            >
-              <div className="flex items-center justify-center gap-4 sm:gap-6 w-full">
-                {/* Player */}
-                <div className="flex flex-col items-center gap-1.5 min-w-0 flex-1">
-                  <AvatarDisplay
-                    customization={playerAvatarCustomization ?? { base: playerAvatarUrl }}
-                    size="sm"
-                    countryCode={playerCountryCode}
-                    className="ring-[3px] ring-brand-cyan"
-                  />
-                  <span className="text-xs font-black text-white truncate max-w-[120px]">
-                    {playerName}
-                  </span>
-                </div>
+            {/* Score */}
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              <span className="text-4xl sm:text-5xl font-black text-white tabular-nums leading-none">
+                {playerGoals}
+              </span>
+              <span className="text-2xl sm:text-3xl font-black text-white/30">:</span>
+              <span className="text-4xl sm:text-5xl font-black text-white tabular-nums leading-none">
+                {opponentGoals}
+              </span>
+            </div>
 
-                {/* Score */}
-                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                  <span className="text-4xl sm:text-5xl font-black text-white tabular-nums leading-none">
-                    {playerGoals}
-                  </span>
-                  <span className="text-2xl sm:text-3xl font-black text-white/30">:</span>
-                  <span className="text-4xl sm:text-5xl font-black text-white tabular-nums leading-none">
-                    {opponentGoals}
-                  </span>
-                </div>
-
-                {/* Opponent */}
-                <div className="flex flex-col items-center gap-1.5 min-w-0 flex-1">
-                  <AvatarDisplay
-                    customization={opponentAvatarCustomization ?? { base: opponentAvatarUrl }}
-                    size="sm"
-                    countryCode={opponentCountryCode}
-                    className="ring-[3px] ring-brand-red-soft"
-                  />
-                  <span className="text-xs font-black text-white truncate max-w-[120px]">
-                    {opponentName}
-                  </span>
-                </div>
-              </div>
-
-              {/* Timer appears only after the backend confirms the ban UI deadline. */}
-              {banTimerReady && (
-                <CircularTimer timeLeft={timeLeft} totalDuration={totalDuration} isUrgent={isUrgent} />
-              )}
-            </motion.div>
-
-            {/* Ban phase — slides in after intro delay */}
-            <AnimatePresence>
-              {showBanPhase && (
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: 'spring', stiffness: 280, damping: 24 }}
-                  className="w-full flex flex-col items-center"
-                >
-                  {/* Section title */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.1 }}
-                    className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] text-brand-slate mb-3 sm:mb-4"
-                  >
-                    Ban 1 Category Each
-                  </motion.div>
-
-                  {/* Category cards — shared BanCategoryCard mirrors /play style */}
-                  <div className="grid grid-cols-3 gap-3 sm:gap-5 w-full">
-                    {categoryOptions.map((category, index) => {
-                      const isMyBan = myBan === category.id;
-                      const isOpponentBan = opponentBan === category.id;
-                      const isBanned = isMyBan || isOpponentBan;
-                      const isRemaining = bothBansSubmitted && !isMyBan && !isOpponentBan && remainingCategory?.id === category.id;
-                      const disabled = isBanned || !canBan;
-
-                      return (
-                        <BanCategoryCard
-                          key={category.id}
-                          category={category}
-                          colorIndex={index}
-                          animationIndex={index}
-                          isBanned={isBanned}
-                          isRemaining={isRemaining}
-                          disabled={disabled}
-                          onClick={onBanCategory}
-                        />
-                      );
-                    })}
-                  </div>
-
-                  {/* Status text */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                    className="mt-4 sm:mt-6 text-xs sm:text-sm font-bold uppercase tracking-widest text-white/50 text-center"
-                  >
-                    {bothBansSubmitted
-                      ? t('possession.halftime.secondHalfCategory', { name: remainingCategory?.name ?? t('possession.halftime.deciding') })
-                      : myBan
-                        ? t('possession.halftime.banWaitingOpponent')
-                        : !canBan
-                          ? t('possession.halftime.banOpponentChoosing')
-                          : t('possession.halftime.banChooseCategory')}
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {/* Opponent */}
+            <div className="flex flex-col items-center gap-1.5 min-w-0 flex-1">
+              <AvatarDisplay
+                customization={opponentAvatarCustomization ?? { base: opponentAvatarUrl }}
+                size="sm"
+                countryCode={opponentCountryCode}
+                className="ring-[3px] ring-brand-red-soft"
+              />
+              <span className="text-xs font-black text-white truncate max-w-[120px]">
+                {opponentName}
+              </span>
+            </div>
           </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+
+          {/* Timer appears only after the backend confirms the ban UI deadline. */}
+          {banTimerReady && (
+            <CircularTimer timeLeft={timeLeft} totalDuration={totalDuration} isUrgent={isUrgent} />
+          )}
+        </div>
+
+        {/* Ban phase */}
+        {showBanPhase && (
+          <div className="w-full flex flex-col items-center">
+            {/* Section title */}
+            <div className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] text-brand-slate mb-3 sm:mb-4">
+              Ban 1 Category Each
+            </div>
+
+            {/* Category cards — shared BanCategoryCard mirrors /play style */}
+            <div className="grid grid-cols-3 gap-3 sm:gap-5 w-full">
+              {categoryOptions.map((category, index) => {
+                const isMyBan = myBan === category.id;
+                const isOpponentBan = opponentBan === category.id;
+                const isBanned = isMyBan || isOpponentBan;
+                const isRemaining = bothBansSubmitted && !isMyBan && !isOpponentBan && remainingCategory?.id === category.id;
+                const disabled = isBanned || !canBan;
+
+                return (
+                  <BanCategoryCard
+                    key={category.id}
+                    category={category}
+                    colorIndex={index}
+                    isBanned={isBanned}
+                    isRemaining={isRemaining}
+                    disabled={disabled}
+                    onClick={onBanCategory}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Status text */}
+            <div
+              className="mt-4 sm:mt-6 text-xs sm:text-sm font-bold uppercase tracking-widest text-white/50 text-center"
+            >
+              {bothBansSubmitted
+                ? t('possession.halftime.secondHalfCategory', { name: remainingCategory?.name ?? t('possession.halftime.deciding') })
+                : myBan
+                  ? t('possession.halftime.banWaitingOpponent')
+                  : !canBan
+                    ? t('possession.halftime.banOpponentChoosing')
+                    : t('possession.halftime.banChooseCategory')}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

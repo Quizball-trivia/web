@@ -1,6 +1,5 @@
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
-import { motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -140,9 +139,7 @@ export function ModeSelectionScreen({
     <div className="max-w-5xl mx-auto px-4 py-3 space-y-4 md:py-6 md:space-y-5 font-fun">
 
       {/* ─── 1. Ranked Hero Card ─── */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+      <div
         onClick={() => {
           if (onRankedIntercept?.()) return;
           setSelectedMode('ranked');
@@ -297,13 +294,10 @@ export function ModeSelectionScreen({
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* ─── 2. Secondary Modes Grid ─── */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+      <div
         className="grid grid-cols-2 gap-3 md:gap-4"
       >
         {/* Friendly Match */}
@@ -413,14 +407,10 @@ export function ModeSelectionScreen({
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* ─── 3. Objectives ─── */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.35 }}
-      >
+      <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base text-white uppercase" style={poppins}>
             {t('play.objectivesTitle')}
@@ -567,7 +557,7 @@ export function ModeSelectionScreen({
             );
           })}
         </div>
-      </motion.div>
+      </div>
 
       {/* ─── 5. Recent Matches ─── */}
       <HomeRecentMatches collapsedOnly />

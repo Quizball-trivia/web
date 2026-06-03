@@ -287,7 +287,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
                 value={userAnswer}
                 onChange={(e) => setUserAnswer(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="bg-surface-card-tint border-2 border-surface-card text-white placeholder:text-brand-slate focus:border-brand-cyan text-center text-lg h-12 rounded-xl"
+                className="bg-surface-card-tint border-2 border-surface-card text-white placeholder:text-brand-slate focus:border-brand-cyan focus-visible:border-brand-cyan focus-visible:ring-brand-cyan/50 text-center text-lg h-12 rounded-xl"
                 autoFocus
                 disabled={hasSubmitted}
               />
