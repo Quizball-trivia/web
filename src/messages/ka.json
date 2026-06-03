@@ -787,7 +787,7 @@
     "redirecting": "გადამისამართება..."
   },
   "oauthCallback": {
-    "finalizingTransfer": "გადაცემის დასრულება...",
+    "finalizingTransfer": "მიმდინარეობს აუთენტიფიკაცია...",
     "authenticationFailed": "ავტორიზაცია ვერ მოხერხდა",
     "authenticationFailedDefault": "ავტორიზაცია ვერ მოხერხდა",
     "sessionLoadError": "ავტორიზაციის სესიის ჩატვირთვა ვერ მოხერხდა",

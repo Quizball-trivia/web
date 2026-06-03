@@ -28,6 +28,7 @@ interface WelcomeLoginDialogProps {
   authError: string | null;
   authFieldErrors: AuthFieldErrors;
   phoneOtpSent: boolean;
+  socialSubmitting: 'google' | 'facebook' | null;
   showAdvancedAuth: boolean;
   showForgot: boolean;
   forgotSubmitting: boolean;
@@ -67,6 +68,7 @@ export function WelcomeLoginDialog({
   authError,
   authFieldErrors,
   phoneOtpSent,
+  socialSubmitting,
   showAdvancedAuth,
   showForgot,
   forgotSubmitting,
@@ -150,8 +152,12 @@ export function WelcomeLoginDialog({
                     clientId={googleClientId}
                     onClick={onGoogleLogin}
                     onCredential={onGoogleCredential}
+                    submitting={socialSubmitting === 'google'}
                   />
-                  <WelcomeFacebookButton onClick={onFacebookLogin} />
+                  <WelcomeFacebookButton
+                    onClick={onFacebookLogin}
+                    submitting={socialSubmitting === 'facebook'}
+                  />
                 </div>
 
                 <div className="my-5 flex items-center gap-3">

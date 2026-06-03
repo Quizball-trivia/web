@@ -78,6 +78,10 @@ export function useWelcomeAuthController() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [authFieldErrors, setAuthFieldErrors] = useState<AuthFieldErrors>({});
   const [phoneOtpSent, setPhoneOtpSent] = useState(false);
+  // Which social provider is mid-sign-in, so the button shows a spinner +
+  // disables immediately on press (the GIS token exchange / GIS-wait / OAuth
+  // redirect are all async with otherwise no feedback).
+  const [socialSubmitting, setSocialSubmitting] = useState<'google' | 'facebook' | null>(null);
 
   const [showAdvancedAuth, setShowAdvancedAuth] = useState(false);
 
@@ -153,6 +157,7 @@ export function useWelcomeAuthController() {
   const handleGoogleCredential = useCallback(
     async (credential: GoogleCredential) => {
       trackSignupStarted('google');
+      setSocialSubmitting('google');
       try {
         await socialLoginWithIdToken('google', credential.idToken, credential.nonce);
         await bootstrap({ force: true });
@@ -171,6 +176,8 @@ export function useWelcomeAuthController() {
         }
         console.error('Google credential sign-in failed', error);
         setAuthError(t('welcome.loginError'));
+      } finally {
+        setSocialSubmitting(null);
       }
     },
     [bootstrap, t],
@@ -179,7 +186,9 @@ export function useWelcomeAuthController() {
   // Fallback for when the overlaid GIS button never rendered (GIS unavailable
   // in a locked-down webview): try One Tap, then the classic redirect.
   const handleGoogleLogin = useCallback(async () => {
+    if (socialSubmitting) return;
     trackSignupStarted('google');
+    setSocialSubmitting('google');
 
     if (googleClientId) {
       let googleIdentity: { idToken: string; nonce?: string } | null = null;
@@ -198,6 +207,7 @@ export function useWelcomeAuthController() {
           });
           setAuthNoticeModal('pending-deletion');
           setLoginOpen(true);
+          setSocialSubmitting(null);
           return;
         }
         console.warn('GIS sign-in unavailable, falling back to redirect', gisError);
@@ -205,23 +215,29 @@ export function useWelcomeAuthController() {
     }
 
     try {
+      // Navigates away (window.location); the spinner stays until the page unloads.
       const redirectTo = `${window.location.origin}/auth/callback`;
       await socialLogin('google', redirectTo);
     } catch (error) {
       console.error('Google login failed', error);
+      setSocialSubmitting(null);
     }
-  }, [bootstrap, googleClientId]);
+  }, [bootstrap, googleClientId, socialSubmitting]);
 
   const handleFacebookLogin = useCallback(async () => {
+    if (socialSubmitting) return;
     trackSignupStarted('facebook');
+    setSocialSubmitting('facebook');
 
     try {
+      // Navigates away (window.location); the spinner stays until the page unloads.
       const redirectTo = `${window.location.origin}/auth/callback`;
       await socialLogin('facebook', redirectTo);
     } catch (error) {
       console.error('Facebook login failed', error);
+      setSocialSubmitting(null);
     }
-  }, []);
+  }, [socialSubmitting]);
 
   const handleEmailAuth = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
@@ -495,6 +511,7 @@ export function useWelcomeAuthController() {
     authError,
     authFieldErrors,
     phoneOtpSent,
+    socialSubmitting,
 
     // "More sign-in options" disclosure
     showAdvancedAuth,

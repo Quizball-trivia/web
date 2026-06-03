@@ -3,19 +3,23 @@
 /**
  * "Continue with Google" CTA inside the login dialog.
  *
- * Visually this is our branded yellow button, but the real click target is
- * Google's own GIS button rendered transparently on top of it. The rendered
- * button runs a Google-hosted popup that returns an id_token — which works
- * inside embedded webviews (Instagram, etc.) where the classic OAuth redirect
- * is blocked with `disallowed_useragent`. The credential is handed back to the
- * controller, which exchanges it for a session via socialLoginWithIdToken.
+ * GIS-everywhere strategy: visually this is our branded yellow button, but
+ * Google's own GIS button is rendered transparently on top, stretched to cover
+ * the ENTIRE button so a tap anywhere goes through GIS (deterministic — no
+ * center/edge dead zones). The rendered button runs a Google-hosted popup that
+ * returns an id_token, which works in both normal browsers AND embedded webviews
+ * (Instagram/Messenger) — the token endpoint isn't subject to the
+ * `disallowed_useragent` block that kills the classic OAuth redirect. The
+ * credential is exchanged for a session via socialLoginWithIdToken.
  *
- * If GIS can't load (rare locked-down webviews), the overlay never appears and
- * the visible button falls back to onClick (classic redirect flow).
+ * Redirect is the FALLBACK only: if GIS can't load (rare locked-down webview),
+ * the overlay never renders, `gisReady` stays false, and the visible button's
+ * onClick runs the classic redirect flow instead.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FcGoogle } from 'react-icons/fc';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLocale } from '@/contexts/LocaleContext';
 import { renderGoogleButton, type GoogleCredential } from '@/lib/auth/google-identity';
@@ -24,12 +28,17 @@ interface WelcomeGoogleButtonProps {
   clientId: string;
   onClick: () => void;
   onCredential: (credential: GoogleCredential) => void;
+  submitting?: boolean;
 }
 
-export function WelcomeGoogleButton({ clientId, onClick, onCredential }: WelcomeGoogleButtonProps) {
+export function WelcomeGoogleButton({ clientId, onClick, onCredential, submitting = false }: WelcomeGoogleButtonProps) {
   const { t } = useLocale();
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const [width, setWidth] = useState(0);
+  // True once Google's real (overlaid) button has rendered. When ready, ALL
+  // clicks go through GIS (the overlay covers the whole button); the visible
+  // button's onClick redirect-fallback only fires when GIS never rendered.
+  const [gisReady, setGisReady] = useState(false);
   const onCredentialRef = useRef(onCredential);
   const observerRef = useRef<ResizeObserver | null>(null);
   useEffect(() => {
@@ -66,34 +75,53 @@ export function WelcomeGoogleButton({ clientId, onClick, onCredential }: Welcome
     let cancelled = false;
     void renderGoogleButton(clientId, container, width, (credential) => {
       if (!cancelled) onCredentialRef.current(credential);
+    }).then((rendered) => {
+      if (!cancelled) setGisReady(rendered);
     });
     return () => {
       cancelled = true;
     };
   }, [clientId, width]);
 
+  // GIS-everywhere with redirect fallback: when GIS rendered, the overlay owns
+  // every click (it covers the whole button), so the visible button's onClick
+  // must NOT also fire the redirect. Only fall back to redirect when GIS never
+  // rendered (e.g. a locked-down webview where the library failed to load).
+  const handleVisibleClick = useCallback(() => {
+    if (gisReady) return; // overlay handles it
+    onClick();
+  }, [gisReady, onClick]);
+
   return (
     <div ref={measureRef} className="relative w-full">
       <Button
-        onClick={onClick}
-        className="flex h-[52px] w-full items-center justify-center rounded-[28px] bg-brand-yellow px-6 font-poppins text-sm font-semibold uppercase tracking-wide text-black shadow-none transition-colors hover:bg-brand-yellow-deep hover:shadow-none sm:h-14 sm:px-8 sm:text-base focus-visible:ring-0 focus-visible:outline-none"
+        onClick={handleVisibleClick}
+        disabled={submitting}
+        aria-busy={submitting}
+        className="flex h-[52px] w-full items-center justify-center rounded-[28px] bg-brand-yellow px-6 font-poppins text-sm font-semibold uppercase tracking-wide text-black shadow-none transition-colors hover:bg-brand-yellow-deep hover:shadow-none sm:h-14 sm:px-8 sm:text-base focus-visible:ring-0 focus-visible:outline-none disabled:opacity-70"
       >
-        <span className="grid w-full grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-3">
-          <FcGoogle className="size-6 justify-self-center" />
-          <span className="min-w-0 text-center">{t('welcome.continueWithGoogle')}</span>
-        </span>
+        {submitting ? (
+          <Loader2 className="size-5 animate-spin" />
+        ) : (
+          <span className="grid w-full grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-3">
+            <FcGoogle className="size-6 justify-self-center" />
+            <span className="min-w-0 text-center">{t('welcome.continueWithGoogle')}</span>
+          </span>
+        )}
       </Button>
 
       {/* Real GIS button, rendered transparently on top. It captures the tap
           and runs Google's popup token flow. Near-zero opacity keeps our button
-          visible underneath; the iframe still receives pointer events. Centered
-          so Google's shorter button covers the middle of our taller CTA; a tap
-          on the very top/bottom edge harmlessly falls through to the redirect
-          fallback. */}
+          visible underneath. The rendered Google iframe is stretched to fill the
+          WHOLE button (scale-y) so a tap ANYWHERE goes through GIS — no
+          center/edge dead zones, so behaviour is deterministic. While submitting,
+          it's click-blocked so it can't be re-fired mid-sign-in. */}
       <div
         ref={overlayRef}
         aria-hidden
-        className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center overflow-hidden opacity-[0.001] [&>*]:pointer-events-auto [color-scheme:light]"
+        className={`absolute inset-0 z-10 flex items-stretch justify-center overflow-hidden opacity-[0.001] [color-scheme:light] [&>*]:h-full [&>*]:w-full [&_iframe]:h-full [&_iframe]:w-full ${
+          submitting ? 'pointer-events-none [&>*]:pointer-events-none' : 'pointer-events-none [&>*]:pointer-events-auto'
+        }`}
       />
     </div>
   );

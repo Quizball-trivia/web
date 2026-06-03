@@ -20,7 +20,8 @@ interface GoalProgressBarProps {
 }
 
 const FILL_COLOR = '#FFE500';
-const GOAL_COLOR = '#FB3101';
+// Goal threshold (100) — green to read as the positive "score" target (brand-green).
+const GOAL_COLOR = '#38B60E';
 
 /**
  * Single "race to 100" meter: shows the player's own points filling toward a

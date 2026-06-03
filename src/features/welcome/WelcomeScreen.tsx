@@ -57,6 +57,7 @@ export function WelcomeScreen() {
     authError,
     authFieldErrors,
     phoneOtpSent,
+    socialSubmitting,
     showAdvancedAuth,
     toggleAdvancedAuth,
     showForgot,
@@ -158,6 +159,7 @@ export function WelcomeScreen() {
         authError={authError}
         authFieldErrors={authFieldErrors}
         phoneOtpSent={phoneOtpSent}
+        socialSubmitting={socialSubmitting}
         showAdvancedAuth={showAdvancedAuth}
         showForgot={showForgot}
         forgotSubmitting={forgotSubmitting}

@@ -44,6 +44,25 @@ export function OAuthCallbackScreen() {
             return;
           }
         }
+        // User cancelled / denied the provider consent (e.g. tapped "Cancel" on
+        // the Facebook or Google screen). The provider redirects back with an
+        // `error` param and no tokens — that's NOT a failure, so don't log an
+        // error or show the failure screen; quietly return to the landing page.
+        // Supabase OAuth returns the error in the HASH fragment
+        // (#error=access_denied&error_description=...), not the query string, so
+        // check both.
+        const hashParams = new URLSearchParams(hash.replace(/^#/, ""));
+        const oauthError = searchParams.get("error") ?? hashParams.get("error");
+        if (oauthError) {
+          logger.info("OAuth callback: user cancelled or denied consent", {
+            error: oauthError,
+            description: searchParams.get("error_description") ?? hashParams.get("error_description") ?? undefined,
+          });
+          window.history.replaceState({}, document.title, window.location.pathname);
+          router.replace("/");
+          return;
+        }
+
         const lastHash = window.sessionStorage.getItem("quizball_oauth_hash");
         const lastQuery = window.sessionStorage.getItem("quizball_oauth_query");
 
