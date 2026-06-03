@@ -31,6 +31,7 @@ export function WelcomeGoogleButton({ clientId, onClick, onCredential }: Welcome
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const [width, setWidth] = useState(0);
   const onCredentialRef = useRef(onCredential);
+  const observerRef = useRef<ResizeObserver | null>(null);
   useEffect(() => {
     onCredentialRef.current = onCredential;
   }, [onCredential]);
@@ -39,8 +40,12 @@ export function WelcomeGoogleButton({ clientId, onClick, onCredential }: Welcome
   // width — callback ref, not useEffect+ref, so it survives the dialog's
   // conditional DOM (see project ResizeObserver guidance). Falls back to the
   // configured max-w-md dialog width when measurement isn't available (e.g.
-  // jsdom), so the overlay still renders.
+  // jsdom), so the overlay still renders. Callback refs ignore returned
+  // cleanups, so the observer is tracked in a ref and disconnected on the
+  // next ref call and on unmount.
   const measureRef = useCallback((node: HTMLDivElement | null) => {
+    observerRef.current?.disconnect();
+    observerRef.current = null;
     if (!node) return;
     const update = () => {
       const measured = Math.round(node.getBoundingClientRect().width);
@@ -50,8 +55,10 @@ export function WelcomeGoogleButton({ clientId, onClick, onCredential }: Welcome
     if (typeof ResizeObserver === 'undefined') return;
     const observer = new ResizeObserver(update);
     observer.observe(node);
-    return () => observer.disconnect();
+    observerRef.current = observer;
   }, []);
+
+  useEffect(() => () => observerRef.current?.disconnect(), []);
 
   useEffect(() => {
     const container = overlayRef.current;

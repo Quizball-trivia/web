@@ -23,7 +23,6 @@ import {
   forgotPassword,
   isPendingDeletionAuthError,
   restorePendingDeletionWithLogin,
-  restorePendingDeletionWithToken,
   socialLogin,
   socialLoginWithIdToken,
   startGeorgianPhoneOtp,
@@ -331,7 +330,12 @@ export function useWelcomeAuthController() {
         await restorePendingDeletionWithLogin(pendingRestoreAction.email, pendingRestoreAction.password);
         trackLoginCompleted('email');
       } else if (pendingRestoreAction.kind === 'phone') {
-        await restorePendingDeletionWithToken();
+        // Re-verify with the OTP the user just entered (still valid), passing
+        // the restore flag — restorePendingDeletionWithToken() sent no identity
+        // material, so the phone restore would otherwise fail.
+        await verifyGeorgianPhoneOtp(pendingRestoreAction.phone, pendingRestoreAction.token, {
+          restorePendingDeletion: true,
+        });
         trackLoginCompleted('phone');
       } else {
         await socialLoginWithIdToken(

@@ -154,8 +154,8 @@ export async function signInWithGoogleIdentity(clientId: string): Promise<{
  * The button is rendered transparently on top of our own styled CTA (see
  * WelcomeGoogleButton), so the user sees our button but clicks Google's.
  *
- * Returns the px width the button was rendered at (caller sizes the overlay
- * to match), or null if GIS was unavailable.
+ * Returns `true` once the button is rendered, or `false` if GIS was
+ * unavailable (caller falls back to the redirect flow).
  */
 export async function renderGoogleButton(
   clientId: string,

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import type { MatchAnswerAckPayload, MatchRoundResultPayload } from '@/lib/realtime/socket.types';
 import { useRealtimeMatchStore, type DevPossessionAnimation } from '@/stores/realtimeMatch.store';
 import {
@@ -54,8 +54,31 @@ export function usePossessionMatchSounds({
     playSfxRef.current('correctRanked');
   }, [answerAck]);
 
+  const roundResultSfxKeyRef = useRef<string | null>(null);
+  const roundResultSfxTimerRef = useRef<number | null>(null);
+  const clearRoundResultSfxTimer = useCallback(() => {
+    if (roundResultSfxTimerRef.current === null) return;
+    window.clearTimeout(roundResultSfxTimerRef.current);
+    roundResultSfxTimerRef.current = null;
+  }, []);
+
+  useEffect(() => clearRoundResultSfxTimer, [clearRoundResultSfxTimer]);
+
   useEffect(() => {
-    if (!roundResult) return;
+    if (!roundResult) {
+      clearRoundResultSfxTimer();
+      return;
+    }
+    const roundResultSfxKey = [
+      roundResult.matchId,
+      roundResult.qIndex,
+      roundResult.phaseKind,
+      roundResult.deltas?.goalScoredBySeat ?? 'no-goal',
+      roundResult.deltas?.penaltyOutcome ?? 'no-penalty-outcome',
+    ].join(':');
+    if (roundResultSfxKeyRef.current === roundResultSfxKey) return;
+    roundResultSfxKeyRef.current = roundResultSfxKey;
+    clearRoundResultSfxTimer();
     const phaseKindForSfx = roundResult.phaseKind;
     if (
       phaseKindForSfx === 'penalty'
@@ -84,12 +107,14 @@ export function usePossessionMatchSounds({
               includeScoreFlightHandoff: matchVariant === 'ranked_sim',
             })
           : 0;
-      const timer = window.setTimeout(() => playSfxRef.current('kick'), kickDelayMs);
-      return () => window.clearTimeout(timer);
+      roundResultSfxTimerRef.current = window.setTimeout(() => {
+        roundResultSfxTimerRef.current = null;
+        playSfxRef.current('kick');
+      }, kickDelayMs);
     } else {
       playSfxRef.current('pass');
     }
-  }, [matchVariant, roundResult, selfUserId]);
+  }, [clearRoundResultSfxTimer, matchVariant, roundResult, selfUserId]);
 
   useEffect(() => {
     if (!devPossessionAnimation) return;
