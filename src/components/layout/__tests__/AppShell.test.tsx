@@ -482,6 +482,7 @@ describe('AppShell — rejoin / completed / forfeit / draft banners', () => {
     });
     renderShell();
     expect(screen.getAllByText(/appShell.matchStillActiveAgainst/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/"name":"Opp"/).length).toBeGreaterThan(0);
   });
 
   it('falls back to active-match banner when match exists with no finalResults', () => {
@@ -511,6 +512,7 @@ describe('AppShell — rejoin / completed / forfeit / draft banners', () => {
     });
     renderShell();
     expect(screen.getAllByText(/appShell.matchFinishedAgainst/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/"name":"WinnerOpp"/).length).toBeGreaterThan(0);
   });
 
   it('shows the forfeit-pending banner before finalResults are received', () => {
@@ -595,6 +597,7 @@ describe('AppShell — rejoin / completed / forfeit / draft banners', () => {
     });
     renderShell();
     expect(screen.getAllByText(/appShell.draftActiveAgainst/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/"name":"DraftOpp"/).length).toBeGreaterThan(0);
   });
 
   it('hides the draft banner while still inside the lobby room handoff route', () => {
