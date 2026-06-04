@@ -1,6 +1,3 @@
-import { API_BASE_URL } from "@/lib/config";
-import { getAccessToken } from "@/lib/auth/tokenStorage";
-import { ApiError } from "@/lib/api/api";
 import { apiFetch } from "@/lib/api/client";
 import type { components, paths } from "@/types/api.generated";
 import type { Achievement } from "@/types/game";
@@ -18,46 +15,17 @@ export async function requestAccountDeletion(): Promise<AccountDeletionResponse>
 }
 
 export async function getPublicProfile(userId: string): Promise<PublicProfileResponse> {
-  const token = getAccessToken();
-  const res = await fetch(`${API_BASE_URL}/api/v1/users/${encodeURIComponent(userId)}/profile`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    credentials: "include",
+  return apiFetch("get", "/api/v1/users/{userId}/profile", {
+    params: { userId },
   });
-
-  if (!res.ok) {
-    const data = await res.json().catch(() => null);
-    throw new ApiError("Request failed", res.status, data);
-  }
-
-  return res.json();
 }
 
 export async function getMyAchievements(): Promise<AchievementsResponse> {
-  const token = getAccessToken();
-  const res = await fetch(`${API_BASE_URL}/api/v1/users/me/achievements`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    credentials: "include",
-  });
-
-  if (!res.ok) {
-    const data = await res.json().catch(() => null);
-    throw new ApiError("Request failed", res.status, data);
-  }
-
-  return res.json();
+  return apiFetch("get", "/api/v1/users/me/achievements");
 }
 
 export async function getUserAchievements(userId: string): Promise<AchievementsResponse> {
-  const token = getAccessToken();
-  const res = await fetch(`${API_BASE_URL}/api/v1/users/${encodeURIComponent(userId)}/achievements`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    credentials: "include",
+  return apiFetch("get", "/api/v1/users/{userId}/achievements", {
+    params: { userId },
   });
-
-  if (!res.ok) {
-    const data = await res.json().catch(() => null);
-    throw new ApiError("Request failed", res.status, data);
-  }
-
-  return res.json();
 }
