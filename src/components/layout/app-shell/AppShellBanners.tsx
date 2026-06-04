@@ -95,6 +95,9 @@ export function AppShellBanners({ variant, vm }: AppShellBannersProps) {
   const rankedReturnLabel = isDesktop ? 'appShell.returnToMatchmaking' : 'appShell.return';
   const lobbyReturnLabel = isDesktop ? 'appShell.returnToLobby' : 'appShell.return';
   const completedDismissLabel = isDesktop ? 'Dismiss' : t('appShell.dismiss');
+  const completedOpponentName = completedMatchBanner?.opponent.username ?? t('appShell.opponentFallback');
+  const draftOpponentName = activeDraftBanner?.opponent?.username ?? t('appShell.opponentFallback');
+  const activeMatchOpponentName = activeMatchBanner?.opponent.username ?? t('appShell.opponentFallback');
 
   return (
     <>
@@ -154,10 +157,7 @@ export function AppShellBanners({ variant, vm }: AppShellBannersProps) {
                     {completedPartyQuiz ? (
                       t('appShell.partyQuizFinished')
                     ) : (
-                      <>
-                        {t(matchFinishedLabel)}{' '}
-                        <span className="text-white">{completedMatchBanner?.opponent.username ?? t('appShell.opponentFallback')}</span>
-                      </>
+                      t(matchFinishedLabel, { name: completedOpponentName })
                     )}
                   </p>
                   <p className="text-xs text-white/70">{t(completedDescKey)}</p>
@@ -194,8 +194,7 @@ export function AppShellBanners({ variant, vm }: AppShellBannersProps) {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white">
-                    {t(draftActiveKey)}{' '}
-                    <span className="text-white">{activeDraftBanner?.opponent?.username ?? t('appShell.opponentFallback')}</span>
+                    {t(draftActiveKey, { name: draftOpponentName })}
                   </p>
                   <p className="text-xs text-white/70">{t(draftDescKey)}</p>
                 </div>
@@ -222,8 +221,7 @@ export function AppShellBanners({ variant, vm }: AppShellBannersProps) {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white">
-                    {t(rejoinActiveKey)}{' '}
-                    <span className="text-white">{activeMatchBanner?.opponent.username ?? t('appShell.opponentFallback')}</span>
+                    {t(rejoinActiveKey, { name: activeMatchOpponentName })}
                   </p>
                   <p className="text-xs text-white/70">
                     {activeMatchBanner?.source === 'rejoin'

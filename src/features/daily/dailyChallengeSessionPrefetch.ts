@@ -7,7 +7,17 @@ type PrefetchKey = `${DailyChallengeType}:${string}`;
 
 interface PrefetchEntry {
   promise: Promise<DailyChallengeSession>;
-  createdAt: number;
+  // Mutable resolution timestamp — null while still in flight, set when the POST
+  // resolves. Freshness is measured from this, not from when the request started,
+  // so a slow request is never treated as stale mid-flight (which would trigger a
+  // duplicate POST). A box so the .then closure can stamp it after construction.
+  resolved: { at: number | null };
+}
+
+// True when this entry should still be reused: a pending request is ALWAYS
+// reusable; a resolved one only within the TTL of when it resolved.
+function isFresh(entry: PrefetchEntry, now: number): boolean {
+  return entry.resolved.at === null || now - entry.resolved.at < TTL_MS;
 }
 
 // Sessions are created by a POST (side-effecting), so we deliberately keep ONE
@@ -37,19 +47,25 @@ export function prefetchDailyChallengeSession(
 ): Promise<DailyChallengeSession> {
   const key = keyFor(challengeType, locale);
   const existing = cache.get(key);
-  if (existing && now - existing.createdAt < TTL_MS) {
+  if (existing && isFresh(existing, now)) {
     return existing.promise;
   }
 
+  const resolved: { at: number | null } = { at: null };
   const promise = createDailyChallengeSession(challengeType, locale)
-    .then(toDailyChallengeSession)
+    .then((raw) => {
+      // Stamp resolution time so the TTL counts from when the POST finished,
+      // not when it started.
+      resolved.at = Date.now();
+      return toDailyChallengeSession(raw);
+    })
     .catch((error) => {
       // Drop a failed prefetch so the page's own fetch can retry cleanly.
       cache.delete(key);
       throw error;
     });
 
-  cache.set(key, { promise, createdAt: now });
+  cache.set(key, { promise, resolved });
   return promise;
 }
 
@@ -66,6 +82,7 @@ export function consumeDailyChallengeSession(
   const entry = cache.get(key);
   if (!entry) return null;
   cache.delete(key);
-  if (now - entry.createdAt >= TTL_MS) return null;
+  // A still-pending request is always reusable; a resolved one only within TTL.
+  if (!isFresh(entry, now)) return null;
   return entry.promise;
 }
