@@ -263,9 +263,14 @@ export function HalftimeScreen({
           )}
         </div>
 
-        {/* Ban phase */}
+        {/* Ban phase — slides up into view after the intro. */}
         {showBanPhase && (
-          <div className="w-full flex flex-col items-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 280, damping: 24 }}
+            className="w-full flex flex-col items-center"
+          >
             {/* Section title */}
             <div className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] text-brand-slate mb-3 sm:mb-4">
               {t('possession.halftime.banTitle')}
@@ -285,6 +290,7 @@ export function HalftimeScreen({
                     key={category.id}
                     category={category}
                     colorIndex={index}
+                    animationIndex={index}
                     isBanned={isBanned}
                     isRemaining={isRemaining}
                     disabled={disabled}
@@ -306,7 +312,7 @@ export function HalftimeScreen({
                     ? t('possession.halftime.banOpponentChoosing')
                     : t('possession.halftime.banChooseCategory')}
             </div>
-          </div>
+          </motion.div>
         )}
       </div>
     </div>

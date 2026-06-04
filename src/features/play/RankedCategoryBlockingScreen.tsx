@@ -242,6 +242,7 @@ export function BanCategoryView({
                   key={category.id}
                   category={category}
                   colorIndex={i}
+                  animationIndex={i}
                   isBanned={isBanned}
                   disabled={disabled}
                   onClick={onBanCategory}
