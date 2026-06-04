@@ -39,6 +39,27 @@ interface PromptMomentNotification {
   getDismissedReason(): string | undefined;
 }
 
+function waitForRenderedButton(container: HTMLElement, timeoutMs = 750): Promise<boolean> {
+  const hasRenderedButton = () => Boolean(container.firstElementChild || container.querySelector('iframe'));
+  if (hasRenderedButton()) return Promise.resolve(true);
+
+  return new Promise((resolve) => {
+    const startedAt = Date.now();
+    const tick = () => {
+      if (hasRenderedButton()) {
+        resolve(true);
+        return;
+      }
+      if (Date.now() - startedAt >= timeoutMs) {
+        resolve(false);
+        return;
+      }
+      setTimeout(tick, 50);
+    };
+    tick();
+  });
+}
+
 declare global {
   interface Window {
     google?: {
@@ -182,15 +203,19 @@ export async function renderGoogleButton(
   });
 
   container.replaceChildren();
-  window.google.accounts.id.renderButton(container, {
-    type: 'standard',
-    theme: 'filled_blue',
-    size: 'large',
-    text: 'continue_with',
-    shape: 'pill',
-    logo_alignment: 'center',
-    width,
-  });
+  try {
+    window.google.accounts.id.renderButton(container, {
+      type: 'standard',
+      theme: 'filled_blue',
+      size: 'large',
+      text: 'continue_with',
+      shape: 'pill',
+      logo_alignment: 'center',
+      width,
+    });
+  } catch {
+    return false;
+  }
 
-  return true;
+  return waitForRenderedButton(container);
 }

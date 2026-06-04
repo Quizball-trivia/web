@@ -15,7 +15,7 @@
  * redirect, every error-message fallback preserved.
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
   login,
@@ -82,6 +82,7 @@ export function useWelcomeAuthController() {
   // disables immediately on press (the GIS token exchange / GIS-wait / OAuth
   // redirect are all async with otherwise no feedback).
   const [socialSubmitting, setSocialSubmitting] = useState<'google' | 'facebook' | null>(null);
+  const googleCredentialInFlightRef = useRef(false);
 
   const [showAdvancedAuth, setShowAdvancedAuth] = useState(false);
 
@@ -156,6 +157,8 @@ export function useWelcomeAuthController() {
   // redirect is only a last-ditch fallback in handleGoogleLogin below.
   const handleGoogleCredential = useCallback(
     async (credential: GoogleCredential) => {
+      if (googleCredentialInFlightRef.current) return;
+      googleCredentialInFlightRef.current = true;
       trackSignupStarted('google');
       setSocialSubmitting('google');
       try {
@@ -177,6 +180,7 @@ export function useWelcomeAuthController() {
         console.error('Google credential sign-in failed', error);
         setAuthError(t('welcome.loginError'));
       } finally {
+        googleCredentialInFlightRef.current = false;
         setSocialSubmitting(null);
       }
     },

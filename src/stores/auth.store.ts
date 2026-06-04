@@ -129,6 +129,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           if (isAuthFailure(retryError)) {
             logger.warn("Auth bootstrap after refresh failed terminally");
             clearLocalSession();
+            resetUser();
             set({ status: "anonymous", user: null, hasBootstrapped: true });
             return;
           }
@@ -139,6 +140,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
       if (refreshed.terminal) {
         clearLocalSession();
+        resetUser();
         set({ status: "anonymous", user: null, hasBootstrapped: true });
         return;
       }
@@ -150,6 +152,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ status: "authenticated", user, hasBootstrapped: true });
         syncAnalyticsUser(user);
       } catch (retryError) {
+        if (isAuthFailure(retryError)) {
+          logger.warn("Auth bootstrap transient retry failed terminally");
+          clearLocalSession();
+          resetUser();
+          set({ status: "anonymous", user: null, hasBootstrapped: true });
+          return;
+        }
         logger.warn("Auth bootstrap transient retry failed; keeping session", retryError);
         set({ status: "loading" });
       }

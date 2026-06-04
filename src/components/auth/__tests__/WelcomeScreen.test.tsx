@@ -352,6 +352,21 @@ describe('WelcomeScreen — Google sign-in flow', () => {
     expect(bootstrapMock).not.toHaveBeenCalled();
   });
 
+  it('falls back to the visible Google handler when GIS reports rendered but mounts no clickable button', async () => {
+    render(<WelcomeScreen />);
+    openLoginDialog();
+    await waitFor(() => expect(renderGoogleButtonMock).toHaveBeenCalled());
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    clickContinueWithGoogle();
+
+    await waitFor(() => expect(signInWithGoogleIdentityMock).toHaveBeenCalledWith('test-google-client'));
+    expect(socialLoginWithIdTokenMock).toHaveBeenCalledWith('google', 'tok', 'nonce', undefined);
+    expect(bootstrapMock).toHaveBeenCalledWith({ force: true });
+  });
+
   it('renders the overlaid GIS button and exchanges its credential for a session', async () => {
     render(<WelcomeScreen />);
     openLoginDialog();

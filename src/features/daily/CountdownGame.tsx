@@ -56,6 +56,11 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
   const [finished, setFinished] = useState(false);
   const [allRoundAnswers, setAllRoundAnswers] = useState<string[][]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Guards round advancement against double-fire: handleRoundEnd is reachable
+  // both from the timer hitting 0 AND a manual "next" press. Without this, two
+  // calls for the same round both append foundAnswers and double-increment,
+  // pushing currentRound past questions.length and stranding the loading state.
+  const advancedFromRoundRef = useRef(-1);
 
   const currentQuestion = questions[currentRound];
   const isGameActive =
@@ -70,6 +75,9 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
   );
   const handleRoundEnd = useCallback(() => {
     if (questions.length === 0) return;
+    // Already advanced past this round (e.g. timer + manual press raced) — no-op.
+    if (advancedFromRoundRef.current === currentRound) return;
+    advancedFromRoundRef.current = currentRound;
 
     if (currentRound < questions.length - 1) {
       // No "round finished" overlay — go straight to the next question.

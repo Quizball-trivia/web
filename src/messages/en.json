@@ -1002,7 +1002,8 @@
       "banOpponentChoosing": "Opponent is choosing a ban...",
       "banChooseCategory": "Choose one category to ban",
       "secondHalfCategory": "2nd half category: {name}",
-      "deciding": "Deciding..."
+      "deciding": "Deciding...",
+      "banTitle": "Ban 1 Category Each"
     },
     "opponentSelected": "Opponent selected this answer",
     "partyPickSelected": "{username} selected this answer",
@@ -1153,7 +1154,8 @@
       "tabHair": "Hair",
       "tabGlasses": "Glasses",
       "tabFacialHair": "Facial Hair",
-      "edit": "Edit"
+      "edit": "Edit",
+      "none": "None"
     },
     "purchase": {
       "confirmTitle": "Confirm Purchase",

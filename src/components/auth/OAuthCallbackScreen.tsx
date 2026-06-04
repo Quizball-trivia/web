@@ -17,6 +17,16 @@ import { isOnboardingComplete } from '@/lib/auth/onboarding';
 import { trackLoginCompleted, trackSignupCompleted } from '@/lib/analytics/game-events';
 import { useLocale } from '@/contexts/LocaleContext';
 
+// Provider error codes that mean "the user backed out", not "auth is broken".
+// These are silently redirected home; every other error surfaces the failure UI.
+const OAUTH_CANCELLATION_CODES = new Set([
+  'access_denied',
+  'user_cancelled',
+  'consent_required',
+  'interaction_required',
+  'login_required',
+]);
+
 export function OAuthCallbackScreen() {
   const { t } = useLocale();
   const router = useRouter();
@@ -54,13 +64,19 @@ export function OAuthCallbackScreen() {
         const hashParams = new URLSearchParams(hash.replace(/^#/, ""));
         const oauthError = searchParams.get("error") ?? hashParams.get("error");
         if (oauthError) {
-          logger.info("OAuth callback: user cancelled or denied consent", {
-            error: oauthError,
-            description: searchParams.get("error_description") ?? hashParams.get("error_description") ?? undefined,
-          });
-          window.history.replaceState({}, document.title, window.location.pathname);
-          router.replace("/");
-          return;
+          const description =
+            searchParams.get("error_description") ?? hashParams.get("error_description") ?? undefined;
+          // Only the user-cancellation codes are benign — quietly return to the
+          // landing page. Any other provider error (server_error, misconfig, etc.)
+          // is a real failure and must surface via the catch below, not be hidden.
+          if (OAUTH_CANCELLATION_CODES.has(oauthError)) {
+            logger.info("OAuth callback: user cancelled or denied consent", { error: oauthError, description });
+            window.history.replaceState({}, document.title, window.location.pathname);
+            router.replace("/");
+            return;
+          }
+          logger.error("OAuth callback: provider returned an error", { error: oauthError, description });
+          throw new Error(description ?? oauthError);
         }
 
         const lastHash = window.sessionStorage.getItem("quizball_oauth_hash");

@@ -233,8 +233,10 @@ export function BanCategoryView({
                 currentActor !== 'player' ||
                 phase !== 'ban';
 
-              const fadedOut = Boolean(playerBannedId && !isPlayerBanned && !isOpponentBanned);
-
+              // Only the BANNED card dims (via isBanned: grayscale + BANNED stamp).
+              // The not-yet-banned cards stay fully visible while waiting for the
+              // opponent — matching prod, where the card's entrance motion pinned
+              // inline opacity:1 and silently overrode this opacity-30 fade.
               return (
                 <BanCategoryCard
                   key={category.id}
@@ -242,7 +244,6 @@ export function BanCategoryView({
                   colorIndex={i}
                   isBanned={isBanned}
                   disabled={disabled}
-                  fadedOut={fadedOut}
                   onClick={onBanCategory}
                 />
               );

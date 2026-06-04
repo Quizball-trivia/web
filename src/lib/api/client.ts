@@ -25,6 +25,7 @@ const NON_REFRESHABLE_PATHS = new Set<string>([
   "/api/v1/auth/logout",
   "/api/v1/auth/register",
   "/api/v1/auth/restore-pending-deletion",
+  "/api/v1/auth/social-login-token",
 ]);
 
 export async function apiFetch<

@@ -22,7 +22,8 @@ export function WelcomeFacebookButton({ onClick, submitting = false }: WelcomeFa
       onClick={onClick}
       disabled={submitting}
       aria-busy={submitting}
-      className="flex h-[52px] w-full items-center justify-center rounded-[28px] bg-white px-6 font-poppins text-sm font-semibold uppercase tracking-wide text-brand-slate-deep shadow-none transition-colors hover:bg-white/90 hover:shadow-none sm:h-14 sm:px-8 sm:text-base focus-visible:ring-0 focus-visible:outline-none disabled:opacity-70"
+      aria-label={t('welcome.continueWithFacebook')}
+      className="flex h-[52px] w-full items-center justify-center rounded-[28px] bg-white px-6 font-poppins text-sm font-semibold uppercase tracking-wide text-brand-slate-deep shadow-none transition-colors hover:bg-white/90 hover:shadow-none sm:h-14 sm:px-8 sm:text-base focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-2 disabled:opacity-70"
     >
       {submitting ? (
         <Loader2 className="size-5 animate-spin text-brand-blue" />

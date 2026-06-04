@@ -40,6 +40,17 @@ describe("apiFetch — refresh recursion guard", () => {
     expect(mockedRequest).toHaveBeenCalledTimes(1); // no retry
   });
 
+  it("does NOT attempt refresh when the failing request is /api/v1/auth/social-login-token", async () => {
+    mockedRequest.mockRejectedValue(new ApiError("Request failed", 401, null));
+
+    await expect(
+      apiFetch("post", "/api/v1/auth/social-login-token"),
+    ).rejects.toBeInstanceOf(ApiError);
+
+    expect(mockedRefresh).not.toHaveBeenCalled();
+    expect(mockedRequest).toHaveBeenCalledTimes(1);
+  });
+
   it("does NOT attempt refresh for auth:false requests", async () => {
     mockedRequest.mockRejectedValue(new ApiError("Request failed", 401, null));
 

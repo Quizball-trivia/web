@@ -1048,7 +1048,8 @@
       "banOpponentChoosing": "მოწინააღმდეგე ირჩევს დასაბლოკ კატეგორიას...",
       "banChooseCategory": "აირჩიეთ ერთი კატეგორია დასაბლოკად",
       "secondHalfCategory": "მე-2 ტაიმის კატეგორია: {name}",
-      "deciding": "მიმდინარეობს გადაწყვეტა..."
+      "deciding": "მიმდინარეობს გადაწყვეტა...",
+      "banTitle": "თითო კატეგორია დაბლოკეთ"
     },
     "opponentSelected": "მოწინააღმდეგემ აირჩია ეს პასუხი",
     "partyPickSelected": "{username}-მ აირჩია ეს პასუხი",
@@ -1153,7 +1154,8 @@
       "tabHair": "თმა",
       "tabGlasses": "სათვალე",
       "tabFacialHair": "წვერ-ულვაში",
-      "edit": "რედაქტირება"
+      "edit": "რედაქტირება",
+      "none": "არცერთი"
     },
     "purchase": {
       "confirmTitle": "შესყიდვის დადასტურება",

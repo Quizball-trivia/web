@@ -204,6 +204,9 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
   // True when the round was confirmed by the timer running out (not a manual
   // "Confirm Bets" press) — drives auto-advance to the next question.
   const autoAdvanceRef = useRef(false);
+  // Holds the pending auto-advance timer so a manual "Next" press can cancel it;
+  // otherwise the stale callback fires on the next screen and skips a question.
+  const autoAdvanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex >= questions.length - 1;
@@ -252,7 +255,10 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
       // result has been on screen ~2.5s, instead of waiting for a manual press.
       if (autoAdvanceRef.current) {
         autoAdvanceRef.current = false;
-        setTimeout(() => handleNextQuestionRef.current?.({ auto: true }), 2500);
+        autoAdvanceTimeoutRef.current = setTimeout(() => {
+          autoAdvanceTimeoutRef.current = null;
+          handleNextQuestionRef.current?.({ auto: true });
+        }, 2500);
       }
     }, wrongAnswers.length * 1000 + 2000);
   }, [bets, currentQuestion, hasConfirmed]);
@@ -320,6 +326,12 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
   ]);
 
   const handleNextQuestion = (options?: { auto?: boolean }) => {
+    // Cancel any pending auto-advance so it can't fire on the next screen after
+    // a manual press (which would skip a question or end the run early).
+    if (autoAdvanceTimeoutRef.current) {
+      clearTimeout(autoAdvanceTimeoutRef.current);
+      autoAdvanceTimeoutRef.current = null;
+    }
     const correctBet = bets[currentQuestion.correctAnswerIndex];
     const newMoney = correctBet;
     setCurrentMoney(newMoney);
@@ -348,6 +360,16 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
   useEffect(() => {
     handleNextQuestionRef.current = handleNextQuestion;
   });
+
+  // Clear any pending auto-advance timer on unmount so it can't fire after the
+  // component is gone.
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceTimeoutRef.current) {
+        clearTimeout(autoAdvanceTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleFiftyFifty = () => {
     if (fiftyFiftyUsed || showResult || hasConfirmed) return;

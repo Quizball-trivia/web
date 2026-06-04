@@ -268,7 +268,7 @@ export function HalftimeScreen({
           <div className="w-full flex flex-col items-center">
             {/* Section title */}
             <div className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] text-brand-slate mb-3 sm:mb-4">
-              Ban 1 Category Each
+              {t('possession.halftime.banTitle')}
             </div>
 
             {/* Category cards — shared BanCategoryCard mirrors /play style */}

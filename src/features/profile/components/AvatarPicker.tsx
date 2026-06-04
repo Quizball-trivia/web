@@ -260,7 +260,7 @@ export function AvatarPicker({
               <X className="size-8 text-white/40" strokeWidth={2.5} />
             </div>
             <span className="text-[10px] font-black uppercase tracking-wider text-white/70">
-              None
+              {t('profile.avatarPicker.none')}
             </span>
             {!currentValue && (
               <div

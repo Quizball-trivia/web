@@ -31,6 +31,10 @@ interface WelcomeGoogleButtonProps {
   submitting?: boolean;
 }
 
+function hasRenderedGoogleButton(container: HTMLElement): boolean {
+  return Boolean(container.firstElementChild || container.querySelector('iframe'));
+}
+
 export function WelcomeGoogleButton({ clientId, onClick, onCredential, submitting = false }: WelcomeGoogleButtonProps) {
   const { t } = useLocale();
   const overlayRef = useRef<HTMLDivElement | null>(null);
@@ -76,19 +80,21 @@ export function WelcomeGoogleButton({ clientId, onClick, onCredential, submittin
     void renderGoogleButton(clientId, container, width, (credential) => {
       if (!cancelled) onCredentialRef.current(credential);
     }).then((rendered) => {
-      if (!cancelled) setGisReady(rendered);
+      if (!cancelled) setGisReady(rendered && hasRenderedGoogleButton(container));
+    }).catch(() => {
+      if (!cancelled) setGisReady(false);
     });
     return () => {
       cancelled = true;
     };
   }, [clientId, width]);
 
-  // GIS-everywhere with redirect fallback: when GIS rendered, the overlay owns
-  // every click (it covers the whole button), so the visible button's onClick
-  // must NOT also fire the redirect. Only fall back to redirect when GIS never
-  // rendered (e.g. a locked-down webview where the library failed to load).
+  // GIS-everywhere with redirect fallback: when a real GIS iframe/button exists,
+  // the overlay owns every click. Otherwise the visible button falls back to the
+  // prompt/redirect path instead of becoming a dead CTA.
   const handleVisibleClick = useCallback(() => {
-    if (gisReady) return; // overlay handles it
+    const container = overlayRef.current;
+    if (gisReady && container && hasRenderedGoogleButton(container)) return; // overlay handles it
     onClick();
   }, [gisReady, onClick]);
 
@@ -98,7 +104,7 @@ export function WelcomeGoogleButton({ clientId, onClick, onCredential, submittin
         onClick={handleVisibleClick}
         disabled={submitting}
         aria-busy={submitting}
-        className="flex h-[52px] w-full items-center justify-center rounded-[28px] bg-brand-yellow px-6 font-poppins text-sm font-semibold uppercase tracking-wide text-black shadow-none transition-colors hover:bg-brand-yellow-deep hover:shadow-none sm:h-14 sm:px-8 sm:text-base focus-visible:ring-0 focus-visible:outline-none disabled:opacity-70"
+        className="flex h-[52px] w-full items-center justify-center rounded-[28px] bg-brand-yellow px-6 font-poppins text-sm font-semibold uppercase tracking-wide text-black shadow-none transition-colors hover:bg-brand-yellow-deep hover:shadow-none sm:h-14 sm:px-8 sm:text-base focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-2 disabled:opacity-70"
       >
         {submitting ? (
           <Loader2 className="size-5 animate-spin" />
@@ -120,7 +126,7 @@ export function WelcomeGoogleButton({ clientId, onClick, onCredential, submittin
         ref={overlayRef}
         aria-hidden
         className={`absolute inset-0 z-10 flex items-stretch justify-center overflow-hidden opacity-[0.001] [color-scheme:light] [&>*]:h-full [&>*]:w-full [&_iframe]:h-full [&_iframe]:w-full ${
-          submitting ? 'pointer-events-none [&>*]:pointer-events-none' : 'pointer-events-none [&>*]:pointer-events-auto'
+          submitting || !gisReady ? 'pointer-events-none [&>*]:pointer-events-none' : 'pointer-events-none [&>*]:pointer-events-auto'
         }`}
       />
     </div>

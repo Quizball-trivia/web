@@ -50,7 +50,7 @@ describe('usePossessionMatchSounds', () => {
       });
     }, {
       initialProps: {
-        roundResult: null,
+        roundResult: null as MatchRoundResultPayload | null,
       },
     });
 

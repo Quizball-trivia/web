@@ -78,8 +78,10 @@ export function FriendMatchHubPage() {
     if (lobby?.inviteCode && isNavigatingToRoom) {
       resetLobbyCommand();
       router.push(`/friend/room/${lobby.inviteCode}`);
-      // Reset navigation state after push
-      return; 
+      // Reset navigation state after push so a re-run doesn't strand the flag.
+      // Deferred out of the synchronous effect body to avoid a cascading render.
+      queueMicrotask(() => setIsNavigatingToRoom(false));
+      return;
     }
     
     // Safety fallback: if we are verifying "Already In Lobby", we don't redirect.

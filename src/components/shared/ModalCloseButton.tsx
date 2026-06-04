@@ -41,7 +41,7 @@ export function ModalCloseButton({ onClose, className }: ModalCloseButtonProps) 
         // looks like a stray glow when Radix auto-focuses this button on open.
         // Suppress the default outline; show a tasteful white ring only on
         // keyboard focus.
-        "outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-0",
+        "outline-hidden focus:outline-hidden focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-0",
         className,
       )}
     >
