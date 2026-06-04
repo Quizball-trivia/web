@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queries/queryKeys";
 import {
   completeDailyChallenge,
@@ -21,6 +21,10 @@ export function useDailyChallenges() {
     },
     staleTime: 60_000,
     gcTime: 15 * 60_000,
+    // Keep showing the last list while a refetch is in flight (e.g. the
+    // post-completion invalidate, or a locale switch) so returning to the hub
+    // never flashes the full-screen loading state.
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -47,8 +51,14 @@ export function useCompleteDailyChallenge(challengeType: DailyChallengeType) {
     // network write — so the card is blurred and unpressable by the time the
     // user lands back on the hub, with no wait for the round-trip. Snapshot the
     // prior caches so we can roll back if the write fails.
+    //
+    // Cancel only the LIST queries (not `all`): cancelling `all` would also kill
+    // an in-flight hub refetch, leaving that query with no data and stuck on the
+    // full-screen "loading" state when the user returns to the hub.
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.dailyChallenges.all });
+      await queryClient.cancelQueries({
+        predicate: (query) => isListQuery(query.queryKey),
+      });
       const previous = queryClient.getQueriesData<DailyChallengeSummary[]>({
         predicate: (query) => isListQuery(query.queryKey),
       });

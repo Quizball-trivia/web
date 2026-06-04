@@ -10,7 +10,7 @@ import {
 } from '../realtimePossession.helpers';
 import { getBarBattleGoalAttackDelayMs, resolvePossessionBattlePoints } from './useBarBattle';
 
-type PossessionSfxName = 'whistle' | 'kick' | 'pass' | 'correctRanked';
+type PossessionSfxName = 'whistle' | 'kick' | 'pass' | 'correctRanked' | 'wrongAnswer';
 
 interface UsePossessionMatchSoundsParams {
   phase: string | undefined;
@@ -45,13 +45,16 @@ export function usePossessionMatchSounds({
     }
   }, [phase]);
 
-  const correctAnswerSfxKeyRef = useRef<string | null>(null);
+  // One answer-result SFX per question: the correct chime when the player got
+  // it right, the wrong-answer buzzer when they didn't. Deduped by matchId+qIndex
+  // so re-renders / repeated acks don't retrigger it.
+  const answerSfxKeyRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!answerAck?.isCorrect) return;
+    if (!answerAck) return;
     const key = `${answerAck.matchId}:${answerAck.qIndex}`;
-    if (correctAnswerSfxKeyRef.current === key) return;
-    correctAnswerSfxKeyRef.current = key;
-    playSfxRef.current('correctRanked');
+    if (answerSfxKeyRef.current === key) return;
+    answerSfxKeyRef.current = key;
+    playSfxRef.current(answerAck.isCorrect ? 'correctRanked' : 'wrongAnswer');
   }, [answerAck]);
 
   const roundResultSfxKeyRef = useRef<string | null>(null);

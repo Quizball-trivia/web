@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import type { FootballLogicSession } from "@/lib/domain/dailyChallenge";
 import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
 import { fuzzyMatchesAnswer } from "@/lib/answerMatching";
+import { playSfx } from "@/lib/sounds/gameSounds";
 import { QuitGameDialog } from "./QuitGameDialog";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
 
@@ -61,6 +62,7 @@ export function FootballLogicGame({
 
     const isCorrect = fuzzyMatchesAnswer(answer, currentQuestion.acceptedAnswers);
 
+    playSfx(isCorrect ? "dailyCorrect" : "wrongAnswer");
     if (isCorrect) {
       setCorrectCount((previous) => previous + 1);
     }

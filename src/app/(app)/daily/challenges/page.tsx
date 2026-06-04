@@ -1,17 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState, type MouseEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, RotateCcw } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { useDailyChallenges, useResetDailyChallengeDev } from "@/lib/queries/dailyChallenges.queries";
 import { queryKeys } from "@/lib/queries/queryKeys";
-import type { DailyChallengeSummary } from "@/lib/domain/dailyChallenge";
+import type { DailyChallengeSummary, DailyChallengeType } from "@/lib/domain/dailyChallenge";
 import { useAuthStore } from "@/stores/auth.store";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocale } from "@/contexts/LocaleContext";
+import { prefetchDailyChallengeSession } from "@/features/daily/dailyChallengeSessionPrefetch";
 
 // Challenges reset at 00:00 UTC. Show that moment as a wall-clock time in the
 // viewer's own timezone (auto-detected by Intl) so a Georgia user sees 04:00
@@ -31,11 +32,13 @@ function ChallengeCard({
   challenge,
   index,
   onClick,
+  onPrefetch,
   showDevReset,
 }: {
   challenge: DailyChallengeSummary;
   index: number;
   onClick: () => void;
+  onPrefetch: () => void;
   showDevReset: boolean;
 }) {
   const { t } = useLocale();
@@ -68,6 +71,7 @@ function ChallengeCard({
         type="button"
         disabled={disabled}
         onClick={onClick}
+        onPointerDown={disabled ? undefined : onPrefetch}
         className={`relative flex min-h-[184px] w-full flex-col overflow-hidden rounded-[8px] p-3.5 pb-3.5 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow md:flex md:min-h-[268px] md:flex-col md:rounded-[20px] md:p-6 ${
           isCompleted
             ? "border-2 border-brand-green-light bg-brand-green-darkest text-white shadow-[0_0_0_3px_hsl(var(--brand-green-light)/0.16)] disabled:cursor-default md:border-2 md:shadow-[0_0_0_4px_hsl(var(--brand-green-light)/0.16)]"
@@ -150,6 +154,28 @@ export default function DailyChallengesPage() {
     setLocalResetTime(getLocalResetTime(locale));
   }, [locale]);
 
+  // Prefetch the page bundle for AVAILABLE challenges only (completed/locked
+  // ones can't be opened, so prefetching them is wasted). The session POST is
+  // what we overlap on tap-down.
+  useEffect(() => {
+    for (const challenge of challenges) {
+      if (!challenge.availableToday) continue;
+      router.prefetch(`/daily/challenges/${challenge.challengeType}`);
+    }
+  }, [challenges, router]);
+
+  // Start (or reuse) the session the moment the user presses a card — the POST
+  // round-trip then overlaps the navigation + intro, so the game's ready by the
+  // time the intro finishes. Available cards only; completed ones aren't tapped.
+  const handlePrefetchSession = useCallback(
+    (challengeType: DailyChallengeType) => {
+      void prefetchDailyChallengeSession(challengeType, locale, Date.now()).catch(() => {
+        // Swallow — the challenge page will surface and retry any real failure.
+      });
+    },
+    [locale],
+  );
+
   const completedCount = useMemo(
     () => challenges.filter((c) => c.completedToday).length,
     [challenges],
@@ -188,7 +214,7 @@ export default function DailyChallengesPage() {
             ) : null}
           </div>
 
-          <div className="flex items-start gap-3 md:gap-4">
+          <div className="flex items-start gap-3 md:gap-8">
             {/* Label, bar, and count are one left-aligned column whose width is
                 set by the (widest) label — so the bar and the count line up to
                 the label's edges in any locale (EN or the wider Georgian). */}
@@ -211,11 +237,8 @@ export default function DailyChallengesPage() {
               <p className="font-poppins text-[13px] font-semibold uppercase leading-tight tracking-[-0.02em] text-white md:whitespace-nowrap md:text-[0.95rem] md:leading-none">
                 {t('dailyGames.hubCoinsEarned')}
               </p>
-              <p className="font-poppins mt-1 text-[30px] font-semibold uppercase leading-none text-brand-yellow md:mt-2 md:text-[44px]">
-                {earnedCoins}
-              </p>
-              <p className="mt-0.5 font-poppins text-[12px] font-semibold uppercase leading-none text-white/45 md:mt-1 md:text-[16px]">
-                {t('dailyGames.hubOfTotal', { total: totalCoins })}
+              <p className="font-poppins mt-1 text-[22px] font-semibold uppercase leading-none text-brand-yellow md:mt-2 md:text-[32px]">
+                {earnedCoins}/{totalCoins}
               </p>
             </div>
           </div>
@@ -234,6 +257,7 @@ export default function DailyChallengesPage() {
                 challenge={challenge}
                 index={index}
                 onClick={() => router.push(`/daily/challenges/${challenge.challengeType}`)}
+                onPrefetch={() => handlePrefetchSession(challenge.challengeType)}
                 showDevReset={canUseDevReset}
               />
             ))}

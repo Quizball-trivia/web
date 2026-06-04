@@ -8,7 +8,9 @@ const SOUND_FILES = {
   kick: "/sounds/kick.mp3",
   pass: "/sounds/pass.mp3",
   correctRanked: "/sounds/correct_ranked.mp3",
-  dailyCorrect: "/sounds/mixkit-unlock-game-notification-253.wav",
+  dailyCorrect: "/sounds/correct_answer.mp3",
+  // Shared wrong-answer buzzer for daily challenges and ranked gameplay.
+  wrongAnswer: "/sounds/wrong_answer.mp3",
   imposterReveal: "/sounds/imposter.wav",
 } as const;
 
@@ -43,6 +45,7 @@ const sounds: Partial<Record<SoundName, Howl>> = {};
 const SOUND_VOLUME: Partial<Record<SoundName, number>> = {
   correctRanked: 0.45,
   dailyCorrect: 0.55,
+  wrongAnswer: 0.5,
   imposterReveal: 0.7,
 };
 

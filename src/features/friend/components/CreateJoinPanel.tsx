@@ -238,6 +238,11 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
               fontWeight: 600,
               fontSize: 'clamp(18px, 2vw, 24px)',
               letterSpacing: '0.18em',
+              // letter-spacing adds a trailing gap after the last glyph; with
+              // text-center that pushes the final letter past the right edge and
+              // clips it. text-indent shifts the line right by one space to
+              // recenter and keep the last character fully visible.
+              textIndent: '0.18em',
             }}
           />
 

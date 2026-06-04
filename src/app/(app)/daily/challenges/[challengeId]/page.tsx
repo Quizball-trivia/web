@@ -13,13 +13,14 @@ import { CareerPathGame } from "@/features/daily/CareerPathGame";
 import { HighLowGame } from "@/features/daily/HighLowGame";
 import { FootballLogicGame } from "@/features/daily/FootballLogicGame";
 import { QuitGameDialog } from "@/features/daily/QuitGameDialog";
+import { DailyChallengeIntro } from "@/features/daily/components/DailyChallengeIntro";
+import { consumeDailyChallengeSession } from "@/features/daily/dailyChallengeSessionPrefetch";
 import { DAILY_CHALLENGE_VISUALS } from "@/lib/domain/dailyChallengeVisuals";
 import { useCompleteDailyChallenge } from "@/lib/queries/dailyChallenges.queries";
 import { queryKeys } from "@/lib/queries/queryKeys";
 import { usePlayer } from "@/contexts/PlayerContext";
 import type { DailyChallengeSession, DailyChallengeType } from "@/lib/domain/dailyChallenge";
 import { trackDailyChallengeCompleted, trackDailyChallengeStarted, trackDailyChallengeQuit } from "@/lib/analytics/game-events";
-import { ApiError } from "@/lib/api/api";
 import { createDailyChallengeSession } from "@/lib/repositories/dailyChallenges.repo";
 import { toDailyChallengeSession } from "@/lib/mappers/dailyChallenge.mapper";
 import { useLocale } from "@/contexts/LocaleContext";
@@ -29,45 +30,20 @@ function isDailyChallengeType(value: string): value is DailyChallengeType {
   return value in DAILY_CHALLENGE_VISUALS;
 }
 
-function getSessionErrorMessage(error: unknown): string {
-  if (error instanceof ApiError && error.data && typeof error.data === "object") {
-    const data = error.data as {
-      code?: string;
-      message?: string;
-      details?: {
-        needed?: number;
-        available?: number;
-      };
-    };
-
-    if (data.code === "DAILY_CHALLENGE_CONTENT_UNAVAILABLE") {
-      const needed = data.details?.needed;
-      const available = data.details?.available;
-      if (typeof needed === "number" && typeof available === "number") {
-        return `This challenge needs ${needed} published questions, but only ${available} are available. Lower the question count in CMS or publish more questions.`;
-      }
-      return "This challenge does not have enough published questions yet. Update the CMS config or publish more questions.";
-    }
-
-    if (data.message) {
-      return data.message;
-    }
-  }
-
-  return "Could not start this daily challenge. Check the CMS setup and try again.";
-}
-
 export default function ChallengePage() {
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { addXP } = usePlayer();
-  const { locale } = useLocale();
+  const { locale, t } = useLocale();
   const [showBrowserBackDialog, setShowBrowserBackDialog] = useState(false);
   const [session, setSession] = useState<DailyChallengeSession | undefined>();
   const [sessionError, setSessionError] = useState<unknown>(null);
   const [isSessionLoading, setIsSessionLoading] = useState(false);
   const [sessionAttempt, setSessionAttempt] = useState(0);
+  // Gate the game behind a "get ready" intro; the game (and its timer) only
+  // mounts once the intro has played. Reset on every new session attempt.
+  const [introDone, setIntroDone] = useState(false);
   const guardPushed = useRef(false);
   const completeOnceRef = useRef(false);
 
@@ -77,7 +53,10 @@ export default function ChallengePage() {
 
   const invalidateAfterComplete = useCallback(async () => {
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: queryKeys.dailyChallenges.list() }),
+      // `.all` (not `.list()`, which defaults to the "en" locale key) so the
+      // refetch hits whatever locale the hub is actually showing — otherwise a
+      // Georgian user's list never refreshes and can show a stale/empty state.
+      queryClient.invalidateQueries({ queryKey: queryKeys.dailyChallenges.all }),
       queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() }),
     ]);
   }, [queryClient]);
@@ -151,10 +130,18 @@ export default function ChallengePage() {
       setIsSessionLoading(true);
       setSessionError(null);
       setSession(undefined);
+      setIntroDone(false);
     });
 
-    createDailyChallengeSession(challengeType, locale)
-      .then(toDailyChallengeSession)
+    // Reuse the session the hub started on tap-down if it's still fresh; that
+    // POST already overlapped the navigation, so this is usually resolved by now.
+    // Falls back to creating one when there's no fresh prefetch (deep link, slow
+    // network, stale TTL).
+    const prefetched = consumeDailyChallengeSession(challengeType, locale, Date.now());
+    const sessionPromise =
+      prefetched ?? createDailyChallengeSession(challengeType, locale).then(toDailyChallengeSession);
+
+    sessionPromise
       .then((nextSession) => {
         if (cancelled) return;
         setSession(nextSession);
@@ -235,30 +222,28 @@ export default function ChallengePage() {
 
   if (sessionError || sessionTypeMismatch) {
     return (
-      <div className="fixed inset-0 z-40 flex items-center justify-center bg-surface-deep px-4 font-fun text-white">
-        <div className="w-full max-w-md rounded-2xl border border-white/10 bg-surface-card p-6 text-center shadow-2xl">
-          <p className="text-lg font-black uppercase">Challenge unavailable</p>
-          <p className="mt-3 text-sm leading-6 text-brand-slate-light">
-            {sessionTypeMismatch
-              ? `Received a ${session?.challengeType} session while opening ${challengeType}. Refresh and try again.`
-              : getSessionErrorMessage(sessionError)}
+      <div className="fixed inset-0 z-40 flex items-center justify-center bg-surface-page px-4">
+        <div className="w-full max-w-md rounded-[24px] bg-brand-blue p-8 text-center sm:p-10">
+          <h2 className="font-poppins text-[22px] font-semibold uppercase text-white sm:text-[26px]">
+            {t("dailyGames.unavailableTitle")}
+          </h2>
+          <p className="mt-3 font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-sm">
+            {t("dailyGames.unavailableMessage")}
           </p>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-6 flex flex-col gap-3">
             <button
               type="button"
-              onClick={() => {
-                setSessionAttempt((attempt) => attempt + 1);
-              }}
-              className="flex-1 rounded-xl bg-brand-green px-4 py-3 text-sm font-black uppercase text-white"
+              onClick={() => setSessionAttempt((attempt) => attempt + 1)}
+              className="h-12 w-full rounded-[28px] bg-brand-yellow font-poppins text-sm font-semibold uppercase tracking-wide text-black transition-colors hover:bg-brand-yellow-deep"
             >
-              Try again
+              {t("dailyGames.unavailableTryAgain")}
             </button>
             <button
               type="button"
               onClick={handleBack}
-              className="flex-1 rounded-xl border border-white/15 px-4 py-3 text-sm font-black uppercase text-white/80"
+              className="h-11 w-full rounded-[28px] bg-white/10 font-poppins text-xs font-semibold uppercase tracking-wide text-white transition-colors hover:bg-white/15"
             >
-              Back
+              {t("dailyGames.unavailableBack")}
             </button>
           </div>
         </div>
@@ -272,6 +257,12 @@ export default function ChallengePage() {
         className="bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
       />
     );
+  }
+
+  // Play the "get ready" intro first; the game (and its timer) only mounts
+  // after it finishes, so the countdown never starts before the player is ready.
+  if (!introDone) {
+    return <DailyChallengeIntro title={session.title} onDone={() => setIntroDone(true)} />;
   }
 
   return (

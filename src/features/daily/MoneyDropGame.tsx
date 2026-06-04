@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import type { MoneyDropSession } from "@/lib/domain/dailyChallenge";
 import { useLocale } from "@/contexts/LocaleContext";
 import { trackLifelineUsed } from "@/lib/analytics/game-events";
+import { playSfx } from "@/lib/sounds/gameSounds";
 
 interface MoneyDropGameProps {
   session: MoneyDropSession;
@@ -198,6 +199,11 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
   const deadlineRef = useRef<number | null>(null);
   const totalAllocatedRef = useRef(0);
   const handleConfirmBetsRef = useRef<(() => void) | null>(null);
+  const handleNextQuestionRef = useRef<((options?: { auto?: boolean }) => void) | null>(null);
+  const confirmButtonRef = useRef<HTMLButtonElement | null>(null);
+  // True when the round was confirmed by the timer running out (not a manual
+  // "Confirm Bets" press) — drives auto-advance to the next question.
+  const autoAdvanceRef = useRef(false);
 
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex >= questions.length - 1;
@@ -221,7 +227,10 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
   };
 
   const handleConfirmBets = useCallback(() => {
-    if (timeoutHandledRef.current) return;
+    // Guard against a double manual press, but NOT against the timer-initiated
+    // call: the timeout sets timeoutHandledRef before invoking this, and that
+    // path must still run (auto-submit). hasConfirmed covers the double-press.
+    if (hasConfirmed) return;
     setHasConfirmed(true);
     setIsAnimating(true);
     setShowClue(false);
@@ -236,12 +245,33 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
     setTimeout(() => {
       setIsAnimating(false);
       setShowResult(true);
+      // Survived with money on the correct answer = correct chime; lost it all
+      // (nothing left on the right option) = wrong-answer buzzer.
+      playSfx(bets[currentQuestion.correctAnswerIndex] > 0 ? "dailyCorrect" : "wrongAnswer");
+      // Auto-submitted by the timer → advance to the next question after the
+      // result has been on screen ~2.5s, instead of waiting for a manual press.
+      if (autoAdvanceRef.current) {
+        autoAdvanceRef.current = false;
+        setTimeout(() => handleNextQuestionRef.current?.({ auto: true }), 2500);
+      }
     }, wrongAnswers.length * 1000 + 2000);
-  }, [bets, currentQuestion]);
+  }, [bets, currentQuestion, hasConfirmed]);
 
   useEffect(() => {
     totalAllocatedRef.current = totalAllocated;
   }, [totalAllocated]);
+
+  // Once all the money is placed, bring the Confirm button fully into view —
+  // several users couldn't find it below the fold and didn't realise they could
+  // submit. `block: "end"` guarantees the whole button reaches the bottom of the
+  // viewport (nearest scrolled too little). Only while still betting.
+  useEffect(() => {
+    if (!isFullyAllocated || hasConfirmed || showResult) return;
+    const id = window.setTimeout(() => {
+      confirmButtonRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }, 200);
+    return () => window.clearTimeout(id);
+  }, [isFullyAllocated, hasConfirmed, showResult]);
 
   useEffect(() => {
     handleConfirmBetsRef.current = handleConfirmBets;
@@ -271,11 +301,11 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
       timeoutHandledRef.current = true;
       clearInterval(timer);
 
-      if (totalAllocatedRef.current === 0) {
-        onComplete(0);
-        return;
-      }
-
+      // Time's up: auto-submit whatever's allocated (even nothing) and advance
+      // to the next question automatically — never strand the player on a result
+      // screen waiting for a press, and never end the game just because no bet
+      // was placed (that question simply carries $0).
+      autoAdvanceRef.current = true;
       handleConfirmBetsRef.current?.();
     }, 250);
 
@@ -289,11 +319,16 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
     showResult,
   ]);
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = (options?: { auto?: boolean }) => {
     const correctBet = bets[currentQuestion.correctAnswerIndex];
     const newMoney = correctBet;
     setCurrentMoney(newMoney);
-    if (newMoney === 0 || currentQuestionIndex >= questions.length - 1) {
+    // On a MANUAL advance, $0 ends the game (you're out of money — MoneyDrop's
+    // core rule). On an AUTO advance (timer ran out), don't punish the player
+    // with game-over for not betting in time: carry $0 forward and keep going,
+    // ending only when the last question is reached.
+    const isLast = currentQuestionIndex >= questions.length - 1;
+    if (isLast || (newMoney === 0 && !options?.auto)) {
       onComplete(newMoney);
       return;
     }
@@ -308,6 +343,11 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
     setTimeLeft(QUESTION_TIME);
     timeoutHandledRef.current = false;
   };
+  // Keep the ref pointing at the latest handler so the timer's auto-advance
+  // (fired from a stale closure) always calls the current logic.
+  useEffect(() => {
+    handleNextQuestionRef.current = handleNextQuestion;
+  });
 
   const handleFiftyFifty = () => {
     if (fiftyFiftyUsed || showResult || hasConfirmed) return;
@@ -511,6 +551,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
               {/* Confirm button */}
               {!hasConfirmed && (
                 <button
+                  ref={confirmButtonRef}
                   onClick={handleConfirmBets}
                   disabled={!isFullyAllocated}
                   style={
@@ -673,7 +714,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
               )}
 
               <button
-                onClick={handleNextQuestion}
+                onClick={() => handleNextQuestion()}
                 style={{ boxShadow: '0 1.76px 6.334px 1.32px rgba(56, 182, 14, 0.25)' }}
                 className="w-full py-4 lg:py-5 rounded-[20px] bg-brand-green hover:bg-brand-green-deep font-poppins font-semibold uppercase tracking-wide text-white text-base lg:text-lg transition-colors flex items-center justify-center gap-2"
               >

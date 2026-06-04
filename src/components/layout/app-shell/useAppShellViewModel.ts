@@ -88,8 +88,13 @@ export function useAppShellViewModel() {
   }, [suppressLobbyBannerUntil]);
 
   const currentPath = pathname ?? '/';
-  const showHeader = HEADER_PATHS.some((p) => (p === '/' ? currentPath === '/' : currentPath.startsWith(p)));
-  const showNav = !HIDE_NAV_PATHS.some((path) => currentPath.startsWith(path));
+  // A daily-challenge GAME (`/daily/challenges/<type>`) is an immersive fullscreen
+  // experience like a ranked match — hide the app header AND bottom nav so they
+  // can't be reached and content can't scroll behind them. The hub
+  // (`/daily/challenges`) keeps both.
+  const inDailyChallengeGame = currentPath.startsWith('/daily/challenges/');
+  const showHeader = !inDailyChallengeGame && HEADER_PATHS.some((p) => (p === '/' ? currentPath === '/' : currentPath.startsWith(p)));
+  const showNav = !inDailyChallengeGame && !HIDE_NAV_PATHS.some((path) => currentPath.startsWith(path));
   const inLobbyRoom = currentPath.startsWith('/friend/room');
   const lobbyBannerSuppressed =
     suppressLobbyBannerReason !== null ||

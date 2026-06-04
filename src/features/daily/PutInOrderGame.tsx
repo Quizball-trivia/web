@@ -33,6 +33,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { PutInOrderSession } from "@/lib/domain/dailyChallenge";
+import { playSfx } from "@/lib/sounds/gameSounds";
 
 interface PutInOrderGameProps {
   session: PutInOrderSession;
@@ -166,6 +167,7 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
     const isCorrect = userOrder.every((item, index) => item.id === correctOrder[index]?.id);
     setIsRevealed(true);
 
+    playSfx(isCorrect ? "dailyCorrect" : "wrongAnswer");
     if (isCorrect) {
       setCorrectCount((prev) => prev + 1);
       setTotalCoins((prev) => prev + 50);

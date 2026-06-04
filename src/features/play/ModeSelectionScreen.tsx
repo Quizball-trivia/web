@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -15,6 +16,21 @@ import { useObjectives } from '@/lib/queries/objectives.queries';
 import { colors } from '@/lib/colors';
 
 import { getNextTierBand } from '@/utils/rankedTier';
+
+const PLAY_ENTRANCE_SESSION_KEY = 'quizball.playEntranceSeen';
+const PLAY_ENTRANCE_INITIAL = { opacity: 0.88, scale: 0.985 } as const;
+const PLAY_ENTRANCE_ANIMATE = { opacity: 1, scale: 1 } as const;
+const PLAY_ENTRANCE_TRANSITION = { duration: 0.22, ease: 'easeOut' } as const;
+
+function shouldPlayEntranceAnimation() {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    return window.sessionStorage.getItem(PLAY_ENTRANCE_SESSION_KEY) !== '1';
+  } catch {
+    return false;
+  }
+}
 
 
 /**
@@ -84,6 +100,7 @@ export function ModeSelectionScreen({
 }: ModeSelectionScreenProps) {
   const { t, locale } = useLocale();
   const [selectedMode, setSelectedMode] = useState<'ranked' | 'friendly' | 'solo' | null>(null);
+  const [playEntranceAnimation] = useState(shouldPlayEntranceAnimation);
   const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
   const placementPlayed = rankedProfile?.placementPlayed ?? 0;
   const placementRequired = Math.max(1, rankedProfile?.placementRequired ?? 3);
@@ -117,6 +134,16 @@ export function ModeSelectionScreen({
   // font-black/font-bold Duolingo weights). Only Poppins 600 is loaded.
   const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
+  useEffect(() => {
+    if (!playEntranceAnimation) return;
+
+    try {
+      window.sessionStorage.setItem(PLAY_ENTRANCE_SESSION_KEY, '1');
+    } catch {
+      // Session storage can be unavailable in private or restricted contexts.
+    }
+  }, [playEntranceAnimation]);
+
   const handleConfirm = () => {
     if (!selectedMode) return;
     if (selectedMode !== 'friendly') {
@@ -136,7 +163,12 @@ export function ModeSelectionScreen({
   const hasPreviewObjectives = previewObjectives.length > 0;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-3 space-y-4 md:py-6 md:space-y-5 font-fun">
+    <motion.div
+      initial={playEntranceAnimation ? PLAY_ENTRANCE_INITIAL : false}
+      animate={PLAY_ENTRANCE_ANIMATE}
+      transition={playEntranceAnimation ? PLAY_ENTRANCE_TRANSITION : { duration: 0 }}
+      className="max-w-5xl mx-auto px-4 py-3 space-y-4 md:py-6 md:space-y-5 font-fun"
+    >
 
       {/* ─── 1. Ranked Hero Card ─── */}
       <div
@@ -574,6 +606,6 @@ export function ModeSelectionScreen({
         isOpen={selectedMode === 'friendly'}
         onOpenChange={(open) => !open && setSelectedMode(null)}
       />
-    </div>
+    </motion.div>
   );
 }

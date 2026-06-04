@@ -538,7 +538,6 @@
     "hubResetAt": "Resets at {time}",
     "hubTodaysProgress": "Today's Progress",
     "hubCoinsEarned": "Coins Earned",
-    "hubOfTotal": "of {total}",
     "hubPlayFor": "Play For",
     "hubEarn": "Earn",
     "hubPlay": "Play",
@@ -548,7 +547,13 @@
     "hubUnavailable": "Completed today. Come back after the UTC reset.",
     "hubResetButton": "Reset",
     "hubResetSuccess": "{title} reset for today",
-    "hubResetError": "Failed to reset daily challenge"
+    "hubResetError": "Failed to reset daily challenge",
+    "introTag": "Daily Challenge",
+    "introGetReady": "Get Ready",
+    "unavailableTitle": "Challenge Unavailable",
+    "unavailableMessage": "This challenge isn't available right now. Please try again later.",
+    "unavailableTryAgain": "Try Again",
+    "unavailableBack": "Back"
   },
   "dailyChallenge": {
     "answerPrefix": "Answer",

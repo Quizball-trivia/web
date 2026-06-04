@@ -31,6 +31,7 @@ import { purchaseStoreWithCoins } from "@/lib/repositories/store.repo";
 import { queryKeys } from "@/lib/queries/queryKeys";
 import { ApiError } from "@/lib/api/api";
 import { useLocale } from "@/contexts/LocaleContext";
+import { translatePartName } from "@/lib/avatars/partNames";
 import type { AvatarCustomization } from "@/types/game";
 
 type SlotTab = "skin" | "jersey" | "hair" | "glasses" | "facialHair";
@@ -115,10 +116,10 @@ export function AvatarPicker({
       const p = pendingPurchase;
       if (p?.type === "skin" && p.skin) {
         persist({ ...current, skin: p.skin.id });
-        toast.success(t('profile.skinEquipped', { name: p.skin.name }));
+        toast.success(t('profile.skinEquipped', { name: translatePartName(p.skin.name, t) }));
       } else if (p?.type === "part" && p.part) {
         persist({ ...current, [p.part.slot]: p.part.id });
-        toast.success(t('profile.partEquipped', { name: p.part.name }));
+        toast.success(t('profile.partEquipped', { name: translatePartName(p.part.name, t) }));
       }
       setPendingPurchase(null);
     },
@@ -198,10 +199,9 @@ export function AvatarPicker({
             type="button"
             disabled={isSaving}
             onClick={() => handleSelectSkin(skin)}
-            className="group relative flex flex-col items-center gap-2 rounded-2xl py-3 transition-all active:translate-y-[1px]"
+            className="group relative flex flex-col items-center gap-2 rounded-2xl bg-surface-page py-3 transition-all active:translate-y-[1px]"
             style={{
-              border: `2px solid ${selected ? PURPLE : "transparent"}`,
-              backgroundColor: "#FFFFFF",
+              border: `2px solid ${selected ? PURPLE : "rgba(255,255,255,0.1)"}`,
             }}
           >
             <div className="relative flex h-32 sm:h-36 items-center justify-center">
@@ -213,8 +213,8 @@ export function AvatarPicker({
               )}
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-black uppercase tracking-wider text-surface-page/70">
-                {skin.name}
+              <span className="text-[10px] font-black uppercase tracking-wider text-white/70">
+                {translatePartName(skin.name, t)}
               </span>
               {!owned && skin.priceCoins && (
                 <span className="text-[9px] font-black uppercase tracking-wider text-brand-yellow">
@@ -251,16 +251,15 @@ export function AvatarPicker({
             type="button"
             disabled={isSaving}
             onClick={() => handleSelectPart(slot, null)}
-            className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl py-3 transition-all active:translate-y-[1px]"
+            className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl bg-surface-page py-3 transition-all active:translate-y-[1px]"
             style={{
-              border: `2px solid ${!currentValue ? PURPLE : "transparent"}`,
-              backgroundColor: "#FFFFFF",
+              border: `2px solid ${!currentValue ? PURPLE : "rgba(255,255,255,0.1)"}`,
             }}
           >
-            <div className="flex size-20 sm:size-24 items-center justify-center rounded-full border-2 border-dashed border-surface-page/20">
-              <X className="size-8 text-surface-page/40" strokeWidth={2.5} />
+            <div className="flex size-20 sm:size-24 items-center justify-center rounded-full border-2 border-dashed border-white/20">
+              <X className="size-8 text-white/40" strokeWidth={2.5} />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-surface-page/70">
+            <span className="text-[10px] font-black uppercase tracking-wider text-white/70">
               None
             </span>
             {!currentValue && (
@@ -282,10 +281,9 @@ export function AvatarPicker({
                 type="button"
                 disabled={isSaving}
                 onClick={() => handleSelectPart(slot, part)}
-                className="group relative flex flex-col items-center gap-2 rounded-2xl py-3 transition-all active:translate-y-[1px]"
+                className="group relative flex flex-col items-center gap-2 rounded-2xl bg-surface-page py-3 transition-all active:translate-y-[1px]"
                 style={{
-                  border: `2px solid ${selected ? PURPLE : "transparent"}`,
-                  backgroundColor: "#FFFFFF",
+                  border: `2px solid ${selected ? PURPLE : "rgba(255,255,255,0.1)"}`,
                 }}
               >
                 <div className="relative flex size-20 sm:size-24 items-center justify-center">
@@ -304,8 +302,8 @@ export function AvatarPicker({
                   )}
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="max-w-[96px] text-center text-[10px] font-black uppercase tracking-wider leading-tight text-surface-page/70 line-clamp-2">
-                    {part.name}
+                  <span className="max-w-[96px] text-center text-[10px] font-black uppercase tracking-wider leading-tight text-white/70 line-clamp-2">
+                    {translatePartName(part.name, t)}
                   </span>
                   {!owned && part.priceCoins && (
                     <span className="text-[9px] font-black uppercase tracking-wider text-brand-yellow">
@@ -331,8 +329,9 @@ export function AvatarPicker({
 
   const Content = (
     <div className="space-y-4">
-      {/* Live preview of the avatar with current selection */}
-      <div className="flex justify-center rounded-2xl bg-white pt-1 pb-2">
+      {/* Live preview of the avatar — solid dark panel (not translucent, which
+          would pick up the blue modal behind it). */}
+      <div className="flex justify-center rounded-2xl border border-white/10 bg-surface-page pt-1 pb-2">
         <AvatarPreview customization={current} width={isMobile ? 140 : 160} />
       </div>
 
@@ -356,8 +355,8 @@ export function AvatarPicker({
               </DialogTitle>
               <DialogDescription>
                 {pendingPurchase.type === "skin"
-                  ? t('profile.purchase.unlockSkin', { name: pendingPurchase.skin?.name ?? '' })
-                  : t('profile.purchase.unlockPart', { name: pendingPurchase.part?.name ?? '' })}
+                  ? t('profile.purchase.unlockSkin', { name: translatePartName(pendingPurchase.skin?.name ?? '', t) })
+                  : t('profile.purchase.unlockPart', { name: translatePartName(pendingPurchase.part?.name ?? '', t) })}
               </DialogDescription>
             </DialogHeader>
             <div className="flex flex-col items-center gap-4 py-2">
@@ -421,10 +420,11 @@ export function AvatarPicker({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side="bottom"
-          className="max-h-[92dvh] overflow-y-auto rounded-t-3xl border-t border-border/50"
+          className="max-h-[92dvh] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-surface-card p-5 [&>button:last-child]:hidden"
         >
+          <ModalCloseButton onClose={() => onOpenChange(false)} />
           <SheetHeader className="mb-3 text-left">
-            <SheetTitle className="text-lg font-bold">{t('profile.avatarPicker.title')}</SheetTitle>
+            <SheetTitle className="pr-14 text-lg font-bold text-white">{t('profile.avatarPicker.title')}</SheetTitle>
           </SheetHeader>
           {Content}
         </SheetContent>
@@ -434,7 +434,7 @@ export function AvatarPicker({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl max-h-[90dvh] overflow-y-auto rounded-[24px] border-0 bg-brand-blue p-6 sm:p-8 [&>button:last-child]:hidden">
+      <DialogContent className="sm:max-w-3xl max-h-[90dvh] overflow-y-auto rounded-[24px] border border-white/10 bg-surface-card p-6 sm:p-8 [&>button:last-child]:hidden">
         <ModalCloseButton onClose={() => onOpenChange(false)} />
         <DialogHeader>
           <DialogTitle className="pr-14 font-poppins text-[22px] font-semibold text-white sm:text-[26px]">{t('profile.avatarPicker.title')}</DialogTitle>

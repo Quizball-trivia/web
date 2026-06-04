@@ -84,7 +84,7 @@
     "Legend": "ლეგენდა"
   },
   "store": {
-    "partWayfarer": "Wayfarer",
+    "partWayfarer": "საბაზისო სათვალე",
     "sessionExpired": "სესია ამოიწურა. გთხოვთ, ხელახლა გაიაროთ ავტორიზაცია.",
     "ticketsAlreadyFull": "ბილეთების რაოდენობა უკვე მაქსიმალურია.",
     "unableToStartCheckout": "გადახდის დაწყება ვერ მოხერხდა.",
@@ -730,7 +730,6 @@
     "hubResetAt": "განახლდება {time}-ზე",
     "hubTodaysProgress": "დღევანდელი პროგრესი",
     "hubCoinsEarned": "მოპოვებული მონეტები",
-    "hubOfTotal": "{total}-დან",
     "hubPlayFor": "ფასი",
     "hubEarn": "მოიგებ",
     "hubPlay": "თამაში",
@@ -740,7 +739,13 @@
     "hubUnavailable": "დღეს უკვე შესრულდა. დაბრუნდი მომდევნო დღეს.",
     "hubResetButton": "გადატვირთვა",
     "hubResetSuccess": "{title} დღევანდელად გადაიტვირთა",
-    "hubResetError": "ყოველდღიური გამოწვევის გადატვირთვა ვერ მოხერხდა"
+    "hubResetError": "ყოველდღიური გამოწვევის გადატვირთვა ვერ მოხერხდა",
+    "introTag": "ყოველდღიური გამოწვევა",
+    "introGetReady": "მზად იყავი",
+    "unavailableTitle": "გამოწვევა მიუწვდომელია",
+    "unavailableMessage": "ეს გამოწვევა ამჟამად მიუწვდომელია. სცადე მოგვიანებით.",
+    "unavailableTryAgain": "ხელახლა ცდა",
+    "unavailableBack": "უკან"
   },
   "dailyChallenge": {
     "answerPrefix": "პასუხი",
