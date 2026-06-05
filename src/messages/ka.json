@@ -820,7 +820,9 @@
     "backToLogin": "შესვლაზე დაბრუნება"
   },
   "banCategory": {
-    "banned": "დაბლოკილია"
+    "banned": "დაბლოკილია",
+    "title": "დაბლოკე კატეგორია",
+    "draftResumes": "მეტოქე გაითიშა. დრაფტი განახლდება მისი დაბრუნებისას."
   },
   "recentMatches": {
     "title": "ბოლო მატჩები",
@@ -1049,7 +1051,9 @@
       "banChooseCategory": "აირჩიეთ ერთი კატეგორია დასაბლოკად",
       "secondHalfCategory": "მე-2 ტაიმის კატეგორია: {name}",
       "deciding": "მიმდინარეობს გადაწყვეტა...",
-      "banTitle": "თითო კატეგორია დაბლოკეთ"
+      "banTitle": "თითო კატეგორია დაბლოკეთ",
+      "yourTurn": "შენი რიგია",
+      "opponentBanning": "მეტოქე ბლოკავს"
     },
     "opponentSelected": "მოწინააღმდეგემ აირჩია ეს პასუხი",
     "partyPickSelected": "{username}-მ აირჩია ეს პასუხი",

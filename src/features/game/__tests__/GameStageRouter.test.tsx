@@ -23,9 +23,15 @@ type RealtimeResultsScreenMockProps = {
   opponentRankPoints?: number | null;
   playerQuestionResults?: Array<'correct' | 'wrong' | null>;
   opponentQuestionResults?: Array<'correct' | 'wrong' | null>;
+  onMainMenu?: () => void;
 };
 
 const realtimeResultsRenderProps = vi.hoisted(() => [] as RealtimeResultsScreenMockProps[]);
+const analyticsMocks = vi.hoisted(() => ({
+  trackResultsMainMenuClicked: vi.fn(),
+  trackExitToPlayStarted: vi.fn(),
+  markExitToPlayPending: vi.fn(),
+}));
 
 function createInitialGameSessionState() {
   return {
@@ -147,6 +153,8 @@ vi.mock('@/lib/match/useGameStageTransitions', () => ({
   useGameStageTransitions: () => {},
 }));
 
+vi.mock('@/lib/analytics/game-events', () => analyticsMocks);
+
 vi.mock('@/lib/queries/ranked.queries', () => ({
   useRankedProfile: () => ({ data: rankedProfileData }),
 }));
@@ -179,7 +187,12 @@ vi.mock('@/features/play/RankedCategoryBlockingScreen', () => ({
 vi.mock('@/features/game/RealtimeResultsScreen', () => ({
   RealtimeResultsScreen: (props: RealtimeResultsScreenMockProps) => {
     realtimeResultsRenderProps.push(props);
-    return <div>Realtime Results {String(props.finalWinnerId)}</div>;
+    return (
+      <div>
+        <div>Realtime Results {String(props.finalWinnerId)}</div>
+        <button type="button" onClick={props.onMainMenu}>Main Menu</button>
+      </div>
+    );
   },
 }));
 
@@ -197,7 +210,12 @@ vi.mock('@/features/party/RealtimePartyQuizScreen', () => ({
 }));
 
 vi.mock('@/features/party/PartyQuizResultsScreen', () => ({
-  PartyQuizResultsScreen: () => <div>Party Quiz Results</div>,
+  PartyQuizResultsScreen: (props: { onMainMenu: () => void }) => (
+    <div>
+      <div>Party Quiz Results</div>
+      <button type="button" onClick={props.onMainMenu}>Party Main Menu</button>
+    </div>
+  ),
 }));
 
 vi.mock('@/components/shared/LoadingScreen', () => ({
@@ -341,6 +359,63 @@ describe('GameStageRouter', () => {
     render(<GameStageRouter />);
 
     expect(screen.getByText('Realtime Results self-1')).toBeInTheDocument();
+  });
+
+  it('tracks results main-menu exits and marks the /play landing pending', () => {
+    gameSessionState.stage = 'finalResults';
+    gameSessionState.config = {
+      mode: 'ranked',
+      matchType: 'ranked',
+      categoryName: 'Football',
+      categoryIcon: '⚽',
+    };
+    realtimeMatchState.match = {
+      ...realtimeMatchState.match,
+      mode: 'ranked',
+      variant: 'ranked_sim',
+      finalResults: {
+        matchId: 'match-results-1',
+        resultVersion: 42,
+        winnerId: 'self-1',
+        winnerDecisionMethod: 'goals',
+        players: {
+          'self-1': { userId: 'self-1', goals: 2, correctAnswers: 9 },
+          'opp-1': { userId: 'opp-1', goals: 1, correctAnswers: 7 },
+        },
+        unlockedAchievements: {},
+        rankedOutcome: null,
+      },
+    } as unknown as typeof realtimeMatchState.match & {
+      mode: 'ranked';
+      finalResults: unknown;
+    };
+
+    render(<GameStageRouter />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Main Menu' }));
+
+    const expectedAnalytics = expect.objectContaining({
+      source: 'results_main_menu',
+      matchId: 'match-results-1',
+      matchType: 'ranked',
+      mode: 'ranked',
+      variant: 'ranked_sim',
+      resultVersion: 42,
+      hadFinalResults: true,
+      finalResultsAckSent: true,
+      stage: 'finalResults',
+    });
+    expect(analyticsMocks.trackResultsMainMenuClicked).toHaveBeenCalledWith(expectedAnalytics);
+    expect(analyticsMocks.trackExitToPlayStarted).toHaveBeenCalledWith(expectedAnalytics);
+    expect(analyticsMocks.markExitToPlayPending).toHaveBeenCalledWith(expectedAnalytics);
+    expect(socket.emit).toHaveBeenCalledWith('match:final_results_ack', {
+      matchId: 'match-results-1',
+      resultVersion: 42,
+    });
+    expect(realtimeMatchState.reset).toHaveBeenCalled();
+    expect(rankedMatchmakingState.clearRankedMatchmaking).toHaveBeenCalled();
+    expect(gameSessionState.reset).toHaveBeenCalled();
+    expect(router.push).toHaveBeenCalledWith('/play');
   });
 
   it('renders replayed final results when a reload clears the game session', () => {

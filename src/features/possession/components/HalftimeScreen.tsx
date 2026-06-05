@@ -21,6 +21,9 @@ interface HalftimeScreenProps {
   playerAvatarCustomization?: AvatarCustomization | null;
   opponentAvatarCustomization?: AvatarCustomization | null;
   playerPosition: number;
+  /** Ranked points — renders the RP pill under each name, like the draft header. */
+  playerRankPoints?: number | null;
+  opponentRankPoints?: number | null;
   /** ISO-country code (e.g. "ge", "us") — renders a flag badge on the avatar. */
   playerCountryCode?: string | null;
   opponentCountryCode?: string | null;
@@ -89,6 +92,8 @@ export function HalftimeScreen({
   playerAvatarCustomization = null,
   opponentAvatarCustomization = null,
   playerPosition,
+  playerRankPoints = null,
+  opponentRankPoints = null,
   playerCountryCode = null,
   opponentCountryCode = null,
   deadlineAt = null,
@@ -203,8 +208,9 @@ export function HalftimeScreen({
         />
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 w-full max-w-md sm:max-w-lg lg:max-w-2xl flex flex-col items-center font-poppins px-4 sm:px-6 pt-6 sm:pt-10">
+      {/* Content — same width as the pre-match draft (max-w-3xl) so cards and
+          avatars render at the same size across all three ban screens. */}
+      <div className="relative z-10 w-full max-w-3xl flex flex-col items-center font-poppins px-4 sm:px-6 pt-6 sm:pt-10">
         {/* Half Time label — flat, no 3D border */}
         <div className="mb-4 sm:mb-5">
           <span
@@ -215,21 +221,34 @@ export function HalftimeScreen({
           </span>
         </div>
 
-        {/* Compact score row — flat, no surrounding card
-            (avatars w/ flags | score | avatars w/ flags, timer below) */}
+        {/* Score row — draft-style headers (avatar in a colored circle + name),
+            score in the centre, timer below. The non-acting player's avatar is
+            dimmed during the ban phase so it's clear whose turn it is. */}
         <div className="w-full flex flex-col items-center gap-3 mb-6 sm:mb-8">
           <div className="flex items-center justify-center gap-4 sm:gap-6 w-full">
-            {/* Player */}
-            <div className="flex flex-col items-center gap-1.5 min-w-0 flex-1">
-              <AvatarDisplay
-                customization={playerAvatarCustomization ?? { base: playerAvatarUrl }}
-                size="sm"
-                countryCode={playerCountryCode}
-                className="ring-[3px] ring-brand-cyan"
-              />
-              <span className="text-xs font-black text-white truncate max-w-[120px]">
-                {playerName}
-              </span>
+            {/* Player — avatar with name + RP to the SIDE, like the draft. */}
+            <div className={cn(
+              'flex items-center gap-3 min-w-0 flex-1 transition-opacity duration-300',
+              showBanPhase && !bothBansSubmitted && !canBan && 'opacity-40',
+            )}>
+              <div className="shrink-0 rounded-full p-3" style={{ backgroundColor: '#1645FF' }}>
+                <AvatarDisplay
+                  customization={playerAvatarCustomization ?? { base: playerAvatarUrl }}
+                  size="md"
+                  countryCode={playerCountryCode}
+                />
+              </div>
+              <div className="hidden min-w-0 sm:block">
+                <div className="max-w-[140px] truncate text-[13px] font-black uppercase text-white sm:text-sm">
+                  {playerName}
+                </div>
+                <span
+                  className="mt-1.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] tabular-nums"
+                  style={{ backgroundColor: '#FFE500', color: '#1a1800' }}
+                >
+                  {playerRankPoints != null ? `${playerRankPoints} RP` : '— RP'}
+                </span>
+              </div>
             </div>
 
             {/* Score */}
@@ -243,17 +262,30 @@ export function HalftimeScreen({
               </span>
             </div>
 
-            {/* Opponent */}
-            <div className="flex flex-col items-center gap-1.5 min-w-0 flex-1">
-              <AvatarDisplay
-                customization={opponentAvatarCustomization ?? { base: opponentAvatarUrl }}
-                size="sm"
-                countryCode={opponentCountryCode}
-                className="ring-[3px] ring-brand-red-soft"
-              />
-              <span className="text-xs font-black text-white truncate max-w-[120px]">
-                {opponentName}
-              </span>
+            {/* Opponent — mirrored: avatar on the right, name + RP to its side. */}
+            <div className={cn(
+              'flex flex-row-reverse items-center gap-3 min-w-0 flex-1 transition-opacity duration-300',
+              showBanPhase && !bothBansSubmitted && canBan && 'opacity-40',
+            )}>
+              <div className="shrink-0 rounded-full p-3" style={{ backgroundColor: '#FF4B4B' }}>
+                <AvatarDisplay
+                  customization={opponentAvatarCustomization ?? { base: opponentAvatarUrl }}
+                  size="md"
+                  countryCode={opponentCountryCode}
+                  className="-scale-x-100"
+                />
+              </div>
+              <div className="hidden min-w-0 text-right sm:block">
+                <div className="max-w-[140px] truncate text-[13px] font-black uppercase text-white sm:text-sm">
+                  {opponentName}
+                </div>
+                <span
+                  className="mt-1.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] tabular-nums"
+                  style={{ backgroundColor: '#FFE500', color: '#1a1800' }}
+                >
+                  {opponentRankPoints != null ? `${opponentRankPoints} RP` : '— RP'}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -272,9 +304,23 @@ export function HalftimeScreen({
             className="w-full flex flex-col items-center"
           >
             {/* Section title */}
-            <div className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] text-brand-slate mb-3 sm:mb-4">
+            <div className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] text-brand-slate mb-1.5 sm:mb-2">
               {t('possession.halftime.banTitle')}
             </div>
+
+            {/* Turn indicator — your turn vs opponent banning, like the draft. */}
+            {!bothBansSubmitted && (
+              <div
+                className={cn(
+                  'mb-3 sm:mb-4 text-sm sm:text-base font-black uppercase tracking-[0.12em]',
+                  canBan ? 'text-brand-yellow' : 'text-white/55',
+                )}
+              >
+                {canBan
+                  ? t('possession.halftime.yourTurn')
+                  : t('possession.halftime.opponentBanning')}
+              </div>
+            )}
 
             {/* Category cards — shared BanCategoryCard mirrors /play style */}
             <div className="grid grid-cols-3 gap-3 sm:gap-5 w-full">

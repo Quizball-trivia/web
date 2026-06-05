@@ -204,18 +204,35 @@ export function BanCategoryView({
             className="text-3xl uppercase text-white sm:text-4xl"
             style={poppins}
           >
-            {paused ? 'Waiting' : phase === 'ban' ? 'Ban Category' : 'Get Ready'}
-          </h2>
-          <p
-            className="mt-2 text-xs uppercase tracking-[0.08em] text-white/55 sm:text-sm"
-            style={poppins}
-          >
             {paused
-              ? 'Opponent disconnected. Draft resumes when they return.'
+              ? t('possession.waiting')
               : phase === 'ban'
-              ? 'Tap a card to remove it. One category remains for Half 1.'
-              : 'Match starting with selected Half 1 category…'}
-          </p>
+                ? t('banCategory.title')
+                : t('possession.getReady')}
+          </h2>
+          {/* Turn indicator — clearly shows whose turn it is to ban. */}
+          {phase === 'ban' && !paused ? (
+            <p
+              className={cn(
+                'mt-2 text-sm uppercase tracking-[0.12em] sm:text-base',
+                currentActor === 'player' ? 'text-brand-yellow' : 'text-white/55',
+              )}
+              style={poppins}
+            >
+              {currentActor === 'player'
+                ? t('possession.halftime.yourTurn')
+                : t('possession.halftime.opponentBanning')}
+            </p>
+          ) : (
+            <p
+              className="mt-2 text-xs uppercase tracking-[0.08em] text-white/55 sm:text-sm"
+              style={poppins}
+            >
+              {paused
+                ? t('banCategory.draftResumes')
+                : t('training.matchStartingHalf1')}
+            </p>
+          )}
         </div>
 
         {/* Category Cards — shared BanCategoryCard matches /play mode-selection style */}
@@ -302,7 +319,7 @@ export function RankedCategoryBlockingScreen() {
     [opponentMember?.avatarUrl]
   );
   const opponentId = opponentMember?.userId ?? 'opponent';
-  const opponentUsername = opponentMember?.username ?? 'Opponent';
+  const opponentUsername = opponentMember?.username ?? t('possession.opponent');
 
   useEffect(() => {
     if (!draft || showShowdown || draftPaused) return;

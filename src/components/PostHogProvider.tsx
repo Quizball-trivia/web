@@ -4,6 +4,7 @@ import { Suspense, useEffect } from 'react';
 import type { ReactElement } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import posthog from 'posthog-js';
+import { consumeExitToPlayPending, trackExitToPlayLanded } from '@/lib/analytics/game-events';
 
 export function PostHogPageView(): ReactElement {
   return (
@@ -36,6 +37,18 @@ function PostHogPageViewInner(): ReactElement {
       console.log('[Dev] PostHog PageView:', pathname);
     }
   }, [pathname, searchParams]);
+
+  useEffect(() => {
+    if (!pathname) return;
+    const normalizedPath = pathname.replace(/\/$/, '');
+    if (normalizedPath !== '/play' && !normalizedPath.endsWith('/play')) return;
+    const pendingExit = consumeExitToPlayPending();
+    if (!pendingExit) return;
+    trackExitToPlayLanded({
+      ...pendingExit,
+      landedPath: pathname,
+    });
+  }, [pathname]);
 
   return <></>;
 }

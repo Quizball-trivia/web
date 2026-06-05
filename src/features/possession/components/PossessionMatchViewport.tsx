@@ -2,6 +2,7 @@
 
 import { type ComponentProps, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
 import { GoalCelebrationOverlay } from './GoalCelebrationOverlay';
 import { GoalProgressBar } from './GoalProgressBar';
@@ -250,7 +251,18 @@ export function PossessionMatchViewport({ model, children }: PossessionMatchView
           </>
         )}
 
-        {children}
+        {/* During the goal celebration, blur + dim and disable the question
+            area below so users don't mistake the just-answered question for the
+            next one and start reading/answering early. Reverts when the
+            celebration ends and the next round loads. */}
+        <div
+          className={cn(
+            'transition-[filter,opacity] duration-300',
+            celebrationOwnsBall && 'pointer-events-none blur-[6px] opacity-50',
+          )}
+        >
+          {children}
+        </div>
       </div>
     </>
   );

@@ -6,6 +6,7 @@ import { useRealtimeGameLogic } from '@/lib/match/useRealtimeGameLogic';
 import { useGameSounds } from '@/lib/sounds/useGameSounds';
 import { usePreloadImages } from '@/lib/usePreloadImages';
 import { useRealtimeMatchStore, type MatchQuestionState } from '@/stores/realtimeMatch.store';
+import { useRankedProfile } from '@/lib/queries/ranked.queries';
 import { logger } from '@/utils/logger';
 import { HalftimeScreen } from '../components/HalftimeScreen';
 import type { PossessionViewportModel } from '../components/PossessionMatchViewport';
@@ -122,6 +123,12 @@ export function useRealtimePossessionMatchController({
   const realtimeError = useRealtimeMatchStore((store) => store.error);
   const meUserId = useRealtimeMatchStore((store) => store.selfUserId);
   const shouldPulseUnopposedBars = unopposedBarPulse || possessionMatch.variant === 'ranked_sim';
+
+  // RP for the halftime/penalty ban header (mirrors the pre-match draft header):
+  // self from the ranked profile, opponent from the match participant payload.
+  const { data: rankedProfile } = useRankedProfile();
+  const playerRankPoints = rankedProfile?.rp ?? null;
+  const opponentRankPoints = possessionMatch.opponent?.rp ?? null;
 
   const [muted, setMuted] = useState(false);
   const [quitModalOpen, setQuitModalOpen] = useState(false);
@@ -671,6 +678,8 @@ export function useRealtimePossessionMatchController({
       playerAvatarCustomization,
       opponentAvatarCustomization,
       playerPosition: fieldState.visualMyPossessionPct,
+      playerRankPoints,
+      opponentRankPoints,
       playerCountryCode,
       opponentCountryCode,
       deadlineAt: possessionState.halftime.deadlineAt,

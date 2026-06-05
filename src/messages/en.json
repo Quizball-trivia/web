@@ -713,7 +713,9 @@
     "backToLogin": "Back to Login"
   },
   "banCategory": {
-    "banned": "BANNED"
+    "banned": "BANNED",
+    "title": "Ban Category",
+    "draftResumes": "Opponent disconnected. Draft resumes when they return."
   },
   "recentMatches": {
     "title": "Recent Matches",
@@ -1003,7 +1005,9 @@
       "banChooseCategory": "Choose one category to ban",
       "secondHalfCategory": "2nd half category: {name}",
       "deciding": "Deciding...",
-      "banTitle": "Ban 1 Category Each"
+      "banTitle": "Ban 1 Category Each",
+      "yourTurn": "Your Turn",
+      "opponentBanning": "Opponent is banning"
     },
     "opponentSelected": "Opponent selected this answer",
     "partyPickSelected": "{username} selected this answer",

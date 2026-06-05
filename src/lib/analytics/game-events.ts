@@ -2,6 +2,65 @@ import { trackEvent } from '@/lib/posthog';
 
 type AuthMethod = 'google' | 'facebook' | 'email' | 'phone';
 
+export type ExitToPlaySource =
+  | 'results_main_menu'
+  | 'party_results_main_menu'
+  | 'match_quit'
+  | 'matchmaking_exit'
+  | 'training_complete'
+  | 'generic';
+
+export interface ExitToPlayAnalyticsProps {
+  source: ExitToPlaySource;
+  matchId?: string | null;
+  matchType?: string | null;
+  mode?: string | null;
+  variant?: string | null;
+  resultVersion?: number | null;
+  hadFinalResults?: boolean;
+  finalResultsAckSent?: boolean;
+  stage?: string | null;
+}
+
+interface PendingExitToPlayAnalytics extends ExitToPlayAnalyticsProps {
+  startedAtMs: number;
+  fromPath?: string | null;
+}
+
+const EXIT_TO_PLAY_PENDING_KEY = 'quizball.exit_to_play.pending';
+const EXIT_TO_PLAY_PENDING_TTL_MS = 10 * 60 * 1000;
+
+function resultsExitProps(props: ExitToPlayAnalyticsProps) {
+  return {
+    source: props.source,
+    match_id: props.matchId ?? null,
+    match_type: props.matchType ?? null,
+    mode: props.mode ?? null,
+    variant: props.variant ?? null,
+    result_version: props.resultVersion ?? null,
+    had_final_results: Boolean(props.hadFinalResults),
+    final_results_ack_sent: Boolean(props.finalResultsAckSent),
+    stage: props.stage ?? null,
+  };
+}
+
+function readPendingExitToPlay(): PendingExitToPlayAnalytics | null {
+  if (typeof window === 'undefined') return null;
+  const raw = window.sessionStorage.getItem(EXIT_TO_PLAY_PENDING_KEY);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as Partial<PendingExitToPlayAnalytics>;
+    if (typeof parsed.startedAtMs !== 'number' || !Number.isFinite(parsed.startedAtMs)) {
+      window.sessionStorage.removeItem(EXIT_TO_PLAY_PENDING_KEY);
+      return null;
+    }
+    return parsed as PendingExitToPlayAnalytics;
+  } catch {
+    window.sessionStorage.removeItem(EXIT_TO_PLAY_PENDING_KEY);
+    return null;
+  }
+}
+
 export function trackSignupStarted(method: AuthMethod = 'google') {
   // Fires when a user TAPS an auth button (Google/Facebook/email-signup) — this
   // is auth *intent*, not a real signup, and covers both new signups and
@@ -132,6 +191,51 @@ export function trackMatchResultsViewed(
     score,
     opponent_score: opponentScore,
     rp_change: rpChange,
+  });
+}
+
+export function trackResultsMainMenuClicked(props: ExitToPlayAnalyticsProps): void {
+  trackEvent('results_main_menu_clicked', resultsExitProps(props));
+}
+
+export function trackExitToPlayStarted(props: ExitToPlayAnalyticsProps): void {
+  trackEvent('exit_to_play_started', {
+    ...resultsExitProps(props),
+    started_at_ms: Date.now(),
+  });
+}
+
+export function markExitToPlayPending(props: ExitToPlayAnalyticsProps): void {
+  if (typeof window === 'undefined') return;
+  const pending: PendingExitToPlayAnalytics = {
+    ...props,
+    startedAtMs: Date.now(),
+    fromPath: window.location.pathname,
+  };
+  window.sessionStorage.setItem(EXIT_TO_PLAY_PENDING_KEY, JSON.stringify(pending));
+}
+
+export function consumeExitToPlayPending(nowMs = Date.now()): PendingExitToPlayAnalytics | null {
+  if (typeof window === 'undefined') return null;
+  const pending = readPendingExitToPlay();
+  if (!pending) return null;
+  window.sessionStorage.removeItem(EXIT_TO_PLAY_PENDING_KEY);
+  if (nowMs - pending.startedAtMs > EXIT_TO_PLAY_PENDING_TTL_MS) {
+    return null;
+  }
+  return pending;
+}
+
+export function trackExitToPlayLanded(
+  props: PendingExitToPlayAnalytics & { landedPath?: string | null; nowMs?: number },
+): void {
+  const nowMs = props.nowMs ?? Date.now();
+  trackEvent('exit_to_play_landed', {
+    ...resultsExitProps(props),
+    started_at_ms: props.startedAtMs,
+    elapsed_ms: Math.max(0, nowMs - props.startedAtMs),
+    from_path: props.fromPath ?? null,
+    landed_path: props.landedPath ?? null,
   });
 }
 
