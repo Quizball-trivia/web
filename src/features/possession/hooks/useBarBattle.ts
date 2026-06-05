@@ -323,6 +323,40 @@ export function useBarBattle({
     const pBars = pointsToBars(myPts);
     const oBars = pointsToBars(oppPts);
     const delta = pBars - oBars;
+
+    // DEBUG: trace why the bar fill can disagree with the flight number (e.g.
+    // flight +100/+10 but bar shows 80). Logs, per player: the raw pointsEarned
+    // (what the flight shows), the possessionPointsEarned (what the bar uses),
+    // the resolved value, the bar counts, AND the authoritative server delta —
+    // plus an explicit `mismatch` flag when raw and possession points diverge or
+    // when the bar's point-delta != raw-delta. Search console for [bar-battle-debug].
+    const rawDelta = (myRound.pointsEarned ?? 0) - (opponentRound.pointsEarned ?? 0);
+    const possessionMismatch =
+      (myRound.possessionPointsEarned != null && myRound.possessionPointsEarned !== myRound.pointsEarned) ||
+      (opponentRound.possessionPointsEarned != null && opponentRound.possessionPointsEarned !== opponentRound.pointsEarned);
+    console.info('[bar-battle-debug]', {
+      qIndex: roundResult.qIndex,
+      questionKind: roundResult.questionKind,
+      phaseKind: roundResult.phaseKind,
+      myRawPoints: myRound.pointsEarned,
+      myPossessionPoints: myRound.possessionPointsEarned,
+      myResolvedPts: myPts,
+      oppRawPoints: opponentRound.pointsEarned,
+      oppPossessionPoints: opponentRound.possessionPointsEarned,
+      oppResolvedPts: oppPts,
+      pBars,
+      oBars,
+      barDelta: delta,
+      barDeltaPoints: delta * 10,
+      // What the FLIGHT-shown raw scores would imply for the swing.
+      rawDeltaPoints: rawDelta,
+      // Server's authoritative possession swing for this round (the bar should match this).
+      serverPossessionDelta: roundResult.deltas?.possessionDelta ?? null,
+      // True when bar (possession) points differ from the raw points the flight shows.
+      possessionMismatch,
+      // True when the bar's point-delta doesn't equal the raw flight delta (the visible bug).
+      deltaMismatch: delta * 10 !== rawDelta,
+    });
     const cancelledCount = Math.min(pBars, oBars);
     const key = roundResult.qIndex;
     const snapDividerX = dividerXRef.current;

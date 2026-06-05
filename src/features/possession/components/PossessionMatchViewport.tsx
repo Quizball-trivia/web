@@ -98,6 +98,10 @@ function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
   if (!model?.visible) return null;
 
   const { localQuestionIndex, result, resultShooterIsMe } = model;
+  if (process.env.NODE_ENV === 'development') {
+    // eslint-disable-next-line no-console
+    console.log(`[pen-splash] MOUNT q=${localQuestionIndex} result=${result} @${Math.round(performance.now())}ms`);
+  }
   return (
     <motion.div
       key={`pen-splash-${localQuestionIndex}`}
@@ -112,6 +116,12 @@ function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
         duration: 1.85,
         times: [0, 0.12, 0.25, 0.82, 1],
         ease: [0.22, 1, 0.36, 1],
+      }}
+      onAnimationComplete={() => {
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.log(`[pen-splash] ANIMATION COMPLETE q=${localQuestionIndex} @${Math.round(performance.now())}ms`);
+        }
       }}
       className="absolute inset-x-0 top-[35%] z-30 flex pointer-events-none flex-col items-center"
     >

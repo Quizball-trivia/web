@@ -21,6 +21,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
 import { RealtimePossessionMatchScreen } from '@/features/possession/RealtimePossessionMatchScreen';
+import { PenaltyMatchEndOverlay } from '@/features/possession/components/PenaltyMatchEndOverlay';
+import { PENALTY_RESULT_SEQUENCE_HOLD_MS } from '@/features/possession/realtimePossession.helpers';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import type { Socket } from 'socket.io-client';
 import { __setSocketOverride } from '@/lib/realtime/socket-client';
@@ -438,6 +440,10 @@ type PenaltyKickOptions = {
   answerAckDelayMs?: number;
   opponentAnsweredDelayMs?: number;
   roundResultDelayMs?: number;
+  // When true, DON'T advance to the next shooter after the round result. Used for
+  // the FINAL/deciding kick so the goal/save shot + splash play out fully instead
+  // of being cut short by the next-shooter state change (the reported bug).
+  holdOnResult?: boolean;
 };
 
 function defaultPenaltyPoints(shooterSeat: 1 | 2, outcome: 'goal' | 'saved'): { me: number; opp: number } {
@@ -722,6 +728,14 @@ function DevAnimationsContent() {
   // (roundResultHoldDone, showOptions, firstQuestionIntro etc.) re-initialises
   // cleanly — otherwise dev clicks can land between phases and wedge the UI.
   const [remountKey, setRemountKey] = useState(0);
+  // Dev-only prototype of the penalty match-end overlay (won/lost + final score)
+  // we want to show after the deciding kick before the results screen.
+  const [penaltyEndOverlay, setPenaltyEndOverlay] = useState<{
+    visible: boolean;
+    playerWon: boolean;
+    myPenaltyGoals: number;
+    oppPenaltyGoals: number;
+  }>({ visible: false, playerWon: true, myPenaltyGoals: 0, oppPenaltyGoals: 0 });
   // Mobile-only: controls drawer toggle. Defaults open so the user lands
   // straight on the controls, can tap "✕" to dismiss and watch the
   // animation full-screen.
@@ -1919,6 +1933,7 @@ function DevAnimationsContent() {
     const opponentAnsweredDelayMs = options.opponentAnsweredDelayMs ?? 3500;
     const roundResultDelayMs = options.roundResultDelayMs ?? DEV_PENALTY_ROUND_RESULT_DELAY_MS;
     const emitOpponentAnswered = options.emitOpponentAnswered ?? false;
+    const holdOnResult = options.holdOnResult ?? false;
     const nextShooterSeat = nextSeat(shooterSeat);
 
     stateVersion.current += 1;
@@ -2015,6 +2030,10 @@ function DevAnimationsContent() {
           }
           scoreRef.current.meTotal = me.totalPoints;
           scoreRef.current.oppTotal = opp.totalPoints;
+          // Deciding kick: DON'T advance to the next shooter — that state change
+          // is what cuts the goal/save shot + splash short. Hold on the result so
+          // the animation plays out fully.
+          if (holdOnResult) return;
           stateVersion.current += 1;
           s.setMatchState(
             makeMatchState('PENALTY_SHOOTOUT', {
@@ -2090,6 +2109,151 @@ function DevAnimationsContent() {
     });
   }
 
+  // Penalty match-end simulator. Jumps STRAIGHT to the deciding kick (seeds the
+  // scoreboard at 2-0 so we don't sit through a whole shootout), takes ONE
+  // deciding goal, then ends the match.
+  //   mode 'broken' — reproduce the reported bug: final_results fires the instant
+  //     the round_result lands, so the shot animation is truncated and the end
+  //     screen cuts in with no won/lost beat.
+  //   mode 'fixed'  — let the shot/save animation FULLY play, then show the
+  //     won/lost + final-score overlay for a few seconds, THEN go to results.
+  function simulatePenaltyMatchEnd(playerWon: boolean, mode: 'broken' | 'fixed') {
+    setMobilePanelOpen(false);
+    pendingTimers.current.forEach((t) => window.clearTimeout(t));
+    pendingTimers.current = [];
+    setPenaltyEndOverlay((o) => ({ ...o, visible: false }));
+
+    stateVersion.current = 0;
+    scoreRef.current = { meTotal: 70, oppTotal: 70 }; // both on 70 like the report
+    goalsRef.current = { seat1: 6, seat2: 6 };
+    // Seed near-deciding: the winning side already has 2, loser 0, and the
+    // deciding kick makes it 3-0. (decidingSeat scores; seat1 = me.)
+    const decidingSeat: 1 | 2 = playerWon ? 1 : 2;
+    penaltyGoalsRef.current = decidingSeat === 1 ? { seat1: 2, seat2: 0 } : { seat1: 0, seat2: 2 };
+    penaltyKickIndexRef.current = 4; // we're deep in the shootout
+    possessionDiffRef.current = 0;
+
+    const s = store();
+    s.reset();
+    s.setSelfUserId(SELF_ID);
+    s.setMatchStart(makeStartPayload());
+    useRealtimeMatchStore.setState((prev) =>
+      prev.match ? { ...prev, match: { ...prev.match, countdownEndsAt: null } } : prev
+    );
+
+    stateVersion.current += 1;
+    s.setMatchState(
+      makeMatchState('PENALTY_SHOOTOUT', {
+        stateVersion: stateVersion.current,
+        half: 2,
+        goals: goalsRef.current,
+        penaltyGoals: penaltyGoalsRef.current,
+        phaseKind: 'penalty',
+        phaseRound: penaltyPhaseRoundForKickIndex(penaltyKickIndexRef.current),
+        shooterSeat: decidingSeat,
+      })
+    );
+    setRemountKey((k) => k + 1);
+
+    const finalPenaltyGoals = {
+      seat1: penaltyGoalsRef.current.seat1 + (decidingSeat === 1 ? 1 : 0),
+      seat2: penaltyGoalsRef.current.seat2 + (decidingSeat === 2 ? 1 : 0),
+    };
+
+    const emitFinalResults = () => {
+      stateVersion.current += 1;
+      s.setMatchState(
+        makeMatchState('COMPLETED', {
+          stateVersion: stateVersion.current,
+          half: 2,
+          goals: goalsRef.current,
+          penaltyGoals: finalPenaltyGoals,
+          phaseKind: 'penalty',
+        })
+      );
+      s.setFinalResults({
+        matchId: MATCH_ID,
+        variant: 'friendly_possession',
+        winnerId: playerWon ? SELF_ID : OPP_ID,
+        durationMs: 600_000,
+        resultVersion: 1,
+        winnerDecisionMethod: 'penalty_goals',
+        players: {
+          [SELF_ID]: {
+            totalPoints: scoreRef.current.meTotal,
+            correctAnswers: 9,
+            avgTimeMs: 5200,
+            goals: goalsRef.current.seat1,
+            penaltyGoals: finalPenaltyGoals.seat1,
+          },
+          [OPP_ID]: {
+            totalPoints: scoreRef.current.oppTotal,
+            correctAnswers: 9,
+            avgTimeMs: 5400,
+            goals: goalsRef.current.seat2,
+            penaltyGoals: finalPenaltyGoals.seat2,
+          },
+        },
+      });
+    };
+
+    // Take the deciding kick after a short beat (the shootout is already set up).
+    const decidingDelay = 600;
+    const t0 = performance.now();
+    const log = (label: string) =>
+      // eslint-disable-next-line no-console
+      console.log(`[penalty-end ${mode}] +${Math.round(performance.now() - t0)}ms — ${label}`);
+    pendingTimers.current.push(
+      window.setTimeout(() => {
+        log('deciding kick taken');
+        // holdOnResult: keep the scene on the deciding shot so the goal/save
+        // animation + splash fully play instead of being cut by a next-shooter state.
+        takePenaltyKick(decidingSeat, 'goal', { resetTimers: false, holdOnResult: true });
+      }, decidingDelay)
+    );
+
+    // When the round_result lands (shot starts resolving):
+    const roundResultAt = decidingDelay + DEV_PENALTY_ROUND_RESULT_DELAY_MS;
+
+    pendingTimers.current.push(window.setTimeout(() => log('round_result lands (shot resolving)'), roundResultAt));
+
+    if (mode === 'broken') {
+      // BUG: end the match immediately — cuts the shot mid-flight, no beat.
+      pendingTimers.current.push(
+        window.setTimeout(() => {
+          log('final_results (INSTANT — bug)');
+          emitFinalResults();
+        }, roundResultAt + 50)
+      );
+      return;
+    }
+
+    // FIXED: the visible chain after round_result is score-flight/attack handoff →
+    // ball flight → the "GOAL!"/"SAVED" splash (1.85s). PENALTY_RESULT_SEQUENCE_HOLD_MS
+    // is exactly that whole window, so the overlay fires right as the splash ends —
+    // no dead air, no racing the animation.
+    const shotFullyPlayedAt = roundResultAt + PENALTY_RESULT_SEQUENCE_HOLD_MS;
+    pendingTimers.current.push(
+      window.setTimeout(() => {
+        log('shot done → SHOW overlay');
+        setPenaltyEndOverlay({
+          visible: true,
+          playerWon,
+          myPenaltyGoals: finalPenaltyGoals.seat1,
+          oppPenaltyGoals: finalPenaltyGoals.seat2,
+        });
+      }, shotFullyPlayedAt)
+    );
+    const OVERLAY_HOLD_MS = 2000;
+    pendingTimers.current.push(
+      window.setTimeout(() => {
+        log('overlay done → final_results');
+        setPenaltyEndOverlay((o) => ({ ...o, visible: false }));
+        emitFinalResults();
+      }, shotFullyPlayedAt + OVERLAY_HOLD_MS)
+    );
+  }
+
   return (
     <div className="relative min-h-dvh bg-surface-page">
       {/* Stage — main area with the real match screen */}
@@ -2109,6 +2273,21 @@ function DevAnimationsContent() {
           disableBgm
           onQuit={() => router.push('/play')}
           onForfeit={() => router.push('/play')}
+        />
+        <PenaltyMatchEndOverlay
+          visible={penaltyEndOverlay.visible}
+          playerWon={penaltyEndOverlay.playerWon}
+          myPenaltyGoals={penaltyEndOverlay.myPenaltyGoals}
+          oppPenaltyGoals={penaltyEndOverlay.oppPenaltyGoals}
+          playerName="Me"
+          opponentName="Mock Opponent"
+          playerAvatarUrl="avatar-1"
+          opponentAvatarUrl="avatar-2"
+          opponentAvatarCustomization={{ jersey: 'jersey_red' }}
+          playerCountryCode="GE"
+          opponentCountryCode="BR"
+          playerRankPoints={1240}
+          opponentRankPoints={1180}
         />
       </div>
 
@@ -2288,6 +2467,34 @@ function DevAnimationsContent() {
             Full script starts from 6-6, alternates shooters, omits
             opponent_answered like production penalties, then sends the next
             shooter state right after each goal/save result.
+          </p>
+        </Group>
+
+        <Group label="Penalty MATCH END — BUG (instant cut)">
+          <Btn variant="red" onClick={() => simulatePenaltyMatchEnd(true, 'broken')}>
+            deciding goal · I WIN — abrupt
+          </Btn>
+          <Btn variant="red" onClick={() => simulatePenaltyMatchEnd(false, 'broken')}>
+            deciding goal · I LOSE — abrupt
+          </Btn>
+          <p className="mt-1 text-[9px] text-brand-slate">
+            Reproduces the reported bug: jumps to 2-0, takes the deciding kick,
+            and the end screen cuts in INSTANTLY — the shot animation is
+            truncated, no goal beat, no who-won moment.
+          </p>
+        </Group>
+
+        <Group label="Penalty MATCH END — FIXED (shot + overlay)">
+          <Btn variant="green" onClick={() => simulatePenaltyMatchEnd(true, 'fixed')}>
+            deciding goal · I WIN 🏆
+          </Btn>
+          <Btn variant="green" onClick={() => simulatePenaltyMatchEnd(false, 'fixed')}>
+            deciding goal · I LOSE 💔
+          </Btn>
+          <p className="mt-1 text-[9px] text-brand-slate">
+            The proposed fix: the deciding shot/save animation FULLY plays, then a
+            WON/LOST + final-score (3-0) overlay holds ~2.6s, THEN the results
+            screen. Compare against the abrupt version above.
           </p>
         </Group>
 

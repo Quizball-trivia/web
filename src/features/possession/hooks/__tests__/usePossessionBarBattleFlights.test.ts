@@ -583,4 +583,131 @@ describe('usePossessionBarBattleFlights', () => {
       boostVia: { x: 454, y: 84 },
     });
   });
+
+  it('uses doubled opponent points directly when the active 2x badge is not visible yet', async () => {
+    useRealtimeMatchStore.setState({
+      match: {
+        variant: 'ranked_sim',
+        matchId: MATCH_ID,
+        mySeat: 1,
+        currentQuestionPhase: 'playing',
+        currentQuestion: {
+          matchId: MATCH_ID,
+          qIndex: 9,
+          total: 12,
+          phaseKind: 'normal',
+          phaseRound: 10,
+          question: {
+            kind: 'multipleChoice',
+            id: 'q-9',
+            prompt: 'Question',
+            options: ['A', 'B', 'C', 'D'],
+            categoryName: 'General',
+          },
+          deadlineAt: new Date(Date.now() + 10_000).toISOString(),
+        },
+        possessionState: {
+          phaseKind: 'normal',
+          speedStreakHolderSeat: 2,
+        },
+        opponentAnswered: true,
+        opponentAnsweredCorrectly: true,
+        opponentRecentPoints: 10,
+      } as never,
+    });
+
+    const { result } = renderHook(() => usePossessionBarBattleFlights());
+
+    await act(async () => {
+      vi.advanceTimersByTime(250);
+    });
+
+    expect(result.current.flights).toHaveLength(1);
+    expect(result.current.flights[0]).toMatchObject({
+      side: 'opponent',
+      points: 20,
+      boostVia: undefined,
+    });
+  });
+
+  it('routes boosted round-result fallback flights with base points to avoid double-doubling', async () => {
+    appendAnchor('data-speed-streak-badge', 'opponent', rect(430, 70, 48, 28));
+    useRealtimeMatchStore.getState().setSelfUserId('user-a');
+    useRealtimeMatchStore.setState({
+      match: {
+        variant: 'ranked_sim',
+        matchId: MATCH_ID,
+        mySeat: 1,
+        currentQuestionPhase: 'playing',
+        currentQuestion: {
+          matchId: MATCH_ID,
+          qIndex: 10,
+          total: 12,
+          phaseKind: 'normal',
+          phaseRound: 11,
+          question: {
+            kind: 'multipleChoice',
+            id: 'q-10',
+            prompt: 'Question',
+            options: ['A', 'B', 'C', 'D'],
+            categoryName: 'General',
+          },
+          deadlineAt: new Date(Date.now() + 10_000).toISOString(),
+        },
+        lastRoundResult: {
+          matchId: MATCH_ID,
+          qIndex: 10,
+          questionKind: 'multipleChoice',
+          reveal: { kind: 'multipleChoice', correctIndex: 0 },
+          players: {
+            'user-a': {
+              selectedIndex: 0,
+              isCorrect: true,
+              timeMs: 1600,
+              pointsEarned: 100,
+              possessionPointsEarned: 100,
+              totalPoints: 100,
+              submittedOrderIds: [],
+            },
+            'user-b': {
+              selectedIndex: 0,
+              isCorrect: true,
+              timeMs: 5000,
+              pointsEarned: 10,
+              possessionPointsEarned: 20,
+              totalPoints: 10,
+              submittedOrderIds: [],
+            },
+          },
+          phaseKind: 'normal',
+          phaseRound: 11,
+          deltas: {
+            possessionDelta: 80,
+            goalScoredBySeat: null,
+            penaltyOutcome: null,
+            speedStreakBoostedSeat: 2,
+          },
+        },
+        possessionState: {
+          phaseKind: 'normal',
+          speedStreakHolderSeat: 2,
+        },
+        opponentAnswered: false,
+      } as never,
+    });
+
+    const { result } = renderHook(() => usePossessionBarBattleFlights());
+
+    await act(async () => {
+      vi.advanceTimersByTime(250);
+    });
+
+    expect(result.current.flights).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        side: 'opponent',
+        points: 10,
+        boostVia: { x: 454, y: 84 },
+      }),
+    ]));
+  });
 });

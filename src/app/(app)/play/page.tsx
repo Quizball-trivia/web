@@ -1,6 +1,6 @@
 "use client";
 
-// import { useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ModeSelectionScreen } from "@/features/play/ModeSelectionScreen";
 import { useGameSessionStore } from "@/stores/gameSession.store";
@@ -11,7 +11,7 @@ import { useCategoriesList } from "@/lib/queries/categories.queries";
 import { useFeaturedCategories } from "@/lib/queries/featuredCategories.queries";
 import { useMatchStatsSummary } from "@/lib/queries/stats.queries";
 import { useRankedProfile } from "@/lib/queries/ranked.queries";
-import { useStoreWallet } from "@/lib/queries/store.queries";
+import { useStoreWallet, getStoreWalletQuery } from "@/lib/queries/store.queries";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
 import type { CategorySummary, GameQuestion } from "@/lib/domain";
@@ -21,6 +21,9 @@ import { queryKeys } from "@/lib/queries/queryKeys";
 import { trackModeSelected } from "@/lib/analytics/game-events";
 import { shuffleArray } from "@/lib/utils";
 import { useLocale } from "@/contexts/LocaleContext";
+
+// Ranked entry costs 1 ticket — mirrors ModeConfirmModal's CONFIG.ranked.entryCost.
+const RANKED_TICKET_COST = 1;
 
 export default function PlayPage() {
   const router = useRouter();
@@ -40,6 +43,13 @@ export default function PlayPage() {
 
   const defaultCategory: CategorySummary | undefined =
     featuredData?.items[0]?.category ?? categoriesData?.items[0];
+
+  // Refresh the ticket balance whenever the Play screen opens so the ranked
+  // confirm modal shows the correct insufficient-tickets state up front (the
+  // cached wallet seeded from localStorage can otherwise be stale).
+  useEffect(() => {
+    void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+  }, [queryClient]);
 
   const fetchQuestions = async (categoryId?: string) => {
     const filters: ListQuestionsQuery = {
@@ -68,6 +78,24 @@ export default function PlayPage() {
     // For ranked mode, start matchmaking without pre-fetching questions
     // Questions will be fetched after category blocking
     if (params.mode === "ranked") {
+      // Gate on the LIVE ticket balance before entering the search screen — the
+      // cached wallet (seeded from localStorage) can be stale and let a 0-ticket
+      // player into matchmaking, where the server then rejects the queue join and
+      // strands them on the searching map. Refetch fresh; if they can't afford it,
+      // bounce to the store instead of starting.
+      let liveTickets = storeWallet?.tickets ?? 0;
+      try {
+        const fresh = await queryClient.fetchQuery(getStoreWalletQuery());
+        liveTickets = fresh.tickets;
+      } catch {
+        // Network hiccup — fall back to the cached value rather than hard-blocking.
+      }
+      if (liveTickets < RANKED_TICKET_COST) {
+        toast.error(t("modeConfirm.notEnoughTickets"));
+        router.push("/store");
+        return;
+      }
+
       startSession({
         ...params,
         matchType: "ranked",

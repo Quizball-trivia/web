@@ -832,6 +832,7 @@
     "vs": "vs {opponent}",
     "modeRanked": "რეიტინგული",
     "modeFriendly": "მეგობრული",
+    "placementMatch": "საკვალიფიკაციო",
     "showLess": "ნაკლების ჩვენება",
     "showMore": "კიდევ {count}-ის ჩვენება"
   },

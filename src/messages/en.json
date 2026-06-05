@@ -725,6 +725,7 @@
     "vs": "vs {opponent}",
     "modeRanked": "Ranked",
     "modeFriendly": "Friendly",
+    "placementMatch": "Placement",
     "showLess": "Show less",
     "showMore": "Show {count} more"
   },

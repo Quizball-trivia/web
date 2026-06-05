@@ -127,11 +127,18 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
 
             {/* RP + Score */}
             <div className="ml-auto flex items-center justify-end gap-3 md:gap-5 shrink-0 whitespace-nowrap">
-              {match.competition !== 'friendly' && match.rpDelta !== null && (
+              {/* Placement matches don't move RP in a per-game win/loss way (the
+                  seed is applied once), so showing a +/- RP number is misleading
+                  — show a neutral "Placement" badge instead. Ranked shows RP. */}
+              {match.competition === 'placement' ? (
+                <span className="rounded-[8px] bg-white/10 px-3 py-2 font-poppins text-[10px] md:text-[11px] font-semibold uppercase leading-none text-white/70">
+                  {t('recentMatches.placementMatch')}
+                </span>
+              ) : match.competition !== 'friendly' && match.rpDelta !== null ? (
                 <span className={`rounded-[8px] px-3 py-2 font-poppins text-[10px] md:text-[11px] font-semibold leading-none tabular-nums ${rpPillTone(match.result)}`}>
                   {match.rpDelta >= 0 ? '+' : ''}{match.rpDelta} RP
                 </span>
-              )}
+              ) : null}
               <div className="flex items-center gap-1.5">
                 <span className="font-poppins text-[20px] md:text-[22px] font-semibold leading-none text-white tabular-nums">
                   {match.score}

@@ -41,22 +41,32 @@ import type {
 
 type Side = 'player' | 'opponent';
 
-function resolveFlightPoints(
+function resolveBaseFlightPoints(
+  pointsEarned: number,
+  questionKind?: MatchAnswerAckPayload['questionKind'] | MatchRoundResultPayload['questionKind'],
+  foundCount?: number
+): number {
+  if (pointsEarned > 0) return pointsEarned;
+  if (questionKind === 'putInOrder' && typeof foundCount === 'number' && foundCount > 0) {
+    return Math.min(foundCount, 5) * 20;
+  }
+  return pointsEarned;
+}
+
+function resolvePossessionFlightPoints(
   pointsEarned: number,
   questionKind?: MatchAnswerAckPayload['questionKind'] | MatchRoundResultPayload['questionKind'],
   foundCount?: number,
   possessionPointsEarned?: number
-): number {
-  // Prefer the possession-scaled value (same source the bars use via
-  // resolvePossessionBattlePoints) so the flying +N matches the bar count. In
-  // penalties pointsEarned and possessionPointsEarned diverge, which previously
-  // made the flight show +0 while the bars showed the real points.
-  const resolvedPoints = typeof possessionPointsEarned === 'number' ? possessionPointsEarned : pointsEarned;
-  if (resolvedPoints > 0) return resolvedPoints;
-  if (questionKind === 'putInOrder' && typeof foundCount === 'number' && foundCount > 0) {
-    return Math.min(foundCount, 5) * 20;
+): { basePoints: number; possessionPoints: number } {
+  const basePoints = resolveBaseFlightPoints(pointsEarned, questionKind, foundCount);
+  if (typeof possessionPointsEarned !== 'number') {
+    return { basePoints, possessionPoints: basePoints };
   }
-  return resolvedPoints;
+  return {
+    basePoints,
+    possessionPoints: resolveBaseFlightPoints(possessionPointsEarned, questionKind, foundCount),
+  };
 }
 
 function isFlightPhaseKind(kind: string | undefined): boolean {
@@ -159,6 +169,15 @@ function rectCentre(rect: DOMRect): { x: number; y: number } {
 function sideForSeat(seat: 1 | 2 | null, mySeat: number | null): Side | null {
   if (seat == null || mySeat == null) return null;
   return seat === mySeat ? 'player' : 'opponent';
+}
+
+function boostedSideForCurrentQuestion(
+  phaseKind: string | undefined,
+  holderSeat: 1 | 2 | null,
+  mySeat: number | null
+): Side | null {
+  if (phaseKind !== 'normal') return null;
+  return sideForSeat(holderSeat, mySeat);
 }
 
 function clampFlightPoint(point: { x: number; y: number }): { x: number; y: number } {
@@ -316,14 +335,19 @@ export function usePossessionBarBattleFlights() {
     opponentRect: DOMRect | null;
     pitchRect: DOMRect | null;
     points: number;
+    possessionPoints?: number;
     failed?: boolean;
   }) => {
     const id = ++flightSeqRef.current;
-    const addFlight = () => {
-      const barTargetRect = findPitchBarTarget(params.side);
-      // If the 2× streak badge is showing for this side, route the +N through
-      // it so the number visibly doubles mid-flight.
-      const badgeRect = !params.failed ? findSpeedStreakBadge(params.side) : null;
+      const addFlight = () => {
+        const barTargetRect = findPitchBarTarget(params.side);
+        const possessionPoints = params.possessionPoints ?? params.points;
+      const hasBoostedPoints = possessionPoints === params.points * 2 && params.points > 0;
+      // If the 2× streak badge is visible, route the base +N through it so the
+      // number doubles mid-flight. If the badge is not mounted yet, show the
+      // possession-resolved value directly so the landing value still matches
+      // the bars.
+      const badgeRect = !params.failed && hasBoostedPoints ? findSpeedStreakBadge(params.side) : null;
       setFlights((prev) => [...prev, {
         id,
         side: params.side,
@@ -331,7 +355,7 @@ export function usePossessionBarBattleFlights() {
         target: barTargetRect
           ? clampFlightPoint(rectCentre(barTargetRect))
           : computeFallbackBarLaneTarget(params.targetRect, params.opponentRect, params.pitchRect),
-        points: params.points,
+        points: badgeRect ? params.points : possessionPoints,
         failed: params.failed,
         boostVia: badgeRect ? clampFlightPoint(rectCentre(badgeRect)) : undefined,
       }]);
@@ -349,6 +373,7 @@ export function usePossessionBarBattleFlights() {
     side: Side;
     roundKey: string;
     points: number;
+    possessionPoints?: number;
     failed?: boolean;
     logLabel: string;
     questionKind?: string;
@@ -379,6 +404,7 @@ export function usePossessionBarBattleFlights() {
           opponentRect: otherAvatarRect,
           pitchRect,
           points: params.points,
+          possessionPoints: params.possessionPoints,
           failed: params.failed,
         });
         return;
@@ -412,8 +438,14 @@ export function usePossessionBarBattleFlights() {
     if (!enabled || !answerAck) return;
     const phaseKind = answerAck.phaseKind ?? 'normal';
     if (!isFlightPhaseKind(phaseKind)) return;
-    const points = resolveFlightPoints(answerAck.pointsEarned, answerAck.questionKind, answerAck.foundCount);
-    const failed = !answerAck.isCorrect || points <= 0;
+    const points = resolveBaseFlightPoints(answerAck.pointsEarned, answerAck.questionKind, answerAck.foundCount);
+    const activeBoostedSide = boostedSideForCurrentQuestion(
+      phaseKind,
+      barBattleMatch.speedStreakHolderSeat,
+      barBattleMatch.mySeat
+    );
+    const possessionPoints = activeBoostedSide === 'player' ? points * 2 : points;
+    const failed = !answerAck.isCorrect || possessionPoints <= 0;
     const ackKey = `${answerAck.matchId}:${answerAck.qIndex}`;
     if (currentKey !== ackKey) return;
     if (barBattleMatch.currentQuestionPhase !== 'playing') return;
@@ -423,11 +455,20 @@ export function usePossessionBarBattleFlights() {
       side: 'player',
       roundKey: ackKey,
       points,
+      possessionPoints,
       failed,
       logLabel: 'Bar-battle player flight',
       questionKind: answerAck.questionKind,
     });
-  }, [barBattleMatch.currentQuestionPhase, currentKey, enabled, answerAck, enqueueFlightFromDom]);
+  }, [
+    barBattleMatch.currentQuestionPhase,
+    barBattleMatch.mySeat,
+    barBattleMatch.speedStreakHolderSeat,
+    currentKey,
+    enabled,
+    answerAck,
+    enqueueFlightFromDom,
+  ]);
 
   // Fallback: if the client missed its immediate answer_ack, fire the same
   // player flight from the authoritative round_result so the user still sees
@@ -441,16 +482,22 @@ export function usePossessionBarBattleFlights() {
     if (playerFiredQRef.current === roundKey) return;
 
     const playerRound = roundResult.players[selfUserId];
-    const points = playerRound
-      ? resolveFlightPoints(playerRound.pointsEarned, roundResult.questionKind, playerRound.foundCount, playerRound.possessionPointsEarned)
-      : 0;
-    const failed = playerRound ? !playerRound.isCorrect || points <= 0 : false;
-    if (!playerRound || (points <= 0 && phaseKind !== 'penalty')) return;
+    const resolved = playerRound
+      ? resolvePossessionFlightPoints(
+        playerRound.pointsEarned,
+        roundResult.questionKind,
+        playerRound.foundCount,
+        playerRound.possessionPointsEarned
+      )
+      : { basePoints: 0, possessionPoints: 0 };
+    const failed = playerRound ? !playerRound.isCorrect || resolved.possessionPoints <= 0 : false;
+    if (!playerRound || (resolved.possessionPoints <= 0 && phaseKind !== 'penalty')) return;
 
     enqueueFlightFromDom({
       side: 'player',
       roundKey,
-      points,
+      points: resolved.basePoints,
+      possessionPoints: resolved.possessionPoints,
       failed: failed ? true : undefined,
       logLabel: 'Bar-battle player fallback flight',
       questionKind: roundResult.questionKind,
@@ -472,16 +519,22 @@ export function usePossessionBarBattleFlights() {
     if (opponentFiredQRef.current === roundKey) return;
 
     const opponentRound = Object.entries(roundResult.players).find(([userId]) => userId !== selfUserId)?.[1];
-    const points = opponentRound
-      ? resolveFlightPoints(opponentRound.pointsEarned, roundResult.questionKind, opponentRound.foundCount, opponentRound.possessionPointsEarned)
-      : 0;
-    const failed = opponentRound ? !opponentRound.isCorrect || points <= 0 : false;
-    if (!opponentRound || (points <= 0 && phaseKind !== 'penalty')) return;
+    const resolved = opponentRound
+      ? resolvePossessionFlightPoints(
+        opponentRound.pointsEarned,
+        roundResult.questionKind,
+        opponentRound.foundCount,
+        opponentRound.possessionPointsEarned
+      )
+      : { basePoints: 0, possessionPoints: 0 };
+    const failed = opponentRound ? !opponentRound.isCorrect || resolved.possessionPoints <= 0 : false;
+    if (!opponentRound || (resolved.possessionPoints <= 0 && phaseKind !== 'penalty')) return;
 
     enqueueFlightFromDom({
       side: 'opponent',
       roundKey,
-      points,
+      points: resolved.basePoints,
+      possessionPoints: resolved.possessionPoints,
       failed: failed ? true : undefined,
       logLabel: 'Bar-battle opponent fallback flight',
       questionKind: roundResult.questionKind,
@@ -503,11 +556,18 @@ export function usePossessionBarBattleFlights() {
     if (currentKey == null) return;
     if (opponentFiredQRef.current === currentKey) return;
 
-    const failed = opponentAnsweredCorrectly !== true || opponentRecentPoints <= 0;
+    const activeBoostedSide = boostedSideForCurrentQuestion(
+      phaseKindFromState,
+      barBattleMatch.speedStreakHolderSeat,
+      barBattleMatch.mySeat
+    );
+    const possessionPoints = activeBoostedSide === 'opponent' ? opponentRecentPoints * 2 : opponentRecentPoints;
+    const failed = opponentAnsweredCorrectly !== true || possessionPoints <= 0;
     enqueueFlightFromDom({
       side: 'opponent',
       roundKey: currentKey,
       points: opponentRecentPoints,
+      possessionPoints,
       failed,
       logLabel: 'Bar-battle opponent flight',
     });
@@ -517,6 +577,8 @@ export function usePossessionBarBattleFlights() {
     opponentAnswered,
     opponentAnsweredCorrectly,
     opponentRecentPoints,
+    barBattleMatch.mySeat,
+    barBattleMatch.speedStreakHolderSeat,
     barBattleMatch.currentQuestionPhase,
     currentQIndex,
     currentKey,
