@@ -6,6 +6,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { ModalCloseButton } from '@/components/shared/ModalCloseButton';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { GoogleCredential } from '@/lib/auth/google-identity';
+import { getPlatform } from '@/lib/auth/in-app-browser';
+import { InAppBrowserInstructions } from './InAppBrowserInstructions';
 import { WelcomeGoogleButton } from './WelcomeGoogleButton';
 import { WelcomeFacebookButton } from './WelcomeFacebookButton';
 import { WelcomeEmailAuthForm } from './WelcomeEmailAuthForm';
@@ -16,7 +18,9 @@ import type { AuthFieldErrors } from '@/lib/auth/validation';
 
 interface WelcomeLoginDialogProps {
   open: boolean;
+  showOpenInBrowser: boolean;
   googleClientId: string;
+  disableGoogleIdentityOverlay: boolean;
   authMode: AuthPanelMode;
   authEmail: string;
   authPassword: string;
@@ -56,7 +60,9 @@ interface WelcomeLoginDialogProps {
 
 export function WelcomeLoginDialog({
   open,
+  showOpenInBrowser,
   googleClientId,
+  disableGoogleIdentityOverlay,
   authMode,
   authEmail,
   authPassword,
@@ -118,7 +124,9 @@ export function WelcomeLoginDialog({
       <DialogContent className="max-h-[92vh] max-w-md w-[92vw] overflow-y-auto overflow-x-hidden rounded-[24px] border-0 bg-brand-blue p-5 sm:p-8 md:p-10 [&>button:last-child]:hidden focus:outline-none focus-visible:outline-none focus-visible:ring-0 ring-0">
         <ModalCloseButton onClose={onClose} />
 
-        {showForgot ? (
+        {showOpenInBrowser ? (
+          <InAppBrowserInstructions platform={getPlatform()} />
+        ) : showForgot ? (
           <>
             <DialogHeader className="text-center">
               <DialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
@@ -153,6 +161,7 @@ export function WelcomeLoginDialog({
                     onClick={onGoogleLogin}
                     onCredential={onGoogleCredential}
                     submitting={socialSubmitting === 'google'}
+                    disableIdentityOverlay={disableGoogleIdentityOverlay}
                   />
                   <WelcomeFacebookButton
                     onClick={onFacebookLogin}

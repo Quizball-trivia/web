@@ -30,10 +30,12 @@ export function WelcomeScreen() {
   const {
     loginOpen,
     setLoginOpen,
+    showOpenInBrowser,
     handleLoginDialogOpenChange,
     handleCloseLoginDialog,
     handleKickOff,
     handleGoogleCredential,
+    disableGoogleIdentityOverlay,
     authMode,
     handleAuthModeChange,
     authEmail,
@@ -147,7 +149,9 @@ export function WelcomeScreen() {
 
       <WelcomeLoginDialog
         open={loginOpen}
+        showOpenInBrowser={showOpenInBrowser}
         googleClientId={googleClientId}
+        disableGoogleIdentityOverlay={disableGoogleIdentityOverlay}
         authMode={authMode}
         authEmail={authEmail}
         authPassword={authPassword}

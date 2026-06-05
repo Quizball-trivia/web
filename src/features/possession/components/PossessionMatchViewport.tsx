@@ -48,6 +48,7 @@ export interface PossessionViewportModel {
 interface PossessionMatchViewportProps {
   model: PossessionViewportModel;
   children?: ReactNode;
+  onPenaltySplashComplete?: (localQuestionIndex: number | null) => void;
 }
 
 function usePitchBallMetrics(orientation: 'portrait' | 'landscape', pitchProps: PitchProps) {
@@ -93,15 +94,17 @@ function usePitchBallMetrics(orientation: 'portrait' | 'landscape', pitchProps: 
   return { containerRef, ballSizePx, ballCenterPx };
 }
 
-function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
+function PenaltySplash({
+  model,
+  onComplete,
+}: {
+  model: PenaltySplashModel | null;
+  onComplete?: (localQuestionIndex: number | null) => void;
+}) {
   const { t } = useLocale();
   if (!model?.visible) return null;
 
   const { localQuestionIndex, result, resultShooterIsMe } = model;
-  if (process.env.NODE_ENV === 'development') {
-    // eslint-disable-next-line no-console
-    console.log(`[pen-splash] MOUNT q=${localQuestionIndex} result=${result} @${Math.round(performance.now())}ms`);
-  }
   return (
     <motion.div
       key={`pen-splash-${localQuestionIndex}`}
@@ -118,10 +121,7 @@ function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
         ease: [0.22, 1, 0.36, 1],
       }}
       onAnimationComplete={() => {
-        if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
-          console.log(`[pen-splash] ANIMATION COMPLETE q=${localQuestionIndex} @${Math.round(performance.now())}ms`);
-        }
+        onComplete?.(localQuestionIndex);
       }}
       className="absolute inset-x-0 top-[35%] z-30 flex pointer-events-none flex-col items-center"
     >
@@ -156,7 +156,7 @@ function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
   );
 }
 
-export function PossessionMatchViewport({ model, children }: PossessionMatchViewportProps) {
+export function PossessionMatchViewport({ model, children, onPenaltySplashComplete }: PossessionMatchViewportProps) {
   const { t } = useLocale();
   const { showMainUI, hud, pitchProps, goalCelebration, penaltySplash, muted, autoScrollKey } = model;
   const celebrationOwnsBall = Boolean(goalCelebration);
@@ -205,7 +205,7 @@ export function PossessionMatchViewport({ model, children }: PossessionMatchView
             </AnimatePresence>
           </div>
           <AnimatePresence>
-            <PenaltySplash model={penaltySplash} />
+            <PenaltySplash model={penaltySplash} onComplete={onPenaltySplashComplete} />
           </AnimatePresence>
         </div>
       )}
@@ -235,7 +235,7 @@ export function PossessionMatchViewport({ model, children }: PossessionMatchView
                 )}
               </AnimatePresence>
               <AnimatePresence>
-                <PenaltySplash model={penaltySplash} />
+                <PenaltySplash model={penaltySplash} onComplete={onPenaltySplashComplete} />
               </AnimatePresence>
             </div>
 

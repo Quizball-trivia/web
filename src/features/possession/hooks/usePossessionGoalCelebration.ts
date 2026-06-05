@@ -10,7 +10,11 @@ import {
   GOAL_SHOT_TO_CELEBRATION_MS,
   type GoalCelebrationState,
 } from '../realtimePossession.helpers';
-import { getBarBattleGoalAttackDelayMs, resolvePossessionBattlePoints } from './useBarBattle';
+import {
+  getBarBattleGoalAttackDelayMs,
+  resolvePossessionBattlePoints,
+  shouldUsePossessionPointsForSide,
+} from './useBarBattle';
 
 interface DevPossessionAnimationLike {
   id?: number;
@@ -41,6 +45,7 @@ export function usePossessionGoalCelebration({
 }: UsePossessionGoalCelebrationParams) {
   const matchVariant = useRealtimeMatchStore((s) => s.match?.variant);
   const selfUserId = useRealtimeMatchStore((s) => s.selfUserId);
+  const storeMySeat = useRealtimeMatchStore((s) => s.match?.mySeat ?? null);
   const [goalCelebration, setGoalCelebration] = useState<GoalCelebrationState | null>(null);
   const goalCelebrationHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const goalCelebrationStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -76,8 +81,24 @@ export function usePossessionGoalCelebration({
     const players = roundResult?.players ?? {};
     const playerRound = selfUserId ? players[selfUserId] : undefined;
     const opponentRound = Object.entries(players).find(([userId]) => userId !== selfUserId)?.[1];
-    const playerPoints = resolvePossessionBattlePoints(playerRound, roundResult?.questionKind);
-    const opponentPoints = resolvePossessionBattlePoints(opponentRound, roundResult?.questionKind);
+    const boostedSeat = roundDeltas?.speedStreakBoostedSeat ?? null;
+    const effectiveMySeat = mySeat ?? storeMySeat;
+    const playerPoints = resolvePossessionBattlePoints(playerRound, roundResult?.questionKind, {
+      usePossessionPoints: shouldUsePossessionPointsForSide({
+        phaseKind: roundPhaseKind,
+        speedStreakBoostedSeat: boostedSeat,
+        mySeat: effectiveMySeat,
+        side: 'player',
+      }),
+    });
+    const opponentPoints = resolvePossessionBattlePoints(opponentRound, roundResult?.questionKind, {
+      usePossessionPoints: shouldUsePossessionPointsForSide({
+        phaseKind: roundPhaseKind,
+        speedStreakBoostedSeat: boostedSeat,
+        mySeat: effectiveMySeat,
+        side: 'opponent',
+      }),
+    });
     const attackDelayMs = getBarBattleGoalAttackDelayMs(
       playerPoints,
       opponentPoints,
@@ -109,8 +130,10 @@ export function usePossessionGoalCelebration({
     roundQIndex,
     roundScorerSeat,
     roundResult,
+    roundDeltas,
     matchVariant,
     selfUserId,
+    storeMySeat,
   ]);
 
   useEffect(() => {

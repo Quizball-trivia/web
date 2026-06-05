@@ -1254,6 +1254,17 @@
   "inviteCode": {
     "invalid": "ოთახის კოდი არასწორია"
   },
+  "inAppBrowser": {
+    "title": "გახსენით თქვენს ბრაუზერში",
+    "body": "ავტორიზაცია არ მუშაობს აპის შიდა ბრაუზერში. გასაგრძელებლად გახსენით გვერდი Safari-ში ან Chrome-ში.",
+    "iosStep1": "დააჭირეთ მენიუს (... ან გაზიარების ხატულას) ზედა მარჯვენა კუთხეში.",
+    "iosStep2": "აირჩიეთ \"Open in Safari\".",
+    "androidStep1": "დააჭირეთ მენიუს (...) ზედა მარჯვენა კუთხეში.",
+    "androidStep2": "აირჩიეთ \"Open in browser\" ან \"Open in Chrome\".",
+    "genericInstructions": "გასაგრძელებლად გახსენით ეს ბმული Safari-ში, Chrome-ში ან Firefox-ში.",
+    "orCopyLink": "ან დააკოპირეთ ბმული",
+    "linkCopied": "ბმული დაკოპირდა. ჩასვით Safari-ში ან Chrome-ში."
+  },
   "errors": {
     "INTERNAL_ERROR": "რაღაც შეფერხდა",
     "AUTHENTICATION_ERROR": "საჭიროა ავტორიზაცია",

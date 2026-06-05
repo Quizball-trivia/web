@@ -511,6 +511,7 @@ describe('useBarBattle', () => {
       opponentRound,
       phaseKind: 'normal',
       dividerX: 250,
+      mySeat: 1,
     }));
 
     await act(async () => {});
@@ -522,6 +523,54 @@ describe('useBarBattle', () => {
       playerBars: 8,
       opponentBars: 16,
       remainingDelta: -8,
+    });
+  });
+
+  it('ignores stray possession points when no speed-streak boost fired', async () => {
+    const myRound = makePlayer(100, true);
+    const opponentRound = makePlayer(10, true, 20);
+    const roundResult = makeRoundResult(100, 10);
+    roundResult.players.opp = opponentRound;
+    roundResult.deltas = {
+      possessionDelta: 90,
+      goalScoredBySeat: null,
+      penaltyOutcome: null,
+      speedStreakBoostedSeat: null,
+    };
+
+    const { result } = renderHook(() => useBarBattle({
+      answerAck: {
+        matchId: MATCH_ID,
+        qIndex: 5,
+        questionKind: 'multipleChoice',
+        selectedIndex: 0,
+        isCorrect: true,
+        myTotalPoints: 100,
+        oppAnswered: true,
+        pointsEarned: 100,
+        phaseKind: 'normal',
+        phaseRound: 6,
+      },
+      opponentAnswered: true,
+      opponentRecentPoints: 10,
+      opponentAnsweredCorrectly: true,
+      roundResult,
+      myRound,
+      opponentRound,
+      phaseKind: 'normal',
+      dividerX: 250,
+      mySeat: 1,
+    }));
+
+    await act(async () => {});
+
+    expect(result.current).toMatchObject({
+      phase: 'both-score',
+      playerPoints: 100,
+      opponentPoints: 10,
+      playerBars: 10,
+      opponentBars: 1,
+      remainingDelta: 9,
     });
   });
 

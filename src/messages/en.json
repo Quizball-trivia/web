@@ -1254,6 +1254,17 @@
   "inviteCode": {
     "invalid": "Invalid Room Code"
   },
+  "inAppBrowser": {
+    "title": "Open in your browser",
+    "body": "Sign-in doesn't work inside this app's built-in browser. Open the page in Safari or Chrome to continue.",
+    "iosStep1": "Tap the menu (... or share icon) at the top right.",
+    "iosStep2": "Choose \"Open in Safari\".",
+    "androidStep1": "Tap the menu (...) at the top right.",
+    "androidStep2": "Choose \"Open in browser\" or \"Open in Chrome\".",
+    "genericInstructions": "Open this link in Safari, Chrome, or Firefox to continue.",
+    "orCopyLink": "Or copy the link",
+    "linkCopied": "Link copied. Paste it in Safari or Chrome."
+  },
   "errors": {
     "INTERNAL_ERROR": "Something went wrong",
     "AUTHENTICATION_ERROR": "Authentication required",

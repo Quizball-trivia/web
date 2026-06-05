@@ -34,6 +34,7 @@ import { useShallow } from 'zustand/shallow';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import type { FlightSpec } from '../components/BarBattleFlightOverlay';
 import { logger } from '@/utils/logger';
+import { shouldUsePossessionPointsForSide } from './useBarBattle';
 import type {
   MatchAnswerAckPayload,
   MatchRoundResultPayload,
@@ -482,12 +483,18 @@ export function usePossessionBarBattleFlights() {
     if (playerFiredQRef.current === roundKey) return;
 
     const playerRound = roundResult.players[selfUserId];
+    const usePossessionPoints = shouldUsePossessionPointsForSide({
+      phaseKind,
+      speedStreakBoostedSeat: roundResult.deltas?.speedStreakBoostedSeat ?? null,
+      mySeat: barBattleMatch.mySeat,
+      side: 'player',
+    });
     const resolved = playerRound
       ? resolvePossessionFlightPoints(
         playerRound.pointsEarned,
         roundResult.questionKind,
         playerRound.foundCount,
-        playerRound.possessionPointsEarned
+        usePossessionPoints ? playerRound.possessionPointsEarned : undefined
       )
       : { basePoints: 0, possessionPoints: 0 };
     const failed = playerRound ? !playerRound.isCorrect || resolved.possessionPoints <= 0 : false;
@@ -502,7 +509,7 @@ export function usePossessionBarBattleFlights() {
       logLabel: 'Bar-battle player fallback flight',
       questionKind: roundResult.questionKind,
     });
-  }, [enabled, enqueueFlightFromDom, phaseKindFromState, roundResult, selfUserId]);
+  }, [barBattleMatch.mySeat, enabled, enqueueFlightFromDom, phaseKindFromState, roundResult, selfUserId]);
 
   // Same fallback for the opponent. Special questions may only expose final
   // opponent scoring through round_result, so keep the flight feedback even
@@ -519,12 +526,18 @@ export function usePossessionBarBattleFlights() {
     if (opponentFiredQRef.current === roundKey) return;
 
     const opponentRound = Object.entries(roundResult.players).find(([userId]) => userId !== selfUserId)?.[1];
+    const usePossessionPoints = shouldUsePossessionPointsForSide({
+      phaseKind,
+      speedStreakBoostedSeat: roundResult.deltas?.speedStreakBoostedSeat ?? null,
+      mySeat: barBattleMatch.mySeat,
+      side: 'opponent',
+    });
     const resolved = opponentRound
       ? resolvePossessionFlightPoints(
         opponentRound.pointsEarned,
         roundResult.questionKind,
         opponentRound.foundCount,
-        opponentRound.possessionPointsEarned
+        usePossessionPoints ? opponentRound.possessionPointsEarned : undefined
       )
       : { basePoints: 0, possessionPoints: 0 };
     const failed = opponentRound ? !opponentRound.isCorrect || resolved.possessionPoints <= 0 : false;
@@ -539,7 +552,7 @@ export function usePossessionBarBattleFlights() {
       logLabel: 'Bar-battle opponent fallback flight',
       questionKind: roundResult.questionKind,
     });
-  }, [enabled, enqueueFlightFromDom, phaseKindFromState, roundResult, selfUserId]);
+  }, [barBattleMatch.mySeat, enabled, enqueueFlightFromDom, phaseKindFromState, roundResult, selfUserId]);
 
   // ── Opponent flight on opponent answer ──────────────────────────────────
   const opponentAnswered = barBattleMatch.opponentAnswered;

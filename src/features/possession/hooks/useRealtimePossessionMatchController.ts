@@ -353,6 +353,7 @@ export function useRealtimePossessionMatchController({
     phaseKind,
     dividerX,
     unopposedBarPulse: shouldPulseUnopposedBars,
+    mySeat,
   });
 
   const { handleHalftimeBan, handleHalftimeBanPhaseShown } = useHalftimeBanController({

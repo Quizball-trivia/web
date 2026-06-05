@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Volume2, VolumeX } from 'lucide-react';
 import { QuitMatchModal } from '@/components/match/QuitMatchModal';
@@ -12,6 +12,7 @@ import { HalftimeScreen } from './components/HalftimeScreen';
 import { KickoffCountdownOverlay } from './components/KickoffCountdownOverlay';
 import { PenaltyStartCountdownOverlay } from './components/PenaltyStartCountdownOverlay';
 import { MatchHudIconButton } from './components/MatchHudPrimitives';
+import { PenaltyMatchEndOverlay } from './components/PenaltyMatchEndOverlay';
 import { PossessionMatchViewport } from './components/PossessionMatchViewport';
 import { PossessionQuestionArea } from './components/PossessionQuestionArea';
 import { usePossessionBarBattleFlights } from './hooks/usePossessionBarBattleFlights';
@@ -50,10 +51,17 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
   const barBattleFlights = usePossessionBarBattleFlights();
   const matchPaused = useRealtimeMatchStore((state) => state.matchPaused);
   const hasMatch = useRealtimeMatchStore((state) => state.match != null);
+  const finalResults = useRealtimeMatchStore((state) => state.match?.finalResults ?? null);
+  const selfUserId = useRealtimeMatchStore((state) => state.selfUserId);
+  const opponentInfo = useRealtimeMatchStore((state) => state.match?.opponent ?? null);
   const pauseUntil = useRealtimeMatchStore((state) => state.pauseUntil);
   const remainingReconnects = useRealtimeMatchStore((state) => state.remainingReconnects);
   const forfeitPending = useRealtimeMatchStore((state) => state.forfeitPending);
   const [pauseNowMs, setPauseNowMs] = useState(() => Date.now());
+  const [completedPenaltySplash, setCompletedPenaltySplash] = useState<{
+    resultKey: string;
+    qIndex: number;
+  } | null>(null);
 
   const {
     isReady,
@@ -102,6 +110,42 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
       : forfeitPending?.reason === 'opponent_reconnect_limit'
         ? t('forfeit.opponentDidNotReconnect')
         : t('forfeit.matchForfeited');
+  const penaltyMatchEndOverlay = useMemo(() => {
+    if (!finalResults || finalResults.winnerDecisionMethod !== 'penalty_goals' || !selfUserId) {
+      return null;
+    }
+    const myResult = finalResults.players[selfUserId];
+    const opponentEntry = Object.entries(finalResults.players).find(([userId]) => userId !== selfUserId);
+    const opponentResult = opponentEntry?.[1] ?? null;
+    if (!myResult || !opponentResult) return null;
+
+    return {
+      playerWon: finalResults.winnerId === selfUserId,
+      myPenaltyGoals: myResult.penaltyGoals ?? 0,
+      oppPenaltyGoals: opponentResult.penaltyGoals ?? 0,
+      playerRankPoints: finalResults.rankedOutcome?.byUserId[selfUserId]?.newRp ?? null,
+      opponentRankPoints: opponentInfo?.rp ?? null,
+    };
+  }, [finalResults, opponentInfo?.rp, selfUserId]);
+  const penaltyFinalResultKey = finalResults
+    ? `${finalResults.matchId}:${finalResults.resultVersion}`
+    : null;
+
+  const showPenaltyMatchEndOverlay =
+    Boolean(penaltyMatchEndOverlay)
+    && completedPenaltySplash?.resultKey === penaltyFinalResultKey;
+
+  const handlePenaltySplashComplete = useCallback((localQuestionIndex: number | null) => {
+    if (!penaltyMatchEndOverlay || !penaltyFinalResultKey || localQuestionIndex === null) return;
+    setCompletedPenaltySplash((current) => (
+      current?.resultKey === penaltyFinalResultKey
+        ? current
+        : {
+          resultKey: penaltyFinalResultKey,
+          qIndex: localQuestionIndex,
+        }
+    ));
+  }, [penaltyFinalResultKey, penaltyMatchEndOverlay]);
 
   if (!isReady) {
     const showPendingKickoff = showStartCountdown || hasMatch;
@@ -246,7 +290,10 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
 
       <div className="w-full max-w-lg flex flex-col lg:max-w-7xl lg:flex-row lg:h-[calc(100dvh-2rem)] lg:items-stretch lg:gap-4 lg:px-4">
         {viewportModel && (
-          <PossessionMatchViewport model={viewportModel}>
+          <PossessionMatchViewport
+            model={viewportModel}
+            onPenaltySplashComplete={handlePenaltySplashComplete}
+          >
             {showQuestionArea && questionAreaModel && (
               <PossessionQuestionArea model={questionAreaModel} />
             )}
@@ -257,6 +304,27 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
           </PossessionMatchViewport>
         )}
       </div>
+
+      <AnimatePresence>
+        {penaltyMatchEndOverlay && showPenaltyMatchEndOverlay && (
+          <PenaltyMatchEndOverlay
+            visible
+            playerWon={penaltyMatchEndOverlay.playerWon}
+            myPenaltyGoals={penaltyMatchEndOverlay.myPenaltyGoals}
+            oppPenaltyGoals={penaltyMatchEndOverlay.oppPenaltyGoals}
+            playerName={props.playerUsername}
+            opponentName={props.opponentUsername}
+            playerAvatarUrl={props.playerAvatar}
+            opponentAvatarUrl={props.opponentAvatar}
+            playerAvatarCustomization={props.playerAvatarCustomization}
+            opponentAvatarCustomization={props.opponentAvatarCustomization}
+            playerCountryCode={props.playerCountryCode}
+            opponentCountryCode={props.opponentCountryCode}
+            playerRankPoints={penaltyMatchEndOverlay.playerRankPoints}
+            opponentRankPoints={penaltyMatchEndOverlay.opponentRankPoints}
+          />
+        )}
+      </AnimatePresence>
 
       <QuitMatchModal
         open={quitModalOpen}

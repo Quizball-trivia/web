@@ -7,14 +7,18 @@
  * Google's own GIS button is rendered transparently on top, stretched to cover
  * the ENTIRE button so a tap anywhere goes through GIS (deterministic — no
  * center/edge dead zones). The rendered button runs a Google-hosted popup that
- * returns an id_token, which works in both normal browsers AND embedded webviews
- * (Instagram/Messenger) — the token endpoint isn't subject to the
+ * returns an id_token, which works in normal browsers and some embedded
+ * webviews like Instagram — the token endpoint isn't subject to the
  * `disallowed_useragent` block that kills the classic OAuth redirect. The
  * credential is exchanged for a session via socialLoginWithIdToken.
  *
  * Redirect is the FALLBACK only: if GIS can't load (rare locked-down webview),
  * the overlay never renders, `gisReady` stays false, and the visible button's
  * onClick runs the classic redirect flow instead.
+ *
+ * In Messenger/Facebook-style in-app browsers the overlay is disabled so the
+ * visible React button can run the external-browser bounce instead of being
+ * intercepted by Google's iframe.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -29,13 +33,20 @@ interface WelcomeGoogleButtonProps {
   onClick: () => void;
   onCredential: (credential: GoogleCredential) => void;
   submitting?: boolean;
+  disableIdentityOverlay?: boolean;
 }
 
 function hasRenderedGoogleButton(container: HTMLElement): boolean {
   return Boolean(container.firstElementChild || container.querySelector('iframe'));
 }
 
-export function WelcomeGoogleButton({ clientId, onClick, onCredential, submitting = false }: WelcomeGoogleButtonProps) {
+export function WelcomeGoogleButton({
+  clientId,
+  onClick,
+  onCredential,
+  submitting = false,
+  disableIdentityOverlay = false,
+}: WelcomeGoogleButtonProps) {
   const { t } = useLocale();
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const [width, setWidth] = useState(0);
@@ -75,7 +86,10 @@ export function WelcomeGoogleButton({ clientId, onClick, onCredential, submittin
 
   useEffect(() => {
     const container = overlayRef.current;
-    if (!container || !clientId || width <= 0) return;
+    if (!container || !clientId || width <= 0 || disableIdentityOverlay) {
+      container?.replaceChildren();
+      return;
+    }
     let cancelled = false;
     void renderGoogleButton(clientId, container, width, (credential) => {
       if (!cancelled) onCredentialRef.current(credential);
@@ -87,16 +101,18 @@ export function WelcomeGoogleButton({ clientId, onClick, onCredential, submittin
     return () => {
       cancelled = true;
     };
-  }, [clientId, width]);
+  }, [clientId, disableIdentityOverlay, width]);
+
+  const overlayInteractive = Boolean(clientId && width > 0 && !disableIdentityOverlay && gisReady);
 
   // GIS-everywhere with redirect fallback: when a real GIS iframe/button exists,
   // the overlay owns every click. Otherwise the visible button falls back to the
   // prompt/redirect path instead of becoming a dead CTA.
   const handleVisibleClick = useCallback(() => {
     const container = overlayRef.current;
-    if (gisReady && container && hasRenderedGoogleButton(container)) return; // overlay handles it
+    if (overlayInteractive && container && hasRenderedGoogleButton(container)) return; // overlay handles it
     onClick();
-  }, [gisReady, onClick]);
+  }, [onClick, overlayInteractive]);
 
   return (
     <div ref={measureRef} className="relative w-full">
@@ -126,7 +142,7 @@ export function WelcomeGoogleButton({ clientId, onClick, onCredential, submittin
         ref={overlayRef}
         aria-hidden
         className={`absolute inset-0 z-10 flex items-stretch justify-center overflow-hidden opacity-[0.001] [color-scheme:light] [&>*]:h-full [&>*]:w-full [&_iframe]:h-full [&_iframe]:w-full ${
-          submitting || !gisReady ? 'pointer-events-none [&>*]:pointer-events-none' : 'pointer-events-none [&>*]:pointer-events-auto'
+          submitting || !overlayInteractive ? 'pointer-events-none [&>*]:pointer-events-none' : 'pointer-events-none [&>*]:pointer-events-auto'
         }`}
       />
     </div>

@@ -21,8 +21,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
 import { RealtimePossessionMatchScreen } from '@/features/possession/RealtimePossessionMatchScreen';
-import { PenaltyMatchEndOverlay } from '@/features/possession/components/PenaltyMatchEndOverlay';
-import { PENALTY_RESULT_SEQUENCE_HOLD_MS } from '@/features/possession/realtimePossession.helpers';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import type { Socket } from 'socket.io-client';
 import { __setSocketOverride } from '@/lib/realtime/socket-client';
@@ -728,14 +726,6 @@ function DevAnimationsContent() {
   // (roundResultHoldDone, showOptions, firstQuestionIntro etc.) re-initialises
   // cleanly — otherwise dev clicks can land between phases and wedge the UI.
   const [remountKey, setRemountKey] = useState(0);
-  // Dev-only prototype of the penalty match-end overlay (won/lost + final score)
-  // we want to show after the deciding kick before the results screen.
-  const [penaltyEndOverlay, setPenaltyEndOverlay] = useState<{
-    visible: boolean;
-    playerWon: boolean;
-    myPenaltyGoals: number;
-    oppPenaltyGoals: number;
-  }>({ visible: false, playerWon: true, myPenaltyGoals: 0, oppPenaltyGoals: 0 });
   // Mobile-only: controls drawer toggle. Defaults open so the user lands
   // straight on the controls, can tap "✕" to dismiss and watch the
   // animation full-screen.
@@ -2111,17 +2101,12 @@ function DevAnimationsContent() {
 
   // Penalty match-end simulator. Jumps STRAIGHT to the deciding kick (seeds the
   // scoreboard at 2-0 so we don't sit through a whole shootout), takes ONE
-  // deciding goal, then ends the match.
-  //   mode 'broken' — reproduce the reported bug: final_results fires the instant
-  //     the round_result lands, so the shot animation is truncated and the end
-  //     screen cuts in with no won/lost beat.
-  //   mode 'fixed'  — let the shot/save animation FULLY play, then show the
-  //     won/lost + final-score overlay for a few seconds, THEN go to results.
-  function simulatePenaltyMatchEnd(playerWon: boolean, mode: 'broken' | 'fixed') {
+  // deciding goal, queues final_results, and lets the real match screen show the
+  // won/lost overlay after the penalty splash completes.
+  function simulatePenaltyMatchEnd(playerWon: boolean) {
     setMobilePanelOpen(false);
     pendingTimers.current.forEach((t) => window.clearTimeout(t));
     pendingTimers.current = [];
-    setPenaltyEndOverlay((o) => ({ ...o, visible: false }));
 
     stateVersion.current = 0;
     scoreRef.current = { meTotal: 70, oppTotal: 70 }; // both on 70 like the report
@@ -2173,7 +2158,10 @@ function DevAnimationsContent() {
       );
       s.setFinalResults({
         matchId: MATCH_ID,
-        variant: 'friendly_possession',
+        // Keep this aligned with makeStartPayload(). Downgrading to
+        // friendly_possession mid-animation makes the bar battle switch from
+        // small avatar-anchored ranked bars to the large classic layout.
+        variant: 'ranked_sim',
         winnerId: playerWon ? SELF_ID : OPP_ID,
         durationMs: 600_000,
         resultVersion: 1,
@@ -2201,8 +2189,7 @@ function DevAnimationsContent() {
     const decidingDelay = 600;
     const t0 = performance.now();
     const log = (label: string) =>
-      // eslint-disable-next-line no-console
-      console.log(`[penalty-end ${mode}] +${Math.round(performance.now() - t0)}ms — ${label}`);
+      console.log(`[penalty-end] +${Math.round(performance.now() - t0)}ms — ${label}`);
     pendingTimers.current.push(
       window.setTimeout(() => {
         log('deciding kick taken');
@@ -2217,40 +2204,15 @@ function DevAnimationsContent() {
 
     pendingTimers.current.push(window.setTimeout(() => log('round_result lands (shot resolving)'), roundResultAt));
 
-    if (mode === 'broken') {
-      // BUG: end the match immediately — cuts the shot mid-flight, no beat.
-      pendingTimers.current.push(
-        window.setTimeout(() => {
-          log('final_results (INSTANT — bug)');
-          emitFinalResults();
-        }, roundResultAt + 50)
-      );
-      return;
-    }
-
-    // FIXED: the visible chain after round_result is score-flight/attack handoff →
-    // ball flight → the "GOAL!"/"SAVED" splash (1.85s). PENALTY_RESULT_SEQUENCE_HOLD_MS
-    // is exactly that whole window, so the overlay fires right as the splash ends —
-    // no dead air, no racing the animation.
-    const shotFullyPlayedAt = roundResultAt + PENALTY_RESULT_SEQUENCE_HOLD_MS;
+    // final_results may arrive while the deciding kick is still playing.
+    // The real match screen now waits for PenaltySplash's animation-complete
+    // callback before showing the won/lost overlay, so the dev sim should not
+    // mount its own timer-driven overlay here.
     pendingTimers.current.push(
       window.setTimeout(() => {
-        log('shot done → SHOW overlay');
-        setPenaltyEndOverlay({
-          visible: true,
-          playerWon,
-          myPenaltyGoals: finalPenaltyGoals.seat1,
-          oppPenaltyGoals: finalPenaltyGoals.seat2,
-        });
-      }, shotFullyPlayedAt)
-    );
-    const OVERLAY_HOLD_MS = 2000;
-    pendingTimers.current.push(
-      window.setTimeout(() => {
-        log('overlay done → final_results');
-        setPenaltyEndOverlay((o) => ({ ...o, visible: false }));
+        log('final_results queued; real overlay waits for splash completion');
         emitFinalResults();
-      }, shotFullyPlayedAt + OVERLAY_HOLD_MS)
+      }, roundResultAt + 50)
     );
   }
 
@@ -2273,21 +2235,6 @@ function DevAnimationsContent() {
           disableBgm
           onQuit={() => router.push('/play')}
           onForfeit={() => router.push('/play')}
-        />
-        <PenaltyMatchEndOverlay
-          visible={penaltyEndOverlay.visible}
-          playerWon={penaltyEndOverlay.playerWon}
-          myPenaltyGoals={penaltyEndOverlay.myPenaltyGoals}
-          oppPenaltyGoals={penaltyEndOverlay.oppPenaltyGoals}
-          playerName="Me"
-          opponentName="Mock Opponent"
-          playerAvatarUrl="avatar-1"
-          opponentAvatarUrl="avatar-2"
-          opponentAvatarCustomization={{ jersey: 'jersey_red' }}
-          playerCountryCode="GE"
-          opponentCountryCode="BR"
-          playerRankPoints={1240}
-          opponentRankPoints={1180}
         />
       </div>
 
@@ -2470,31 +2417,16 @@ function DevAnimationsContent() {
           </p>
         </Group>
 
-        <Group label="Penalty MATCH END — BUG (instant cut)">
-          <Btn variant="red" onClick={() => simulatePenaltyMatchEnd(true, 'broken')}>
-            deciding goal · I WIN — abrupt
-          </Btn>
-          <Btn variant="red" onClick={() => simulatePenaltyMatchEnd(false, 'broken')}>
-            deciding goal · I LOSE — abrupt
-          </Btn>
-          <p className="mt-1 text-[9px] text-brand-slate">
-            Reproduces the reported bug: jumps to 2-0, takes the deciding kick,
-            and the end screen cuts in INSTANTLY — the shot animation is
-            truncated, no goal beat, no who-won moment.
-          </p>
-        </Group>
-
-        <Group label="Penalty MATCH END — FIXED (shot + overlay)">
-          <Btn variant="green" onClick={() => simulatePenaltyMatchEnd(true, 'fixed')}>
+        <Group label="Penalty MATCH END (shot + overlay)">
+          <Btn variant="green" onClick={() => simulatePenaltyMatchEnd(true)}>
             deciding goal · I WIN 🏆
           </Btn>
-          <Btn variant="green" onClick={() => simulatePenaltyMatchEnd(false, 'fixed')}>
+          <Btn variant="green" onClick={() => simulatePenaltyMatchEnd(false)}>
             deciding goal · I LOSE 💔
           </Btn>
           <p className="mt-1 text-[9px] text-brand-slate">
-            The proposed fix: the deciding shot/save animation FULLY plays, then a
-            WON/LOST + final-score (3-0) overlay holds ~2.6s, THEN the results
-            screen. Compare against the abrupt version above.
+            The deciding shot/save animation fully plays, then a WON/LOST +
+            final-score overlay appears before the results transition.
           </p>
         </Group>
 

@@ -15,7 +15,7 @@
  * redirect, every error-message fallback preserved.
  */
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
   login,
@@ -29,6 +29,7 @@ import {
   verifyGeorgianPhoneOtp,
 } from '@/lib/auth/auth.service';
 import { signInWithGoogleIdentity, type GoogleCredential } from '@/lib/auth/google-identity';
+import { getInAppBrowserApp, tryOpenInExternalBrowser } from '@/lib/auth/in-app-browser';
 import { useAuthStore } from '@/stores/auth.store';
 import { useLocale } from '@/contexts/LocaleContext';
 import {
@@ -55,13 +56,19 @@ type PendingRestoreAction =
   | { kind: 'email'; email: string; password: string }
   | { kind: 'phone'; phone: string; token: string }
   | { kind: 'social-token'; provider: 'google'; idToken: string; nonce?: string };
+type SocialProvider = 'google' | 'facebook';
 
 export function useWelcomeAuthController() {
   const { t, locale } = useLocale();
   const bootstrap = useAuthStore((state) => state.bootstrap);
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? '';
+  const inAppBrowserApp = useMemo(() => getInAppBrowserApp(), []);
+  const authInAppBrowser = inAppBrowserApp !== null;
+  const allowInstagramGoogleIdentity = inAppBrowserApp === 'instagram';
+  const disableGoogleIdentityOverlay = authInAppBrowser && !allowInstagramGoogleIdentity;
 
   const [loginOpen, setLoginOpen] = useState(false);
+  const [showOpenInBrowser, setShowOpenInBrowser] = useState(false);
   const [authMode, setAuthMode] = useState<AuthPanelMode>('signin');
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
@@ -83,6 +90,7 @@ export function useWelcomeAuthController() {
   // redirect are all async with otherwise no feedback).
   const [socialSubmitting, setSocialSubmitting] = useState<'google' | 'facebook' | null>(null);
   const googleCredentialInFlightRef = useRef(false);
+  const inAppBrowserTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [showAdvancedAuth, setShowAdvancedAuth] = useState(false);
 
@@ -92,6 +100,40 @@ export function useWelcomeAuthController() {
   const [forgotSubmitting, setForgotSubmitting] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
   const [forgotError, setForgotError] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (inAppBrowserTimerRef.current !== null) {
+        clearTimeout(inAppBrowserTimerRef.current);
+      }
+    };
+  }, []);
+
+  const clearInAppBrowserTimer = useCallback(() => {
+    if (inAppBrowserTimerRef.current !== null) {
+      clearTimeout(inAppBrowserTimerRef.current);
+      inAppBrowserTimerRef.current = null;
+    }
+  }, []);
+
+  const openInBrowserFallback = useCallback(() => {
+    if (typeof window === 'undefined') return false;
+    tryOpenInExternalBrowser(window.location.href);
+    clearInAppBrowserTimer();
+    inAppBrowserTimerRef.current = setTimeout(() => {
+      inAppBrowserTimerRef.current = null;
+      if (typeof document !== 'undefined' && !document.hidden) {
+        setShowOpenInBrowser(true);
+      }
+    }, 1500);
+    return true;
+  }, [clearInAppBrowserTimer]);
+
+  const tryInAppBrowserBounce = useCallback((provider: SocialProvider) => {
+    if (!authInAppBrowser) return false;
+    if (provider === 'google' && allowInstagramGoogleIdentity) return false;
+    return openInBrowserFallback();
+  }, [allowInstagramGoogleIdentity, authInAppBrowser, openInBrowserFallback]);
 
   const resetAuthFeedback = useCallback(() => {
     setAuthError(null);
@@ -133,16 +175,20 @@ export function useWelcomeAuthController() {
     (open: boolean) => {
       setLoginOpen(open);
       if (!open) {
+        setShowOpenInBrowser(false);
+        clearInAppBrowserTimer();
         resetAuthDialog();
       }
     },
-    [resetAuthDialog],
+    [clearInAppBrowserTimer, resetAuthDialog],
   );
 
   const handleCloseLoginDialog = useCallback(() => {
     setLoginOpen(false);
+    setShowOpenInBrowser(false);
+    clearInAppBrowserTimer();
     resetAuthDialog();
-  }, [resetAuthDialog]);
+  }, [clearInAppBrowserTimer, resetAuthDialog]);
 
   const handleAuthModeChange = useCallback(
     (mode: AuthPanelMode) => {
@@ -157,6 +203,7 @@ export function useWelcomeAuthController() {
   // redirect is only a last-ditch fallback in handleGoogleLogin below.
   const handleGoogleCredential = useCallback(
     async (credential: GoogleCredential) => {
+      if (tryInAppBrowserBounce('google')) return;
       if (googleCredentialInFlightRef.current) return;
       googleCredentialInFlightRef.current = true;
       trackSignupStarted('google');
@@ -184,7 +231,7 @@ export function useWelcomeAuthController() {
         setSocialSubmitting(null);
       }
     },
-    [bootstrap, t],
+    [bootstrap, t, tryInAppBrowserBounce],
   );
 
   // Fallback for when the overlaid GIS button never rendered (GIS unavailable
@@ -192,6 +239,7 @@ export function useWelcomeAuthController() {
   const handleGoogleLogin = useCallback(async () => {
     if (socialSubmitting) return;
     trackSignupStarted('google');
+    if (tryInAppBrowserBounce('google')) return;
     setSocialSubmitting('google');
 
     if (googleClientId) {
@@ -214,7 +262,12 @@ export function useWelcomeAuthController() {
           setSocialSubmitting(null);
           return;
         }
-        console.warn('GIS sign-in unavailable, falling back to redirect', gisError);
+        console.warn('GIS sign-in unavailable', gisError);
+        if (authInAppBrowser) {
+          setSocialSubmitting(null);
+          openInBrowserFallback();
+          return;
+        }
       }
     }
 
@@ -226,11 +279,12 @@ export function useWelcomeAuthController() {
       console.error('Google login failed', error);
       setSocialSubmitting(null);
     }
-  }, [bootstrap, googleClientId, socialSubmitting]);
+  }, [authInAppBrowser, bootstrap, googleClientId, openInBrowserFallback, socialSubmitting, tryInAppBrowserBounce]);
 
   const handleFacebookLogin = useCallback(async () => {
     if (socialSubmitting) return;
     trackSignupStarted('facebook');
+    if (tryInAppBrowserBounce('facebook')) return;
     setSocialSubmitting('facebook');
 
     try {
@@ -241,7 +295,7 @@ export function useWelcomeAuthController() {
       console.error('Facebook login failed', error);
       setSocialSubmitting(null);
     }
-  }, [socialSubmitting]);
+  }, [socialSubmitting, tryInAppBrowserBounce]);
 
   const handleEmailAuth = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
@@ -481,6 +535,7 @@ export function useWelcomeAuthController() {
     // Dialog visibility
     loginOpen,
     setLoginOpen,
+    showOpenInBrowser,
     handleLoginDialogOpenChange,
     handleCloseLoginDialog,
     handleKickOff,
@@ -488,6 +543,7 @@ export function useWelcomeAuthController() {
     // Google client id + credential handler for the overlaid GIS button
     googleClientId,
     handleGoogleCredential,
+    disableGoogleIdentityOverlay,
 
     // Auth panel mode + form fields
     authMode,

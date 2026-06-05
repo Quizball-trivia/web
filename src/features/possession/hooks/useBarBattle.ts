@@ -58,6 +58,29 @@ interface BarBattleTimingOptions {
   holdPenaltySaveShield?: boolean;
 }
 
+export type BarBattleSide = 'player' | 'opponent';
+
+export function seatForBarBattleSide(
+  side: BarBattleSide,
+  mySeat: number | null | undefined,
+): 1 | 2 | null {
+  if (mySeat !== 1 && mySeat !== 2) return null;
+  if (side === 'player') return mySeat;
+  return mySeat === 1 ? 2 : 1;
+}
+
+export function shouldUsePossessionPointsForSide(params: {
+  phaseKind?: string | null;
+  speedStreakBoostedSeat?: 1 | 2 | null;
+  mySeat?: number | null;
+  side: BarBattleSide;
+}): boolean {
+  const { phaseKind, speedStreakBoostedSeat, mySeat, side } = params;
+  if (phaseKind !== 'normal') return false;
+  if (speedStreakBoostedSeat !== 1 && speedStreakBoostedSeat !== 2) return false;
+  return seatForBarBattleSide(side, mySeat) === speedStreakBoostedSeat;
+}
+
 function getScoreHandoffMs(includeScoreFlightHandoff = false): number {
   return includeScoreFlightHandoff
     ? Math.max(BOTH_SCORE_HOLD_MS, RANKED_SCORE_FLIGHT_HANDOFF_MS)
@@ -163,13 +186,15 @@ export function resolveBattlePoints(
 
 export function resolvePossessionBattlePoints(
   round: Pick<MatchRoundResultPlayer, 'pointsEarned' | 'foundCount' | 'possessionPointsEarned'> | null | undefined,
-  questionKind?: MatchRoundResultPayload['questionKind']
+  questionKind?: MatchRoundResultPayload['questionKind'],
+  options: { usePossessionPoints?: boolean } = {}
 ): number {
+  const usePossessionPoints = options.usePossessionPoints ?? true;
   return resolveBattlePoints(
     round?.pointsEarned ?? 0,
     questionKind,
     round?.foundCount,
-    round?.possessionPointsEarned
+    usePossessionPoints ? round?.possessionPointsEarned : undefined
   );
 }
 
@@ -197,6 +222,7 @@ interface UseBarBattleParams {
   dividerX: number;
   /** Dev prototype: glow surviving one-sided bars before normal possession movement. */
   unopposedBarPulse?: boolean;
+  mySeat?: number | null;
 }
 
 export function useBarBattle({
@@ -210,6 +236,7 @@ export function useBarBattle({
   phaseKind,
   dividerX,
   unopposedBarPulse = false,
+  mySeat = null,
 }: UseBarBattleParams): BarBattleState | null {
   const matchVariant = useRealtimeMatchStore((s) => s.match?.variant);
   const [battle, setBattle] = useState<BarBattleState | null>(null);
@@ -318,8 +345,23 @@ export function useBarBattle({
     for (const t of timersRef.current) clearTimeout(t);
     timersRef.current = [];
 
-    const myPts = resolvePossessionBattlePoints(myRound, roundResult.questionKind);
-    const oppPts = resolvePossessionBattlePoints(opponentRound, roundResult.questionKind);
+    const boostedSeat = roundResult.deltas?.speedStreakBoostedSeat ?? null;
+    const myPts = resolvePossessionBattlePoints(myRound, roundResult.questionKind, {
+      usePossessionPoints: shouldUsePossessionPointsForSide({
+        phaseKind: kind,
+        speedStreakBoostedSeat: boostedSeat,
+        mySeat,
+        side: 'player',
+      }),
+    });
+    const oppPts = resolvePossessionBattlePoints(opponentRound, roundResult.questionKind, {
+      usePossessionPoints: shouldUsePossessionPointsForSide({
+        phaseKind: kind,
+        speedStreakBoostedSeat: boostedSeat,
+        mySeat,
+        side: 'opponent',
+      }),
+    });
     const pBars = pointsToBars(myPts);
     const oBars = pointsToBars(oppPts);
     const delta = pBars - oBars;
