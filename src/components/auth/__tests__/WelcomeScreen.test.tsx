@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ApiError } from '@/lib/api/api';
 
 // JSDOM doesn't ship with IntersectionObserver, which motion/react uses for
 // `whileInView`. Stub it before any component imports.
@@ -57,21 +58,50 @@ vi.mock('@/stores/auth.store', () => ({
 
 // Auth service — these are the six calls the screen issues.
 const loginMock = vi.fn(async (_email: string, _password: string) => ({ id: 'u1' }));
-const registerMock = vi.fn(async (_payload: { email: string; password: string }) => ({ user: { id: 'u1' }, tokensSet: true }));
+type RegisterMockResult = {
+  user: { id: string } | null;
+  tokensSet: boolean;
+  alreadyRegistered: boolean;
+  pendingDeletion: boolean;
+};
+const registerMock = vi.fn(
+  async (_payload: { email: string; password: string }): Promise<RegisterMockResult> => ({
+    user: { id: 'u1' },
+    tokensSet: true,
+    alreadyRegistered: false,
+    pendingDeletion: false,
+  }),
+);
+const restorePendingDeletionWithLoginMock = vi.fn(async (_email: string, _password: string) => ({ id: 'u1' }));
 const socialLoginMock = vi.fn(async (_provider: string, _redirect: string) => undefined);
-const socialLoginWithIdTokenMock = vi.fn(async (_provider: string, _idToken: string, _nonce: string) => undefined);
+const socialLoginWithIdTokenMock = vi.fn(
+  async (_provider: string, _idToken: string, _nonce?: string, _options?: { restorePendingDeletion?: boolean }) => undefined,
+);
 const startGeorgianPhoneOtpMock = vi.fn(async (_phone: string) => undefined);
-const verifyGeorgianPhoneOtpMock = vi.fn(async (_phone: string, _code: string) => ({ id: 'u1' }));
+const verifyGeorgianPhoneOtpMock = vi.fn(
+  async (_phone: string, _code: string, _options?: { restorePendingDeletion?: boolean }) => ({ id: 'u1' }),
+);
 const forgotPasswordMock = vi.fn(async (_email: string, _redirectTo: string) => undefined);
 vi.mock('@/lib/auth/auth.service', () => ({
   login: (email: string, password: string) => loginMock(email, password),
   register: (payload: { email: string; password: string }) => registerMock(payload),
+  restorePendingDeletionWithLogin: (email: string, password: string) =>
+    restorePendingDeletionWithLoginMock(email, password),
+  isPendingDeletionAuthError: (error: unknown) =>
+    error instanceof ApiError &&
+    Boolean(
+      error.data &&
+        typeof error.data === 'object' &&
+        'details' in error.data &&
+        (error.data as { details?: { reason?: string } }).details?.reason === 'pending_deletion',
+    ),
   forgotPassword: (email: string, redirectTo: string) => forgotPasswordMock(email, redirectTo),
   socialLogin: (provider: string, redirect: string) => socialLoginMock(provider, redirect),
-  socialLoginWithIdToken: (provider: string, idToken: string, nonce: string) =>
-    socialLoginWithIdTokenMock(provider, idToken, nonce),
+  socialLoginWithIdToken: (provider: string, idToken: string, nonce: string, options?: { restorePendingDeletion?: boolean }) =>
+    socialLoginWithIdTokenMock(provider, idToken, nonce, options),
   startGeorgianPhoneOtp: (phone: string) => startGeorgianPhoneOtpMock(phone),
-  verifyGeorgianPhoneOtp: (phone: string, code: string) => verifyGeorgianPhoneOtpMock(phone, code),
+  verifyGeorgianPhoneOtp: (phone: string, code: string, options?: { restorePendingDeletion?: boolean }) =>
+    verifyGeorgianPhoneOtpMock(phone, code, options),
 }));
 
 const georgianPhoneAvailabilityMock = vi.fn(() => ({
@@ -83,22 +113,31 @@ vi.mock('@/lib/auth/useGeorgianPhoneAuthAvailability', () => ({
   useGeorgianPhoneAuthAvailability: () => georgianPhoneAvailabilityMock(),
 }));
 
-// Google Identity — clientId comes from process.env; the screen calls
-// `signInWithGoogleIdentity` if present. Stub it to a sentinel so we can
-// assert it ran with the right id.
+// Google Identity. The overlaid GIS button (renderGoogleButton) is the primary
+// path; clicking the visible yellow button triggers the fallback
+// (signInWithGoogleIdentity One Tap → redirect). We capture renderGoogleButton's
+// onCredential callback so a test can drive the primary path directly.
 const signInWithGoogleIdentityMock = vi.fn(async (_clientId: string) => ({ idToken: 'tok', nonce: 'nonce' }));
+let lastGoogleButtonCredentialCb: ((c: { idToken: string; nonce: string }) => void) | null = null;
+const renderGoogleButtonMock = vi.fn(
+  async (
+    _clientId: string,
+    _container: HTMLElement,
+    _width: number,
+    onCredential: (c: { idToken: string; nonce: string }) => void,
+  ) => {
+    lastGoogleButtonCredentialCb = onCredential;
+    return true;
+  },
+);
 vi.mock('@/lib/auth/google-identity', () => ({
   signInWithGoogleIdentity: (clientId: string) => signInWithGoogleIdentityMock(clientId),
-}));
-
-// In-app-browser helpers.
-const isInAppBrowserMock = vi.fn(() => false);
-const tryOpenInExternalBrowserMock = vi.fn((_url: string) => true);
-const getPlatformMock = vi.fn(() => 'ios' as const);
-vi.mock('@/lib/auth/in-app-browser', () => ({
-  isInAppBrowser: () => isInAppBrowserMock(),
-  tryOpenInExternalBrowser: (url: string) => tryOpenInExternalBrowserMock(url),
-  getPlatform: () => getPlatformMock(),
+  renderGoogleButton: (
+    clientId: string,
+    container: HTMLElement,
+    width: number,
+    onCredential: (c: { idToken: string; nonce: string }) => void,
+  ) => renderGoogleButtonMock(clientId, container, width, onCredential),
 }));
 
 // Analytics — we assert event names + payloads.
@@ -211,7 +250,9 @@ beforeEach(() => {
   loginMock.mockReset();
   loginMock.mockResolvedValue({ id: 'u1' });
   registerMock.mockReset();
-  registerMock.mockResolvedValue({ user: { id: 'u1' }, tokensSet: true });
+  registerMock.mockResolvedValue({ user: { id: 'u1' }, tokensSet: true, alreadyRegistered: false, pendingDeletion: false });
+  restorePendingDeletionWithLoginMock.mockReset();
+  restorePendingDeletionWithLoginMock.mockResolvedValue({ id: 'u1' });
   socialLoginMock.mockReset();
   socialLoginMock.mockResolvedValue(undefined);
   socialLoginWithIdTokenMock.mockReset();
@@ -230,8 +271,8 @@ beforeEach(() => {
   forgotPasswordMock.mockResolvedValue(undefined);
   signInWithGoogleIdentityMock.mockReset();
   signInWithGoogleIdentityMock.mockResolvedValue({ idToken: 'tok', nonce: 'nonce' });
-  isInAppBrowserMock.mockReturnValue(false);
-  tryOpenInExternalBrowserMock.mockReturnValue(true);
+  renderGoogleButtonMock.mockClear();
+  lastGoogleButtonCredentialCb = null;
   trackLoginCompletedMock.mockClear();
   trackSignupCompletedMock.mockClear();
   trackSignupStartedMock.mockClear();
@@ -293,7 +334,7 @@ describe('WelcomeScreen — Google sign-in flow', () => {
     clickContinueWithGoogle();
     expect(trackSignupStartedMock).toHaveBeenCalledWith('google');
     await waitFor(() => expect(signInWithGoogleIdentityMock).toHaveBeenCalledWith('test-google-client'));
-    expect(socialLoginWithIdTokenMock).toHaveBeenCalledWith('google', 'tok', 'nonce');
+    expect(socialLoginWithIdTokenMock).toHaveBeenCalledWith('google', 'tok', 'nonce', undefined);
     expect(bootstrapMock).toHaveBeenCalledWith({ force: true });
   });
 
@@ -311,28 +352,37 @@ describe('WelcomeScreen — Google sign-in flow', () => {
     expect(bootstrapMock).not.toHaveBeenCalled();
   });
 
-  it('takes the in-app-browser branch instead of starting GIS', async () => {
-    isInAppBrowserMock.mockReturnValueOnce(true);
+  it('falls back to the visible Google handler when GIS reports rendered but mounts no clickable button', async () => {
     render(<WelcomeScreen />);
     openLoginDialog();
+    await waitFor(() => expect(renderGoogleButtonMock).toHaveBeenCalled());
+    await act(async () => {
+      await Promise.resolve();
+    });
+
     clickContinueWithGoogle();
-    expect(tryOpenInExternalBrowserMock).toHaveBeenCalled();
-    expect(signInWithGoogleIdentityMock).not.toHaveBeenCalled();
-    expect(socialLoginMock).not.toHaveBeenCalled();
+
+    await waitFor(() => expect(signInWithGoogleIdentityMock).toHaveBeenCalledWith('test-google-client'));
+    expect(socialLoginWithIdTokenMock).toHaveBeenCalledWith('google', 'tok', 'nonce', undefined);
+    expect(bootstrapMock).toHaveBeenCalledWith({ force: true });
   });
 
-  it('shows the in-app-browser instructions panel after the bounce timeout', () => {
-    vi.useFakeTimers();
-    isInAppBrowserMock.mockReturnValue(true);
+  it('renders the overlaid GIS button and exchanges its credential for a session', async () => {
     render(<WelcomeScreen />);
     openLoginDialog();
-    clickContinueWithGoogle();
-    // Instructions hidden until the 1500ms timer fires.
-    expect(screen.queryByText(/inAppBrowser\.title/)).not.toBeInTheDocument();
+    // The overlaid Google button is rendered with the configured client id.
+    await waitFor(() => expect(renderGoogleButtonMock).toHaveBeenCalled());
+    expect(renderGoogleButtonMock.mock.calls[0]?.[0]).toBe('test-google-client');
+    // Drive the primary path: Google returns a credential via the rendered button.
+    expect(lastGoogleButtonCredentialCb).toBeTruthy();
     act(() => {
-      vi.advanceTimersByTime(1600);
+      lastGoogleButtonCredentialCb?.({ idToken: 'btn-tok', nonce: 'btn-nonce' });
     });
-    expect(screen.getByText(/inAppBrowser\.title/)).toBeInTheDocument();
+    expect(trackSignupStartedMock).toHaveBeenCalledWith('google');
+    await waitFor(() =>
+      expect(socialLoginWithIdTokenMock).toHaveBeenCalledWith('google', 'btn-tok', 'btn-nonce', undefined),
+    );
+    expect(bootstrapMock).toHaveBeenCalledWith({ force: true });
   });
 });
 
@@ -368,15 +418,27 @@ describe('WelcomeScreen — email signin / signup', () => {
     await waitFor(() => expect(bootstrapMock).toHaveBeenCalled());
   });
 
-  it('shows the check-email notice when register reports tokensSet=false', async () => {
-    registerMock.mockResolvedValueOnce({ user: null as unknown as { id: string }, tokensSet: false });
+  it('shows the check-email modal when register reports tokensSet=false (new signup)', async () => {
+    registerMock.mockResolvedValueOnce({ user: null as unknown as { id: string }, tokensSet: false, alreadyRegistered: false, pendingDeletion: false });
     render(<WelcomeScreen />);
     openLoginDialog();
     openAuthOptions();
     fireEvent.click(screen.getByText(/welcome\.signUpTab/));
     setEmailFields('new@example.com', 'secret12', 'secret12');
     fireEvent.click(screen.getByText(/welcome\.createAccount/));
-    await waitFor(() => expect(screen.getByText(/welcome\.checkEmail/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/welcome\.checkEmailTitle/)).toBeInTheDocument());
+    expect(bootstrapMock).not.toHaveBeenCalled();
+  });
+
+  it('shows the already-registered modal when register reports alreadyRegistered=true', async () => {
+    registerMock.mockResolvedValueOnce({ user: null as unknown as { id: string }, tokensSet: false, alreadyRegistered: true, pendingDeletion: false });
+    render(<WelcomeScreen />);
+    openLoginDialog();
+    openAuthOptions();
+    fireEvent.click(screen.getByText(/welcome\.signUpTab/));
+    setEmailFields('existing@example.com', 'secret12', 'secret12');
+    fireEvent.click(screen.getByText(/welcome\.createAccount/));
+    await waitFor(() => expect(screen.getByText(/welcome\.alreadyRegisteredTitle/)).toBeInTheDocument());
     expect(bootstrapMock).not.toHaveBeenCalled();
   });
 
@@ -413,6 +475,55 @@ describe('WelcomeScreen — email signin / signup', () => {
     await waitFor(() => expect(screen.getByText(/welcome\.loginError/)).toBeInTheDocument());
     expect(screen.queryByText('Bad credentials, bro')).not.toBeInTheDocument();
     expect(bootstrapMock).not.toHaveBeenCalled();
+  });
+
+  it('shows restore modal for pending-deletion email login and disables restore while submitting', async () => {
+    loginMock.mockRejectedValueOnce(new ApiError('Request failed', 401, {
+      code: 'AUTHENTICATION_ERROR',
+      details: { reason: 'pending_deletion' },
+    }));
+    let resolveRestore: (() => void) | null = null;
+    restorePendingDeletionWithLoginMock.mockImplementationOnce(
+      () => new Promise<{ id: string }>((resolve) => {
+        resolveRestore = () => resolve({ id: 'u1' });
+      }),
+    );
+
+    render(<WelcomeScreen />);
+    openLoginDialog();
+    openAuthOptions();
+    setEmailFields('user@example.com', 'secret');
+    fireEvent.click(screen.getByText(/welcome\.signInWithEmail/));
+
+    await waitFor(() => expect(screen.getByText(/welcome\.restoreAccountTitle/)).toBeInTheDocument());
+    const restoreButton = screen.getByRole('button', { name: 'welcome.restoreAccount' }) as HTMLButtonElement;
+    fireEvent.click(restoreButton);
+    fireEvent.click(restoreButton);
+
+    await waitFor(() => expect(restorePendingDeletionWithLoginMock).toHaveBeenCalledTimes(1));
+    expect(restorePendingDeletionWithLoginMock).toHaveBeenCalledWith('user@example.com', 'secret');
+    await waitFor(() => expect(restoreButton.disabled).toBe(true));
+    act(() => resolveRestore?.());
+    await waitFor(() => expect(bootstrapMock).toHaveBeenCalledWith({ force: true }));
+  });
+
+  it('shows restore modal when signup reports a pending-deletion account', async () => {
+    registerMock.mockResolvedValueOnce({
+      user: null as unknown as { id: string },
+      tokensSet: false,
+      alreadyRegistered: true,
+      pendingDeletion: true,
+    });
+
+    render(<WelcomeScreen />);
+    openLoginDialog();
+    openAuthOptions();
+    fireEvent.click(screen.getByText(/welcome\.signUpTab/));
+    setEmailFields('existing@example.com', 'secret12', 'secret12');
+    fireEvent.click(screen.getByText(/welcome\.createAccount/));
+
+    await waitFor(() => expect(screen.getByText(/welcome\.restoreAccountTitle/)).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'welcome.restoreAccount' })).toBeInTheDocument();
   });
 
   it('surfaces the upstream error message on a failed signup', async () => {
@@ -467,7 +578,7 @@ describe('WelcomeScreen — email signin / signup', () => {
 });
 
 describe('WelcomeScreen — phone OTP', () => {
-  it('hides the phone tab when Georgian phone auth is not available', () => {
+  it('hides the phone form when Georgian phone auth is not available', () => {
     georgianPhoneAvailabilityMock.mockReturnValue({
       country: 'US',
       isAvailable: false,
@@ -478,29 +589,34 @@ describe('WelcomeScreen — phone OTP', () => {
     openLoginDialog();
     openAuthOptions();
 
-    expect(screen.queryByText(/welcome\.phoneTab/)).not.toBeInTheDocument();
-    expect(screen.queryByPlaceholderText(/welcome\.phonePlaceholder/)).not.toBeInTheDocument();
+    // Phone is no longer a tab; when unavailable the phone form is absent under Sign In.
+    expect(screen.queryByPlaceholderText(/welcome\.phoneLocalPlaceholder/)).not.toBeInTheDocument();
   });
 
-  it('starts the OTP flow on first submit then verifies on second', async () => {
+  it('shows the phone form under Sign In via the Email|Phone toggle and runs the OTP flow', async () => {
     render(<WelcomeScreen />);
     openLoginDialog();
     openAuthOptions();
-    fireEvent.click(screen.getByText(/welcome\.phoneTab/));
-    const phoneInput = screen.getByPlaceholderText(/welcome\.phonePlaceholder/);
-    fireEvent.change(phoneInput, { target: { value: '+995555000111' } });
+    // Sign In defaults to the Email method; switch the toggle to Phone.
+    fireEvent.click(screen.getByText(/welcome\.phoneMethod/));
+    // The +995 prefix is fixed; the user types only the 9 local digits.
+    const phoneInput = screen.getByPlaceholderText(/welcome\.phoneLocalPlaceholder/);
+    fireEvent.change(phoneInput, { target: { value: '555000111' } });
     const sendButton = screen.getByText(/welcome\.sendCode/);
     fireEvent.click(sendButton);
     expect(trackSignupStartedMock).not.toHaveBeenCalledWith('phone');
     await waitFor(() => expect(startGeorgianPhoneOtpMock).toHaveBeenCalledWith('+995555000111'));
-    await waitFor(() => expect(screen.getByText(/welcome\.phoneCodeSent/)).toBeInTheDocument());
+    // After the code is sent the modal collapses to a focused step showing the
+    // persistent inline "code sent" hint + a change-number affordance.
+    await waitFor(() => expect(screen.getByText(/welcome\.otpSentHint/)).toBeInTheDocument());
+    expect(screen.getByText(/welcome\.changeNumber/)).toBeInTheDocument();
 
     // OTP input is now visible. Type 6 digits + verify.
     const otpInput = screen.getByPlaceholderText(/welcome\.otpPlaceholder/);
     fireEvent.change(otpInput, { target: { value: '123456' } });
     const verifyButton = screen.getByText(/welcome\.verifyCode/);
     fireEvent.click(verifyButton);
-    await waitFor(() => expect(verifyGeorgianPhoneOtpMock).toHaveBeenCalledWith('+995555000111', '123456'));
+    await waitFor(() => expect(verifyGeorgianPhoneOtpMock).toHaveBeenCalledWith('+995555000111', '123456', undefined));
     expect(trackLoginCompletedMock).toHaveBeenCalledWith('phone');
     await waitFor(() => expect(bootstrapMock).toHaveBeenCalledWith({ force: true }));
   });
@@ -510,25 +626,38 @@ describe('WelcomeScreen — phone OTP', () => {
     render(<WelcomeScreen />);
     openLoginDialog();
     openAuthOptions();
-    fireEvent.click(screen.getByText(/welcome\.phoneTab/));
-    const phoneInput = screen.getByPlaceholderText(/welcome\.phonePlaceholder/);
-    fireEvent.change(phoneInput, { target: { value: '+995555000111' } });
+    fireEvent.click(screen.getByText(/welcome\.phoneMethod/));
+    const phoneInput = screen.getByPlaceholderText(/welcome\.phoneLocalPlaceholder/);
+    fireEvent.change(phoneInput, { target: { value: '555000111' } });
     fireEvent.click(screen.getByText(/welcome\.sendCode/));
     await waitFor(() => expect(screen.getByText('SMS blocked here')).toBeInTheDocument());
   });
 });
 
-describe('WelcomeScreen — mode-switch reset behavior', () => {
-  it('switching tabs resets feedback and disables stale OTP state', () => {
+describe('WelcomeScreen — sign-in method toggle', () => {
+  it('toggles between Email and Phone under Sign In, one form at a time', () => {
     render(<WelcomeScreen />);
     openLoginDialog();
     openAuthOptions();
-    fireEvent.click(screen.getByText(/welcome\.phoneTab/));
-    const phoneInput = screen.getByPlaceholderText(/welcome\.phonePlaceholder/);
-    fireEvent.change(phoneInput, { target: { value: '+1' } });
-    // Switch back to signin — the email form should appear.
-    fireEvent.click(screen.getByText(/welcome\.signInTab/));
+    // Defaults to Email: email form shown, phone hidden.
     expect(screen.getByPlaceholderText(/welcome\.emailPlaceholder/)).toBeInTheDocument();
-    expect(screen.queryByPlaceholderText(/welcome\.otpPlaceholder/)).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText(/welcome\.phoneLocalPlaceholder/)).not.toBeInTheDocument();
+    // Toggle to Phone: phone form shown, email hidden.
+    fireEvent.click(screen.getByText(/welcome\.phoneMethod/));
+    expect(screen.getByPlaceholderText(/welcome\.phoneLocalPlaceholder/)).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText(/welcome\.emailPlaceholder/)).not.toBeInTheDocument();
+    // Toggle back to Email.
+    fireEvent.click(screen.getByText(/welcome\.emailMethod/));
+    expect(screen.getByPlaceholderText(/welcome\.emailPlaceholder/)).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText(/welcome\.phoneLocalPlaceholder/)).not.toBeInTheDocument();
+  });
+
+  it('hides the method toggle on Sign Up (email only)', () => {
+    render(<WelcomeScreen />);
+    openLoginDialog();
+    openAuthOptions();
+    fireEvent.click(screen.getByText(/welcome\.signUpTab/));
+    expect(screen.getByPlaceholderText(/welcome\.emailPlaceholder/)).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText(/welcome\.phoneLocalPlaceholder/)).not.toBeInTheDocument();
   });
 });

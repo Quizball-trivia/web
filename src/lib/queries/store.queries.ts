@@ -152,7 +152,7 @@ export function useStoreWallet() {
   const authStatus = useAuthStore((state) => state.status);
   return useQuery({
     ...getStoreWalletQuery(),
-    enabled: authStatus !== "anonymous",
+    enabled: authStatus === "authenticated",
   });
 }
 
@@ -168,5 +168,9 @@ export const getStoreInventoryQuery = () => ({
 });
 
 export function useStoreInventory() {
-  return useQuery(getStoreInventoryQuery());
+  const authStatus = useAuthStore((state) => state.status);
+  return useQuery({
+    ...getStoreInventoryQuery(),
+    enabled: authStatus === "authenticated",
+  });
 }

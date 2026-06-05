@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import { render, renderHook, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { BarBattleOverlay, type BarBattleState } from '../BarBattleOverlay';
+import { useBarBattleViewModel } from '../bar-battle/useBarBattleViewModel';
 
 function rankedBattle(overrides: Partial<BarBattleState> = {}): BarBattleState {
   return {
@@ -84,6 +85,104 @@ describe('BarBattleOverlay — anchored layout (variant="ranked_sim")', () => {
     );
 
     expect(screen.getAllByTestId('stack-cancel-hit')).toHaveLength(4);
+  });
+});
+
+describe('BarBattleOverlay — penalty anchored layout', () => {
+  it('keeps a compact edge-keeper stack behind the avatar instead of under it', () => {
+    const { result } = renderHook(() => useBarBattleViewModel({
+      battle: rankedBattle({
+        phase: 'bars',
+        playerBars: 5,
+        opponentBars: 0,
+        playerPoints: 50,
+        opponentPoints: 0,
+        remainingDelta: 5,
+      }),
+      mirrored: false,
+      playerAvatarX: 33,
+      opponentAvatarX: 140,
+      isPortrait: false,
+      matchVariant: 'ranked_sim',
+      isPenalty: true,
+    }));
+
+    const stackHalfWidth = (result.current.barW * 2.2) / 2;
+    expect(result.current.playerLayout.compact).toBe(true);
+    expect(result.current.playerLayout.compactX - stackHalfWidth).toBeGreaterThanOrEqual(4);
+    expect(result.current.playerLayout.compactX + stackHalfWidth).toBeLessThanOrEqual(29);
+  });
+
+  it('keeps a right-side penalty shooter row inside the visible pitch', () => {
+    const { result } = renderHook(() => useBarBattleViewModel({
+      battle: rankedBattle({
+        phase: 'bars',
+        playerBars: 0,
+        opponentBars: 10,
+        playerPoints: 0,
+        opponentPoints: 100,
+        remainingDelta: -10,
+      }),
+      mirrored: false,
+      playerAvatarX: 140,
+      opponentAvatarX: 360,
+      isPortrait: false,
+      matchVariant: 'ranked_sim',
+      isPenalty: true,
+    }));
+
+    const xs = Array.from({ length: 10 }, (_, index) => result.current.opponentBarStartX(index));
+    const rightEdges = xs.map((x) => x + result.current.barW);
+    expect(result.current.opponentLayout.compact).toBe(false);
+    expect(xs[0]).toBeLessThan(401);
+    expect(Math.min(...xs)).toBeGreaterThanOrEqual(4);
+    expect(Math.max(...rightEdges)).toBeLessThanOrEqual(496);
+  });
+
+  it('moves the left-goal keeper save shield in front of the avatar', () => {
+    const { result } = renderHook(() => useBarBattleViewModel({
+      battle: rankedBattle({
+        phase: 'charge',
+        playerBars: 5,
+        opponentBars: 0,
+        playerPoints: 50,
+        opponentPoints: 0,
+        remainingDelta: 5,
+        penaltyOutcome: 'saved',
+      }),
+      mirrored: false,
+      playerAvatarX: 33,
+      opponentAvatarX: 140,
+      isPortrait: false,
+      matchVariant: 'ranked_sim',
+      isPenalty: true,
+    }));
+
+    expect(result.current.playerBarDir).toBe(-1);
+    expect(result.current.playerKeeperShieldCenterX).toBeGreaterThan(33);
+  });
+
+  it('moves the right-goal keeper save shield in front of the avatar', () => {
+    const { result } = renderHook(() => useBarBattleViewModel({
+      battle: rankedBattle({
+        phase: 'charge',
+        playerBars: 0,
+        opponentBars: 5,
+        playerPoints: 0,
+        opponentPoints: 50,
+        remainingDelta: -5,
+        penaltyOutcome: 'saved',
+      }),
+      mirrored: false,
+      playerAvatarX: 360,
+      opponentAvatarX: 467,
+      isPortrait: false,
+      matchVariant: 'ranked_sim',
+      isPenalty: true,
+    }));
+
+    expect(result.current.opponentBarDir).toBe(1);
+    expect(result.current.opponentKeeperShieldCenterX).toBeLessThan(467);
   });
 });
 

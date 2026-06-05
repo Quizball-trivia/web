@@ -8,6 +8,7 @@ import {
   peekPostAuthRedirect,
   rememberPostAuthRedirect,
 } from '../postAuthRedirect';
+import { extractFriendInviteCode } from '@/lib/friend/inviteCode';
 import { STORAGE_KEYS } from '@/utils/storage';
 import type { User } from '@/lib/types';
 
@@ -25,11 +26,23 @@ describe('post-auth redirect helpers', () => {
     expect(normalizePostAuthRedirect('/play')).toBeNull();
     expect(normalizePostAuthRedirect('https://evil.test/friend/room/ABC123')).toBeNull();
     expect(normalizePostAuthRedirect('/friend/room/a')).toBeNull();
+    expect(normalizePostAuthRedirect('/friend/room/ABC-123')).toBeNull();
   });
 
   it('builds friend invite paths and absolute urls', () => {
     expect(buildFriendInvitePath('abc123')).toBe('/friend/room/ABC123');
     expect(buildFriendInviteUrl('abc123', 'https://quizball.test')).toBe('https://quizball.test/friend/room/ABC123');
+    expect(buildFriendInvitePath('ABC-123')).toBeNull();
+  });
+
+  it('extracts backend-compatible codes from copied invite links', () => {
+    expect(extractFriendInviteCode('abc123')).toBe('ABC123');
+    expect(extractFriendInviteCode('https://quizball.test/friend/room/abc123')).toBe('ABC123');
+    expect(extractFriendInviteCode('quizball.test/friend/room/abc123')).toBe('ABC123');
+    expect(extractFriendInviteCode('Join me: https://quizball.test/friend/room/abc123?utm=share')).toBe('ABC123');
+    expect(extractFriendInviteCode('Join me: https://quizball.test/friend/room/abc123.')).toBe('ABC123');
+    expect(extractFriendInviteCode('/friend/room/abc123')).toBe('ABC123');
+    expect(extractFriendInviteCode('https://quizball.test/friend/room/abc-123')).toBeNull();
   });
 
   it('remembers and consumes a pending friend room redirect once', () => {

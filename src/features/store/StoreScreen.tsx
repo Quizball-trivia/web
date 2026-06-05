@@ -20,6 +20,7 @@ import {
   trackAvatarPartEquipped,
 } from "@/lib/analytics/game-events";
 import { useLocale } from "@/contexts/LocaleContext";
+import { translatePartName as translateSharedPartName } from "@/lib/avatars/partNames";
 import {
   HAIR_PARTS,
   GLASSES_PARTS,
@@ -186,34 +187,9 @@ function TicketCard({ pack, onBuy }: { pack: TicketPackItem; onBuy: (b: TicketPa
 // Map of static English part names → translation keys. Football-related
 // proper nouns (Ramos, Real Madrid, Liverpool, etc.) intentionally stay
 // untranslated since they're brand names.
-const PART_NAME_KEY_MAP: Record<string, string> = {
-  "Wayfarer": "store.partWayfarer",
-  "Round Shades": "store.partRoundShades",
-  "Aviator": "store.partAviator",
-  "Mustache": "store.partMustache",
-  "Beard": "store.partBeard",
-  "Boy Basic": "store.partBoyBasic",
-  "Girl Basic": "store.partGirlBasic",
-  "Light": "store.partLight",
-  "Tan": "store.partTan",
-  "Brown": "store.partBrown",
-  "Dark": "store.partDark",
-  "Green": "store.partGreen",
-  "Blue": "store.partBlue",
-  "Yellow": "store.partYellow",
-  "Red": "store.partRed",
-  "Violet": "store.partViolet",
-  "Pink": "store.partPink",
-};
-
 export function StoreScreen() {
   const { t } = useLocale();
-  const translatePartName = (name: string) => {
-    const key = PART_NAME_KEY_MAP[name];
-    if (!key) return name;
-    const translated = t(key as Parameters<typeof t>[0]);
-    return translated === key ? name : translated;
-  };
+  const translatePartName = (name: string) => translateSharedPartName(name, t);
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();

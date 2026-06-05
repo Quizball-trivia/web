@@ -1,5 +1,4 @@
-import { refresh } from "@/lib/auth/auth.service";
-import { clearTokens } from "@/lib/auth/tokenStorage";
+import { refreshSession } from "@/lib/auth/auth.service";
 import {
   ApiError,
   api,
@@ -16,6 +15,19 @@ type ApiFetchOptions<
   skipRefresh?: boolean;
 };
 
+// Auth endpoints must never trigger the 401→refresh→retry cycle: a 401/400 from
+// these IS the refresh failing, so retrying would recurse. Refresh itself also
+// runs with `auth: false`, which is a second guard.
+const NON_REFRESHABLE_PATHS = new Set<string>([
+  "/api/v1/auth/refresh",
+  "/api/v1/auth/login",
+  "/api/v1/auth/login/restore",
+  "/api/v1/auth/logout",
+  "/api/v1/auth/register",
+  "/api/v1/auth/restore-pending-deletion",
+  "/api/v1/auth/social-login-token",
+]);
+
 export async function apiFetch<
   M extends HttpMethod,
   P extends PathsWithMethod<M>,
@@ -23,12 +35,22 @@ export async function apiFetch<
   try {
     return await api.request(method, path, options);
   } catch (error) {
-    if (error instanceof ApiError && error.status === 401 && !options.skipRefresh) {
-      const refreshed = await refresh();
-      if (refreshed) {
+    const canRefresh =
+      error instanceof ApiError &&
+      error.status === 401 &&
+      !options.skipRefresh &&
+      options.auth !== false &&
+      !NON_REFRESHABLE_PATHS.has(String(path));
+
+    if (canRefresh) {
+      // Single-flight: parallel 401s all await the same refresh attempt.
+      const result = await refreshSession();
+      if (result.ok) {
         return apiFetch(method, path, { ...options, skipRefresh: true });
       }
-      clearTokens();
+      // Terminal failure already cleared tokens inside refreshSession; transient
+      // failure leaves them intact for a later attempt. Either way, surface the
+      // original 401 to the caller rather than retrying into a loop.
     }
     throw error;
   }

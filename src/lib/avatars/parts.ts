@@ -151,7 +151,7 @@ export const HAIR_PARTS: AvatarPart[] = [
   {
     id: "hair_ronaldo_brazil",
     slot: "hair",
-    name: "Ronaldo Brazil",
+    name: "Ronaldo Nazario",
     asset: "/assets/store/hair_ronaldo_brazil.webp",
     priceCoins: 1000,
     productSlug: "avatar_hair_ronaldo_brazil",
@@ -160,7 +160,7 @@ export const HAIR_PARTS: AvatarPart[] = [
   {
     id: "hair_ronaldo_goat",
     slot: "hair",
-    name: "Ronaldo GOAT",
+    name: "CR7",
     asset: "/assets/store/hair_ronaldo_goat.webp",
     priceCoins: 700,
     productSlug: "avatar_hair_ronaldo_goat",

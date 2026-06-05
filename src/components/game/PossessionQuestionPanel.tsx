@@ -6,6 +6,7 @@ import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import type { AnswerStateArray, Phase } from '@/lib/types/game.types';
 import { ArenaScoreSplash } from '@/components/game/ArenaScoreSplash';
 import { MatchHudIconButton } from '@/features/possession/components/MatchHudPrimitives';
+import { MAX_PENALTY_ROUNDS } from '@/features/possession/types/possession.types';
 import { useLocale } from '@/contexts/LocaleContext';
 
 const poppins = {
@@ -32,6 +33,11 @@ interface PossessionQuestionPanelProps {
   isPenaltyPhase: boolean;
   isShotPhase: boolean;
   isLastAttackPhase: boolean;
+  /** Penalty round to display (1..5 in regulation, 1 in sudden death). */
+  penaltyDisplayRound?: number;
+  /** Penalty round total to display (5 in regulation, 1 in sudden death). */
+  penaltyDisplayTotal?: number;
+  isPenaltySuddenDeath?: boolean;
 
   question: GameQuestion | null;
   qIndex: number;
@@ -125,6 +131,9 @@ export function PossessionQuestionPanel({
   phase,
   isPenaltyPhase,
   isShotPhase,
+  penaltyDisplayRound,
+  penaltyDisplayTotal,
+  isPenaltySuddenDeath = false,
   question,
   qIndex,
   totalQuestions,
@@ -165,10 +174,18 @@ export function PossessionQuestionPanel({
   const timerPillClass =
     'flex shrink-0 items-center justify-center rounded-[16px] bg-brand-blue text-white tabular-nums';
 
-  const questionCounterLabel = t('possession.questionCounter', {
-    current: displayQuestionNum,
-    total: totalQuestions,
-  });
+  const questionCounterLabel = isPenaltyPhase
+    ? isPenaltySuddenDeath
+      // Sudden death restarts as a one-shot set; no "sudden death" wording.
+      ? t('possession.questionCounter', { current: 1, total: 1 })
+      : t('possession.penaltyRound', {
+        round: penaltyDisplayRound ?? 1,
+        max: penaltyDisplayTotal ?? MAX_PENALTY_ROUNDS,
+      })
+    : t('possession.questionCounter', {
+      current: displayQuestionNum,
+      total: totalQuestions,
+    });
 
   const questionPill = (
     <div
@@ -339,7 +356,7 @@ export function PossessionQuestionPanel({
           const isWrongPick = buttonState === 'selected-wrong';
 
           const isPlayerPicked = selectedAnswer === i;
-          const opponentPickedThis = !partyPicks && !isPenaltyPhase && opponentAnswer === i;
+          const opponentPickedThis = !partyPicks && opponentAnswer === i;
           const opponentPickCorrect = opponentAnswer !== null && correctIndex !== undefined
             ? opponentAnswer === correctIndex
             : null;

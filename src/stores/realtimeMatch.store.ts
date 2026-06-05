@@ -49,6 +49,7 @@ const initialState = {
   ...draftInitialState,
   ...presenceInitialState,
   ...matchInitialState,
+  penaltyMatchEndHoldComplete: true,
   error: null,
 };
 

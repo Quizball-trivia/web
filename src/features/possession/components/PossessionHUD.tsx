@@ -37,6 +37,8 @@ interface PossessionHUDProps {
   opponentAnsweredCorrectly?: boolean | null;
   /** True when the player currently holds the 2× speed streak. */
   speedStreakMine?: boolean;
+  /** True when the opponent currently holds the 2× speed streak. */
+  speedStreakOpponent?: boolean;
 }
 
 export function PossessionHUD({
@@ -52,6 +54,7 @@ export function PossessionHUD({
   half,
   onQuit,
   speedStreakMine = false,
+  speedStreakOpponent = false,
 }: PossessionHUDProps) {
   const { t } = useLocale();
   const showTimer = timeRemaining !== null;
@@ -89,7 +92,7 @@ export function PossessionHUD({
                   {playerGoals}
                 </motion.span>
               </div>
-              <SpeedStreakBadge active={speedStreakMine} />
+              <SpeedStreakBadge active={speedStreakMine} side="player" />
             </div>
             <div className="hidden sm:block">
               <AnimatedPointsCounter value={playerPoints} accentClassName="text-brand-yellow" />
@@ -115,15 +118,18 @@ export function PossessionHUD({
         <div className="flex min-w-0 flex-1 items-center justify-end gap-1 sm:gap-3">
           <div className="min-w-0 text-right">
             <div className="ml-auto hidden truncate text-xs font-bold text-white/85 sm:block">{opponentName}</div>
-            <div className="text-2xl font-black leading-6 tabular-nums text-white sm:text-3xl sm:leading-7">
-              <motion.span
-                key={`o-${opponentGoals}`}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                {opponentGoals}
-              </motion.span>
+            <div className="flex items-center justify-end gap-2 sm:gap-2.5">
+              <SpeedStreakBadge active={speedStreakOpponent} side="opponent" />
+              <div className="text-2xl font-black leading-6 tabular-nums text-white sm:text-3xl sm:leading-7">
+                <motion.span
+                  key={`o-${opponentGoals}`}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {opponentGoals}
+                </motion.span>
+              </div>
             </div>
             <div className="hidden sm:block">
               <AnimatedPointsCounter
@@ -144,16 +150,15 @@ export function PossessionHUD({
 }
 
 /**
- * 2× speed-streak badge — shown to the right of the player's score while the
- * streak is active. `data-speed-streak-badge` anchors the future flight
- * animation (the +N ghost gets multiplied here before flying to the pitch).
+ * 2× speed-streak badge — shown beside a score while the streak is active.
+ * `data-speed-streak-badge` anchors the score flight detour where +N doubles.
  */
 // Time for the incoming "2×" flight token to travel from the answer source to
 // this slot. Derived from the overlay's own flight duration so the two can't
 // drift (single source of truth).
 const SPEED_STREAK_FLIGHT_MS = FLIGHT_TOTAL_MS;
 
-function SpeedStreakBadge({ active }: { active: boolean }) {
+function SpeedStreakBadge({ active, side }: { active: boolean; side: 'player' | 'opponent' }) {
   // Reveal the sticky badge only after the flying 2× token has had time to
   // arrive (so it doesn't sit here while the token is still mid-air).
   const [landed, setLanded] = useState(false);
@@ -188,7 +193,7 @@ function SpeedStreakBadge({ active }: { active: boolean }) {
       )}
       {/* center-of-badge anchor — the flight token lands here */}
       <span
-        data-speed-streak-slot="player"
+        data-speed-streak-slot={side}
         className="pointer-events-none absolute left-1/2 top-1/2 size-px -translate-x-1/2 -translate-y-1/2"
       />
       <AnimatePresence>
@@ -209,7 +214,7 @@ function SpeedStreakBadge({ active }: { active: boolean }) {
             className="absolute inset-0 z-[120] flex items-center justify-center"
           >
             <div
-              data-speed-streak-badge="player"
+              data-speed-streak-badge={side}
               className="inline-flex w-max items-center gap-1 whitespace-nowrap rounded-xl bg-brand-yellow px-2.5 py-1 shadow-[0_3px_10px_rgba(0,0,0,0.35)] sm:gap-1.5 sm:px-3 sm:py-1.5"
             >
               <Zap className="size-4 fill-black text-black sm:size-5" />

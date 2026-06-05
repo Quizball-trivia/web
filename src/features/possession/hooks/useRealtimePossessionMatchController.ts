@@ -4,7 +4,9 @@ import { useCallback, useEffect, useMemo, useState, type ComponentProps } from '
 import { useShallow } from 'zustand/shallow';
 import { useRealtimeGameLogic } from '@/lib/match/useRealtimeGameLogic';
 import { useGameSounds } from '@/lib/sounds/useGameSounds';
+import { usePreloadImages } from '@/lib/usePreloadImages';
 import { useRealtimeMatchStore, type MatchQuestionState } from '@/stores/realtimeMatch.store';
+import { useRankedProfile } from '@/lib/queries/ranked.queries';
 import { logger } from '@/utils/logger';
 import { HalftimeScreen } from '../components/HalftimeScreen';
 import type { PossessionViewportModel } from '../components/PossessionMatchViewport';
@@ -29,6 +31,7 @@ import {
   type FeedResult,
 } from '../realtimePossession.helpers';
 import type { FeedDirection } from '../types/possession.types';
+import { MAX_PENALTY_ROUNDS } from '../types/possession.types';
 import type { AvatarCustomization } from '@/types/game';
 
 type HalftimeModel = ComponentProps<typeof HalftimeScreen>;
@@ -121,6 +124,12 @@ export function useRealtimePossessionMatchController({
   const meUserId = useRealtimeMatchStore((store) => store.selfUserId);
   const shouldPulseUnopposedBars = unopposedBarPulse || possessionMatch.variant === 'ranked_sim';
 
+  // RP for the halftime/penalty ban header (mirrors the pre-match draft header):
+  // self from the ranked profile, opponent from the match participant payload.
+  const { data: rankedProfile } = useRankedProfile();
+  const playerRankPoints = rankedProfile?.rp ?? null;
+  const opponentRankPoints = possessionMatch.opponent?.rp ?? null;
+
   const [muted, setMuted] = useState(false);
   const [quitModalOpen, setQuitModalOpen] = useState(false);
 
@@ -149,9 +158,23 @@ export function useRealtimePossessionMatchController({
   const localQuestionIndex = localQuestion?.qIndex ?? null;
   const phaseKind = localQuestion?.phaseKind ?? possessionState?.phaseKind ?? 'normal';
   const halftimeActive = phase === 'HALFTIME';
+  // Warm the ban-category images as soon as the halftime options arrive in the
+  // socket payload — usually a beat before the ban UI renders — so the cards
+  // don't show blank while images download. See usePreloadImages.
+  const banImageUrls = useMemo(
+    () => (possessionState?.halftime.categoryOptions ?? []).map((c) => c.imageUrl ?? null),
+    [possessionState?.halftime.categoryOptions],
+  );
+  usePreloadImages(banImageUrls);
   const isPenaltyQuestion = phaseKind === 'penalty';
   const isLastAttackQuestion = phaseKind === 'last_attack';
   const isShotQuestion = phaseKind === 'shot';
+  // Penalty round display: regulation counts 1..MAX_PENALTY_ROUNDS; sudden death
+  // restarts as its own one-shot set (round 1/1, pips reset) — see PenaltyHUD.
+  const isPenaltySuddenDeath = possessionState?.penaltySuddenDeath ?? false;
+  const penaltyRound = Math.max(1, possessionState?.phaseRound ?? 1);
+  const penaltyDisplayRound = isPenaltySuddenDeath ? 1 : penaltyRound;
+  const penaltyDisplayTotal = isPenaltySuddenDeath ? 1 : MAX_PENALTY_ROUNDS;
   const pendingQuestion = possessionMatch.pendingQuestion;
   const answerAck = possessionMatch.answerAck && possessionMatch.answerAck.qIndex === localQuestionIndex
     ? possessionMatch.answerAck
@@ -330,6 +353,7 @@ export function useRealtimePossessionMatchController({
     phaseKind,
     dividerX,
     unopposedBarPulse: shouldPulseUnopposedBars,
+    mySeat,
   });
 
   const { handleHalftimeBan, handleHalftimeBanPhaseShown } = useHalftimeBanController({
@@ -506,10 +530,12 @@ export function useRealtimePossessionMatchController({
             props: {
               penaltyPlayerScore: fieldState.myPenaltyGoals,
               penaltyOpponentScore: fieldState.oppPenaltyGoals,
+              penaltyPlayerAttempts: fieldState.myPenaltyAttempts,
+              penaltyOpponentAttempts: fieldState.oppPenaltyAttempts,
               playerPoints,
               opponentPoints,
-              penaltyRound: Math.max(1, possessionState.phaseRound),
-              isPenaltySuddenDeath: possessionState.penaltySuddenDeath ?? false,
+              penaltyRound,
+              isPenaltySuddenDeath,
               isPlayerShooter: fieldState.shooterIsMe,
               playerName: playerUsername,
               opponentName: opponentUsername,
@@ -546,6 +572,7 @@ export function useRealtimePossessionMatchController({
               opponentAnswered: state.opponentAnswered,
               opponentAnsweredCorrectly,
               speedStreakMine: fieldState.speedStreakMine,
+              speedStreakOpponent: fieldState.speedStreakOpponent,
             },
           },
       pitchProps: {
@@ -584,6 +611,9 @@ export function useRealtimePossessionMatchController({
             isPenaltyPhase: fieldState.isPenaltyQuestion,
             isShotPhase: fieldState.isShotVisualPhase,
             isLastAttackPhase: fieldState.isLastAttackQuestion,
+            penaltyDisplayRound,
+            penaltyDisplayTotal,
+            isPenaltySuddenDeath,
             question,
             qIndex: localQuestion?.qIndex ?? 0,
             totalQuestions: localQuestion?.total ?? 12,
@@ -613,6 +643,10 @@ export function useRealtimePossessionMatchController({
               matchId: possessionMatch.matchId,
               qIndex: localQuestion.qIndex,
               totalQuestions: localQuestion.total ?? 12,
+              isPenaltyPhase: fieldState.isPenaltyQuestion,
+              penaltyDisplayRound,
+              penaltyDisplayTotal,
+              isPenaltySuddenDeath,
               question: specialQuestion,
               showOptions: state.showOptions,
               timeRemaining: state.timeRemaining,
@@ -645,6 +679,8 @@ export function useRealtimePossessionMatchController({
       playerAvatarCustomization,
       opponentAvatarCustomization,
       playerPosition: fieldState.visualMyPossessionPct,
+      playerRankPoints,
+      opponentRankPoints,
       playerCountryCode,
       opponentCountryCode,
       deadlineAt: possessionState.halftime.deadlineAt,
@@ -664,6 +700,8 @@ export function useRealtimePossessionMatchController({
           : null,
       onBanCategory: handleHalftimeBan,
       onBanPhaseShown: handleHalftimeBanPhaseShown,
+      // Pre-penalty ban reuses the halftime ban UI but with a penalty title.
+      isPenaltyBan: possessionState.halftime.purpose === 'penalty',
     };
 
   const handleTemporaryQuit = useCallback(() => {

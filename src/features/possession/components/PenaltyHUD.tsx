@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'motion/react';
 import { X } from 'lucide-react';
 import { MAX_PENALTY_ROUNDS } from '../types/possession.types';
@@ -12,6 +13,8 @@ import type { AvatarCustomization } from '@/types/game';
 interface PenaltyHUDProps {
   penaltyPlayerScore: number;
   penaltyOpponentScore: number;
+  penaltyPlayerAttempts?: Array<'goal' | 'miss'>;
+  penaltyOpponentAttempts?: Array<'goal' | 'miss'>;
   playerPoints?: number;
   opponentPoints?: number;
   penaltyRound: number;
@@ -31,11 +34,12 @@ interface PenaltyHUDProps {
 export function PenaltyHUD({
   penaltyPlayerScore,
   penaltyOpponentScore,
+  penaltyPlayerAttempts,
+  penaltyOpponentAttempts,
   playerPoints = 0,
   opponentPoints = 0,
   penaltyRound,
   isPenaltySuddenDeath,
-  isPlayerShooter,
   playerName,
   opponentName,
   playerAvatarCustomization = null,
@@ -45,8 +49,55 @@ export function PenaltyHUD({
   onQuit,
 }: PenaltyHUDProps) {
   const { t } = useLocale();
+
+  // Sudden death restarts the pip rows: capture each side's cumulative score at
+  // the moment SD begins, then show only the SD-relative goals so the dots clear
+  // to empty and refill round by round (instead of staying at all-5-filled).
+  // Adjust-state-during-render pattern (no effect): the baseline is set the first
+  // render SD is active and cleared when it ends. See react.dev — "storing
+  // information from previous renders".
+  const [sdBaseline, setSdBaseline] = useState<{
+    playerScore: number;
+    opponentScore: number;
+    playerAttempts: number;
+    opponentAttempts: number;
+  } | null>(null);
+  if (isPenaltySuddenDeath && sdBaseline === null) {
+    setSdBaseline({
+      playerScore: penaltyPlayerScore,
+      opponentScore: penaltyOpponentScore,
+      playerAttempts: penaltyPlayerAttempts?.length ?? penaltyPlayerScore,
+      opponentAttempts: penaltyOpponentAttempts?.length ?? penaltyOpponentScore,
+    });
+  } else if (!isPenaltySuddenDeath && sdBaseline !== null) {
+    setSdBaseline(null);
+  }
+
+  const baseline = isPenaltySuddenDeath ? sdBaseline : null;
+  const pipPlayerScore = baseline ? Math.max(0, penaltyPlayerScore - baseline.playerScore) : penaltyPlayerScore;
+  const pipOpponentScore = baseline ? Math.max(0, penaltyOpponentScore - baseline.opponentScore) : penaltyOpponentScore;
+  // Only MAX_PENALTY_ROUNDS pip slots render, so keep the MOST RECENT attempts
+  // — otherwise extra sudden-death rounds would silently drop the latest results.
+  const playerPips = ((penaltyPlayerAttempts && penaltyPlayerAttempts.length > 0)
+    ? (baseline ? penaltyPlayerAttempts.slice(baseline.playerAttempts) : penaltyPlayerAttempts)
+    : Array.from({ length: pipPlayerScore }, () => 'goal' as const)
+  ).slice(-MAX_PENALTY_ROUNDS);
+  const opponentPips = ((penaltyOpponentAttempts && penaltyOpponentAttempts.length > 0)
+    ? (baseline ? penaltyOpponentAttempts.slice(baseline.opponentAttempts) : penaltyOpponentAttempts)
+    : Array.from({ length: pipOpponentScore }, () => 'goal' as const)
+  ).slice(-MAX_PENALTY_ROUNDS);
+  const pipClassName = (result: 'goal' | 'miss' | undefined) => {
+    if (result === 'goal') return 'bg-brand-green-light border-brand-green-light';
+    if (result === 'miss') return 'bg-brand-red-soft border-brand-red-soft';
+    return 'bg-transparent border-white/20';
+  };
+
   return (
-    <div className="relative w-full font-fun space-y-2 mb-3">
+    <div
+      className="relative w-full space-y-2 mb-3"
+      // family-only to preserve font-black / tracking on descendants
+      style={{ fontFamily: "'Poppins', sans-serif" }}
+    >
       {onQuit && (
         <MatchHudIconButton
           onClick={onQuit}
@@ -89,9 +140,6 @@ export function PenaltyHUD({
           >
             {phase === 'penalty-playing' ? timeRemaining : '\u2014'}
           </motion.div>
-          <div className="-mt-0.5 hidden text-[10px] font-black tracking-[0.18em] text-brand-orange/70 sm:block">
-            {isPlayerShooter ? t('possession.youShoot') : t('possession.youSave')}
-          </div>
         </div>
         <div className="flex min-w-0 flex-1 items-center justify-end gap-1 sm:gap-3">
           <div className="min-w-0 text-right">
@@ -115,13 +163,13 @@ export function PenaltyHUD({
       <div className="flex justify-center gap-4 px-3">
         <div className="flex gap-1.5">
           {Array.from({ length: MAX_PENALTY_ROUNDS }).map((_, i) => (
-            <div key={`pp-${i}`} className={`size-3 rounded-full border-2 ${i < penaltyPlayerScore ? 'bg-brand-green-light border-brand-green-light' : 'bg-transparent border-white/20'}`} />
+            <div key={`pp-${i}`} data-testid="penalty-player-pip" className={`size-3 rounded-full border-2 ${pipClassName(playerPips[i])}`} />
           ))}
         </div>
         <div className="text-[10px] font-black text-white/30 tracking-wider">{t('possession.pens')}</div>
         <div className="flex gap-1.5">
           {Array.from({ length: MAX_PENALTY_ROUNDS }).map((_, i) => (
-            <div key={`op-${i}`} className={`size-3 rounded-full border-2 ${i < penaltyOpponentScore ? 'bg-brand-red-soft border-brand-red-soft' : 'bg-transparent border-white/20'}`} />
+            <div key={`op-${i}`} data-testid="penalty-opponent-pip" className={`size-3 rounded-full border-2 ${pipClassName(opponentPips[i])}`} />
           ))}
         </div>
       </div>

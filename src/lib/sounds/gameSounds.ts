@@ -8,7 +8,9 @@ const SOUND_FILES = {
   kick: "/sounds/kick.mp3",
   pass: "/sounds/pass.mp3",
   correctRanked: "/sounds/correct_ranked.mp3",
-  dailyCorrect: "/sounds/mixkit-unlock-game-notification-253.wav",
+  dailyCorrect: "/sounds/correct_answer.mp3",
+  // Shared wrong-answer buzzer for daily challenges and ranked gameplay.
+  wrongAnswer: "/sounds/wrong_answer.mp3",
   imposterReveal: "/sounds/imposter.wav",
 } as const;
 
@@ -25,7 +27,10 @@ type BgmName = keyof typeof BGM_FILES;
 export const GAME_SOUND_VOLUME = {
   sfx: 0.3,
   rankedBgm: 0.025,
-  kickoffBgm: 0.025,
+  // The kickoff track is mastered ~8 dB louder than the search loop
+  // (-9.7 vs -17.8 LUFS), so it's played quieter to match search's
+  // perceived level. 0.025 * 10^(-8/20) ≈ 0.01.
+  kickoffBgm: 0.01,
   searchBgm: 0.025,
 } as const;
 // Flip to true to re-enable the ranked BGM loop. Wiring stays in place
@@ -40,6 +45,7 @@ const sounds: Partial<Record<SoundName, Howl>> = {};
 const SOUND_VOLUME: Partial<Record<SoundName, number>> = {
   correctRanked: 0.45,
   dailyCorrect: 0.55,
+  wrongAnswer: 0.5,
   imposterReveal: 0.7,
 };
 

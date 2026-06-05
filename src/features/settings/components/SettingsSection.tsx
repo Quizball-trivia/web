@@ -16,7 +16,7 @@ export function SettingsSection({ title, icon, children, className }: SettingsSe
         className,
       )}
     >
-      <div className="flex items-center gap-3 px-1">
+      <div className="flex items-center gap-3">
         {icon && <div className="text-brand-cyan">{icon}</div>}
         <h2 className="font-fun text-base font-black uppercase tracking-wide text-white">
           {title}

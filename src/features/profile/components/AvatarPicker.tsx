@@ -4,9 +4,9 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ModalCloseButton } from "@/components/shared/ModalCloseButton";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useMobile";
 import {
@@ -30,6 +30,7 @@ import { purchaseStoreWithCoins } from "@/lib/repositories/store.repo";
 import { queryKeys } from "@/lib/queries/queryKeys";
 import { ApiError } from "@/lib/api/api";
 import { useLocale } from "@/contexts/LocaleContext";
+import { translatePartName } from "@/lib/avatars/partNames";
 import type { AvatarCustomization } from "@/types/game";
 
 type SlotTab = "skin" | "jersey" | "hair" | "glasses" | "facialHair";
@@ -72,11 +73,24 @@ export function AvatarPicker({
     part?: AvatarPart;
   } | null>(null);
 
-  /** Current full customization. Missing customization intentionally renders the default avatar. */
+  /** The committed customization (from props). Missing → default avatar. */
   const current = useMemo<AvatarCustomization>(
     () => currentCustomization ?? customizationFromAvatarValue(null),
     [currentCustomization],
   );
+
+  // Working "draft" look — selecting items only PREVIEWS them here; nothing is
+  // saved until the user taps Save. Lets the user try multiple parts together.
+  // Re-seeded from the committed look on each OPEN transition (so reopening
+  // discards an unsaved draft). Uses the React "adjust state during render"
+  // pattern (compare a tracked value, no setState-in-effect).
+  const [draft, setDraft] = useState<AvatarCustomization>(current);
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setDraft(current); // re-seed on the closed→open transition
+  }
+  const isDirty = encodeAvatarCustomization(draft) !== encodeAvatarCustomization(current);
 
   /** Set of part ids the user owns (free + purchased). In dev mode, everything is unlocked
    *  so designers/devs can preview all items in the picker. */
@@ -102,8 +116,9 @@ export function AvatarPicker({
     return set;
   }, [inventoryData]);
 
-  const persist = (next: AvatarCustomization) => {
-    onSelect(encodeAvatarCustomization(next));
+  // Commit the draft look (called by the Save button).
+  const handleSave = () => {
+    onSelect(encodeAvatarCustomization(draft));
   };
 
   const purchaseMutation = useMutation({
@@ -112,12 +127,14 @@ export function AvatarPicker({
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
       const p = pendingPurchase;
+      // Apply the freshly-bought item to the DRAFT (preview). It's saved when the
+      // user taps Save, like any other selection.
       if (p?.type === "skin" && p.skin) {
-        persist({ ...current, skin: p.skin.id });
-        toast.success(t('profile.skinEquipped', { name: p.skin.name }));
+        setDraft((d) => ({ ...d, skin: p.skin!.id }));
+        toast.success(t('profile.skinEquipped', { name: translatePartName(p.skin.name, t) }));
       } else if (p?.type === "part" && p.part) {
-        persist({ ...current, [p.part.slot]: p.part.id });
-        toast.success(t('profile.partEquipped', { name: p.part.name }));
+        setDraft((d) => ({ ...d, [p.part!.slot]: p.part!.id }));
+        toast.success(t('profile.partEquipped', { name: translatePartName(p.part.name, t) }));
       }
       setPendingPurchase(null);
     },
@@ -131,8 +148,9 @@ export function AvatarPicker({
   });
 
   const handleSelectSkin = (skin: SkinPart) => {
+    // Owned/free → preview in the draft (saved on Save). Locked → buy first.
     if (skin.free || ownedPartIds.has(skin.id)) {
-      persist({ ...current, skin: skin.id });
+      setDraft((d) => ({ ...d, skin: skin.id }));
       return;
     }
     if (skin.productSlug) {
@@ -145,13 +163,15 @@ export function AvatarPicker({
     part: AvatarPart | null,
   ) => {
     if (part === null) {
-      const next = { ...current };
-      delete next[slot];
-      persist(next);
+      setDraft((d) => {
+        const next = { ...d };
+        delete next[slot];
+        return next;
+      });
       return;
     }
     if (part.free || ownedPartIds.has(part.id)) {
-      persist({ ...current, [slot]: part.id });
+      setDraft((d) => ({ ...d, [slot]: part.id }));
       return;
     }
     if (part.productSlug) {
@@ -189,18 +209,17 @@ export function AvatarPicker({
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {SKIN_PARTS.map((skin) => {
         const owned = ownedPartIds.has(skin.id);
-        const selected = current.skin === skin.id;
-        const previewCustomization: AvatarCustomization = { ...current, skin: skin.id };
+        const selected = draft.skin === skin.id;
+        const previewCustomization: AvatarCustomization = { ...draft, skin: skin.id };
         return (
           <button
             key={skin.id}
             type="button"
             disabled={isSaving}
             onClick={() => handleSelectSkin(skin)}
-            className="group relative flex flex-col items-center gap-2 rounded-2xl py-3 transition-all active:translate-y-[1px]"
+            className="group relative flex flex-col items-center gap-2 rounded-2xl bg-surface-page py-3 transition-all active:translate-y-[1px]"
             style={{
-              border: `2px solid ${selected ? PURPLE : "transparent"}`,
-              backgroundColor: "#FFFFFF",
+              border: `2px solid ${selected ? PURPLE : "rgba(255,255,255,0.1)"}`,
             }}
           >
             <div className="relative flex h-32 sm:h-36 items-center justify-center">
@@ -212,8 +231,8 @@ export function AvatarPicker({
               )}
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-black uppercase tracking-wider text-surface-page/70">
-                {skin.name}
+              <span className="text-[10px] font-black uppercase tracking-wider text-white/70">
+                {translatePartName(skin.name, t)}
               </span>
               {!owned && skin.priceCoins && (
                 <span className="text-[9px] font-black uppercase tracking-wider text-brand-yellow">
@@ -240,7 +259,7 @@ export function AvatarPicker({
     slot: "jersey" | "hair" | "glasses" | "facialHair",
     parts: AvatarPart[],
   ) => {
-    const currentValue = current[slot];
+    const currentValue = draft[slot];
 
     return (
       <div className="space-y-3">
@@ -250,17 +269,16 @@ export function AvatarPicker({
             type="button"
             disabled={isSaving}
             onClick={() => handleSelectPart(slot, null)}
-            className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl py-3 transition-all active:translate-y-[1px]"
+            className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl bg-surface-page py-3 transition-all active:translate-y-[1px]"
             style={{
-              border: `2px solid ${!currentValue ? PURPLE : "transparent"}`,
-              backgroundColor: "#FFFFFF",
+              border: `2px solid ${!currentValue ? PURPLE : "rgba(255,255,255,0.1)"}`,
             }}
           >
-            <div className="flex size-20 sm:size-24 items-center justify-center rounded-full border-2 border-dashed border-surface-page/20">
-              <X className="size-8 text-surface-page/40" strokeWidth={2.5} />
+            <div className="flex size-20 sm:size-24 items-center justify-center rounded-full border-2 border-dashed border-white/20">
+              <X className="size-8 text-white/40" strokeWidth={2.5} />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-surface-page/70">
-              None
+            <span className="text-[10px] font-black uppercase tracking-wider text-white/70">
+              {t('profile.avatarPicker.none')}
             </span>
             {!currentValue && (
               <div
@@ -281,10 +299,9 @@ export function AvatarPicker({
                 type="button"
                 disabled={isSaving}
                 onClick={() => handleSelectPart(slot, part)}
-                className="group relative flex flex-col items-center gap-2 rounded-2xl py-3 transition-all active:translate-y-[1px]"
+                className="group relative flex flex-col items-center gap-2 rounded-2xl bg-surface-page py-3 transition-all active:translate-y-[1px]"
                 style={{
-                  border: `2px solid ${selected ? PURPLE : "transparent"}`,
-                  backgroundColor: "#FFFFFF",
+                  border: `2px solid ${selected ? PURPLE : "rgba(255,255,255,0.1)"}`,
                 }}
               >
                 <div className="relative flex size-20 sm:size-24 items-center justify-center">
@@ -303,8 +320,8 @@ export function AvatarPicker({
                   )}
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="max-w-[96px] text-center text-[10px] font-black uppercase tracking-wider leading-tight text-surface-page/70 line-clamp-2">
-                    {part.name}
+                  <span className="max-w-[96px] text-center text-[10px] font-black uppercase tracking-wider leading-tight text-white/70 line-clamp-2">
+                    {translatePartName(part.name, t)}
                   </span>
                   {!owned && part.priceCoins && (
                     <span className="text-[9px] font-black uppercase tracking-wider text-brand-yellow">
@@ -330,9 +347,10 @@ export function AvatarPicker({
 
   const Content = (
     <div className="space-y-4">
-      {/* Live preview of the avatar with current selection */}
-      <div className="flex justify-center rounded-2xl bg-white pt-1 pb-2">
-        <AvatarPreview customization={current} width={isMobile ? 140 : 160} />
+      {/* Live preview of the avatar — solid dark panel (not translucent, which
+          would pick up the blue modal behind it). */}
+      <div className="flex justify-center rounded-2xl border border-white/10 bg-surface-page pt-1 pb-2">
+        <AvatarPreview customization={draft} width={isMobile ? 140 : 160} />
       </div>
 
       {TabBar}
@@ -345,32 +363,28 @@ export function AvatarPicker({
         {activeTab === "facialHair" && renderSlotGrid("facialHair", FACIAL_HAIR_PARTS)}
       </div>
 
-      <div className="flex justify-end pt-1">
-        <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={isSaving}>
-          {t('common.close')}
-        </Button>
-      </div>
-
-      {/* In-picker buy confirmation for locked items */}
+      {/* In-picker buy confirmation for locked items — brand-styled like the
+          mode-confirm modal: red square close, green confirm, red-outline cancel. */}
       {pendingPurchase && (
         <Dialog open onOpenChange={() => setPendingPurchase(null)}>
-          <DialogContent className="sm:max-w-md border-border/60">
+          <DialogContent className="sm:max-w-md border-0 bg-surface-card [&>button:last-child]:hidden">
+            <ModalCloseButton onClose={() => setPendingPurchase(null)} />
             <DialogHeader>
-              <DialogTitle className="text-lg font-black uppercase tracking-wide">
+              <DialogTitle className="pr-12 text-lg font-black uppercase tracking-wide text-white">
                 {t('profile.purchase.confirmTitle')}
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-white/60">
                 {pendingPurchase.type === "skin"
-                  ? t('profile.purchase.unlockSkin', { name: pendingPurchase.skin?.name ?? '' })
-                  : t('profile.purchase.unlockPart', { name: pendingPurchase.part?.name ?? '' })}
+                  ? t('profile.purchase.unlockSkin', { name: translatePartName(pendingPurchase.skin?.name ?? '', t) })
+                  : t('profile.purchase.unlockPart', { name: translatePartName(pendingPurchase.part?.name ?? '', t) })}
               </DialogDescription>
             </DialogHeader>
             <div className="flex flex-col items-center gap-4 py-2">
               <AvatarPreview
                 customization={
                   pendingPurchase.type === "skin"
-                    ? { ...current, skin: pendingPurchase.skin!.id }
-                    : { ...current, [pendingPurchase.part!.slot]: pendingPurchase.part!.id }
+                    ? { ...draft, skin: pendingPurchase.skin!.id }
+                    : { ...draft, [pendingPurchase.part!.slot]: pendingPurchase.part!.id }
                 }
                 width={140}
               />
@@ -383,18 +397,17 @@ export function AvatarPicker({
                 </span>
                 <span className="text-[10px] uppercase tracking-[0.04em] text-white/50">{t('profile.purchase.coinsLabel')}</span>
               </div>
-              <div className="flex w-full gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1"
+              <div className="flex w-full gap-3">
+                <button
+                  type="button"
                   onClick={() => setPendingPurchase(null)}
                   disabled={purchaseMutation.isPending}
+                  className="h-12 flex-1 rounded-[28px] border-2 border-brand-red-soft/70 bg-transparent font-poppins text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-brand-red-soft/10 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {t('common.cancel')}
-                </Button>
-                <Button
-                  className="flex-1"
-                  style={{ backgroundColor: PURPLE }}
+                </button>
+                <button
+                  type="button"
                   disabled={purchaseMutation.isPending}
                   onClick={() => {
                     const slug =
@@ -403,21 +416,42 @@ export function AvatarPicker({
                         : pendingPurchase.part?.productSlug;
                     if (slug) purchaseMutation.mutate(slug);
                   }}
+                  className="h-12 flex-1 rounded-[28px] bg-brand-green font-poppins text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-brand-green-deep disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {purchaseMutation.isPending ? (
-                    <span className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center gap-2">
                       <Loader2 className="size-4 animate-spin" />
                       {t('profile.purchase.processing')}
                     </span>
                   ) : (
                     t('profile.purchase.confirm')
                   )}
-                </Button>
+                </button>
               </div>
             </div>
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Save — commits the whole previewed look at once. Sticks to the bottom so
+          it's reachable after trying several parts. Disabled until something changed. */}
+      <div className="sticky bottom-0 -mx-5 mt-2 border-t border-white/10 bg-surface-card px-5 py-3 sm:-mx-8 sm:px-8">
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={!isDirty || isSaving}
+          className="h-12 w-full rounded-[28px] bg-brand-green font-poppins text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-brand-green-deep disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isSaving ? (
+            <span className="inline-flex items-center justify-center gap-2">
+              <Loader2 className="size-4 animate-spin" />
+              {t('common.save')}
+            </span>
+          ) : (
+            t('common.save')
+          )}
+        </button>
+      </div>
     </div>
   );
 
@@ -426,10 +460,11 @@ export function AvatarPicker({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side="bottom"
-          className="max-h-[92dvh] overflow-y-auto rounded-t-3xl border-t border-border/50"
+          className="max-h-[92dvh] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-surface-card p-5 [&>button:last-child]:hidden"
         >
+          <ModalCloseButton onClose={() => onOpenChange(false)} />
           <SheetHeader className="mb-3 text-left">
-            <SheetTitle className="text-lg font-bold">{t('profile.avatarPicker.title')}</SheetTitle>
+            <SheetTitle className="pr-14 text-lg font-bold text-white">{t('profile.avatarPicker.title')}</SheetTitle>
           </SheetHeader>
           {Content}
         </SheetContent>
@@ -439,10 +474,11 @@ export function AvatarPicker({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl max-h-[90dvh] overflow-y-auto border-border/50">
+      <DialogContent className="sm:max-w-3xl max-h-[90dvh] overflow-y-auto rounded-[24px] border border-white/10 bg-surface-card p-6 sm:p-8 [&>button:last-child]:hidden">
+        <ModalCloseButton onClose={() => onOpenChange(false)} />
         <DialogHeader>
-          <DialogTitle className="text-lg font-bold">{t('profile.avatarPicker.title')}</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="pr-14 font-poppins text-[22px] font-semibold text-white sm:text-[26px]">{t('profile.avatarPicker.title')}</DialogTitle>
+          <DialogDescription className="font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-[14px]">
             {t('profile.avatarPicker.description')}
           </DialogDescription>
         </DialogHeader>

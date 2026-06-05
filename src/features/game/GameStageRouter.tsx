@@ -19,6 +19,12 @@ import { tierFromRp } from "@/utils/rankedTier";
 import { parseRp } from "@/lib/utils";
 import { TrainingMatchScreen } from "@/features/training/TrainingMatchScreen";
 import { useGameStageState } from "@/features/game/hooks/useGameStageState";
+import {
+  markExitToPlayPending,
+  trackExitToPlayStarted,
+  trackResultsMainMenuClicked,
+  type ExitToPlaySource,
+} from "@/lib/analytics/game-events";
 
 const POSSESSION_TOTAL_QUESTIONS_FALLBACK = 12;
 
@@ -76,8 +82,25 @@ export function GameStageRouter() {
 
   const showdownType = matchType === "ranked" ? "ranked" : "friendly";
 
-  const exitToPlay = useCallback(() => {
+  const exitToPlay = useCallback((source: ExitToPlaySource = "generic") => {
     const final = realtimeMatch.finalResults;
+    const finalResultVersion = typeof final?.resultVersion === "number" ? final.resultVersion : null;
+    const exitAnalytics = {
+      source,
+      matchId: final?.matchId ?? realtimeMatch.matchId ?? null,
+      matchType,
+      mode: (realtimeMatch as { mode?: string | null }).mode ?? config?.mode ?? matchType,
+      variant: realtimeMatch.variant ?? config?.matchType ?? null,
+      resultVersion: finalResultVersion,
+      hadFinalResults: Boolean(final),
+      finalResultsAckSent: Boolean(final),
+      stage,
+    };
+    if (source === "results_main_menu" || source === "party_results_main_menu") {
+      trackResultsMainMenuClicked(exitAnalytics);
+    }
+    trackExitToPlayStarted(exitAnalytics);
+    markExitToPlayPending(exitAnalytics);
     if (final) {
       socket.emit("match:final_results_ack", {
         matchId: final.matchId,
@@ -92,7 +115,18 @@ export function GameStageRouter() {
     clearRankedMatchmaking();
     resetGameSession();
     router.push("/play");
-  }, [clearRankedMatchmaking, realtimeMatch.finalResults, resetGameSession, resetRealtime, router, socket]);
+  }, [
+    clearRankedMatchmaking,
+    config?.matchType,
+    config?.mode,
+    matchType,
+    realtimeMatch,
+    resetGameSession,
+    resetRealtime,
+    router,
+    socket,
+    stage,
+  ]);
 
   useEffect(() => {
     const inviteCode = realtimeLobby?.inviteCode;
@@ -141,7 +175,7 @@ export function GameStageRouter() {
     } else {
       logger.info("Socket emit match:leave skipped (missing matchId)");
     }
-    exitToPlay();
+    exitToPlay("match_quit");
   }, [realtimeMatchId, exitToPlay]);
 
   const handleForfeit = useCallback(() => {
@@ -168,7 +202,7 @@ export function GameStageRouter() {
       getSocket().emit("lobby:leave");
       logger.info("Socket emit lobby:leave");
     }
-    exitToPlay();
+    exitToPlay("matchmaking_exit");
   }, [exitToPlay, matchType]);
 
   const matchmakingDebugInfo = useMemo(
@@ -203,7 +237,7 @@ export function GameStageRouter() {
   );
 
   if (config?.mode === "training") {
-    return <TrainingMatchScreen onComplete={exitToPlay} />;
+    return <TrainingMatchScreen onComplete={() => exitToPlay("training_complete")} />;
   }
 
   if (stage === "idle" && !showingFinalResultsFromReplay) {
@@ -304,7 +338,7 @@ export function GameStageRouter() {
               logger.info("Socket emit match:play_again", { matchId: realtimeMatch.matchId });
             }}
             onMainMenu={() => {
-              exitToPlay();
+              exitToPlay("party_results_main_menu");
             }}
           />
         );
@@ -407,7 +441,7 @@ export function GameStageRouter() {
             logger.info("Socket emit match:play_again", { matchId: realtimeMatch.matchId });
           }}
           onMainMenu={() => {
-            exitToPlay();
+            exitToPlay("results_main_menu");
           }}
         />
       );

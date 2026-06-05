@@ -14,6 +14,7 @@ import type { GameStageRealtimeMatchSlice } from "@/features/game/hooks/useGameS
 import type { GameConfig, GameStage } from "@/types/game.runtime";
 import { logger } from "@/utils/logger";
 import { GOAL_VISUAL_SEQUENCE_MS } from "@/lib/constants/game";
+import { PENALTY_RESULT_SEQUENCE_HOLD_MS } from "@/features/possession/realtimePossession.helpers";
 
 const STAGE_ORDER: GameStage[] = [
   "idle",
@@ -35,6 +36,12 @@ const MATCH_FOUND_HOLD_MS = 2000;
 const FINAL_RESULTS_HOLD_BASE_MS = 2500;
 const FINAL_RESULTS_HOLD_WITH_GOAL_MS = GOAL_VISUAL_SEQUENCE_MS + 500;
 const FINAL_RESULTS_PAYLOAD_FALLBACK_MS = 750;
+// How long the penalty match-end overlay (won/lost + score) shows before results.
+export const PENALTY_MATCH_END_OVERLAY_MS = 2000;
+// A deciding PENALTY goal must let the full shot + "GOAL!"/"SAVED" splash play out,
+// THEN show the won/lost overlay, before the results screen — otherwise the shot is
+// cut mid-animation and the match appears to end abruptly (reported bug).
+const FINAL_RESULTS_HOLD_PENALTY_MS = PENALTY_RESULT_SEQUENCE_HOLD_MS + PENALTY_MATCH_END_OVERLAY_MS;
 const GEO_HINT_CACHE_KEY = "ranked_geo_hint_v1";
 const IP_LOOKUP_TIMEOUT_MS = 1800;
 
@@ -583,8 +590,15 @@ export function useGameStageTransitions({
     const hasGoalInLastRound =
       (lastRound?.phaseKind === "normal" || lastRound?.phaseKind === "last_attack") &&
       Boolean(lastRound?.deltas?.goalScoredBySeat);
+    // The deciding penalty kick: hold long enough for the shot/save animation +
+    // splash to finish AND the won/lost overlay to show, before the results screen.
+    const isDecidingPenalty = lastRound?.phaseKind === "penalty";
     const holdMs = lastRoundResolvedAtRef.current
-      ? (hasGoalInLastRound ? FINAL_RESULTS_HOLD_WITH_GOAL_MS : FINAL_RESULTS_HOLD_BASE_MS)
+      ? (isDecidingPenalty
+          ? FINAL_RESULTS_HOLD_PENALTY_MS
+          : hasGoalInLastRound
+            ? FINAL_RESULTS_HOLD_WITH_GOAL_MS
+            : FINAL_RESULTS_HOLD_BASE_MS)
       : 0;
     const elapsedMs = lastRoundResolvedAtRef.current
       ? Date.now() - lastRoundResolvedAtRef.current

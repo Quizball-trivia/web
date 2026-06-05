@@ -8,7 +8,8 @@ import { CheckCircle2, XCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import type { FootballLogicSession } from "@/lib/domain/dailyChallenge";
 import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
-import { findAcceptedAnswer } from "./daily-challenge.utils";
+import { fuzzyMatchesAnswer } from "@/lib/answerMatching";
+import { playSfx } from "@/lib/sounds/gameSounds";
 import { QuitGameDialog } from "./QuitGameDialog";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
 
@@ -59,9 +60,9 @@ export function FootballLogicGame({
       return;
     }
 
-    const matchedAnswer = findAcceptedAnswer(answer, currentQuestion.acceptedAnswers);
-    const isCorrect = matchedAnswer !== null;
+    const isCorrect = fuzzyMatchesAnswer(answer, currentQuestion.acceptedAnswers);
 
+    playSfx(isCorrect ? "dailyCorrect" : "wrongAnswer");
     if (isCorrect) {
       setCorrectCount((previous) => previous + 1);
     }
@@ -173,8 +174,8 @@ export function FootballLogicGame({
               }
             }}
             placeholder={copy.typeYourAnswer}
-            className="h-[48px] sm:h-[56px] rounded-[16px] bg-surface-page text-white text-center placeholder:text-white/35 flex-1"
-            style={{ ...poppins, fontSize: 'clamp(14px, 1.7vw, 22px)', fontWeight: 500, border: '2px solid rgba(255,255,255,0.1)' }}
+            className="h-[48px] sm:h-[56px] rounded-[16px] bg-surface-card-tint border-2 border-surface-card text-white text-center placeholder:text-brand-slate focus:border-brand-cyan focus-visible:border-brand-cyan focus-visible:ring-brand-cyan/50 flex-1"
+            style={{ ...poppins, fontSize: 'clamp(16px, 1.7vw, 22px)', fontWeight: 500 }}
             autoFocus
           />
           <button

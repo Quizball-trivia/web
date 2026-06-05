@@ -68,7 +68,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
             >
               {t("leaderboard.title")}
             </h1>
-            <p className="mt-2 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-white/40">
+            <p className="mt-2 text-[11px] sm:text-[13px] font-black uppercase tracking-[0.08em] text-white/70">
               {t("leaderboard.subtitle")}
             </p>
           </div>

@@ -20,6 +20,7 @@ import {
   PENALTY_BALL_SAVE_FLIGHT_MS,
   PENALTY_KICK_CONTACT_MS,
 } from '../../realtimePossession.helpers';
+import { PENALTY_KEEPER_SHIELD_OFFSET } from '../bar-battle/barBattle.helpers';
 
 import type { GoalCoordinates, PitchVisualizationProps } from './pitch.types';
 import {
@@ -233,6 +234,8 @@ export function usePitchSceneModel({
 
   // Keeper jolt direction (away from goal) — enhanced amplitude for cinematic feel
   const keeperJolt = { x: [0, -8 * goal.inward, 4 * goal.inward, 0], y: [0, -6, -2, 0] };
+  const penaltySaveShieldX = keeperX - PENALTY_KEEPER_SHIELD_OFFSET * goal.inward;
+  const penaltySaveDeflectX = penaltySaveShieldX - 54 * goal.inward;
   const ballTarget = useMemo(() => {
     if (isGoal) {
       return {
@@ -242,8 +245,8 @@ export function usePitchSceneModel({
     }
     if (isSave) {
       return {
-        x: [penaltyBallStart.x, penaltyBallStart.x, goal.saveTarget.x - 10 * goal.inward],
-        y: [penaltyBallStart.y, penaltyBallStart.y, goal.saveTarget.y + 5],
+        x: [penaltyBallStart.x, penaltyBallStart.x, penaltySaveShieldX, penaltySaveDeflectX],
+        y: [penaltyBallStart.y, penaltyBallStart.y, goal.saveTarget.y + 2, goal.saveTarget.y + 24],
       };
     }
     if (useSimpleShotAnimation && isShotGoal) return simpleShotTarget;
@@ -335,7 +338,7 @@ export function usePitchSceneModel({
     }
     // Position ball at the boundary between blue and red zones
     return { x: possessionBoundaryX, y: 112 };
-  }, [isGoal, isSave, useSimpleShotAnimation, isShotGoal, simpleShotTarget, isShotSave, isShotMiss, isPenalty, isShot, shotMode, shotVariant, goal, penaltyBallStart, shotBallOriginX, shotBallOriginY, simpleShotOriginX, simpleShotOriginY, possessionBoundaryX]);
+  }, [isGoal, isSave, useSimpleShotAnimation, isShotGoal, simpleShotTarget, isShotSave, isShotMiss, isPenalty, isShot, shotMode, shotVariant, goal, penaltyBallStart, penaltySaveShieldX, penaltySaveDeflectX, shotBallOriginX, shotBallOriginY, simpleShotOriginX, simpleShotOriginY, possessionBoundaryX]);
   const ballTransition = useMemo(() => {
     // Penalty: hold the ball still through the shooter's wind-up, then
     // launch exactly on the same contact beat as the SFX.
@@ -348,7 +351,7 @@ export function usePitchSceneModel({
     if (isSave) return {
       duration: PENALTY_BALL_SAVE_FLIGHT_MS / 1000,
       delay: PENALTY_KICK_CONTACT_MS / 1000,
-      times: [0, 0.5, 1],
+      times: [0, 0.44, 0.62, 1],
       ease: [0.3, 0, 0.2, 1] as const,
     };
     if (useSimpleShotAnimation && simpleShotReturnToCenter) {
@@ -449,6 +452,12 @@ export function usePitchSceneModel({
   const opponentHtmlIsKeeper = isPenalty
     ? penaltyMode.isPlayerShooter
     : (isShot && shotMode ? shotMode.isPlayerAttacker : false);
+  // Avatar facing. Base art faces RIGHT; scaleX(-1) faces it LEFT. In penalties
+  // facing is by role, not by half: the keeper (in goal, left) faces right toward
+  // the ball, the shooter (pen spot, right) faces left toward goal. Outside
+  // penalties, fall back to the half-based mirror used in open play.
+  const playerFlipX = isPenalty ? playerHtmlIsShooter : mirrored;
+  const opponentFlipX = isPenalty ? opponentHtmlIsShooter : !mirrored;
   const htmlActorMotion = (isShooter: boolean, isKeeper: boolean) => {
     if (htmlActorResultActive && isShooter) {
       if (disableShotActorResultMotion && isShot && !isPenalty) {
@@ -533,6 +542,8 @@ export function usePitchSceneModel({
     useMarkerActors,
     playerHtmlIsShooter,
     opponentHtmlIsShooter,
+    playerFlipX,
+    opponentFlipX,
     playerHtmlActorMotion,
     opponentHtmlActorMotion,
     playerHtmlActorTransition,

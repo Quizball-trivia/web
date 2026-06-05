@@ -16,7 +16,7 @@
 
 import { motion } from 'motion/react';
 import type { BarBattlePhase } from './barBattle.types';
-import { BAR_H, BAR_RX, BAR_W, CY } from './barBattle.helpers';
+import { BAR_H, BAR_RX, BAR_W, CY, getChargeImpactXKeyframes } from './barBattle.helpers';
 
 interface BarBattleBarProps {
   spawnX: number;
@@ -32,6 +32,8 @@ interface BarBattleBarProps {
   survived: boolean;
   chargeOrder: number;
   chargeHitOffsetX?: number;
+  holdChargeImpact?: boolean;
+  resultInitialX?: number;
   /** Vertical centre for the bar; classic uses CY=115, anchored uses CY_ANCHORED. */
   cy?: number;
   barW?: number;
@@ -58,6 +60,8 @@ export function BarBattleBar({
   survived,
   chargeOrder,
   chargeHitOffsetX = 0,
+  holdChargeImpact = false,
+  resultInitialX,
   cy = CY,
   barW = BAR_W,
   barH = BAR_H,
@@ -129,7 +133,7 @@ export function BarBattleBar({
         key={`bar-result-${index}`}
         x={0} y={y} width={W} height={H} rx={RX}
         fill={`url(#${gradientId})`}
-        initial={{ opacity: 0.95, x: marchX }}
+        initial={{ opacity: 0.95, x: resultInitialX ?? marchX }}
         animate={{ x: pushX, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 80, damping: 12, mass: 0.7 }}
       />
@@ -153,7 +157,7 @@ export function BarBattleBar({
       initial={{ x: initialX, y: initialYOffset }}
       animate={{
         x: isChargeImpact
-          ? [targetX, targetX, targetX + chargeHitOffsetX, targetX + chargeHitOffsetX * 0.2]
+          ? getChargeImpactXKeyframes(targetX, chargeHitOffsetX, holdChargeImpact)
           : targetX,
         y: 0,
       }}

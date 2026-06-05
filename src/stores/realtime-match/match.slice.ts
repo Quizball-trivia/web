@@ -1,6 +1,6 @@
 import type { StateCreator } from 'zustand';
 import { logger } from '@/utils/logger';
-import { trackAnswerSubmitted, trackMatchCompleted, trackMatchStarted } from '@/lib/analytics/game-events';
+import { trackAnswerSubmitted, trackMatchStarted } from '@/lib/analytics/game-events';
 import type {
   MatchAnswerAckPayload,
   MatchCluesGuessAckPayload,
@@ -155,9 +155,9 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
       const startsAtMs = parseCountdownDeadline(payload.startsAt, payload.seconds, Date.now());
       const isResume = payload.reason === 'resume';
       return {
-        matchPaused: isResume ? false : state.matchPaused,
+        matchPaused: isResume ? true : state.matchPaused,
         pauseUntil: isResume ? null : state.pauseUntil,
-        pausedAt: isResume ? null : state.pausedAt,
+        pausedAt: state.pausedAt,
         remainingReconnects: isResume ? null : state.remainingReconnects,
         match: {
           ...state.match,
@@ -421,7 +421,9 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
       }
       try {
         const q = state.match.currentQuestion;
-        if (q && q.qIndex === payload.qIndex) {
+        // MCQ submissions are tracked by useRealtimeGameLogic with the local
+        // submit elapsed time. Keep this store fallback for special rounds.
+        if (q && q.qIndex === payload.qIndex && q.question.kind !== 'multipleChoice') {
           const startedAt = q.playableAt ? new Date(q.playableAt).getTime() : 0;
           const syncedNowMs = Date.now() + (q.serverTimeOffsetMs ?? state.match.serverTimeOffsetMs ?? 0);
           const timeMs = startedAt ? Math.max(0, syncedNowMs - startedAt) : 0;
@@ -668,45 +670,10 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
       variant: payload.variant,
     });
     set((state) => {
-      // Only emit completion analytics for the currently active match so
-      // late-arriving payloads (e.g. from a replaced/rejoined session)
-      // can't fire telemetry for a stale match.
-      const isActiveMatch = state.match?.matchId === payload.matchId;
-      if (isActiveMatch) {
-        try {
-          const selfId = state.selfUserId;
-          const myPlayer = selfId ? payload.players[selfId] : null;
-          const oppParticipant = (payload.participants ?? state.match?.participants ?? [])
-            .find((p) => p.userId !== selfId);
-          const oppPlayer = oppParticipant ? payload.players[oppParticipant.userId] : null;
-          const myScore = myPlayer?.totalPoints ?? 0;
-          const oppScore = oppPlayer?.totalPoints ?? 0;
-          const isAiOpponent = oppParticipant
-            ? !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(oppParticipant.userId)
-            : false;
-          const won = selfId ? payload.winnerId === selfId : false;
-          trackMatchCompleted({
-            matchId: payload.matchId,
-            mode: state.match?.mode ?? (payload.rankedOutcome ? 'ranked' : 'friendly'),
-            variant: payload.variant ?? state.match?.variant,
-            won,
-            score: myScore,
-            opponentScore: oppScore,
-            rpChange: selfId ? payload.rankedOutcome?.byUserId?.[selfId]?.deltaRp : undefined,
-            opponentIsAi: isAiOpponent,
-            durationSec: Math.round(payload.durationMs / 1000),
-            questionsAnswered: payload.totalQuestions,
-            correctAnswers: myPlayer?.correctAnswers,
-            goalsFor: myPlayer?.goals,
-            goalsAgainst: oppPlayer?.goals,
-            penaltyGoalsFor: myPlayer?.penaltyGoals,
-            penaltyGoalsAgainst: oppPlayer?.penaltyGoals,
-            winnerDecisionMethod: payload.winnerDecisionMethod ?? null,
-          });
-        } catch {
-          /* analytics best-effort */
-        }
-      }
+      // match_completed analytics are emitted server-side (one event per
+      // player, with a reliable opponent_is_ai flag) so the event fires even
+      // when a player disconnects before final_results arrives. See
+      // backend possession-completion.ts / party-quiz-match-flow.ts.
       if (!state.match) {
         const rejoin = state.rejoinMatch?.matchId === payload.matchId ? state.rejoinMatch : null;
         const sessionBelongsToPayload = state.sessionState?.activeMatchId === payload.matchId;

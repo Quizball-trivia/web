@@ -16,6 +16,7 @@ import { useWelcomeStadiumSim } from './useWelcomeStadiumSim';
 import { useWelcomeCategoriesData } from './useWelcomeCategoriesData';
 import { peekPostAuthRedirect } from '@/lib/auth/postAuthRedirect';
 import { WelcomeLoginDialog } from './WelcomeLoginDialog';
+import { WelcomeAuthNoticeModal } from './WelcomeAuthNoticeModal';
 import { WelcomeNavbar } from './WelcomeNavbar';
 import { WelcomeHero } from './WelcomeHero';
 import { WelcomeCategoriesSection } from './WelcomeCategoriesSection';
@@ -33,6 +34,8 @@ export function WelcomeScreen() {
     handleLoginDialogOpenChange,
     handleCloseLoginDialog,
     handleKickOff,
+    handleGoogleCredential,
+    disableGoogleIdentityOverlay,
     authMode,
     handleAuthModeChange,
     authEmail,
@@ -47,9 +50,16 @@ export function WelcomeScreen() {
     setAuthOtp,
     authSubmitting,
     authNotice,
+    authNoticeModal,
+    handleCloseAuthNoticeModal,
+    handleNoticeModalGoToSignIn,
+    handleRestorePendingDeletion,
+    restoreSubmitting,
+    restoreError,
     authError,
     authFieldErrors,
     phoneOtpSent,
+    socialSubmitting,
     showAdvancedAuth,
     toggleAdvancedAuth,
     showForgot,
@@ -140,6 +150,8 @@ export function WelcomeScreen() {
       <WelcomeLoginDialog
         open={loginOpen}
         showOpenInBrowser={showOpenInBrowser}
+        googleClientId={googleClientId}
+        disableGoogleIdentityOverlay={disableGoogleIdentityOverlay}
         authMode={authMode}
         authEmail={authEmail}
         authPassword={authPassword}
@@ -151,6 +163,7 @@ export function WelcomeScreen() {
         authError={authError}
         authFieldErrors={authFieldErrors}
         phoneOtpSent={phoneOtpSent}
+        socialSubmitting={socialSubmitting}
         showAdvancedAuth={showAdvancedAuth}
         showForgot={showForgot}
         forgotSubmitting={forgotSubmitting}
@@ -160,6 +173,7 @@ export function WelcomeScreen() {
         onOpenChange={handleLoginDialogOpenChange}
         onClose={handleCloseLoginDialog}
         onGoogleLogin={handleGoogleLogin}
+        onGoogleCredential={handleGoogleCredential}
         onFacebookLogin={handleFacebookLogin}
         onAuthModeChange={handleAuthModeChange}
         onEmailChange={setAuthEmail}
@@ -173,6 +187,16 @@ export function WelcomeScreen() {
         onShowForgot={handleShowForgot}
         onBackToSignIn={handleBackToSignIn}
         onForgotSubmit={handleForgotSubmit}
+      />
+
+      <WelcomeAuthNoticeModal
+        open={authNoticeModal !== null}
+        variant={authNoticeModal ?? 'check-email'}
+        onClose={handleCloseAuthNoticeModal}
+        onGoToSignIn={handleNoticeModalGoToSignIn}
+        onRestorePendingDeletion={handleRestorePendingDeletion}
+        restoreSubmitting={restoreSubmitting}
+        restoreError={restoreError}
       />
     </div>
   );

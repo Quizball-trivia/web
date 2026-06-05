@@ -11,6 +11,7 @@ import type { MatchStatePayload, MatchVariant } from '@/lib/realtime/socket.type
 import type { DevPossessionAnimation } from '@/stores/realtimeMatch.store';
 import { PitchVisualization } from '../components/PitchVisualization';
 import { usePossessionAnimationOrchestrator } from './usePossessionAnimationOrchestrator';
+import { getBarBattleGoalAttackDelayMs, resolvePossessionBattlePoints } from './useBarBattle';
 import { getZone } from './usePossessionMovement';
 import {
   getQuestionDurationSeconds,
@@ -37,6 +38,8 @@ export interface PossessionFieldState {
   oppGoals: number;
   myPenaltyGoals: number;
   oppPenaltyGoals: number;
+  myPenaltyAttempts: Array<'goal' | 'miss'>;
+  oppPenaltyAttempts: Array<'goal' | 'miss'>;
   questionDurationSeconds: number;
   zone: string;
   zoneColor: string;
@@ -48,6 +51,8 @@ export interface PossessionFieldState {
   pitchProps: PitchProps;
   /** True when I currently hold the 2× speed streak. */
   speedStreakMine: boolean;
+  /** True when the opponent currently holds the 2× speed streak. */
+  speedStreakOpponent: boolean;
 }
 
 interface UsePossessionFieldStateParams {
@@ -95,6 +100,45 @@ function getSeatGoals(params: {
   };
 }
 
+function reconstructPenaltyAttempts(goals: number, attempts: number): Array<'goal' | 'miss'> {
+  return [
+    ...Array.from({ length: Math.max(0, goals) }, () => 'goal' as const),
+    ...Array.from({ length: Math.max(0, attempts - goals) }, () => 'miss' as const),
+  ];
+}
+
+function getSeatPenaltyAttempts(params: {
+  possessionState: MatchStatePayload | null;
+  mySeat: number | null;
+}): { myPenaltyAttempts: Array<'goal' | 'miss'>; oppPenaltyAttempts: Array<'goal' | 'miss'> } {
+  const { possessionState, mySeat } = params;
+  if (!possessionState) return { myPenaltyAttempts: [], oppPenaltyAttempts: [] };
+
+  const attempts = possessionState.penaltyAttempts;
+  if (attempts) {
+    return {
+      myPenaltyAttempts: mySeat === 2 ? attempts.seat2 : attempts.seat1,
+      oppPenaltyAttempts: mySeat === 2 ? attempts.seat1 : attempts.seat2,
+    };
+  }
+
+  const stateWithPenalty = possessionState as MatchStatePayload & {
+    penalty?: { kicksTaken?: { seat1?: number; seat2?: number } };
+  };
+  const seat1Attempts = reconstructPenaltyAttempts(
+    possessionState.penaltyGoals.seat1,
+    Number(stateWithPenalty.penalty?.kicksTaken?.seat1 ?? possessionState.penaltyGoals.seat1)
+  );
+  const seat2Attempts = reconstructPenaltyAttempts(
+    possessionState.penaltyGoals.seat2,
+    Number(stateWithPenalty.penalty?.kicksTaken?.seat2 ?? possessionState.penaltyGoals.seat2)
+  );
+  return {
+    myPenaltyAttempts: mySeat === 2 ? seat2Attempts : seat1Attempts,
+    oppPenaltyAttempts: mySeat === 2 ? seat1Attempts : seat2Attempts,
+  };
+}
+
 export function usePossessionFieldState({
   possessionState,
   mySeat,
@@ -131,6 +175,10 @@ export function usePossessionFieldState({
   const questionDurationSeconds = getQuestionDurationSeconds(localQuestion);
 
   const { myGoals, oppGoals, myPenaltyGoals, oppPenaltyGoals } = useMemo(() => getSeatGoals({
+    possessionState,
+    mySeat,
+  }), [mySeat, possessionState]);
+  const { myPenaltyAttempts, oppPenaltyAttempts } = useMemo(() => getSeatPenaltyAttempts({
     possessionState,
     mySeat,
   }), [mySeat, possessionState]);
@@ -235,7 +283,14 @@ export function usePossessionFieldState({
     if (!isPenaltyQuestion || !penaltyRoundResult || !myRound || !opponentRound || !immediatePenaltyResult) return 0;
     if (variant !== 'ranked_sim') return 0;
 
-    return PENALTY_SCORE_FLIGHT_HANDOFF_MS;
+    // Wait for the bar battle to play out before the shot/result, exactly like
+    // an open-play goal (usePossessionGoalCelebration). Using a fixed handoff
+    // fired the shot while the bars were still animating.
+    const playerPoints = resolvePossessionBattlePoints(myRound, penaltyRoundResult.questionKind);
+    const opponentPoints = resolvePossessionBattlePoints(opponentRound, penaltyRoundResult.questionKind);
+    return getBarBattleGoalAttackDelayMs(playerPoints, opponentPoints, PENALTY_SCORE_FLIGHT_HANDOFF_MS, {
+      includeScoreFlightHandoff: true,
+    });
   }, [immediatePenaltyResult, isPenaltyQuestion, variant, myRound, opponentRound, penaltyRoundResult]);
 
   const penaltyResultKey = penaltyRoundResult && immediatePenaltyResult
@@ -304,6 +359,23 @@ export function usePossessionFieldState({
     isPenaltyQuestion,
     myPenaltyGoals,
     oppPenaltyGoals,
+    penaltyDisplayResult,
+    penaltyRoundResult,
+    resultShooterIsMe,
+  ]);
+
+  const visiblePenaltyAttempts = useMemo(() => {
+    if (!isPenaltyQuestion || !penaltyRoundResult || !immediatePenaltyResult || penaltyDisplayResult) {
+      return { myPenaltyAttempts, oppPenaltyAttempts };
+    }
+    return resultShooterIsMe
+      ? { myPenaltyAttempts: myPenaltyAttempts.slice(0, -1), oppPenaltyAttempts }
+      : { myPenaltyAttempts, oppPenaltyAttempts: oppPenaltyAttempts.slice(0, -1) };
+  }, [
+    immediatePenaltyResult,
+    isPenaltyQuestion,
+    myPenaltyAttempts,
+    oppPenaltyAttempts,
     penaltyDisplayResult,
     penaltyRoundResult,
     resultShooterIsMe,
@@ -385,6 +457,10 @@ export function usePossessionFieldState({
   // one-shot fly-in / score-doubling moment, handled in the flight overlay.
   const speedStreakMine =
     mySeat != null && possessionState?.speedStreakHolderSeat === mySeat;
+  const speedStreakOpponent =
+    mySeat != null
+    && possessionState?.speedStreakHolderSeat != null
+    && possessionState.speedStreakHolderSeat !== mySeat;
 
   return {
     mySeat,
@@ -402,6 +478,8 @@ export function usePossessionFieldState({
     oppGoals,
     myPenaltyGoals: visiblePenaltyGoals.myPenaltyGoals,
     oppPenaltyGoals: visiblePenaltyGoals.oppPenaltyGoals,
+    myPenaltyAttempts: visiblePenaltyAttempts.myPenaltyAttempts,
+    oppPenaltyAttempts: visiblePenaltyAttempts.oppPenaltyAttempts,
     questionDurationSeconds,
     zone,
     zoneColor,
@@ -412,5 +490,6 @@ export function usePossessionFieldState({
     uiPhase,
     pitchProps,
     speedStreakMine,
+    speedStreakOpponent,
   };
 }

@@ -18,6 +18,7 @@ import {
   CY,
   STACK_CANCEL_FLASH_S,
   STACK_CANCEL_STEP_S,
+  getChargeImpactXKeyframes,
 } from './barBattle.helpers';
 
 interface BarBattleStackedBarProps {
@@ -32,6 +33,7 @@ interface BarBattleStackedBarProps {
   survived: boolean;
   chargeOrder: number;
   chargeHitOffsetX?: number;
+  holdChargeImpact?: boolean;
   cy?: number;
   barW?: number;
   barH?: number;
@@ -53,6 +55,7 @@ export function BarBattleStackedBar({
   survived,
   chargeOrder,
   chargeHitOffsetX = 0,
+  holdChargeImpact = false,
   cy = CY,
   barW = BAR_W,
   barH = BAR_H,
@@ -76,7 +79,7 @@ export function BarBattleStackedBar({
   if (!showBar) return null;
 
   if (isBattling) {
-    const hitCount = Math.max(1, Math.min(cancelCount, 12));
+    const hitCount = Math.max(1, Math.min(cancelCount, 20));
     const finalHitDelay = (hitCount - 1) * STACK_CANCEL_STEP_S;
     const vanishAt = finalHitDelay + STACK_CANCEL_FLASH_S;
     const shouldDisappear = cancelled && !survived;
@@ -154,7 +157,7 @@ export function BarBattleStackedBar({
       animate={{
         opacity: isCharging ? [0.95, 1, 0.95] : 0.95,
         x: isChargeImpact
-          ? [targetX, targetX, targetX + chargeHitOffsetX, targetX + chargeHitOffsetX * 0.2]
+          ? getChargeImpactXKeyframes(targetX, chargeHitOffsetX, holdChargeImpact)
           : targetX,
         y: 0,
         scale: isCharging ? [1, 1.08, 1] : 1,

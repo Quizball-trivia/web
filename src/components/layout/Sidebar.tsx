@@ -69,16 +69,20 @@ export function Sidebar({ currentPath, socialBadgeCount = 0, className }: Sideba
                 key={item.path}
                 href={item.path}
                 className={cn(
-                  "relative inline-flex items-center justify-center py-2.5 px-4 text-sm font-black uppercase tracking-wide transition-all",
+                  "relative inline-flex items-center justify-center py-2.5 px-4 text-sm uppercase tracking-wide transition-all",
                   isActive
                     ? "rounded-full text-black min-w-[132px]"
                     : "text-center text-white/62 hover:text-white",
                 )}
-                style={isActive ? { backgroundColor: "#38B60E" } : undefined}
+                style={{
+                  fontFamily: "'Poppins', sans-serif",
+                  fontWeight: 700,
+                  ...(isActive ? { backgroundColor: "#38B60E" } : {}),
+                }}
               >
                 <span className="truncate">{t(item.labelKey as MessageKey)}</span>
                 {showSocialBadge && (
-                  <span className="absolute -right-6 top-1/2 min-w-5 -translate-y-1/2 rounded-full bg-red-500 px-1.5 py-0.5 text-center text-[10px] font-black text-white">
+                  <span className="absolute -right-6 top-1/2 min-w-5 -translate-y-1/2 rounded-full bg-red-500 px-1.5 py-0.5 text-center text-[10px] font-poppins font-semibold text-white">
                     {socialBadgeCount}
                   </span>
                 )}
@@ -92,7 +96,7 @@ export function Sidebar({ currentPath, socialBadgeCount = 0, className }: Sideba
         <div className="relative">
           {/* Beta badge — flags that this is a pre-release build. Matches the
               ranked question-kind badge style (tilted yellow pill). */}
-          <span className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 -rotate-[6deg] rounded-[14px] bg-brand-yellow px-4 py-1.5 font-poppins text-base font-black uppercase tracking-wide text-surface-page shadow-[0_3px_10px_rgba(0,0,0,0.4)]">
+          <span className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 -rotate-[6deg] rounded-[14px] bg-brand-yellow px-4 py-1.5 font-poppins text-base font-semibold uppercase tracking-wide text-surface-page shadow-[0_3px_10px_rgba(0,0,0,0.4)]">
             {t('common.beta')}
           </span>
           <Image

@@ -17,7 +17,12 @@ import {
   PENALTY_ICON_SWAP_DELAY_MS,
   computeMyPossessionPct,
 } from '../realtimePossession.helpers';
-import { getBarBattleFieldLockMs, getBarBattleGoalAttackDelayMs, resolveBattlePoints } from './useBarBattle';
+import {
+  getBarBattleFieldLockMs,
+  getBarBattleGoalAttackDelayMs,
+  resolvePossessionBattlePoints,
+  shouldUsePossessionPointsForSide,
+} from './useBarBattle';
 import type { ShotResult } from '../types/possession.types';
 
 interface AttackAnimation {
@@ -205,16 +210,24 @@ export function usePossessionAnimationOrchestrator({
     queueMicrotask(() => {
       setReadyRoundAttackKey(null);
     });
-    const playerPoints = resolveBattlePoints(
-      myRound?.pointsEarned ?? 0,
-      roundResult?.questionKind,
-      myRound?.foundCount
-    );
-    const opponentPoints = resolveBattlePoints(
-      opponentRound?.pointsEarned ?? 0,
-      roundResult?.questionKind,
-      opponentRound?.foundCount
-    );
+    const kind = roundResult?.phaseKind ?? phaseKind;
+    const boostedSeat = roundResult?.deltas?.speedStreakBoostedSeat ?? null;
+    const playerPoints = resolvePossessionBattlePoints(myRound, roundResult?.questionKind, {
+      usePossessionPoints: shouldUsePossessionPointsForSide({
+        phaseKind: kind,
+        speedStreakBoostedSeat: boostedSeat,
+        mySeat,
+        side: 'player',
+      }),
+    });
+    const opponentPoints = resolvePossessionBattlePoints(opponentRound, roundResult?.questionKind, {
+      usePossessionPoints: shouldUsePossessionPointsForSide({
+        phaseKind: kind,
+        speedStreakBoostedSeat: boostedSeat,
+        mySeat,
+        side: 'opponent',
+      }),
+    });
     const attackDelayMs = getBarBattleGoalAttackDelayMs(
       playerPoints,
       opponentPoints,
@@ -227,7 +240,7 @@ export function usePossessionAnimationOrchestrator({
     }, attackDelayMs);
 
     return () => clearTimeout(timer);
-  }, [matchVariant, myRound, opponentRound, roundAttackKey, roundResult?.questionKind]);
+  }, [matchVariant, myRound, mySeat, opponentRound, phaseKind, roundAttackKey, roundResult]);
 
   const delayedRoundAttackAnimation = roundAttackKey && readyRoundAttackKey === roundAttackKey
     ? roundAttackAnimation
@@ -350,16 +363,23 @@ export function usePossessionAnimationOrchestrator({
     fieldMotionLockedRef.current = true;
     setFieldMotionLocked(true);
     if (fieldReleaseTimerRef.current) clearTimeout(fieldReleaseTimerRef.current);
-    const playerPoints = resolveBattlePoints(
-      myRound?.pointsEarned ?? 0,
-      roundResult.questionKind,
-      myRound?.foundCount
-    );
-    const opponentPoints = resolveBattlePoints(
-      opponentRound?.pointsEarned ?? 0,
-      roundResult.questionKind,
-      opponentRound?.foundCount
-    );
+    const boostedSeat = roundResult.deltas?.speedStreakBoostedSeat ?? null;
+    const playerPoints = resolvePossessionBattlePoints(myRound, roundResult.questionKind, {
+      usePossessionPoints: shouldUsePossessionPointsForSide({
+        phaseKind: kind,
+        speedStreakBoostedSeat: boostedSeat,
+        mySeat,
+        side: 'player',
+      }),
+    });
+    const opponentPoints = resolvePossessionBattlePoints(opponentRound, roundResult.questionKind, {
+      usePossessionPoints: shouldUsePossessionPointsForSide({
+        phaseKind: kind,
+        speedStreakBoostedSeat: boostedSeat,
+        mySeat,
+        side: 'opponent',
+      }),
+    });
     const fieldLockMs = Math.max(
       FIELD_RESULT_COMPARE_MS + FIELD_POSSESSION_CUE_MS,
       getBarBattleFieldLockMs(playerPoints, opponentPoints, {
@@ -374,7 +394,7 @@ export function usePossessionAnimationOrchestrator({
       setMyPossessionPct(latestPossessionRef.current);
       fieldReleaseTimerRef.current = null;
     }, fieldLockMs);
-  }, [matchVariant, myRound, opponentRound, phaseKind, roundResult, unopposedBarPulse]);
+  }, [matchVariant, myRound, mySeat, opponentRound, phaseKind, roundResult, unopposedBarPulse]);
 
   useEffect(() => {
     delayedFieldQRef.current = null;

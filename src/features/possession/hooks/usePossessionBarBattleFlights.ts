@@ -11,12 +11,12 @@
  * arrives.
  *
  * Triggers (when `match.variant === 'ranked_sim'`):
- *   - Player flight: fires when `answerAck` arrives with `pointsEarned > 0`,
+ *   - Player flight: fires when `answerAck` arrives with the local score,
  *     gated on phaseKind === normal, last_attack, or penalty.
  *     Deduped by `answerAck.qIndex`.
- *   - Opponent flight: fires when `opponentAnswered` flips true with
- *     `opponentAnsweredCorrectly === true && opponentRecentPoints > 0`,
- *     gated similarly and delayed until the local question is playable.
+ *   - Opponent flight: fires when `opponentAnswered` flips true with the
+ *     opponent's local score, gated similarly and delayed until the local
+ *     question is playable.
  *     Deduped by the current question's qIndex.
  *
  * Returns the active flights list + handlers ready to feed into
@@ -34,6 +34,7 @@ import { useShallow } from 'zustand/shallow';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import type { FlightSpec } from '../components/BarBattleFlightOverlay';
 import { logger } from '@/utils/logger';
+import { shouldUsePossessionPointsForSide } from './useBarBattle';
 import type {
   MatchAnswerAckPayload,
   MatchRoundResultPayload,
@@ -41,7 +42,7 @@ import type {
 
 type Side = 'player' | 'opponent';
 
-function resolveFlightPoints(
+function resolveBaseFlightPoints(
   pointsEarned: number,
   questionKind?: MatchAnswerAckPayload['questionKind'] | MatchRoundResultPayload['questionKind'],
   foundCount?: number
@@ -51,6 +52,22 @@ function resolveFlightPoints(
     return Math.min(foundCount, 5) * 20;
   }
   return pointsEarned;
+}
+
+function resolvePossessionFlightPoints(
+  pointsEarned: number,
+  questionKind?: MatchAnswerAckPayload['questionKind'] | MatchRoundResultPayload['questionKind'],
+  foundCount?: number,
+  possessionPointsEarned?: number
+): { basePoints: number; possessionPoints: number } {
+  const basePoints = resolveBaseFlightPoints(pointsEarned, questionKind, foundCount);
+  if (typeof possessionPointsEarned !== 'number') {
+    return { basePoints, possessionPoints: basePoints };
+  }
+  return {
+    basePoints,
+    possessionPoints: resolveBaseFlightPoints(possessionPointsEarned, questionKind, foundCount),
+  };
 }
 
 function isFlightPhaseKind(kind: string | undefined): boolean {
@@ -148,6 +165,20 @@ function rectCentre(rect: DOMRect): { x: number; y: number } {
     x: rect.left + rect.width / 2,
     y: rect.top + rect.height / 2,
   };
+}
+
+function sideForSeat(seat: 1 | 2 | null, mySeat: number | null): Side | null {
+  if (seat == null || mySeat == null) return null;
+  return seat === mySeat ? 'player' : 'opponent';
+}
+
+function boostedSideForCurrentQuestion(
+  phaseKind: string | undefined,
+  holderSeat: 1 | 2 | null,
+  mySeat: number | null
+): Side | null {
+  if (phaseKind !== 'normal') return null;
+  return sideForSeat(holderSeat, mySeat);
 }
 
 function clampFlightPoint(point: { x: number; y: number }): { x: number; y: number } {
@@ -305,14 +336,19 @@ export function usePossessionBarBattleFlights() {
     opponentRect: DOMRect | null;
     pitchRect: DOMRect | null;
     points: number;
+    possessionPoints?: number;
     failed?: boolean;
   }) => {
     const id = ++flightSeqRef.current;
-    const addFlight = () => {
-      const barTargetRect = findPitchBarTarget(params.side);
-      // If the 2× streak badge is showing for this side, route the +N through
-      // it so the number visibly doubles mid-flight.
-      const badgeRect = !params.failed ? findSpeedStreakBadge(params.side) : null;
+      const addFlight = () => {
+        const barTargetRect = findPitchBarTarget(params.side);
+        const possessionPoints = params.possessionPoints ?? params.points;
+      const hasBoostedPoints = possessionPoints === params.points * 2 && params.points > 0;
+      // If the 2× streak badge is visible, route the base +N through it so the
+      // number doubles mid-flight. If the badge is not mounted yet, show the
+      // possession-resolved value directly so the landing value still matches
+      // the bars.
+      const badgeRect = !params.failed && hasBoostedPoints ? findSpeedStreakBadge(params.side) : null;
       setFlights((prev) => [...prev, {
         id,
         side: params.side,
@@ -320,7 +356,7 @@ export function usePossessionBarBattleFlights() {
         target: barTargetRect
           ? clampFlightPoint(rectCentre(barTargetRect))
           : computeFallbackBarLaneTarget(params.targetRect, params.opponentRect, params.pitchRect),
-        points: params.points,
+        points: badgeRect ? params.points : possessionPoints,
         failed: params.failed,
         boostVia: badgeRect ? clampFlightPoint(rectCentre(badgeRect)) : undefined,
       }]);
@@ -338,6 +374,7 @@ export function usePossessionBarBattleFlights() {
     side: Side;
     roundKey: string;
     points: number;
+    possessionPoints?: number;
     failed?: boolean;
     logLabel: string;
     questionKind?: string;
@@ -368,6 +405,7 @@ export function usePossessionBarBattleFlights() {
           opponentRect: otherAvatarRect,
           pitchRect,
           points: params.points,
+          possessionPoints: params.possessionPoints,
           failed: params.failed,
         });
         return;
@@ -399,10 +437,16 @@ export function usePossessionBarBattleFlights() {
   const answerAck = barBattleMatch.answerAck;
   useEffect(() => {
     if (!enabled || !answerAck) return;
-    const points = resolveFlightPoints(answerAck.pointsEarned, answerAck.questionKind, answerAck.foundCount);
-    const failed = !answerAck.isCorrect || points <= 0;
     const phaseKind = answerAck.phaseKind ?? 'normal';
     if (!isFlightPhaseKind(phaseKind)) return;
+    const points = resolveBaseFlightPoints(answerAck.pointsEarned, answerAck.questionKind, answerAck.foundCount);
+    const activeBoostedSide = boostedSideForCurrentQuestion(
+      phaseKind,
+      barBattleMatch.speedStreakHolderSeat,
+      barBattleMatch.mySeat
+    );
+    const possessionPoints = activeBoostedSide === 'player' ? points * 2 : points;
+    const failed = !answerAck.isCorrect || possessionPoints <= 0;
     const ackKey = `${answerAck.matchId}:${answerAck.qIndex}`;
     if (currentKey !== ackKey) return;
     if (barBattleMatch.currentQuestionPhase !== 'playing') return;
@@ -412,11 +456,20 @@ export function usePossessionBarBattleFlights() {
       side: 'player',
       roundKey: ackKey,
       points,
+      possessionPoints,
       failed,
       logLabel: 'Bar-battle player flight',
       questionKind: answerAck.questionKind,
     });
-  }, [barBattleMatch.currentQuestionPhase, currentKey, enabled, answerAck, enqueueFlightFromDom]);
+  }, [
+    barBattleMatch.currentQuestionPhase,
+    barBattleMatch.mySeat,
+    barBattleMatch.speedStreakHolderSeat,
+    currentKey,
+    enabled,
+    answerAck,
+    enqueueFlightFromDom,
+  ]);
 
   // Fallback: if the client missed its immediate answer_ack, fire the same
   // player flight from the authoritative round_result so the user still sees
@@ -430,45 +483,76 @@ export function usePossessionBarBattleFlights() {
     if (playerFiredQRef.current === roundKey) return;
 
     const playerRound = roundResult.players[selfUserId];
-    const points = playerRound
-      ? resolveFlightPoints(playerRound.pointsEarned, roundResult.questionKind, playerRound.foundCount)
-      : 0;
-    if (!playerRound || points <= 0) return;
+    const usePossessionPoints = shouldUsePossessionPointsForSide({
+      phaseKind,
+      speedStreakBoostedSeat: roundResult.deltas?.speedStreakBoostedSeat ?? null,
+      mySeat: barBattleMatch.mySeat,
+      side: 'player',
+    });
+    const resolved = playerRound
+      ? resolvePossessionFlightPoints(
+        playerRound.pointsEarned,
+        roundResult.questionKind,
+        playerRound.foundCount,
+        usePossessionPoints ? playerRound.possessionPointsEarned : undefined
+      )
+      : { basePoints: 0, possessionPoints: 0 };
+    const failed = playerRound ? !playerRound.isCorrect || resolved.possessionPoints <= 0 : false;
+    if (!playerRound || (resolved.possessionPoints <= 0 && phaseKind !== 'penalty')) return;
 
     enqueueFlightFromDom({
       side: 'player',
       roundKey,
-      points,
+      points: resolved.basePoints,
+      possessionPoints: resolved.possessionPoints,
+      failed: failed ? true : undefined,
       logLabel: 'Bar-battle player fallback flight',
       questionKind: roundResult.questionKind,
     });
-  }, [enabled, enqueueFlightFromDom, phaseKindFromState, roundResult, selfUserId]);
+  }, [barBattleMatch.mySeat, enabled, enqueueFlightFromDom, phaseKindFromState, roundResult, selfUserId]);
 
   // Same fallback for the opponent. Special questions may only expose final
   // opponent scoring through round_result, so keep the flight feedback even
   // when match:opponent_answered was not emitted or arrived too early.
   useEffect(() => {
     if (!enabled || !roundResult || !selfUserId) return;
-    if (barBattleMatch.currentQuestionPhase !== 'playing') return;
+    // No currentQuestionPhase guard here (matching the player fallback): in
+    // penalties the optimistic opponent flight is intentionally skipped, so this
+    // round_result fallback is the ONLY opponent flight and must fire even after
+    // the phase has advanced past 'playing'. Deduped by opponentFiredQRef.
     const phaseKind = roundResult.phaseKind ?? phaseKindFromState;
     if (!isFlightPhaseKind(phaseKind)) return;
     const roundKey = `${roundResult.matchId}:${roundResult.qIndex}`;
     if (opponentFiredQRef.current === roundKey) return;
 
     const opponentRound = Object.entries(roundResult.players).find(([userId]) => userId !== selfUserId)?.[1];
-    const points = opponentRound
-      ? resolveFlightPoints(opponentRound.pointsEarned, roundResult.questionKind, opponentRound.foundCount)
-      : 0;
-    if (!opponentRound || points <= 0) return;
+    const usePossessionPoints = shouldUsePossessionPointsForSide({
+      phaseKind,
+      speedStreakBoostedSeat: roundResult.deltas?.speedStreakBoostedSeat ?? null,
+      mySeat: barBattleMatch.mySeat,
+      side: 'opponent',
+    });
+    const resolved = opponentRound
+      ? resolvePossessionFlightPoints(
+        opponentRound.pointsEarned,
+        roundResult.questionKind,
+        opponentRound.foundCount,
+        usePossessionPoints ? opponentRound.possessionPointsEarned : undefined
+      )
+      : { basePoints: 0, possessionPoints: 0 };
+    const failed = opponentRound ? !opponentRound.isCorrect || resolved.possessionPoints <= 0 : false;
+    if (!opponentRound || (resolved.possessionPoints <= 0 && phaseKind !== 'penalty')) return;
 
     enqueueFlightFromDom({
       side: 'opponent',
       roundKey,
-      points,
+      points: resolved.basePoints,
+      possessionPoints: resolved.possessionPoints,
+      failed: failed ? true : undefined,
       logLabel: 'Bar-battle opponent fallback flight',
       questionKind: roundResult.questionKind,
     });
-  }, [barBattleMatch.currentQuestionPhase, enabled, enqueueFlightFromDom, phaseKindFromState, roundResult, selfUserId]);
+  }, [barBattleMatch.mySeat, enabled, enqueueFlightFromDom, phaseKindFromState, roundResult, selfUserId]);
 
   // ── Opponent flight on opponent answer ──────────────────────────────────
   const opponentAnswered = barBattleMatch.opponentAnswered;
@@ -485,11 +569,18 @@ export function usePossessionBarBattleFlights() {
     if (currentKey == null) return;
     if (opponentFiredQRef.current === currentKey) return;
 
-    const failed = opponentAnsweredCorrectly !== true || opponentRecentPoints <= 0;
+    const activeBoostedSide = boostedSideForCurrentQuestion(
+      phaseKindFromState,
+      barBattleMatch.speedStreakHolderSeat,
+      barBattleMatch.mySeat
+    );
+    const possessionPoints = activeBoostedSide === 'opponent' ? opponentRecentPoints * 2 : opponentRecentPoints;
+    const failed = opponentAnsweredCorrectly !== true || possessionPoints <= 0;
     enqueueFlightFromDom({
       side: 'opponent',
       roundKey: currentKey,
       points: opponentRecentPoints,
+      possessionPoints,
       failed,
       logLabel: 'Bar-battle opponent flight',
     });
@@ -499,17 +590,19 @@ export function usePossessionBarBattleFlights() {
     opponentAnswered,
     opponentAnsweredCorrectly,
     opponentRecentPoints,
+    barBattleMatch.mySeat,
+    barBattleMatch.speedStreakHolderSeat,
     barBattleMatch.currentQuestionPhase,
     currentQIndex,
     currentKey,
     phaseKindFromState,
   ]);
 
-  // ── 2× badge fly-in when the player newly earns the streak ──────────────
+  // ── 2× badge fly-in when either side newly earns the streak ─────────────
   // Driven by the LIVE match-state holder (the source of truth that survives
-  // across questions), not the transient round result. When the holder
-  // transitions to my seat, fly a "2×" token from the answer source to the HUD
-  // badge slot, where the sticky badge takes over.
+  // across questions), not the transient round result. When the holder changes,
+  // fly a "2×" token from that side's answer source to its HUD badge slot,
+  // where the sticky badge takes over.
   const mySeat = barBattleMatch.mySeat;
   const liveHolderSeat = barBattleMatch.speedStreakHolderSeat;
   const prevHolderRef = useRef<1 | 2 | null>(null);
@@ -529,17 +622,19 @@ export function usePossessionBarBattleFlights() {
     }
     const prev = prevHolderRef.current;
     prevHolderRef.current = liveHolderSeat;
-    // Only fly the token on a fresh null/opponent → me transition.
-    if (mySeat == null || liveHolderSeat !== mySeat || prev === mySeat) return;
+    // Only fly the token on a fresh transition to a real holder.
+    if (liveHolderSeat == null || prev === liveHolderSeat) return;
+    const side = sideForSeat(liveHolderSeat, mySeat);
+    if (!side) return;
 
     const launch = (retries: number) => {
-      const sourceRect = findScoreAnchor('player');
-      const slotRect = findSpeedStreakSlot('player');
+      const sourceRect = findScoreAnchor(side);
+      const slotRect = findSpeedStreakSlot(side);
       if (sourceRect && slotRect) {
         const id = ++flightSeqRef.current;
         setFlights((prevFlights) => [...prevFlights, {
           id,
-          side: 'player',
+          side,
           kind: 'badge',
           source: clampFlightPoint(rectCentre(sourceRect)),
           target: clampFlightPoint(rectCentre(slotRect)),

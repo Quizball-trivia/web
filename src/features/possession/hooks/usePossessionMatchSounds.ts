@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import type { MatchAnswerAckPayload, MatchRoundResultPayload } from '@/lib/realtime/socket.types';
 import { useRealtimeMatchStore, type DevPossessionAnimation } from '@/stores/realtimeMatch.store';
 import {
@@ -8,9 +8,13 @@ import {
   PENALTY_KICK_CONTACT_MS,
   PENALTY_SCORE_FLIGHT_HANDOFF_MS,
 } from '../realtimePossession.helpers';
-import { getBarBattleGoalAttackDelayMs, resolveBattlePoints } from './useBarBattle';
+import {
+  getBarBattleGoalAttackDelayMs,
+  resolvePossessionBattlePoints,
+  shouldUsePossessionPointsForSide,
+} from './useBarBattle';
 
-type PossessionSfxName = 'whistle' | 'kick' | 'pass' | 'correctRanked';
+type PossessionSfxName = 'whistle' | 'kick' | 'pass' | 'correctRanked' | 'wrongAnswer';
 
 interface UsePossessionMatchSoundsParams {
   phase: string | undefined;
@@ -29,6 +33,7 @@ export function usePossessionMatchSounds({
 }: UsePossessionMatchSoundsParams): void {
   const matchVariant = useRealtimeMatchStore((s) => s.match?.variant);
   const selfUserId = useRealtimeMatchStore((s) => s.selfUserId);
+  const mySeat = useRealtimeMatchStore((s) => s.match?.mySeat ?? null);
   const prevPhaseRef = useRef<string | null>(null);
   const playSfxRef = useRef(playSfx);
   useEffect(() => {
@@ -45,17 +50,43 @@ export function usePossessionMatchSounds({
     }
   }, [phase]);
 
-  const correctAnswerSfxKeyRef = useRef<string | null>(null);
+  // One answer-result SFX per question: the correct chime when the player got
+  // it right, the wrong-answer buzzer when they didn't. Deduped by matchId+qIndex
+  // so re-renders / repeated acks don't retrigger it.
+  const answerSfxKeyRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!answerAck?.isCorrect) return;
+    if (!answerAck) return;
     const key = `${answerAck.matchId}:${answerAck.qIndex}`;
-    if (correctAnswerSfxKeyRef.current === key) return;
-    correctAnswerSfxKeyRef.current = key;
-    playSfxRef.current('correctRanked');
+    if (answerSfxKeyRef.current === key) return;
+    answerSfxKeyRef.current = key;
+    playSfxRef.current(answerAck.isCorrect ? 'correctRanked' : 'wrongAnswer');
   }, [answerAck]);
 
+  const roundResultSfxKeyRef = useRef<string | null>(null);
+  const roundResultSfxTimerRef = useRef<number | null>(null);
+  const clearRoundResultSfxTimer = useCallback(() => {
+    if (roundResultSfxTimerRef.current === null) return;
+    window.clearTimeout(roundResultSfxTimerRef.current);
+    roundResultSfxTimerRef.current = null;
+  }, []);
+
+  useEffect(() => clearRoundResultSfxTimer, [clearRoundResultSfxTimer]);
+
   useEffect(() => {
-    if (!roundResult) return;
+    if (!roundResult) {
+      clearRoundResultSfxTimer();
+      return;
+    }
+    const roundResultSfxKey = [
+      roundResult.matchId,
+      roundResult.qIndex,
+      roundResult.phaseKind,
+      roundResult.deltas?.goalScoredBySeat ?? 'no-goal',
+      roundResult.deltas?.penaltyOutcome ?? 'no-penalty-outcome',
+    ].join(':');
+    if (roundResultSfxKeyRef.current === roundResultSfxKey) return;
+    roundResultSfxKeyRef.current = roundResultSfxKey;
+    clearRoundResultSfxTimer();
     const phaseKindForSfx = roundResult.phaseKind;
     if (
       phaseKindForSfx === 'penalty'
@@ -72,16 +103,23 @@ export function usePossessionMatchSounds({
       const players = roundResult.players ?? {};
       const playerRound = selfUserId ? players[selfUserId] : undefined;
       const opponentRound = Object.entries(players).find(([userId]) => userId !== selfUserId)?.[1];
-      const playerPoints = resolveBattlePoints(
-        playerRound?.pointsEarned ?? 0,
-        roundResult.questionKind,
-        playerRound?.foundCount
-      );
-      const opponentPoints = resolveBattlePoints(
-        opponentRound?.pointsEarned ?? 0,
-        roundResult.questionKind,
-        opponentRound?.foundCount
-      );
+      const boostedSeat = roundResult.deltas?.speedStreakBoostedSeat ?? null;
+      const playerPoints = resolvePossessionBattlePoints(playerRound, roundResult.questionKind, {
+        usePossessionPoints: shouldUsePossessionPointsForSide({
+          phaseKind: phaseKindForSfx,
+          speedStreakBoostedSeat: boostedSeat,
+          mySeat,
+          side: 'player',
+        }),
+      });
+      const opponentPoints = resolvePossessionBattlePoints(opponentRound, roundResult.questionKind, {
+        usePossessionPoints: shouldUsePossessionPointsForSide({
+          phaseKind: phaseKindForSfx,
+          speedStreakBoostedSeat: boostedSeat,
+          mySeat,
+          side: 'opponent',
+        }),
+      });
       // Penalty kick: roundResult first waits for score-flight handoff before
       // the visible avatar kick starts. Schedule the SFX from raw roundResult
       // to that same eventual contact beat.
@@ -92,12 +130,14 @@ export function usePossessionMatchSounds({
               includeScoreFlightHandoff: matchVariant === 'ranked_sim',
             })
           : 0;
-      const timer = window.setTimeout(() => playSfxRef.current('kick'), kickDelayMs);
-      return () => window.clearTimeout(timer);
+      roundResultSfxTimerRef.current = window.setTimeout(() => {
+        roundResultSfxTimerRef.current = null;
+        playSfxRef.current('kick');
+      }, kickDelayMs);
     } else {
       playSfxRef.current('pass');
     }
-  }, [matchVariant, roundResult, selfUserId]);
+  }, [clearRoundResultSfxTimer, matchVariant, mySeat, roundResult, selfUserId]);
 
   useEffect(() => {
     if (!devPossessionAnimation) return;

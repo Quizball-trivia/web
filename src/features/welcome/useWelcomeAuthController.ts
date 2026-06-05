@@ -4,10 +4,10 @@
  * Controller hook for the WelcomeScreen login dialog.
  *
  * Owns:
- *  - the 11 useState fields for the dialog (open, mode, form fields,
- *    submitting, error/notice, phone-OTP-sent, in-app-browser panel)
- *  - the in-app-browser bounce timer ref + unmount cleanup
- *  - the three submit handlers (Google, email, phone OTP)
+ *  - the useState fields for the dialog (open, mode, form fields,
+ *    submitting, error/notice, phone-OTP-sent)
+ *  - the submit handlers (Google credential + redirect fallback, email,
+ *    phone OTP)
  *  - the login dialog open/close handler that resets the form
  *
  * Returns one object the dialog component reads. Behavior must stay
@@ -15,18 +15,21 @@
  * redirect, every error-message fallback preserved.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import {
   login,
   register,
   forgotPassword,
+  isPendingDeletionAuthError,
+  restorePendingDeletionWithLogin,
   socialLogin,
   socialLoginWithIdToken,
   startGeorgianPhoneOtp,
   verifyGeorgianPhoneOtp,
 } from '@/lib/auth/auth.service';
-import { signInWithGoogleIdentity } from '@/lib/auth/google-identity';
-import { isInAppBrowser, tryOpenInExternalBrowser } from '@/lib/auth/in-app-browser';
+import { signInWithGoogleIdentity, type GoogleCredential } from '@/lib/auth/google-identity';
+import { getInAppBrowserApp, tryOpenInExternalBrowser } from '@/lib/auth/in-app-browser';
 import { useAuthStore } from '@/stores/auth.store';
 import { useLocale } from '@/contexts/LocaleContext';
 import {
@@ -36,6 +39,7 @@ import {
 } from '@/lib/analytics/game-events';
 
 import type { AuthPanelMode } from './welcome.types';
+import type { AuthNoticeVariant } from './WelcomeAuthNoticeModal';
 import { authErrorMessage } from './welcome.helpers';
 import {
   validateLogin,
@@ -48,10 +52,20 @@ import {
   type AuthFieldErrors,
 } from '@/lib/auth/validation';
 
+type PendingRestoreAction =
+  | { kind: 'email'; email: string; password: string }
+  | { kind: 'phone'; phone: string; token: string }
+  | { kind: 'social-token'; provider: 'google'; idToken: string; nonce?: string };
+type SocialProvider = 'google' | 'facebook';
+
 export function useWelcomeAuthController() {
   const { t, locale } = useLocale();
   const bootstrap = useAuthStore((state) => state.bootstrap);
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? '';
+  const inAppBrowserApp = useMemo(() => getInAppBrowserApp(), []);
+  const authInAppBrowser = inAppBrowserApp !== null;
+  const allowInstagramGoogleIdentity = inAppBrowserApp === 'instagram';
+  const disableGoogleIdentityOverlay = authInAppBrowser && !allowInstagramGoogleIdentity;
 
   const [loginOpen, setLoginOpen] = useState(false);
   const [showOpenInBrowser, setShowOpenInBrowser] = useState(false);
@@ -63,9 +77,20 @@ export function useWelcomeAuthController() {
   const [authOtp, setAuthOtp] = useState('');
   const [authSubmitting, setAuthSubmitting] = useState(false);
   const [authNotice, setAuthNotice] = useState<string | null>(null);
+  // Centered post-signup confirmation modal (check-email vs already-registered).
+  const [authNoticeModal, setAuthNoticeModal] = useState<AuthNoticeVariant | null>(null);
+  const [pendingRestoreAction, setPendingRestoreAction] = useState<PendingRestoreAction | null>(null);
+  const [restoreSubmitting, setRestoreSubmitting] = useState(false);
+  const [restoreError, setRestoreError] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [authFieldErrors, setAuthFieldErrors] = useState<AuthFieldErrors>({});
   const [phoneOtpSent, setPhoneOtpSent] = useState(false);
+  // Which social provider is mid-sign-in, so the button shows a spinner +
+  // disables immediately on press (the GIS token exchange / GIS-wait / OAuth
+  // redirect are all async with otherwise no feedback).
+  const [socialSubmitting, setSocialSubmitting] = useState<'google' | 'facebook' | null>(null);
+  const googleCredentialInFlightRef = useRef(false);
+  const inAppBrowserTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [showAdvancedAuth, setShowAdvancedAuth] = useState(false);
 
@@ -76,26 +101,45 @@ export function useWelcomeAuthController() {
   const [forgotSent, setForgotSent] = useState(false);
   const [forgotError, setForgotError] = useState<string | null>(null);
 
-  // Tracks the 1.5s timer that reveals the in-app-browser instructions panel.
-  // Held in a ref so we can cancel it when the user closes the dialog or the
-  // component unmounts — otherwise the panel can flash open after dismissal.
-  const inAppBrowserTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Cancel the pending in-app-browser instructions timer on unmount so it
-  // can't fire setState against a torn-down component.
   useEffect(() => {
     return () => {
       if (inAppBrowserTimerRef.current !== null) {
         clearTimeout(inAppBrowserTimerRef.current);
-        inAppBrowserTimerRef.current = null;
       }
     };
   }, []);
+
+  const clearInAppBrowserTimer = useCallback(() => {
+    if (inAppBrowserTimerRef.current !== null) {
+      clearTimeout(inAppBrowserTimerRef.current);
+      inAppBrowserTimerRef.current = null;
+    }
+  }, []);
+
+  const openInBrowserFallback = useCallback(() => {
+    if (typeof window === 'undefined') return false;
+    tryOpenInExternalBrowser(window.location.href);
+    clearInAppBrowserTimer();
+    inAppBrowserTimerRef.current = setTimeout(() => {
+      inAppBrowserTimerRef.current = null;
+      if (typeof document !== 'undefined' && !document.hidden) {
+        setShowOpenInBrowser(true);
+      }
+    }, 1500);
+    return true;
+  }, [clearInAppBrowserTimer]);
+
+  const tryInAppBrowserBounce = useCallback((provider: SocialProvider) => {
+    if (!authInAppBrowser) return false;
+    if (provider === 'google' && allowInstagramGoogleIdentity) return false;
+    return openInBrowserFallback();
+  }, [allowInstagramGoogleIdentity, authInAppBrowser, openInBrowserFallback]);
 
   const resetAuthFeedback = useCallback(() => {
     setAuthError(null);
     setAuthNotice(null);
     setAuthFieldErrors({});
+    setRestoreError(null);
   }, []);
 
   const resetAuthForm = useCallback(() => {
@@ -109,6 +153,9 @@ export function useWelcomeAuthController() {
     setForgotSent(false);
     setForgotError(null);
     setForgotSubmitting(false);
+    setPendingRestoreAction(null);
+    setRestoreSubmitting(false);
+    setRestoreError(null);
   }, [resetAuthFeedback]);
 
   // Switching tabs uses resetAuthForm (keeps the panel open); only closing the
@@ -129,25 +176,19 @@ export function useWelcomeAuthController() {
       setLoginOpen(open);
       if (!open) {
         setShowOpenInBrowser(false);
+        clearInAppBrowserTimer();
         resetAuthDialog();
-        if (inAppBrowserTimerRef.current !== null) {
-          clearTimeout(inAppBrowserTimerRef.current);
-          inAppBrowserTimerRef.current = null;
-        }
       }
     },
-    [resetAuthDialog],
+    [clearInAppBrowserTimer, resetAuthDialog],
   );
 
   const handleCloseLoginDialog = useCallback(() => {
     setLoginOpen(false);
     setShowOpenInBrowser(false);
+    clearInAppBrowserTimer();
     resetAuthDialog();
-    if (inAppBrowserTimerRef.current !== null) {
-      clearTimeout(inAppBrowserTimerRef.current);
-      inAppBrowserTimerRef.current = null;
-    }
-  }, [resetAuthDialog]);
+  }, [clearInAppBrowserTimer, resetAuthDialog]);
 
   const handleAuthModeChange = useCallback(
     (mode: AuthPanelMode) => {
@@ -157,71 +198,104 @@ export function useWelcomeAuthController() {
     [resetAuthForm],
   );
 
-  const handleGoogleLogin = useCallback(async () => {
-    trackSignupStarted('google');
-
-    // In-app browsers (Messenger, Instagram, etc.) — Google blocks OAuth in
-    // these webviews. Fire the bounce URL silently; only show the manual
-    // instructions panel if we're still here after ~1.5s (OS ignored it).
-    if (isInAppBrowser()) {
-      tryOpenInExternalBrowser(window.location.href);
-      if (inAppBrowserTimerRef.current !== null) {
-        clearTimeout(inAppBrowserTimerRef.current);
-      }
-      inAppBrowserTimerRef.current = setTimeout(() => {
-        inAppBrowserTimerRef.current = null;
-        if (typeof document !== 'undefined' && !document.hidden) {
-          setShowOpenInBrowser(true);
+  // Exchange a Google id_token (from the overlaid GIS button — the path that
+  // works inside in-app browsers like Instagram) for a session. The classic
+  // redirect is only a last-ditch fallback in handleGoogleLogin below.
+  const handleGoogleCredential = useCallback(
+    async (credential: GoogleCredential) => {
+      if (tryInAppBrowserBounce('google')) return;
+      if (googleCredentialInFlightRef.current) return;
+      googleCredentialInFlightRef.current = true;
+      trackSignupStarted('google');
+      setSocialSubmitting('google');
+      try {
+        await socialLoginWithIdToken('google', credential.idToken, credential.nonce);
+        await bootstrap({ force: true });
+        setLoginOpen(false);
+      } catch (error) {
+        if (isPendingDeletionAuthError(error)) {
+          setPendingRestoreAction({
+            kind: 'social-token',
+            provider: 'google',
+            idToken: credential.idToken,
+            nonce: credential.nonce,
+          });
+          setAuthNoticeModal('pending-deletion');
+          setLoginOpen(true);
+          return;
         }
-      }, 1500);
-      return;
-    }
+        console.error('Google credential sign-in failed', error);
+        setAuthError(t('welcome.loginError'));
+      } finally {
+        googleCredentialInFlightRef.current = false;
+        setSocialSubmitting(null);
+      }
+    },
+    [bootstrap, t, tryInAppBrowserBounce],
+  );
+
+  // Fallback for when the overlaid GIS button never rendered (GIS unavailable
+  // in a locked-down webview): try One Tap, then the classic redirect.
+  const handleGoogleLogin = useCallback(async () => {
+    if (socialSubmitting) return;
+    trackSignupStarted('google');
+    if (tryInAppBrowserBounce('google')) return;
+    setSocialSubmitting('google');
 
     if (googleClientId) {
+      let googleIdentity: { idToken: string; nonce?: string } | null = null;
       try {
-        const { idToken, nonce } = await signInWithGoogleIdentity(googleClientId);
-        await socialLoginWithIdToken('google', idToken, nonce);
+        googleIdentity = await signInWithGoogleIdentity(googleClientId);
+        await socialLoginWithIdToken('google', googleIdentity.idToken, googleIdentity.nonce);
         await bootstrap({ force: true });
         return;
       } catch (gisError) {
-        console.warn('GIS sign-in unavailable, falling back to redirect', gisError);
+        if (googleIdentity && isPendingDeletionAuthError(gisError)) {
+          setPendingRestoreAction({
+            kind: 'social-token',
+            provider: 'google',
+            idToken: googleIdentity.idToken,
+            nonce: googleIdentity.nonce,
+          });
+          setAuthNoticeModal('pending-deletion');
+          setLoginOpen(true);
+          setSocialSubmitting(null);
+          return;
+        }
+        console.warn('GIS sign-in unavailable', gisError);
+        if (authInAppBrowser) {
+          setSocialSubmitting(null);
+          openInBrowserFallback();
+          return;
+        }
       }
     }
 
     try {
+      // Navigates away (window.location); the spinner stays until the page unloads.
       const redirectTo = `${window.location.origin}/auth/callback`;
       await socialLogin('google', redirectTo);
     } catch (error) {
       console.error('Google login failed', error);
+      setSocialSubmitting(null);
     }
-  }, [bootstrap, googleClientId]);
+  }, [authInAppBrowser, bootstrap, googleClientId, openInBrowserFallback, socialSubmitting, tryInAppBrowserBounce]);
 
   const handleFacebookLogin = useCallback(async () => {
+    if (socialSubmitting) return;
     trackSignupStarted('facebook');
-
-    // Same in-app-browser guard as Google: Facebook also blocks OAuth inside
-    // Messenger/Instagram webviews, so bounce to the external browser.
-    if (isInAppBrowser()) {
-      tryOpenInExternalBrowser(window.location.href);
-      if (inAppBrowserTimerRef.current !== null) {
-        clearTimeout(inAppBrowserTimerRef.current);
-      }
-      inAppBrowserTimerRef.current = setTimeout(() => {
-        inAppBrowserTimerRef.current = null;
-        if (typeof document !== 'undefined' && !document.hidden) {
-          setShowOpenInBrowser(true);
-        }
-      }, 1500);
-      return;
-    }
+    if (tryInAppBrowserBounce('facebook')) return;
+    setSocialSubmitting('facebook');
 
     try {
+      // Navigates away (window.location); the spinner stays until the page unloads.
       const redirectTo = `${window.location.origin}/auth/callback`;
       await socialLogin('facebook', redirectTo);
     } catch (error) {
       console.error('Facebook login failed', error);
+      setSocialSubmitting(null);
     }
-  }, []);
+  }, [socialSubmitting, tryInAppBrowserBounce]);
 
   const handleEmailAuth = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
@@ -250,8 +324,15 @@ export function useWelcomeAuthController() {
             locale,
           });
           if (!result.tokensSet) {
-            // Neutral confirmation when Supabase requires email confirmation.
-            setAuthNotice(t('welcome.checkEmail'));
+            // Centered modal instead of the easy-to-miss inline notice.
+            // `alreadyRegistered` distinguishes "email already has an account"
+            // (no email sent) from a genuine new signup awaiting confirmation.
+            if (result.pendingDeletion) {
+              setPendingRestoreAction({ kind: 'email', email: authEmail, password: authPassword });
+              setAuthNoticeModal('pending-deletion');
+            } else {
+              setAuthNoticeModal(result.alreadyRegistered ? 'already-registered' : 'check-email');
+            }
             setAuthMode('signin');
             setAuthPassword('');
             setAuthConfirmPassword('');
@@ -260,7 +341,16 @@ export function useWelcomeAuthController() {
           }
           trackSignupCompleted('email');
         } else {
-          await login(authEmail, authPassword);
+          try {
+            await login(authEmail, authPassword);
+          } catch (error) {
+            if (isPendingDeletionAuthError(error)) {
+              setPendingRestoreAction({ kind: 'email', email: authEmail, password: authPassword });
+              setAuthNoticeModal('pending-deletion');
+              return;
+            }
+            throw error;
+          }
           trackLoginCompleted('email');
         }
 
@@ -282,6 +372,65 @@ export function useWelcomeAuthController() {
     },
     [authConfirmPassword, authEmail, authMode, authPassword, bootstrap, locale, resetAuthFeedback, resetAuthForm, t],
   );
+
+  const handleCloseAuthNoticeModal = useCallback(() => {
+    setAuthNoticeModal(null);
+    setPendingRestoreAction(null);
+    setRestoreSubmitting(false);
+    setRestoreError(null);
+  }, []);
+
+  // From the "already registered" modal: dismiss it and land the user on the
+  // sign-in tab (dialog stays open) so they can log in right away.
+  const handleNoticeModalGoToSignIn = useCallback(() => {
+    setAuthNoticeModal(null);
+    setPendingRestoreAction(null);
+    setRestoreSubmitting(false);
+    setRestoreError(null);
+    setAuthMode('signin');
+    setShowAdvancedAuth(true);
+    setLoginOpen(true);
+  }, []);
+
+  const handleRestorePendingDeletion = useCallback(async () => {
+    if (!pendingRestoreAction || restoreSubmitting) {
+      return;
+    }
+
+    setRestoreSubmitting(true);
+    setRestoreError(null);
+    try {
+      if (pendingRestoreAction.kind === 'email') {
+        await restorePendingDeletionWithLogin(pendingRestoreAction.email, pendingRestoreAction.password);
+        trackLoginCompleted('email');
+      } else if (pendingRestoreAction.kind === 'phone') {
+        // Re-verify with the OTP the user just entered (still valid), passing
+        // the restore flag — restorePendingDeletionWithToken() sent no identity
+        // material, so the phone restore would otherwise fail.
+        await verifyGeorgianPhoneOtp(pendingRestoreAction.phone, pendingRestoreAction.token, {
+          restorePendingDeletion: true,
+        });
+        trackLoginCompleted('phone');
+      } else {
+        await socialLoginWithIdToken(
+          pendingRestoreAction.provider,
+          pendingRestoreAction.idToken,
+          pendingRestoreAction.nonce,
+          { restorePendingDeletion: true },
+        );
+        trackLoginCompleted(pendingRestoreAction.provider);
+      }
+
+      await bootstrap({ force: true });
+      setAuthNoticeModal(null);
+      setPendingRestoreAction(null);
+      setLoginOpen(false);
+      resetAuthForm();
+    } catch (error) {
+      setRestoreError(authErrorMessage(error, t('welcome.restoreAccountFailed')));
+      setRestoreSubmitting(false);
+    }
+  }, [bootstrap, pendingRestoreAction, resetAuthForm, restoreSubmitting, t]);
 
   const handleShowForgot = useCallback(() => {
     resetAuthFeedback();
@@ -343,10 +492,22 @@ export function useWelcomeAuthController() {
           setAuthPhone(normalizedPhone);
           setPhoneOtpSent(true);
           setAuthNotice(t('welcome.phoneCodeSent'));
+          toast.success(t('welcome.phoneCodeSentTitle'), {
+            description: t('welcome.phoneCodeSent'),
+          });
           return;
         }
 
-        await verifyGeorgianPhoneOtp(normalizedPhone, authOtp);
+        try {
+          await verifyGeorgianPhoneOtp(normalizedPhone, authOtp);
+        } catch (error) {
+          if (isPendingDeletionAuthError(error)) {
+            setPendingRestoreAction({ kind: 'phone', phone: normalizedPhone, token: authOtp });
+            setAuthNoticeModal('pending-deletion');
+            return;
+          }
+          throw error;
+        }
         trackLoginCompleted('phone');
         await bootstrap({ force: true });
         setLoginOpen(false);
@@ -379,6 +540,11 @@ export function useWelcomeAuthController() {
     handleCloseLoginDialog,
     handleKickOff,
 
+    // Google client id + credential handler for the overlaid GIS button
+    googleClientId,
+    handleGoogleCredential,
+    disableGoogleIdentityOverlay,
+
     // Auth panel mode + form fields
     authMode,
     handleAuthModeChange,
@@ -396,9 +562,16 @@ export function useWelcomeAuthController() {
     // Submit state + feedback
     authSubmitting,
     authNotice,
+    authNoticeModal,
+    handleCloseAuthNoticeModal,
+    handleNoticeModalGoToSignIn,
+    handleRestorePendingDeletion,
+    restoreSubmitting,
+    restoreError,
     authError,
     authFieldErrors,
     phoneOtpSent,
+    socialSubmitting,
 
     // "More sign-in options" disclosure
     showAdvancedAuth,

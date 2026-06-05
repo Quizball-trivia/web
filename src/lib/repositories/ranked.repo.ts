@@ -1,4 +1,6 @@
-import { api, ApiError } from "@/lib/api/api";
+import { ApiError } from "@/lib/api/api";
+import { apiFetch } from "@/lib/api/client";
+import { refreshSession } from "@/lib/auth/auth.service";
 import { API_BASE_URL } from "@/lib/config";
 import { getAccessToken } from "@/lib/auth/tokenStorage";
 import type { paths } from "@/types/api.generated";
@@ -8,7 +10,7 @@ export type RankedProfileResponse =
   paths["/api/v1/ranked/profile"]["get"]["responses"]["200"]["content"]["application/json"];
 
 export async function getRankedProfile() {
-  return api.GET("/api/v1/ranked/profile");
+  return apiFetch("get", "/api/v1/ranked/profile");
 }
 
 interface UserRankResponse {
@@ -16,7 +18,7 @@ interface UserRankResponse {
   total: number;
 }
 
-async function fetchUserRank(scope: "global" | "country"): Promise<RankPosition | null> {
+async function requestUserRank(scope: "global" | "country"): Promise<RankPosition | null> {
   const token = getAccessToken();
   const res = await fetch(`${API_BASE_URL}/api/v1/ranked/leaderboard/me?scope=${scope}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -28,6 +30,20 @@ async function fetchUserRank(scope: "global" | "country"): Promise<RankPosition 
   }
   const body: UserRankResponse | null = await res.json();
   return body ? { rank: body.rank, total: body.total } : null;
+}
+
+async function fetchUserRank(scope: "global" | "country"): Promise<RankPosition | null> {
+  try {
+    return await requestUserRank(scope);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      const refreshed = await refreshSession();
+      if (refreshed.ok) {
+        return requestUserRank(scope);
+      }
+    }
+    throw error;
+  }
 }
 
 export async function getUserRanks(): Promise<{

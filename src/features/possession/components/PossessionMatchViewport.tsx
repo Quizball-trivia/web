@@ -2,6 +2,7 @@
 
 import { type ComponentProps, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
 import { GoalCelebrationOverlay } from './GoalCelebrationOverlay';
 import { GoalProgressBar } from './GoalProgressBar';
@@ -47,6 +48,7 @@ export interface PossessionViewportModel {
 interface PossessionMatchViewportProps {
   model: PossessionViewportModel;
   children?: ReactNode;
+  onPenaltySplashComplete?: (localQuestionIndex: number | null) => void;
 }
 
 function usePitchBallMetrics(orientation: 'portrait' | 'landscape', pitchProps: PitchProps) {
@@ -92,7 +94,13 @@ function usePitchBallMetrics(orientation: 'portrait' | 'landscape', pitchProps: 
   return { containerRef, ballSizePx, ballCenterPx };
 }
 
-function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
+function PenaltySplash({
+  model,
+  onComplete,
+}: {
+  model: PenaltySplashModel | null;
+  onComplete?: (localQuestionIndex: number | null) => void;
+}) {
   const { t } = useLocale();
   if (!model?.visible) return null;
 
@@ -112,6 +120,9 @@ function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
         times: [0, 0.12, 0.25, 0.82, 1],
         ease: [0.22, 1, 0.36, 1],
       }}
+      onAnimationComplete={() => {
+        onComplete?.(localQuestionIndex);
+      }}
       className="absolute inset-x-0 top-[35%] z-30 flex pointer-events-none flex-col items-center"
     >
       {result === 'goal' ? (
@@ -122,15 +133,21 @@ function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
         />
       ) : (
         <div
-          className="font-fun text-5xl font-black uppercase tracking-wider text-brand-red-soft"
+          className="text-5xl font-black uppercase tracking-wider text-brand-red-soft"
+          // family-only to preserve font-black / tracking
           style={{
+            fontFamily: "'Poppins', sans-serif",
             textShadow: '0 0 30px rgba(255,75,75,0.5), 0 4px 0 rgba(200,40,40,0.8)',
           }}
         >
           {t('possession.savedExclaim')}
         </div>
       )}
-      <div className="mt-1 text-sm font-bold font-fun uppercase tracking-widest text-white/60">
+      <div
+        className="mt-1 text-sm font-bold uppercase tracking-widest text-white/60"
+        // family-only to preserve font-bold / tracking
+        style={{ fontFamily: "'Poppins', sans-serif" }}
+      >
         {result === 'goal'
           ? (resultShooterIsMe ? t('possession.youScored') : t('possession.opponentScored'))
           : (resultShooterIsMe ? t('possession.keeperSavesIt') : t('possession.youSavedIt'))}
@@ -139,7 +156,8 @@ function PenaltySplash({ model }: { model: PenaltySplashModel | null }) {
   );
 }
 
-export function PossessionMatchViewport({ model, children }: PossessionMatchViewportProps) {
+export function PossessionMatchViewport({ model, children, onPenaltySplashComplete }: PossessionMatchViewportProps) {
+  const { t } = useLocale();
   const { showMainUI, hud, pitchProps, goalCelebration, penaltySplash, muted, autoScrollKey } = model;
   const celebrationOwnsBall = Boolean(goalCelebration);
   const {
@@ -168,7 +186,9 @@ export function PossessionMatchViewport({ model, children }: PossessionMatchView
       {showMainUI && (
         <div className="hidden lg:flex lg:w-[42%] lg:items-center lg:gap-3 lg:py-4 relative">
           <div className="h-full max-h-[calc(100dvh-2rem)] py-6">
-            <GoalProgressBar position={pitchProps.playerPosition} orientation="vertical" />
+            {hud.kind !== 'penalty' && (
+              <GoalProgressBar position={pitchProps.playerPosition} orientation="vertical" mirrored={pitchProps.mirrored} />
+            )}
           </div>
           <div ref={desktopPitchRef} className="relative h-full w-full max-h-[calc(100dvh-2rem)]">
             <PitchVisualization {...pitchProps} orientation="portrait" hideBall={celebrationOwnsBall} />
@@ -185,7 +205,7 @@ export function PossessionMatchViewport({ model, children }: PossessionMatchView
             </AnimatePresence>
           </div>
           <AnimatePresence>
-            <PenaltySplash model={penaltySplash} />
+            <PenaltySplash model={penaltySplash} onComplete={onPenaltySplashComplete} />
           </AnimatePresence>
         </div>
       )}
@@ -215,17 +235,44 @@ export function PossessionMatchViewport({ model, children }: PossessionMatchView
                 )}
               </AnimatePresence>
               <AnimatePresence>
-                <PenaltySplash model={penaltySplash} />
+                <PenaltySplash model={penaltySplash} onComplete={onPenaltySplashComplete} />
               </AnimatePresence>
             </div>
 
-            <div className="lg:hidden">
-              <GoalProgressBar position={pitchProps.playerPosition} orientation="horizontal" />
-            </div>
+            {hud.kind !== 'penalty' && (
+              <div className="lg:hidden">
+                <GoalProgressBar position={pitchProps.playerPosition} orientation="horizontal" mirrored={pitchProps.mirrored} />
+              </div>
+            )}
+
+            {/* Penalty: in place of the (hidden) possession meter, show who is
+                shooting vs in goal this round, so it's obvious at a glance.
+                Shown on mobile and web. */}
+            {hud.kind === 'penalty' && (
+              <div className="flex justify-center py-1.5">
+                <div
+                  className="rounded-full bg-brand-orange/15 px-4 py-1 text-xs font-black uppercase tracking-[0.18em] text-brand-orange"
+                  style={{ fontFamily: "'Poppins', sans-serif" }}
+                >
+                  {hud.props.isPlayerShooter ? t('possession.youShoot') : t('possession.youSave')}
+                </div>
+              </div>
+            )}
           </>
         )}
 
-        {children}
+        {/* During the goal celebration, blur + dim and disable the question
+            area below so users don't mistake the just-answered question for the
+            next one and start reading/answering early. Reverts when the
+            celebration ends and the next round loads. */}
+        <div
+          className={cn(
+            'transition-[filter,opacity] duration-300',
+            celebrationOwnsBall && 'pointer-events-none blur-[6px] opacity-50',
+          )}
+        >
+          {children}
+        </div>
       </div>
     </>
   );

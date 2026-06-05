@@ -1,39 +1,47 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState, type MouseEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, RotateCcw } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { useDailyChallenges, useResetDailyChallengeDev } from "@/lib/queries/dailyChallenges.queries";
 import { queryKeys } from "@/lib/queries/queryKeys";
-import type { DailyChallengeSummary } from "@/lib/domain/dailyChallenge";
+import type { DailyChallengeSummary, DailyChallengeType } from "@/lib/domain/dailyChallenge";
 import { useAuthStore } from "@/stores/auth.store";
 import { useQueryClient } from "@tanstack/react-query";
+import { useLocale } from "@/contexts/LocaleContext";
+import { prefetchDailyChallengeSession } from "@/features/daily/dailyChallengeSessionPrefetch";
 
-function getTimeUntilUtcReset() {
-  const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
-  tomorrow.setUTCHours(0, 0, 0, 0);
-  const remainingMs = tomorrow.getTime() - now.getTime();
-  const hours = Math.floor(remainingMs / (1000 * 60 * 60));
-  const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-  return `${hours}h ${minutes}m`;
+// Challenges reset at 00:00 UTC. Show that moment as a wall-clock time in the
+// viewer's own timezone (auto-detected by Intl) so a Georgia user sees 04:00
+// and an EST user sees 7:00 PM — no confusing "UTC" label. Georgian uses 24h
+// (EU/Georgia convention, e.g. 04:00 / 20:00); English keeps 12h AM/PM.
+function getLocalResetTime(locale: string) {
+  const reset = new Date();
+  reset.setUTCHours(24, 0, 0, 0); // next 00:00 UTC
+  return new Intl.DateTimeFormat(locale === "ka" ? "ka-GE" : "en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: locale === "ka" ? "h23" : "h12",
+  }).format(reset);
 }
 
 function ChallengeCard({
   challenge,
   index,
   onClick,
+  onPrefetch,
   showDevReset,
 }: {
   challenge: DailyChallengeSummary;
   index: number;
   onClick: () => void;
+  onPrefetch: () => void;
   showDevReset: boolean;
 }) {
+  const { t } = useLocale();
   const queryClient = useQueryClient();
   const resetMutation = useResetDailyChallengeDev(challenge.challengeType);
   const disabled = !challenge.availableToday;
@@ -45,9 +53,9 @@ function ChallengeCard({
     try {
       await resetMutation.mutateAsync();
       await queryClient.invalidateQueries({ queryKey: queryKeys.dailyChallenges.all });
-      toast.success(`${challenge.title} reset for today`);
+      toast.success(t('dailyGames.hubResetSuccess', { title: challenge.title }));
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to reset daily challenge";
+      const message = error instanceof Error ? error.message : t('dailyGames.hubResetError');
       toast.error(message);
     }
   };
@@ -57,47 +65,62 @@ function ChallengeCard({
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: 0.05 + index * 0.04, ease: "easeOut" }}
-      className="relative"
+      className="relative flex h-full"
     >
       <button
         type="button"
         disabled={disabled}
         onClick={onClick}
-        className={`relative flex h-[184px] w-full flex-col overflow-hidden rounded-[8px] p-3.5 pb-10 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow md:flex md:h-[252px] md:flex-col md:rounded-[20px] md:p-6 ${
+        onPointerDown={disabled ? undefined : onPrefetch}
+        className={`relative flex min-h-[184px] w-full flex-col overflow-hidden rounded-[8px] p-3.5 pb-3.5 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow md:flex md:min-h-[268px] md:flex-col md:rounded-[20px] md:p-6 ${
           isCompleted
-            ? "bg-brand-yellow text-black opacity-65 saturate-[0.85] disabled:cursor-default md:border-2 md:border-brand-green-light md:bg-brand-green-darkest md:text-white md:shadow-[0_0_0_4px_hsl(var(--brand-green-light)/0.16)]"
-            : "bg-brand-yellow text-black hover:brightness-105 active:translate-y-[2px]"
+            ? "border-2 border-brand-green-light bg-brand-green-darkest text-white shadow-[0_0_0_3px_hsl(var(--brand-green-light)/0.16)] disabled:cursor-default md:border-2 md:shadow-[0_0_0_4px_hsl(var(--brand-green-light)/0.16)]"
+            : "bg-brand-yellow text-black pb-10 hover:brightness-105 active:translate-y-[2px] md:pb-6"
         }`}
       >
         {isCompleted ? (
-          <div className="absolute left-3 top-3 hidden items-center gap-1.5 rounded-full bg-brand-green-light px-3 py-1 text-[11px] font-black uppercase tracking-wide text-white md:inline-flex">
-            <CheckCircle2 className="size-3.5" />
-            Completed
+          <div className="absolute left-2.5 top-2.5 inline-flex items-center gap-1.5 rounded-full bg-brand-green-light p-1 text-[11px] font-black uppercase tracking-wide text-white md:left-3 md:top-3 md:px-3 md:py-1">
+            {/* Mobile: just the check icon so it can't overlap the centered
+                title. md+: full "COMPLETED" label (room to spare). */}
+            <CheckCircle2 className="size-3 md:size-3.5" />
+            <span className="hidden md:inline">{t('dailyGames.hubCompleted')}</span>
           </div>
         ) : null}
 
-        <h3 className={`font-poppins min-h-[31px] pr-7 text-center text-[16px] uppercase leading-[0.95] md:min-h-0 md:pr-0 md:text-[28px] md:mt-2 ${isCompleted ? "text-black md:mt-8 md:text-white" : "text-black"}`}>
+        {/* Reserve 2 title lines (min-h) and TOP-align so a 1-line and a 2-line
+            title share the same top baseline across cards in a row, and the
+            description below them also starts at the same height. */}
+        <h3 className={`font-poppins flex min-h-[2.1rem] items-start justify-center px-7 text-center text-[16px] uppercase leading-[0.95] md:min-h-[3.5rem] md:px-0 md:text-[28px] md:mt-2 ${isCompleted ? "text-white md:mt-8" : "text-black"}`}>
           {challenge.title}
         </h3>
-        <p className={`mt-3 line-clamp-3 text-center text-[10px] font-bold leading-tight md:mt-5 md:line-clamp-3 md:flex-1 md:text-[18px] md:font-semibold md:leading-snug md:px-4 ${isCompleted ? "text-black/65 md:text-white/75" : "text-black/55"}`}>
+        {/* No line-clamp: the full description always shows and the card (min-h,
+            not fixed h) grows to fit it. mb keeps a gap above PLAY. */}
+        <p className={`mt-3 mb-4 text-center text-[10px] font-bold leading-tight md:mt-5 md:mb-6 md:text-[18px] md:font-semibold md:leading-snug md:px-4 ${isCompleted ? "text-white/75 md:text-white/80" : "text-black/80"}`}>
           {challenge.availableToday
             ? challenge.description
-            : "Completed today. Come back after the UTC reset."}
+            : t('dailyGames.hubUnavailable')}
         </p>
-        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 lg:hidden">
-          <span className="inline-flex h-6 items-center gap-1 rounded-full bg-white/70 px-2.5 text-[10px] font-black text-brand-gold-ink">
-            {challenge.coinReward}
-            <Image src="/assets/coin-1.png" alt="" width={16} height={16} className="size-4 object-contain" />
-          </span>
-          <span className="inline-flex h-6 items-center gap-1 rounded-full bg-brand-green-light px-2.5 text-[10px] font-black text-white">
-            {challenge.xpReward} XP
-          </span>
-        </div>
-        <div className="hidden justify-center md:flex md:mt-auto">
-          <span className={`font-poppins inline-flex h-[50px] min-w-[200px] items-center justify-center rounded-[20px] px-8 text-[24px] uppercase tracking-wide ${
+        {/* Mobile reward pills — only for an OPEN challenge. A completed card
+            drops these and shows the DONE button instead, matching the web. */}
+        {!isCompleted ? (
+          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 lg:hidden">
+            <span className="inline-flex h-6 items-center gap-1 rounded-full bg-white/70 px-2.5 text-[10px] font-black text-brand-gold-ink">
+              {challenge.coinReward}
+              <Image src="/assets/coin-1.png" alt="" width={16} height={16} className="size-4 object-contain" />
+            </span>
+            <span className="inline-flex h-6 items-center gap-1 rounded-full bg-brand-green-light px-2.5 text-[10px] font-black text-white">
+              {challenge.xpReward} XP
+            </span>
+          </div>
+        ) : null}
+        {/* PLAY / DONE pill. On mobile it's hidden for OPEN cards (those use the
+            reward pills above) but shown for COMPLETED cards so they get the same
+            DONE treatment as the web. On md+ it always shows. */}
+        <div className={`mt-auto justify-center ${isCompleted ? "flex" : "hidden md:flex"}`}>
+          <span className={`font-poppins inline-flex h-[34px] min-w-[120px] items-center justify-center rounded-[14px] px-5 text-[15px] uppercase tracking-wide md:h-[50px] md:min-w-[200px] md:rounded-[20px] md:px-8 md:text-[24px] ${
             isCompleted ? "bg-white text-brand-green-darkest" : "bg-black text-white"
           }`}>
-            {isCompleted ? "Done" : "Play"}
+            {isCompleted ? t('dailyGames.hubDone') : t('dailyGames.hubPlay')}
           </span>
         </div>
       </button>
@@ -110,7 +133,7 @@ function ChallengeCard({
           className="absolute right-1.5 top-1.5 inline-flex h-4 items-center gap-0.5 rounded-md bg-black/60 px-1.5 text-[7px] font-black uppercase tracking-wide text-white hover:bg-black/80 disabled:opacity-50 md:right-2 md:top-2 md:h-auto md:gap-1 md:rounded-lg md:px-2 md:py-1 md:text-[10px]"
         >
           <RotateCcw className="size-2.5 md:size-3" />
-          {resetMutation.isPending ? "…" : "Reset"}
+          {resetMutation.isPending ? "…" : t('dailyGames.hubResetButton')}
         </button>
       )}
     </motion.div>
@@ -118,18 +141,40 @@ function ChallengeCard({
 }
 
 export default function DailyChallengesPage() {
+  const { t, locale } = useLocale();
   const router = useRouter();
   const authUser = useAuthStore((state) => state.user);
   const { data: challenges = [], isLoading } = useDailyChallenges();
-  const [timeUntilReset, setTimeUntilReset] = useState(() => getTimeUntilUtcReset());
+  // Computed client-side only (depends on the browser's timezone), so it stays
+  // empty on the server and first paint to avoid a hydration mismatch.
+  const [localResetTime, setLocalResetTime] = useState("");
   const canUseDevReset = authUser?.role === "admin";
 
   useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      setTimeUntilReset(getTimeUntilUtcReset());
-    }, 60_000);
-    return () => window.clearInterval(intervalId);
-  }, []);
+    setLocalResetTime(getLocalResetTime(locale));
+  }, [locale]);
+
+  // Prefetch the page bundle for AVAILABLE challenges only (completed/locked
+  // ones can't be opened, so prefetching them is wasted). The session POST is
+  // what we overlap on tap-down.
+  useEffect(() => {
+    for (const challenge of challenges) {
+      if (!challenge.availableToday) continue;
+      router.prefetch(`/daily/challenges/${challenge.challengeType}`);
+    }
+  }, [challenges, router]);
+
+  // Start (or reuse) the session the moment the user presses a card — the POST
+  // round-trip then overlaps the navigation + intro, so the game's ready by the
+  // time the intro finishes. Available cards only; completed ones aren't tapped.
+  const handlePrefetchSession = useCallback(
+    (challengeType: DailyChallengeType) => {
+      void prefetchDailyChallengeSession(challengeType, locale, Date.now()).catch(() => {
+        // Swallow — the challenge page will surface and retry any real failure.
+      });
+    },
+    [locale],
+  );
 
   const completedCount = useMemo(
     () => challenges.filter((c) => c.completedToday).length,
@@ -159,39 +204,41 @@ export default function DailyChallengesPage() {
         {/* Header */}
         <div className="mb-5 flex items-start justify-between gap-4 md:mb-10">
           <div>
-            <h1 className="font-poppins text-[20px] uppercase leading-none text-white md:text-6xl">
-              Daily Challenges
+            <h1 className="font-poppins text-[20px] uppercase leading-[1.1] text-white md:text-[40px] md:leading-[1.1]">
+              {t('dailyGames.hubTitle')}
             </h1>
-            <p className="mt-1 text-[8px] font-black uppercase tracking-[0.14em] text-white/45 md:mt-2 md:text-sm md:tracking-[0.2em]">
-              UTC Reset in {timeUntilReset}
-            </p>
+            {localResetTime ? (
+              <p className="mt-1.5 text-[11px] font-black uppercase tracking-[0.04em] text-white/55 md:mt-2 md:text-sm md:tracking-[0.08em]">
+                {t('dailyGames.hubResetAt', { time: localResetTime })}
+              </p>
+            ) : null}
           </div>
 
-          <div className="flex items-start gap-3 md:gap-4">
-            <div className="hidden w-[250px] md:block">
-              <p className="inline-block whitespace-nowrap font-poppins text-sm md:text-[0.95rem] font-semibold uppercase leading-none tracking-[-0.02em] text-white">
-                Today&apos;s Progress
+          <div className="flex items-start gap-3 md:gap-8">
+            {/* Label, bar, and count are one left-aligned column whose width is
+                set by the (widest) label — so the bar and the count line up to
+                the label's edges in any locale (EN or the wider Georgian). */}
+            <div className="hidden md:flex md:flex-col md:items-start">
+              <p className="whitespace-nowrap font-poppins text-sm md:text-[0.95rem] font-semibold uppercase leading-none tracking-[-0.02em] text-white">
+                {t('dailyGames.hubTodaysProgress')}
               </p>
-              <div className="mt-3 h-[18px] w-[15ch] max-w-full overflow-hidden rounded-[5px] bg-brand-gold-fill-deep">
+              <div className="mt-3 h-[18px] w-full overflow-hidden rounded-[5px] bg-brand-gold-fill-deep">
                 <div
                   className="h-full rounded-[5px] bg-brand-yellow transition-all duration-500"
                   style={{ width: `${progressPct}%` }}
                 />
               </div>
-              <p className="mt-3 text-center font-poppins text-[18px] font-semibold leading-none text-white/55">
+              <p className="mt-3 self-end font-poppins text-[18px] font-semibold leading-none text-white/55">
                 {completedCount}/{challenges.length}
               </p>
             </div>
 
-            <div className="w-[96px] text-right md:w-[165px]">
-              <p className="font-poppins text-[8px] font-semibold uppercase leading-none tracking-[-0.02em] text-white md:text-[0.95rem]">
-                Coins Earned
+            <div className="w-[120px] text-right md:w-[200px]">
+              <p className="font-poppins text-[13px] font-semibold uppercase leading-tight tracking-[-0.02em] text-white md:whitespace-nowrap md:text-[0.95rem] md:leading-none">
+                {t('dailyGames.hubCoinsEarned')}
               </p>
-              <p className="font-poppins mt-1 text-[30px] font-semibold uppercase leading-none text-brand-yellow md:mt-2 md:text-[44px]">
-                {earnedCoins}
-              </p>
-              <p className="mt-0.5 font-poppins text-[10px] font-semibold uppercase leading-none text-white/45 md:mt-1 md:text-[16px]">
-                of {totalCoins}
+              <p className="font-poppins mt-1 text-[22px] font-semibold uppercase leading-none text-brand-yellow md:mt-2 md:text-[32px]">
+                {earnedCoins}/{totalCoins}
               </p>
             </div>
           </div>
@@ -200,7 +247,7 @@ export default function DailyChallengesPage() {
         {/* Grid of challenge cards */}
         {isLoading ? (
           <div className="rounded-[10px] bg-surface-card p-6 text-center text-brand-slate font-bold">
-            Loading today&apos;s challenge lineup...
+            {t('dailyGames.hubLoading')}
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-2.5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
@@ -210,6 +257,7 @@ export default function DailyChallengesPage() {
                 challenge={challenge}
                 index={index}
                 onClick={() => router.push(`/daily/challenges/${challenge.challengeType}`)}
+                onPrefetch={() => handlePrefetchSession(challenge.challengeType)}
                 showDevReset={canUseDevReset}
               />
             ))}
@@ -218,8 +266,8 @@ export default function DailyChallengesPage() {
 
         {!isLoading && challenges.length > 0 && (
           <div className="mt-4 flex flex-col items-center lg:hidden">
-            <p className="font-poppins text-[8px] font-black uppercase tracking-[0.12em] text-white">
-              Today&apos;s Progress
+            <p className="font-poppins text-[10px] font-black uppercase tracking-[0.04em] text-white">
+              {t('dailyGames.hubTodaysProgress')}
             </p>
             <div className="mt-2 h-[7px] w-[74px] overflow-hidden rounded-full bg-brand-gold-fill-deep">
               <div
@@ -227,7 +275,7 @@ export default function DailyChallengesPage() {
                 style={{ width: `${progressPct}%` }}
               />
             </div>
-            <p className="mt-2 font-poppins text-[9px] font-semibold leading-none text-white/55">
+            <p className="mt-2 font-poppins text-[12px] font-semibold leading-none text-white/55">
               {completedCount}/{challenges.length}
             </p>
           </div>
@@ -238,7 +286,7 @@ export default function DailyChallengesPage() {
           <div className="mt-8 hidden flex-wrap items-end gap-8 md:mt-10 md:flex">
             <div className="flex flex-col items-center">
               <p className="font-poppins text-xs uppercase tracking-wider text-white mb-2">
-                Play For
+                {t('dailyGames.hubPlayFor')}
               </p>
               <span className="inline-flex items-center gap-2 rounded-full bg-brand-yellow/15 px-4 py-1.5 text-sm font-black text-brand-yellow">
                 {totalPlayCost}
@@ -247,7 +295,7 @@ export default function DailyChallengesPage() {
             </div>
             <div className="flex flex-col items-center">
               <p className="font-poppins text-xs uppercase tracking-wider text-white mb-2">
-                Earn
+                {t('dailyGames.hubEarn')}
               </p>
               <span className="inline-flex items-center rounded-full bg-brand-green-light px-4 py-1.5 text-sm font-black text-white">
                 {totalXp} XP

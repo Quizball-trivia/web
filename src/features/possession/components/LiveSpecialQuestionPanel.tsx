@@ -23,6 +23,7 @@
  */
 import type { ReactNode } from 'react';
 import { useLocale } from '@/contexts/LocaleContext';
+import { MAX_PENALTY_ROUNDS } from '../types/possession.types';
 import { LiveCluesPanel } from './live-special/LiveCluesPanel';
 import { LiveCountdownPanel } from './live-special/LiveCountdownPanel';
 import { LivePutInOrderPanel } from './live-special/LivePutInOrderPanel';
@@ -37,6 +38,10 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
     matchId,
     qIndex,
     totalQuestions,
+    isPenaltyPhase = false,
+    penaltyDisplayRound,
+    penaltyDisplayTotal,
+    isPenaltySuddenDeath = false,
     question,
     showOptions,
     timeRemaining,
@@ -51,6 +56,14 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
   } = props;
 
   const displayQuestionNum = qIndex + 1;
+  const counterLabel = isPenaltyPhase
+    ? isPenaltySuddenDeath
+      ? t('possession.questionCounter', { current: 1, total: 1 })
+      : t('possession.penaltyRound', {
+        round: penaltyDisplayRound ?? 1,
+        max: penaltyDisplayTotal ?? MAX_PENALTY_ROUNDS,
+      })
+    : t('possession.questionCounter', { current: displayQuestionNum, total: totalQuestions });
   const displayTimer = Math.max(0, timeRemaining ?? 0);
   const timerLabel = displayTimer >= 10 ? `${displayTimer}` : `0${displayTimer}`;
 
@@ -119,7 +132,7 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
             className="font-poppins flex flex-1 items-center justify-center rounded-[16px] bg-brand-blue px-5 text-white h-[40px] sm:h-[52px] md:h-[62px] lg:h-[72px]"
             style={{ fontWeight: 600, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
           >
-            {t('possession.questionCounter', { current: displayQuestionNum, total: totalQuestions })}
+            {counterLabel}
           </div>
           <div
             className="font-poppins flex w-[64px] items-center justify-center rounded-[16px] bg-brand-blue text-white h-[40px] sm:h-[52px] sm:w-[92px] md:h-[62px] md:w-[116px] lg:h-[72px] lg:w-[136px] tabular-nums"

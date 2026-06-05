@@ -6,13 +6,13 @@ import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ModalCloseButton } from "@/components/shared/ModalCloseButton";
 import {
   Dialog,
   DialogContent,
@@ -93,6 +93,13 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const normalizedDeleteConfirmation = deleteConfirmation.trim().toLocaleUpperCase("en-US");
   const normalizedDeletionConfirmWord = deletionConfirmWord.trim().toLocaleUpperCase("en-US");
   const canConfirmDeletion = normalizedDeleteConfirmation === normalizedDeletionConfirmWord && !isDeletingAccount;
+  // Dismiss the delete-account dialog (the top-right X — replaces the old
+  // bottom "Cancel" button so this modal matches the app-wide close pattern).
+  const closeDeleteDialog = () => {
+    if (isDeletingAccount) return;
+    setDeleteDialogOpen(false);
+    setDeleteConfirmation("");
+  };
   const canUseDevReset = user?.role === "admin";
   const currentPhone = user?.phone_number ?? null;
   const canUseGeorgianPhoneAuth = phoneAuthAvailability.isAvailable;
@@ -193,6 +200,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
         }
         setPhoneStep("otp");
         setPhoneNotice(t("settings.phoneCodeSent", { phone: result.phone }));
+        toast.success(t("settings.phoneCodeSent", { phone: result.phone }));
         return;
       }
 
@@ -277,7 +285,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   };
 
   return (
-    <div className="container max-w-2xl mx-auto py-6 pb-20 animate-in fade-in duration-500">
+    <div className="container mx-auto max-w-2xl px-4 py-6 pb-20 animate-in fade-in duration-500 sm:px-5 xl:px-0">
       {/* Nav */}
       <div className="flex items-center gap-2 mb-6">
         <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full hover:bg-muted/50">
@@ -496,9 +504,16 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
           setPhoneDialogOpen(open);
         }}
       >
-        <DialogContent className="max-w-md rounded-[24px] border-0 bg-brand-blue p-8 sm:p-10">
+        <DialogContent className="max-w-md rounded-[24px] border-0 bg-brand-blue p-8 sm:p-10 [&>button:last-child]:hidden">
+          {/* Standardized red close button — matches every other modal. */}
+          <ModalCloseButton
+            onClose={() => {
+              if (isUpdatingPhone) return;
+              setPhoneDialogOpen(false);
+            }}
+          />
           <DialogHeader>
-            <DialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
+            <DialogTitle className="px-10 text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
               {t("settings.changePhoneTitle")}
             </DialogTitle>
             <DialogDescription className="mt-3 text-center font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-[14px]">
@@ -583,9 +598,16 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
           setPasswordDialogOpen(open);
         }}
       >
-        <DialogContent className="max-w-md rounded-[24px] border-0 bg-brand-blue p-8 sm:p-10">
+        <DialogContent className="max-w-md rounded-[24px] border-0 bg-brand-blue p-8 sm:p-10 [&>button:last-child]:hidden">
+          {/* Standardized red close button — matches every other modal. */}
+          <ModalCloseButton
+            onClose={() => {
+              if (isUpdatingPassword) return;
+              setPasswordDialogOpen(false);
+            }}
+          />
           <DialogHeader>
-            <DialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
+            <DialogTitle className="px-10 text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
               {t("settings.changePasswordTitle")}
             </DialogTitle>
             <DialogDescription className="mt-3 text-center font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-[14px]">
@@ -616,8 +638,9 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
         <AlertDialogContent
           className="max-w-md w-[92vw] rounded-[24px] border-0 bg-brand-blue p-8 font-poppins shadow-none sm:p-10"
         >
+          <ModalCloseButton onClose={closeDeleteDialog} />
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
+            <AlertDialogTitle className="px-10 text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
               {t("settings.deleteAccountTitle")}
             </AlertDialogTitle>
             <AlertDialogDescription className="mt-3 text-center font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-[14px]">
@@ -651,12 +674,6 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
             >
               {isDeletingAccount ? t("settings.deleteAccountDeleting") : t("settings.deleteAccount")}
             </AlertDialogAction>
-            <AlertDialogCancel
-              disabled={isDeletingAccount}
-              className="mt-0 w-full rounded-[16px] border-0 bg-white/15 px-3 py-3 font-poppins text-sm font-semibold uppercase tracking-wide text-white shadow-none hover:bg-white/25 hover:text-white focus-visible:ring-0"
-            >
-              {t("common.cancel")}
-            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

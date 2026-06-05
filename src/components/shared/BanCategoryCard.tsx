@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- Category artwork URLs come from realtime/backend payloads. */
 
-import { memo, useMemo, useState } from 'react';
+import { memo, useMemo } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -80,15 +80,8 @@ function BanCategoryCardComponent({
   const color = BAN_CARD_COLORS[colorIndex % BAN_CARD_COLORS.length];
   const imageUrl = category.imageUrl ?? null;
   const hasImage = Boolean(imageUrl);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  // Reset the fade-in state when the image source changes, the React-recommended
-  // "adjust state during render" way — avoids a setState-in-effect cascade.
-  const [loadedImageUrl, setLoadedImageUrl] = useState(imageUrl);
-  if (loadedImageUrl !== imageUrl) {
-    setLoadedImageUrl(imageUrl);
-    setImageLoaded(false);
-  }
   const interactive = !disabled && !isBanned && !!onClick;
+  // Staggered entrance so cards cascade in rather than popping all at once.
   const entranceTransition = useMemo(
     () => ({ ...CARD_SPRING, delay: 0.2 + animationIndex * 0.08 }),
     [animationIndex],
@@ -126,12 +119,13 @@ function BanCategoryCardComponent({
           <img
             src={imageUrl ?? ''}
             alt=""
+            width={400}
+            height={500}
             decoding="async"
             loading="eager"
-            onLoad={() => setImageLoaded(true)}
+            fetchPriority="high"
             className={cn(
-              'absolute inset-0 h-full w-full object-cover transition-[opacity,transform,filter] duration-300 ease-out sm:duration-500',
-              imageLoaded ? 'opacity-100' : 'opacity-0',
+              'absolute inset-0 h-full w-full object-cover transition-[transform,filter] duration-300 ease-out sm:duration-500',
               interactive && 'group-hover:scale-105',
               isBanned && 'grayscale'
             )}
@@ -195,12 +189,13 @@ function BanCategoryCardComponent({
         </motion.div>
       )}
 
-      {/* Banned stamp overlay — flat style to match the /play cards */}
+      {/* Banned stamp overlay — slams in when the card is banned. */}
       <AnimatePresence>
         {isBanned && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none"
           >
             <motion.div

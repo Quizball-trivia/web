@@ -1,17 +1,13 @@
 import type { User } from "@/lib/types";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
+import {
+  extractFriendInviteCodeFromPath,
+  normalizeFriendInviteCode,
+} from "@/lib/friend/inviteCode";
 import { isOnboardingComplete } from "./onboarding";
 
-const FRIEND_ROOM_PATH_RE = /^\/friend\/room\/([A-Za-z0-9_-]{3,16})\/?$/;
-
-function normalizeInviteCode(code: string): string | null {
-  const normalized = code.trim().toUpperCase();
-  if (!/^[A-Z0-9_-]{3,16}$/.test(normalized)) return null;
-  return normalized;
-}
-
 export function buildFriendInvitePath(code: string): string | null {
-  const normalized = normalizeInviteCode(code);
+  const normalized = normalizeFriendInviteCode(code);
   return normalized ? `/friend/room/${normalized}` : null;
 }
 
@@ -24,9 +20,8 @@ export function buildFriendInviteUrl(code: string, origin?: string): string | nu
 
 export function normalizePostAuthRedirect(pathname: string | null | undefined): string | null {
   if (!pathname) return null;
-  const match = FRIEND_ROOM_PATH_RE.exec(pathname);
-  if (!match) return null;
-  return buildFriendInvitePath(match[1]);
+  const code = extractFriendInviteCodeFromPath(pathname);
+  return code ? buildFriendInvitePath(code) : null;
 }
 
 export function rememberPostAuthRedirect(pathname: string | null | undefined): void {

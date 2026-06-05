@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Loader2, LogOut } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle2, Loader2, LogOut, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LobbyHeader } from "./LobbyHeader";
 import { LobbySettings } from "./LobbySettings";
@@ -20,12 +20,15 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
     members,
     lobbyCode,
     isResolvingInvite,
+    isPreparingMatch,
+    inviteJoinFailure,
     targetInviteCode,
     me,
     h2hSummary,
     allCategories,
     settingsErrorVersion,
     isStartingMatch,
+    isLeaving,
     optimisticReady,
     actions
   } = useFriendLobbyLogic({ roomCode, isHost });
@@ -36,7 +39,7 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
   const matchIsStarting = isStartingMatch || lobby?.status === "active";
 
   const settings = lobby?.settings;
-  const isCurrentHost = Boolean(me?.isHost) || isHost;
+  const isCurrentHost = Boolean(me?.isHost) || (isHost && roomCode.trim().toLowerCase() === "new");
   const allReady = members.length > 0 && members.every((member) => member.isReady);
   const isPartyMode = settings?.gameMode === "friendly_party_quiz" || members.length > 2;
   // Lobby capacity by mode: party quiz holds up to 6; classic + ranked sim are 1v1 (2).
@@ -72,6 +75,30 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
 
   const poppins = "'Poppins', sans-serif";
 
+  if (isPreparingMatch) {
+    return (
+      <div className="container mx-auto max-w-5xl px-3 py-6 animate-in fade-in lg:px-0">
+        <div className="flex min-h-[420px] flex-col items-center justify-center gap-5 rounded-[20px] border border-white/10 bg-white/[0.03] px-6 text-center">
+          <Loader2 className="size-9 animate-spin text-brand-yellow" />
+          <div className="space-y-2">
+            <h1
+              className="text-white uppercase"
+              style={{ fontFamily: poppins, fontWeight: 700, fontSize: 24, letterSpacing: '0.04em' }}
+            >
+              {t("friend.preparingMatchSpinner")}
+            </h1>
+            <p
+              className="text-white/55 uppercase"
+              style={{ fontFamily: poppins, fontWeight: 600, fontSize: 12, letterSpacing: '0.08em' }}
+            >
+              {t("friend.matchHandoffDescription")}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (isResolvingInvite) {
     const code = targetInviteCode ?? lobbyCode;
 
@@ -101,6 +128,56 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
             <LogOut className="size-4" />
             {t("friend.leaveLobby")}
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (inviteJoinFailure) {
+    const code = inviteJoinFailure.code || targetInviteCode || lobbyCode;
+
+    return (
+      <div className="container mx-auto max-w-5xl px-3 py-6 animate-in fade-in lg:px-0">
+        <div className="flex min-h-[420px] flex-col items-center justify-center gap-5 rounded-[20px] border border-brand-red/40 bg-brand-red/10 px-6 text-center">
+          <AlertCircle className="size-10 text-brand-red" />
+          <div className="max-w-md space-y-3">
+            <h1
+              className="text-white uppercase"
+              style={{ fontFamily: poppins, fontWeight: 700, fontSize: 24, letterSpacing: '0.04em' }}
+            >
+              {t("friend.inviteJoinFailedTitle")}
+            </h1>
+            <p
+              className="text-white/65"
+              style={{ fontFamily: poppins, fontWeight: 500, fontSize: 14, lineHeight: 1.45 }}
+            >
+              {t("friend.inviteJoinFailedDescription", { code })}
+            </p>
+            <p
+              className="text-white/45 uppercase"
+              style={{ fontFamily: poppins, fontWeight: 600, fontSize: 11, letterSpacing: '0.08em' }}
+            >
+              {inviteJoinFailure.message}
+            </p>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <button
+              onClick={actions.handleInviteRetry}
+              className="flex h-12 items-center justify-center gap-2 rounded-[16px] bg-brand-green px-5 text-white uppercase transition-all hover:bg-brand-green-deep active:scale-[0.98]"
+              style={{ fontFamily: poppins, fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
+            >
+              <RotateCcw className="size-4" />
+              {t("friend.retry")}
+            </button>
+            <button
+              onClick={actions.handleInviteBack}
+              className="flex h-12 items-center justify-center gap-2 rounded-[16px] bg-white/10 px-5 text-white uppercase transition-all hover:bg-white/15 active:scale-[0.98]"
+              style={{ fontFamily: poppins, fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
+            >
+              <ArrowLeft className="size-4" />
+              {t("friend.backToFriendHub")}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -223,12 +300,22 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
 
               <button
                 onClick={actions.handleLeaveLobby}
-                disabled={!lobby}
-                className="w-full h-12 rounded-[20px] bg-brand-red text-white uppercase transition-all hover:bg-brand-red/90 disabled:opacity-50 flex items-center justify-center gap-2 active:scale-[0.98]"
+                disabled={!lobby || isLeaving}
+                aria-busy={isLeaving}
+                className="w-full h-12 rounded-[20px] bg-brand-red text-white uppercase transition-all hover:bg-brand-red/90 disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-center gap-2 active:scale-[0.98]"
                 style={{ fontFamily: poppins, fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
               >
-                <LogOut className="size-4" />
-                {t("friend.leaveLobby")}
+                {isLeaving ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" />
+                    {t("friend.leavingLobby")}
+                  </>
+                ) : (
+                  <>
+                    <LogOut className="size-4" />
+                    {t("friend.leaveLobby")}
+                  </>
+                )}
               </button>
 
               <div className="py-1 text-center">

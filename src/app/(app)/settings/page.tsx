@@ -6,5 +6,5 @@ import { SettingsScreen } from "@/features/settings/SettingsScreen";
 export default function SettingsPage() {
   const router = useRouter();
 
-  return <SettingsScreen onBack={() => router.push("/")} />;
+  return <SettingsScreen onBack={() => router.push("/play")} />;
 }

@@ -11,12 +11,17 @@ import {
 
 const MATCH_ID = 'match-1';
 
-function makePlayer(pointsEarned: number, isCorrect: boolean): MatchRoundResultPlayer {
+function makePlayer(
+  pointsEarned: number,
+  isCorrect: boolean,
+  possessionPointsEarned = pointsEarned
+): MatchRoundResultPlayer {
   return {
     selectedIndex: null,
     isCorrect,
     timeMs: 3000,
     pointsEarned,
+    possessionPointsEarned,
     totalPoints: pointsEarned,
     submittedOrderIds: [],
   };
@@ -69,6 +74,23 @@ function makeRoundResult(
       possessionDelta: playerPoints - opponentPoints,
       goalScoredBySeat,
       penaltyOutcome: null,
+    },
+  };
+}
+
+function makePenaltyRoundResult(
+  playerPoints: number,
+  opponentPoints: number,
+  penaltyOutcome: 'goal' | 'saved'
+): MatchRoundResultPayload {
+  return {
+    ...makeRoundResult(playerPoints, opponentPoints),
+    phaseKind: 'penalty',
+    phaseRound: 3,
+    deltas: {
+      possessionDelta: 0,
+      goalScoredBySeat: null,
+      penaltyOutcome,
     },
   };
 }
@@ -359,6 +381,196 @@ describe('useBarBattle', () => {
       playerBars: 8,
       opponentBars: 3,
       remainingDelta: 5,
+    });
+  });
+
+  it('carries penalty save outcome into the charge animation state', async () => {
+    const myRound = makePlayer(50, true);
+    const opponentRound = makePlayer(0, false);
+    const roundResult = makePenaltyRoundResult(50, 0, 'saved');
+
+    const { result } = renderHook(() => useBarBattle({
+      answerAck: {
+        matchId: MATCH_ID,
+        qIndex: 5,
+        questionKind: 'multipleChoice',
+        selectedIndex: 0,
+        isCorrect: true,
+        myTotalPoints: 50,
+        oppAnswered: true,
+        pointsEarned: 50,
+        phaseKind: 'penalty',
+        phaseRound: 3,
+      },
+      opponentAnswered: true,
+      opponentRecentPoints: 0,
+      opponentAnsweredCorrectly: false,
+      roundResult,
+      myRound,
+      opponentRound,
+      phaseKind: 'penalty',
+      dividerX: 250,
+    }));
+
+    await act(async () => {});
+
+    act(() => {
+      vi.advanceTimersByTime(950);
+    });
+
+    expect(result.current).toMatchObject({
+      phase: 'charge',
+      penaltyOutcome: 'saved',
+      playerBars: 5,
+      remainingDelta: 5,
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(1300);
+    });
+
+    expect(result.current).toMatchObject({
+      phase: 'result',
+      penaltyOutcome: 'saved',
+      playerBars: 5,
+      remainingDelta: 5,
+    });
+  });
+
+  it('keeps zero-zero penalty resolution alive for score-flight targets', async () => {
+    const myRound = makePlayer(0, false);
+    const opponentRound = makePlayer(0, false);
+    const roundResult = makePenaltyRoundResult(0, 0, 'saved');
+
+    const { result } = renderHook(() => useBarBattle({
+      answerAck: {
+        matchId: MATCH_ID,
+        qIndex: 5,
+        questionKind: 'multipleChoice',
+        selectedIndex: 1,
+        isCorrect: false,
+        myTotalPoints: 0,
+        oppAnswered: true,
+        pointsEarned: 0,
+        phaseKind: 'penalty',
+        phaseRound: 3,
+      },
+      opponentAnswered: true,
+      opponentRecentPoints: 0,
+      opponentAnsweredCorrectly: false,
+      roundResult,
+      myRound,
+      opponentRound,
+      phaseKind: 'penalty',
+      dividerX: 250,
+    }));
+
+    await act(async () => {});
+
+    expect(result.current).toMatchObject({
+      phase: 'both-score',
+      playerPoints: 0,
+      opponentPoints: 0,
+      playerBars: 0,
+      opponentBars: 0,
+      remainingDelta: 0,
+      penaltyOutcome: 'saved',
+    });
+  });
+
+  it('uses boosted possession points for bar battle resolution while preserving base points', async () => {
+    const myRound = makePlayer(80, true);
+    const opponentRound = makePlayer(80, true, 160);
+    const roundResult = makeRoundResult(80, 80);
+    roundResult.players.opp = opponentRound;
+    roundResult.deltas = {
+      possessionDelta: -80,
+      goalScoredBySeat: null,
+      penaltyOutcome: null,
+      speedStreakBoostedSeat: 2,
+    };
+
+    const { result } = renderHook(() => useBarBattle({
+      answerAck: {
+        matchId: MATCH_ID,
+        qIndex: 5,
+        questionKind: 'multipleChoice',
+        selectedIndex: 0,
+        isCorrect: true,
+        myTotalPoints: 80,
+        oppAnswered: true,
+        pointsEarned: 80,
+        phaseKind: 'normal',
+        phaseRound: 6,
+      },
+      opponentAnswered: true,
+      opponentRecentPoints: 80,
+      opponentAnsweredCorrectly: true,
+      roundResult,
+      myRound,
+      opponentRound,
+      phaseKind: 'normal',
+      dividerX: 250,
+      mySeat: 1,
+    }));
+
+    await act(async () => {});
+
+    expect(result.current).toMatchObject({
+      phase: 'both-score',
+      playerPoints: 80,
+      opponentPoints: 160,
+      playerBars: 8,
+      opponentBars: 16,
+      remainingDelta: -8,
+    });
+  });
+
+  it('ignores stray possession points when no speed-streak boost fired', async () => {
+    const myRound = makePlayer(100, true);
+    const opponentRound = makePlayer(10, true, 20);
+    const roundResult = makeRoundResult(100, 10);
+    roundResult.players.opp = opponentRound;
+    roundResult.deltas = {
+      possessionDelta: 90,
+      goalScoredBySeat: null,
+      penaltyOutcome: null,
+      speedStreakBoostedSeat: null,
+    };
+
+    const { result } = renderHook(() => useBarBattle({
+      answerAck: {
+        matchId: MATCH_ID,
+        qIndex: 5,
+        questionKind: 'multipleChoice',
+        selectedIndex: 0,
+        isCorrect: true,
+        myTotalPoints: 100,
+        oppAnswered: true,
+        pointsEarned: 100,
+        phaseKind: 'normal',
+        phaseRound: 6,
+      },
+      opponentAnswered: true,
+      opponentRecentPoints: 10,
+      opponentAnsweredCorrectly: true,
+      roundResult,
+      myRound,
+      opponentRound,
+      phaseKind: 'normal',
+      dividerX: 250,
+      mySeat: 1,
+    }));
+
+    await act(async () => {});
+
+    expect(result.current).toMatchObject({
+      phase: 'both-score',
+      playerPoints: 100,
+      opponentPoints: 10,
+      playerBars: 10,
+      opponentBars: 1,
+      remainingDelta: 9,
     });
   });
 

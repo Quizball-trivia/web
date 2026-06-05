@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ShowdownScreen } from '@/components/ShowdownScreen';
-import { motion } from 'motion/react';
 import { Volume2, VolumeX } from 'lucide-react';
 import { isMuted as getIsMuted, toggleMute } from '@/lib/sounds/gameSounds';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
@@ -198,32 +197,46 @@ export function BanCategoryView({
       {/* ── Content ── */}
       <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 pb-12">
         {/* Heading */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+        <div
           className="text-center mb-8 sm:mb-10 px-6"
         >
           <h2
             className="text-3xl uppercase text-white sm:text-4xl"
             style={poppins}
           >
-            {paused ? 'Waiting' : phase === 'ban' ? 'Ban Category' : 'Get Ready'}
-          </h2>
-          <p
-            className="mt-2 text-xs uppercase tracking-[0.08em] text-white/55 sm:text-sm"
-            style={poppins}
-          >
             {paused
-              ? 'Opponent disconnected. Draft resumes when they return.'
+              ? t('possession.waiting')
               : phase === 'ban'
-              ? 'Tap a card to remove it. One category remains for Half 1.'
-              : 'Match starting with selected Half 1 category…'}
-          </p>
-        </motion.div>
+                ? t('banCategory.title')
+                : t('possession.getReady')}
+          </h2>
+          {/* Turn indicator — clearly shows whose turn it is to ban. */}
+          {phase === 'ban' && !paused ? (
+            <p
+              className={cn(
+                'mt-2 text-sm uppercase tracking-[0.12em] sm:text-base',
+                currentActor === 'player' ? 'text-brand-yellow' : 'text-white/55',
+              )}
+              style={poppins}
+            >
+              {currentActor === 'player'
+                ? t('possession.halftime.yourTurn')
+                : t('possession.halftime.opponentBanning')}
+            </p>
+          ) : (
+            <p
+              className="mt-2 text-xs uppercase tracking-[0.08em] text-white/55 sm:text-sm"
+              style={poppins}
+            >
+              {paused
+                ? t('banCategory.draftResumes')
+                : t('training.matchStartingHalf1')}
+            </p>
+          )}
+        </div>
 
         {/* Category Cards — shared BanCategoryCard matches /play mode-selection style */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="w-full">
+        <div className="w-full">
           <div className="grid grid-cols-3 gap-3 sm:gap-5 px-4 sm:px-6 max-w-3xl mx-auto">
             {categories.map((category, i) => {
               const isPlayerBanned = category.id === playerBannedId;
@@ -237,8 +250,10 @@ export function BanCategoryView({
                 currentActor !== 'player' ||
                 phase !== 'ban';
 
-              const fadedOut = Boolean(playerBannedId && !isPlayerBanned && !isOpponentBanned);
-
+              // Only the BANNED card dims (via isBanned: grayscale + BANNED stamp).
+              // The not-yet-banned cards stay fully visible while waiting for the
+              // opponent — matching prod, where the card's entrance motion pinned
+              // inline opacity:1 and silently overrode this opacity-30 fade.
               return (
                 <BanCategoryCard
                   key={category.id}
@@ -247,13 +262,12 @@ export function BanCategoryView({
                   animationIndex={i}
                   isBanned={isBanned}
                   disabled={disabled}
-                  fadedOut={fadedOut}
                   onClick={onBanCategory}
                 />
               );
             })}
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
@@ -305,7 +319,7 @@ export function RankedCategoryBlockingScreen() {
     [opponentMember?.avatarUrl]
   );
   const opponentId = opponentMember?.userId ?? 'opponent';
-  const opponentUsername = opponentMember?.username ?? 'Opponent';
+  const opponentUsername = opponentMember?.username ?? t('possession.opponent');
 
   useEffect(() => {
     if (!draft || showShowdown || draftPaused) return;

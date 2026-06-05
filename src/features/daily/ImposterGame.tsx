@@ -88,9 +88,14 @@ export function ImposterGame({
     const timeout = window.setTimeout(() => {
       if (isCorrectSelection) {
         setCorrectCount((previous) => previous + 1);
+        // Chime ONLY when the full set is correct, timed to the reveal beat (the
+        // answers appear now, after the 2s sting). Imposter already plays its own
+        // reveal sting, so the splash stays silent to avoid stacking sounds — and
+        // a wrong answer gets no extra buzzer, just the sting.
+        playSfx("dailyCorrect");
       }
       // Submit button sits on the right → splash flies in from the right.
-      fire(isCorrectSelection ? "correct" : "wrong", "right");
+      fire(isCorrectSelection ? "correct" : "wrong", "right", { silent: true });
       setResolved(true);
     }, IMPOSTER_REVEAL_DELAY_MS);
     return () => window.clearTimeout(timeout);

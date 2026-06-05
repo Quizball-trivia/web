@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LobbyBrowsePanel } from "./components/LobbyBrowsePanel";
 import { CreateJoinPanel } from "./components/CreateJoinPanel";
@@ -15,11 +15,8 @@ import { lobbiesKeys } from "@/lib/queries/lobbies.queries";
 import { Users } from "lucide-react";
 import { toast } from "sonner";
 import { logger } from "@/utils/logger";
-import { connectSocket, getSocket } from "@/lib/realtime/socket-client";
 import { useLocale } from "@/contexts/LocaleContext";
-
-/** Delay (ms) between lobby:leave and lobby:join_by_code to let the server process the leave. */
-const LOBBY_LEAVE_JOIN_DELAY_MS = 140;
+import { useLobbyCommandMachine } from "./hooks/useLobbyCommandMachine";
 
 export function FriendMatchHubPage() {
   const { t } = useLocale();
@@ -42,28 +39,14 @@ export function FriendMatchHubPage() {
   const clearRealtimeError = useRealtimeMatchStore(state => state.clearError);
   
   const [activeTab, setActiveTab] = useState(initialTab);
-  const [isJoiningCode, setIsJoiningCode] = useState<string | null>(null);
   const [isNavigatingToRoom, setIsNavigatingToRoom] = useState(false);
-  const joinRetryCountRef = useRef(0);
-  const joinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const joinRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const clearJoinTimeout = () => {
-    if (!joinTimeoutRef.current) return;
-    clearTimeout(joinTimeoutRef.current);
-    joinTimeoutRef.current = null;
-  };
-
-  const clearJoinRetryTimer = () => {
-    if (!joinRetryTimerRef.current) return;
-    clearTimeout(joinRetryTimerRef.current);
-    joinRetryTimerRef.current = null;
-  };
+  const lobbyCommands = useLobbyCommandMachine();
+  const { joinByCode, reset: resetLobbyCommand } = lobbyCommands;
+  const isJoiningCode = lobbyCommands.isJoining ? lobbyCommands.state.targetInviteCode : null;
 
   const resetJoiningCodeState = useCallback(() => {
-    setIsJoiningCode(null);
-    joinRetryCountRef.current = 0;
-  }, []);
+    resetLobbyCommand();
+  }, [resetLobbyCommand]);
 
   const resetJoinNavigationState = useCallback(() => {
     resetJoiningCodeState();
@@ -74,13 +57,6 @@ export function FriendMatchHubPage() {
     // Prevent stale realtime errors from previous routes from flashing lobby UI in this screen.
     clearRealtimeError();
   }, [clearRealtimeError]);
-
-  useEffect(() => {
-    return () => {
-      clearJoinTimeout();
-      clearJoinRetryTimer();
-    };
-  }, []);
 
   // Only treat CORRUPT_MULTI_STATE as a recovery scenario.
   // sessionState === null just means the first session:state event hasn't arrived yet — normal loading, not an error.
@@ -100,13 +76,16 @@ export function FriendMatchHubPage() {
   // BUT only if we explicitly initiated navigation.
   useEffect(() => {
     if (lobby?.inviteCode && isNavigatingToRoom) {
+      resetLobbyCommand();
       router.push(`/friend/room/${lobby.inviteCode}`);
-      // Reset navigation state after push
-      return; 
+      // Reset navigation state after push so a re-run doesn't strand the flag.
+      // Deferred out of the synchronous effect body to avoid a cascading render.
+      queueMicrotask(() => setIsNavigatingToRoom(false));
+      return;
     }
     
     // Safety fallback: if we are verifying "Already In Lobby", we don't redirect.
-  }, [lobby, router, isNavigatingToRoom]);
+  }, [lobby, resetLobbyCommand, router, isNavigatingToRoom]);
 
   const handleJoinPublic = (inviteCode: string) => {
     const currentCode = lobby?.inviteCode?.toUpperCase() ?? null;
@@ -117,69 +96,42 @@ export function FriendMatchHubPage() {
     }
 
     handleActionTriggered();
-    setIsJoiningCode(targetCode);
-    joinRetryCountRef.current = 0;
-    clearJoinTimeout();
-    joinTimeoutRef.current = setTimeout(() => {
-      clearJoinRetryTimer();
+    toast.info(t('friend.toastJoiningCode', { code: targetCode }));
+    void joinByCode(targetCode).then((result) => {
+      if (!result) {
+        resetJoinNavigationState();
+        return;
+      }
+      if (result.ok) {
+        // Route straight from the ack — the join result carries the invite
+        // code, so we don't have to wait on the lobby:state store update
+        // (which won't re-fire the navigation effect if the store was already
+        // populated, leaving the button doing nothing).
+        resetLobbyCommand();
+        router.push(`/friend/room/${result.inviteCode}`);
+        return;
+      }
+      if (result.code === "LOBBY_NOT_FOUND") {
+        void queryClient.invalidateQueries({ queryKey: lobbiesKeys.public() });
+        toast.error(t('friend.toastLobbyClosed'));
+      } else {
+        toast.error(result.message);
+      }
       resetJoinNavigationState();
-      toast.error(t('friend.toastJoinTooLong'));
-    }, 8000);
-    
-    // Leave → join: ideally we'd wait for a server ack on lobby:leave, but the
-    // backend event signature is fire-and-forget (`() => void`).  The 140 ms
-    // delay is a pragmatic workaround; the TRANSITION_IN_PROGRESS retry below
-    // covers the race if the leave hasn't completed in time.
-    connectSocket();
-    const socket = getSocket();
-    if (lobby?.lobbyId) {
-      socket.emit("lobby:leave");
-    }
-    setTimeout(() => {
-      socket.emit("lobby:join_by_code", { inviteCode: targetCode });
-      toast.info(t('friend.toastJoiningCode', { code: targetCode }));
-    }, lobby?.lobbyId ? LOBBY_LEAVE_JOIN_DELAY_MS : 0);
+    });
   };
 
   // Clear joining state if error occurs
   useEffect(() => {
     if (lobby?.inviteCode && isNavigatingToRoom) {
-      clearJoinTimeout();
-      clearJoinRetryTimer();
       queueMicrotask(resetJoiningCodeState);
     }
   }, [isNavigatingToRoom, lobby?.inviteCode, resetJoiningCodeState]);
 
   useEffect(() => {
     if (error) {
-      const isTransientJoinLock =
-        error.code === "TRANSITION_IN_PROGRESS" &&
-        isNavigatingToRoom &&
-        Boolean(isJoiningCode);
-
-      if (isTransientJoinLock && isJoiningCode) {
-        if (joinRetryCountRef.current >= 5) {
-          clearJoinTimeout();
-          clearJoinRetryTimer();
-          queueMicrotask(resetJoinNavigationState);
-          toast.error(t('friend.toastJoinFailed'));
-          return;
-        }
-        joinRetryCountRef.current += 1;
-        const retryDelayMs = 220 + joinRetryCountRef.current * 100;
-        logger.info("Retrying join after transient transition lock", {
-          inviteCode: `${isJoiningCode.slice(0, 2)}***`,
-          errorCode: error.code,
-          retry: joinRetryCountRef.current,
-          retryDelayMs,
-          sessionState: sessionState?.state ?? "NO_SESSION",
-        });
-        clearJoinRetryTimer();
-        joinRetryTimerRef.current = setTimeout(() => {
-          connectSocket();
-          getSocket().emit("lobby:join_by_code", { inviteCode: isJoiningCode });
-          joinRetryTimerRef.current = null;
-        }, retryDelayMs);
+      if (isNavigatingToRoom || isJoiningCode) {
+        clearRealtimeError();
         return;
       }
 
@@ -191,22 +143,16 @@ export function FriendMatchHubPage() {
         isJoiningCode,
         lobbyCode: lobby?.inviteCode ?? null,
       });
-      if (error.code === "LOBBY_NOT_FOUND" && isJoiningCode) {
-        void queryClient.invalidateQueries({ queryKey: lobbiesKeys.public() });
-        toast.error(t('friend.toastLobbyClosed'));
-      }
       queueMicrotask(resetJoinNavigationState);
-      clearJoinTimeout();
-      clearJoinRetryTimer();
+      clearRealtimeError();
     }
   }, [
+    clearRealtimeError,
     error,
     isJoiningCode,
     isNavigatingToRoom,
     lobby?.inviteCode,
-    queryClient,
     resetJoinNavigationState,
-    sessionState?.state,
   ]);
 
   return (

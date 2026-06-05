@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
@@ -106,6 +106,7 @@ const socketStub = {
   emit: socketEmitMock,
 };
 vi.mock('@/lib/realtime/socket-client', () => ({
+  connectSocket: () => socketStub,
   getSocket: () => socketStub,
 }));
 
@@ -241,6 +242,19 @@ beforeEach(() => {
   routerPushMock.mockClear();
   routerReplaceMock.mockClear();
   socketEmitMock.mockClear();
+  socketEmitMock.mockImplementation((event: string, payload?: unknown, ack?: (result: unknown) => void) => {
+    if (event === 'lobby:leave' && typeof ack === 'function') {
+      ack({
+        ok: true,
+        lobbyId: 'L1',
+        closed: false,
+        correlationId:
+          payload && typeof payload === 'object' && 'correlationId' in payload
+            ? String((payload as { correlationId: unknown }).correlationId)
+            : 'test-correlation',
+      });
+    }
+  });
   clearRankedMatchmakingMock.mockClear();
   startSessionMock.mockClear();
   setGameStageMock.mockClear();
@@ -468,6 +482,7 @@ describe('AppShell — rejoin / completed / forfeit / draft banners', () => {
     });
     renderShell();
     expect(screen.getAllByText(/appShell.matchStillActiveAgainst/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/"name":"Opp"/).length).toBeGreaterThan(0);
   });
 
   it('falls back to active-match banner when match exists with no finalResults', () => {
@@ -497,6 +512,7 @@ describe('AppShell — rejoin / completed / forfeit / draft banners', () => {
     });
     renderShell();
     expect(screen.getAllByText(/appShell.matchFinishedAgainst/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/"name":"WinnerOpp"/).length).toBeGreaterThan(0);
   });
 
   it('shows the forfeit-pending banner before finalResults are received', () => {
@@ -523,6 +539,26 @@ describe('AppShell — rejoin / completed / forfeit / draft banners', () => {
     renderShell();
     expect(screen.getAllByText('forfeit.matchForfeited').length).toBeGreaterThan(0);
     expect(screen.queryByText(/appShell.matchStillActiveAgainst/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/appShell.forfeit/)).not.toBeInTheDocument();
+  });
+
+  it('hides the rejoin banner while a lobby room is handing off to an active match', () => {
+    pathnameMock.mockReturnValue('/friend/room/ROOM1');
+    seedRealtime({
+      match: {
+        matchId: 'M-HANDOFF',
+        mode: 'friendly',
+        opponent: { id: 'opp', username: 'Opp', avatarUrl: null },
+        finalResults: null,
+      },
+      sessionState: {
+        state: 'IN_WAITING_LOBBY',
+        waitingLobbyId: 'L1',
+      },
+    });
+    renderShell();
+    expect(screen.queryByText(/appShell.matchStillActiveAgainst/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/appShell.rejoinMatch/)).not.toBeInTheDocument();
     expect(screen.queryByText(/appShell.forfeit/)).not.toBeInTheDocument();
   });
 
@@ -561,6 +597,27 @@ describe('AppShell — rejoin / completed / forfeit / draft banners', () => {
     });
     renderShell();
     expect(screen.getAllByText(/appShell.draftActiveAgainst/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/"name":"DraftOpp"/).length).toBeGreaterThan(0);
+  });
+
+  it('hides the draft banner while still inside the lobby room handoff route', () => {
+    pathnameMock.mockReturnValue('/friend/room/ROOM1');
+    seedRealtime({
+      lobby: {
+        status: 'active',
+        mode: 'friendly',
+        inviteCode: 'ROOM1',
+        lobbyId: 'L9',
+        displayName: 'L',
+        members: [
+          { userId: 'self-user', username: 'me', avatarUrl: null },
+          { userId: 'opp', username: 'DraftOpp', avatarUrl: null },
+        ],
+      },
+      draft: { state: 'in_progress' },
+    });
+    renderShell();
+    expect(screen.queryByText(/appShell.draftActiveAgainst/)).not.toBeInTheDocument();
   });
 });
 
@@ -629,7 +686,7 @@ describe('AppShell — banner callbacks fire the right store / socket actions', 
     expect(routerPushMock).toHaveBeenCalledWith('/friend/room/ROOM1');
   });
 
-  it('lobby banner Leave → emits lobby:leave, resets realtime, clears ranked matchmaking', () => {
+  it('lobby banner Leave → emits lobby:leave, resets realtime, clears ranked matchmaking', async () => {
     pathnameMock.mockReturnValue('/leaderboard');
     const reset = vi.fn();
     seedRealtime({
@@ -646,9 +703,13 @@ describe('AppShell — banner callbacks fire the right store / socket actions', 
     renderShell();
     const leaves = screen.getAllByText(/appShell.leave/);
     fireEvent.click(leaves[0]);
-    expect(socketEmitMock).toHaveBeenCalledWith('lobby:leave');
-    expect(reset).toHaveBeenCalled();
-    expect(clearRankedMatchmakingMock).toHaveBeenCalled();
+    expect(socketEmitMock).toHaveBeenCalledWith('lobby:leave', {
+      correlationId: expect.any(String),
+    }, expect.any(Function));
+    await waitFor(() => {
+      expect(reset).toHaveBeenCalled();
+      expect(clearRankedMatchmakingMock).toHaveBeenCalled();
+    });
   });
 
   it('completed-match banner View Results → routes to /game with finalResults stage', () => {

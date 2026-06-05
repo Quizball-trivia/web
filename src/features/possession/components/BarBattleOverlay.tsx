@@ -30,6 +30,8 @@ interface BarBattleOverlayProps {
    *  classic layout. Must be passed by the caller — the overlay no
    *  longer reads it from the realtime store directly. */
   variant?: 'ranked_sim' | 'friendly_possession';
+  /** Penalties zoom the pitch — renders smaller anchored bars. */
+  isPenalty?: boolean;
 }
 
 export function BarBattleOverlay({
@@ -39,6 +41,7 @@ export function BarBattleOverlay({
   opponentAvatarX,
   isPortrait = false,
   variant,
+  isPenalty = false,
 }: BarBattleOverlayProps) {
   const vm = useBarBattleViewModel({
     battle,
@@ -47,6 +50,7 @@ export function BarBattleOverlay({
     opponentAvatarX,
     isPortrait,
     matchVariant: variant,
+    isPenalty,
   });
   if (vm.isDone) return null;
   const { blueGrad, redGrad, battleClip, isAnchored, cy, playerLayout, opponentLayout } = vm;

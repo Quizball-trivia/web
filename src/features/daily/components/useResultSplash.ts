@@ -11,9 +11,12 @@ const SPLASH_DURATION_MS = 1100;
 
 /**
  * Shared controller for the fly-in result splash used across daily games.
- * `fire(verdict, from)` shows the splash (and plays the correct sound on a
- * correct verdict only); it auto-hides after ~0.9s. Returns the props the
- * <ResultSplash /> needs.
+ * `fire(verdict, from)` shows the splash and plays the matching sound (correct
+ * chime or wrong-answer buzzer); it auto-hides after ~0.9s. Returns the props
+ * the <ResultSplash /> needs.
+ *
+ * Pass `{ silent: true }` when the caller plays its own result audio (e.g.
+ * Imposter's reveal sting) so the splash doesn't stack a second sound on top.
  */
 export function useResultSplash() {
   const [show, setShow] = useState(false);
@@ -21,15 +24,18 @@ export function useResultSplash() {
   const [from, setFrom] = useState<"left" | "right">("right");
   const [triggerKey, setTriggerKey] = useState(0);
 
-  const fire = useCallback((nextVerdict: SplashVerdict, fromSide: "left" | "right") => {
-    setVerdict(nextVerdict);
-    setFrom(fromSide);
-    setTriggerKey((k) => k + 1);
-    setShow(true);
-    if (nextVerdict === "correct") {
-      playSfx("dailyCorrect");
-    }
-  }, []);
+  const fire = useCallback(
+    (nextVerdict: SplashVerdict, fromSide: "left" | "right", options?: { silent?: boolean }) => {
+      setVerdict(nextVerdict);
+      setFrom(fromSide);
+      setTriggerKey((k) => k + 1);
+      setShow(true);
+      if (!options?.silent) {
+        playSfx(nextVerdict === "correct" ? "dailyCorrect" : "wrongAnswer");
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     if (!show) return;

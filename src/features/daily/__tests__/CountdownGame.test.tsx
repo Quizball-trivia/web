@@ -83,7 +83,7 @@ describe('CountdownGame', () => {
     expect(screen.getAllByText('Cristiano Ronaldo').length).toBeGreaterThan(0);
   });
 
-  it('shows suggestions for short partials and allows tap-to-complete', () => {
+  it('does not leak answers as suggestions while typing a partial', () => {
     render(
       <CountdownGame
         session={session as never}
@@ -95,10 +95,22 @@ describe('CountdownGame', () => {
     const input = screen.getByPlaceholderText('Press Enter to submit...');
     fireEvent.change(input, { target: { value: 'rona' } });
 
-    const suggestion = screen.getByRole('button', { name: 'Cristiano Ronaldo' });
-    expect(suggestion).toBeInTheDocument();
+    // The full answer must NOT be revealed before it's accepted.
+    expect(screen.queryByText('Cristiano Ronaldo')).not.toBeInTheDocument();
+  });
 
-    fireEvent.click(suggestion);
+  it('accepts a fully typed answer on Enter and reveals it', () => {
+    render(
+      <CountdownGame
+        session={session as never}
+        onBack={vi.fn()}
+        onComplete={vi.fn()}
+      />
+    );
+
+    const input = screen.getByPlaceholderText('Press Enter to submit...');
+    fireEvent.change(input, { target: { value: 'Cristiano Ronaldo' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
 
     expect(screen.getAllByText('Cristiano Ronaldo').length).toBeGreaterThan(0);
   });

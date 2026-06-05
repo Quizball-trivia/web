@@ -17,6 +17,7 @@ import type { CluesSession } from "@/lib/domain/dailyChallenge";
 import { calculateCluesDisplayPoints } from "@/utils/cluesScoring";
 import { useLocale } from "@/contexts/LocaleContext";
 import { fuzzyMatchesAnswer } from "@/lib/answerMatching";
+import { playSfx } from "@/lib/sounds/gameSounds";
 
 interface ClueGameProps {
   session: CluesSession;
@@ -123,6 +124,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
     const correct = bestMatch !== null;
 
     if (correct) {
+      playSfx("dailyCorrect");
       setHasSubmitted(true);
       setIsCorrect(true);
       setShowResult(true);
@@ -143,6 +145,8 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
           setHasSubmitted(false);
         }, 100);
       } else {
+        // Final wrong: no clues left to reveal — play the buzzer.
+        playSfx("wrongAnswer");
         setHasSubmitted(true);
         setIsCorrect(false);
         setShowResult(true);
@@ -287,7 +291,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
                 value={userAnswer}
                 onChange={(e) => setUserAnswer(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="bg-surface-card-tint border-2 border-surface-card text-white placeholder:text-brand-slate focus:border-brand-cyan text-center text-lg h-12 rounded-xl"
+                className="bg-surface-card-tint border-2 border-surface-card text-white placeholder:text-brand-slate focus:border-brand-cyan focus-visible:border-brand-cyan focus-visible:ring-brand-cyan/50 text-center text-lg h-12 rounded-xl"
                 autoFocus
                 disabled={hasSubmitted}
               />

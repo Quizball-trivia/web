@@ -3,6 +3,7 @@ import { Search, RotateCcw, Filter } from "lucide-react";
 import { usePublicLobbies } from "@/lib/queries/lobbies.queries";
 import { LobbyCard } from "./LobbyCard";
 import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useLocale } from "@/contexts/LocaleContext";
 
 interface LobbyBrowsePanelProps {
@@ -13,7 +14,7 @@ interface LobbyBrowsePanelProps {
 
 export function LobbyBrowsePanel({ onJoin, isJoiningCode, onActionTriggered }: LobbyBrowsePanelProps) {
   const { t } = useLocale();
-  const { data: lobbies, isLoading, refetch } = usePublicLobbies();
+  const { data: lobbies, isLoading, isFetching, refetch } = usePublicLobbies();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<'all' | 'open'>('open');
 
@@ -89,11 +90,13 @@ export function LobbyBrowsePanel({ onJoin, isJoiningCode, onActionTriggered }: L
              <button
                 type="button"
                 onClick={() => refetch()}
+                disabled={isFetching}
                 title={t("friend.refresh")}
                 aria-label={t("friend.refresh")}
-                className="flex aspect-square h-9 sm:h-11 items-center justify-center rounded-[20px] border-2 border-brand-green bg-transparent text-brand-green transition-colors hover:bg-brand-green/10"
+                aria-busy={isFetching}
+                className="flex aspect-square h-9 sm:h-11 items-center justify-center rounded-[20px] border-2 border-brand-green bg-transparent text-brand-green transition-colors hover:bg-brand-green/10 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
              >
-                <RotateCcw className="size-4 sm:size-5" />
+                <RotateCcw className={cn("size-4 sm:size-5", isFetching && "animate-spin")} />
              </button>
           </div>
        </div>
@@ -107,14 +110,19 @@ export function LobbyBrowsePanel({ onJoin, isJoiningCode, onActionTriggered }: L
              </div>
           ) : filteredLobbies.length === 0 ? (
              <div
-                className="flex flex-col items-center justify-center py-12 border-2 border-brand-blue rounded-xl bg-brand-blue/[0.03] text-white/60"
+                className="flex flex-col items-center justify-center px-4 py-12 text-center border-2 border-brand-blue rounded-xl bg-brand-blue/[0.03] text-white/60"
                 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 500 }}
              >
-                <div className="size-12 rounded-full bg-brand-blue/15 text-brand-blue flex items-center justify-center mb-3">
+                <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-brand-blue/15 text-brand-blue">
                    <Filter className="size-6" />
                 </div>
-                <h3 className="uppercase text-white" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}>{t("friend.noLobbiesFound")}</h3>
-                <p className="text-sm mt-1">{t("friend.noLobbiesHint")}</p>
+                <h3
+                  className="max-w-xs uppercase text-white"
+                  style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
+                >
+                  {t("friend.noLobbiesFound")}
+                </h3>
+                <p className="mt-1 max-w-xs text-sm text-white/55">{t("friend.noLobbiesHint")}</p>
              </div>
           ) : (
              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">

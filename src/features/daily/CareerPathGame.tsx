@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import type { CareerPathSession } from "@/lib/domain/dailyChallenge";
 import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
-import { findAcceptedAnswer } from "./daily-challenge.utils";
+import { fuzzyMatchesAnswer } from "@/lib/answerMatching";
 import { QuitGameDialog } from "./QuitGameDialog";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
 import { ResultSplash } from "./components/ResultSplash";
@@ -59,8 +59,7 @@ export function CareerPathGame({
       return;
     }
 
-    const matchedAnswer = findAcceptedAnswer(answer, currentQuestion.acceptedAnswers);
-    const isCorrect = matchedAnswer !== null;
+    const isCorrect = fuzzyMatchesAnswer(answer, currentQuestion.acceptedAnswers);
 
     if (isCorrect) {
       setCorrectCount((previous) => previous + 1);
@@ -153,8 +152,8 @@ export function CareerPathGame({
               }
             }}
             placeholder={copy.typePlayerName}
-            className="h-[48px] sm:h-[56px] rounded-[16px] bg-surface-page text-white text-center placeholder:text-white/35"
-            style={{ ...poppins, fontSize: 'clamp(14px, 1.7vw, 22px)', fontWeight: 500, border: '2px solid rgba(255,255,255,0.1)' }}
+            className="h-[48px] sm:h-[56px] rounded-[16px] bg-surface-card-tint border-2 border-surface-card text-white text-center placeholder:text-brand-slate focus:border-brand-cyan focus-visible:border-brand-cyan focus-visible:ring-brand-cyan/50"
+            style={{ ...poppins, fontSize: 'clamp(16px, 1.7vw, 22px)', fontWeight: 500 }}
             autoFocus
           />
           <button

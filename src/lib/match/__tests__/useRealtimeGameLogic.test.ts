@@ -2,7 +2,14 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { ROUND_RESULT_HOLD_MS, useRealtimeGameLogic } from '../useRealtimeGameLogic';
-import { PENALTY_RESULT_SEQUENCE_HOLD_MS } from '@/features/possession/realtimePossession.helpers';
+import {
+  PENALTY_RESULT_DISPLAY_DELAY_MS,
+  PENALTY_RESULT_SEQUENCE_HOLD_MS,
+  PENALTY_RESULT_SPLASH_MS,
+  PENALTY_SCORE_FLIGHT_HANDOFF_MS,
+} from '@/features/possession/realtimePossession.helpers';
+import { getBarBattleGoalAttackDelayMs } from '@/features/possession/hooks/useBarBattle';
+import { trackAnswerSubmitted } from '@/lib/analytics/game-events';
 import type {
   MatchRoundResultPayload,
   MatchStatePayload,
@@ -162,6 +169,7 @@ function makeQuestionWithImmediatePlay(
 describe('useRealtimeGameLogic — roundResultHoldDone for goals', () => {
   beforeEach(() => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.clearAllMocks();
     useRealtimeMatchStore.getState().reset();
   });
 
@@ -284,8 +292,20 @@ describe('useRealtimeGameLogic — roundResultHoldDone for goals', () => {
     expect(result.current.state.roundResultHoldDone).toBe(false);
     expect(result.current.state.showOptions).toBe(true);
 
+    // The hold is now bar-battle-aware: it waits for the shot (which waits for
+    // the bars) plus the result display + splash, so the SAVED!/GOAL! splash
+    // isn't cut off. Compute the same hold the hook does for this round's points
+    // (self USER_A earned 10, opponent USER_B earned 0).
+    const shotDelayMs = getBarBattleGoalAttackDelayMs(10, 0, PENALTY_SCORE_FLIGHT_HANDOFF_MS, {
+      includeScoreFlightHandoff: true,
+    });
+    const penaltyHoldMs = Math.max(
+      PENALTY_RESULT_SEQUENCE_HOLD_MS,
+      shotDelayMs + PENALTY_RESULT_DISPLAY_DELAY_MS + PENALTY_RESULT_SPLASH_MS,
+    );
+
     await act(async () => {
-      vi.advanceTimersByTime(PENALTY_RESULT_SEQUENCE_HOLD_MS - ROUND_RESULT_HOLD_MS + 50);
+      vi.advanceTimersByTime(penaltyHoldMs - ROUND_RESULT_HOLD_MS + 50);
     });
 
     expect(result.current.state.roundResultHoldDone).toBe(true);
@@ -369,6 +389,72 @@ describe('useRealtimeGameLogic — roundResultHoldDone for goals', () => {
 
     await act(async () => { vi.advanceTimersByTime(500); });
     expect(result.current.state.showOptions).toBe(true);
+  });
+
+  it('hides answer options while a paused match is in the resume handoff', async () => {
+    seedMatch();
+    const store = useRealtimeMatchStore.getState();
+
+    const { result } = renderHook(() =>
+      useRealtimeGameLogic({ transitionDelayMs: 1600 })
+    );
+
+    act(() => store.setMatchQuestion(makeQuestionWithImmediatePlay(9)));
+    await act(async () => { vi.advanceTimersByTime(50); });
+
+    expect(result.current.state.showOptions).toBe(true);
+
+    act(() => {
+      store.setMatchPaused({ graceMs: 60_000, remainingReconnects: 2 });
+      store.setMatchCountdown({
+        matchId: MATCH_ID,
+        seconds: 5,
+        startsAt: new Date(Date.now() + 5_000).toISOString(),
+        reason: 'resume',
+      });
+    });
+
+    expect(result.current.state.matchPaused).toBe(true);
+    expect(result.current.state.startCountdownActive).toBe(true);
+    expect(result.current.state.showOptions).toBe(false);
+
+    await act(async () => { vi.advanceTimersByTime(5_100); });
+
+    expect(result.current.state.matchPaused).toBe(true);
+    expect(result.current.state.startCountdownActive).toBe(false);
+    expect(result.current.state.showOptions).toBe(false);
+  });
+
+  it('tracks MCQ answer submissions once when the answer ack arrives', async () => {
+    vi.setSystemTime(new Date('2026-05-29T13:00:00.000Z'));
+    seedMatch();
+    const store = useRealtimeMatchStore.getState();
+
+    const { result } = renderHook(() =>
+      useRealtimeGameLogic({ transitionDelayMs: 1600 })
+    );
+
+    act(() => store.setMatchQuestion(makeQuestionWithImmediatePlay(9)));
+    await act(async () => { vi.advanceTimersByTime(50); });
+
+    act(() => result.current.actions.submitAnswer(0));
+    act(() => store.setAnswerAck({
+      matchId: MATCH_ID,
+      qIndex: 9,
+      questionKind: 'multipleChoice',
+      selectedIndex: 0,
+      isCorrect: true,
+      correctIndex: 0,
+      myTotalPoints: 100,
+      oppAnswered: false,
+      pointsEarned: 100,
+      phaseKind: 'normal',
+      phaseRound: 9,
+      shooterSeat: null,
+    }));
+    await act(async () => {});
+
+    expect(trackAnswerSubmitted).toHaveBeenCalledTimes(1);
   });
 
   it('does not expose opponent answered UI before the local question is playable', async () => {

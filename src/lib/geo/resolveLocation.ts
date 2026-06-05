@@ -24,6 +24,8 @@ export function getGeoObject(
 
 function normalizeGeoText(value: string): string {
   return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9 ]+/g, " ")
     .replace(/\s+/g, " ")
@@ -99,9 +101,16 @@ function detectCountryKey(raw: string | null | undefined): string | null {
 
   const normalized = normalizeGeoText(trimmed);
   if (!normalized) return null;
+  const normalizedSlug = normalized.replace(/\s+/g, "_");
+  if (COUNTRY_LOCATION_FALLBACKS[normalizedSlug]) return normalizedSlug;
 
   for (const [key, aliases] of Object.entries(COUNTRY_ALIASES)) {
-    if (aliases.some((alias) => normalized.includes(normalizeGeoText(alias)))) {
+    if (
+      aliases.some((alias) => {
+        const normalizedAlias = normalizeGeoText(alias);
+        return normalizedAlias.length > 0 && normalized.includes(normalizedAlias);
+      })
+    ) {
       return key;
     }
   }
@@ -188,7 +197,7 @@ export function resolveOpponentLocation(
     detectCountryKey(opponent.id);
   const countryFallback = resolveCountryFallback(countryKey);
   const cityFallback = resolveLocationFromCity(
-    `${cityHint} ${locationText}`.trim(),
+    `${cityHint} ${countryHint} ${locationText}`.trim(),
   );
   const geoFlag = geoObj?.flag?.trim() ?? "";
   const resolvedCity =
@@ -219,6 +228,14 @@ export function resolveOpponentLocation(
           countryCodeHint,
         };
       }
+      return {
+        ...cityFallback,
+        source: "city_display_safe",
+        countryKey,
+        cityHint,
+        countryHint,
+        countryCodeHint,
+      };
     } else if (countryFallback) {
       const lonDelta = Math.abs(lon - countryFallback.lon);
       const latDelta = Math.abs(lat - countryFallback.lat);

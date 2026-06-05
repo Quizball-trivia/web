@@ -351,6 +351,31 @@ describe('realtimeMatch.store — setMatchState shouldClearQuestion', () => {
   });
 
   describe('pause/rejoin question refresh', () => {
+    it('keeps the match logically paused during a resume countdown until match:resume arrives', () => {
+      seedMatch();
+      const store = useRealtimeMatchStore.getState();
+
+      store.setMatchPaused({ graceMs: 60_000, remainingReconnects: 2 });
+      const pausedAt = useRealtimeMatchStore.getState().pausedAt;
+
+      store.setMatchCountdown({
+        matchId: MATCH_ID,
+        seconds: 5,
+        startsAt: new Date(Date.now() + 5_000).toISOString(),
+        reason: 'resume',
+      });
+
+      const state = useRealtimeMatchStore.getState();
+      expect(state.matchPaused).toBe(true);
+      expect(state.pauseUntil).toBeNull();
+      expect(state.pausedAt).toBe(pausedAt);
+      expect(state.remainingReconnects).toBeNull();
+      expect(state.match?.countdownReason).toBe('resume');
+
+      store.clearMatchPaused();
+      expect(useRealtimeMatchStore.getState().matchPaused).toBe(false);
+    });
+
     it('accepts same-qIndex question payload when the match is paused', () => {
       seedMatch();
       const store = useRealtimeMatchStore.getState();

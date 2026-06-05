@@ -62,7 +62,7 @@ export function shouldClearQuestionOnStateChange(
     previousPhase === 'HALFTIME' && incoming.phase === 'NORMAL_PLAY' && incoming.half === 2;
   return (
     isSecondHalfKickoff ||
-    ((incoming.phase === 'COMPLETED' || incoming.phase === 'HALFTIME') && !hasLastRoundResult)
+    (incoming.phase === 'HALFTIME' && !hasLastRoundResult)
   );
 }
 

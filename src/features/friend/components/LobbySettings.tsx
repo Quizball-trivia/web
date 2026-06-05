@@ -437,17 +437,33 @@ export function LobbySettings({
       <div className="rounded-[20px] px-3 py-5 space-y-4">
         {/* Mode Selector */}
         <div className="space-y-4">
-          <span className="text-xs font-black text-brand-slate uppercase tracking-wider">{t("friend.matchMode")}</span>
+          <span
+            className="text-brand-slate uppercase"
+            style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: '0.08em' }}
+          >
+            {t("friend.matchMode")}
+          </span>
           {isPartyLocked ? (
             <div className="rounded-[14px] bg-surface-deep p-1.5">
               <div className="flex items-center justify-between rounded-[10px] bg-brand-blue px-4 py-3 text-white">
                 <div>
-                  <div className="text-sm font-black uppercase tracking-wide">{t("friend.partyQuiz")}</div>
-                  <div className="text-[10px] font-bold text-white/70">
+                  <div
+                    className="uppercase"
+                    style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 14, letterSpacing: '0.04em' }}
+                  >
+                    {t("friend.partyQuiz")}
+                  </div>
+                  <div
+                    className="text-white/70"
+                    style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 500, fontSize: 10 }}
+                  >
                     {t("friend.partyLockedHint")}
                   </div>
                 </div>
-                <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white">
+                <span
+                  className="rounded-full bg-white/15 px-2.5 py-1 uppercase text-white"
+                  style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 10, letterSpacing: '0.06em' }}
+                >
                   {memberCount}/6
                 </span>
               </div>
@@ -457,8 +473,9 @@ export function LobbySettings({
               <button
                 onClick={() => handleModeChange('friendly_possession')}
                 disabled={!canEdit}
+                style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
                 className={cn(
-                  "flex-1 py-2.5 rounded-[10px] text-sm font-black uppercase tracking-wide transition-colors",
+                  "flex-1 py-2.5 rounded-[10px] uppercase transition-colors",
                   mode === 'friendly_possession'
                     ? "bg-brand-blue text-white"
                     : "text-white/55 hover:text-white"
@@ -469,8 +486,9 @@ export function LobbySettings({
               <button
                 onClick={() => handleModeChange('friendly_party_quiz')}
                 disabled={!canEdit}
+                style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
                 className={cn(
-                  "flex-1 py-2.5 rounded-[10px] text-sm font-black uppercase tracking-wide transition-colors",
+                  "flex-1 py-2.5 rounded-[10px] uppercase transition-colors",
                   mode === 'friendly_party_quiz'
                     ? "bg-brand-blue text-white"
                     : "text-white/55 hover:text-white"
@@ -481,8 +499,9 @@ export function LobbySettings({
               <button
                 onClick={() => handleModeChange('ranked_sim')}
                 disabled={!canEdit}
+                style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
                 className={cn(
-                  "flex-1 py-2.5 rounded-[10px] text-sm font-black uppercase tracking-wide transition-colors",
+                  "flex-1 py-2.5 rounded-[10px] uppercase transition-colors",
                   mode === 'ranked_sim'
                     ? "bg-brand-blue text-white"
                     : "text-white/55 hover:text-white"
@@ -492,7 +511,10 @@ export function LobbySettings({
               </button>
             </div>
           )}
-          <p className="text-xs font-bold text-white/75">
+          <p
+            className="text-white/75"
+            style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 500, fontSize: 12, lineHeight: 1.4 }}
+          >
             {isPartyLocked
               ? t("friend.partyDescription")
               : mode === 'friendly_possession'
@@ -505,7 +527,12 @@ export function LobbySettings({
 
         {/* Lobby Visibility */}
         <div className="space-y-4">
-          <span className="text-xs font-black text-brand-slate uppercase tracking-wider">{t("friend.lobbyVisibility")}</span>
+          <span
+            className="text-brand-slate uppercase"
+            style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: '0.08em' }}
+          >
+            {t("friend.lobbyVisibility")}
+          </span>
           <button
             onClick={handleVisibilityClick}
             disabled={!canEdit}
@@ -522,8 +549,16 @@ export function LobbySettings({
                 {isPublic ? <Eye className="size-4 text-white" /> : <EyeOff className="size-4 text-brand-slate" />}
               </div>
               <div className="text-left">
-                <div className="text-sm font-black text-white">{isPublic ? t('friend.lobbyVisibilityPublic') : t('friend.lobbyVisibilityPrivate')}</div>
-                <div className="text-[10px] font-bold leading-snug text-white/80">
+                <div
+                  className="text-white"
+                  style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 14, letterSpacing: '0.02em' }}
+                >
+                  {isPublic ? t('friend.lobbyVisibilityPublic') : t('friend.lobbyVisibilityPrivate')}
+                </div>
+                <div
+                  className="leading-snug text-white/70"
+                  style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 500, fontSize: 11 }}
+                >
                   {isPublic
                     ? t('friend.lobbyVisibilityPublicHint')
                     : t('friend.lobbyVisibilityPrivateHint')}
@@ -545,7 +580,12 @@ export function LobbySettings({
         {/* Categories (Friendly Only) */}
         {isFriendlyMode && (
           <div className="space-y-4">
-            <span className="text-xs font-black text-brand-slate uppercase tracking-wider">{t("friend.categoriesTitle")}</span>
+            <span
+              className="text-brand-slate uppercase"
+              style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: '0.08em' }}
+            >
+              {t("friend.categoriesTitle")}
+            </span>
             <button
               onClick={handleRandomToggle}
               disabled={!canEdit}
@@ -562,8 +602,16 @@ export function LobbySettings({
                   <Shuffle className={cn("size-4", isRandom ? "text-surface-page" : "text-brand-slate")} />
                 </div>
                 <div className="text-left">
-                  <div className="text-sm font-black text-white">{t("friend.randomCategories")}</div>
-                  <div className="text-[10px] font-bold leading-snug text-white/80">
+                  <div
+                    className="text-white"
+                    style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 14, letterSpacing: '0.02em' }}
+                  >
+                    {t("friend.randomCategories")}
+                  </div>
+                  <div
+                    className="leading-snug text-white/70"
+                    style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 500, fontSize: 11 }}
+                  >
                     {isRandom ? t("friend.randomCategoriesOn") : t("friend.randomCategoriesOff")}
                   </div>
                 </div>
@@ -581,7 +629,10 @@ export function LobbySettings({
 
             {!isRandom && (
               <>
-                <p className="text-[10px] font-bold leading-snug text-white/80">
+                <p
+                  className="leading-snug text-white/70"
+                  style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 500, fontSize: 11 }}
+                >
                   {mode === 'friendly_party_quiz'
                     ? t("friend.pickCategoryParty")
                     : t("friend.pickCategoryClassic")}
@@ -599,7 +650,10 @@ export function LobbySettings({
                 </div>
                 <div className="max-h-72 overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-thumb-[#243B44] scrollbar-track-transparent">
                   {filteredCategories.length === 0 ? (
-                    <p className="py-6 text-center text-xs font-bold text-brand-slate uppercase tracking-wider">
+                    <p
+                      className="py-6 text-center text-brand-slate uppercase"
+                      style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: '0.08em' }}
+                    >
                       {t("friend.noCategoryMatchesSearch", { query: categorySearch })}
                     </p>
                   ) : filteredCategories.map(cat => {
@@ -609,8 +663,9 @@ export function LobbySettings({
                         key={cat.id}
                         onClick={() => toggleCategory(cat.id)}
                         disabled={!canEdit || isRandom}
+                        style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, letterSpacing: '0.02em' }}
                         className={cn(
-                          "w-full flex items-center gap-3 px-3 py-3.5 rounded-[14px] font-bold transition-colors border-2 bg-white/[0.04] hover:bg-white/[0.08]",
+                          "w-full flex items-center gap-3 px-3 py-3.5 rounded-[14px] transition-colors border-2 bg-white/[0.04] hover:bg-white/[0.08]",
                           isSelected
                             ? "border-brand-green text-white"
                             : "border-brand-blue text-white/70 hover:text-white",
@@ -636,12 +691,20 @@ export function LobbySettings({
 
         {/* Ranked Sim Info */}
         {mode === 'ranked_sim' && (
-          <div className="p-5 rounded-xl bg-brand-orange/10 border-b-[3px] border-brand-orange/20 flex flex-col items-center text-center gap-2">
-            <div className="size-14 rounded-full bg-brand-orange border-4 border-b-[6px] border-brand-orange-deep flex items-center justify-center">
+          <div className="p-5 rounded-[14px] bg-white/[0.05] flex flex-col items-center text-center gap-2.5">
+            <div className="size-14 rounded-full bg-brand-orange flex items-center justify-center">
               <Trophy className="size-7 text-white" strokeWidth={2.5} />
             </div>
-            <h4 className="text-base font-black text-brand-orange">{t("friend.rankedSimHeader")}</h4>
-            <p className="text-xs font-bold text-brand-slate max-w-xs">
+            <h4
+              className="text-brand-orange uppercase"
+              style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 16, letterSpacing: '0.04em' }}
+            >
+              {t("friend.rankedSimHeader")}
+            </h4>
+            <p
+              className="text-white/65 max-w-xs"
+              style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 500, fontSize: 12, lineHeight: 1.45 }}
+            >
               {t("friend.rankedSimDescriptionLong")}
             </p>
           </div>

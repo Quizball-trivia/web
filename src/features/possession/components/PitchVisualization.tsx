@@ -6,6 +6,7 @@ import { PitchMarker } from './pitch/PitchMarker';
 import { PitchSvgDefs } from './pitch/PitchSvgDefs';
 import { PitchBackground } from './pitch/PitchBackground';
 import { PossessionTrackScene } from './pitch/PossessionTrackScene';
+import { BarBattleOverlay } from './BarBattleOverlay';
 import { PitchBall } from './pitch/PitchBall';
 import { PitchGoalNetRipple } from './pitch/PitchGoalNetRipple';
 import { PitchHtmlActors } from './pitch/PitchHtmlActors';
@@ -81,6 +82,8 @@ export function PitchVisualization(props: PitchVisualizationProps) {
     useMarkerActors,
     playerHtmlIsShooter,
     opponentHtmlIsShooter,
+    playerFlipX,
+    opponentFlipX,
     playerHtmlActorMotion,
     opponentHtmlActorMotion,
     playerHtmlActorTransition,
@@ -205,6 +208,23 @@ export function PitchVisualization(props: PitchVisualizationProps) {
             />
           )}
 
+          {/* Penalty: reuse the ranked bar-battle overlay WITHOUT the open-play
+              possession-track background (which is meaningless over a penalty
+              pitch). Anchor bars to the penalty actor X (keeperX / penSpotX) so
+              they sit behind the penalty avatars and align with the +N flight
+              targets. penY === CY_ANCHORED, so the height is already correct. */}
+          {isPenalty && barBattle && (
+            <BarBattleOverlay
+              battle={barBattle}
+              mirrored={mirrored}
+              playerAvatarX={playerX}
+              opponentAvatarX={opponentX}
+              isPortrait={isPortrait}
+              variant={barBattleVariant}
+              isPenalty
+            />
+          )}
+
           {/* === UNIFIED BALL — single persistent <motion.g> that never unmounts === */}
           {!hideBall && !renderHtmlPitchActors && !renderSimpleShotBall && (
             <PitchBall
@@ -270,7 +290,8 @@ export function PitchVisualization(props: PitchVisualizationProps) {
             opponentAvatarAlt={opponentAvatarAlt}
             playerAvatarCustomization={playerAvatarCustomization}
             opponentAvatarCustomization={opponentAvatarCustomization}
-            mirrored={mirrored}
+            playerFlipX={playerFlipX}
+            opponentFlipX={opponentFlipX}
             isPortrait={isPortrait}
             hideBall={hideBall}
             ballOpacity={ballOpacity}

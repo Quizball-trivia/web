@@ -25,6 +25,8 @@ import { useStoreWallet } from '@/lib/queries/store.queries';
 import { useIncomingFriendRequestCount } from '@/lib/queries/social.queries';
 import { getSocket } from '@/lib/realtime/socket-client';
 import { useRealtimeConnection } from '@/lib/realtime/useRealtimeConnection';
+import { logger } from '@/utils/logger';
+import { useLobbyCommandMachine } from '@/features/friend/hooks/useLobbyCommandMachine';
 
 import type { RankedGeoHintDebug } from './appShell.types';
 import {
@@ -73,6 +75,7 @@ export function useAppShellViewModel() {
   );
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [nowTick, setNowTick] = useState(() => Date.now());
+  const lobbyCommands = useLobbyCommandMachine();
   useRealtimeConnection({ enabled: Boolean(authUser), selfUserId: authUser?.id ?? null });
 
   // Tick once per second so any time-comparison render values
@@ -85,8 +88,13 @@ export function useAppShellViewModel() {
   }, [suppressLobbyBannerUntil]);
 
   const currentPath = pathname ?? '/';
-  const showHeader = HEADER_PATHS.some((p) => (p === '/' ? currentPath === '/' : currentPath.startsWith(p)));
-  const showNav = !HIDE_NAV_PATHS.some((path) => currentPath.startsWith(path));
+  // A daily-challenge GAME (`/daily/challenges/<type>`) is an immersive fullscreen
+  // experience like a ranked match — hide the app header AND bottom nav so they
+  // can't be reached and content can't scroll behind them. The hub
+  // (`/daily/challenges`) keeps both.
+  const inDailyChallengeGame = currentPath.startsWith('/daily/challenges/');
+  const showHeader = !inDailyChallengeGame && HEADER_PATHS.some((p) => (p === '/' ? currentPath === '/' : currentPath.startsWith(p)));
+  const showNav = !inDailyChallengeGame && !HIDE_NAV_PATHS.some((path) => currentPath.startsWith(path));
   const inLobbyRoom = currentPath.startsWith('/friend/room');
   const lobbyBannerSuppressed =
     suppressLobbyBannerReason !== null ||
@@ -124,7 +132,7 @@ export function useAppShellViewModel() {
         opponent: draftOpponent,
       }
     : null;
-  const showDraftBanner = !!activeDraftBanner && !currentPath.startsWith('/game');
+  const showDraftBanner = !!activeDraftBanner && !inLobbyRoom && !currentPath.startsWith('/game');
   const activeMatchBanner = rejoinMatch
     ? {
         matchId: rejoinMatch.matchId,
@@ -152,6 +160,7 @@ export function useAppShellViewModel() {
     !!activeMatchBanner &&
     !forfeitPendingForActiveMatch &&
     !partyDropoutForActiveMatch &&
+    !inLobbyRoom &&
     !currentPath.startsWith('/game');
   const completedMatchBanner = matchBanner.finalResults
     ? {
@@ -234,9 +243,16 @@ export function useAppShellViewModel() {
   };
 
   const handleLeaveLobby = () => {
-    getSocket().emit('lobby:leave');
-    resetRealtime();
-    useRankedMatchmakingStore.getState().clearRankedMatchmaking();
+    if (lobbyCommands.isLeaving) return;
+    void lobbyCommands.leaveLobby()
+      .then((result) => {
+        if (!result?.ok) return;
+        resetRealtime();
+        useRankedMatchmakingStore.getState().clearRankedMatchmaking();
+      })
+      .catch((error) => {
+        logger.warn('Failed to leave lobby', { error });
+      });
   };
 
   const handleRejoinMatch = () => {

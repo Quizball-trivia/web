@@ -8,6 +8,7 @@ import type {
 } from '@/lib/realtime/socket.types';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import type { BarBattleState } from '../components/BarBattleOverlay';
+import { PENALTY_RESULT_DISPLAY_DELAY_MS } from '../realtimePossession.helpers';
 
 // ─── Timing constants (ms) ──────────────────────────────────────────────────
 //
@@ -37,9 +38,12 @@ const DONE_LINGER_MS = 100;
 const UNOPPOSED_PULSE_RESULT_HOLD_MS = 80;
 const UNOPPOSED_PULSE_DONE_LINGER_MS = 40;
 const RANKED_SCORE_FLIGHT_HANDOFF_MS = 420;
+const PENALTY_SAVE_SHIELD_RESULT_BUFFER_MS = 180;
+const PENALTY_SAVE_SHIELD_RESULT_HOLD_MS =
+  PENALTY_RESULT_DISPLAY_DELAY_MS - CHARGE_SHOT_OVERLAP_MS + PENALTY_SAVE_SHIELD_RESULT_BUFFER_MS;
 
 const POINTS_PER_BAR = 10;
-const MAX_BARS = 12;
+const MAX_BARS = 20;
 const BAR_BATTLE_LOCK_BUFFER_MS = 240;
 const UNOPPOSED_PULSE_LOCK_BUFFER_MS = 60;
 
@@ -51,12 +55,42 @@ export function pointsToBars(points: number): number {
 interface BarBattleTimingOptions {
   includeScoreFlightHandoff?: boolean;
   includeUnopposedPulse?: boolean;
+  holdPenaltySaveShield?: boolean;
+}
+
+export type BarBattleSide = 'player' | 'opponent';
+
+export function seatForBarBattleSide(
+  side: BarBattleSide,
+  mySeat: number | null | undefined,
+): 1 | 2 | null {
+  if (mySeat !== 1 && mySeat !== 2) return null;
+  if (side === 'player') return mySeat;
+  return mySeat === 1 ? 2 : 1;
+}
+
+export function shouldUsePossessionPointsForSide(params: {
+  phaseKind?: string | null;
+  speedStreakBoostedSeat?: 1 | 2 | null;
+  mySeat?: number | null;
+  side: BarBattleSide;
+}): boolean {
+  const { phaseKind, speedStreakBoostedSeat, mySeat, side } = params;
+  if (phaseKind !== 'normal') return false;
+  if (speedStreakBoostedSeat !== 1 && speedStreakBoostedSeat !== 2) return false;
+  return seatForBarBattleSide(side, mySeat) === speedStreakBoostedSeat;
 }
 
 function getScoreHandoffMs(includeScoreFlightHandoff = false): number {
   return includeScoreFlightHandoff
     ? Math.max(BOTH_SCORE_HOLD_MS, RANKED_SCORE_FLIGHT_HANDOFF_MS)
     : BOTH_SCORE_HOLD_MS;
+}
+
+function getResultHoldMs(options: BarBattleTimingOptions): number {
+  if (options.includeUnopposedPulse) return UNOPPOSED_PULSE_RESULT_HOLD_MS;
+  if (options.holdPenaltySaveShield) return Math.max(RESULT_HOLD_MS, PENALTY_SAVE_SHIELD_RESULT_HOLD_MS);
+  return RESULT_HOLD_MS;
 }
 
 export function getBarBattleTotalMs(
@@ -87,7 +121,10 @@ function getBarBattleTimelineMs(
   const chargeMs = (includeShotCharge || shouldPulseUnopposed) && survivorCount > 0
     ? CHARGE_BASE_MS + survivorCount * CHARGE_PER_BAR_MS
     : 0;
-  const resultHoldMs = shouldPulseUnopposed ? UNOPPOSED_PULSE_RESULT_HOLD_MS : RESULT_HOLD_MS;
+  const resultHoldMs = getResultHoldMs({
+    includeUnopposedPulse: shouldPulseUnopposed,
+    holdPenaltySaveShield: options.holdPenaltySaveShield,
+  });
   const doneLingerMs = shouldPulseUnopposed ? UNOPPOSED_PULSE_DONE_LINGER_MS : DONE_LINGER_MS;
   const scoreHandoffMs = getScoreHandoffMs(options.includeScoreFlightHandoff);
   const beforeResultMs = (
@@ -136,17 +173,33 @@ export function getBarBattleGoalAttackDelayMs(
 export function resolveBattlePoints(
   pointsEarned: number,
   questionKind?: MatchAnswerAckPayload['questionKind'] | MatchRoundResultPayload['questionKind'],
-  foundCount?: number
+  foundCount?: number,
+  possessionPointsEarned?: number
 ): number {
-  if (pointsEarned > 0) return pointsEarned;
+  const resolvedPoints = typeof possessionPointsEarned === 'number' ? possessionPointsEarned : pointsEarned;
+  if (resolvedPoints > 0) return resolvedPoints;
   if (questionKind === 'putInOrder' && typeof foundCount === 'number' && foundCount > 0) {
     return Math.min(foundCount, 5) * 20;
   }
-  return pointsEarned;
+  return resolvedPoints;
+}
+
+export function resolvePossessionBattlePoints(
+  round: Pick<MatchRoundResultPlayer, 'pointsEarned' | 'foundCount' | 'possessionPointsEarned'> | null | undefined,
+  questionKind?: MatchRoundResultPayload['questionKind'],
+  options: { usePossessionPoints?: boolean } = {}
+): number {
+  const usePossessionPoints = options.usePossessionPoints ?? true;
+  return resolveBattlePoints(
+    round?.pointsEarned ?? 0,
+    questionKind,
+    round?.foundCount,
+    usePossessionPoints ? round?.possessionPointsEarned : undefined
+  );
 }
 
 function isBarBattlePhaseKind(kind: string | undefined): boolean {
-  return kind === 'normal' || kind === 'last_attack';
+  return kind === 'normal' || kind === 'last_attack' || kind === 'penalty';
 }
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
@@ -169,6 +222,7 @@ interface UseBarBattleParams {
   dividerX: number;
   /** Dev prototype: glow surviving one-sided bars before normal possession movement. */
   unopposedBarPulse?: boolean;
+  mySeat?: number | null;
 }
 
 export function useBarBattle({
@@ -182,6 +236,7 @@ export function useBarBattle({
   phaseKind,
   dividerX,
   unopposedBarPulse = false,
+  mySeat = null,
 }: UseBarBattleParams): BarBattleState | null {
   const matchVariant = useRealtimeMatchStore((s) => s.match?.variant);
   const [battle, setBattle] = useState<BarBattleState | null>(null);
@@ -249,7 +304,7 @@ export function useBarBattle({
 
     // Get opponent points from best available source
     const oppPts = opponentRound
-      ? resolveBattlePoints(opponentRound.pointsEarned, roundResult?.questionKind, opponentRound.foundCount)
+      ? resolvePossessionBattlePoints(opponentRound, roundResult?.questionKind)
       : (opponentRecentPoints ?? 0);
 
     scoreShownQRef.current.opponent = qIndex;
@@ -290,21 +345,75 @@ export function useBarBattle({
     for (const t of timersRef.current) clearTimeout(t);
     timersRef.current = [];
 
-    const myPts = resolveBattlePoints(myRound.pointsEarned, roundResult.questionKind, myRound.foundCount);
-    const oppPts = resolveBattlePoints(opponentRound.pointsEarned, roundResult.questionKind, opponentRound.foundCount);
+    const boostedSeat = roundResult.deltas?.speedStreakBoostedSeat ?? null;
+    const myPts = resolvePossessionBattlePoints(myRound, roundResult.questionKind, {
+      usePossessionPoints: shouldUsePossessionPointsForSide({
+        phaseKind: kind,
+        speedStreakBoostedSeat: boostedSeat,
+        mySeat,
+        side: 'player',
+      }),
+    });
+    const oppPts = resolvePossessionBattlePoints(opponentRound, roundResult.questionKind, {
+      usePossessionPoints: shouldUsePossessionPointsForSide({
+        phaseKind: kind,
+        speedStreakBoostedSeat: boostedSeat,
+        mySeat,
+        side: 'opponent',
+      }),
+    });
     const pBars = pointsToBars(myPts);
     const oBars = pointsToBars(oppPts);
     const delta = pBars - oBars;
+
+    // DEBUG: trace why the bar fill can disagree with the flight number (e.g.
+    // flight +100/+10 but bar shows 80). Logs, per player: the raw pointsEarned
+    // (what the flight shows), the possessionPointsEarned (what the bar uses),
+    // the resolved value, the bar counts, AND the authoritative server delta —
+    // plus an explicit `mismatch` flag when raw and possession points diverge or
+    // when the bar's point-delta != raw-delta. Search console for [bar-battle-debug].
+    const rawDelta = (myRound.pointsEarned ?? 0) - (opponentRound.pointsEarned ?? 0);
+    const possessionMismatch =
+      (myRound.possessionPointsEarned != null && myRound.possessionPointsEarned !== myRound.pointsEarned) ||
+      (opponentRound.possessionPointsEarned != null && opponentRound.possessionPointsEarned !== opponentRound.pointsEarned);
+    console.info('[bar-battle-debug]', {
+      qIndex: roundResult.qIndex,
+      questionKind: roundResult.questionKind,
+      phaseKind: roundResult.phaseKind,
+      myRawPoints: myRound.pointsEarned,
+      myPossessionPoints: myRound.possessionPointsEarned,
+      myResolvedPts: myPts,
+      oppRawPoints: opponentRound.pointsEarned,
+      oppPossessionPoints: opponentRound.possessionPointsEarned,
+      oppResolvedPts: oppPts,
+      pBars,
+      oBars,
+      barDelta: delta,
+      barDeltaPoints: delta * 10,
+      // What the FLIGHT-shown raw scores would imply for the swing.
+      rawDeltaPoints: rawDelta,
+      // Server's authoritative possession swing for this round (the bar should match this).
+      serverPossessionDelta: roundResult.deltas?.possessionDelta ?? null,
+      // True when bar (possession) points differ from the raw points the flight shows.
+      possessionMismatch,
+      // True when the bar's point-delta doesn't equal the raw flight delta (the visible bug).
+      deltaMismatch: delta * 10 !== rawDelta,
+    });
     const cancelledCount = Math.min(pBars, oBars);
     const key = roundResult.qIndex;
     const snapDividerX = dividerXRef.current;
     const isShotResolution = Boolean(
       roundResult.deltas?.goalScoredBySeat || roundResult.deltas?.penaltyOutcome
     );
+    const penaltyOutcome = kind === 'penalty'
+      ? roundResult.deltas?.penaltyOutcome ?? null
+      : null;
     const shouldPulseUnopposed = unopposedBarPulse && !isShotResolution && cancelledCount === 0 && Math.max(pBars, oBars) > 0;
 
-    // If both scored 0, just clean up
-    if (myPts === 0 && oppPts === 0) {
+    // If both scored 0, there is normally no bar battle to show. Penalty
+    // resolutions still need a short state so the +0 flight can target the
+    // pitch before the save/miss animation takes over.
+    if (myPts === 0 && oppPts === 0 && !(kind === 'penalty' && isShotResolution)) {
       queueMicrotask(() => setBattle(null));
       return;
     }
@@ -318,6 +427,7 @@ export function useBarBattle({
       remainingDelta: delta,
       dividerX: snapDividerX,
       chargeMode: shouldPulseUnopposed ? 'pulse' as const : 'lunge' as const,
+      penaltyOutcome,
     };
 
     // First ensure both-score is showing with final values
@@ -365,7 +475,10 @@ export function useBarBattle({
         }, t)
       : null;
 
-    const resultHoldMs = shouldPulseUnopposed ? UNOPPOSED_PULSE_RESULT_HOLD_MS : RESULT_HOLD_MS;
+    const resultHoldMs = getResultHoldMs({
+      includeUnopposedPulse: shouldPulseUnopposed,
+      holdPenaltySaveShield: penaltyOutcome === 'saved' && survivorCount > 0,
+    });
     const doneLingerMs = shouldPulseUnopposed ? UNOPPOSED_PULSE_DONE_LINGER_MS : DONE_LINGER_MS;
 
     // Result: show remaining bars

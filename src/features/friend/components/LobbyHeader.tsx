@@ -2,9 +2,10 @@ import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { DEFAULT_AVATAR_PRIMARY, DEFAULT_AVATAR_SECONDARY } from "@/lib/avatars";
 import type { HeadToHeadSummary } from "@/lib/domain";
 import type { LobbyMember } from "@/lib/realtime/socket.types";
-import { buildFriendInviteUrl } from "@/lib/auth/postAuthRedirect";
+import { buildFriendInvitePath, buildFriendInviteUrl } from "@/lib/auth/postAuthRedirect";
 import { copyToClipboard } from "@/utils/clipboard";
-import { Check, Copy, Link2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Check, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { useLocale } from "@/contexts/LocaleContext";
 import { trackFriendInviteSent } from "@/lib/analytics/game-events";
@@ -19,6 +20,49 @@ interface LobbyHeaderProps {
   maxMembers: number;
 }
 
+const labelStyle = {
+  fontFamily: "'Poppins', sans-serif",
+  fontWeight: 600,
+  fontSize: 11,
+  letterSpacing: '0.08em',
+} as const;
+
+const pillStyle = {
+  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+  fontSize: 12,
+  fontWeight: 600,
+} as const;
+
+const inviteRowHeight = 'h-7';
+
+function InviteCopyButton({
+  onClick,
+  disabled,
+  ariaLabel,
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+  ariaLabel: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={ariaLabel}
+      disabled={disabled}
+      className={cn(
+        inviteRowHeight,
+        'flex w-7 shrink-0 items-center justify-center rounded-[8px]',
+        'border border-brand-yellow/55 bg-brand-yellow/20 text-brand-yellow',
+        'transition-colors hover:border-brand-yellow hover:bg-brand-yellow/35',
+        'disabled:pointer-events-none disabled:opacity-40',
+      )}
+    >
+      <Copy className="size-3.5" strokeWidth={2.5} />
+    </button>
+  );
+}
+
 export function LobbyHeader({
   lobbyName,
   lobbyCode,
@@ -28,6 +72,9 @@ export function LobbyHeader({
   maxMembers,
 }: LobbyHeaderProps) {
   const { t } = useLocale();
+  const inviteUrl = lobbyCode ? buildFriendInviteUrl(lobbyCode) : null;
+  const invitePath = lobbyCode ? buildFriendInvitePath(lobbyCode) : null;
+
   const copyCode = async () => {
     if (!lobbyCode) return;
     const success = await copyToClipboard(lobbyCode);
@@ -42,8 +89,6 @@ export function LobbyHeader({
   };
 
   const copyInviteLink = async () => {
-    if (!lobbyCode) return;
-    const inviteUrl = buildFriendInviteUrl(lobbyCode);
     if (!inviteUrl) return;
     const success = await copyToClipboard(inviteUrl);
     if (success) {
@@ -73,35 +118,48 @@ export function LobbyHeader({
             >
               {lobbyName || t("friend.friendlyLobby")}
             </h1>
-            <div className="mt-1.5 flex items-center gap-2 flex-wrap">
-              <span
-                className="uppercase text-white/55"
-                style={{ fontFamily: poppins, fontWeight: 600, fontSize: 11, letterSpacing: '0.08em' }}
-              >
-                {t("appShell.code")}
-              </span>
-              <span
-                className="select-all rounded-[10px] bg-surface-deep px-2.5 py-1 font-mono uppercase tracking-wider text-white"
-                style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 13, fontWeight: 600 }}
-              >
-                {lobbyCode || "..."}
-              </span>
-              <button
-                onClick={copyCode}
-                aria-label={t("friend.copyLobbyCode")}
-                className="text-white/55 transition-colors hover:text-brand-cyan"
-                disabled={!lobbyCode}
-              >
-                <Copy className="size-3.5" />
-              </button>
-              <button
-                onClick={copyInviteLink}
-                aria-label={t("friend.copyInviteLink")}
-                className="text-white/55 transition-colors hover:text-brand-cyan"
-                disabled={!lobbyCode}
-              >
-                <Link2 className="size-3.5" />
-              </button>
+
+            <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
+              <div className="flex shrink-0 items-center gap-1.5">
+                <span className="shrink-0 uppercase text-white/55" style={labelStyle}>
+                  {t("appShell.code")}
+                </span>
+                <span
+                  className={cn(
+                    inviteRowHeight,
+                    'inline-flex shrink-0 select-all items-center rounded-[8px] bg-surface-deep px-2 font-mono uppercase tracking-wider text-white',
+                  )}
+                  style={pillStyle}
+                >
+                  {lobbyCode || "..."}
+                </span>
+                <InviteCopyButton
+                  onClick={() => void copyCode()}
+                  disabled={!lobbyCode}
+                  ariaLabel={t("friend.copyLobbyCode")}
+                />
+              </div>
+
+              <div className="flex min-w-0 max-w-full items-center gap-1.5">
+                <span className="shrink-0 uppercase text-white/55" style={labelStyle}>
+                  {t("friend.inviteLinkLabel")}
+                </span>
+                <span
+                  className={cn(
+                    inviteRowHeight,
+                    'inline-flex min-w-0 max-w-[9.5rem] select-all items-center truncate rounded-[8px] bg-surface-deep px-2 font-mono text-white sm:max-w-[13rem]',
+                  )}
+                  style={pillStyle}
+                  title={inviteUrl ?? undefined}
+                >
+                  {invitePath || "..."}
+                </span>
+                <InviteCopyButton
+                  onClick={() => void copyInviteLink()}
+                  disabled={!inviteUrl}
+                  ariaLabel={t("friend.copyInviteLink")}
+                />
+              </div>
             </div>
           </div>
 

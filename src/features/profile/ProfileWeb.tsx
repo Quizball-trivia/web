@@ -808,7 +808,11 @@ export function ProfileWeb({
                   : match.competition === 'placement'
                     ? t('profileScreen.modePlacement')
                     : t('profileScreen.modeRanked');
-                const showRpDelta = match.competition !== 'friendly' && match.rpDelta !== null;
+                const isPlacementMatch = match.competition === 'placement';
+                // Placement matches don't move RP per win/loss (the seed is
+                // applied once), so a +/- RP number is misleading — show a
+                // neutral "Placement" badge instead. Ranked still shows RP.
+                const showRpDelta = !isPlacementMatch && match.competition !== 'friendly' && match.rpDelta !== null;
                 const rpDelta = match.rpDelta ?? 0;
                 const formattedRpDelta = `${rpDelta >= 0 ? '+' : ''}${rpDelta} RP`;
                 return (
@@ -839,6 +843,11 @@ export function ProfileWeb({
 
                     {/* RP + Score */}
                     <div className="ml-auto flex items-center justify-end gap-3 md:gap-5 shrink-0 whitespace-nowrap">
+                      {isPlacementMatch && (
+                        <span className="rounded-[8px] bg-white/10 px-3 py-2 font-poppins text-[10px] md:text-[11px] font-semibold uppercase leading-none text-white/70">
+                          {t('recentMatches.placementMatch')}
+                        </span>
+                      )}
                       {showRpDelta && (
                         <span className={`rounded-[8px] px-3 py-2 font-poppins text-[10px] md:text-[11px] font-semibold leading-none tabular-nums ${rpPillTone}`}>
                           {formattedRpDelta}

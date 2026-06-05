@@ -7,6 +7,7 @@ import {
   type FriendRequestListItemResponse,
   type SocialPlayerResponse,
 } from "@/lib/repositories/social.repo";
+import { useAuthStore } from "@/stores/auth.store";
 import type { AvatarCustomization } from "@/types/game";
 
 export interface SocialPlayer {
@@ -66,6 +67,10 @@ export function useSocialFriends() {
 }
 
 export function useFriendRequests() {
+  // Auth-only polling: only fetch (and only keep the 60s timer running) while the
+  // session is authenticated. A logged-out / loading / terminally-failed session
+  // would otherwise poll forever, each tick firing a 401→refresh→400 cycle.
+  const isAuthenticated = useAuthStore((s) => s.status === "authenticated");
   return useQuery({
     queryKey: queryKeys.social.requests(),
     queryFn: async (): Promise<FriendRequestsDTO> => {
@@ -78,11 +83,13 @@ export function useFriendRequests() {
     },
     staleTime: 30_000,
     gcTime: 10 * 60_000,
-    refetchInterval: 60_000,
+    enabled: isAuthenticated,
+    refetchInterval: () => (isAuthenticated ? 60_000 : false),
   });
 }
 
 export function useIncomingFriendRequestCount() {
+  const isAuthenticated = useAuthStore((s) => s.status === "authenticated");
   return useQuery({
     queryKey: queryKeys.social.requests(),
     queryFn: async (): Promise<FriendRequestsDTO> => {
@@ -96,7 +103,8 @@ export function useIncomingFriendRequestCount() {
     select: (data) => data.incomingCount,
     staleTime: 30_000,
     gcTime: 10 * 60_000,
-    refetchInterval: 60_000,
+    enabled: isAuthenticated,
+    refetchInterval: () => (isAuthenticated ? 60_000 : false),
   });
 }
 
