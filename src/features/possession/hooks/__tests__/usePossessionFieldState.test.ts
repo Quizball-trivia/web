@@ -370,7 +370,14 @@ describe('usePossessionFieldState', () => {
       roundResult: makeRoundResult(5, 1, 1),
     });
 
+    // A new roundResult reference re-arms the goal-attack animation: the effect
+    // resets the ready key (microtask) and re-schedules the attack-start timer.
+    // Flush the microtask first, then advance past the delay, before asserting
+    // the captured origin (keyed by qIndex) is still the same 352.
     await act(async () => {});
+    await act(async () => {
+      vi.advanceTimersByTime(GOAL_ATTACK_START_DELAY_MS + 50);
+    });
 
     expect(result.current.pitchProps.shotMode?.ballOriginX).toBe(352);
   });
