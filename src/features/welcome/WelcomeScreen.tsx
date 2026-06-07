@@ -30,12 +30,12 @@ export function WelcomeScreen() {
   const {
     loginOpen,
     setLoginOpen,
-    showOpenInBrowser,
     handleLoginDialogOpenChange,
     handleCloseLoginDialog,
     handleKickOff,
     handleGoogleCredential,
     disableGoogleIdentityOverlay,
+    showFacebookLogin,
     authMode,
     handleAuthModeChange,
     authEmail,
@@ -88,7 +88,7 @@ export function WelcomeScreen() {
   const phoneAuthAvailability = useGeorgianPhoneAuthAvailability();
   const canUseGeorgianPhoneAuth = phoneAuthAvailability.isAvailable;
 
-  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? '';
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ?? '';
 
   useEffect(() => {
     if (!canUseGeorgianPhoneAuth && authMode === 'phone') {
@@ -149,7 +149,6 @@ export function WelcomeScreen() {
 
       <WelcomeLoginDialog
         open={loginOpen}
-        showOpenInBrowser={showOpenInBrowser}
         googleClientId={googleClientId}
         disableGoogleIdentityOverlay={disableGoogleIdentityOverlay}
         authMode={authMode}
@@ -170,6 +169,7 @@ export function WelcomeScreen() {
         forgotSent={forgotSent}
         forgotError={forgotError}
         showPhoneAuth={canUseGeorgianPhoneAuth}
+        showFacebookLogin={showFacebookLogin}
         onOpenChange={handleLoginDialogOpenChange}
         onClose={handleCloseLoginDialog}
         onGoogleLogin={handleGoogleLogin}

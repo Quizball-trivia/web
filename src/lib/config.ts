@@ -1,5 +1,12 @@
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8001";
+function nonBlank(value: string | undefined, fallback: string): string {
+  const trimmed = value?.trim();
+  return trimmed && trimmed.length > 0 ? trimmed : fallback;
+}
+
+export const API_BASE_URL = nonBlank(
+  process.env.NEXT_PUBLIC_API_URL,
+  "http://localhost:8001",
+);
 
 /**
  * Master switch for phone / OTP sign-in. When on, the phone tab/OTP UI appears

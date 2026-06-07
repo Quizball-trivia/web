@@ -2,22 +2,26 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/lib/api/api";
 import type { User } from "@/lib/types";
 
-const bootstrapUserMock = vi.fn();
-const refreshSessionMock = vi.fn();
+const fetchCurrentUserMock = vi.fn();
+const getSupabaseSessionMock = vi.fn();
+const signOutLocalMock = vi.fn();
 const clearTokensMock = vi.fn();
 const storageRemoveMock = vi.fn();
 const identifyUserMock = vi.fn();
 const resetUserMock = vi.fn();
 const setPersonPropertiesMock = vi.fn();
-const setNewRelicUserMock = vi.fn();
 
 vi.mock("@/lib/auth/session", () => ({
-  bootstrapUser: (...args: unknown[]) => bootstrapUserMock(...args),
+  fetchCurrentUser: (...args: unknown[]) => fetchCurrentUserMock(...args),
 }));
 
 vi.mock("@/lib/auth/auth.service", () => ({
   logout: vi.fn(),
-  refreshSession: (...args: unknown[]) => refreshSessionMock(...args),
+}));
+
+vi.mock("@/lib/auth/supabase", () => ({
+  getSupabaseSession: (...args: unknown[]) => getSupabaseSessionMock(...args),
+  signOutLocal: (...args: unknown[]) => signOutLocalMock(...args),
 }));
 
 vi.mock("@/lib/auth/tokenStorage", () => ({
@@ -28,10 +32,6 @@ vi.mock("@/lib/posthog", () => ({
   identifyUser: (...args: unknown[]) => identifyUserMock(...args),
   resetUser: () => resetUserMock(),
   setPersonProperties: (...args: unknown[]) => setPersonPropertiesMock(...args),
-}));
-
-vi.mock("@/lib/newrelic-browser", () => ({
-  setNewRelicUser: (...args: unknown[]) => setNewRelicUserMock(...args),
 }));
 
 vi.mock("@/lib/analytics/game-events", () => ({
@@ -93,13 +93,13 @@ describe("auth store bootstrap", () => {
     vi.useRealTimers();
   });
 
-  it("clears tokens and sets anonymous on a terminal refresh failure", async () => {
-    bootstrapUserMock.mockRejectedValueOnce(new ApiError("Request failed", 401, null));
-    refreshSessionMock.mockResolvedValueOnce({ ok: false, terminal: true });
+  it("clears legacy tokens and sets anonymous when Supabase has no session", async () => {
+    getSupabaseSessionMock.mockResolvedValueOnce(null);
 
     await useAuthStore.getState().bootstrap();
 
-    expect(clearTokensMock).toHaveBeenCalledTimes(1);
+    expect(fetchCurrentUserMock).not.toHaveBeenCalled();
+    expect(clearTokensMock).toHaveBeenCalledTimes(2);
     expect(storageRemoveMock).toHaveBeenCalledWith("store_wallet");
     expect(useAuthStore.getState()).toMatchObject({
       status: "anonymous",
@@ -108,15 +108,30 @@ describe("auth store bootstrap", () => {
     });
   });
 
-  it("keeps tokens and stays loading on a transient refresh failure", async () => {
-    bootstrapUserMock
+  it("signs out locally and sets anonymous when users/me rejects the Supabase token", async () => {
+    getSupabaseSessionMock.mockResolvedValueOnce({ access_token: "token-a" });
+    fetchCurrentUserMock.mockRejectedValueOnce(new ApiError("Request failed", 401, null));
+
+    await useAuthStore.getState().bootstrap();
+
+    expect(signOutLocalMock).toHaveBeenCalledTimes(1);
+    expect(clearTokensMock).toHaveBeenCalledTimes(2);
+    expect(storageRemoveMock).toHaveBeenCalledWith("store_wallet");
+    expect(useAuthStore.getState()).toMatchObject({
+      status: "anonymous",
+      user: null,
+      hasBootstrapped: true,
+    });
+  });
+
+  it("stays loading when Supabase session reads keep failing transiently", async () => {
+    getSupabaseSessionMock
       .mockRejectedValueOnce(new Error("network down"))
       .mockRejectedValueOnce(new Error("still down"));
-    refreshSessionMock.mockResolvedValueOnce({ ok: false, terminal: false });
 
     await runBootstrapWithRetry();
 
-    expect(clearTokensMock).not.toHaveBeenCalled();
+    expect(clearTokensMock).toHaveBeenCalledTimes(1);
     expect(storageRemoveMock).not.toHaveBeenCalled();
     expect(useAuthStore.getState()).toMatchObject({
       status: "loading",
@@ -124,15 +139,17 @@ describe("auth store bootstrap", () => {
     });
   });
 
-  it("keeps tokens when users/me still fails transiently after a successful refresh", async () => {
-    bootstrapUserMock
+  it("stays loading when users/me still fails transiently after a valid session", async () => {
+    getSupabaseSessionMock
+      .mockResolvedValueOnce({ access_token: "token-a" })
+      .mockResolvedValueOnce({ access_token: "token-a" });
+    fetchCurrentUserMock
       .mockRejectedValueOnce(new Error("profile timeout"))
       .mockRejectedValueOnce(new Error("profile still slow"));
-    refreshSessionMock.mockResolvedValueOnce({ ok: true });
 
     await runBootstrapWithRetry();
 
-    expect(clearTokensMock).not.toHaveBeenCalled();
+    expect(clearTokensMock).toHaveBeenCalledTimes(1);
     expect(useAuthStore.getState()).toMatchObject({
       status: "loading",
       user: null,
@@ -140,14 +157,16 @@ describe("auth store bootstrap", () => {
   });
 
   it("authenticates when the single retry succeeds", async () => {
-    bootstrapUserMock
+    getSupabaseSessionMock
+      .mockResolvedValueOnce({ access_token: "token-a" })
+      .mockResolvedValueOnce({ access_token: "token-a" });
+    fetchCurrentUserMock
       .mockRejectedValueOnce(new Error("profile timeout"))
       .mockResolvedValueOnce(USER);
-    refreshSessionMock.mockResolvedValueOnce({ ok: true });
 
     await runBootstrapWithRetry();
 
-    expect(clearTokensMock).not.toHaveBeenCalled();
+    expect(clearTokensMock).toHaveBeenCalledTimes(1);
     expect(useAuthStore.getState()).toMatchObject({
       status: "authenticated",
       user: USER,

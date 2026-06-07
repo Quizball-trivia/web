@@ -1,22 +1,17 @@
 import posthog from 'posthog-js';
-import { initNewRelic } from './lib/newrelic-browser';
 
-// Initialize New Relic (production only)
-if (typeof window !== 'undefined') {
-  initNewRelic().catch((error) => {
-    console.error('New Relic initialization error:', error);
-  });
-}
+const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY?.trim();
+const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST?.trim();
 
 // Initialize PostHog (production only)
 if (
   typeof window !== 'undefined' &&
-  process.env.NEXT_PUBLIC_POSTHOG_KEY &&
+  POSTHOG_KEY &&
   process.env.NODE_ENV === 'production'
 ) {
   try {
-    posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
-      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+    posthog.init(POSTHOG_KEY, {
+      api_host: POSTHOG_HOST,
       person_profiles: 'identified_only',
       capture_pageview: false,
       capture_pageleave: true,

@@ -1,4 +1,3 @@
-import { refreshSession } from "@/lib/auth/auth.service";
 import {
   ApiError,
   api,
@@ -7,6 +6,8 @@ import {
   type HttpMethod,
   type PathsWithMethod,
 } from "@/lib/api/api";
+import { clearTokens } from "@/lib/auth/tokenStorage";
+import { getSupabaseAccessToken, signOutLocal } from "@/lib/auth/supabase";
 
 type ApiFetchOptions<
   M extends HttpMethod,
@@ -15,9 +16,7 @@ type ApiFetchOptions<
   skipRefresh?: boolean;
 };
 
-// Auth endpoints must never trigger the 401→refresh→retry cycle: a 401/400 from
-// these IS the refresh failing, so retrying would recurse. Refresh itself also
-// runs with `auth: false`, which is a second guard.
+// Auth endpoints must never trigger the 401→session-reread→retry cycle.
 const NON_REFRESHABLE_PATHS = new Set<string>([
   "/api/v1/auth/refresh",
   "/api/v1/auth/login",
@@ -32,6 +31,7 @@ export async function apiFetch<
   M extends HttpMethod,
   P extends PathsWithMethod<M>,
 >(method: M, path: P, options: ApiFetchOptions<M, P> = {}): Promise<ApiResponse<M, P>> {
+  const tokenBefore = options.auth === false ? null : await getSupabaseAccessToken();
   try {
     return await api.request(method, path, options);
   } catch (error) {
@@ -43,14 +43,16 @@ export async function apiFetch<
       !NON_REFRESHABLE_PATHS.has(String(path));
 
     if (canRefresh) {
-      // Single-flight: parallel 401s all await the same refresh attempt.
-      const result = await refreshSession();
-      if (result.ok) {
+      const tokenAfter = await getSupabaseAccessToken();
+      if (tokenAfter && tokenAfter !== tokenBefore) {
         return apiFetch(method, path, { ...options, skipRefresh: true });
       }
-      // Terminal failure already cleared tokens inside refreshSession; transient
-      // failure leaves them intact for a later attempt. Either way, surface the
-      // original 401 to the caller rather than retrying into a loop.
+      try {
+        await signOutLocal();
+      } catch {
+        // Best-effort; still clear legacy app state below.
+      }
+      clearTokens();
     }
     throw error;
   }

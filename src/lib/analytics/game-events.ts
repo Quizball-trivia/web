@@ -1,4 +1,6 @@
 import { trackEvent } from '@/lib/posthog';
+import { storage, STORAGE_KEYS } from '@/utils/storage';
+import { getInAppBrowserApp } from '@/lib/auth/in-app-browser';
 
 type AuthMethod = 'google' | 'facebook' | 'email' | 'phone';
 
@@ -67,17 +69,34 @@ export function trackSignupStarted(method: AuthMethod = 'google') {
   // returning logins (the server only knows new-vs-returning after auth).
   // `auth_started` is the honest name; `signup_started` is kept for historical
   // dashboards (dual-fire) and should be retired once charts are migrated.
-  // Real new-account signal = `onboarding_completed` (only new users see it).
-  trackEvent('auth_started', { method });
-  trackEvent('signup_started', { method });
+  // Real new-account signal = server `account_created`; `onboarding_completed`
+  // (now method-aware) is the client-side proxy until those charts repoint.
+  //
+  // Persist the method so onboarding_completed can attribute by it, and tag the
+  // in-app browser (facebook/instagram/tiktok/…) — that's the segment where OAuth
+  // fails, so we want it on the intent event for funnel breakdowns.
+  const inAppBrowser = getInAppBrowserApp();
+  try {
+    storage.set(STORAGE_KEYS.SIGNUP_METHOD, method);
+  } catch {
+    // storage unavailable — onboarding_completed just won't carry method
+  }
+  trackEvent('auth_started', { method, in_app_browser: inAppBrowser });
+  trackEvent('signup_started', { method, in_app_browser: inAppBrowser });
 }
 
 export function trackSignupCompleted(method: AuthMethod = 'google') {
+  // Legacy client signal. The authoritative new-account event is now server-side
+  // `account_created` (fires once per real account, all methods). Kept dual-firing
+  // only so historical charts don't go blank; retire once they repoint.
   trackEvent('signup_completed', { method });
 }
 
-export function trackLoginCompleted(method: AuthMethod = 'google') {
-  trackEvent('login_completed', { method });
+export function trackLoginCompleted(_method: AuthMethod = 'google') {
+  // No-op: `login_completed` is now emitted authoritatively by the backend for
+  // every method (server is the only place that knows new-vs-returning). Firing
+  // it here too would double-count email/phone logins. Call sites are kept so the
+  // server stays the single source of truth. The arg is intentionally unused.
 }
 
 export function trackLogout() {
@@ -93,7 +112,11 @@ export function trackOnboardingStepCompleted(step: string) {
 }
 
 export function trackOnboardingCompleted() {
-  trackEvent('onboarding_completed');
+  // Attribute the real signup by method. Read the method stored at auth time so
+  // this event — the client-side proxy for a real new signup — is self-contained
+  // and breakable down by google/facebook/email without a join.
+  const method = storage.get<AuthMethod | null>(STORAGE_KEYS.SIGNUP_METHOD, null);
+  trackEvent('onboarding_completed', method ? { method } : {});
 }
 
 export function trackInAppBrowserBlocked(browser: string, isIOS: boolean, isAndroid: boolean) {

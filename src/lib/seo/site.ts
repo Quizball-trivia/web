@@ -8,7 +8,10 @@ export const SITE_DESCRIPTION =
 // Canonical production URL. Hardcoded so Vercel preview/branch deploys
 // can never leak `*.vercel.app` into canonical/sitemap/OpenGraph URLs.
 // NEXT_PUBLIC_SITE_URL is honored as an override for self-hosting.
-const rawUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://quizball.io";
+const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+const rawUrl = configuredSiteUrl && configuredSiteUrl.length > 0
+  ? configuredSiteUrl
+  : "https://quizball.io";
 
 export const SITE_URL = rawUrl.startsWith("http") ? rawUrl : `https://${rawUrl}`;
 

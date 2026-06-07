@@ -4,8 +4,8 @@ import type React from "react";
 import type { User } from "@/lib/types";
 
 const replaceMock = vi.fn();
-const bootstrapMock = vi.fn();
-const refreshWithTokenDetailedMock = vi.fn();
+const fetchCurrentUserMock = vi.fn();
+const getSessionMock = vi.fn();
 const consumeRedirectOAuthProviderMock = vi.fn();
 const trackSignupCompletedMock = vi.fn();
 const trackLoginCompletedMock = vi.fn();
@@ -34,16 +34,23 @@ vi.mock("@/components/shared/LoadingScreen", () => ({
 
 vi.mock("@/lib/auth/auth.service", () => ({
   consumeRedirectOAuthProvider: () => consumeRedirectOAuthProviderMock(),
-  parseOAuthHash: (hash: string) => {
-    const params = new URLSearchParams(hash.replace(/^#/, ""));
-    const accessToken = params.get("access_token");
-    const refreshToken = params.get("refresh_token");
-    return accessToken && refreshToken ? { accessToken, refreshToken } : null;
-  },
-  refreshWithTokenDetailed: (...args: unknown[]) => refreshWithTokenDetailedMock(...args),
+  isPendingDeletionAuthError: vi.fn(() => false),
   restorePendingDeletionWithToken: vi.fn(),
   logout: vi.fn(),
   refreshSession: vi.fn(),
+}));
+
+vi.mock("@/lib/auth/supabase", () => ({
+  getSupabaseClient: () => ({
+    auth: {
+      getSession: (...args: unknown[]) => getSessionMock(...args),
+    },
+  }),
+  getSupabaseSession: () => getSessionMock().then((result: { data?: { session?: unknown } }) => result.data?.session ?? null),
+}));
+
+vi.mock("@/lib/auth/session", () => ({
+  fetchCurrentUser: () => fetchCurrentUserMock(),
 }));
 
 vi.mock("@/lib/analytics/game-events", () => ({
@@ -83,21 +90,21 @@ function makeUser(onboardingComplete: boolean): User {
 describe("OAuthCallbackScreen analytics", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    window.history.replaceState({}, "", "/auth/callback#access_token=access&refresh_token=refresh");
+    window.history.replaceState({}, "", "/auth/callback?code=pkce-code");
     useAuthStore.setState({
       status: "loading",
       user: null,
       hasBootstrapped: false,
-      bootstrap: bootstrapMock,
     });
-    refreshWithTokenDetailedMock.mockResolvedValue({ ok: true });
+    getSessionMock.mockResolvedValue({
+      data: { session: { access_token: "access", refresh_token: "refresh" } },
+      error: null,
+    });
     consumeRedirectOAuthProviderMock.mockReturnValue("google");
   });
 
   it("tracks signup_completed for a successful callback when the user still needs onboarding", async () => {
-    bootstrapMock.mockImplementation(async () => {
-      useAuthStore.setState({ user: makeUser(false), status: "authenticated" });
-    });
+    fetchCurrentUserMock.mockResolvedValue(makeUser(false));
 
     render(<OAuthCallbackScreen />);
 
@@ -108,9 +115,7 @@ describe("OAuthCallbackScreen analytics", () => {
 
   it("tracks login_completed for a successful callback when the user is onboarded", async () => {
     consumeRedirectOAuthProviderMock.mockReturnValue("facebook");
-    bootstrapMock.mockImplementation(async () => {
-      useAuthStore.setState({ user: makeUser(true), status: "authenticated" });
-    });
+    fetchCurrentUserMock.mockResolvedValue(makeUser(true));
 
     render(<OAuthCallbackScreen />);
 
@@ -120,7 +125,7 @@ describe("OAuthCallbackScreen analytics", () => {
   });
 
   it("does not track completion when the callback fails", async () => {
-    refreshWithTokenDetailedMock.mockResolvedValue({ ok: false, pendingDeletion: false });
+    fetchCurrentUserMock.mockRejectedValue(new Error("provision failed"));
 
     render(<OAuthCallbackScreen />);
 

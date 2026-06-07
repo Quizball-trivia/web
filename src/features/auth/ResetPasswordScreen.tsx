@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { AppLogo } from '@/components/AppLogo';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { PasswordForm } from '@/features/auth/PasswordForm';
-import { parseOAuthHash, refreshWithToken, resetPassword } from '@/lib/auth/auth.service';
+import { resetPassword } from '@/lib/auth/auth.service';
+import { getSupabaseClient } from '@/lib/auth/supabase';
 import { useAuthStore } from '@/stores/auth.store';
 import { getAuthenticatedEntryRoute } from '@/lib/auth/onboarding';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -17,11 +18,30 @@ import { logger } from '@/utils/logger';
 
 type Phase = 'verifying' | 'ready' | 'invalid';
 
+async function waitForRecoverySession() {
+  const supabase = getSupabaseClient();
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      lastError = error;
+    } else if (data.session) {
+      return data.session;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+
+  if (lastError) {
+    throw lastError;
+  }
+  return null;
+}
+
 /**
  * Handles Supabase password-recovery links. The recovery link lands here with
- * tokens in the URL hash (or query). We establish the session from them,
- * clear the tokens from the URL, then let the user set a new password via the
- * shared PasswordForm and POST it to the reset-password endpoint.
+ * a PKCE code/token payload. Supabase JS establishes the session from the URL,
+ * then the user sets a new password through the shared PasswordForm.
  */
 export function ResetPasswordScreen() {
   const { t } = useLocale();
@@ -33,34 +53,23 @@ export function ResetPasswordScreen() {
   useEffect(() => {
     const establishSession = async () => {
       try {
-        const hash = window.location.hash || '';
         const query = window.location.search || '';
+        const hash = window.location.hash || '';
         const queryParams = new URLSearchParams(query.replace(/^\?/, ''));
-        const queryAccessToken = queryParams.get('access_token');
-        const queryRefreshToken = queryParams.get('refresh_token');
-
-        const tokens =
-          parseOAuthHash(hash) ??
-          (queryAccessToken && queryRefreshToken
-            ? { accessToken: queryAccessToken, refreshToken: queryRefreshToken }
-            : null);
-
-        if (!tokens) {
-          logger.warn('Reset password: no tokens in recovery link');
+        const hashParams = new URLSearchParams(hash.replace(/^#/, ''));
+        const recoveryError = queryParams.get('error') ?? hashParams.get('error');
+        if (recoveryError) {
+          logger.warn('Reset password: recovery provider returned an error', {
+            error: recoveryError,
+          });
+          window.history.replaceState({}, document.title, window.location.pathname);
           setPhase('invalid');
           return;
         }
 
-        let refreshed: boolean;
-        try {
-          refreshed = await refreshWithToken(tokens.refreshToken);
-        } finally {
-          // Clear tokens from the URL regardless of refresh outcome (success,
-          // failure, or throw), so they don't linger in browser history.
-          window.history.replaceState({}, document.title, window.location.pathname);
-        }
-
-        if (!refreshed) {
+        const session = await waitForRecoverySession();
+        window.history.replaceState({}, document.title, window.location.pathname);
+        if (!session?.access_token) {
           logger.warn('Reset password: failed to establish recovery session');
           setPhase('invalid');
           return;

@@ -7,6 +7,9 @@ export const STORAGE_KEYS = {
   // User
   LOCALE: 'quizball_locale',
   ONBOARDING_COMPLETE: 'quizball_onboarding_complete',
+  // Auth method (google/facebook/email/phone) the user last started auth with.
+  // Carried from the auth tap to onboarding_completed so that event is method-aware.
+  SIGNUP_METHOD: 'quizball_signup_method',
   WALKTHROUGH_COMPLETE: 'quizball_walkthrough_complete',
   PLAYER_STATE: 'quizball_player_state',
   USER_PREFERENCES: 'quizball_user_preferences',

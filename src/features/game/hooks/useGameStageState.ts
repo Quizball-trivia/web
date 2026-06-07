@@ -110,7 +110,11 @@ export function useGameStageState() {
 
   const isMultiplayer = config?.mode !== "solo" && !!config;
   const selfUserId = connectedSelfUserId ?? authUser?.id ?? player.id;
-  const socket = useRealtimeConnection({ enabled: isMultiplayer, selfUserId });
+  const realtimeSelfUserId = authUser?.id ?? null;
+  const socket = useRealtimeConnection({
+    enabled: isMultiplayer && Boolean(realtimeSelfUserId),
+    selfUserId: realtimeSelfUserId,
+  });
   const [socketConnected, setSocketConnected] = useState(() => socket.connected);
   const [socketId, setSocketId] = useState<string | null>(() => socket.id ?? null);
 

@@ -17,12 +17,13 @@ export function PostHogPageView(): ReactElement {
 function PostHogPageViewInner(): ReactElement {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const postHogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY?.trim();
 
   useEffect(() => {
     // Only track pageviews in production
     if (
       pathname &&
-      process.env.NEXT_PUBLIC_POSTHOG_KEY &&
+      postHogKey &&
       process.env.NODE_ENV === 'production'
     ) {
       let url = window.origin + pathname;
@@ -36,7 +37,7 @@ function PostHogPageViewInner(): ReactElement {
       // Log in development for visibility
       console.log('[Dev] PostHog PageView:', pathname);
     }
-  }, [pathname, searchParams]);
+  }, [pathname, postHogKey, searchParams]);
 
   useEffect(() => {
     if (!pathname) return;

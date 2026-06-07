@@ -6,8 +6,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { ModalCloseButton } from '@/components/shared/ModalCloseButton';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { GoogleCredential } from '@/lib/auth/google-identity';
-import { getPlatform } from '@/lib/auth/in-app-browser';
-import { InAppBrowserInstructions } from './InAppBrowserInstructions';
 import { WelcomeGoogleButton } from './WelcomeGoogleButton';
 import { WelcomeFacebookButton } from './WelcomeFacebookButton';
 import { WelcomeEmailAuthForm } from './WelcomeEmailAuthForm';
@@ -18,7 +16,6 @@ import type { AuthFieldErrors } from '@/lib/auth/validation';
 
 interface WelcomeLoginDialogProps {
   open: boolean;
-  showOpenInBrowser: boolean;
   googleClientId: string;
   disableGoogleIdentityOverlay: boolean;
   authMode: AuthPanelMode;
@@ -39,6 +36,7 @@ interface WelcomeLoginDialogProps {
   forgotSent: boolean;
   forgotError: string | null;
   showPhoneAuth: boolean;
+  showFacebookLogin: boolean;
   onToggleAdvancedAuth: () => void;
   onOpenChange: (open: boolean) => void;
   onClose: () => void;
@@ -60,7 +58,6 @@ interface WelcomeLoginDialogProps {
 
 export function WelcomeLoginDialog({
   open,
-  showOpenInBrowser,
   googleClientId,
   disableGoogleIdentityOverlay,
   authMode,
@@ -81,6 +78,7 @@ export function WelcomeLoginDialog({
   forgotSent,
   forgotError,
   showPhoneAuth,
+  showFacebookLogin,
   onToggleAdvancedAuth,
   onOpenChange,
   onClose,
@@ -124,9 +122,7 @@ export function WelcomeLoginDialog({
       <DialogContent className="max-h-[92vh] max-w-md w-[92vw] overflow-y-auto overflow-x-hidden rounded-[24px] border-0 bg-brand-blue p-5 sm:p-8 md:p-10 [&>button:last-child]:hidden focus:outline-none focus-visible:outline-none focus-visible:ring-0 ring-0">
         <ModalCloseButton onClose={onClose} />
 
-        {showOpenInBrowser ? (
-          <InAppBrowserInstructions platform={getPlatform()} />
-        ) : showForgot ? (
+        {showForgot ? (
           <>
             <DialogHeader className="text-center">
               <DialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
@@ -163,10 +159,12 @@ export function WelcomeLoginDialog({
                     submitting={socialSubmitting === 'google'}
                     disableIdentityOverlay={disableGoogleIdentityOverlay}
                   />
-                  <WelcomeFacebookButton
-                    onClick={onFacebookLogin}
-                    submitting={socialSubmitting === 'facebook'}
-                  />
+                  {showFacebookLogin && (
+                    <WelcomeFacebookButton
+                      onClick={onFacebookLogin}
+                      submitting={socialSubmitting === 'facebook'}
+                    />
+                  )}
                 </div>
 
                 <div className="my-5 flex items-center gap-3">

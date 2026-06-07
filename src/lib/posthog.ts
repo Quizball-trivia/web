@@ -5,9 +5,13 @@ export { posthog };
 type AnalyticsValue = string | number | boolean | null | undefined;
 type AnalyticsProperties = Record<string, AnalyticsValue>;
 
+function hasPostHogKey(): boolean {
+  return Boolean(process.env.NEXT_PUBLIC_POSTHOG_KEY?.trim());
+}
+
 // Identify user when they log in
 export function identifyUser(userId: string, properties?: AnalyticsProperties): void {
-  if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+  if (typeof window === 'undefined' || !hasPostHogKey()) {
     return;
   }
 
@@ -32,7 +36,7 @@ export function identifyUser(userId: string, properties?: AnalyticsProperties): 
 
 // Reset user when they log out
 export function resetUser(): void {
-  if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+  if (typeof window === 'undefined' || !hasPostHogKey()) {
     return;
   }
 
@@ -51,7 +55,7 @@ export function resetUser(): void {
 
 // Track custom events
 export function trackEvent(eventName: string, properties?: AnalyticsProperties): void {
-  if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+  if (typeof window === 'undefined' || !hasPostHogKey()) {
     return;
   }
 
@@ -78,7 +82,7 @@ export function setPersonProperties(
   set?: AnalyticsProperties,
   setOnce?: AnalyticsProperties,
 ): void {
-  if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+  if (typeof window === 'undefined' || !hasPostHogKey()) {
     return;
   }
   if (process.env.NODE_ENV !== 'production') {
@@ -99,7 +103,7 @@ export function setPersonProperties(
 
 // Feature flag helpers
 export function getFeatureFlag(flagKey: string): boolean | string | undefined {
-  if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+  if (typeof window === 'undefined' || !hasPostHogKey()) {
     return undefined;
   }
 
@@ -116,4 +120,3 @@ export function getFeatureFlag(flagKey: string): boolean | string | undefined {
     return undefined;
   }
 }
-

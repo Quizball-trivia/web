@@ -5,10 +5,11 @@ import { AlertCircle, ArrowLeft, RotateCcw } from 'lucide-react';
 import { motion } from 'motion/react';
 import {
   consumeRedirectOAuthProvider,
-  parseOAuthHash,
-  refreshWithTokenDetailed,
+  isPendingDeletionAuthError,
   restorePendingDeletionWithToken,
 } from '@/lib/auth/auth.service';
+import { getSupabaseClient, getSupabaseSession } from '@/lib/auth/supabase';
+import { fetchCurrentUser } from '@/lib/auth/session';
 import { useAuthStore } from '@/stores/auth.store';
 import { logger } from '@/utils/logger';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
@@ -27,10 +28,30 @@ const OAUTH_CANCELLATION_CODES = new Set([
   'login_required',
 ]);
 
+async function waitForCallbackSession() {
+  const supabase = getSupabaseClient();
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      lastError = error;
+    } else if (data.session) {
+      return data.session;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+
+  if (lastError) {
+    throw lastError;
+  }
+  return null;
+}
+
 export function OAuthCallbackScreen() {
   const { t } = useLocale();
   const router = useRouter();
-  const bootstrap = useAuthStore((state) => state.bootstrap);
+  const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
   const [error, setError] = useState<string | null>(null);
   const [pendingRestoreAvailable, setPendingRestoreAvailable] = useState(false);
   const [restoreSubmitting, setRestoreSubmitting] = useState(false);
@@ -42,18 +63,9 @@ export function OAuthCallbackScreen() {
         const hash = window.location.hash || "";
         const query = window.location.search || "";
 
-        // Mobile app redirect: if source=mobile, forward tokens via deep link
         const searchParams = new URLSearchParams(query.replace(/^\?/, ""));
         const mobileRedirect = searchParams.get("mobile_redirect");
-        if (mobileRedirect) {
-          const tokens = parseOAuthHash(hash);
-          if (tokens) {
-            const deepLink = `${mobileRedirect}?access_token=${encodeURIComponent(tokens.accessToken)}&refresh_token=${encodeURIComponent(tokens.refreshToken)}`;
-            logger.info("OAuth callback: redirecting to mobile app");
-            window.location.href = deepLink;
-            return;
-          }
-        }
+
         // User cancelled / denied the provider consent (e.g. tapped "Cancel" on
         // the Facebook or Google screen). The provider redirects back with an
         // `error` param and no tokens — that's NOT a failure, so don't log an
@@ -79,60 +91,37 @@ export function OAuthCallbackScreen() {
           throw new Error(description ?? oauthError);
         }
 
-        const lastHash = window.sessionStorage.getItem("quizball_oauth_hash");
-        const lastQuery = window.sessionStorage.getItem("quizball_oauth_query");
-
         logger.info('OAuth callback start', {
           hashLength: hash.length,
           queryLength: query.length,
-          hasLastHash: !!lastHash,
-          hasLastQuery: !!lastQuery,
         });
 
-        if ((hash && lastHash === hash) || (!hash && query && lastQuery === query)) {
-          logger.info('OAuth callback duplicate payload, skipping');
+        const session = await waitForCallbackSession();
+        if (!session?.access_token) {
+          throw new Error(t('oauthCallback.sessionEstablishError'));
+        }
+
+        if (mobileRedirect) {
+          const deepLink = `${mobileRedirect}?access_token=${encodeURIComponent(session.access_token)}&refresh_token=${encodeURIComponent(session.refresh_token)}`;
+          logger.info("OAuth callback: redirecting to mobile app");
+          window.location.href = deepLink;
           return;
         }
 
-        const queryParams = new URLSearchParams(query.replace(/^\?/, ""));
-        const queryAccessToken = queryParams.get("access_token");
-        const queryRefreshToken = queryParams.get("refresh_token");
-        const tokens = parseOAuthHash(hash) ??
-          (queryAccessToken && queryRefreshToken
-            ? { accessToken: queryAccessToken, refreshToken: queryRefreshToken }
-            : null);
-        if (tokens) {
-          const refreshed = await refreshWithTokenDetailed(tokens.refreshToken);
-          if (!refreshed.ok && refreshed.pendingDeletion) {
-            window.history.replaceState({}, document.title, window.location.pathname);
+        window.history.replaceState({}, document.title, window.location.pathname);
+
+        let authenticatedUser;
+        try {
+          authenticatedUser = await fetchCurrentUser();
+        } catch (bootstrapError) {
+          if (isPendingDeletionAuthError(bootstrapError)) {
             setPendingRestoreAvailable(true);
             return;
           }
-          if (!refreshed.ok) {
-            throw new Error(t('oauthCallback.sessionEstablishError'));
-          }
-          if (hash) {
-            window.sessionStorage.setItem("quizball_oauth_hash", hash);
-          }
-          if (query) {
-            window.sessionStorage.setItem("quizball_oauth_query", query);
-          }
-          logger.info('OAuth callback session established');
-          // Clear tokens from URL (security: don't leave in browser history)
-          window.history.replaceState({}, document.title, window.location.pathname);
-        } else {
-          logger.warn('OAuth callback missing tokens', {
-            hasCode: Boolean(queryParams.get("code")),
-            hasError: Boolean(queryParams.get("error")),
-          });
-          // Fall back to cookie-based session if already set
+          throw bootstrapError;
         }
+        setAuthenticated(authenticatedUser);
 
-        await bootstrap({ force: true });
-        const authenticatedUser = useAuthStore.getState().user;
-        if (!authenticatedUser) {
-          throw new Error(t('oauthCallback.sessionLoadError'));
-        }
         const provider = consumeRedirectOAuthProvider();
         if (provider) {
           // OAuth callbacks don't expose a precise new-vs-returning signal; onboarding
@@ -151,7 +140,7 @@ export function OAuthCallbackScreen() {
       }
     };
     processCallback();
-  }, [bootstrap, router, t]);
+  }, [router, setAuthenticated, t]);
 
   const handleRestore = async () => {
     if (!pendingRestoreAvailable || restoreSubmitting) {
@@ -160,12 +149,13 @@ export function OAuthCallbackScreen() {
     setRestoreSubmitting(true);
     setRestoreError(null);
     try {
-      await restorePendingDeletionWithToken();
-      await bootstrap({ force: true });
-      const authenticatedUser = useAuthStore.getState().user;
-      if (!authenticatedUser) {
+      const session = await getSupabaseSession();
+      if (!session?.refresh_token) {
         throw new Error(t('oauthCallback.sessionLoadError'));
       }
+      await restorePendingDeletionWithToken(session.refresh_token);
+      const authenticatedUser = await fetchCurrentUser();
+      setAuthenticated(authenticatedUser);
       router.replace(getPostAuthEntryRoute(authenticatedUser));
     } catch (err) {
       logger.error('OAuth pending deletion restore failed', err);

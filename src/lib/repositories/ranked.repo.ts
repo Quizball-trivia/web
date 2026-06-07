@@ -1,8 +1,7 @@
 import { ApiError } from "@/lib/api/api";
 import { apiFetch } from "@/lib/api/client";
-import { refreshSession } from "@/lib/auth/auth.service";
 import { API_BASE_URL } from "@/lib/config";
-import { getAccessToken } from "@/lib/auth/tokenStorage";
+import { getSupabaseAccessToken } from "@/lib/auth/supabase";
 import type { paths } from "@/types/api.generated";
 import type { RankPosition } from "@/lib/domain";
 
@@ -19,7 +18,7 @@ interface UserRankResponse {
 }
 
 async function requestUserRank(scope: "global" | "country"): Promise<RankPosition | null> {
-  const token = getAccessToken();
+  const token = await getSupabaseAccessToken();
   const res = await fetch(`${API_BASE_URL}/api/v1/ranked/leaderboard/me?scope=${scope}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     credentials: "include",
@@ -33,17 +32,7 @@ async function requestUserRank(scope: "global" | "country"): Promise<RankPositio
 }
 
 async function fetchUserRank(scope: "global" | "country"): Promise<RankPosition | null> {
-  try {
-    return await requestUserRank(scope);
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 401) {
-      const refreshed = await refreshSession();
-      if (refreshed.ok) {
-        return requestUserRank(scope);
-      }
-    }
-    throw error;
-  }
+  return requestUserRank(scope);
 }
 
 export async function getUserRanks(): Promise<{

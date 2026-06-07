@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { LocaleProvider } from "@/contexts/LocaleContext";
 import { PostHogPageView } from "@/components/PostHogProvider";
 import { PresencePingMount } from "@/components/PresencePingMount";
+import { AuthSessionBridge } from "@/components/auth/AuthSessionBridge";
 import type { Locale } from "@/lib/i18n/messages";
 
 type ProvidersProps = {
@@ -35,6 +36,7 @@ export function Providers({ children, initialLocale }: ProvidersProps) {
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
         <LocaleProvider initialLocale={initialLocale}>
           <PlayerProvider>
+            <AuthSessionBridge />
             <PostHogPageView />
             <PresencePingMount />
             {children}

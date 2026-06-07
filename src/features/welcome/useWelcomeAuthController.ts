@@ -15,7 +15,7 @@
  * redirect, every error-message fallback preserved.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
   login,
@@ -29,7 +29,7 @@ import {
   verifyGeorgianPhoneOtp,
 } from '@/lib/auth/auth.service';
 import { signInWithGoogleIdentity, type GoogleCredential } from '@/lib/auth/google-identity';
-import { getInAppBrowserApp, tryOpenInExternalBrowser } from '@/lib/auth/in-app-browser';
+import { getInAppBrowserApp } from '@/lib/auth/in-app-browser';
 import { useAuthStore } from '@/stores/auth.store';
 import { useLocale } from '@/contexts/LocaleContext';
 import {
@@ -56,19 +56,24 @@ type PendingRestoreAction =
   | { kind: 'email'; email: string; password: string }
   | { kind: 'phone'; phone: string; token: string }
   | { kind: 'social-token'; provider: 'google'; idToken: string; nonce?: string };
-type SocialProvider = 'google' | 'facebook';
 
 export function useWelcomeAuthController() {
   const { t, locale } = useLocale();
   const bootstrap = useAuthStore((state) => state.bootstrap);
-  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? '';
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ?? '';
   const inAppBrowserApp = useMemo(() => getInAppBrowserApp(), []);
   const authInAppBrowser = inAppBrowserApp !== null;
-  const allowInstagramGoogleIdentity = inAppBrowserApp === 'instagram';
-  const disableGoogleIdentityOverlay = authInAppBrowser && !allowInstagramGoogleIdentity;
+  // GIS id_token sign-in works inside in-app browsers (Instagram, Messenger,
+  // Facebook, …) where Google blocks the classic OAuth redirect, so the GIS
+  // overlay is always enabled. We never force users out to an external browser.
+  const disableGoogleIdentityOverlay = false;
+  // Facebook sign-in only has the OAuth *redirect* flow (no in-webview token
+  // equivalent like Google's GIS), and that redirect can't complete inside an
+  // in-app browser (Instagram/Messenger/…) — it dead-ends. So hide the Facebook
+  // button there and steer users to Google / email / phone, which all work.
+  const showFacebookLogin = !authInAppBrowser;
 
   const [loginOpen, setLoginOpen] = useState(false);
-  const [showOpenInBrowser, setShowOpenInBrowser] = useState(false);
   const [authMode, setAuthMode] = useState<AuthPanelMode>('signin');
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
@@ -90,7 +95,6 @@ export function useWelcomeAuthController() {
   // redirect are all async with otherwise no feedback).
   const [socialSubmitting, setSocialSubmitting] = useState<'google' | 'facebook' | null>(null);
   const googleCredentialInFlightRef = useRef(false);
-  const inAppBrowserTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [showAdvancedAuth, setShowAdvancedAuth] = useState(false);
 
@@ -100,40 +104,6 @@ export function useWelcomeAuthController() {
   const [forgotSubmitting, setForgotSubmitting] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
   const [forgotError, setForgotError] = useState<string | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (inAppBrowserTimerRef.current !== null) {
-        clearTimeout(inAppBrowserTimerRef.current);
-      }
-    };
-  }, []);
-
-  const clearInAppBrowserTimer = useCallback(() => {
-    if (inAppBrowserTimerRef.current !== null) {
-      clearTimeout(inAppBrowserTimerRef.current);
-      inAppBrowserTimerRef.current = null;
-    }
-  }, []);
-
-  const openInBrowserFallback = useCallback(() => {
-    if (typeof window === 'undefined') return false;
-    tryOpenInExternalBrowser(window.location.href);
-    clearInAppBrowserTimer();
-    inAppBrowserTimerRef.current = setTimeout(() => {
-      inAppBrowserTimerRef.current = null;
-      if (typeof document !== 'undefined' && !document.hidden) {
-        setShowOpenInBrowser(true);
-      }
-    }, 1500);
-    return true;
-  }, [clearInAppBrowserTimer]);
-
-  const tryInAppBrowserBounce = useCallback((provider: SocialProvider) => {
-    if (!authInAppBrowser) return false;
-    if (provider === 'google' && allowInstagramGoogleIdentity) return false;
-    return openInBrowserFallback();
-  }, [allowInstagramGoogleIdentity, authInAppBrowser, openInBrowserFallback]);
 
   const resetAuthFeedback = useCallback(() => {
     setAuthError(null);
@@ -175,20 +145,16 @@ export function useWelcomeAuthController() {
     (open: boolean) => {
       setLoginOpen(open);
       if (!open) {
-        setShowOpenInBrowser(false);
-        clearInAppBrowserTimer();
         resetAuthDialog();
       }
     },
-    [clearInAppBrowserTimer, resetAuthDialog],
+    [resetAuthDialog],
   );
 
   const handleCloseLoginDialog = useCallback(() => {
     setLoginOpen(false);
-    setShowOpenInBrowser(false);
-    clearInAppBrowserTimer();
     resetAuthDialog();
-  }, [clearInAppBrowserTimer, resetAuthDialog]);
+  }, [resetAuthDialog]);
 
   const handleAuthModeChange = useCallback(
     (mode: AuthPanelMode) => {
@@ -203,7 +169,6 @@ export function useWelcomeAuthController() {
   // redirect is only a last-ditch fallback in handleGoogleLogin below.
   const handleGoogleCredential = useCallback(
     async (credential: GoogleCredential) => {
-      if (tryInAppBrowserBounce('google')) return;
       if (googleCredentialInFlightRef.current) return;
       googleCredentialInFlightRef.current = true;
       trackSignupStarted('google');
@@ -231,7 +196,7 @@ export function useWelcomeAuthController() {
         setSocialSubmitting(null);
       }
     },
-    [bootstrap, t, tryInAppBrowserBounce],
+    [bootstrap, t],
   );
 
   // Fallback for when the overlaid GIS button never rendered (GIS unavailable
@@ -239,7 +204,6 @@ export function useWelcomeAuthController() {
   const handleGoogleLogin = useCallback(async () => {
     if (socialSubmitting) return;
     trackSignupStarted('google');
-    if (tryInAppBrowserBounce('google')) return;
     setSocialSubmitting('google');
 
     if (googleClientId) {
@@ -264,8 +228,12 @@ export function useWelcomeAuthController() {
         }
         console.warn('GIS sign-in unavailable', gisError);
         if (authInAppBrowser) {
+          // GIS unavailable in this webview, and Google blocks the classic OAuth
+          // redirect inside embedded browsers — surface email/phone instead of
+          // dead-ending the user (never force an external-browser bounce).
           setSocialSubmitting(null);
-          openInBrowserFallback();
+          setShowAdvancedAuth(true);
+          setLoginOpen(true);
           return;
         }
       }
@@ -279,12 +247,11 @@ export function useWelcomeAuthController() {
       console.error('Google login failed', error);
       setSocialSubmitting(null);
     }
-  }, [authInAppBrowser, bootstrap, googleClientId, openInBrowserFallback, socialSubmitting, tryInAppBrowserBounce]);
+  }, [authInAppBrowser, bootstrap, googleClientId, socialSubmitting]);
 
   const handleFacebookLogin = useCallback(async () => {
     if (socialSubmitting) return;
     trackSignupStarted('facebook');
-    if (tryInAppBrowserBounce('facebook')) return;
     setSocialSubmitting('facebook');
 
     try {
@@ -295,7 +262,7 @@ export function useWelcomeAuthController() {
       console.error('Facebook login failed', error);
       setSocialSubmitting(null);
     }
-  }, [socialSubmitting, tryInAppBrowserBounce]);
+  }, [socialSubmitting]);
 
   const handleEmailAuth = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
@@ -535,7 +502,6 @@ export function useWelcomeAuthController() {
     // Dialog visibility
     loginOpen,
     setLoginOpen,
-    showOpenInBrowser,
     handleLoginDialogOpenChange,
     handleCloseLoginDialog,
     handleKickOff,
@@ -544,6 +510,9 @@ export function useWelcomeAuthController() {
     googleClientId,
     handleGoogleCredential,
     disableGoogleIdentityOverlay,
+
+    // Hide Facebook inside in-app browsers (its redirect can't complete there)
+    showFacebookLogin,
 
     // Auth panel mode + form fields
     authMode,
