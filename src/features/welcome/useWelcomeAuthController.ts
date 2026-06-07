@@ -146,7 +146,13 @@ export function useWelcomeAuthController() {
     setShowAdvancedAuth((current) => !current);
   }, []);
 
-  const handleKickOff = useCallback(() => setLoginOpen(true), []);
+  const handleKickOff = useCallback(() => {
+    if (inAppBlocksAllSignIn) {
+      setOpenInBrowserModalOpen(true);
+      return;
+    }
+    setLoginOpen(true);
+  }, [inAppBlocksAllSignIn]);
 
   const handleCloseOpenInBrowserModal = useCallback(() => setOpenInBrowserModalOpen(false), []);
 
@@ -519,6 +525,9 @@ export function useWelcomeAuthController() {
     openInBrowserModalOpen,
     handleCloseOpenInBrowserModal,
     inAppBrowserPlatform,
+    // True in Messenger/Facebook webviews: all sign-in paths are blocked, so
+    // WelcomeScreen suppresses the login dialog and shows only this modal.
+    inAppBlocksAllSignIn,
 
     // Google client id + credential handler for the overlaid GIS button
     googleClientId,

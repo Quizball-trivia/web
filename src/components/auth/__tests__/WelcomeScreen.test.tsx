@@ -22,6 +22,15 @@ class IntersectionObserverStub {
 // the in-app-browser detection.
 // ---------------------------------------------------------------------------
 
+const inAppBrowserMock = vi.hoisted(() => ({
+  app: null as 'facebook' | 'instagram' | 'messenger' | null,
+  platform: 'other' as 'ios' | 'android' | 'other',
+}));
+
+const postAuthRedirectMock = vi.hoisted(() => ({
+  redirect: null as string | null,
+}));
+
 // next/script — render nothing.
 vi.mock('next/script', () => ({
   default: () => null,
@@ -111,6 +120,17 @@ const georgianPhoneAvailabilityMock = vi.fn(() => ({
 }));
 vi.mock('@/lib/auth/useGeorgianPhoneAuthAvailability', () => ({
   useGeorgianPhoneAuthAvailability: () => georgianPhoneAvailabilityMock(),
+}));
+
+vi.mock('@/lib/auth/in-app-browser', () => ({
+  getInAppBrowserApp: () => inAppBrowserMock.app,
+  getPlatform: () => inAppBrowserMock.platform,
+  isPopupBlockedInAppBrowser: (app = inAppBrowserMock.app) =>
+    app === 'facebook' || app === 'messenger',
+}));
+
+vi.mock('@/lib/auth/postAuthRedirect', () => ({
+  peekPostAuthRedirect: () => postAuthRedirectMock.redirect,
 }));
 
 // Google Identity. The overlaid GIS button (renderGoogleButton) is the primary
@@ -273,6 +293,9 @@ beforeEach(() => {
   signInWithGoogleIdentityMock.mockResolvedValue({ idToken: 'tok', nonce: 'nonce' });
   renderGoogleButtonMock.mockClear();
   lastGoogleButtonCredentialCb = null;
+  inAppBrowserMock.app = null;
+  inAppBrowserMock.platform = 'other';
+  postAuthRedirectMock.redirect = null;
   trackLoginCompletedMock.mockClear();
   trackSignupCompletedMock.mockClear();
   trackSignupStartedMock.mockClear();
@@ -324,6 +347,38 @@ describe('WelcomeScreen — landing chrome', () => {
     openLoginDialog();
     fireEvent.click(screen.getByTestId('modal-close'));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it.each(['facebook', 'messenger'] as const)(
+    'shows only the open-in-browser modal in %s webviews',
+    (app) => {
+      inAppBrowserMock.app = app;
+      postAuthRedirectMock.redirect = '/friend/room/ABC123';
+
+      render(<WelcomeScreen />);
+
+      expect(screen.getByText(/inAppBrowser\.title/)).toBeInTheDocument();
+      expect(screen.queryByText(/welcome\.loginTitle/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/welcome\.continueWithGoogle/)).not.toBeInTheDocument();
+
+      openLoginDialog();
+
+      expect(screen.getByText(/inAppBrowser\.title/)).toBeInTheDocument();
+      expect(screen.queryByText(/welcome\.loginTitle/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/welcome\.continueWithGoogle/)).not.toBeInTheDocument();
+    },
+  );
+
+  it('still opens the normal login dialog in Instagram webviews', () => {
+    inAppBrowserMock.app = 'instagram';
+
+    render(<WelcomeScreen />);
+    openLoginDialog();
+
+    expect(screen.getByText(/welcome\.loginTitle/)).toBeInTheDocument();
+    expect(screen.getByText(/welcome\.continueWithGoogle/)).toBeInTheDocument();
+    expect(screen.queryByText(/welcome\.continueWithFacebook/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/inAppBrowser\.title/)).not.toBeInTheDocument();
   });
 });
 
