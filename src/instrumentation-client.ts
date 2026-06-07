@@ -16,12 +16,18 @@ if (
       capture_pageview: false,
       capture_pageleave: true,
       autocapture: {
-        dom_event_allowlist: ['click', 'submit', 'change'],
-        element_allowlist: ['button', 'a', 'input', 'select', 'textarea', 'form'],
+        // Only meaningful clicks on buttons/links. Dropping 'change'/'submit' and
+        // input/textarea/form/select cuts the bulk of autocapture volume (every
+        // keystroke and field change), which was ~34% of all events, while keeping
+        // the clicks we actually analyze.
+        dom_event_allowlist: ['click'],
+        element_allowlist: ['button', 'a'],
       },
       session_recording: {
         recordCrossOriginIframes: true,
       },
+      // Replay sampling (record 30% of sessions, skip <5s) is set server-side in
+      // the project's replay settings so it can't drift from the deployed bundle.
       capture_performance: true,
     });
   } catch (error) {

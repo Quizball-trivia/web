@@ -541,16 +541,20 @@ export function trackAchievementUnlocked(achievementId: string, achievementName:
   });
 }
 
-export function trackSocketConnectionFailed(error: string) {
-  trackEvent('socket_connection_failed', { error });
+export function trackSocketConnectionFailed(_error: string) {
+  // No-op: socket connection lifecycle is already in Railway's backend logs, so
+  // mirroring it into PostHog just adds ingest cost (socket_* was ~6% of events).
 }
 
-export function trackSocketReconnected(downtimeSec: number) {
-  trackEvent('socket_reconnected', { downtime_sec: downtimeSec });
+export function trackSocketReconnected(_downtimeSec: number) {
+  // No-op: see trackSocketConnectionFailed — socket events live in Railway logs.
 }
 
-export function trackApiError(endpoint: string, status: number, code?: string) {
-  trackEvent('api_error', { endpoint, status, code });
+export function trackApiError(_endpoint: string, _status: number, _code?: string) {
+  // Intentionally a no-op: API failures (4xx/5xx) are already captured server-side
+  // in Railway's HTTP/deploy logs, so sending them to PostHog too just doubles the
+  // ingest cost (api_error was ~6% of all events) with no extra insight. Kept as a
+  // stub so call sites stay intact and it's trivial to re-enable if ever needed.
 }
 
 export function trackMatchLoadError(matchId: string | undefined, errorCode: string) {
