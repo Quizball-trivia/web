@@ -1256,7 +1256,11 @@
   },
   "inAppBrowser": {
     "title": "Open in your browser",
-    "body": "For the best experience, please open this page in an external browser like Safari or Chrome instead of the built-in browser.",
+    "iosTitle": "Open in Safari",
+    "androidTitle": "Open in Chrome",
+    "body": "For the best experience, open this page in Safari or Chrome.",
+    "iosBody": "For the best experience, open this page in Safari.",
+    "androidBody": "For the best experience, open this page in Chrome.",
     "iosStep1": "Tap the menu (... or share icon) at the top right.",
     "iosBottomRightStep1": "Tap the menu (...) at the bottom right.",
     "iosStep2": "Choose \"Open in Safari\".",
