@@ -17,12 +17,14 @@ export function PostHogPageView(): ReactElement {
 function PostHogPageViewInner(): ReactElement {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const postHogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY?.trim();
 
   useEffect(() => {
-    // Track pageviews in any environment with a PostHog key (prod AND staging —
-    // separate project keys). Local dev has no key, so it just logs instead.
-    if (pathname && postHogKey) {
+    // Only track pageviews in production
+    if (
+      pathname &&
+      process.env.NEXT_PUBLIC_POSTHOG_KEY &&
+      process.env.NODE_ENV === 'production'
+    ) {
       let url = window.origin + pathname;
       if (searchParams && searchParams.toString()) {
         url = url + `?${searchParams.toString()}`;
@@ -30,11 +32,11 @@ function PostHogPageViewInner(): ReactElement {
       posthog.capture('$pageview', {
         $current_url: url,
       });
-    } else if (pathname && !postHogKey) {
-      // Log in local dev (no key) for visibility
+    } else if (pathname && process.env.NODE_ENV !== 'production') {
+      // Log in development for visibility
       console.log('[Dev] PostHog PageView:', pathname);
     }
-  }, [pathname, postHogKey, searchParams]);
+  }, [pathname, searchParams]);
 
   useEffect(() => {
     if (!pathname) return;

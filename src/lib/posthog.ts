@@ -5,19 +5,21 @@ export { posthog };
 type AnalyticsValue = string | number | boolean | null | undefined;
 type AnalyticsProperties = Record<string, AnalyticsValue>;
 
-function hasPostHogKey(): boolean {
-  return Boolean(process.env.NEXT_PUBLIC_POSTHOG_KEY?.trim());
-}
-
 // Identify user when they log in
 export function identifyUser(userId: string, properties?: AnalyticsProperties): void {
-  if (typeof window === 'undefined' || !hasPostHogKey()) {
+  if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_POSTHOG_KEY) {
     return;
   }
 
   // Validate userId is a non-empty string
   if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
     console.warn('PostHog identifyUser: Invalid userId provided', userId);
+    return;
+  }
+
+  // In development, just log to console
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[Dev] PostHog Identify:', userId, properties);
     return;
   }
 
@@ -30,7 +32,13 @@ export function identifyUser(userId: string, properties?: AnalyticsProperties): 
 
 // Reset user when they log out
 export function resetUser(): void {
-  if (typeof window === 'undefined' || !hasPostHogKey()) {
+  if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+    return;
+  }
+
+  // In development, just log to console
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[Dev] PostHog Reset');
     return;
   }
 
@@ -43,7 +51,13 @@ export function resetUser(): void {
 
 // Track custom events
 export function trackEvent(eventName: string, properties?: AnalyticsProperties): void {
-  if (typeof window === 'undefined' || !hasPostHogKey()) {
+  if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+    return;
+  }
+
+  // In development, just log to console
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[Dev] PostHog Event:', eventName, properties);
     return;
   }
 
@@ -64,7 +78,11 @@ export function setPersonProperties(
   set?: AnalyticsProperties,
   setOnce?: AnalyticsProperties,
 ): void {
-  if (typeof window === 'undefined' || !hasPostHogKey()) {
+  if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+    return;
+  }
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[Dev] PostHog Set Person Properties:', { set, setOnce });
     return;
   }
   try {
@@ -81,7 +99,13 @@ export function setPersonProperties(
 
 // Feature flag helpers
 export function getFeatureFlag(flagKey: string): boolean | string | undefined {
-  if (typeof window === 'undefined' || !hasPostHogKey()) {
+  if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+    return undefined;
+  }
+
+  // In development, return undefined (no feature flags)
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[Dev] PostHog Feature Flag:', flagKey, '(disabled in dev)');
     return undefined;
   }
 

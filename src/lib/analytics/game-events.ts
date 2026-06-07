@@ -1,6 +1,4 @@
 import { trackEvent } from '@/lib/posthog';
-import { storage, STORAGE_KEYS } from '@/utils/storage';
-import { getInAppBrowserApp } from '@/lib/auth/in-app-browser';
 
 type AuthMethod = 'google' | 'facebook' | 'email' | 'phone';
 
@@ -69,34 +67,17 @@ export function trackSignupStarted(method: AuthMethod = 'google') {
   // returning logins (the server only knows new-vs-returning after auth).
   // `auth_started` is the honest name; `signup_started` is kept for historical
   // dashboards (dual-fire) and should be retired once charts are migrated.
-  // Real new-account signal = server `account_created`; `onboarding_completed`
-  // (now method-aware) is the client-side proxy until those charts repoint.
-  //
-  // Persist the method so onboarding_completed can attribute by it, and tag the
-  // in-app browser (facebook/instagram/tiktok/…) — that's the segment where OAuth
-  // fails, so we want it on the intent event for funnel breakdowns.
-  const inAppBrowser = getInAppBrowserApp();
-  try {
-    storage.set(STORAGE_KEYS.SIGNUP_METHOD, method);
-  } catch {
-    // storage unavailable — onboarding_completed just won't carry method
-  }
-  trackEvent('auth_started', { method, in_app_browser: inAppBrowser });
-  trackEvent('signup_started', { method, in_app_browser: inAppBrowser });
+  // Real new-account signal = `onboarding_completed` (only new users see it).
+  trackEvent('auth_started', { method });
+  trackEvent('signup_started', { method });
 }
 
 export function trackSignupCompleted(method: AuthMethod = 'google') {
-  // Legacy client signal. The authoritative new-account event is now server-side
-  // `account_created` (fires once per real account, all methods). Kept dual-firing
-  // only so historical charts don't go blank; retire once they repoint.
   trackEvent('signup_completed', { method });
 }
 
-export function trackLoginCompleted(_method: AuthMethod = 'google') {
-  // No-op: `login_completed` is now emitted authoritatively by the backend for
-  // every method (server is the only place that knows new-vs-returning). Firing
-  // it here too would double-count email/phone logins. Call sites are kept so the
-  // server stays the single source of truth. The arg is intentionally unused.
+export function trackLoginCompleted(method: AuthMethod = 'google') {
+  trackEvent('login_completed', { method });
 }
 
 export function trackLogout() {
@@ -112,11 +93,7 @@ export function trackOnboardingStepCompleted(step: string) {
 }
 
 export function trackOnboardingCompleted() {
-  // Attribute the real signup by method. Read the method stored at auth time so
-  // this event — the client-side proxy for a real new signup — is self-contained
-  // and breakable down by google/facebook/email without a join.
-  const method = storage.get<AuthMethod | null>(STORAGE_KEYS.SIGNUP_METHOD, null);
-  trackEvent('onboarding_completed', method ? { method } : {});
+  trackEvent('onboarding_completed');
 }
 
 export function trackInAppBrowserBlocked(browser: string, isIOS: boolean, isAndroid: boolean) {
@@ -541,20 +518,16 @@ export function trackAchievementUnlocked(achievementId: string, achievementName:
   });
 }
 
-export function trackSocketConnectionFailed(_error: string) {
-  // No-op: socket connection lifecycle is already in Railway's backend logs, so
-  // mirroring it into PostHog just adds ingest cost (socket_* was ~6% of events).
+export function trackSocketConnectionFailed(error: string) {
+  trackEvent('socket_connection_failed', { error });
 }
 
-export function trackSocketReconnected(_downtimeSec: number) {
-  // No-op: see trackSocketConnectionFailed — socket events live in Railway logs.
+export function trackSocketReconnected(downtimeSec: number) {
+  trackEvent('socket_reconnected', { downtime_sec: downtimeSec });
 }
 
-export function trackApiError(_endpoint: string, _status: number, _code?: string) {
-  // Intentionally a no-op: API failures (4xx/5xx) are already captured server-side
-  // in Railway's HTTP/deploy logs, so sending them to PostHog too just doubles the
-  // ingest cost (api_error was ~6% of all events) with no extra insight. Kept as a
-  // stub so call sites stay intact and it's trivial to re-enable if ever needed.
+export function trackApiError(endpoint: string, status: number, code?: string) {
+  trackEvent('api_error', { endpoint, status, code });
 }
 
 export function trackMatchLoadError(matchId: string | undefined, errorCode: string) {
