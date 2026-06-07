@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getInAppBrowserApp } from '../in-app-browser';
+import { getInAppBrowserApp, isPopupBlockedInAppBrowser } from '../in-app-browser';
 
 // showFacebookLogin in the welcome controller is `!authInAppBrowser`, i.e. hide
 // Facebook whenever getInAppBrowserApp() detects an embedded webview. These cases
@@ -25,5 +25,23 @@ describe('hide Facebook login inside in-app browsers', () => {
 
   it.each(realBrowsers)('keeps Facebook in %s', (_label, ua) => {
     expect(shouldHideFacebook(ua)).toBe(false);
+  });
+});
+
+describe('"open in browser" modal targets only popup-blocking webviews', () => {
+  it('shows for Messenger (popup blocked → Google dead-ends)', () => {
+    expect(isPopupBlockedInAppBrowser('messenger')).toBe(true);
+  });
+
+  it('shows for Facebook in-app browser', () => {
+    expect(isPopupBlockedInAppBrowser('facebook')).toBe(true);
+  });
+
+  it('does NOT show for Instagram (GIS popup works there)', () => {
+    expect(isPopupBlockedInAppBrowser('instagram')).toBe(false);
+  });
+
+  it('does NOT show in a real browser (no in-app app)', () => {
+    expect(isPopupBlockedInAppBrowser(null)).toBe(false);
   });
 });

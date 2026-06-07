@@ -29,7 +29,7 @@ import {
   verifyGeorgianPhoneOtp,
 } from '@/lib/auth/auth.service';
 import { signInWithGoogleIdentity, type GoogleCredential } from '@/lib/auth/google-identity';
-import { getInAppBrowserApp } from '@/lib/auth/in-app-browser';
+import { getInAppBrowserApp, getPlatform, isPopupBlockedInAppBrowser } from '@/lib/auth/in-app-browser';
 import { useAuthStore } from '@/stores/auth.store';
 import { useLocale } from '@/contexts/LocaleContext';
 import {
@@ -72,6 +72,12 @@ export function useWelcomeAuthController() {
   // in-app browser (Instagram/Messenger/…) — it dead-ends. So hide the Facebook
   // button there and steer users to Google / email / phone, which all work.
   const showFacebookLogin = !authInAppBrowser;
+  // Messenger/Facebook webviews block Google's GIS popup (it opens a blank
+  // accounts.google.com page), so social sign-in can't complete there at all.
+  // Show an "open in your browser" instructions modal for those. Instagram is
+  // excluded — its webview allows the popup, so Google works in place.
+  const showOpenInBrowserModal = isPopupBlockedInAppBrowser(inAppBrowserApp);
+  const inAppBrowserPlatform = getPlatform();
 
   const [loginOpen, setLoginOpen] = useState(false);
   const [authMode, setAuthMode] = useState<AuthPanelMode>('signin');
@@ -513,6 +519,10 @@ export function useWelcomeAuthController() {
 
     // Hide Facebook inside in-app browsers (its redirect can't complete there)
     showFacebookLogin,
+
+    // Messenger/Facebook webview: Google popup is blocked, show "open in browser"
+    showOpenInBrowserModal,
+    inAppBrowserPlatform,
 
     // Auth panel mode + form fields
     authMode,

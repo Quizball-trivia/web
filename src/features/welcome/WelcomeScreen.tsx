@@ -17,6 +17,7 @@ import { useWelcomeCategoriesData } from './useWelcomeCategoriesData';
 import { peekPostAuthRedirect } from '@/lib/auth/postAuthRedirect';
 import { WelcomeLoginDialog } from './WelcomeLoginDialog';
 import { WelcomeAuthNoticeModal } from './WelcomeAuthNoticeModal';
+import { WelcomeOpenInBrowserModal } from './WelcomeOpenInBrowserModal';
 import { WelcomeNavbar } from './WelcomeNavbar';
 import { WelcomeHero } from './WelcomeHero';
 import { WelcomeCategoriesSection } from './WelcomeCategoriesSection';
@@ -36,6 +37,8 @@ export function WelcomeScreen() {
     handleGoogleCredential,
     disableGoogleIdentityOverlay,
     showFacebookLogin,
+    showOpenInBrowserModal,
+    inAppBrowserPlatform,
     authMode,
     handleAuthModeChange,
     authEmail,
@@ -87,6 +90,9 @@ export function WelcomeScreen() {
   const { allCategories, featuredCategories, remainingCategories } = useWelcomeCategoriesData();
   const phoneAuthAvailability = useGeorgianPhoneAuthAvailability();
   const canUseGeorgianPhoneAuth = phoneAuthAvailability.isAvailable;
+
+  // Dismissable "open in browser" prompt for Messenger/Facebook webviews.
+  const [openInBrowserDismissed, setOpenInBrowserDismissed] = useState(false);
 
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ?? '';
 
@@ -197,6 +203,12 @@ export function WelcomeScreen() {
         onRestorePendingDeletion={handleRestorePendingDeletion}
         restoreSubmitting={restoreSubmitting}
         restoreError={restoreError}
+      />
+
+      <WelcomeOpenInBrowserModal
+        open={showOpenInBrowserModal && !openInBrowserDismissed}
+        platform={inAppBrowserPlatform}
+        onClose={() => setOpenInBrowserDismissed(true)}
       />
     </div>
   );
