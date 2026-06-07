@@ -194,6 +194,16 @@ function computeHasSearchAck(
   );
 }
 
+function hasActiveRealtimeSession(snapshot: ReturnType<typeof useRealtimeMatchStore.getState>): boolean {
+  return Boolean(
+    snapshot.match?.matchId ||
+      snapshot.draft?.lobbyId ||
+      snapshot.lobby?.lobbyId ||
+      snapshot.sessionState?.activeMatchId ||
+      snapshot.sessionState?.waitingLobbyId
+  );
+}
+
 interface GameStageTransitionOptions {
   isMultiplayer: boolean;
   stage: GameStage;
@@ -375,6 +385,32 @@ export function useGameStageTransitions({
       return;
     }
     if (!rankedRequestRef.current) {
+      const latestRealtime = useRealtimeMatchStore.getState();
+      const latestRanked = useRankedMatchmakingStore.getState();
+      const hasSearchAck = computeHasSearchAck(
+        latestRanked.rankedSearchStartedAt,
+        latestRanked.rankedFoundOpponent,
+        latestRealtime.sessionState,
+      );
+      if (hasSearchAck || hasActiveRealtimeSession(latestRealtime)) {
+        rankedRequestRef.current = true;
+        logger.info("Ranked queue join skipped: existing realtime session/search state", {
+          hasSearchAck,
+          hasLobby: Boolean(latestRealtime.lobby?.lobbyId),
+          hasDraft: Boolean(latestRealtime.draft?.lobbyId),
+          activeMatchId: latestRealtime.sessionState?.activeMatchId ?? latestRealtime.match?.matchId ?? null,
+          waitingLobbyId: latestRealtime.sessionState?.waitingLobbyId ?? latestRealtime.lobby?.lobbyId ?? null,
+          queueSearchId: latestRealtime.sessionState?.queueSearchId ?? null,
+          sessionState: latestRealtime.sessionState?.state ?? "NO_SESSION",
+          rankedSearching: latestRanked.rankedSearching,
+          rankedFoundOpponentId: latestRanked.rankedFoundOpponent?.id ?? null,
+        });
+        return;
+      }
+      if (!latestRealtime.sessionState) {
+        logger.info("Ranked queue join waiting for session state before initial search");
+        return;
+      }
       rankedRequestRef.current = true;
       rankedRetryCountRef.current = 0;
       emitRankedQueueJoin("initial");
@@ -385,7 +421,20 @@ export function useGameStageTransitions({
       clearMatchFoundHoldTimer();
       clearFinalStageTimer();
     };
-  }, [clearFinalStageTimer, clearMatchFoundHoldTimer, clearRankedAckTimer, clearRankedRetryTimer, config?.matchType, emitRankedQueueJoin, isMultiplayer, stage]);
+  }, [
+    clearFinalStageTimer,
+    clearMatchFoundHoldTimer,
+    clearRankedAckTimer,
+    clearRankedRetryTimer,
+    config?.matchType,
+    emitRankedQueueJoin,
+    isMultiplayer,
+    rankedFoundOpponent,
+    rankedSearchStartedAt,
+    sessionState,
+    sessionState?.resolvedAt,
+    stage,
+  ]);
 
   useEffect(() => {
     if (!isMultiplayer || config?.matchType !== "ranked" || stage !== "matchmaking") {
