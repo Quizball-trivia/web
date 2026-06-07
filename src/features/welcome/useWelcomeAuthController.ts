@@ -33,6 +33,7 @@ import { getInAppBrowserApp, getPlatform, isPopupBlockedInAppBrowser } from '@/l
 import { useAuthStore } from '@/stores/auth.store';
 import { useLocale } from '@/contexts/LocaleContext';
 import {
+  trackInAppBrowserBlocked,
   trackLoginCompleted,
   trackSignupCompleted,
   trackSignupStarted,
@@ -63,22 +64,18 @@ export function useWelcomeAuthController() {
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ?? '';
   const inAppBrowserApp = useMemo(() => getInAppBrowserApp(), []);
   const authInAppBrowser = inAppBrowserApp !== null;
-  // GIS id_token sign-in works inside in-app browsers (Instagram, Messenger,
-  // Facebook, …) where Google blocks the classic OAuth redirect, so the GIS
-  // overlay is always enabled. We never force users out to an external browser.
-  const disableGoogleIdentityOverlay = false;
+  // GIS id_token sign-in works inside some in-app browsers (Instagram), but
+  // Messenger/Facebook swallow the popup. Disable the overlay there so the
+  // visible Google button can show our "open in browser" modal instead.
+  const shouldPromptExternalBrowserForGoogle = isPopupBlockedInAppBrowser(inAppBrowserApp);
+  const disableGoogleIdentityOverlay = shouldPromptExternalBrowserForGoogle;
   // Facebook sign-in only has the OAuth *redirect* flow (no in-webview token
   // equivalent like Google's GIS), and that redirect can't complete inside an
   // in-app browser (Instagram/Messenger/…) — it dead-ends. So hide the Facebook
   // button there and steer users to Google / email / phone, which all work.
   const showFacebookLogin = !authInAppBrowser;
-  // Messenger/Facebook webviews block EVERY sign-in method (Google popup blocked,
-  // Facebook redirect blocked), so we auto-show an "open in your browser" modal on
-  // load and let nothing else happen there. Instagram is excluded (Google works in
-  // place). Everywhere else, auth is unchanged.
-  const inAppBlocksAllSignIn = isPopupBlockedInAppBrowser(inAppBrowserApp);
   const inAppBrowserPlatform = useMemo(() => getPlatform(), []);
-  const [openInBrowserModalOpen, setOpenInBrowserModalOpen] = useState(inAppBlocksAllSignIn);
+  const [openInBrowserModalOpen, setOpenInBrowserModalOpen] = useState(false);
 
   const [loginOpen, setLoginOpen] = useState(false);
   const [authMode, setAuthMode] = useState<AuthPanelMode>('signin');
@@ -146,13 +143,7 @@ export function useWelcomeAuthController() {
     setShowAdvancedAuth((current) => !current);
   }, []);
 
-  const handleKickOff = useCallback(() => {
-    if (inAppBlocksAllSignIn) {
-      setOpenInBrowserModalOpen(true);
-      return;
-    }
-    setLoginOpen(true);
-  }, [inAppBlocksAllSignIn]);
+  const handleKickOff = useCallback(() => setLoginOpen(true), []);
 
   const handleCloseOpenInBrowserModal = useCallback(() => setOpenInBrowserModalOpen(false), []);
 
@@ -218,6 +209,17 @@ export function useWelcomeAuthController() {
   // in a locked-down webview): try One Tap, then the classic redirect.
   const handleGoogleLogin = useCallback(async () => {
     if (socialSubmitting) return;
+
+    if (shouldPromptExternalBrowserForGoogle) {
+      trackInAppBrowserBlocked(
+        inAppBrowserApp ?? 'unknown',
+        inAppBrowserPlatform === 'ios',
+        inAppBrowserPlatform === 'android',
+      );
+      setOpenInBrowserModalOpen(true);
+      return;
+    }
+
     trackSignupStarted('google');
     setSocialSubmitting('google');
 
@@ -262,7 +264,15 @@ export function useWelcomeAuthController() {
       console.error('Google login failed', error);
       setSocialSubmitting(null);
     }
-  }, [authInAppBrowser, bootstrap, googleClientId, socialSubmitting]);
+  }, [
+    authInAppBrowser,
+    bootstrap,
+    googleClientId,
+    inAppBrowserApp,
+    inAppBrowserPlatform,
+    shouldPromptExternalBrowserForGoogle,
+    socialSubmitting,
+  ]);
 
   const handleFacebookLogin = useCallback(async () => {
     if (socialSubmitting) return;
@@ -521,14 +531,11 @@ export function useWelcomeAuthController() {
     handleCloseLoginDialog,
     handleKickOff,
 
-    // "Open in your browser" modal (Messenger/Facebook webview only)
+    // "Open in your browser" modal (shown after Google click in Messenger/Facebook)
     openInBrowserModalOpen,
     handleCloseOpenInBrowserModal,
     inAppBrowserPlatform,
     inAppBrowserApp,
-    // True in Messenger/Facebook webviews: all sign-in paths are blocked, so
-    // WelcomeScreen suppresses the login dialog and shows only this modal.
-    inAppBlocksAllSignIn,
 
     // Google client id + credential handler for the overlaid GIS button
     googleClientId,

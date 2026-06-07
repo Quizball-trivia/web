@@ -164,7 +164,10 @@ vi.mock('@/lib/auth/google-identity', () => ({
 const trackLoginCompletedMock = vi.fn();
 const trackSignupCompletedMock = vi.fn();
 const trackSignupStartedMock = vi.fn();
+const trackInAppBrowserBlockedMock = vi.fn();
 vi.mock('@/lib/analytics/game-events', () => ({
+  trackInAppBrowserBlocked: (browser: string, isIOS: boolean, isAndroid: boolean) =>
+    trackInAppBrowserBlockedMock(browser, isIOS, isAndroid),
   trackLoginCompleted: (method: string) => trackLoginCompletedMock(method),
   trackSignupCompleted: (method: string) => trackSignupCompletedMock(method),
   trackSignupStarted: (method: string) => trackSignupStartedMock(method),
@@ -299,6 +302,7 @@ beforeEach(() => {
   trackLoginCompletedMock.mockClear();
   trackSignupCompletedMock.mockClear();
   trackSignupStartedMock.mockClear();
+  trackInAppBrowserBlockedMock.mockClear();
 });
 
 afterEach(() => {
@@ -350,7 +354,7 @@ describe('WelcomeScreen — landing chrome', () => {
   });
 
   it.each(['facebook', 'messenger'] as const)(
-    'shows only the open-in-browser modal in %s webviews',
+    'shows the login dialog in %s webviews and opens browser instructions only after Google click',
     (app) => {
       inAppBrowserMock.app = app;
       inAppBrowserMock.platform = 'ios';
@@ -358,17 +362,20 @@ describe('WelcomeScreen — landing chrome', () => {
 
       render(<WelcomeScreen />);
 
+      expect(screen.getByText(/welcome\.loginTitle/)).toBeInTheDocument();
+      expect(screen.getByText(/welcome\.continueWithGoogle/)).toBeInTheDocument();
+      expect(screen.queryByText(/welcome\.continueWithFacebook/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/inAppBrowser\.title/)).not.toBeInTheDocument();
+
+      clickContinueWithGoogle();
+
+      expect(trackInAppBrowserBlockedMock).toHaveBeenCalledWith(app, true, false);
       expect(screen.getByText(/inAppBrowser\.title/)).toBeInTheDocument();
       expect(screen.getByText(/inAppBrowser\.iosBottomRightStep1/)).toBeInTheDocument();
       expect(screen.queryByText(/inAppBrowser\.iosStep1/)).not.toBeInTheDocument();
-      expect(screen.queryByText(/welcome\.loginTitle/)).not.toBeInTheDocument();
-      expect(screen.queryByText(/welcome\.continueWithGoogle/)).not.toBeInTheDocument();
-
-      openLoginDialog();
-
-      expect(screen.getByText(/inAppBrowser\.title/)).toBeInTheDocument();
-      expect(screen.queryByText(/welcome\.loginTitle/)).not.toBeInTheDocument();
-      expect(screen.queryByText(/welcome\.continueWithGoogle/)).not.toBeInTheDocument();
+      expect(signInWithGoogleIdentityMock).not.toHaveBeenCalled();
+      expect(socialLoginMock).not.toHaveBeenCalled();
+      expect(trackSignupStartedMock).not.toHaveBeenCalledWith('google');
     },
   );
 

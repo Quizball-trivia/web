@@ -38,7 +38,6 @@ export function WelcomeScreen() {
     handleCloseOpenInBrowserModal,
     inAppBrowserPlatform,
     inAppBrowserApp,
-    inAppBlocksAllSignIn,
     handleGoogleCredential,
     disableGoogleIdentityOverlay,
     showFacebookLogin,
@@ -105,12 +104,9 @@ export function WelcomeScreen() {
 
   useEffect(() => {
     if (peekPostAuthRedirect()) {
-      if (inAppBlocksAllSignIn) {
-        return;
-      }
       setLoginOpen(true);
     }
-  }, [inAppBlocksAllSignIn, setLoginOpen]);
+  }, [setLoginOpen]);
 
   return (
     <div className="min-h-screen w-full bg-surface-page font-sans text-foreground flex flex-col overflow-x-hidden">
@@ -158,7 +154,7 @@ export function WelcomeScreen() {
       />
 
       <WelcomeLoginDialog
-        open={loginOpen && !inAppBlocksAllSignIn}
+        open={loginOpen}
         googleClientId={googleClientId}
         disableGoogleIdentityOverlay={disableGoogleIdentityOverlay}
         authMode={authMode}
@@ -210,7 +206,7 @@ export function WelcomeScreen() {
       />
 
       <WelcomeOpenInBrowserModal
-        open={openInBrowserModalOpen || inAppBlocksAllSignIn}
+        open={openInBrowserModalOpen}
         platform={inAppBrowserPlatform}
         app={inAppBrowserApp}
         onClose={handleCloseOpenInBrowserModal}

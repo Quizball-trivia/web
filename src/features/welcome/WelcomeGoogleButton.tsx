@@ -17,8 +17,8 @@
  * onClick runs the classic redirect flow instead.
  *
  * In Messenger/Facebook-style in-app browsers the overlay is disabled so the
- * visible React button can run the external-browser bounce instead of being
- * intercepted by Google's iframe.
+ * visible React button can show the external-browser instructions instead of
+ * being intercepted by Google's iframe.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
