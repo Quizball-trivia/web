@@ -19,7 +19,7 @@ if (
       session_recording: {
         recordCrossOriginIframes: true,
       },
-      capture_performance: true,
+      capture_performance: false,
     });
   } catch (error) {
     console.error('PostHog initialization error:', error);
