@@ -346,6 +346,15 @@ describe('WelcomeScreen — landing chrome', () => {
     expect(screen.queryByPlaceholderText(/welcome\.emailPlaceholder/)).not.toBeInTheDocument();
   });
 
+  it('does not auto-open the login dialog when a post-auth redirect is pending', () => {
+    postAuthRedirectMock.redirect = '/friend/room/ABC123';
+
+    render(<WelcomeScreen />);
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByText(/welcome\.loginTitle/)).not.toBeInTheDocument();
+  });
+
   it('closes the login dialog via the modal close button and resets the in-app-browser panel', () => {
     render(<WelcomeScreen />);
     openLoginDialog();
@@ -362,16 +371,25 @@ describe('WelcomeScreen — landing chrome', () => {
 
       render(<WelcomeScreen />);
 
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.queryByText(/welcome\.loginTitle/)).not.toBeInTheDocument();
+
+      openLoginDialog();
+
       expect(screen.getByText(/welcome\.loginTitle/)).toBeInTheDocument();
       expect(screen.getByText(/welcome\.continueWithGoogle/)).toBeInTheDocument();
       expect(screen.queryByText(/welcome\.continueWithFacebook/)).not.toBeInTheDocument();
-      expect(screen.queryByText(/inAppBrowser\.title/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/inAppBrowser\.iosTitle/)).not.toBeInTheDocument();
 
       clickContinueWithGoogle();
 
       expect(trackInAppBrowserBlockedMock).toHaveBeenCalledWith(app, true, false);
-      expect(screen.getByText(/inAppBrowser\.title/)).toBeInTheDocument();
+      expect(screen.queryByText(/welcome\.loginTitle/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/welcome\.continueWithGoogle/)).not.toBeInTheDocument();
+      expect(screen.getByText(/inAppBrowser\.iosTitle/)).toBeInTheDocument();
+      expect(screen.getByText(/inAppBrowser\.iosBody/)).toBeInTheDocument();
       expect(screen.getByText(/inAppBrowser\.iosBottomRightStep1/)).toBeInTheDocument();
+      expect(screen.getByTestId('modal-close')).toBeInTheDocument();
       expect(screen.queryByText(/inAppBrowser\.iosStep1/)).not.toBeInTheDocument();
       expect(signInWithGoogleIdentityMock).not.toHaveBeenCalled();
       expect(socialLoginMock).not.toHaveBeenCalled();
@@ -389,6 +407,7 @@ describe('WelcomeScreen — landing chrome', () => {
     expect(screen.getByText(/welcome\.continueWithGoogle/)).toBeInTheDocument();
     expect(screen.queryByText(/welcome\.continueWithFacebook/)).not.toBeInTheDocument();
     expect(screen.queryByText(/inAppBrowser\.title/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/inAppBrowser\.iosTitle/)).not.toBeInTheDocument();
   });
 });
 

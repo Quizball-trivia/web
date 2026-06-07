@@ -216,6 +216,8 @@ export function useWelcomeAuthController() {
         inAppBrowserPlatform === 'ios',
         inAppBrowserPlatform === 'android',
       );
+      setLoginOpen(false);
+      resetAuthDialog();
       setOpenInBrowserModalOpen(true);
       return;
     }
@@ -270,6 +272,7 @@ export function useWelcomeAuthController() {
     googleClientId,
     inAppBrowserApp,
     inAppBrowserPlatform,
+    resetAuthDialog,
     shouldPromptExternalBrowserForGoogle,
     socialSubmitting,
   ]);

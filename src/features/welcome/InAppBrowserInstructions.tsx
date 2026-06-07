@@ -39,10 +39,18 @@ export function InAppBrowserInstructions({ platform, app }: InAppBrowserInstruct
     <>
       <DialogHeader className="text-center">
         <DialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
-          {t('inAppBrowser.title')}
+          {platform === 'ios'
+            ? t('inAppBrowser.iosTitle')
+            : platform === 'android'
+              ? t('inAppBrowser.androidTitle')
+              : t('inAppBrowser.title')}
         </DialogTitle>
         <DialogDescription className="mt-3 text-center font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-[14px]">
-          {t('inAppBrowser.body')}
+          {platform === 'ios'
+            ? t('inAppBrowser.iosBody')
+            : platform === 'android'
+              ? t('inAppBrowser.androidBody')
+              : t('inAppBrowser.body')}
         </DialogDescription>
       </DialogHeader>
 
