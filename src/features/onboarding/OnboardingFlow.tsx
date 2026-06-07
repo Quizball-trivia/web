@@ -10,6 +10,7 @@ import { AVATAR_COLORS } from '@/lib/avatars';
 import { DEFAULT_HAIR_ID, DEFAULT_JERSEY_ID, DEFAULT_SKIN_ID } from '@/lib/avatars/parts';
 import { trackOnboardingStarted, trackOnboardingStepCompleted } from '@/lib/analytics/game-events';
 import { useLocale } from '@/contexts/LocaleContext';
+import type { Locale } from '@/lib/i18n/messages';
 
 interface OnboardingFlowProps {
   onComplete: (data: OnboardingData) => void;
@@ -27,7 +28,7 @@ interface OnboardingData {
 const LANGUAGES = [
   { code: 'en', name: 'ENGLISH', nativeName: 'English', countryCode: 'gb' },
   { code: 'ka', name: 'GEORGIAN', nativeName: 'ქართული', countryCode: 'ge' },
-];
+] as const satisfies readonly { code: Locale; name: string; nativeName: string; countryCode: string }[];
 
 function getAvatarCustomization(color: string | null | undefined): AvatarCustomization {
   return {
@@ -47,13 +48,14 @@ type OnboardingStep = 'language' | 'club' | 'profile';
 const STEP_ORDER: OnboardingStep[] = ['language', 'club', 'profile'];
 
 export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingFlowProps) {
-  const { t } = useLocale();
+  const { locale, setLocale, t } = useLocale();
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('language');
   const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
-  const [preferredLanguage, setPreferredLanguage] = useState('');
+  const [preferredLanguage, setPreferredLanguage] = useState<Locale>(locale);
   const [favoriteClub, setFavoriteClub] = useState('');
   const [username, setUsername] = useState('');
   const [avatar, setAvatar] = useState('');
+  const languageTouchedRef = useRef(false);
   // Analytics — fire once on mount + once per forward step transition.
   // useRef avoids double-firing in React Strict Mode dev double-mount.
   const trackedStartRef = useRef(false);
@@ -62,6 +64,17 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
     trackedStartRef.current = true;
     trackOnboardingStarted();
   }, []);
+
+  useEffect(() => {
+    if (languageTouchedRef.current) return;
+    queueMicrotask(() => setPreferredLanguage(locale));
+  }, [locale]);
+
+  const handleLanguageSelect = (language: Locale) => {
+    languageTouchedRef.current = true;
+    setPreferredLanguage(language);
+    setLocale(language);
+  };
 
   const currentIndex = STEP_ORDER.indexOf(currentStep);
   const progress = ((currentIndex + 1) / STEP_ORDER.length) * 100;
@@ -170,7 +183,7 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
                     <button
                       key={language.code}
                       type="button"
-                      onClick={() => setPreferredLanguage(language.code)}
+                      onClick={() => handleLanguageSelect(language.code)}
                       aria-pressed={isSelected}
                       className={`${OPTION_PILL_CLASS} ${isSelected ? 'ring-2 ring-white' : ''}`}
                     >

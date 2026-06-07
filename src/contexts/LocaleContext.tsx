@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 import { type Locale, type MessageKey, isSupportedLocale, normalizeLocale, translate } from '@/lib/i18n/messages';
+import { inferLocaleFromBrowser } from '@/lib/i18n/infer-locale';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 
 interface LocaleContextType {
@@ -42,6 +43,14 @@ function localeFromPath(pathname: string | null): Locale | null {
   return isSupportedLocale(first) ? first : null;
 }
 
+function readStoredLocale(): { locale: Locale; hasStoredLocale: boolean } {
+  const stored = storage.get<string | null>(STORAGE_KEYS.LOCALE, null);
+  return {
+    locale: normalizeLocale(stored),
+    hasStoredLocale: stored !== null && stored !== undefined && String(stored).trim().length > 0,
+  };
+}
+
 export function LocaleProvider({ children, initialLocale }: LocaleProviderProps) {
   const preferredLanguage = useAuthStore((state) => state.user?.preferred_language);
   const lastSyncedPreferredLanguage = useRef<string | null | undefined>(undefined);
@@ -73,14 +82,16 @@ export function LocaleProvider({ children, initialLocale }: LocaleProviderProps)
     // If the route already supplied a locale (localized SEO pages), trust it
     // and skip the localStorage upgrade — the URL is the source of truth.
     if (initialLocale || pathLocale) return;
-    const stored = normalizeLocale(storage.get(STORAGE_KEYS.LOCALE, 'en'));
-    if (stored !== 'en') {
+    const { locale: stored, hasStoredLocale } = readStoredLocale();
+    const preferredLocale = isSupportedLocale(preferredLanguage) ? preferredLanguage : null;
+    const nextLocale = hasStoredLocale ? stored : preferredLocale ?? inferLocaleFromBrowser();
+    if (nextLocale !== 'en') {
       queueMicrotask(() => {
         localeSourceRef.current = 'app';
-        setLocaleState(stored);
+        setLocaleState(nextLocale);
       });
     }
-  }, [initialLocale, pathLocale]);
+  }, [initialLocale, pathLocale, preferredLanguage]);
 
   useEffect(() => {
     if (!hasHydratedRef.current) return;
@@ -92,7 +103,7 @@ export function LocaleProvider({ children, initialLocale }: LocaleProviderProps)
   useEffect(() => {
     if (!hasHydratedRef.current || pathLocale || localeSourceRef.current !== 'path') return;
 
-    const storedLocale = normalizeLocale(storage.get(STORAGE_KEYS.LOCALE, 'en'));
+    const { locale: storedLocale } = readStoredLocale();
     if (storedLocale === locale) {
       localeSourceRef.current = 'app';
       return;
@@ -115,7 +126,7 @@ export function LocaleProvider({ children, initialLocale }: LocaleProviderProps)
       return;
     }
 
-    const storedLocale = normalizeLocale(storage.get(STORAGE_KEYS.LOCALE, 'en'));
+    const { locale: storedLocale } = readStoredLocale();
     const preferredLanguageChanged = preferredLanguage !== lastSyncedPreferredLanguage.current;
     const shouldApplyPreferredLanguage =
       preferredLanguage !== locale &&
