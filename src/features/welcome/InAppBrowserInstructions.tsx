@@ -3,16 +3,18 @@
 import { useMemo, useState } from 'react';
 import { DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useLocale } from '@/contexts/LocaleContext';
-import type { Platform } from '@/lib/auth/in-app-browser';
+import type { InAppBrowserApp, Platform } from '@/lib/auth/in-app-browser';
 import { extractFriendInviteCodeFromPath } from '@/lib/friend/inviteCode';
 
 interface InAppBrowserInstructionsProps {
   platform: Platform;
+  app: InAppBrowserApp | null;
 }
 
-export function InAppBrowserInstructions({ platform }: InAppBrowserInstructionsProps) {
+export function InAppBrowserInstructions({ platform, app }: InAppBrowserInstructionsProps) {
   const { t } = useLocale();
   const [copied, setCopied] = useState(false);
+  const usesBottomRightMenu = app === 'messenger' || app === 'facebook';
 
   // Only offer "copy the link" when the current URL carries something worth
   // reopening — i.e. a friend-lobby invite (/friend/room/CODE). Copying the bare
@@ -47,7 +49,7 @@ export function InAppBrowserInstructions({ platform }: InAppBrowserInstructionsP
       <div className="mt-5 rounded-2xl bg-black/20 p-4 text-left font-poppins text-[13px] font-medium leading-relaxed text-white/90 sm:text-[14px]">
         {platform === 'ios' ? (
           <ol className="list-decimal space-y-2 pl-5">
-            <li>{t('inAppBrowser.iosStep1')}</li>
+            <li>{t(usesBottomRightMenu ? 'inAppBrowser.iosBottomRightStep1' : 'inAppBrowser.iosStep1')}</li>
             <li>{t('inAppBrowser.iosStep2')}</li>
           </ol>
         ) : platform === 'android' ? (

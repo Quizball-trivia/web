@@ -525,6 +525,7 @@ export function useWelcomeAuthController() {
     openInBrowserModalOpen,
     handleCloseOpenInBrowserModal,
     inAppBrowserPlatform,
+    inAppBrowserApp,
     // True in Messenger/Facebook webviews: all sign-in paths are blocked, so
     // WelcomeScreen suppresses the login dialog and shows only this modal.
     inAppBlocksAllSignIn,

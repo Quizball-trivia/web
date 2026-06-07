@@ -37,6 +37,7 @@ export function WelcomeScreen() {
     openInBrowserModalOpen,
     handleCloseOpenInBrowserModal,
     inAppBrowserPlatform,
+    inAppBrowserApp,
     inAppBlocksAllSignIn,
     handleGoogleCredential,
     disableGoogleIdentityOverlay,
@@ -211,6 +212,7 @@ export function WelcomeScreen() {
       <WelcomeOpenInBrowserModal
         open={openInBrowserModalOpen || inAppBlocksAllSignIn}
         platform={inAppBrowserPlatform}
+        app={inAppBrowserApp}
         onClose={handleCloseOpenInBrowserModal}
       />
     </div>

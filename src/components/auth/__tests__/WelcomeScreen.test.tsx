@@ -353,11 +353,14 @@ describe('WelcomeScreen — landing chrome', () => {
     'shows only the open-in-browser modal in %s webviews',
     (app) => {
       inAppBrowserMock.app = app;
+      inAppBrowserMock.platform = 'ios';
       postAuthRedirectMock.redirect = '/friend/room/ABC123';
 
       render(<WelcomeScreen />);
 
       expect(screen.getByText(/inAppBrowser\.title/)).toBeInTheDocument();
+      expect(screen.getByText(/inAppBrowser\.iosBottomRightStep1/)).toBeInTheDocument();
+      expect(screen.queryByText(/inAppBrowser\.iosStep1/)).not.toBeInTheDocument();
       expect(screen.queryByText(/welcome\.loginTitle/)).not.toBeInTheDocument();
       expect(screen.queryByText(/welcome\.continueWithGoogle/)).not.toBeInTheDocument();
 
