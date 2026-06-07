@@ -34,11 +34,12 @@ export function WelcomeScreen() {
     handleLoginDialogOpenChange,
     handleCloseLoginDialog,
     handleKickOff,
+    openInBrowserModalOpen,
+    handleCloseOpenInBrowserModal,
+    inAppBrowserPlatform,
     handleGoogleCredential,
     disableGoogleIdentityOverlay,
     showFacebookLogin,
-    showOpenInBrowserModal,
-    inAppBrowserPlatform,
     authMode,
     handleAuthModeChange,
     authEmail,
@@ -91,8 +92,6 @@ export function WelcomeScreen() {
   const phoneAuthAvailability = useGeorgianPhoneAuthAvailability();
   const canUseGeorgianPhoneAuth = phoneAuthAvailability.isAvailable;
 
-  // Dismissable "open in browser" prompt for Messenger/Facebook webviews.
-  const [openInBrowserDismissed, setOpenInBrowserDismissed] = useState(false);
 
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ?? '';
 
@@ -206,9 +205,9 @@ export function WelcomeScreen() {
       />
 
       <WelcomeOpenInBrowserModal
-        open={showOpenInBrowserModal && !openInBrowserDismissed}
+        open={openInBrowserModalOpen}
         platform={inAppBrowserPlatform}
-        onClose={() => setOpenInBrowserDismissed(true)}
+        onClose={handleCloseOpenInBrowserModal}
       />
     </div>
   );

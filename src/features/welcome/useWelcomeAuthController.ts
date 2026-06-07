@@ -72,12 +72,14 @@ export function useWelcomeAuthController() {
   // in-app browser (Instagram/Messenger/…) — it dead-ends. So hide the Facebook
   // button there and steer users to Google / email / phone, which all work.
   const showFacebookLogin = !authInAppBrowser;
-  // Messenger/Facebook webviews block Google's GIS popup (it opens a blank
-  // accounts.google.com page), so social sign-in can't complete there at all.
-  // Show an "open in your browser" instructions modal for those. Instagram is
-  // excluded — its webview allows the popup, so Google works in place.
-  const showOpenInBrowserModal = isPopupBlockedInAppBrowser(inAppBrowserApp);
-  const inAppBrowserPlatform = getPlatform();
+  // Messenger/Facebook webviews block EVERY sign-in method (Google popup blocked,
+  // Facebook redirect blocked). Opening the login dialog there is a dead end, so
+  // instead we open an "open in your browser" modal. Instagram is excluded (Google
+  // works in place), and email/phone aren't offered because the whole point is to
+  // get the user into a real browser where the session handoff is reliable.
+  const inAppBlocksAllSignIn = isPopupBlockedInAppBrowser(inAppBrowserApp);
+  const inAppBrowserPlatform = useMemo(() => getPlatform(), []);
+  const [openInBrowserModalOpen, setOpenInBrowserModalOpen] = useState(false);
 
   const [loginOpen, setLoginOpen] = useState(false);
   const [authMode, setAuthMode] = useState<AuthPanelMode>('signin');
@@ -145,7 +147,17 @@ export function useWelcomeAuthController() {
     setShowAdvancedAuth((current) => !current);
   }, []);
 
-  const handleKickOff = useCallback(() => setLoginOpen(true), []);
+  const handleKickOff = useCallback(() => {
+    // In Messenger/Facebook webviews no sign-in method works — send the user to a
+    // real browser via the modal instead of opening a dead-end login dialog.
+    if (inAppBlocksAllSignIn) {
+      setOpenInBrowserModalOpen(true);
+      return;
+    }
+    setLoginOpen(true);
+  }, [inAppBlocksAllSignIn]);
+
+  const handleCloseOpenInBrowserModal = useCallback(() => setOpenInBrowserModalOpen(false), []);
 
   const handleLoginDialogOpenChange = useCallback(
     (open: boolean) => {
@@ -512,6 +524,11 @@ export function useWelcomeAuthController() {
     handleCloseLoginDialog,
     handleKickOff,
 
+    // "Open in your browser" modal (Messenger/Facebook webview only)
+    openInBrowserModalOpen,
+    handleCloseOpenInBrowserModal,
+    inAppBrowserPlatform,
+
     // Google client id + credential handler for the overlaid GIS button
     googleClientId,
     handleGoogleCredential,
@@ -519,10 +536,6 @@ export function useWelcomeAuthController() {
 
     // Hide Facebook inside in-app browsers (its redirect can't complete there)
     showFacebookLogin,
-
-    // Messenger/Facebook webview: Google popup is blocked, show "open in browser"
-    showOpenInBrowserModal,
-    inAppBrowserPlatform,
 
     // Auth panel mode + form fields
     authMode,

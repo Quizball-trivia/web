@@ -28,20 +28,20 @@ describe('hide Facebook login inside in-app browsers', () => {
   });
 });
 
-describe('"open in browser" modal targets only popup-blocking webviews', () => {
-  it('shows for Messenger (popup blocked → Google dead-ends)', () => {
+describe('"open in browser" modal replaces login in fully-blocked webviews', () => {
+  it('Messenger: login blocked → show modal', () => {
     expect(isPopupBlockedInAppBrowser('messenger')).toBe(true);
   });
 
-  it('shows for Facebook in-app browser', () => {
+  it('Facebook in-app: login blocked → show modal', () => {
     expect(isPopupBlockedInAppBrowser('facebook')).toBe(true);
   });
 
-  it('does NOT show for Instagram (GIS popup works there)', () => {
+  it('Instagram: Google works in place → normal login (no modal)', () => {
     expect(isPopupBlockedInAppBrowser('instagram')).toBe(false);
   });
 
-  it('does NOT show in a real browser (no in-app app)', () => {
+  it('real browser: normal login (no modal)', () => {
     expect(isPopupBlockedInAppBrowser(null)).toBe(false);
   });
 });

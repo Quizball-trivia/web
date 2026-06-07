@@ -48,10 +48,11 @@ export function isInAppBrowser(): boolean {
   return getInAppBrowserApp() !== null;
 }
 
-// In-app browsers where Google's GIS popup is blocked (window.open is swallowed),
-// so "Continue with Google" dead-ends on a blank accounts.google.com page. These
-// users must open the page in a real browser. Instagram is NOT in this list — its
-// webview allows the GIS popup, so Google works there in place.
+// In-app browsers where ALL social sign-in is blocked: Google's GIS popup is
+// swallowed (blank accounts.google.com) AND Facebook's redirect can't complete.
+// In these, login can't work at all, so we show only an "open in your browser"
+// prompt. Instagram is NOT here — its webview allows the GIS popup, so Google
+// works in place there.
 const POPUP_BLOCKED_IN_APP_BROWSERS: ReadonlySet<InAppBrowserApp> = new Set([
   'messenger',
   'facebook',
