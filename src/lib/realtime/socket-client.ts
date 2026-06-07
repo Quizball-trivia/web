@@ -12,24 +12,39 @@ let socketOverride: Socket<ServerToClientEvents, ClientToServerEvents> | null = 
 let connectInFlight: Promise<void> | null = null;
 let authRecoveryInFlight: Promise<void> | null = null;
 const ACCESS_TOKEN_REFRESH_SKEW_MS = 30_000;
+const RECENT_ACCESS_TOKEN_SETTLE_MS = 1_500;
+const AUTH_RECOVERY_RETRY_MS = 1_000;
 
-function parseJwtExpMs(token: string): number | null {
+function parseJwtTimestampMs(token: string, claim: 'exp' | 'iat'): number | null {
   const parts = token.split('.');
   if (parts.length !== 3) return null;
   try {
     let b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
     while (b64.length % 4 !== 0) b64 += '=';
-    const payload = JSON.parse(atob(b64)) as { exp?: number };
-    return typeof payload.exp === 'number' ? payload.exp * 1000 : null;
+    const payload = JSON.parse(atob(b64)) as Partial<Record<'exp' | 'iat', number>>;
+    const timestamp = payload[claim];
+    return typeof timestamp === 'number' ? timestamp * 1000 : null;
   } catch {
     return null;
   }
 }
 
 function isTokenExpiredOrExpiringSoon(token: string): boolean {
-  const expMs = parseJwtExpMs(token);
+  const expMs = parseJwtTimestampMs(token, 'exp');
   if (!expMs) return false;
   return expMs - Date.now() <= ACCESS_TOKEN_REFRESH_SKEW_MS;
+}
+
+function recentTokenSettleDelayMs(token: string): number {
+  const iatMs = parseJwtTimestampMs(token, 'iat');
+  if (!iatMs) return 0;
+  const ageMs = Date.now() - iatMs;
+  if (ageMs < 0) return RECENT_ACCESS_TOKEN_SETTLE_MS;
+  return Math.max(0, RECENT_ACCESS_TOKEN_SETTLE_MS - ageMs);
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function ensureValidAccessToken(): Promise<string | null> {
@@ -53,6 +68,13 @@ function isAuthConnectError(message: string): boolean {
   return normalized.includes('invalid token') || normalized.includes('authentication required');
 }
 
+async function waitForTokenToSettle(token: string): Promise<void> {
+  const delayMs = recentTokenSettleDelayMs(token);
+  if (delayMs <= 0) return;
+  logger.info('Socket connect waiting for newly issued Supabase token to settle', { delayMs });
+  await wait(delayMs);
+}
+
 async function recoverSocketAuthAndReconnect(
   socket: Socket<ServerToClientEvents, ClientToServerEvents>
 ): Promise<void> {
@@ -61,6 +83,7 @@ async function recoverSocketAuthAndReconnect(
   }
 
   authRecoveryInFlight = (async () => {
+    await wait(AUTH_RECOVERY_RETRY_MS);
     const token = await ensureValidAccessToken();
     if (!token) {
       logger.warn('Socket auth recovery failed: no Supabase session');
@@ -96,7 +119,13 @@ async function connectWithFreshAuth(
       logger.warn('Socket connect skipped: no valid Supabase access token');
       return;
     }
-    socket.auth = { token };
+    await waitForTokenToSettle(token);
+    const settledToken = await ensureValidAccessToken();
+    if (!settledToken) {
+      logger.warn('Socket connect skipped after token settle: no valid Supabase access token');
+      return;
+    }
+    socket.auth = { token: settledToken };
     logger.info('Socket connect requested');
     socket.connect();
   })().finally(() => {
@@ -130,11 +159,13 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
     lastDisconnectAtMs = Date.now();
   });
   socket.on('connect_error', (error) => {
+    if (isAuthConnectError(error.message)) {
+      logger.info('Socket auth connect error; retrying after Supabase session settles', { message: error.message });
+      void recoverSocketAuthAndReconnect(socket);
+      return;
+    }
     logger.warn('Socket connect error', { message: error.message });
     try { trackSocketConnectionFailed(error.message); } catch { /* best-effort */ }
-    if (isAuthConnectError(error.message)) {
-      void recoverSocketAuthAndReconnect(socket);
-    }
   });
   socket.on('reconnect_attempt', (attempt) => {
     logger.info('Socket reconnect attempt', { attempt });

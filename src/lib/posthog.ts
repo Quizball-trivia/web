@@ -21,12 +21,6 @@ export function identifyUser(userId: string, properties?: AnalyticsProperties): 
     return;
   }
 
-  // In development, just log to console
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('[Dev] PostHog Identify:', userId, properties);
-    return;
-  }
-
   try {
     posthog.identify(userId, properties);
   } catch (error) {
@@ -40,12 +34,6 @@ export function resetUser(): void {
     return;
   }
 
-  // In development, just log to console
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('[Dev] PostHog Reset');
-    return;
-  }
-
   try {
     posthog.reset();
   } catch (error) {
@@ -56,12 +44,6 @@ export function resetUser(): void {
 // Track custom events
 export function trackEvent(eventName: string, properties?: AnalyticsProperties): void {
   if (typeof window === 'undefined' || !hasPostHogKey()) {
-    return;
-  }
-
-  // In development, just log to console
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('[Dev] PostHog Event:', eventName, properties);
     return;
   }
 
@@ -85,10 +67,6 @@ export function setPersonProperties(
   if (typeof window === 'undefined' || !hasPostHogKey()) {
     return;
   }
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('[Dev] PostHog Set Person Properties:', { set, setOnce });
-    return;
-  }
   try {
     const payload: { $set?: AnalyticsProperties; $set_once?: AnalyticsProperties } = {};
     if (set) payload.$set = set;
@@ -104,12 +82,6 @@ export function setPersonProperties(
 // Feature flag helpers
 export function getFeatureFlag(flagKey: string): boolean | string | undefined {
   if (typeof window === 'undefined' || !hasPostHogKey()) {
-    return undefined;
-  }
-
-  // In development, return undefined (no feature flags)
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('[Dev] PostHog Feature Flag:', flagKey, '(disabled in dev)');
     return undefined;
   }
 
