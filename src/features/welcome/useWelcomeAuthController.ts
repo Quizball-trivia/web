@@ -73,13 +73,12 @@ export function useWelcomeAuthController() {
   // button there and steer users to Google / email / phone, which all work.
   const showFacebookLogin = !authInAppBrowser;
   // Messenger/Facebook webviews block EVERY sign-in method (Google popup blocked,
-  // Facebook redirect blocked). Opening the login dialog there is a dead end, so
-  // instead we open an "open in your browser" modal. Instagram is excluded (Google
-  // works in place), and email/phone aren't offered because the whole point is to
-  // get the user into a real browser where the session handoff is reliable.
+  // Facebook redirect blocked), so we auto-show an "open in your browser" modal on
+  // load and let nothing else happen there. Instagram is excluded (Google works in
+  // place). Everywhere else, auth is unchanged.
   const inAppBlocksAllSignIn = isPopupBlockedInAppBrowser(inAppBrowserApp);
   const inAppBrowserPlatform = useMemo(() => getPlatform(), []);
-  const [openInBrowserModalOpen, setOpenInBrowserModalOpen] = useState(false);
+  const [openInBrowserModalOpen, setOpenInBrowserModalOpen] = useState(inAppBlocksAllSignIn);
 
   const [loginOpen, setLoginOpen] = useState(false);
   const [authMode, setAuthMode] = useState<AuthPanelMode>('signin');
@@ -147,15 +146,7 @@ export function useWelcomeAuthController() {
     setShowAdvancedAuth((current) => !current);
   }, []);
 
-  const handleKickOff = useCallback(() => {
-    // In Messenger/Facebook webviews no sign-in method works — send the user to a
-    // real browser via the modal instead of opening a dead-end login dialog.
-    if (inAppBlocksAllSignIn) {
-      setOpenInBrowserModalOpen(true);
-      return;
-    }
-    setLoginOpen(true);
-  }, [inAppBlocksAllSignIn]);
+  const handleKickOff = useCallback(() => setLoginOpen(true), []);
 
   const handleCloseOpenInBrowserModal = useCallback(() => setOpenInBrowserModalOpen(false), []);
 
