@@ -3,7 +3,7 @@ import { BundleCard, type BundleProps } from "./components/BundleCard";
 import { ItemCard } from "./components/ItemCard";
 import { PurchaseConfirmModal } from "./components/PurchaseConfirmModal";
 import { CoinIcon } from "./components/CoinIcon";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -229,6 +229,21 @@ export function StoreScreen() {
     return new Map((productsData?.items ?? []).map((item) => [item.slug, item]));
   }, [productsData]);
 
+  const getAvatarPartPriceCoins = useCallback(
+    (part: AvatarPart) => part.productSlug
+      ? productsBySlug.get(part.productSlug)?.priceCents ?? part.priceCoins
+      : part.priceCoins,
+    [productsBySlug],
+  );
+
+  const formatAvatarPartPrice = useCallback(
+    (part: AvatarPart) => {
+      const priceCoins = getAvatarPartPriceCoins(part);
+      return priceCoins ? priceCoins.toLocaleString() : "—";
+    },
+    [getAvatarPartPriceCoins],
+  );
+
   const featuredBundleSlug = useMemo(() => {
     if (productsBySlug.has("coin_pack_1200")) return "coin_pack_1200";
     if (productsBySlug.has("coin_pack_550")) return "coin_pack_550";
@@ -400,13 +415,15 @@ export function StoreScreen() {
       [part.slot]: part.id,
     };
     const isOwned = ownedPartIds.has(part.id);
-    const modalMode: BuyModalState["mode"] = isOwned ? "equip" : part.productSlug ? "coins" : "none";
+    const canBuyWithCoins = part.productSlug ? productsBySlug.has(part.productSlug) : false;
+    const modalMode: BuyModalState["mode"] = isOwned ? "equip" : canBuyWithCoins ? "coins" : "none";
+    const priceCoins = getAvatarPartPriceCoins(part);
     if (part.productSlug) {
       trackPurchaseModalOpened(part.productSlug, modalMode);
     }
     setBuyModal({
       name: translatePartName(part.name),
-      price: isOwned ? "" : part.priceCoins ? t("store.coinsPrice", { amount: part.priceCoins.toLocaleString() }) : "—",
+      price: isOwned ? "" : priceCoins ? t("store.coinsPrice", { amount: priceCoins.toLocaleString() }) : "—",
       productSlug: part.productSlug,
       mode: modalMode,
       avatarPart: part,
@@ -549,7 +566,7 @@ export function StoreScreen() {
                   <ItemCard
                     name={translatePartName(part.name)}
                     asset={part.asset}
-                    price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
+                    price={formatAvatarPartPrice(part)}
                     mannequinPart={part}
                     owned={ownedPartIds.has(part.id)}
                     onBuy={() => openAvatarPartModal(part)}
@@ -576,7 +593,7 @@ export function StoreScreen() {
                   <ItemCard
                     name={translatePartName(part.name)}
                     asset={part.asset}
-                    price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
+                    price={formatAvatarPartPrice(part)}
                     mannequinPart={part}
                     owned={ownedPartIds.has(part.id)}
                     onBuy={() => openAvatarPartModal(part)}
@@ -603,7 +620,7 @@ export function StoreScreen() {
                   <ItemCard
                     name={translatePartName(part.name)}
                     asset={part.asset}
-                    price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
+                    price={formatAvatarPartPrice(part)}
                     mannequinPart={part}
                     owned={ownedPartIds.has(part.id)}
                     onBuy={() => openAvatarPartModal(part)}
@@ -630,7 +647,7 @@ export function StoreScreen() {
                   <ItemCard
                     name={translatePartName(part.name)}
                     asset={part.asset}
-                    price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
+                    price={formatAvatarPartPrice(part)}
                     imageSize="lg"
                     owned={ownedPartIds.has(part.id)}
                     onBuy={() => openAvatarPartModal(part)}
