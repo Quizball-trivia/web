@@ -39,6 +39,16 @@ function socketSnapshot(socket: Socket<ServerToClientEvents, ClientToServerEvent
   };
 }
 
+export function logSocketDebug(event: string, meta?: Record<string, unknown>): void {
+  socketDebug(event, meta);
+}
+
+export function getSocketDebugSnapshot(
+  socket: Socket<ServerToClientEvents, ClientToServerEvents> = getSocket()
+): Record<string, unknown> {
+  return socketSnapshot(socket);
+}
+
 function getConnectErrorCode(error: Error): unknown {
   const candidate = error as Error & {
     code?: unknown;

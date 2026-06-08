@@ -5,6 +5,8 @@ export { posthog };
 type AnalyticsValue = string | number | boolean | null | undefined;
 type AnalyticsProperties = Record<string, AnalyticsValue>;
 
+let lastIdentifySignature: string | null = null;
+
 // PostHog runs on real deployments — production AND staging (Vercel "preview"),
 // which use separate project keys. Locally (VERCEL_ENV "development"/unset) we
 // just log to the console instead of sending events.
@@ -26,6 +28,11 @@ export function identifyUser(userId: string, properties?: AnalyticsProperties): 
   }
 
   try {
+    const signature = `${userId}:${JSON.stringify(properties ?? {})}`;
+    if (lastIdentifySignature === signature) {
+      return;
+    }
+    lastIdentifySignature = signature;
     posthog.identify(userId, properties);
   } catch (error) {
     console.error('PostHog identifyUser error:', error);
@@ -39,6 +46,7 @@ export function resetUser(): void {
   }
 
   try {
+    lastIdentifySignature = null;
     posthog.reset();
   } catch (error) {
     console.error('PostHog resetUser error:', error);

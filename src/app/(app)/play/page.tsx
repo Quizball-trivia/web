@@ -21,6 +21,7 @@ import { queryKeys } from "@/lib/queries/queryKeys";
 import { trackModeSelected } from "@/lib/analytics/game-events";
 import { shuffleArray } from "@/lib/utils";
 import { useLocale } from "@/contexts/LocaleContext";
+import { logSocketDebug } from "@/lib/realtime/socket-client";
 
 // Ranked entry costs 1 ticket — mirrors ModeConfirmModal's CONFIG.ranked.entryCost.
 const RANKED_TICKET_COST = 1;
@@ -91,11 +92,21 @@ export default function PlayPage() {
         // Network hiccup — fall back to the cached value rather than hard-blocking.
       }
       if (liveTickets < RANKED_TICKET_COST) {
+        logSocketDebug("ranked start blocked before navigation", {
+          cachedTickets: storeWallet?.tickets ?? null,
+          liveTickets,
+          requiredTickets: RANKED_TICKET_COST,
+        });
         toast.error(t("modeConfirm.notEnoughTickets"));
         router.push("/store");
         return;
       }
 
+      logSocketDebug("ranked start requested from play screen", {
+        cachedTickets: storeWallet?.tickets ?? null,
+        liveTickets,
+        requiredTickets: RANKED_TICKET_COST,
+      });
       startSession({
         ...params,
         matchType: "ranked",
