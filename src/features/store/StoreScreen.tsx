@@ -160,7 +160,7 @@ function TicketCard({ pack, onBuy }: { pack: TicketPackItem; onBuy: (b: TicketPa
     >
       <div
         className={`relative flex min-h-[218px] flex-col rounded-[16px] border-[3px] aspect-[4/5] px-2.5 py-3 transition sm:min-h-[270px] sm:rounded-[20px] sm:px-5 sm:py-5 ${
-          pack.disabled ? "opacity-60 blur-[1px]" : ""
+          pack.disabled ? "opacity-60" : ""
         }`}
         style={{ backgroundColor: CARD_BG, borderColor: ACCENT_PURPLE }}
       >
