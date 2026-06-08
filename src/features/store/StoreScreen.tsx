@@ -39,12 +39,25 @@ import { updateMe } from "@/lib/api/endpoints";
 import type { AvatarCustomization } from "@/types/game";
 
 const STRIPE_PURCHASES_ENABLED = false;
+const TICKET_CAP = 3;
 
 function formatUsd(priceCents: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
   }).format(priceCents / 100);
+}
+
+function formatDurationShort(totalSeconds: number, locale: string): string {
+  const totalMinutes = Math.max(0, Math.ceil(totalSeconds / 60));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (locale === "ka") {
+    return hours > 0 ? `${hours}სთ ${minutes}წთ` : `${minutes}წთ`;
+  }
+
+  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 }
 
 interface TicketPackItem {
@@ -55,6 +68,8 @@ interface TicketPackItem {
   iconAsset: string;
   productSlug?: string;
   disabled?: boolean;
+  disabledReason?: "full" | "cooldown";
+  disabledLabel?: string;
   /** Number of tickets this pack grants — drives the stacked-icon visual. */
   ticketCount: number;
 }
@@ -144,7 +159,9 @@ function TicketCard({ pack, onBuy }: { pack: TicketPackItem; onBuy: (b: TicketPa
       className="relative flex flex-col"
     >
       <div
-        className="relative flex min-h-[218px] flex-col rounded-[16px] border-[3px] aspect-[4/5] px-2.5 py-3 sm:min-h-[270px] sm:rounded-[20px] sm:px-5 sm:py-5"
+        className={`relative flex min-h-[218px] flex-col rounded-[16px] border-[3px] aspect-[4/5] px-2.5 py-3 transition sm:min-h-[270px] sm:rounded-[20px] sm:px-5 sm:py-5 ${
+          pack.disabled ? "opacity-60 blur-[1px]" : ""
+        }`}
         style={{ backgroundColor: CARD_BG, borderColor: ACCENT_PURPLE }}
       >
         {/* Top: title + subtitle (centered) */}
@@ -173,10 +190,14 @@ function TicketCard({ pack, onBuy }: { pack: TicketPackItem; onBuy: (b: TicketPa
           type="button"
           onClick={() => onBuy(pack)}
           disabled={pack.disabled}
-          className="flex h-9 w-full items-center justify-center gap-1 rounded-[16px] text-[12px] uppercase text-white transition-transform active:translate-y-[2px] disabled:opacity-50 disabled:active:translate-y-0 sm:h-[44px] sm:gap-2 sm:rounded-[20px] sm:text-[18px]"
+          className={`flex h-9 w-full items-center justify-center gap-1 rounded-[16px] uppercase text-white transition-transform active:translate-y-[2px] disabled:opacity-50 disabled:active:translate-y-0 sm:h-[44px] sm:gap-2 sm:rounded-[20px] ${
+            pack.disabledReason === "cooldown" ? "text-[9px] sm:text-[13px]" : "text-[12px] sm:text-[18px]"
+          }`}
           style={{ ...POPPINS_HEADER, backgroundColor: ACCENT_PURPLE }}
         >
-          <span className="tabular-nums">{pack.disabled ? t("store.full") : pack.price}</span>
+          <span className="tabular-nums">
+            {pack.disabled ? pack.disabledLabel ?? t("store.full") : pack.price}
+          </span>
           {!pack.disabled && <CoinIcon size={22} />}
         </button>
       </div>
@@ -188,7 +209,7 @@ function TicketCard({ pack, onBuy }: { pack: TicketPackItem; onBuy: (b: TicketPa
 // proper nouns (Ramos, Real Madrid, Liverpool, etc.) intentionally stay
 // untranslated since they're brand names.
 export function StoreScreen() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const translatePartName = (name: string) => translateSharedPartName(name, t);
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -201,6 +222,12 @@ export function StoreScreen() {
   const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
   const { player, updateStats } = usePlayer();
   const [buyModal, setBuyModal] = useState<BuyModalState | null>(null);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setNowMs(Date.now()), 60_000);
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   /** Currently saved customization (decoded from avatar_url). */
   const currentCustomization = useMemo<AvatarCustomization>(() => {
@@ -305,6 +332,11 @@ export function StoreScreen() {
           toast.error(t("store.ticketsAlreadyFull"));
           return;
         }
+        if (errorCode === "TICKET_PURCHASE_COOLDOWN") {
+          toast.error(t("store.ticketPurchaseCooldown"));
+          void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+          return;
+        }
         toast.error(t("store.notEnoughCoins"));
         return;
       }
@@ -331,7 +363,7 @@ export function StoreScreen() {
     params.delete("purchase");
     const cleaned = params.toString();
     router.replace(cleaned ? `?${cleaned}` : pathname, { scroll: false });
-  }, [searchParams, pathname, queryClient, router]);
+  }, [searchParams, pathname, queryClient, router, t]);
 
   const coinBundles = useMemo<BundleProps[]>(() => {
     const config: Array<{ id: string; title: string; amount: number; bonus?: number; isPopular?: boolean; slug: string; imageSrc: string }> = [
@@ -365,8 +397,15 @@ export function StoreScreen() {
 
   const ticketPacks = useMemo<TicketPackItem[]>(() => {
     const currentTickets = wallet?.tickets ?? 0;
-    const TICKET_CAP = 10;
     const availableSpace = Math.max(0, TICKET_CAP - currentTickets);
+    const cooldown = wallet?.ticketPurchaseCooldown;
+    const cooldownRemainingSeconds = cooldown?.nextAvailableAt
+      ? Math.max(0, Math.ceil((Date.parse(cooldown.nextAvailableAt) - nowMs) / 1000))
+      : cooldown?.remainingSeconds ?? 0;
+    const isTicketPurchaseCoolingDown = cooldown?.canBuy === false && cooldownRemainingSeconds > 0;
+    const cooldownLabel = isTicketPurchaseCoolingDown
+      ? t("store.ticketUnlocksIn", { time: formatDurationShort(cooldownRemainingSeconds, locale) })
+      : undefined;
 
     const ticketPacks = (productsData?.items ?? []).filter(
       (p) => p.type === "ticket_pack",
@@ -386,12 +425,14 @@ export function StoreScreen() {
           price: product.priceCents.toLocaleString(),
           productSlug: product.slug,
           iconAsset: "/assets/ticket_icon.webp",
-          disabled: ticketCount > availableSpace,
+          disabled: ticketCount > availableSpace || isTicketPurchaseCoolingDown,
+          disabledReason: isTicketPurchaseCoolingDown ? "cooldown" : ticketCount > availableSpace ? "full" : undefined,
+          disabledLabel: isTicketPurchaseCoolingDown ? cooldownLabel : undefined,
           ticketCount,
         } satisfies TicketPackItem;
       })
       .sort((a, b) => a.ticketCount - b.ticketCount);
-  }, [productsData, wallet?.tickets, t]);
+  }, [locale, nowMs, productsData, wallet?.ticketPurchaseCooldown, wallet?.tickets, t]);
 
   const purchasePending = checkoutMutation.isPending || coinPurchaseMutation.isPending;
 
@@ -533,6 +574,10 @@ export function StoreScreen() {
                     pack={pack}
                     onBuy={(b) => {
                       if (b.disabled) {
+                        if (b.disabledReason === "cooldown" && b.disabledLabel) {
+                          toast.message(b.disabledLabel);
+                          return;
+                        }
                         toast.message(t("store.notEnoughTicketSpace"));
                         return;
                       }

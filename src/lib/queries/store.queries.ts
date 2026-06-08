@@ -89,6 +89,12 @@ type CachedWallet = {
   updatedAt: number;
 };
 
+const OPEN_TICKET_PURCHASE_COOLDOWN: StoreWalletResponse["ticketPurchaseCooldown"] = {
+  canBuy: true,
+  nextAvailableAt: null,
+  remainingSeconds: 0,
+};
+
 function readCachedWallet(): CachedWallet | null {
   const cached = storage.get<CachedWallet | null>(STORAGE_KEYS.STORE_WALLET, null);
   if (!cached) return null;
@@ -142,9 +148,10 @@ export const getStoreWalletQuery = () => ({
     ? {
         coins: readCachedWallet()!.coins,
         tickets: readCachedWallet()!.tickets,
+        ticketPurchaseCooldown: OPEN_TICKET_PURCHASE_COOLDOWN,
       }
     : undefined,
-  initialDataUpdatedAt: readCachedWallet()?.updatedAt,
+  initialDataUpdatedAt: 0,
   ...STORE_WALLET_QUERY_OPTIONS,
 });
 

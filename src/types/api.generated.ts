@@ -1556,6 +1556,7 @@ export interface paths {
                             wallet: {
                                 coins: number;
                                 tickets: number;
+                                ticketPurchaseCooldown: components["schemas"]["StoreWalletResponse"]["ticketPurchaseCooldown"];
                             };
                         };
                     };
@@ -1621,6 +1622,7 @@ export interface paths {
                         "application/json": {
                             coins: number;
                             tickets: number;
+                            ticketPurchaseCooldown: components["schemas"]["StoreWalletResponse"]["ticketPurchaseCooldown"];
                         };
                     };
                 };
@@ -1751,6 +1753,7 @@ export interface paths {
                             wallet: {
                                 coins: number;
                                 tickets: number;
+                                ticketPurchaseCooldown: components["schemas"]["StoreWalletResponse"]["ticketPurchaseCooldown"];
                             };
                         };
                     };
@@ -1830,6 +1833,7 @@ export interface paths {
                             wallet: {
                                 coins: number;
                                 tickets: number;
+                                ticketPurchaseCooldown: components["schemas"]["StoreWalletResponse"]["ticketPurchaseCooldown"];
                             };
                             inventoryApplied: {
                                 productSlug: string;
@@ -5430,6 +5434,12 @@ export interface components {
         StoreWalletResponse: {
             coins: number;
             tickets: number;
+            ticketPurchaseCooldown: {
+                canBuy: boolean;
+                /** Format: date-time */
+                nextAvailableAt: string | null;
+                remainingSeconds: number;
+            };
         };
         StoreInventoryResponse: {
             items: {
@@ -5464,6 +5474,7 @@ export interface components {
             wallet: {
                 coins: number;
                 tickets: number;
+                ticketPurchaseCooldown: components["schemas"]["StoreWalletResponse"]["ticketPurchaseCooldown"];
             };
         };
         ManualAdjustmentResponse: {
@@ -5471,6 +5482,7 @@ export interface components {
             wallet: {
                 coins: number;
                 tickets: number;
+                ticketPurchaseCooldown: components["schemas"]["StoreWalletResponse"]["ticketPurchaseCooldown"];
             };
             inventoryApplied: {
                 productSlug: string;
