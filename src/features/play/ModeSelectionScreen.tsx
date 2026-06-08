@@ -12,6 +12,7 @@ import { getI18nText } from '@/lib/utils/i18n';
 import type { MatchStatsSummary } from '@/lib/domain';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import { useObjectives } from '@/lib/queries/objectives.queries';
+import { useObjectivesEnabled } from '@/lib/hooks/useObjectivesEnabled';
 
 import { colors } from '@/lib/colors';
 
@@ -112,6 +113,7 @@ export function ModeSelectionScreen({
   const nextTierTargetRp = nextTierBand?.minRp ?? null;
   const router = useRouter();
   const { data: objectivesData, isLoading: objectivesLoading } = useObjectives();
+  const objectivesEnabled = useObjectivesEnabled();
   const rankedTitleStyle = {
     fontFamily: "'Poppins', sans-serif",
     fontWeight: 600,
@@ -442,6 +444,7 @@ export function ModeSelectionScreen({
       </div>
 
       {/* ─── 3. Objectives ─── */}
+      {objectivesEnabled && (
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base text-white uppercase" style={poppins}>
@@ -590,6 +593,7 @@ export function ModeSelectionScreen({
           })}
         </div>
       </div>
+      )}
 
       {/* ─── 5. Recent Matches ─── */}
       <HomeRecentMatches collapsedOnly />
