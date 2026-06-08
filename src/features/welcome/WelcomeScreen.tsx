@@ -29,10 +29,11 @@ export function WelcomeScreen() {
   const auth = useWelcomeAuthController();
   const {
     loginOpen,
-    setLoginOpen,
     handleLoginDialogOpenChange,
     handleCloseLoginDialog,
     handleKickOff,
+    handleProtectedWelcomeAction,
+    authInAppBrowser,
     openInBrowserModalOpen,
     handleCloseOpenInBrowserModal,
     inAppBrowserPlatform,
@@ -92,8 +93,20 @@ export function WelcomeScreen() {
   const phoneAuthAvailability = useGeorgianPhoneAuthAvailability();
   const canUseGeorgianPhoneAuth = phoneAuthAvailability.isAvailable;
 
-
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ?? '';
+
+  const handleBrowseCategories = () => {
+    if (authInAppBrowser) {
+      handleProtectedWelcomeAction();
+      return;
+    }
+    setCategoriesOpen(true);
+  };
+
+  const handleCategorySelect = () => {
+    setCategoriesOpen(false);
+    handleProtectedWelcomeAction();
+  };
 
   useEffect(() => {
     if (!canUseGeorgianPhoneAuth && authMode === 'phone') {
@@ -124,17 +137,17 @@ export function WelcomeScreen() {
         allCategoriesCount={allCategories.length}
         featuredCategories={featuredCategories}
         hasRemaining={remainingCategories.length > 0}
-        onCategorySelect={() => setLoginOpen(true)}
-        onBrowseAll={() => setCategoriesOpen(true)}
+        onCategorySelect={handleProtectedWelcomeAction}
+        onBrowseAll={handleBrowseCategories}
       />
 
 
-      <WelcomeTierRoadSection onStartClimbing={() => setLoginOpen(true)} />
+      <WelcomeTierRoadSection onStartClimbing={handleProtectedWelcomeAction} />
 
       <WelcomeLeaderboardSection
         entries={leaderboardEntries}
-        onEntryClick={() => setLoginOpen(true)}
-        onViewFull={() => setLoginOpen(true)}
+        onEntryClick={handleProtectedWelcomeAction}
+        onViewFull={handleProtectedWelcomeAction}
       />
 
       <WelcomeFooter duelsCount={duelsCount} />
@@ -143,7 +156,7 @@ export function WelcomeScreen() {
         open={categoriesOpen}
         categories={allCategories}
         onOpenChange={setCategoriesOpen}
-        onCategorySelect={() => { setCategoriesOpen(false); setLoginOpen(true); }}
+        onCategorySelect={handleCategorySelect}
       />
 
       <WelcomeLoginDialog

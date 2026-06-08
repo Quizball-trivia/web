@@ -172,6 +172,14 @@ describe("auth store bootstrap", () => {
       user: USER,
       hasBootstrapped: true,
     });
-    expect(identifyUserMock).toHaveBeenCalledWith("u1", expect.any(Object));
+    expect(identifyUserMock).toHaveBeenCalledWith(
+      "u1",
+      expect.objectContaining({
+        $email: "user@example.com",
+        $name: "user@example.com",
+        email: "user@example.com",
+        name: "user@example.com",
+      }),
+    );
   });
 });

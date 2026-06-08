@@ -29,8 +29,13 @@ function syncAnalyticsUser(user: User): void {
     return;
   }
 
+  const displayName = user.nickname ?? user.email ?? user.id;
+
   identifyUser(user.id, {
+    $email: user.email,
+    $name: displayName,
     email: user.email,
+    name: displayName,
     nickname: user.nickname,
     created_at: user.created_at,
   });
@@ -38,6 +43,10 @@ function syncAnalyticsUser(user: User): void {
   try {
     setPersonProperties(
       {
+        $email: user.email,
+        $name: displayName,
+        email: user.email,
+        name: displayName,
         nickname: user.nickname,
         country: user.country,
         favorite_club: user.favorite_club,

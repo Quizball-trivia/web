@@ -29,7 +29,7 @@ import {
   verifyGeorgianPhoneOtp,
 } from '@/lib/auth/auth.service';
 import { signInWithGoogleIdentity, type GoogleCredential } from '@/lib/auth/google-identity';
-import { getInAppBrowserApp, getPlatform, isPopupBlockedInAppBrowser } from '@/lib/auth/in-app-browser';
+import { getInAppBrowserApp, getPlatform } from '@/lib/auth/in-app-browser';
 import { useAuthStore } from '@/stores/auth.store';
 import { useLocale } from '@/contexts/LocaleContext';
 import {
@@ -64,15 +64,9 @@ export function useWelcomeAuthController() {
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ?? '';
   const inAppBrowserApp = useMemo(() => getInAppBrowserApp(), []);
   const authInAppBrowser = inAppBrowserApp !== null;
-  // GIS id_token sign-in works inside some in-app browsers (Instagram), but
-  // Messenger/Facebook swallow the popup. Disable the overlay there so the
-  // visible Google button can show our "open in browser" modal instead.
-  const shouldPromptExternalBrowserForGoogle = isPopupBlockedInAppBrowser(inAppBrowserApp);
-  const disableGoogleIdentityOverlay = shouldPromptExternalBrowserForGoogle;
-  // Facebook sign-in only has the OAuth *redirect* flow (no in-webview token
-  // equivalent like Google's GIS), and that redirect can't complete inside an
-  // in-app browser (Instagram/Messenger/…) — it dead-ends. So hide the Facebook
-  // button there and steer users to Google / email / phone, which all work.
+  // In embedded social-app browsers, keep the landing page visible but block
+  // auth/game CTAs behind the manual "open in Safari/Chrome" instructions.
+  const disableGoogleIdentityOverlay = authInAppBrowser;
   const showFacebookLogin = !authInAppBrowser;
   const inAppBrowserPlatform = useMemo(() => getPlatform(), []);
   const [openInBrowserModalOpen, setOpenInBrowserModalOpen] = useState(false);
@@ -143,18 +137,41 @@ export function useWelcomeAuthController() {
     setShowAdvancedAuth((current) => !current);
   }, []);
 
-  const handleKickOff = useCallback(() => setLoginOpen(true), []);
+  const showOpenInBrowserInstructions = useCallback(() => {
+    trackInAppBrowserBlocked(
+      inAppBrowserApp ?? 'unknown',
+      inAppBrowserPlatform === 'ios',
+      inAppBrowserPlatform === 'android',
+    );
+    setLoginOpen(false);
+    resetAuthDialog();
+    setOpenInBrowserModalOpen(true);
+  }, [inAppBrowserApp, inAppBrowserPlatform, resetAuthDialog]);
+
+  const handleProtectedWelcomeAction = useCallback(() => {
+    if (authInAppBrowser) {
+      showOpenInBrowserInstructions();
+      return;
+    }
+    setLoginOpen(true);
+  }, [authInAppBrowser, showOpenInBrowserInstructions]);
+
+  const handleKickOff = handleProtectedWelcomeAction;
 
   const handleCloseOpenInBrowserModal = useCallback(() => setOpenInBrowserModalOpen(false), []);
 
   const handleLoginDialogOpenChange = useCallback(
     (open: boolean) => {
+      if (open && authInAppBrowser) {
+        showOpenInBrowserInstructions();
+        return;
+      }
       setLoginOpen(open);
       if (!open) {
         resetAuthDialog();
       }
     },
-    [resetAuthDialog],
+    [authInAppBrowser, resetAuthDialog, showOpenInBrowserInstructions],
   );
 
   const handleCloseLoginDialog = useCallback(() => {
@@ -170,9 +187,9 @@ export function useWelcomeAuthController() {
     [resetAuthForm],
   );
 
-  // Exchange a Google id_token (from the overlaid GIS button — the path that
-  // works inside in-app browsers like Instagram) for a session. The classic
-  // redirect is only a last-ditch fallback in handleGoogleLogin below.
+  // Exchange a Google id_token (from the overlaid GIS button) for a session.
+  // In-app browsers should not reach this path because protected landing CTAs
+  // are intercepted before the login dialog opens.
   const handleGoogleCredential = useCallback(
     async (credential: GoogleCredential) => {
       if (googleCredentialInFlightRef.current) return;
@@ -205,20 +222,13 @@ export function useWelcomeAuthController() {
     [bootstrap, t],
   );
 
-  // Fallback for when the overlaid GIS button never rendered (GIS unavailable
-  // in a locked-down webview): try One Tap, then the classic redirect.
+  // Fallback for when the overlaid GIS button never rendered: try One Tap,
+  // then the classic redirect.
   const handleGoogleLogin = useCallback(async () => {
     if (socialSubmitting) return;
 
-    if (shouldPromptExternalBrowserForGoogle) {
-      trackInAppBrowserBlocked(
-        inAppBrowserApp ?? 'unknown',
-        inAppBrowserPlatform === 'ios',
-        inAppBrowserPlatform === 'android',
-      );
-      setLoginOpen(false);
-      resetAuthDialog();
-      setOpenInBrowserModalOpen(true);
+    if (authInAppBrowser) {
+      showOpenInBrowserInstructions();
       return;
     }
 
@@ -246,15 +256,6 @@ export function useWelcomeAuthController() {
           return;
         }
         console.warn('GIS sign-in unavailable', gisError);
-        if (authInAppBrowser) {
-          // GIS unavailable in this webview, and Google blocks the classic OAuth
-          // redirect inside embedded browsers — surface email/phone instead of
-          // dead-ending the user (never force an external-browser bounce).
-          setSocialSubmitting(null);
-          setShowAdvancedAuth(true);
-          setLoginOpen(true);
-          return;
-        }
       }
     }
 
@@ -270,15 +271,16 @@ export function useWelcomeAuthController() {
     authInAppBrowser,
     bootstrap,
     googleClientId,
-    inAppBrowserApp,
-    inAppBrowserPlatform,
-    resetAuthDialog,
-    shouldPromptExternalBrowserForGoogle,
+    showOpenInBrowserInstructions,
     socialSubmitting,
   ]);
 
   const handleFacebookLogin = useCallback(async () => {
     if (socialSubmitting) return;
+    if (authInAppBrowser) {
+      showOpenInBrowserInstructions();
+      return;
+    }
     trackSignupStarted('facebook');
     setSocialSubmitting('facebook');
 
@@ -290,7 +292,7 @@ export function useWelcomeAuthController() {
       console.error('Facebook login failed', error);
       setSocialSubmitting(null);
     }
-  }, [socialSubmitting]);
+  }, [authInAppBrowser, showOpenInBrowserInstructions, socialSubmitting]);
 
   const handleEmailAuth = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
@@ -533,8 +535,10 @@ export function useWelcomeAuthController() {
     handleLoginDialogOpenChange,
     handleCloseLoginDialog,
     handleKickOff,
+    handleProtectedWelcomeAction,
+    authInAppBrowser,
 
-    // "Open in your browser" modal (shown after Google click in Messenger/Facebook)
+    // "Open in your browser" modal (shown for protected CTAs in in-app browsers)
     openInBrowserModalOpen,
     handleCloseOpenInBrowserModal,
     inAppBrowserPlatform,
@@ -545,7 +549,7 @@ export function useWelcomeAuthController() {
     handleGoogleCredential,
     disableGoogleIdentityOverlay,
 
-    // Hide Facebook inside in-app browsers (its redirect can't complete there)
+    // Hide Facebook inside in-app browsers (the login dialog is blocked there)
     showFacebookLogin,
 
     // Auth panel mode + form fields

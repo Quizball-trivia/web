@@ -362,8 +362,8 @@ describe('WelcomeScreen — landing chrome', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it.each(['facebook', 'messenger'] as const)(
-    'shows the login dialog in %s webviews and opens browser instructions only after Google click',
+  it.each(['facebook', 'messenger', 'instagram'] as const)(
+    'opens browser instructions from landing CTAs in %s webviews without opening auth',
     (app) => {
       inAppBrowserMock.app = app;
       inAppBrowserMock.platform = 'ios';
@@ -376,36 +376,31 @@ describe('WelcomeScreen — landing chrome', () => {
 
       openLoginDialog();
 
-      expect(screen.getByText(/welcome\.loginTitle/)).toBeInTheDocument();
-      expect(screen.getByText(/welcome\.continueWithGoogle/)).toBeInTheDocument();
-      expect(screen.queryByText(/welcome\.continueWithFacebook/)).not.toBeInTheDocument();
-      expect(screen.queryByText(/inAppBrowser\.iosTitle/)).not.toBeInTheDocument();
-
-      clickContinueWithGoogle();
-
       expect(trackInAppBrowserBlockedMock).toHaveBeenCalledWith(app, true, false);
       expect(screen.queryByText(/welcome\.loginTitle/)).not.toBeInTheDocument();
       expect(screen.queryByText(/welcome\.continueWithGoogle/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/welcome\.continueWithFacebook/)).not.toBeInTheDocument();
       expect(screen.getByText(/inAppBrowser\.iosTitle/)).toBeInTheDocument();
       expect(screen.getByText(/inAppBrowser\.iosBody/)).toBeInTheDocument();
-      expect(screen.getByText(/inAppBrowser\.iosBottomRightStep1/)).toBeInTheDocument();
+      expect(
+        screen.getByText(app === 'instagram' ? /inAppBrowser\.iosStep1/ : /inAppBrowser\.iosBottomRightStep1/),
+      ).toBeInTheDocument();
       expect(screen.getByTestId('modal-close')).toBeInTheDocument();
-      expect(screen.queryByText(/inAppBrowser\.iosStep1/)).not.toBeInTheDocument();
       expect(signInWithGoogleIdentityMock).not.toHaveBeenCalled();
       expect(socialLoginMock).not.toHaveBeenCalled();
       expect(trackSignupStartedMock).not.toHaveBeenCalledWith('google');
     },
   );
 
-  it('still opens the normal login dialog in Instagram webviews', () => {
-    inAppBrowserMock.app = 'instagram';
+  it('keeps the normal login dialog in regular browsers', () => {
+    inAppBrowserMock.app = null;
 
     render(<WelcomeScreen />);
     openLoginDialog();
 
     expect(screen.getByText(/welcome\.loginTitle/)).toBeInTheDocument();
     expect(screen.getByText(/welcome\.continueWithGoogle/)).toBeInTheDocument();
-    expect(screen.queryByText(/welcome\.continueWithFacebook/)).not.toBeInTheDocument();
+    expect(screen.getByText(/welcome\.continueWithFacebook/)).toBeInTheDocument();
     expect(screen.queryByText(/inAppBrowser\.title/)).not.toBeInTheDocument();
     expect(screen.queryByText(/inAppBrowser\.iosTitle/)).not.toBeInTheDocument();
   });

@@ -1,12 +1,9 @@
 'use client';
 
 /**
- * "Open in your browser" modal, shown inside webviews that block Google's GIS
- * popup (Messenger / Facebook). There, "Continue with Google" dead-ends on a
- * blank accounts.google.com page, so we tell the user — in their language — how
- * to reopen the page in Safari/Chrome, where sign-in works.
- *
- * Not shown in Instagram (its webview allows the popup, so Google works in place).
+ * "Open in your browser" modal, shown for protected landing actions inside
+ * social-app webviews (Messenger, Facebook, Instagram, etc.). The landing page
+ * remains visible, but auth/game entry waits until the user opens Safari/Chrome.
  */
 
 import { Dialog, DialogContent } from '@/components/ui/dialog';

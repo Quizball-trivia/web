@@ -1,5 +1,6 @@
-// Detect in-app browsers (Messenger, Instagram, FB feed, etc.) and try to
-// send the user to Safari/Chrome where OAuth and session handoff are reliable.
+// Detect in-app browsers (Messenger, Instagram, FB feed, etc.). Welcome keeps
+// the landing page visible there, but protected auth/game CTAs show manual
+// Safari/Chrome instructions instead of starting OAuth in the webview.
 
 export type Platform = 'ios' | 'android' | 'other';
 export type InAppBrowserApp =
@@ -48,11 +49,9 @@ export function isInAppBrowser(): boolean {
   return getInAppBrowserApp() !== null;
 }
 
-// In-app browsers where ALL social sign-in is blocked: Google's GIS popup is
-// swallowed (blank accounts.google.com) AND Facebook's redirect can't complete.
-// In these, login can't work at all, so we show only an "open in your browser"
-// prompt. Instagram is NOT here — its webview allows the GIS popup, so Google
-// works in place there.
+// Legacy helper retained for tests/diagnostics that specifically care whether
+// Google's GIS popup is swallowed. Product policy is broader: any detected
+// in-app browser should use the external-browser instructions before auth.
 const POPUP_BLOCKED_IN_APP_BROWSERS: ReadonlySet<InAppBrowserApp> = new Set([
   'messenger',
   'facebook',
