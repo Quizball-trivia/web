@@ -9,6 +9,7 @@ import { identifyUser, resetUser, setPersonProperties } from "@/lib/posthog";
 import { trackLogout } from "@/lib/analytics/game-events";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { getSupabaseSession, signOutLocal } from "@/lib/auth/supabase";
+import { disconnectSocket } from "@/lib/realtime/socket-client";
 
 type AuthStatus = "loading" | "anonymous" | "authenticated";
 const BOOTSTRAP_TRANSIENT_RETRY_MS = 300;
@@ -180,6 +181,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       logger.error('Analytics trackLogout failed', error);
     }
+    disconnectSocket();
     try {
       await logoutService();
     } catch {

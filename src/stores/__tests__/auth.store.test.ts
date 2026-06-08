@@ -10,13 +10,15 @@ const storageRemoveMock = vi.fn();
 const identifyUserMock = vi.fn();
 const resetUserMock = vi.fn();
 const setPersonPropertiesMock = vi.fn();
+const logoutServiceMock = vi.fn();
+const disconnectSocketMock = vi.fn();
 
 vi.mock("@/lib/auth/session", () => ({
   fetchCurrentUser: (...args: unknown[]) => fetchCurrentUserMock(...args),
 }));
 
 vi.mock("@/lib/auth/auth.service", () => ({
-  logout: vi.fn(),
+  logout: (...args: unknown[]) => logoutServiceMock(...args),
 }));
 
 vi.mock("@/lib/auth/supabase", () => ({
@@ -26,6 +28,10 @@ vi.mock("@/lib/auth/supabase", () => ({
 
 vi.mock("@/lib/auth/tokenStorage", () => ({
   clearTokens: () => clearTokensMock(),
+}));
+
+vi.mock("@/lib/realtime/socket-client", () => ({
+  disconnectSocket: () => disconnectSocketMock(),
 }));
 
 vi.mock("@/lib/posthog", () => ({
@@ -181,5 +187,34 @@ describe("auth store bootstrap", () => {
         name: "user@example.com",
       }),
     );
+  });
+});
+
+describe("auth store logout", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useAuthStore.setState({
+      status: "authenticated",
+      user: USER,
+      hasBootstrapped: true,
+    });
+  });
+
+  it("disconnects realtime socket before clearing the auth session", async () => {
+    const calls: string[] = [];
+    disconnectSocketMock.mockImplementationOnce(() => calls.push("disconnectSocket"));
+    logoutServiceMock.mockImplementationOnce(async () => {
+      calls.push("logoutService");
+    });
+
+    await useAuthStore.getState().logout();
+
+    expect(calls).toEqual(["disconnectSocket", "logoutService"]);
+    expect(disconnectSocketMock).toHaveBeenCalledTimes(1);
+    expect(useAuthStore.getState()).toMatchObject({
+      status: "anonymous",
+      user: null,
+      hasBootstrapped: true,
+    });
   });
 });
