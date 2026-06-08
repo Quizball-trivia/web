@@ -46,6 +46,10 @@ function ChallengeCard({
   const resetMutation = useResetDailyChallengeDev(challenge.challengeType);
   const disabled = !challenge.availableToday;
   const isCompleted = challenge.completedToday;
+  const isMoneyDrop = challenge.challengeType === "moneyDrop";
+  const rewardLabel = isMoneyDrop
+    ? t("dailyGames.hubRewardMax", { amount: challenge.coinReward.toLocaleString() })
+    : t("dailyGames.hubRewardPerCorrect", { amount: challenge.coinReward.toLocaleString() });
 
   const handleReset = async (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -100,16 +104,15 @@ function ChallengeCard({
             ? challenge.description
             : t('dailyGames.hubUnavailable')}
         </p>
-        {/* Mobile reward pills — only for an OPEN challenge. A completed card
-            drops these and shows the DONE button instead, matching the web. */}
+        {/* Reward pills — only for an OPEN challenge. */}
         {!isCompleted ? (
-          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 lg:hidden">
-            <span className="inline-flex h-6 items-center gap-1 rounded-full bg-white/70 px-2.5 text-[10px] font-black text-brand-gold-ink">
-              {challenge.coinReward}
+          <div className="mt-auto flex items-center justify-between gap-2 md:mb-4">
+            <span className="inline-flex min-h-6 items-center gap-1 rounded-full bg-white/70 px-2.5 py-1 text-[9px] font-black uppercase leading-none text-brand-gold-ink md:min-h-8 md:px-3 md:text-[12px]">
+              {rewardLabel}
               <Image src="/assets/coin-1.png" alt="" width={16} height={16} className="size-4 object-contain" />
-              {challenge.challengeType !== "moneyDrop" ? <CheckCircle2 className="size-3" /> : null}
+              {!isMoneyDrop ? <CheckCircle2 className="size-3 md:size-3.5" /> : null}
             </span>
-            <span className="inline-flex h-6 items-center gap-1 rounded-full bg-brand-green-light px-2.5 text-[10px] font-black text-white">
+            <span className="inline-flex min-h-6 items-center gap-1 rounded-full bg-brand-green-light px-2.5 py-1 text-[9px] font-black uppercase leading-none text-white md:min-h-8 md:px-3 md:text-[12px]">
               {challenge.xpReward} XP
             </span>
           </div>
@@ -117,7 +120,7 @@ function ChallengeCard({
         {/* PLAY / DONE pill. On mobile it's hidden for OPEN cards (those use the
             reward pills above) but shown for COMPLETED cards so they get the same
             DONE treatment as the web. On md+ it always shows. */}
-        <div className={`mt-auto justify-center ${isCompleted ? "flex" : "hidden md:flex"}`}>
+        <div className={`justify-center ${isCompleted ? "mt-auto flex" : "hidden md:flex"}`}>
           <span className={`font-poppins inline-flex h-[34px] min-w-[120px] items-center justify-center rounded-[14px] px-5 text-[15px] uppercase tracking-wide md:h-[50px] md:min-w-[200px] md:rounded-[20px] md:px-8 md:text-[24px] ${
             isCompleted ? "bg-white text-brand-green-darkest" : "bg-black text-white"
           }`}>
@@ -181,20 +184,12 @@ export default function DailyChallengesPage() {
     () => challenges.filter((c) => c.completedToday).length,
     [challenges],
   );
-  const totalCoins = useMemo(
-    () => challenges.reduce((sum, c) => sum + c.coinReward, 0),
-    [challenges],
-  );
   const earnedCoins = useMemo(
     () => challenges.filter((c) => c.completedToday).reduce((sum, c) => sum + c.coinReward, 0),
     [challenges],
   );
   const totalXp = useMemo(
     () => challenges.reduce((sum, c) => sum + c.xpReward, 0),
-    [challenges],
-  );
-  const totalPlayCost = useMemo(
-    () => challenges.reduce((sum, c) => sum + (c.coinReward ?? 0), 0),
     [challenges],
   );
   const progressPct = challenges.length > 0 ? (completedCount / challenges.length) * 100 : 0;
@@ -239,7 +234,7 @@ export default function DailyChallengesPage() {
                 {t('dailyGames.hubCoinsEarned')}
               </p>
               <p className="font-poppins mt-1 text-[22px] font-semibold uppercase leading-none text-brand-yellow md:mt-2 md:text-[32px]">
-                {earnedCoins}/{totalCoins}
+                {earnedCoins}
               </p>
             </div>
           </div>
@@ -287,12 +282,18 @@ export default function DailyChallengesPage() {
           <div className="mt-8 hidden flex-wrap items-end gap-8 md:mt-10 md:flex">
             <div className="flex flex-col items-center">
               <p className="font-poppins text-xs uppercase tracking-wider text-white mb-2">
-                {t('dailyGames.hubPlayFor')}
+                {t('dailyGames.hubRewardRules')}
               </p>
-              <span className="inline-flex items-center gap-2 rounded-full bg-brand-yellow/15 px-4 py-1.5 text-sm font-black text-brand-yellow">
-                {totalPlayCost}
-                <Image src="/assets/coin-1.png" alt="" width={20} height={20} className="size-5 object-contain" />
-              </span>
+              <div className="flex flex-wrap justify-center gap-2">
+                <span className="inline-flex items-center gap-2 rounded-full bg-brand-yellow/15 px-4 py-1.5 text-sm font-black text-brand-yellow">
+                  {t('dailyGames.hubRewardMax', { amount: "1,000" })}
+                  <Image src="/assets/coin-1.png" alt="" width={20} height={20} className="size-5 object-contain" />
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full bg-brand-yellow/15 px-4 py-1.5 text-sm font-black text-brand-yellow">
+                  {t('dailyGames.hubRewardPerCorrect', { amount: "20" })}
+                  <Image src="/assets/coin-1.png" alt="" width={20} height={20} className="size-5 object-contain" />
+                </span>
+              </div>
             </div>
             <div className="flex flex-col items-center">
               <p className="font-poppins text-xs uppercase tracking-wider text-white mb-2">
