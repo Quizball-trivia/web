@@ -89,15 +89,27 @@ export function sanitizeAnalyticsUrl(value: string): string {
 
   try {
     const url = new URL(value, base);
-    const shouldReturnRelative = !isAbsolute && value.startsWith('/');
+    // Preserve the input's original form so sanitizing doesn't reshape the
+    // analytics value: protocol-relative ("//host/x") stays protocol-relative,
+    // root-relative ("/x") stays root-relative, and path-relative ("x") stays
+    // path-relative. Only absolute URLs are returned in absolute form.
+    const isProtocolRelative = value.startsWith('//');
+    const isRootRelative = value.startsWith('/') && !isProtocolRelative;
+    const isPathRelative = !isAbsolute && !isProtocolRelative && !isRootRelative;
 
     removeSensitiveSearchParams(url);
     if (hashContainsSensitiveParams(url.hash)) {
       url.hash = '';
     }
 
-    if (shouldReturnRelative) {
+    if (isRootRelative) {
       return `${url.pathname}${url.search}${url.hash}`;
+    }
+    if (isPathRelative) {
+      return `${url.pathname.replace(/^\//, '')}${url.search}${url.hash}`;
+    }
+    if (isProtocolRelative) {
+      return `//${url.host}${url.pathname}${url.search}${url.hash}`;
     }
     return url.toString();
   } catch {
