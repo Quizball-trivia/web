@@ -122,22 +122,33 @@ export function ModeConfirmModal({
           close button on narrow viewports. The natural break after
           "RANKED" produces the Figma's two-line composition. */}
       <h2
-        className="font-poppins mx-auto max-w-[80%] text-center uppercase text-white leading-[0.95]"
-        style={{ fontSize: "clamp(28px, 4.6vw, 52px)" }}
+        className="font-poppins mx-auto max-w-[88%] text-center uppercase text-white leading-[0.95]"
+        style={{ fontSize: "clamp(26px, 6.2vw, 46px)" }}
       >
         <span className="text-brand-yellow">{t(config.titlePrefixKey)}</span>{" "}
         {titleRest}
       </h2>
 
       {/* Description */}
-      <p className="mx-auto mt-4 max-w-[30rem] text-center text-sm leading-snug font-bold text-white/85 md:text-base">
+      <p className="mx-auto mt-3 max-w-[30rem] text-center text-[13px] leading-snug font-bold text-white/85 sm:mt-4 sm:text-sm md:text-base">
         {description}
       </p>
 
       {/* Trophy section. Mobile gets the Figma's 3-pill composition
           (top-left entry-cost, mid-right duration, bottom-left question
           count). Desktop keeps the original 2-pill layout. */}
-      <div className="relative mx-auto my-6 h-48 w-full md:my-8 md:h-60">
+      <div
+        className={cn(
+          "relative mx-auto h-40 w-full sm:h-48 md:h-60",
+          // Ranked: let the trophy box overlap the button below so the yellow
+          // arms tuck behind it and read as "coming out of" the button. The
+          // button sits on z-20, the trophy on z-0, so the button covers the
+          // arm-ends. Other modes keep the original symmetric margins.
+          mode === "ranked"
+            ? "mt-5 -mb-2 sm:mt-6 sm:-mb-3 md:mt-8 md:-mb-4"
+            : "my-5 sm:my-6 md:my-8",
+        )}
+      >
         <Image
           src={config.icon}
           alt=""
@@ -145,7 +156,7 @@ export function ModeConfirmModal({
           priority
           className={cn(
             "z-0 object-contain",
-            mode === "ranked" && "translate-y-5 scale-110 md:translate-y-7",
+            mode === "ranked" && "translate-y-4 scale-90 sm:translate-y-5 sm:scale-95 md:translate-y-6",
           )}
         />
 
@@ -197,7 +208,7 @@ export function ModeConfirmModal({
         type="button"
         onClick={handlePrimaryClick}
         className={cn(
-          "w-full h-16 rounded-2xl text-lg font-black uppercase tracking-wide transition-all md:h-[72px] md:text-xl",
+          "w-full h-14 rounded-2xl text-base font-black uppercase tracking-wide transition-all sm:h-16 sm:text-lg md:h-[72px] md:text-xl",
           "relative z-20",
           needsTickets
             ? "bg-brand-yellow text-black hover:bg-brand-yellow/90 active:translate-y-[2px]"
@@ -273,8 +284,11 @@ export function ModeConfirmModal({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
-          "w-[600px] max-h-[95vh] rounded-3xl border-0",
-          "px-8 pt-8 pb-8 sm:max-w-[600px]",
+          // Responsive width: never wider than the viewport (keeps a 1rem
+          // gutter), capped at 600px on desktop — so it never crams on
+          // narrow-but-not-"mobile" widths (~600–767px).
+          "w-[calc(100vw-2rem)] max-w-[600px] max-h-[90vh] overflow-y-auto rounded-3xl border-0",
+          "px-5 pt-7 pb-7 sm:px-8 sm:pt-8 sm:pb-8",
           "[&>button]:hidden",
         )}
         style={{ backgroundColor: config.bg }}
