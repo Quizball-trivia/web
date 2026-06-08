@@ -543,7 +543,7 @@
     "hubEarn": "Earn",
     "hubRewardRules": "Coin Rewards",
     "hubRewardMax": "Up to {amount}",
-    "hubRewardPerCorrect": "+{amount} per correct",
+    "hubRewardPerCorrect": "+{amount}",
     "hubPlay": "Play",
     "hubDone": "Done",
     "hubCompleted": "Completed",

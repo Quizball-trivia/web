@@ -735,7 +735,7 @@
     "hubEarn": "მოიგებ",
     "hubRewardRules": "მონეტების ჯილდო",
     "hubRewardMax": "მაქს. {amount}",
-    "hubRewardPerCorrect": "+{amount} სწორ პასუხზე",
+    "hubRewardPerCorrect": "+{amount}",
     "hubPlay": "თამაში",
     "hubDone": "შესრულდა",
     "hubCompleted": "შესრულებული",
