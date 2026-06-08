@@ -1,14 +1,11 @@
 import posthog from 'posthog-js';
 
-// Initialize PostHog on real deployments — production AND staging (Vercel
-// "preview"). They use separate PostHog project keys. Skipped locally, where
-// VERCEL_ENV is "development" / unset.
-const deployEnv = process.env.NEXT_PUBLIC_VERCEL_ENV;
-if (
-  typeof window !== 'undefined' &&
-  process.env.NEXT_PUBLIC_POSTHOG_KEY &&
-  (deployEnv === 'production' || deployEnv === 'preview')
-) {
+// Initialize PostHog in any environment that has a key configured (prod AND
+// staging use separate project keys). Local dev has no key, so init is skipped.
+// Gating on the key — not VERCEL_ENV — because NEXT_PUBLIC_VERCEL_ENV does not
+// reliably inline at build on the prod Vercel build, which silently disabled
+// all browser analytics on prod.
+if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
   try {
     posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
       api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
