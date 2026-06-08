@@ -2,36 +2,42 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/lib/api/api";
 import type { User } from "@/lib/types";
 
-const bootstrapUserMock = vi.fn();
-const refreshSessionMock = vi.fn();
+const fetchCurrentUserMock = vi.fn();
+const getSupabaseSessionMock = vi.fn();
+const signOutLocalMock = vi.fn();
 const clearTokensMock = vi.fn();
 const storageRemoveMock = vi.fn();
 const identifyUserMock = vi.fn();
 const resetUserMock = vi.fn();
 const setPersonPropertiesMock = vi.fn();
-const setNewRelicUserMock = vi.fn();
+const logoutServiceMock = vi.fn();
+const disconnectSocketMock = vi.fn();
 
 vi.mock("@/lib/auth/session", () => ({
-  bootstrapUser: (...args: unknown[]) => bootstrapUserMock(...args),
+  fetchCurrentUser: (...args: unknown[]) => fetchCurrentUserMock(...args),
 }));
 
 vi.mock("@/lib/auth/auth.service", () => ({
-  logout: vi.fn(),
-  refreshSession: (...args: unknown[]) => refreshSessionMock(...args),
+  logout: (...args: unknown[]) => logoutServiceMock(...args),
+}));
+
+vi.mock("@/lib/auth/supabase", () => ({
+  getSupabaseSession: (...args: unknown[]) => getSupabaseSessionMock(...args),
+  signOutLocal: (...args: unknown[]) => signOutLocalMock(...args),
 }));
 
 vi.mock("@/lib/auth/tokenStorage", () => ({
   clearTokens: () => clearTokensMock(),
 }));
 
+vi.mock("@/lib/realtime/socket-client", () => ({
+  disconnectSocket: () => disconnectSocketMock(),
+}));
+
 vi.mock("@/lib/posthog", () => ({
   identifyUser: (...args: unknown[]) => identifyUserMock(...args),
   resetUser: () => resetUserMock(),
   setPersonProperties: (...args: unknown[]) => setPersonPropertiesMock(...args),
-}));
-
-vi.mock("@/lib/newrelic-browser", () => ({
-  setNewRelicUser: (...args: unknown[]) => setNewRelicUserMock(...args),
 }));
 
 vi.mock("@/lib/analytics/game-events", () => ({
@@ -93,13 +99,13 @@ describe("auth store bootstrap", () => {
     vi.useRealTimers();
   });
 
-  it("clears tokens and sets anonymous on a terminal refresh failure", async () => {
-    bootstrapUserMock.mockRejectedValueOnce(new ApiError("Request failed", 401, null));
-    refreshSessionMock.mockResolvedValueOnce({ ok: false, terminal: true });
+  it("clears legacy tokens and sets anonymous when Supabase has no session", async () => {
+    getSupabaseSessionMock.mockResolvedValueOnce(null);
 
     await useAuthStore.getState().bootstrap();
 
-    expect(clearTokensMock).toHaveBeenCalledTimes(1);
+    expect(fetchCurrentUserMock).not.toHaveBeenCalled();
+    expect(clearTokensMock).toHaveBeenCalledTimes(2);
     expect(storageRemoveMock).toHaveBeenCalledWith("store_wallet");
     expect(useAuthStore.getState()).toMatchObject({
       status: "anonymous",
@@ -108,15 +114,30 @@ describe("auth store bootstrap", () => {
     });
   });
 
-  it("keeps tokens and stays loading on a transient refresh failure", async () => {
-    bootstrapUserMock
+  it("signs out locally and sets anonymous when users/me rejects the Supabase token", async () => {
+    getSupabaseSessionMock.mockResolvedValueOnce({ access_token: "token-a" });
+    fetchCurrentUserMock.mockRejectedValueOnce(new ApiError("Request failed", 401, null));
+
+    await useAuthStore.getState().bootstrap();
+
+    expect(signOutLocalMock).toHaveBeenCalledTimes(1);
+    expect(clearTokensMock).toHaveBeenCalledTimes(2);
+    expect(storageRemoveMock).toHaveBeenCalledWith("store_wallet");
+    expect(useAuthStore.getState()).toMatchObject({
+      status: "anonymous",
+      user: null,
+      hasBootstrapped: true,
+    });
+  });
+
+  it("stays loading when Supabase session reads keep failing transiently", async () => {
+    getSupabaseSessionMock
       .mockRejectedValueOnce(new Error("network down"))
       .mockRejectedValueOnce(new Error("still down"));
-    refreshSessionMock.mockResolvedValueOnce({ ok: false, terminal: false });
 
     await runBootstrapWithRetry();
 
-    expect(clearTokensMock).not.toHaveBeenCalled();
+    expect(clearTokensMock).toHaveBeenCalledTimes(1);
     expect(storageRemoveMock).not.toHaveBeenCalled();
     expect(useAuthStore.getState()).toMatchObject({
       status: "loading",
@@ -124,15 +145,17 @@ describe("auth store bootstrap", () => {
     });
   });
 
-  it("keeps tokens when users/me still fails transiently after a successful refresh", async () => {
-    bootstrapUserMock
+  it("stays loading when users/me still fails transiently after a valid session", async () => {
+    getSupabaseSessionMock
+      .mockResolvedValueOnce({ access_token: "token-a" })
+      .mockResolvedValueOnce({ access_token: "token-a" });
+    fetchCurrentUserMock
       .mockRejectedValueOnce(new Error("profile timeout"))
       .mockRejectedValueOnce(new Error("profile still slow"));
-    refreshSessionMock.mockResolvedValueOnce({ ok: true });
 
     await runBootstrapWithRetry();
 
-    expect(clearTokensMock).not.toHaveBeenCalled();
+    expect(clearTokensMock).toHaveBeenCalledTimes(1);
     expect(useAuthStore.getState()).toMatchObject({
       status: "loading",
       user: null,
@@ -140,19 +163,108 @@ describe("auth store bootstrap", () => {
   });
 
   it("authenticates when the single retry succeeds", async () => {
-    bootstrapUserMock
+    getSupabaseSessionMock
+      .mockResolvedValueOnce({ access_token: "token-a" })
+      .mockResolvedValueOnce({ access_token: "token-a" });
+    fetchCurrentUserMock
       .mockRejectedValueOnce(new Error("profile timeout"))
       .mockResolvedValueOnce(USER);
-    refreshSessionMock.mockResolvedValueOnce({ ok: true });
 
     await runBootstrapWithRetry();
 
-    expect(clearTokensMock).not.toHaveBeenCalled();
+    expect(clearTokensMock).toHaveBeenCalledTimes(1);
     expect(useAuthStore.getState()).toMatchObject({
       status: "authenticated",
       user: USER,
       hasBootstrapped: true,
     });
-    expect(identifyUserMock).toHaveBeenCalledWith("u1", expect.any(Object));
+    expect(identifyUserMock).toHaveBeenCalledWith(
+      "u1",
+      expect.objectContaining({
+        $email: "user@example.com",
+        $name: "user@example.com",
+        email: "user@example.com",
+        name: "user@example.com",
+      }),
+    );
+  });
+
+  it("keeps authenticated UI visible during forced background bootstrap", async () => {
+    let resolveSession: (session: { access_token: string }) => void = () => undefined;
+    getSupabaseSessionMock.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveSession = resolve;
+      }),
+    );
+    useAuthStore.setState({
+      status: "authenticated",
+      user: USER,
+      hasBootstrapped: true,
+    });
+
+    const promise = useAuthStore.getState().bootstrap({ force: true });
+
+    expect(useAuthStore.getState()).toMatchObject({
+      status: "authenticated",
+      user: USER,
+    });
+
+    resolveSession({ access_token: "token-a" });
+    fetchCurrentUserMock.mockResolvedValueOnce(USER);
+    await promise;
+
+    expect(useAuthStore.getState()).toMatchObject({
+      status: "authenticated",
+      user: USER,
+      hasBootstrapped: true,
+    });
+  });
+
+  it("keeps authenticated UI visible when forced background bootstrap has transient failures", async () => {
+    getSupabaseSessionMock
+      .mockRejectedValueOnce(new Error("session read failed"))
+      .mockRejectedValueOnce(new Error("still failed"));
+    useAuthStore.setState({
+      status: "authenticated",
+      user: USER,
+      hasBootstrapped: true,
+    });
+
+    await runBootstrapWithRetry();
+
+    expect(useAuthStore.getState()).toMatchObject({
+      status: "authenticated",
+      user: USER,
+      hasBootstrapped: true,
+    });
+  });
+});
+
+describe("auth store logout", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useAuthStore.setState({
+      status: "authenticated",
+      user: USER,
+      hasBootstrapped: true,
+    });
+  });
+
+  it("disconnects realtime socket before clearing the auth session", async () => {
+    const calls: string[] = [];
+    disconnectSocketMock.mockImplementationOnce(() => calls.push("disconnectSocket"));
+    logoutServiceMock.mockImplementationOnce(async () => {
+      calls.push("logoutService");
+    });
+
+    await useAuthStore.getState().logout();
+
+    expect(calls).toEqual(["disconnectSocket", "logoutService"]);
+    expect(disconnectSocketMock).toHaveBeenCalledTimes(1);
+    expect(useAuthStore.getState()).toMatchObject({
+      status: "anonymous",
+      user: null,
+      hasBootstrapped: true,
+    });
   });
 });

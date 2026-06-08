@@ -6,7 +6,6 @@ import { LobbyBrowsePanel } from "./components/LobbyBrowsePanel";
 import { CreateJoinPanel } from "./components/CreateJoinPanel";
 import { AlreadyInLobbyModal } from "./components/AlreadyInLobbyModal";
 import { useRealtimeConnection } from "@/lib/realtime/useRealtimeConnection";
-import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { useSiteOnlineStore } from "@/hooks/usePresencePing";
@@ -24,13 +23,12 @@ export function FriendMatchHubPage() {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab') === 'create' ? 'create' : 'browse';
   
-  const { player } = usePlayer();
   const authUser = useAuthStore((state) => state.user);
-  const selfUserId = authUser?.id ?? player.id;
+  const realtimeSelfUserId = authUser?.id ?? null;
   const queryClient = useQueryClient();
   
   // Realtime connection
-  useRealtimeConnection({ enabled: true, selfUserId });
+  useRealtimeConnection({ enabled: Boolean(realtimeSelfUserId), selfUserId: realtimeSelfUserId });
   
   const lobby = useRealtimeMatchStore(state => state.lobby);
   const sessionState = useRealtimeMatchStore(state => state.sessionState);

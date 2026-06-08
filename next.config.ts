@@ -6,7 +6,80 @@ import type { NextConfig } from "next";
 // missing) gets noindex headers.
 const IS_PRODUCTION_DEPLOYMENT = process.env.VERCEL_ENV === "production";
 
+function originFromEnv(name: string): string | null {
+  const value = process.env[name]?.trim();
+  if (!value) return null;
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
+}
+
+function buildCspReportOnly(): string {
+  const apiOrigin = originFromEnv("NEXT_PUBLIC_API_URL");
+  const supabaseOrigin = originFromEnv("NEXT_PUBLIC_SUPABASE_URL");
+  const posthogOrigin = originFromEnv("NEXT_PUBLIC_POSTHOG_HOST");
+  const connectSrc = [
+    "'self'",
+    apiOrigin,
+    supabaseOrigin,
+    posthogOrigin,
+    "https://us.i.posthog.com",
+    "https://app.posthog.com",
+    "https://*.posthog.com",
+    "https://accounts.google.com",
+    "https://www.googleapis.com",
+    "https://graph.facebook.com",
+    "https://api-js.mixpanel.com",
+    "https://vitals.vercel-insights.com",
+    "wss:",
+    "ws:",
+  ].filter(Boolean);
+
+  return [
+    "default-src 'self'",
+    "base-uri 'none'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "form-action 'self'",
+    "img-src 'self' data: blob: https:",
+    "font-src 'self' data:",
+    "style-src 'self' 'unsafe-inline'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://www.gstatic.com https://connect.facebook.net https://va.vercel-scripts.com https://vercel.live",
+    `connect-src ${connectSrc.join(" ")}`,
+    "frame-src 'self' https://accounts.google.com https://*.facebook.com https://www.facebook.com",
+    "worker-src 'self' blob:",
+    "media-src 'self' blob: data: https:",
+  ].join("; ");
+}
+
+const SECURITY_HEADERS = [
+  {
+    key: "Content-Security-Policy-Report-Only",
+    value: buildCspReportOnly(),
+  },
+  {
+    key: "Referrer-Policy",
+    value: "strict-origin-when-cross-origin",
+  },
+  {
+    key: "X-Content-Type-Options",
+    value: "nosniff",
+  },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=()",
+  },
+];
+
 const nextConfig: NextConfig = {
+  // Expose Vercel's deployment environment to the browser so client code can
+  // distinguish prod ("production") from staging ("preview"). VERCEL_ENV is
+  // server-only by default; inlining it here makes it readable client-side.
+  env: {
+    NEXT_PUBLIC_VERCEL_ENV: process.env.VERCEL_ENV,
+  },
   images: {
     remotePatterns: [
       {
@@ -38,11 +111,19 @@ const nextConfig: NextConfig = {
   async headers() {
     // Block preview/branch deploys from search indexes even for
     // non-HTML responses (sitemap.xml, JSON, etc.).
-    if (IS_PRODUCTION_DEPLOYMENT) return [];
+    if (IS_PRODUCTION_DEPLOYMENT) {
+      return [
+        {
+          source: "/:path*",
+          headers: SECURITY_HEADERS,
+        },
+      ];
+    }
     return [
       {
         source: "/:path*",
         headers: [
+          ...SECURITY_HEADERS,
           { key: "X-Robots-Tag", value: "noindex, nofollow" },
         ],
       },

@@ -55,7 +55,38 @@ function removeTokenKeys(storage: Storage): void {
       keysToRemove.push(key);
     }
   }
+  keysToRemove.push(TOKEN_SCOPE_KEY);
   keysToRemove.forEach((key) => storage.removeItem(key));
+}
+
+function clearAuthCookies(): void {
+  if (!hasWindow()) return;
+  const options = [
+    'path=/',
+    `domain=${window.location.hostname}`,
+  ];
+  for (const name of [LEGACY_ACCESS_TOKEN_KEY, LEGACY_REFRESH_TOKEN_KEY]) {
+    document.cookie = `${name}=; Max-Age=0; path=/`;
+    document.cookie = `${name}=; Max-Age=0; ${options.join('; ')}`;
+  }
+}
+
+export function clearLegacyAuthState(): void {
+  accessToken = null;
+  refreshToken = null;
+  hydrated = true;
+  if (!hasWindow()) return;
+  try {
+    removeTokenKeys(window.localStorage);
+  } catch {
+    // Ignore storage access issues.
+  }
+  try {
+    removeTokenKeys(window.sessionStorage);
+  } catch {
+    // Ignore storage access issues.
+  }
+  clearAuthCookies();
 }
 
 function hydrateFromStorage(): void {
@@ -146,8 +177,5 @@ export function setTokens(tokens: {
 }
 
 export function clearTokens(): void {
-  accessToken = null;
-  refreshToken = null;
-  hydrated = true;
-  persistToStorage();
+  clearLegacyAuthState();
 }

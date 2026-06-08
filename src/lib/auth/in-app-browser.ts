@@ -1,5 +1,6 @@
-// Detect in-app browsers (Messenger, Instagram, FB feed, etc.) and try to
-// send the user to Safari/Chrome where OAuth and session handoff are reliable.
+// Detect in-app browsers (Messenger, Instagram, FB feed, etc.). Welcome keeps
+// the landing page visible there, but protected auth/game CTAs show manual
+// Safari/Chrome instructions instead of starting OAuth in the webview.
 
 export type Platform = 'ios' | 'android' | 'other';
 export type InAppBrowserApp =
@@ -46,6 +47,18 @@ export function getInAppBrowserApp(userAgent = readUserAgent()): InAppBrowserApp
 
 export function isInAppBrowser(): boolean {
   return getInAppBrowserApp() !== null;
+}
+
+// Legacy helper retained for tests/diagnostics that specifically care whether
+// Google's GIS popup is swallowed. Product policy is broader: any detected
+// in-app browser should use the external-browser instructions before auth.
+const POPUP_BLOCKED_IN_APP_BROWSERS: ReadonlySet<InAppBrowserApp> = new Set([
+  'messenger',
+  'facebook',
+]);
+
+export function isPopupBlockedInAppBrowser(app = getInAppBrowserApp()): boolean {
+  return app !== null && POPUP_BLOCKED_IN_APP_BROWSERS.has(app);
 }
 
 export function tryOpenInExternalBrowser(url: string): boolean {

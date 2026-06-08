@@ -335,6 +335,7 @@
     "chooseAvatar": "Choose your avatar",
     "selectAvatar": "Select {color} avatar",
     "searchAndSelectClub": "Search and select your club",
+    "usernameTaken": "This username is already taken. Try another one.",
     "toastWelcome": "Welcome to QuizBall!",
     "toastWelcomeDescription": "Your football trivia journey begins now!",
     "toastSaveFailed": "Failed to save your preferences",
@@ -1256,14 +1257,15 @@
   },
   "inAppBrowser": {
     "title": "Open in your browser",
-    "body": "Sign-in doesn't work inside this app's built-in browser. Open the page in Safari or Chrome to continue.",
-    "iosStep1": "Tap the menu (... or share icon) at the top right.",
-    "iosStep2": "Choose \"Open in Safari\".",
-    "androidStep1": "Tap the menu (...) at the top right.",
-    "androidStep2": "Choose \"Open in browser\" or \"Open in Chrome\".",
-    "genericInstructions": "Open this link in Safari, Chrome, or Firefox to continue.",
+    "body": "For the best experience, open this page in your phone's browser.",
+    "menuStep": "Tap the menu (...) or share icon in the browser toolbar.",
+    "bottomRightStep": "Tap the menu (...) in the bottom-right toolbar.",
+    "openBrowserStep": "Choose \"Open in browser\" or \"Open in external browser\".",
+    "genericInstructions": "Open this link in your browser to continue.",
     "orCopyLink": "Or copy the link",
-    "linkCopied": "Link copied. Paste it in Safari or Chrome."
+    "linkCopied": "Link copied. Paste it in your browser.",
+    "copyInviteLink": "Copy invite link",
+    "inviteLinkCopied": "Invite link copied"
   },
   "errors": {
     "INTERNAL_ERROR": "Something went wrong",

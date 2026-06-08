@@ -1,74 +1,120 @@
 import { io, type Socket } from 'socket.io-client';
 import { API_BASE_URL } from '@/lib/config';
-import { getAccessToken } from '@/lib/auth/tokenStorage';
-import { refreshSession } from '@/lib/auth/auth.service';
+import { getSupabaseAccessToken, getSupabaseClient } from '@/lib/auth/supabase';
 import { logger } from '@/utils/logger';
 import { trackSocketConnectionFailed, trackSocketReconnected } from '@/lib/analytics/game-events';
 import type { ClientToServerEvents, ServerToClientEvents } from './socket.types';
 
-// Socket-uptime accounting for analytics: timestamp of the most recent
-// disconnect (if any) so we can compute downtime on the next connect.
 let lastDisconnectAtMs: number | null = null;
 
 let socketInstance: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
 let socketOverride: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
 let connectInFlight: Promise<void> | null = null;
-let authRecoveryInFlight: Promise<void> | null = null;
-// After a terminal refresh failure there's no valid session — stop trying to
-// recover the socket until the user logs in again. Otherwise a dead session
-// loops: connect_error → refresh(fail) → reconnect → connect_error …
-let authRecoveryDisabled = false;
+let connectAttemptId = 0;
+type AuthRecoveryState = {
+  id: number;
+  cancelled: boolean;
+  promise: Promise<void>;
+};
+let authRecoveryState: AuthRecoveryState | null = null;
+let authRecoveryAttemptId = 0;
 const ACCESS_TOKEN_REFRESH_SKEW_MS = 30_000;
+const RECENT_ACCESS_TOKEN_SETTLE_MS = 1_500;
+const AUTH_RECOVERY_RETRY_MS = 1_000;
+const SOCKET_DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_SOCKET === 'true';
 
-function parseJwtExpMs(token: string): number | null {
+function socketDebug(event: string, meta?: Record<string, unknown>): void {
+  if (!SOCKET_DEBUG_ENABLED) return;
+  console.info(`[socket-debug] ${event}`, {
+    ...meta,
+    at: new Date().toISOString(),
+  });
+}
+
+function socketSnapshot(socket: Socket<ServerToClientEvents, ClientToServerEvents>): Record<string, unknown> {
+  return {
+    socketId: socket.id ?? null,
+    connected: socket.connected,
+    active: socket.active,
+  };
+}
+
+export function logSocketDebug(event: string, meta?: Record<string, unknown>): void {
+  socketDebug(event, meta);
+}
+
+export function getSocketDebugSnapshot(
+  socket: Socket<ServerToClientEvents, ClientToServerEvents> = getSocket()
+): Record<string, unknown> {
+  return socketSnapshot(socket);
+}
+
+function getConnectErrorCode(error: Error): unknown {
+  const candidate = error as Error & {
+    code?: unknown;
+    data?: { code?: unknown };
+    description?: unknown;
+    type?: unknown;
+  };
+  return candidate.code ?? candidate.data?.code ?? candidate.description ?? candidate.type ?? null;
+}
+
+function parseJwtTimestampMs(token: string, claim: 'exp' | 'iat'): number | null {
   const parts = token.split('.');
   if (parts.length !== 3) return null;
   try {
     let b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
     while (b64.length % 4 !== 0) b64 += '=';
-    const payload = JSON.parse(atob(b64)) as { exp?: number };
-    return typeof payload.exp === 'number' ? payload.exp * 1000 : null;
+    const payload = JSON.parse(atob(b64)) as Partial<Record<'exp' | 'iat', number>>;
+    const timestamp = payload[claim];
+    return typeof timestamp === 'number' ? timestamp * 1000 : null;
   } catch {
     return null;
   }
 }
 
 function isTokenExpiredOrExpiringSoon(token: string): boolean {
-  const expMs = parseJwtExpMs(token);
+  const expMs = parseJwtTimestampMs(token, 'exp');
   if (!expMs) return false;
   return expMs - Date.now() <= ACCESS_TOKEN_REFRESH_SKEW_MS;
 }
 
+function recentTokenSettleDelayMs(token: string): number {
+  const iatMs = parseJwtTimestampMs(token, 'iat');
+  if (!iatMs) return 0;
+  const ageMs = Date.now() - iatMs;
+  if (ageMs < 0) return RECENT_ACCESS_TOKEN_SETTLE_MS;
+  return Math.max(0, RECENT_ACCESS_TOKEN_SETTLE_MS - ageMs);
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function ensureValidAccessToken(): Promise<string | null> {
-  const currentToken = getAccessToken();
-  if (currentToken && !isTokenExpiredOrExpiringSoon(currentToken)) {
+  const currentToken = await getSupabaseAccessToken();
+  if (!currentToken) return null;
+  if (!isTokenExpiredOrExpiringSoon(currentToken)) {
     return currentToken;
   }
 
-  // Don't keep trying to recover a session that has already failed terminally.
-  if (authRecoveryDisabled) {
+  const expMs = parseJwtTimestampMs(currentToken, 'exp');
+  socketDebug('token refresh before connect', {
+    expiresInMs: expMs ? expMs - Date.now() : null,
+  });
+  logger.info('Socket token expiring soon, asking Supabase to refresh before connect');
+  const { data, error } = await getSupabaseClient().auth.refreshSession();
+  if (error) {
+    // The current token is already expired/expiring; returning it would connect
+    // with a known-bad token, triggering an immediate connect_error + recovery
+    // loop. Return null so callers skip the attempt and let auth recovery run.
+    logger.error('Socket token refresh failed before connect', {
+      error,
+      expiresInMs: expMs ? expMs - Date.now() : null,
+    });
     return null;
   }
-
-  logger.info('Socket token missing/expired, attempting refresh before connect');
-  const result = await refreshSession();
-  if (!result.ok) {
-    if (result.terminal) {
-      authRecoveryDisabled = true;
-      logger.warn('Socket token refresh failed terminally — staying disconnected until login');
-    } else {
-      logger.warn('Socket token refresh failed (transient) before connect');
-    }
-    return null;
-  }
-
-  const nextToken = getAccessToken();
-  if (!nextToken) {
-    logger.warn('Socket token refresh succeeded but access token missing');
-    return null;
-  }
-
-  return nextToken;
+  return data.session?.access_token ?? currentToken;
 }
 
 function isAuthConnectError(message: string): boolean {
@@ -76,67 +122,109 @@ function isAuthConnectError(message: string): boolean {
   return normalized.includes('invalid token') || normalized.includes('authentication required');
 }
 
+async function waitForTokenToSettle(token: string): Promise<void> {
+  const delayMs = recentTokenSettleDelayMs(token);
+  if (delayMs <= 0) return;
+  logger.info('Socket connect waiting for newly issued Supabase token to settle', { delayMs });
+  await wait(delayMs);
+}
+
 async function recoverSocketAuthAndReconnect(
   socket: Socket<ServerToClientEvents, ClientToServerEvents>
 ): Promise<void> {
-  // Terminal failure already happened: there's no valid session to recover.
-  // Stay disconnected until the user logs in rather than looping reconnects.
-  if (authRecoveryDisabled) {
-    socket.disconnect();
-    return;
-  }
-  if (authRecoveryInFlight) {
-    return authRecoveryInFlight;
+  if (authRecoveryState && !authRecoveryState.cancelled) {
+    return authRecoveryState.promise;
   }
 
-  authRecoveryInFlight = (async () => {
-    const result = await refreshSession();
-    if (!result.ok) {
-      if (result.terminal) {
-        authRecoveryDisabled = true;
-        logger.warn('Socket auth recovery failed terminally — staying disconnected');
-        socket.disconnect();
-      } else {
-        logger.warn('Socket auth recovery refresh failed (transient)');
-      }
+  const recovery: AuthRecoveryState = {
+    id: ++authRecoveryAttemptId,
+    cancelled: false,
+    promise: Promise.resolve(),
+  };
+  socketDebug('auth recovery retry scheduled', {
+    attemptId: recovery.id,
+    delayMs: AUTH_RECOVERY_RETRY_MS,
+    ...socketSnapshot(socket),
+  });
+
+  recovery.promise = (async () => {
+    await wait(AUTH_RECOVERY_RETRY_MS);
+    if (recovery.cancelled) {
       return;
     }
-
-    const token = getAccessToken();
+    const token = await ensureValidAccessToken();
+    if (recovery.cancelled) {
+      return;
+    }
     if (!token) {
-      logger.warn('Socket auth recovery missing token after refresh');
+      logger.warn('Socket auth recovery failed: no Supabase session');
+      socket.disconnect();
       return;
     }
 
     socket.auth = { token };
     if (!socket.connected) {
-      logger.info('Socket reconnect requested after auth refresh');
+      logger.info('Socket reconnect requested after Supabase auth recovery');
       socket.connect();
     }
   })().finally(() => {
-    authRecoveryInFlight = null;
+    if (authRecoveryState?.id === recovery.id) {
+      authRecoveryState = null;
+    }
   });
 
-  return authRecoveryInFlight;
+  authRecoveryState = recovery;
+  return recovery.promise;
+}
+
+function cancelAuthRecovery(reason: string): void {
+  if (!authRecoveryState || authRecoveryState.cancelled) return;
+  authRecoveryState.cancelled = true;
+  socketDebug('auth recovery retry cancelled', {
+    attemptId: authRecoveryState.id,
+    reason,
+  });
 }
 
 async function connectWithFreshAuth(
   socket: Socket<ServerToClientEvents, ClientToServerEvents>
 ): Promise<void> {
-  if (socket.connected || socket.active) {
+  if (socket.connected) {
+    socketDebug('skipped because already connected', socketSnapshot(socket));
+    return;
+  }
+  if (socket.active) {
+    socketDebug('skipped because already connected', socketSnapshot(socket));
     return;
   }
   if (connectInFlight) {
+    socketDebug('skipped because connect is already in progress', socketSnapshot(socket));
     return connectInFlight;
   }
 
+  const attemptId = ++connectAttemptId;
   connectInFlight = (async () => {
     const token = await ensureValidAccessToken();
-    if (!token) {
-      logger.warn('Socket connect skipped: no valid access token');
+    if (attemptId !== connectAttemptId) {
       return;
     }
-    socket.auth = { token };
+    if (!token) {
+      logger.warn('Socket connect skipped: no valid Supabase access token');
+      return;
+    }
+    await waitForTokenToSettle(token);
+    if (attemptId !== connectAttemptId) {
+      return;
+    }
+    const settledToken = await ensureValidAccessToken();
+    if (attemptId !== connectAttemptId) {
+      return;
+    }
+    if (!settledToken) {
+      logger.warn('Socket connect skipped after token settle: no valid Supabase access token');
+      return;
+    }
+    socket.auth = { token: settledToken };
     logger.info('Socket connect requested');
     socket.connect();
   })().finally(() => {
@@ -150,17 +238,16 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
   const socket = io(API_BASE_URL, {
     autoConnect: false,
     auth: (cb) => {
-      cb({ token: getAccessToken() ?? undefined });
+      void getSupabaseAccessToken()
+        .then((token) => cb({ token: token ?? undefined }))
+        .catch(() => cb({ token: undefined }));
     },
     transports: ['websocket'],
     withCredentials: true,
   });
   socket.on('connect', () => {
+    socketDebug('socket authenticated/connected', socketSnapshot(socket));
     logger.info('Socket connected', { socketId: socket.id });
-    // A successful connect means we have a valid session again — re-arm auth
-    // recovery so a future expiry can be refreshed.
-    authRecoveryDisabled = false;
-    // Analytics: only count as a reconnect when we had a prior disconnect.
     if (lastDisconnectAtMs !== null) {
       const downtimeSec = Math.max(0, Math.round((Date.now() - lastDisconnectAtMs) / 1000));
       lastDisconnectAtMs = null;
@@ -168,15 +255,26 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
     }
   });
   socket.on('disconnect', (reason) => {
+    socketDebug('socket disconnected', {
+      reason,
+      ...socketSnapshot(socket),
+    });
     logger.warn('Socket disconnected', { reason });
     lastDisconnectAtMs = Date.now();
   });
   socket.on('connect_error', (error) => {
+    socketDebug('connect_error', {
+      code: getConnectErrorCode(error),
+      message: error.message,
+      ...socketSnapshot(socket),
+    });
+    if (isAuthConnectError(error.message)) {
+      logger.info('Socket auth connect error; retrying after Supabase session settles', { message: error.message });
+      void recoverSocketAuthAndReconnect(socket);
+      return;
+    }
     logger.warn('Socket connect error', { message: error.message });
     try { trackSocketConnectionFailed(error.message); } catch { /* best-effort */ }
-    if (isAuthConnectError(error.message)) {
-      void recoverSocketAuthAndReconnect(socket);
-    }
   });
   socket.on('reconnect_attempt', (attempt) => {
     logger.info('Socket reconnect attempt', { attempt });
@@ -202,11 +300,18 @@ export function getSocket(): Socket<ServerToClientEvents, ClientToServerEvents> 
 
 export function connectSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
   const socket = getSocket();
+  socketDebug('connectSocket called', socketSnapshot(socket));
   void connectWithFreshAuth(socket);
   return socket;
 }
 
 export function disconnectSocket(): void {
+  socketDebug('logout/manual disconnect cleanup', {
+    hasSocket: Boolean(socketInstance),
+    ...(socketInstance ? socketSnapshot(socketInstance) : {}),
+  });
+  connectAttemptId += 1;
+  cancelAuthRecovery('manual-disconnect-cleanup');
   if (socketInstance && (socketInstance.connected || socketInstance.active)) {
     logger.info('Socket disconnect requested');
     socketInstance.disconnect();

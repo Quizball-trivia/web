@@ -30,6 +30,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   const { player } = usePlayer();
   const authUser = useAuthStore((state) => state.user);
   const selfUserId = authUser?.id ?? player.id;
+  const realtimeSelfUserId = authUser?.id ?? null;
 
   // Stores
   const lobby = useRealtimeMatchStore((state) => state.lobby);
@@ -51,7 +52,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   const allCategories = categoriesData?.items ?? [];
 
   // Connection
-  useRealtimeConnection({ enabled: true, selfUserId });
+  useRealtimeConnection({ enabled: Boolean(realtimeSelfUserId), selfUserId: realtimeSelfUserId });
   const lobbyCommands = useLobbyCommandMachine();
   const {
     createLobby,

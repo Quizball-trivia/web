@@ -12,6 +12,7 @@ import { getI18nText } from '@/lib/utils/i18n';
 import type { MatchStatsSummary } from '@/lib/domain';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import { useObjectives } from '@/lib/queries/objectives.queries';
+import { useObjectivesEnabled } from '@/lib/hooks/useObjectivesEnabled';
 
 import { colors } from '@/lib/colors';
 
@@ -111,7 +112,8 @@ export function ModeSelectionScreen({
   const nextTierBand = getNextTierBand(displayRp);
   const nextTierTargetRp = nextTierBand?.minRp ?? null;
   const router = useRouter();
-  const { data: objectivesData, isLoading: objectivesLoading } = useObjectives();
+  const objectivesEnabled = useObjectivesEnabled();
+  const { data: objectivesData, isLoading: objectivesLoading } = useObjectives({ enabled: objectivesEnabled });
   const rankedTitleStyle = {
     fontFamily: "'Poppins', sans-serif",
     fontWeight: 600,
@@ -195,8 +197,8 @@ export function ModeSelectionScreen({
         <Image
           src="/assets/brand/ranked-hands-trophy.svg"
           alt=""
-          width={346}
-          height={283}
+          width={257}
+          height={294}
           className="hidden lg:block absolute left-[52.6%] top-[15%] h-[90%] w-auto -translate-x-1/2 object-contain object-top pointer-events-none"
         />
 
@@ -308,9 +310,9 @@ export function ModeSelectionScreen({
                 <Image
                   src="/assets/brand/ranked-hands-trophy.svg"
                   alt=""
-                  width={200}
-                  height={200}
-                  className="h-[176px] w-[176px] object-contain pointer-events-none"
+                  width={257}
+                  height={294}
+                  className="h-[176px] w-auto object-contain pointer-events-none"
                 />
                 {!rankedProfileLoading && (
                   <WinRateStat
@@ -442,6 +444,7 @@ export function ModeSelectionScreen({
       </div>
 
       {/* ─── 3. Objectives ─── */}
+      {objectivesEnabled && (
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base text-white uppercase" style={poppins}>
@@ -590,6 +593,7 @@ export function ModeSelectionScreen({
           })}
         </div>
       </div>
+      )}
 
       {/* ─── 5. Recent Matches ─── */}
       <HomeRecentMatches collapsedOnly />

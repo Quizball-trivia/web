@@ -1,7 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { ApiError } from "@/lib/api/api";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock the low-level api module so we can drive refresh responses.
+const supabaseMocks = vi.hoisted(() => ({
+  getSession: vi.fn(),
+  refreshSession: vi.fn(),
+  setSupabaseSession: vi.fn(),
+}));
+
 vi.mock("@/lib/api/api", async () => {
   const actual = await vi.importActual<typeof import("@/lib/api/api")>("@/lib/api/api");
   return {
@@ -13,9 +17,20 @@ vi.mock("@/lib/api/api", async () => {
   };
 });
 
+vi.mock("@/lib/auth/supabase", () => ({
+  getSupabaseClient: () => ({
+    auth: {
+      getSession: (...args: unknown[]) => supabaseMocks.getSession(...args),
+      refreshSession: (...args: unknown[]) => supabaseMocks.refreshSession(...args),
+    },
+  }),
+  setSupabaseSession: (...args: unknown[]) => supabaseMocks.setSupabaseSession(...args),
+  signOutLocal: vi.fn(),
+}));
+
 import { api } from "@/lib/api/api";
-import { refreshSession, refresh, restorePendingDeletionWithToken } from "@/lib/auth/auth.service";
-import { setTokens, getRefreshToken, getAccessToken, clearTokens } from "@/lib/auth/tokenStorage";
+import { refresh, refreshSession, restorePendingDeletionWithToken } from "@/lib/auth/auth.service";
+import { clearTokens, getAccessToken, getRefreshToken, setTokens } from "@/lib/auth/tokenStorage";
 
 const mockedPost = api.POST as unknown as ReturnType<typeof vi.fn>;
 
@@ -25,117 +40,67 @@ beforeEach(() => {
 });
 
 describe("restorePendingDeletionWithToken", () => {
-  it("can restore from the httpOnly refresh cookie without re-sending a consumed token", async () => {
-    mockedPost.mockResolvedValueOnce({ access_token: "a", refresh_token: "r", user: { provider_sub: "u1" } });
+  it("feeds restored backend tokens into the Supabase browser session", async () => {
+    mockedPost.mockResolvedValueOnce({
+      access_token: "a",
+      refresh_token: "r",
+      user: { provider_sub: "u1" },
+    });
 
-    const user = await restorePendingDeletionWithToken();
+    const user = await restorePendingDeletionWithToken("restore-refresh");
 
     expect(mockedPost).toHaveBeenCalledWith("/api/v1/auth/restore-pending-deletion", {
-      body: {},
+      body: { refresh_token: "restore-refresh" },
       auth: false,
     });
+    expect(supabaseMocks.setSupabaseSession).toHaveBeenCalledWith({
+      accessToken: "a",
+      refreshToken: "r",
+    });
     expect(user).toEqual({ provider_sub: "u1" });
-    expect(getAccessToken()).toBe("a");
-    expect(getRefreshToken()).toBe("r");
   });
 });
 
-describe("refreshSession — terminal failure clears tokens", () => {
-  it("clears tokens on a hard 401", async () => {
-    setTokens({ accessToken: "a", refreshToken: "r" });
-    mockedPost.mockRejectedValueOnce(new ApiError("Request failed", 401, { code: "AUTHENTICATION_ERROR" }));
+describe("refreshSession", () => {
+  it("returns ok when Supabase has a session", async () => {
+    supabaseMocks.getSession.mockResolvedValueOnce({
+      data: { session: { access_token: "a" } },
+      error: null,
+    });
 
-    const result = await refreshSession();
+    await expect(refreshSession()).resolves.toEqual({ ok: true });
+    expect(mockedPost).not.toHaveBeenCalledWith("/api/v1/auth/refresh", expect.anything());
+  });
 
-    expect(result).toEqual({ ok: false, terminal: true });
-    expect(getRefreshToken()).toBeNull();
+  it("returns terminal false and clears legacy tokens when Supabase has no session", async () => {
+    setTokens({ accessToken: "legacy-a", refreshToken: "legacy-r" });
+    supabaseMocks.getSession.mockResolvedValueOnce({
+      data: { session: null },
+      error: null,
+    });
+
+    await expect(refreshSession()).resolves.toEqual({ ok: false, terminal: true });
     expect(getAccessToken()).toBeNull();
-  });
-
-  it("clears tokens on a hard 400 (dead refresh token)", async () => {
-    setTokens({ accessToken: "a", refreshToken: "r" });
-    mockedPost.mockRejectedValueOnce(new ApiError("Request failed", 400, { code: "BAD_REQUEST" }));
-
-    const result = await refreshSession();
-
-    expect(result).toEqual({ ok: false, terminal: true });
     expect(getRefreshToken()).toBeNull();
   });
 
-  it("does NOT clear tokens on a transient (network/5xx) failure", async () => {
-    setTokens({ accessToken: "a", refreshToken: "r" });
-    mockedPost.mockRejectedValueOnce(new ApiError("Request failed", 503, null));
+  it("treats Supabase session read errors as transient", async () => {
+    setTokens({ accessToken: "legacy-a", refreshToken: "legacy-r" });
+    supabaseMocks.getSession.mockResolvedValueOnce({
+      data: { session: null },
+      error: new Error("offline"),
+    });
 
-    const result = await refreshSession();
-
-    expect(result).toEqual({ ok: false, terminal: false });
-    expect(getRefreshToken()).toBe("r"); // left intact for a later retry
+    await expect(refreshSession()).resolves.toEqual({ ok: false, terminal: false });
+    expect(getRefreshToken()).toBe("legacy-r");
   });
 
-  it("sets new tokens and returns ok on success", async () => {
-    mockedPost.mockResolvedValueOnce({ access_token: "new-a", refresh_token: "new-r" });
+  it("boolean refresh wrapper reflects the Supabase session result", async () => {
+    supabaseMocks.getSession.mockResolvedValueOnce({
+      data: { session: null },
+      error: null,
+    });
 
-    const result = await refreshSession();
-
-    expect(result).toEqual({ ok: true });
-    expect(getAccessToken()).toBe("new-a");
-    expect(getRefreshToken()).toBe("new-r");
-  });
-
-  it("boolean refresh() wrapper returns false on terminal failure and clears tokens", async () => {
-    setTokens({ accessToken: "a", refreshToken: "r" });
-    mockedPost.mockRejectedValueOnce(new ApiError("Request failed", 401, null));
-
-    const ok = await refresh();
-
-    expect(ok).toBe(false);
-    expect(getRefreshToken()).toBeNull();
-  });
-
-  it("does not keep calling /auth/refresh after a terminal failure without new tokens", async () => {
-    setTokens({ accessToken: "a", refreshToken: "r" });
-    mockedPost.mockRejectedValueOnce(new ApiError("Request failed", 400, { code: "BAD_REQUEST" }));
-
-    await refreshSession();
-    const result = await refreshSession();
-
-    expect(result).toEqual({ ok: false, terminal: true });
-    expect(mockedPost).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe("refreshSession — single-flight", () => {
-  it("multiple parallel callers trigger only ONE /auth/refresh call", async () => {
-    setTokens({ accessToken: "a", refreshToken: "r" });
-    let resolvePost: (v: unknown) => void = () => {};
-    mockedPost.mockImplementationOnce(
-      () =>
-        new Promise((resolve) => {
-          resolvePost = resolve;
-        }),
-    );
-
-    const p1 = refreshSession();
-    const p2 = refreshSession();
-    const p3 = refreshSession();
-
-    resolvePost({ access_token: "a", refresh_token: "r" });
-    const [r1, r2, r3] = await Promise.all([p1, p2, p3]);
-
-    expect(mockedPost).toHaveBeenCalledTimes(1);
-    expect(r1).toEqual({ ok: true });
-    expect(r2).toEqual({ ok: true });
-    expect(r3).toEqual({ ok: true });
-  });
-
-  it("allows a new refresh after the previous one settles", async () => {
-    setTokens({ accessToken: "a", refreshToken: "r" });
-    mockedPost.mockResolvedValueOnce({ access_token: "a", refresh_token: "r" });
-    await refreshSession();
-
-    mockedPost.mockResolvedValueOnce({ access_token: "a2", refresh_token: "r2" });
-    await refreshSession();
-
-    expect(mockedPost).toHaveBeenCalledTimes(2);
+    await expect(refresh()).resolves.toBe(false);
   });
 });

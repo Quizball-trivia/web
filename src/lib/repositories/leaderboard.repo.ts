@@ -1,6 +1,5 @@
 import { API_BASE_URL } from "@/lib/config";
-import { getAccessToken } from "@/lib/auth/tokenStorage";
-import { refreshSession } from "@/lib/auth/auth.service";
+import { getSupabaseAccessToken } from "@/lib/auth/supabase";
 import { ApiError } from "@/lib/api/api";
 import type { LeaderboardType } from "@/lib/domain/leaderboard";
 import type { AvatarCustomization } from "@/types/game";
@@ -37,7 +36,7 @@ export interface UserRankResponse {
 }
 
 async function requestJson<T>(path: string): Promise<T> {
-  const token = getAccessToken();
+  const token = await getSupabaseAccessToken();
   const res = await fetch(`${API_BASE_URL}${path}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     credentials: "include",
@@ -49,20 +48,6 @@ async function requestJson<T>(path: string): Promise<T> {
   return res.json();
 }
 
-async function authFetch<T>(path: string): Promise<T> {
-  try {
-    return await requestJson<T>(path);
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 401) {
-      const refreshed = await refreshSession();
-      if (refreshed.ok) {
-        return requestJson<T>(path);
-      }
-    }
-    throw error;
-  }
-}
-
 function scopeFromType(type: LeaderboardType): string {
   if (type === "country") return "country";
   return "global";
@@ -70,7 +55,7 @@ function scopeFromType(type: LeaderboardType): string {
 
 export async function getLeaderboard(type: LeaderboardType = "global", limit = 50, offset = 0) {
   const scope = scopeFromType(type);
-  const data = await authFetch<LeaderboardApiResponse>(
+  const data = await requestJson<LeaderboardApiResponse>(
     `/api/v1/ranked/leaderboard?scope=${scope}&limit=${limit}&offset=${offset}`
   );
   return { data: data.entries, error: null };
@@ -78,7 +63,7 @@ export async function getLeaderboard(type: LeaderboardType = "global", limit = 5
 
 export async function getUserRank(type: LeaderboardType = "global") {
   const scope = scopeFromType(type);
-  const data = await authFetch<UserRankResponse | null>(
+  const data = await requestJson<UserRankResponse | null>(
     `/api/v1/ranked/leaderboard/me?scope=${scope}`
   );
   return { data, error: null };

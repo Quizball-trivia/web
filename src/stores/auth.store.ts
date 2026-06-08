@@ -1,14 +1,15 @@
 import { create } from "zustand";
-import { bootstrapUser } from "@/lib/auth/session";
+import { fetchCurrentUser } from "@/lib/auth/session";
 import { clearTokens } from "@/lib/auth/tokenStorage";
-import { logout as logoutService, refreshSession } from "@/lib/auth/auth.service";
+import { logout as logoutService } from "@/lib/auth/auth.service";
 import { ApiError } from "@/lib/api/api";
 import type { User } from "@/lib/types";
 import { logger } from "@/utils/logger";
 import { identifyUser, resetUser, setPersonProperties } from "@/lib/posthog";
 import { trackLogout } from "@/lib/analytics/game-events";
-import { setNewRelicUser } from "@/lib/newrelic-browser";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
+import { getSupabaseSession, signOutLocal } from "@/lib/auth/supabase";
+import { disconnectSocket } from "@/lib/realtime/socket-client";
 
 type AuthStatus = "loading" | "anonymous" | "authenticated";
 const BOOTSTRAP_TRANSIENT_RETRY_MS = 300;
@@ -19,6 +20,7 @@ type AuthState = {
   hasBootstrapped: boolean;
   bootstrap: (options?: { force?: boolean }) => Promise<void>;
   setAuthenticated: (user: User) => void;
+  setAnonymous: () => void;
   patchProgression: (progression: User["progression"]) => void;
   logout: () => Promise<void>;
 };
@@ -28,8 +30,13 @@ function syncAnalyticsUser(user: User): void {
     return;
   }
 
+  const displayName = user.nickname ?? user.email ?? user.id;
+
   identifyUser(user.id, {
+    $email: user.email,
+    $name: displayName,
     email: user.email,
+    name: displayName,
     nickname: user.nickname,
     created_at: user.created_at,
   });
@@ -37,6 +44,10 @@ function syncAnalyticsUser(user: User): void {
   try {
     setPersonProperties(
       {
+        $email: user.email,
+        $name: displayName,
+        email: user.email,
+        name: displayName,
         nickname: user.nickname,
         country: user.country,
         favorite_club: user.favorite_club,
@@ -51,11 +62,6 @@ function syncAnalyticsUser(user: User): void {
   } catch (error) {
     logger.error('Analytics setPersonProperties failed', error);
   }
-
-  setNewRelicUser(user.id, {
-    email: user.email,
-    nickname: user.nickname,
-  });
 }
 
 function wait(ms: number): Promise<void> {
@@ -79,6 +85,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ status: "authenticated", user, hasBootstrapped: true });
     syncAnalyticsUser(user);
   },
+  setAnonymous: () => {
+    clearLocalSession();
+    resetUser();
+    set({ status: "anonymous", user: null, hasBootstrapped: true });
+  },
   patchProgression: (progression) => {
     const { user } = get();
     if (!user) return;
@@ -87,6 +98,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   bootstrap: async (options) => {
     const force = options?.force ?? false;
     const { status, hasBootstrapped } = get();
+    const hasAuthenticatedUser = status === "authenticated" && Boolean(get().user);
     if (!force && status === "authenticated") {
       if (!hasBootstrapped) {
         set({ hasBootstrapped: true });
@@ -105,40 +117,33 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return;
     }
 
-    if (status !== "loading") {
+    if (status !== "loading" && !hasAuthenticatedUser) {
       set({ status: "loading" });
     }
 
     try {
-      const user = await bootstrapUser();
+      clearTokens();
+      const session = await getSupabaseSession();
+      if (!session?.access_token) {
+        logger.info("Auth bootstrap anonymous: no Supabase session");
+        clearLocalSession();
+        resetUser();
+        set({ status: "anonymous", user: null, hasBootstrapped: true });
+        return;
+      }
+
+      const user = await fetchCurrentUser();
       logger.info("Auth bootstrap success");
       set({ status: "authenticated", user, hasBootstrapped: true });
       syncAnalyticsUser(user);
     } catch (error) {
       logger.warn("Auth bootstrap failed", error);
-      const refreshed = await refreshSession();
-      if (refreshed.ok) {
-        await wait(BOOTSTRAP_TRANSIENT_RETRY_MS);
+      if (isAuthFailure(error)) {
         try {
-          const user = await bootstrapUser();
-          logger.info("Auth bootstrap after refresh success");
-          set({ status: "authenticated", user, hasBootstrapped: true });
-          syncAnalyticsUser(user);
-          return;
-        } catch (retryError) {
-          if (isAuthFailure(retryError)) {
-            logger.warn("Auth bootstrap after refresh failed terminally");
-            clearLocalSession();
-            resetUser();
-            set({ status: "anonymous", user: null, hasBootstrapped: true });
-            return;
-          }
-          logger.warn("Auth bootstrap after refresh failed transiently; keeping session", retryError);
-          set({ status: "loading" });
-          return;
+          await signOutLocal();
+        } catch {
+          // Best-effort; local app state still becomes anonymous.
         }
-      }
-      if (refreshed.terminal) {
         clearLocalSession();
         resetUser();
         set({ status: "anonymous", user: null, hasBootstrapped: true });
@@ -147,8 +152,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       await wait(BOOTSTRAP_TRANSIENT_RETRY_MS);
       try {
-        const user = await bootstrapUser();
-        logger.info("Auth bootstrap after transient refresh retry success");
+        const session = await getSupabaseSession();
+        if (!session?.access_token) {
+          clearLocalSession();
+          resetUser();
+          set({ status: "anonymous", user: null, hasBootstrapped: true });
+          return;
+        }
+        const user = await fetchCurrentUser();
+        logger.info("Auth bootstrap transient retry success");
         set({ status: "authenticated", user, hasBootstrapped: true });
         syncAnalyticsUser(user);
       } catch (retryError) {
@@ -157,6 +169,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           clearLocalSession();
           resetUser();
           set({ status: "anonymous", user: null, hasBootstrapped: true });
+          return;
+        }
+        if (hasAuthenticatedUser) {
+          logger.warn("Auth bootstrap transient retry failed; keeping authenticated session", retryError);
           return;
         }
         logger.warn("Auth bootstrap transient retry failed; keeping session", retryError);
@@ -170,6 +186,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       logger.error('Analytics trackLogout failed', error);
     }
+    disconnectSocket();
     try {
       await logoutService();
     } catch {

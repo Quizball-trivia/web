@@ -1,4 +1,4 @@
-import { getSocket } from './socket-client';
+import { getSocket, getSocketDebugSnapshot, logSocketDebug } from './socket-client';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
 import { QueryClient } from '@tanstack/react-query';
@@ -167,6 +167,12 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       data.code === 'RANKED_QUEUE_BUSY' ||
       data.code === 'INSUFFICIENT_TICKETS'
     ) {
+      logSocketDebug('ranked socket error', {
+        code: data.code,
+        message: data.message,
+        meta: data.meta ?? null,
+        ...getSocketDebugSnapshot(socket),
+      });
       useRankedMatchmakingStore.getState().setRankedQueueLeft();
     }
     // Rollback optimistic draft ban on server rejection
@@ -533,12 +539,22 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
 
   socket.on('ranked:search_started', (data: RankedSearchStartedPayload) => {
     logger.info('Socket event ranked:search_started', { durationMs: data.durationMs });
+    logSocketDebug('ranked search_started ack', {
+      durationMs: data.durationMs,
+      ...getSocketDebugSnapshot(socket),
+    });
     store.clearError();
     useRankedMatchmakingStore.getState().setRankedSearchStarted({ durationMs: data.durationMs });
   });
 
   socket.on('ranked:match_found', (data: RankedMatchFoundPayload) => {
     logger.info('Socket event ranked:match_found', { lobbyId: data.lobbyId, opponentId: data.opponent.id });
+    logSocketDebug('ranked match_found ack', {
+      lobbyId: data.lobbyId,
+      opponentId: data.opponent.id,
+      isAiOpponent: (data.opponent as { isAiOpponent?: boolean }).isAiOpponent ?? null,
+      ...getSocketDebugSnapshot(socket),
+    });
     store.clearError();
     useRankedMatchmakingStore.getState().setRankedMatchFound({
       opponent: data.opponent,
@@ -548,6 +564,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
 
   socket.on('ranked:queue_left', () => {
     logger.info('Socket event ranked:queue_left');
+    logSocketDebug('ranked queue_left event', getSocketDebugSnapshot(socket));
     useRankedMatchmakingStore.getState().setRankedQueueLeft();
   });
 

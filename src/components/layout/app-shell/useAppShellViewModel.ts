@@ -44,6 +44,7 @@ export function useAppShellViewModel() {
   const { data: storeWallet } = useStoreWallet();
   const { data: incomingFriendRequestCount = 0 } = useIncomingFriendRequestCount();
   const authUser = useAuthStore((state) => state.user);
+  const authStatus = useAuthStore((state) => state.status);
   const logout = useAuthStore((state) => state.logout);
   const lobby = useRealtimeMatchStore((state) => state.lobby);
   const draft = useRealtimeMatchStore((state) => state.draft);
@@ -76,7 +77,10 @@ export function useAppShellViewModel() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [nowTick, setNowTick] = useState(() => Date.now());
   const lobbyCommands = useLobbyCommandMachine();
-  useRealtimeConnection({ enabled: Boolean(authUser), selfUserId: authUser?.id ?? null });
+  useRealtimeConnection({
+    enabled: authStatus === 'authenticated' && Boolean(authUser?.id),
+    selfUserId: authUser?.id ?? null,
+  });
 
   // Tick once per second so any time-comparison render values
   // (e.g. lobby banner suppression deadline) stay fresh without

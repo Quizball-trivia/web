@@ -1,5 +1,5 @@
 import { API_BASE_URL } from "@/lib/config";
-import { getAccessToken } from "@/lib/auth/tokenStorage";
+import { getSupabaseAccessToken } from "@/lib/auth/supabase";
 import { trackApiError } from "@/lib/analytics/game-events";
 import type { paths } from "@/types/api.generated";
 
@@ -134,7 +134,7 @@ async function request<M extends HttpMethod, P extends PathsWithMethod<M>>(
 ): Promise<ApiResponse<M, P>> {
   const headers = new Headers(options.headers);
   if (options.auth !== false && !headers.has("Authorization")) {
-    const accessToken = typeof window !== "undefined" ? getAccessToken() : null;
+    const accessToken = typeof window !== "undefined" ? await getSupabaseAccessToken() : null;
     if (accessToken) {
       headers.set("Authorization", `Bearer ${accessToken}`);
     }

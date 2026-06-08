@@ -14,9 +14,9 @@ import {
 import { useWelcomeAuthController } from './useWelcomeAuthController';
 import { useWelcomeStadiumSim } from './useWelcomeStadiumSim';
 import { useWelcomeCategoriesData } from './useWelcomeCategoriesData';
-import { peekPostAuthRedirect } from '@/lib/auth/postAuthRedirect';
 import { WelcomeLoginDialog } from './WelcomeLoginDialog';
 import { WelcomeAuthNoticeModal } from './WelcomeAuthNoticeModal';
+import { WelcomeOpenInBrowserModal } from './WelcomeOpenInBrowserModal';
 import { WelcomeNavbar } from './WelcomeNavbar';
 import { WelcomeHero } from './WelcomeHero';
 import { WelcomeCategoriesSection } from './WelcomeCategoriesSection';
@@ -29,13 +29,18 @@ export function WelcomeScreen() {
   const auth = useWelcomeAuthController();
   const {
     loginOpen,
-    setLoginOpen,
-    showOpenInBrowser,
     handleLoginDialogOpenChange,
     handleCloseLoginDialog,
     handleKickOff,
+    handleProtectedWelcomeAction,
+    authInAppBrowser,
+    openInBrowserModalOpen,
+    handleCloseOpenInBrowserModal,
+    inAppBrowserPlatform,
+    inAppBrowserApp,
     handleGoogleCredential,
     disableGoogleIdentityOverlay,
+    showFacebookLogin,
     authMode,
     handleAuthModeChange,
     authEmail,
@@ -88,19 +93,26 @@ export function WelcomeScreen() {
   const phoneAuthAvailability = useGeorgianPhoneAuthAvailability();
   const canUseGeorgianPhoneAuth = phoneAuthAvailability.isAvailable;
 
-  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? '';
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ?? '';
+
+  const handleBrowseCategories = () => {
+    if (authInAppBrowser) {
+      handleProtectedWelcomeAction();
+      return;
+    }
+    setCategoriesOpen(true);
+  };
+
+  const handleCategorySelect = () => {
+    setCategoriesOpen(false);
+    handleProtectedWelcomeAction();
+  };
 
   useEffect(() => {
     if (!canUseGeorgianPhoneAuth && authMode === 'phone') {
       handleAuthModeChange('signin');
     }
   }, [authMode, canUseGeorgianPhoneAuth, handleAuthModeChange]);
-
-  useEffect(() => {
-    if (peekPostAuthRedirect()) {
-      setLoginOpen(true);
-    }
-  }, [setLoginOpen]);
 
   return (
     <div className="min-h-screen w-full bg-surface-page font-sans text-foreground flex flex-col overflow-x-hidden">
@@ -125,17 +137,17 @@ export function WelcomeScreen() {
         allCategoriesCount={allCategories.length}
         featuredCategories={featuredCategories}
         hasRemaining={remainingCategories.length > 0}
-        onCategorySelect={() => setLoginOpen(true)}
-        onBrowseAll={() => setCategoriesOpen(true)}
+        onCategorySelect={handleProtectedWelcomeAction}
+        onBrowseAll={handleBrowseCategories}
       />
 
 
-      <WelcomeTierRoadSection onStartClimbing={() => setLoginOpen(true)} />
+      <WelcomeTierRoadSection onStartClimbing={handleProtectedWelcomeAction} />
 
       <WelcomeLeaderboardSection
         entries={leaderboardEntries}
-        onEntryClick={() => setLoginOpen(true)}
-        onViewFull={() => setLoginOpen(true)}
+        onEntryClick={handleProtectedWelcomeAction}
+        onViewFull={handleProtectedWelcomeAction}
       />
 
       <WelcomeFooter duelsCount={duelsCount} />
@@ -144,12 +156,11 @@ export function WelcomeScreen() {
         open={categoriesOpen}
         categories={allCategories}
         onOpenChange={setCategoriesOpen}
-        onCategorySelect={() => { setCategoriesOpen(false); setLoginOpen(true); }}
+        onCategorySelect={handleCategorySelect}
       />
 
       <WelcomeLoginDialog
         open={loginOpen}
-        showOpenInBrowser={showOpenInBrowser}
         googleClientId={googleClientId}
         disableGoogleIdentityOverlay={disableGoogleIdentityOverlay}
         authMode={authMode}
@@ -170,6 +181,7 @@ export function WelcomeScreen() {
         forgotSent={forgotSent}
         forgotError={forgotError}
         showPhoneAuth={canUseGeorgianPhoneAuth}
+        showFacebookLogin={showFacebookLogin}
         onOpenChange={handleLoginDialogOpenChange}
         onClose={handleCloseLoginDialog}
         onGoogleLogin={handleGoogleLogin}
@@ -197,6 +209,13 @@ export function WelcomeScreen() {
         onRestorePendingDeletion={handleRestorePendingDeletion}
         restoreSubmitting={restoreSubmitting}
         restoreError={restoreError}
+      />
+
+      <WelcomeOpenInBrowserModal
+        open={openInBrowserModalOpen}
+        platform={inAppBrowserPlatform}
+        app={inAppBrowserApp}
+        onClose={handleCloseOpenInBrowserModal}
       />
     </div>
   );

@@ -13,6 +13,7 @@ import type { DraftStatus } from "@/stores/realtimeMatch.store";
 import type { GameStageRealtimeMatchSlice } from "@/features/game/hooks/useGameStageState";
 import type { GameConfig, GameStage } from "@/types/game.runtime";
 import { logger } from "@/utils/logger";
+import { getSocketDebugSnapshot, logSocketDebug } from "@/lib/realtime/socket-client";
 import { GOAL_VISUAL_SEQUENCE_MS } from "@/lib/constants/game";
 import { PENALTY_RESULT_SEQUENCE_HOLD_MS } from "@/features/possession/realtimePossession.helpers";
 
@@ -194,6 +195,16 @@ function computeHasSearchAck(
   );
 }
 
+function hasActiveRealtimeSession(snapshot: ReturnType<typeof useRealtimeMatchStore.getState>): boolean {
+  return Boolean(
+    snapshot.match?.matchId ||
+      snapshot.draft?.lobbyId ||
+      snapshot.lobby?.lobbyId ||
+      snapshot.sessionState?.activeMatchId ||
+      snapshot.sessionState?.waitingLobbyId
+  );
+}
+
 interface GameStageTransitionOptions {
   isMultiplayer: boolean;
   stage: GameStage;
@@ -358,6 +369,18 @@ export function useGameStageTransitions({
         activeMatchId: snapshot.sessionState?.activeMatchId ?? null,
         rankedSearching: useRankedMatchmakingStore.getState().rankedSearching,
       });
+      logSocketDebug("ranked queue_join emit", {
+        reason,
+        retryCount: rankedRetryCountRef.current,
+        ...getSocketDebugSnapshot(socket),
+        sessionState: snapshot.sessionState?.state ?? "NO_SESSION",
+        queueSearchId: snapshot.sessionState?.queueSearchId ?? null,
+        waitingLobbyId: snapshot.sessionState?.waitingLobbyId ?? null,
+        activeMatchId: snapshot.sessionState?.activeMatchId ?? null,
+        rankedSearching: useRankedMatchmakingStore.getState().rankedSearching,
+        geoHintSource: rankedGeoHintRef.current?.source ?? "unknown",
+        geoHintCountry: rankedGeoHintRef.current?.countryCode ?? null,
+      });
     },
     [socket]
   );
@@ -375,6 +398,49 @@ export function useGameStageTransitions({
       return;
     }
     if (!rankedRequestRef.current) {
+      const latestRealtime = useRealtimeMatchStore.getState();
+      const latestRanked = useRankedMatchmakingStore.getState();
+      const hasSearchAck = computeHasSearchAck(
+        latestRanked.rankedSearchStartedAt,
+        latestRanked.rankedFoundOpponent,
+        latestRealtime.sessionState,
+      );
+      if (hasSearchAck || hasActiveRealtimeSession(latestRealtime)) {
+        rankedRequestRef.current = true;
+        logger.info("Ranked queue join skipped: existing realtime session/search state", {
+          hasSearchAck,
+          hasLobby: Boolean(latestRealtime.lobby?.lobbyId),
+          hasDraft: Boolean(latestRealtime.draft?.lobbyId),
+          activeMatchId: latestRealtime.sessionState?.activeMatchId ?? latestRealtime.match?.matchId ?? null,
+          waitingLobbyId: latestRealtime.sessionState?.waitingLobbyId ?? latestRealtime.lobby?.lobbyId ?? null,
+          queueSearchId: latestRealtime.sessionState?.queueSearchId ?? null,
+          sessionState: latestRealtime.sessionState?.state ?? "NO_SESSION",
+          rankedSearching: latestRanked.rankedSearching,
+          rankedFoundOpponentId: latestRanked.rankedFoundOpponent?.id ?? null,
+        });
+        logSocketDebug("ranked queue_join skipped existing state", {
+          hasSearchAck,
+          hasLobby: Boolean(latestRealtime.lobby?.lobbyId),
+          hasDraft: Boolean(latestRealtime.draft?.lobbyId),
+          ...getSocketDebugSnapshot(socket),
+          sessionState: latestRealtime.sessionState?.state ?? "NO_SESSION",
+          queueSearchId: latestRealtime.sessionState?.queueSearchId ?? null,
+          waitingLobbyId: latestRealtime.sessionState?.waitingLobbyId ?? null,
+          activeMatchId: latestRealtime.sessionState?.activeMatchId ?? latestRealtime.match?.matchId ?? null,
+          rankedSearching: latestRanked.rankedSearching,
+          rankedFoundOpponentId: latestRanked.rankedFoundOpponent?.id ?? null,
+        });
+        return;
+      }
+      if (!latestRealtime.sessionState) {
+        logger.info("Ranked queue join waiting for session state before initial search");
+        logSocketDebug("ranked queue_join waiting for session state", {
+          ...getSocketDebugSnapshot(socket),
+          stage,
+          matchType: config?.matchType ?? null,
+        });
+        return;
+      }
       rankedRequestRef.current = true;
       rankedRetryCountRef.current = 0;
       emitRankedQueueJoin("initial");
@@ -385,7 +451,21 @@ export function useGameStageTransitions({
       clearMatchFoundHoldTimer();
       clearFinalStageTimer();
     };
-  }, [clearFinalStageTimer, clearMatchFoundHoldTimer, clearRankedAckTimer, clearRankedRetryTimer, config?.matchType, emitRankedQueueJoin, isMultiplayer, stage]);
+  }, [
+    clearFinalStageTimer,
+    clearMatchFoundHoldTimer,
+    clearRankedAckTimer,
+    clearRankedRetryTimer,
+    config?.matchType,
+    emitRankedQueueJoin,
+    isMultiplayer,
+    rankedFoundOpponent,
+    rankedSearchStartedAt,
+    sessionState,
+    sessionState?.resolvedAt,
+    socket,
+    stage,
+  ]);
 
   useEffect(() => {
     if (!isMultiplayer || config?.matchType !== "ranked" || stage !== "matchmaking") {
@@ -431,6 +511,13 @@ export function useGameStageTransitions({
         sessionState: latest.sessionState?.state ?? "NO_SESSION",
         queueSearchId: latest.sessionState?.queueSearchId ?? null,
       });
+      logSocketDebug("ranked queue_join ack missing retrying", {
+        retryCount: rankedRetryCountRef.current,
+        ...getSocketDebugSnapshot(socket),
+        sessionState: latest.sessionState?.state ?? "NO_SESSION",
+        queueSearchId: latest.sessionState?.queueSearchId ?? null,
+        errorCode: latest.error?.code ?? null,
+      });
       emitRankedQueueJoin("retry");
     }, RANKED_QUEUE_ACK_TIMEOUT_MS);
 
@@ -448,6 +535,7 @@ export function useGameStageTransitions({
     rankedFoundOpponent,
     rankedSearchStartedAt,
     sessionState,
+    socket,
     stage,
   ]);
 
@@ -487,6 +575,12 @@ export function useGameStageTransitions({
     rankedRetryTimerRef.current = setTimeout(() => {
       rankedRetryTimerRef.current = null;
       rankedRetryCountRef.current += 1;
+      logSocketDebug("ranked queue_join recovery retry firing", {
+        retryCount: rankedRetryCountRef.current,
+        errorCode: realtimeErrorCode,
+        ...getSocketDebugSnapshot(socket),
+        sessionState: useRealtimeMatchStore.getState().sessionState?.state ?? "NO_SESSION",
+      });
       emitRankedQueueJoin("retry");
     }, RANKED_QUEUE_RETRY_DELAY_MS);
 
@@ -506,6 +600,7 @@ export function useGameStageTransitions({
     realtimeErrorCode,
     sessionState,
     sessionState?.state,
+    socket,
     stage,
   ]);
 

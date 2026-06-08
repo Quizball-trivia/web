@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, Loader2 } from 'lucide-react';
 import { AppLogo } from '@/components/AppLogo';
@@ -10,10 +10,13 @@ import { AVATAR_COLORS } from '@/lib/avatars';
 import { DEFAULT_HAIR_ID, DEFAULT_JERSEY_ID, DEFAULT_SKIN_ID } from '@/lib/avatars/parts';
 import { trackOnboardingStarted, trackOnboardingStepCompleted } from '@/lib/analytics/game-events';
 import { useLocale } from '@/contexts/LocaleContext';
+import type { Locale } from '@/lib/i18n/messages';
 
 interface OnboardingFlowProps {
   onComplete: (data: OnboardingData) => void;
   isSubmitting?: boolean;
+  usernameError?: string | null;
+  onUsernameChange?: () => void;
 }
 
 interface OnboardingData {
@@ -27,7 +30,7 @@ interface OnboardingData {
 const LANGUAGES = [
   { code: 'en', name: 'ENGLISH', nativeName: 'English', countryCode: 'gb' },
   { code: 'ka', name: 'GEORGIAN', nativeName: 'ქართული', countryCode: 'ge' },
-];
+] as const satisfies readonly { code: Locale; name: string; nativeName: string; countryCode: string }[];
 
 function getAvatarCustomization(color: string | null | undefined): AvatarCustomization {
   return {
@@ -46,14 +49,20 @@ const OPTION_PILL_CLASS =
 type OnboardingStep = 'language' | 'club' | 'profile';
 const STEP_ORDER: OnboardingStep[] = ['language', 'club', 'profile'];
 
-export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingFlowProps) {
-  const { t } = useLocale();
+export function OnboardingFlow({
+  onComplete,
+  isSubmitting = false,
+  usernameError = null,
+  onUsernameChange,
+}: OnboardingFlowProps) {
+  const { locale, setLocale, t } = useLocale();
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('language');
   const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
-  const [preferredLanguage, setPreferredLanguage] = useState('');
+  const [preferredLanguage, setPreferredLanguage] = useState<Locale>(locale);
   const [favoriteClub, setFavoriteClub] = useState('');
   const [username, setUsername] = useState('');
   const [avatar, setAvatar] = useState('');
+  const languageTouchedRef = useRef(false);
   // Analytics — fire once on mount + once per forward step transition.
   // useRef avoids double-firing in React Strict Mode dev double-mount.
   const trackedStartRef = useRef(false);
@@ -62,6 +71,17 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
     trackedStartRef.current = true;
     trackOnboardingStarted();
   }, []);
+
+  useEffect(() => {
+    if (languageTouchedRef.current) return;
+    queueMicrotask(() => setPreferredLanguage(locale));
+  }, [locale]);
+
+  const handleLanguageSelect = (language: Locale) => {
+    languageTouchedRef.current = true;
+    setPreferredLanguage(language);
+    setLocale(language);
+  };
 
   const currentIndex = STEP_ORDER.indexOf(currentStep);
   const progress = ((currentIndex + 1) / STEP_ORDER.length) * 100;
@@ -78,6 +98,13 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
     trackOnboardingStepCompleted(currentStep);
     setDirection('forward');
     setCurrentStep(STEP_ORDER[currentIndex + 1]);
+  };
+
+  const handleUsernameChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setUsername(event.target.value);
+    if (usernameError) {
+      onUsernameChange?.();
+    }
   };
 
   const handleComplete = () => {
@@ -170,7 +197,7 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
                     <button
                       key={language.code}
                       type="button"
-                      onClick={() => setPreferredLanguage(language.code)}
+                      onClick={() => handleLanguageSelect(language.code)}
                       aria-pressed={isSelected}
                       className={`${OPTION_PILL_CLASS} ${isSelected ? 'ring-2 ring-white' : ''}`}
                     >
@@ -251,13 +278,30 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
               <input
                 type="text"
                 value={username}
-                onChange={(event) => setUsername(event.target.value)}
+                onChange={handleUsernameChange}
                 placeholder={t("onboarding.enterUsername")}
                 maxLength={20}
-                className="mt-7 md:mt-9 h-[56px] md:h-[64px] w-full rounded-[18px] bg-brand-blue px-5 text-center font-poppins text-[18px] md:text-[24px] font-semibold uppercase text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-white"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                aria-invalid={!!usernameError}
+                aria-describedby={usernameError ? "onboarding-username-error" : undefined}
+                className={`mt-7 md:mt-9 h-[56px] md:h-[64px] w-full rounded-[18px] bg-brand-blue px-4 text-center font-poppins text-[15px] font-semibold leading-none text-white placeholder:text-white/50 focus:outline-none focus:ring-2 sm:text-[17px] md:text-[24px] ${
+                  usernameError ? 'ring-2 ring-brand-red focus:ring-brand-red' : 'focus:ring-white'
+                }`}
               />
 
-              <p className="mt-6 md:mt-8 text-center font-poppins text-[12px] md:text-[14px] font-semibold uppercase text-white/50">
+              {usernameError && (
+                <p
+                  id="onboarding-username-error"
+                  role="alert"
+                  className="mt-2 px-2 text-center font-poppins text-[12px] font-semibold leading-snug text-brand-red md:text-[13px]"
+                >
+                  {usernameError}
+                </p>
+              )}
+
+              <p className={`${usernameError ? 'mt-4 md:mt-6' : 'mt-6 md:mt-8'} text-center font-poppins text-[12px] md:text-[14px] font-semibold uppercase text-white/50`}>
                 {t("onboarding.chooseAvatar")}
               </p>
 
@@ -302,7 +346,7 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
                     {t("onboarding.saving")}
                   </span>
                 ) : (
-                  <>Let&apos;s Go</>
+                  <>{t("onboarding.letsGo")}</>
                 )}
               </button>
             </motion.div>
