@@ -729,6 +729,7 @@
     "backToChallenges": "გამოწვევებში დაბრუნება",
     "hubTitle": "ყოველდღიური გამოწვევები",
     "hubResetAt": "განახლდება {time}-ზე",
+    "hubResetAtWithRemaining": "განახლდება {time}-ზე · დარჩა {remaining}",
     "hubTodaysProgress": "დღევანდელი პროგრესი",
     "hubCoinsEarned": "მოპოვებული მონეტები",
     "hubPlayFor": "ფასი",

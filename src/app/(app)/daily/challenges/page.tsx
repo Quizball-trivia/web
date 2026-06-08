@@ -14,18 +14,53 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useLocale } from "@/contexts/LocaleContext";
 import { prefetchDailyChallengeSession } from "@/features/daily/dailyChallengeSessionPrefetch";
 
-// Challenges reset at 00:00 UTC. Show that moment as a wall-clock time in the
-// viewer's own timezone (auto-detected by Intl) so a Georgia user sees 04:00
-// and an EST user sees 7:00 PM — no confusing "UTC" label. Georgian uses 24h
-// (EU/Georgia convention, e.g. 04:00 / 20:00); English keeps 12h AM/PM.
-function getLocalResetTime(locale: string) {
-  const reset = new Date();
-  reset.setUTCHours(24, 0, 0, 0); // next 00:00 UTC
-  return new Intl.DateTimeFormat(locale === "ka" ? "ka-GE" : "en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: locale === "ka" ? "h23" : "h12",
-  }).format(reset);
+const DAILY_RESET_UTC_HOUR = 20;
+const GEORGIA_TIME_ZONE = "Asia/Tbilisi";
+
+type DailyResetInfo = {
+  time: string;
+  remaining: string;
+};
+
+function getNextDailyReset(now = new Date()) {
+  const reset = new Date(now);
+  reset.setUTCHours(DAILY_RESET_UTC_HOUR, 0, 0, 0);
+  if (reset <= now) {
+    reset.setUTCDate(reset.getUTCDate() + 1);
+  }
+  return reset;
+}
+
+function formatResetCountdown(resetAt: Date, now: Date, locale: string) {
+  const totalMinutes = Math.max(0, Math.ceil((resetAt.getTime() - now.getTime()) / 60_000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (locale === "ka") {
+    return hours > 0 ? `${hours}სთ ${minutes}წთ` : `${minutes}წთ`;
+  }
+
+  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+}
+
+function getDailyResetInfo(locale: string, now = new Date()): DailyResetInfo {
+  const reset = getNextDailyReset(now);
+  const browserTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const isGeorgiaTimeZone = browserTimeZone === GEORGIA_TIME_ZONE;
+
+  const time = isGeorgiaTimeZone
+    ? new Intl.DateTimeFormat(locale === "ka" ? "ka-GE" : "en-US", {
+        timeZone: GEORGIA_TIME_ZONE,
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: locale === "ka" ? "h23" : "h12",
+      }).format(reset)
+    : "20:00 UTC";
+
+  return {
+    time,
+    remaining: formatResetCountdown(reset, now, locale),
+  };
 }
 
 function ChallengeCard({
@@ -150,11 +185,20 @@ export default function DailyChallengesPage() {
   const { data: challenges = [], isLoading } = useDailyChallenges();
   // Computed client-side only (depends on the browser's timezone), so it stays
   // empty on the server and first paint to avoid a hydration mismatch.
-  const [localResetTime, setLocalResetTime] = useState("");
+  const [resetInfo, setResetInfo] = useState<DailyResetInfo | null>(null);
   const canUseDevReset = authUser?.role === "admin";
 
   useEffect(() => {
-    setLocalResetTime(getLocalResetTime(locale));
+    const refreshResetInfo = () => setResetInfo(getDailyResetInfo(locale));
+    const timeoutId = window.setTimeout(refreshResetInfo, 0);
+    const intervalId = window.setInterval(() => {
+      refreshResetInfo();
+    }, 60_000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.clearInterval(intervalId);
+    };
   }, [locale]);
 
   // Prefetch the page bundle for AVAILABLE challenges only (completed/locked
@@ -198,9 +242,12 @@ export default function DailyChallengesPage() {
             <h1 className="font-poppins text-[20px] uppercase leading-[1.1] text-white md:text-[40px] md:leading-[1.1]">
               {t('dailyGames.hubTitle')}
             </h1>
-            {localResetTime ? (
+            {resetInfo ? (
               <p className="mt-1.5 text-[11px] font-black uppercase tracking-[0.04em] text-white/55 md:mt-2 md:text-sm md:tracking-[0.08em]">
-                {t('dailyGames.hubResetAt', { time: localResetTime })}
+                {t('dailyGames.hubResetAtWithRemaining', {
+                  time: resetInfo.time,
+                  remaining: resetInfo.remaining,
+                })}
               </p>
             ) : null}
           </div>
