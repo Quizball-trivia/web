@@ -33,6 +33,7 @@ export function HighLowGame({
   const [currentMatchupIndex, setCurrentMatchupIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(session.secondsPerRound);
   const [roundScore, setRoundScore] = useState(0);
+  const [correctAnswerCount, setCorrectAnswerCount] = useState(0);
   const [roundResolved, setRoundResolved] = useState(false);
   const [showQuitDialog, setShowQuitDialog] = useState(false);
   const [finished, setFinished] = useState(false);
@@ -107,6 +108,8 @@ export function HighLowGame({
       resolveRound(false);
       return;
     }
+
+    setCorrectAnswerCount((previous) => previous + 1);
 
     if (currentMatchupIndex >= currentRound.matchups.length - 1) {
       // Whole chain cleared: correct splash from the winning side.
@@ -260,7 +263,7 @@ export function HighLowGame({
         title={session.title}
         correct={roundScore}
         total={session.roundCount}
-        onDone={() => onComplete(roundScore)}
+        onDone={() => onComplete(correctAnswerCount)}
       />
     </div>
   );

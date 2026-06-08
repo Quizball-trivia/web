@@ -205,7 +205,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
           title={session.title}
           correct={totalFound}
           total={totalAnswerSlots}
-          onDone={() => onComplete(totalFound * 100)}
+          onDone={() => onComplete(totalFound)}
         />
       </div>
     );

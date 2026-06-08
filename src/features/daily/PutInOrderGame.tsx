@@ -170,7 +170,7 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
     playSfx(isCorrect ? "dailyCorrect" : "wrongAnswer");
     if (isCorrect) {
       setCorrectCount((prev) => prev + 1);
-      setTotalCoins((prev) => prev + 50);
+      setTotalCoins((prev) => prev + 20);
     }
   };
 
@@ -186,7 +186,7 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
   };
 
   const handleComplete = () => {
-    onComplete(correctCount * 100);
+    onComplete(correctCount);
   };
 
   if (!round) {

@@ -49,6 +49,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState("");
   const [score, setScore] = useState(0);
+  const [correctCount, setCorrectCount] = useState(0);
   const [streak, setStreak] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
@@ -79,12 +80,12 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
   useEffect(() => {
     if (showResult && currentQuestionIndex === questions.length - 1) {
       const timeout = setTimeout(() => {
-        onComplete(score);
+        onComplete(correctCount);
       }, 1500);
 
       return () => clearTimeout(timeout);
     }
-  }, [showResult, currentQuestionIndex, questions.length, score, onComplete]);
+  }, [showResult, currentQuestionIndex, questions.length, correctCount, onComplete]);
 
   useEffect(() => {
     if (showResult || hasSubmitted) {
@@ -130,6 +131,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
       setShowResult(true);
 
       setScore((prev) => prev + getPoints(revealedClues));
+      setCorrectCount((prev) => prev + 1);
       setStreak((prev) => prev + 1);
 
       if (timerRef.current) {

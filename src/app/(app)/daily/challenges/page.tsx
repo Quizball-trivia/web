@@ -107,6 +107,7 @@ function ChallengeCard({
             <span className="inline-flex h-6 items-center gap-1 rounded-full bg-white/70 px-2.5 text-[10px] font-black text-brand-gold-ink">
               {challenge.coinReward}
               <Image src="/assets/coin-1.png" alt="" width={16} height={16} className="size-4 object-contain" />
+              {challenge.challengeType !== "moneyDrop" ? <CheckCircle2 className="size-3" /> : null}
             </span>
             <span className="inline-flex h-6 items-center gap-1 rounded-full bg-brand-green-light px-2.5 text-[10px] font-black text-white">
               {challenge.xpReward} XP
