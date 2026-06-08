@@ -98,6 +98,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   bootstrap: async (options) => {
     const force = options?.force ?? false;
     const { status, hasBootstrapped } = get();
+    const hasAuthenticatedUser = status === "authenticated" && Boolean(get().user);
     if (!force && status === "authenticated") {
       if (!hasBootstrapped) {
         set({ hasBootstrapped: true });
@@ -116,7 +117,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return;
     }
 
-    if (status !== "loading") {
+    if (status !== "loading" && !hasAuthenticatedUser) {
       set({ status: "loading" });
     }
 
@@ -168,6 +169,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           clearLocalSession();
           resetUser();
           set({ status: "anonymous", user: null, hasBootstrapped: true });
+          return;
+        }
+        if (hasAuthenticatedUser) {
+          logger.warn("Auth bootstrap transient retry failed; keeping authenticated session", retryError);
           return;
         }
         logger.warn("Auth bootstrap transient retry failed; keeping session", retryError);

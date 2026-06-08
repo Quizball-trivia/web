@@ -188,6 +188,56 @@ describe("auth store bootstrap", () => {
       }),
     );
   });
+
+  it("keeps authenticated UI visible during forced background bootstrap", async () => {
+    let resolveSession: (session: { access_token: string }) => void = () => undefined;
+    getSupabaseSessionMock.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveSession = resolve;
+      }),
+    );
+    useAuthStore.setState({
+      status: "authenticated",
+      user: USER,
+      hasBootstrapped: true,
+    });
+
+    const promise = useAuthStore.getState().bootstrap({ force: true });
+
+    expect(useAuthStore.getState()).toMatchObject({
+      status: "authenticated",
+      user: USER,
+    });
+
+    resolveSession({ access_token: "token-a" });
+    fetchCurrentUserMock.mockResolvedValueOnce(USER);
+    await promise;
+
+    expect(useAuthStore.getState()).toMatchObject({
+      status: "authenticated",
+      user: USER,
+      hasBootstrapped: true,
+    });
+  });
+
+  it("keeps authenticated UI visible when forced background bootstrap has transient failures", async () => {
+    getSupabaseSessionMock
+      .mockRejectedValueOnce(new Error("session read failed"))
+      .mockRejectedValueOnce(new Error("still failed"));
+    useAuthStore.setState({
+      status: "authenticated",
+      user: USER,
+      hasBootstrapped: true,
+    });
+
+    await runBootstrapWithRetry();
+
+    expect(useAuthStore.getState()).toMatchObject({
+      status: "authenticated",
+      user: USER,
+      hasBootstrapped: true,
+    });
+  });
 });
 
 describe("auth store logout", () => {

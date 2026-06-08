@@ -54,6 +54,10 @@ export function useRealtimeConnection({ enabled, selfUserId }: RealtimeConnectio
     logger.info('Realtime connection set self user id', { selfUserId });
     realtimeStore.setSelfUserId(selfUserId);
     connectedRealtimeUserId = selfUserId;
+    const socket = getSocket();
+    if (socket.connected || socket.active) {
+      return;
+    }
     connectSocket();
 
   }, [enabled, selfUserId, queryClient]);
