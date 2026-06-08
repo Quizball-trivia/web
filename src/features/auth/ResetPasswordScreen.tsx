@@ -21,15 +21,18 @@ type Phase = 'verifying' | 'ready' | 'invalid';
 async function waitForRecoverySession() {
   const supabase = getSupabaseClient();
   let lastError: Error | null = null;
+  // Poll up to ~10s — Supabase's PKCE session exchange can take longer than the
+  // old ~2s budget, which produced false "invalid link" outcomes on slow links.
+  const deadline = Date.now() + 10_000;
 
-  for (let attempt = 0; attempt < 20; attempt += 1) {
+  while (Date.now() < deadline) {
     const { data, error } = await supabase.auth.getSession();
     if (error) {
       lastError = error;
     } else if (data.session) {
       return data.session;
     }
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 200));
   }
 
   if (lastError) {

@@ -112,8 +112,8 @@ export function ModeSelectionScreen({
   const nextTierBand = getNextTierBand(displayRp);
   const nextTierTargetRp = nextTierBand?.minRp ?? null;
   const router = useRouter();
-  const { data: objectivesData, isLoading: objectivesLoading } = useObjectives();
   const objectivesEnabled = useObjectivesEnabled();
+  const { data: objectivesData, isLoading: objectivesLoading } = useObjectives({ enabled: objectivesEnabled });
   const rankedTitleStyle = {
     fontFamily: "'Poppins', sans-serif",
     fontWeight: 600,

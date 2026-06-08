@@ -28,6 +28,52 @@ const OAUTH_CANCELLATION_CODES = new Set([
   'login_required',
 ]);
 
+// The mobile app sends `mobile_redirect` so the web callback can hand the
+// session back to it. That value is attacker-controllable via the URL, and we
+// attach the access/refresh tokens to it — so it MUST be strictly validated, or
+// a crafted link could exfiltrate a victim's tokens to an arbitrary origin.
+// The only legitimate target is the mobile-callback page on a quizball.io host
+// (prod `quizball.io`/`www`, `staging.quizball.io`, and any preview subdomain),
+// which the app sets as `redirectTo`.
+const ALLOWED_MOBILE_REDIRECT_DOMAIN = 'quizball.io';
+const ALLOWED_MOBILE_REDIRECT_PATH = '/auth/mobile-callback';
+
+function isAllowedMobileRedirectHost(host: string): boolean {
+  // Apex domain or any subdomain of quizball.io — but NOT lookalikes such as
+  // `quizball.io.evil.com` (the `.` prefix anchors the suffix to a real label).
+  return host === ALLOWED_MOBILE_REDIRECT_DOMAIN || host.endsWith(`.${ALLOWED_MOBILE_REDIRECT_DOMAIN}`);
+}
+
+/**
+ * Returns a safe, validated URL to deep-link the mobile app to with the session
+ * tokens attached — or null if `raw` is not an allowlisted target (in which case
+ * the caller falls back to the normal web login flow and never leaks tokens).
+ */
+function buildMobileRedirectUrl(
+  raw: string,
+  accessToken: string,
+  refreshToken: string,
+): string | null {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return null;
+  }
+  const isAllowed =
+    url.protocol === 'https:' &&
+    isAllowedMobileRedirectHost(url.hostname) &&
+    url.pathname === ALLOWED_MOBILE_REDIRECT_PATH;
+  if (!isAllowed) {
+    return null;
+  }
+  // Build via searchParams so any existing query params are preserved instead of
+  // producing a malformed `...?a=1?access_token=...` double-query string.
+  url.searchParams.set('access_token', accessToken);
+  url.searchParams.set('refresh_token', refreshToken);
+  return url.toString();
+}
+
 async function waitForCallbackSession() {
   const supabase = getSupabaseClient();
   let lastError: Error | null = null;
@@ -102,10 +148,19 @@ export function OAuthCallbackScreen() {
         }
 
         if (mobileRedirect) {
-          const deepLink = `${mobileRedirect}?access_token=${encodeURIComponent(session.access_token)}&refresh_token=${encodeURIComponent(session.refresh_token)}`;
-          logger.info("OAuth callback: redirecting to mobile app");
-          window.location.href = deepLink;
-          return;
+          const deepLink = buildMobileRedirectUrl(
+            mobileRedirect,
+            session.access_token,
+            session.refresh_token,
+          );
+          if (deepLink) {
+            logger.info("OAuth callback: redirecting to mobile app");
+            window.location.href = deepLink;
+            return;
+          }
+          // Not an allowlisted mobile target — ignore it (never attach tokens to
+          // an untrusted origin) and continue the normal web login flow below.
+          logger.warn("OAuth callback: ignoring non-allowlisted mobile_redirect");
         }
 
         window.history.replaceState({}, document.title, window.location.pathname);

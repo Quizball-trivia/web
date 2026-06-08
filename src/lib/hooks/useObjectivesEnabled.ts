@@ -24,9 +24,17 @@ const posthogActive =
  * 2. the PostHog `objectives_enabled` flag on real deployments,
  * 3. visible by default in local dev so the feature stays developable.
  */
+function resolveInitial(): boolean {
+  if (envOverride != null) return envOverride !== 'false';
+  if (!posthogActive || typeof window === 'undefined') return true;
+  // PostHog may already have a bootstrapped/cached value on first render; use it
+  // rather than defaulting to a hard `false`, which would make consumers redirect
+  // or hide Objectives before the flag has resolved. Unknown → visible.
+  return posthog.isFeatureEnabled(OBJECTIVES_FLAG) ?? true;
+}
+
 export function useObjectivesEnabled(): boolean {
-  const initial = envOverride != null ? envOverride !== 'false' : !posthogActive;
-  const [enabled, setEnabled] = useState<boolean>(initial);
+  const [enabled, setEnabled] = useState<boolean>(resolveInitial);
 
   useEffect(() => {
     if (envOverride != null || !posthogActive) return;
