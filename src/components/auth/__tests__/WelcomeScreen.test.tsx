@@ -380,11 +380,12 @@ describe('WelcomeScreen — landing chrome', () => {
       expect(screen.queryByText(/welcome\.loginTitle/)).not.toBeInTheDocument();
       expect(screen.queryByText(/welcome\.continueWithGoogle/)).not.toBeInTheDocument();
       expect(screen.queryByText(/welcome\.continueWithFacebook/)).not.toBeInTheDocument();
-      expect(screen.getByText(/inAppBrowser\.iosTitle/)).toBeInTheDocument();
-      expect(screen.getByText(/inAppBrowser\.iosBody/)).toBeInTheDocument();
+      expect(screen.getByText(/inAppBrowser\.title/)).toBeInTheDocument();
+      expect(screen.getByText(/inAppBrowser\.body/)).toBeInTheDocument();
       expect(
-        screen.getByText(app === 'instagram' ? /inAppBrowser\.iosStep1/ : /inAppBrowser\.iosBottomRightStep1/),
+        screen.getByText(app === 'instagram' ? /inAppBrowser\.menuStep/ : /inAppBrowser\.bottomRightStep/),
       ).toBeInTheDocument();
+      expect(screen.getByText(/inAppBrowser\.openBrowserStep/)).toBeInTheDocument();
       expect(screen.getByTestId('modal-close')).toBeInTheDocument();
       expect(signInWithGoogleIdentityMock).not.toHaveBeenCalled();
       expect(socialLoginMock).not.toHaveBeenCalled();
@@ -402,7 +403,6 @@ describe('WelcomeScreen — landing chrome', () => {
     expect(screen.getByText(/welcome\.continueWithGoogle/)).toBeInTheDocument();
     expect(screen.getByText(/welcome\.continueWithFacebook/)).toBeInTheDocument();
     expect(screen.queryByText(/inAppBrowser\.title/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/inAppBrowser\.iosTitle/)).not.toBeInTheDocument();
   });
 });
 

@@ -1256,19 +1256,13 @@
   },
   "inAppBrowser": {
     "title": "Open in your browser",
-    "iosTitle": "Open in Safari",
-    "androidTitle": "Open in Chrome",
-    "body": "For the best experience, open this page in Safari or Chrome.",
-    "iosBody": "For the best experience, open this page in Safari.",
-    "androidBody": "For the best experience, open this page in Chrome.",
-    "iosStep1": "Tap the menu (... or share icon) at the top right.",
-    "iosBottomRightStep1": "Tap the menu (...) at the bottom right.",
-    "iosStep2": "Choose \"Open in Safari\".",
-    "androidStep1": "Tap the menu (...) at the top right.",
-    "androidStep2": "Choose \"Open in browser\" or \"Open in Chrome\".",
-    "genericInstructions": "Open this link in Safari, Chrome, or Firefox to continue.",
+    "body": "For the best experience, open this page in your phone's browser.",
+    "menuStep": "Tap the menu (...) or share icon in the browser toolbar.",
+    "bottomRightStep": "Tap the menu (...) in the bottom-right toolbar.",
+    "openBrowserStep": "Choose \"Open in browser\" or \"Open in external browser\".",
+    "genericInstructions": "Open this link in your browser to continue.",
     "orCopyLink": "Or copy the link",
-    "linkCopied": "Link copied. Paste it in Safari or Chrome."
+    "linkCopied": "Link copied. Paste it in your browser."
   },
   "errors": {
     "INTERNAL_ERROR": "Something went wrong",
