@@ -19,11 +19,12 @@ function PostHogPageViewInner(): ReactElement {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // Only track pageviews in production
+    // Track pageviews on real deployments — production AND staging ("preview").
+    const deployEnv = process.env.NEXT_PUBLIC_VERCEL_ENV;
     if (
       pathname &&
       process.env.NEXT_PUBLIC_POSTHOG_KEY &&
-      process.env.NODE_ENV === 'production'
+      (deployEnv === 'production' || deployEnv === 'preview')
     ) {
       let url = window.origin + pathname;
       if (searchParams && searchParams.toString()) {
@@ -32,9 +33,6 @@ function PostHogPageViewInner(): ReactElement {
       posthog.capture('$pageview', {
         $current_url: url,
       });
-    } else if (pathname && process.env.NODE_ENV !== 'production') {
-      // Log in development for visibility
-      console.log('[Dev] PostHog PageView:', pathname);
     }
   }, [pathname, searchParams]);
 

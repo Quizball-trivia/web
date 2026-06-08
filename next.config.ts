@@ -74,6 +74,12 @@ const SECURITY_HEADERS = [
 ];
 
 const nextConfig: NextConfig = {
+  // Expose Vercel's deployment environment to the browser so client code can
+  // distinguish prod ("production") from staging ("preview"). VERCEL_ENV is
+  // server-only by default; inlining it here makes it readable client-side.
+  env: {
+    NEXT_PUBLIC_VERCEL_ENV: process.env.VERCEL_ENV,
+  },
   images: {
     remotePatterns: [
       {

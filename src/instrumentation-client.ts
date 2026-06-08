@@ -1,10 +1,13 @@
 import posthog from 'posthog-js';
 
-// Initialize PostHog (production builds only)
+// Initialize PostHog on real deployments — production AND staging (Vercel
+// "preview"). They use separate PostHog project keys. Skipped locally, where
+// VERCEL_ENV is "development" / unset.
+const deployEnv = process.env.NEXT_PUBLIC_VERCEL_ENV;
 if (
   typeof window !== 'undefined' &&
   process.env.NEXT_PUBLIC_POSTHOG_KEY &&
-  process.env.NODE_ENV === 'production'
+  (deployEnv === 'production' || deployEnv === 'preview')
 ) {
   try {
     posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
