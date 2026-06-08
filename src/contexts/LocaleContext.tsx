@@ -45,9 +45,17 @@ function localeFromPath(pathname: string | null): Locale | null {
 
 function readStoredLocale(): { locale: Locale; hasStoredLocale: boolean } {
   const stored = storage.get<string | null>(STORAGE_KEYS.LOCALE, null);
+  // Only treat the stored value as an explicit choice when it's a genuinely
+  // supported locale (or a `ka` variant that normalizeLocale maps to `ka`).
+  // Otherwise an unsupported value like "fr" would normalize to "en" and be
+  // mistaken for a deliberate English selection, pinning the user to English
+  // instead of honoring preferredLanguage / browser inference.
+  const trimmed = typeof stored === 'string' ? stored.trim() : '';
+  const hasStoredLocale =
+    isSupportedLocale(trimmed) || trimmed.toLowerCase().startsWith('ka');
   return {
     locale: normalizeLocale(stored),
-    hasStoredLocale: stored !== null && stored !== undefined && String(stored).trim().length > 0,
+    hasStoredLocale,
   };
 }
 

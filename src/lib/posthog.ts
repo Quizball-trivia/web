@@ -32,8 +32,10 @@ export function identifyUser(userId: string, properties?: AnalyticsProperties): 
     if (lastIdentifySignature === signature) {
       return;
     }
-    lastIdentifySignature = signature;
+    // Cache the signature only after a successful identify — otherwise a throw
+    // here would leave the signature set and skip a valid retry as a duplicate.
     posthog.identify(userId, properties);
+    lastIdentifySignature = signature;
   } catch (error) {
     console.error('PostHog identifyUser error:', error);
   }

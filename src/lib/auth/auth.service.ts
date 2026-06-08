@@ -92,7 +92,17 @@ export function consumeRedirectOAuthProvider(): RedirectOAuthProvider | null {
 }
 
 async function provisionCurrentSession(): Promise<void> {
-  await api.GET("/api/v1/users/me");
+  // Provisioning the backend user record is required for a usable login: a
+  // failure here means the user is authenticated in Supabase but has no backend
+  // record. api.GET already throws on HTTP errors (so the login still fails),
+  // but log + rethrow with context so the provisioning step is identifiable
+  // upstream instead of surfacing as a bare request error.
+  try {
+    await api.GET("/api/v1/users/me");
+  } catch (error) {
+    logger.error("Session provisioning failed", { error });
+    throw error;
+  }
 }
 
 async function applyAuthResponseSession(response: AuthResponse): Promise<void> {

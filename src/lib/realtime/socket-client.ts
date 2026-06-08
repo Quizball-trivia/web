@@ -105,8 +105,14 @@ async function ensureValidAccessToken(): Promise<string | null> {
   logger.info('Socket token expiring soon, asking Supabase to refresh before connect');
   const { data, error } = await getSupabaseClient().auth.refreshSession();
   if (error) {
-    logger.warn('Socket token refresh failed before connect', error);
-    return currentToken;
+    // The current token is already expired/expiring; returning it would connect
+    // with a known-bad token, triggering an immediate connect_error + recovery
+    // loop. Return null so callers skip the attempt and let auth recovery run.
+    logger.error('Socket token refresh failed before connect', {
+      error,
+      expiresInMs: expMs ? expMs - Date.now() : null,
+    });
+    return null;
   }
   return data.session?.access_token ?? currentToken;
 }
