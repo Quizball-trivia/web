@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, Loader2 } from 'lucide-react';
 import { AppLogo } from '@/components/AppLogo';
@@ -15,6 +15,8 @@ import type { Locale } from '@/lib/i18n/messages';
 interface OnboardingFlowProps {
   onComplete: (data: OnboardingData) => void;
   isSubmitting?: boolean;
+  usernameError?: string | null;
+  onUsernameChange?: () => void;
 }
 
 interface OnboardingData {
@@ -47,7 +49,12 @@ const OPTION_PILL_CLASS =
 type OnboardingStep = 'language' | 'club' | 'profile';
 const STEP_ORDER: OnboardingStep[] = ['language', 'club', 'profile'];
 
-export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingFlowProps) {
+export function OnboardingFlow({
+  onComplete,
+  isSubmitting = false,
+  usernameError = null,
+  onUsernameChange,
+}: OnboardingFlowProps) {
   const { locale, setLocale, t } = useLocale();
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('language');
   const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
@@ -91,6 +98,13 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
     trackOnboardingStepCompleted(currentStep);
     setDirection('forward');
     setCurrentStep(STEP_ORDER[currentIndex + 1]);
+  };
+
+  const handleUsernameChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setUsername(event.target.value);
+    if (usernameError) {
+      onUsernameChange?.();
+    }
   };
 
   const handleComplete = () => {
@@ -264,13 +278,30 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
               <input
                 type="text"
                 value={username}
-                onChange={(event) => setUsername(event.target.value)}
+                onChange={handleUsernameChange}
                 placeholder={t("onboarding.enterUsername")}
                 maxLength={20}
-                className="mt-7 md:mt-9 h-[56px] md:h-[64px] w-full rounded-[18px] bg-brand-blue px-5 text-center font-poppins text-[18px] md:text-[24px] font-semibold uppercase text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-white"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                aria-invalid={!!usernameError}
+                aria-describedby={usernameError ? "onboarding-username-error" : undefined}
+                className={`mt-7 md:mt-9 h-[56px] md:h-[64px] w-full rounded-[18px] bg-brand-blue px-4 text-center font-poppins text-[15px] font-semibold leading-none text-white placeholder:text-white/50 focus:outline-none focus:ring-2 sm:text-[17px] md:text-[24px] ${
+                  usernameError ? 'ring-2 ring-brand-red focus:ring-brand-red' : 'focus:ring-white'
+                }`}
               />
 
-              <p className="mt-6 md:mt-8 text-center font-poppins text-[12px] md:text-[14px] font-semibold uppercase text-white/50">
+              {usernameError && (
+                <p
+                  id="onboarding-username-error"
+                  role="alert"
+                  className="mt-2 px-2 text-center font-poppins text-[12px] font-semibold leading-snug text-brand-red md:text-[13px]"
+                >
+                  {usernameError}
+                </p>
+              )}
+
+              <p className={`${usernameError ? 'mt-4 md:mt-6' : 'mt-6 md:mt-8'} text-center font-poppins text-[12px] md:text-[14px] font-semibold uppercase text-white/50`}>
                 {t("onboarding.chooseAvatar")}
               </p>
 
@@ -315,7 +346,7 @@ export function OnboardingFlow({ onComplete, isSubmitting = false }: OnboardingF
                     {t("onboarding.saving")}
                   </span>
                 ) : (
-                  <>Let&apos;s Go</>
+                  <>{t("onboarding.letsGo")}</>
                 )}
               </button>
             </motion.div>

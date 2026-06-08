@@ -544,6 +544,7 @@
     "chooseAvatar": "აირჩიეთ თქვენი ავატარი",
     "selectAvatar": "აირჩიეთ {color} ავატარი",
     "searchAndSelectClub": "მოძებნე და აირჩიე შენი კლუბი",
+    "usernameTaken": "ეს სახელი უკვე დაკავებულია. სცადეთ სხვა.",
     "toastWelcome": "მოგესალმება QuizBall!",
     "toastWelcomeDescription": "შენი საფეხბურთო თავგადასავალი ახლა იწყება!",
     "toastSaveFailed": "პარამეტრების შენახვა ვერ მოხერხდა",

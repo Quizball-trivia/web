@@ -335,6 +335,7 @@
     "chooseAvatar": "Choose your avatar",
     "selectAvatar": "Select {color} avatar",
     "searchAndSelectClub": "Search and select your club",
+    "usernameTaken": "This username is already taken. Try another one.",
     "toastWelcome": "Welcome to QuizBall!",
     "toastWelcomeDescription": "Your football trivia journey begins now!",
     "toastSaveFailed": "Failed to save your preferences",

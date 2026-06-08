@@ -21,8 +21,8 @@ interface WelcomeOpenInBrowserModalProps {
 export function WelcomeOpenInBrowserModal({ open, platform, app, onClose }: WelcomeOpenInBrowserModalProps) {
   return (
     <Dialog open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
-      <DialogContent className="max-w-[400px] rounded-3xl border-none bg-brand-blue p-6 sm:p-7 [&>button:last-child]:hidden">
-        <ModalCloseButton onClose={onClose} />
+      <DialogContent className="max-h-[88vh] max-w-[400px] overflow-y-auto rounded-3xl border-none bg-brand-blue px-5 pb-5 pt-14 sm:p-7 [&>button:last-child]:hidden">
+        <ModalCloseButton onClose={onClose} className="right-3 top-3 sm:right-4 sm:top-4" />
         <InAppBrowserInstructions platform={platform} app={app} />
       </DialogContent>
     </Dialog>
