@@ -197,8 +197,8 @@ export function ModeSelectionScreen({
         <Image
           src="/assets/brand/ranked-hands-trophy.svg"
           alt=""
-          width={346}
-          height={283}
+          width={257}
+          height={294}
           className="hidden lg:block absolute left-[52.6%] top-[15%] h-[90%] w-auto -translate-x-1/2 object-contain object-top pointer-events-none"
         />
 
@@ -310,9 +310,9 @@ export function ModeSelectionScreen({
                 <Image
                   src="/assets/brand/ranked-hands-trophy.svg"
                   alt=""
-                  width={200}
-                  height={200}
-                  className="h-[176px] w-[176px] object-contain pointer-events-none"
+                  width={257}
+                  height={294}
+                  className="h-[176px] w-auto object-contain pointer-events-none"
                 />
                 {!rankedProfileLoading && (
                   <WinRateStat
