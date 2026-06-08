@@ -1263,7 +1263,9 @@
     "openBrowserStep": "Choose \"Open in browser\" or \"Open in external browser\".",
     "genericInstructions": "Open this link in your browser to continue.",
     "orCopyLink": "Or copy the link",
-    "linkCopied": "Link copied. Paste it in your browser."
+    "linkCopied": "Link copied. Paste it in your browser.",
+    "copyInviteLink": "Copy invite link",
+    "inviteLinkCopied": "Invite link copied"
   },
   "errors": {
     "INTERNAL_ERROR": "Something went wrong",

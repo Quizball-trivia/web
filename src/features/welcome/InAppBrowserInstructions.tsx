@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { InAppBrowserApp, Platform } from '@/lib/auth/in-app-browser';
-import { extractFriendInviteCodeFromPath } from '@/lib/friend/inviteCode';
+import { normalizePostAuthRedirect, peekPostAuthRedirect } from '@/lib/auth/postAuthRedirect';
 
 interface InAppBrowserInstructionsProps {
   platform: Platform;
@@ -18,17 +18,20 @@ export function InAppBrowserInstructions({ platform, app }: InAppBrowserInstruct
   const hasMenuInstructions = platform === 'ios' || platform === 'android';
 
   // Only offer "copy the link" when the current URL carries something worth
-  // reopening — i.e. a friend-lobby invite (/friend/room/CODE). Copying the bare
-  // homepage URL is pointless, so we hide the button for a plain quizball.io link.
-  const hasInviteLink = useMemo(() => {
-    if (typeof window === 'undefined') return false;
-    return extractFriendInviteCodeFromPath(window.location.pathname) !== null;
+  // reopening — i.e. a friend-lobby invite (/friend/room/CODE). AppAuthGate
+  // redirects logged-out invite visitors to "/" and stores the invite path for
+  // post-auth return, so read that remembered path too.
+  const inviteLink = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+
+    const invitePath = normalizePostAuthRedirect(window.location.pathname) ?? peekPostAuthRedirect();
+    return invitePath ? `${window.location.origin}${invitePath}` : null;
   }, []);
 
   const handleCopy = async () => {
-    if (typeof window === 'undefined') return;
+    if (!inviteLink) return;
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      await navigator.clipboard.writeText(inviteLink);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -58,13 +61,13 @@ export function InAppBrowserInstructions({ platform, app }: InAppBrowserInstruct
         )}
       </div>
 
-      {hasInviteLink && (
+      {inviteLink && (
         <button
           type="button"
           onClick={handleCopy}
-          className="mt-4 block w-full text-center font-poppins text-[12px] font-medium text-white/75 underline-offset-2 hover:text-white hover:underline"
+          className="mt-4 flex min-h-12 w-full items-center justify-center rounded-2xl bg-white px-4 text-center font-poppins text-[13px] font-semibold uppercase text-brand-blue transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/45"
         >
-          {copied ? t('inAppBrowser.linkCopied') : t('inAppBrowser.orCopyLink')}
+          {copied ? t('inAppBrowser.inviteLinkCopied') : t('inAppBrowser.copyInviteLink')}
         </button>
       )}
     </>

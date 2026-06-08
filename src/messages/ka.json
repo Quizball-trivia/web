@@ -1263,7 +1263,9 @@
     "openBrowserStep": "აირჩიეთ \"Open in browser\" ან \"Open in external browser\".",
     "genericInstructions": "გასაგრძელებლად გახსენით ეს ბმული თქვენს ბრაუზერში.",
     "orCopyLink": "ან დააკოპირეთ ბმული",
-    "linkCopied": "ბმული დაკოპირდა. ჩასვით თქვენს ბრაუზერში."
+    "linkCopied": "ბმული დაკოპირდა. ჩასვით თქვენს ბრაუზერში.",
+    "copyInviteLink": "მოწვევის ბმულის კოპირება",
+    "inviteLinkCopied": "მოწვევის ბმული დაკოპირდა"
   },
   "errors": {
     "INTERNAL_ERROR": "რაღაც შეფერხდა",
