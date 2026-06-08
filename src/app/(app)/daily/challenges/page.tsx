@@ -188,10 +188,6 @@ export default function DailyChallengesPage() {
     () => challenges.filter((c) => c.completedToday).reduce((sum, c) => sum + c.coinReward, 0),
     [challenges],
   );
-  const totalXp = useMemo(
-    () => challenges.reduce((sum, c) => sum + c.xpReward, 0),
-    [challenges],
-  );
   const progressPct = challenges.length > 0 ? (completedCount / challenges.length) * 100 : 0;
 
   return (
@@ -277,34 +273,6 @@ export default function DailyChallengesPage() {
           </div>
         )}
 
-        {/* Bottom stats */}
-        {!isLoading && challenges.length > 0 && (
-          <div className="mt-8 hidden flex-wrap items-end gap-8 md:mt-10 md:flex">
-            <div className="flex flex-col items-center">
-              <p className="font-poppins text-xs uppercase tracking-wider text-white mb-2">
-                {t('dailyGames.hubRewardRules')}
-              </p>
-              <div className="flex flex-wrap justify-center gap-2">
-                <span className="inline-flex items-center gap-2 rounded-full bg-brand-yellow/15 px-4 py-1.5 text-sm font-black text-brand-yellow">
-                  {t('dailyGames.hubRewardMax', { amount: "1,000" })}
-                  <Image src="/assets/coin-1.png" alt="" width={20} height={20} className="size-5 object-contain" />
-                </span>
-                <span className="inline-flex items-center gap-2 rounded-full bg-brand-yellow/15 px-4 py-1.5 text-sm font-black text-brand-yellow">
-                  {t('dailyGames.hubRewardPerCorrect', { amount: "20" })}
-                  <Image src="/assets/coin-1.png" alt="" width={20} height={20} className="size-5 object-contain" />
-                </span>
-              </div>
-            </div>
-            <div className="flex flex-col items-center">
-              <p className="font-poppins text-xs uppercase tracking-wider text-white mb-2">
-                {t('dailyGames.hubEarn')}
-              </p>
-              <span className="inline-flex items-center rounded-full bg-brand-green-light px-4 py-1.5 text-sm font-black text-white">
-                {totalXp} XP
-              </span>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
