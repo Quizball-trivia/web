@@ -73,7 +73,17 @@ export default function PlayPage() {
     matchType?: "ranked" | "friendly";
   }) => {
     // Always clear stale realtime state before opening a new game flow.
+    const previousSessionState = useRealtimeMatchStore.getState().sessionState;
     resetRealtime();
+    if (params.mode === "ranked" && previousSessionState) {
+      useRealtimeMatchStore.getState().setSessionState(previousSessionState);
+      logSocketDebug("ranked preserved session state after realtime reset", {
+        state: previousSessionState.state,
+        queueSearchId: previousSessionState.queueSearchId,
+        waitingLobbyId: previousSessionState.waitingLobbyId,
+        activeMatchId: previousSessionState.activeMatchId,
+      });
+    }
     useRankedMatchmakingStore.getState().clearRankedMatchmaking();
 
     // For ranked mode, start matchmaking without pre-fetching questions
