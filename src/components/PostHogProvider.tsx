@@ -19,13 +19,8 @@ function PostHogPageViewInner(): ReactElement {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // Track pageviews on real deployments — production AND staging ("preview").
-    const deployEnv = process.env.NEXT_PUBLIC_VERCEL_ENV;
-    if (
-      pathname &&
-      process.env.NEXT_PUBLIC_POSTHOG_KEY &&
-      (deployEnv === 'production' || deployEnv === 'preview')
-    ) {
+    // Track pageviews wherever a PostHog key is configured (prod + staging).
+    if (pathname && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
       let url = window.origin + pathname;
       if (searchParams && searchParams.toString()) {
         url = url + `?${searchParams.toString()}`;

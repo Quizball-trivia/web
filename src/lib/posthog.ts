@@ -7,12 +7,12 @@ type AnalyticsProperties = Record<string, AnalyticsValue>;
 
 let lastIdentifySignature: string | null = null;
 
-// PostHog runs on real deployments — production AND staging (Vercel "preview"),
-// which use separate project keys. Locally (VERCEL_ENV "development"/unset) we
-// just log to the console instead of sending events.
+// PostHog runs wherever a project key is configured (prod + staging use separate
+// keys); local dev has no key so events are skipped. Gating on the key — not
+// VERCEL_ENV — because NEXT_PUBLIC_VERCEL_ENV does not reliably inline at build
+// on the prod Vercel build, which silently disabled all browser analytics.
 function isTrackingEnv(): boolean {
-  const deployEnv = process.env.NEXT_PUBLIC_VERCEL_ENV;
-  return deployEnv === 'production' || deployEnv === 'preview';
+  return Boolean(process.env.NEXT_PUBLIC_POSTHOG_KEY);
 }
 
 // Identify user when they log in

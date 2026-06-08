@@ -10,13 +10,10 @@ const OBJECTIVES_FLAG = 'objectives_enabled';
 // staging/prod. "true" force-shows; unset falls back to the PostHog flag.
 const envOverride = process.env.NEXT_PUBLIC_OBJECTIVES_ENABLED;
 
-// PostHog (and therefore flags) only runs on real deployments — production and
-// staging ("preview"). Locally it's off, so we fall back to "visible" unless the
-// env override above hides it.
-const deployEnv = process.env.NEXT_PUBLIC_VERCEL_ENV;
-const posthogActive =
-  Boolean(process.env.NEXT_PUBLIC_POSTHOG_KEY) &&
-  (deployEnv === 'production' || deployEnv === 'preview');
+// PostHog (and therefore flags) runs wherever a project key is configured
+// (prod + staging). Locally there's no key, so we fall back to "visible" unless
+// the env override above hides it.
+const posthogActive = Boolean(process.env.NEXT_PUBLIC_POSTHOG_KEY);
 
 /**
  * Reactively reports whether the Objectives feature is enabled. Precedence:
