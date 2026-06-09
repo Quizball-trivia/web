@@ -341,6 +341,7 @@ export function RankedCategoryBlockingScreen() {
     return Boolean(useRankedMatchmakingStore.getState().rankedFoundOpponent) && !hasExistingDraftProgress;
   });
   const autoBanFired = useRef(false);
+  const rejoinedDraftLobbyRef = useRef<string | null>(null);
   const [soundMuted, setSoundMuted] = useState(() => getIsMuted());
 
   const opponentMember = useMemo(
@@ -359,6 +360,15 @@ export function RankedCategoryBlockingScreen() {
   );
   const opponentId = opponentMember?.userId ?? 'opponent';
   const opponentUsername = opponentMember?.username ?? t('possession.opponent');
+
+  useEffect(() => {
+    const lobbyId = draft?.lobbyId ?? lobby?.lobbyId;
+    if (!lobbyId || !selfUserId) return;
+    if (rejoinedDraftLobbyRef.current === lobbyId) return;
+    rejoinedDraftLobbyRef.current = lobbyId;
+    getSocket().emit('draft:rejoin', { lobbyId });
+    logger.info('Socket emit draft:rejoin', { lobbyId });
+  }, [draft?.lobbyId, lobby?.lobbyId, selfUserId]);
 
   useEffect(() => {
     if (!draft || showShowdown || draftPaused) return;
