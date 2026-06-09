@@ -225,6 +225,9 @@ export function StoreScreen() {
     return set;
   }, [inventoryData]);
 
+  const canAffordPart = (part: AvatarPart) =>
+    !part.priceCoins || (wallet?.coins ?? 0) >= part.priceCoins;
+
   const productsBySlug = useMemo(() => {
     return new Map((productsData?.items ?? []).map((item) => [item.slug, item]));
   }, [productsData]);
@@ -433,6 +436,11 @@ export function StoreScreen() {
       checkoutMutation.mutate(buyModal.productSlug);
       return;
     }
+    if (buyModal.avatarPart && !canAffordPart(buyModal.avatarPart)) {
+      toast.error(t("store.notEnoughCoins"));
+      setBuyModal(null);
+      return;
+    }
     const partToEquip = buyModal.avatarPart;
     coinPurchaseMutation.mutate(buyModal.productSlug, {
       onSuccess: async () => {
@@ -552,6 +560,7 @@ export function StoreScreen() {
                     price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
                     mannequinPart={part}
                     owned={ownedPartIds.has(part.id)}
+                    affordable={canAffordPart(part)}
                     onBuy={() => openAvatarPartModal(part)}
                   />
                 </motion.div>
@@ -579,6 +588,7 @@ export function StoreScreen() {
                     price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
                     mannequinPart={part}
                     owned={ownedPartIds.has(part.id)}
+                    affordable={canAffordPart(part)}
                     onBuy={() => openAvatarPartModal(part)}
                   />
                 </motion.div>
@@ -606,6 +616,7 @@ export function StoreScreen() {
                     price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
                     mannequinPart={part}
                     owned={ownedPartIds.has(part.id)}
+                    affordable={canAffordPart(part)}
                     onBuy={() => openAvatarPartModal(part)}
                   />
                 </motion.div>
@@ -633,6 +644,7 @@ export function StoreScreen() {
                     price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
                     imageSize="lg"
                     owned={ownedPartIds.has(part.id)}
+                    affordable={canAffordPart(part)}
                     onBuy={() => openAvatarPartModal(part)}
                   />
                 </motion.div>
