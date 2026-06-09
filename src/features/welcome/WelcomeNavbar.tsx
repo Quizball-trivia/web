@@ -1,9 +1,11 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { AppLogo } from '@/components/AppLogo';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { useLocale } from '@/contexts/LocaleContext';
+import { useGeoEligibility } from '@/lib/geo/useGeoEligibility';
 
 interface WelcomeNavbarProps {
   wcDaysLeft: number;
@@ -11,6 +13,8 @@ interface WelcomeNavbarProps {
 
 export function WelcomeNavbar({ wcDaysLeft }: WelcomeNavbarProps) {
   const { t, locale } = useLocale();
+  const { showBetson } = useGeoEligibility();
+
   return (
     <header className="flex h-16 md:h-20 items-center justify-between gap-2 px-6 md:px-12 lg:px-20 shrink-0 bg-surface-page/80 backdrop-blur-md sticky top-0 z-50">
       {/* Mobile: three slots so the switcher is centered between logo and cup.
@@ -26,6 +30,14 @@ export function WelcomeNavbar({ wcDaysLeft }: WelcomeNavbarProps) {
       </div>
 
       <div className="flex flex-1 items-center justify-end gap-3 md:gap-4">
+        {showBetson ? (
+          <Link
+            href="/events"
+            className="font-poppins text-xs font-black uppercase text-brand-yellow transition-colors hover:text-white md:text-sm"
+          >
+            Betson
+          </Link>
+        ) : null}
         {/* Switcher in the right cluster — desktop only */}
         <div className="hidden md:flex">
           <LanguageSwitcher locale={locale} />
