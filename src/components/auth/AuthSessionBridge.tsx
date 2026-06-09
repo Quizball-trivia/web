@@ -14,6 +14,11 @@ export function AuthSessionBridge() {
         return;
       }
 
+      const authState = useAuthStore.getState();
+      if (event === 'TOKEN_REFRESHED' && authState.status === 'authenticated' && authState.user) {
+        return;
+      }
+
       if (
         event === 'SIGNED_IN' ||
         event === 'INITIAL_SESSION' ||
