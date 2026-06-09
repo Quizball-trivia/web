@@ -252,7 +252,8 @@
     "partViolet": "Violet",
     "partPink": "Pink",
     "equipped": "{name} equipped.",
-    "coinsPrice": "{amount} coins"
+    "coinsPrice": "{amount} coins",
+    "needMoreCoins": "Need more"
   },
   "profileScreen": {
     "changeAvatar": "Change avatar",

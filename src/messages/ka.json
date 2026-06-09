@@ -147,7 +147,8 @@
     "partViolet": "იისფერი",
     "partPink": "ვარდისფერი",
     "equipped": "{name} მორგებულია.",
-    "coinsPrice": "{amount} მონეტა"
+    "coinsPrice": "{amount} მონეტა",
+    "needMoreCoins": "არ ჰყოფნის"
   },
   "profileScreen": {
     "rp": "RP",
