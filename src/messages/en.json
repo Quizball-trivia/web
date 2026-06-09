@@ -191,7 +191,7 @@
   "store": {
     "sessionExpired": "Session expired. Please sign in again.",
     "ticketsAlreadyFull": "Tickets are already full.",
-    "ticketPurchaseCooldown": "You can buy one ticket every 24 hours.",
+    "ticketPurchaseCooldown": "You can buy up to 3 tickets every 24 hours.",
     "ticketUnlocksIn": "Unlocks in {time}",
     "unableToStartCheckout": "Unable to start checkout.",
     "purchaseCompleted": "Purchase completed.",

@@ -87,7 +87,7 @@
     "partWayfarer": "საბაზისო სათვალე",
     "sessionExpired": "სესია ამოიწურა. გთხოვთ, ხელახლა გაიაროთ ავტორიზაცია.",
     "ticketsAlreadyFull": "ბილეთების რაოდენობა უკვე მაქსიმალურია.",
-    "ticketPurchaseCooldown": "ბილეთის ყიდვა 24 საათში ერთხელ შეგიძლია.",
+    "ticketPurchaseCooldown": "24 საათში 3 ბილეთამდე ყიდვა შეგიძლია.",
     "ticketUnlocksIn": "გაიხსნება {time}-ში",
     "unableToStartCheckout": "გადახდის დაწყება ვერ მოხერხდა.",
     "purchaseCompleted": "შესყიდვა დასრულებულია.",
