@@ -39,6 +39,17 @@ describe("answerMatching", () => {
     expect(fuzzyMatchesAnswer("capelo", ["Fabio Capello"])).toBe(true);
   });
 
+  it("accepts a short surname that is a whole word in the answer", () => {
+    expect(fuzzyMatchesAnswer("ake", ["Nathan Ake"])).toBe(true);
+    expect(fuzzyMatchesAnswer("Aké", ["Nathan Ake"])).toBe(true);
+    expect(fuzzyMatchesAnswer("son", ["Heung-min Son"])).toBe(true);
+  });
+
+  it("does not fuzzy-match short inputs that are not whole words", () => {
+    expect(fuzzyMatchesAnswer("joe", ["Jose Mourinho"])).toBe(false);
+    expect(fuzzyMatchesAnswer("ake", ["Nathaniel"])).toBe(false);
+  });
+
   it("accepts common club abbreviations in either direction", () => {
     const groups = [
       { display: "Manchester United", acceptedAnswers: ["Man United", "Man Utd"] },
