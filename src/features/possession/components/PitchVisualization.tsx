@@ -24,6 +24,7 @@ export function PitchVisualization(props: PitchVisualizationProps) {
     targetGoal,
     barBattle,
     barBattleVariant,
+    ambientPulses,
     hideBall = false,
   } = props;
   const {
@@ -205,6 +206,7 @@ export function PitchVisualization(props: PitchVisualizationProps) {
               renderHtmlPitchActors={renderHtmlPitchActors}
               barBattle={barBattle}
               barBattleVariant={barBattleVariant}
+              ambientPulses={ambientPulses}
             />
           )}
 

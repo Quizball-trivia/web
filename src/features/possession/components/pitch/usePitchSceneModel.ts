@@ -392,9 +392,15 @@ export function usePitchSceneModel({
         opacity: 1,
       };
   const renderHtmlPitchActors = true;
+  // Actor positions are expressed as TRANSFORM percentages (x/y of a
+  // full-pitch-sized wrapper), NOT left/top. Animating left/top forces a
+  // style-recalc + layout + paint of the multi-image avatar subtree on every
+  // spring frame, which is what made the landing animation stutter on
+  // mobile Blink (Chrome/Android) while WebKit coped. Transforms stay on the
+  // compositor. See PitchHtmlActors for the matching wrapper structure.
   const actorPosition = (x: number, y: number) => ({
-    left: `${(isPortrait ? (y + 30) / 290 : x / 500) * 100}%`,
-    top: `${(isPortrait ? (500 - x) / 500 : (y + 30) / 290) * 100}%`,
+    x: `${(isPortrait ? (y + 30) / 290 : x / 500) * 100}%`,
+    y: `${(isPortrait ? (500 - x) / 500 : (y + 30) / 290) * 100}%`,
   });
   const actorMotionPosition = (target: { x: number | number[]; y: number | number[] }) => {
     if (typeof target.x === 'number' && typeof target.y === 'number') {
@@ -405,15 +411,15 @@ export function usePitchSceneModel({
     const ys = Array.isArray(target.y) ? target.y : [target.y];
     const keyframeCount = Math.max(xs.length, ys.length);
     return {
-      left: Array.from({ length: keyframeCount }, (_, i) => {
+      x: Array.from({ length: keyframeCount }, (_, i) => {
         const x = xs[Math.min(i, xs.length - 1)] ?? xs[xs.length - 1] ?? 0;
         const y = ys[Math.min(i, ys.length - 1)] ?? ys[ys.length - 1] ?? 0;
-        return actorPosition(x, y).left;
+        return actorPosition(x, y).x;
       }),
-      top: Array.from({ length: keyframeCount }, (_, i) => {
+      y: Array.from({ length: keyframeCount }, (_, i) => {
         const x = xs[Math.min(i, xs.length - 1)] ?? xs[xs.length - 1] ?? 0;
         const y = ys[Math.min(i, ys.length - 1)] ?? ys[ys.length - 1] ?? 0;
-        return actorPosition(x, y).top;
+        return actorPosition(x, y).y;
       }),
     };
   };
