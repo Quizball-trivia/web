@@ -90,12 +90,12 @@ function ChallengeCard({
         {/* Reserve 2 title lines (min-h) and TOP-align so a 1-line and a 2-line
             title share the same top baseline across cards in a row, and the
             description below them also starts at the same height. */}
-        <h3 className={`font-poppins flex min-h-[2.1rem] items-start justify-center px-7 text-center text-[16px] uppercase leading-[0.95] md:min-h-[3.5rem] md:px-0 md:text-[28px] md:mt-2 ${isCompleted ? "text-white md:mt-8" : "text-black"}`}>
+        <h3 className={`font-poppins flex min-h-[2.1rem] items-start justify-center px-7 text-center text-[16px] uppercase leading-[1.1] md:min-h-[3.5rem] md:px-0 md:text-[28px] md:mt-2 md:leading-[0.95] ${isCompleted ? "text-white md:mt-8" : "text-black"}`}>
           {challenge.title}
         </h3>
         {/* No line-clamp: the full description always shows and the card (min-h,
             not fixed h) grows to fit it. mb keeps a gap above PLAY. */}
-        <p className={`mt-3 mb-4 text-center text-[10px] font-bold leading-tight md:mt-5 md:mb-6 md:text-[18px] md:font-semibold md:leading-snug md:px-4 ${isCompleted ? "text-white/75 md:text-white/80" : "text-black/80"}`}>
+        <p className={`mt-3 mb-4 text-center text-[10px] font-bold leading-snug [word-spacing:0.1em] md:mt-5 md:mb-6 md:text-[18px] md:font-semibold md:leading-snug md:px-4 md:[word-spacing:normal] ${isCompleted ? "text-white/75 md:text-white/80" : "text-black/80"}`}>
           {challenge.availableToday
             ? challenge.description
             : t('dailyGames.hubUnavailable')}
