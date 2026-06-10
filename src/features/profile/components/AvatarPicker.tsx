@@ -92,15 +92,12 @@ export function AvatarPicker({
   }
   const isDirty = encodeAvatarCustomization(draft) !== encodeAvatarCustomization(current);
 
-  /** Set of part ids the user owns (free + purchased). In dev mode, everything is unlocked
-   *  so designers/devs can preview all items in the picker. */
+  /** Set of part ids the user owns (free + purchased). Mirrors the backend's
+   *  ownership check (`assertAvatarCustomizationAllowed`) — no dev-mode
+   *  unlock here, since saving an unowned part is rejected server-side
+   *  anyway and the mismatch made local saves fail confusingly. */
   const ownedPartIds = useMemo(() => {
     const set = new Set<string>();
-    if (process.env.NODE_ENV === "development") {
-      for (const part of ALL_AVATAR_PARTS) set.add(part.id);
-      for (const skin of SKIN_PARTS) set.add(skin.id);
-      return set;
-    }
     for (const part of ALL_AVATAR_PARTS) {
       if (part.free) set.add(part.id);
     }
