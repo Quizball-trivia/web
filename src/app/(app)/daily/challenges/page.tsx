@@ -103,7 +103,7 @@ function ChallengeCard({
         {/* Mobile reward pills — only for an OPEN challenge. A completed card
             drops these and shows the DONE button instead, matching the web. */}
         {!isCompleted ? (
-          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 lg:hidden">
+          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 md:hidden">
             <span className="inline-flex h-6 items-center gap-1 rounded-full bg-white/70 px-2.5 text-[10px] font-black text-brand-gold-ink">
               {challenge.coinReward}
               <Image src="/assets/coin-1.png" alt="" width={16} height={16} className="size-4 object-contain" />
