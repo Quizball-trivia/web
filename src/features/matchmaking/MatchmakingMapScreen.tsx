@@ -173,6 +173,9 @@ function pickRandom<T>(items: readonly T[], indexFallback: number): T {
   return items[Math.floor(Math.random() * items.length)] ?? items[indexFallback % items.length];
 }
 
+/** How many fake pins to show while searching (pool is larger; we sample). */
+const SEARCH_PIN_COUNT = 58;
+
 function generateFakePlayers(): FakePlayer[] {
   // Dedupe by city: several cities appear in both CITY_DATA and
   // EXTRA_SEARCH_LOCATIONS (Ankara, Birmingham, Delhi, ...). Without this the
@@ -193,7 +196,7 @@ function generateFakePlayers(): FakePlayer[] {
       seenCities.add(c.city);
       return true;
     }),
-  ).slice(0, CITY_DATA.length + 12);
+  ).slice(0, SEARCH_PIN_COUNT);
   const names = shuffled(SEARCH_PLAYER_NAMES);
   const avatarCustomizations = shuffled(CITY_DATA.map((c) => c.customization));
 
@@ -212,7 +215,8 @@ function generateFakePlayers(): FakePlayer[] {
       flag: c.flag,
       city: c.city,
       country: c.country,
-      delay: 0.35 + i * 0.1,
+      // Stagger-in delay: with ~58 pins keep the full roll-in under ~3.5s.
+      delay: 0.35 + i * 0.055,
       source: "randomized_search_city",
     };
   });
