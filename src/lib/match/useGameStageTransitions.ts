@@ -433,13 +433,22 @@ export function useGameStageTransitions({
         return;
       }
       if (!latestRealtime.sessionState) {
-        logger.info("Ranked queue join waiting for session state before initial search");
-        logSocketDebug("ranked queue_join waiting for session state", {
+        // No session snapshot — e.g. right after ranked Play Again, which
+        // resets the realtime store (sessionState -> null). `session:state`
+        // is only PUSHED by the server (on connect / transitions); there is
+        // no client-side way to request one, so WAITING here deadlocked
+        // Play Again forever: the join was never emitted and the search UI
+        // hung (staging 2026-06-10 — server logs show zero queue_join after
+        // the result screen). The server validates the join authoritatively
+        // anyway (session guard + queue dedupe + pairing markers) and
+        // answers `session:blocked` when it must — so proceed and let the
+        // server be the judge instead of blocking on a missing cache.
+        logger.info("Ranked queue join proceeding without session snapshot (server validates)");
+        logSocketDebug("ranked queue_join proceeding without session snapshot", {
           ...getSocketDebugSnapshot(socket),
           stage,
           matchType: config?.matchType ?? null,
         });
-        return;
       }
       rankedRequestRef.current = true;
       rankedRetryCountRef.current = 0;

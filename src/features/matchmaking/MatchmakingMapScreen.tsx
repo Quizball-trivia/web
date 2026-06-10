@@ -22,10 +22,12 @@ import {
   PROJ_CENTER,
   PROJ_SCALE,
   SEARCH_PLAYER_NAMES,
+  type SearchRegion,
   clamp,
   getGeoObject,
   projectPoint,
   resolveOpponentLocation,
+  searchRegionOf,
 } from "@/lib/geo";
 import { MapPlayerPin, type FakePlayer } from "./components/MapPlayerPin";
 import { logger } from "@/utils/logger";
@@ -173,8 +175,59 @@ function pickRandom<T>(items: readonly T[], indexFallback: number): T {
   return items[Math.floor(Math.random() * items.length)] ?? items[indexFallback % items.length];
 }
 
+/**
+ * Regional quotas for the searching pins. Tuned so the map reads as a
+ * busy-EU/CIS player base: dense across Europe + Georgia/Caucasus, a handful
+ * across Asia/Africa, and only a few in the Americas/Oceania.
+ */
+const SEARCH_REGION_WEIGHTS: Record<SearchRegion, number> = {
+  // Georgia + Turkey/Greece/Ukraine/southern-Russia neighborhood — densest.
+  caucasus: 13,
+  // A few scattered across the rest of Europe / the world.
+  europe: 6,
+  asia: 3,
+  africa: 2,
+  americas: 3,
+  oceania: 1,
+};
+const SEARCH_REGION_WEIGHT_TOTAL = Object.values(SEARCH_REGION_WEIGHTS).reduce(
+  (a, b) => a + b,
+  0,
+);
+
+const SEARCH_PIN_MIN = 10;
+const SEARCH_PIN_MAX = 40;
+
+/**
+ * How many pins to show for this search: follows a daily activity curve in
+ * the player's local time (deep-night trough, daytime ramp, peak around
+ * 21:00–22:00) plus ±15% per-search jitter, clamped to 10–40 so the queue
+ * always looks alive but believable.
+ */
+export function searchPinTargetCount(
+  now: Date = new Date(),
+  random: () => number = Math.random,
+): number {
+  const h = now.getHours() + now.getMinutes() / 60;
+  let level: number;
+  if (h < 6) level = 0.05 + (h / 6) * 0.1; // deep night ~ trough
+  else if (h < 12) level = 0.15 + ((h - 6) / 6) * 0.35; // morning ramp
+  else if (h < 18) level = 0.5 + ((h - 12) / 6) * 0.2; // afternoon
+  else if (h < 21.5) level = 0.7 + ((h - 18) / 3.5) * 0.3; // evening → peak 21:30
+  else level = 1.0 - ((h - 21.5) / 2.5) * 0.55; // tapering toward midnight
+  const jitter = 0.85 + random() * 0.3;
+  const count = Math.round(
+    (SEARCH_PIN_MIN + (SEARCH_PIN_MAX - SEARCH_PIN_MIN) * level) * jitter,
+  );
+  return Math.max(SEARCH_PIN_MIN, Math.min(SEARCH_PIN_MAX, count));
+}
+
 function generateFakePlayers(): FakePlayer[] {
-  const cityPool = shuffled([
+  // Dedupe by city: several cities appear in both CITY_DATA and
+  // EXTRA_SEARCH_LOCATIONS (Ankara, Birmingham, Delhi, ...). Without this the
+  // shuffle can pick both copies and render two pins stacked on one spot.
+  const seenCities = new Set<string>();
+  const dedupedPool = [
     ...CITY_DATA.map(({ lon, lat, city, country, flag }) => ({
       lon,
       lat,
@@ -183,7 +236,36 @@ function generateFakePlayers(): FakePlayer[] {
       flag,
     })),
     ...EXTRA_SEARCH_LOCATIONS,
-  ]).slice(0, CITY_DATA.length + 6);
+  ].filter((c) => {
+    if (seenCities.has(c.city)) return false;
+    seenCities.add(c.city);
+    return true;
+  });
+
+  // Time-of-day pin budget, split across regions by weight. Rounding drift
+  // and short buckets are topped up from the remaining pool afterwards.
+  const targetCount = searchPinTargetCount();
+  const buckets: Record<SearchRegion, typeof dedupedPool> = {
+    caucasus: [], europe: [], asia: [], africa: [], americas: [], oceania: [],
+  };
+  for (const c of dedupedPool) buckets[searchRegionOf(c.country)].push(c);
+  const picked: typeof dedupedPool = [];
+  for (const region of Object.keys(buckets) as SearchRegion[]) {
+    const quota = Math.round(
+      (SEARCH_REGION_WEIGHTS[region] / SEARCH_REGION_WEIGHT_TOTAL) * targetCount,
+    );
+    picked.push(...shuffled(buckets[region]).slice(0, quota));
+  }
+  if (picked.length < targetCount) {
+    const pickedCities = new Set(picked.map((c) => c.city));
+    picked.push(
+      ...shuffled(dedupedPool.filter((c) => !pickedCities.has(c.city))).slice(
+        0,
+        targetCount - picked.length,
+      ),
+    );
+  }
+  const cityPool = shuffled(picked).slice(0, targetCount);
   const names = shuffled(SEARCH_PLAYER_NAMES);
   const avatarCustomizations = shuffled(CITY_DATA.map((c) => c.customization));
 
@@ -202,7 +284,8 @@ function generateFakePlayers(): FakePlayer[] {
       flag: c.flag,
       city: c.city,
       country: c.country,
-      delay: 0.35 + i * 0.1,
+      // Stagger-in delay: with ~58 pins keep the full roll-in under ~3.5s.
+      delay: 0.35 + i * 0.055,
       source: "randomized_search_city",
     };
   });
@@ -547,25 +630,31 @@ export function MatchmakingMapScreen({
       );
     });
 
-    // Ongoing churn: every ~1.4s, hide one random pin and (after a beat) show
-    // another, so the set of visible pins keeps changing.
+    // Ongoing churn: every ~1.1s either someone "leaves" (hide a random
+    // visible pin) or "joins" (show a random hidden pin), so the visible
+    // count breathes up and down like a live queue instead of staying fixed.
+    // Drift is bounded so the map never empties or fully saturates.
     const churn = setInterval(() => {
       const ids = fakePlayers.map((p) => p.id);
       if (ids.length === 0) return;
-      const hideId = ids[Math.floor(Math.random() * ids.length)];
       setVisiblePins((prev) => {
         const next = new Set(prev);
-        next.delete(hideId);
+        const hidden = ids.filter((id) => !next.has(id));
+        const minVisible = Math.floor(ids.length * 0.6);
+        const join = next.size <= minVisible
+          ? true
+          : hidden.length === 0
+            ? false
+            : Math.random() < 0.5;
+        if (join && hidden.length > 0) {
+          next.add(hidden[Math.floor(Math.random() * hidden.length)]);
+        } else if (next.size > 0) {
+          const visible = [...next];
+          next.delete(visible[Math.floor(Math.random() * visible.length)]);
+        }
         return next;
       });
-      // Bring a (possibly different) random pin back shortly after, so the
-      // overall count stays lively without draining.
-      const showTimer = setTimeout(() => {
-        const showId = ids[Math.floor(Math.random() * ids.length)];
-        setVisiblePins((prev) => new Set(prev).add(showId));
-      }, 500 + Math.random() * 500);
-      timers.push(showTimer);
-    }, 1400);
+    }, 1100);
 
     return () => {
       timers.forEach(clearTimeout);
@@ -607,7 +696,7 @@ export function MatchmakingMapScreen({
   }, [showFoundState, fakePlayers, opponentPinId]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-surface-darkest bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat overflow-hidden font-fun select-none">
+    <div className="fixed inset-0 z-50 bg-surface-darkest bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat overflow-hidden font-fun select-none">
       {/* ── Map ──
           Cover the whole screen (like QuizUp) instead of letterboxing: the map
           box is sized to the LARGER of "fit by width" / "fit by height" so it
@@ -633,6 +722,14 @@ export function MatchmakingMapScreen({
             background: "#0D1117",
           }}
         >
+          {/* transformBox MUST be view-box (not fill-box): with fill-box the
+              <g> scales around the projected land bounding box origin
+              (~14.8, 55.6) while the HTML pin overlay below scales around the
+              viewBox (0,0), so every pin drifts by (scale-1)*(14.8, 55.6)
+              viewBox px — a few px while searching (pins visibly off-country),
+              and ~(33, 122) px at the found-state zoom (opponent pin lands in
+              the wrong country entirely). view-box gives both layers the same
+              origin. */}
           <motion.g
             style={{
               x: mapX,
@@ -640,7 +737,7 @@ export function MatchmakingMapScreen({
               scale: mapScale,
               originX: 0,
               originY: 0,
-              transformBox: "fill-box",
+              transformBox: "view-box",
               transformOrigin: "0px 0px",
             }}
           >

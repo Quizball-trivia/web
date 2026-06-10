@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- Category artwork URLs come from realtime/backend payloads. */
 
+import { optimizedRemoteImageProps } from "@/lib/images/remoteImage";
 import { memo, useMemo } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -117,7 +118,7 @@ function BanCategoryCardComponent({
         <>
           <div className="absolute inset-0" style={{ backgroundColor: color.bg }} />
           <img
-            src={imageUrl ?? ''}
+            {...optimizedRemoteImageProps(imageUrl ?? '', 400)}
             alt=""
             width={400}
             height={500}

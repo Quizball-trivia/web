@@ -101,11 +101,8 @@
     "coinsTitle": "მონეტები",
     "coinsSubtitle": "შეავსეთ თქვენი საფულე",
     "ticketsTitle": "ბილეთები",
-    "ticketsSubtitle": "შეავსეთ თქვენი რეიტინგული არენის ბილეთები",
     "hairTitle": "თმა",
-    "hairSubtitle": "შეუქმენით სტილი თქვენს პერსონაჟს",
     "glassesTitle": "სათვალე",
-    "glassesSubtitle": "მოერგეთ იმიჯს",
     "unlock": "განბლოკვა",
     "theArena": "არენა",
     "bundleDescription": "მიიღეთ {tickets} რეიტინგში წინსვლის დასაწყებად. ბილეთები საათობრივად ივსება, სანამ ლიმიტს არ მიაღწევთ.",
@@ -126,9 +123,7 @@
     "tickets": "ბილეთები",
     "full": "სავსეა",
     "facialHairTitle": "წვერ-ულვაში",
-    "facialHairSubtitle": "შეძინე ხასიათი",
     "jerseysTitle": "ფორმები",
-    "jerseysSubtitle": "წარმოაჩინე შენი ფერები",
     "owned": "ფლობთ",
     "partRoundShades": "მრგვალი სათვალე",
     "partAviator": "ავიატორი",
@@ -146,8 +141,10 @@
     "partRed": "წითელი",
     "partViolet": "იისფერი",
     "partPink": "ვარდისფერი",
+    "partGeorgia": "Georgia",
     "equipped": "{name} მორგებულია.",
-    "coinsPrice": "{amount} მონეტა"
+    "equip": "მორგება",
+    "needMoreCoins": "არ ჰყოფნის"
   },
   "profileScreen": {
     "rp": "RP",
@@ -333,6 +330,8 @@
   "results": {
     "xp": "XP",
     "newRank": "ახალი რანგი",
+    "rankUnlocked": "ახალი რანგი განბლოკილია!",
+    "rankLost": "რანგი დაკარგულია",
     "nextStage": "შემდეგი ეტაპი",
     "rpToNextTier": "{points} RP შემდეგ ლიგამდე",
     "maxTierReached": "მაქსიმალური ლიგა მიღწეულია",
@@ -627,7 +626,7 @@
     "putInOrder": "დაალაგე თანმიმდევრობით",
     "trueOrFalse": "მართალია თუ მცდარი",
     "highLow": "მეტი თუ ნაკლები",
-    "imposter": "თაღლითი",
+    "imposter": "Pick'em",
     "careerPath": "კარიერული გზა",
     "footballLogic": "საფეხბურთო ლოგიკა",
     "moneyDrop": "ფულის ვარდნა",
@@ -801,7 +800,8 @@
     "colRank": "ადგილი",
     "colPlayer": "მოთამაშე",
     "colTier": "ლიგა",
-    "colRP": "RP"
+    "colRP": "RP",
+    "resetsIn": "განახლდება"
   },
   "appAuthGate": {
     "warmingUp": "გახურება...",

@@ -154,6 +154,7 @@ export function ModeConfirmModal({
           alt=""
           fill
           priority
+          sizes="(min-width: 768px) 320px, 60vw"
           className={cn(
             "z-0 object-contain",
             mode === "ranked" && "translate-y-4 scale-90 sm:translate-y-5 sm:scale-95 md:translate-y-6",
@@ -284,10 +285,10 @@ export function ModeConfirmModal({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
-          // Responsive width: never wider than the viewport (keeps a 1rem
-          // gutter), capped at 600px on desktop — so it never crams on
-          // narrow-but-not-"mobile" widths (~600–767px).
-          "w-[calc(100vw-2rem)] max-w-[600px] max-h-[90vh] overflow-y-auto rounded-3xl border-0",
+          // Fixed 600px on desktop (restores the original card size so the X
+          // button and title sit right), shrinking only when the viewport is
+          // genuinely narrower than that (keeps a 1rem gutter on small screens).
+          "w-[600px] max-w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto rounded-3xl border-0",
           "px-5 pt-7 pb-7 sm:px-8 sm:pt-8 sm:pb-8",
           "[&>button]:hidden",
         )}

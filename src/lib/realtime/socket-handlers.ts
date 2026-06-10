@@ -188,7 +188,10 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     }
 
     if (data.code === 'INSUFFICIENT_TICKETS') {
-      toast.error(data.message);
+      // Localize by error code — the server message is English-only, and the
+      // errors.* namespace already carries en + ka strings for this code.
+      const locale = normalizeLocale(storage.get<string>(STORAGE_KEYS.LOCALE, 'en'));
+      toast.error(translate(locale, 'errors.INSUFFICIENT_TICKETS'));
       const qc = getQueryClient();
       if (qc) {
         void qc.invalidateQueries({ queryKey: queryKeys.store.wallet() });

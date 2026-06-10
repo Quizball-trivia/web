@@ -10,7 +10,7 @@ interface LoadingScreenProps {
   fullScreen?: boolean;
 }
 
-const LOADING_BALL_IMAGE_URL = '/assets/brand/goal-ball.png';
+const LOADING_BALL_IMAGE_URL = '/assets/brand/goal-ball.webp';
 
 function LoadingBallImage({ size = 64 }: { size?: number }) {
   return (

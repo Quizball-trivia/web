@@ -118,7 +118,7 @@ export default function DevHalftimesPage() {
   const bothBanned = Boolean(playerBan && opponentBan);
 
   return (
-    <div className="relative min-h-dvh w-full bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat">
+    <div className="relative min-h-dvh w-full bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat">
       {/* Dev toolbar */}
       <div className="absolute left-0 right-0 top-0 z-[60] flex items-center justify-between gap-2 px-3 py-2">
         <div className="flex flex-wrap gap-1.5">

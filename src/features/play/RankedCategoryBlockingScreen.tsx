@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { ShowdownScreen } from '@/components/ShowdownScreen';
 import { Volume2, VolumeX } from 'lucide-react';
 import { isMuted as getIsMuted, toggleMute } from '@/lib/sounds/gameSounds';
@@ -56,6 +57,7 @@ export interface BanCategoryViewProps {
   currentActor: 'player' | 'opponent';
   timeLeft: number;
   paused?: boolean;
+  pauseSeconds?: number | null;
   soundMuted: boolean;
   onToggleSound: () => void;
   onBanCategory: (categoryId: string) => void;
@@ -141,6 +143,7 @@ export function BanCategoryView({
   currentActor,
   timeLeft,
   paused = false,
+  pauseSeconds = null,
   soundMuted,
   onToggleSound,
   onBanCategory,
@@ -151,6 +154,40 @@ export function BanCategoryView({
 
   return (
     <div className="relative min-h-dvh flex flex-col bg-surface-page">
+      <AnimatePresence>
+        {paused && pauseSeconds != null && pauseSeconds > 0 && (
+          <motion.div
+            key="draft-disconnect-pause"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 z-40 flex items-center justify-center bg-surface-page-alt/70 px-4 backdrop-blur-[2px]"
+          >
+            <motion.div
+              initial={{ y: -12, scale: 0.96, opacity: 0 }}
+              animate={{ y: 0, scale: 1, opacity: 1 }}
+              exit={{ y: -12, scale: 0.96, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+              className="w-full max-w-sm rounded-[20px] bg-brand-blue px-6 py-6 text-center shadow-2xl"
+            >
+              <div className="font-poppins text-[11px] font-semibold uppercase tracking-[0.28em] text-white/60">
+                {t('possession.matchPaused')}
+              </div>
+              <div className="mt-2 font-poppins text-xl font-semibold uppercase text-white">
+                {t('possession.opponentDisconnected')}
+              </div>
+              <div className="mt-1 font-poppins text-sm font-semibold text-white/70">
+                {t('possession.waitingForReconnect')}
+              </div>
+              <div className="mt-4 inline-flex items-center justify-center rounded-full bg-black/30 px-6 py-2 font-poppins text-3xl font-semibold tabular-nums text-white">
+                {pauseSeconds}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── Header ── */}
       <div className="relative z-10 w-full">
         <div className="max-w-5xl mx-auto px-5 py-5 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
@@ -286,6 +323,7 @@ export function RankedCategoryBlockingScreen() {
   const lobby = useRealtimeMatchStore((state) => state.lobby);
   const draft = useRealtimeMatchStore((state) => state.draft);
   const draftPaused = useRealtimeMatchStore((state) => state.draftPaused);
+  const draftPauseUntil = useRealtimeMatchStore((state) => state.draftPauseUntil);
   const rankedFoundOpponent = useRankedMatchmakingStore((state) => state.rankedFoundOpponent);
   const rankedFoundMyRecentForm = useRankedMatchmakingStore((state) => state.rankedFoundMyRecentForm);
   const matchOpponent = useRealtimeMatchStore((state) => state.match?.opponent);
@@ -293,6 +331,7 @@ export function RankedCategoryBlockingScreen() {
   const skipDraftShowdown = useGameSessionStore((state) => state.config?.skipDraftShowdown === true);
   const { data: rankedProfile } = useRankedProfile();
   const [timeLeft, setTimeLeft] = useState(15);
+  const [draftPauseNowMs, setDraftPauseNowMs] = useState(() => Date.now());
   const [showShowdown, setShowShowdown] = useState(() => {
     if (skipDraftShowdown) return false;
     const currentDraft = useRealtimeMatchStore.getState().draft;
@@ -302,6 +341,7 @@ export function RankedCategoryBlockingScreen() {
     return Boolean(useRankedMatchmakingStore.getState().rankedFoundOpponent) && !hasExistingDraftProgress;
   });
   const autoBanFired = useRef(false);
+  const rejoinedDraftLobbyRef = useRef<string | null>(null);
   const [soundMuted, setSoundMuted] = useState(() => getIsMuted());
 
   const opponentMember = useMemo(
@@ -322,6 +362,15 @@ export function RankedCategoryBlockingScreen() {
   const opponentUsername = opponentMember?.username ?? t('possession.opponent');
 
   useEffect(() => {
+    const lobbyId = draft?.lobbyId ?? lobby?.lobbyId;
+    if (!lobbyId || !selfUserId) return;
+    if (rejoinedDraftLobbyRef.current === lobbyId) return;
+    rejoinedDraftLobbyRef.current = lobbyId;
+    getSocket().emit('draft:rejoin', { lobbyId });
+    logger.info('Socket emit draft:rejoin', { lobbyId });
+  }, [draft?.lobbyId, lobby?.lobbyId, selfUserId]);
+
+  useEffect(() => {
     if (!draft || showShowdown || draftPaused) return;
     setTimeLeft(15);
     autoBanFired.current = false;
@@ -331,6 +380,14 @@ export function RankedCategoryBlockingScreen() {
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft?.turnUserId, draft?.halfOneCategoryId, draft?.categories, draftPaused, showShowdown]);
+
+  useEffect(() => {
+    if (!draftPaused || !draftPauseUntil) return;
+    const tick = () => setDraftPauseNowMs(Date.now());
+    tick();
+    const intervalId = setInterval(tick, 250);
+    return () => clearInterval(intervalId);
+  }, [draftPaused, draftPauseUntil]);
 
   // Auto-ban a random category when timer expires on player's turn
   useEffect(() => {
@@ -364,6 +421,9 @@ export function RankedCategoryBlockingScreen() {
   const playerBannedId = draft?.bans[selfUserId ?? ''] ?? null;
   const opponentBannedId = draft
     ? Object.entries(draft.bans).find(([userId]) => userId !== selfUserId)?.[1] ?? null
+    : null;
+  const pauseSeconds = draftPauseUntil
+    ? Math.max(0, Math.ceil((draftPauseUntil - draftPauseNowMs) / 1000))
     : null;
 
   const poolCategories = draft?.categories ?? [];
@@ -451,6 +511,7 @@ export function RankedCategoryBlockingScreen() {
       currentActor={currentActor}
       timeLeft={timeLeft}
       paused={draftPaused}
+      pauseSeconds={pauseSeconds}
       soundMuted={soundMuted}
       onToggleSound={() => setSoundMuted(toggleMute())}
       onBanCategory={handleBanCategory}

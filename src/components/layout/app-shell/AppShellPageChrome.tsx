@@ -10,7 +10,7 @@ export function AppShellPageChrome() {
     <>
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
+        className="pointer-events-none fixed inset-0 bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat"
       />
       <div
         aria-hidden="true"

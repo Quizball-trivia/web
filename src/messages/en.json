@@ -205,11 +205,8 @@
     "coinsTitle": "Coins",
     "coinsSubtitle": "Power up your wallet",
     "ticketsTitle": "Tickets",
-    "ticketsSubtitle": "Top up your ranked arena tickets",
     "hairTitle": "Hair",
-    "hairSubtitle": "Style your character",
     "glassesTitle": "Glasses",
-    "glassesSubtitle": "Look the part",
     "unlock": "Unlock",
     "theArena": "the Arena",
     "bundleDescription": "Get {tickets} to jumpstart your ranked climb. Tickets refill hourly while you are below the cap.",
@@ -230,9 +227,7 @@
     "tickets": "Tickets",
     "full": "Full",
     "facialHairTitle": "Facial Hair",
-    "facialHairSubtitle": "Add some character",
     "jerseysTitle": "Jerseys",
-    "jerseysSubtitle": "Rep your colors",
     "owned": "Owned",
     "partWayfarer": "Wayfarer",
     "partRoundShades": "Round Shades",
@@ -251,8 +246,10 @@
     "partRed": "Red",
     "partViolet": "Violet",
     "partPink": "Pink",
+    "partGeorgia": "Georgia",
     "equipped": "{name} equipped.",
-    "coinsPrice": "{amount} coins"
+    "equip": "Equip",
+    "needMoreCoins": "Need more"
   },
   "profileScreen": {
     "changeAvatar": "Change avatar",
@@ -435,7 +432,7 @@
     "putInOrder": "Put in Order",
     "trueOrFalse": "True or False",
     "highLow": "High Low",
-    "imposter": "Imposter",
+    "imposter": "Pick'em",
     "careerPath": "Career Path",
     "footballLogic": "Football Logic",
     "moneyDrop": "Money Drop",
@@ -609,7 +606,8 @@
     "colRank": "Rank",
     "colPlayer": "Player",
     "colTier": "Tier",
-    "colRP": "RP"
+    "colRP": "RP",
+    "resetsIn": "Resets in"
   },
   "welcome": {
     "untilKickoff": "until kickoff",
@@ -787,6 +785,8 @@
   },
   "results": {
     "newRank": "New Rank",
+    "rankUnlocked": "New rank unlocked!",
+    "rankLost": "Rank lost",
     "nextStage": "Next Stage",
     "rpToNextTier": "{points} RP to next tier",
     "maxTierReached": "Max tier reached",

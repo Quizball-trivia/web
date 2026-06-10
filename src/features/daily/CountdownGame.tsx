@@ -199,13 +199,15 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
   // backdrop — never fall through to the "loading questions" fallback below.
   if (finished) {
     return (
-      <div className="fixed inset-0 z-40 bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat">
+      <div className="fixed inset-0 z-40 bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat">
         <DailyChallengeCompleteModal
           open
           title={session.title}
           correct={totalFound}
           total={totalAnswerSlots}
-          onDone={() => onComplete(totalFound * 100)}
+          // Score = raw answers found; the backend pays the per-answer coin
+          // reward (COINS_PER_SCORE_POINT.countdown), so no client multiplier.
+          onDone={() => onComplete(totalFound)}
         />
       </div>
     );
@@ -214,13 +216,13 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
   if (!currentQuestion) {
     return (
       <LoadingScreen
-        className="bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
+        className="bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat"
       />
     );
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat font-poppins text-white">
+    <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat font-poppins text-white">
       <DailyChallengeHeader
         onQuit={() => setShowQuitDialog(true)}
         currentIndex={currentRound}

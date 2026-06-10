@@ -254,7 +254,7 @@ export default function ChallengePage() {
   if (isSessionLoading || !session) {
     return (
       <LoadingScreen
-        className="bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
+        className="bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat"
       />
     );
   }

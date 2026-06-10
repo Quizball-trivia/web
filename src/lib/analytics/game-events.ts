@@ -446,10 +446,17 @@ export function trackStoreViewed() {
   trackEvent('store_viewed');
 }
 
-export function trackPurchaseModalOpened(productSlug: string, mode: 'coins' | 'stripe' | 'equip' | 'none') {
+export function trackPurchaseModalOpened(
+  productSlug: string,
+  mode: 'coins' | 'stripe' | 'equip' | 'none',
+  options?: { affordable?: boolean },
+) {
   trackEvent('purchase_modal_opened', {
     product_slug: productSlug,
     mode,
+    // Distinguishes real purchase intent from "Need more" previews so the
+    // open -> confirm/cancel funnel isn't skewed by broke-user window shopping.
+    affordable: options?.affordable ?? true,
   });
 }
 

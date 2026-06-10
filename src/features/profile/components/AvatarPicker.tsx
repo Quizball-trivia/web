@@ -92,15 +92,12 @@ export function AvatarPicker({
   }
   const isDirty = encodeAvatarCustomization(draft) !== encodeAvatarCustomization(current);
 
-  /** Set of part ids the user owns (free + purchased). In dev mode, everything is unlocked
-   *  so designers/devs can preview all items in the picker. */
+  /** Set of part ids the user owns (free + purchased). Mirrors the backend's
+   *  ownership check (`assertAvatarCustomizationAllowed`) — no dev-mode
+   *  unlock here, since saving an unowned part is rejected server-side
+   *  anyway and the mismatch made local saves fail confusingly. */
   const ownedPartIds = useMemo(() => {
     const set = new Set<string>();
-    if (process.env.NODE_ENV === "development") {
-      for (const part of ALL_AVATAR_PARTS) set.add(part.id);
-      for (const skin of SKIN_PARTS) set.add(skin.id);
-      return set;
-    }
     for (const part of ALL_AVATAR_PARTS) {
       if (part.free) set.add(part.id);
     }
@@ -217,7 +214,7 @@ export function AvatarPicker({
             type="button"
             disabled={isSaving}
             onClick={() => handleSelectSkin(skin)}
-            className="group relative flex flex-col items-center gap-2 rounded-2xl bg-surface-page py-3 transition-all active:translate-y-[1px]"
+            className="group relative flex flex-col items-center gap-2 rounded-2xl bg-surface-card py-3 transition-all active:translate-y-[1px]"
             style={{
               border: `2px solid ${selected ? PURPLE : "rgba(255,255,255,0.1)"}`,
             }}
@@ -269,7 +266,7 @@ export function AvatarPicker({
             type="button"
             disabled={isSaving}
             onClick={() => handleSelectPart(slot, null)}
-            className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl bg-surface-page py-3 transition-all active:translate-y-[1px]"
+            className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl bg-surface-card py-3 transition-all active:translate-y-[1px]"
             style={{
               border: `2px solid ${!currentValue ? PURPLE : "rgba(255,255,255,0.1)"}`,
             }}
@@ -299,7 +296,7 @@ export function AvatarPicker({
                 type="button"
                 disabled={isSaving}
                 onClick={() => handleSelectPart(slot, part)}
-                className="group relative flex flex-col items-center gap-2 rounded-2xl bg-surface-page py-3 transition-all active:translate-y-[1px]"
+                className="group relative flex flex-col items-center gap-2 rounded-2xl bg-surface-card py-3 transition-all active:translate-y-[1px]"
                 style={{
                   border: `2px solid ${selected ? PURPLE : "rgba(255,255,255,0.1)"}`,
                 }}
@@ -347,9 +344,9 @@ export function AvatarPicker({
 
   const Content = (
     <div className="space-y-4">
-      {/* Live preview of the avatar — solid dark panel (not translucent, which
-          would pick up the blue modal behind it). */}
-      <div className="flex justify-center rounded-2xl border border-white/10 bg-surface-page pt-1 pb-2">
+      {/* Live preview of the avatar — solid panel, lifted above the store-card
+          modal bg so dark assets (black hair etc.) stay visible. */}
+      <div className="flex justify-center rounded-2xl border border-white/10 bg-surface-card pt-1 pb-2">
         <AvatarPreview customization={draft} width={isMobile ? 140 : 160} />
       </div>
 
@@ -367,7 +364,7 @@ export function AvatarPicker({
           mode-confirm modal: red square close, green confirm, red-outline cancel. */}
       {pendingPurchase && (
         <Dialog open onOpenChange={() => setPendingPurchase(null)}>
-          <DialogContent className="sm:max-w-md border-0 bg-surface-card [&>button:last-child]:hidden">
+          <DialogContent className="sm:max-w-md rounded-[24px] border-[3px] border-store-accent bg-store-card [&>button:last-child]:hidden">
             <ModalCloseButton onClose={() => setPendingPurchase(null)} />
             <DialogHeader>
               <DialogTitle className="pr-12 text-lg font-black uppercase tracking-wide text-white">
@@ -435,7 +432,7 @@ export function AvatarPicker({
 
       {/* Save — commits the whole previewed look at once. Sticks to the bottom so
           it's reachable after trying several parts. Disabled until something changed. */}
-      <div className="sticky bottom-0 -mx-5 mt-2 border-t border-white/10 bg-surface-card px-5 py-3 sm:-mx-8 sm:px-8">
+      <div className="sticky bottom-0 -mx-5 mt-2 border-t border-white/10 bg-store-card px-5 py-3 sm:-mx-8 sm:px-8">
         <button
           type="button"
           onClick={handleSave}
@@ -460,7 +457,7 @@ export function AvatarPicker({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side="bottom"
-          className="max-h-[92dvh] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-surface-card p-5 [&>button:last-child]:hidden"
+          className="max-h-[92dvh] overflow-y-auto rounded-t-3xl border-t-[3px] border-store-accent bg-store-card p-5 [&>button:last-child]:hidden"
         >
           <ModalCloseButton onClose={() => onOpenChange(false)} />
           <SheetHeader className="mb-3 text-left">
@@ -474,7 +471,7 @@ export function AvatarPicker({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl max-h-[90dvh] overflow-y-auto rounded-[24px] border border-white/10 bg-surface-card p-6 sm:p-8 [&>button:last-child]:hidden">
+      <DialogContent className="sm:max-w-3xl max-h-[90dvh] overflow-y-auto rounded-[24px] border-[3px] border-store-accent bg-store-card p-6 sm:p-8 [&>button:last-child]:hidden">
         <ModalCloseButton onClose={() => onOpenChange(false)} />
         <DialogHeader>
           <DialogTitle className="pr-14 font-poppins text-[22px] font-semibold text-white sm:text-[26px]">{t('profile.avatarPicker.title')}</DialogTitle>

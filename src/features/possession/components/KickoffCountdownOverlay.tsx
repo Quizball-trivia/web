@@ -5,9 +5,12 @@ import { motion } from 'motion/react';
 
 import { AvatarPreview } from '@/components/AvatarPreview';
 import { MatchCountdownPuck } from '@/components/shared/MatchCountdownPuck';
+import { RankFrameCard } from '@/features/profile/components/RankFrameCard';
 import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
+import { useTierLabel } from '@/hooks/useTierLabel';
 import { playBgm } from '@/lib/sounds/gameSounds';
+import { tierFromRp } from '@/utils/rankedTier';
 import type { AvatarCustomization } from '@/types/game';
 
 type CountdownPhase = 'kickoff' | 'resume';
@@ -24,6 +27,10 @@ interface KickoffCountdownOverlayProps {
   opponentAvatarBase?: string;
   playerAvatarCustomization?: AvatarCustomization | null;
   opponentAvatarCustomization?: AvatarCustomization | null;
+  /** Ranked points — when provided, the player is shown inside their tier's
+   *  shield frame instead of the plain blue card. */
+  playerRankPoints?: number | null;
+  opponentRankPoints?: number | null;
   className?: string;
 }
 
@@ -39,6 +46,8 @@ export function KickoffCountdownOverlay({
   opponentAvatarBase = 'avatar-2',
   playerAvatarCustomization,
   opponentAvatarCustomization,
+  playerRankPoints,
+  opponentRankPoints,
   className,
 }: KickoffCountdownOverlayProps) {
   const { t } = useLocale();
@@ -78,6 +87,7 @@ export function KickoffCountdownOverlay({
           name={playerName}
           label="Home"
           avatarCustomization={playerCustomization}
+          rankPoints={playerRankPoints}
         />
 
         <MatchCountdownPuck
@@ -93,6 +103,7 @@ export function KickoffCountdownOverlay({
           name={opponentName}
           label="Away"
           avatarCustomization={opponentCustomization}
+          rankPoints={opponentRankPoints}
         />
       </motion.div>
 
@@ -115,13 +126,17 @@ function KickoffPlayerCard({
   name,
   label,
   avatarCustomization,
+  rankPoints,
 }: {
   align: 'left' | 'right';
   name: string;
   label: string;
   avatarCustomization: AvatarCustomization;
+  rankPoints?: number | null;
 }) {
   const isOpponent = align === 'right';
+  const tierLabelOf = useTierLabel();
+  const tier = rankPoints != null ? tierFromRp(rankPoints) : null;
 
   return (
     <motion.div
@@ -137,23 +152,41 @@ function KickoffPlayerCard({
         initial={{ scale: 0.82 }}
         animate={{ scale: 1 }}
         transition={{ delay: 0.12, type: 'spring', stiffness: 200 }}
-        className="relative mt-2 flex aspect-[5/6] w-[112px] items-end justify-center overflow-hidden rounded-[16px] bg-brand-blue sm:w-[200px] sm:rounded-[20px] md:w-[240px]"
+        className={cn(
+          'relative mt-2',
+          !tier &&
+            'flex aspect-[5/6] w-[112px] items-end justify-center overflow-hidden rounded-[16px] bg-brand-blue sm:w-[200px] sm:rounded-[20px] md:w-[240px]',
+        )}
       >
-        <AvatarPreview
-          customization={avatarCustomization}
-          width={96}
-          className={cn('translate-y-3 sm:hidden', isOpponent && '-scale-x-100')}
-        />
-        <AvatarPreview
-          customization={avatarCustomization}
-          width={170}
-          className={cn('hidden translate-y-5 sm:block md:hidden', isOpponent && '-scale-x-100')}
-        />
-        <AvatarPreview
-          customization={avatarCustomization}
-          width={210}
-          className={cn('hidden translate-y-7 md:block', isOpponent && '-scale-x-100')}
-        />
+        {tier ? (
+          <RankFrameCard
+            tier={tier}
+            tierLabel={tierLabelOf(tier)}
+            rpLabel={`${rankPoints}RP`}
+            customization={avatarCustomization}
+            mirrored={isOpponent}
+            sizes="(min-width: 768px) 240px, (min-width: 640px) 200px, 112px"
+            className="w-[112px] sm:w-[200px] md:w-[240px]"
+          />
+        ) : (
+          <>
+            <AvatarPreview
+              customization={avatarCustomization}
+              width={96}
+              className={cn('translate-y-3 sm:hidden', isOpponent && '-scale-x-100')}
+            />
+            <AvatarPreview
+              customization={avatarCustomization}
+              width={170}
+              className={cn('hidden translate-y-5 sm:block md:hidden', isOpponent && '-scale-x-100')}
+            />
+            <AvatarPreview
+              customization={avatarCustomization}
+              width={210}
+              className={cn('hidden translate-y-7 md:block', isOpponent && '-scale-x-100')}
+            />
+          </>
+        )}
       </motion.div>
       <div className="mt-2 max-w-[130px] truncate text-center font-poppins text-base font-black uppercase tracking-wide text-white sm:mt-4 sm:max-w-[260px] sm:text-2xl md:text-3xl">
         {name}

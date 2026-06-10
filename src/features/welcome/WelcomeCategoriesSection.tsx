@@ -53,7 +53,7 @@ export function WelcomeCategoriesSection({
                 style={{ backgroundColor: style.color }}
                 onClick={onCategorySelect}
               >
-                <CategoryArtwork src={cat.imageUrl} className="absolute inset-2 md:inset-3" />
+                <CategoryArtwork src={cat.imageUrl} className="absolute inset-0" />
                 {cat.imageUrl ? (
                   <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/18 to-black/10" />
                 ) : null}

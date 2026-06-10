@@ -129,7 +129,7 @@ export function PitchVisualization(props: PitchVisualizationProps) {
 
           <PitchBackground uid={uid} isPenalty={isPenalty} zoneBands={zoneBands} />
 
-          {/* Pitch markings removed — stadium-green.png has its own lines */}
+          {/* Pitch markings removed — stadium-green.webp has its own lines */}
 
           <circle
             data-pitch-ball-center="true"

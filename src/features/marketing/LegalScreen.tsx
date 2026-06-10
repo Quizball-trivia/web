@@ -37,7 +37,7 @@ export function LegalScreen({ copy, locale, variant }: LegalScreenProps) {
   const { icon: Icon, tint, text } = ICONS[variant];
 
   return (
-    <div className="relative min-h-screen w-full bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat text-white font-poppins">
+    <div className="relative min-h-screen w-full bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat text-white font-poppins">
       <header className="sticky top-0 z-50 flex h-16 md:h-20 items-center justify-between px-6 md:px-12 lg:px-20 bg-surface-page-alt/80 backdrop-blur-md">
         <Button
           variant="ghost"

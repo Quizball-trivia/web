@@ -39,6 +39,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
     totalGamesLabel,
     showRankedRpCard,
     rpChange,
+    coinsAwarded,
     oldRP,
     newRP,
     rpTierInfo,
@@ -59,6 +60,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
     xpToNextLevelAfterMatch,
     accuracy,
     playerTier,
+    playerDisplayRp,
     opponentTier,
     opponentDisplayRp,
     showRankReveal,
@@ -69,7 +71,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-surface-page-alt p-3 md:p-6">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
+        className="pointer-events-none absolute inset-0 bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat"
       />
       <div
         aria-hidden="true"
@@ -99,6 +101,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
           totalGamesLabel={totalGamesLabel}
           preMatchRankedProfile={preMatchRankedProfile}
           playerTier={playerTier}
+          playerDisplayRp={playerDisplayRp}
           opponentTier={opponentTier}
           opponentDisplayRp={opponentDisplayRp}
         />
@@ -106,8 +109,10 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
         <RankedProgressionPanel
           matchType={matchType}
           t={t}
+          avatarCustomization={playerAvatarCustomization ?? { base: playerAvatar }}
           showRankedRpCard={showRankedRpCard}
           rpChange={rpChange}
+          coinsAwarded={coinsAwarded}
           oldRP={oldRP}
           newRP={newRP}
           rpTierInfo={rpTierInfo}
