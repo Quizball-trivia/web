@@ -202,7 +202,7 @@ export function WelcomeCategoriesSection({
                   <IconComponent className="absolute -bottom-3 -right-3 size-28 md:size-32 opacity-[0.1] text-white pointer-events-none" />
                 ) : null}
 
-                <div className="relative z-10 flex h-full items-end">
+                <div className="relative z-10 flex h-full items-center justify-center text-center">
                   <span className="text-base md:text-lg font-black uppercase tracking-wide leading-tight text-white drop-shadow-[0_2px_14px_rgba(0,0,0,0.5)]">
                     {cat.name}
                   </span>
@@ -218,7 +218,7 @@ export function WelcomeCategoriesSection({
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mt-6"
+            className="mt-6 flex justify-center"
           >
             <Button
               onClick={onBrowseAll}

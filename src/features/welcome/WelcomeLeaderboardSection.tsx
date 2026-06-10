@@ -23,26 +23,7 @@ export function WelcomeLeaderboardSection({
   const { t } = useLocale();
   return (
     <section className="py-6 md:py-8">
-      <div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mb-6"
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-lg md:text-xl font-black uppercase tracking-wide text-white">
-              {t('welcome.leaderboardTitle')}
-            </h2>
-            <span className="rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/40">
-              Preview
-            </span>
-          </div>
-          <p className="text-xs md:text-sm text-white/50 font-medium">
-            {t('welcome.leaderboardSubtitle')}
-          </p>
-        </motion.div>
-
+      <div className="mx-auto w-full max-w-3xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -70,11 +51,26 @@ export function WelcomeLeaderboardSection({
         </motion.div>
 
         <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.25 }}
+          className="mb-6 text-center"
+        >
+          <h2 className="text-lg md:text-xl font-black uppercase tracking-wide text-white">
+            {t('welcome.leaderboardTitle')}
+          </h2>
+          <p className="mt-1 text-xs md:text-sm text-white/50 font-medium">
+            {t('welcome.leaderboardSubtitle')}
+          </p>
+        </motion.div>
+
+        <motion.div
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.3 }}
-          className=""
+          className="flex justify-center"
         >
           <Button
             onClick={onViewFull}

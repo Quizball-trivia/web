@@ -10,6 +10,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { ModalCloseButton } from '@/components/shared/ModalCloseButton';
+import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
 
 interface WorldCupRulesButtonProps {
@@ -33,15 +35,25 @@ export function WorldCupRulesButton({ variant = 'pill', className }: WorldCupRul
             ?
           </button>
         ) : (
-          <button type="button" className={`rounded-full bg-white/10 px-3 py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wide text-white/70 hover:bg-white/15 hover:text-white transition-colors ${className ?? ''}`}>
-            📋 {t('welcome.wcPromoRules')}
+          <button type="button" className={`rounded-full bg-brand-orange px-3 py-1 text-[10px] sm:text-xs font-black uppercase tracking-wide text-white hover:bg-brand-orange/90 transition-colors ${className ?? ''}`}>
+            {t('welcome.wcPromoRules')}
           </button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-lg w-[95vw] rounded-2xl bg-surface-page border-surface-page max-h-[85vh] overflow-y-auto p-6 sm:p-8">
+      <DialogContent
+        className={cn(
+          'max-w-lg w-[95vw] rounded-[24px] border-0 bg-brand-blue',
+          'max-h-[85vh] overflow-y-auto p-6 sm:p-8',
+          '[&>button]:hidden', // hide shadcn's default close — we render our own red X
+        )}
+      >
+        <div className="absolute top-5 right-5 z-30">
+          <ModalCloseButton onClose={() => setOpen(false)} className="!static" />
+        </div>
         <DialogHeader>
-          <DialogTitle className="text-xl sm:text-2xl font-black text-white text-center">
-            🏆 {t('welcome.wcPromoRulesTitle')}
+          <DialogTitle className="flex items-center justify-center gap-2 text-xl sm:text-2xl font-black text-white text-center">
+            <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={28} height={28} className="h-6 w-auto object-contain" />
+            {t('welcome.wcPromoRulesTitle')}
           </DialogTitle>
           <DialogDescription className="sr-only">World Cup event rules and prizes</DialogDescription>
         </DialogHeader>
@@ -96,8 +108,9 @@ export function WorldCupRulesButton({ variant = 'pill', className }: WorldCupRul
           </div>
 
           {/* Footer */}
-          <p className="text-center text-xs text-white/40 pt-2">
-            🏆 {t('welcome.wcPromoRulesFooter')}
+          <p className="flex items-center justify-center gap-1.5 text-center text-xs text-white/40 pt-2">
+            <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={16} height={16} className="h-3.5 w-auto object-contain opacity-70" />
+            {t('welcome.wcPromoRulesFooter')}
           </p>
         </div>
       </DialogContent>

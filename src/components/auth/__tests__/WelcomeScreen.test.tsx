@@ -72,13 +72,17 @@ vi.mock('@/contexts/LocaleContext', () => ({
 
 // Event mode (Georgia World Cup / Betsson) — defaults to OFF so the welcome
 // screen renders the normal QuizBall UI. Individual tests override per-render.
-const eventModeMock = vi.fn(() => ({
-  eventEnabled: false,
-  isEligibleRegion: false,
-  isEventMode: false,
-  scoreLabel: 'RP' as const,
-  eventSlug: null,
-}));
+import type { ActiveEventMode } from '@/lib/hooks/useActiveEventMode';
+const eventModeMock = vi.fn(
+  (): ActiveEventMode => ({
+    eventEnabled: false,
+    isEligibleRegion: false,
+    isEventMode: false,
+    canParticipate: false,
+    scoreLabel: 'RP',
+    eventSlug: null,
+  }),
+);
 vi.mock('@/lib/hooks/useActiveEventMode', () => ({
   useActiveEventMode: () => eventModeMock(),
   EVENT_SLUG: 'georgia-world-cup',
@@ -363,6 +367,7 @@ describe('WelcomeScreen — landing chrome', () => {
       eventEnabled: true,
       isEligibleRegion: true,
       isEventMode: true,
+      canParticipate: true,
       scoreLabel: 'WCP',
       eventSlug: 'georgia-world-cup',
     });

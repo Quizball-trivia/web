@@ -4,7 +4,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useRecentMatches } from '@/lib/queries/stats.queries';
 import { COLLAPSED_MATCHES_COUNT, MAX_MATCHES_COUNT } from '@/lib/constants/matches';
 import { formatMatchScore } from '@/utils/matchScore';
-import { AvatarDisplay } from '@/components/AvatarDisplay';
+import { TierFrameAvatar } from '@/components/TierFrameAvatar';
 import { useLocale } from '@/contexts/LocaleContext';
 
 const rowBorder = (result: string) => {
@@ -107,13 +107,13 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
             key={match.id}
             className={`flex items-center gap-3 rounded-[16px] min-h-[58px] md:min-h-[62px] px-4 md:px-5 border-2 bg-surface-row-deep ${rowBorder(match.result)}`}
           >
-            {/* Avatar */}
-            <div className="relative size-8 md:size-10 shrink-0 rounded-full bg-white/20 flex items-center justify-center">
-              <AvatarDisplay
-                customization={match.avatarCustomization ?? { base: match.avatarUrl ?? undefined }}
-                size="xs"
-              />
-            </div>
+            {/* Avatar — rank frame (neutral tier; opponent rank not in this data) */}
+            <TierFrameAvatar
+              tier="Academy"
+              avatarCustomization={match.avatarCustomization ?? { base: match.avatarUrl ?? undefined }}
+              size="sm"
+              className="shrink-0"
+            />
 
             {/* Info */}
             <div className="min-w-0 flex-1">

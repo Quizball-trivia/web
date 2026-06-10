@@ -6,11 +6,85 @@ import { motion } from 'motion/react';
 import { AvatarPreview } from '@/components/AvatarPreview';
 import { CountryFlag } from '@/components/CountryFlag';
 import type { AvatarCustomization } from '@/types/game';
-import { getTierAccent } from '@/utils/tierVisuals';
+import { getTierAccent, getTierFrameSrc } from '@/utils/tierVisuals';
 import { getClub } from '@/lib/clubs';
 import { normalizeCountryCode } from '@/lib/geo/countryCode';
 import { useIsMobile } from '@/hooks/useMobile';
 import { cn } from '@/lib/utils';
+
+// Standing avatar character displayed inside its tier rank frame. The frame IS
+// the card; the flag sits top-left and the club badge top-right, both inside
+// the frame. The character stands in the frame's body.
+function FramedAvatar({
+  frameSrc,
+  customization,
+  countryCode,
+  club,
+  width,
+  mirror,
+  className,
+}: {
+  frameSrc: string;
+  customization: AvatarCustomization;
+  countryCode?: string | null;
+  club?: ReturnType<typeof getClub>;
+  width: number;
+  mirror?: boolean;
+  className?: string;
+}) {
+  const frameW = width;
+  const frameH = Math.round(frameW * 1.36);
+  const chipW = Math.round(frameW * 0.2);
+  return (
+    <div className={cn('relative', className)} style={{ width: frameW, height: frameH }}>
+      {/* Frame — the card backdrop (solid artwork, sits behind everything) */}
+      <Image
+        src={frameSrc}
+        alt=""
+        width={frameW}
+        height={frameH}
+        className="absolute inset-0 z-0 h-full w-full object-contain pointer-events-none"
+      />
+      {/* Character — ON TOP of the frame, centered in the frame body */}
+      <div className="absolute inset-x-0 bottom-[8%] top-[22%] z-10 flex items-end justify-center overflow-hidden">
+        <AvatarPreview
+          customization={customization}
+          width={Math.round(frameW * 0.64)}
+          className={cn(mirror && '-scale-x-100')}
+        />
+      </div>
+      {/* Flag — top-left, aligned level with the club badge */}
+      {countryCode && (
+        <div
+          className="absolute left-[12%] top-[15%] z-20 overflow-hidden rounded-[3px] shadow-md"
+          style={{ width: chipW, height: Math.round(chipW * 0.67) }}
+        >
+          <CountryFlag
+            code={countryCode}
+            className="!h-full !w-full"
+            style={{ backgroundSize: 'cover', backgroundPosition: 'center' }}
+          />
+        </div>
+      )}
+      {/* Club badge — top-right, no background, aligned level with the flag */}
+      {club && (
+        <div
+          className="absolute right-[12%] top-[12%] z-20 flex items-center justify-center"
+          style={{ width: Math.round(chipW * 1.15), height: Math.round(chipW * 1.15) }}
+        >
+          <Image
+            src={club.logo}
+            alt={club.label}
+            width={64}
+            height={64}
+            unoptimized
+            className="h-full w-full object-contain drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]"
+          />
+        </div>
+      )}
+    </div>
+  );
+}
 
 type MatchResultLetter = 'W' | 'L' | 'D';
 
@@ -82,6 +156,7 @@ function PlayerSide({
   // Opponent (right side) faces the player — flip horizontally per Figma.
   const isOpponent = side === 'right';
   const avatarCustomization = info.avatarCustomization ?? { base: info.avatar || 'avatar-1' };
+  const frameSrc = getTierFrameSrc(info.tier ?? 'Academy');
   const isVertical = variant === 'vertical';
 
   // Vertical variant enters from top/bottom instead of left/right.
@@ -112,78 +187,48 @@ function PlayerSide({
         transition={{ delay: 0.5, type: 'spring', stiffness: 200 }}
         className={
           isVertical
-            ? "relative flex aspect-[5/6] w-[180px] sm:w-[220px] items-end justify-center overflow-hidden rounded-[20px] bg-brand-blue"
-            : "relative flex aspect-[5/6] w-[112px] sm:w-[200px] md:w-[240px] items-end justify-center overflow-hidden rounded-[16px] sm:rounded-[20px] bg-brand-blue"
+            ? "relative flex w-[210px] sm:w-[250px] items-center justify-center"
+            : "relative flex w-[150px] sm:w-[250px] md:w-[300px] items-center justify-center"
         }
       >
-        {/* Country flag chip — top-left, rounded-br/tl. Chip is 3:2 to match
-            the flag-icons SVG aspect exactly so no background bleeds through. */}
-        {countryCode && (
-          <div
-            className={
-              isVertical
-                ? "absolute left-0 top-0 z-10 flex h-[40px] w-[60px] items-center justify-center overflow-hidden rounded-br-[16px] rounded-tl-[20px]"
-                : "absolute left-0 top-0 z-10 flex h-[26px] w-[39px] items-center justify-center overflow-hidden rounded-br-[12px] rounded-tl-[16px] sm:h-[44px] sm:w-[66px] sm:rounded-br-[20px] sm:rounded-tl-[20px] md:h-[56px] md:w-[84px]"
-            }
-          >
-            <CountryFlag
-              code={countryCode}
-              className="!h-full !w-full"
-              style={{ backgroundSize: 'cover', backgroundPosition: 'center' }}
-            />
-          </div>
-        )}
-
-        {/* Club logo chip — top-right, rounded-bl/tr, club's primary color */}
-        {club && (
-          <div
-            className={
-              isVertical
-                ? "absolute right-0 top-0 z-10 flex size-[48px] items-center justify-center overflow-hidden rounded-bl-[16px] rounded-tr-[20px]"
-                : "absolute right-0 top-0 z-10 flex size-[30px] items-center justify-center overflow-hidden rounded-bl-[12px] rounded-tr-[16px] sm:size-[52px] sm:rounded-bl-[20px] sm:rounded-tr-[20px] md:size-[64px]"
-            }
-            style={{ backgroundColor: club.primaryColor }}
-          >
-            <Image
-              src={club.logo}
-              alt={club.label}
-              width={48}
-              height={48}
-              unoptimized
-              className="size-[95%] object-contain"
-            />
-          </div>
-        )}
-
-        {/* Avatar character — pushed down so the body is partially clipped
-            by the bottom of the card. Both avatars stay upright (no Y-flip)
-            even when reversed — only horizontal mirror so the opponent
-            still "faces" inward. */}
+        {/* Rank-frame avatar — frame is the card; flag + club sit inside it. */}
         {isVertical ? (
-          <AvatarPreview
+          <FramedAvatar
+            frameSrc={frameSrc}
             customization={avatarCustomization}
-            width={170}
-            className={cn(
-              'translate-y-6',
-              isOpponent && '-scale-x-100',
-            )}
+            countryCode={countryCode}
+            club={club}
+            width={210}
+            mirror={isOpponent}
           />
         ) : (
           <>
-            <AvatarPreview
+            <FramedAvatar
+              frameSrc={frameSrc}
               customization={avatarCustomization}
-              width={96}
-              className={`sm:hidden translate-y-3 ${isOpponent ? '-scale-x-100' : ''}`}
+              countryCode={countryCode}
+              club={club}
+              width={150}
+              mirror={isOpponent}
+              className="sm:hidden"
             />
-            <AvatarPreview
+            <FramedAvatar
+              frameSrc={frameSrc}
               customization={avatarCustomization}
-              width={170}
-              className={`hidden sm:block md:hidden translate-y-5 ${isOpponent ? '-scale-x-100' : ''}`}
+              countryCode={countryCode}
+              club={club}
+              width={250}
+              mirror={isOpponent}
+              className="hidden sm:block md:hidden"
             />
-            <AvatarPreview
+            <FramedAvatar
+              frameSrc={frameSrc}
               customization={avatarCustomization}
-              width={210}
-              className={`hidden md:block translate-y-7 ${isOpponent ? '-scale-x-100' : ''}`}
+              countryCode={countryCode}
+              club={club}
+              width={300}
+              mirror={isOpponent}
+              className="hidden md:block"
             />
           </>
         )}

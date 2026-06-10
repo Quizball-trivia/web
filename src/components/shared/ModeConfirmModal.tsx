@@ -145,24 +145,17 @@ export function ModeConfirmModal({
 
       {isEventMode && isRanked && (
         <>
-          {/* Event info pill */}
-          <div className="mx-auto mt-4 flex w-fit items-center justify-center rounded-full border-2 border-brand-yellow bg-brand-yellow/10 px-5 py-2">
-            <span className="text-[11px] sm:text-xs font-black uppercase tracking-wide text-brand-yellow">
-              🏆 Play World Cup &amp; Win Prizes
-            </span>
-          </div>
-
-          {/* Event countdown + leaderboard link */}
-          <div className="mt-3 flex items-center justify-center gap-3">
-            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wide text-white/60">
-              ⏱ {wcDaysLeft} days left
+          {/* Event countdown (prominent) + leaderboard link + rules */}
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+            <span className="rounded-full bg-brand-orange px-3.5 py-1.5 text-[11px] sm:text-xs font-black uppercase tracking-wide text-white animate-pulse">
+              ⏱ {t('play.eventDaysLeft', { count: wcDaysLeft })}
             </span>
             <Link
               href="/leaderboard"
               onClick={() => onOpenChange(false)}
               className="text-[11px] sm:text-xs font-bold uppercase tracking-wide text-brand-yellow underline underline-offset-2 hover:text-brand-yellow/80"
             >
-              View Leaderboard →
+              {t('play.eventViewLeaderboard')} →
             </Link>
             <WorldCupRulesButton variant="text" />
           </div>

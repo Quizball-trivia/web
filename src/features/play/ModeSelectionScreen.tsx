@@ -216,7 +216,7 @@ export function ModeSelectionScreen({
                 className="max-w-[20rem] text-[clamp(1.75rem,3vw,2.75rem)] uppercase text-white break-words [hyphens:auto]"
                 style={{ ...rankedTitleStyle, lineHeight: 1.15 }}
               >
-                {t('play.rankedMatch')}
+                {isEventMode ? t('play.rankedMatchEvent') : t('play.rankedMatch')}
               </h1>
               <div className="mt-1.5 text-lg uppercase tracking-wide text-white/90" style={poppins}>
                 {rankedProfileLoading
@@ -229,11 +229,12 @@ export function ModeSelectionScreen({
               {/* World Cup event info — event only */}
               {isEventMode && (
                 <div className="mt-2 flex items-center gap-2 flex-wrap">
-                  <span className="rounded-full bg-brand-yellow px-3 py-1 text-[10px] font-black uppercase tracking-wide text-black">
-                    🏆 Win Prizes
+                  <span className="inline-flex items-center gap-1 rounded-full bg-brand-yellow px-3 py-1 text-[10px] font-black uppercase tracking-wide text-black">
+                    <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={14} height={14} className="h-3.5 w-auto object-contain" />
+                    {t('play.eventWinPrizes')}
                   </span>
-                  <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-brand-yellow animate-pulse">
-                    🔥 {wcDaysLeft} days left
+                  <span className="rounded-full bg-brand-orange px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white animate-pulse">
+                    🔥 {t('play.eventDaysLeft', { count: wcDaysLeft })}
                   </span>
                 </div>
               )}
@@ -298,11 +299,12 @@ export function ModeSelectionScreen({
                 {/* World Cup event info — mobile, event only */}
                 {isEventMode && (
                   <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
-                    <span className="rounded-full bg-brand-yellow px-2 py-0.5 text-[8px] font-black uppercase tracking-wide text-black">
-                      🏆 Win Prizes
+                    <span className="inline-flex items-center gap-1 rounded-full bg-brand-yellow px-2 py-0.5 text-[8px] font-black uppercase tracking-wide text-black">
+                      <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={12} height={12} className="h-3 w-auto object-contain" />
+                      {t('play.eventWinPrizes')}
                     </span>
-                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-wide text-brand-yellow animate-pulse">
-                      🔥 {wcDaysLeft}d left
+                    <span className="rounded-full bg-brand-orange px-2 py-0.5 text-[8px] font-black uppercase tracking-wide text-white animate-pulse">
+                      🔥 {t('play.eventDaysLeftShort', { count: wcDaysLeft })}
                     </span>
                   </div>
                 )}

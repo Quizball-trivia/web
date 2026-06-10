@@ -6,17 +6,18 @@ import { useLocale } from '@/contexts/LocaleContext';
 
 interface WelcomeFooterProps {
   duelsCount: number;
+  verifiedQuestionsCount: number;
 }
 
-export function WelcomeFooter({ duelsCount }: WelcomeFooterProps) {
+export function WelcomeFooter({ duelsCount, verifiedQuestionsCount }: WelcomeFooterProps) {
   const { t, locale } = useLocale();
   return (
-    <footer className="border-t border-white/6 bg-surface-page py-8">
+    <footer className="border-t border-white/6 py-8">
       <div className="mx-auto max-w-4xl px-6">
         <div className="flex flex-wrap justify-center gap-8 md:gap-16">
           <div className="flex items-center gap-2 font-bold text-brand-yellow">
             <Brain className="size-4" />
-            <span className="text-sm">{t('welcome.verifiedQuestions')}</span>
+            <span className="text-sm">{t('welcome.verifiedQuestions', { count: verifiedQuestionsCount.toLocaleString() })}</span>
           </div>
           <div className="flex items-center gap-2 font-bold text-brand-yellow">
             <Swords className="size-4" />

@@ -67,20 +67,6 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
 
               return (
                 <div key={entry.id} className="relative">
-                  {/* Gift icon — filled for top 3, outline for 4-25, sits on left border edge breaking the line */}
-                  {entry.rank <= 25 && (
-                    <div className="absolute -left-5 sm:-left-6 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center">
-                      <div className="absolute size-10 sm:size-11 rounded-full bg-surface-page" />
-                      <Image
-                        src={isTopThree ? "/assets/world-cup-promotion/gift-filled.svg" : "/assets/world-cup-promotion/gift.svg"}
-                        alt=""
-                        width={32}
-                        height={32}
-                        className={cn("size-8 sm:size-9 relative z-10", !isTopThree && "opacity-50")}
-                      />
-                    </div>
-                  )}
-
                   {/* Row content */}
                   <div
                     onClick={interactive ? () => onEntryClick(entry.id) : undefined}
@@ -107,8 +93,8 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
                     )}
                     style={isEventMode && isFirst ? { backgroundColor: '#FF6C0A' } : undefined}
                   >
-                    {/* Rank + Prize image */}
-                    <div className="col-span-3 flex items-center gap-1.5 sm:gap-2">
+                    {/* Rank (+ prize image + event gift, stacked under the rank) */}
+                    <div className="col-span-3 flex items-center justify-center gap-1.5 sm:gap-2">
                       {prize && (
                         <Image
                           src={prize.src}
@@ -118,12 +104,23 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
                           className="h-9 sm:h-12 w-auto object-contain shrink-0"
                         />
                       )}
-                      <span
-                        className="text-xl sm:text-2xl tabular-nums font-black text-white"
-                        style={poppins}
-                      >
-                        #{entry.rank}
-                      </span>
+                      <div className="flex flex-col items-center gap-1">
+                        <span
+                          className="text-xl sm:text-2xl tabular-nums font-black text-white"
+                          style={poppins}
+                        >
+                          #{entry.rank}
+                        </span>
+                        {isEventMode && entry.rank <= 25 && (
+                          <Image
+                            src={isTopThree ? "/assets/world-cup-promotion/gift-filled.svg" : "/assets/world-cup-promotion/gift.svg"}
+                            alt=""
+                            width={24}
+                            height={24}
+                            className={cn("size-5 sm:size-6", !isTopThree && "opacity-50")}
+                          />
+                        )}
+                      </div>
                     </div>
 
                     {/* Player */}

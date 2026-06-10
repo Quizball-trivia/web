@@ -6,6 +6,16 @@ import { Button } from '@/components/ui/button';
 import { useLocale } from '@/contexts/LocaleContext';
 import { RANKED_TIER_BANDS } from '@/utils/rankedTier';
 import { tierConfig, type TierName } from '@/utils/tierVisuals';
+import { AvatarPreview } from '@/components/AvatarPreview';
+import { DEFAULT_HAIR_ID, DEFAULT_SKIN_ID } from '@/lib/avatars/parts';
+import type { AvatarCustomization } from '@/types/game';
+
+// Generic showcase character for the tier cards: default boy hair + PSG jersey.
+const TIER_SHOWCASE_AVATAR: AvatarCustomization = {
+  skin: DEFAULT_SKIN_ID,
+  jersey: 'jersey_psg_retro',
+  hair: DEFAULT_HAIR_ID,
+};
 
 interface WelcomeTierRoadSectionProps {
   onStartClimbing: () => void;
@@ -48,19 +58,21 @@ export function WelcomeTierRoadSection({ onStartClimbing }: WelcomeTierRoadSecti
                   className="flex flex-col items-center px-1.5 md:px-2.5 relative"
                   style={{ minWidth: isTop ? '100px' : '80px' }}
                 >
-                  {/* Card frame with emoji overlay */}
-                  <div className={`relative z-10 mb-2 ${isTop ? 'w-[72px] md:w-[88px]' : 'w-[56px] md:w-[68px]'}`}>
+                  {/* Rank card — frame + showcase avatar centered in the frame body */}
+                  <div className={`relative z-10 mb-2 ${isTop ? 'w-[78px] md:w-[96px]' : 'w-[62px] md:w-[76px]'}`}>
                     <Image
                       src={`/assets/ranks/${slug}_frame.png`}
                       alt={band.tier}
-                      width={isTop ? 88 : 68}
-                      height={isTop ? 120 : 92}
+                      width={isTop ? 96 : 76}
+                      height={isTop ? 130 : 103}
                       className="w-full h-auto object-contain"
                     />
-                    <span className={`absolute inset-0 flex items-center justify-center ${
-                      isTop ? 'text-2xl md:text-3xl' : 'text-lg md:text-xl'
-                    }`}>
-                      {visual?.emoji}
+                    {/* Showcase avatar — centered in the card body, like the profile */}
+                    <span className="absolute inset-x-0 top-[12%] bottom-[12%] flex items-center justify-center overflow-hidden">
+                      <AvatarPreview
+                        customization={TIER_SHOWCASE_AVATAR}
+                        width={isTop ? 66 : 52}
+                      />
                     </span>
                   </div>
 

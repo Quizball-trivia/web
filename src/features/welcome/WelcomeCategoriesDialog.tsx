@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ModalCloseButton } from '@/components/shared/ModalCloseButton';
 import { useLocale } from '@/contexts/LocaleContext';
 import { CategoryArtwork } from './CategoryArtwork';
 import { getCategoryStyle } from './welcome.helpers';
@@ -57,7 +58,10 @@ export function WelcomeCategoriesDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) setCurrentIndex(0); }}>
-      <DialogContent className="max-w-lg w-[95vw] rounded-2xl p-5 md:p-8 bg-surface-page border-surface-page max-h-[85vh] flex flex-col">
+      <DialogContent className="max-w-lg w-[95vw] rounded-[24px] border-0 bg-store-card p-5 md:p-8 max-h-[85vh] flex flex-col [&>button]:hidden">
+        <div className="absolute top-5 right-5 z-30">
+          <ModalCloseButton onClose={() => { onOpenChange(false); setCurrentIndex(0); }} className="!static" />
+        </div>
         <DialogHeader>
           <DialogTitle className="text-xl md:text-2xl font-black text-center text-white">
             {t('welcome.allCategoriesTitle')}
