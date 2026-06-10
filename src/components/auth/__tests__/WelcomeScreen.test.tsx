@@ -131,6 +131,12 @@ vi.mock('@/lib/auth/in-app-browser', () => ({
 
 vi.mock('@/lib/auth/postAuthRedirect', () => ({
   peekPostAuthRedirect: () => postAuthRedirectMock.redirect,
+  // Newer exports the component tree pulls in; mirror the real signatures.
+  normalizePostAuthRedirect: (pathname: string | null | undefined) => pathname ?? null,
+  rememberPostAuthRedirect: () => undefined,
+  consumePostAuthRedirect: () => postAuthRedirectMock.redirect,
+  buildFriendInvitePath: () => null,
+  buildFriendInviteUrl: () => null,
 }));
 
 // Google Identity. The overlaid GIS button (renderGoogleButton) is the primary

@@ -1,7 +1,17 @@
 import { act, renderHook } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { createElement, type ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import type { MatchStatePayload, ResolvedMatchQuestionPayload } from '@/lib/realtime/socket.types';
+
+// The controller pulls useRankedProfile() (react-query); renderHook needs a
+// QueryClientProvider or every test crashes with "No QueryClient set".
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false, enabled: false } },
+});
+const queryWrapper = ({ children }: { children: ReactNode }) =>
+  createElement(QueryClientProvider, { client: queryClient }, children);
 
 const emitMock = vi.fn();
 const storeQueryMock = vi.hoisted(() => ({
@@ -226,7 +236,7 @@ describe('useRealtimePossessionMatchController', () => {
       opponentUsername: 'opp',
       onQuit: vi.fn(),
       onForfeit: vi.fn(),
-    }));
+    }), { wrapper: queryWrapper });
 
     expect(result.current.isReady).toBe(true);
     expect(result.current.viewportModel?.hud.kind).toBe('possession');
@@ -245,7 +255,7 @@ describe('useRealtimePossessionMatchController', () => {
       opponentUsername: 'opp',
       onQuit: vi.fn(),
       onForfeit: vi.fn(),
-    }));
+    }), { wrapper: queryWrapper });
 
     expect(result.current.showMainUI).toBe(false);
     expect(result.current.showQuestionArea).toBe(false);
@@ -265,7 +275,7 @@ describe('useRealtimePossessionMatchController', () => {
       opponentUsername: 'opp',
       onQuit: vi.fn(),
       onForfeit: vi.fn(),
-    }));
+    }), { wrapper: queryWrapper });
 
     expect(result.current.questionAreaModel?.content.kind).toBe('multipleChoice');
     if (result.current.questionAreaModel?.content.kind !== 'multipleChoice') {
@@ -313,7 +323,7 @@ describe('useRealtimePossessionMatchController', () => {
       opponentUsername: 'opp',
       onQuit: vi.fn(),
       onForfeit: vi.fn(),
-    }));
+    }), { wrapper: queryWrapper });
 
     result.current.halftimeModel?.onBanPhaseShown?.();
     result.current.halftimeModel?.onBanPhaseShown?.();
