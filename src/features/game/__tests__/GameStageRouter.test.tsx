@@ -307,6 +307,7 @@ describe('GameStageRouter', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Forfeit Match' }));
 
     expect(socket.emit).toHaveBeenCalledWith('match:forfeit', { matchId: 'match-forfeit-1' });
+    expect(realtimeMatchState.suppressAutoRejoin).toHaveBeenCalledWith('match-forfeit-1');
     expect(realtimeMatchState.reset).toHaveBeenCalled();
     expect(gameSessionState.reset).toHaveBeenCalled();
     expect(router.push).toHaveBeenCalledWith('/');
