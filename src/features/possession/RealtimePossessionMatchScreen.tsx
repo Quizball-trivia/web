@@ -164,7 +164,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
             opponentAvatarBase={props.opponentAvatar}
             playerAvatarCustomization={props.playerAvatarCustomization}
             opponentAvatarCustomization={props.opponentAvatarCustomization}
-            className="h-dvh min-h-dvh w-screen bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
+            className="h-dvh min-h-dvh w-screen bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat"
           />
         ) : (
           <LoadingScreen fullScreen={false} className="h-auto min-h-0" />
@@ -174,7 +174,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
   }
 
   return (
-    <div className="relative flex min-h-dvh flex-col items-center justify-center bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat">
+    <div className="relative flex min-h-dvh flex-col items-center justify-center bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat">
       <MatchHudIconButton
         onClick={toggleMuted}
         className="absolute left-[calc(env(safe-area-inset-left)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.25rem)] z-[70] sm:left-[calc(env(safe-area-inset-left)+0.5rem)] sm:top-[calc(env(safe-area-inset-top)+0.5rem)]"
@@ -206,7 +206,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
               opponentAvatarBase={props.opponentAvatar}
               playerAvatarCustomization={props.playerAvatarCustomization}
               opponentAvatarCustomization={props.opponentAvatarCustomization}
-              className="h-dvh min-h-dvh w-screen bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
+              className="h-dvh min-h-dvh w-screen bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat"
             />
           </motion.div>
         )}

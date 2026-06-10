@@ -5,6 +5,10 @@ import { useShallow } from 'zustand/shallow';
 import { useRealtimeGameLogic } from '@/lib/match/useRealtimeGameLogic';
 import { useGameSounds } from '@/lib/sounds/useGameSounds';
 import { usePreloadImages } from '@/lib/usePreloadImages';
+import { optimizedRemoteImageProps } from '@/lib/images/remoteImage';
+
+/** Static art shown during goal celebrations — decoded at match start. */
+const GOAL_OVERLAY_ASSETS = ['/assets/goal.webp'];
 import { useRealtimeMatchStore, type MatchQuestionState } from '@/stores/realtimeMatch.store';
 import { useRankedProfile } from '@/lib/queries/ranked.queries';
 import { logger } from '@/utils/logger';
@@ -160,12 +164,20 @@ export function useRealtimePossessionMatchController({
   const halftimeActive = phase === 'HALFTIME';
   // Warm the ban-category images as soon as the halftime options arrive in the
   // socket payload — usually a beat before the ban UI renders — so the cards
-  // don't show blank while images download. See usePreloadImages.
+  // don't show blank while images download. Must warm the same optimized URL
+  // that BanCategoryCard renders (see optimizedRemoteImageProps), otherwise
+  // the preload caches the raw asset and the card still fetches cold.
   const banImageUrls = useMemo(
-    () => (possessionState?.halftime.categoryOptions ?? []).map((c) => c.imageUrl ?? null),
+    () =>
+      (possessionState?.halftime.categoryOptions ?? []).map((c) =>
+        c.imageUrl ? optimizedRemoteImageProps(c.imageUrl, 400).src : null,
+      ),
     [possessionState?.halftime.categoryOptions],
   );
   usePreloadImages(banImageUrls);
+  // Decode the goal-celebration art up front so the first goal doesn't pop a
+  // cold image mid-celebration.
+  usePreloadImages(GOAL_OVERLAY_ASSETS);
   const isPenaltyQuestion = phaseKind === 'penalty';
   const isLastAttackQuestion = phaseKind === 'last_attack';
   const isShotQuestion = phaseKind === 'shot';

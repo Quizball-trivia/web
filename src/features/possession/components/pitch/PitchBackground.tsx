@@ -26,7 +26,7 @@ export function PitchBackground({ uid, isPenalty, zoneBands }: PitchBackgroundPr
           500×290 viewBox so the green + yellow boundary lines reach the
           edges of the Figma-matched aspect frame. */}
       <image
-        href="/assets/stadium-green.png"
+        href="/assets/stadium-green.webp"
         x="0"
         y="-30"
         width="500"

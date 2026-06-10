@@ -75,7 +75,7 @@ export function RealtimePartyQuizScreen({
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="relative min-h-dvh overflow-hidden bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat text-white">
+    <div className="relative min-h-dvh overflow-hidden bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat text-white">
       <PartyQuizOverlays
         startCountdownActive={state.startCountdownActive}
         countdownSeconds={state.countdownSeconds}

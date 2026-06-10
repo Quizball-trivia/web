@@ -75,7 +75,17 @@ const SECURITY_HEADERS = [
 
 const nextConfig: NextConfig = {
   images: {
+    // Serve AVIF where the browser supports it (smaller than webp at the
+    // same visual quality), webp otherwise.
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
+      {
+        // Own Supabase storage (question/category images) — lets the
+        // optimizer resize the stored 1440×1080 PNGs down to card size.
+        protocol: "https",
+        hostname: "*.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
       {
         protocol: "https",
         hostname: "api.dicebear.com",

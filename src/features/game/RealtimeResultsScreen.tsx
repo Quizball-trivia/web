@@ -69,7 +69,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-surface-page-alt p-3 md:p-6">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat"
+        className="pointer-events-none absolute inset-0 bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat"
       />
       <div
         aria-hidden="true"

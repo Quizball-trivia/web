@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element -- Category images are runtime CMS URLs. */
 
+import { optimizedRemoteImageProps } from "@/lib/images/remoteImage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Check, Eye, EyeOff, Lock, Search, Shuffle, Trophy } from "lucide-react";
@@ -674,7 +675,7 @@ export function LobbySettings({
                       >
                         <div className="size-9 overflow-hidden shrink-0 flex items-center justify-center">
                           {cat.imageUrl
-                            ? <img src={cat.imageUrl} alt={cat.name} className="size-full object-contain" />
+                            ? <img {...optimizedRemoteImageProps(cat.imageUrl, 72)} alt={cat.name} className="size-full object-contain" />
                             : <span className="text-xl">{cat.icon}</span>
                           }
                         </div>

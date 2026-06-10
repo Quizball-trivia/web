@@ -9,6 +9,7 @@
  * artwork inside the card.
  */
 
+import { optimizedRemoteImageProps } from "@/lib/images/remoteImage";
 import { useState } from 'react';
 
 interface CategoryArtworkProps {
@@ -25,7 +26,7 @@ export function CategoryArtwork({ src, className, imageClassName }: CategoryArtw
   return (
     <div className={className}>
       <img
-        src={src}
+        {...optimizedRemoteImageProps(src, 384)}
         alt=""
         referrerPolicy="no-referrer"
         className={`size-full object-contain object-center transition-transform duration-500 group-hover:scale-105 ${imageClassName ?? ''}`}
