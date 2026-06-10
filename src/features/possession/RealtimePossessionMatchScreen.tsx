@@ -33,6 +33,10 @@ interface RealtimePossessionMatchScreenProps {
    *  modal to pick a famous player from that club for the motivational
    *  headline. */
   playerFavoriteClub?: string | null;
+  /** Pre-match ranked points — shown as tier shield frames on the
+   *  kickoff/resume countdown overlay when provided. */
+  playerRankPoints?: number | null;
+  opponentRankPoints?: number | null;
   centerPossessionTrack?: boolean;
   simpleShotAnimation?: boolean;
   /** Dev prototype: glow one-sided surviving bars before normal possession moves. */
@@ -164,6 +168,8 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
             opponentAvatarBase={props.opponentAvatar}
             playerAvatarCustomization={props.playerAvatarCustomization}
             opponentAvatarCustomization={props.opponentAvatarCustomization}
+            playerRankPoints={props.playerRankPoints}
+            opponentRankPoints={props.opponentRankPoints ?? opponentInfo?.rp ?? null}
             className="h-dvh min-h-dvh w-screen bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat"
           />
         ) : (
@@ -206,6 +212,8 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
               opponentAvatarBase={props.opponentAvatar}
               playerAvatarCustomization={props.playerAvatarCustomization}
               opponentAvatarCustomization={props.opponentAvatarCustomization}
+              playerRankPoints={props.playerRankPoints}
+              opponentRankPoints={props.opponentRankPoints ?? opponentInfo?.rp ?? null}
               className="h-dvh min-h-dvh w-screen bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat"
             />
           </motion.div>

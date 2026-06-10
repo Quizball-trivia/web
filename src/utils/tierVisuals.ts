@@ -87,3 +87,26 @@ const tierAccent: Record<TierName, string> = {
 export function getTierAccent(tier: string): string {
   return isKnownTier(tier) ? tierAccent[tier] : tierAccent['Academy'];
 }
+
+/**
+ * FUT-style shield frame art per tier (public/assets/ranks/*, 208×329 px).
+ * Used as the backdrop the player's avatar is composited into on the
+ * profile rank-progression cards.
+ */
+const tierFrameSrc: Record<TierName, string> = {
+  'Academy':        '/assets/ranks/academy_frame.png',
+  'Youth Prospect': '/assets/ranks/youth_prospect_frame.png',
+  'Reserve':        '/assets/ranks/reserve_frame.png',
+  'Bench':          '/assets/ranks/bench_frame.png',
+  'Rotation':       '/assets/ranks/rotation_frame.png',
+  'Starting11':     '/assets/ranks/starting11_frame.png',
+  'Key Player':     '/assets/ranks/key_player_frame.png',
+  'Captain':        '/assets/ranks/captain_frame.png',
+  'World-Class':    '/assets/ranks/world_class_frame.png',
+  'Legend':         '/assets/ranks/legend_frame.png',
+  'GOAT':           '/assets/ranks/goat_frame.png',
+};
+
+export function getTierFrameSrc(tier: string): string {
+  return isKnownTier(tier) ? tierFrameSrc[tier] : tierFrameSrc['Academy'];
+}

@@ -9,8 +9,8 @@ import type { AvatarCustomization } from "@/types/game";
 
 interface AvatarPreviewProps {
   customization: AvatarCustomization;
-  /** Render at this width (height auto via canonical Figma aspect). */
-  width?: number;
+  /** Render at this width (height auto via canonical Figma aspect). Accepts px number or any CSS width (e.g. "100%"). */
+  width?: number | string;
   className?: string;
 }
 
@@ -43,7 +43,7 @@ export function AvatarPreview({ customization, width = 240, className = "" }: Av
         alt=""
         fill
         unoptimized
-        sizes={`${width}px`}
+        sizes={typeof width === "number" ? `${width}px` : "240px"}
         className="object-contain"
       />
       {AVATAR_SLOTS.map((slot) => {
