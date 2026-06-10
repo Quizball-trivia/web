@@ -108,7 +108,7 @@ export function GoalCelebrationOverlay({ ballSizePx = 32, ballCenterPx }: GoalCe
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             style={{ clipPath: 'inset(0 0 50% 0)' }}
           >
-            <Image src="/assets/goal.png" alt={t('common.altGoalCelebration')} width={760} height={538} className="max-h-full w-auto object-contain" />
+            <Image src="/assets/goal.webp" alt={t('common.altGoalCelebration')} width={760} height={538} className="max-h-full w-auto object-contain" />
           </motion.div>
           <motion.div
             className="absolute inset-0 flex items-center justify-center"
@@ -116,7 +116,7 @@ export function GoalCelebrationOverlay({ ballSizePx = 32, ballCenterPx }: GoalCe
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             style={{ clipPath: 'inset(50% 0 0 0)' }}
           >
-            <Image src="/assets/goal.png" alt="" width={760} height={538} className="max-h-full w-auto object-contain" />
+            <Image src="/assets/goal.webp" alt="" width={760} height={538} className="max-h-full w-auto object-contain" />
           </motion.div>
         </div>
       </motion.div>
@@ -146,7 +146,7 @@ export function GoalCelebrationOverlay({ ballSizePx = 32, ballCenterPx }: GoalCe
         exit={{ opacity: 1, scale: 1 / GOAL_BALL_PEAK_SCALE, transition: { duration: 0.25 } }}
         transition={{ duration: 1.85, times: [0, 0.45, 1], ease: 'easeInOut' }}
       >
-        <Image src="/assets/brand/goal-ball.png" alt="" width={512} height={512} className="size-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.32)]" />
+        <Image src="/assets/brand/goal-ball.webp" alt="" width={512} height={512} className="size-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.32)]" />
       </motion.div>
     </motion.div>
   );

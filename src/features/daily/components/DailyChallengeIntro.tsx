@@ -28,7 +28,7 @@ export function DailyChallengeIntro({ title, onDone }: DailyChallengeIntroProps)
   }, [onDone]);
 
   return (
-    <div className="fixed inset-0 z-40 bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat">
+    <div className="fixed inset-0 z-40 bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat">
       <RoundTransitionOverlay
         title={title}
         categoryName={t("dailyGames.introTag")}

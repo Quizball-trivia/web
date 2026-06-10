@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- Football Logic clue images are CMS-provided runtime URLs. */
 
+import { optimizedRemoteImageProps } from "@/lib/images/remoteImage";
 import { useCallback, useEffect, useState } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
 
@@ -107,7 +108,7 @@ export function FootballLogicGame({
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat text-white">
+    <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat text-white">
       <DailyChallengeHeader
         onQuit={() => setShowQuitDialog(true)}
         currentIndex={currentQuestionIndex}
@@ -141,7 +142,7 @@ export function FootballLogicGame({
             }}
           >
             <img
-              src={currentQuestion.imageAUrl}
+              {...optimizedRemoteImageProps(currentQuestion.imageAUrl, 448)}
               alt="Football logic clue A"
               className="h-56 w-full rounded-[12px] object-cover"
             />
@@ -154,7 +155,7 @@ export function FootballLogicGame({
             }}
           >
             <img
-              src={currentQuestion.imageBUrl}
+              {...optimizedRemoteImageProps(currentQuestion.imageBUrl, 448)}
               alt="Football logic clue B"
               className="h-56 w-full rounded-[12px] object-cover"
             />

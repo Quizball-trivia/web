@@ -10,7 +10,7 @@ import type { GoalCoordinates } from './pitch.types';
 // Same cartoon-style ball asset the LoadingScreen bounces — keeps every
 // in-game ball (pitch, shot, goal celebration) visually consistent with
 // the brand's loading state.
-export const PITCH_BALL_IMAGE_URL = '/assets/brand/goal-ball.png';
+export const PITCH_BALL_IMAGE_URL = '/assets/brand/goal-ball.webp';
 
 export const RIGHT_GOAL: GoalCoordinates = {
   penSpotX: 360,

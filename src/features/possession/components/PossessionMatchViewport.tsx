@@ -127,7 +127,7 @@ function PenaltySplash({
     >
       {result === 'goal' ? (
         <img
-          src="/assets/goal.png"
+          src="/assets/goal.webp"
           alt={t('common.altGoal')}
           className="h-auto w-[min(64vw,260px)] object-contain drop-shadow-[0_10px_0_rgba(0,0,0,0.65)]"
         />

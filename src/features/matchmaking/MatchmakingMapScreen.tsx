@@ -607,7 +607,7 @@ export function MatchmakingMapScreen({
   }, [showFoundState, fakePlayers, opponentPinId]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-surface-darkest bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat overflow-hidden font-fun select-none">
+    <div className="fixed inset-0 z-50 bg-surface-darkest bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat overflow-hidden font-fun select-none">
       {/* ── Map ──
           Cover the whole screen (like QuizUp) instead of letterboxing: the map
           box is sized to the LARGER of "fit by width" / "fit by height" so it

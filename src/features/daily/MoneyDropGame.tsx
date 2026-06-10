@@ -425,7 +425,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col font-poppins bg-surface-page-alt bg-[url('/assets/bg-pattern.png')] bg-cover bg-center bg-no-repeat">
+    <div className="fixed inset-0 z-40 flex flex-col font-poppins bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat">
 
       <DailyChallengeHeader
         onQuit={() => setShowQuitDialog(true)}

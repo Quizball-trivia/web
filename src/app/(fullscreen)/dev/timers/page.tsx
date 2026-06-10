@@ -151,7 +151,7 @@ function useRemainingMs(durationMs: number, runId: number) {
 
 function PreviewFrame({ children, label }: { children: React.ReactNode; label: string }) {
   return (
-    <div className="relative flex min-h-[420px] items-center justify-center overflow-hidden bg-[url('/assets/bg-pattern.png')] bg-cover bg-center px-4 py-8">
+    <div className="relative flex min-h-[420px] items-center justify-center overflow-hidden bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center px-4 py-8">
       <div className="absolute inset-0 bg-surface-page-alt/65" />
       <div className="absolute left-3 top-3 z-20 rounded-full bg-black/60 px-3 py-1 font-poppins text-[10px] font-semibold uppercase tracking-[0.2em] text-white/70">
         {label}
@@ -377,7 +377,7 @@ function PenaltyStartPreview({ preset, runId }: { preset: TimerPreset; runId: nu
   // The overlay is `absolute inset-0`, so each frame is a relative box with a
   // pitch-ish backdrop to mimic the in-match surface it sits over.
   const stage = (heightClass: string) => (
-    <div className={cn("relative w-full overflow-hidden rounded-[20px] bg-[url('/assets/stadium-green.png')] bg-cover bg-center", heightClass)}>
+    <div className={cn("relative w-full overflow-hidden rounded-[20px] bg-[url('/assets/stadium-green.webp')] bg-cover bg-center", heightClass)}>
       <PenaltyStartCountdownOverlay display={display} />
     </div>
   );

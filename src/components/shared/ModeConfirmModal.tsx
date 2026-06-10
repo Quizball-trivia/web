@@ -154,6 +154,7 @@ export function ModeConfirmModal({
           alt=""
           fill
           priority
+          sizes="(min-width: 768px) 320px, 60vw"
           className={cn(
             "z-0 object-contain",
             mode === "ranked" && "translate-y-4 scale-90 sm:translate-y-5 sm:scale-95 md:translate-y-6",
