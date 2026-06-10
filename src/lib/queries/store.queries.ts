@@ -138,19 +138,19 @@ export const getStoreWalletQuery = () => ({
     writeCachedWallet(wallet);
     return wallet;
   },
-  initialData: readCachedWallet()
+  initialData: (readCachedWallet()
     ? {
         coins: readCachedWallet()!.coins,
         tickets: readCachedWallet()!.tickets,
       }
-    : undefined,
+    : undefined) as StoreWalletResponse | undefined,
   initialDataUpdatedAt: readCachedWallet()?.updatedAt,
   ...STORE_WALLET_QUERY_OPTIONS,
 });
 
 export function useStoreWallet() {
   const authStatus = useAuthStore((state) => state.status);
-  return useQuery({
+  return useQuery<StoreWalletResponse>({
     ...getStoreWalletQuery(),
     enabled: authStatus === "authenticated",
   });
