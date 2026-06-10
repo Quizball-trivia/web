@@ -42,6 +42,8 @@ export interface MatchResultViewModel {
   myOutcome: RankedMatchOutcomePayload['byUserId'][string] | null;
   showRankedRpCard: boolean;
   rpChange: number;
+  /** Coin participation reward from the ranked settlement (null when not ranked/settled). */
+  coinsAwarded: number | null;
   oldRP: number;
   newRP: number;
   rpTierInfo: ReturnType<typeof getRankedTierProgress>;
@@ -70,6 +72,8 @@ export interface MatchResultViewModel {
 
   // Tier display for hero
   playerTier: ReturnType<typeof tierFromRp> | null;
+  /** Pre-match RP for the hero card (authoritative settlement oldRp). */
+  playerDisplayRp: number | null;
   opponentTier: ReturnType<typeof tierFromRp> | null;
   opponentDisplayRp: number | null;
 
@@ -151,6 +155,7 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
   // Ranked RP is persisted by the backend. Only render the RP card from
   // authoritative settlement data so profile and result screens cannot diverge.
   const rpChange = myOutcome?.deltaRp ?? 0;
+  const coinsAwarded = myOutcome?.coinsAwarded ?? null;
   const oldRP = myOutcome?.oldRp ?? oldRpBase;
   const newRP = myOutcome?.newRp ?? oldRP;
 
@@ -249,16 +254,21 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
     ? `${totalMatches} GAME${totalMatches === 1 ? '' : 'S'} PLAYED`
     : t('results.matchComplete');
 
+  // Hero cards show the PRE-match identity (rank you entered the match with);
+  // the progression panel below tells the change story (promotion/demotion).
+  // Prefer authoritative settlement oldRp over the pre-match profile snapshot,
+  // which can refresh to post-match values when returning to this screen.
   const playerTier = matchType === 'ranked' && preMatchRankedProfile?.placementStatus === 'placed'
-    ? tierFromRp(oldRpBase)
+    ? tierFromRp(oldRP)
     : null;
+  const playerDisplayRp = matchType === 'ranked' ? oldRP : null;
   const opponentRankedOutcome = rankedOutcome?.byUserId[opponentId] ?? null;
   const opponentTier = opponentRankedOutcome?.placementStatus === 'placed'
-    ? tierFromRp(opponentRankedOutcome.newRp)
+    ? tierFromRp(opponentRankedOutcome.oldRp)
     : opponentRankPoints != null
       ? tierFromRp(opponentRankPoints)
       : null;
-  const opponentDisplayRp = opponentRankedOutcome?.newRp ?? opponentRankPoints ?? null;
+  const opponentDisplayRp = opponentRankedOutcome?.oldRp ?? opponentRankPoints ?? null;
 
   return {
     playerWon,
@@ -268,6 +278,7 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
     myOutcome,
     showRankedRpCard,
     rpChange,
+    coinsAwarded,
     oldRP,
     newRP,
     rpTierInfo,
@@ -288,6 +299,7 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
     xpToNextLevelAfterMatch,
     accuracy,
     playerTier,
+    playerDisplayRp,
     opponentTier,
     opponentDisplayRp,
     showRankReveal,

@@ -22,7 +22,8 @@ const PART_NAME_KEY_MAP: Record<string, MessageKey> = {
   "Red": "store.partRed",
   "Violet": "store.partViolet",
   "Pink": "store.partPink",
-  // Country name (not a club brand) — translated for the home market.
+  // Country name (not a club brand) — kept as "Georgia" in every locale
+  // by design (ka.json mirrors en.json), the key just keeps it overridable.
   "Georgia": "store.partGeorgia",
 };
 

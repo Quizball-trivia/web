@@ -128,6 +128,8 @@ function DevResultsContent() {
           oldRp: preMatchRp,
           newRp,
           deltaRp: signedRpDelta,
+          // Mirrors backend: win 500, anything else (loss/draw) 200.
+          coinsAwarded: outcome === 'win' ? 500 : 200,
           oldTier,
           newTier,
           placementStatus: 'placed',
@@ -140,6 +142,7 @@ function DevResultsContent() {
           oldRp: opponentPreMatchRp,
           newRp: opponentNewRp,
           deltaRp: opponentSignedRpDelta,
+          coinsAwarded: outcome === 'loss' ? 500 : 200,
           oldTier: oppOldTier,
           newTier: oppNewTier,
           placementStatus: 'placed',
@@ -149,7 +152,7 @@ function DevResultsContent() {
         },
       },
     };
-  }, [preMatchRp, newRp, signedRpDelta, opponentPreMatchRp, opponentNewRp, opponentSignedRpDelta]);
+  }, [preMatchRp, newRp, signedRpDelta, opponentPreMatchRp, opponentNewRp, opponentSignedRpDelta, outcome]);
 
   const preMatchRankedProfile = useMemo<RankedProfileResponse>(() => ({
     rp: preMatchRp,

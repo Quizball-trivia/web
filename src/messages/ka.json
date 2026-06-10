@@ -141,7 +141,7 @@
     "partRed": "წითელი",
     "partViolet": "იისფერი",
     "partPink": "ვარდისფერი",
-    "partGeorgia": "საქართველო",
+    "partGeorgia": "Georgia",
     "equipped": "{name} მორგებულია.",
     "equip": "მორგება",
     "needMoreCoins": "არ ჰყოფნის"
@@ -626,7 +626,7 @@
     "putInOrder": "დაალაგე თანმიმდევრობით",
     "trueOrFalse": "მართალია თუ მცდარი",
     "highLow": "მეტი თუ ნაკლები",
-    "imposter": "თაღლითი",
+    "imposter": "Pick'em",
     "careerPath": "კარიერული გზა",
     "footballLogic": "საფეხბურთო ლოგიკა",
     "moneyDrop": "ფულის ვარდნა",
