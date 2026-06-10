@@ -367,7 +367,7 @@ export function AvatarPicker({
           mode-confirm modal: red square close, green confirm, red-outline cancel. */}
       {pendingPurchase && (
         <Dialog open onOpenChange={() => setPendingPurchase(null)}>
-          <DialogContent className="sm:max-w-md border-0 bg-surface-card [&>button:last-child]:hidden">
+          <DialogContent className="sm:max-w-md border-0 bg-brand-blue [&>button:last-child]:hidden">
             <ModalCloseButton onClose={() => setPendingPurchase(null)} />
             <DialogHeader>
               <DialogTitle className="pr-12 text-lg font-black uppercase tracking-wide text-white">
@@ -435,7 +435,7 @@ export function AvatarPicker({
 
       {/* Save — commits the whole previewed look at once. Sticks to the bottom so
           it's reachable after trying several parts. Disabled until something changed. */}
-      <div className="sticky bottom-0 -mx-5 mt-2 border-t border-white/10 bg-surface-card px-5 py-3 sm:-mx-8 sm:px-8">
+      <div className="sticky bottom-0 -mx-5 mt-2 border-t border-white/15 bg-brand-blue px-5 py-3 sm:-mx-8 sm:px-8">
         <button
           type="button"
           onClick={handleSave}
@@ -460,7 +460,7 @@ export function AvatarPicker({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side="bottom"
-          className="max-h-[92dvh] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-surface-card p-5 [&>button:last-child]:hidden"
+          className="max-h-[92dvh] overflow-y-auto rounded-t-3xl border-0 bg-brand-blue p-5 [&>button:last-child]:hidden"
         >
           <ModalCloseButton onClose={() => onOpenChange(false)} />
           <SheetHeader className="mb-3 text-left">
@@ -474,7 +474,7 @@ export function AvatarPicker({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl max-h-[90dvh] overflow-y-auto rounded-[24px] border border-white/10 bg-surface-card p-6 sm:p-8 [&>button:last-child]:hidden">
+      <DialogContent className="sm:max-w-3xl max-h-[90dvh] overflow-y-auto rounded-[24px] border-0 bg-brand-blue p-6 sm:p-8 [&>button:last-child]:hidden">
         <ModalCloseButton onClose={() => onOpenChange(false)} />
         <DialogHeader>
           <DialogTitle className="pr-14 font-poppins text-[22px] font-semibold text-white sm:text-[26px]">{t('profile.avatarPicker.title')}</DialogTitle>

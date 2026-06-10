@@ -67,7 +67,7 @@ export function PurchaseConfirmModal({
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.92, opacity: 0, y: 20 }}
             transition={{ type: "spring", stiffness: 320, damping: 26 }}
-            className="relative w-full max-w-[420px] rounded-[24px] border border-white/10 bg-surface-card p-6"
+            className="relative w-full max-w-[420px] rounded-[24px] border-0 bg-brand-blue p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <ModalCloseButton
@@ -102,8 +102,8 @@ export function PurchaseConfirmModal({
                   {t('profile.purchase.price')}
                 </span>
                 <span
-                  className="text-[28px] tabular-nums"
-                  style={{ ...poppins, color: PURPLE }}
+                  className="text-[28px] tabular-nums text-white"
+                  style={poppins}
                 >
                   {price.replace(/\s*coins?$/i, "").trim()}
                 </span>

@@ -514,7 +514,7 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.2 }}
           >
-            <SectionHeader title={t("store.ticketsTitle")} subtitle={t("store.ticketsSubtitle")} />
+            <SectionHeader title={t("store.ticketsTitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {ticketPacks.map((pack, i) => (
                 <motion.div
@@ -548,7 +548,7 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.3 }}
           >
-            <SectionHeader title={t("store.hairTitle")} subtitle={t("store.hairSubtitle")} />
+            <SectionHeader title={t("store.hairTitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {HAIR_PARTS.filter((p) => !p.free).map((part, i) => (
                 <motion.div
@@ -575,7 +575,7 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.35 }}
           >
-            <SectionHeader title={t("store.glassesTitle")} subtitle={t("store.glassesSubtitle")} />
+            <SectionHeader title={t("store.glassesTitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {GLASSES_PARTS.map((part, i) => (
                 <motion.div
@@ -602,7 +602,7 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.4 }}
           >
-            <SectionHeader title={t("store.facialHairTitle")} subtitle={t("store.facialHairSubtitle")} />
+            <SectionHeader title={t("store.facialHairTitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {FACIAL_HAIR_PARTS.map((part, i) => (
                 <motion.div
@@ -629,7 +629,7 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.45 }}
           >
-            <SectionHeader title={t("store.jerseysTitle")} subtitle={t("store.jerseysSubtitle")} />
+            <SectionHeader title={t("store.jerseysTitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {JERSEY_DESIGN_PARTS.map((part, i) => (
                 <motion.div
