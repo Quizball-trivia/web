@@ -104,7 +104,7 @@ export const FEATURED_NAMES = [
   'serie a',
 ];
 
-export const FEATURED_CATEGORY_LIMIT = 12;
+export const FEATURED_CATEGORY_LIMIT = 40;
 
 // Fallback colors for categories not in the mapping
 export const FALLBACK_COLORS = ['#E74C3C', '#3498DB', '#2ECC71', '#9B59B6', '#F39C12', '#1ABC9C', '#E67E22', '#2980B9'];
@@ -122,15 +122,17 @@ export const DEMO_AVATAR_LOADOUTS: AvatarCustomization[] = [
   { skin: 'skin_male_dark_alt', hair: 'hair_ramos', jersey: 'jersey_netherlands_retro', facialHair: 'beard' },
 ];
 
+/** Demo leaderboard shown on the landing page before the user logs in.
+ *  All Georgian flags + placeholder names to make it clear this is sample data. */
 export const DEMO_LEADERBOARD: LeaderboardEntry[] = [
-  { id: '1', rank: 1, username: 'CR7_GOAT', avatar: 'avatar-1', country: 'pt', tier: 'GOAT', rankPoints: 4820, isCurrentUser: false, trend: 'same', trendValue: 0 },
-  { id: '2', rank: 2, username: 'Messianic10', avatar: 'avatar-2', country: 'ar', tier: 'Legend', rankPoints: 4615, isCurrentUser: false, trend: 'up', trendValue: 2 },
-  { id: '3', rank: 3, username: 'ZizouMagic', avatar: 'avatar-3', country: 'fr', tier: 'Legend', rankPoints: 4490, isCurrentUser: false, trend: 'down', trendValue: 1 },
-  { id: '4', rank: 4, username: 'TotalFootball14', avatar: 'avatar-4', country: 'nl', tier: 'World-Class', rankPoints: 4210, isCurrentUser: false, trend: 'up', trendValue: 3 },
-  { id: '5', rank: 5, username: 'KloppHeavyMetal', avatar: 'avatar-5', country: 'de', tier: 'World-Class', rankPoints: 3980, isCurrentUser: false, trend: 'down', trendValue: 2 },
-  { id: '6', rank: 6, username: 'TikiTakaMaster', avatar: 'avatar-6', country: 'es', tier: 'Captain', rankPoints: 3755, isCurrentUser: false, trend: 'up', trendValue: 1 },
-  { id: '7', rank: 7, username: 'Azzurri_Fan', avatar: 'avatar-7', country: 'it', tier: 'Captain', rankPoints: 3640, isCurrentUser: false, trend: 'same', trendValue: 0 },
-  { id: '8', rank: 8, username: 'ThreeLions_', avatar: 'avatar-8', country: 'gb-eng', tier: 'Key Player', rankPoints: 3510, isCurrentUser: false, trend: 'up', trendValue: 4 },
+  { id: '1', rank: 1, username: 'Player_1', avatar: 'avatar-1', country: 'ge', tier: 'GOAT', rankPoints: 4820, isCurrentUser: false, trend: 'same', trendValue: 0 },
+  { id: '2', rank: 2, username: 'Player_2', avatar: 'avatar-2', country: 'ge', tier: 'Legend', rankPoints: 4615, isCurrentUser: false, trend: 'up', trendValue: 2 },
+  { id: '3', rank: 3, username: 'Player_3', avatar: 'avatar-3', country: 'ge', tier: 'Legend', rankPoints: 4490, isCurrentUser: false, trend: 'down', trendValue: 1 },
+  { id: '4', rank: 4, username: 'Player_4', avatar: 'avatar-4', country: 'ge', tier: 'World-Class', rankPoints: 4210, isCurrentUser: false, trend: 'up', trendValue: 3 },
+  { id: '5', rank: 5, username: 'Player_5', avatar: 'avatar-5', country: 'ge', tier: 'World-Class', rankPoints: 3980, isCurrentUser: false, trend: 'down', trendValue: 2 },
+  { id: '6', rank: 6, username: 'Player_6', avatar: 'avatar-6', country: 'ge', tier: 'Captain', rankPoints: 3755, isCurrentUser: false, trend: 'up', trendValue: 1 },
+  { id: '7', rank: 7, username: 'Player_7', avatar: 'avatar-7', country: 'ge', tier: 'Captain', rankPoints: 3640, isCurrentUser: false, trend: 'same', trendValue: 0 },
+  { id: '8', rank: 8, username: 'Player_8', avatar: 'avatar-8', country: 'ge', tier: 'Key Player', rankPoints: 3510, isCurrentUser: false, trend: 'up', trendValue: 4 },
 ];
 
 export const LANDING_SCENARIOS: LandingScenario[] = [

@@ -22,18 +22,23 @@ export function WelcomeLeaderboardSection({
 }: WelcomeLeaderboardSectionProps) {
   const { t } = useLocale();
   return (
-    <section className="px-6 py-12 md:py-20">
-      <div className="max-w-2xl mx-auto">
+    <section className="py-6 md:py-8">
+      <div>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-10"
+          className="mb-6"
         >
-          <h2 className="text-2xl md:text-3xl font-black text-white mb-3">
-            {t('welcome.leaderboardTitle')}
-          </h2>
-          <p className="text-sm md:text-base text-white/60 font-medium">
+          <div className="flex items-center gap-2 mb-1">
+            <h2 className="text-lg md:text-xl font-black uppercase tracking-wide text-white">
+              {t('welcome.leaderboardTitle')}
+            </h2>
+            <span className="rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/40">
+              Preview
+            </span>
+          </div>
+          <p className="text-xs md:text-sm text-white/50 font-medium">
             {t('welcome.leaderboardSubtitle')}
           </p>
         </motion.div>
@@ -69,11 +74,11 @@ export function WelcomeLeaderboardSection({
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.3 }}
-          className="text-center"
+          className=""
         >
           <Button
             onClick={onViewFull}
-            className="h-14 rounded-[20px] bg-brand-green px-10 font-poppins text-lg font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none"
+            className="h-11 rounded-xl bg-brand-green px-6 font-poppins text-sm font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none"
           >
             {t('welcome.viewFullTable')}
           </Button>
