@@ -611,6 +611,19 @@ export function useRealtimePossessionMatchController({
       autoScrollKey,
     };
 
+  // Question counter shown in the panel header. While the round-transition
+  // overlay is visible it announces the UPCOMING question number (sourced from
+  // pendingQuestion in usePossessionRoundTransition), but the dimmed panel
+  // behind it still renders the previous question — without this, players see
+  // "QUESTION 4" over a panel reading "Question 3/12" and report wrong
+  // question ordering. Outside the transition the counter must keep tracking
+  // localQuestion so it always matches the visible question content.
+  const counterSource = overlayModel.showRoundTransition && pendingQuestion
+    ? pendingQuestion
+    : localQuestion;
+  const displayQIndex = counterSource?.qIndex ?? 0;
+  const displayQTotal = counterSource?.total ?? 12;
+
   const questionAreaModel: PossessionQuestionAreaModel | null = !possessionMatch.matchId || !possessionState
     ? null
     : {
@@ -627,8 +640,8 @@ export function useRealtimePossessionMatchController({
             penaltyDisplayTotal,
             isPenaltySuddenDeath,
             question,
-            qIndex: localQuestion?.qIndex ?? 0,
-            totalQuestions: localQuestion?.total ?? 12,
+            qIndex: displayQIndex,
+            totalQuestions: displayQTotal,
             timeRemaining: state.timeRemaining,
             showOptions: state.showOptions,
             selectedAnswer: state.selectedAnswer,
@@ -653,8 +666,8 @@ export function useRealtimePossessionMatchController({
             kind: 'special',
             props: {
               matchId: possessionMatch.matchId,
-              qIndex: localQuestion.qIndex,
-              totalQuestions: localQuestion.total ?? 12,
+              qIndex: displayQIndex,
+              totalQuestions: displayQTotal,
               isPenaltyPhase: fieldState.isPenaltyQuestion,
               penaltyDisplayRound,
               penaltyDisplayTotal,
