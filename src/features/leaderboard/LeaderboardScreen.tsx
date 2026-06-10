@@ -12,6 +12,7 @@ import { useLocale } from "@/contexts/LocaleContext";
 import type { MessageKey } from "@/lib/i18n/messages";
 
 import { WorldCupRulesButton } from "@/components/shared/WorldCupRulesModal";
+import { useActiveEventMode } from "@/lib/hooks/useActiveEventMode";
 import { LeaderboardTable } from "./components/LeaderboardTable";
 import { LeaderboardPodium } from "./components/LeaderboardPodium";
 import { UserRankStrip } from "./components/UserRankStrip";
@@ -36,6 +37,7 @@ const TABS: { value: LeaderboardType; labelKey: MessageKey }[] = [
 export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
   const router = useRouter();
   const { t } = useLocale();
+  const { isEventMode } = useActiveEventMode();
   const [activeTab, setActiveTab] = useState<LeaderboardType>("global");
 
   const { data: entries, isLoading, isError } = useLeaderboard(activeTab, currentPlayerId);
@@ -74,9 +76,11 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
             <p className="mt-2 text-[11px] sm:text-[13px] font-black uppercase tracking-[0.08em] text-white/70">
               {t("leaderboard.subtitle")}
             </p>
-            <div className="mt-2">
-              <WorldCupRulesButton variant="pill" />
-            </div>
+            {isEventMode && (
+              <div className="mt-2">
+                <WorldCupRulesButton variant="pill" />
+              </div>
+            )}
           </div>
 
           <div className="flex shrink-0 flex-col items-end gap-2">
@@ -101,14 +105,16 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
             className="relative"
           >
             <UserRankStrip userEntry={userEntry} />
-            {/* Betsson badge — sits on the top-right border edge */}
-            <div
-              className="absolute -top-1 -right-2 z-20 flex flex-col items-start rounded-md px-2 py-1"
-              style={{ backgroundColor: '#FF6C0A', width: 120, height: 34, rotate: '-5.8deg', border: '2px solid #000', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}
-            >
-              <span className="text-[6px] font-bold uppercase tracking-wider text-white/80 leading-none">Powered by</span>
-              <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={96} height={18} className="h-4 w-auto object-contain mt-0.5" />
-            </div>
+            {/* Betsson badge — event only, sits on the top-right border edge */}
+            {isEventMode && (
+              <div
+                className="absolute -top-1 -right-2 z-20 flex flex-col items-start rounded-md px-2 py-1"
+                style={{ backgroundColor: '#FF6C0A', width: 120, height: 34, rotate: '-5.8deg', border: '2px solid #000', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}
+              >
+                <span className="text-[6px] font-bold uppercase tracking-wider text-white/80 leading-none">Powered by</span>
+                <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={96} height={18} className="h-4 w-auto object-contain mt-0.5" />
+              </div>
+            )}
           </motion.div>
         )}
 
@@ -131,9 +137,13 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
                 aria-selected={isActive}
                 onClick={() => setActiveTab(tab.value)}
                 className={`inline-flex h-10 min-w-[130px] items-center justify-center rounded-full px-6 text-xs sm:text-sm font-fun font-black uppercase tracking-wide transition-all active:translate-y-[1px] ${
-                  isActive
-                    ? "bg-[#FF6C0A] text-white"
-                    : "border-2 border-[#FF6C0A] text-white hover:bg-[#FF6C0A]/10"
+                  isEventMode
+                    ? isActive
+                      ? "bg-[#FF6C0A] text-white"
+                      : "border-2 border-[#FF6C0A] text-white hover:bg-[#FF6C0A]/10"
+                    : isActive
+                      ? "bg-brand-green text-white"
+                      : "border-2 border-brand-green text-white hover:bg-brand-green/10"
                 }`}
               >
                 {t(tab.labelKey)}

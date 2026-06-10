@@ -37,6 +37,7 @@ import { useIsMobile } from "@/hooks/useMobile";
 import { cn } from "@/lib/utils";
 import { ModalCloseButton } from "./ModalCloseButton";
 import { useLocale } from "@/contexts/LocaleContext";
+import { useActiveEventMode } from "@/lib/hooks/useActiveEventMode";
 import type { MessageKey } from "@/lib/i18n/messages";
 
 interface ModeConfirmModalProps {
@@ -99,6 +100,7 @@ export function ModeConfirmModal({
   ticketsRemaining = 0,
 }: ModeConfirmModalProps) {
   const { t } = useLocale();
+  const { isEventMode } = useActiveEventMode();
   const isMobile = useIsMobile();
   const router = useRouter();
   const [wcDaysLeft] = useState(() =>
@@ -141,7 +143,7 @@ export function ModeConfirmModal({
         {description}
       </p>
 
-      {isRanked && (
+      {isEventMode && isRanked && (
         <>
           {/* Event info pill */}
           <div className="mx-auto mt-4 flex w-fit items-center justify-center rounded-full border-2 border-brand-yellow bg-brand-yellow/10 px-5 py-2">
@@ -223,7 +225,7 @@ export function ModeConfirmModal({
           needsTickets
             ? "bg-brand-yellow text-black hover:bg-brand-yellow/90 active:translate-y-[2px]"
             : hasTickets
-            ? "bg-black text-white hover:bg-black/90 active:translate-y-[2px] border-2 border-brand-yellow/30"
+            ? cn("bg-black text-white hover:bg-black/90 active:translate-y-[2px]", isEventMode && "border-2 border-brand-yellow/30")
             : "bg-black/60 text-white/50 cursor-not-allowed",
         )}
       >

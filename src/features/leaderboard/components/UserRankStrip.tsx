@@ -2,6 +2,7 @@ import { AvatarDisplay } from "@/components/AvatarDisplay";
 import type { LeaderboardEntry } from "@/lib/domain/leaderboard";
 import { getTierAccent } from "@/utils/tierVisuals";
 import { Trophy } from "lucide-react";
+import { useActiveEventMode } from "@/lib/hooks/useActiveEventMode";
 
 interface UserRankStripProps {
   userEntry: LeaderboardEntry;
@@ -15,11 +16,12 @@ const poppins = {
 } as const;
 
 export function UserRankStrip({ userEntry }: UserRankStripProps) {
+  const { isEventMode } = useActiveEventMode();
   const tierAccent = getTierAccent(userEntry.tier);
   return (
     <div
       className="relative flex items-center gap-3 sm:gap-4 rounded-[10px] border-2 px-3 sm:px-4 py-3 sm:py-3.5"
-      style={{ borderColor: "#FF6C0A", backgroundColor: "transparent" }}
+      style={{ borderColor: isEventMode ? "#FF6C0A" : "#38B60E", backgroundColor: "transparent" }}
     >
       {/* Avatar + trophy badge */}
       <div className="relative shrink-0">

@@ -4,6 +4,7 @@ import type { LeaderboardEntry } from "@/lib/domain/leaderboard";
 import { cn } from "@/lib/utils";
 import { getTierAccent } from "@/utils/tierVisuals";
 import { useLocale } from "@/contexts/LocaleContext";
+import { useActiveEventMode } from "@/lib/hooks/useActiveEventMode";
 
 interface LeaderboardTableProps {
   entries: LeaderboardEntry[];
@@ -26,6 +27,7 @@ const PRIZE_IMAGES: Record<number, { src: string; alt: string }> = {
 
 export function LeaderboardTable({ entries, currentUserId, onEntryClick }: LeaderboardTableProps) {
   const { t } = useLocale();
+  const { isEventMode } = useActiveEventMode();
   return (
     <div className="relative">
       {/* Column labels */}
@@ -38,21 +40,23 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
 
       {/* Table wrapper */}
       <div className="relative">
-        {/* Betsson badge — top-right corner of border */}
-        <div
-          className="absolute -top-1 -right-2 z-20 flex flex-col items-start rounded-md px-2 py-1"
-          style={{ backgroundColor: '#FF6C0A', width: 120, height: 34, rotate: '-5.8deg', border: '2px solid #000', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}
-        >
-          <span className="text-[6px] font-bold uppercase tracking-wider text-white/80 leading-none">Powered by</span>
-          <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={96} height={18} className="h-4 w-auto object-contain mt-0.5" />
-        </div>
+        {/* Betsson badge — event only, top-right corner of border */}
+        {isEventMode && (
+          <div
+            className="absolute -top-1 -right-2 z-20 flex flex-col items-start rounded-md px-2 py-1"
+            style={{ backgroundColor: '#FF6C0A', width: 120, height: 34, rotate: '-5.8deg', border: '2px solid #000', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}
+          >
+            <span className="text-[6px] font-bold uppercase tracking-wider text-white/80 leading-none">Powered by</span>
+            <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={96} height={18} className="h-4 w-auto object-contain mt-0.5" />
+          </div>
+        )}
 
-        {/* Orange-bordered table */}
+        {/* Bordered table */}
         <div
           className="overflow-visible rounded-[10px] border-2"
-          style={{ borderColor: "#FF6C0A" }}
+          style={{ borderColor: isEventMode ? "#FF6C0A" : "#38B60E" }}
         >
-          <div className="divide-y divide-white/5">
+          <div className={cn("divide-y", isEventMode ? "divide-white/5" : "divide-brand-green/25")}>
             {entries.map((entry) => {
               const isCurrentUser = entry.isCurrentUser || entry.id === currentUserId;
               const isFirst = entry.rank === 1;
@@ -94,14 +98,14 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
                     tabIndex={interactive ? 0 : undefined}
                     className={cn(
                       "grid grid-cols-12 gap-2 sm:gap-4 items-center px-3 sm:px-4 py-3.5 sm:py-4 transition-colors",
-                      isFirst
+                      isEventMode && isFirst
                         ? "text-white"
                         : isCurrentUser
                           ? "bg-brand-green"
                           : "hover:bg-white/[0.03]",
                       interactive && "cursor-pointer",
                     )}
-                    style={isFirst ? { backgroundColor: '#FF6C0A' } : undefined}
+                    style={isEventMode && isFirst ? { backgroundColor: '#FF6C0A' } : undefined}
                   >
                     {/* Rank + Prize image */}
                     <div className="col-span-3 flex items-center gap-1.5 sm:gap-2">
@@ -151,7 +155,7 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
                     <div className="col-span-2 sm:col-span-3 min-w-0 text-center">
                       <span
                         className="block truncate text-[10px] sm:text-sm font-fun font-black uppercase tracking-wide"
-                        style={{ color: isFirst || isCurrentUser ? "#FFFFFF" : tierAccent }}
+                        style={{ color: (isEventMode && isFirst) || isCurrentUser ? "#FFFFFF" : tierAccent }}
                       >
                         {entry.tier}
                       </span>
@@ -173,8 +177,10 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
           </div>
         </div>
 
-        {/* Vertical timeline line on the left border */}
-        <div className="absolute -left-[1px] top-0 bottom-0 w-0.5 z-10" style={{ backgroundColor: '#FF6C0A' }} />
+        {/* Vertical timeline line on the left border — event only */}
+        {isEventMode && (
+          <div className="absolute -left-[1px] top-0 bottom-0 w-0.5 z-10" style={{ backgroundColor: '#FF6C0A' }} />
+        )}
       </div>
     </div>
   );

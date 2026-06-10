@@ -26,8 +26,10 @@ import { WelcomeTierRoadSection } from './WelcomeTierRoadSection';
 import { WelcomeLeaderboardSection } from './WelcomeLeaderboardSection';
 import { WelcomeFooter } from './WelcomeFooter';
 import { WelcomeWorldCupBanner } from './WelcomeWorldCupBanner';
+import { useActiveEventMode } from '@/lib/hooks/useActiveEventMode';
 
 export function WelcomeScreen() {
+  const { isEventMode } = useActiveEventMode();
   const auth = useWelcomeAuthController();
   const {
     loginOpen,
@@ -140,11 +142,13 @@ export function WelcomeScreen() {
         {/* Vertical timeline line — aligned to left edge */}
         <div className="absolute left-6 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-brand-green/30 to-transparent" />
 
-        {/* Node 1: Prizes */}
-        <div className="relative pl-8 pb-10">
-          <div className="absolute left-[20px] top-1 size-3 rounded-full bg-brand-green ring-4 ring-brand-green/20" />
-          <WelcomeWorldCupBanner />
-        </div>
+        {/* Node 1: Prizes — Betsson/World Cup event only */}
+        {isEventMode && (
+          <div className="relative pl-8 pb-10">
+            <div className="absolute left-[20px] top-1 size-3 rounded-full bg-brand-green ring-4 ring-brand-green/20" />
+            <WelcomeWorldCupBanner />
+          </div>
+        )}
 
         {/* Node 2: Categories */}
         <div className="relative pl-8 pb-10">
@@ -168,20 +172,22 @@ export function WelcomeScreen() {
           />
         </div>
 
-        {/* End node: Betsson branding */}
-        <div className="relative pl-8">
-          <div className="absolute left-[20px] top-0 size-3 rounded-full bg-brand-green/50 ring-4 ring-brand-green/10" />
-          <div className="flex items-center gap-2 opacity-50">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-white/50">Powered by</span>
-            <Image
-              src="/assets/betsson/1.png"
-              alt="Betsson Sport"
-              width={80}
-              height={16}
-              className="h-3 w-auto object-contain"
-            />
+        {/* End node: Betsson branding — event only */}
+        {isEventMode && (
+          <div className="relative pl-8">
+            <div className="absolute left-[20px] top-0 size-3 rounded-full bg-brand-green/50 ring-4 ring-brand-green/10" />
+            <div className="flex items-center gap-2 opacity-50">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-white/50">Powered by</span>
+              <Image
+                src="/assets/betsson/1.png"
+                alt="Betsson Sport"
+                width={80}
+                height={16}
+                className="h-3 w-auto object-contain"
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <WelcomeTierRoadSection onStartClimbing={handleProtectedWelcomeAction} />

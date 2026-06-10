@@ -70,6 +70,20 @@ vi.mock('@/contexts/LocaleContext', () => ({
   }),
 }));
 
+// Event mode (Georgia World Cup / Betsson) — defaults to OFF so the welcome
+// screen renders the normal QuizBall UI. Individual tests override per-render.
+const eventModeMock = vi.fn(() => ({
+  eventEnabled: false,
+  isEligibleRegion: false,
+  isEventMode: false,
+  scoreLabel: 'RP' as const,
+  eventSlug: null,
+}));
+vi.mock('@/lib/hooks/useActiveEventMode', () => ({
+  useActiveEventMode: () => eventModeMock(),
+  EVENT_SLUG: 'georgia-world-cup',
+}));
+
 // Auth store — bootstrap is the only field the screen reads.
 const bootstrapMock = vi.fn(async () => undefined);
 vi.mock('@/stores/auth.store', () => ({
@@ -339,7 +353,19 @@ describe('WelcomeScreen — landing chrome', () => {
     expect(screen.getAllByText(/welcome\.kickOff/).length).toBeGreaterThan(0);
   });
 
-  it('renders the World Cup promo banner copy', () => {
+  it('hides the World Cup promo banner when the event flag is off (default)', () => {
+    render(<WelcomeScreen />);
+    expect(screen.queryByText(/welcome\.wcPromoTitle/)).not.toBeInTheDocument();
+  });
+
+  it('renders the World Cup promo banner copy when event mode is on', () => {
+    eventModeMock.mockReturnValueOnce({
+      eventEnabled: true,
+      isEligibleRegion: true,
+      isEventMode: true,
+      scoreLabel: 'WCP',
+      eventSlug: 'georgia-world-cup',
+    });
     render(<WelcomeScreen />);
     expect(screen.getByText(/welcome\.wcPromoTitle/)).toBeInTheDocument();
   });
