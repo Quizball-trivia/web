@@ -6,6 +6,7 @@ import { useRealtimeGameLogic } from '@/lib/match/useRealtimeGameLogic';
 import { useGameSounds } from '@/lib/sounds/useGameSounds';
 import { usePreloadImages } from '@/lib/usePreloadImages';
 import { optimizedRemoteImageProps } from '@/lib/images/remoteImage';
+import { optimizeSupabaseImage, QUESTION_IMAGE_TRANSFORM } from '@/lib/images/optimizeSupabaseImage';
 
 /** Static art shown during goal celebrations — decoded at match start. */
 const GOAL_OVERLAY_ASSETS = ['/assets/goal.webp'];
@@ -388,6 +389,15 @@ export function useRealtimePossessionMatchController({
   const question = useMemo(() => (
     toMultipleChoiceGameQuestion(localQuestion, resolvedCorrectIndex)
   ), [localQuestion, resolvedCorrectIndex]);
+
+  // Warm the image-MCQ picture as soon as the question payload lands (a beat
+  // before the panel mounts) so it's already decoded when it renders. Preload
+  // the SAME optimized (WebP) URL the card renders — otherwise we'd warm the
+  // raw PNG and the card's WebP request would still be a cold fetch.
+  const questionImageUrl = localQuestion?.question.kind === 'multipleChoice'
+    ? optimizeSupabaseImage(localQuestion.question.image?.url, QUESTION_IMAGE_TRANSFORM)
+    : null;
+  usePreloadImages(useMemo(() => [questionImageUrl], [questionImageUrl]));
 
   const isMultipleChoiceQuestion = localQuestion?.question.kind === 'multipleChoice';
   const specialQuestion = localQuestion && localQuestion.question.kind !== 'multipleChoice'

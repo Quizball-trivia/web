@@ -176,15 +176,24 @@ function makeQuestion(qIndex: number, kind: QuestionKind = 'multipleChoice'): Re
       },
     } as ResolvedMatchQuestionPayload;
   }
-  // Default: multipleChoice
+  // Default: multipleChoice. On the Q4-of-half slot (qIndex % 6 === 3) attach a
+  // sample image so the image-MCQ card (QuestionImageCard) can be previewed.
+  const isImageSlot = qIndex % 6 === 3;
   return {
     ...base,
     question: {
       kind: 'multipleChoice',
       id: `dev-q-${qIndex}`,
-      prompt: sample.prompt,
+      prompt: isImageSlot ? 'Identify the stadium shown in this image' : sample.prompt,
       options: sample.options,
-      categoryName: sample.categoryName,
+      image: isImageSlot
+        ? {
+          url: 'https://upload.wikimedia.org/wikipedia/commons/6/66/Football_Stadium_in_Galich.jpg',
+          width: 1440,
+          height: 1080,
+        }
+        : undefined,
+      categoryName: isImageSlot ? "Maradona's World Cup Legacy" : sample.categoryName,
       difficulty: 'medium',
     },
   } as ResolvedMatchQuestionPayload;
@@ -777,6 +786,35 @@ function DevAnimationsContent() {
     stateVersion.current += 1;
     s.setMatchState(makeMatchState('NORMAL_PLAY', { stateVersion: stateVersion.current }));
     s.setMatchQuestion(makeQuestion(0, 'multipleChoice'));
+    setNextQuestionKind('multipleChoice');
+    setRemountKey((k) => k + 1);
+    setMobilePanelOpen(false);
+  }
+
+  // Jump straight to the Q4-of-half slot (qIndex 3), which carries the sample
+  // image so the image-MCQ card renders immediately — no kickoff, no clicking
+  // "next question" three times.
+  function startImageMcq() {
+    pendingTimers.current.forEach((t) => window.clearTimeout(t));
+    pendingTimers.current = [];
+    stateVersion.current = 0;
+    scoreRef.current = { meTotal: 0, oppTotal: 0 };
+    goalsRef.current = { seat1: 0, seat2: 0 };
+    penaltyGoalsRef.current = { seat1: 0, seat2: 0 };
+    penaltyKickIndexRef.current = 0;
+    possessionDiffRef.current = 0;
+
+    const s = store();
+    s.reset();
+    s.setSelfUserId(SELF_ID);
+    s.setMatchStart(makeStartPayload());
+    // Skip the kickoff countdown so the question renders instantly.
+    useRealtimeMatchStore.setState((prev) =>
+      prev.match ? { ...prev, match: { ...prev.match, countdownEndsAt: null } } : prev
+    );
+    stateVersion.current += 1;
+    s.setMatchState(makeMatchState('NORMAL_PLAY', { stateVersion: stateVersion.current }));
+    s.setMatchQuestion(makeQuestion(3, 'multipleChoice'));
     setNextQuestionKind('multipleChoice');
     setRemountKey((k) => k + 1);
     setMobilePanelOpen(false);
@@ -2278,6 +2316,7 @@ function DevAnimationsContent() {
         <Group label="Match flow">
           <Btn onClick={() => { start(); setRemountKey((k) => k + 1); }}>↻ reset & restart</Btn>
           <Btn variant="yellow" onClick={startKickoffToMcq}>5s kickoff → MCQ</Btn>
+          <Btn variant="green" onClick={startImageMcq}>🖼️ Q4 image MCQ</Btn>
           <Btn onClick={() => nextQuestion()}>next question</Btn>
         </Group>
 

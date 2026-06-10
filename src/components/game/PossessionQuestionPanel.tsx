@@ -1,10 +1,12 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Volume2, VolumeX, X } from 'lucide-react';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import type { AnswerStateArray, Phase } from '@/lib/types/game.types';
 import { ArenaScoreSplash } from '@/components/game/ArenaScoreSplash';
+import { QuestionImageCard } from '@/components/game/QuestionImageCard';
 import { MatchHudIconButton } from '@/features/possession/components/MatchHudPrimitives';
 import { MAX_PENALTY_ROUNDS } from '@/features/possession/types/possession.types';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -155,6 +157,27 @@ export function PossessionQuestionPanel({
   partyMatchHeader,
 }: PossessionQuestionPanelProps) {
   const { t } = useLocale();
+
+  // Image MCQs push the options below the fold on mobile (the image eats
+  // vertical space). Scroll the answer grid into view as soon as the image
+  // question renders so the options are visible without manual scrolling. The
+  // grid is always mounted (empty slots during the read phase), so we don't
+  // wait for showOptions. Mobile only — desktop's split layout already fits.
+  const optionsRef = useRef<HTMLDivElement | null>(null);
+  const hasImage = Boolean(question?.image?.url);
+  const questionId = question?.id ?? null;
+  useEffect(() => {
+    if (!hasImage) return;
+    const grid = optionsRef.current;
+    if (!grid || grid.offsetParent === null) return; // hidden (e.g. desktop split layout)
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) return; // lg+: panel fits
+    // Wait a frame so the image + prompt have laid out before measuring.
+    const raf = requestAnimationFrame(() => {
+      grid.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [hasImage, questionId]);
+
   if (phase === 'goal') return null;
   if (!question) return null;
 
@@ -284,6 +307,9 @@ export function PossessionQuestionPanel({
           transition={{ duration: 0.15 }}
           className="relative mt-3"
         >
+          {question.image && !isPenaltyPhase && !isShotPhase && (
+            <QuestionImageCard image={question.image} />
+          )}
           <div
             className="flex items-center rounded-[24px] bg-surface-page px-5 py-5 text-white sm:px-6 sm:py-6 md:px-8 md:py-7"
             style={{
@@ -338,6 +364,7 @@ export function PossessionQuestionPanel({
           (yellow-bordered empty slots) so the layout is stable; only the
           answer text inside fades in when showOptions flips true. */}
       <div
+        ref={optionsRef}
         className={`mt-2.5 grid grid-cols-2 gap-2.5 ${
           showOptions ? 'pointer-events-auto' : 'pointer-events-none'
         }`}
