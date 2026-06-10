@@ -128,6 +128,7 @@ function DevResultsContent() {
           oldRp: preMatchRp,
           newRp,
           deltaRp: signedRpDelta,
+          // Mirrors backend: win 500, anything else (loss/draw) 200.
           coinsAwarded: outcome === 'win' ? 500 : 200,
           oldTier,
           newTier,
@@ -141,7 +142,7 @@ function DevResultsContent() {
           oldRp: opponentPreMatchRp,
           newRp: opponentNewRp,
           deltaRp: opponentSignedRpDelta,
-          coinsAwarded: outcome === 'win' ? 200 : 500,
+          coinsAwarded: outcome === 'loss' ? 500 : 200,
           oldTier: oppOldTier,
           newTier: oppNewTier,
           placementStatus: 'placed',
