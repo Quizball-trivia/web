@@ -1,7 +1,11 @@
 # Image MCQ (Q4 of each half) — handoff
 
-Branch: **`feat/image-questions`** in BOTH repos (`frontend-web-next` and `backend-node`).
-Status: working end-to-end on staging. Q4 is **hardcoded to one test category** for now.
+Branch: **`feat/featured-image-questions`** in BOTH repos (`frontend-web-next` and `backend-node`),
+split off `staging` (supersedes the original `feat/image-questions` dev branch).
+Status: the hardcoded test category is GONE — Q4 pulls from the **real drafted
+(banned-survivor) categories**, the ranked draft pool is **featured categories only**, and the
+Q4 image is **reserved + announced up-front** so the client preloads it from the half's first
+question.
 
 ---
 
@@ -25,12 +29,30 @@ Everything else (Q1–3, Q5–6, penalties) is unchanged.
   (`NORMAL_HALF_SEQUENCE`). Slot index = `normalQuestionsAnsweredInHalf % POSSESSION_QUESTIONS_PER_HALF`.
   **Q4 = slot index 3.**
 - `isImageMcqSlot(state)` detects slot 3 (`IMAGE_MCQ_SLOT_INDEX = 3`).
-- When it's the image slot, `maybePickQuestionForState()` calls `pickImageMcqForState(matchId)`
-  → `matchQuestionsRepo.getRandomImageMcqCandidatesForMatch({ matchId, categoryIds, limit })`.
+- **Reservation (NEW):** at the half's FIRST normal question, `ensureImageMcqReservedForHalf()`
+  pre-picks the half's image MCQ from the drafted categories and stores
+  `{ questionId, imageUrl }` in `state.imageMcq.half1|half2` (`null` = none available). The raw
+  image URL is surfaced on every `match:state` of the half as `preloadImageUrls`, so the client
+  warms it long before Q4. The reserved id is **excluded from normal picks** (Q1–Q3 can't steal
+  it).
+- When it's the image slot, `maybePickQuestionForState()` calls
+  `pickImageMcqForState(matchId, state, categoryIds)`: it first re-validates the reserved
+  question (`getImageMcqCandidateForMatchById` — still published/valid/unused), then falls back
+  to a fresh random pick via
+  `matchQuestionsRepo.getRandomImageMcqCandidatesForMatch({ matchId, categoryIds, limit })`.
+  `categoryIds` are the REAL drafted categories from `categoryIdsForCurrentHalf(state, cache)`.
 - If no image MCQ is available (empty pool / all already used), it **falls back to a normal
   MCQ** so the match never stalls.
 - `pickFirstValidCandidate()` is the single validator used by both the normal and image paths
-  (so they can't drift).
+  (so they can't drift). It also extracts `imageUrl` for the reservation.
+
+### Backend — featured-only ranked draft pool (NEW)
+`backend-node/src/modules/lobbies/lobbies.repo.ts` → `listAllRankedEligibleCategories` /
+`listRankedEligibleCategoryIds` now `JOIN featured_categories` — only **featured** categories
+are offered in the ranked draft/ban phase. Since every ranked question (MCQ, put-in-order,
+clue_chain "who am I", and the image MCQ) is drawn from the drafted categories, this one filter
+guarantees all ranked content comes from featured categories. Feature/unfeature via the CMS
+(`featured_categories` join table); the pool is cached ~5 min (`invalidateCategoryCache`).
 
 ### Backend — image-MCQ DB query
 `backend-node/src/modules/matches/match-questions.repo.ts` → `getRandomImageMcqCandidatesForMatch`
@@ -66,68 +88,21 @@ parsed payload. This DTO is what `match:question` emits.
   `<QuestionImageCard>` above the prompt and **auto-scrolls the options into view** on mobile
   (image MCQs push them below the fold).
 - `frontend-web-next/src/features/possession/hooks/useRealtimePossessionMatchController.ts` —
-  **preloads the same optimized URL** the moment the question arrives (so it's warm at render).
+  **preloads the same optimized URL** twice over: from `match:state.preloadImageUrls` the moment
+  the half's first question arrives (so the picture is fully cached minutes before Q4), and
+  again when the Q4 question payload itself lands (belt-and-braces; cache hit).
 
 ---
 
-## ⚠️ The hardcoded TEST pin — what to change tomorrow
+## ✅ The hardcoded TEST pin — REMOVED
 
-Right now **every Q4 is pinned to one category** ("Maradona's World Cup Legacy",
-`a7e48fee-b708-4272-acdc-854588179393`), ignoring the categories the players actually drafted.
-This was deliberate so we could test the UI with the only category that has image questions.
+`IMAGE_MCQ_TEST_CATEGORY_IDS` is gone. Q4 now pulls from the **real drafted (banned-survivor)
+categories** of the current half (`categoryIdsForCurrentHalf(state, cache)`), with the
+reservation + preload flow described above. The fallback covers categories that don't have
+image questions yet, so the rollout is incremental: add image MCQs to more featured categories
+and they start appearing automatically.
 
-It lives in **one place**:
-
-```ts
-// backend-node/src/realtime/possession-question-dispatch.ts  (~line 77)
-const IMAGE_MCQ_TEST_CATEGORY_IDS = ['a7e48fee-b708-4272-acdc-854588179393'];
-```
-
-and is used in `pickImageMcqForState` (~line 344):
-
-```ts
-async function pickImageMcqForState(matchId: string): Promise<PickedQuestion | null> {
-  const rows = await matchQuestionsRepo.getRandomImageMcqCandidatesForMatch({
-    matchId,
-    categoryIds: IMAGE_MCQ_TEST_CATEGORY_IDS,   // ← hardcoded
-    limit: SPECIAL_QUESTION_CANDIDATE_LIMIT,
-  });
-  ...
-}
-```
-
-### To make Q4 read from the REAL drafted (banned-survivor) categories
-
-The good news: `maybePickQuestionForState(matchId, state, categoryIds)` **already receives the
-real categories** for the current half — `categoryIds` comes from
-`categoryIdsForCurrentHalf(state, cache)` (see `possession-question-dispatch.ts` ~line 556).
-These are exactly the categories left after the banning phase.
-
-So the change is small:
-
-1. **Pass the real categories into the image picker.** Thread `categoryIds` through:
-   ```ts
-   // in maybePickQuestionForState:
-   const imagePicked = await pickImageMcqForState(matchId, categoryIds);
-
-   // pickImageMcqForState(matchId, categoryIds):
-   const rows = await matchQuestionsRepo.getRandomImageMcqCandidatesForMatch({
-     matchId,
-     categoryIds,                 // ← the drafted categories, not the hardcoded one
-     limit: SPECIAL_QUESTION_CANDIDATE_LIMIT,
-   });
-   ```
-2. **Delete** `IMAGE_MCQ_TEST_CATEGORY_IDS` and the `// TEST ONLY` comments.
-3. The repo query already filters by `category_id = ANY($categoryIds)` + `c.is_active = true` +
-   has-image, so once you pass the drafted categories it "just works": Q4 pulls an image MCQ
-   **from one of the two drafted categories**, and falls back to a normal MCQ if neither drafted
-   category has an image question yet.
-
-That's it — the fallback already covers categories that don't have image questions, so you can
-roll this out incrementally as you add image questions to more categories.
-
-> Optional polish for later: prefer image questions when available but still pull from the
-> drafted categories; maybe weight selection so Q4 is image **only if** a drafted category has
+> Optional polish for later: weight selection so Q4 is image **only if** a drafted category has
 > one. The current fallback already gives that behavior.
 
 ---
@@ -135,10 +110,11 @@ roll this out incrementally as you add image questions to more categories.
 ## When you add image questions to other categories
 
 1. Create them via the CMS (image MCQs are `mcq_single` with an `image` in the payload — the
-   image-MCQ generator already does this). Confirm they're **`published`** and the **category is
-   `is_active = true`**.
-2. No code change needed once the TEST pin is removed (step above) — the query finds any
-   published image MCQ in an active drafted category automatically.
+   image-MCQ generator already does this). Confirm they're **`published`**, the **category is
+   `is_active = true`** AND **featured** (has a `featured_categories` row), otherwise the
+   category can't be drafted in ranked at all.
+2. No code change needed — the query finds any published image MCQ in an active drafted
+   category automatically.
 3. Quick DB sanity check (psql against staging `nsdfiprfmhdqhbfxfwpv`):
    ```sql
    -- published image MCQs per category
@@ -178,8 +154,10 @@ roll this out incrementally as you add image questions to more categories.
 
 - Backend: `npm run build` (tsc) + `npm test` — green.
 - Frontend: `npm run typecheck` + `npm run lint` (0 errors) + `npm test` — green.
-- Live: play a ranked match against staging; Q4 of each half shows a Maradona image MCQ, options
-  auto-scroll into view, image is the small WebP.
+- Live: play a ranked match against staging; the draft only offers featured categories; Q4 of
+  each half shows an image MCQ from a drafted category (when it has one), options auto-scroll
+  into view, image is the small WebP. In the network tab the WebP request fires at the half's
+  FIRST question (the `match:state` preload) and Q4's render is a cache hit.
 
 ## Notes / gotchas
 
@@ -187,5 +165,11 @@ roll this out incrementally as you add image questions to more categories.
   `frontend-web-next/.env.local` → `NEXT_PUBLIC_API_URL=http://localhost:8001` and restart
   `npm run dev` (NEXT_PUBLIC vars are read at startup, not hot-reloaded).
 - `.env.local` is gitignored — not part of this branch.
-- This branch was split off `staging` and contains ONLY the image-question work; other in-flight
-  staging changes are not included.
+- Staging/prod must have at least some categories featured (`featured_categories` rows) or the
+  ranked draft pool is EMPTY. Sanity check:
+  ```sql
+  SELECT count(*) FROM featured_categories fc JOIN categories c ON c.id = fc.category_id
+  WHERE c.is_active = true;
+  ```
+- The ranked category pool is cached in-process for ~5 min — featuring/unfeaturing a category
+  takes up to 5 min to affect new drafts (or restart / `invalidateCategoryCache`).

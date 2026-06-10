@@ -179,6 +179,18 @@ export function useRealtimePossessionMatchController({
   // Decode the goal-celebration art up front so the first goal doesn't pop a
   // cold image mid-celebration.
   usePreloadImages(GOAL_OVERLAY_ASSETS);
+  // Warm the half's upcoming image-MCQ picture as soon as the server announces
+  // it on match:state (the half's first question) so it's fully loaded long
+  // before the image slot (Q4) starts. Must be the SAME optimized URL the
+  // QuestionImageCard renders, otherwise the card's WebP fetch is still cold.
+  const announcedPreloadUrls = useMemo(
+    () =>
+      (possessionState?.preloadImageUrls ?? []).map((url) =>
+        optimizeSupabaseImage(url, QUESTION_IMAGE_TRANSFORM),
+      ),
+    [possessionState?.preloadImageUrls],
+  );
+  usePreloadImages(announcedPreloadUrls);
   const isPenaltyQuestion = phaseKind === 'penalty';
   const isLastAttackQuestion = phaseKind === 'last_attack';
   const isShotQuestion = phaseKind === 'shot';
