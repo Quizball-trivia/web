@@ -187,6 +187,7 @@ export function ItemCard({
           <button
             type="button"
             onClick={onBuy}
+            aria-label={`${name} — ${price}`}
             className="flex h-9 w-full items-center justify-center gap-1 rounded-[16px] text-[12px] uppercase text-white transition-transform active:translate-y-[2px] sm:h-[44px] sm:gap-2 sm:rounded-[20px] sm:text-[18px]"
             style={{ ...poppins, backgroundColor: PURPLE }}
           >

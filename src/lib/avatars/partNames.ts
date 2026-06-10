@@ -22,6 +22,8 @@ const PART_NAME_KEY_MAP: Record<string, MessageKey> = {
   "Red": "store.partRed",
   "Violet": "store.partViolet",
   "Pink": "store.partPink",
+  // Country name (not a club brand) — translated for the home market.
+  "Georgia": "store.partGeorgia",
 };
 
 /**

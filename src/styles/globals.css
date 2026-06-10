@@ -62,6 +62,8 @@
   --surface-card: 195 33% 16%;      /* #1B2F36 — card body (×96; mirrors --card) */
   --surface-card-tint: 198 31% 21%; /* #243B44 — card tint / hover (×61) */
   --surface-card-light: 196 35% 25%; /* #2A4A55 — slate-like card surface (×5) */
+  --store-card: 193 39% 7%;         /* #0B1619 — store card / purchase + avatar modal bg */
+  --store-accent: 288 98% 46%;      /* #BA02E8 — store purple accent (card + modal borders) */
   --surface-deep: 197 32% 14%;      /* #131F24 — overlay surface (×68) */
   --surface-darkest: 215 31% 6%;    /* #0D1117 — deepest surface (×5) */
   --surface-input: 207 27% 13%;     /* #17222A — input field bg (×5) */
@@ -143,6 +145,8 @@
   --color-brand-slate: hsl(var(--brand-slate));
 
   /* Surface palette */
+  --color-store-card: hsl(var(--store-card));
+  --color-store-accent: hsl(var(--store-accent));
   --color-surface-page: hsl(var(--surface-page));
   --color-surface-page-alt: hsl(var(--surface-page-alt));
   --color-surface-page-deep: hsl(var(--surface-page-deep));
