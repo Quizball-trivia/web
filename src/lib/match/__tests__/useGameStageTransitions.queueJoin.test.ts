@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
@@ -35,6 +35,9 @@ function renderTransitions(socket: Socket) {
 describe('ranked matchmaking initial queue join', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // The hook's geo-hint probe may call fetch on mount; keep the suite
+    // hermetic — the hint silently falls back to the locale-derived value.
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network disabled in unit tests')));
     useRealtimeMatchStore.getState().reset();
     useRankedMatchmakingStore.getState().clearRankedMatchmaking?.();
     useRankedMatchmakingStore.setState({
@@ -42,6 +45,10 @@ describe('ranked matchmaking initial queue join', () => {
       rankedSearchStartedAt: null,
       rankedFoundOpponent: null,
     });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it('emits ranked:queue_join even when the session snapshot is null (Play Again deadlock guard)', () => {
