@@ -643,6 +643,14 @@ export function MatchmakingMapScreen({
             background: "#0D1117",
           }}
         >
+          {/* transformBox MUST be view-box (not fill-box): with fill-box the
+              <g> scales around the projected land bounding box origin
+              (~14.8, 55.6) while the HTML pin overlay below scales around the
+              viewBox (0,0), so every pin drifts by (scale-1)*(14.8, 55.6)
+              viewBox px — a few px while searching (pins visibly off-country),
+              and ~(33, 122) px at the found-state zoom (opponent pin lands in
+              the wrong country entirely). view-box gives both layers the same
+              origin. */}
           <motion.g
             style={{
               x: mapX,
@@ -650,13 +658,6 @@ export function MatchmakingMapScreen({
               scale: mapScale,
               originX: 0,
               originY: 0,
-              // MUST be view-box: with fill-box the <g> scales around the
-              // projected land bounding box origin (~14.8, 55.6) while the
-              // HTML pin overlay below scales around the viewBox (0,0), so
-              // every pin drifts by (scale-1)*(14.8, 55.6) viewBox px — a few
-              // px while searching (pins visibly off-country), and ~(33, 122)
-              // px at the found-state zoom (opponent pin lands in the wrong
-              // country entirely). view-box gives both layers the same origin.
               transformBox: "view-box",
               transformOrigin: "0px 0px",
             }}
