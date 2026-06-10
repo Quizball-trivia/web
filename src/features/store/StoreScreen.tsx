@@ -34,6 +34,7 @@ import {
   customizationFromAvatarValue,
 } from "@/lib/avatars";
 import { useAuthStore } from "@/stores/auth.store";
+import { isUnlimitedDevEmail } from "@/lib/auth/devUnlimited";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { updateMe } from "@/lib/api/endpoints";
 import type { AvatarCustomization } from "@/types/game";
@@ -208,6 +209,13 @@ export function StoreScreen() {
   const { data: wallet } = useStoreWallet();
   const { data: inventoryData } = useStoreInventory();
   const authUser = useAuthStore((state) => state.user);
+  // Dev-allowlist accounts: the backend skips every store economy limit for
+  // them, so the UI mirrors that by treating items as always affordable and
+  // ticket packs as never capped.
+  const isUnlimited = useMemo(
+    () => isUnlimitedDevEmail(authUser?.email),
+    [authUser?.email],
+  );
   const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
   const { player, updateStats } = usePlayer();
   const [buyModal, setBuyModal] = useState<BuyModalState | null>(null);
@@ -241,7 +249,7 @@ export function StoreScreen() {
    * don't flash "Need more" before the balance arrives.
    */
   const canAffordCoins = (priceCoins: number | undefined) =>
-    !priceCoins || wallet == null || wallet.coins >= priceCoins;
+    isUnlimited || !priceCoins || wallet == null || wallet.coins >= priceCoins;
 
   const canAffordPart = (part: AvatarPart) => canAffordCoins(part.priceCoins);
 
@@ -371,7 +379,10 @@ export function StoreScreen() {
   const ticketPacks = useMemo<TicketPackItem[]>(() => {
     const currentTickets = wallet?.tickets ?? 0;
     const TICKET_CAP = 10;
-    const availableSpace = Math.max(0, TICKET_CAP - currentTickets);
+    // Dev-allowlist accounts bypass the cap on the backend; never disable here.
+    const availableSpace = isUnlimited
+      ? Number.POSITIVE_INFINITY
+      : Math.max(0, TICKET_CAP - currentTickets);
 
     const ticketPacks = (productsData?.items ?? []).filter(
       (p) => p.type === "ticket_pack",
@@ -398,7 +409,7 @@ export function StoreScreen() {
         } satisfies TicketPackItem;
       })
       .sort((a, b) => a.ticketCount - b.ticketCount);
-  }, [productsData, wallet?.tickets, t]);
+  }, [productsData, wallet?.tickets, isUnlimited, t]);
 
   const purchasePending = checkoutMutation.isPending || coinPurchaseMutation.isPending;
 
