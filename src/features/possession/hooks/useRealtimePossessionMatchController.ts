@@ -5,8 +5,11 @@ import { useShallow } from 'zustand/shallow';
 import { useRealtimeGameLogic } from '@/lib/match/useRealtimeGameLogic';
 import { useGameSounds } from '@/lib/sounds/useGameSounds';
 import { usePreloadImages } from '@/lib/usePreloadImages';
-import { optimizedRemoteImageProps } from '@/lib/images/remoteImage';
-import { optimizeSupabaseImage, QUESTION_IMAGE_TRANSFORM } from '@/lib/images/optimizeSupabaseImage';
+import {
+  CATEGORY_CARD_IMAGE_TRANSFORM,
+  optimizeSupabaseImage,
+  QUESTION_IMAGE_TRANSFORM,
+} from '@/lib/images/optimizeSupabaseImage';
 
 /** Static art shown during goal celebrations — decoded at match start. */
 const GOAL_OVERLAY_ASSETS = ['/assets/goal.webp'];
@@ -166,12 +169,12 @@ export function useRealtimePossessionMatchController({
   // Warm the ban-category images as soon as the halftime options arrive in the
   // socket payload — usually a beat before the ban UI renders — so the cards
   // don't show blank while images download. Must warm the same optimized URL
-  // that BanCategoryCard renders (see optimizedRemoteImageProps), otherwise
-  // the preload caches the raw asset and the card still fetches cold.
+  // that BanCategoryCard renders (the Supabase CDN transform), otherwise the
+  // preload caches a different variant and the card still fetches cold.
   const banImageUrls = useMemo(
     () =>
       (possessionState?.halftime.categoryOptions ?? []).map((c) =>
-        c.imageUrl ? optimizedRemoteImageProps(c.imageUrl, 400).src : null,
+        optimizeSupabaseImage(c.imageUrl, CATEGORY_CARD_IMAGE_TRANSFORM),
       ),
     [possessionState?.halftime.categoryOptions],
   );

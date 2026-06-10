@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- Category artwork URLs come from realtime/backend payloads. */
 
-import { optimizedRemoteImageProps } from "@/lib/images/remoteImage";
+import { CATEGORY_CARD_IMAGE_TRANSFORM, optimizeSupabaseImage } from "@/lib/images/optimizeSupabaseImage";
 import { memo, useMemo } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -118,7 +118,7 @@ function BanCategoryCardComponent({
         <>
           <div className="absolute inset-0" style={{ backgroundColor: color.bg }} />
           <img
-            {...optimizedRemoteImageProps(imageUrl ?? '', 400)}
+            src={optimizeSupabaseImage(imageUrl, CATEGORY_CARD_IMAGE_TRANSFORM) ?? undefined}
             alt=""
             width={400}
             height={500}

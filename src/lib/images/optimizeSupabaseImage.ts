@@ -33,6 +33,23 @@ export const QUESTION_IMAGE_TRANSFORM: SupabaseImageTransform = {
   resize: 'contain',
 };
 
+/**
+ * Transform for draft/halftime ban category cards. Category art is stored as
+ * 2-3 MB raw PNGs; routing them through the Next.js image optimizer made the
+ * FIRST paint of the ban screen multi-second (the optimizer must download the
+ * full original before it can resize, and its cache is per-deployment/cold in
+ * dev). The Supabase render endpoint resizes at the storage CDN edge and is
+ * shared across all users: ~20 KB webp, sub-second cold, instant warm.
+ * 800px wide = 2× the card's ~400px CSS width (retina). The card <img> uses
+ * object-cover, so `contain` here only preserves the source aspect ratio.
+ */
+export const CATEGORY_CARD_IMAGE_TRANSFORM: SupabaseImageTransform = {
+  width: 800,
+  quality: 70,
+  format: 'webp',
+  resize: 'contain',
+};
+
 const PUBLIC_OBJECT_SEGMENT = '/storage/v1/object/public/';
 const RENDER_SEGMENT = '/storage/v1/render/image/public/';
 

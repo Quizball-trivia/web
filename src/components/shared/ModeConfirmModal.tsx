@@ -118,11 +118,13 @@ export function ModeConfirmModal({
 
   const Body = (
     <div className="relative font-fun">
-      {/* Title — centered, max-width keeps it from running into the
-          close button on narrow viewports. The natural break after
-          "RANKED" produces the Figma's two-line composition. */}
+      {/* Title — centered. The max-width must clear the 48px close button
+          anchored top-right (24px inset): reserve ~56px per side so the first
+          line wraps BEFORE sliding under the X (long locales like KA hit this;
+          88% was not enough). Symmetric so the text stays visually centered;
+          the natural break still produces the Figma's two-line composition. */}
       <h2
-        className="font-poppins mx-auto max-w-[88%] text-center uppercase text-white leading-[0.95]"
+        className="font-poppins mx-auto max-w-[calc(100%-112px)] text-center uppercase text-white leading-[0.95]"
         style={{ fontSize: "clamp(26px, 6.2vw, 46px)" }}
       >
         <span className="text-brand-yellow">{t(config.titlePrefixKey)}</span>{" "}

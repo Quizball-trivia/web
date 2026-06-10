@@ -73,6 +73,13 @@ export interface DraftState {
   lobbyId: string;
   categories: DraftCategory[];
   turnUserId: string;
+  /**
+   * Info flag from the backend: the candidates were selected with
+   * recent-category filtering (recently played categories of the matched
+   * players were excluded server-side). Display the categories as-is — the
+   * client performs no filtering.
+   */
+  recentFilterApplied?: boolean;
 }
 
 export interface DraftOpponentDisconnectedPayload {
