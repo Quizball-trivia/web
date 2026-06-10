@@ -174,16 +174,26 @@ function pickRandom<T>(items: readonly T[], indexFallback: number): T {
 }
 
 function generateFakePlayers(): FakePlayer[] {
-  const cityPool = shuffled([
-    ...CITY_DATA.map(({ lon, lat, city, country, flag }) => ({
-      lon,
-      lat,
-      city,
-      country,
-      flag,
-    })),
-    ...EXTRA_SEARCH_LOCATIONS,
-  ]).slice(0, CITY_DATA.length + 6);
+  // Dedupe by city: several cities appear in both CITY_DATA and
+  // EXTRA_SEARCH_LOCATIONS (Ankara, Birmingham, Delhi, ...). Without this the
+  // shuffle can pick both copies and render two pins stacked on one spot.
+  const seenCities = new Set<string>();
+  const cityPool = shuffled(
+    [
+      ...CITY_DATA.map(({ lon, lat, city, country, flag }) => ({
+        lon,
+        lat,
+        city,
+        country,
+        flag,
+      })),
+      ...EXTRA_SEARCH_LOCATIONS,
+    ].filter((c) => {
+      if (seenCities.has(c.city)) return false;
+      seenCities.add(c.city);
+      return true;
+    }),
+  ).slice(0, CITY_DATA.length + 12);
   const names = shuffled(SEARCH_PLAYER_NAMES);
   const avatarCustomizations = shuffled(CITY_DATA.map((c) => c.customization));
 
