@@ -26,6 +26,8 @@ export interface PurchaseConfirmModalProps {
   name: string;
   /** Display price, e.g. "0.99$" or "500". Pass empty string for owned items (equip flow). */
   price: string;
+  /** When true, the price is a coin amount — a coin icon is rendered next to it. */
+  priceInCoins?: boolean;
   /** When provided, modal renders an equipped-on-avatar preview (used for avatar parts). */
   previewCustomization?: AvatarCustomization;
   /** Confirm button label override (e.g. "Equip" when item is already owned). */
@@ -44,6 +46,7 @@ export function PurchaseConfirmModal({
   isPending,
   name,
   price,
+  priceInCoins = false,
   previewCustomization,
   confirmLabel,
   affordable = true,
@@ -107,7 +110,7 @@ export function PurchaseConfirmModal({
                 >
                   {price.replace(/\s*coins?$/i, "").trim()}
                 </span>
-                {/^[\d,]+\s*coins?$/i.test(price) && <CoinIcon size={28} />}
+                {(priceInCoins || /^[\d,]+\s*coins?$/i.test(price)) && <CoinIcon size={28} />}
               </div>
             )}
 

@@ -70,6 +70,8 @@ interface BuyModalState {
   previewCustomization?: AvatarCustomization;
   /** When false, the modal is preview-only with a disabled "Need more" button. */
   affordable?: boolean;
+  /** When true, the price is a coin amount — the modal shows a coin icon. */
+  priceInCoins?: boolean;
 }
 
 const POPPINS_HEADER = {
@@ -411,7 +413,8 @@ export function StoreScreen() {
     }
     setBuyModal({
       name: translatePartName(part.name),
-      price: isOwned ? "" : part.priceCoins ? t("store.coinsPrice", { amount: part.priceCoins.toLocaleString() }) : "—",
+      price: isOwned ? "" : part.priceCoins ? part.priceCoins.toLocaleString() : "—",
+      priceInCoins: !isOwned && Boolean(part.priceCoins),
       productSlug: part.productSlug,
       mode: modalMode,
       avatarPart: part,
@@ -532,7 +535,8 @@ export function StoreScreen() {
                       }
                       setBuyModal({
                         name: b.title,
-                        price: `${b.price} coins`,
+                        price: b.price,
+                        priceInCoins: true,
                         productSlug: b.productSlug,
                         mode: b.productSlug ? "coins" : "none",
                       });
@@ -662,6 +666,7 @@ export function StoreScreen() {
             isPending={purchasePending}
             name={buyModal?.name ?? ""}
             price={buyModal?.price ?? ""}
+            priceInCoins={buyModal?.priceInCoins ?? false}
             previewCustomization={buyModal?.previewCustomization}
             confirmLabel={buyModal?.mode === "equip" ? t("store.equip") : undefined}
             affordable={buyModal?.affordable ?? true}
