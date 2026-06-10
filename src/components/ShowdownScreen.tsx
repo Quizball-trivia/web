@@ -33,7 +33,9 @@ function FramedAvatar({
   className?: string;
 }) {
   const frameW = width;
-  const frameH = Math.round(frameW * 1.36);
+  // Match the actual rank-frame PNG canvas aspect (~h/w 1.58) so the character
+  // and badge overlays don't drift across screen sizes.
+  const frameH = Math.round(frameW * 1.58);
   const chipW = Math.round(frameW * 0.22);
   return (
     <div className={cn('relative', className)} style={{ width: frameW, height: frameH }}>
@@ -53,24 +55,24 @@ function FramedAvatar({
           className={cn(mirror && '-scale-x-100')}
         />
       </div>
-      {/* Flag — top-left, clean rounded square (Figma look) */}
+      {/* Flag — top-left, circular, slightly inset so the design fits the circle */}
       {countryCode && (
         <div
-          className="absolute left-[11%] top-[11%] z-20 overflow-hidden rounded-full shadow-[0_1px_4px_rgba(0,0,0,0.45)]"
+          className="absolute left-[11%] top-[11%] z-20 flex items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_1px_4px_rgba(0,0,0,0.45)]"
           style={{ width: chipW, height: chipW }}
         >
           <CountryFlag
             code={countryCode}
-            className="!h-full !w-full"
-            style={{ backgroundSize: 'cover', backgroundPosition: 'center' }}
+            className="!h-[78%] !w-[78%] rounded-sm"
+            style={{ backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' }}
           />
         </div>
       )}
-      {/* Club badge — top-right, circular, same size as the flag */}
+      {/* Club badge — top-right, circular, no background (just the logo) */}
       {club && (
         <div
-          className="absolute right-[11%] top-[11%] z-20 flex items-center justify-center overflow-hidden rounded-full shadow-[0_1px_4px_rgba(0,0,0,0.45)]"
-          style={{ width: chipW, height: chipW, backgroundColor: club.primaryColor }}
+          className="absolute right-[11%] top-[11%] z-20 flex items-center justify-center"
+          style={{ width: chipW, height: chipW }}
         >
           <Image
             src={club.logo}
@@ -78,7 +80,7 @@ function FramedAvatar({
             width={64}
             height={64}
             unoptimized
-            className="size-[78%] object-contain"
+            className="size-full object-contain drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]"
           />
         </div>
       )}

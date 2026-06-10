@@ -95,7 +95,7 @@ export function WelcomeScreen() {
   const { data: leaderboardData } = useLeaderboard('global');
   const leaderboardEntries = leaderboardData ?? DEMO_LEADERBOARD;
 
-  const { featuredCategories } = useWelcomeCategoriesData();
+  const { allCategories, featuredCategories, remainingCategories } = useWelcomeCategoriesData();
   const phoneAuthAvailability = useGeorgianPhoneAuthAvailability();
   const canUseGeorgianPhoneAuth = phoneAuthAvailability.isAvailable;
 
@@ -151,9 +151,9 @@ export function WelcomeScreen() {
         {/* Categories */}
         <div className="pb-10">
           <WelcomeCategoriesSection
-            allCategoriesCount={featuredCategories.length}
+            allCategoriesCount={allCategories.length}
             featuredCategories={featuredCategories}
-            hasRemaining={featuredCategories.length > 15}
+            hasRemaining={remainingCategories.length > 0}
             onCategorySelect={handleProtectedWelcomeAction}
             onBrowseAll={handleBrowseCategories}
           />
@@ -175,7 +175,7 @@ export function WelcomeScreen() {
 
       <WelcomeCategoriesDialog
         open={categoriesOpen}
-        categories={featuredCategories}
+        categories={allCategories}
         onOpenChange={setCategoriesOpen}
         onCategorySelect={handleCategorySelect}
       />

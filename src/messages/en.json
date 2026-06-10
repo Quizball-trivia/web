@@ -618,6 +618,8 @@
   },
   "welcome": {
     "untilKickoff": "until kickoff",
+    "daysLeft": "days left",
+    "poweredBy": "Powered by",
     "duelsPlayedSoFar": "{count}+ duels settled on the pitch",
     "duelsPlayed": "{count}+ duels played",
     "heroTitle": "Every question is a goal chance.",
@@ -769,7 +771,8 @@
   },
   "modeConfirm": {
     "rankedTitlePrefix": "1V1",
-    "rankedTitleRest": "World Cup Ranked",
+    "rankedTitleRest": "Ranked",
+    "rankedTitleRestEvent": "World Cup Ranked",
     "rankedDescription": "3 Random categories appear - each player blocks 1, then compete in the remaining one",
     "rankedStatLeft": "12–18 Questions",
     "rankedStatRight": "Duration 5 Min",

@@ -112,9 +112,10 @@ export function ModeConfirmModal({
   const config = CONFIG[mode];
   const hasTickets = ticketsRemaining >= config.entryCost;
   const needsTickets = config.entryCost > 0 && !hasTickets;
-  const titleRest = t(config.titleRestKey);
   const description = t(config.descriptionKey);
   const isRanked = mode === "ranked";
+  const titleRest =
+    isEventMode && isRanked ? t("modeConfirm.rankedTitleRestEvent") : t(config.titleRestKey);
   const handlePrimaryClick = () => {
     if (needsTickets) {
       onOpenChange(false);
@@ -228,7 +229,10 @@ export function ModeConfirmModal({
           t("common.play")
         ) : (
           <span>
-            PLAY FOR <span className="text-brand-yellow">{config.entryCost} {config.entryCost === 1 ? 'TICKET' : 'TICKETS'}</span>
+            {t(
+              config.entryCost === 1 ? "modeConfirm.playForTicket" : "modeConfirm.playForTickets",
+              { count: config.entryCost },
+            )}
           </span>
         )}
       </button>

@@ -212,6 +212,8 @@
     "phoneLocalPlaceholder": "5XX XXX XXX",
     "otpPlaceholder": "123456",
     "untilKickoff": "მატჩის დაწყებამდე",
+    "daysLeft": "დარჩა დღე",
+    "poweredBy": "წარმოდგენილია",
     "duelsPlayedSoFar": "{count}+ დასრულებული დუელი მოედანზე",
     "duelsPlayed": "{count}+ ჩატარებული დუელი",
     "heroTitle": "ყოველი კითხვა გოლის გატანის შანსია.",
@@ -312,7 +314,8 @@
   "modeConfirm": {
     "rankedTitlePrefix": "1V1",
     "friendlyTitlePrefix": "1V1",
-    "rankedTitleRest": "World Cup Ranked",
+    "rankedTitleRest": "რეიტინგული",
+    "rankedTitleRestEvent": "მსოფლიო თასის რეიტინგი",
     "rankedDescription": "გამოჩნდება 3 შემთხვევითი კატეგორია - თითოეული მოთამაშე ბლოკავს 1-ს, შემდეგ კი ეჯიბრებით დარჩენილში",
     "rankedStatLeft": "12–18 კითხვა",
     "rankedStatRight": "ხანგრძლივობა 5 წთ",

@@ -46,7 +46,7 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
             className="absolute -top-1 -right-2 z-20 flex flex-col items-start rounded-md px-2 py-1"
             style={{ backgroundColor: '#FF6C0A', width: 120, height: 34, rotate: '-5.8deg', border: '2px solid #000', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}
           >
-            <span className="text-[6px] font-bold uppercase tracking-wider text-white/80 leading-none">Powered by</span>
+            <span className="text-[6px] font-bold uppercase tracking-wider text-white/80 leading-none">{t('welcome.poweredBy')}</span>
             <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={96} height={18} className="h-4 w-auto object-contain mt-0.5" />
           </div>
         )}

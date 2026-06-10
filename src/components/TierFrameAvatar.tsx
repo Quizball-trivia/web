@@ -22,6 +22,8 @@ interface TierFrameAvatarProps {
   avatarFallback?: string;
   countryCode?: string | null;
   size?: 'sm' | 'md' | 'lg';
+  /** Horizontally mirror only the avatar character (not the frame). */
+  mirrorAvatar?: boolean;
   className?: string;
 }
 
@@ -37,6 +39,7 @@ export function TierFrameAvatar({
   avatarFallback = 'avatar-1',
   countryCode,
   size = 'md',
+  mirrorAvatar = false,
   className,
 }: TierFrameAvatarProps) {
   const slug = TIER_FRAME_SLUGS[tier] ?? 'academy';
@@ -54,7 +57,7 @@ export function TierFrameAvatar({
         className="absolute inset-0 w-full h-full object-contain pointer-events-none"
       />
       {/* Avatar — on top of the frame, centered in upper portion */}
-      <div className="absolute left-1/2 -translate-x-1/2 top-[12%] z-10">
+      <div className={`absolute left-1/2 -translate-x-1/2 top-[12%] z-10 ${mirrorAvatar ? '-scale-x-100' : ''}`}>
         <AvatarDisplay
           customization={avatarCustomization ?? { base: avatarFallback }}
           size={avatarSize}

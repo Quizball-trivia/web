@@ -272,7 +272,7 @@ export function HalftimeScreen({
                 avatarCustomization={opponentAvatarCustomization ?? { base: opponentAvatarUrl }}
                 countryCode={opponentCountryCode}
                 size="md"
-                className="[&_img]:-scale-x-100"
+                mirrorAvatar
               />
               <div className="hidden min-w-0 text-right sm:block">
                 <div className="max-w-[140px] truncate text-[13px] font-black uppercase text-white sm:text-sm">

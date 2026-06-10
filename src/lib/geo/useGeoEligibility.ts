@@ -16,6 +16,17 @@ function geoUrl(): string {
   return params ? `/api/geo${params}` : "/api/geo";
 }
 
+// Validate the /api/geo payload shape before trusting it.
+function isGeoApiResponse(value: unknown): value is GeoApiResponse {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return (
+    (typeof v.countryCode === "string" || v.countryCode === null) &&
+    typeof v.isGeorgia === "boolean" &&
+    typeof v.showBetson === "boolean"
+  );
+}
+
 export function useGeoEligibility(): GeoApiResponse {
   const [geo, setGeo] = useState<GeoApiResponse>(INITIAL_GEO);
 
@@ -31,10 +42,10 @@ export function useGeoEligibility(): GeoApiResponse {
         if (!response.ok) {
           throw new Error(`Geo check failed with ${response.status}`);
         }
-        return response.json() as Promise<GeoApiResponse>;
+        return response.json() as Promise<unknown>;
       })
       .then((result) => {
-        if (mounted) {
+        if (mounted && isGeoApiResponse(result)) {
           setGeo(result);
         }
       })

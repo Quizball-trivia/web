@@ -66,7 +66,7 @@ export function WelcomeNavbar({ wcDaysLeft }: WelcomeNavbarProps) {
                 {wcDaysLeft}
               </span>
               <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-brand-yellow">
-                {isEventMode ? 'days left' : t('welcome.untilKickoff')}
+                {isEventMode ? t('welcome.daysLeft') : t('welcome.untilKickoff')}
               </span>
             </div>
           )}
