@@ -191,6 +191,9 @@
   "store": {
     "sessionExpired": "Session expired. Please sign in again.",
     "ticketsAlreadyFull": "Tickets are already full.",
+    "ticketLimitReached": "Limit reached",
+    "ticketPurchaseLimit": "You've hit the daily ticket purchase limit (3 per day).",
+    "ticketPurchaseLimitIn": "Daily ticket limit reached. Next purchase in {time}.",
     "unableToStartCheckout": "Unable to start checkout.",
     "purchaseCompleted": "Purchase completed.",
     "notEnoughCoins": "Not enough coins.",

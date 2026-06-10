@@ -37,6 +37,7 @@ import { useAuthStore } from "@/stores/auth.store";
 import { isUnlimitedDevEmail } from "@/lib/auth/devUnlimited";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { updateMe } from "@/lib/api/endpoints";
+import { cn } from "@/lib/utils";
 import type { AvatarCustomization } from "@/types/game";
 
 const STRIPE_PURCHASES_ENABLED = false;
@@ -48,6 +49,19 @@ function formatUsd(priceCents: number): string {
   }).format(priceCents / 100);
 }
 
+/** Compact "Xh Ym" / "Ym" string for a ticket-purchase cooldown countdown. */
+function formatRemaining(totalSeconds: number): string {
+  const seconds = Math.max(0, Math.ceil(totalSeconds));
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.ceil((seconds % 3600) / 60);
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m`;
+  return "<1m";
+}
+
+/** Live wallet ticket cap — mirrors backend MAX_TICKETS. */
+const TICKET_CAP = 3;
+
 interface TicketPackItem {
   id: string;
   title: string;
@@ -58,6 +72,8 @@ interface TicketPackItem {
   iconAsset: string;
   productSlug?: string;
   disabled?: boolean;
+  /** Why the pack is disabled — drives both the button label and the tap toast. */
+  disabledReason?: "full" | "cooldown";
   /** Number of tickets this pack grants — drives the stacked-icon visual. */
   ticketCount: number;
 }
@@ -179,15 +195,27 @@ function TicketCard({ pack, onBuy }: { pack: TicketPackItem; onBuy: (b: TicketPa
           <TicketStack count={pack.ticketCount} />
         </div>
 
-        {/* Bottom: pill button — coin price + coin icon */}
+        {/* Bottom: pill button — coin price + coin icon.
+            "Full" packs stay hard-disabled (the reason is self-evident). Packs
+            blocked by the rolling 24h limit remain tappable but dimmed, so the
+            tap can explain when the next purchase unlocks. */}
         <button
           type="button"
           onClick={() => onBuy(pack)}
-          disabled={pack.disabled}
-          className="flex h-9 w-full items-center justify-center gap-1 rounded-[16px] text-[12px] uppercase text-white transition-transform active:translate-y-[2px] disabled:opacity-50 disabled:active:translate-y-0 sm:h-[44px] sm:gap-2 sm:rounded-[20px] sm:text-[18px]"
+          disabled={pack.disabledReason === "full"}
+          className={cn(
+            "flex h-9 w-full items-center justify-center gap-1 rounded-[16px] text-[12px] uppercase text-white transition-transform active:translate-y-[2px] disabled:opacity-50 disabled:active:translate-y-0 sm:h-[44px] sm:gap-2 sm:rounded-[20px] sm:text-[18px]",
+            pack.disabledReason === "cooldown" && "opacity-50",
+          )}
           style={{ ...POPPINS_HEADER, backgroundColor: ACCENT_PURPLE }}
         >
-          <span className="tabular-nums">{pack.disabled ? t("store.full") : pack.price}</span>
+          <span className="tabular-nums">
+            {pack.disabledReason === "full"
+              ? t("store.full")
+              : pack.disabledReason === "cooldown"
+              ? t("store.ticketLimitReached")
+              : pack.price}
+          </span>
           {!pack.disabled && <CoinIcon size={22} />}
         </button>
       </div>
@@ -318,6 +346,21 @@ export function StoreScreen() {
           toast.error(t("store.ticketsAlreadyFull"));
           return;
         }
+        if (errorCode === "TICKET_PURCHASE_COOLDOWN") {
+          const remainingSeconds =
+            typeof error.data === "object" &&
+            error.data !== null &&
+            "remainingSeconds" in error.data &&
+            typeof (error.data as { remainingSeconds?: unknown }).remainingSeconds === "number"
+              ? (error.data as { remainingSeconds: number }).remainingSeconds
+              : null;
+          toast.error(
+            remainingSeconds != null
+              ? t("store.ticketPurchaseLimitIn", { time: formatRemaining(remainingSeconds) })
+              : t("store.ticketPurchaseLimit"),
+          );
+          return;
+        }
         toast.error(t("store.notEnoughCoins"));
         return;
       }
@@ -378,11 +421,15 @@ export function StoreScreen() {
 
   const ticketPacks = useMemo<TicketPackItem[]>(() => {
     const currentTickets = wallet?.tickets ?? 0;
-    const TICKET_CAP = 10;
     // Dev-allowlist accounts bypass the cap on the backend; never disable here.
     const availableSpace = isUnlimited
       ? Number.POSITIVE_INFINITY
       : Math.max(0, TICKET_CAP - currentTickets);
+    // Backend enforces a rolling per-24h purchase limit. When it's reached the
+    // wallet reports canBuy=false, so disable the card up-front instead of
+    // letting the tap fail with a misleading "not enough coins" toast. Unlimited
+    // dev accounts skip the cooldown too.
+    const onCooldown = !isUnlimited && wallet?.ticketPurchaseCooldown?.canBuy === false;
 
     const ticketPacks = (productsData?.items ?? []).filter(
       (p) => p.type === "ticket_pack",
@@ -395,6 +442,12 @@ export function StoreScreen() {
           typeof (product.metadata as { tickets?: unknown }).tickets === "number"
             ? ((product.metadata as { tickets: number }).tickets)
             : 1;
+        const isFull = ticketCount > availableSpace;
+        const disabledReason: TicketPackItem["disabledReason"] = isFull
+          ? "full"
+          : onCooldown
+          ? "cooldown"
+          : undefined;
         return {
           id: product.slug,
           title: `${ticketCount} ${ticketCount === 1 ? t("store.ticket") : t("store.tickets")}`,
@@ -404,12 +457,13 @@ export function StoreScreen() {
           priceCoinsValue: product.priceCents,
           productSlug: product.slug,
           iconAsset: "/assets/ticket_icon.webp",
-          disabled: ticketCount > availableSpace,
+          disabled: disabledReason != null,
+          disabledReason,
           ticketCount,
         } satisfies TicketPackItem;
       })
       .sort((a, b) => a.ticketCount - b.ticketCount);
-  }, [productsData, wallet?.tickets, isUnlimited, t]);
+  }, [productsData, wallet?.tickets, wallet?.ticketPurchaseCooldown?.canBuy, isUnlimited, t]);
 
   const purchasePending = checkoutMutation.isPending || coinPurchaseMutation.isPending;
 
@@ -560,8 +614,17 @@ export function StoreScreen() {
                   <TicketCard
                     pack={pack}
                     onBuy={(b) => {
-                      if (b.disabled) {
+                      if (b.disabledReason === "full") {
                         toast.message(t("store.notEnoughTicketSpace"));
+                        return;
+                      }
+                      if (b.disabledReason === "cooldown") {
+                        const remainingSeconds = wallet?.ticketPurchaseCooldown?.remainingSeconds;
+                        toast.message(
+                          remainingSeconds
+                            ? t("store.ticketPurchaseLimitIn", { time: formatRemaining(remainingSeconds) })
+                            : t("store.ticketPurchaseLimit"),
+                        );
                         return;
                       }
                       if (b.productSlug) {
