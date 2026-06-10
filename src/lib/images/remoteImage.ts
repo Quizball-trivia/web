@@ -18,15 +18,20 @@ import { getImageProps } from "next/image";
 const QUALITY = 90;
 
 function isOwnSupabaseUrl(src: string): boolean {
-  let host: string;
+  let url: URL;
   try {
-    host = new URL(src).hostname;
+    url = new URL(src);
   } catch {
     return false; // relative/invalid URLs — leave to the caller as-is
   }
-  // Matches the `*.supabase.co` remotePattern in next.config.ts and keeps
-  // working across staging/prod projects without hardcoding refs.
-  return host.endsWith(".supabase.co");
+  // Must mirror the `*.supabase.co` + `/storage/v1/object/public/**`
+  // remotePattern in next.config.ts exactly: hostname keeps this working
+  // across staging/prod projects, and the pathname check keeps signed or
+  // private storage URLs (which the optimizer would reject) out of it.
+  return (
+    url.hostname.endsWith(".supabase.co") &&
+    url.pathname.startsWith("/storage/v1/object/public/")
+  );
 }
 
 export interface OptimizedRemoteImageProps {
