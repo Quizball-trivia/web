@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "motion/react";
 import { Loader2 } from "lucide-react";
 import { AvatarPreview } from "@/components/AvatarPreview";
+import { ModalCloseButton } from "@/components/shared/ModalCloseButton";
 import { CoinIcon } from "./CoinIcon";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { AvatarCustomization } from "@/types/game";
@@ -15,8 +16,6 @@ const poppins = {
 } as const;
 
 const PURPLE = "#BA02E8";
-const CARD_BG = "#FFFFFF";
-const TEXT_DARK = "#071013";
 
 export interface PurchaseConfirmModalProps {
   open: boolean;
@@ -68,10 +67,14 @@ export function PurchaseConfirmModal({
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.92, opacity: 0, y: 20 }}
             transition={{ type: "spring", stiffness: 320, damping: 26 }}
-            className="relative w-full max-w-[420px] rounded-[24px] border-[3px] p-6"
-            style={{ backgroundColor: CARD_BG, borderColor: PURPLE }}
+            className="relative w-full max-w-[420px] rounded-[24px] border border-white/10 bg-surface-card p-6"
             onClick={(e) => e.stopPropagation()}
           >
+            <ModalCloseButton
+              onClose={() => {
+                if (!isPending) onClose();
+              }}
+            />
             {/* Avatar preview (when applicable) */}
             {previewCustomization && (
               <div className="mb-5 flex justify-center">
@@ -83,7 +86,7 @@ export function PurchaseConfirmModal({
 
             {/* Item name */}
             <div
-              className="text-center text-[24px] uppercase text-surface-page"
+              className="text-center text-[24px] uppercase text-white"
               style={poppins}
             >
               {name}
@@ -93,7 +96,7 @@ export function PurchaseConfirmModal({
             {!hidePrice && (
               <div className="mt-4 flex items-center justify-center gap-2">
                 <span
-                  className="text-[10px] uppercase tracking-[0.04em] text-surface-page/55"
+                  className="text-[10px] uppercase tracking-[0.04em] text-white/55"
                   style={poppins}
                 >
                   {t('profile.purchase.price')}
@@ -121,21 +124,12 @@ export function PurchaseConfirmModal({
                 </button>
               </div>
             ) : (
-            <div className="mt-6 flex gap-3">
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={onClose}
-                className="flex h-[48px] flex-1 items-center justify-center rounded-[16px] border-2 border-surface-page/20 bg-surface-page/5 text-[14px] uppercase text-surface-page transition-colors hover:bg-surface-page/10 disabled:opacity-40"
-                style={poppins}
-              >
-                {t('common.cancel')}
-              </button>
+            <div className="mt-6">
               <button
                 type="button"
                 disabled={isPending}
                 onClick={onConfirm}
-                className="flex h-[48px] flex-1 items-center justify-center gap-2 rounded-[16px] text-[14px] uppercase transition-transform active:translate-y-[1px] disabled:opacity-60"
+                className="flex h-[48px] w-full items-center justify-center gap-2 rounded-[16px] text-[14px] uppercase transition-transform active:translate-y-[1px] disabled:opacity-60"
                 style={{ ...poppins, backgroundColor: PURPLE, color: "#FFFFFF" }}
               >
                 {isPending && <Loader2 className="size-4 animate-spin" />}
@@ -150,5 +144,3 @@ export function PurchaseConfirmModal({
   );
 }
 
-// Re-export TEXT_DARK so consumers can use the same palette.
-export { PURPLE as PURCHASE_MODAL_ACCENT, TEXT_DARK as PURCHASE_MODAL_TEXT_DARK };
