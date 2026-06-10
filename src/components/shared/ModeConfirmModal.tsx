@@ -16,8 +16,11 @@
 //   • Black full-width primary CTA: "PLAY FOR <N> TICKET(S)" with
 //     the cost in yellow.
 //   • Footer: "YOU HAVE <N> TICKETS 🎫" small caps, white/80.
+import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { WorldCupRulesButton } from "./WorldCupRulesModal";
 import {
   Dialog,
   DialogContent,
@@ -98,6 +101,9 @@ export function ModeConfirmModal({
   const { t } = useLocale();
   const isMobile = useIsMobile();
   const router = useRouter();
+  const [wcDaysLeft] = useState(() =>
+    Math.max(0, Math.ceil((new Date("2026-07-19T23:59:59Z").getTime() - Date.now()) / 86_400_000))
+  );
 
   if (!mode) return null;
 
@@ -106,6 +112,7 @@ export function ModeConfirmModal({
   const needsTickets = config.entryCost > 0 && !hasTickets;
   const titleRest = t(config.titleRestKey);
   const description = t(config.descriptionKey);
+  const isRanked = mode === "ranked";
   const handlePrimaryClick = () => {
     if (needsTickets) {
       onOpenChange(false);
@@ -134,18 +141,38 @@ export function ModeConfirmModal({
         {description}
       </p>
 
-      {/* Trophy section. Mobile gets the Figma's 3-pill composition
-          (top-left entry-cost, mid-right duration, bottom-left question
-          count). Desktop keeps the original 2-pill layout. */}
+      {isRanked && (
+        <>
+          {/* Event info pill */}
+          <div className="mx-auto mt-4 flex w-fit items-center justify-center rounded-full border-2 border-brand-yellow bg-brand-yellow/10 px-5 py-2">
+            <span className="text-[11px] sm:text-xs font-black uppercase tracking-wide text-brand-yellow">
+              🏆 Play World Cup &amp; Win Prizes
+            </span>
+          </div>
+
+          {/* Event countdown + leaderboard link */}
+          <div className="mt-3 flex items-center justify-center gap-3">
+            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wide text-white/60">
+              ⏱ {wcDaysLeft} days left
+            </span>
+            <Link
+              href="/leaderboard"
+              onClick={() => onOpenChange(false)}
+              className="text-[11px] sm:text-xs font-bold uppercase tracking-wide text-brand-yellow underline underline-offset-2 hover:text-brand-yellow/80"
+            >
+              View Leaderboard →
+            </Link>
+            <WorldCupRulesButton variant="text" />
+          </div>
+        </>
+      )}
+
+      {/* Trophy section */}
       <div
         className={cn(
           "relative mx-auto h-40 w-full sm:h-48 md:h-60",
-          // Ranked: let the trophy box overlap the button below so the yellow
-          // arms tuck behind it and read as "coming out of" the button. The
-          // button sits on z-20, the trophy on z-0, so the button covers the
-          // arm-ends. Other modes keep the original symmetric margins.
-          mode === "ranked"
-            ? "mt-5 -mb-2 sm:mt-6 sm:-mb-3 md:mt-8 md:-mb-4"
+          isRanked
+            ? "mt-4 -mb-2 sm:mt-5 sm:-mb-3 md:mt-6 md:-mb-4"
             : "my-5 sm:my-6 md:my-8",
         )}
       >
@@ -157,54 +184,36 @@ export function ModeConfirmModal({
           sizes="(min-width: 768px) 320px, 60vw"
           className={cn(
             "z-0 object-contain",
-            mode === "ranked" && "translate-y-4 scale-90 sm:translate-y-5 sm:scale-95 md:translate-y-6",
+            isRanked && "translate-y-4 scale-90 sm:translate-y-5 sm:scale-95 md:translate-y-6",
           )}
         />
 
-        {/* Mobile-only: top-left "PLAY FOR N TICKETS" pill from Figma */}
-        {isMobile && config.entryCost > 0 && (
-          <div
-            className={cn(
-              "absolute left-0 top-[6%]",
-              "rounded-full px-4 py-2 text-xs font-black uppercase whitespace-nowrap",
-              "bg-brand-yellow text-black shadow-sm",
-            )}
-          >
-            {t(
-              config.entryCost === 1 ? "modeConfirm.playForTicket" : "modeConfirm.playForTickets",
-              { count: config.entryCost },
-            )}
-          </div>
+        {/* Stat pills — only for non-ranked modes */}
+        {!isRanked && (
+          <>
+            <div
+              className={cn(
+                "absolute right-0 rounded-full px-4 py-2 text-xs font-black uppercase whitespace-nowrap",
+                "z-10 bg-brand-yellow text-black shadow-sm md:text-sm",
+                isMobile ? "top-[42%]" : "top-[28%]",
+              )}
+            >
+              {t(config.statRightKey)}
+            </div>
+            <div
+              className={cn(
+                "absolute left-0 rounded-full px-4 py-2 text-xs font-black uppercase whitespace-nowrap",
+                "z-10 bg-brand-yellow text-black shadow-sm md:text-sm",
+                isMobile ? "bottom-[10%]" : "top-1/2 -translate-y-1/2",
+              )}
+            >
+              {t(config.statLeftKey)}
+            </div>
+          </>
         )}
-
-        {/* Mid-right pill (e.g. "DURATION 5 MIN") — slightly higher than
-            centre on desktop to match the original composition. */}
-        <div
-          className={cn(
-            "absolute right-0 rounded-full px-4 py-2 text-xs font-black uppercase whitespace-nowrap",
-            "z-10 bg-brand-yellow text-black shadow-sm md:text-sm",
-            isMobile ? "top-[42%]" : "top-[28%]",
-          )}
-        >
-          {t(config.statRightKey)}
-        </div>
-
-        {/* Left pill (e.g. "12-18 QUESTIONS"). Mobile pushes to the
-            bottom-left to mirror Figma; desktop keeps it vertically
-            centred next to the trophy. */}
-        <div
-          className={cn(
-            "absolute left-0 rounded-full px-4 py-2 text-xs font-black uppercase whitespace-nowrap",
-            "z-10 bg-brand-yellow text-black shadow-sm md:text-sm",
-            isMobile ? "bottom-[10%]" : "top-1/2 -translate-y-1/2",
-          )}
-        >
-          {t(config.statLeftKey)}
-        </div>
       </div>
 
-      {/* Primary CTA. Mobile = clean "PLAY" (cost shown in the top-left
-          pill); desktop keeps the original "PLAY FOR N TICKETS" wording. */}
+      {/* Primary CTA */}
       <button
         type="button"
         onClick={handlePrimaryClick}
@@ -214,20 +223,17 @@ export function ModeConfirmModal({
           needsTickets
             ? "bg-brand-yellow text-black hover:bg-brand-yellow/90 active:translate-y-[2px]"
             : hasTickets
-            ? "bg-black text-white hover:bg-black/90 active:translate-y-[2px]"
+            ? "bg-black text-white hover:bg-black/90 active:translate-y-[2px] border-2 border-brand-yellow/30"
             : "bg-black/60 text-white/50 cursor-not-allowed",
         )}
       >
         {needsTickets ? (
           t("modeConfirm.buyTickets")
-        ) : isMobile || config.entryCost === 0 ? (
+        ) : config.entryCost === 0 ? (
           t("common.play")
         ) : (
-          <span className="[&_strong]:font-inherit [&_strong]:text-brand-yellow">
-            {t(
-              config.entryCost === 1 ? "modeConfirm.playForTicket" : "modeConfirm.playForTickets",
-              { count: config.entryCost },
-            )}
+          <span>
+            PLAY FOR <span className="text-brand-yellow">{config.entryCost} {config.entryCost === 1 ? 'TICKET' : 'TICKETS'}</span>
           </span>
         )}
       </button>
