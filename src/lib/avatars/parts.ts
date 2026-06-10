@@ -398,7 +398,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
   {
     id: "jersey_georgia_retro",
     slot: "jersey",
-    name: "Georgia Retro",
+    name: "Georgia",
     asset: "/assets/store/jersey_georgia_retro.webp",
     priceCoins: 50000,
     productSlug: "avatar_jersey_georgia_retro",
