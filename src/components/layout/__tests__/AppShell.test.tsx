@@ -192,8 +192,9 @@ interface RealtimeStateSeed {
   draft?: unknown;
   match?: unknown;
   remainingReconnects?: number | null;
-  sessionState?: { state: string; waitingLobbyId?: string | null } | null;
+  sessionState?: { state: string; waitingLobbyId?: string | null; activeMatchId?: string | null } | null;
   rejoinMatch?: unknown;
+  autoRejoinSuppressedMatchId?: string | null;
   forfeitPending?: { matchId: string; reason: string; message: string } | null;
   partyDropout?: { matchId: string; reason: string; message: string } | null;
   challengeInvites?: unknown[];
@@ -213,6 +214,7 @@ function seedRealtime(overrides: RealtimeStateSeed = {}) {
     remainingReconnects: null,
     sessionState: null,
     rejoinMatch: null,
+    autoRejoinSuppressedMatchId: null,
     forfeitPending: null,
     partyDropout: null,
     challengeInvites: [],
@@ -643,6 +645,62 @@ describe('AppShell — banner callbacks fire the right store / socket actions', 
     expect(socketEmitMock).toHaveBeenCalledWith('match:rejoin', { matchId: 'M1' });
     expect(clearRejoin).toHaveBeenCalledTimes(1);
     expect(routerPushMock).toHaveBeenCalledWith('/game');
+  });
+
+  it('auto-rejoins without a click when the server confirms a live match for this session', () => {
+    pathnameMock.mockReturnValue('/play');
+    const clearRejoin = vi.fn();
+    seedRealtime({
+      rejoinMatch: {
+        matchId: 'M-AUTO',
+        mode: 'ranked',
+        opponent: { id: 'opp', username: 'Opp', avatarUrl: null },
+        remainingReconnects: 2,
+      },
+      sessionState: { state: 'IN_ACTIVE_MATCH', activeMatchId: 'M-AUTO' },
+      clearRejoinAvailable: clearRejoin,
+    });
+    renderShell();
+    expect(startSessionMock).toHaveBeenCalledTimes(1);
+    expect(setGameStageMock).toHaveBeenCalledWith('playing');
+    expect(socketEmitMock).toHaveBeenCalledWith('match:rejoin', { matchId: 'M-AUTO' });
+    expect(clearRejoin).toHaveBeenCalledTimes(1);
+    expect(routerPushMock).toHaveBeenCalledWith('/game');
+  });
+
+  it('does NOT auto-rejoin when the session state does not confirm the active match', () => {
+    pathnameMock.mockReturnValue('/play');
+    seedRealtime({
+      rejoinMatch: {
+        matchId: 'M-NOSESSION',
+        mode: 'ranked',
+        opponent: { id: 'opp', username: 'Opp', avatarUrl: null },
+        remainingReconnects: 2,
+      },
+      sessionState: null,
+    });
+    renderShell();
+    expect(socketEmitMock).not.toHaveBeenCalledWith('match:rejoin', { matchId: 'M-NOSESSION' });
+    expect(routerPushMock).not.toHaveBeenCalledWith('/game');
+    // The manual rejoin banner is still offered.
+    expect(screen.getAllByText(/appShell.rejoinMatch/).length).toBeGreaterThan(0);
+  });
+
+  it('does NOT auto-rejoin a match the user intentionally left', () => {
+    pathnameMock.mockReturnValue('/play');
+    seedRealtime({
+      rejoinMatch: {
+        matchId: 'M-LEFT',
+        mode: 'ranked',
+        opponent: { id: 'opp', username: 'Opp', avatarUrl: null },
+        remainingReconnects: 2,
+      },
+      sessionState: { state: 'IN_ACTIVE_MATCH', activeMatchId: 'M-LEFT' },
+      autoRejoinSuppressedMatchId: 'M-LEFT',
+    });
+    renderShell();
+    expect(socketEmitMock).not.toHaveBeenCalledWith('match:rejoin', { matchId: 'M-LEFT' });
+    expect(routerPushMock).not.toHaveBeenCalledWith('/game');
   });
 
   it('rejoin banner forfeit button → emits match:forfeit', () => {

@@ -61,6 +61,7 @@ function createInitialRealtimeMatchState() {
     selfUserId: 'self-1',
     exitCompletedMatchToLobby: vi.fn(),
     reset: vi.fn(),
+    suppressAutoRejoin: vi.fn(),
   };
 }
 
@@ -131,7 +132,10 @@ vi.mock('@/stores/auth.store', () => ({
 }));
 
 vi.mock('@/stores/realtimeMatch.store', () => ({
-  useRealtimeMatchStore: (selector: (state: typeof realtimeMatchState) => unknown) => selector(realtimeMatchState),
+  useRealtimeMatchStore: Object.assign(
+    (selector: (state: typeof realtimeMatchState) => unknown) => selector(realtimeMatchState),
+    { getState: () => realtimeMatchState },
+  ),
 }));
 
 vi.mock('@/stores/rankedMatchmaking.store', () => ({
