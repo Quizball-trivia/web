@@ -181,11 +181,11 @@ function pickRandom<T>(items: readonly T[], indexFallback: number): T {
  * across Asia/Africa, and only a few in the Americas/Oceania.
  */
 const SEARCH_REGION_QUOTAS: Record<SearchRegion, number> = {
-  europe: 22,
-  asia: 7,
-  africa: 5,
-  americas: 4,
-  oceania: 2,
+  europe: 16,
+  asia: 5,
+  africa: 3,
+  americas: 3,
+  oceania: 1,
 };
 const SEARCH_PIN_COUNT = Object.values(SEARCH_REGION_QUOTAS).reduce(
   (a, b) => a + b,
@@ -596,25 +596,31 @@ export function MatchmakingMapScreen({
       );
     });
 
-    // Ongoing churn: every ~1.4s, hide one random pin and (after a beat) show
-    // another, so the set of visible pins keeps changing.
+    // Ongoing churn: every ~1.1s either someone "leaves" (hide a random
+    // visible pin) or "joins" (show a random hidden pin), so the visible
+    // count breathes up and down like a live queue instead of staying fixed.
+    // Drift is bounded so the map never empties or fully saturates.
     const churn = setInterval(() => {
       const ids = fakePlayers.map((p) => p.id);
       if (ids.length === 0) return;
-      const hideId = ids[Math.floor(Math.random() * ids.length)];
       setVisiblePins((prev) => {
         const next = new Set(prev);
-        next.delete(hideId);
+        const hidden = ids.filter((id) => !next.has(id));
+        const minVisible = Math.floor(ids.length * 0.6);
+        const join = next.size <= minVisible
+          ? true
+          : hidden.length === 0
+            ? false
+            : Math.random() < 0.5;
+        if (join && hidden.length > 0) {
+          next.add(hidden[Math.floor(Math.random() * hidden.length)]);
+        } else if (next.size > 0) {
+          const visible = [...next];
+          next.delete(visible[Math.floor(Math.random() * visible.length)]);
+        }
         return next;
       });
-      // Bring a (possibly different) random pin back shortly after, so the
-      // overall count stays lively without draining.
-      const showTimer = setTimeout(() => {
-        const showId = ids[Math.floor(Math.random() * ids.length)];
-        setVisiblePins((prev) => new Set(prev).add(showId));
-      }, 500 + Math.random() * 500);
-      timers.push(showTimer);
-    }, 1400);
+    }, 1100);
 
     return () => {
       timers.forEach(clearTimeout);
