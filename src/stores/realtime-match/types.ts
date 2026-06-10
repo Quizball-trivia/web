@@ -129,6 +129,7 @@ export interface RealtimeState {
   rejoinMatch: RejoinMatchStatus | null;
   forfeitPending: ForfeitPendingStatus | null;
   partyDropout: PartyDropoutStatus | null;
+  autoRejoinSuppressedMatchId: string | null;
   devPossessionAnimation: DevPossessionAnimation | null;
   error: ErrorPayload | null;
   setSelfUserId: (userId: string | null) => void;
@@ -173,6 +174,7 @@ export interface RealtimeState {
   clearDraftPaused: () => void;
   setRejoinAvailable: (payload: import('@/lib/realtime/socket.types').MatchRejoinAvailablePayload) => void;
   clearRejoinAvailable: () => void;
+  suppressAutoRejoin: (matchId: string) => void;
   setOnlineUsers: (data: import('@/lib/realtime/socket.types').PresenceOnlineCountPayload) => void;
   setSessionState: (payload: SessionStatePayload) => void;
   revertDraftBan: (actorId: string) => void;

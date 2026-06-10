@@ -13,6 +13,7 @@ import { getSocket } from "@/lib/realtime/socket-client";
 import { logger } from "@/utils/logger";
 import { useGameStageTransitions } from "@/lib/match/useGameStageTransitions";
 import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
+import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { resolveAvatarUrl } from "@/lib/avatars";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { tierFromRp } from "@/utils/rankedTier";
@@ -170,6 +171,9 @@ export function GameStageRouter() {
   const realtimeMatchId = realtimeMatch?.matchId;
   const handleQuit = useCallback(() => {
     if (realtimeMatchId) {
+      // Intentional exit: a trailing match:rejoin_available must not
+      // auto-pull the user back into this match.
+      useRealtimeMatchStore.getState().suppressAutoRejoin(realtimeMatchId);
       getSocket().emit("match:leave", { matchId: realtimeMatchId });
       logger.info("Socket emit match:leave", { matchId: realtimeMatchId });
     } else {
@@ -180,6 +184,7 @@ export function GameStageRouter() {
 
   const handleForfeit = useCallback(() => {
     if (realtimeMatchId) {
+      useRealtimeMatchStore.getState().suppressAutoRejoin(realtimeMatchId);
       getSocket().emit("match:forfeit", { matchId: realtimeMatchId });
       logger.info("Socket emit match:forfeit", { matchId: realtimeMatchId });
     } else {
