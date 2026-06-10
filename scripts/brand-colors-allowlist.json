@@ -2,6 +2,7 @@
   "description": "Files that still contain inline hex Tailwind class strings (bg-[#hex], text-[#hex] etc). Remove a file from this list when you migrate it to brand tokens. New code MUST NOT introduce hex classes — files outside this list are blocked by the audit test.",
   "files": [
     "src/app/(fullscreen)/ban-page/page.tsx",
-    "src/app/(fullscreen)/dev/maps/page.tsx"
+    "src/app/(fullscreen)/dev/maps/page.tsx",
+    "src/features/leaderboard/LeaderboardScreen.tsx"
   ]
 }

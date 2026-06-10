@@ -1,6 +1,18 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render as rtlRender, screen, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ReactNode } from 'react';
 import { ApiError } from '@/lib/api/api';
+
+// WelcomeScreen now renders sections that use React Query (leaderboard /
+// categories data). Wrap every render in a QueryClientProvider so those hooks
+// have a client. retry:false keeps failed queries from hanging the tests.
+function render(ui: ReactNode) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return rtlRender(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+}
 
 // JSDOM doesn't ship with IntersectionObserver, which motion/react uses for
 // `whileInView`. Stub it before any component imports.
@@ -219,6 +231,7 @@ vi.mock('@/components/ui/dialog', () => {
   return {
     Dialog: ({ open, children }: { open: boolean; children: React.ReactNode }) =>
       open ? <div role="dialog">{children}</div> : null,
+    DialogTrigger: Frag,
     DialogContent: Frag,
     DialogDescription: Frag,
     DialogHeader: Frag,
@@ -326,9 +339,9 @@ describe('WelcomeScreen — landing chrome', () => {
     expect(screen.getAllByText(/welcome\.kickOff/).length).toBeGreaterThan(0);
   });
 
-  it('renders the World Cup countdown copy', () => {
+  it('renders the World Cup promo banner copy', () => {
     render(<WelcomeScreen />);
-    expect(screen.getByText(/welcome\.untilKickoff/)).toBeInTheDocument();
+    expect(screen.getByText(/welcome\.wcPromoTitle/)).toBeInTheDocument();
   });
 
   it('renders the leaderboard podium and table sections', () => {
