@@ -113,10 +113,21 @@ function ChallengeCard({
             </span>
           </div>
         ) : null}
+        {/* Desktop coin reward — number + coin icon above PLAY so players see
+            exactly what each challenge pays (mobile uses the absolute pills
+            above instead). */}
+        {!isCompleted ? (
+          <div className="mt-auto mb-3 hidden items-center justify-center md:flex">
+            <span className="inline-flex h-8 items-center gap-1.5 rounded-full bg-white/70 px-3.5 text-[16px] font-black tabular-nums text-brand-gold-ink">
+              {challenge.coinReward}
+              <Image src="/assets/coin-1.png" alt="" width={20} height={20} className="size-5 object-contain" />
+            </span>
+          </div>
+        ) : null}
         {/* PLAY / DONE pill. On mobile it's hidden for OPEN cards (those use the
             reward pills above) but shown for COMPLETED cards so they get the same
             DONE treatment as the web. On md+ it always shows. */}
-        <div className={`mt-auto justify-center ${isCompleted ? "flex" : "hidden md:flex"}`}>
+        <div className={`justify-center ${isCompleted ? "mt-auto flex" : "hidden md:flex"}`}>
           <span className={`font-poppins inline-flex h-[34px] min-w-[120px] items-center justify-center rounded-[14px] px-5 text-[15px] uppercase tracking-wide md:h-[50px] md:min-w-[200px] md:rounded-[20px] md:px-8 md:text-[24px] ${
             isCompleted ? "bg-white text-brand-green-darkest" : "bg-black text-white"
           }`}>
