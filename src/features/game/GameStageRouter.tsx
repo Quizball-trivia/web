@@ -16,6 +16,7 @@ import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { resolveAvatarUrl } from "@/lib/avatars";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
+import { useLocale } from "@/contexts/LocaleContext";
 import { tierFromRp } from "@/utils/rankedTier";
 import { parseRp } from "@/lib/utils";
 import { TrainingMatchScreen } from "@/features/training/TrainingMatchScreen";
@@ -31,6 +32,7 @@ const POSSESSION_TOTAL_QUESTIONS_FALLBACK = 12;
 
 export function GameStageRouter() {
   const router = useRouter();
+  const { t } = useLocale();
   const {
     player,
     authUser,
@@ -325,7 +327,7 @@ export function GameStageRouter() {
       if (!isPartyQuizMatch && !final) {
         return (
           <LoadingScreen
-            text={matchType === "ranked" ? "Updating rank..." : "Finalizing results..."}
+            text={matchType === "ranked" ? t("possession.updatingRank") : t("possession.finalizingResults")}
           />
         );
       }
