@@ -148,10 +148,17 @@ export function ModeSelectionScreen({
 
   const handleConfirm = () => {
     if (!selectedMode) return;
-    if (selectedMode !== 'friendly') {
-      onSelectMode(selectedMode);
+    if (selectedMode === 'friendly') {
+      setSelectedMode(null);
+      return;
     }
-    setSelectedMode(null);
+    // Keep the modal OPEN: the PLAY button switches to its starting spinner
+    // while onSelectMode does its pre-navigation work (ranked refetches the
+    // live wallet before router.push) and the game route loads. Closing the
+    // modal here left the play screen with zero feedback for that window,
+    // which read as "the tap didn't register". The modal unmounts naturally
+    // with the page on navigation.
+    onSelectMode(selectedMode);
   };
 
   const previewObjectives = [...(objectivesData?.daily.objectives ?? [])]

@@ -64,7 +64,7 @@ async function run(): Promise<void> {
         'x-upsert': 'true',
         'Cache-Control': 'max-age=31536000',
       },
-      body: webp,
+      body: new Uint8Array(webp),
     });
     if (!up.ok) { console.error(`FAIL upload ${webpName}: ${up.status} ${await up.text()}`); continue; }
 

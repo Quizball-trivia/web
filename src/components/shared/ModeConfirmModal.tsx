@@ -18,6 +18,7 @@
 //   • Footer: "YOU HAVE <N> TICKETS 🎫" small caps, white/80.
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -98,6 +99,26 @@ export function ModeConfirmModal({
   const { t } = useLocale();
   const isMobile = useIsMobile();
   const router = useRouter();
+  // Pressed-state feedback: between PLAY and the route change there is
+  // otherwise ZERO acknowledgement (route compile/navigation can take a
+  // moment, especially in dev), which reads as "my tap didn't register" and
+  // invites double-taps. Locked = spinner + no further clicks.
+  const [starting, setStarting] = useState(false);
+
+  // Re-arm whenever the modal opens fresh (also covers a failed navigation
+  // bringing the user back with the modal still mounted).
+  useEffect(() => {
+    if (isOpen) setStarting(false);
+  }, [isOpen]);
+
+  // Failsafe: if a start path fails WITHOUT navigating (e.g. question fetch
+  // toast on solo), don't leave the button spinning forever — re-arm so the
+  // user can retry. Navigation success unmounts this component anyway.
+  useEffect(() => {
+    if (!starting) return;
+    const timer = setTimeout(() => setStarting(false), 8000);
+    return () => clearTimeout(timer);
+  }, [starting]);
 
   if (!mode) return null;
 
@@ -107,12 +128,14 @@ export function ModeConfirmModal({
   const titleRest = t(config.titleRestKey);
   const description = t(config.descriptionKey);
   const handlePrimaryClick = () => {
+    if (starting) return;
     if (needsTickets) {
       onOpenChange(false);
       router.push("/store");
       return;
     }
 
+    setStarting(true);
     onConfirm();
   };
 
@@ -210,6 +233,7 @@ export function ModeConfirmModal({
       <button
         type="button"
         onClick={handlePrimaryClick}
+        disabled={starting}
         className={cn(
           "w-full h-14 rounded-2xl text-base font-black uppercase tracking-wide transition-all sm:h-16 sm:text-lg md:h-[72px] md:text-xl",
           "relative z-20",
@@ -218,9 +242,18 @@ export function ModeConfirmModal({
             : hasTickets
             ? "bg-black text-white hover:bg-black/90 active:translate-y-[2px]"
             : "bg-black/60 text-white/50 cursor-not-allowed",
+          starting && "opacity-80 cursor-wait",
         )}
       >
-        {needsTickets ? (
+        {starting ? (
+          <span className="inline-flex items-center justify-center gap-2.5">
+            <span
+              aria-hidden
+              className="size-5 animate-spin rounded-full border-[3px] border-white/30 border-t-white"
+            />
+            {t("common.play")}
+          </span>
+        ) : needsTickets ? (
           t("modeConfirm.buyTickets")
         ) : isMobile || config.entryCost === 0 ? (
           t("common.play")
