@@ -1621,6 +1621,12 @@ export interface paths {
                         "application/json": {
                             coins: number;
                             tickets: number;
+                            ticketPurchaseCooldown?: {
+                                canBuy: boolean;
+                                /** Format: date-time */
+                                nextAvailableAt: string | null;
+                                remainingSeconds: number;
+                            };
                         };
                     };
                 };
@@ -5430,6 +5436,12 @@ export interface components {
         StoreWalletResponse: {
             coins: number;
             tickets: number;
+            ticketPurchaseCooldown?: {
+                canBuy: boolean;
+                /** Format: date-time */
+                nextAvailableAt: string | null;
+                remainingSeconds: number;
+            };
         };
         StoreInventoryResponse: {
             items: {

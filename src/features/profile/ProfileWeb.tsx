@@ -470,7 +470,6 @@ export function ProfileWeb({
                 )}
                 {showRankTier && (
                   <>
-                    <tierVisual.Icon className="size-10 text-brand-yellow mb-1" weight="light" />
                     <h2
                       className="text-xl uppercase text-white text-center"
                       style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, letterSpacing: '0', lineHeight: 1 }}

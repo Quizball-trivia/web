@@ -86,6 +86,7 @@ const STORE_WALLET_QUERY_OPTIONS = {
 type CachedWallet = {
   coins: number;
   tickets: number;
+  ticketPurchaseCooldown?: StoreWalletResponse["ticketPurchaseCooldown"];
   updatedAt: number;
 };
 
@@ -106,6 +107,7 @@ function writeCachedWallet(wallet: StoreWalletResponse): void {
   storage.set(STORAGE_KEYS.STORE_WALLET, {
     coins: wallet.coins,
     tickets: wallet.tickets,
+    ticketPurchaseCooldown: wallet.ticketPurchaseCooldown,
     updatedAt: Date.now(),
   } satisfies CachedWallet);
 }
@@ -138,19 +140,26 @@ export const getStoreWalletQuery = () => ({
     writeCachedWallet(wallet);
     return wallet;
   },
-  initialData: readCachedWallet()
-    ? {
-        coins: readCachedWallet()!.coins,
-        tickets: readCachedWallet()!.tickets,
-      }
-    : undefined,
+  initialData: ((): StoreWalletResponse | undefined => {
+    const cached = readCachedWallet();
+    if (!cached) return undefined;
+    return {
+      coins: cached.coins,
+      tickets: cached.tickets,
+      ticketPurchaseCooldown: cached.ticketPurchaseCooldown ?? {
+        canBuy: true,
+        nextAvailableAt: null,
+        remainingSeconds: 0,
+      },
+    };
+  })(),
   initialDataUpdatedAt: readCachedWallet()?.updatedAt,
   ...STORE_WALLET_QUERY_OPTIONS,
 });
 
 export function useStoreWallet() {
   const authStatus = useAuthStore((state) => state.status);
-  return useQuery({
+  return useQuery<StoreWalletResponse>({
     ...getStoreWalletQuery(),
     enabled: authStatus === "authenticated",
   });

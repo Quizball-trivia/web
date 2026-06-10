@@ -30,6 +30,13 @@ export interface PresenceSlice {
   rejoinMatch: RejoinMatchStatus | null;
   forfeitPending: ForfeitPendingStatus | null;
   partyDropout: PartyDropoutStatus | null;
+  /**
+   * Match the user intentionally left/forfeited. The AppShell auto-rejoin
+   * effect must never pull them back into this match, even if a trailing
+   * `match:rejoin_available` / `session:state` races in before the server
+   * processes the leave. Manual rejoin via the banner stays possible.
+   */
+  autoRejoinSuppressedMatchId: string | null;
   setForfeitPending: (payload: MatchForfeitPendingPayload) => void;
   clearForfeitPending: () => void;
   setPartyDropout: (payload: MatchPartyDropoutPayload) => void;
@@ -40,6 +47,7 @@ export interface PresenceSlice {
   clearDraftPaused: () => void;
   setRejoinAvailable: (payload: MatchRejoinAvailablePayload) => void;
   clearRejoinAvailable: () => void;
+  suppressAutoRejoin: (matchId: string) => void;
 }
 
 export const presenceInitialState = {
@@ -53,6 +61,7 @@ export const presenceInitialState = {
   rejoinMatch: null,
   forfeitPending: null,
   partyDropout: null,
+  autoRejoinSuppressedMatchId: null,
 } as const satisfies Pick<
   PresenceSlice,
   | 'matchPaused'
@@ -65,6 +74,7 @@ export const presenceInitialState = {
   | 'rejoinMatch'
   | 'forfeitPending'
   | 'partyDropout'
+  | 'autoRejoinSuppressedMatchId'
 >;
 
 export const createPresenceSlice: StateCreator<RealtimeState, [], [], PresenceSlice> = (set) => ({
@@ -208,5 +218,10 @@ export const createPresenceSlice: StateCreator<RealtimeState, [], [], PresenceSl
   clearRejoinAvailable: () => {
     logger.info('Realtime store clear rejoin available');
     set({ rejoinMatch: null });
+  },
+
+  suppressAutoRejoin: (matchId) => {
+    logger.info('Realtime store suppress auto-rejoin', { matchId });
+    set({ autoRejoinSuppressedMatchId: matchId });
   },
 });

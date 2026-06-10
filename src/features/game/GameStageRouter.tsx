@@ -13,8 +13,10 @@ import { getSocket } from "@/lib/realtime/socket-client";
 import { logger } from "@/utils/logger";
 import { useGameStageTransitions } from "@/lib/match/useGameStageTransitions";
 import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
+import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { resolveAvatarUrl } from "@/lib/avatars";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
+import { useLocale } from "@/contexts/LocaleContext";
 import { tierFromRp } from "@/utils/rankedTier";
 import { parseRp } from "@/lib/utils";
 import { TrainingMatchScreen } from "@/features/training/TrainingMatchScreen";
@@ -30,6 +32,7 @@ const POSSESSION_TOTAL_QUESTIONS_FALLBACK = 12;
 
 export function GameStageRouter() {
   const router = useRouter();
+  const { t } = useLocale();
   const {
     player,
     authUser,
@@ -170,6 +173,9 @@ export function GameStageRouter() {
   const realtimeMatchId = realtimeMatch?.matchId;
   const handleQuit = useCallback(() => {
     if (realtimeMatchId) {
+      // Intentional exit: a trailing match:rejoin_available must not
+      // auto-pull the user back into this match.
+      useRealtimeMatchStore.getState().suppressAutoRejoin(realtimeMatchId);
       getSocket().emit("match:leave", { matchId: realtimeMatchId });
       logger.info("Socket emit match:leave", { matchId: realtimeMatchId });
     } else {
@@ -180,6 +186,7 @@ export function GameStageRouter() {
 
   const handleForfeit = useCallback(() => {
     if (realtimeMatchId) {
+      useRealtimeMatchStore.getState().suppressAutoRejoin(realtimeMatchId);
       getSocket().emit("match:forfeit", { matchId: realtimeMatchId });
       logger.info("Socket emit match:forfeit", { matchId: realtimeMatchId });
     } else {
@@ -320,7 +327,7 @@ export function GameStageRouter() {
       if (!isPartyQuizMatch && !final) {
         return (
           <LoadingScreen
-            text={matchType === "ranked" ? "Updating rank..." : "Finalizing results..."}
+            text={matchType === "ranked" ? t("possession.updatingRank") : t("possession.finalizingResults")}
           />
         );
       }

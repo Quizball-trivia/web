@@ -152,6 +152,7 @@ function PutInOrderCompactColumn({
   matchedCountOverride?: number;
   totalCountOverride?: number;
 }) {
+  const { t } = useLocale();
   const matchedCount = matchedCountOverride ?? itemIds.reduce((count, itemId, index) => (
     correctById.get(itemId)?.index === index ? count + 1 : count
   ), 0);
@@ -227,7 +228,9 @@ function PutInOrderCompactColumn({
                   isCorrectPosition ? 'text-brand-green' : 'text-white/35'
                 }`}>
                   <span className="hidden sm:inline">
-                    {isCorrectPosition ? 'Right' : `Should be ${typeof correctInfo?.index === 'number' ? correctInfo.index + 1 : '-'}`}
+                    {isCorrectPosition
+                      ? t('possession.right')
+                      : t('possession.shouldBe', { pos: typeof correctInfo?.index === 'number' ? correctInfo.index + 1 : '-' })}
                   </span>
                 </span>
               </div>
@@ -462,22 +465,22 @@ export function LivePutInOrderPanel({
     : null;
   const putOrderPlayerCorrect = roundResolved ? Boolean(myRound?.isCorrect) : Boolean(answerAck?.isCorrect);
   const putOrderPlayerBadge = putOrderPlayerCorrect
-    ? 'Perfect'
+    ? t('possession.perfect')
     : playerCorrectCount > 0
-      ? 'Partial'
-      : 'Wrong';
+      ? t('possession.partial')
+      : t('possession.wrong');
   const putOrderPlayerStatus: SpecialSummaryStatus = putOrderPlayerCorrect
     ? 'positive'
     : playerCorrectCount > 0
       ? 'neutral'
       : 'negative';
   const putOrderOpponentBadge = !roundResolved
-    ? 'Waiting'
+    ? t('possession.waiting')
     : opponentRound?.isCorrect
-      ? 'Perfect'
+      ? t('possession.perfect')
       : opponentCorrectCount && opponentCorrectCount > 0
-        ? 'Partial'
-        : 'Wrong';
+        ? t('possession.partial')
+        : t('possession.wrong');
   const putOrderOpponentStatus: SpecialSummaryStatus = !roundResolved
     ? 'pending'
     : opponentRound?.isCorrect
@@ -543,7 +546,7 @@ export function LivePutInOrderPanel({
         visible={submittedForThisQuestion || roundResolved}
         tone="green"
         player={{
-          label: 'You',
+          label: t('possession.you'),
           count: playerCorrectCount,
           total: totalItems,
           points: putOrderPlayerPoints,
@@ -552,7 +555,7 @@ export function LivePutInOrderPanel({
           detail: t('possession.positionsMatched'),
         }}
         opponent={{
-          label: 'Opp',
+          label: t('possession.opp'),
           count: opponentCorrectCount,
           total: totalItems,
           points: putOrderOpponentPoints,
