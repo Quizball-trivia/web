@@ -52,6 +52,8 @@ interface TicketPackItem {
   title: string;
   description: string;
   price: string;
+  /** Numeric coin cost (ticket packs store the coin amount in priceCents). */
+  priceCoinsValue: number;
   iconAsset: string;
   productSlug?: string;
   disabled?: boolean;
@@ -68,6 +70,14 @@ interface BuyModalState {
   avatarPart?: AvatarPart;
   /** Avatar customization to use for the preview (built from current user). */
   previewCustomization?: AvatarCustomization;
+  /**
+   * Numeric coin cost of the item. Affordability is derived from this at
+   * render time (against the live wallet), so it stays correct if the wallet
+   * refreshes while the modal is open. Leave unset for equip/stripe flows.
+   */
+  priceCoinsValue?: number;
+  /** When true, the price is a coin amount — the modal shows a coin icon. */
+  priceInCoins?: boolean;
 }
 
 const POPPINS_HEADER = {
@@ -225,8 +235,15 @@ export function StoreScreen() {
     return set;
   }, [inventoryData]);
 
-  const canAffordPart = (part: AvatarPart) =>
-    !part.priceCoins || (wallet?.coins ?? 0) >= part.priceCoins;
+  /**
+   * Coin affordability check. While the wallet is still loading we treat
+   * everything as affordable (the backend re-validates on purchase) so items
+   * don't flash "Need more" before the balance arrives.
+   */
+  const canAffordCoins = (priceCoins: number | undefined) =>
+    !priceCoins || wallet == null || wallet.coins >= priceCoins;
+
+  const canAffordPart = (part: AvatarPart) => canAffordCoins(part.priceCoins);
 
   const productsBySlug = useMemo(() => {
     return new Map((productsData?.items ?? []).map((item) => [item.slug, item]));
@@ -371,7 +388,9 @@ export function StoreScreen() {
           id: product.slug,
           title: `${ticketCount} ${ticketCount === 1 ? t("store.ticket") : t("store.tickets")}`,
           description: product.description?.en ?? t("store.topUpTicketsDesc"),
+          // Ticket packs are coin-priced: priceCents holds the coin amount.
           price: product.priceCents.toLocaleString(),
+          priceCoinsValue: product.priceCents,
           productSlug: product.slug,
           iconAsset: "/assets/ticket_icon.webp",
           disabled: ticketCount > availableSpace,
@@ -405,17 +424,24 @@ export function StoreScreen() {
     const isOwned = ownedPartIds.has(part.id);
     const modalMode: BuyModalState["mode"] = isOwned ? "equip" : part.productSlug ? "coins" : "none";
     if (part.productSlug) {
-      trackPurchaseModalOpened(part.productSlug, modalMode);
+      trackPurchaseModalOpened(part.productSlug, modalMode, {
+        affordable: isOwned || canAffordPart(part),
+      });
     }
     setBuyModal({
       name: translatePartName(part.name),
-      price: isOwned ? "" : part.priceCoins ? t("store.coinsPrice", { amount: part.priceCoins.toLocaleString() }) : "—",
+      price: isOwned ? "" : part.priceCoins ? part.priceCoins.toLocaleString() : "—",
+      priceInCoins: !isOwned && Boolean(part.priceCoins),
       productSlug: part.productSlug,
       mode: modalMode,
       avatarPart: part,
       previewCustomization,
+      priceCoinsValue: isOwned ? undefined : part.priceCoins,
     });
   };
+
+  /** Live affordability for the open modal — re-derived when the wallet updates. */
+  const modalAffordable = canAffordCoins(buyModal?.priceCoinsValue);
 
   const handleConfirm = () => {
     if (!buyModal || purchasePending) return;
@@ -436,7 +462,7 @@ export function StoreScreen() {
       checkoutMutation.mutate(buyModal.productSlug);
       return;
     }
-    if (buyModal.avatarPart && !canAffordPart(buyModal.avatarPart)) {
+    if (!canAffordCoins(buyModal.priceCoinsValue)) {
       toast.error(t("store.notEnoughCoins"));
       setBuyModal(null);
       return;
@@ -511,7 +537,7 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.2 }}
           >
-            <SectionHeader title={t("store.ticketsTitle")} subtitle={t("store.ticketsSubtitle")} />
+            <SectionHeader title={t("store.ticketsTitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {ticketPacks.map((pack, i) => (
                 <motion.div
@@ -527,9 +553,16 @@ export function StoreScreen() {
                         toast.message(t("store.notEnoughTicketSpace"));
                         return;
                       }
+                      if (b.productSlug) {
+                        trackPurchaseModalOpened(b.productSlug, "coins", {
+                          affordable: canAffordCoins(b.priceCoinsValue),
+                        });
+                      }
                       setBuyModal({
                         name: b.title,
-                        price: `${b.price} coins`,
+                        price: b.price,
+                        priceInCoins: true,
+                        priceCoinsValue: b.priceCoinsValue,
                         productSlug: b.productSlug,
                         mode: b.productSlug ? "coins" : "none",
                       });
@@ -545,7 +578,7 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.3 }}
           >
-            <SectionHeader title={t("store.hairTitle")} subtitle={t("store.hairSubtitle")} />
+            <SectionHeader title={t("store.hairTitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {HAIR_PARTS.filter((p) => !p.free).map((part, i) => (
                 <motion.div
@@ -560,7 +593,6 @@ export function StoreScreen() {
                     price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
                     mannequinPart={part}
                     owned={ownedPartIds.has(part.id)}
-                    affordable={canAffordPart(part)}
                     onBuy={() => openAvatarPartModal(part)}
                   />
                 </motion.div>
@@ -573,7 +605,7 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.35 }}
           >
-            <SectionHeader title={t("store.glassesTitle")} subtitle={t("store.glassesSubtitle")} />
+            <SectionHeader title={t("store.glassesTitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {GLASSES_PARTS.map((part, i) => (
                 <motion.div
@@ -588,7 +620,6 @@ export function StoreScreen() {
                     price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
                     mannequinPart={part}
                     owned={ownedPartIds.has(part.id)}
-                    affordable={canAffordPart(part)}
                     onBuy={() => openAvatarPartModal(part)}
                   />
                 </motion.div>
@@ -601,7 +632,7 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.4 }}
           >
-            <SectionHeader title={t("store.facialHairTitle")} subtitle={t("store.facialHairSubtitle")} />
+            <SectionHeader title={t("store.facialHairTitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {FACIAL_HAIR_PARTS.map((part, i) => (
                 <motion.div
@@ -616,7 +647,6 @@ export function StoreScreen() {
                     price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
                     mannequinPart={part}
                     owned={ownedPartIds.has(part.id)}
-                    affordable={canAffordPart(part)}
                     onBuy={() => openAvatarPartModal(part)}
                   />
                 </motion.div>
@@ -629,7 +659,7 @@ export function StoreScreen() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.45 }}
           >
-            <SectionHeader title={t("store.jerseysTitle")} subtitle={t("store.jerseysSubtitle")} />
+            <SectionHeader title={t("store.jerseysTitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {JERSEY_DESIGN_PARTS.map((part, i) => (
                 <motion.div
@@ -644,7 +674,6 @@ export function StoreScreen() {
                     price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
                     imageSize="lg"
                     owned={ownedPartIds.has(part.id)}
-                    affordable={canAffordPart(part)}
                     onBuy={() => openAvatarPartModal(part)}
                   />
                 </motion.div>
@@ -656,15 +685,21 @@ export function StoreScreen() {
             open={!!buyModal}
             onClose={() => {
               if (purchasePending) return;
-              if (buyModal?.productSlug) trackPurchaseCancelled(buyModal.productSlug);
+              // Dismissing an unaffordable preview isn't a purchase decision —
+              // keep it out of the purchase_cancelled funnel.
+              if (buyModal?.productSlug && modalAffordable) {
+                trackPurchaseCancelled(buyModal.productSlug);
+              }
               setBuyModal(null);
             }}
             onConfirm={handleConfirm}
             isPending={purchasePending}
             name={buyModal?.name ?? ""}
             price={buyModal?.price ?? ""}
+            priceInCoins={buyModal?.priceInCoins ?? false}
             previewCustomization={buyModal?.previewCustomization}
-            confirmLabel={buyModal?.mode === "equip" ? "Equip" : undefined}
+            confirmLabel={buyModal?.mode === "equip" ? t("store.equip") : undefined}
+            affordable={modalAffordable}
           />
 
         </div>

@@ -233,7 +233,7 @@ export interface paths {
         put?: never;
         /**
          * Restore pending-deletion account with refresh token
-         * @description Used by OAuth callback flows after the provider has returned a valid Supabase refresh token. The endpoint restores only the account matching that token; it never accepts a user id.
+         * @description Used by OAuth callback flows after the provider has returned a valid Supabase refresh token. The endpoint restores only the account matching that token; it never accepts a user id. The refresh token may be supplied either in the request body OR via the httpOnly qb_refresh_token cookie (injected server-side), which is why `refresh_token` is optional in the body schema; a 400 is returned when neither source provides one.
          */
         post: {
             parameters: {
@@ -759,7 +759,7 @@ export interface paths {
                                 /** @enum {string} */
                                 skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
                                 /** @enum {string} */
-                                jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                                jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro" | "jersey_georgia_retro" | "jersey_psg_retro";
                                 /** @enum {string} */
                                 hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
                                 /** @enum {string} */
@@ -1154,7 +1154,7 @@ export interface paths {
                                         /** @enum {string} */
                                         skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
                                         /** @enum {string} */
-                                        jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                                        jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro" | "jersey_georgia_retro" | "jersey_psg_retro";
                                         /** @enum {string} */
                                         hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
                                         /** @enum {string} */
@@ -1303,7 +1303,7 @@ export interface paths {
                                         /** @enum {string} */
                                         skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
                                         /** @enum {string} */
-                                        jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                                        jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro" | "jersey_georgia_retro" | "jersey_psg_retro";
                                         /** @enum {string} */
                                         hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
                                         /** @enum {string} */
@@ -2034,7 +2034,7 @@ export interface paths {
                             /** @enum {string} */
                             skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
                             /** @enum {string} */
-                            jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                            jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro" | "jersey_georgia_retro" | "jersey_psg_retro";
                             /** @enum {string} */
                             hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
                             /** @enum {string} */
@@ -2492,7 +2492,7 @@ export interface paths {
                                     /** @enum {string} */
                                     skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
                                     /** @enum {string} */
-                                    jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                                    jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro" | "jersey_georgia_retro" | "jersey_psg_retro";
                                     /** @enum {string} */
                                     hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
                                     /** @enum {string} */
@@ -2574,7 +2574,7 @@ export interface paths {
                                     /** @enum {string} */
                                     skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
                                     /** @enum {string} */
-                                    jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                                    jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro" | "jersey_georgia_retro" | "jersey_psg_retro";
                                     /** @enum {string} */
                                     hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
                                     /** @enum {string} */
@@ -2661,7 +2661,7 @@ export interface paths {
                                         /** @enum {string} */
                                         skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
                                         /** @enum {string} */
-                                        jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                                        jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro" | "jersey_georgia_retro" | "jersey_psg_retro";
                                         /** @enum {string} */
                                         hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
                                         /** @enum {string} */
@@ -2703,7 +2703,7 @@ export interface paths {
                                         /** @enum {string} */
                                         skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
                                         /** @enum {string} */
-                                        jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                                        jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro" | "jersey_georgia_retro" | "jersey_psg_retro";
                                         /** @enum {string} */
                                         hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
                                         /** @enum {string} */
@@ -5357,7 +5357,7 @@ export interface components {
                         /** @enum {string} */
                         skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
                         /** @enum {string} */
-                        jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                        jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro" | "jersey_georgia_retro" | "jersey_psg_retro";
                         /** @enum {string} */
                         hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
                         /** @enum {string} */
@@ -5575,7 +5575,7 @@ export interface components {
                 /** @enum {string} */
                 skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
                 /** @enum {string} */
-                jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro" | "jersey_georgia_retro" | "jersey_psg_retro";
                 /** @enum {string} */
                 hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
                 /** @enum {string} */
@@ -5600,7 +5600,7 @@ export interface components {
                 /** @enum {string} */
                 skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
                 /** @enum {string} */
-                jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro" | "jersey_georgia_retro" | "jersey_psg_retro";
                 /** @enum {string} */
                 hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
                 /** @enum {string} */
@@ -5657,7 +5657,7 @@ export interface components {
                     /** @enum {string} */
                     skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
                     /** @enum {string} */
-                    jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                    jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro" | "jersey_georgia_retro" | "jersey_psg_retro";
                     /** @enum {string} */
                     hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
                     /** @enum {string} */
@@ -5700,7 +5700,7 @@ export interface components {
                         /** @enum {string} */
                         skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
                         /** @enum {string} */
-                        jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                        jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro" | "jersey_georgia_retro" | "jersey_psg_retro";
                         /** @enum {string} */
                         hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
                         /** @enum {string} */
@@ -5742,7 +5742,7 @@ export interface components {
                         /** @enum {string} */
                         skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
                         /** @enum {string} */
-                        jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro";
+                        jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro" | "jersey_georgia_retro" | "jersey_psg_retro";
                         /** @enum {string} */
                         hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
                         /** @enum {string} */

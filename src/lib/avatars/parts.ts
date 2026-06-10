@@ -342,6 +342,15 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     position: { top: 44, left: 13, width: 70 },
   },
   {
+    id: "jersey_psg_retro",
+    slot: "jersey",
+    name: "PSG",
+    asset: "/assets/store/jersey_psg_retro.webp",
+    priceCoins: 50000,
+    productSlug: "avatar_jersey_psg_retro",
+    position: { top: 44, left: 13, width: 70 },
+  },
+  {
     id: "jersey_argentina_retro",
     slot: "jersey",
     name: "Argentina Retro",
@@ -384,6 +393,15 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_netherlands_retro.webp",
     priceCoins: 800,
     productSlug: "avatar_jersey_netherlands_retro",
+    position: { top: 44, left: 13, width: 70 },
+  },
+  {
+    id: "jersey_georgia_retro",
+    slot: "jersey",
+    name: "Georgia",
+    asset: "/assets/store/jersey_georgia_retro.webp",
+    priceCoins: 50000,
+    productSlug: "avatar_jersey_georgia_retro",
     position: { top: 44, left: 13, width: 70 },
   },
 ];
