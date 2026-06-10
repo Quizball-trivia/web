@@ -47,8 +47,10 @@ export function QuestionImageCard({ image }: QuestionImageCardProps) {
       <div className="relative flex h-[clamp(150px,34vw,260px)] w-full items-center justify-center overflow-hidden rounded-[12px] bg-surface-page">
         {/* Blurred cover backdrop: fills the letterbox bars with the photo's
             own colors so portrait/landscape sources all read as one uniform,
-            edge-to-edge card. Decorative only — errors are handled by the
-            foreground image. */}
+            edge-to-edge card. Boosted brightness/saturation because most
+            quiz photos are dark stadium shots — at low opacity the bars read
+            as plain black on the dark card and the effect disappears.
+            Decorative only — errors are handled by the foreground image. */}
         <img
           src={src}
           alt=""
@@ -56,7 +58,7 @@ export function QuestionImageCard({ image }: QuestionImageCardProps) {
           loading="eager"
           decoding="async"
           referrerPolicy="no-referrer"
-          className="absolute inset-0 h-full w-full scale-110 object-cover opacity-50 blur-xl"
+          className="absolute inset-0 h-full w-full scale-110 object-cover opacity-80 blur-lg brightness-125 saturate-150"
           onError={(e) => {
             (e.currentTarget as HTMLImageElement).style.display = 'none';
           }}
