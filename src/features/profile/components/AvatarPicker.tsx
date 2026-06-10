@@ -217,7 +217,7 @@ export function AvatarPicker({
             type="button"
             disabled={isSaving}
             onClick={() => handleSelectSkin(skin)}
-            className="group relative flex flex-col items-center gap-2 rounded-2xl bg-surface-page py-3 transition-all active:translate-y-[1px]"
+            className="group relative flex flex-col items-center gap-2 rounded-2xl bg-surface-card py-3 transition-all active:translate-y-[1px]"
             style={{
               border: `2px solid ${selected ? PURPLE : "rgba(255,255,255,0.1)"}`,
             }}
@@ -269,7 +269,7 @@ export function AvatarPicker({
             type="button"
             disabled={isSaving}
             onClick={() => handleSelectPart(slot, null)}
-            className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl bg-surface-page py-3 transition-all active:translate-y-[1px]"
+            className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl bg-surface-card py-3 transition-all active:translate-y-[1px]"
             style={{
               border: `2px solid ${!currentValue ? PURPLE : "rgba(255,255,255,0.1)"}`,
             }}
@@ -299,7 +299,7 @@ export function AvatarPicker({
                 type="button"
                 disabled={isSaving}
                 onClick={() => handleSelectPart(slot, part)}
-                className="group relative flex flex-col items-center gap-2 rounded-2xl bg-surface-page py-3 transition-all active:translate-y-[1px]"
+                className="group relative flex flex-col items-center gap-2 rounded-2xl bg-surface-card py-3 transition-all active:translate-y-[1px]"
                 style={{
                   border: `2px solid ${selected ? PURPLE : "rgba(255,255,255,0.1)"}`,
                 }}
@@ -349,7 +349,7 @@ export function AvatarPicker({
     <div className="space-y-4">
       {/* Live preview of the avatar — solid dark panel (not translucent, which
           would pick up the blue modal behind it). */}
-      <div className="flex justify-center rounded-2xl border border-white/10 bg-surface-page pt-1 pb-2">
+      <div className="flex justify-center rounded-2xl border border-white/10 bg-surface-card pt-1 pb-2">
         <AvatarPreview customization={draft} width={isMobile ? 140 : 160} />
       </div>
 
