@@ -611,6 +611,20 @@ export function useRealtimePossessionMatchController({
       autoScrollKey,
     };
 
+  // Question counter shown in the panel header. While the round-transition
+  // overlay is visible, the panel MUST show the same number the overlay
+  // announces — so it reads the overlay's own frozen snapshot
+  // (transitionSnapshot.upcomingQIndex) rather than deriving the number
+  // independently (a live read of pendingQuestion can disagree with the
+  // frozen splash when the next question arrives mid-transition). Outside the
+  // transition the counter tracks localQuestion so it always matches the
+  // visible question content (e.g. during answer reveal).
+  const transitionQIndex = overlayModel.showRoundTransition
+    ? overlayModel.transitionSnapshot.upcomingQIndex
+    : null;
+  const displayQIndex = transitionQIndex ?? localQuestion?.qIndex ?? 0;
+  const displayQTotal = pendingQuestion?.total ?? localQuestion?.total ?? 12;
+
   const questionAreaModel: PossessionQuestionAreaModel | null = !possessionMatch.matchId || !possessionState
     ? null
     : {
@@ -627,8 +641,8 @@ export function useRealtimePossessionMatchController({
             penaltyDisplayTotal,
             isPenaltySuddenDeath,
             question,
-            qIndex: localQuestion?.qIndex ?? 0,
-            totalQuestions: localQuestion?.total ?? 12,
+            qIndex: displayQIndex,
+            totalQuestions: displayQTotal,
             timeRemaining: state.timeRemaining,
             showOptions: state.showOptions,
             selectedAnswer: state.selectedAnswer,
@@ -653,8 +667,8 @@ export function useRealtimePossessionMatchController({
             kind: 'special',
             props: {
               matchId: possessionMatch.matchId,
-              qIndex: localQuestion.qIndex,
-              totalQuestions: localQuestion.total ?? 12,
+              qIndex: displayQIndex,
+              totalQuestions: displayQTotal,
               isPenaltyPhase: fieldState.isPenaltyQuestion,
               penaltyDisplayRound,
               penaltyDisplayTotal,

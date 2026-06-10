@@ -34,6 +34,7 @@ const mockOverlayState = {
     title: 'Question 1',
     categoryName: 'Football',
     subtitle: '1st Half',
+    upcomingQIndex: null as number | null,
   },
 };
 
@@ -207,6 +208,8 @@ describe('useRealtimePossessionMatchController', () => {
     emitMock.mockReset();
     useRealtimeMatchStore.getState().reset();
     mockOverlayState.isHalftime = false;
+    mockOverlayState.showRoundTransition = false;
+    mockOverlayState.transitionSnapshot.upcomingQIndex = null;
     mockGameLogicState.currentQuestion = mockQuestion;
     mockGameLogicState.roundResult = null;
     mockGameLogicState.roundResultHoldDone = false;
@@ -243,6 +246,38 @@ describe('useRealtimePossessionMatchController', () => {
     expect(result.current.questionAreaModel?.content.kind).toBe('multipleChoice');
     expect(result.current.showQuestionArea).toBe(true);
     expect(result.current.halftimeModel).toBeNull();
+  });
+
+  it('panel counter mirrors the transition snapshot while the overlay is visible (single source, never disagrees with the splash)', () => {
+    // Player just answered Q3 (qIndex 2); the transition overlay announces the
+    // upcoming Q4 via its frozen snapshot (upcomingQIndex 3). The panel header
+    // must read THE SAME snapshot value — not derive its own number — so the
+    // splash and the counter can never disagree, regardless of when the next
+    // match:question arrives.
+    mockGameLogicState.currentQuestion = { ...mockQuestion, qIndex: 2 };
+    mockOverlayState.showRoundTransition = true;
+    mockOverlayState.transitionSnapshot.upcomingQIndex = 3;
+
+    const { result, rerender } = renderHook(() => useRealtimePossessionMatchController({
+      playerAvatar: '/me.png',
+      playerUsername: 'me',
+      opponentAvatar: '/opp.png',
+      opponentUsername: 'opp',
+      onQuit: vi.fn(),
+      onForfeit: vi.fn(),
+    }), { wrapper: queryWrapper });
+
+    // Overlay visible → counter shows the snapshot's upcoming question: 3 + 1 = "Question 4".
+    expect(result.current.questionAreaModel?.content.kind).toBe('multipleChoice');
+    if (result.current.questionAreaModel?.content.kind !== 'multipleChoice') return;
+    expect(result.current.questionAreaModel.content.props.qIndex).toBe(3);
+
+    // Overlay gone (still pre-promotion) → counter tracks the visible question content again.
+    mockOverlayState.showRoundTransition = false;
+    rerender();
+    expect(result.current.questionAreaModel?.content.kind).toBe('multipleChoice');
+    if (result.current.questionAreaModel?.content.kind !== 'multipleChoice') return;
+    expect(result.current.questionAreaModel.content.props.qIndex).toBe(2);
   });
 
   it('builds a halftime model when the overlay state enters halftime', () => {
