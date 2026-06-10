@@ -86,6 +86,3 @@ export function getTiersRemainingToMax(rp: number): number {
   return currentIndex;
 }
 
-export function getRankedTierBandsAscending(): RankedTierBand[] {
-  return [...RANKED_TIER_BANDS].reverse();
-}

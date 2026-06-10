@@ -26,20 +26,20 @@ const achievementIconMap: Record<string, LucideIcon> = {
 };
 
 import { AvatarDisplay } from '@/components/AvatarDisplay';
-import { AvatarPreview } from '@/components/AvatarPreview';
 import { CountryFlag } from '@/components/CountryFlag';
 import { AvatarPicker } from './components/AvatarPicker';
+import { RankFrameCard } from './components/RankFrameCard';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
 import type { PlayerStats } from '@/types/game';
-import type { MatchStatsSummary, HeadToHeadSummary, RankPosition, UserProgression } from '@/lib/domain';
+import type { MatchStatsSummary, HeadToHeadSummary, RankPosition } from '@/lib/domain';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 
 import { getTierVisual } from '@/utils/tierVisuals';
 import { RANKED_TIER_BANDS, getNextTierBand } from '@/utils/rankedTier';
 import { useLocale } from '@/contexts/LocaleContext';
-import type { MessageKey } from '@/lib/i18n/messages';
+import { useTierLabel } from '@/hooks/useTierLabel';
 
 function resolveI18n(field: Record<string, string> | string | undefined, locale: string): string {
   if (!field) return '';
@@ -84,7 +84,6 @@ interface ProfileWebProps {
   country?: string | null;
   favoriteClub?: string | null;
   preferredLanguage?: string | null;
-  progression?: UserProgression | null;
   globalRank?: RankPosition | null;
   countryRank?: RankPosition | null;
   matchStatsSummary?: MatchStatsSummary | null;
@@ -113,6 +112,7 @@ export function ProfileWeb({
   isUpdating = false,
 }: ProfileWebProps) {
   const { t, locale } = useLocale();
+  const tierLabelOf = useTierLabel();
   const isSelf = viewMode === 'self';
   const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
   const placementPlayed = rankedProfile?.placementPlayed ?? 0;
@@ -195,43 +195,6 @@ export function ProfileWeb({
         className="relative overflow-hidden px-1 py-4 lg:py-6"
       >
         <div className="relative flex flex-col lg:flex-row items-center gap-5 lg:gap-7">
-          {/* Avatar — blue square, character anchored to bottom per Figma */}
-          {isSelf ? (
-            <button
-              type="button"
-              onClick={() => setIsAvatarPickerOpen(true)}
-              className="group relative size-36 lg:size-40 rounded-[12px] bg-brand-blue flex items-end justify-center overflow-hidden shrink-0"
-              aria-label={t("profileScreen.changeAvatar")}
-            >
-              <AvatarPreview
-                customization={player.avatarCustomization ?? {}}
-                width={130}
-                className="lg:hidden translate-y-4"
-              />
-              <AvatarPreview
-                customization={player.avatarCustomization ?? {}}
-                width={150}
-                className="hidden lg:block translate-y-5"
-              />
-              <span className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-[10px] font-black uppercase tracking-[0.18em] opacity-0 group-hover:opacity-100 transition-opacity">
-                {t('profile.avatarPicker.edit')}
-              </span>
-            </button>
-          ) : (
-            <div className="relative size-36 lg:size-40 rounded-[12px] bg-brand-blue flex items-end justify-center overflow-hidden shrink-0">
-              <AvatarPreview
-                customization={player.avatarCustomization ?? {}}
-                width={130}
-                className="lg:hidden translate-y-4"
-              />
-              <AvatarPreview
-                customization={player.avatarCustomization ?? {}}
-                width={150}
-                className="hidden lg:block translate-y-5"
-              />
-            </div>
-          )}
-
           {/* Name */}
           <div className="flex-1 min-w-0 text-center lg:text-left">
             <div className="flex items-center justify-center lg:justify-start gap-2">
@@ -310,7 +273,20 @@ export function ProfileWeb({
 
         {/* ── Rank Progression — no header, no separator ── */}
         <div className="mt-6">
-          {(() => {
+          {/* While the ranked profile is loading, RP would read 0 and the
+              cards would flash the Academy frame before snapping to the real
+              tier — show a neutral skeleton instead until data arrives. */}
+          {rankedProfileLoading ? (
+            <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 sm:gap-6">
+              <div className="aspect-[200/320] w-[96px] animate-pulse rounded-[16px] bg-white/5 sm:w-[160px]" />
+              <div className="flex w-full flex-col items-center px-2">
+                <div className="h-8 w-28 animate-pulse rounded bg-white/5 sm:h-12" />
+                <div className="mt-6 h-[18px] w-full animate-pulse bg-white/5 sm:mt-8" />
+                <div className="mt-3 h-4 w-40 animate-pulse rounded bg-white/5 sm:mt-4" />
+              </div>
+              <div className="aspect-[200/320] w-[96px] animate-pulse rounded-[16px] bg-white/5 sm:w-[160px]" />
+            </div>
+          ) : (() => {
             const ladder = [...RANKED_TIER_BANDS].reverse(); // ascending: Academy → GOAT
             const goatRp = ladder[ladder.length - 1].minRp; // 3200
             const currentIdx = (() => {
@@ -323,7 +299,6 @@ export function ProfileWeb({
             const currentTier = currentIdx >= 0 ? ladder[currentIdx].tier : null;
             const next = !isPlacementInProgress ? getNextTierBand(displayRp) : ladder[0];
             const rpToNext = next ? Math.max(0, next.minRp - displayRp) : 0;
-            const overallPct = Math.min(100, Math.max(0, (displayRp / goatRp) * 100));
 
             const currentBandMin = currentIdx >= 0 ? ladder[currentIdx].minRp : 0;
             const bandTarget = next ? next.minRp : goatRp;
@@ -331,8 +306,7 @@ export function ProfileWeb({
             const bandPct = next
               ? Math.min(100, Math.max(0, ((displayRp - currentBandMin) / bandSpan) * 100))
               : 100;
-            const currentVisual = currentTier ? getTierVisual(currentTier) : null;
-            const nextVisual = next ? getTierVisual(next.tier) : null;
+            const avatarCustomization = player.avatarCustomization ?? {};
 
             return (
               <>
@@ -341,29 +315,73 @@ export function ProfileWeb({
                     so the centre column — the progress bar — gets significantly more
                     horizontal room. Desktop keeps the original chunky 160px squares. */}
                 <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 sm:gap-6">
-                  {/* Current tier — big blue square card per Figma */}
-                  <div className="flex w-[84px] sm:w-[160px] flex-col items-center justify-center gap-1.5 sm:gap-2 rounded-[16px] sm:rounded-[20px] bg-brand-blue p-2.5 sm:p-4">
-                    {currentVisual?.Icon ? (
-                      <currentVisual.Icon className="size-9 sm:size-16 text-brand-yellow" weight="light" />
+                  {/* Current tier — player avatar inside the tier's shield frame.
+                      Clicking it (self view) opens the avatar picker, replacing
+                      the old hero-avatar edit entry point. Unranked keeps the
+                      legacy blue card since there is no tier frame yet. */}
+                  {currentTier ? (
+                    isSelf ? (
+                      <button
+                        type="button"
+                        onClick={() => setIsAvatarPickerOpen(true)}
+                        className="group relative shrink-0"
+                        aria-label={t("profileScreen.changeAvatar")}
+                      >
+                        <RankFrameCard
+                          tier={currentTier}
+                          caption={t("profileScreen.current")}
+                          tierLabel={tierLabelOf(currentTier)}
+                          rpLabel={`${displayRp}RP`}
+                          customization={avatarCustomization}
+                        />
+                        <span className="absolute inset-x-0 top-[38%] mx-auto w-fit rounded-[6px] bg-black/60 px-2 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-white opacity-0 transition-opacity group-hover:opacity-100">
+                          {t('profile.avatarPicker.edit')}
+                        </span>
+                      </button>
                     ) : (
-                      <TrophyPh className="size-9 sm:size-16 text-brand-yellow" weight="light" />
-                    )}
-                    <div className="text-center">
-                      <div className="font-poppins text-[9px] sm:text-[11px] font-semibold uppercase text-white/60">{t("profileScreen.current")}</div>
-                      <div className="mt-0.5 sm:mt-1 font-poppins text-[11px] sm:text-base font-semibold uppercase leading-tight text-white">
-                        {currentTier
-                          ? (() => {
-                              const key = `tiers.${currentTier}` as MessageKey;
-                              const translated = t(key);
-                              return translated === key ? currentTier : translated;
-                            })()
-                          : t("profileScreen.unranked")}
-                      </div>
-                      <div className="mt-0.5 sm:mt-1 font-poppins text-[10px] sm:text-[11px] font-semibold uppercase tabular-nums text-white/70">
-                        {displayRp} RP
-                      </div>
-                    </div>
-                  </div>
+                      <RankFrameCard
+                        tier={currentTier}
+                        caption={t("profileScreen.current")}
+                        tierLabel={tierLabelOf(currentTier)}
+                        rpLabel={`${displayRp}RP`}
+                        customization={avatarCustomization}
+                        className="shrink-0"
+                      />
+                    )
+                  ) : (
+                    /* Unranked — legacy blue card. For self view it stays a
+                       button so the avatar picker remains reachable (the old
+                       hero-avatar entry point was removed). */
+                    (() => {
+                      const unrankedCard = (
+                        <div className="flex w-[84px] sm:w-[160px] flex-col items-center justify-center gap-1.5 sm:gap-2 rounded-[16px] sm:rounded-[20px] bg-brand-blue p-2.5 sm:p-4">
+                          <TrophyPh className="size-9 sm:size-16 text-brand-yellow" weight="light" />
+                          <div className="text-center">
+                            <div className="font-poppins text-[9px] sm:text-[11px] font-semibold uppercase text-white/60">{t("profileScreen.current")}</div>
+                            <div className="mt-0.5 sm:mt-1 font-poppins text-[11px] sm:text-base font-semibold uppercase leading-tight text-white">
+                              {t("profileScreen.unranked")}
+                            </div>
+                            <div className="mt-0.5 sm:mt-1 font-poppins text-[10px] sm:text-[11px] font-semibold uppercase tabular-nums text-white/70">
+                              {displayRp} RP
+                            </div>
+                          </div>
+                        </div>
+                      );
+                      return isSelf ? (
+                        <button
+                          type="button"
+                          onClick={() => setIsAvatarPickerOpen(true)}
+                          className="group relative shrink-0"
+                          aria-label={t("profileScreen.changeAvatar")}
+                        >
+                          {unrankedCard}
+                          <span className="absolute inset-0 flex items-center justify-center rounded-[16px] sm:rounded-[20px] bg-black/40 text-[9px] font-black uppercase tracking-[0.18em] text-white opacity-0 transition-opacity group-hover:opacity-100">
+                            {t('profile.avatarPicker.edit')}
+                          </span>
+                        </button>
+                      ) : unrankedCard;
+                    })()
+                  )}
 
                   {/* Center — big RP, thick progress, RP-to-next label */}
                   <div className="min-w-0 flex flex-col items-center px-2 w-full">
@@ -395,76 +413,30 @@ export function ProfileWeb({
                     </div>
                   </div>
 
-                  {/* Next tier — same mobile-shrink treatment as the
-                      current-tier card; desktop keeps the full 160px square. */}
+                  {/* Next tier — same avatar previewed inside the next tier's
+                      frame, softly blurred ("what you're chasing"). At max rank
+                      (GOAT) it shows the GOAT frame unblurred with a glow. */}
                   {next ? (
-                    <div className="flex w-[84px] sm:w-[160px] flex-col items-center justify-center gap-1.5 sm:gap-2 rounded-[16px] sm:rounded-[20px] bg-brand-blue/30 border-2 border-brand-blue p-2.5 sm:p-4">
-                      {nextVisual?.Icon ? (
-                        <nextVisual.Icon className="size-9 sm:size-16 text-white/80" weight="light" />
-                      ) : (
-                        <TrophyPh className="size-9 sm:size-16 text-white/80" weight="light" />
-                      )}
-                      <div className="text-center">
-                        <div className="font-poppins text-[9px] sm:text-[11px] font-semibold uppercase text-white/50">{t("profileScreen.next")}</div>
-                        <div className="mt-0.5 sm:mt-1 font-poppins text-[11px] sm:text-base font-semibold uppercase leading-tight text-white/85">
-                          {(() => {
-                            const key = `tiers.${next.tier}` as MessageKey;
-                            const translated = t(key);
-                            return translated === key ? next.tier : translated;
-                          })()}
-                        </div>
-                        <div className="mt-0.5 sm:mt-1 font-poppins text-[10px] sm:text-[11px] font-semibold uppercase tabular-nums text-white/50">
-                          {next.minRp} RP
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex w-[84px] sm:w-[160px] flex-col items-center justify-center gap-1.5 sm:gap-2 rounded-[16px] sm:rounded-[20px] bg-brand-yellow/15 border-2 border-brand-yellow p-2.5 sm:p-4">
-                      <TrophyPh className="size-9 sm:size-16 text-brand-yellow" weight="light" />
-                      <div className="text-center">
-                        <div className="font-poppins text-[9px] sm:text-[11px] font-semibold uppercase text-brand-yellow">{t("profileScreen.achieved")}</div>
-                        <div className="mt-0.5 sm:mt-1 font-poppins text-[11px] sm:text-base font-semibold uppercase leading-tight text-white">
-                          GOAT
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Full ladder — every tier visible with current highlighted */}
-                <div className="mt-6">
-                  <div className="relative flex items-end justify-between px-1">
-                    {ladder.map((band, idx) => {
-                      const visual = getTierVisual(band.tier);
-                      const isCurrent = idx === currentIdx;
-                      const isPast = idx < currentIdx;
-                      return (
-                        <div
-                          key={band.tier}
-                          className="flex flex-col items-center gap-1 transition-transform"
-                          title={`${band.tier} (${band.minRp}+ RP)`}
-                          style={{
-                            opacity: isCurrent ? 1 : isPast ? 0.7 : 0.25,
-                            transform: isCurrent ? 'scale(1.2)' : 'scale(1)',
-                          }}
-                        >
-                          <visual.Icon
-                            className={`size-5 sm:size-6 ${isCurrent ? 'text-brand-yellow' : isPast ? 'text-brand-green' : 'text-white/50'}`}
-                            weight={isCurrent ? 'regular' : 'light'}
-                          />
-                          {isCurrent && <div className="size-1 rounded-full bg-brand-yellow" />}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div className="mt-3 relative h-1 rounded-full bg-white/8 overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${overallPct}%` }}
-                      transition={{ duration: 0.8, ease: 'easeOut', delay: 0.35 }}
-                      className="absolute inset-y-0 left-0 rounded-full bg-brand-green"
+                    <RankFrameCard
+                      tier={next.tier}
+                      caption={t("profileScreen.next")}
+                      tierLabel={tierLabelOf(next.tier)}
+                      rpLabel={`${next.minRp}RP`}
+                      customization={avatarCustomization}
+                      blurred
+                      className="shrink-0"
                     />
-                  </div>
+                  ) : (
+                    <RankFrameCard
+                      tier="GOAT"
+                      caption={t("profileScreen.achieved")}
+                      tierLabel={tierLabelOf('GOAT')}
+                      rpLabel={`${goatRp}RP`}
+                      customization={avatarCustomization}
+                      glow
+                      className="shrink-0"
+                    />
+                  )}
                 </div>
               </>
             );

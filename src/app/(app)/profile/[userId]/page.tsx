@@ -141,7 +141,6 @@ function PublicProfileContent({ userId }: { userId: string }) {
         avatarUrl={profile.avatarUrl}
         country={profile.country}
         favoriteClub={profile.favoriteClub}
-        progression={profile.progression}
         globalRank={profile.globalRank}
         countryRank={profile.countryRank}
         matchStatsSummary={matchStatsSummary}

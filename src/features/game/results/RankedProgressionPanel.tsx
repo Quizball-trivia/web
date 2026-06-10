@@ -20,6 +20,9 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
+import { useTierLabel } from '@/hooks/useTierLabel';
+import { RankFrameCard } from '@/features/profile/components/RankFrameCard';
+import type { AvatarCustomization } from '@/types/game';
 import { AnimatedCounter } from './AnimatedCounter';
 import type { MatchResultViewModel } from './useMatchResultViewModel';
 
@@ -51,11 +54,15 @@ type RankedFields = Pick<
 export function RankedProgressionPanel({
   matchType,
   t,
+  avatarCustomization,
   ...vm
 }: RankedFields & {
   matchType: 'ranked' | 'friendly';
   t: LocaleT;
+  /** Player avatar composited inside the tier frame for unlock/reveal animations. */
+  avatarCustomization?: AvatarCustomization;
 }) {
+  const tierLabelOf = useTierLabel();
   const {
     showRankedRpCard,
     rpChange,
@@ -133,13 +140,23 @@ export function RankedProgressionPanel({
                         transition={{ duration: 1.5 }}
                         className="absolute inset-0 bg-gradient-to-b from-emerald-500/10 via-emerald-500/5 to-transparent pointer-events-none"
                       />
+                      {/* New rank frame unlock — avatar inside the freshly
+                          earned tier frame pops in (replaces the old emoji). */}
                       <motion.div
                         initial={{ scale: 0 }}
-                        animate={{ scale: [0, 1.3, 1] }}
+                        animate={{ scale: [0, 1.15, 1] }}
                         transition={{ duration: 0.6, delay: 0.15 }}
-                        className="mb-2 text-4xl md:text-5xl"
+                        className="mb-3 flex justify-center"
                       >
-                        {revealTierVisual.emoji}
+                        <RankFrameCard
+                          tier={revealTier}
+                          tierLabel={tierLabelOf(revealTier)}
+                          rpLabel={`${newRP}RP`}
+                          customization={avatarCustomization ?? {}}
+                          glow
+                          sizes="(min-width: 640px) 200px, 150px"
+                      className="w-[150px] sm:w-[200px]"
+                        />
                       </motion.div>
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
@@ -147,8 +164,6 @@ export function RankedProgressionPanel({
                         transition={{ delay: 0.4 }}
                       >
                         <div className="mb-1 text-[11px] font-bold uppercase tracking-wider text-white/40 md:text-xs">{t('results.yourRank')}</div>
-                        <div className={cn('text-xl font-black md:text-2xl', revealTierVisual.color)}>{revealTier}</div>
-                        <div className="text-sm font-bold text-white/60 mt-1">{newRP} RP</div>
                       </motion.div>
                     </>
                   ) : (
@@ -182,6 +197,100 @@ export function RankedProgressionPanel({
           transition={{ delay: 0.3 }}
           className="mx-auto w-full max-w-[720px] pt-6 md:pt-8"
         >
+          {/* ── Frame transition on tier change ────────────────────────
+              While the bar fills/drains ('fill' phase) the OLD tier frame
+              sits dimmed + blurred. When the transition settles, it
+              crossfades to the NEW tier frame:
+              · promotion — springs in with glow + yellow flash +
+                "New rank unlocked!"
+              · demotion  — slides down muted with a red "Rank lost"
+                label, no glow/flash. */}
+          {tierChanged && (
+            <div className="mb-6 flex flex-col items-center md:mb-8">
+              <AnimatePresence mode="wait">
+                {tierTransitionPhase === 'fill' ? (
+                  <motion.div
+                    key="locked-frame"
+                    initial={{ opacity: 0, scale: 0.85 }}
+                    animate={{ opacity: 0.75, scale: 0.92 }}
+                    exit={{ opacity: 0, scale: 0.8, filter: 'blur(8px)' }}
+                    transition={{ duration: 0.35 }}
+                  >
+                    <RankFrameCard
+                      tier={oldRpTierInfo.tier}
+                      tierLabel={tierLabelOf(oldRpTierInfo.tier)}
+                      rpLabel={`${oldRP}RP`}
+                      customization={avatarCustomization ?? {}}
+                      blurred
+                      sizes="(min-width: 640px) 200px, 150px"
+                      className="w-[150px] sm:w-[200px]"
+                    />
+                  </motion.div>
+                ) : tierPromoted ? (
+                  <motion.div
+                    key="unlocked-frame"
+                    initial={{ opacity: 0, scale: 0.55 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 14 }}
+                    className="relative flex flex-col items-center"
+                  >
+                    {/* one-shot radial flash behind the new frame */}
+                    <motion.div
+                      initial={{ opacity: 0.9, scale: 0.4 }}
+                      animate={{ opacity: 0, scale: 2.2 }}
+                      transition={{ duration: 0.9, ease: 'easeOut' }}
+                      className="pointer-events-none absolute inset-0 m-auto aspect-square rounded-full bg-[radial-gradient(circle,rgba(255,229,0,0.45),transparent_70%)]"
+                    />
+                    <RankFrameCard
+                      tier={rpTierInfo.tier}
+                      tierLabel={tierLabelOf(rpTierInfo.tier)}
+                      rpLabel={`${newRP}RP`}
+                      customization={avatarCustomization ?? {}}
+                      glow
+                      sizes="(min-width: 640px) 200px, 150px"
+                      className="w-[150px] sm:w-[200px]"
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.7 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ delay: 0.25, type: 'spring', stiffness: 260, damping: 16 }}
+                      className="mt-3 font-poppins text-[12px] font-semibold uppercase tracking-wide text-brand-yellow sm:text-[14px]"
+                      style={{ textShadow: '0 2px 0 rgba(0,0,0,0.45)' }}
+                    >
+                      {t('results.rankUnlocked')}
+                    </motion.div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="demoted-frame"
+                    initial={{ opacity: 0, y: -16, scale: 0.9 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                    className="flex flex-col items-center"
+                  >
+                    <RankFrameCard
+                      tier={rpTierInfo.tier}
+                      tierLabel={tierLabelOf(rpTierInfo.tier)}
+                      rpLabel={`${newRP}RP`}
+                      customization={avatarCustomization ?? {}}
+                      sizes="(min-width: 640px) 200px, 150px"
+                      className="w-[150px] opacity-90 saturate-[0.8] sm:w-[200px]"
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                      className="mt-3 font-poppins text-[12px] font-semibold uppercase tracking-wide text-brand-red sm:text-[14px]"
+                      style={{ textShadow: '0 2px 0 rgba(0,0,0,0.45)' }}
+                    >
+                      {t('results.rankLost')}
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
           <div className="flex flex-col items-center text-center">
             <div
               className="font-poppins font-semibold uppercase text-white text-[11px] sm:text-[13px] md:text-[14px]"
