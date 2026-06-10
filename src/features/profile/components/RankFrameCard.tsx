@@ -24,6 +24,9 @@ interface RankFrameCardProps {
   blurred?: boolean;
   /** Tier glow halo (used for the GOAT max-rank card). */
   glow?: boolean;
+  /** `next/image` sizes hint — keep in sync with the width set via
+   *  `className`. Defaults to the profile card widths (96px / 160px). */
+  sizes?: string;
   className?: string;
 }
 
@@ -45,6 +48,7 @@ export function RankFrameCard({
   mirrored = false,
   blurred = false,
   glow = false,
+  sizes = "(min-width: 640px) 160px, 96px",
   className,
 }: RankFrameCardProps) {
   const frameSrc = getTierFrameSrc(tier);
@@ -82,7 +86,7 @@ export function RankFrameCard({
           src={frameSrc}
           alt=""
           fill
-          sizes="(min-width: 640px) 160px, 96px"
+          sizes={sizes}
           className="object-contain"
         />
         {/* Character: Figma x23 y37 w152 of 200×320 */}

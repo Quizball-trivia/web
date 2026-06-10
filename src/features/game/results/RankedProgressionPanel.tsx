@@ -154,7 +154,8 @@ export function RankedProgressionPanel({
                           rpLabel={`${newRP}RP`}
                           customization={avatarCustomization ?? {}}
                           glow
-                          className="w-[150px] sm:w-[200px]"
+                          sizes="(min-width: 640px) 200px, 150px"
+                      className="w-[150px] sm:w-[200px]"
                         />
                       </motion.div>
                       <motion.div
@@ -221,6 +222,7 @@ export function RankedProgressionPanel({
                       rpLabel={`${oldRP}RP`}
                       customization={avatarCustomization ?? {}}
                       blurred
+                      sizes="(min-width: 640px) 200px, 150px"
                       className="w-[150px] sm:w-[200px]"
                     />
                   </motion.div>
@@ -245,6 +247,7 @@ export function RankedProgressionPanel({
                       rpLabel={`${newRP}RP`}
                       customization={avatarCustomization ?? {}}
                       glow
+                      sizes="(min-width: 640px) 200px, 150px"
                       className="w-[150px] sm:w-[200px]"
                     />
                     <motion.div
@@ -270,6 +273,7 @@ export function RankedProgressionPanel({
                       tierLabel={tierLabelOf(rpTierInfo.tier)}
                       rpLabel={`${newRP}RP`}
                       customization={avatarCustomization ?? {}}
+                      sizes="(min-width: 640px) 200px, 150px"
                       className="w-[150px] opacity-90 saturate-[0.8] sm:w-[200px]"
                     />
                     <motion.div

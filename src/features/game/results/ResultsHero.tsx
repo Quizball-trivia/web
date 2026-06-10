@@ -83,6 +83,7 @@ export function ResultsHero({
                     : undefined
                 }
                 customization={playerAvatarCustomization ?? { base: playerAvatar }}
+                sizes="(min-width: 640px) 120px, 84px"
                 className="w-[84px] shrink-0 sm:w-[120px]"
               />
             ) : (
@@ -139,6 +140,7 @@ export function ResultsHero({
                 rpLabel={opponentDisplayRp != null ? `${opponentDisplayRp}RP` : undefined}
                 customization={opponentAvatarCustomization ?? { base: opponentAvatar }}
                 mirrored
+                sizes="(min-width: 640px) 120px, 84px"
                 className="w-[84px] shrink-0 sm:w-[120px]"
               />
             ) : (

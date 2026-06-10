@@ -349,18 +349,38 @@ export function ProfileWeb({
                       />
                     )
                   ) : (
-                    <div className="flex w-[84px] sm:w-[160px] flex-col items-center justify-center gap-1.5 sm:gap-2 rounded-[16px] sm:rounded-[20px] bg-brand-blue p-2.5 sm:p-4">
-                      <TrophyPh className="size-9 sm:size-16 text-brand-yellow" weight="light" />
-                      <div className="text-center">
-                        <div className="font-poppins text-[9px] sm:text-[11px] font-semibold uppercase text-white/60">{t("profileScreen.current")}</div>
-                        <div className="mt-0.5 sm:mt-1 font-poppins text-[11px] sm:text-base font-semibold uppercase leading-tight text-white">
-                          {t("profileScreen.unranked")}
+                    /* Unranked — legacy blue card. For self view it stays a
+                       button so the avatar picker remains reachable (the old
+                       hero-avatar entry point was removed). */
+                    (() => {
+                      const unrankedCard = (
+                        <div className="flex w-[84px] sm:w-[160px] flex-col items-center justify-center gap-1.5 sm:gap-2 rounded-[16px] sm:rounded-[20px] bg-brand-blue p-2.5 sm:p-4">
+                          <TrophyPh className="size-9 sm:size-16 text-brand-yellow" weight="light" />
+                          <div className="text-center">
+                            <div className="font-poppins text-[9px] sm:text-[11px] font-semibold uppercase text-white/60">{t("profileScreen.current")}</div>
+                            <div className="mt-0.5 sm:mt-1 font-poppins text-[11px] sm:text-base font-semibold uppercase leading-tight text-white">
+                              {t("profileScreen.unranked")}
+                            </div>
+                            <div className="mt-0.5 sm:mt-1 font-poppins text-[10px] sm:text-[11px] font-semibold uppercase tabular-nums text-white/70">
+                              {displayRp} RP
+                            </div>
+                          </div>
                         </div>
-                        <div className="mt-0.5 sm:mt-1 font-poppins text-[10px] sm:text-[11px] font-semibold uppercase tabular-nums text-white/70">
-                          {displayRp} RP
-                        </div>
-                      </div>
-                    </div>
+                      );
+                      return isSelf ? (
+                        <button
+                          type="button"
+                          onClick={() => setIsAvatarPickerOpen(true)}
+                          className="group relative shrink-0"
+                          aria-label={t("profileScreen.changeAvatar")}
+                        >
+                          {unrankedCard}
+                          <span className="absolute inset-0 flex items-center justify-center rounded-[16px] sm:rounded-[20px] bg-black/40 text-[9px] font-black uppercase tracking-[0.18em] text-white opacity-0 transition-opacity group-hover:opacity-100">
+                            {t('profile.avatarPicker.edit')}
+                          </span>
+                        </button>
+                      ) : unrankedCard;
+                    })()
                   )}
 
                   {/* Center — big RP, thick progress, RP-to-next label */}

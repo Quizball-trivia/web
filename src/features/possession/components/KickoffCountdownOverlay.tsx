@@ -165,6 +165,7 @@ function KickoffPlayerCard({
             rpLabel={`${rankPoints}RP`}
             customization={avatarCustomization}
             mirrored={isOpponent}
+            sizes="(min-width: 768px) 240px, (min-width: 640px) 200px, 112px"
             className="w-[112px] sm:w-[200px] md:w-[240px]"
           />
         ) : (
