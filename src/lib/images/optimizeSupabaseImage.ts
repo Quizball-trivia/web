@@ -61,7 +61,10 @@ export function optimizeSupabaseImage(
   if (!url.includes(PUBLIC_OBJECT_SEGMENT)) return url; // not a transformable Supabase object
 
   const rendered = url.replace(PUBLIC_OBJECT_SEGMENT, RENDER_SEGMENT);
-  const params = new URLSearchParams();
+  // Preserve any query params already on the source URL (rare, but a blind
+  // append would produce an invalid double-`?` URL). Transform params win.
+  const [base, existingQs] = rendered.split('?');
+  const params = new URLSearchParams(existingQs ?? '');
   if (transform.width) params.set('width', String(transform.width));
   if (transform.height) params.set('height', String(transform.height));
   if (transform.quality) params.set('quality', String(transform.quality));
@@ -72,5 +75,5 @@ export function optimizeSupabaseImage(
   if (transform.format) params.set('format', transform.format);
 
   const qs = params.toString();
-  return qs ? `${rendered}?${qs}` : rendered;
+  return qs ? `${base}?${qs}` : (base ?? rendered);
 }

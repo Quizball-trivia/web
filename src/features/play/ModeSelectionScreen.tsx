@@ -150,11 +150,9 @@ export function ModeSelectionScreen({
   }, [playEntranceAnimation]);
 
   const handleConfirm = () => {
+    // Note: 'friendly' never reaches here — the confirm modal is only opened
+    // for non-friendly modes (see its isOpen condition below).
     if (!selectedMode) return;
-    if (selectedMode === 'friendly') {
-      setSelectedMode(null);
-      return;
-    }
     // Keep the modal OPEN: the PLAY button switches to its starting spinner
     // while onSelectMode does its pre-navigation work (ranked refetches the
     // live wallet before router.push) and the game route loads. Closing the

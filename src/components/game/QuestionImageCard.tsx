@@ -63,6 +63,11 @@ export function QuestionImageCard({ image }: QuestionImageCardProps) {
             (e.currentTarget as HTMLImageElement).style.display = 'none';
           }}
         />
+        {/* alt is DELIBERATELY empty: the picture IS the quiz content —
+            descriptive alt text ("Maradona lifting the 1986 trophy") would
+            hand the answer to anyone inspecting the DOM and spoil the
+            question for screen-reader users. A curated, spoiler-free alt
+            field can be added to the CMS payload later if needed. */}
         <img
           src={src}
           alt=""
