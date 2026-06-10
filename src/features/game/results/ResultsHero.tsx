@@ -34,6 +34,7 @@ export function ResultsHero({
   totalGamesLabel,
   preMatchRankedProfile,
   playerTier,
+  playerDisplayRp,
   opponentTier,
   opponentDisplayRp,
 }: {
@@ -51,6 +52,8 @@ export function ResultsHero({
   totalGamesLabel: string;
   preMatchRankedProfile: RankedProfileResponse | null | undefined;
   playerTier: string | null;
+  /** Pre-match RP shown on the hero card (settlement oldRp). */
+  playerDisplayRp: number | null;
   opponentTier: string | null;
   opponentDisplayRp: number | null;
 }) {
@@ -78,13 +81,13 @@ export function ResultsHero({
                 tier={playerTier}
                 tierLabel={tierLabelOf(playerTier)}
                 rpLabel={
-                  preMatchRankedProfile?.rp != null
-                    ? `${preMatchRankedProfile.rp}RP`
+                  (playerDisplayRp ?? preMatchRankedProfile?.rp) != null
+                    ? `${playerDisplayRp ?? preMatchRankedProfile?.rp}RP`
                     : undefined
                 }
                 customization={playerAvatarCustomization ?? { base: playerAvatar }}
-                sizes="(min-width: 640px) 120px, 84px"
-                className="w-[84px] shrink-0 sm:w-[120px]"
+                sizes="(min-width: 640px) 150px, 100px"
+                className="w-[100px] shrink-0 sm:w-[150px]"
               />
             ) : (
               <div className="flex size-24 shrink-0 items-center justify-center">
@@ -140,8 +143,8 @@ export function ResultsHero({
                 rpLabel={opponentDisplayRp != null ? `${opponentDisplayRp}RP` : undefined}
                 customization={opponentAvatarCustomization ?? { base: opponentAvatar }}
                 mirrored
-                sizes="(min-width: 640px) 120px, 84px"
-                className="w-[84px] shrink-0 sm:w-[120px]"
+                sizes="(min-width: 640px) 150px, 100px"
+                className="w-[100px] shrink-0 sm:w-[150px]"
               />
             ) : (
               <div className="flex size-24 shrink-0 items-center justify-center">

@@ -112,7 +112,7 @@ export function RankFrameCard({
           {tierLabel}
         </div>
         {rpLabel ? (
-          <div className="mt-[2cqw] font-poppins text-[7.8cqw] font-semibold uppercase tabular-nums leading-none text-brand-yellow [text-shadow:0_1.9cqw_1cqw_rgba(0,0,0,0.25)]">
+          <div className="mt-[1.5cqw] font-poppins text-[9.5cqw] font-semibold uppercase tabular-nums leading-none text-brand-yellow [text-shadow:0_1.9cqw_1cqw_rgba(0,0,0,0.25)]">
             {rpLabel}
           </div>
         ) : null}

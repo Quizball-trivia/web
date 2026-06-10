@@ -205,7 +205,9 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
           title={session.title}
           correct={totalFound}
           total={totalAnswerSlots}
-          onDone={() => onComplete(totalFound * 100)}
+          // Score = raw answers found; the backend pays the per-answer coin
+          // reward (COINS_PER_SCORE_POINT.countdown), so no client multiplier.
+          onDone={() => onComplete(totalFound)}
         />
       </div>
     );

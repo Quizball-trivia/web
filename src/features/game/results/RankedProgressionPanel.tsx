@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useTierLabel } from '@/hooks/useTierLabel';
 import { RankFrameCard } from '@/features/profile/components/RankFrameCard';
+import { CoinIcon } from '@/features/store/components/CoinIcon';
 import type { AvatarCustomization } from '@/types/game';
 import { AnimatedCounter } from './AnimatedCounter';
 import type { MatchResultViewModel } from './useMatchResultViewModel';
@@ -32,6 +33,7 @@ type RankedFields = Pick<
   MatchResultViewModel,
   | 'showRankedRpCard'
   | 'rpChange'
+  | 'coinsAwarded'
   | 'oldRP'
   | 'newRP'
   | 'rpTierInfo'
@@ -66,6 +68,7 @@ export function RankedProgressionPanel({
   const {
     showRankedRpCard,
     rpChange,
+    coinsAwarded,
     oldRP,
     newRP,
     rpTierInfo,
@@ -181,6 +184,12 @@ export function RankedProgressionPanel({
             </AnimatePresence>
           )}
 
+          {/* Placement matches also pay the participation reward */}
+          {isPlacementMatch && coinsAwarded != null && coinsAwarded > 0 && (
+            <div className="mt-3 flex justify-center">
+              <CoinRewardChip amount={coinsAwarded} delay={0.8} />
+            </div>
+          )}
         </>
       )}
 
@@ -318,6 +327,10 @@ export function RankedProgressionPanel({
                 </motion.span>
               )}
             </div>
+            {/* Coin participation reward (win 500 / loss 200) from settlement */}
+            {coinsAwarded != null && coinsAwarded > 0 && (
+              <CoinRewardChip amount={coinsAwarded} delay={1.1} />
+            )}
           </div>
 
           {/* Bar + markers row. Each marker column (label · polygon · cap)
@@ -359,6 +372,30 @@ export function RankedProgressionPanel({
         </motion.div>
       )}
     </>
+  );
+}
+
+/**
+ * Yellow coin pill showing the match's coin participation reward
+ * (ranked win/loss). Pops in after the RP delta chip.
+ */
+function CoinRewardChip({ amount, delay }: { amount: number; delay: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24, scale: 0 }}
+      animate={{ opacity: 1, y: 0, scale: [0, 1.25, 0.95, 1] }}
+      transition={{
+        delay,
+        duration: 0.55,
+        times: [0, 0.55, 0.8, 1],
+        ease: 'easeOut',
+      }}
+      className="mt-4 inline-flex items-center gap-2 rounded-full px-4 py-1.5 font-poppins font-semibold tabular-nums leading-none text-[17px] sm:py-2 sm:text-[21px]"
+      style={{ backgroundColor: '#FFE500', color: '#071013', boxShadow: '0 4px 0 rgba(0,0,0,0.35)' }}
+    >
+      <CoinIcon size={24} />
+      +{amount}
+    </motion.div>
   );
 }
 

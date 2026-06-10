@@ -128,6 +128,7 @@ function DevResultsContent() {
           oldRp: preMatchRp,
           newRp,
           deltaRp: signedRpDelta,
+          coinsAwarded: outcome === 'win' ? 500 : 200,
           oldTier,
           newTier,
           placementStatus: 'placed',
@@ -140,6 +141,7 @@ function DevResultsContent() {
           oldRp: opponentPreMatchRp,
           newRp: opponentNewRp,
           deltaRp: opponentSignedRpDelta,
+          coinsAwarded: outcome === 'win' ? 200 : 500,
           oldTier: oppOldTier,
           newTier: oppNewTier,
           placementStatus: 'placed',
@@ -149,7 +151,7 @@ function DevResultsContent() {
         },
       },
     };
-  }, [preMatchRp, newRp, signedRpDelta, opponentPreMatchRp, opponentNewRp, opponentSignedRpDelta]);
+  }, [preMatchRp, newRp, signedRpDelta, opponentPreMatchRp, opponentNewRp, opponentSignedRpDelta, outcome]);
 
   const preMatchRankedProfile = useMemo<RankedProfileResponse>(() => ({
     rp: preMatchRp,

@@ -39,6 +39,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
     totalGamesLabel,
     showRankedRpCard,
     rpChange,
+    coinsAwarded,
     oldRP,
     newRP,
     rpTierInfo,
@@ -59,6 +60,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
     xpToNextLevelAfterMatch,
     accuracy,
     playerTier,
+    playerDisplayRp,
     opponentTier,
     opponentDisplayRp,
     showRankReveal,
@@ -99,6 +101,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
           totalGamesLabel={totalGamesLabel}
           preMatchRankedProfile={preMatchRankedProfile}
           playerTier={playerTier}
+          playerDisplayRp={playerDisplayRp}
           opponentTier={opponentTier}
           opponentDisplayRp={opponentDisplayRp}
         />
@@ -109,6 +112,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
           avatarCustomization={playerAvatarCustomization ?? { base: playerAvatar }}
           showRankedRpCard={showRankedRpCard}
           rpChange={rpChange}
+          coinsAwarded={coinsAwarded}
           oldRP={oldRP}
           newRP={newRP}
           rpTierInfo={rpTierInfo}
