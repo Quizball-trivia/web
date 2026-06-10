@@ -55,32 +55,32 @@ function FramedAvatar({
           className={cn(mirror && '-scale-x-100')}
         />
       </div>
-      {/* Flag — top-left, circular, slightly inset so the design fits the circle */}
+      {/* Flag — top-left, plain rectangular chip */}
       {countryCode && (
         <div
-          className="absolute left-[11%] top-[11%] z-20 flex items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_1px_4px_rgba(0,0,0,0.45)]"
-          style={{ width: chipW, height: chipW }}
+          className="absolute left-[11%] top-[12%] z-20 overflow-hidden rounded-[3px] shadow-[0_1px_4px_rgba(0,0,0,0.45)]"
+          style={{ width: chipW, height: Math.round(chipW * 0.67) }}
         >
           <CountryFlag
             code={countryCode}
-            className="!h-[78%] !w-[78%] rounded-sm"
-            style={{ backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' }}
+            className="!h-full !w-full"
+            style={{ backgroundSize: 'cover', backgroundPosition: 'center' }}
           />
         </div>
       )}
-      {/* Club badge — top-right, circular, no background (just the logo) */}
+      {/* Club badge — top-right, plain logo (no background), larger than the flag */}
       {club && (
         <div
-          className="absolute right-[11%] top-[11%] z-20 flex items-center justify-center"
-          style={{ width: chipW, height: chipW }}
+          className="absolute right-[10%] top-[8%] z-20 flex items-center justify-center"
+          style={{ width: Math.round(chipW * 1.25), height: Math.round(chipW * 1.25) }}
         >
           <Image
             src={club.logo}
             alt={club.label}
-            width={64}
-            height={64}
+            width={80}
+            height={80}
             unoptimized
-            className="size-full object-contain drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]"
+            className="h-full w-full object-contain drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]"
           />
         </div>
       )}
