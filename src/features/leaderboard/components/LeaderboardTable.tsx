@@ -1,8 +1,8 @@
-import { AvatarDisplay } from "@/components/AvatarDisplay";
+import Image from "next/image";
+import { TierFrameAvatar } from "@/components/TierFrameAvatar";
 import type { LeaderboardEntry } from "@/lib/domain/leaderboard";
 import { cn } from "@/lib/utils";
 import { getTierAccent } from "@/utils/tierVisuals";
-import { Minus, TrendingDown, TrendingUp, Trophy } from "lucide-react";
 import { useLocale } from "@/contexts/LocaleContext";
 
 interface LeaderboardTableProps {
@@ -18,140 +18,163 @@ const poppins = {
   lineHeight: 1,
 } as const;
 
+const PRIZE_IMAGES: Record<number, { src: string; alt: string }> = {
+  1: { src: "/assets/world-cup-promotion/Layer 6.png", alt: "iPhone" },
+  2: { src: "/assets/world-cup-promotion/Sony-PlayStation-5-Digital-Edition-Console-Wholesale-Product-Hero2.png", alt: "PS5" },
+  3: { src: "/assets/world-cup-promotion/pngtree-apple-airpods-pro-in-a-charging-case-with-the-lid-open-png-image_16254552.png", alt: "AirPods" },
+};
+
 export function LeaderboardTable({ entries, currentUserId, onEntryClick }: LeaderboardTableProps) {
   const { t } = useLocale();
   return (
-    <div>
-      {/* Column labels — outside the card */}
+    <div className="relative">
+      {/* Column labels */}
       <div className="grid grid-cols-12 gap-2 sm:gap-4 px-3 sm:px-4 pb-3 text-[10px] sm:text-xs font-fun font-black uppercase tracking-[0.18em] text-white/45">
-        <div className="col-span-2 sm:col-span-2 text-center">{t('leaderboard.colRank')}</div>
-        <div className="col-span-5 sm:col-span-5 text-left">{t('leaderboard.colPlayer')}</div>
+        <div className="col-span-3 text-center">{t('leaderboard.colRank')}</div>
+        <div className="col-span-4 text-left">{t('leaderboard.colPlayer')}</div>
         <div className="col-span-2 sm:col-span-3 text-center">{t('leaderboard.colTier')}</div>
         <div className="col-span-3 sm:col-span-2 text-center">{t('leaderboard.colRP')}</div>
       </div>
 
-      {/* Rows container with green outline */}
-      <div
-        className="overflow-hidden rounded-[10px] border-2"
-        style={{ borderColor: "#38B60E" }}
-      >
-        <div className="divide-y divide-brand-green/25">
-          {entries.map((entry) => {
-            const isCurrentUser = entry.isCurrentUser || entry.id === currentUserId;
-            const isTopThree = entry.rank <= 3;
-            const interactive = !!onEntryClick;
-            const tierAccent = getTierAccent(entry.tier);
+      {/* Table wrapper */}
+      <div className="relative">
+        {/* Betsson badge — top-right corner of border */}
+        <div
+          className="absolute -top-1 -right-2 z-20 flex flex-col items-start rounded-md px-2 py-1"
+          style={{ backgroundColor: '#FF6C0A', width: 120, height: 34, rotate: '-5.8deg', border: '2px solid #000', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}
+        >
+          <span className="text-[6px] font-bold uppercase tracking-wider text-white/80 leading-none">Powered by</span>
+          <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={96} height={18} className="h-4 w-auto object-contain mt-0.5" />
+        </div>
 
-            return (
-              <div
-                key={entry.id}
-                onClick={interactive ? () => onEntryClick(entry.id) : undefined}
-                onKeyDown={
-                  interactive
-                    ? (e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          onEntryClick(entry.id);
-                        }
-                      }
-                    : undefined
-                }
-                role={interactive ? "button" : undefined}
-                tabIndex={interactive ? 0 : undefined}
-                className={cn(
-                  "grid grid-cols-12 gap-2 sm:gap-4 items-center px-3 sm:px-4 py-3 sm:py-3.5 transition-colors",
-                  isCurrentUser ? "bg-brand-green" : "hover:bg-white/[0.03]",
-                  interactive && "cursor-pointer",
-                )}
-              >
-                {/* Rank */}
-                <div className="col-span-2 sm:col-span-2 flex items-center justify-center gap-1">
-                  <span
-                    className="text-base sm:text-xl tabular-nums text-white"
-                    style={poppins}
+        {/* Orange-bordered table */}
+        <div
+          className="overflow-visible rounded-[10px] border-2"
+          style={{ borderColor: "#FF6C0A" }}
+        >
+          <div className="divide-y divide-white/5">
+            {entries.map((entry) => {
+              const isCurrentUser = entry.isCurrentUser || entry.id === currentUserId;
+              const isFirst = entry.rank === 1;
+              const isTopThree = entry.rank <= 3;
+              const interactive = !!onEntryClick;
+              const tierAccent = getTierAccent(entry.tier);
+              const prize = PRIZE_IMAGES[entry.rank];
+
+              return (
+                <div key={entry.id} className="relative">
+                  {/* Gift icon — filled for top 3, outline for 4-25, sits on left border edge breaking the line */}
+                  {entry.rank <= 25 && (
+                    <div className="absolute -left-5 sm:-left-6 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center">
+                      <div className="absolute size-10 sm:size-11 rounded-full bg-surface-page" />
+                      <Image
+                        src={isTopThree ? "/assets/world-cup-promotion/gift-filled.svg" : "/assets/world-cup-promotion/gift.svg"}
+                        alt=""
+                        width={32}
+                        height={32}
+                        className={cn("size-8 sm:size-9 relative z-10", !isTopThree && "opacity-50")}
+                      />
+                    </div>
+                  )}
+
+                  {/* Row content */}
+                  <div
+                    onClick={interactive ? () => onEntryClick(entry.id) : undefined}
+                    onKeyDown={
+                      interactive
+                        ? (e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              onEntryClick(entry.id);
+                            }
+                          }
+                        : undefined
+                    }
+                    role={interactive ? "button" : undefined}
+                    tabIndex={interactive ? 0 : undefined}
+                    className={cn(
+                      "grid grid-cols-12 gap-2 sm:gap-4 items-center px-3 sm:px-4 py-3.5 sm:py-4 transition-colors",
+                      isFirst
+                        ? "text-white"
+                        : isCurrentUser
+                          ? "bg-brand-green"
+                          : "hover:bg-white/[0.03]",
+                      interactive && "cursor-pointer",
+                    )}
+                    style={isFirst ? { backgroundColor: '#FF6C0A' } : undefined}
                   >
-                    #{entry.rank}
-                  </span>
-                  {entry.trend === "up" && (
-                    <TrendingUp
-                      className={cn(
-                        "size-3 shrink-0",
-                        isCurrentUser ? "text-white" : "text-brand-green-light",
+                    {/* Rank + Prize image */}
+                    <div className="col-span-3 flex items-center gap-1.5 sm:gap-2">
+                      {prize && (
+                        <Image
+                          src={prize.src}
+                          alt={prize.alt}
+                          width={40}
+                          height={48}
+                          className="h-9 sm:h-12 w-auto object-contain shrink-0"
+                        />
                       )}
-                    />
-                  )}
-                  {entry.trend === "down" && (
-                    <TrendingDown
-                      className={cn(
-                        "size-3 shrink-0",
-                        isCurrentUser ? "text-white" : "text-brand-red-soft",
-                      )}
-                    />
-                  )}
-                  {entry.trend === "same" && (
-                    <Minus
-                      className={cn(
-                        "size-3 shrink-0",
-                        isCurrentUser ? "text-white/70" : "text-white/35",
-                      )}
-                    />
-                  )}
-                </div>
+                      <span
+                        className="text-xl sm:text-2xl tabular-nums font-black text-white"
+                        style={poppins}
+                      >
+                        #{entry.rank}
+                      </span>
+                    </div>
 
-                {/* Player */}
-                <div className="col-span-5 sm:col-span-5 flex items-center justify-start gap-2 sm:gap-3 min-w-0">
-                  <div className="relative shrink-0">
-                    <div className="block sm:hidden">
-                      <AvatarDisplay
-                        customization={entry.avatarCustomization ?? { base: entry.avatar || "avatar-1" }}
-                        size="sm"
-                        countryCode={entry.country}
-                      />
-                    </div>
-                    <div className="hidden sm:block">
-                      <AvatarDisplay
-                        customization={entry.avatarCustomization ?? { base: entry.avatar || "avatar-1" }}
-                        size="md"
-                        countryCode={entry.country}
-                      />
-                    </div>
-                    {isTopThree && (
-                      <div className="absolute -top-1 -left-1 flex size-4 sm:size-5 items-center justify-center rounded-full bg-brand-yellow shadow ring-2 ring-surface-page">
-                        <Trophy
-                          className="size-2.5 sm:size-3 text-black"
-                          strokeWidth={2.5}
+                    {/* Player */}
+                    <div className="col-span-4 flex items-center justify-start gap-2 sm:gap-3 min-w-0">
+                      <div className="block sm:hidden">
+                        <TierFrameAvatar
+                          tier={entry.tier}
+                          avatarCustomization={entry.avatarCustomization}
+                          avatarFallback={entry.avatar || "avatar-1"}
+                          countryCode={entry.country}
+                          size="sm"
                         />
                       </div>
-                    )}
+                      <div className="hidden sm:block">
+                        <TierFrameAvatar
+                          tier={entry.tier}
+                          avatarCustomization={entry.avatarCustomization}
+                          avatarFallback={entry.avatar || "avatar-1"}
+                          countryCode={entry.country}
+                          size="md"
+                        />
+                      </div>
+                      <span className="truncate text-sm sm:text-base font-fun font-black uppercase text-white">
+                        {entry.username}
+                      </span>
+                    </div>
+
+                    {/* Tier */}
+                    <div className="col-span-2 sm:col-span-3 min-w-0 text-center">
+                      <span
+                        className="block truncate text-[10px] sm:text-sm font-fun font-black uppercase tracking-wide"
+                        style={{ color: isFirst || isCurrentUser ? "#FFFFFF" : tierAccent }}
+                      >
+                        {entry.tier}
+                      </span>
+                    </div>
+
+                    {/* RP */}
+                    <div className="col-span-3 sm:col-span-2 text-center">
+                      <span
+                        className="text-sm sm:text-lg tabular-nums font-black text-white"
+                        style={poppins}
+                      >
+                        {entry.rankPoints.toLocaleString()}
+                      </span>
+                    </div>
                   </div>
-                  <span className="truncate text-sm sm:text-base font-fun font-black uppercase text-white">
-                    {entry.username}
-                  </span>
                 </div>
-
-                {/* Tier */}
-                <div className="col-span-2 sm:col-span-3 min-w-0 text-center">
-                  <span
-                    className="block truncate text-[10px] sm:text-sm font-fun font-black uppercase tracking-wide"
-                    style={{ color: isCurrentUser ? "#FFFFFF" : tierAccent }}
-                  >
-                    {entry.tier}
-                  </span>
-                </div>
-
-                {/* RP */}
-                <div className="col-span-3 sm:col-span-2 text-center">
-                  <span
-                    className="text-sm sm:text-base tabular-nums text-white"
-                    style={poppins}
-                  >
-                    {entry.rankPoints.toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
+
+        {/* Vertical timeline line on the left border */}
+        <div className="absolute -left-[1px] top-0 bottom-0 w-0.5 z-10" style={{ backgroundColor: '#FF6C0A' }} />
       </div>
     </div>
   );

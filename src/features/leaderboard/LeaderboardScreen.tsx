@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { motion } from "motion/react";
 
+import Image from "next/image";
 import { useLeaderboard, useUserRank } from "@/lib/queries/leaderboard.queries";
 import type { LeaderboardType } from "@/lib/domain/leaderboard";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { MessageKey } from "@/lib/i18n/messages";
 
+import { WorldCupRulesButton } from "@/components/shared/WorldCupRulesModal";
 import { LeaderboardTable } from "./components/LeaderboardTable";
 import { LeaderboardPodium } from "./components/LeaderboardPodium";
 import { UserRankStrip } from "./components/UserRankStrip";
@@ -72,6 +74,9 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
             <p className="mt-2 text-[11px] sm:text-[13px] font-black uppercase tracking-[0.08em] text-white/70">
               {t("leaderboard.subtitle")}
             </p>
+            <div className="mt-2">
+              <WorldCupRulesButton variant="pill" />
+            </div>
           </div>
 
           <div className="flex shrink-0 flex-col items-end gap-2">
@@ -87,14 +92,23 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
           </div>
         </motion.div>
 
-        {/* ─── User Rank Strip ─── */}
+        {/* ─── User Rank Strip + Betsson Badge ─── */}
         {userEntry && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: 0.05 }}
+            className="relative"
           >
             <UserRankStrip userEntry={userEntry} />
+            {/* Betsson badge — sits on the top-right border edge */}
+            <div
+              className="absolute -top-1 -right-2 z-20 flex flex-col items-start rounded-md px-2 py-1"
+              style={{ backgroundColor: '#FF6C0A', width: 120, height: 34, rotate: '-5.8deg', border: '2px solid #000', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}
+            >
+              <span className="text-[6px] font-bold uppercase tracking-wider text-white/80 leading-none">Powered by</span>
+              <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={96} height={18} className="h-4 w-auto object-contain mt-0.5" />
+            </div>
           </motion.div>
         )}
 
@@ -118,8 +132,8 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
                 onClick={() => setActiveTab(tab.value)}
                 className={`inline-flex h-10 min-w-[130px] items-center justify-center rounded-full px-6 text-xs sm:text-sm font-fun font-black uppercase tracking-wide transition-all active:translate-y-[1px] ${
                   isActive
-                    ? "bg-brand-green text-white"
-                    : "border-2 border-brand-green text-white hover:bg-brand-green/10"
+                    ? "bg-[#FF6C0A] text-white"
+                    : "border-2 border-[#FF6C0A] text-white hover:bg-[#FF6C0A]/10"
                 }`}
               >
                 {t(tab.labelKey)}

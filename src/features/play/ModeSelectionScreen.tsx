@@ -102,6 +102,7 @@ export function ModeSelectionScreen({
   const { t, locale } = useLocale();
   const [selectedMode, setSelectedMode] = useState<'ranked' | 'friendly' | 'solo' | null>(null);
   const [playEntranceAnimation] = useState(shouldPlayEntranceAnimation);
+  const [wcDaysLeft] = useState(() => Math.max(0, Math.ceil((new Date('2026-07-19T23:59:59Z').getTime() - Date.now()) / 86_400_000)));
   const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
   const placementPlayed = rankedProfile?.placementPlayed ?? 0;
   const placementRequired = Math.max(1, rankedProfile?.placementRequired ?? 3);
@@ -223,6 +224,15 @@ export function ModeSelectionScreen({
                     : t('play.rankedSubtitle')}
               </div>
 
+              {/* World Cup event info */}
+              <div className="mt-2 flex items-center gap-2 flex-wrap">
+                <span className="rounded-full bg-brand-yellow px-3 py-1 text-[10px] font-black uppercase tracking-wide text-black">
+                  🏆 Win Prizes
+                </span>
+                <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-brand-yellow animate-pulse">
+                  🔥 {wcDaysLeft} days left
+                </span>
+              </div>
 
               <div className="mt-5">
                 <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[16px] bg-surface-page text-xl uppercase tracking-wide text-white" style={poppins}>
@@ -281,6 +291,15 @@ export function ModeSelectionScreen({
                       ? t('play.rankedPlacement', { played: placementPlayed, required: placementRequired })
                       : t('play.rankedSubtitle')}
                 </div>
+                {/* World Cup event info — mobile */}
+                <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+                  <span className="rounded-full bg-brand-yellow px-2 py-0.5 text-[8px] font-black uppercase tracking-wide text-black">
+                    🏆 Win Prizes
+                  </span>
+                  <span className="rounded-full bg-white/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-wide text-brand-yellow animate-pulse">
+                    🔥 {wcDaysLeft}d left
+                  </span>
+                </div>
               </div>
               <div className="shrink-0 text-right w-[125px]">
                 <div className="text-[1.4rem] leading-none text-brand-yellow drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]" style={poppins}>
@@ -300,6 +319,14 @@ export function ModeSelectionScreen({
                     : nextTierBand
                       ? <>{t('play.rpToTier', { rp: Math.max(0, (nextTierTargetRp ?? 0) - displayRp) })}<span className="text-brand-yellow">{nextTierBand.tier}</span></>
                       : t('play.maxRankReached')}
+                </div>
+                {/* Betsson badge — mobile only, below tier label */}
+                <div
+                  className="mt-1.5 inline-flex flex-col items-start rounded-md px-2 py-1 lg:hidden"
+                  style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.15)' }}
+                >
+                  <span className="text-[5px] font-bold uppercase tracking-wider text-white/60 leading-none">Powered by</span>
+                  <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={72} height={14} className="h-2.5 w-auto object-contain mt-0.5" />
                 </div>
               </div>
             </div>
@@ -327,6 +354,15 @@ export function ModeSelectionScreen({
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Betsson badge — bottom-right on desktop only */}
+        <div
+          className="hidden lg:flex absolute bottom-4 right-4 z-20 flex-col items-start rounded-lg px-3 py-1.5"
+          style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.15)' }}
+        >
+          <span className="text-[8px] font-bold uppercase tracking-wider text-white/60 leading-none">Powered by</span>
+          <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={96} height={18} className="h-4 w-auto object-contain mt-0.5" />
         </div>
       </div>
 
