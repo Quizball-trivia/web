@@ -32,6 +32,7 @@ const baseModel: PossessionQuestionAreaModel = {
     title: 'Question 4',
     categoryName: 'Football',
     subtitle: '1st Half',
+    upcomingQIndex: 3,
   },
 };
 

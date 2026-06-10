@@ -40,6 +40,14 @@ export interface TransitionSnapshot {
   title: string;
   categoryName: string | null;
   subtitle: string | null;
+  /**
+   * qIndex of the question this transition announces. Single source of truth
+   * for the question number shown by BOTH the overlay splash and the panel
+   * header while the transition is visible — derived from the round result
+   * that triggered the transition (roundResult.qIndex + 1), so it is correct
+   * even before the next match:question arrives from the server.
+   */
+  upcomingQIndex: number | null;
 }
 
 export interface GoalCelebrationState {

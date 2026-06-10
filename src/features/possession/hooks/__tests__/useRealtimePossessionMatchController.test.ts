@@ -34,6 +34,7 @@ const mockOverlayState = {
     title: 'Question 1',
     categoryName: 'Football',
     subtitle: '1st Half',
+    upcomingQIndex: null as number | null,
   },
 };
 
@@ -208,6 +209,7 @@ describe('useRealtimePossessionMatchController', () => {
     useRealtimeMatchStore.getState().reset();
     mockOverlayState.isHalftime = false;
     mockOverlayState.showRoundTransition = false;
+    mockOverlayState.transitionSnapshot.upcomingQIndex = null;
     mockGameLogicState.currentQuestion = mockQuestion;
     mockGameLogicState.roundResult = null;
     mockGameLogicState.roundResultHoldDone = false;
@@ -246,33 +248,16 @@ describe('useRealtimePossessionMatchController', () => {
     expect(result.current.halftimeModel).toBeNull();
   });
 
-  it('shows the upcoming question number while the round-transition overlay is visible (counter never lags the splash)', () => {
-    // Player just answered Q3 (qIndex 2). The server already sent Q4
-    // (qIndex 3), which the store buffers as pendingQuestion while the
-    // result/transition plays out. The transition splash announces
-    // "QUESTION 4" from pendingQuestion — the panel counter must agree.
+  it('panel counter mirrors the transition snapshot while the overlay is visible (single source, never disagrees with the splash)', () => {
+    // Player just answered Q3 (qIndex 2); the transition overlay announces the
+    // upcoming Q4 via its frozen snapshot (upcomingQIndex 3). The panel header
+    // must read THE SAME snapshot value — not derive its own number — so the
+    // splash and the counter can never disagree, regardless of when the next
+    // match:question arrives.
     mockGameLogicState.currentQuestion = { ...mockQuestion, qIndex: 2 };
-    const store = useRealtimeMatchStore.getState();
-    // Advance the store to Q3 first — setRoundResult rejects results whose
-    // qIndex doesn't match the store's current question.
-    store.setMatchQuestion({ ...mockQuestion, qIndex: 2 });
-    store.setRoundResult({
-      matchId: MATCH_ID,
-      qIndex: 2,
-      questionKind: 'multipleChoice',
-      reveal: { kind: 'multipleChoice', correctIndex: 0 },
-      players: {
-        'user-a': { totalPoints: 100, pointsEarned: 10, isCorrect: true, timeMs: 3000, selectedIndex: 0, submittedOrderIds: [] },
-        'user-b': { totalPoints: 80, pointsEarned: 0, isCorrect: false, timeMs: 5000, selectedIndex: 1, submittedOrderIds: [] },
-      },
-      phaseKind: 'normal',
-      phaseRound: 3,
-      deltas: { possessionDelta: 10, goalScoredBySeat: null, penaltyOutcome: null },
-    } as never);
-    store.setMatchQuestion({ ...mockQuestion, qIndex: 3 });
-    expect(useRealtimeMatchStore.getState().match?.pendingQuestion?.qIndex).toBe(3);
-
     mockOverlayState.showRoundTransition = true;
+    mockOverlayState.transitionSnapshot.upcomingQIndex = 3;
+
     const { result, rerender } = renderHook(() => useRealtimePossessionMatchController({
       playerAvatar: '/me.png',
       playerUsername: 'me',
@@ -282,7 +267,7 @@ describe('useRealtimePossessionMatchController', () => {
       onForfeit: vi.fn(),
     }), { wrapper: queryWrapper });
 
-    // Overlay visible → counter shows the buffered (upcoming) question: 3 + 1 = "Question 4".
+    // Overlay visible → counter shows the snapshot's upcoming question: 3 + 1 = "Question 4".
     expect(result.current.questionAreaModel?.content.kind).toBe('multipleChoice');
     if (result.current.questionAreaModel?.content.kind !== 'multipleChoice') return;
     expect(result.current.questionAreaModel.content.props.qIndex).toBe(3);

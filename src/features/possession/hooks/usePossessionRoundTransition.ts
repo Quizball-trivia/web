@@ -159,11 +159,15 @@ export function usePossessionRoundTransition({
     title: t('possession.questionN', { n: 1 }),
     categoryName: '',
     subtitle: t('possession.firstHalf'),
+    upcomingQIndex: null,
   });
 
   const prevPenaltyPhaseRef = useRef(phase === 'PENALTY_SHOOTOUT');
   const pendingPenaltyCountdownRef = useRef(false);
-  const transitionVisibleRef = useRef(false);
+  // Capture key of the currently shown transition snapshot (null = hidden).
+  // Keyed (rather than boolean) so a back-to-back transition for a NEW round,
+  // or a pendingQuestion arriving mid-transition, re-captures the snapshot.
+  const transitionVisibleRef = useRef<string | null>(null);
   const hasBoundaryGoalRound = Boolean(
     (roundResult?.phaseKind === 'normal' || roundResult?.phaseKind === 'last_attack') &&
     roundResult.deltas?.goalScoredBySeat
@@ -285,12 +289,28 @@ export function usePossessionRoundTransition({
     && hasNextPenaltyQuestion;
 
   useLayoutEffect(() => {
-    if (showRoundTransition && !transitionVisibleRef.current) {
-      transitionVisibleRef.current = true;
+    if (showRoundTransition) {
+      // The transition announces the UPCOMING question. The buffered
+      // pendingQuestion is authoritative when it has already arrived, but on a
+      // slow network it can land AFTER the transition becomes visible — the
+      // round result that triggered this transition is always available, and
+      // the upcoming question is deterministically roundResult.qIndex + 1.
+      // Falling back to localQuestion.qIndex (the just-answered question)
+      // produced a stale "QUESTION 3" splash while entering question 4.
+      const upcomingQIndex = firstQuestionIntro
+        ? (localQuestion?.qIndex ?? 0)
+        : pendingQuestion?.qIndex
+          ?? (typeof roundResult?.qIndex === 'number' ? roundResult.qIndex + 1 : localQuestion?.qIndex ?? null);
+      // Re-capture keyed on the announced question: back-to-back transitions
+      // (or a pendingQuestion arriving late with a different category) must
+      // refresh the frozen snapshot instead of replaying the previous round's.
+      const captureKey = `round:${upcomingQIndex ?? 'unknown'}:${pendingQuestion?.qIndex ?? 'pending-missing'}`;
+      if (transitionVisibleRef.current === captureKey) return;
+      transitionVisibleRef.current = captureKey;
+
       const isExtra = pendingQuestion?.phaseKind === 'last_attack';
-      const transitionQIndex = pendingQuestion?.qIndex ?? localQuestion?.qIndex;
-      const questionNumber = typeof transitionQIndex === 'number'
-        ? transitionQIndex + 1
+      const questionNumber = typeof upcomingQIndex === 'number'
+        ? upcomingQIndex + 1
         : pendingQuestion?.phaseRound
           ?? (typeof localQuestion?.phaseRound === 'number' ? localQuestion.phaseRound + 1 : 1);
       const title = firstQuestionIntro
@@ -309,28 +329,33 @@ export function usePossessionRoundTransition({
         title,
         categoryName,
         subtitle: (half ?? 1) === 1 ? t('possession.firstHalf') : t('possession.secondHalf'),
+        upcomingQIndex,
       });
       return;
     }
 
-    if (showPenaltyTransition && !transitionVisibleRef.current) {
-      transitionVisibleRef.current = true;
+    if (showPenaltyTransition) {
       // Prefer the buffered next question, else the promoted current penalty
       // question, else derive from the just-finished round.
       const penaltyRound = pendingQuestion?.phaseRound
         ?? (localQuestion?.phaseKind === 'penalty' ? localQuestion.phaseRound : undefined)
         ?? (typeof roundResult?.phaseRound === 'number' ? roundResult.phaseRound + 1 : undefined)
         ?? 1;
+      const captureKey = `penalty:${penaltyRound}`;
+      if (transitionVisibleRef.current === captureKey) return;
+      transitionVisibleRef.current = captureKey;
       setTransitionSnapshot({
         title: t('possession.penaltyN', { n: penaltyRound }),
         categoryName: t('possession.penaltyShootout'),
         subtitle: penaltySuddenDeath ? t('possession.suddenDeath') : t('possession.shootout'),
+        upcomingQIndex: pendingQuestion?.qIndex
+          ?? (localQuestion?.phaseKind === 'penalty' ? localQuestion.qIndex : null),
       });
       return;
     }
 
-    if (!showRoundTransition && !showPenaltyTransition && transitionVisibleRef.current) {
-      transitionVisibleRef.current = false;
+    if (!showRoundTransition && !showPenaltyTransition && transitionVisibleRef.current !== null) {
+      transitionVisibleRef.current = null;
     }
   }, [
     firstQuestionIntro,
@@ -345,6 +370,7 @@ export function usePossessionRoundTransition({
     pendingQuestion?.question.categoryName,
     penaltySuddenDeath,
     roundResult?.phaseRound,
+    roundResult?.qIndex,
     secondHalfQuestionIntro,
     showPenaltyTransition,
     showRoundTransition,

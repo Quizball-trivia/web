@@ -121,16 +121,82 @@ describe('usePossessionRoundTransition', () => {
       title: 'Question 6',
       categoryName: 'First Category',
       subtitle: 'First Half',
+      upcomingQIndex: 5,
     });
 
+    // Same announced question, only the category payload changed → snapshot
+    // stays frozen (no mid-splash flicker).
     rerender({
-      pendingQuestion: makeQuestion(6, 1, 'normal', 'Changed Category'),
+      pendingQuestion: makeQuestion(5, 6, 'normal', 'Changed Category'),
     });
 
     expect(result.current.transitionSnapshot).toEqual({
       title: 'Question 6',
       categoryName: 'First Category',
       subtitle: 'First Half',
+      upcomingQIndex: 5,
+    });
+
+    // A DIFFERENT upcoming question while the overlay is still visible is a
+    // back-to-back transition — the snapshot must re-capture instead of
+    // replaying the previous round's number (stale-counter bug).
+    rerender({
+      pendingQuestion: makeQuestion(6, 1, 'normal', 'Next Category'),
+    });
+
+    expect(result.current.transitionSnapshot).toEqual({
+      title: 'Question 7',
+      categoryName: 'Next Category',
+      subtitle: 'First Half',
+      upcomingQIndex: 6,
+    });
+  });
+
+  it('announces the upcoming question from the round result when the next question has not arrived yet', async () => {
+    // Slow network: the transition becomes visible BEFORE match:question for
+    // the next round lands. The just-finished round result is authoritative:
+    // upcoming qIndex = roundResult.qIndex + 1. Falling back to localQuestion
+    // (the just-answered question) produced a stale "QUESTION 5" splash while
+    // entering question 6.
+    const { result, rerender } = renderHook((props: {
+      pendingQuestion: ResolvedMatchQuestionPayload | null;
+    }) => usePossessionRoundTransition({
+      phase: 'NORMAL_PLAY',
+      half: 1,
+      penaltySuddenDeath: false,
+      firstQuestionIntro: false,
+      secondHalfQuestionIntro: false,
+      localQuestion: makeQuestion(4, 5, 'normal', 'Current'),
+      pendingQuestion: props.pendingQuestion,
+      roundResult: makeRoundResult('normal', 5),
+      roundResultHoldDone: true,
+      isPenaltyQuestion: false,
+      isShotQuestion: false,
+      isLastAttackQuestion: false,
+      goalCelebration: null,
+    }), {
+      initialProps: { pendingQuestion: null as ResolvedMatchQuestionPayload | null },
+    });
+
+    await act(async () => {});
+
+    expect(result.current.showRoundTransition).toBe(true);
+    expect(result.current.transitionSnapshot).toEqual({
+      title: 'Question 6',
+      categoryName: 'Current',
+      subtitle: 'First Half',
+      upcomingQIndex: 5,
+    });
+
+    // The buffered question lands mid-transition with the same index → the
+    // number stays put, the category refreshes to the real upcoming one.
+    rerender({ pendingQuestion: makeQuestion(5, 6, 'normal', 'Real Category') });
+
+    expect(result.current.transitionSnapshot).toEqual({
+      title: 'Question 6',
+      categoryName: 'Real Category',
+      subtitle: 'First Half',
+      upcomingQIndex: 5,
     });
   });
 
@@ -180,17 +246,34 @@ describe('usePossessionRoundTransition', () => {
       title: 'Penalty 1',
       categoryName: 'Penalty Shootout',
       subtitle: 'Sudden Death',
+      upcomingQIndex: 12,
     });
 
+    // Same penalty round, refreshed payload → snapshot stays frozen.
     rerender({
       phase: 'PENALTY_SHOOTOUT',
-      pendingQuestion: makeQuestion(13, 2, 'penalty', 'Changed Penalty'),
+      pendingQuestion: makeQuestion(12, 1, 'penalty', 'Changed Penalty'),
     });
 
     expect(result.current.transitionSnapshot).toEqual({
       title: 'Penalty 1',
       categoryName: 'Penalty Shootout',
       subtitle: 'Sudden Death',
+      upcomingQIndex: 12,
+    });
+
+    // A NEW penalty round while the overlay is still visible re-captures
+    // (back-to-back transition) instead of replaying "Penalty 1".
+    rerender({
+      phase: 'PENALTY_SHOOTOUT',
+      pendingQuestion: makeQuestion(13, 2, 'penalty', 'Changed Penalty'),
+    });
+
+    expect(result.current.transitionSnapshot).toEqual({
+      title: 'Penalty 2',
+      categoryName: 'Penalty Shootout',
+      subtitle: 'Sudden Death',
+      upcomingQIndex: 13,
     });
   });
 
@@ -324,6 +407,7 @@ describe('usePossessionRoundTransition', () => {
       title: 'Question 7',
       categoryName: 'Second Half Category',
       subtitle: 'Second Half',
+      upcomingQIndex: 6,
     });
   });
 
@@ -380,6 +464,7 @@ describe('usePossessionRoundTransition', () => {
       title: 'Question 7',
       categoryName: 'Dortmund',
       subtitle: 'Second Half',
+      upcomingQIndex: 6,
     });
   });
 
@@ -407,6 +492,7 @@ describe('usePossessionRoundTransition', () => {
       title: 'Extra Question',
       categoryName: 'Extra Category',
       subtitle: 'First Half',
+      upcomingQIndex: 6,
     });
   });
 });
