@@ -288,6 +288,36 @@ export const EXTRA_SEARCH_LOCATIONS: Pick<
   { lon: 149.13, lat: -35.28, city: "Canberra", country: "Australia", flag: "🇦🇺" },
 ];
 
+/** Region buckets used to weight the searching-pins sample. */
+export type SearchRegion = "europe" | "americas" | "africa" | "asia" | "oceania";
+
+const REGION_BY_COUNTRY: Record<string, SearchRegion> = {
+  // Europe + Caucasus/CIS (kept dense in the search sample)
+  UK: "europe", France: "europe", Germany: "europe", Netherlands: "europe",
+  Spain: "europe", Italy: "europe", Portugal: "europe", Poland: "europe",
+  Czechia: "europe", Austria: "europe", Hungary: "europe", Serbia: "europe",
+  Croatia: "europe", Romania: "europe", Ukraine: "europe", Greece: "europe",
+  Turkey: "europe", Georgia: "europe", Armenia: "europe", Russia: "europe",
+  Belgium: "europe", Switzerland: "europe", Bulgaria: "europe", Ireland: "europe",
+  Norway: "europe", Sweden: "europe", Finland: "europe",
+  // Americas (sparse in the search sample)
+  USA: "americas", Canada: "americas", Mexico: "americas", Brazil: "americas",
+  Argentina: "americas", Chile: "americas", Colombia: "americas", Peru: "americas",
+  Ecuador: "americas", Bolivia: "americas", Paraguay: "americas",
+  Uruguay: "americas", Venezuela: "americas",
+  Egypt: "africa", Morocco: "africa", Algeria: "africa", Tunisia: "africa",
+  Ghana: "africa", Ethiopia: "africa", Uganda: "africa", "DR Congo": "africa",
+  Zambia: "africa", Zimbabwe: "africa", "South Africa": "africa",
+  Nigeria: "africa", Kenya: "africa",
+  "Saudi Arabia": "asia", UAE: "asia", India: "asia", Thailand: "asia",
+  China: "asia", Japan: "asia", "South Korea": "asia",
+  Australia: "oceania",
+};
+
+export function searchRegionOf(country: string): SearchRegion {
+  return REGION_BY_COUNTRY[country] ?? "europe";
+}
+
 /**
  * Display names used to label the rotating search pins. Decoupled from
  * CITY_DATA's `name` field so the component can shuffle the two

@@ -5,11 +5,12 @@
 // just needs to resolve a player's location to a map pin should import
 // from `@/lib/geo`, not the screen component.
 
-export type { OpponentLocationCandidate } from "./cities";
+export type { OpponentLocationCandidate, SearchRegion } from "./cities";
 export {
   CITY_DATA,
   EXTRA_SEARCH_LOCATIONS,
   SEARCH_PLAYER_NAMES,
+  searchRegionOf,
 } from "./cities";
 export {
   CITY_ALIASES,

@@ -22,10 +22,12 @@ import {
   PROJ_CENTER,
   PROJ_SCALE,
   SEARCH_PLAYER_NAMES,
+  type SearchRegion,
   clamp,
   getGeoObject,
   projectPoint,
   resolveOpponentLocation,
+  searchRegionOf,
 } from "@/lib/geo";
 import { MapPlayerPin, type FakePlayer } from "./components/MapPlayerPin";
 import { logger } from "@/utils/logger";
@@ -173,30 +175,63 @@ function pickRandom<T>(items: readonly T[], indexFallback: number): T {
   return items[Math.floor(Math.random() * items.length)] ?? items[indexFallback % items.length];
 }
 
-/** How many fake pins to show while searching (pool is larger; we sample). */
-const SEARCH_PIN_COUNT = 58;
+/**
+ * Regional quotas for the searching pins. Tuned so the map reads as a
+ * busy-EU/CIS player base: dense across Europe + Georgia/Caucasus, a handful
+ * across Asia/Africa, and only a few in the Americas/Oceania.
+ */
+const SEARCH_REGION_QUOTAS: Record<SearchRegion, number> = {
+  europe: 22,
+  asia: 7,
+  africa: 5,
+  americas: 4,
+  oceania: 2,
+};
+const SEARCH_PIN_COUNT = Object.values(SEARCH_REGION_QUOTAS).reduce(
+  (a, b) => a + b,
+  0,
+);
 
 function generateFakePlayers(): FakePlayer[] {
   // Dedupe by city: several cities appear in both CITY_DATA and
   // EXTRA_SEARCH_LOCATIONS (Ankara, Birmingham, Delhi, ...). Without this the
   // shuffle can pick both copies and render two pins stacked on one spot.
   const seenCities = new Set<string>();
-  const cityPool = shuffled(
-    [
-      ...CITY_DATA.map(({ lon, lat, city, country, flag }) => ({
-        lon,
-        lat,
-        city,
-        country,
-        flag,
-      })),
-      ...EXTRA_SEARCH_LOCATIONS,
-    ].filter((c) => {
-      if (seenCities.has(c.city)) return false;
-      seenCities.add(c.city);
-      return true;
-    }),
-  ).slice(0, SEARCH_PIN_COUNT);
+  const dedupedPool = [
+    ...CITY_DATA.map(({ lon, lat, city, country, flag }) => ({
+      lon,
+      lat,
+      city,
+      country,
+      flag,
+    })),
+    ...EXTRA_SEARCH_LOCATIONS,
+  ].filter((c) => {
+    if (seenCities.has(c.city)) return false;
+    seenCities.add(c.city);
+    return true;
+  });
+
+  // Weighted regional sample: take each region's quota from a shuffled
+  // bucket, then top up from whatever's left if a bucket ran short.
+  const buckets: Record<SearchRegion, typeof dedupedPool> = {
+    europe: [], asia: [], africa: [], americas: [], oceania: [],
+  };
+  for (const c of dedupedPool) buckets[searchRegionOf(c.country)].push(c);
+  const picked: typeof dedupedPool = [];
+  for (const region of Object.keys(buckets) as SearchRegion[]) {
+    picked.push(...shuffled(buckets[region]).slice(0, SEARCH_REGION_QUOTAS[region]));
+  }
+  if (picked.length < SEARCH_PIN_COUNT) {
+    const pickedCities = new Set(picked.map((c) => c.city));
+    picked.push(
+      ...shuffled(dedupedPool.filter((c) => !pickedCities.has(c.city))).slice(
+        0,
+        SEARCH_PIN_COUNT - picked.length,
+      ),
+    );
+  }
+  const cityPool = shuffled(picked);
   const names = shuffled(SEARCH_PLAYER_NAMES);
   const avatarCustomizations = shuffled(CITY_DATA.map((c) => c.customization));
 
