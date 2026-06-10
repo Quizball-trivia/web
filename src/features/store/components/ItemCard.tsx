@@ -28,8 +28,6 @@ export interface ItemCardProps {
   onBuy?: () => void;
   /** Already owned/unlocked — show an "Owned" pill instead of price. */
   owned?: boolean;
-  /** When false, the user can't afford the item — the Buy button is disabled. */
-  affordable?: boolean;
   /** When provided, card renders a composite avatar preview instead of the flat asset. */
   previewCustomization?: AvatarCustomization;
   /** When provided, card renders a mannequin head with this part overlaid (for hair/glasses/facialHair). */
@@ -125,12 +123,10 @@ export function ItemCard({
   imageSize = "md",
   onBuy,
   owned,
-  affordable = true,
   previewCustomization,
   mannequinPart,
 }: ItemCardProps) {
   const { t } = useLocale();
-  const canBuy = owned || affordable;
   return (
     <motion.div
       whileHover={{ scale: 1.02, y: -2 }}
@@ -191,12 +187,11 @@ export function ItemCard({
           <button
             type="button"
             onClick={onBuy}
-            disabled={!canBuy}
-            className="flex h-9 w-full items-center justify-center gap-1 rounded-[16px] text-[12px] uppercase text-white transition-transform active:translate-y-[2px] disabled:opacity-50 disabled:active:translate-y-0 sm:h-[44px] sm:gap-2 sm:rounded-[20px] sm:text-[18px]"
+            className="flex h-9 w-full items-center justify-center gap-1 rounded-[16px] text-[12px] uppercase text-white transition-transform active:translate-y-[2px] sm:h-[44px] sm:gap-2 sm:rounded-[20px] sm:text-[18px]"
             style={{ ...poppins, backgroundColor: PURPLE }}
           >
-            <span className="tabular-nums">{canBuy ? price : t("store.needMoreCoins")}</span>
-            {canBuy && <CoinIcon size={22} />}
+            <span className="tabular-nums">{price}</span>
+            <CoinIcon size={22} />
           </button>
         )}
       </div>

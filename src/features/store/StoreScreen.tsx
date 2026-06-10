@@ -68,6 +68,8 @@ interface BuyModalState {
   avatarPart?: AvatarPart;
   /** Avatar customization to use for the preview (built from current user). */
   previewCustomization?: AvatarCustomization;
+  /** When false, the modal is preview-only with a disabled "Need more" button. */
+  affordable?: boolean;
 }
 
 const POPPINS_HEADER = {
@@ -414,6 +416,7 @@ export function StoreScreen() {
       mode: modalMode,
       avatarPart: part,
       previewCustomization,
+      affordable: isOwned || canAffordPart(part),
     });
   };
 
@@ -560,7 +563,6 @@ export function StoreScreen() {
                     price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
                     mannequinPart={part}
                     owned={ownedPartIds.has(part.id)}
-                    affordable={canAffordPart(part)}
                     onBuy={() => openAvatarPartModal(part)}
                   />
                 </motion.div>
@@ -588,7 +590,6 @@ export function StoreScreen() {
                     price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
                     mannequinPart={part}
                     owned={ownedPartIds.has(part.id)}
-                    affordable={canAffordPart(part)}
                     onBuy={() => openAvatarPartModal(part)}
                   />
                 </motion.div>
@@ -616,7 +617,6 @@ export function StoreScreen() {
                     price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
                     mannequinPart={part}
                     owned={ownedPartIds.has(part.id)}
-                    affordable={canAffordPart(part)}
                     onBuy={() => openAvatarPartModal(part)}
                   />
                 </motion.div>
@@ -644,7 +644,6 @@ export function StoreScreen() {
                     price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
                     imageSize="lg"
                     owned={ownedPartIds.has(part.id)}
-                    affordable={canAffordPart(part)}
                     onBuy={() => openAvatarPartModal(part)}
                   />
                 </motion.div>
@@ -664,7 +663,8 @@ export function StoreScreen() {
             name={buyModal?.name ?? ""}
             price={buyModal?.price ?? ""}
             previewCustomization={buyModal?.previewCustomization}
-            confirmLabel={buyModal?.mode === "equip" ? "Equip" : undefined}
+            confirmLabel={buyModal?.mode === "equip" ? t("store.equip") : undefined}
+            affordable={buyModal?.affordable ?? true}
           />
 
         </div>

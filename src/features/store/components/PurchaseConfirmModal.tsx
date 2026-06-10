@@ -31,6 +31,11 @@ export interface PurchaseConfirmModalProps {
   previewCustomization?: AvatarCustomization;
   /** Confirm button label override (e.g. "Equip" when item is already owned). */
   confirmLabel?: string;
+  /**
+   * When false, the user can't afford the item — Cancel/Confirm are replaced
+   * by a single disabled "Need more" button (modal stays preview-only).
+   */
+  affordable?: boolean;
 }
 
 export function PurchaseConfirmModal({
@@ -42,6 +47,7 @@ export function PurchaseConfirmModal({
   price,
   previewCustomization,
   confirmLabel,
+  affordable = true,
 }: PurchaseConfirmModalProps) {
   const { t } = useLocale();
   const hidePrice = !price.trim();
@@ -103,6 +109,18 @@ export function PurchaseConfirmModal({
             )}
 
             {/* Buttons */}
+            {!affordable ? (
+              <div className="mt-6">
+                <button
+                  type="button"
+                  disabled
+                  className="flex h-[48px] w-full items-center justify-center rounded-[16px] text-[14px] uppercase opacity-50"
+                  style={{ ...poppins, backgroundColor: PURPLE, color: "#FFFFFF" }}
+                >
+                  {t('store.needMoreCoins')}
+                </button>
+              </div>
+            ) : (
             <div className="mt-6 flex gap-3">
               <button
                 type="button"
@@ -124,6 +142,7 @@ export function PurchaseConfirmModal({
                 {isPending ? t('profile.purchase.processing') : (confirmLabel ?? t('profile.purchase.confirm'))}
               </button>
             </div>
+            )}
           </motion.div>
         </motion.div>
       )}

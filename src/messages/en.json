@@ -252,6 +252,7 @@
     "partViolet": "Violet",
     "partPink": "Pink",
     "equipped": "{name} equipped.",
+    "equip": "Equip",
     "coinsPrice": "{amount} coins",
     "needMoreCoins": "Need more"
   },
