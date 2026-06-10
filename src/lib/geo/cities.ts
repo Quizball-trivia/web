@@ -251,8 +251,24 @@ export const EXTRA_SEARCH_LOCATIONS: Pick<
   { lon: 22.42, lat: 39.64, city: "Larissa", country: "Greece", flag: "🇬🇷" },
   { lon: 32.86, lat: 39.93, city: "Ankara", country: "Turkey", flag: "🇹🇷" },
   { lon: 32.48, lat: 37.87, city: "Konya", country: "Turkey", flag: "🇹🇷" },
+  { lon: 29.06, lat: 40.2, city: "Bursa", country: "Turkey", flag: "🇹🇷" },
+  { lon: 41.27, lat: 39.9, city: "Erzurum", country: "Turkey", flag: "🇹🇷" },
+  { lon: 37.38, lat: 37.3, city: "Gaziantep", country: "Turkey", flag: "🇹🇷" },
   { lon: 42.7, lat: 42.27, city: "Kutaisi", country: "Georgia", flag: "🇬🇪" },
+  { lon: 42.1, lat: 41.8, city: "Batumi", country: "Georgia", flag: "🇬🇪" },
+  { lon: 44.11, lat: 41.98, city: "Gori", country: "Georgia", flag: "🇬🇪" },
   { lon: 44.51, lat: 40.18, city: "Yerevan", country: "Armenia", flag: "🇦🇲" },
+  { lon: 43.85, lat: 40.79, city: "Gyumri", country: "Armenia", flag: "🇦🇲" },
+  { lon: 48.8, lat: 40.5, city: "Baku", country: "Azerbaijan", flag: "🇦🇿" },
+  { lon: 46.36, lat: 40.68, city: "Ganja", country: "Azerbaijan", flag: "🇦🇿" },
+  { lon: 22.8, lat: 40.9, city: "Thessaloniki", country: "Greece", flag: "🇬🇷" },
+  { lon: 24.03, lat: 49.84, city: "Lviv", country: "Ukraine", flag: "🇺🇦" },
+  { lon: 36.23, lat: 49.99, city: "Kharkiv", country: "Ukraine", flag: "🇺🇦" },
+  { lon: 35.05, lat: 48.45, city: "Dnipro", country: "Ukraine", flag: "🇺🇦" },
+  { lon: 38.98, lat: 45.04, city: "Krasnodar", country: "Russia", flag: "🇷🇺" },
+  { lon: 39.7, lat: 47.23, city: "Rostov-on-Don", country: "Russia", flag: "🇷🇺" },
+  { lon: 40.1, lat: 43.8, city: "Sochi", country: "Russia", flag: "🇷🇺" },
+  { lon: 44.5, lat: 48.7, city: "Volgograd", country: "Russia", flag: "🇷🇺" },
   { lon: 37.62, lat: 55.75, city: "Moscow", country: "Russia", flag: "🇷🇺" },
   { lon: 4.35, lat: 50.85, city: "Brussels", country: "Belgium", flag: "🇧🇪" },
   { lon: 8.54, lat: 47.37, city: "Zurich", country: "Switzerland", flag: "🇨🇭" },
@@ -289,15 +305,17 @@ export const EXTRA_SEARCH_LOCATIONS: Pick<
 ];
 
 /** Region buckets used to weight the searching-pins sample. */
-export type SearchRegion = "europe" | "americas" | "africa" | "asia" | "oceania";
+export type SearchRegion = "caucasus" | "europe" | "americas" | "africa" | "asia" | "oceania";
 
 const REGION_BY_COUNTRY: Record<string, SearchRegion> = {
-  // Europe + Caucasus/CIS (kept dense in the search sample)
+  // Georgia + neighborhood (densest in the search sample — home market)
+  Georgia: "caucasus", Armenia: "caucasus", Azerbaijan: "caucasus",
+  Turkey: "caucasus", Greece: "caucasus", Ukraine: "caucasus", Russia: "caucasus",
+  // Rest of Europe (a few here and there)
   UK: "europe", France: "europe", Germany: "europe", Netherlands: "europe",
   Spain: "europe", Italy: "europe", Portugal: "europe", Poland: "europe",
   Czechia: "europe", Austria: "europe", Hungary: "europe", Serbia: "europe",
-  Croatia: "europe", Romania: "europe", Ukraine: "europe", Greece: "europe",
-  Turkey: "europe", Georgia: "europe", Armenia: "europe", Russia: "europe",
+  Croatia: "europe", Romania: "europe",
   Belgium: "europe", Switzerland: "europe", Bulgaria: "europe", Ireland: "europe",
   Norway: "europe", Sweden: "europe", Finland: "europe",
   // Americas (sparse in the search sample)

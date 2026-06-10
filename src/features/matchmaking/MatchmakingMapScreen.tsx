@@ -181,9 +181,12 @@ function pickRandom<T>(items: readonly T[], indexFallback: number): T {
  * across Asia/Africa, and only a few in the Americas/Oceania.
  */
 const SEARCH_REGION_QUOTAS: Record<SearchRegion, number> = {
-  europe: 16,
-  asia: 5,
-  africa: 3,
+  // Georgia + Turkey/Greece/Ukraine/southern-Russia neighborhood — densest.
+  caucasus: 13,
+  // A few scattered across the rest of Europe / the world.
+  europe: 6,
+  asia: 3,
+  africa: 2,
   americas: 3,
   oceania: 1,
 };
@@ -215,7 +218,7 @@ function generateFakePlayers(): FakePlayer[] {
   // Weighted regional sample: take each region's quota from a shuffled
   // bucket, then top up from whatever's left if a bucket ran short.
   const buckets: Record<SearchRegion, typeof dedupedPool> = {
-    europe: [], asia: [], africa: [], americas: [], oceania: [],
+    caucasus: [], europe: [], asia: [], africa: [], americas: [], oceania: [],
   };
   for (const c of dedupedPool) buckets[searchRegionOf(c.country)].push(c);
   const picked: typeof dedupedPool = [];
