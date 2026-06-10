@@ -16,9 +16,14 @@ interface CategoryArtworkProps {
   src?: string | null;
   className: string;
   imageClassName?: string;
+  /**
+   * `cover` bleeds the artwork edge-to-edge (cropping overflow — what the
+   * in-match ban cards do); `contain` letterboxes it inside the card.
+   */
+  fit?: 'cover' | 'contain';
 }
 
-export function CategoryArtwork({ src, className, imageClassName }: CategoryArtworkProps) {
+export function CategoryArtwork({ src, className, imageClassName, fit = 'contain' }: CategoryArtworkProps) {
   const [failed, setFailed] = useState(false);
 
   if (!src || failed) return null;
@@ -31,7 +36,7 @@ export function CategoryArtwork({ src, className, imageClassName }: CategoryArtw
         loading="lazy"
         decoding="async"
         referrerPolicy="no-referrer"
-        className={`size-full object-contain object-center transition-transform duration-500 group-hover:scale-105 ${imageClassName ?? ''}`}
+        className={`size-full ${fit === 'cover' ? 'object-cover' : 'object-contain'} object-center transition-transform duration-500 group-hover:scale-105 ${imageClassName ?? ''}`}
         onError={() => setFailed(true)}
       />
     </div>

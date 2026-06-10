@@ -1,7 +1,6 @@
 'use client';
 
 import { motion } from 'motion/react';
-import Image from 'next/image';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useLocale } from '@/contexts/LocaleContext';
 import { CategoryArtwork } from './CategoryArtwork';
@@ -50,7 +49,7 @@ export function WelcomeCategoriesDialog({
                   style={{ backgroundColor: style.color }}
                   onClick={onCategorySelect}
                 >
-                  <CategoryArtwork src={cat.imageUrl} className="absolute inset-1.5" />
+                  <CategoryArtwork src={cat.imageUrl} fit="cover" className="absolute inset-0" />
                   {cat.imageUrl ? (
                     <div className="absolute inset-0 bg-gradient-to-r from-black/48 via-black/18 to-black/55" />
                   ) : null}
