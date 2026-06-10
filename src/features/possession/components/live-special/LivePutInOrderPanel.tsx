@@ -152,6 +152,7 @@ function PutInOrderCompactColumn({
   matchedCountOverride?: number;
   totalCountOverride?: number;
 }) {
+  const { t } = useLocale();
   const matchedCount = matchedCountOverride ?? itemIds.reduce((count, itemId, index) => (
     correctById.get(itemId)?.index === index ? count + 1 : count
   ), 0);
