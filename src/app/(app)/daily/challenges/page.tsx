@@ -90,12 +90,12 @@ function ChallengeCard({
         {/* Reserve 2 title lines (min-h) and TOP-align so a 1-line and a 2-line
             title share the same top baseline across cards in a row, and the
             description below them also starts at the same height. */}
-        <h3 className={`font-poppins flex min-h-[2.1rem] items-start justify-center px-7 text-center text-[16px] uppercase leading-[0.95] md:min-h-[3.5rem] md:px-0 md:text-[28px] md:mt-2 ${isCompleted ? "text-white md:mt-8" : "text-black"}`}>
+        <h3 className={`font-poppins flex min-h-[2.1rem] items-start justify-center px-7 text-center text-[16px] uppercase leading-[1.1] md:min-h-[3.5rem] md:px-0 md:text-[28px] md:mt-2 md:leading-[0.95] ${isCompleted ? "text-white md:mt-8" : "text-black"}`}>
           {challenge.title}
         </h3>
         {/* No line-clamp: the full description always shows and the card (min-h,
             not fixed h) grows to fit it. mb keeps a gap above PLAY. */}
-        <p className={`mt-3 mb-4 text-center text-[10px] font-bold leading-tight md:mt-5 md:mb-6 md:text-[18px] md:font-semibold md:leading-snug md:px-4 ${isCompleted ? "text-white/75 md:text-white/80" : "text-black/80"}`}>
+        <p className={`mt-3 mb-4 text-center text-[10px] font-bold leading-snug [word-spacing:0.1em] md:mt-5 md:mb-6 md:text-[18px] md:font-semibold md:leading-snug md:px-4 md:[word-spacing:normal] ${isCompleted ? "text-white/75 md:text-white/80" : "text-black/80"}`}>
           {challenge.availableToday
             ? challenge.description
             : t('dailyGames.hubUnavailable')}
@@ -103,7 +103,7 @@ function ChallengeCard({
         {/* Mobile reward pills — only for an OPEN challenge. A completed card
             drops these and shows the DONE button instead, matching the web. */}
         {!isCompleted ? (
-          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 lg:hidden">
+          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 md:hidden">
             <span className="inline-flex h-6 items-center gap-1 rounded-full bg-white/70 px-2.5 text-[10px] font-black text-brand-gold-ink">
               {challenge.coinReward}
               <Image src="/assets/coin-1.png" alt="" width={16} height={16} className="size-4 object-contain" />
@@ -113,10 +113,23 @@ function ChallengeCard({
             </span>
           </div>
         ) : null}
+        {/* Desktop reward pills — coin left, XP right (mirrors the mobile
+            layout) so players see exactly what each challenge pays. */}
+        {!isCompleted ? (
+          <div className="mt-auto mb-3 hidden w-full items-center justify-between gap-2 md:flex">
+            <span className="inline-flex h-8 items-center gap-1.5 rounded-full bg-white/70 px-3.5 text-[16px] font-black tabular-nums text-brand-gold-ink">
+              {challenge.coinReward}
+              <Image src="/assets/coin-1.png" alt="" width={20} height={20} className="size-5 object-contain" />
+            </span>
+            <span className="inline-flex h-8 items-center gap-1 rounded-full bg-brand-green-light px-3.5 text-[16px] font-black text-white">
+              {challenge.xpReward} XP
+            </span>
+          </div>
+        ) : null}
         {/* PLAY / DONE pill. On mobile it's hidden for OPEN cards (those use the
             reward pills above) but shown for COMPLETED cards so they get the same
             DONE treatment as the web. On md+ it always shows. */}
-        <div className={`mt-auto justify-center ${isCompleted ? "flex" : "hidden md:flex"}`}>
+        <div className={`justify-center ${isCompleted ? "mt-auto flex" : "hidden md:flex"}`}>
           <span className={`font-poppins inline-flex h-[34px] min-w-[120px] items-center justify-center rounded-[14px] px-5 text-[15px] uppercase tracking-wide md:h-[50px] md:min-w-[200px] md:rounded-[20px] md:px-8 md:text-[24px] ${
             isCompleted ? "bg-white text-brand-green-darkest" : "bg-black text-white"
           }`}>
@@ -186,14 +199,6 @@ export default function DailyChallengesPage() {
   );
   const earnedCoins = useMemo(
     () => challenges.filter((c) => c.completedToday).reduce((sum, c) => sum + c.coinReward, 0),
-    [challenges],
-  );
-  const totalXp = useMemo(
-    () => challenges.reduce((sum, c) => sum + c.xpReward, 0),
-    [challenges],
-  );
-  const totalPlayCost = useMemo(
-    () => challenges.reduce((sum, c) => sum + (c.coinReward ?? 0), 0),
     [challenges],
   );
   const progressPct = challenges.length > 0 ? (completedCount / challenges.length) * 100 : 0;
@@ -281,28 +286,6 @@ export default function DailyChallengesPage() {
           </div>
         )}
 
-        {/* Bottom stats */}
-        {!isLoading && challenges.length > 0 && (
-          <div className="mt-8 hidden flex-wrap items-end gap-8 md:mt-10 md:flex">
-            <div className="flex flex-col items-center">
-              <p className="font-poppins text-xs uppercase tracking-wider text-white mb-2">
-                {t('dailyGames.hubPlayFor')}
-              </p>
-              <span className="inline-flex items-center gap-2 rounded-full bg-brand-yellow/15 px-4 py-1.5 text-sm font-black text-brand-yellow">
-                {totalPlayCost}
-                <Image src="/assets/coin-1.png" alt="" width={20} height={20} className="size-5 object-contain" />
-              </span>
-            </div>
-            <div className="flex flex-col items-center">
-              <p className="font-poppins text-xs uppercase tracking-wider text-white mb-2">
-                {t('dailyGames.hubEarn')}
-              </p>
-              <span className="inline-flex items-center rounded-full bg-brand-green-light px-4 py-1.5 text-sm font-black text-white">
-                {totalXp} XP
-              </span>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

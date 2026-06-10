@@ -327,7 +327,7 @@ export function RankedProgressionPanel({
                 </motion.span>
               )}
             </div>
-            {/* Coin participation reward (win 500 / loss 200) from settlement */}
+            {/* Coin participation reward (win 300 / loss 100) from settlement */}
             {coinsAwarded != null && coinsAwarded > 0 && (
               <CoinRewardChip amount={coinsAwarded} delay={1.1} />
             )}
