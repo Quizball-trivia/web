@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Script from 'next/script';
 import { useLeaderboard } from '@/lib/queries/leaderboard.queries';
 import { BarBattleFlightOverlay } from '@/features/possession/components/BarBattleFlightOverlay';
@@ -10,6 +11,7 @@ import { DEMO_LEADERBOARD } from './welcome.content';
 import {
   getDaysUntilWorldCup,
   getDuelsCount,
+  getVerifiedQuestionsCount,
 } from './welcome.helpers';
 import { useWelcomeAuthController } from './useWelcomeAuthController';
 import { useWelcomeStadiumSim } from './useWelcomeStadiumSim';
@@ -24,8 +26,11 @@ import { WelcomeCategoriesDialog } from './WelcomeCategoriesDialog';
 import { WelcomeTierRoadSection } from './WelcomeTierRoadSection';
 import { WelcomeLeaderboardSection } from './WelcomeLeaderboardSection';
 import { WelcomeFooter } from './WelcomeFooter';
+import { WelcomeWorldCupBanner } from './WelcomeWorldCupBanner';
+import { useActiveEventMode } from '@/lib/hooks/useActiveEventMode';
 
 export function WelcomeScreen() {
+  const { isEventMode } = useActiveEventMode();
   const auth = useWelcomeAuthController();
   const {
     loginOpen,
@@ -81,6 +86,7 @@ export function WelcomeScreen() {
   } = auth;
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [duelsCount] = useState(() => getDuelsCount());
+  const [verifiedQuestionsCount] = useState(() => getVerifiedQuestionsCount());
   const [wcDaysLeft] = useState(() => getDaysUntilWorldCup());
 
   const sim = useWelcomeStadiumSim();
@@ -115,7 +121,7 @@ export function WelcomeScreen() {
   }, [authMode, canUseGeorgianPhoneAuth, handleAuthModeChange]);
 
   return (
-    <div className="min-h-screen w-full bg-surface-page font-sans text-foreground flex flex-col overflow-x-hidden">
+    <div className="min-h-screen w-full bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat font-sans text-foreground flex flex-col overflow-x-hidden">
       {googleClientId ? (
         <Script
           src="https://accounts.google.com/gsi/client"
@@ -133,24 +139,39 @@ export function WelcomeScreen() {
         onArrive={(id) => setLandingFlights((flights) => flights.filter((flight) => flight.id !== id))}
       />
 
-      <WelcomeCategoriesSection
-        allCategoriesCount={allCategories.length}
-        featuredCategories={featuredCategories}
-        hasRemaining={remainingCategories.length > 0}
-        onCategorySelect={handleProtectedWelcomeAction}
-        onBrowseAll={handleBrowseCategories}
-      />
+      {/* ─── World Cup Event Zone ─── */}
+      <div className="relative max-w-7xl mx-auto w-full px-2 md:px-4 pt-8 pb-4">
+        {/* World Cup banner — Betsson/World Cup event only */}
+        {isEventMode && (
+          <div className="pb-10">
+            <WelcomeWorldCupBanner />
+          </div>
+        )}
 
+        {/* Categories */}
+        <div className="pb-10">
+          <WelcomeCategoriesSection
+            allCategoriesCount={allCategories.length}
+            featuredCategories={featuredCategories}
+            hasRemaining={remainingCategories.length > 0}
+            onCategorySelect={handleProtectedWelcomeAction}
+            onBrowseAll={handleBrowseCategories}
+          />
+        </div>
+
+        {/* Leaderboard */}
+        <div className="pb-10">
+          <WelcomeLeaderboardSection
+            entries={leaderboardEntries}
+            onEntryClick={handleProtectedWelcomeAction}
+            onViewFull={handleProtectedWelcomeAction}
+          />
+        </div>
+      </div>
 
       <WelcomeTierRoadSection onStartClimbing={handleProtectedWelcomeAction} />
 
-      <WelcomeLeaderboardSection
-        entries={leaderboardEntries}
-        onEntryClick={handleProtectedWelcomeAction}
-        onViewFull={handleProtectedWelcomeAction}
-      />
-
-      <WelcomeFooter duelsCount={duelsCount} />
+      <WelcomeFooter duelsCount={duelsCount} verifiedQuestionsCount={verifiedQuestionsCount} />
 
       <WelcomeCategoriesDialog
         open={categoriesOpen}

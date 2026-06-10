@@ -105,17 +105,21 @@ export function getDaysUntilWorldCup(): number {
   return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
 }
 
-// Deterministic pseudo-random duels count based on days since launch
+// Marketing counters that grow ~2,000/day from a fixed baseline. Deterministic
+// (date-derived) so every viewer on a given day sees the same number.
+const COUNTER_ANCHOR_DATE = Date.UTC(2026, 5, 10); // 2026-06-10
+const COUNTER_DAILY_GROWTH = 2000;
+
+function daysSinceAnchor(): number {
+  return Math.max(0, Math.floor((Date.now() - COUNTER_ANCHOR_DATE) / (1000 * 60 * 60 * 24)));
+}
+
+// Duels played: ~35k baseline, +2k/day.
 export function getDuelsCount(): number {
-  const LAUNCH_DATE = Date.UTC(2026, 2, 1);
-  const BASE_COUNT = 1000;
-  const now = Date.now();
-  const daysSinceLaunch = Math.max(0, Math.floor((now - LAUNCH_DATE) / (1000 * 60 * 60 * 24)));
-  let total = BASE_COUNT;
-  for (let d = 0; d < daysSinceLaunch; d++) {
-    const seed = d * 2654435761;
-    const daily = 5 + (Math.abs(seed) % 96);
-    total += daily;
-  }
-  return total;
+  return 35000 + daysSinceAnchor() * COUNTER_DAILY_GROWTH;
+}
+
+// Verified questions: ~50k baseline, +2k/day.
+export function getVerifiedQuestionsCount(): number {
+  return 50000 + daysSinceAnchor() * COUNTER_DAILY_GROWTH;
 }

@@ -13,6 +13,7 @@ import type { MatchStatsSummary } from '@/lib/domain';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import { useObjectives } from '@/lib/queries/objectives.queries';
 import { useObjectivesEnabled } from '@/lib/hooks/useObjectivesEnabled';
+import { useActiveEventMode } from '@/lib/hooks/useActiveEventMode';
 
 import { colors } from '@/lib/colors';
 
@@ -100,8 +101,10 @@ export function ModeSelectionScreen({
   rankedProfileLoading = false,
 }: ModeSelectionScreenProps) {
   const { t, locale } = useLocale();
+  const { isEventMode } = useActiveEventMode();
   const [selectedMode, setSelectedMode] = useState<'ranked' | 'friendly' | 'solo' | null>(null);
   const [playEntranceAnimation] = useState(shouldPlayEntranceAnimation);
+  const [wcDaysLeft] = useState(() => Math.max(0, Math.ceil((new Date('2026-07-19T23:59:59Z').getTime() - Date.now()) / 86_400_000)));
   const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
   const placementPlayed = rankedProfile?.placementPlayed ?? 0;
   const placementRequired = Math.max(1, rankedProfile?.placementRequired ?? 3);
@@ -213,7 +216,7 @@ export function ModeSelectionScreen({
                 className="max-w-[20rem] text-[clamp(1.75rem,3vw,2.75rem)] uppercase text-white break-words [hyphens:auto]"
                 style={{ ...rankedTitleStyle, lineHeight: 1.15 }}
               >
-                {t('play.rankedMatch')}
+                {isEventMode ? t('play.rankedMatchEvent') : t('play.rankedMatch')}
               </h1>
               <div className="mt-1.5 text-lg uppercase tracking-wide text-white/90" style={poppins}>
                 {rankedProfileLoading
@@ -223,6 +226,18 @@ export function ModeSelectionScreen({
                     : t('play.rankedSubtitle')}
               </div>
 
+              {/* World Cup event info — event only */}
+              {isEventMode && (
+                <div className="mt-2 flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-brand-yellow px-3 py-1 text-[10px] font-black uppercase tracking-wide text-black">
+                    <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={14} height={14} className="h-3.5 w-auto object-contain" />
+                    {t('play.eventWinPrizes')}
+                  </span>
+                  <span className="rounded-full bg-brand-orange px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white animate-pulse">
+                    🔥 {t('play.eventDaysLeft', { count: wcDaysLeft })}
+                  </span>
+                </div>
+              )}
 
               <div className="mt-5">
                 <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[16px] bg-surface-page text-xl uppercase tracking-wide text-white" style={poppins}>
@@ -281,6 +296,18 @@ export function ModeSelectionScreen({
                       ? t('play.rankedPlacement', { played: placementPlayed, required: placementRequired })
                       : t('play.rankedSubtitle')}
                 </div>
+                {/* World Cup event info — mobile, event only */}
+                {isEventMode && (
+                  <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-brand-yellow px-2 py-0.5 text-[8px] font-black uppercase tracking-wide text-black">
+                      <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={12} height={12} className="h-3 w-auto object-contain" />
+                      {t('play.eventWinPrizes')}
+                    </span>
+                    <span className="rounded-full bg-brand-orange px-2 py-0.5 text-[8px] font-black uppercase tracking-wide text-white animate-pulse">
+                      🔥 {t('play.eventDaysLeftShort', { count: wcDaysLeft })}
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="shrink-0 text-right w-[125px]">
                 <div className="text-[1.4rem] leading-none text-brand-yellow drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]" style={poppins}>
@@ -301,6 +328,16 @@ export function ModeSelectionScreen({
                       ? <>{t('play.rpToTier', { rp: Math.max(0, (nextTierTargetRp ?? 0) - displayRp) })}<span className="text-brand-yellow">{nextTierBand.tier}</span></>
                       : t('play.maxRankReached')}
                 </div>
+                {/* Betsson badge — mobile only, below tier label, event only */}
+                {isEventMode && (
+                  <div
+                    className="mt-1.5 inline-flex flex-col items-start rounded-md px-2 py-1 lg:hidden"
+                    style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.15)' }}
+                  >
+                    <span className="text-[5px] font-bold uppercase tracking-wider text-white/60 leading-none">Powered by</span>
+                    <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={72} height={14} className="h-2.5 w-auto object-contain mt-0.5" />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -328,6 +365,17 @@ export function ModeSelectionScreen({
             </div>
           </div>
         </div>
+
+        {/* Betsson badge — bottom-right on desktop only, event only */}
+        {isEventMode && (
+          <div
+            className="hidden lg:flex absolute bottom-4 right-4 z-20 flex-col items-start rounded-lg px-3 py-1.5"
+            style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.15)' }}
+          >
+            <span className="text-[8px] font-bold uppercase tracking-wider text-white/60 leading-none">Powered by</span>
+            <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={96} height={18} className="h-4 w-auto object-contain mt-0.5" />
+          </div>
+        )}
       </div>
 
       {/* ─── 2. Secondary Modes Grid ─── */}

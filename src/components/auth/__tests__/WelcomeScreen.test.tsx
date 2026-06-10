@@ -1,6 +1,18 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render as rtlRender, screen, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ReactNode } from 'react';
 import { ApiError } from '@/lib/api/api';
+
+// WelcomeScreen now renders sections that use React Query (leaderboard /
+// categories data). Wrap every render in a QueryClientProvider so those hooks
+// have a client. retry:false keeps failed queries from hanging the tests.
+function render(ui: ReactNode) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return rtlRender(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+}
 
 // JSDOM doesn't ship with IntersectionObserver, which motion/react uses for
 // `whileInView`. Stub it before any component imports.
@@ -56,6 +68,24 @@ vi.mock('@/contexts/LocaleContext', () => ({
       params ? `${key}|${JSON.stringify(params)}` : key,
     locale: 'en',
   }),
+}));
+
+// Event mode (Georgia World Cup / Betsson) — defaults to OFF so the welcome
+// screen renders the normal QuizBall UI. Individual tests override per-render.
+import type { ActiveEventMode } from '@/lib/hooks/useActiveEventMode';
+const eventModeMock = vi.fn(
+  (): ActiveEventMode => ({
+    eventEnabled: false,
+    isEligibleRegion: false,
+    isEventMode: false,
+    canParticipate: false,
+    scoreLabel: 'RP',
+    eventSlug: null,
+  }),
+);
+vi.mock('@/lib/hooks/useActiveEventMode', () => ({
+  useActiveEventMode: () => eventModeMock(),
+  EVENT_SLUG: 'georgia-world-cup',
 }));
 
 // Auth store — bootstrap is the only field the screen reads.
@@ -219,6 +249,7 @@ vi.mock('@/components/ui/dialog', () => {
   return {
     Dialog: ({ open, children }: { open: boolean; children: React.ReactNode }) =>
       open ? <div role="dialog">{children}</div> : null,
+    DialogTrigger: Frag,
     DialogContent: Frag,
     DialogDescription: Frag,
     DialogHeader: Frag,
@@ -326,9 +357,22 @@ describe('WelcomeScreen — landing chrome', () => {
     expect(screen.getAllByText(/welcome\.kickOff/).length).toBeGreaterThan(0);
   });
 
-  it('renders the World Cup countdown copy', () => {
+  it('hides the World Cup promo banner when the event flag is off (default)', () => {
     render(<WelcomeScreen />);
-    expect(screen.getByText(/welcome\.untilKickoff/)).toBeInTheDocument();
+    expect(screen.queryByText(/welcome\.wcPromoTitle/)).not.toBeInTheDocument();
+  });
+
+  it('renders the World Cup promo banner copy when event mode is on', () => {
+    eventModeMock.mockReturnValueOnce({
+      eventEnabled: true,
+      isEligibleRegion: true,
+      isEventMode: true,
+      canParticipate: true,
+      scoreLabel: 'WCP',
+      eventSlug: 'georgia-world-cup',
+    });
+    render(<WelcomeScreen />);
+    expect(screen.getByText(/welcome\.wcPromoTitle/)).toBeInTheDocument();
   });
 
   it('renders the leaderboard podium and table sections', () => {
