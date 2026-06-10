@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
 import Script from 'next/script';
 import { useLeaderboard } from '@/lib/queries/leaderboard.queries';
 import { BarBattleFlightOverlay } from '@/features/possession/components/BarBattleFlightOverlay';
@@ -25,7 +24,6 @@ import { WelcomeCategoriesDialog } from './WelcomeCategoriesDialog';
 import { WelcomeTierRoadSection } from './WelcomeTierRoadSection';
 import { WelcomeLeaderboardSection } from './WelcomeLeaderboardSection';
 import { WelcomeFooter } from './WelcomeFooter';
-import { WelcomeWorldCupBanner } from './WelcomeWorldCupBanner';
 
 export function WelcomeScreen() {
   const auth = useWelcomeAuthController();
@@ -91,7 +89,7 @@ export function WelcomeScreen() {
   const { data: leaderboardData } = useLeaderboard('global');
   const leaderboardEntries = leaderboardData ?? DEMO_LEADERBOARD;
 
-  const { featuredCategories } = useWelcomeCategoriesData();
+  const { allCategories, featuredCategories, remainingCategories } = useWelcomeCategoriesData();
   const phoneAuthAvailability = useGeorgianPhoneAuthAvailability();
   const canUseGeorgianPhoneAuth = phoneAuthAvailability.isAvailable;
 
@@ -135,62 +133,28 @@ export function WelcomeScreen() {
         onArrive={(id) => setLandingFlights((flights) => flights.filter((flight) => flight.id !== id))}
       />
 
-      {/* ─── World Cup Event Zone (Timeline) ─── */}
-      <div className="relative max-w-7xl mx-auto w-full pl-6 pr-2 md:pr-4 pt-8 pb-4">
-        {/* Vertical timeline line — aligned to left edge */}
-        <div className="absolute left-6 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-brand-green/30 to-transparent" />
+      <WelcomeCategoriesSection
+        allCategoriesCount={allCategories.length}
+        featuredCategories={featuredCategories}
+        hasRemaining={remainingCategories.length > 0}
+        onCategorySelect={handleProtectedWelcomeAction}
+        onBrowseAll={handleBrowseCategories}
+      />
 
-        {/* Node 1: Prizes */}
-        <div className="relative pl-8 pb-10">
-          <div className="absolute left-[20px] top-1 size-3 rounded-full bg-brand-green ring-4 ring-brand-green/20" />
-          <WelcomeWorldCupBanner />
-        </div>
-
-        {/* Node 2: Categories */}
-        <div className="relative pl-8 pb-10">
-          <div className="absolute left-[20px] top-1 size-3 rounded-full bg-brand-green ring-4 ring-brand-green/20" />
-          <WelcomeCategoriesSection
-            allCategoriesCount={featuredCategories.length}
-            featuredCategories={featuredCategories}
-            hasRemaining={featuredCategories.length > 15}
-            onCategorySelect={handleProtectedWelcomeAction}
-            onBrowseAll={handleBrowseCategories}
-          />
-        </div>
-
-        {/* Node 3: Leaderboard */}
-        <div className="relative pl-8 pb-10">
-          <div className="absolute left-[20px] top-1 size-3 rounded-full bg-brand-green ring-4 ring-brand-green/20" />
-          <WelcomeLeaderboardSection
-            entries={leaderboardEntries}
-            onEntryClick={handleProtectedWelcomeAction}
-            onViewFull={handleProtectedWelcomeAction}
-          />
-        </div>
-
-        {/* End node: Betsson branding */}
-        <div className="relative pl-8">
-          <div className="absolute left-[20px] top-0 size-3 rounded-full bg-brand-green/50 ring-4 ring-brand-green/10" />
-          <div className="flex items-center gap-2 opacity-50">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-white/50">Powered by</span>
-            <Image
-              src="/assets/betsson/1.png"
-              alt="Betsson Sport"
-              width={80}
-              height={16}
-              className="h-3 w-auto object-contain"
-            />
-          </div>
-        </div>
-      </div>
 
       <WelcomeTierRoadSection onStartClimbing={handleProtectedWelcomeAction} />
+
+      <WelcomeLeaderboardSection
+        entries={leaderboardEntries}
+        onEntryClick={handleProtectedWelcomeAction}
+        onViewFull={handleProtectedWelcomeAction}
+      />
 
       <WelcomeFooter duelsCount={duelsCount} />
 
       <WelcomeCategoriesDialog
         open={categoriesOpen}
-        categories={featuredCategories}
+        categories={allCategories}
         onOpenChange={setCategoriesOpen}
         onCategorySelect={handleCategorySelect}
       />
