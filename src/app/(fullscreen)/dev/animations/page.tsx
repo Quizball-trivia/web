@@ -188,9 +188,12 @@ function makeQuestion(qIndex: number, kind: QuestionKind = 'multipleChoice'): Re
       options: sample.options,
       image: isImageSlot
         ? {
-          url: 'https://upload.wikimedia.org/wikipedia/commons/6/66/Football_Stadium_in_Galich.jpg',
-          width: 1440,
-          height: 1080,
+          // A real (portrait) question image from the staging CDN — exercises
+          // the full production path: Supabase render transform + the blurred
+          // cover backdrop filling the letterbox bars in QuestionImageCard.
+          url: 'https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/question-images/argentina-world-cup/af712bff-1b2d-4374-b8e5-153dcb587cef.webp',
+          width: 708,
+          height: 1056,
         }
         : undefined,
       categoryName: isImageSlot ? "Maradona's World Cup Legacy" : sample.categoryName,

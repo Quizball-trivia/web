@@ -14,9 +14,12 @@ interface QuestionImageCardProps {
 /**
  * Image shown above the prompt for an image-MCQ (e.g. the 4th question of each
  * half in ranked). The box reserves a fixed height band immediately so the image
- * decoding never shifts the layout, and uses `object-contain` so quiz-relevant
- * detail is never cropped. Hides itself if the image fails to load, leaving the
- * question fully answerable.
+ * decoding never shifts the layout. Source photos come in wildly different
+ * aspect ratios, so the card is filled edge-to-edge by a blurred `object-cover`
+ * backdrop of the SAME image, with the sharp `object-contain` photo in front —
+ * every photo "fits inside" uniformly (like the category cards) while
+ * quiz-relevant detail is never cropped. Hides itself if the image fails to
+ * load, leaving the question fully answerable.
  *
  * Styling mirrors the football-logic image card (yellow border + soft glow).
  */
@@ -35,13 +38,29 @@ export function QuestionImageCard({ image }: QuestionImageCardProps) {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="mb-2.5 overflow-hidden rounded-[16px] p-2"
+      className="mb-2 overflow-hidden rounded-[16px] p-2"
       style={{
         border: '2px solid rgba(255,229,0,0.3)',
         boxShadow: '0 0 6.334px 1.32px rgba(255,229,0,0.1)',
       }}
     >
-      <div className="flex h-[clamp(180px,42vw,300px)] w-full items-center justify-center overflow-hidden rounded-[12px] bg-surface-page">
+      <div className="relative flex h-[clamp(150px,34vw,260px)] w-full items-center justify-center overflow-hidden rounded-[12px] bg-surface-page">
+        {/* Blurred cover backdrop: fills the letterbox bars with the photo's
+            own colors so portrait/landscape sources all read as one uniform,
+            edge-to-edge card. Decorative only — errors are handled by the
+            foreground image. */}
+        <img
+          src={src}
+          alt=""
+          aria-hidden
+          loading="eager"
+          decoding="async"
+          referrerPolicy="no-referrer"
+          className="absolute inset-0 h-full w-full scale-110 object-cover opacity-50 blur-xl"
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).style.display = 'none';
+          }}
+        />
         <img
           src={src}
           alt=""
@@ -51,7 +70,7 @@ export function QuestionImageCard({ image }: QuestionImageCardProps) {
           decoding="async"
           fetchPriority="high"
           referrerPolicy="no-referrer"
-          className="h-full max-h-full w-auto max-w-full object-contain"
+          className="relative h-full max-h-full w-auto max-w-full object-contain"
           onError={() => {
             // First failure: retry with the raw URL. Second: hide the card.
             if (!useRaw) setUseRaw(true);

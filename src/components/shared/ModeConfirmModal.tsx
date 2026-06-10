@@ -106,10 +106,14 @@ export function ModeConfirmModal({
   const [starting, setStarting] = useState(false);
 
   // Re-arm whenever the modal opens fresh (also covers a failed navigation
-  // bringing the user back with the modal still mounted).
-  useEffect(() => {
+  // bringing the user back with the modal still mounted). Render-phase state
+  // adjustment (React's recommended pattern) — an effect would be flagged for
+  // cascading renders.
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  if (prevIsOpen !== isOpen) {
+    setPrevIsOpen(isOpen);
     if (isOpen) setStarting(false);
-  }, [isOpen]);
+  }
 
   // Failsafe: if a start path fails WITHOUT navigating (e.g. question fetch
   // toast on solo), don't leave the button spinning forever — re-arm so the

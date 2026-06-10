@@ -191,6 +191,9 @@ export function PossessionQuestionPanel({
   const displayQuestionNum = qIndex + 1;
   const displayTimer = timeRemaining ?? 0;
   const timerLabel = displayTimer >= 10 ? `${displayTimer}` : `0${displayTimer}`;
+  // Image MCQs render a photo band above the prompt; everything below it uses
+  // a compact variant so the options grid stays above the fold.
+  const hasQuestionImage = Boolean(question.image) && !isPenaltyPhase && !isShotPhase;
 
   const questionPillClass =
     'flex items-center justify-center rounded-[16px] bg-brand-blue text-white';
@@ -307,16 +310,27 @@ export function PossessionQuestionPanel({
           transition={{ duration: 0.15 }}
           className="relative mt-3"
         >
-          {question.image && !isPenaltyPhase && !isShotPhase && (
-            <QuestionImageCard image={question.image} />
+          {hasQuestionImage && (
+            <QuestionImageCard image={question.image!} />
           )}
+          {/* Compact when an image is shown: the photo band already eats a lot
+              of vertical space, so the prompt box tightens (smaller min-height,
+              padding, font) to keep the options grid above the fold. */}
           <div
-            className="flex items-center rounded-[24px] bg-surface-page px-5 py-5 text-white sm:px-6 sm:py-6 md:px-8 md:py-7"
+            className={
+              hasQuestionImage
+                ? 'flex items-center rounded-[24px] bg-surface-page px-5 py-3.5 text-white sm:px-6 sm:py-4 md:px-8 md:py-5'
+                : 'flex items-center rounded-[24px] bg-surface-page px-5 py-5 text-white sm:px-6 sm:py-6 md:px-8 md:py-7'
+            }
             style={{
               fontFamily: "'Poppins', sans-serif",
               fontWeight: 700,
-              fontSize: 'clamp(15px, 1.9vw, 26px)',
-              minHeight: 'clamp(108px, 15vw, 176px)',
+              fontSize: hasQuestionImage
+                ? 'clamp(14px, 1.6vw, 21px)'
+                : 'clamp(15px, 1.9vw, 26px)',
+              minHeight: hasQuestionImage
+                ? 'clamp(72px, 9vw, 112px)'
+                : 'clamp(108px, 15vw, 176px)',
             }}
           >
             <p className="leading-snug">{question.prompt}</p>
@@ -414,10 +428,16 @@ export function PossessionQuestionPanel({
                 damping: 24,
                 mass: 0.75,
               }}
-              className="relative flex items-center justify-center overflow-hidden rounded-[16px] px-3 transition-shadow duration-150 h-[60px] sm:h-[78px] md:h-[94px] lg:h-[116px]"
+              className={`relative flex items-center justify-center overflow-hidden rounded-[16px] px-3 transition-shadow duration-150 ${
+                hasQuestionImage
+                  ? 'h-[48px] sm:h-[58px] md:h-[68px] lg:h-[80px]'
+                  : 'h-[60px] sm:h-[78px] md:h-[94px] lg:h-[116px]'
+              }`}
               style={{
                 ...poppins,
-                fontSize: 'clamp(13px, 1.7vw, 26px)',
+                fontSize: hasQuestionImage
+                  ? 'clamp(12px, 1.4vw, 20px)'
+                  : 'clamp(13px, 1.7vw, 26px)',
                 textTransform: 'uppercase',
                 color: isWrongPick ? '#FB3101' : '#FFFFFF',
                 backgroundColor: isWinningAnswer ? '#38B60E' : 'transparent',
