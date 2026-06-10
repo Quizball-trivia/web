@@ -28,6 +28,8 @@ export function CategoryArtwork({ src, className, imageClassName }: CategoryArtw
       <img
         {...optimizedRemoteImageProps(src, 384)}
         alt=""
+        loading="lazy"
+        decoding="async"
         referrerPolicy="no-referrer"
         className={`size-full object-contain object-center transition-transform duration-500 group-hover:scale-105 ${imageClassName ?? ''}`}
         onError={() => setFailed(true)}

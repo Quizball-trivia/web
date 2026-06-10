@@ -78,6 +78,9 @@ const nextConfig: NextConfig = {
     // Serve AVIF where the browser supports it (smaller than webp at the
     // same visual quality), webp otherwise.
     formats: ["image/avif", "image/webp"],
+    // Next 16 only allows q=75 unless whitelisted; 90 is used for remote
+    // Supabase question/category art (see lib/images/remoteImage.ts).
+    qualities: [75, 90],
     remotePatterns: [
       {
         // Own Supabase storage (question/category images) — lets the

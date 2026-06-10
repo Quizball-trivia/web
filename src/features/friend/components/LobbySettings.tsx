@@ -675,7 +675,7 @@ export function LobbySettings({
                       >
                         <div className="size-9 overflow-hidden shrink-0 flex items-center justify-center">
                           {cat.imageUrl
-                            ? <img {...optimizedRemoteImageProps(cat.imageUrl, 72)} alt={cat.name} className="size-full object-contain" />
+                            ? <img {...optimizedRemoteImageProps(cat.imageUrl, 72)} alt={cat.name} loading="lazy" decoding="async" className="size-full object-contain" />
                             : <span className="text-xl">{cat.icon}</span>
                           }
                         </div>
