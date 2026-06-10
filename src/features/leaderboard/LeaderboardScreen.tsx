@@ -13,6 +13,7 @@ import type { MessageKey } from "@/lib/i18n/messages";
 import { LeaderboardTable } from "./components/LeaderboardTable";
 import { LeaderboardPodium } from "./components/LeaderboardPodium";
 import { UserRankStrip } from "./components/UserRankStrip";
+import { ResetsInBadge } from "./components/ResetsInBadge";
 
 interface LeaderboardScreenProps {
   currentPlayerId?: string;
@@ -73,14 +74,17 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
             </p>
           </div>
 
-          {userEntry && (
-            <div
-              className="shrink-0 text-right text-2xl sm:text-3xl md:text-4xl tabular-nums text-brand-yellow drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]"
-              style={poppinsTitle}
-            >
-              {userEntry.rankPoints.toLocaleString()} RP
-            </div>
-          )}
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            {userEntry && (
+              <div
+                className="text-right text-2xl sm:text-3xl md:text-4xl tabular-nums text-brand-yellow drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]"
+                style={poppinsTitle}
+              >
+                {userEntry.rankPoints.toLocaleString()} RP
+              </div>
+            )}
+            <ResetsInBadge />
+          </div>
         </motion.div>
 
         {/* ─── User Rank Strip ─── */}

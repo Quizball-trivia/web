@@ -800,7 +800,8 @@
     "colRank": "ადგილი",
     "colPlayer": "მოთამაშე",
     "colTier": "ლიგა",
-    "colRP": "RP"
+    "colRP": "RP",
+    "resetsIn": "განახლდება"
   },
   "appAuthGate": {
     "warmingUp": "გახურება...",

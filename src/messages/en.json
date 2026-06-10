@@ -606,7 +606,8 @@
     "colRank": "Rank",
     "colPlayer": "Player",
     "colTier": "Tier",
-    "colRP": "RP"
+    "colRP": "RP",
+    "resetsIn": "Resets in"
   },
   "welcome": {
     "untilKickoff": "until kickoff",
