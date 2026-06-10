@@ -34,7 +34,7 @@ function FramedAvatar({
 }) {
   const frameW = width;
   const frameH = Math.round(frameW * 1.36);
-  const chipW = Math.round(frameW * 0.2);
+  const chipW = Math.round(frameW * 0.22);
   return (
     <div className={cn('relative', className)} style={{ width: frameW, height: frameH }}>
       {/* Frame — the card backdrop (solid artwork, sits behind everything) */}
@@ -53,11 +53,11 @@ function FramedAvatar({
           className={cn(mirror && '-scale-x-100')}
         />
       </div>
-      {/* Flag — top-left, aligned level with the club badge */}
+      {/* Flag — top-left, clean rounded square (Figma look) */}
       {countryCode && (
         <div
-          className="absolute left-[12%] top-[15%] z-20 overflow-hidden rounded-[3px] shadow-md"
-          style={{ width: chipW, height: Math.round(chipW * 0.67) }}
+          className="absolute left-[11%] top-[11%] z-20 overflow-hidden rounded-full shadow-[0_1px_4px_rgba(0,0,0,0.45)]"
+          style={{ width: chipW, height: chipW }}
         >
           <CountryFlag
             code={countryCode}
@@ -66,11 +66,11 @@ function FramedAvatar({
           />
         </div>
       )}
-      {/* Club badge — top-right, no background, aligned level with the flag */}
+      {/* Club badge — top-right, circular, same size as the flag */}
       {club && (
         <div
-          className="absolute right-[12%] top-[12%] z-20 flex items-center justify-center"
-          style={{ width: Math.round(chipW * 1.15), height: Math.round(chipW * 1.15) }}
+          className="absolute right-[11%] top-[11%] z-20 flex items-center justify-center overflow-hidden rounded-full shadow-[0_1px_4px_rgba(0,0,0,0.45)]"
+          style={{ width: chipW, height: chipW, backgroundColor: club.primaryColor }}
         >
           <Image
             src={club.logo}
@@ -78,7 +78,7 @@ function FramedAvatar({
             width={64}
             height={64}
             unoptimized
-            className="h-full w-full object-contain drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]"
+            className="size-[78%] object-contain"
           />
         </div>
       )}
