@@ -167,7 +167,6 @@ export default function ProfilePage() {
       country={authUser?.country ?? null}
       favoriteClub={authUser?.favorite_club ?? null}
       preferredLanguage={authUser?.preferred_language ?? null}
-      progression={authUser?.progression ?? null}
       globalRank={userRanks?.globalRank ?? null}
       countryRank={userRanks?.countryRank ?? null}
       matchStatsSummary={matchStatsSummary}

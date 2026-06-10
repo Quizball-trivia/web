@@ -106,6 +106,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
         <RankedProgressionPanel
           matchType={matchType}
           t={t}
+          avatarCustomization={playerAvatarCustomization ?? { base: playerAvatar }}
           showRankedRpCard={showRankedRpCard}
           rpChange={rpChange}
           oldRP={oldRP}

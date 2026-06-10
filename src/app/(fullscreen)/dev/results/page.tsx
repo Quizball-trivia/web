@@ -234,6 +234,37 @@ function DevResultsContent() {
           />
         </Group>
 
+        {/* One-click scenarios for the rank frame unlock animation */}
+        <Group label="Presets">
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => {
+                setOutcome('win');
+                setPreMatchRp(880); // Reserve, 20 below Bench (900)
+                setRpDelta(35);
+                setReplayKey((k) => k + 1);
+              }}
+              className="rounded-lg bg-brand-yellow px-2 py-1.5 text-[10px] font-black uppercase tracking-wider text-surface-page"
+            >
+              ▲ Tier up
+            </button>
+            <button
+              onClick={() => {
+                setOutcome('loss');
+                setPreMatchRp(910); // Bench, 10 above Reserve cutoff
+                setRpDelta(30);
+                setReplayKey((k) => k + 1);
+              }}
+              className="rounded-lg bg-surface-deep px-2 py-1.5 text-[10px] font-black uppercase tracking-wider text-brand-red"
+            >
+              ▼ Tier down
+            </button>
+          </div>
+          <p className="mt-1 text-[9px] text-brand-slate">
+            Tier up shows the frame-unlock animation (Reserve → Bench).
+          </p>
+        </Group>
+
         {/* RP */}
         <Group label="Pre-match RP">
           <Slider min={0} max={3500} step={5} value={preMatchRp} onChange={setPreMatchRp} suffix="RP" />

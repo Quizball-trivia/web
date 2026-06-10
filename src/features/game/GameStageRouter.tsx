@@ -303,6 +303,12 @@ export function GameStageRouter() {
           playerCountryCode={authUser?.country ?? null}
           opponentCountryCode={playingOppCountryCode}
           playerFavoriteClub={authUser?.favorite_club ?? null}
+          playerRankPoints={
+            rankedProfile?.placementStatus === 'placed'
+              ? (rankedProfile?.rp ?? player.rankPoints)
+              : undefined
+          }
+          opponentRankPoints={parseRp(playingOppInfo?.rp)}
           onQuit={handleQuit}
           onForfeit={handleForfeit}
         />

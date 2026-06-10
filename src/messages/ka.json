@@ -334,6 +334,8 @@
   "results": {
     "xp": "XP",
     "newRank": "ახალი რანგი",
+    "rankUnlocked": "ახალი რანგი განბლოკილია!",
+    "rankLost": "რანგი დაკარგულია",
     "nextStage": "შემდეგი ეტაპი",
     "rpToNextTier": "{points} RP შემდეგ ლიგამდე",
     "maxTierReached": "მაქსიმალური ლიგა მიღწეულია",

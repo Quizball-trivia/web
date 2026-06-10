@@ -15,6 +15,8 @@
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import type { AvatarCustomization } from '@/types/game';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
+import { RankFrameCard } from '@/features/profile/components/RankFrameCard';
+import { useTierLabel } from '@/hooks/useTierLabel';
 import { AnimatedCounter } from './AnimatedCounter';
 
 export function ResultsHero({
@@ -52,6 +54,7 @@ export function ResultsHero({
   opponentTier: string | null;
   opponentDisplayRp: number | null;
 }) {
+  const tierLabelOf = useTierLabel();
   return (
     <>
       <div className="pb-2 text-center">
@@ -68,39 +71,43 @@ export function ResultsHero({
 
       <div className="mx-auto w-full max-w-[1100px]">
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6">
-          {/* Player (Left) */}
+          {/* Player (Left) — tier shield frame when ranked, plain avatar otherwise */}
           <div className="flex items-center gap-3 justify-self-start sm:gap-4">
-            <div className="flex size-24 shrink-0 items-center justify-center">
-              <AvatarDisplay
+            {playerTier ? (
+              <RankFrameCard
+                tier={playerTier}
+                tierLabel={tierLabelOf(playerTier)}
+                rpLabel={
+                  preMatchRankedProfile?.rp != null
+                    ? `${preMatchRankedProfile.rp}RP`
+                    : undefined
+                }
                 customization={playerAvatarCustomization ?? { base: playerAvatar }}
-                size="lg"
-                shape="square"
+                className="w-[84px] shrink-0 sm:w-[120px]"
               />
-            </div>
+            ) : (
+              <div className="flex size-24 shrink-0 items-center justify-center">
+                <AvatarDisplay
+                  customization={playerAvatarCustomization ?? { base: playerAvatar }}
+                  size="lg"
+                  shape="square"
+                />
+              </div>
+            )}
             <div className="hidden min-w-0 sm:block">
               <div
                 className="truncate font-poppins font-semibold uppercase text-white text-base sm:text-lg md:text-xl"
               >
                 {playerUsername}
               </div>
-              {(preMatchRankedProfile?.rp != null || playerTier) && (
+              {!playerTier && preMatchRankedProfile?.rp != null && (
                 <div className="mt-2 flex items-center gap-2">
-                  {preMatchRankedProfile?.rp != null && (
-                    <span
-                      className="inline-flex h-[22px] items-center rounded-[20px] px-3 font-poppins font-semibold uppercase tabular-nums text-[12px] sm:text-[13px] md:text-[15px]"
-                      style={{ backgroundColor: '#FFE500', color: '#071013' }}
-                    >
-                      {preMatchRankedProfile.rp} RP
-                    </span>
-                  )}
-                  {playerTier && (
-                    <span
-                      className="font-poppins font-semibold uppercase text-[12px] sm:text-[13px] md:text-[15px]"
-                      style={{ color: '#FFE500' }}
-                    >
-                      {playerTier}
-                    </span>
-                  )}
+                  <span
+                    className="inline-flex h-[22px] items-center rounded-[20px] px-3 font-poppins font-semibold uppercase tabular-nums text-[12px] sm:text-[13px] md:text-[15px]"
+                    style={{ backgroundColor: '#FFE500', color: '#071013' }}
+                  >
+                    {preMatchRankedProfile.rp} RP
+                  </span>
                 </div>
               )}
             </div>
@@ -123,40 +130,41 @@ export function ResultsHero({
             </div>
           </div>
 
-          {/* Opponent (Right) */}
+          {/* Opponent (Right) — tier shield frame when ranked, plain avatar otherwise */}
           <div className="flex flex-row-reverse items-center gap-3 justify-self-end sm:gap-4">
-            <div className="flex size-24 shrink-0 items-center justify-center">
-              <AvatarDisplay
+            {opponentTier ? (
+              <RankFrameCard
+                tier={opponentTier}
+                tierLabel={tierLabelOf(opponentTier)}
+                rpLabel={opponentDisplayRp != null ? `${opponentDisplayRp}RP` : undefined}
                 customization={opponentAvatarCustomization ?? { base: opponentAvatar }}
-                size="lg"
-                className="-scale-x-100"
-                shape="square"
+                mirrored
+                className="w-[84px] shrink-0 sm:w-[120px]"
               />
-            </div>
+            ) : (
+              <div className="flex size-24 shrink-0 items-center justify-center">
+                <AvatarDisplay
+                  customization={opponentAvatarCustomization ?? { base: opponentAvatar }}
+                  size="lg"
+                  className="-scale-x-100"
+                  shape="square"
+                />
+              </div>
+            )}
             <div className="hidden min-w-0 text-right sm:block">
               <div
                 className="truncate font-poppins font-semibold uppercase text-white text-base sm:text-lg md:text-xl"
               >
                 {opponentUsername}
               </div>
-              {(opponentDisplayRp != null || opponentTier) && (
+              {!opponentTier && opponentDisplayRp != null && (
                 <div className="mt-2 flex flex-row-reverse items-center gap-2">
-                  {opponentDisplayRp != null && (
-                    <span
-                      className="inline-flex h-[22px] items-center rounded-[20px] px-3 font-poppins font-semibold uppercase tabular-nums text-[12px] sm:text-[13px] md:text-[15px]"
-                      style={{ backgroundColor: '#FFE500', color: '#071013' }}
-                    >
-                      {opponentDisplayRp} RP
-                    </span>
-                  )}
-                  {opponentTier && (
-                    <span
-                      className="font-poppins font-semibold uppercase text-[12px] sm:text-[13px] md:text-[15px]"
-                      style={{ color: '#FFE500' }}
-                    >
-                      {opponentTier}
-                    </span>
-                  )}
+                  <span
+                    className="inline-flex h-[22px] items-center rounded-[20px] px-3 font-poppins font-semibold uppercase tabular-nums text-[12px] sm:text-[13px] md:text-[15px]"
+                    style={{ backgroundColor: '#FFE500', color: '#071013' }}
+                  >
+                    {opponentDisplayRp} RP
+                  </span>
                 </div>
               )}
             </div>

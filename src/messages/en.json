@@ -788,6 +788,8 @@
   },
   "results": {
     "newRank": "New Rank",
+    "rankUnlocked": "New rank unlocked!",
+    "rankLost": "Rank lost",
     "nextStage": "Next Stage",
     "rpToNextTier": "{points} RP to next tier",
     "maxTierReached": "Max tier reached",
