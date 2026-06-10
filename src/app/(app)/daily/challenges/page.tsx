@@ -113,14 +113,16 @@ function ChallengeCard({
             </span>
           </div>
         ) : null}
-        {/* Desktop coin reward — number + coin icon above PLAY so players see
-            exactly what each challenge pays (mobile uses the absolute pills
-            above instead). */}
+        {/* Desktop reward pills — coin left, XP right (mirrors the mobile
+            layout) so players see exactly what each challenge pays. */}
         {!isCompleted ? (
-          <div className="mt-auto mb-3 hidden items-center justify-center md:flex">
+          <div className="mt-auto mb-3 hidden w-full items-center justify-between gap-2 md:flex">
             <span className="inline-flex h-8 items-center gap-1.5 rounded-full bg-white/70 px-3.5 text-[16px] font-black tabular-nums text-brand-gold-ink">
               {challenge.coinReward}
               <Image src="/assets/coin-1.png" alt="" width={20} height={20} className="size-5 object-contain" />
+            </span>
+            <span className="inline-flex h-8 items-center gap-1 rounded-full bg-brand-green-light px-3.5 text-[16px] font-black text-white">
+              {challenge.xpReward} XP
             </span>
           </div>
         ) : null}
@@ -197,14 +199,6 @@ export default function DailyChallengesPage() {
   );
   const earnedCoins = useMemo(
     () => challenges.filter((c) => c.completedToday).reduce((sum, c) => sum + c.coinReward, 0),
-    [challenges],
-  );
-  const totalXp = useMemo(
-    () => challenges.reduce((sum, c) => sum + c.xpReward, 0),
-    [challenges],
-  );
-  const totalPlayCost = useMemo(
-    () => challenges.reduce((sum, c) => sum + (c.coinReward ?? 0), 0),
     [challenges],
   );
   const progressPct = challenges.length > 0 ? (completedCount / challenges.length) * 100 : 0;
@@ -292,28 +286,6 @@ export default function DailyChallengesPage() {
           </div>
         )}
 
-        {/* Bottom stats */}
-        {!isLoading && challenges.length > 0 && (
-          <div className="mt-8 hidden flex-wrap items-end gap-8 md:mt-10 md:flex">
-            <div className="flex flex-col items-center">
-              <p className="font-poppins text-xs uppercase tracking-wider text-white mb-2">
-                {t('dailyGames.hubPlayFor')}
-              </p>
-              <span className="inline-flex items-center gap-2 rounded-full bg-brand-yellow/15 px-4 py-1.5 text-sm font-black text-brand-yellow">
-                {totalPlayCost}
-                <Image src="/assets/coin-1.png" alt="" width={20} height={20} className="size-5 object-contain" />
-              </span>
-            </div>
-            <div className="flex flex-col items-center">
-              <p className="font-poppins text-xs uppercase tracking-wider text-white mb-2">
-                {t('dailyGames.hubEarn')}
-              </p>
-              <span className="inline-flex items-center rounded-full bg-brand-green-light px-4 py-1.5 text-sm font-black text-white">
-                {totalXp} XP
-              </span>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
