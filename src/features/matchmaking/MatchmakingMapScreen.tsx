@@ -180,7 +180,7 @@ function pickRandom<T>(items: readonly T[], indexFallback: number): T {
  * busy-EU/CIS player base: dense across Europe + Georgia/Caucasus, a handful
  * across Asia/Africa, and only a few in the Americas/Oceania.
  */
-const SEARCH_REGION_QUOTAS: Record<SearchRegion, number> = {
+const SEARCH_REGION_WEIGHTS: Record<SearchRegion, number> = {
   // Georgia + Turkey/Greece/Ukraine/southern-Russia neighborhood — densest.
   caucasus: 13,
   // A few scattered across the rest of Europe / the world.
@@ -190,10 +190,37 @@ const SEARCH_REGION_QUOTAS: Record<SearchRegion, number> = {
   americas: 3,
   oceania: 1,
 };
-const SEARCH_PIN_COUNT = Object.values(SEARCH_REGION_QUOTAS).reduce(
+const SEARCH_REGION_WEIGHT_TOTAL = Object.values(SEARCH_REGION_WEIGHTS).reduce(
   (a, b) => a + b,
   0,
 );
+
+const SEARCH_PIN_MIN = 10;
+const SEARCH_PIN_MAX = 40;
+
+/**
+ * How many pins to show for this search: follows a daily activity curve in
+ * the player's local time (deep-night trough, daytime ramp, peak around
+ * 21:00–22:00) plus ±15% per-search jitter, clamped to 10–40 so the queue
+ * always looks alive but believable.
+ */
+export function searchPinTargetCount(
+  now: Date = new Date(),
+  random: () => number = Math.random,
+): number {
+  const h = now.getHours() + now.getMinutes() / 60;
+  let level: number;
+  if (h < 6) level = 0.05 + (h / 6) * 0.1; // deep night ~ trough
+  else if (h < 12) level = 0.15 + ((h - 6) / 6) * 0.35; // morning ramp
+  else if (h < 18) level = 0.5 + ((h - 12) / 6) * 0.2; // afternoon
+  else if (h < 21.5) level = 0.7 + ((h - 18) / 3.5) * 0.3; // evening → peak 21:30
+  else level = 1.0 - ((h - 21.5) / 2.5) * 0.55; // tapering toward midnight
+  const jitter = 0.85 + random() * 0.3;
+  const count = Math.round(
+    (SEARCH_PIN_MIN + (SEARCH_PIN_MAX - SEARCH_PIN_MIN) * level) * jitter,
+  );
+  return Math.max(SEARCH_PIN_MIN, Math.min(SEARCH_PIN_MAX, count));
+}
 
 function generateFakePlayers(): FakePlayer[] {
   // Dedupe by city: several cities appear in both CITY_DATA and
@@ -215,26 +242,30 @@ function generateFakePlayers(): FakePlayer[] {
     return true;
   });
 
-  // Weighted regional sample: take each region's quota from a shuffled
-  // bucket, then top up from whatever's left if a bucket ran short.
+  // Time-of-day pin budget, split across regions by weight. Rounding drift
+  // and short buckets are topped up from the remaining pool afterwards.
+  const targetCount = searchPinTargetCount();
   const buckets: Record<SearchRegion, typeof dedupedPool> = {
     caucasus: [], europe: [], asia: [], africa: [], americas: [], oceania: [],
   };
   for (const c of dedupedPool) buckets[searchRegionOf(c.country)].push(c);
   const picked: typeof dedupedPool = [];
   for (const region of Object.keys(buckets) as SearchRegion[]) {
-    picked.push(...shuffled(buckets[region]).slice(0, SEARCH_REGION_QUOTAS[region]));
+    const quota = Math.round(
+      (SEARCH_REGION_WEIGHTS[region] / SEARCH_REGION_WEIGHT_TOTAL) * targetCount,
+    );
+    picked.push(...shuffled(buckets[region]).slice(0, quota));
   }
-  if (picked.length < SEARCH_PIN_COUNT) {
+  if (picked.length < targetCount) {
     const pickedCities = new Set(picked.map((c) => c.city));
     picked.push(
       ...shuffled(dedupedPool.filter((c) => !pickedCities.has(c.city))).slice(
         0,
-        SEARCH_PIN_COUNT - picked.length,
+        targetCount - picked.length,
       ),
     );
   }
-  const cityPool = shuffled(picked);
+  const cityPool = shuffled(picked).slice(0, targetCount);
   const names = shuffled(SEARCH_PLAYER_NAMES);
   const avatarCustomizations = shuffled(CITY_DATA.map((c) => c.customization));
 
