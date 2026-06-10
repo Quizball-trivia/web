@@ -90,6 +90,10 @@ vi.mock('@/lib/queries/store.queries', () => ({
   }),
 }));
 
+vi.mock('@/lib/queries/ranked.queries', () => ({
+  useRankedProfile: () => ({ data: null }),
+}));
+
 vi.mock('@/lib/sounds/useGameSounds', () => ({
   useGameSounds: () => ({
     playSfx: vi.fn(),

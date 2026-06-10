@@ -16,7 +16,7 @@
 //   • Black full-width primary CTA: "PLAY FOR <N> TICKET(S)" with
 //     the cost in yellow.
 //   • Footer: "YOU HAVE <N> TICKETS 🎫" small caps, white/80.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -103,6 +103,31 @@ export function ModeConfirmModal({
   const { isEventMode } = useActiveEventMode();
   const isMobile = useIsMobile();
   const router = useRouter();
+  // Pressed-state feedback: between PLAY and the route change there is
+  // otherwise ZERO acknowledgement (route compile/navigation can take a
+  // moment, especially in dev), which reads as "my tap didn't register" and
+  // invites double-taps. Locked = spinner + no further clicks.
+  const [starting, setStarting] = useState(false);
+
+  // Re-arm whenever the modal opens fresh (also covers a failed navigation
+  // bringing the user back with the modal still mounted). Render-phase state
+  // adjustment (React's recommended pattern) — an effect would be flagged for
+  // cascading renders.
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  if (prevIsOpen !== isOpen) {
+    setPrevIsOpen(isOpen);
+    if (isOpen) setStarting(false);
+  }
+
+  // Failsafe: if a start path fails WITHOUT navigating (e.g. question fetch
+  // toast on solo), don't leave the button spinning forever — re-arm so the
+  // user can retry. Navigation success unmounts this component anyway.
+  useEffect(() => {
+    if (!starting) return;
+    const timer = setTimeout(() => setStarting(false), 8000);
+    return () => clearTimeout(timer);
+  }, [starting]);
+
   const [wcDaysLeft] = useState(() =>
     Math.max(0, Math.ceil((new Date("2026-07-19T23:59:59Z").getTime() - Date.now()) / 86_400_000))
   );
@@ -117,22 +142,26 @@ export function ModeConfirmModal({
   const titleRest =
     isEventMode && isRanked ? t("modeConfirm.rankedTitleRestEvent") : t(config.titleRestKey);
   const handlePrimaryClick = () => {
+    if (starting) return;
     if (needsTickets) {
       onOpenChange(false);
       router.push("/store");
       return;
     }
 
+    setStarting(true);
     onConfirm();
   };
 
   const Body = (
     <div className="relative font-fun">
-      {/* Title — centered, max-width keeps it from running into the
-          close button on narrow viewports. The natural break after
-          "RANKED" produces the Figma's two-line composition. */}
+      {/* Title — centered. The max-width must clear the 48px close button
+          anchored top-right (24px inset): reserve ~56px per side so the first
+          line wraps BEFORE sliding under the X (long locales like KA hit this;
+          88% was not enough). Symmetric so the text stays visually centered;
+          the natural break still produces the Figma's two-line composition. */}
       <h2
-        className="font-poppins mx-auto max-w-[88%] text-center uppercase text-white leading-[0.95]"
+        className="font-poppins mx-auto max-w-[calc(100%-112px)] text-center uppercase text-white leading-[0.95]"
         style={{ fontSize: "clamp(26px, 6.2vw, 46px)" }}
       >
         <span className="text-brand-yellow">{t(config.titlePrefixKey)}</span>{" "}
@@ -213,6 +242,7 @@ export function ModeConfirmModal({
       <button
         type="button"
         onClick={handlePrimaryClick}
+        disabled={starting}
         className={cn(
           "w-full h-14 rounded-2xl text-base font-black uppercase tracking-wide transition-all sm:h-16 sm:text-lg md:h-[72px] md:text-xl",
           "relative z-20",
@@ -221,9 +251,18 @@ export function ModeConfirmModal({
             : hasTickets
             ? cn("bg-black text-white hover:bg-black/90 active:translate-y-[2px]", isEventMode && "border-2 border-brand-yellow/30")
             : "bg-black/60 text-white/50 cursor-not-allowed",
+          starting && "opacity-80 cursor-wait",
         )}
       >
-        {needsTickets ? (
+        {starting ? (
+          <span className="inline-flex items-center justify-center gap-2.5">
+            <span
+              aria-hidden
+              className="size-5 animate-spin rounded-full border-[3px] border-white/30 border-t-white"
+            />
+            {t("common.play")}
+          </span>
+        ) : needsTickets ? (
           t("modeConfirm.buyTickets")
         ) : config.entryCost === 0 ? (
           t("common.play")

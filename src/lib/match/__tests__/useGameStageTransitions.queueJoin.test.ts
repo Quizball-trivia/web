@@ -102,4 +102,73 @@ describe('ranked matchmaking initial queue join', () => {
       expect.objectContaining({ searchMode: 'human_first' })
     );
   });
+
+  it('re-joins after a silent search loss (acked search + server says IDLE, no error code)', async () => {
+    vi.useFakeTimers();
+    try {
+      // Reproduces the stuck-spinner bug: the search WAS acked
+      // (rankedSearchStartedAt set), then the socket blipped — the backend
+      // cancels the search immediately on disconnect and emits
+      // session:state IDLE on reconnect, with NO error event. The stale local
+      // ack must not mask the loss; the hook must re-emit queue_join.
+      useRealtimeMatchStore.setState({
+        sessionState: {
+          state: 'IDLE',
+          activeMatchId: null,
+          waitingLobbyId: null,
+          queueSearchId: null,
+        } as never,
+        error: null,
+      });
+      const socket = createSocket();
+
+      renderTransitions(socket);
+      // Initial mount join fires once; simulate that it was acked, then lost.
+      (socket.emit as ReturnType<typeof vi.fn>).mockClear();
+      useRankedMatchmakingStore.setState({
+        rankedSearching: true,
+        rankedSearchStartedAt: Date.now() - 3000,
+        rankedFoundOpponent: null,
+      });
+
+      await vi.advanceTimersByTimeAsync(1000); // > RANKED_QUEUE_RETRY_DELAY_MS
+
+      expect(socket.emit).toHaveBeenCalledWith(
+        'ranked:queue_join',
+        expect.objectContaining({ searchMode: 'human_first' })
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('does NOT re-join while the server still confirms IN_QUEUE', async () => {
+    vi.useFakeTimers();
+    try {
+      useRealtimeMatchStore.setState({
+        sessionState: {
+          state: 'IN_QUEUE',
+          activeMatchId: null,
+          waitingLobbyId: null,
+          queueSearchId: 'search-1',
+        } as never,
+        error: null,
+      });
+      const socket = createSocket();
+
+      renderTransitions(socket);
+      (socket.emit as ReturnType<typeof vi.fn>).mockClear();
+      useRankedMatchmakingStore.setState({
+        rankedSearching: true,
+        rankedSearchStartedAt: Date.now() - 3000,
+        rankedFoundOpponent: null,
+      });
+
+      await vi.advanceTimersByTimeAsync(1000);
+
+      expect(socket.emit).not.toHaveBeenCalledWith('ranked:queue_join', expect.anything());
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

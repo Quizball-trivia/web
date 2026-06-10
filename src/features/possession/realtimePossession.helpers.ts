@@ -197,6 +197,7 @@ export function toMultipleChoiceGameQuestion(
     prompt: question.question.prompt,
     options: question.question.options,
     correctIndex: typeof correctIndex === 'number' ? correctIndex : -1,
+    image: question.question.image,
     categoryId: question.question.categoryId,
     categoryName: question.question.categoryName,
     difficulty: question.question.difficulty,
