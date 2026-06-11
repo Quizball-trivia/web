@@ -63,7 +63,9 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
               const isTopThree = entry.rank <= 3;
               const interactive = !!onEntryClick;
               const tierAccent = getTierAccent(entry.tier);
-              const prize = PRIZE_IMAGES[entry.rank];
+              // Prize images are part of the World Cup / Betsson event — only show
+              // them while the event is active (badge + border are already gated).
+              const prize = isEventMode ? PRIZE_IMAGES[entry.rank] : undefined;
 
               return (
                 <div key={entry.id} className="relative">
