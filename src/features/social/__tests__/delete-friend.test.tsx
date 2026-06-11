@@ -46,6 +46,7 @@ vi.mock('@/lib/queries/social.queries', () => ({
   useSocialFriends: vi.fn(),
   useFriendRequests: vi.fn(),
   useSocialSearch: vi.fn(),
+  SEARCH_MIN_CHARS: 2,
 }));
 
 // Mock repository
