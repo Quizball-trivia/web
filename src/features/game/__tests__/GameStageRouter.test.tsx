@@ -1,7 +1,18 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render as rtlRender, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ReactElement } from 'react';
 
 import { GameStageRouter } from '../GameStageRouter';
+
+// GameStageRouter reads the store wallet (Play Again ticket gate) via
+// TanStack Query, so renders need a QueryClientProvider.
+function render(ui: ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return rtlRender(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+}
 
 const router = {
   push: vi.fn(),
@@ -161,6 +172,14 @@ vi.mock('@/lib/analytics/game-events', () => analyticsMocks);
 
 vi.mock('@/lib/queries/ranked.queries', () => ({
   useRankedProfile: () => ({ data: rankedProfileData }),
+}));
+
+vi.mock('@/lib/queries/store.queries', () => ({
+  useStoreWallet: () => ({ data: { tickets: 5 }, isFetching: false }),
+  getStoreWalletQuery: () => ({
+    queryKey: ['store', 'wallet'],
+    queryFn: async () => ({ tickets: 5 }),
+  }),
 }));
 
 vi.mock('@/stores/possessionMatch.store', () => ({
