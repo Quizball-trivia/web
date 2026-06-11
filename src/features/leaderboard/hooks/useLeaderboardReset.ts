@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 
-// The leaderboard resets daily at 12:00 PM Georgia time (Asia/Tbilisi, UTC+4,
-// no DST). We derive the countdown to the next noon-Tbilisi boundary live on the
-// client, independent of the viewer's own timezone.
+// The leaderboard resets daily at 20:00 (8 PM) Georgia time (Asia/Tbilisi,
+// UTC+4, no DST). We derive the countdown to the next 20:00-Tbilisi boundary
+// live on the client, independent of the viewer's own timezone.
 
 const TBILISI_TZ = "Asia/Tbilisi";
-const RESET_HOUR = 12; // 12:00 noon Tbilisi
+const RESET_HOUR = 20; // 20:00 (8 PM) Tbilisi
 
 // Current wall-clock parts in Tbilisi, derived via Intl so it's correct in any
 // viewer timezone.
@@ -29,13 +29,13 @@ function tbilisiParts(now: Date): { year: number; month: number; day: number; ho
   return { year: get("year"), month: get("month"), day: get("day"), hour, minute: get("minute"), second: get("second") };
 }
 
-// Milliseconds remaining until the next 12:00 PM Tbilisi.
+// Milliseconds remaining until the next 20:00 (8 PM) Tbilisi.
 function msUntilNextReset(now: Date): number {
   const p = tbilisiParts(now);
   const secondsNow = p.hour * 3600 + p.minute * 60 + p.second;
   const resetSeconds = RESET_HOUR * 3600;
   let remaining = resetSeconds - secondsNow;
-  if (remaining <= 0) remaining += 24 * 3600; // already past noon → next day's noon
+  if (remaining <= 0) remaining += 24 * 3600; // already past 20:00 → next day's reset
   return remaining * 1000;
 }
 

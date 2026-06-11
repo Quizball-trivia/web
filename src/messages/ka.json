@@ -160,7 +160,7 @@
     "winStreak": "მოგებათა სერია",
     "matches": "მატჩები",
     "current": "მიმდინარე",
-    "maxRankAchieved": "უმაღლესი მიღწეული რანგი",
+    "maxRankAchieved": "უმაღლესი რანგი",
     "achieved": "მიღწეულია",
     "currentSeason": "მიმდინარე სეზონი",
     "global": "გლობალური",
@@ -190,7 +190,8 @@
     "daysAgo": "{count} დღის წინ",
     "next": "შემდეგი",
     "unranked": "ურანგო",
-    "rpToNextTier": "{rp} RP შემდეგ ლიგამდე"
+    "rpToNextTier": "{rp} RP შემდეგ ლიგამდე",
+    "toNextLeagueLabel": "შემდეგ ლიგამდე"
   },
   "home": {
     "statRP": "RP",

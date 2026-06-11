@@ -218,7 +218,7 @@ export function ModeSelectionScreen({
                 second line instead of running under the absolute trophy. */}
             <div className="flex-1 min-w-0">
               <h1
-                className="max-w-[20rem] text-[clamp(1.75rem,3vw,2.75rem)] uppercase text-white break-words [hyphens:auto]"
+                className="max-w-[20rem] text-[clamp(1.75rem,3vw,2.75rem)] uppercase text-white [overflow-wrap:normal] [word-break:keep-all] [hyphens:none]"
                 style={{ ...rankedTitleStyle, lineHeight: 1.15 }}
               >
                 {isEventMode ? t('play.rankedMatchEvent') : t('play.rankedMatch')}
@@ -289,7 +289,7 @@ export function ModeSelectionScreen({
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <h1
-                  className="text-[1.55rem] leading-[1.05] uppercase text-white break-words [hyphens:auto]"
+                  className="text-[1.55rem] leading-[1.05] uppercase text-white [overflow-wrap:normal] [word-break:keep-all] [hyphens:none]"
                   style={rankedTitleStyle}
                 >
                   {t('play.rankedMatch')}
@@ -336,7 +336,7 @@ export function ModeSelectionScreen({
                 {/* Betsson badge — mobile only, below tier label, event only */}
                 {isEventMode && (
                   <div
-                    className="mt-1.5 inline-flex flex-col items-start rounded-md px-2 py-1 lg:hidden"
+                    className="-mt-0.5 inline-flex flex-col items-end rounded-md px-2 py-1 lg:hidden"
                     style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.15)' }}
                   >
                     <span className="text-[5px] font-bold uppercase tracking-wider text-white/60 leading-none">Powered by</span>

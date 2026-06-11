@@ -91,14 +91,14 @@ function SortableItem({
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            {item.emoji && <span className="text-xl sm:text-2xl">{item.emoji}</span>}
-            <span className="truncate text-base font-fun font-black uppercase tracking-wide text-white sm:text-lg">
+          <div className="flex items-start gap-2">
+            {item.emoji && <span className="shrink-0 text-xl sm:text-2xl">{item.emoji}</span>}
+            <span className="text-sm font-fun font-black uppercase leading-tight tracking-wide text-white [overflow-wrap:anywhere] sm:text-lg">
               {item.label}
             </span>
           </div>
           {item.details && (
-            <p className="truncate text-xs font-fun font-black uppercase tracking-[0.16em] text-white/60 sm:text-sm">
+            <p className="text-xs font-fun font-black uppercase leading-tight tracking-[0.16em] text-white/60 [overflow-wrap:anywhere] sm:text-sm">
               {item.details}
             </p>
           )}

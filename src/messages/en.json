@@ -295,7 +295,8 @@
     "daysAgo": "{count}d ago",
     "next": "Next",
     "unranked": "Unranked",
-    "rpToNextTier": "{rp} RP to next tier"
+    "rpToNextTier": "{rp} RP to next tier",
+    "toNextLeagueLabel": "to next tier"
   },
   "socialScreen": {
     "friends": "Friends",

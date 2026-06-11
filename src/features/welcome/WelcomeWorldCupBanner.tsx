@@ -29,7 +29,7 @@ export function WelcomeWorldCupBanner() {
       </div>
 
       {/* Description */}
-      <p className="text-xs md:text-sm text-white/50 mb-4 max-w-md">
+      <p className="text-xs md:text-sm text-white/80 mb-4 max-w-md">
         {t('welcome.wcPromoDescription')}
       </p>
 
@@ -60,7 +60,7 @@ export function WelcomeWorldCupBanner() {
 
       {/* Merch + Rules */}
       <div className="mt-3 flex items-center justify-between">
-        <p className="text-[10px] md:text-xs text-white/40">
+        <p className="text-[11px] md:text-xs font-medium text-white/75">
           🎁 {t('welcome.wcPromoMerch')}
         </p>
         <WorldCupRulesButton variant="text" />
