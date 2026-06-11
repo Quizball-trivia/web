@@ -431,8 +431,8 @@ export function PossessionQuestionPanel({
               }}
               className={`relative flex items-center justify-center overflow-hidden rounded-[16px] px-3 transition-shadow duration-150 ${
                 hasQuestionImage
-                  ? 'h-[48px] sm:h-[58px] md:h-[68px] lg:h-[80px]'
-                  : 'h-[60px] sm:h-[78px] md:h-[94px] lg:h-[116px]'
+                  ? 'h-[62px] sm:h-[72px] md:h-[82px] lg:h-[92px]'
+                  : 'h-[68px] sm:h-[86px] md:h-[100px] lg:h-[120px]'
               }`}
               style={{
                 ...poppins,
@@ -497,13 +497,13 @@ export function PossessionQuestionPanel({
               )}
 
               <motion.span
-                className="relative z-[1] flex h-full w-full items-center justify-center overflow-hidden px-1 py-1"
+                className="relative z-[1] flex h-full w-full items-center justify-center overflow-hidden px-3 py-2 sm:px-4 sm:py-2.5"
                 initial={false}
                 animate={{ opacity: showOptions ? 1 : 0, y: showOptions ? 0 : 6 }}
                 transition={{ duration: 0.25, delay: showOptions ? i * 0.08 : 0, ease: 'easeOut' }}
               >
                 <FitText
-                  className="text-center leading-tight [overflow-wrap:anywhere]"
+                  className="text-center leading-snug [overflow-wrap:anywhere]"
                   maxFontSize={hasQuestionImage ? 20 : 26}
                   minFontSize={hasQuestionImage ? 9 : 10}
                 >

@@ -50,6 +50,17 @@ export function FitText({ children, maxFontSize, minFontSize, className, style }
         setFontSize(maxFontSize);
         return;
       }
+      // If even the minimum doesn't fit (extremely long text / tiny box), scale
+      // BELOW the minimum by the overflow ratio so the text still fits — never
+      // clips. fits() leaves the font set to minFontSize, so measure overflow here.
+      if (!fits(minFontSize)) {
+        const widthRatio = el.scrollWidth > 0 ? parent.clientWidth / el.scrollWidth : 1;
+        const heightRatio = el.scrollHeight > 0 ? parent.clientHeight / el.scrollHeight : 1;
+        const scale = Math.min(widthRatio, heightRatio, 1);
+        // Floor at a hard 6px so it never collapses to unreadable/zero.
+        setFontSize(Math.max(6, Math.floor(minFontSize * scale)));
+        return;
+      }
       // Binary search for the largest fitting size.
       let lo = minFontSize;
       let hi = maxFontSize;

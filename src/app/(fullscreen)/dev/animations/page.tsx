@@ -94,6 +94,19 @@ const SAMPLE_QUESTIONS: Array<{
     correctIndex: 1,
     categoryName: 'Records',
   },
+  {
+    // Long-answer preview: each option auto-shrinks to fit the card (FitText) —
+    // uniform card heights, no ellipsis, full text always visible.
+    prompt: 'Which match is widely considered the greatest World Cup final ever?',
+    options: [
+      'Italy vs France, 2006 — decided on penalties after the Zidane headbutt',
+      'Brazil vs Germany, 2002 final in Yokohama, Ronaldo scoring twice',
+      'Argentina vs France, 2022 — Mbappé hat-trick, Messi wins on penalties',
+      'England vs West Germany, 1966 at Wembley with the controversial goal',
+    ],
+    correctIndex: 2,
+    categoryName: 'World Cup Finals',
+  },
 ];
 
 type QuestionKind = 'multipleChoice' | 'countdown' | 'putInOrder' | 'clues';
@@ -185,7 +198,17 @@ function makeQuestion(qIndex: number, kind: QuestionKind = 'multipleChoice'): Re
       kind: 'multipleChoice',
       id: `dev-q-${qIndex}`,
       prompt: isImageSlot ? 'Identify the stadium shown in this image' : sample.prompt,
-      options: sample.options,
+      // Image slot uses long answers so the FitText auto-shrink can be previewed
+      // in the tighter image-MCQ cards (which are shorter than text-only cards).
+      options: isImageSlot
+        ? [
+          // Real worst-case answers from the DB (longest is 86 chars EN / 89 KA).
+          'Fear of flying following the Superga air disaster which killed most of the Torino team',
+          'There was no official "Final," as the winner was decided by a final group stage',
+          'Estadio Monumental Antonio Vespucio Liberti, Buenos Aires',
+          'Rose Bowl, Pasadena',
+        ] as [string, string, string, string]
+        : sample.options,
       image: isImageSlot
         ? {
           // A real (portrait) question image from the staging CDN — exercises
