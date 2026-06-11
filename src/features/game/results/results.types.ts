@@ -38,6 +38,10 @@ export interface RealtimeResultsScreenProps {
   preMatchRankedProfile?: RankedProfileResponse | null;
   preMatchProgression?: UserProgression | null;
   unlockedAchievements?: AchievementUnlockPayload[];
-  onPlayAgain: () => void;
+  /** Grays out the Play Again CTA (e.g. ranked replay with 0 tickets). */
+  playAgainDisabled?: boolean;
+  /** Optional helper text under the Play Again CTA (e.g. "not enough tickets"). */
+  playAgainHint?: string | null;
+  onPlayAgain: () => void | Promise<void>;
   onMainMenu: () => void;
 }

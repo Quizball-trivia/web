@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { MatchmakingMapScreen } from "@/components/match/MatchmakingMapScreen";
 import { ShowdownScreen } from "@/components/ShowdownScreen";
 import { RankedCategoryBlockingScreen } from "@/features/play/RankedCategoryBlockingScreen";
@@ -21,6 +23,7 @@ import { tierFromRp } from "@/utils/rankedTier";
 import { parseRp } from "@/lib/utils";
 import { TrainingMatchScreen } from "@/features/training/TrainingMatchScreen";
 import { useGameStageState } from "@/features/game/hooks/useGameStageState";
+import { useStoreWallet, getStoreWalletQuery } from "@/lib/queries/store.queries";
 import {
   markExitToPlayPending,
   trackExitToPlayStarted,
@@ -69,6 +72,20 @@ export function GameStageRouter() {
     clientTotalCorrect,
     clientTotalQuestions,
   } = useGameStageState();
+
+  // Ranked replay costs a ticket. match:final_results invalidates the wallet
+  // query, so while the refetch is in flight the cached count may be stale —
+  // we gray the button out during that window (without the "no tickets" hint,
+  // since the real count isn't known yet) and the click handler additionally
+  // revalidates against a live fetch before entering matchmaking.
+  const queryClient = useQueryClient();
+  const { data: storeWallet, isFetching: walletFetching } = useStoreWallet();
+  const hasRankedTicket = (storeWallet?.tickets ?? 0) >= 1;
+  const playAgainDisabled = matchType === "ranked" && (walletFetching || !hasRankedTicket);
+  const playAgainHint =
+    matchType === "ranked" && !walletFetching && !hasRankedTicket
+      ? t("modeConfirm.notEnoughTickets")
+      : null;
 
   const returningToLobbyRef = useRef(false);
   const showingFinalResultsFromReplay = stage === "idle" && Boolean(realtimeMatch.finalResults);
@@ -439,8 +456,28 @@ export function GameStageRouter() {
           preMatchRankedProfile={stableRankedProfile}
           preMatchProgression={stableProgression}
           unlockedAchievements={unlockedAchievements}
-          onPlayAgain={() => {
+          playAgainDisabled={playAgainDisabled}
+          playAgainHint={playAgainHint}
+          onPlayAgain={async () => {
             if (matchType === "ranked") {
+              // Revalidate against the live wallet — the cached value can lag
+              // the post-match invalidation refetch (mirrors play/page.tsx).
+              let liveTickets = storeWallet?.tickets ?? 0;
+              try {
+                const fresh = await queryClient.fetchQuery(getStoreWalletQuery());
+                liveTickets = fresh.tickets;
+              } catch {
+                // Network hiccup — fall back to the cached value rather than
+                // hard-blocking; the server still rejects 0-ticket queue joins.
+              }
+              if (liveTickets < 1) {
+                logger.warn("Play Again blocked: no tickets for ranked replay", {
+                  cachedTickets: storeWallet?.tickets ?? null,
+                  liveTickets,
+                });
+                toast.error(t("modeConfirm.notEnoughTickets"));
+                return;
+              }
               resetRealtime();
               clearRankedMatchmaking();
               setStage("matchmaking");
