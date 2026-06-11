@@ -150,6 +150,7 @@ export const getStoreWalletQuery = () => ({
         canBuy: true,
         nextAvailableAt: null,
         remainingSeconds: 0,
+        ticketsRemainingInWindow: 5,
       },
     };
   })(),

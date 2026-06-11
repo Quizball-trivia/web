@@ -1556,6 +1556,13 @@ export interface paths {
                             wallet: {
                                 coins: number;
                                 tickets: number;
+                                ticketPurchaseCooldown: {
+                                    canBuy: boolean;
+                                    /** Format: date-time */
+                                    nextAvailableAt: string | null;
+                                    remainingSeconds: number;
+                                    ticketsRemainingInWindow: number;
+                                };
                             };
                         };
                     };
@@ -1621,11 +1628,12 @@ export interface paths {
                         "application/json": {
                             coins: number;
                             tickets: number;
-                            ticketPurchaseCooldown?: {
+                            ticketPurchaseCooldown: {
                                 canBuy: boolean;
                                 /** Format: date-time */
                                 nextAvailableAt: string | null;
                                 remainingSeconds: number;
+                                ticketsRemainingInWindow: number;
                             };
                         };
                     };
@@ -1757,6 +1765,13 @@ export interface paths {
                             wallet: {
                                 coins: number;
                                 tickets: number;
+                                ticketPurchaseCooldown: {
+                                    canBuy: boolean;
+                                    /** Format: date-time */
+                                    nextAvailableAt: string | null;
+                                    remainingSeconds: number;
+                                    ticketsRemainingInWindow: number;
+                                };
                             };
                         };
                     };
@@ -1836,6 +1851,13 @@ export interface paths {
                             wallet: {
                                 coins: number;
                                 tickets: number;
+                                ticketPurchaseCooldown: {
+                                    canBuy: boolean;
+                                    /** Format: date-time */
+                                    nextAvailableAt: string | null;
+                                    remainingSeconds: number;
+                                    ticketsRemainingInWindow: number;
+                                };
                             };
                             inventoryApplied: {
                                 productSlug: string;
@@ -5436,11 +5458,12 @@ export interface components {
         StoreWalletResponse: {
             coins: number;
             tickets: number;
-            ticketPurchaseCooldown?: {
+            ticketPurchaseCooldown: {
                 canBuy: boolean;
                 /** Format: date-time */
                 nextAvailableAt: string | null;
                 remainingSeconds: number;
+                ticketsRemainingInWindow: number;
             };
         };
         StoreInventoryResponse: {
@@ -5476,6 +5499,13 @@ export interface components {
             wallet: {
                 coins: number;
                 tickets: number;
+                ticketPurchaseCooldown: {
+                    canBuy: boolean;
+                    /** Format: date-time */
+                    nextAvailableAt: string | null;
+                    remainingSeconds: number;
+                    ticketsRemainingInWindow: number;
+                };
             };
         };
         ManualAdjustmentResponse: {
@@ -5483,6 +5513,13 @@ export interface components {
             wallet: {
                 coins: number;
                 tickets: number;
+                ticketPurchaseCooldown: {
+                    canBuy: boolean;
+                    /** Format: date-time */
+                    nextAvailableAt: string | null;
+                    remainingSeconds: number;
+                    ticketsRemainingInWindow: number;
+                };
             };
             inventoryApplied: {
                 productSlug: string;

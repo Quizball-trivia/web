@@ -59,8 +59,12 @@ function formatRemaining(totalSeconds: number): string {
   return "<1m";
 }
 
-/** Live wallet ticket cap — mirrors backend MAX_TICKETS. */
-const TICKET_CAP = 3;
+/** Live wallet ticket cap — mirrors backend MAX_TICKETS (economy v3). */
+const TICKET_CAP = 5;
+/** Daily purchase allowance in TICKETS per rolling 24h — mirrors backend
+ * TICKET_PURCHASE_MAX_TICKETS_PER_WINDOW. Used only as a fallback when the
+ * wallet response predates ticketsRemainingInWindow. */
+const TICKET_PURCHASE_DAILY_CAP = 5;
 
 interface TicketPackItem {
   id: string;
@@ -419,17 +423,25 @@ export function StoreScreen() {
     });
   }, [productsBySlug]);
 
+  // Backend enforces a QUANTITY-based rolling per-24h purchase limit (up to
+  // 5 tickets/day): a pack is blocked when it's larger than the remaining
+  // allowance, so the 1-pack can stay buyable while the 3/5-packs are not.
+  // Falls back to the binary canBuy flag for wallet payloads that predate
+  // ticketsRemainingInWindow. Unlimited dev accounts skip the cooldown.
+  const cooldown = wallet?.ticketPurchaseCooldown;
+  const ticketsRemainingInWindow = isUnlimited
+    ? Number.POSITIVE_INFINITY
+    : cooldown
+      ? (cooldown.ticketsRemainingInWindow
+        ?? (cooldown.canBuy === false ? 0 : TICKET_PURCHASE_DAILY_CAP))
+      : TICKET_PURCHASE_DAILY_CAP;
+
   const ticketPacks = useMemo<TicketPackItem[]>(() => {
     const currentTickets = wallet?.tickets ?? 0;
     // Dev-allowlist accounts bypass the cap on the backend; never disable here.
     const availableSpace = isUnlimited
       ? Number.POSITIVE_INFINITY
       : Math.max(0, TICKET_CAP - currentTickets);
-    // Backend enforces a rolling per-24h purchase limit. When it's reached the
-    // wallet reports canBuy=false, so disable the card up-front instead of
-    // letting the tap fail with a misleading "not enough coins" toast. Unlimited
-    // dev accounts skip the cooldown too.
-    const onCooldown = !isUnlimited && wallet?.ticketPurchaseCooldown?.canBuy === false;
 
     const ticketPacks = (productsData?.items ?? []).filter(
       (p) => p.type === "ticket_pack",
@@ -443,9 +455,10 @@ export function StoreScreen() {
             ? ((product.metadata as { tickets: number }).tickets)
             : 1;
         const isFull = ticketCount > availableSpace;
+        const overDailyAllowance = ticketCount > ticketsRemainingInWindow;
         const disabledReason: TicketPackItem["disabledReason"] = isFull
           ? "full"
-          : onCooldown
+          : overDailyAllowance
           ? "cooldown"
           : undefined;
         return {
@@ -463,7 +476,7 @@ export function StoreScreen() {
         } satisfies TicketPackItem;
       })
       .sort((a, b) => a.ticketCount - b.ticketCount);
-  }, [productsData, wallet?.tickets, wallet?.ticketPurchaseCooldown?.canBuy, isUnlimited, t]);
+  }, [productsData, wallet?.tickets, ticketsRemainingInWindow, isUnlimited, t]);
 
   const purchasePending = checkoutMutation.isPending || coinPurchaseMutation.isPending;
 
@@ -621,9 +634,11 @@ export function StoreScreen() {
                       if (b.disabledReason === "cooldown") {
                         const remainingSeconds = wallet?.ticketPurchaseCooldown?.remainingSeconds;
                         toast.message(
-                          remainingSeconds
-                            ? t("store.ticketPurchaseLimitIn", { time: formatRemaining(remainingSeconds) })
-                            : t("store.ticketPurchaseLimit"),
+                          Number.isFinite(ticketsRemainingInWindow) && ticketsRemainingInWindow > 0
+                            ? t("store.ticketDailyAllowanceLeft", { count: ticketsRemainingInWindow })
+                            : remainingSeconds
+                              ? t("store.ticketPurchaseLimitIn", { time: formatRemaining(remainingSeconds) })
+                              : t("store.ticketPurchaseLimit"),
                         );
                         return;
                       }
