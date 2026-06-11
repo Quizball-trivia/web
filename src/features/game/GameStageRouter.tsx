@@ -74,12 +74,18 @@ export function GameStageRouter() {
   } = useGameStageState();
 
   // Ranked replay costs a ticket. match:final_results invalidates the wallet
-  // query so this converges to the post-match count, but it can briefly serve
-  // the stale cached value while the refetch is in flight — the Play Again
-  // click handler revalidates against a live fetch before entering matchmaking.
+  // query, so while the refetch is in flight the cached count may be stale —
+  // we gray the button out during that window (without the "no tickets" hint,
+  // since the real count isn't known yet) and the click handler additionally
+  // revalidates against a live fetch before entering matchmaking.
   const queryClient = useQueryClient();
-  const { data: storeWallet } = useStoreWallet();
+  const { data: storeWallet, isFetching: walletFetching } = useStoreWallet();
   const hasRankedTicket = (storeWallet?.tickets ?? 0) >= 1;
+  const playAgainDisabled = matchType === "ranked" && (walletFetching || !hasRankedTicket);
+  const playAgainHint =
+    matchType === "ranked" && !walletFetching && !hasRankedTicket
+      ? t("modeConfirm.notEnoughTickets")
+      : null;
 
   const returningToLobbyRef = useRef(false);
   const showingFinalResultsFromReplay = stage === "idle" && Boolean(realtimeMatch.finalResults);
@@ -450,7 +456,8 @@ export function GameStageRouter() {
           preMatchRankedProfile={stableRankedProfile}
           preMatchProgression={stableProgression}
           unlockedAchievements={unlockedAchievements}
-          playAgainDisabled={matchType === "ranked" && !hasRankedTicket}
+          playAgainDisabled={playAgainDisabled}
+          playAgainHint={playAgainHint}
           onPlayAgain={async () => {
             if (matchType === "ranked") {
               // Revalidate against the live wallet — the cached value can lag

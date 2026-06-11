@@ -29,6 +29,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
     preMatchRankedProfile,
     unlockedAchievements = [],
     playAgainDisabled = false,
+    playAgainHint = null,
     onPlayAgain,
     onMainMenu,
   } = props;
@@ -148,6 +149,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
           playerQuestionResults={playerQuestionResults}
           opponentQuestionResults={opponentQuestionResults}
           playAgainDisabled={playAgainDisabled}
+          playAgainHint={playAgainHint}
           onPlayAgain={onPlayAgain}
           onMainMenu={onMainMenu}
         />
