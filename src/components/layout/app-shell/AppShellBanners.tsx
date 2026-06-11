@@ -94,7 +94,7 @@ export function AppShellBanners({ variant, vm }: AppShellBannersProps) {
     : 'appShell.returnToMatchmakingOrLeaveShort';
   const rankedReturnLabel = isDesktop ? 'appShell.returnToMatchmaking' : 'appShell.return';
   const lobbyReturnLabel = isDesktop ? 'appShell.returnToLobby' : 'appShell.return';
-  const completedDismissLabel = isDesktop ? 'Dismiss' : t('appShell.dismiss');
+  const completedDismissLabel = t('appShell.dismiss');
   const completedOpponentName = completedMatchBanner?.opponent.username ?? t('appShell.opponentFallback');
   const draftOpponentName = activeDraftBanner?.opponent?.username ?? t('appShell.opponentFallback');
   const activeMatchOpponentName = activeMatchBanner?.opponent.username ?? t('appShell.opponentFallback');
