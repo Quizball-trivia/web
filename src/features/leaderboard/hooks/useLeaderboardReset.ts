@@ -29,13 +29,13 @@ function tbilisiParts(now: Date): { year: number; month: number; day: number; ho
   return { year: get("year"), month: get("month"), day: get("day"), hour, minute: get("minute"), second: get("second") };
 }
 
-// Milliseconds remaining until the next 12:00 PM Tbilisi.
+// Milliseconds remaining until the next 20:00 (8 PM) Tbilisi.
 function msUntilNextReset(now: Date): number {
   const p = tbilisiParts(now);
   const secondsNow = p.hour * 3600 + p.minute * 60 + p.second;
   const resetSeconds = RESET_HOUR * 3600;
   let remaining = resetSeconds - secondsNow;
-  if (remaining <= 0) remaining += 24 * 3600; // already past noon → next day's noon
+  if (remaining <= 0) remaining += 24 * 3600; // already past 20:00 → next day's reset
   return remaining * 1000;
 }
 

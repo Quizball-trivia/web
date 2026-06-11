@@ -48,7 +48,7 @@ function FramedAvatar({
         className="absolute inset-0 z-0 h-full w-full object-contain pointer-events-none"
       />
       {/* Character — ON TOP of the frame, centered in the frame body */}
-      <div className="absolute inset-x-0 bottom-[8%] top-[22%] z-10 flex items-end justify-center overflow-hidden">
+      <div className="absolute inset-x-0 bottom-[8%] top-[22%] z-10 flex items-center justify-center overflow-hidden">
         <AvatarPreview
           customization={customization}
           width={Math.round(frameW * 0.64)}

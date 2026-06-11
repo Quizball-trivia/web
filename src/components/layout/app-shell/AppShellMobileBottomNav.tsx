@@ -23,8 +23,11 @@ interface AppShellMobileBottomNavProps {
 export function AppShellMobileBottomNav({ isPathActive, socialBadgeCount }: AppShellMobileBottomNavProps) {
   const { t } = useLocale();
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-20 bg-background border-t border-border/50">
-      <nav className="flex justify-around px-2 py-2">
+    <div
+      className="fixed bottom-0 left-0 right-0 z-20 bg-background border-t border-border/50"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+    >
+      <nav className="flex items-stretch px-1 py-2">
         {MOBILE_NAV_ITEMS.map((item) => {
           const isActive = isPathActive(item.path, undefined);
           const showSocialBadge = item.path === '/social' && socialBadgeCount > 0;
@@ -33,12 +36,12 @@ export function AppShellMobileBottomNav({ isPathActive, socialBadgeCount }: AppS
               key={item.path}
               href={item.path}
               className={cn(
-                'relative flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors',
+                'relative flex min-w-0 flex-1 flex-col items-center gap-1 rounded-lg px-1 py-2 transition-colors',
                 isActive ? 'text-primary bg-secondary' : 'text-muted-foreground',
               )}
             >
-              <item.icon className="size-5" />
-              <span className="text-xs">{t(item.labelKey as MessageKey)}</span>
+              <item.icon className="size-5 shrink-0" />
+              <span className="max-w-full truncate text-[11px] leading-none">{t(item.labelKey as MessageKey)}</span>
               {showSocialBadge && (
                 <span className="absolute right-1 top-1 min-w-4 rounded-full bg-red-500 px-1 py-0.5 text-center text-[9px] font-black text-white">
                   {socialBadgeCount}

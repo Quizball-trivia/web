@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/useDebounce";
+import { cn } from "@/lib/utils";
+import { useProfileNavigation } from "@/lib/hooks/useProfileNavigation";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { MessageKey } from "@/lib/i18n/messages";
 import {
@@ -191,20 +193,11 @@ function CardIdentity({ player }: { player: SocialPlayer }) {
 // buttons (challenge/add/accept/…) sit OUTSIDE this wrapper so they aren't
 // swallowed by the navigation click.
 function CardPersonLink({ player }: { player: SocialPlayer }) {
-  const router = useRouter();
-  const goToProfile = () => router.push(`/profile/${player.id}`);
+  const nav = useProfileNavigation(player.id);
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={goToProfile}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          goToProfile();
-        }
-      }}
-      className="flex min-w-0 flex-1 items-center gap-3 rounded-xl transition-colors hover:bg-white/[0.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 cursor-pointer"
+      {...nav.handlers}
+      className={cn("flex min-w-0 flex-1 items-center gap-3 rounded-xl", nav.className)}
     >
       <CardAvatar player={player} />
       <CardIdentity player={player} />

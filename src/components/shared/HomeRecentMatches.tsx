@@ -5,6 +5,7 @@ import { useRecentMatches } from '@/lib/queries/stats.queries';
 import { COLLAPSED_MATCHES_COUNT, MAX_MATCHES_COUNT } from '@/lib/constants/matches';
 import { formatMatchScore } from '@/utils/matchScore';
 import { TierFrameAvatar } from '@/components/TierFrameAvatar';
+import { buildProfileNavTarget } from '@/lib/hooks/useProfileNavigation';
 import { useLocale } from '@/contexts/LocaleContext';
 
 const rowBorder = (result: string) => {
@@ -106,24 +107,12 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
           </div>
         )}
         {!isLoading && !error && visibleMatches.map((match) => {
-          const canViewProfile = Boolean(match.opponentId) && !match.opponentIsAi;
+          const nav = buildProfileNavTarget(router, match.opponentId, match.opponentIsAi);
           return (
           <div
             key={match.id}
-            role={canViewProfile ? 'button' : undefined}
-            tabIndex={canViewProfile ? 0 : undefined}
-            onClick={canViewProfile ? () => router.push(`/profile/${match.opponentId}`) : undefined}
-            onKeyDown={
-              canViewProfile
-                ? (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      router.push(`/profile/${match.opponentId}`);
-                    }
-                  }
-                : undefined
-            }
-            className={`flex items-center gap-3 rounded-[16px] min-h-[76px] md:min-h-[82px] px-4 md:px-5 border-2 bg-surface-row-deep ${rowBorder(match.result)} ${canViewProfile ? 'cursor-pointer transition-colors hover:bg-white/[0.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30' : ''}`}
+            {...nav.handlers}
+            className={`flex items-center gap-3 rounded-[16px] min-h-[76px] md:min-h-[82px] px-4 md:px-5 border-2 bg-surface-row-deep ${rowBorder(match.result)} ${nav.className}`}
           >
             {/* Avatar — rank frame using the opponent's real tier; falls back to
                 a neutral frame until the backend supplies opponent.tier. */}

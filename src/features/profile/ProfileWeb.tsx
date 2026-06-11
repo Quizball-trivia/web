@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { buildProfileNavTarget } from '@/lib/hooks/useProfileNavigation';
 import { motion } from 'motion/react';
 import {
   Trophy, Target, Flame, Star, Award, Pencil, Check, X,
@@ -226,8 +227,18 @@ export function ProfileWeb({
               ) : (
                 <>
                   <h1
-                    className="truncate text-3xl lg:text-5xl uppercase text-white max-w-[220px] lg:max-w-md"
-                    style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, letterSpacing: '0', lineHeight: 1 }}
+                    className="text-[clamp(1.25rem,6vw,1.875rem)] lg:text-5xl uppercase text-white max-w-[240px] lg:max-w-md [overflow-wrap:anywhere]"
+                    style={{
+                      fontFamily: "'Poppins', sans-serif",
+                      fontWeight: 600,
+                      letterSpacing: '0',
+                      lineHeight: 1.05,
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                    }}
+                    title={player.username}
                   >
                     {player.username}
                   </h1>
@@ -406,7 +417,7 @@ export function ProfileWeb({
                         </div>
                       </div>
                     ) : (
-                      <div className="font-poppins text-xl sm:text-3xl font-semibold uppercase text-brand-yellow leading-none">
+                      <div className="font-poppins max-w-full text-balance text-center text-xl sm:text-3xl font-semibold uppercase leading-tight text-brand-yellow">
                         {t("profileScreen.maxRankAchieved")}
                       </div>
                     )}
@@ -420,7 +431,7 @@ export function ProfileWeb({
                     </div>
                     <div className="mt-2 sm:mt-3 flex w-full items-center justify-between font-poppins uppercase tabular-nums">
                       <span className="text-[10px] font-semibold text-brand-yellow">{currentBandMin} RP</span>
-                      <span className="text-sm font-black text-white">{Math.round(bandPct)}%</span>
+                      <span className="hidden sm:inline text-sm font-black text-white">{Math.round(bandPct)}%</span>
                       <span className="text-[10px] font-semibold text-brand-yellow">{bandTarget} RP</span>
                     </div>
                   </div>
@@ -792,28 +803,15 @@ export function ProfileWeb({
                 const showRpDelta = !isPlacementMatch && match.competition !== 'friendly' && match.rpDelta !== null;
                 const rpDelta = match.rpDelta ?? 0;
                 const formattedRpDelta = `${rpDelta >= 0 ? '+' : ''}${rpDelta} RP`;
-                const canViewProfile = Boolean(match.opponentId) && !match.opponentIsAi;
-                const goToProfile = () => router.push(`/profile/${match.opponentId}`);
+                const nav = buildProfileNavTarget(router, match.opponentId, match.opponentIsAi);
                 return (
                   <motion.div
                     key={match.id}
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.05 * index, duration: 0.3 }}
-                    role={canViewProfile ? 'button' : undefined}
-                    tabIndex={canViewProfile ? 0 : undefined}
-                    onClick={canViewProfile ? goToProfile : undefined}
-                    onKeyDown={
-                      canViewProfile
-                        ? (e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.preventDefault();
-                              goToProfile();
-                            }
-                          }
-                        : undefined
-                    }
-                    className={`flex items-center gap-3 rounded-[16px] min-h-[76px] md:min-h-[82px] px-4 md:px-5 border-2 bg-surface-row-deep ${borderColor} ${canViewProfile ? 'cursor-pointer transition-colors hover:bg-white/[0.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30' : ''}`}
+                    {...nav.handlers}
+                    className={`flex items-center gap-3 rounded-[16px] min-h-[76px] md:min-h-[82px] px-4 md:px-5 border-2 bg-surface-row-deep ${borderColor} ${nav.className}`}
                   >
                     {/* Avatar — rank frame using the opponent's real tier; falls
                         back to a neutral frame until the backend supplies it. */}
