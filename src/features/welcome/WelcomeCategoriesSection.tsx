@@ -50,10 +50,12 @@ export function WelcomeCategoriesSection({
   onBrowseAll,
 }: WelcomeCategoriesSectionProps) {
   const { t } = useLocale();
-  const { isEventMode } = useActiveEventMode();
+  // Landing is region-free: the World Cup showcase renders for everyone while
+  // the event flag is on (in-game surfaces keep the region-gated isEventMode).
+  const { eventEnabled } = useActiveEventMode();
   if (featuredCategories.length === 0) return null;
 
-  if (!isEventMode) {
+  if (!eventEnabled) {
     return (
       <section className="px-6 py-12 md:py-20">
         <div className="max-w-5xl mx-auto">

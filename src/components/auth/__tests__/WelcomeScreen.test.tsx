@@ -375,6 +375,21 @@ describe('WelcomeScreen — landing chrome', () => {
     expect(screen.getByText(/welcome\.wcPromoTitle/)).toBeInTheDocument();
   });
 
+  it('renders the World Cup promo banner for non-eligible regions too (landing is region-free)', () => {
+    // The landing shows the Betsson layer to EVERYONE while the flag is on —
+    // region gating only applies to in-game surfaces (isEventMode stays false).
+    eventModeMock.mockReturnValueOnce({
+      eventEnabled: true,
+      isEligibleRegion: false,
+      isEventMode: false,
+      canParticipate: false,
+      scoreLabel: 'RP',
+      eventSlug: null,
+    });
+    render(<WelcomeScreen />);
+    expect(screen.getByText(/welcome\.wcPromoTitle/)).toBeInTheDocument();
+  });
+
   it('renders the leaderboard podium and table sections', () => {
     render(<WelcomeScreen />);
     expect(screen.getByTestId('leaderboard-podium')).toBeInTheDocument();

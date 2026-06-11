@@ -12,15 +12,15 @@ interface WelcomeNavbarProps {
 
 export function WelcomeNavbar({ wcDaysLeft }: WelcomeNavbarProps) {
   const { t, locale } = useLocale();
-  const { isEventMode } = useActiveEventMode();
+  const { eventEnabled } = useActiveEventMode();
   return (
     <header className="flex h-16 md:h-20 items-center justify-between gap-2 px-6 md:px-12 lg:px-20 shrink-0 bg-surface-page/80 backdrop-blur-md sticky top-0 z-50">
       {/* Mobile: three slots so the switcher is centered between logo and cup.
           Desktop (md+): switcher rejoins the right cluster next to the trophy,
           like the original layout. */}
-      <div className={isEventMode ? "flex flex-1 items-center gap-3 md:gap-5 justify-start md:flex-none" : "flex flex-1 justify-start md:flex-none"}>
+      <div className={eventEnabled ? "flex flex-1 items-center gap-3 md:gap-5 justify-start md:flex-none" : "flex flex-1 justify-start md:flex-none"}>
         <AppLogo size="md" className="!justify-start" />
-        {isEventMode && (
+        {eventEnabled && (
           <>
             <div className="h-8 md:h-10 w-px bg-white/20 shrink-0" />
             <div className="flex flex-col items-start shrink-0">
@@ -61,7 +61,7 @@ export function WelcomeNavbar({ wcDaysLeft }: WelcomeNavbarProps) {
                 {wcDaysLeft}
               </span>
               <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-brand-yellow">
-                {isEventMode ? t('welcome.daysLeft') : t('welcome.untilKickoff')}
+                {eventEnabled ? t('welcome.daysLeft') : t('welcome.untilKickoff')}
               </span>
             </div>
           )}
