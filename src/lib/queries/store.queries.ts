@@ -146,10 +146,22 @@ export const getStoreWalletQuery = () => ({
     return {
       coins: cached.coins,
       tickets: cached.tickets,
-      ticketPurchaseCooldown: cached.ticketPurchaseCooldown ?? {
-        canBuy: true,
-        nextAvailableAt: null,
-        remainingSeconds: 0,
+      // Normalize instead of `??`: a wallet cached before the economy-v3
+      // deploy has a cooldown object WITHOUT ticketsRemainingInWindow — merge
+      // field-by-field so the declared StoreWalletResponse shape always holds.
+      ticketPurchaseCooldown: {
+        canBuy: cached.ticketPurchaseCooldown?.canBuy ?? true,
+        nextAvailableAt: cached.ticketPurchaseCooldown?.nextAvailableAt ?? null,
+        remainingSeconds:
+          typeof cached.ticketPurchaseCooldown?.remainingSeconds === "number"
+            ? cached.ticketPurchaseCooldown.remainingSeconds
+            : 0,
+        ticketsRemainingInWindow:
+          typeof cached.ticketPurchaseCooldown?.ticketsRemainingInWindow === "number"
+            ? cached.ticketPurchaseCooldown.ticketsRemainingInWindow
+            : cached.ticketPurchaseCooldown?.canBuy === false
+              ? 0
+              : 5,
       },
     };
   })(),
