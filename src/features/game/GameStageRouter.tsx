@@ -21,6 +21,7 @@ import { tierFromRp } from "@/utils/rankedTier";
 import { parseRp } from "@/lib/utils";
 import { TrainingMatchScreen } from "@/features/training/TrainingMatchScreen";
 import { useGameStageState } from "@/features/game/hooks/useGameStageState";
+import { useStoreWallet } from "@/lib/queries/store.queries";
 import {
   markExitToPlayPending,
   trackExitToPlayStarted,
@@ -69,6 +70,11 @@ export function GameStageRouter() {
     clientTotalCorrect,
     clientTotalQuestions,
   } = useGameStageState();
+
+  // Ranked replay costs a ticket; the wallet query is refreshed by the
+  // match:final_results socket handler, so this is the post-match count.
+  const { data: storeWallet } = useStoreWallet();
+  const hasRankedTicket = (storeWallet?.tickets ?? 0) >= 1;
 
   const returningToLobbyRef = useRef(false);
   const showingFinalResultsFromReplay = stage === "idle" && Boolean(realtimeMatch.finalResults);
@@ -439,8 +445,13 @@ export function GameStageRouter() {
           preMatchRankedProfile={stableRankedProfile}
           preMatchProgression={stableProgression}
           unlockedAchievements={unlockedAchievements}
+          playAgainDisabled={matchType === "ranked" && !hasRankedTicket}
           onPlayAgain={() => {
             if (matchType === "ranked") {
+              if (!hasRankedTicket) {
+                logger.warn("Play Again blocked: no tickets for ranked replay");
+                return;
+              }
               resetRealtime();
               clearRankedMatchmaking();
               setStage("matchmaking");

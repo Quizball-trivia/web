@@ -31,6 +31,7 @@ export function ResultsActions({
   xpToNextLevel,
   playerQuestionResults,
   opponentQuestionResults,
+  playAgainDisabled = false,
   onPlayAgain,
   onMainMenu,
 }: {
@@ -47,6 +48,8 @@ export function ResultsActions({
   xpToNextLevel: number | null;
   playerQuestionResults?: Array<'correct' | 'wrong' | null>;
   opponentQuestionResults?: Array<'correct' | 'wrong' | null>;
+  /** Grays out the Play Again CTA (e.g. ranked replay with 0 tickets). */
+  playAgainDisabled?: boolean;
   onPlayAgain: () => void;
   onMainMenu: () => void;
 }) {
@@ -72,10 +75,16 @@ export function ResultsActions({
 
         <button
           onClick={onPlayAgain}
-          className="flex h-[64px] w-full items-center justify-center rounded-[20px] bg-brand-green font-poppins font-semibold uppercase text-white text-[1.5rem] transition-colors hover:bg-brand-green md:h-[80px] md:text-[28px]"
+          disabled={playAgainDisabled}
+          className="flex h-[64px] w-full items-center justify-center rounded-[20px] bg-brand-green font-poppins font-semibold uppercase text-white text-[1.5rem] transition-colors hover:bg-brand-green disabled:cursor-not-allowed disabled:bg-black/60 disabled:text-white/50 disabled:hover:bg-black/60 md:h-[80px] md:text-[28px]"
         >
           {t('results.playAgain')}
         </button>
+        {playAgainDisabled && (
+          <p className="-mt-1 text-center font-poppins text-sm text-white/60 md:-mt-2 md:text-base">
+            {t('modeConfirm.notEnoughTickets')}
+          </p>
+        )}
         <button
           onClick={onMainMenu}
           className="flex h-[64px] w-full items-center justify-center rounded-[20px] border-[3px] border-brand-green bg-transparent font-poppins font-semibold uppercase text-white text-[1.5rem] transition-colors hover:bg-brand-green/10 md:h-[80px] md:text-[28px]"

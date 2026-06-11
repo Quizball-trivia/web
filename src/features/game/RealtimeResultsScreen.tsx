@@ -28,6 +28,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
     opponentQuestionResults,
     preMatchRankedProfile,
     unlockedAchievements = [],
+    playAgainDisabled = false,
     onPlayAgain,
     onMainMenu,
   } = props;
@@ -146,6 +147,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
           xpToNextLevel={projectedProgression ? xpToNextLevelAfterMatch : null}
           playerQuestionResults={playerQuestionResults}
           opponentQuestionResults={opponentQuestionResults}
+          playAgainDisabled={playAgainDisabled}
           onPlayAgain={onPlayAgain}
           onMainMenu={onMainMenu}
         />
