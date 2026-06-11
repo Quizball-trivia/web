@@ -5,7 +5,8 @@ import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { PitchVisualization } from './PitchVisualization';
 import { BanCategoryCard } from '@/components/shared/BanCategoryCard';
-import { AvatarDisplay } from '@/components/AvatarDisplay';
+import { TierFrameAvatar } from '@/components/TierFrameAvatar';
+import { tierFromRp } from '@/utils/rankedTier';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { DraftCategory } from '@/lib/realtime/socket.types';
 import type { AvatarCustomization } from '@/types/game';
@@ -231,13 +232,12 @@ export function HalftimeScreen({
               'flex items-center gap-3 min-w-0 flex-1 transition-opacity duration-300',
               showBanPhase && !bothBansSubmitted && !canBan && 'opacity-40',
             )}>
-              <div className="shrink-0 rounded-full p-3" style={{ backgroundColor: '#1645FF' }}>
-                <AvatarDisplay
-                  customization={playerAvatarCustomization ?? { base: playerAvatarUrl }}
-                  size="md"
-                  countryCode={playerCountryCode}
-                />
-              </div>
+              <TierFrameAvatar
+                tier={tierFromRp(playerRankPoints ?? 0)}
+                avatarCustomization={playerAvatarCustomization ?? { base: playerAvatarUrl }}
+                countryCode={playerCountryCode}
+                size="md"
+              />
               <div className="hidden min-w-0 sm:block">
                 <div className="max-w-[140px] truncate text-[13px] font-black uppercase text-white sm:text-sm">
                   {playerName}
@@ -267,14 +267,13 @@ export function HalftimeScreen({
               'flex flex-row-reverse items-center gap-3 min-w-0 flex-1 transition-opacity duration-300',
               showBanPhase && !bothBansSubmitted && canBan && 'opacity-40',
             )}>
-              <div className="shrink-0 rounded-full p-3" style={{ backgroundColor: '#FF4B4B' }}>
-                <AvatarDisplay
-                  customization={opponentAvatarCustomization ?? { base: opponentAvatarUrl }}
-                  size="md"
-                  countryCode={opponentCountryCode}
-                  className="-scale-x-100"
-                />
-              </div>
+              <TierFrameAvatar
+                tier={tierFromRp(opponentRankPoints ?? 0)}
+                avatarCustomization={opponentAvatarCustomization ?? { base: opponentAvatarUrl }}
+                countryCode={opponentCountryCode}
+                size="md"
+                mirrorAvatar
+              />
               <div className="hidden min-w-0 text-right sm:block">
                 <div className="max-w-[140px] truncate text-[13px] font-black uppercase text-white sm:text-sm">
                   {opponentName}

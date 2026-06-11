@@ -1,7 +1,8 @@
-import { AvatarDisplay } from "@/components/AvatarDisplay";
+import { TierFrameAvatar } from "@/components/TierFrameAvatar";
 import type { LeaderboardEntry } from "@/lib/domain/leaderboard";
 import { getTierAccent } from "@/utils/tierVisuals";
 import { Trophy } from "lucide-react";
+import { useActiveEventMode } from "@/lib/hooks/useActiveEventMode";
 
 interface UserRankStripProps {
   userEntry: LeaderboardEntry;
@@ -15,20 +16,23 @@ const poppins = {
 } as const;
 
 export function UserRankStrip({ userEntry }: UserRankStripProps) {
+  const { isEventMode } = useActiveEventMode();
   const tierAccent = getTierAccent(userEntry.tier);
   return (
     <div
       className="relative flex items-center gap-3 sm:gap-4 rounded-[10px] border-2 px-3 sm:px-4 py-3 sm:py-3.5"
-      style={{ borderColor: "#38B60E", backgroundColor: "transparent" }}
+      style={{ borderColor: isEventMode ? "#FF6C0A" : "#38B60E", backgroundColor: "transparent" }}
     >
       {/* Avatar + trophy badge */}
       <div className="relative shrink-0">
-        <AvatarDisplay
-          customization={userEntry.avatarCustomization ?? { base: userEntry.avatar || "avatar-1" }}
+        <TierFrameAvatar
+          tier={userEntry.tier}
+          avatarCustomization={userEntry.avatarCustomization ?? { base: userEntry.avatar || "avatar-1" }}
+          avatarFallback={userEntry.avatar || "avatar-1"}
           countryCode={userEntry.country}
           size="md"
         />
-        <div className="absolute -top-1 -left-1 flex size-5 items-center justify-center rounded-full bg-brand-yellow shadow-sm ring-2 ring-black">
+        <div className="absolute -top-1 -left-1 z-20 flex size-5 items-center justify-center rounded-full bg-brand-yellow shadow-sm ring-2 ring-black">
           <Trophy className="size-3 text-black" strokeWidth={2.5} />
         </div>
       </div>

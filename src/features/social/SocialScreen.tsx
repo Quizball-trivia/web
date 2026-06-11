@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/useDebounce";
+import { cn } from "@/lib/utils";
+import { useProfileNavigation } from "@/lib/hooks/useProfileNavigation";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { MessageKey } from "@/lib/i18n/messages";
 import {
@@ -21,7 +23,7 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api/api";
-import { AvatarDisplay } from "@/components/AvatarDisplay";
+import { TierFrameAvatar } from "@/components/TierFrameAvatar";
 import { getSocket } from "@/lib/realtime/socket-client";
 import type { ErrorPayload, LobbyChallengeCreatedPayload } from "@/lib/realtime/socket.types";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
@@ -138,17 +140,20 @@ function CardShell({
 }
 
 function CardAvatar({ player }: { player: SocialPlayer }) {
+  const tier = player.ranked?.tier ?? 'Academy';
   return (
     <div className="shrink-0">
       <div className="block sm:hidden">
-        <AvatarDisplay
-          customization={player.avatarCustomization ?? { base: player.avatarUrl ?? undefined }}
+        <TierFrameAvatar
+          tier={tier}
+          avatarCustomization={player.avatarCustomization ?? { base: player.avatarUrl ?? undefined }}
           size="sm"
         />
       </div>
       <div className="hidden sm:block">
-        <AvatarDisplay
-          customization={player.avatarCustomization ?? { base: player.avatarUrl ?? undefined }}
+        <TierFrameAvatar
+          tier={tier}
+          avatarCustomization={player.avatarCustomization ?? { base: player.avatarUrl ?? undefined }}
           size="md"
         />
       </div>
@@ -184,6 +189,22 @@ function CardIdentity({ player }: { player: SocialPlayer }) {
   );
 }
 
+// Avatar + name region that links to the player's profile. The card's action
+// buttons (challenge/add/accept/…) sit OUTSIDE this wrapper so they aren't
+// swallowed by the navigation click.
+function CardPersonLink({ player }: { player: SocialPlayer }) {
+  const nav = useProfileNavigation(player.id);
+  return (
+    <div
+      {...nav.handlers}
+      className={cn("flex min-w-0 flex-1 items-center gap-3 rounded-xl", nav.className)}
+    >
+      <CardAvatar player={player} />
+      <CardIdentity player={player} />
+    </div>
+  );
+}
+
 function PlayerCard({
   player,
   index,
@@ -211,8 +232,7 @@ function PlayerCard({
 
   return (
     <CardShell variant={variant} index={index}>
-      <CardAvatar player={player} />
-      <CardIdentity player={player} />
+      <CardPersonLink player={player} />
 
       <div className="flex shrink-0 items-center gap-2">
         {onChallenge && player.friendStatus === "friends" && (
@@ -302,8 +322,7 @@ function RequestCard({
 
   return (
     <CardShell variant={variant} index={index}>
-      <CardAvatar player={item.user} />
-      <CardIdentity player={item.user} />
+      <CardPersonLink player={item.user} />
 
       {isIncoming ? (
         <div className="flex shrink-0 items-center gap-2">

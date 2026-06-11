@@ -40,6 +40,14 @@ export interface TransitionSnapshot {
   title: string;
   categoryName: string | null;
   subtitle: string | null;
+  /**
+   * qIndex of the question this transition announces. Single source of truth
+   * for the question number shown by BOTH the overlay splash and the panel
+   * header while the transition is visible — derived from the round result
+   * that triggered the transition (roundResult.qIndex + 1), so it is correct
+   * even before the next match:question arrives from the server.
+   */
+  upcomingQIndex: number | null;
 }
 
 export interface GoalCelebrationState {
@@ -135,6 +143,17 @@ export function getQuestionDurationSeconds(question: ResolvedMatchQuestionPayloa
   return Math.max(1, Math.round((deadlineAtMs - playableAtMs) / 1000));
 }
 
+/**
+ * Render-time clamp for PITCH visuals only (avatars/ball must not sit on the
+ * exact field edge). Must never be applied to the underlying possession value:
+ * the goal progress meter derives its score from that value, and a 10..90
+ * clamp silently caps the displayed score at 80 (flight says +90, bar says 80
+ * — the bug this separation fixes).
+ */
+export function clampToFieldPct(value: number): number {
+  return Math.max(10, Math.min(90, value));
+}
+
 export function computeMyPossessionPct(
   possessionDiff: number,
   mySeat: 1 | 2,
@@ -147,7 +166,7 @@ export function computeMyPossessionPct(
   const value = serverMyPossessionPct + offset;
 
   if (clampRange === 'field') {
-    return Math.max(10, Math.min(90, value));
+    return clampToFieldPct(value);
   }
 
   return Math.max(0, Math.min(100, value));
@@ -189,6 +208,7 @@ export function toMultipleChoiceGameQuestion(
     prompt: question.question.prompt,
     options: question.question.options,
     correctIndex: typeof correctIndex === 'number' ? correctIndex : -1,
+    image: question.question.image,
     categoryId: question.question.categoryId,
     categoryName: question.question.categoryName,
     difficulty: question.question.difficulty,

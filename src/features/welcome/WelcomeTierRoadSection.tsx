@@ -1,10 +1,21 @@
 'use client';
 
+import Image from 'next/image';
 import { motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { useLocale } from '@/contexts/LocaleContext';
 import { RANKED_TIER_BANDS } from '@/utils/rankedTier';
 import { tierConfig, type TierName } from '@/utils/tierVisuals';
+import { AvatarPreview } from '@/components/AvatarPreview';
+import { DEFAULT_HAIR_ID, DEFAULT_SKIN_ID } from '@/lib/avatars/parts';
+import type { AvatarCustomization } from '@/types/game';
+
+// Generic showcase character for the tier cards: default boy hair + PSG jersey.
+const TIER_SHOWCASE_AVATAR: AvatarCustomization = {
+  skin: DEFAULT_SKIN_ID,
+  jersey: 'jersey_psg_retro',
+  hair: DEFAULT_HAIR_ID,
+};
 
 interface WelcomeTierRoadSectionProps {
   onStartClimbing: () => void;
@@ -36,7 +47,7 @@ export function WelcomeTierRoadSection({ onStartClimbing }: WelcomeTierRoadSecti
             {[...RANKED_TIER_BANDS].reverse().map((band, i) => {
               const visual = tierConfig[band.tier as TierName];
               const isTop = band.tier === 'GOAT';
-              const totalTiers = RANKED_TIER_BANDS.length;
+              const slug = band.tier.toLowerCase().replace(/[\s-]+/g, '_');
               return (
                 <motion.div
                   key={band.tier}
@@ -44,20 +55,28 @@ export function WelcomeTierRoadSection({ onStartClimbing }: WelcomeTierRoadSecti
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.06 }}
-                  className="flex flex-col items-center px-2 md:px-3 relative"
-                  style={{ minWidth: i === totalTiers - 1 ? '90px' : '76px' }}
+                  className="flex flex-col items-center px-1.5 md:px-2.5 relative"
+                  style={{ minWidth: isTop ? '100px' : '80px' }}
                 >
-                  <div
-                    className={`relative z-10 flex items-center justify-center shrink-0 rounded-full border-2 mb-2 ${
-                      isTop
-                        ? 'size-14 md:size-16 text-2xl md:text-3xl bg-gradient-to-br from-fuchsia-500/30 to-fuchsia-400/10 border-fuchsia-400/50 shadow-[0_0_20px_rgba(217,70,239,0.3)]'
-                        : 'size-10 md:size-12 text-lg md:text-xl border-white/15 bg-surface-auth-input'
-                    }`}
-                  >
-                    {visual?.emoji}
+                  {/* Rank card — frame + showcase avatar centered in the frame body */}
+                  <div className={`relative z-10 mb-2 ${isTop ? 'w-[78px] md:w-[96px]' : 'w-[62px] md:w-[76px]'}`}>
+                    <Image
+                      src={`/assets/ranks/${slug}_frame.png`}
+                      alt={band.tier}
+                      width={isTop ? 96 : 76}
+                      height={isTop ? 130 : 103}
+                      className="w-full h-auto object-contain"
+                    />
+                    {/* Showcase avatar — centered in the card body, like the profile */}
+                    <span className="absolute inset-x-0 top-[12%] bottom-[12%] flex items-center justify-center overflow-hidden">
+                      <AvatarPreview
+                        customization={TIER_SHOWCASE_AVATAR}
+                        width={isTop ? 66 : 52}
+                      />
+                    </span>
                   </div>
 
-                  <div className={`text-center font-black text-[10px] md:text-xs uppercase tracking-wide leading-tight ${
+                  <div className={`text-center font-black text-[9px] md:text-[11px] uppercase tracking-wide leading-tight ${
                     isTop ? 'text-fuchsia-300' : visual?.color ?? 'text-white'
                   }`}>
                     {band.tier}

@@ -5,7 +5,11 @@ import { useShallow } from 'zustand/shallow';
 import { useRealtimeGameLogic } from '@/lib/match/useRealtimeGameLogic';
 import { useGameSounds } from '@/lib/sounds/useGameSounds';
 import { usePreloadImages } from '@/lib/usePreloadImages';
-import { optimizedRemoteImageProps } from '@/lib/images/remoteImage';
+import {
+  CATEGORY_CARD_IMAGE_TRANSFORM,
+  optimizeSupabaseImage,
+  QUESTION_IMAGE_TRANSFORM,
+} from '@/lib/images/optimizeSupabaseImage';
 
 /** Static art shown during goal celebrations — decoded at match start. */
 const GOAL_OVERLAY_ASSETS = ['/assets/goal.webp'];
@@ -165,12 +169,12 @@ export function useRealtimePossessionMatchController({
   // Warm the ban-category images as soon as the halftime options arrive in the
   // socket payload — usually a beat before the ban UI renders — so the cards
   // don't show blank while images download. Must warm the same optimized URL
-  // that BanCategoryCard renders (see optimizedRemoteImageProps), otherwise
-  // the preload caches the raw asset and the card still fetches cold.
+  // that BanCategoryCard renders (the Supabase CDN transform), otherwise the
+  // preload caches a different variant and the card still fetches cold.
   const banImageUrls = useMemo(
     () =>
       (possessionState?.halftime.categoryOptions ?? []).map((c) =>
-        c.imageUrl ? optimizedRemoteImageProps(c.imageUrl, 400).src : null,
+        optimizeSupabaseImage(c.imageUrl, CATEGORY_CARD_IMAGE_TRANSFORM),
       ),
     [possessionState?.halftime.categoryOptions],
   );
@@ -178,6 +182,18 @@ export function useRealtimePossessionMatchController({
   // Decode the goal-celebration art up front so the first goal doesn't pop a
   // cold image mid-celebration.
   usePreloadImages(GOAL_OVERLAY_ASSETS);
+  // Warm the half's upcoming image-MCQ picture as soon as the server announces
+  // it on match:state (the half's first question) so it's fully loaded long
+  // before the image slot (Q4) starts. Must be the SAME optimized URL the
+  // QuestionImageCard renders, otherwise the card's WebP fetch is still cold.
+  const announcedPreloadUrls = useMemo(
+    () =>
+      (possessionState?.preloadImageUrls ?? []).map((url) =>
+        optimizeSupabaseImage(url, QUESTION_IMAGE_TRANSFORM),
+      ),
+    [possessionState?.preloadImageUrls],
+  );
+  usePreloadImages(announcedPreloadUrls);
   const isPenaltyQuestion = phaseKind === 'penalty';
   const isLastAttackQuestion = phaseKind === 'last_attack';
   const isShotQuestion = phaseKind === 'shot';
@@ -388,6 +404,15 @@ export function useRealtimePossessionMatchController({
   const question = useMemo(() => (
     toMultipleChoiceGameQuestion(localQuestion, resolvedCorrectIndex)
   ), [localQuestion, resolvedCorrectIndex]);
+
+  // Warm the image-MCQ picture as soon as the question payload lands (a beat
+  // before the panel mounts) so it's already decoded when it renders. Preload
+  // the SAME optimized (WebP) URL the card renders — otherwise we'd warm the
+  // raw PNG and the card's WebP request would still be a cold fetch.
+  const questionImageUrl = localQuestion?.question.kind === 'multipleChoice'
+    ? optimizeSupabaseImage(localQuestion.question.image?.url, QUESTION_IMAGE_TRANSFORM)
+    : null;
+  usePreloadImages(useMemo(() => [questionImageUrl], [questionImageUrl]));
 
   const isMultipleChoiceQuestion = localQuestion?.question.kind === 'multipleChoice';
   const specialQuestion = localQuestion && localQuestion.question.kind !== 'multipleChoice'
@@ -611,6 +636,20 @@ export function useRealtimePossessionMatchController({
       autoScrollKey,
     };
 
+  // Question counter shown in the panel header. While the round-transition
+  // overlay is visible, the panel MUST show the same number the overlay
+  // announces — so it reads the overlay's own frozen snapshot
+  // (transitionSnapshot.upcomingQIndex) rather than deriving the number
+  // independently (a live read of pendingQuestion can disagree with the
+  // frozen splash when the next question arrives mid-transition). Outside the
+  // transition the counter tracks localQuestion so it always matches the
+  // visible question content (e.g. during answer reveal).
+  const transitionQIndex = overlayModel.showRoundTransition
+    ? overlayModel.transitionSnapshot.upcomingQIndex
+    : null;
+  const displayQIndex = transitionQIndex ?? localQuestion?.qIndex ?? 0;
+  const displayQTotal = pendingQuestion?.total ?? localQuestion?.total ?? 12;
+
   const questionAreaModel: PossessionQuestionAreaModel | null = !possessionMatch.matchId || !possessionState
     ? null
     : {
@@ -627,8 +666,8 @@ export function useRealtimePossessionMatchController({
             penaltyDisplayTotal,
             isPenaltySuddenDeath,
             question,
-            qIndex: localQuestion?.qIndex ?? 0,
-            totalQuestions: localQuestion?.total ?? 12,
+            qIndex: displayQIndex,
+            totalQuestions: displayQTotal,
             timeRemaining: state.timeRemaining,
             showOptions: state.showOptions,
             selectedAnswer: state.selectedAnswer,
@@ -653,8 +692,8 @@ export function useRealtimePossessionMatchController({
             kind: 'special',
             props: {
               matchId: possessionMatch.matchId,
-              qIndex: localQuestion.qIndex,
-              totalQuestions: localQuestion.total ?? 12,
+              qIndex: displayQIndex,
+              totalQuestions: displayQTotal,
               isPenaltyPhase: fieldState.isPenaltyQuestion,
               penaltyDisplayRound,
               penaltyDisplayTotal,

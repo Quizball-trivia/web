@@ -188,11 +188,14 @@ function computeHasSearchAck(
   rankedFoundOpponent: OpponentInfo | null | undefined,
   sessionState: SessionStatePayload | null,
 ): boolean {
-  return (
-    Boolean(rankedSearchStartedAt) ||
-    Boolean(rankedFoundOpponent) ||
-    sessionState?.state === "IN_QUEUE"
-  );
+  if (rankedFoundOpponent) return true;
+  if (sessionState?.state === "IN_QUEUE") return true;
+  // A local search ack is only trusted while the server doesn't explicitly
+  // contradict it. The backend removes the queue search the moment a socket
+  // drops (no grace) and emits session:state IDLE on reconnect — if we kept
+  // trusting the stale ack here, every recovery path would short-circuit and
+  // the matchmaking spinner would hang forever after a transport blip.
+  return Boolean(rankedSearchStartedAt) && sessionState?.state !== "IDLE";
 }
 
 function hasActiveRealtimeSession(snapshot: ReturnType<typeof useRealtimeMatchStore.getState>): boolean {
@@ -559,10 +562,18 @@ export function useGameStageTransitions({
       return;
     }
 
+    // Silent search loss: we HAD a server ack (search_started) but the server
+    // now reports IDLE — the backend dropped the search without any error
+    // event (it cancels searches immediately on socket disconnect, so a brief
+    // transport blip mid-search lands exactly here after reconnect). Re-join;
+    // the backend treats queue_join idempotently (resumes an existing search).
+    const searchSilentlyLost = Boolean(rankedSearchStartedAt);
+
     const shouldRetry =
       rankedRequestRef.current &&
       sessionState?.state === "IDLE" &&
-      (realtimeErrorCode === "TRANSITION_IN_PROGRESS" ||
+      (searchSilentlyLost ||
+        realtimeErrorCode === "TRANSITION_IN_PROGRESS" ||
         realtimeErrorCode === "RANKED_QUEUE_BUSY" ||
         realtimeErrorCode === "RANKED_QUEUE_BLOCKED" ||
         realtimeErrorCode === "RANKED_QUEUE_UNAVAILABLE");

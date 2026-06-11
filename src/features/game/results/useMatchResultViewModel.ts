@@ -258,17 +258,15 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
   // the progression panel below tells the change story (promotion/demotion).
   // Prefer authoritative settlement oldRp over the pre-match profile snapshot,
   // which can refresh to post-match values when returning to this screen.
-  const playerTier = matchType === 'ranked' && preMatchRankedProfile?.placementStatus === 'placed'
-    ? tierFromRp(oldRP)
+  const playerTier = matchType === 'ranked'
+    ? tierFromRp(preMatchRankedProfile?.placementStatus === 'placed' ? oldRP : 0)
     : null;
-  const playerDisplayRp = matchType === 'ranked' ? oldRP : null;
+  const playerDisplayRp = matchType === 'ranked' ? (oldRP ?? 0) : null;
   const opponentRankedOutcome = rankedOutcome?.byUserId[opponentId] ?? null;
-  const opponentTier = opponentRankedOutcome?.placementStatus === 'placed'
-    ? tierFromRp(opponentRankedOutcome.oldRp)
-    : opponentRankPoints != null
-      ? tierFromRp(opponentRankPoints)
-      : null;
-  const opponentDisplayRp = opponentRankedOutcome?.oldRp ?? opponentRankPoints ?? null;
+  const opponentTier = matchType === 'ranked'
+    ? tierFromRp(opponentRankedOutcome?.oldRp ?? opponentRankPoints ?? 0)
+    : null;
+  const opponentDisplayRp = matchType === 'ranked' ? (opponentRankedOutcome?.oldRp ?? opponentRankPoints ?? 0) : null;
 
   return {
     playerWon,

@@ -34,8 +34,10 @@ import {
   customizationFromAvatarValue,
 } from "@/lib/avatars";
 import { useAuthStore } from "@/stores/auth.store";
+import { isUnlimitedDevEmail } from "@/lib/auth/devUnlimited";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { updateMe } from "@/lib/api/endpoints";
+import { cn } from "@/lib/utils";
 import type { AvatarCustomization } from "@/types/game";
 
 const STRIPE_PURCHASES_ENABLED = false;
@@ -47,6 +49,23 @@ function formatUsd(priceCents: number): string {
   }).format(priceCents / 100);
 }
 
+/** Compact "Xh Ym" / "Ym" string for a ticket-purchase cooldown countdown. */
+function formatRemaining(totalSeconds: number): string {
+  const seconds = Math.max(0, Math.ceil(totalSeconds));
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  if (hours > 0) return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+  if (minutes > 0) return `${minutes}m`;
+  return "<1m";
+}
+
+/** Live wallet ticket cap — mirrors backend MAX_TICKETS (economy v3). */
+const TICKET_CAP = 5;
+/** Daily purchase allowance in TICKETS per rolling 24h — mirrors backend
+ * TICKET_PURCHASE_MAX_TICKETS_PER_WINDOW. Used only as a fallback when the
+ * wallet response predates ticketsRemainingInWindow. */
+const TICKET_PURCHASE_DAILY_CAP = 5;
+
 interface TicketPackItem {
   id: string;
   title: string;
@@ -57,6 +76,10 @@ interface TicketPackItem {
   iconAsset: string;
   productSlug?: string;
   disabled?: boolean;
+  /** Why the pack is disabled — drives both the button label and the tap toast. */
+  disabledReason?: "full" | "cooldown";
+  /** Button label shown when disabled by the daily limit, e.g. "Unlocks in 4h". */
+  disabledLabel?: string;
   /** Number of tickets this pack grants — drives the stacked-icon visual. */
   ticketCount: number;
 }
@@ -178,15 +201,28 @@ function TicketCard({ pack, onBuy }: { pack: TicketPackItem; onBuy: (b: TicketPa
           <TicketStack count={pack.ticketCount} />
         </div>
 
-        {/* Bottom: pill button — coin price + coin icon */}
+        {/* Bottom: pill button — coin price + coin icon.
+            Both "full" and "cooldown" (daily purchase limit) packs are
+            hard-disabled and greyed out so the user can't trigger a purchase
+            that the backend would reject. The button label explains the reason
+            (and shows when the next purchase unlocks for cooldown). */}
         <button
           type="button"
           onClick={() => onBuy(pack)}
           disabled={pack.disabled}
-          className="flex h-9 w-full items-center justify-center gap-1 rounded-[16px] text-[12px] uppercase text-white transition-transform active:translate-y-[2px] disabled:opacity-50 disabled:active:translate-y-0 sm:h-[44px] sm:gap-2 sm:rounded-[20px] sm:text-[18px]"
+          className={cn(
+            "flex h-9 w-full items-center justify-center gap-1 rounded-[16px] uppercase text-white transition-transform active:translate-y-[2px] disabled:opacity-50 disabled:active:translate-y-0 disabled:cursor-not-allowed sm:h-[44px] sm:gap-2 sm:rounded-[20px]",
+            pack.disabledReason === "cooldown" ? "text-[10px] sm:text-[14px]" : "text-[12px] sm:text-[18px]",
+          )}
           style={{ ...POPPINS_HEADER, backgroundColor: ACCENT_PURPLE }}
         >
-          <span className="tabular-nums">{pack.disabled ? t("store.full") : pack.price}</span>
+          <span className="tabular-nums">
+            {pack.disabledReason === "full"
+              ? t("store.full")
+              : pack.disabledReason === "cooldown"
+              ? pack.disabledLabel ?? t("store.ticketLimitReached")
+              : pack.price}
+          </span>
           {!pack.disabled && <CoinIcon size={22} />}
         </button>
       </div>
@@ -208,9 +244,23 @@ export function StoreScreen() {
   const { data: wallet } = useStoreWallet();
   const { data: inventoryData } = useStoreInventory();
   const authUser = useAuthStore((state) => state.user);
+  // Dev-allowlist accounts: the backend skips every store economy limit for
+  // them, so the UI mirrors that by treating items as always affordable and
+  // ticket packs as never capped.
+  const isUnlimited = useMemo(
+    () => isUnlimitedDevEmail(authUser?.email),
+    [authUser?.email],
+  );
   const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
   const { player, updateStats } = usePlayer();
   const [buyModal, setBuyModal] = useState<BuyModalState | null>(null);
+  // Ticks once a minute so the ticket-cooldown "Unlocks in Xh" label stays
+  // current without a full wallet refetch.
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNowMs(Date.now()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   /** Currently saved customization (decoded from avatar_url). */
   const currentCustomization = useMemo<AvatarCustomization>(() => {
@@ -241,7 +291,7 @@ export function StoreScreen() {
    * don't flash "Need more" before the balance arrives.
    */
   const canAffordCoins = (priceCoins: number | undefined) =>
-    !priceCoins || wallet == null || wallet.coins >= priceCoins;
+    isUnlimited || !priceCoins || wallet == null || wallet.coins >= priceCoins;
 
   const canAffordPart = (part: AvatarPart) => canAffordCoins(part.priceCoins);
 
@@ -290,8 +340,7 @@ export function StoreScreen() {
       const productName = product?.name?.en ?? product?.slug ?? productSlug;
       trackItemPurchased(productSlug, productName, product?.priceCents ?? 0, 'coins');
       toast.success(t("store.purchaseCompleted"));
-      void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
+      // wallet/inventory refresh handled by onSettled below (runs on both paths)
     },
     onError: (error) => {
       if (error instanceof ApiError && error.status === 401) {
@@ -310,10 +359,32 @@ export function StoreScreen() {
           toast.error(t("store.ticketsAlreadyFull"));
           return;
         }
+        if (errorCode === "TICKET_PURCHASE_COOLDOWN") {
+          const remainingSeconds =
+            typeof error.data === "object" &&
+            error.data !== null &&
+            "remainingSeconds" in error.data &&
+            typeof (error.data as { remainingSeconds?: unknown }).remainingSeconds === "number"
+              ? (error.data as { remainingSeconds: number }).remainingSeconds
+              : null;
+          toast.error(
+            remainingSeconds != null
+              ? t("store.ticketPurchaseLimitIn", { time: formatRemaining(remainingSeconds) })
+              : t("store.ticketPurchaseLimit"),
+          );
+          return;
+        }
         toast.error(t("store.notEnoughCoins"));
         return;
       }
       toast.error(t("store.purchaseFailed"));
+    },
+    // Re-sync wallet + inventory after EVERY attempt — success or failure — so a
+    // failed purchase never leaves a stale ticket/coin count on screen (which
+    // previously made a rejected buy look like it "worked" after a manual reload).
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
     },
   });
 
@@ -368,10 +439,31 @@ export function StoreScreen() {
     });
   }, [productsBySlug]);
 
+  // Backend enforces a QUANTITY-based rolling per-24h purchase limit (up to
+  // 5 tickets/day): a pack is blocked when it's larger than the remaining
+  // allowance, so the 1-pack can stay buyable while the 3/5-packs are not.
+  // Falls back to the binary canBuy flag for wallet payloads that predate
+  // ticketsRemainingInWindow. Unlimited dev accounts skip the cooldown.
+  const cooldown = wallet?.ticketPurchaseCooldown;
+  const ticketsRemainingInWindow = isUnlimited
+    ? Number.POSITIVE_INFINITY
+    : cooldown
+      ? (cooldown.ticketsRemainingInWindow
+        ?? (cooldown.canBuy === false ? 0 : TICKET_PURCHASE_DAILY_CAP))
+      : TICKET_PURCHASE_DAILY_CAP;
+  // Seconds until the next ticket-purchase slot frees up. Prefer the absolute
+  // timestamp (so the label stays accurate as the wallet refetches) and fall
+  // back to the server-sent remainingSeconds.
+  const cooldownSeconds = cooldown?.nextAvailableAt
+    ? Math.max(0, Math.ceil((Date.parse(cooldown.nextAvailableAt) - nowMs) / 1000))
+    : cooldown?.remainingSeconds ?? 0;
+
   const ticketPacks = useMemo<TicketPackItem[]>(() => {
     const currentTickets = wallet?.tickets ?? 0;
-    const TICKET_CAP = 10;
-    const availableSpace = Math.max(0, TICKET_CAP - currentTickets);
+    // Dev-allowlist accounts bypass the cap on the backend; never disable here.
+    const availableSpace = isUnlimited
+      ? Number.POSITIVE_INFINITY
+      : Math.max(0, TICKET_CAP - currentTickets);
 
     const ticketPacks = (productsData?.items ?? []).filter(
       (p) => p.type === "ticket_pack",
@@ -384,6 +476,13 @@ export function StoreScreen() {
           typeof (product.metadata as { tickets?: unknown }).tickets === "number"
             ? ((product.metadata as { tickets: number }).tickets)
             : 1;
+        const isFull = ticketCount > availableSpace;
+        const overDailyAllowance = ticketCount > ticketsRemainingInWindow;
+        const disabledReason: TicketPackItem["disabledReason"] = isFull
+          ? "full"
+          : overDailyAllowance
+          ? "cooldown"
+          : undefined;
         return {
           id: product.slug,
           title: `${ticketCount} ${ticketCount === 1 ? t("store.ticket") : t("store.tickets")}`,
@@ -393,12 +492,17 @@ export function StoreScreen() {
           priceCoinsValue: product.priceCents,
           productSlug: product.slug,
           iconAsset: "/assets/ticket_icon.webp",
-          disabled: ticketCount > availableSpace,
+          disabled: disabledReason != null,
+          disabledReason,
+          disabledLabel:
+            disabledReason === "cooldown" && cooldownSeconds > 0
+              ? t("store.ticketUnlocksIn", { time: formatRemaining(cooldownSeconds) })
+              : undefined,
           ticketCount,
         } satisfies TicketPackItem;
       })
       .sort((a, b) => a.ticketCount - b.ticketCount);
-  }, [productsData, wallet?.tickets, t]);
+  }, [productsData, wallet?.tickets, ticketsRemainingInWindow, cooldownSeconds, isUnlimited, t]);
 
   const purchasePending = checkoutMutation.isPending || coinPurchaseMutation.isPending;
 
@@ -549,8 +653,19 @@ export function StoreScreen() {
                   <TicketCard
                     pack={pack}
                     onBuy={(b) => {
-                      if (b.disabled) {
+                      if (b.disabledReason === "full") {
                         toast.message(t("store.notEnoughTicketSpace"));
+                        return;
+                      }
+                      if (b.disabledReason === "cooldown") {
+                        const remainingSeconds = wallet?.ticketPurchaseCooldown?.remainingSeconds;
+                        toast.message(
+                          Number.isFinite(ticketsRemainingInWindow) && ticketsRemainingInWindow > 0
+                            ? t("store.ticketDailyAllowanceLeft", { count: ticketsRemainingInWindow })
+                            : remainingSeconds
+                              ? t("store.ticketPurchaseLimitIn", { time: formatRemaining(remainingSeconds) })
+                              : t("store.ticketPurchaseLimit"),
+                        );
                         return;
                       }
                       if (b.productSlug) {

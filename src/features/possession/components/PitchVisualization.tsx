@@ -12,10 +12,10 @@ import { PitchGoalNetRipple } from './pitch/PitchGoalNetRipple';
 import { PitchHtmlActors } from './pitch/PitchHtmlActors';
 import { PitchVignette } from './pitch/PitchVignette';
 import { usePitchSceneModel } from './pitch/usePitchSceneModel';
+import { clampToFieldPct } from '@/features/possession/realtimePossession.helpers';
 
 export function PitchVisualization(props: PitchVisualizationProps) {
   const {
-    playerPosition,
     playerAvatarCustomization = null,
     opponentAvatarCustomization = null,
     penaltyMode,
@@ -26,6 +26,12 @@ export function PitchVisualization(props: PitchVisualizationProps) {
     barBattleVariant,
     hideBall = false,
   } = props;
+  // RENDER-TIME field clamp: avatars/ball/track must stay visually inside the
+  // pitch (10..90), but the incoming value is the TRUE possession position
+  // (0..100) — the goal progress meter consumes it unclamped elsewhere.
+  // Clamping any earlier capped the meter's score at 80 (the flight-vs-bar
+  // mismatch bug).
+  const playerPosition = clampToFieldPct(props.playerPosition);
   const {
     isPenalty,
     isShot,
@@ -88,7 +94,7 @@ export function PitchVisualization(props: PitchVisualizationProps) {
     opponentHtmlActorMotion,
     playerHtmlActorTransition,
     opponentHtmlActorTransition,
-  } = usePitchSceneModel(props);
+  } = usePitchSceneModel({ ...props, playerPosition });
 
   return (
     <div className={isPortrait ? 'h-full w-full' : 'w-full'}>

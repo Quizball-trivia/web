@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { getSocket } from '@/lib/realtime/socket-client';
@@ -50,6 +50,10 @@ export function LiveCluesPanel({
   const { t } = useLocale();
   const [guess, setGuess] = useState('');
   const [pendingGuess, setPendingGuess] = useState(false);
+  // As each new clue reveals, the answer input gets pushed further down the
+  // page. Keep it on-screen by scrolling the input block into view whenever the
+  // revealed-clue count grows (mobile: clues stack and shove the input off-screen).
+  const inputBlockRef = useRef<HTMLDivElement>(null);
   const [manualRevealCount, setManualRevealCount] = useState(1);
   const resolvedLocale = question.resolvedLocale ?? 'en';
   const submitted = Boolean(answerAck?.questionKind === 'clues' && answerAck?.qIndex === qIndex);
@@ -65,6 +69,17 @@ export function LiveCluesPanel({
       ? resolveI18nText(answerAck.cluesDisplayAnswer, resolvedLocale)
     : null;
   const inputLocked = !showOptions || submitted || pendingGuess || roundResolved;
+
+  // Scroll the answer input back into view each time a new clue is revealed,
+  // so the user never has to manually scroll down to reach it.
+  useEffect(() => {
+    if (roundResolved) return;
+    const node = inputBlockRef.current;
+    if (typeof node?.scrollIntoView === 'function') {
+      node.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, [revealedClues, roundResolved]);
+
   const playerAnswerCount = roundResolved
     ? (myRound?.isCorrect ? 1 : 0)
     : submitted && answerAck?.isCorrect
@@ -154,20 +169,20 @@ export function LiveCluesPanel({
         visible={submitted || roundResolved}
         tone="orange"
         player={{
-          label: 'You',
+          label: t('possession.you'),
           count: playerAnswerCount,
           total: 1,
           points: cluesPlayerPoints,
-          badge: cluesPlayerCorrect ? 'Correct' : 'Wrong',
+          badge: cluesPlayerCorrect ? t('possession.correct') : t('possession.wrong'),
           status: cluesPlayerCorrect ? 'positive' : 'negative',
           detail: cluesPlayerDetail,
         }}
         opponent={{
-          label: 'Opp',
+          label: t('possession.opp'),
           count: opponentAnswerCount,
           total: 1,
           points: cluesOpponentPoints,
-          badge: roundResolved ? (opponentRound?.isCorrect ? 'Correct' : 'Wrong') : 'Waiting',
+          badge: roundResolved ? (opponentRound?.isCorrect ? t('possession.correct') : t('possession.wrong')) : t('possession.waiting'),
           status: roundResolved ? (opponentRound?.isCorrect ? 'positive' : 'negative') : 'pending',
           detail: cluesOpponentDetail,
         }}
@@ -296,7 +311,7 @@ export function LiveCluesPanel({
       )}
 
       {!roundResolved && (
-        <div className="space-y-2">
+        <div ref={inputBlockRef} className="space-y-2 scroll-mb-4">
           <div className="relative">
             <input
               type="text"

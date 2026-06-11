@@ -12,7 +12,7 @@
  * this hook returns.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useShallow } from 'zustand/shallow';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -67,6 +67,7 @@ export function useAppShellViewModel() {
   const suppressLobbyBannerReason = useRealtimeMatchStore((state) => state.suppressLobbyBannerReason);
   const clearLobbyBannerSuppression = useRealtimeMatchStore((state) => state.clearLobbyBannerSuppression);
   const clearRejoinAvailable = useRealtimeMatchStore((state) => state.clearRejoinAvailable);
+  const autoRejoinSuppressedMatchId = useRealtimeMatchStore((state) => state.autoRejoinSuppressedMatchId);
   const resetRealtime = useRealtimeMatchStore((state) => state.reset);
   const startSession = useGameSessionStore((state) => state.startSession);
   const setGameStage = useGameSessionStore((state) => state.setStage);
@@ -282,6 +283,38 @@ export function useAppShellViewModel() {
 
     router.push('/game');
   };
+
+  // Auto-rejoin on reload: a tab refresh mid-match resets the client game
+  // state, so the user used to land on /play and had to press "Rejoin"
+  // manually (and only when the disconnect-grace pause won the reconnect
+  // race — a fast reload resumed silently, making behavior feel random).
+  // Make it uniform: as soon as the server confirms a live match for this
+  // session (match:rejoin_available cross-checked against session:state
+  // IN_ACTIVE_MATCH), perform exactly what the Rejoin button does.
+  //
+  // Guards:
+  //  - source === 'rejoin' only (reload/disconnect path, never live navigation)
+  //  - showRejoinBanner reuses all existing suppressions (forfeit pending,
+  //    party dropout, /friend/room, already on /game)
+  //  - autoRejoinSuppressedMatchId skips matches the user intentionally left
+  //  - once per matchId per page lifetime (ref) — no loops if rejoin fails
+  const autoRejoinAttemptedMatchIdRef = useRef<string | null>(null);
+  const canAutoRejoin =
+    showRejoinBanner &&
+    !!activeMatchBanner &&
+    activeMatchBanner.source === 'rejoin' &&
+    sessionState?.state === 'IN_ACTIVE_MATCH' &&
+    sessionState.activeMatchId === activeMatchBanner.matchId &&
+    autoRejoinSuppressedMatchId !== activeMatchBanner.matchId;
+  const autoRejoinMatchId = canAutoRejoin && activeMatchBanner ? activeMatchBanner.matchId : null;
+  useEffect(() => {
+    if (!autoRejoinMatchId) return;
+    if (autoRejoinAttemptedMatchIdRef.current === autoRejoinMatchId) return;
+    autoRejoinAttemptedMatchIdRef.current = autoRejoinMatchId;
+    logger.info('Auto-rejoining active match after reload/reconnect', { matchId: autoRejoinMatchId });
+    handleRejoinMatch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleRejoinMatch is recreated every render; the matchId + ref guard make this fire at most once per match
+  }, [autoRejoinMatchId]);
 
   const handleReturnToDraft = () => {
     if (!activeDraftBanner) return;

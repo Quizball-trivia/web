@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- Category artwork URLs come from realtime/backend payloads. */
 
-import { optimizedRemoteImageProps } from "@/lib/images/remoteImage";
+import { CATEGORY_CARD_IMAGE_TRANSFORM, optimizeSupabaseImage } from "@/lib/images/optimizeSupabaseImage";
 import { memo, useMemo } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -118,7 +118,7 @@ function BanCategoryCardComponent({
         <>
           <div className="absolute inset-0" style={{ backgroundColor: color.bg }} />
           <img
-            {...optimizedRemoteImageProps(imageUrl ?? '', 400)}
+            src={optimizeSupabaseImage(imageUrl, CATEGORY_CARD_IMAGE_TRANSFORM) ?? undefined}
             alt=""
             width={400}
             height={500}
@@ -156,7 +156,7 @@ function BanCategoryCardComponent({
       <div className="relative z-10 flex h-full flex-col justify-end items-center p-3 sm:p-4">
         <h3
           className={cn(
-            'text-[clamp(0.7rem,3.4vw,1.25rem)] uppercase leading-tight text-balance text-center w-full [overflow-wrap:normal] [word-break:keep-all]',
+            'text-[clamp(0.62rem,3.1vw,1.25rem)] uppercase leading-tight text-balance text-center w-full [overflow-wrap:break-word]',
             isBanned && 'grayscale opacity-70'
           )}
           style={{
@@ -166,7 +166,7 @@ function BanCategoryCardComponent({
             color: isBanned ? '#E3E9EC' : (hasImage ? '#ffffff' : color.text),
             textShadow: hasImage ? '0 2px 8px rgba(0,0,0,0.75), 0 0 4px rgba(0,0,0,0.6)' : 'none',
             display: '-webkit-box',
-            WebkitLineClamp: 2,
+            WebkitLineClamp: 3,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
           }}

@@ -80,7 +80,15 @@ export const useRealtimeMatchStore = create<RealtimeState>()((...args) => {
     reset: () => {
       logger.info('Realtime store reset');
       // Keep identity across UI resets so round-result mapping remains stable.
-      set((state) => ({ ...initialState, selfUserId: state.selfUserId }));
+      // Keep autoRejoinSuppressedMatchId too: quit/forfeit flows reset the
+      // store right after suppressing, and a trailing match:rejoin_available
+      // for the left match must not re-trigger auto-rejoin. It's keyed by
+      // matchId, so it can never affect a future (different) match.
+      set((state) => ({
+        ...initialState,
+        selfUserId: state.selfUserId,
+        autoRejoinSuppressedMatchId: state.autoRejoinSuppressedMatchId,
+      }));
     },
   };
 });

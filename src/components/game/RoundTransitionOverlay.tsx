@@ -90,7 +90,7 @@ function ModernRoundTransitionOverlay({ title, categoryName, subtitle }: RoundTr
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
-      className="absolute inset-0 z-20 flex flex-col items-center justify-center overflow-hidden bg-transparent"
+      className="absolute inset-0 z-20 flex flex-col items-center justify-center overflow-hidden bg-transparent px-6 text-center"
     >
       {/* Top + bottom accent rails — kept from the classic variant so the
           overlay still reads as a discrete "round break" beat. Brand green
@@ -113,7 +113,7 @@ function ModernRoundTransitionOverlay({ title, categoryName, subtitle }: RoundTr
           initial={{ y: 12, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 380, damping: 26, delay: 0.05 }}
-          className="font-poppins text-[16px] sm:text-[18px] md:text-[20px] font-bold uppercase tracking-[0.22em] text-brand-yellow mb-4"
+          className="font-poppins max-w-[90vw] text-balance text-[15px] sm:text-[18px] md:text-[20px] font-bold uppercase leading-tight tracking-[0.12em] sm:tracking-[0.22em] text-brand-yellow mb-4"
           style={{ textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}
         >
           {categoryName}

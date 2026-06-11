@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { MatchmakingMapScreen } from "@/components/match/MatchmakingMapScreen";
 import { ShowdownScreen } from "@/components/ShowdownScreen";
 import { RankedCategoryBlockingScreen } from "@/features/play/RankedCategoryBlockingScreen";
@@ -13,12 +15,15 @@ import { getSocket } from "@/lib/realtime/socket-client";
 import { logger } from "@/utils/logger";
 import { useGameStageTransitions } from "@/lib/match/useGameStageTransitions";
 import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
+import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { resolveAvatarUrl } from "@/lib/avatars";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
+import { useLocale } from "@/contexts/LocaleContext";
 import { tierFromRp } from "@/utils/rankedTier";
 import { parseRp } from "@/lib/utils";
 import { TrainingMatchScreen } from "@/features/training/TrainingMatchScreen";
 import { useGameStageState } from "@/features/game/hooks/useGameStageState";
+import { useStoreWallet, getStoreWalletQuery } from "@/lib/queries/store.queries";
 import {
   markExitToPlayPending,
   trackExitToPlayStarted,
@@ -30,6 +35,7 @@ const POSSESSION_TOTAL_QUESTIONS_FALLBACK = 12;
 
 export function GameStageRouter() {
   const router = useRouter();
+  const { t } = useLocale();
   const {
     player,
     authUser,
@@ -66,6 +72,20 @@ export function GameStageRouter() {
     clientTotalCorrect,
     clientTotalQuestions,
   } = useGameStageState();
+
+  // Ranked replay costs a ticket. match:final_results invalidates the wallet
+  // query, so while the refetch is in flight the cached count may be stale —
+  // we gray the button out during that window (without the "no tickets" hint,
+  // since the real count isn't known yet) and the click handler additionally
+  // revalidates against a live fetch before entering matchmaking.
+  const queryClient = useQueryClient();
+  const { data: storeWallet, isFetching: walletFetching } = useStoreWallet();
+  const hasRankedTicket = (storeWallet?.tickets ?? 0) >= 1;
+  const playAgainDisabled = matchType === "ranked" && (walletFetching || !hasRankedTicket);
+  const playAgainHint =
+    matchType === "ranked" && !walletFetching && !hasRankedTicket
+      ? t("modeConfirm.notEnoughTickets")
+      : null;
 
   const returningToLobbyRef = useRef(false);
   const showingFinalResultsFromReplay = stage === "idle" && Boolean(realtimeMatch.finalResults);
@@ -170,6 +190,9 @@ export function GameStageRouter() {
   const realtimeMatchId = realtimeMatch?.matchId;
   const handleQuit = useCallback(() => {
     if (realtimeMatchId) {
+      // Intentional exit: a trailing match:rejoin_available must not
+      // auto-pull the user back into this match.
+      useRealtimeMatchStore.getState().suppressAutoRejoin(realtimeMatchId);
       getSocket().emit("match:leave", { matchId: realtimeMatchId });
       logger.info("Socket emit match:leave", { matchId: realtimeMatchId });
     } else {
@@ -180,6 +203,7 @@ export function GameStageRouter() {
 
   const handleForfeit = useCallback(() => {
     if (realtimeMatchId) {
+      useRealtimeMatchStore.getState().suppressAutoRejoin(realtimeMatchId);
       getSocket().emit("match:forfeit", { matchId: realtimeMatchId });
       logger.info("Socket emit match:forfeit", { matchId: realtimeMatchId });
     } else {
@@ -306,9 +330,9 @@ export function GameStageRouter() {
           playerRankPoints={
             rankedProfile?.placementStatus === 'placed'
               ? (rankedProfile?.rp ?? player.rankPoints)
-              : undefined
+              : 0
           }
-          opponentRankPoints={parseRp(playingOppInfo?.rp)}
+          opponentRankPoints={parseRp(playingOppInfo?.rp) ?? 0}
           onQuit={handleQuit}
           onForfeit={handleForfeit}
         />
@@ -320,7 +344,7 @@ export function GameStageRouter() {
       if (!isPartyQuizMatch && !final) {
         return (
           <LoadingScreen
-            text={matchType === "ranked" ? "Updating rank..." : "Finalizing results..."}
+            text={matchType === "ranked" ? t("possession.updatingRank") : t("possession.finalizingResults")}
           />
         );
       }
@@ -432,8 +456,28 @@ export function GameStageRouter() {
           preMatchRankedProfile={stableRankedProfile}
           preMatchProgression={stableProgression}
           unlockedAchievements={unlockedAchievements}
-          onPlayAgain={() => {
+          playAgainDisabled={playAgainDisabled}
+          playAgainHint={playAgainHint}
+          onPlayAgain={async () => {
             if (matchType === "ranked") {
+              // Revalidate against the live wallet — the cached value can lag
+              // the post-match invalidation refetch (mirrors play/page.tsx).
+              let liveTickets = storeWallet?.tickets ?? 0;
+              try {
+                const fresh = await queryClient.fetchQuery(getStoreWalletQuery());
+                liveTickets = fresh.tickets;
+              } catch {
+                // Network hiccup — fall back to the cached value rather than
+                // hard-blocking; the server still rejects 0-ticket queue joins.
+              }
+              if (liveTickets < 1) {
+                logger.warn("Play Again blocked: no tickets for ranked replay", {
+                  cachedTickets: storeWallet?.tickets ?? null,
+                  liveTickets,
+                });
+                toast.error(t("modeConfirm.notEnoughTickets"));
+                return;
+              }
               resetRealtime();
               clearRankedMatchmaking();
               setStage("matchmaking");
@@ -478,9 +522,9 @@ export function GameStageRouter() {
           username: player.username,
           avatar: playerGameAvatar,
           avatarCustomization: authUser?.avatar_customization ?? player.avatarCustomization,
-          rankPoints: playerRankPoints,
+          rankPoints: playerRankPoints ?? 0,
           level: player.level,
-          tier: playerRankPoints != null ? tierFromRp(playerRankPoints) : undefined,
+          tier: tierFromRp(playerRankPoints ?? 0),
           country: authUser?.country ?? undefined,
           countryCode: authUser?.country ?? undefined,
           favoriteClub: authUser?.favorite_club ?? null,
@@ -490,8 +534,8 @@ export function GameStageRouter() {
           username: oppInfo.username,
           avatar: showdownOpponentAvatar,
           avatarCustomization: oppInfo.avatarCustomization,
-          rankPoints: opponentRankPoints,
-          tier: opponentRankPoints != null ? tierFromRp(opponentRankPoints) : undefined,
+          rankPoints: opponentRankPoints ?? 0,
+          tier: tierFromRp(opponentRankPoints ?? 0),
           country: oppCountry,
           countryCode: oppCountryCode,
           flag: oppInfo.flag,

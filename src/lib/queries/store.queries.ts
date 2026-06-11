@@ -86,6 +86,7 @@ const STORE_WALLET_QUERY_OPTIONS = {
 type CachedWallet = {
   coins: number;
   tickets: number;
+  ticketPurchaseCooldown?: StoreWalletResponse["ticketPurchaseCooldown"];
   updatedAt: number;
 };
 
@@ -106,6 +107,7 @@ function writeCachedWallet(wallet: StoreWalletResponse): void {
   storage.set(STORAGE_KEYS.STORE_WALLET, {
     coins: wallet.coins,
     tickets: wallet.tickets,
+    ticketPurchaseCooldown: wallet.ticketPurchaseCooldown,
     updatedAt: Date.now(),
   } satisfies CachedWallet);
 }
@@ -138,19 +140,38 @@ export const getStoreWalletQuery = () => ({
     writeCachedWallet(wallet);
     return wallet;
   },
-  initialData: readCachedWallet()
-    ? {
-        coins: readCachedWallet()!.coins,
-        tickets: readCachedWallet()!.tickets,
-      }
-    : undefined,
+  initialData: ((): StoreWalletResponse | undefined => {
+    const cached = readCachedWallet();
+    if (!cached) return undefined;
+    return {
+      coins: cached.coins,
+      tickets: cached.tickets,
+      // Normalize instead of `??`: a wallet cached before the economy-v3
+      // deploy has a cooldown object WITHOUT ticketsRemainingInWindow — merge
+      // field-by-field so the declared StoreWalletResponse shape always holds.
+      ticketPurchaseCooldown: {
+        canBuy: cached.ticketPurchaseCooldown?.canBuy ?? true,
+        nextAvailableAt: cached.ticketPurchaseCooldown?.nextAvailableAt ?? null,
+        remainingSeconds:
+          typeof cached.ticketPurchaseCooldown?.remainingSeconds === "number"
+            ? cached.ticketPurchaseCooldown.remainingSeconds
+            : 0,
+        ticketsRemainingInWindow:
+          typeof cached.ticketPurchaseCooldown?.ticketsRemainingInWindow === "number"
+            ? cached.ticketPurchaseCooldown.ticketsRemainingInWindow
+            : cached.ticketPurchaseCooldown?.canBuy === false
+              ? 0
+              : 5,
+      },
+    };
+  })(),
   initialDataUpdatedAt: readCachedWallet()?.updatedAt,
   ...STORE_WALLET_QUERY_OPTIONS,
 });
 
 export function useStoreWallet() {
   const authStatus = useAuthStore((state) => state.status);
-  return useQuery({
+  return useQuery<StoreWalletResponse>({
     ...getStoreWalletQuery(),
     enabled: authStatus === "authenticated",
   });

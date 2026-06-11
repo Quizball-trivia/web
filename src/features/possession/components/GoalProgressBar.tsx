@@ -7,6 +7,11 @@ interface GoalProgressBarProps {
    * Current possession position, 0–100. 50 = midfield (even). 100 = the
    * player's goal threshold. The bar shows the player's progress toward
    * scoring: 0 (even or losing) up to 100 (goal).
+   *
+   * MUST be the TRUE possession value (server clamp 0..100) — never the
+   * 10..90 field-clamped pitch position. The score below is derived as
+   * (position − 50) × 2, so a field-clamped input silently caps the meter at
+   * 80 while the score flight shows the real points (the +90 vs 80 bug).
    */
   position: number;
   /** Layout: vertical (web, alongside the pitch) or horizontal (mobile, under it). */

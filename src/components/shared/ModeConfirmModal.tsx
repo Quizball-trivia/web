@@ -16,8 +16,11 @@
 //   • Black full-width primary CTA: "PLAY FOR <N> TICKET(S)" with
 //     the cost in yellow.
 //   • Footer: "YOU HAVE <N> TICKETS 🎫" small caps, white/80.
+import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { WorldCupRulesButton } from "./WorldCupRulesModal";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +37,7 @@ import { useIsMobile } from "@/hooks/useMobile";
 import { cn } from "@/lib/utils";
 import { ModalCloseButton } from "./ModalCloseButton";
 import { useLocale } from "@/contexts/LocaleContext";
+import { useActiveEventMode } from "@/lib/hooks/useActiveEventMode";
 import type { MessageKey } from "@/lib/i18n/messages";
 
 interface ModeConfirmModalProps {
@@ -96,33 +100,68 @@ export function ModeConfirmModal({
   ticketsRemaining = 0,
 }: ModeConfirmModalProps) {
   const { t } = useLocale();
+  const { isEventMode } = useActiveEventMode();
   const isMobile = useIsMobile();
   const router = useRouter();
+  // Pressed-state feedback: between PLAY and the route change there is
+  // otherwise ZERO acknowledgement (route compile/navigation can take a
+  // moment, especially in dev), which reads as "my tap didn't register" and
+  // invites double-taps. Locked = spinner + no further clicks.
+  const [starting, setStarting] = useState(false);
+
+  // Re-arm whenever the modal opens fresh (also covers a failed navigation
+  // bringing the user back with the modal still mounted). Render-phase state
+  // adjustment (React's recommended pattern) — an effect would be flagged for
+  // cascading renders.
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  if (prevIsOpen !== isOpen) {
+    setPrevIsOpen(isOpen);
+    if (isOpen) setStarting(false);
+  }
+
+  // Failsafe: if a start path fails WITHOUT navigating (e.g. question fetch
+  // toast on solo), don't leave the button spinning forever — re-arm so the
+  // user can retry. Navigation success unmounts this component anyway.
+  useEffect(() => {
+    if (!starting) return;
+    const timer = setTimeout(() => setStarting(false), 8000);
+    return () => clearTimeout(timer);
+  }, [starting]);
+
+  const [wcDaysLeft] = useState(() =>
+    Math.max(0, Math.ceil((new Date("2026-07-19T23:59:59Z").getTime() - Date.now()) / 86_400_000))
+  );
 
   if (!mode) return null;
 
   const config = CONFIG[mode];
   const hasTickets = ticketsRemaining >= config.entryCost;
   const needsTickets = config.entryCost > 0 && !hasTickets;
-  const titleRest = t(config.titleRestKey);
   const description = t(config.descriptionKey);
+  const isRanked = mode === "ranked";
+  const titleRest =
+    isEventMode && isRanked ? t("modeConfirm.rankedTitleRestEvent") : t(config.titleRestKey);
   const handlePrimaryClick = () => {
+    if (starting) return;
     if (needsTickets) {
       onOpenChange(false);
       router.push("/store");
       return;
     }
 
+    setStarting(true);
     onConfirm();
   };
 
   const Body = (
     <div className="relative font-fun">
-      {/* Title — centered, max-width keeps it from running into the
-          close button on narrow viewports. The natural break after
-          "RANKED" produces the Figma's two-line composition. */}
+      {/* Title — centered. The max-width must clear the 48px close button
+          anchored top-right (24px inset): reserve ~56px per side so the first
+          line wraps BEFORE sliding under the X (long locales like KA hit this;
+          88% was not enough). Symmetric so the text stays visually centered;
+          the natural break still produces the Figma's two-line composition. */}
       <h2
-        className="font-poppins mx-auto max-w-[88%] text-center uppercase text-white leading-[0.95]"
+        className="font-poppins mx-auto max-w-[calc(100%-112px)] text-center uppercase text-white leading-[0.95]"
         style={{ fontSize: "clamp(26px, 6.2vw, 46px)" }}
       >
         <span className="text-brand-yellow">{t(config.titlePrefixKey)}</span>{" "}
@@ -134,18 +173,31 @@ export function ModeConfirmModal({
         {description}
       </p>
 
-      {/* Trophy section. Mobile gets the Figma's 3-pill composition
-          (top-left entry-cost, mid-right duration, bottom-left question
-          count). Desktop keeps the original 2-pill layout. */}
+      {isEventMode && isRanked && (
+        <>
+          {/* Event countdown (prominent) + leaderboard link + rules */}
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+            <span className="rounded-full bg-white/10 px-3.5 py-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wide text-white/70">
+              {t('play.eventDaysLeft', { count: wcDaysLeft })}
+            </span>
+            <Link
+              href="/leaderboard"
+              onClick={() => onOpenChange(false)}
+              className="text-[11px] sm:text-xs font-bold uppercase tracking-wide text-brand-yellow underline underline-offset-2 hover:text-brand-yellow/80"
+            >
+              {t('play.eventViewLeaderboard')} →
+            </Link>
+            <WorldCupRulesButton variant="text" />
+          </div>
+        </>
+      )}
+
+      {/* Trophy section */}
       <div
         className={cn(
           "relative mx-auto h-40 w-full sm:h-48 md:h-60",
-          // Ranked: let the trophy box overlap the button below so the yellow
-          // arms tuck behind it and read as "coming out of" the button. The
-          // button sits on z-20, the trophy on z-0, so the button covers the
-          // arm-ends. Other modes keep the original symmetric margins.
-          mode === "ranked"
-            ? "mt-5 -mb-2 sm:mt-6 sm:-mb-3 md:mt-8 md:-mb-4"
+          isRanked
+            ? "mt-4 -mb-2 sm:mt-5 sm:-mb-3 md:mt-6 md:-mb-4"
             : "my-5 sm:my-6 md:my-8",
         )}
       >
@@ -157,80 +209,85 @@ export function ModeConfirmModal({
           sizes="(min-width: 768px) 320px, 60vw"
           className={cn(
             "z-0 object-contain",
-            mode === "ranked" && "translate-y-4 scale-90 sm:translate-y-5 sm:scale-95 md:translate-y-6",
+            isRanked && "translate-y-4 scale-90 sm:translate-y-5 sm:scale-95 md:translate-y-6",
           )}
         />
 
-        {/* Mobile-only: top-left "PLAY FOR N TICKETS" pill from Figma */}
-        {isMobile && config.entryCost > 0 && (
-          <div
-            className={cn(
-              "absolute left-0 top-[6%]",
-              "rounded-full px-4 py-2 text-xs font-black uppercase whitespace-nowrap",
-              "bg-brand-yellow text-black shadow-sm",
-            )}
-          >
-            {t(
-              config.entryCost === 1 ? "modeConfirm.playForTicket" : "modeConfirm.playForTickets",
-              { count: config.entryCost },
-            )}
-          </div>
+        {/* Stat pills — only for non-ranked modes */}
+        {!isRanked && (
+          <>
+            <div
+              className={cn(
+                "absolute right-0 rounded-full px-4 py-2 text-xs font-black uppercase whitespace-nowrap",
+                "z-10 bg-brand-yellow text-black shadow-sm md:text-sm",
+                isMobile ? "top-[42%]" : "top-[28%]",
+              )}
+            >
+              {t(config.statRightKey)}
+            </div>
+            <div
+              className={cn(
+                "absolute left-0 rounded-full px-4 py-2 text-xs font-black uppercase whitespace-nowrap",
+                "z-10 bg-brand-yellow text-black shadow-sm md:text-sm",
+                isMobile ? "bottom-[10%]" : "top-1/2 -translate-y-1/2",
+              )}
+            >
+              {t(config.statLeftKey)}
+            </div>
+          </>
         )}
-
-        {/* Mid-right pill (e.g. "DURATION 5 MIN") — slightly higher than
-            centre on desktop to match the original composition. */}
-        <div
-          className={cn(
-            "absolute right-0 rounded-full px-4 py-2 text-xs font-black uppercase whitespace-nowrap",
-            "z-10 bg-brand-yellow text-black shadow-sm md:text-sm",
-            isMobile ? "top-[42%]" : "top-[28%]",
-          )}
-        >
-          {t(config.statRightKey)}
-        </div>
-
-        {/* Left pill (e.g. "12-18 QUESTIONS"). Mobile pushes to the
-            bottom-left to mirror Figma; desktop keeps it vertically
-            centred next to the trophy. */}
-        <div
-          className={cn(
-            "absolute left-0 rounded-full px-4 py-2 text-xs font-black uppercase whitespace-nowrap",
-            "z-10 bg-brand-yellow text-black shadow-sm md:text-sm",
-            isMobile ? "bottom-[10%]" : "top-1/2 -translate-y-1/2",
-          )}
-        >
-          {t(config.statLeftKey)}
-        </div>
       </div>
 
-      {/* Primary CTA. Mobile = clean "PLAY" (cost shown in the top-left
-          pill); desktop keeps the original "PLAY FOR N TICKETS" wording. */}
-      <button
-        type="button"
-        onClick={handlePrimaryClick}
-        className={cn(
-          "w-full h-14 rounded-2xl text-base font-black uppercase tracking-wide transition-all sm:h-16 sm:text-lg md:h-[72px] md:text-xl",
-          "relative z-20",
-          needsTickets
-            ? "bg-brand-yellow text-black hover:bg-brand-yellow/90 active:translate-y-[2px]"
-            : hasTickets
-            ? "bg-black text-white hover:bg-black/90 active:translate-y-[2px]"
-            : "bg-black/60 text-white/50 cursor-not-allowed",
+      {/* Primary CTA */}
+      <div className="relative">
+        <button
+          type="button"
+          onClick={handlePrimaryClick}
+          disabled={starting}
+          className={cn(
+            "w-full h-14 rounded-2xl text-base font-black uppercase tracking-wide transition-all sm:h-16 sm:text-lg md:h-[72px] md:text-xl",
+            "relative z-20",
+            needsTickets
+              ? "bg-brand-yellow text-black hover:bg-brand-yellow/90 active:translate-y-[2px]"
+              : hasTickets
+              ? cn("bg-black text-white hover:bg-black/90 active:translate-y-[2px]", isEventMode && "border-2 border-brand-yellow/30")
+              : "bg-black/60 text-white/50 cursor-not-allowed",
+            starting && "opacity-80 cursor-wait",
+          )}
+        >
+          {starting ? (
+            <span className="inline-flex items-center justify-center gap-2.5">
+              <span
+                aria-hidden
+                className="size-5 animate-spin rounded-full border-[3px] border-white/30 border-t-white"
+              />
+              {t("common.play")}
+            </span>
+          ) : needsTickets ? (
+            t("modeConfirm.buyTickets")
+          ) : config.entryCost === 0 ? (
+            t("common.play")
+          ) : (
+            <span>
+              {t(
+                config.entryCost === 1 ? "modeConfirm.playForTicket" : "modeConfirm.playForTickets",
+                { count: config.entryCost },
+              )}
+            </span>
+          )}
+        </button>
+
+        {/* Betsson sticker — event + ranked only */}
+        {isEventMode && isRanked && (
+          <div
+            className="absolute -bottom-3 -right-3 z-30 flex flex-col items-start rounded-md px-2 py-1"
+            style={{ backgroundColor: '#FF6C0A', border: '2px solid #000', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}
+          >
+            <span className="text-[6px] font-bold uppercase tracking-wider text-white/80 leading-none">{t('welcome.poweredBy')}</span>
+            <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={80} height={16} className="h-3.5 w-auto object-contain mt-0.5" />
+          </div>
         )}
-      >
-        {needsTickets ? (
-          t("modeConfirm.buyTickets")
-        ) : isMobile || config.entryCost === 0 ? (
-          t("common.play")
-        ) : (
-          <span className="[&_strong]:font-inherit [&_strong]:text-brand-yellow">
-            {t(
-              config.entryCost === 1 ? "modeConfirm.playForTicket" : "modeConfirm.playForTickets",
-              { count: config.entryCost },
-            )}
-          </span>
-        )}
-      </button>
+      </div>
 
       {/* Tickets footer */}
       {config.entryCost > 0 && (
