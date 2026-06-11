@@ -30,7 +30,10 @@ import { WelcomeWorldCupBanner } from './WelcomeWorldCupBanner';
 import { useActiveEventMode } from '@/lib/hooks/useActiveEventMode';
 
 export function WelcomeScreen() {
-  const { isEventMode } = useActiveEventMode();
+  // Landing shows the Betsson/World Cup layer to EVERYONE while the event flag
+  // is on — no region gating here. In-game surfaces (leaderboard, play, modals)
+  // keep the region-gated `isEventMode`.
+  const { eventEnabled } = useActiveEventMode();
   const auth = useWelcomeAuthController();
   const {
     loginOpen,
@@ -142,7 +145,7 @@ export function WelcomeScreen() {
       {/* ─── World Cup Event Zone ─── */}
       <div className="relative max-w-7xl mx-auto w-full px-2 md:px-4 pt-8 pb-4">
         {/* World Cup banner — Betsson/World Cup event only */}
-        {isEventMode && (
+        {eventEnabled && (
           <div className="pb-10">
             <WelcomeWorldCupBanner />
           </div>
