@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { getSupabaseClient } from '@/lib/auth/supabase';
+import { nudgeSocketReconnectAfterTokenRefresh } from '@/lib/realtime/socket-client';
 import { useAuthStore } from '@/stores/auth.store';
 
 export function AuthSessionBridge() {
@@ -16,6 +17,11 @@ export function AuthSessionBridge() {
 
       const authState = useAuthStore.getState();
       if (event === 'TOKEN_REFRESHED' && authState.status === 'authenticated' && authState.user) {
+        // If the refresh landed while the realtime socket was down (e.g. the
+        // hourly token-expiry disconnect), kick a reconnect now that a fresh
+        // token exists — otherwise the manager can idle in backoff while the
+        // player stares at a frozen match. No-op when connected/reconnecting.
+        nudgeSocketReconnectAfterTokenRefresh();
         return;
       }
 
