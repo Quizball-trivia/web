@@ -340,8 +340,7 @@ export function StoreScreen() {
       const productName = product?.name?.en ?? product?.slug ?? productSlug;
       trackItemPurchased(productSlug, productName, product?.priceCents ?? 0, 'coins');
       toast.success(t("store.purchaseCompleted"));
-      void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
+      // wallet/inventory refresh handled by onSettled below (runs on both paths)
     },
     onError: (error) => {
       if (error instanceof ApiError && error.status === 401) {
@@ -379,6 +378,13 @@ export function StoreScreen() {
         return;
       }
       toast.error(t("store.purchaseFailed"));
+    },
+    // Re-sync wallet + inventory after EVERY attempt — success or failure — so a
+    // failed purchase never leaves a stale ticket/coin count on screen (which
+    // previously made a rejected buy look like it "worked" after a manual reload).
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
     },
   });
 
