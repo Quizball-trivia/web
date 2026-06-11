@@ -83,7 +83,11 @@ export function usePossessionAnimationOrchestrator({
   const localQuestionIndex = localQuestion?.qIndex ?? null;
   const effectiveSeat = toSeat(mySeat);
   const possessionDiff = possessionState?.possessionDiff ?? 0;
-  const initialPossessionPct = computeMyPossessionPct(possessionDiff, effectiveSeat, 0, 'field');
+  // The orchestrator's position pipeline carries the TRUE possession value
+  // (server clamp, 0..100). The 10..90 field clamp is applied at render time
+  // inside PitchVisualization only — clamping here capped the goal progress
+  // meter's derived score at 80 while the score flight showed the real +90.
+  const initialPossessionPct = computeMyPossessionPct(possessionDiff, effectiveSeat);
 
   const [delayedIsShooter, setDelayedIsShooter] = useState(false);
   const [optimisticOffset, setOptimisticOffset] = useState(0);
@@ -106,11 +110,11 @@ export function usePossessionAnimationOrchestrator({
 
   const isShooter = mySeat !== null && mySeat !== undefined && shooterSeat === mySeat;
   const serverMyPossessionPct = computeMyPossessionPct(possessionDiff, effectiveSeat);
+  // Server clamp (0..100), NOT the 10..90 field clamp — see initialPossessionPct.
   const immediateMyPossessionPct = computeMyPossessionPct(
     possessionDiff,
     effectiveSeat,
-    optimisticOffset,
-    'field'
+    optimisticOffset
   );
 
   useLayoutEffect(() => {

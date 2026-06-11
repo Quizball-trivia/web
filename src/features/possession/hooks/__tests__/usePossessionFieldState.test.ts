@@ -197,6 +197,33 @@ describe('usePossessionFieldState', () => {
     expect(result.current.visualMyPossessionPct).toBe(50);
   });
 
+  it('carries the TRUE possession value beyond the field clamp (flight 90 vs bar 80 bug)', () => {
+    // possessionDiff +90 => true position 95. The old pipeline field-clamped
+    // this to 90 at the SOURCE, so the goal progress meter derived
+    // (90-50)*2 = 80 while the score flight showed the real +90. The pitch
+    // now clamps at render time instead; the data stays truthful.
+    const { result } = renderHook(() => usePossessionFieldState({
+      ...matchFieldParams(makeMatch(90, { normalQuestionsAnsweredInHalf: 0, phaseRound: 1 })),
+      localQuestion: makeQuestion(0),
+      roundResult: null,
+      questionPhase: 'playing',
+      roundResolved: false,
+      answerAck: null,
+      opponentAnsweredCorrectly: null,
+      myRound: null,
+      opponentRound: null,
+      devPossessionAnimation: null,
+      clearDevPossessionAnimation: vi.fn(),
+      playerAvatar: '/me.png',
+      opponentAvatar: '/opp.png',
+      playerUsername: 'me',
+      opponentUsername: 'opp',
+      isHalftime: false,
+    }));
+
+    expect(result.current.visualMyPossessionPct).toBe(95);
+  });
+
   it('resets the field to center when the second half starts', async () => {
     const { result, rerender } = renderHook((props: { match: MatchStatus }) => usePossessionFieldState({
       ...matchFieldParams(props.match),
