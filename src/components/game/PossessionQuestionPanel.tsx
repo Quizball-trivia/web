@@ -6,6 +6,7 @@ import { Volume2, VolumeX, X } from 'lucide-react';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import type { AnswerStateArray, Phase } from '@/lib/types/game.types';
 import { ArenaScoreSplash } from '@/components/game/ArenaScoreSplash';
+import { FitText } from '@/components/game/FitText';
 import { QuestionImageCard } from '@/components/game/QuestionImageCard';
 import { MatchHudIconButton } from '@/features/possession/components/MatchHudPrimitives';
 import { MAX_PENALTY_ROUNDS } from '@/features/possession/types/possession.types';
@@ -435,9 +436,6 @@ export function PossessionQuestionPanel({
               }`}
               style={{
                 ...poppins,
-                fontSize: hasQuestionImage
-                  ? 'clamp(11px, 1.4vw, 20px)'
-                  : 'clamp(12px, 1.7vw, 26px)',
                 textTransform: 'uppercase',
                 color: isWrongPick ? '#FB3101' : '#FFFFFF',
                 backgroundColor: isWinningAnswer ? '#38B60E' : 'transparent',
@@ -499,19 +497,18 @@ export function PossessionQuestionPanel({
               )}
 
               <motion.span
-                className="relative z-[1] w-full px-1 text-center leading-tight [overflow-wrap:anywhere]"
-                style={{
-                  display: '-webkit-box',
-                  WebkitLineClamp: 3,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                }}
+                className="relative z-[1] flex h-full w-full items-center justify-center overflow-hidden px-1 py-1"
                 initial={false}
                 animate={{ opacity: showOptions ? 1 : 0, y: showOptions ? 0 : 6 }}
                 transition={{ duration: 0.25, delay: showOptions ? i * 0.08 : 0, ease: 'easeOut' }}
-                title={opt}
               >
-                {opt}
+                <FitText
+                  className="text-center leading-tight [overflow-wrap:anywhere]"
+                  maxFontSize={hasQuestionImage ? 20 : 26}
+                  minFontSize={hasQuestionImage ? 9 : 10}
+                >
+                  {opt}
+                </FitText>
               </motion.span>
             </motion.button>
           );
