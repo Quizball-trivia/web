@@ -192,6 +192,7 @@
     "sessionExpired": "Session expired. Please sign in again.",
     "ticketsAlreadyFull": "Tickets are already full.",
     "ticketLimitReached": "Limit reached",
+    "ticketUnlocksIn": "Unlocks in {time}",
     "ticketPurchaseLimit": "You've hit the daily ticket purchase limit (5 tickets per day).",
     "ticketPurchaseLimitIn": "Daily ticket limit reached. Next purchase in {time}.",
     "ticketDailyAllowanceLeft": "Only {count} more ticket(s) available to buy today.",

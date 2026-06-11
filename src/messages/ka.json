@@ -88,6 +88,7 @@
     "sessionExpired": "სესია ამოიწურა. გთხოვთ, ხელახლა გაიაროთ ავტორიზაცია.",
     "ticketsAlreadyFull": "ბილეთების რაოდენობა უკვე მაქსიმალურია.",
     "ticketLimitReached": "ლიმიტი ამოიწურა",
+    "ticketUnlocksIn": "გაიხსნება {time}-ში",
     "ticketPurchaseLimit": "დღიური ბილეთის შეძენის ლიმიტი ამოიწურა (დღეში 5 ბილეთი).",
     "ticketPurchaseLimitIn": "დღიური ბილეთის ლიმიტი ამოიწურა. შემდეგი შესყიდვა {time}-ში.",
     "ticketDailyAllowanceLeft": "დღეს კიდევ მხოლოდ {count} ბილეთის ყიდვა შეგიძლია.",
