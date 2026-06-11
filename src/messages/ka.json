@@ -795,8 +795,8 @@
     "rankedMatchEvent": "მსოფლიო თასის რეიტინგი",
     "rankedSubtitle": "1V1 ონლაინ",
     "eventWinPrizes": "მოიგე პრიზები",
-    "eventDaysLeft": "დარჩა {count} დღე",
-    "eventDaysLeftShort": "{count}დ",
+    "eventDaysLeft": "ივენთი მთავრდება {count} დღეში",
+    "eventDaysLeftShort": "მთავრდება {count}დ-ში",
     "eventPlayWorldCup": "ითამაშე მსოფლიო თასი და მოიგე პრიზები",
     "eventViewLeaderboard": "ლიდერბორდის ნახვა",
     "eventRules": "წესები",
@@ -835,7 +835,8 @@
     "colPlayer": "მოთამაშე",
     "colTier": "ლიგა",
     "colRP": "RP",
-    "resetsIn": "განახლდება"
+    "resetsIn": "განახლდება",
+    "wcSeasonEnds": "მსოფლიო თასის სეზონი მთავრდება {count} დღეში"
   },
   "appAuthGate": {
     "warmingUp": "გახურება...",

@@ -579,8 +579,8 @@
     "rankedMatchEvent": "World Cup Ranked",
     "rankedSubtitle": "1v1 Competitive",
     "eventWinPrizes": "Win Prizes",
-    "eventDaysLeft": "{count} days left",
-    "eventDaysLeftShort": "{count}d left",
+    "eventDaysLeft": "Event ends in {count} days",
+    "eventDaysLeftShort": "Ends in {count}d",
     "eventPlayWorldCup": "Play World Cup & Win Prizes",
     "eventViewLeaderboard": "View Leaderboard",
     "eventRules": "Rules",
@@ -619,7 +619,8 @@
     "colPlayer": "Player",
     "colTier": "Tier",
     "colRP": "RP",
-    "resetsIn": "Resets in"
+    "resetsIn": "Resets in",
+    "wcSeasonEnds": "World Cup season ends in {count} days"
   },
   "welcome": {
     "untilKickoff": "until kickoff",

@@ -51,8 +51,8 @@ export function WorldCupRulesButton({ variant = 'pill', className }: WorldCupRul
           <ModalCloseButton onClose={() => setOpen(false)} className="!static" />
         </div>
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-center gap-2 text-xl sm:text-2xl font-black text-white text-center">
-            <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={28} height={28} className="h-6 w-auto object-contain" />
+          <DialogTitle className="flex items-center justify-center gap-2 text-xl sm:text-2xl font-black text-white text-center pr-10">
+            <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={28} height={28} className="h-6 w-auto shrink-0 object-contain" />
             {t('welcome.wcPromoRulesTitle')}
           </DialogTitle>
           <DialogDescription className="sr-only">World Cup event rules and prizes</DialogDescription>

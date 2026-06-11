@@ -238,8 +238,8 @@ export function ModeSelectionScreen({
                     <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={14} height={14} className="h-3.5 w-auto object-contain" />
                     {t('play.eventWinPrizes')}
                   </span>
-                  <span className="rounded-full bg-brand-orange px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white animate-pulse">
-                    🔥 {t('play.eventDaysLeft', { count: wcDaysLeft })}
+                  <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white/70">
+                    {t('play.eventDaysLeft', { count: wcDaysLeft })}
                   </span>
                 </div>
               )}
@@ -308,8 +308,8 @@ export function ModeSelectionScreen({
                       <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={12} height={12} className="h-3 w-auto object-contain" />
                       {t('play.eventWinPrizes')}
                     </span>
-                    <span className="rounded-full bg-brand-orange px-2 py-0.5 text-[8px] font-black uppercase tracking-wide text-white animate-pulse">
-                      🔥 {t('play.eventDaysLeftShort', { count: wcDaysLeft })}
+                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white/70">
+                      {t('play.eventDaysLeftShort', { count: wcDaysLeft })}
                     </span>
                   </div>
                 )}

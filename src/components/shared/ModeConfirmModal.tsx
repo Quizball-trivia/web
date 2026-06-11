@@ -177,8 +177,8 @@ export function ModeConfirmModal({
         <>
           {/* Event countdown (prominent) + leaderboard link + rules */}
           <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-            <span className="rounded-full bg-brand-orange px-3.5 py-1.5 text-[11px] sm:text-xs font-black uppercase tracking-wide text-white animate-pulse">
-              ⏱ {t('play.eventDaysLeft', { count: wcDaysLeft })}
+            <span className="rounded-full bg-white/10 px-3.5 py-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wide text-white/70">
+              {t('play.eventDaysLeft', { count: wcDaysLeft })}
             </span>
             <Link
               href="/leaderboard"
@@ -239,42 +239,55 @@ export function ModeConfirmModal({
       </div>
 
       {/* Primary CTA */}
-      <button
-        type="button"
-        onClick={handlePrimaryClick}
-        disabled={starting}
-        className={cn(
-          "w-full h-14 rounded-2xl text-base font-black uppercase tracking-wide transition-all sm:h-16 sm:text-lg md:h-[72px] md:text-xl",
-          "relative z-20",
-          needsTickets
-            ? "bg-brand-yellow text-black hover:bg-brand-yellow/90 active:translate-y-[2px]"
-            : hasTickets
-            ? cn("bg-black text-white hover:bg-black/90 active:translate-y-[2px]", isEventMode && "border-2 border-brand-yellow/30")
-            : "bg-black/60 text-white/50 cursor-not-allowed",
-          starting && "opacity-80 cursor-wait",
+      <div className="relative">
+        <button
+          type="button"
+          onClick={handlePrimaryClick}
+          disabled={starting}
+          className={cn(
+            "w-full h-14 rounded-2xl text-base font-black uppercase tracking-wide transition-all sm:h-16 sm:text-lg md:h-[72px] md:text-xl",
+            "relative z-20",
+            needsTickets
+              ? "bg-brand-yellow text-black hover:bg-brand-yellow/90 active:translate-y-[2px]"
+              : hasTickets
+              ? cn("bg-black text-white hover:bg-black/90 active:translate-y-[2px]", isEventMode && "border-2 border-brand-yellow/30")
+              : "bg-black/60 text-white/50 cursor-not-allowed",
+            starting && "opacity-80 cursor-wait",
+          )}
+        >
+          {starting ? (
+            <span className="inline-flex items-center justify-center gap-2.5">
+              <span
+                aria-hidden
+                className="size-5 animate-spin rounded-full border-[3px] border-white/30 border-t-white"
+              />
+              {t("common.play")}
+            </span>
+          ) : needsTickets ? (
+            t("modeConfirm.buyTickets")
+          ) : config.entryCost === 0 ? (
+            t("common.play")
+          ) : (
+            <span>
+              {t(
+                config.entryCost === 1 ? "modeConfirm.playForTicket" : "modeConfirm.playForTickets",
+                { count: config.entryCost },
+              )}
+            </span>
+          )}
+        </button>
+
+        {/* Betsson sticker — event + ranked only */}
+        {isEventMode && isRanked && (
+          <div
+            className="absolute -bottom-3 -right-3 z-30 flex flex-col items-start rounded-md px-2 py-1"
+            style={{ backgroundColor: '#FF6C0A', border: '2px solid #000', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}
+          >
+            <span className="text-[6px] font-bold uppercase tracking-wider text-white/80 leading-none">{t('welcome.poweredBy')}</span>
+            <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={80} height={16} className="h-3.5 w-auto object-contain mt-0.5" />
+          </div>
         )}
-      >
-        {starting ? (
-          <span className="inline-flex items-center justify-center gap-2.5">
-            <span
-              aria-hidden
-              className="size-5 animate-spin rounded-full border-[3px] border-white/30 border-t-white"
-            />
-            {t("common.play")}
-          </span>
-        ) : needsTickets ? (
-          t("modeConfirm.buyTickets")
-        ) : config.entryCost === 0 ? (
-          t("common.play")
-        ) : (
-          <span>
-            {t(
-              config.entryCost === 1 ? "modeConfirm.playForTicket" : "modeConfirm.playForTickets",
-              { count: config.entryCost },
-            )}
-          </span>
-        )}
-      </button>
+      </div>
 
       {/* Tickets footer */}
       {config.entryCost > 0 && (

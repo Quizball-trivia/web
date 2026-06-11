@@ -69,6 +69,18 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
 
               return (
                 <div key={entry.id} className="relative">
+                  {/* Gift icon on the left border — event only */}
+                  {isEventMode && entry.rank <= 25 && (
+                    <div className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full bg-surface-page size-7 sm:size-8">
+                      <Image
+                        src={isTopThree ? "/assets/world-cup-promotion/gift-filled.svg" : "/assets/world-cup-promotion/gift.svg"}
+                        alt=""
+                        width={24}
+                        height={24}
+                        className={cn("size-5 sm:size-6", !isTopThree && "opacity-50")}
+                      />
+                    </div>
+                  )}
                   {/* Row content */}
                   <div
                     onClick={interactive ? () => onEntryClick(entry.id) : undefined}
@@ -95,7 +107,7 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
                     )}
                     style={isEventMode && isFirst ? { backgroundColor: '#FF6C0A' } : undefined}
                   >
-                    {/* Rank (+ prize image + event gift, stacked under the rank) */}
+                    {/* Rank (+ prize image) */}
                     <div className="col-span-3 flex items-center justify-center gap-1.5 sm:gap-2">
                       {prize && (
                         <Image
@@ -106,23 +118,12 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick }: Leade
                           className="h-9 sm:h-12 w-auto object-contain shrink-0"
                         />
                       )}
-                      <div className="flex flex-col items-center gap-1">
-                        <span
-                          className="text-xl sm:text-2xl tabular-nums font-black text-white"
-                          style={poppins}
-                        >
-                          #{entry.rank}
-                        </span>
-                        {isEventMode && entry.rank <= 25 && (
-                          <Image
-                            src={isTopThree ? "/assets/world-cup-promotion/gift-filled.svg" : "/assets/world-cup-promotion/gift.svg"}
-                            alt=""
-                            width={24}
-                            height={24}
-                            className={cn("size-5 sm:size-6", !isTopThree && "opacity-50")}
-                          />
-                        )}
-                      </div>
+                      <span
+                        className="text-xl sm:text-2xl tabular-nums font-black text-white"
+                        style={poppins}
+                      >
+                        #{entry.rank}
+                      </span>
                     </div>
 
                     {/* Player */}

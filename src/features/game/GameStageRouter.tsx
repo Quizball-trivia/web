@@ -330,9 +330,9 @@ export function GameStageRouter() {
           playerRankPoints={
             rankedProfile?.placementStatus === 'placed'
               ? (rankedProfile?.rp ?? player.rankPoints)
-              : undefined
+              : 0
           }
-          opponentRankPoints={parseRp(playingOppInfo?.rp)}
+          opponentRankPoints={parseRp(playingOppInfo?.rp) ?? 0}
           onQuit={handleQuit}
           onForfeit={handleForfeit}
         />
@@ -522,9 +522,9 @@ export function GameStageRouter() {
           username: player.username,
           avatar: playerGameAvatar,
           avatarCustomization: authUser?.avatar_customization ?? player.avatarCustomization,
-          rankPoints: playerRankPoints,
+          rankPoints: playerRankPoints ?? 0,
           level: player.level,
-          tier: playerRankPoints != null ? tierFromRp(playerRankPoints) : undefined,
+          tier: tierFromRp(playerRankPoints ?? 0),
           country: authUser?.country ?? undefined,
           countryCode: authUser?.country ?? undefined,
           favoriteClub: authUser?.favorite_club ?? null,
@@ -534,8 +534,8 @@ export function GameStageRouter() {
           username: oppInfo.username,
           avatar: showdownOpponentAvatar,
           avatarCustomization: oppInfo.avatarCustomization,
-          rankPoints: opponentRankPoints,
-          tier: opponentRankPoints != null ? tierFromRp(opponentRankPoints) : undefined,
+          rankPoints: opponentRankPoints ?? 0,
+          tier: tierFromRp(opponentRankPoints ?? 0),
           country: oppCountry,
           countryCode: oppCountryCode,
           flag: oppInfo.flag,

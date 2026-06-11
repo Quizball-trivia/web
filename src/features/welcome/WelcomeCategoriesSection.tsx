@@ -162,7 +162,7 @@ export function WelcomeCategoriesSection({
         </motion.div>
 
         {/* 3-per-row grid, bigger cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+        <div className="grid grid-cols-3 gap-2.5 md:gap-5">
           {showcase.map((cat, i) => {
             const style = getCategoryStyle(cat.slug, cat.name, i);
             const IconComponent = style.icon;
@@ -175,7 +175,7 @@ export function WelcomeCategoriesSection({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.04 }}
-                className="group relative min-h-[160px] md:min-h-[190px] cursor-pointer overflow-hidden rounded-2xl border border-white/10 p-5 md:p-6 transition-all duration-200 hover:scale-[1.03] hover:-translate-y-1 hover:brightness-110 hover:border-brand-yellow/30 hover:shadow-[0_8px_40px_rgba(212,175,55,0.15)]"
+                className="group relative aspect-[3/4] md:min-h-[190px] cursor-pointer overflow-hidden rounded-2xl border border-white/10 p-3 md:p-6 transition-all duration-200 hover:scale-[1.03] hover:-translate-y-1 hover:brightness-110 hover:border-brand-yellow/30 hover:shadow-[0_8px_40px_rgba(212,175,55,0.15)]"
                 style={{ backgroundColor: style.color }}
                 onClick={onCategorySelect}
               >
