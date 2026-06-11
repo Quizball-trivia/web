@@ -18,8 +18,15 @@ export function WelcomeNavbar({ wcDaysLeft }: WelcomeNavbarProps) {
       {/* Mobile: three slots so the switcher is centered between logo and cup.
           Desktop (md+): switcher rejoins the right cluster next to the trophy,
           like the original layout. */}
-      <div className={eventEnabled ? "flex flex-1 items-center gap-3 md:gap-5 justify-start md:flex-none" : "flex flex-1 justify-start md:flex-none"}>
-        <AppLogo size="md" className="!justify-start" />
+      <div className={eventEnabled ? "flex flex-1 items-center gap-2 md:gap-5 justify-start md:flex-none min-w-0" : "flex flex-1 justify-start md:flex-none"}>
+        {eventEnabled ? (
+          <>
+            <AppLogo size="sm" className="!justify-start shrink-0 md:!hidden" />
+            <AppLogo size="md" className="!justify-start shrink-0 !hidden md:!flex" />
+          </>
+        ) : (
+          <AppLogo size="md" className="!justify-start" />
+        )}
         {eventEnabled && (
           <>
             <div className="h-8 md:h-10 w-px bg-white/20 shrink-0" />
@@ -32,7 +39,7 @@ export function WelcomeNavbar({ wcDaysLeft }: WelcomeNavbarProps) {
                 alt="Betsson Sport"
                 width={200}
                 height={26}
-                className="h-5 md:h-6 w-auto object-contain"
+                className="h-4 md:h-6 w-auto max-w-[100px] md:max-w-none object-contain"
               />
             </div>
           </>

@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { motion } from 'motion/react';
 
-import { AvatarPreview } from '@/components/AvatarPreview';
 import { MatchCountdownPuck } from '@/components/shared/MatchCountdownPuck';
 import { RankFrameCard } from '@/features/profile/components/RankFrameCard';
 import { cn } from '@/lib/utils';
@@ -136,7 +135,7 @@ function KickoffPlayerCard({
 }) {
   const isOpponent = align === 'right';
   const tierLabelOf = useTierLabel();
-  const tier = rankPoints != null ? tierFromRp(rankPoints) : null;
+  const tier = tierFromRp(rankPoints ?? 0);
 
   return (
     <motion.div
@@ -152,41 +151,17 @@ function KickoffPlayerCard({
         initial={{ scale: 0.82 }}
         animate={{ scale: 1 }}
         transition={{ delay: 0.12, type: 'spring', stiffness: 200 }}
-        className={cn(
-          'relative mt-2',
-          !tier &&
-            'flex aspect-[5/6] w-[112px] items-end justify-center overflow-hidden rounded-[16px] bg-brand-blue sm:w-[200px] sm:rounded-[20px] md:w-[240px]',
-        )}
+        className="relative mt-2"
       >
-        {tier ? (
-          <RankFrameCard
-            tier={tier}
-            tierLabel={tierLabelOf(tier)}
-            rpLabel={`${rankPoints}RP`}
-            customization={avatarCustomization}
-            mirrored={isOpponent}
-            sizes="(min-width: 768px) 240px, (min-width: 640px) 200px, 112px"
-            className="w-[112px] sm:w-[200px] md:w-[240px]"
-          />
-        ) : (
-          <>
-            <AvatarPreview
-              customization={avatarCustomization}
-              width={96}
-              className={cn('translate-y-3 sm:hidden', isOpponent && '-scale-x-100')}
-            />
-            <AvatarPreview
-              customization={avatarCustomization}
-              width={170}
-              className={cn('hidden translate-y-5 sm:block md:hidden', isOpponent && '-scale-x-100')}
-            />
-            <AvatarPreview
-              customization={avatarCustomization}
-              width={210}
-              className={cn('hidden translate-y-7 md:block', isOpponent && '-scale-x-100')}
-            />
-          </>
-        )}
+        <RankFrameCard
+          tier={tier}
+          tierLabel={tierLabelOf(tier)}
+          rpLabel={`${rankPoints ?? 0}RP`}
+          customization={avatarCustomization}
+          mirrored={isOpponent}
+          sizes="(min-width: 768px) 240px, (min-width: 640px) 200px, 112px"
+          className="w-[112px] sm:w-[200px] md:w-[240px]"
+        />
       </motion.div>
       <div className="mt-2 max-w-[130px] truncate text-center font-poppins text-base font-black uppercase tracking-wide text-white sm:mt-4 sm:max-w-[260px] sm:text-2xl md:text-3xl">
         {name}

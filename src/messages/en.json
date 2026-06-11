@@ -192,6 +192,7 @@
     "sessionExpired": "Session expired. Please sign in again.",
     "ticketsAlreadyFull": "Tickets are already full.",
     "ticketLimitReached": "Limit reached",
+    "ticketUnlocksIn": "Unlocks in {time}",
     "ticketPurchaseLimit": "You've hit the daily ticket purchase limit (5 tickets per day).",
     "ticketPurchaseLimitIn": "Daily ticket limit reached. Next purchase in {time}.",
     "ticketDailyAllowanceLeft": "Only {count} more ticket(s) available to buy today.",
@@ -579,8 +580,8 @@
     "rankedMatchEvent": "World Cup Ranked",
     "rankedSubtitle": "1v1 Competitive",
     "eventWinPrizes": "Win Prizes",
-    "eventDaysLeft": "{count} days left",
-    "eventDaysLeftShort": "{count}d left",
+    "eventDaysLeft": "Event ends in {count} days",
+    "eventDaysLeftShort": "Ends in {count}d",
     "eventPlayWorldCup": "Play World Cup & Win Prizes",
     "eventViewLeaderboard": "View Leaderboard",
     "eventRules": "Rules",
@@ -619,7 +620,8 @@
     "colPlayer": "Player",
     "colTier": "Tier",
     "colRP": "RP",
-    "resetsIn": "Resets in"
+    "resetsIn": "Resets in",
+    "wcSeasonEnds": "World Cup season ends in {count} days"
   },
   "welcome": {
     "untilKickoff": "until kickoff",

@@ -88,6 +88,7 @@
     "sessionExpired": "სესია ამოიწურა. გთხოვთ, ხელახლა გაიაროთ ავტორიზაცია.",
     "ticketsAlreadyFull": "ბილეთების რაოდენობა უკვე მაქსიმალურია.",
     "ticketLimitReached": "ლიმიტი ამოიწურა",
+    "ticketUnlocksIn": "გაიხსნება {time}-ში",
     "ticketPurchaseLimit": "დღიური ბილეთის შეძენის ლიმიტი ამოიწურა (დღეში 5 ბილეთი).",
     "ticketPurchaseLimitIn": "დღიური ბილეთის ლიმიტი ამოიწურა. შემდეგი შესყიდვა {time}-ში.",
     "ticketDailyAllowanceLeft": "დღეს კიდევ მხოლოდ {count} ბილეთის ყიდვა შეგიძლია.",
@@ -795,8 +796,8 @@
     "rankedMatchEvent": "მსოფლიო თასის რეიტინგი",
     "rankedSubtitle": "1V1 ონლაინ",
     "eventWinPrizes": "მოიგე პრიზები",
-    "eventDaysLeft": "დარჩა {count} დღე",
-    "eventDaysLeftShort": "{count}დ",
+    "eventDaysLeft": "ივენთი მთავრდება {count} დღეში",
+    "eventDaysLeftShort": "მთავრდება {count}დ-ში",
     "eventPlayWorldCup": "ითამაშე მსოფლიო თასი და მოიგე პრიზები",
     "eventViewLeaderboard": "ლიდერბორდის ნახვა",
     "eventRules": "წესები",
@@ -835,7 +836,8 @@
     "colPlayer": "მოთამაშე",
     "colTier": "ლიგა",
     "colRP": "RP",
-    "resetsIn": "განახლდება"
+    "resetsIn": "განახლდება",
+    "wcSeasonEnds": "მსოფლიო თასის სეზონი მთავრდება {count} დღეში"
   },
   "appAuthGate": {
     "warmingUp": "გახურება...",
