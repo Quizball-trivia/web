@@ -317,11 +317,6 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
           }
           className="relative rounded-full hover:bg-white/5"
         >
-          {/* BETA badge — mobile only (xl:hidden). Mobile has no sidebar, so the
-              sidebar's beta badge never shows there; mirror it on the bell. */}
-          <span className="pointer-events-none absolute -top-2 left-1/2 z-10 -translate-x-1/2 -rotate-[6deg] rounded-md bg-brand-yellow px-1.5 py-0.5 font-poppins text-[8px] font-black uppercase leading-none tracking-wide text-surface-page shadow-[0_2px_6px_rgba(0,0,0,0.4)] xl:hidden">
-            {t('common.beta')}
-          </span>
           <Image
             src="/assets/bell.png"
             alt=""

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import {
   Trophy, Target, Flame, Star, Award, Pencil, Check, X,
@@ -25,7 +26,7 @@ const achievementIconMap: Record<string, LucideIcon> = {
   Trophy, Target, Flame, Star, Award, Check, MapPin, Globe, Users, Clock, Zap, Medal, Crown,
 };
 
-import { AvatarDisplay } from '@/components/AvatarDisplay';
+import { TierFrameAvatar } from '@/components/TierFrameAvatar';
 import { CountryFlag } from '@/components/CountryFlag';
 import { AvatarPicker } from './components/AvatarPicker';
 import { RankFrameCard } from './components/RankFrameCard';
@@ -57,8 +58,11 @@ export interface ProfileRecentMatch {
   time: string;
   rpDelta: number | null;
   opponent: string;
+  opponentId: string | null;
+  opponentIsAi: boolean;
   opponentAvatarUrl: string | null;
   opponentAvatarCustomization: RecentMatchSummary["opponent"]["avatarCustomization"];
+  opponentTier: RecentMatchSummary["opponent"]["tier"];
   scoreFormatted: FormattedMatchScore;
 }
 
@@ -71,8 +75,11 @@ export function toProfileRecentMatch(match: RecentMatchSummary): ProfileRecentMa
     time: match.timeLabel,
     rpDelta: match.rpDelta,
     opponent: match.opponent.username,
+    opponentId: match.opponent.id,
+    opponentIsAi: match.opponent.isAi,
     opponentAvatarUrl: match.opponent.avatarUrl,
     opponentAvatarCustomization: match.opponent.avatarCustomization,
+    opponentTier: match.opponent.tier,
     scoreFormatted: formatMatchScore(match),
   };
 }
@@ -112,6 +119,7 @@ export function ProfileWeb({
   isUpdating = false,
 }: ProfileWebProps) {
   const { t, locale } = useLocale();
+  const router = useRouter();
   const tierLabelOf = useTierLabel();
   const isSelf = viewMode === 'self';
   const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
@@ -383,14 +391,25 @@ export function ProfileWeb({
                     })()
                   )}
 
-                  {/* Center — big RP, thick progress, RP-to-next label */}
+                  {/* Center — RP-to-next-tier headline, thick progress, band edges */}
                   <div className="min-w-0 flex flex-col items-center px-2 w-full">
-                    <div
-                      className="font-poppins text-3xl sm:text-5xl tabular-nums text-brand-yellow leading-none"
-                      style={{ fontWeight: 600 }}
-                    >
-                      {displayRp} <span className="text-xl sm:text-2xl">RP</span>
-                    </div>
+                    {next ? (
+                      <div className="flex flex-col items-center leading-none">
+                        <div
+                          className="font-poppins text-3xl sm:text-5xl tabular-nums text-brand-yellow leading-none"
+                          style={{ fontWeight: 600 }}
+                        >
+                          {rpToNext} <span className="text-xl sm:text-2xl">RP</span>
+                        </div>
+                        <div className="mt-1.5 sm:mt-2 font-poppins text-xs sm:text-base font-semibold uppercase text-white/90">
+                          {t("profileScreen.toNextLeagueLabel")}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="font-poppins text-xl sm:text-3xl font-semibold uppercase text-brand-yellow leading-none">
+                        {t("profileScreen.maxRankAchieved")}
+                      </div>
+                    )}
                     <div className="mt-6 sm:mt-8 relative h-[18px] w-full bg-brand-green-deep overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
@@ -399,17 +418,10 @@ export function ProfileWeb({
                         className="absolute inset-y-0 left-0 rounded-r-full bg-brand-green"
                       />
                     </div>
-                    <div className="mt-3 sm:mt-4 font-poppins text-xs sm:text-base font-semibold uppercase text-white/50">
-                      {next ? (
-                        t("profileScreen.rpToNextTier", { rp: rpToNext })
-                      ) : (
-                        t("profileScreen.maxRankAchieved")
-                      )}
-                    </div>
-                    <div className="mt-1 flex w-full items-center justify-between font-poppins text-[10px] font-semibold uppercase tabular-nums text-white/30">
-                      <span>{currentBandMin} RP</span>
-                      <span>{Math.round(bandPct)}%</span>
-                      <span>{bandTarget} RP</span>
+                    <div className="mt-2 sm:mt-3 flex w-full items-center justify-between font-poppins uppercase tabular-nums">
+                      <span className="text-[10px] font-semibold text-brand-yellow">{currentBandMin} RP</span>
+                      <span className="text-sm font-black text-white">{Math.round(bandPct)}%</span>
+                      <span className="text-[10px] font-semibold text-brand-yellow">{bandTarget} RP</span>
                     </div>
                   </div>
 
@@ -470,13 +482,7 @@ export function ProfileWeb({
                 )}
                 {showRankTier && (
                   <>
-                    <h2
-                      className="text-xl uppercase text-white text-center"
-                      style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, letterSpacing: '0', lineHeight: 1 }}
-                    >
-                      {rankedProfile!.tier}
-                    </h2>
-                    <p className="font-poppins text-[11px] font-semibold uppercase text-white/50 mt-2 mb-4">{t("profileScreen.currentSeason")}</p>
+                    <p className="font-poppins text-[11px] font-semibold uppercase text-white/50 mb-4">{t("profileScreen.currentSeason")}</p>
 
                     <div className="w-full space-y-2">
                       <div className="flex justify-between items-center h-10 rounded-full bg-brand-green px-4">
@@ -786,21 +792,37 @@ export function ProfileWeb({
                 const showRpDelta = !isPlacementMatch && match.competition !== 'friendly' && match.rpDelta !== null;
                 const rpDelta = match.rpDelta ?? 0;
                 const formattedRpDelta = `${rpDelta >= 0 ? '+' : ''}${rpDelta} RP`;
+                const canViewProfile = Boolean(match.opponentId) && !match.opponentIsAi;
+                const goToProfile = () => router.push(`/profile/${match.opponentId}`);
                 return (
                   <motion.div
                     key={match.id}
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.05 * index, duration: 0.3 }}
-                    className={`flex items-center gap-3 rounded-[16px] min-h-[58px] md:min-h-[62px] px-4 md:px-5 border-2 bg-surface-row-deep ${borderColor}`}
+                    role={canViewProfile ? 'button' : undefined}
+                    tabIndex={canViewProfile ? 0 : undefined}
+                    onClick={canViewProfile ? goToProfile : undefined}
+                    onKeyDown={
+                      canViewProfile
+                        ? (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              goToProfile();
+                            }
+                          }
+                        : undefined
+                    }
+                    className={`flex items-center gap-3 rounded-[16px] min-h-[76px] md:min-h-[82px] px-4 md:px-5 border-2 bg-surface-row-deep ${borderColor} ${canViewProfile ? 'cursor-pointer transition-colors hover:bg-white/[0.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30' : ''}`}
                   >
-                    {/* Avatar */}
-                    <div className="relative size-8 md:size-10 shrink-0 rounded-full bg-white/20 overflow-hidden flex items-center justify-center">
-                      <AvatarDisplay
-                        customization={match.opponentAvatarCustomization ?? { base: match.opponentAvatarUrl ?? undefined }}
-                        size="xs"
-                      />
-                    </div>
+                    {/* Avatar — rank frame using the opponent's real tier; falls
+                        back to a neutral frame until the backend supplies it. */}
+                    <TierFrameAvatar
+                      tier={match.opponentTier ?? 'Academy'}
+                      avatarCustomization={match.opponentAvatarCustomization ?? { base: match.opponentAvatarUrl ?? undefined }}
+                      size="sm"
+                      className="shrink-0"
+                    />
 
                     {/* Info */}
                     <div className="min-w-0 flex-1">

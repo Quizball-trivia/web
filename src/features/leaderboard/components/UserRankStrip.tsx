@@ -1,4 +1,4 @@
-import { AvatarDisplay } from "@/components/AvatarDisplay";
+import { TierFrameAvatar } from "@/components/TierFrameAvatar";
 import type { LeaderboardEntry } from "@/lib/domain/leaderboard";
 import { getTierAccent } from "@/utils/tierVisuals";
 import { Trophy } from "lucide-react";
@@ -25,12 +25,14 @@ export function UserRankStrip({ userEntry }: UserRankStripProps) {
     >
       {/* Avatar + trophy badge */}
       <div className="relative shrink-0">
-        <AvatarDisplay
-          customization={userEntry.avatarCustomization ?? { base: userEntry.avatar || "avatar-1" }}
+        <TierFrameAvatar
+          tier={userEntry.tier}
+          avatarCustomization={userEntry.avatarCustomization ?? { base: userEntry.avatar || "avatar-1" }}
+          avatarFallback={userEntry.avatar || "avatar-1"}
           countryCode={userEntry.country}
           size="md"
         />
-        <div className="absolute -top-1 -left-1 flex size-5 items-center justify-center rounded-full bg-brand-yellow shadow-sm ring-2 ring-black">
+        <div className="absolute -top-1 -left-1 z-20 flex size-5 items-center justify-center rounded-full bg-brand-yellow shadow-sm ring-2 ring-black">
           <Trophy className="size-3 text-black" strokeWidth={2.5} />
         </div>
       </div>

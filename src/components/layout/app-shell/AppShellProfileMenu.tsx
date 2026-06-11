@@ -7,7 +7,8 @@
  */
 
 import { useRouter } from 'next/navigation';
-import { AvatarDisplay } from '@/components/AvatarDisplay';
+import { TierFrameAvatar } from '@/components/TierFrameAvatar';
+import { useRankedProfile } from '@/lib/queries/ranked.queries';
 import { useLocale } from '@/contexts/LocaleContext';
 import {
   DropdownMenu,
@@ -36,16 +37,18 @@ export function AppShellProfileMenu({
   const { t } = useLocale();
   const isDesktop = variant === 'desktop';
   const align = isDesktop ? 'end' : 'start';
+  const { data: rankedProfile } = useRankedProfile();
+  const tier = rankedProfile?.tier ?? 'Academy';
 
   const trigger = isDesktop ? (
     <button className="flex items-center gap-3 rounded-full px-1 py-1 hover:bg-white/5 transition-colors focus:outline-none">
-      <div className="rounded-full bg-brand-blue p-1.5">
-        <AvatarDisplay
-          customization={playerStats.avatarCustomization || { base: playerStats.avatar }}
-          size="sm"
-          countryCode={authUserCountry ?? undefined}
-        />
-      </div>
+      <TierFrameAvatar
+        tier={tier}
+        avatarCustomization={playerStats.avatarCustomization || { base: playerStats.avatar }}
+        avatarFallback={playerStats.avatar}
+        countryCode={authUserCountry ?? undefined}
+        size="sm"
+      />
       <div className="text-left">
         <div className="text-sm font-black uppercase tracking-wide text-white">
           {playerStats.username}
@@ -57,19 +60,20 @@ export function AppShellProfileMenu({
     </button>
   ) : (
     <button className="flex items-center gap-2 rounded-full focus:outline-none">
-      <div className="size-12 rounded-full overflow-hidden">
-        <AvatarDisplay
-          customization={playerStats.avatarCustomization || { base: playerStats.avatar }}
-          size="sm"
-          countryCode={authUserCountry ?? undefined}
-        />
-      </div>
-      <div className="text-left">
+      <TierFrameAvatar
+        tier={tier}
+        avatarCustomization={playerStats.avatarCustomization || { base: playerStats.avatar }}
+        avatarFallback={playerStats.avatar}
+        countryCode={authUserCountry ?? undefined}
+        size="sm"
+      />
+      <div className="flex flex-col items-start text-left">
         <div className="text-sm font-black uppercase tracking-[0.03em] text-white">
           {playerStats.username}
         </div>
-        <div className="mt-1 inline-flex items-center rounded-full bg-brand-yellow px-2.5 py-0.5 text-[11px] font-black uppercase leading-none text-black">
-          {playerStats.rankPoints ?? 0} RP
+        <div className="mt-1 inline-flex flex-col items-center self-start rounded-full bg-brand-yellow px-3 py-1 font-black uppercase leading-none text-black">
+          <span className="text-[12px] tabular-nums">{playerStats.rankPoints ?? 0}</span>
+          <span className="text-[9px] tracking-wide">RP</span>
         </div>
       </div>
     </button>
@@ -86,7 +90,7 @@ export function AppShellProfileMenu({
       >
         <DropdownMenuLabel className="font-normal px-2 pb-3">
           <div className="flex flex-col space-y-1">
-            <p className="font-poppins text-base font-semibold leading-none text-white">
+            <p className="font-poppins text-base font-semibold uppercase tracking-[0.03em] leading-none text-white">
               {playerStats.username}
             </p>
             <p className="font-poppins text-xs font-medium leading-none text-white/70">

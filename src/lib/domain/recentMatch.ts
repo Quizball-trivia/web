@@ -1,4 +1,5 @@
 import type { AvatarCustomization } from "@/types/game";
+import type { RankedTier } from "@/utils/rankedTier";
 
 export type WinnerDecisionMethod = "goals" | "penalty_goals" | "total_points" | "total_points_fallback" | "forfeit";
 
@@ -24,5 +25,8 @@ export interface RecentMatchSummary {
     avatarUrl: string | null;
     avatarCustomization: AvatarCustomization | null;
     isAi: boolean;
+    /** Backend ranked tier of the opponent. Optional until the recent-matches
+     *  endpoint includes it; callers fall back to a neutral frame when absent. */
+    tier: RankedTier | null;
   };
 }

@@ -66,6 +66,7 @@ export function toRecentMatchSummaries(response: RecentMatchesResponse): RecentM
       avatarUrl: item.opponent.avatarUrl,
       avatarCustomization: item.opponent.avatarCustomization,
       isAi: item.opponent.isAi,
+      tier: item.opponent.tier,
     },
   }));
 }

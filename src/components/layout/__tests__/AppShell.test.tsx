@@ -89,6 +89,10 @@ vi.mock('@/lib/queries/social.queries', () => ({
   useIncomingFriendRequestCount: () => ({ data: 2 }),
 }));
 
+vi.mock('@/lib/queries/ranked.queries', () => ({
+  useRankedProfile: () => ({ data: { tier: 'Academy', rp: 0, placementStatus: 'placed' } }),
+}));
+
 // Socket + realtime connection
 const socketEmitMock = vi.fn();
 const socketHandlers: Record<string, Array<(...args: unknown[]) => void>> = {};
@@ -351,13 +355,17 @@ describe('AppShell — route gating', () => {
   });
 
   it('hides the mobile header on routes outside HEADER_PATHS', () => {
+    // The mobile header renders the user's display name ("Tester"). It shows on
+    // HEADER_PATHS like `/` and disappears on non-HEADER routes. Count within
+    // each render's own container so the two renders don't bleed into each other.
+    const countTester = (container: HTMLElement) =>
+      Array.from(container.querySelectorAll('*')).filter(
+        (el) => el.childElementCount === 0 && el.textContent === 'Tester',
+      ).length;
     pathnameMock.mockReturnValue('/');
-    const headerCount = render(<AppShell><div /></AppShell>).container.querySelectorAll('.size-12.rounded-full').length;
-    // Mobile header on `/` renders one `size-12 rounded-full` wrapper for the
-    // user avatar. Switch the route to a non-HEADER path and that wrapper
-    // disappears.
+    const headerCount = countTester(render(<AppShell><div /></AppShell>).container);
     pathnameMock.mockReturnValue('/onboarding');
-    const onboardingCount = render(<AppShell><div /></AppShell>).container.querySelectorAll('.size-12.rounded-full').length;
+    const onboardingCount = countTester(render(<AppShell><div /></AppShell>).container);
     expect(headerCount).toBeGreaterThan(onboardingCount);
   });
 

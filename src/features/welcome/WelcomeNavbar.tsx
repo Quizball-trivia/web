@@ -39,8 +39,10 @@ export function WelcomeNavbar({ wcDaysLeft }: WelcomeNavbarProps) {
         )}
       </div>
 
-      {/* Centered switcher — mobile only */}
-      <div className="flex shrink-0 justify-center md:hidden">
+      {/* Centered switcher — mobile only. Nudged down so it clears the wide
+          "Powered by Betsson" logo on the left instead of overlapping it, and
+          scaled down a touch so it reads smaller on mobile than on desktop. */}
+      <div className="flex shrink-0 justify-center md:hidden translate-y-10 scale-90 origin-top">
         <LanguageSwitcher locale={locale} />
       </div>
 
@@ -51,13 +53,6 @@ export function WelcomeNavbar({ wcDaysLeft }: WelcomeNavbarProps) {
         </div>
         <div className="flex items-center gap-2.5">
           <div className="relative shrink-0">
-            {/* Beta badge — tilted yellow pill over the trophy, matching the
-                sidebar beta badge style. */}
-            {!isEventMode && (
-              <span className="absolute -top-2 left-1/2 z-10 -translate-x-1/2 -rotate-[6deg] rounded-[9px] bg-brand-yellow px-2 py-0.5 font-poppins text-[9px] font-black uppercase tracking-wide text-surface-page shadow-[0_2px_6px_rgba(0,0,0,0.4)] md:text-[10px]">
-                {t('common.beta')}
-              </span>
-            )}
             <Image src="/assets/brand/world-cup-trophy.webp" alt="Trophy" width={96} height={96} className="h-10 md:h-12 w-auto object-contain" />
           </div>
           {wcDaysLeft > 0 && (

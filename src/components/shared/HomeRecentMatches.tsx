@@ -38,8 +38,11 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
         id: match.matchId,
         result: match.result,
         opponent: match.opponent.username,
+        opponentId: match.opponent.id,
+        opponentIsAi: match.opponent.isAi,
         avatarUrl: match.opponent.avatarUrl,
         avatarCustomization: match.opponent.avatarCustomization,
+        opponentTier: match.opponent.tier,
         mode: match.mode === 'ranked' ? t('recentMatches.modeRanked') : t('recentMatches.modeFriendly'),
         competition: match.competition,
         rpDelta: match.rpDelta,
@@ -102,14 +105,30 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
             {t('recentMatches.empty')}
           </div>
         )}
-        {!isLoading && !error && visibleMatches.map((match) => (
+        {!isLoading && !error && visibleMatches.map((match) => {
+          const canViewProfile = Boolean(match.opponentId) && !match.opponentIsAi;
+          return (
           <div
             key={match.id}
-            className={`flex items-center gap-3 rounded-[16px] min-h-[58px] md:min-h-[62px] px-4 md:px-5 border-2 bg-surface-row-deep ${rowBorder(match.result)}`}
+            role={canViewProfile ? 'button' : undefined}
+            tabIndex={canViewProfile ? 0 : undefined}
+            onClick={canViewProfile ? () => router.push(`/profile/${match.opponentId}`) : undefined}
+            onKeyDown={
+              canViewProfile
+                ? (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      router.push(`/profile/${match.opponentId}`);
+                    }
+                  }
+                : undefined
+            }
+            className={`flex items-center gap-3 rounded-[16px] min-h-[76px] md:min-h-[82px] px-4 md:px-5 border-2 bg-surface-row-deep ${rowBorder(match.result)} ${canViewProfile ? 'cursor-pointer transition-colors hover:bg-white/[0.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30' : ''}`}
           >
-            {/* Avatar — rank frame (neutral tier; opponent rank not in this data) */}
+            {/* Avatar — rank frame using the opponent's real tier; falls back to
+                a neutral frame until the backend supplies opponent.tier. */}
             <TierFrameAvatar
-              tier="Academy"
+              tier={match.opponentTier ?? 'Academy'}
               avatarCustomization={match.avatarCustomization ?? { base: match.avatarUrl ?? undefined }}
               size="sm"
               className="shrink-0"
@@ -160,7 +179,8 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
 
         {/* Expand/Collapse toggle — compact pill, mostly transparent. */}
         {!isLoading && !error && canExpand && (

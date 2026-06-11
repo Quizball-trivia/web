@@ -1163,6 +1163,8 @@ export interface paths {
                                         facialHair?: "stache" | "beard";
                                     } | null;
                                     isAi: boolean;
+                                    /** @enum {string|null} */
+                                    tier: "Academy" | "Youth Prospect" | "Reserve" | "Bench" | "Rotation" | "Starting11" | "Key Player" | "Captain" | "World-Class" | "Legend" | "GOAT" | null;
                                 };
                             }[];
                         };
@@ -5394,6 +5396,8 @@ export interface components {
                         facialHair?: "stache" | "beard";
                     } | null;
                     isAi: boolean;
+                    /** @enum {string|null} */
+                    tier: "Academy" | "Youth Prospect" | "Reserve" | "Bench" | "Rotation" | "Starting11" | "Key Player" | "Captain" | "World-Class" | "Legend" | "GOAT" | null;
                 };
             }[];
         };
