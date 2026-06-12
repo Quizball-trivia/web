@@ -170,7 +170,6 @@ export function FriendMatchHubPage() {
             </p>
          </div>
 
-         {/* Online-presence count hidden per product decision. */}
       </div>
 
       {(isSessionRecovering || isSessionTransitioning) && (
