@@ -6,10 +6,8 @@ import { useRouter } from 'next/navigation';
 import { buildProfileNavTarget } from '@/lib/hooks/useProfileNavigation';
 import { motion } from 'motion/react';
 import {
-  Trophy, Target, Flame, Star, Award, Pencil, Check, X,
-  MapPin, Globe, Users, Clock, Zap, Medal, Crown,
+  Pencil, Check, X,
   ChevronDown, ChevronUp,
-  type LucideIcon,
 } from 'lucide-react';
 import { Trophy as TrophyPh } from '@phosphor-icons/react';
 import { COLLAPSED_MATCHES_COUNT, MAX_MATCHES_COUNT } from '@/lib/constants/matches';
@@ -23,10 +21,6 @@ function countryCodeToName(code: string): string {
     return code;
   }
 }
-
-const achievementIconMap: Record<string, LucideIcon> = {
-  Trophy, Target, Flame, Star, Award, Check, MapPin, Globe, Users, Clock, Zap, Medal, Crown,
-};
 
 import { TierFrameAvatar } from '@/components/TierFrameAvatar';
 import { CountryFlag } from '@/components/CountryFlag';
@@ -477,7 +471,7 @@ export function ProfileWeb({
       </motion.div>
 
       {/* ─── 3. Stat cards row (3 columns on desktop) ─── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
 
           {/* Rank Card — translucent blue with brand-blue border outline.
               Mirrors the "next tier" badge style elsewhere on this page so
@@ -486,7 +480,7 @@ export function ProfileWeb({
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08 }}
-              className="rounded-[20px] overflow-hidden border-2 border-brand-blue bg-surface-card/40 backdrop-blur-sm"
+              className="h-full rounded-[20px] overflow-hidden bg-surface-card/40 backdrop-blur-sm"
             >
               <div className="p-5 flex flex-col items-center">
                 {rankedProfileLoading && (
@@ -502,7 +496,14 @@ export function ProfileWeb({
                 )}
                 {showRankTier && (
                   <>
-                    <p className="font-poppins text-[11px] font-semibold uppercase text-white/50 mb-4">{t("profileScreen.currentSeason")}</p>
+                    <p className="font-poppins text-xs font-semibold uppercase text-white/80 mb-2">{t("profileScreen.currentSeason")}</p>
+
+                    {/* Games-played counts, folded into the season card. */}
+                    <div className="mb-4 flex w-full items-center justify-center gap-4 font-poppins text-xs font-semibold uppercase text-white/90">
+                      <span>{t('profileScreen.rankedLabel')} <span className="text-brand-yellow">{rankedStats?.gamesPlayed ?? 0}</span></span>
+                      <span className="text-white/30">·</span>
+                      <span>{t('profileScreen.friendlyLabel')} <span className="text-white">{friendlyStats?.gamesPlayed ?? 0}</span></span>
+                    </div>
 
                     <div className="w-full space-y-2">
                       <div className="flex justify-between items-center h-10 rounded-full bg-brand-green px-4">
@@ -539,40 +540,23 @@ export function ProfileWeb({
               </div>
             </motion.div>
 
-            {/* W/L/D Breakdown — two stacked blue cards per Figma, fill column height */}
+            {/* W/L/D Breakdown — in event mode a single card with a toggle to
+                switch between Ranked (regular) and World Cup event stats. The
+                games-played counts live in the season card (left). */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.12 }}
-              className="h-full flex flex-col gap-3"
+              className="flex h-full flex-col gap-3"
             >
-              {/* Mode header card */}
-              <div className="flex h-12 shrink-0 items-center justify-between rounded-[20px] border-2 border-brand-blue bg-surface-card/40 backdrop-blur-sm px-6">
-                <span className="font-poppins text-sm font-semibold uppercase text-white">
-                  {t('profileScreen.rankedLabel')}: <span className="text-brand-yellow">{rankedStats?.gamesPlayed ?? 0}</span>
-                </span>
-                <span className="font-poppins text-sm font-semibold uppercase text-white">
-                  {t('profileScreen.friendlyLabel')}: <span className="text-white">{friendlyStats?.gamesPlayed ?? 0}</span>
-                </span>
-              </div>
-
-              {/* W/D/L — split into regular vs World Cup event cards in event mode. */}
               {showSeasonSplit ? (
-                <div className="flex-1 flex flex-col gap-3">
-                  <WinDrawLossCard
-                    label={t('profileScreen.rankedLabel')}
-                    stats={rankedSeasons!.regular}
-                    t={t}
-                  />
-                  <WinDrawLossCard
-                    label={t('profileScreen.wcEventLabel')}
-                    stats={rankedSeasons!.event}
-                    t={t}
-                    event
-                  />
-                </div>
+                <SeasonToggleCard
+                  regular={rankedSeasons!.regular}
+                  event={rankedSeasons!.event}
+                  t={t}
+                />
               ) : (
-                <div className="flex-1 flex items-center justify-center rounded-[20px] border-2 border-brand-blue bg-surface-card/40 backdrop-blur-sm">
+                <div className="flex h-full items-center justify-center rounded-[20px] border-2 border-brand-blue bg-surface-card/40 backdrop-blur-sm">
                   {wldTotal > 0 ? (
                     <WinDrawLossGrid wins={wins} draws={draws} losses={losses} t={t} />
                   ) : (
@@ -590,7 +574,7 @@ export function ProfileWeb({
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="rounded-[20px] border-2 border-brand-blue bg-surface-card/40 backdrop-blur-sm px-6 py-5"
+                className="h-full rounded-[20px] bg-surface-card/40 backdrop-blur-sm px-6 py-5"
               >
                 <h3 className="font-poppins text-sm font-semibold uppercase text-white text-center mb-4">
                   {t('profileScreen.preferences')}
@@ -694,45 +678,23 @@ export function ProfileWeb({
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="rounded-[10px] p-5"
-                style={{ backgroundColor: '#1B2F36' }}
+                className="flex h-full flex-col rounded-[20px] p-5 bg-surface-card/40 backdrop-blur-sm"
               >
-                <h3 className="text-[11px] font-poppins font-black uppercase tracking-[0.22em] text-white/45 mb-4">
-                  Head to Head
+                <h3 className="text-[11px] font-poppins font-black uppercase tracking-[0.22em] text-white/45 px-1">
+                  {t('friend.headToHead')}
                 </h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-poppins font-black uppercase tracking-wide text-white">{t("profileScreen.yourWins")}</span>
-                    <span
-                      className="text-xl tabular-nums text-brand-green"
-                      style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
-                    >
-                      {headToHead.winsA}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-poppins font-black uppercase tracking-wide text-white">{t("profileScreen.theirWins")}</span>
-                    <span
-                      className="text-xl tabular-nums text-brand-red-soft"
-                      style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
-                    >
-                      {headToHead.winsB}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-poppins font-black uppercase tracking-wide text-white">{t("profileScreen.draws")}</span>
-                    <span
-                      className="text-xl tabular-nums text-white/55"
-                      style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
-                    >
-                      {headToHead.draws}
-                    </span>
-                  </div>
-                  <div className="h-px bg-white/8" />
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-poppins font-black uppercase tracking-[0.2em] text-white/40">{t("profileScreen.totalMatches")}</span>
-                    <span className="text-sm font-poppins font-black tabular-nums text-white">{headToHead.total}</span>
-                  </div>
+                <div className="flex flex-1 items-center justify-center">
+                  <WinDrawLossGrid
+                    wins={headToHead.winsA}
+                    draws={headToHead.draws}
+                    losses={headToHead.winsB}
+                    t={t}
+                    size="sm"
+                  />
+                </div>
+                <div className="flex items-center justify-center gap-2 px-1 font-poppins text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
+                  <span>{t('profileScreen.totalMatches')}</span>
+                  <span className="text-white/70">{headToHead.total}</span>
                 </div>
               </motion.div>
             )}
@@ -907,51 +869,36 @@ export function ProfileWeb({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
               {player.achievements.map((achievement) => {
-                const Icon = achievementIconMap[achievement.icon] || Trophy;
                 const hasProgress = achievement.progress !== undefined && achievement.target !== undefined;
                 const progressPct = hasProgress
                   ? Math.min(100, ((achievement.progress ?? 0) / Math.max(1, achievement.target ?? 1)) * 100)
                   : achievement.unlocked ? 100 : 0;
 
                 return (
-                  <div key={achievement.id} className="flex items-center gap-2">
-                    {/* Icon card — yellow outline matches the achievement
-                        accent colour (the trophy icons + progress fill are
-                        already brand-yellow), creating a tighter colour story
-                        than the previous blue border. */}
-                    <div className="flex size-[64px] shrink-0 items-center justify-center rounded-[16px] border-2 border-brand-yellow bg-surface-card/40 backdrop-blur-sm">
-                      <Icon
-                        className={`size-8 ${achievement.unlocked ? 'text-brand-yellow' : 'text-brand-yellow/80'}`}
-                        strokeWidth={2.5}
+                  <div key={achievement.id} className="relative min-w-0 h-[64px] rounded-[16px] border border-brand-yellow bg-surface-card/40 backdrop-blur-sm px-3 py-2">
+                    <div className="font-poppins text-[13px] font-semibold uppercase truncate text-white pr-7">
+                      {resolveI18n(achievement.title, locale)}
+                    </div>
+                    <div className="mt-0.5 font-poppins text-[10px] font-semibold uppercase text-white/60 truncate">
+                      {achievement.unlocked
+                        ? t("achievements.completed")
+                        : hasProgress
+                          ? `${achievement.progress} / ${achievement.target}`
+                          : t("achievements.locked")}
+                    </div>
+                    <div className="mt-1.5 h-1 w-full rounded-full overflow-hidden bg-brand-yellow/20">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progressPct}%` }}
+                        transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
+                        className="h-full rounded-full bg-brand-yellow"
                       />
                     </div>
-
-                    {/* Body card */}
-                    <div className="relative flex-1 min-w-0 h-[64px] rounded-[16px] border-2 border-brand-yellow bg-surface-card/40 backdrop-blur-sm px-3 py-2">
-                      <div className="font-poppins text-[13px] font-semibold uppercase truncate text-white pr-7">
-                        {resolveI18n(achievement.title, locale)}
+                    {achievement.unlocked && (
+                      <div className="absolute right-2 top-2 flex size-5 items-center justify-center rounded-full bg-brand-yellow">
+                        <Check className="size-3 text-black" strokeWidth={3} />
                       </div>
-                      <div className="mt-0.5 font-poppins text-[10px] font-semibold uppercase text-white/60 truncate">
-                        {achievement.unlocked
-                          ? t("achievements.completed")
-                          : hasProgress
-                            ? `${achievement.progress} / ${achievement.target}`
-                            : t("achievements.locked")}
-                      </div>
-                      <div className="mt-1.5 h-1 w-full rounded-full overflow-hidden bg-brand-yellow/20">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${progressPct}%` }}
-                          transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
-                          className="h-full rounded-full bg-brand-yellow"
-                        />
-                      </div>
-                      {achievement.unlocked && (
-                        <div className="absolute right-2 top-2 flex size-5 items-center justify-center rounded-full bg-brand-yellow">
-                          <Check className="size-3 text-black" strokeWidth={3} />
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
                 );
               })}
@@ -988,8 +935,6 @@ function WinDrawLossGrid({
   t: (key: MessageKey, params?: Record<string, string | number>) => string;
   size?: 'lg' | 'sm';
 }) {
-  // Both sizes use the same big, bold numbers; `sm` just trims vertical padding
-  // so two stacked cards stay compact.
   const numClass = 'text-5xl';
   const pad = size === 'lg' ? 'px-6 py-8' : 'px-4 py-5';
   const labelMt = 'mt-3';
@@ -1011,41 +956,60 @@ function WinDrawLossGrid({
   );
 }
 
-/** A labeled W/D/L card for one season bucket. `event` styles it as the World
- *  Cup event card (yellow border + trophy badge top-right). */
-function WinDrawLossCard({
-  label,
-  stats,
+/** A single W/D/L card with a segmented toggle to switch between the Ranked
+ *  (regular) season and the World Cup event. Replaces the two stacked cards so
+ *  the middle column stays compact in event mode. */
+function SeasonToggleCard({
+  regular,
+  event,
   t,
-  event = false,
 }: {
-  label: string;
-  stats: ModeMatchStatsSummary;
+  regular: ModeMatchStatsSummary;
+  event: ModeMatchStatsSummary;
   t: (key: MessageKey, params?: Record<string, string | number>) => string;
-  event?: boolean;
 }) {
+  const [active, setActive] = useState<'ranked' | 'event'>('ranked');
+  const stats = active === 'event' ? event : regular;
   const total = stats.wins + stats.draws + stats.losses;
-  const border = event ? 'border-brand-yellow' : 'border-brand-blue';
-  const headerBorder = event ? 'border-brand-yellow/40' : 'border-brand-blue/40';
+
   return (
-    <div className={`relative flex-1 flex flex-col rounded-[20px] border-2 ${border} bg-surface-card/40 backdrop-blur-sm overflow-hidden`}>
-      {event && (
-        <Image
-          src="/assets/brand/world-cup-trophy.webp"
-          alt=""
-          width={28}
-          height={28}
-          className="absolute top-1.5 right-2.5 z-10 h-5 w-auto object-contain drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]"
-        />
-      )}
-      <div className={`shrink-0 border-b-2 ${headerBorder} px-4 py-1.5 text-center font-poppins text-xs font-black uppercase tracking-wide text-brand-yellow`}>
-        {label}
+    <div className="relative flex h-full flex-col rounded-[20px] bg-surface-card/40 backdrop-blur-sm overflow-hidden">
+      {/* Segmented toggle */}
+      <div className="flex gap-1 p-1.5">
+        {([
+          { key: 'ranked' as const, label: t('profileScreen.rankedLabel'), activeBg: 'bg-brand-blue' },
+          { key: 'event' as const, label: t('profileScreen.wcEventShort'), activeBg: 'bg-brand-yellow' },
+        ]).map((tab) => {
+          const on = active === tab.key;
+          const onText = tab.key === 'event' ? 'text-black' : 'text-white';
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setActive(tab.key)}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-[14px] px-1.5 py-2 font-poppins text-[11px] font-black uppercase tracking-wide transition-colors ${
+                on ? `${tab.activeBg} ${onText}` : 'bg-white/5 text-white/50 hover:text-white/80'
+              }`}
+            >
+              {tab.key === 'event' && (
+                <Image
+                  src="/assets/brand/world-cup-trophy.webp"
+                  alt=""
+                  width={16}
+                  height={16}
+                  className={`h-4 w-auto shrink-0 object-contain ${on ? '' : 'opacity-60'}`}
+                />
+              )}
+              <span className="whitespace-nowrap">{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex flex-1 items-center justify-center pb-1">
         {total > 0 ? (
           <WinDrawLossGrid wins={stats.wins} draws={stats.draws} losses={stats.losses} t={t} size="sm" />
         ) : (
-          <div className="font-poppins text-xs font-semibold uppercase text-white/40 text-center py-4">
+          <div className="font-poppins text-xs font-semibold uppercase text-white/40 text-center py-6">
             {t('profileScreen.noMatchesPlayed')}
           </div>
         )}
@@ -1053,3 +1017,4 @@ function WinDrawLossCard({
     </div>
   );
 }
+

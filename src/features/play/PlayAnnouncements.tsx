@@ -32,17 +32,17 @@ const TYPE_STYLES: Record<Announcement['type'], { bg: string; icon: string }> = 
 
 export function PlayAnnouncements() {
   const { t } = useLocale();
-  const [expandedId, setExpandedId] = useState<string | null>(
-    ANNOUNCEMENTS.length > 0 ? ANNOUNCEMENTS[0].id : null,
-  );
+  // Collapsed by default — the announcement is shown as a tappable header the
+  // user can expand, not an auto-opened modal. (Proper notifications system TBD.)
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   if (ANNOUNCEMENTS.length === 0) return null;
 
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2 px-1">
-        <Megaphone className="size-4 text-white/50" />
-        <h2 className="font-poppins text-xs font-semibold uppercase tracking-wide text-white/50">
+        <Megaphone className="size-4 text-white" />
+        <h2 className="font-poppins text-base uppercase text-white">
           {t('announcements.sectionTitle')}
         </h2>
       </div>
@@ -66,7 +66,7 @@ export function PlayAnnouncements() {
                   <span className="font-poppins text-sm font-bold text-white">
                     {t(a.titleKey)}
                   </span>
-                  <span className="text-[10px] font-medium text-white/40">
+                  <span className="font-poppins text-[11px] font-medium tracking-[0.08em] text-white/70">
                     {a.date}
                   </span>
                 </div>
@@ -78,7 +78,7 @@ export function PlayAnnouncements() {
               )}
             </div>
             {expanded && (
-              <div className="mt-3 space-y-2.5 text-[13px] leading-relaxed text-white/75">
+              <div className="mt-3 space-y-2.5 text-[13px] leading-relaxed text-white">
                 {t(a.bodyKey).split('\n\n').map((paragraph, idx) => (
                   <p key={idx}>{paragraph}</p>
                 ))}
