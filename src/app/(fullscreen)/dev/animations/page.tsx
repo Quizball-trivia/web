@@ -71,6 +71,34 @@ const SAMPLE_QUESTIONS: Array<{
     categoryName: 'World Cup History',
   },
   {
+    // Georgian sample — reproduces the long-word wrapping issue (ხორვატია /
+    // არგენტინა break mid-word with overflow-wrap:anywhere).
+    prompt: 'რომელი გუნდი დაამარცხა საფრანგეთმა 2018 წლის ფიფას მსოფლიო ჩემპიონატის ფინალში?',
+    options: ['ხორვატია', 'ბელგია', 'არგენტინა', 'ურუგვაი'],
+    correctIndex: 0,
+    categoryName: 'მსოფლიო თასი',
+  },
+  {
+    // REAL DB worst case — the longest single KA option (89 chars, a full
+    // sentence). The ultimate stress test for the answer cards.
+    prompt: '1950 წლის მსოფლიო ჩემპიონატზე რატომ გაემგზავრა მოქმედი ჩემპიონი იტალია ბრაზილიაში გემით და არა თვითმფრინავით?',
+    options: [
+      'ფულის დაზოგვა სურდათ',
+      'ფრენის შიში სუპერგას ავიაკატასტროფის შემდეგ, რომელმაც ტორინოს გუნდის უმეტესობა იმსხვერპლა',
+      'ფიფამ აიძულა',
+      'თვითმფრინავისთვის ზედმეტად ბევრი აღჭურვილობა ჰქონდათ',
+    ],
+    correctIndex: 1,
+    categoryName: 'მსოფლიო თასი',
+  },
+  {
+    // REAL DB worst case — the longest KA prompt (186 chars).
+    prompt: '1982 წლის მსოფლიო ჩემპიონატზე, რომელი გუნდი მონაწილეობდა „ხიხონის სირცხვილში“ — მატჩში დასავლეთ გერმანიის წინააღმდეგ, სადაც ორივე გუნდმა სავარაუდოდ ურთიერთხელსაყრელი შედეგისთვის ითამაშა?',
+    options: ['ავსტრია', 'ალჟირი', 'ჩილე', 'ჰონდურასი'],
+    correctIndex: 0,
+    categoryName: 'მსოფლიო თასი',
+  },
+  {
     prompt: 'Who scored the famous "Hand of God" goal in 1986?',
     options: ['Pelé', 'Maradona', 'Zidane', 'Cruyff'],
     correctIndex: 1,
@@ -812,6 +840,23 @@ function DevAnimationsContent() {
     stateVersion.current += 1;
     s.setMatchState(makeMatchState('NORMAL_PLAY', { stateVersion: stateVersion.current }));
     s.setMatchQuestion(makeQuestion(0, 'multipleChoice'));
+    setNextQuestionKind('multipleChoice');
+    setRemountKey((k) => k + 1);
+    setMobilePanelOpen(false);
+  }
+
+  // Jump straight to a specific SAMPLE_QUESTIONS entry (for testing the long
+  // Georgian worst-case answers). Picks a qIndex whose `% length` == sampleIdx.
+  function jumpToSample(sampleIdx: number) {
+    const s = store();
+    s.setSelfUserId(SELF_ID);
+    s.setMatchStart(makeStartPayload());
+    stateVersion.current += 1;
+    s.setMatchState(makeMatchState('NORMAL_PLAY', { stateVersion: stateVersion.current }));
+    // Find a qIndex < TOTAL_QUESTIONS that maps to sampleIdx.
+    let qi = sampleIdx;
+    while (qi >= TOTAL_QUESTIONS) qi -= SAMPLE_QUESTIONS.length;
+    s.setMatchQuestion(makeQuestion(Math.max(0, qi), 'multipleChoice'));
     setNextQuestionKind('multipleChoice');
     setRemountKey((k) => k + 1);
     setMobilePanelOpen(false);
@@ -2344,6 +2389,12 @@ function DevAnimationsContent() {
           <Btn variant="yellow" onClick={startKickoffToMcq}>5s kickoff → MCQ</Btn>
           <Btn variant="green" onClick={startImageMcq}>🖼️ Q4 image MCQ</Btn>
           <Btn onClick={() => nextQuestion()}>next question</Btn>
+        </Group>
+
+        <Group label="🇬🇪 Long-answer stress tests (KA)">
+          <Btn variant="yellow" onClick={() => jumpToSample(2)}>ხორვატია (mid-word break)</Btn>
+          <Btn variant="yellow" onClick={() => jumpToSample(3)}>longest option (89 chars)</Btn>
+          <Btn variant="yellow" onClick={() => jumpToSample(4)}>longest prompt (186 chars)</Btn>
         </Group>
 
         <Group label="Spawn question kind (drops badge)">
