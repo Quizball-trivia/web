@@ -3,6 +3,7 @@
 import { motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { useLocale } from '@/contexts/LocaleContext';
+import { useActiveEventMode } from '@/lib/hooks/useActiveEventMode';
 import { LeaderboardPodium } from '@/features/leaderboard/components/LeaderboardPodium';
 import { LeaderboardTable } from '@/features/leaderboard/components/LeaderboardTable';
 import type { ComponentProps } from 'react';
@@ -21,6 +22,11 @@ export function WelcomeLeaderboardSection({
   onViewFull,
 }: WelcomeLeaderboardSectionProps) {
   const { t } = useLocale();
+  // The landing page shows the Betsson/World Cup event layer to EVERYONE while
+  // the flag is on (no region gating for display) — same as the banner and
+  // categories above. So force the leaderboard's event styling on `eventEnabled`
+  // rather than the region-gated `isEventMode` the components default to.
+  const { eventEnabled } = useActiveEventMode();
   return (
     <section className="py-6 md:py-8">
       <div className="mx-auto w-full max-w-3xl">
@@ -34,6 +40,7 @@ export function WelcomeLeaderboardSection({
           <LeaderboardPodium
             topThree={entries.slice(0, 3)}
             onEntryClick={onEntryClick}
+            eventMode={eventEnabled}
           />
         </motion.div>
 
@@ -47,6 +54,7 @@ export function WelcomeLeaderboardSection({
           <LeaderboardTable
             entries={entries.slice(3, 8)}
             onEntryClick={onEntryClick}
+            eventMode={eventEnabled}
           />
         </motion.div>
 
@@ -74,7 +82,7 @@ export function WelcomeLeaderboardSection({
         >
           <Button
             onClick={onViewFull}
-            className="h-11 rounded-xl bg-brand-green px-6 font-poppins text-sm font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none"
+            className="h-14 rounded-[20px] bg-brand-green px-10 font-poppins text-lg font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none"
           >
             {t('welcome.viewFullTable')}
           </Button>

@@ -554,6 +554,8 @@ export function useRealtimePossessionMatchController({
             opponentAvatarUrl: opponentAvatar,
             playerAvatarCustomization,
             opponentAvatarCustomization,
+            playerRankPoints,
+            opponentRankPoints,
             timeRemaining: state.roundResolved ? 0 : state.timeRemaining,
             phase: state.roundResolved ? 'goal' : 'shot',
             isPlayerAttacker: fieldState.attackerIsMe,
@@ -581,6 +583,8 @@ export function useRealtimePossessionMatchController({
               opponentAvatarUrl: opponentAvatar,
               playerAvatarCustomization,
               opponentAvatarCustomization,
+              playerRankPoints,
+              opponentRankPoints,
               timeRemaining: state.roundResolved ? 0 : state.timeRemaining,
               phase: state.questionPhase === 'playing' ? 'penalty-playing' : 'penalty-question',
               onQuit: openQuitModal,
@@ -599,6 +603,8 @@ export function useRealtimePossessionMatchController({
               opponentAvatarUrl: opponentAvatar,
               playerAvatarCustomization,
               opponentAvatarCustomization,
+              playerRankPoints,
+              opponentRankPoints,
               timeRemaining: state.questionPhase === 'playing' && state.showOptions && !state.roundResolved
                 ? state.timeRemaining
                 : null,

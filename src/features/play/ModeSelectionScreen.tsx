@@ -8,6 +8,7 @@ import { ModeConfirmModal } from '@/components/shared/ModeConfirmModal';
 import { FriendPlayModal } from '@/components/shared/FriendPlayModal';
 import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
 import { useLocale } from '@/contexts/LocaleContext';
+import { useTierLabel } from '@/hooks/useTierLabel';
 import { getI18nText } from '@/lib/utils/i18n';
 import type { MatchStatsSummary } from '@/lib/domain';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
@@ -102,6 +103,7 @@ export function ModeSelectionScreen({
   rankedProfileLoading = false,
 }: ModeSelectionScreenProps) {
   const { t, locale } = useLocale();
+  const tierLabelOf = useTierLabel();
   const { isEventMode } = useActiveEventMode();
   const [selectedMode, setSelectedMode] = useState<'ranked' | 'friendly' | 'solo' | null>(null);
   const [playEntranceAnimation] = useState(shouldPlayEntranceAnimation);
@@ -278,7 +280,7 @@ export function ModeSelectionScreen({
                       { count: placementMatchesLeft },
                     )
                   : nextTierBand
-                    ? <>{t('play.rpToTier', { rp: Math.max(0, (nextTierTargetRp ?? 0) - displayRp) })}<span className="text-brand-yellow">{nextTierBand.tier}</span></>
+                    ? <>{t('play.rpToTier', { rp: Math.max(0, (nextTierTargetRp ?? 0) - displayRp) })}<span className="text-brand-yellow">{tierLabelOf(nextTierBand.tier)}</span></>
                     : t('play.maxRankReached')}
               </div>
             </div>
@@ -331,7 +333,7 @@ export function ModeSelectionScreen({
                         { count: placementMatchesLeft },
                       )
                     : nextTierBand
-                      ? <>{t('play.rpToTier', { rp: Math.max(0, (nextTierTargetRp ?? 0) - displayRp) })}<span className="text-brand-yellow">{nextTierBand.tier}</span></>
+                      ? <>{t('play.rpToTier', { rp: Math.max(0, (nextTierTargetRp ?? 0) - displayRp) })}<span className="text-brand-yellow">{tierLabelOf(nextTierBand.tier)}</span></>
                       : t('play.maxRankReached')}
                 </div>
                 {/* Betsson badge — mobile only, below tier label, event only */}

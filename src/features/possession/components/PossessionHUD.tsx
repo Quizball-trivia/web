@@ -27,6 +27,8 @@ interface PossessionHUDProps {
   opponentAvatarUrl: string;
   playerAvatarCustomization?: AvatarCustomization | null;
   opponentAvatarCustomization?: AvatarCustomization | null;
+  playerRankPoints?: number | null;
+  opponentRankPoints?: number | null;
   timeRemaining: number | null;
   half: 1 | 2;
   questionInHalf: number;
@@ -50,6 +52,8 @@ export function PossessionHUD({
   opponentName,
   playerAvatarCustomization = null,
   opponentAvatarCustomization = null,
+  playerRankPoints = null,
+  opponentRankPoints = null,
   timeRemaining,
   half,
   onQuit,
@@ -78,7 +82,7 @@ export function PossessionHUD({
 
       <div className="flex items-center justify-between gap-1 px-12 sm:gap-3 sm:px-3">
         <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-3">
-          <MatchHudAvatar customization={playerAvatarCustomization} side="player" />
+          <MatchHudAvatar customization={playerAvatarCustomization} side="player" rankPoints={playerRankPoints} />
           <div className="min-w-0">
             <div className="hidden truncate text-xs font-bold text-white/85 sm:block">{playerName}</div>
             <div className="flex items-center gap-2 sm:gap-2.5">
@@ -142,7 +146,7 @@ export function PossessionHUD({
               {opponentPoints} {t('possession.pointsLabel')}
             </div>
           </div>
-          <MatchHudAvatar customization={opponentAvatarCustomization} side="opponent" flipped />
+          <MatchHudAvatar customization={opponentAvatarCustomization} side="opponent" flipped rankPoints={opponentRankPoints} />
         </div>
       </div>
     </div>

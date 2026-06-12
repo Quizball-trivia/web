@@ -153,8 +153,8 @@ function BanCategoryCardComponent({
         </div>
       )}
 
-      {/* Title — centered at the bottom */}
-      <div className="relative z-10 flex h-full flex-col justify-end items-center p-3 sm:p-4">
+      {/* Title — centered in the card */}
+      <div className="relative z-10 flex h-full flex-col justify-center items-center p-3 sm:p-4">
         <h3
           className={cn(
             'text-[clamp(0.62rem,3.1vw,1.25rem)] uppercase leading-tight text-balance text-center w-full [overflow-wrap:break-word]',
@@ -204,10 +204,10 @@ function BanCategoryCardComponent({
               initial={{ scale: 0, rotate: -20 }}
               animate={{ scale: 1, rotate: -8 }}
               transition={{ type: 'spring', stiffness: 400, damping: 14 }}
-              className="rounded-lg bg-brand-red-soft px-3 py-1.5 sm:rounded-xl sm:px-5 sm:py-2"
+              className="max-w-[88%] rounded-lg bg-brand-red-soft px-3 py-1.5 sm:rounded-xl sm:px-5 sm:py-2"
             >
               <span
-                className="text-xs uppercase tracking-[0.15em] text-white sm:text-base"
+                className="block whitespace-nowrap text-center text-[11px] uppercase tracking-[0.08em] text-white sm:text-sm"
                 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
               >
                 {t('banCategory.banned')}

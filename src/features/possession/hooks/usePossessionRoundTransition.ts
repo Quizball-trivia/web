@@ -345,8 +345,12 @@ export function usePossessionRoundTransition({
       if (transitionVisibleRef.current === captureKey) return;
       transitionVisibleRef.current = captureKey;
       setTransitionSnapshot({
+        // No `categoryName`: in Georgian both `penaltyShootout` and `shootout`
+        // translate to the same "პენალტების სერია", so showing it as the top
+        // line AND the subtitle rendered a duplicate. The title ("პენალტი N")
+        // plus a single subtitle is all we need.
         title: t('possession.penaltyN', { n: penaltyRound }),
-        categoryName: t('possession.penaltyShootout'),
+        categoryName: '',
         subtitle: penaltySuddenDeath ? t('possession.suddenDeath') : t('possession.shootout'),
         upcomingQIndex: pendingQuestion?.qIndex
           ?? (localQuestion?.phaseKind === 'penalty' ? localQuestion.qIndex : null),
