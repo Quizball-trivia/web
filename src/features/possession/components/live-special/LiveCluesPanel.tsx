@@ -157,13 +157,10 @@ export function LiveCluesPanel({
         <QuestionKindBadge key={qIndex} kind="clues" />
       </div>
 
-      {/* Prompt — plain text, no card chrome. Matches the countdown /
-          put-in-order layout: the prompt line sits above the You/Opp
-          summary and the clues so the player has the question's framing
-          before any clues drop. */}
-      <div className="px-1">
-        <p className="text-base font-black font-fun leading-snug text-white">{question.prompt}</p>
-      </div>
+      {/* No prompt line here: for "Who am I?" clue questions the prompt text is
+          the same as the kind badge above ("ვინ ვარ მე? / Who am I?"), so
+          rendering it again is a redundant duplicate. The badge + the clue cards
+          give the player all the framing they need. */}
 
       <SpecialResultSummary
         visible={submitted || roundResolved}

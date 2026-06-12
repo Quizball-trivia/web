@@ -30,13 +30,26 @@ const TYPE_STYLES: Record<Announcement['type'], { bg: string; icon: string }> = 
   event: { bg: 'bg-brand-orange', icon: '🏆' },
 };
 
+// Short month names per locale. We format the date ourselves rather than relying
+// on Intl.DateTimeFormat('ka-GE') — browser ICU builds vary and some fall back
+// to English month abbreviations, which is exactly the bug this avoids.
+const MONTHS_SHORT: Record<'en' | 'ka', readonly string[]> = {
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  ka: ['იან', 'თებ', 'მარ', 'აპრ', 'მაი', 'ივნ', 'ივლ', 'აგვ', 'სექ', 'ოქტ', 'ნოე', 'დეკ'],
+};
+
+// Parse 'YYYY-MM-DD' as a LOCAL date (not UTC) so a viewer behind UTC doesn't
+// see the day shifted back by one (e.g. "Jun 12" rendering as "Jun 11").
+function formatAnnouncementDate(iso: string, locale: 'en' | 'ka'): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  if (!y || !m || !d) return iso;
+  const month = MONTHS_SHORT[locale][m - 1] ?? '';
+  return locale === 'ka' ? `${d} ${month} ${y}` : `${month} ${d}, ${y}`;
+}
+
 export function PlayAnnouncements() {
   const { t, locale } = useLocale();
-  const dateFormatter = new Intl.DateTimeFormat(locale === 'ka' ? 'ka-GE' : 'en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+  const dateLocale: 'en' | 'ka' = locale === 'ka' ? 'ka' : 'en';
   // Collapsed by default — the announcement is shown as a tappable header the
   // user can expand, not an auto-opened modal. (Proper notifications system TBD.)
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -75,7 +88,7 @@ export function PlayAnnouncements() {
                     {t(a.titleKey)}
                   </span>
                   <span className="font-poppins text-[11px] font-medium tracking-[0.08em] text-white/70">
-                    {dateFormatter.format(new Date(a.date))}
+                    {formatAnnouncementDate(a.date, dateLocale)}
                   </span>
                 </div>
               </div>

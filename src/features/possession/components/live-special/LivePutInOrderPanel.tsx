@@ -534,11 +534,14 @@ export function LivePutInOrderPanel({
         <p className="text-base font-black font-fun leading-snug text-white">{question.prompt}</p>
       </div>
 
-      {/* Instruction — single inline line, no card */}
-      <div className="flex items-center gap-2 px-1 text-[11px] font-fun font-black uppercase tracking-[0.18em] text-white/55">
-        <ArrowUpDown className="size-3.5 text-brand-cyan" />
-        <span>
-          Drag to arrange from <span className="text-brand-cyan">{question.instruction}</span>
+      {/* Instruction — single inline line, no card. Keep whole words intact
+          (Georgian must not break mid-word) and don't letter-space the
+          instruction text so it wraps cleanly. */}
+      <div className="flex items-start gap-2 px-1 text-[11px] font-fun font-black uppercase tracking-[0.18em] text-white/55">
+        <ArrowUpDown className="size-3.5 shrink-0 translate-y-px text-brand-cyan" />
+        <span className="[overflow-wrap:break-word] [word-break:keep-all]">
+          {t('possession.dragArrangeFrom')}{' '}
+          <span className="text-brand-cyan tracking-normal normal-case">{question.instruction}</span>
         </span>
       </div>
 
