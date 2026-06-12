@@ -81,6 +81,12 @@ const STORE_PRODUCTS_QUERY_OPTIONS = {
 const STORE_WALLET_QUERY_OPTIONS = {
   staleTime: 5 * 60_000,
   gcTime: 30 * 60_000,
+  // Without these the cached wallet (initialData from localStorage) can show a
+  // stale balance for up to staleTime — e.g. an admin grant or a purchase made
+  // on another device won't appear until the cache expires. Mobile Safari makes
+  // this worse by suspending the tab. Always revalidate on mount and on focus.
+  refetchOnMount: "always",
+  refetchOnWindowFocus: true,
 } as const;
 
 type CachedWallet = {

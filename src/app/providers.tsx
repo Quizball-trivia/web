@@ -8,7 +8,6 @@ import { PlayerProvider } from "@/contexts/PlayerContext";
 import { Toaster } from "@/components/ui/sonner";
 import { LocaleProvider } from "@/contexts/LocaleContext";
 import { PostHogPageView } from "@/components/PostHogProvider";
-import { PresencePingMount } from "@/components/PresencePingMount";
 import { AuthSessionBridge } from "@/components/auth/AuthSessionBridge";
 import type { Locale } from "@/lib/i18n/messages";
 
@@ -38,7 +37,6 @@ export function Providers({ children, initialLocale }: ProvidersProps) {
           <PlayerProvider>
             <AuthSessionBridge />
             <PostHogPageView />
-            <PresencePingMount />
             {children}
             <Toaster />
           </PlayerProvider>
