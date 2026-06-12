@@ -8,12 +8,6 @@
  *
  * Coordinates come from the scene model's `actorPosition()` factory
  * which maps the pitch's local SVG units into the page's percentages.
- *
- * PERF: positions are animated as x/y TRANSFORMS of a full-pitch-sized
- * wrapper (transform %s resolve against the element's own box, which here
- * equals the pitch box) — never as left/top, which would trigger
- * layout+paint of the multi-image avatar subtree every spring frame and
- * stutter on mobile Blink.
  */
 
 import type { CSSProperties } from 'react';
@@ -22,7 +16,7 @@ import { AvatarDisplay } from '@/components/AvatarDisplay';
 import type { AvatarCustomization } from '@/types/game';
 import { PITCH_BALL_IMAGE_URL } from './pitch.helpers';
 
-type ActorPosition = { x: string | string[]; y: string | string[] };
+type ActorPosition = { left: string | string[]; top: string | string[] };
 
 interface PitchHtmlActorsProps {
   playerActorPosition: ActorPosition;
@@ -91,32 +85,27 @@ export function PitchHtmlActors({
         initial={false}
         animate={playerActorPosition}
         transition={{ type: 'spring', stiffness: 160, damping: 12, mass: 0.7 }}
-        className="pointer-events-none absolute inset-0 z-20"
-        style={{ willChange: 'transform' }}
+        className="pointer-events-none absolute z-20"
+        style={{
+          width: actorAvatarSize,
+          aspectRatio: '1 / 1',
+          transform: 'translate(-50%, -50%)',
+        }}
       >
-        <div
-          className="absolute left-0 top-0"
-          style={{
-            width: actorAvatarSize,
-            aspectRatio: '1 / 1',
-            transform: 'translate(-50%, -50%)',
-          }}
+        <motion.div
+          animate={playerHtmlActorMotion}
+          transition={playerHtmlActorTransition}
+          className="size-full rounded-full"
+          style={playerShooterStyle}
         >
-          <motion.div
-            animate={playerHtmlActorMotion}
-            transition={playerHtmlActorTransition}
-            className="size-full rounded-full"
-            style={playerShooterStyle}
+          <div
+            aria-label={playerAvatarAlt}
+            className="size-full overflow-hidden rounded-full"
+            style={{ transform: playerFlipX ? 'scaleX(-1)' : undefined }}
           >
-            <div
-              aria-label={playerAvatarAlt}
-              className="size-full overflow-hidden rounded-full"
-              style={{ transform: playerFlipX ? 'scaleX(-1)' : undefined }}
-            >
-              <AvatarDisplay customization={playerAvatarCustomization ?? {}} size="xs" className="size-full" />
-            </div>
-          </motion.div>
-        </div>
+            <AvatarDisplay customization={playerAvatarCustomization ?? {}} size="xs" className="size-full" />
+          </div>
+        </motion.div>
       </motion.div>
 
       <motion.div
@@ -124,32 +113,27 @@ export function PitchHtmlActors({
         initial={false}
         animate={opponentActorPosition}
         transition={{ type: 'spring', stiffness: 160, damping: 12, mass: 0.7 }}
-        className="pointer-events-none absolute inset-0 z-20"
-        style={{ willChange: 'transform' }}
+        className="pointer-events-none absolute z-20"
+        style={{
+          width: actorAvatarSize,
+          aspectRatio: '1 / 1',
+          transform: 'translate(-50%, -50%)',
+        }}
       >
-        <div
-          className="absolute left-0 top-0"
-          style={{
-            width: actorAvatarSize,
-            aspectRatio: '1 / 1',
-            transform: 'translate(-50%, -50%)',
-          }}
+        <motion.div
+          animate={opponentHtmlActorMotion}
+          transition={opponentHtmlActorTransition}
+          className="size-full rounded-full"
+          style={opponentShooterStyle}
         >
-          <motion.div
-            animate={opponentHtmlActorMotion}
-            transition={opponentHtmlActorTransition}
-            className="size-full rounded-full"
-            style={opponentShooterStyle}
+          <div
+            aria-label={opponentAvatarAlt}
+            className="size-full overflow-hidden rounded-full"
+            style={{ transform: opponentFlipX ? 'scaleX(-1)' : undefined }}
           >
-            <div
-              aria-label={opponentAvatarAlt}
-              className="size-full overflow-hidden rounded-full"
-              style={{ transform: opponentFlipX ? 'scaleX(-1)' : undefined }}
-            >
-              <AvatarDisplay customization={opponentAvatarCustomization ?? {}} size="xs" className="size-full" />
-            </div>
-          </motion.div>
-        </div>
+            <AvatarDisplay customization={opponentAvatarCustomization ?? {}} size="xs" className="size-full" />
+          </div>
+        </motion.div>
       </motion.div>
 
       {!hideBall && ballActorPosition && (
@@ -161,32 +145,19 @@ export function PitchHtmlActors({
             opacity: ballOpacity,
           }}
           transition={ballTransition}
-          className="pointer-events-none absolute inset-0 z-30"
-          style={{ willChange: 'transform, opacity' }}
+          className="pointer-events-none absolute z-30"
+          style={{
+            width: actorBallSize,
+            aspectRatio: '1 / 1',
+            transform: 'translate(-50%, -50%)',
+          }}
         >
-          <div
-            className="absolute left-0 top-0"
-            style={{
-              width: actorBallSize,
-              aspectRatio: '1 / 1',
-              transform: 'translate(-50%, -50%)',
-            }}
-          >
-            {/* Glow via radial gradient — NOT blur()/drop-shadow() filters,
-                which Blink re-rasterizes every frame while the ball moves. */}
-            <div
-              className="absolute inset-[-30%] rounded-full"
-              style={{
-                background:
-                  'radial-gradient(circle, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.10) 45%, rgba(255,255,255,0) 70%)',
-              }}
-            />
-            <img
-              src={PITCH_BALL_IMAGE_URL}
-              alt=""
-              className="relative size-full object-contain"
-            />
-          </div>
+          <div className="absolute inset-[-18%] rounded-full bg-white/10 blur-sm" />
+          <img
+            src={PITCH_BALL_IMAGE_URL}
+            alt=""
+            className="relative size-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.32)]"
+          />
         </motion.div>
       )}
     </>

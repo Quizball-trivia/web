@@ -187,9 +187,7 @@ export function BarBattleBar({
               scaleX: { type: 'spring', stiffness: 240, damping: 14, delay: spawnDelay },
             }}
         style={{
-          // No drop-shadow here: an SVG CSS filter on a scale-animated rect
-          // forces Blink to re-rasterize every frame. The charging glow is
-          // already provided by the yellow halo rect below.
+          filter: isCharging ? 'drop-shadow(0 0 7px rgba(255,229,0,0.75))' : undefined,
           transformOrigin: `${W / 2}px ${cy}px`,
         }}
       />
