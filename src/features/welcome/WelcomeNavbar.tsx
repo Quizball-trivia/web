@@ -14,10 +14,7 @@ export function WelcomeNavbar({ wcDaysLeft }: WelcomeNavbarProps) {
   const { t, locale } = useLocale();
   const { eventEnabled } = useActiveEventMode();
   return (
-    // Mobile uses a near-opaque bg instead of backdrop-blur: blurring the
-    // perpetually-animating hero underneath costs Blink a full re-blur every
-    // frame (one of the mobile-Chrome jank sources). Desktop keeps the glass.
-    <header className="flex h-16 md:h-20 items-center justify-between gap-2 px-6 md:px-12 lg:px-20 shrink-0 bg-surface-page/95 md:bg-surface-page/80 md:backdrop-blur-md sticky top-0 z-50">
+    <header className="flex h-16 md:h-20 items-center justify-between gap-2 px-6 md:px-12 lg:px-20 shrink-0 bg-surface-page/80 backdrop-blur-md sticky top-0 z-50">
       {/* Mobile: three slots so the switcher is centered between logo and cup.
           Desktop (md+): switcher rejoins the right cluster next to the trophy,
           like the original layout. */}

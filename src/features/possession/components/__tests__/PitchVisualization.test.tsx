@@ -204,13 +204,11 @@ describe('PitchVisualization — shot branches', () => {
       simpleShotAnimation: true,
     }));
 
-    // Positions are transform percentages (y of the full-pitch wrapper) —
-    // see actorPosition() in usePitchSceneModel.
-    const y = result.current.ballActorPosition?.y;
-    expect(Array.isArray(y)).toBe(true);
-    const yFrames = y as string[];
-    expect(yFrames).toHaveLength(2);
-    expect(Number.parseFloat(yFrames[1])).toBeLessThan(Number.parseFloat(yFrames[0]));
+    const top = result.current.ballActorPosition?.top;
+    expect(Array.isArray(top)).toBe(true);
+    const topFrames = top as string[];
+    expect(topFrames).toHaveLength(2);
+    expect(Number.parseFloat(topFrames[1])).toBeLessThan(Number.parseFloat(topFrames[0]));
   });
 });
 

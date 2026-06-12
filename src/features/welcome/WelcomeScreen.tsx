@@ -29,33 +29,6 @@ import { WelcomeFooter } from './WelcomeFooter';
 import { WelcomeWorldCupBanner } from './WelcomeWorldCupBanner';
 import { useActiveEventMode } from '@/lib/hooks/useActiveEventMode';
 
-/**
- * Owns the stadium-sim state so its timers re-render ONLY the hero + flight
- * overlay. Previously the sim hook lived in WelcomeScreen, so every phase
- * tick (and the 3s phrase rotator, forever) reconciled the entire landing
- * page — hero, categories grid, leaderboard, tier road, footer — which
- * competed with the animation frame loop on mobile CPUs.
- */
-function WelcomeStadium({
-  duelsCount,
-  onKickOff,
-}: {
-  duelsCount: number;
-  onKickOff: () => void;
-}) {
-  const sim = useWelcomeStadiumSim();
-  const { landingFlights, setLandingFlights } = sim;
-  return (
-    <>
-      <WelcomeHero sim={sim} duelsCount={duelsCount} onKickOff={onKickOff} />
-      <BarBattleFlightOverlay
-        flights={landingFlights}
-        onArrive={(id) => setLandingFlights((flights) => flights.filter((flight) => flight.id !== id))}
-      />
-    </>
-  );
-}
-
 export function WelcomeScreen() {
   // Landing shows the Betsson/World Cup layer to EVERYONE while the event flag
   // is on — no region gating here. In-game surfaces (leaderboard, play, modals)
@@ -119,6 +92,9 @@ export function WelcomeScreen() {
   const [verifiedQuestionsCount] = useState(() => getVerifiedQuestionsCount());
   const [wcDaysLeft] = useState(() => getDaysUntilWorldCup());
 
+  const sim = useWelcomeStadiumSim();
+  const { landingFlights, setLandingFlights } = sim;
+
   const { data: leaderboardData } = useLeaderboard('global');
   const leaderboardEntries = leaderboardData ?? DEMO_LEADERBOARD;
 
@@ -159,7 +135,12 @@ export function WelcomeScreen() {
       ) : null}
       <WelcomeNavbar wcDaysLeft={wcDaysLeft} />
 
-      <WelcomeStadium duelsCount={duelsCount} onKickOff={handleKickOff} />
+      <WelcomeHero sim={sim} duelsCount={duelsCount} onKickOff={handleKickOff} />
+
+      <BarBattleFlightOverlay
+        flights={landingFlights}
+        onArrive={(id) => setLandingFlights((flights) => flights.filter((flight) => flight.id !== id))}
+      />
 
       {/* ─── World Cup Event Zone ─── */}
       <div className="relative max-w-7xl mx-auto w-full px-2 md:px-4 pt-8 pb-4">

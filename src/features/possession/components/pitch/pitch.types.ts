@@ -66,8 +66,6 @@ export interface PitchVisualizationProps {
   barBattle?: BarBattleState | null;
   /** Force a bar-battle variant without changing global realtime match state. */
   barBattleVariant?: 'ranked_sim' | 'friendly_possession';
-  /** Infinite possession-fill/boundary opacity pulses (see PossessionTrackScene). */
-  ambientPulses?: boolean;
   /** Align the possession boundary to the stadium art's true center line. */
   centerPossessionTrack?: boolean;
   /** Dev prototype: keep avatars planted and animate only the ball for shot/goal results. */

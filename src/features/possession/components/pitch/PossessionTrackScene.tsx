@@ -39,14 +39,6 @@ interface PossessionTrackSceneProps {
   renderHtmlPitchActors: boolean;
   barBattle?: BarBattleState | null;
   barBattleVariant?: 'ranked_sim' | 'friendly_possession';
-  /**
-   * Infinite "breathing" opacity pulses on the possession fills + boundary
-   * line. Default on for matches; the landing hero passes false because
-   * SVG children never get compositor layers in Blink — an infinite pulse
-   * means the (stadium-bitmap-backed) SVG repaints forever, a major source
-   * of the mobile-Chrome landing jank.
-   */
-  ambientPulses?: boolean;
 }
 
 export function PossessionTrackScene({
@@ -72,7 +64,6 @@ export function PossessionTrackScene({
   renderHtmlPitchActors,
   barBattle,
   barBattleVariant,
-  ambientPulses = true,
 }: PossessionTrackSceneProps) {
   return (
     <g>
@@ -91,8 +82,10 @@ export function PossessionTrackScene({
         fill="#1CB0F6"
         opacity="0.18"
         rx="6"
-        animate={ambientPulses ? { opacity: [0.15, 0.22, 0.15] } : undefined}
-        transition={ambientPulses ? { duration: 2.5, repeat: Infinity, ease: 'easeInOut' } : undefined}
+        animate={{
+          opacity: [0.15, 0.22, 0.15],
+        }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
       />
 
       {/* Opponent's possession fill */}
@@ -104,8 +97,10 @@ export function PossessionTrackScene({
         fill="#FF4B4B"
         opacity="0.12"
         rx="6"
-        animate={ambientPulses ? { opacity: [0.08, 0.15, 0.08] } : undefined}
-        transition={ambientPulses ? { duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 } : undefined}
+        animate={{
+          opacity: [0.08, 0.15, 0.08],
+        }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
       />
 
       {/* Bar battle animation sits UNDER avatars. If bars overlap in
@@ -215,8 +210,10 @@ export function PossessionTrackScene({
           stroke="white"
           strokeWidth="2.5"
           opacity="0.9"
-          animate={ambientPulses ? { opacity: [0.7, 1, 0.7] } : undefined}
-          transition={ambientPulses ? { duration: 1.5, repeat: Infinity, ease: 'easeInOut' } : undefined}
+          animate={{
+            opacity: [0.7, 1, 0.7],
+          }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
         />
       </motion.g>
     </g>
