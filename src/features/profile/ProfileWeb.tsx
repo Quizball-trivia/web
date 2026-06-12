@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { buildProfileNavTarget } from '@/lib/hooks/useProfileNavigation';
 import { motion } from 'motion/react';
@@ -35,13 +36,15 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
 import type { PlayerStats } from '@/types/game';
-import type { MatchStatsSummary, HeadToHeadSummary, RankPosition } from '@/lib/domain';
+import type { MatchStatsSummary, ModeMatchStatsSummary, HeadToHeadSummary, RankPosition } from '@/lib/domain';
+import type { MessageKey } from '@/lib/i18n/messages';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 
 import { getTierVisual } from '@/utils/tierVisuals';
 import { RANKED_TIER_BANDS, getNextTierBand } from '@/utils/rankedTier';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useTierLabel } from '@/hooks/useTierLabel';
+import { useActiveEventMode } from '@/lib/hooks/useActiveEventMode';
 
 function resolveI18n(field: Record<string, string> | string | undefined, locale: string): string {
   if (!field) return '';
@@ -120,6 +123,7 @@ export function ProfileWeb({
   isUpdating = false,
 }: ProfileWebProps) {
   const { t, locale } = useLocale();
+  const { isEventMode } = useActiveEventMode();
   const router = useRouter();
   const tierLabelOf = useTierLabel();
   const isSelf = viewMode === 'self';
@@ -160,6 +164,11 @@ export function ProfileWeb({
   const losses = overallStats?.losses ?? 0;
   const draws = overallStats?.draws ?? 0;
   const wldTotal = wins + losses + draws;
+
+  // World Cup event: split the ranked W/D/L into the event season vs the
+  // post-reset season. Only shown in event mode once the backend provides it.
+  const rankedSeasons = matchStatsSummary?.rankedSeasons;
+  const showSeasonSplit = isEventMode && !!rankedSeasons;
 
 
 
@@ -468,7 +477,7 @@ export function ProfileWeb({
       </motion.div>
 
       {/* ─── 3. Stat cards row (3 columns on desktop) ─── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
 
           {/* Rank Card — translucent blue with brand-blue border outline.
               Mirrors the "next tier" badge style elsewhere on this page so
@@ -547,44 +556,32 @@ export function ProfileWeb({
                 </span>
               </div>
 
-              {/* W/D/L card — flex-1 fills remaining column height */}
-              <div className="flex-1 flex items-center justify-center rounded-[20px] border-2 border-brand-blue bg-surface-card/40 backdrop-blur-sm">
-                {wldTotal > 0 ? (
-                  <div className="grid w-full grid-cols-3 px-6 py-8 text-center">
-                    <div>
-                      <div
-                        className="text-5xl tabular-nums text-brand-green"
-                        style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, lineHeight: 1 }}
-                      >
-                        {wins}
-                      </div>
-                      <div className="mt-3 font-poppins text-sm font-semibold uppercase text-white">{t('profileScreen.win')}</div>
+              {/* W/D/L — split into regular vs World Cup event cards in event mode. */}
+              {showSeasonSplit ? (
+                <div className="flex-1 flex flex-col gap-3">
+                  <WinDrawLossCard
+                    label={t('profileScreen.rankedLabel')}
+                    stats={rankedSeasons!.regular}
+                    t={t}
+                  />
+                  <WinDrawLossCard
+                    label={t('profileScreen.wcEventLabel')}
+                    stats={rankedSeasons!.event}
+                    t={t}
+                    event
+                  />
+                </div>
+              ) : (
+                <div className="flex-1 flex items-center justify-center rounded-[20px] border-2 border-brand-blue bg-surface-card/40 backdrop-blur-sm">
+                  {wldTotal > 0 ? (
+                    <WinDrawLossGrid wins={wins} draws={draws} losses={losses} t={t} />
+                  ) : (
+                    <div className="font-poppins text-sm font-semibold uppercase text-white/50 text-center py-10">
+                      {t('profileScreen.noMatchesPlayed')}
                     </div>
-                    <div>
-                      <div
-                        className="text-5xl tabular-nums text-white"
-                        style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, lineHeight: 1 }}
-                      >
-                        {draws}
-                      </div>
-                      <div className="mt-3 font-poppins text-sm font-semibold uppercase text-white">{t('profileScreen.draw')}</div>
-                    </div>
-                    <div>
-                      <div
-                        className="text-5xl tabular-nums text-brand-red"
-                        style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, lineHeight: 1 }}
-                      >
-                        {losses}
-                      </div>
-                      <div className="mt-3 font-poppins text-sm font-semibold uppercase text-white">{t('profileScreen.lose')}</div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="font-poppins text-sm font-semibold uppercase text-white/50 text-center py-10">
-                    {t('profileScreen.noMatchesPlayed')}
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </motion.div>
 
             {/* Preferences (self only) — blue card per Figma */}
@@ -971,6 +968,88 @@ export function ProfileWeb({
           isSaving={isSavingAvatar}
         />
       )}
+    </div>
+  );
+}
+
+const WDL_NUM_STYLE = { fontFamily: "'Poppins', sans-serif", fontWeight: 600, lineHeight: 1 } as const;
+
+/** The win / draw / loss number grid. */
+function WinDrawLossGrid({
+  wins,
+  draws,
+  losses,
+  t,
+  size = 'lg',
+}: {
+  wins: number;
+  draws: number;
+  losses: number;
+  t: (key: MessageKey, params?: Record<string, string | number>) => string;
+  size?: 'lg' | 'sm';
+}) {
+  // Both sizes use the same big, bold numbers; `sm` just trims vertical padding
+  // so two stacked cards stay compact.
+  const numClass = 'text-5xl';
+  const pad = size === 'lg' ? 'px-6 py-8' : 'px-4 py-5';
+  const labelMt = 'mt-3';
+  return (
+    <div className={`grid w-full grid-cols-3 ${pad} text-center`}>
+      <div>
+        <div className={`${numClass} tabular-nums text-brand-green`} style={WDL_NUM_STYLE}>{wins}</div>
+        <div className={`${labelMt} font-poppins text-sm font-semibold uppercase text-white`}>{t('profileScreen.win')}</div>
+      </div>
+      <div>
+        <div className={`${numClass} tabular-nums text-white`} style={WDL_NUM_STYLE}>{draws}</div>
+        <div className={`${labelMt} font-poppins text-sm font-semibold uppercase text-white`}>{t('profileScreen.draw')}</div>
+      </div>
+      <div>
+        <div className={`${numClass} tabular-nums text-brand-red`} style={WDL_NUM_STYLE}>{losses}</div>
+        <div className={`${labelMt} font-poppins text-sm font-semibold uppercase text-white`}>{t('profileScreen.lose')}</div>
+      </div>
+    </div>
+  );
+}
+
+/** A labeled W/D/L card for one season bucket. `event` styles it as the World
+ *  Cup event card (yellow border + trophy badge top-right). */
+function WinDrawLossCard({
+  label,
+  stats,
+  t,
+  event = false,
+}: {
+  label: string;
+  stats: ModeMatchStatsSummary;
+  t: (key: MessageKey, params?: Record<string, string | number>) => string;
+  event?: boolean;
+}) {
+  const total = stats.wins + stats.draws + stats.losses;
+  const border = event ? 'border-brand-yellow' : 'border-brand-blue';
+  const headerBorder = event ? 'border-brand-yellow/40' : 'border-brand-blue/40';
+  return (
+    <div className={`relative flex-1 flex flex-col rounded-[20px] border-2 ${border} bg-surface-card/40 backdrop-blur-sm overflow-hidden`}>
+      {event && (
+        <Image
+          src="/assets/brand/world-cup-trophy.webp"
+          alt=""
+          width={28}
+          height={28}
+          className="absolute top-1.5 right-2.5 z-10 h-5 w-auto object-contain drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]"
+        />
+      )}
+      <div className={`shrink-0 border-b-2 ${headerBorder} px-4 py-1.5 text-center font-poppins text-xs font-black uppercase tracking-wide text-brand-yellow`}>
+        {label}
+      </div>
+      <div className="flex-1 flex items-center justify-center">
+        {total > 0 ? (
+          <WinDrawLossGrid wins={stats.wins} draws={stats.draws} losses={stats.losses} t={t} size="sm" />
+        ) : (
+          <div className="font-poppins text-xs font-semibold uppercase text-white/40 text-center py-4">
+            {t('profileScreen.noMatchesPlayed')}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
