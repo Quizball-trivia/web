@@ -8,10 +8,8 @@ import { AlreadyInLobbyModal } from "./components/AlreadyInLobbyModal";
 import { useRealtimeConnection } from "@/lib/realtime/useRealtimeConnection";
 import { useAuthStore } from "@/stores/auth.store";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
-import { useSiteOnlineStore } from "@/hooks/usePresencePing";
 import { useQueryClient } from "@tanstack/react-query";
 import { lobbiesKeys } from "@/lib/queries/lobbies.queries";
-import { Users } from "lucide-react";
 import { toast } from "sonner";
 import { logger } from "@/utils/logger";
 import { useLocale } from "@/contexts/LocaleContext";
@@ -32,7 +30,6 @@ export function FriendMatchHubPage() {
   
   const lobby = useRealtimeMatchStore(state => state.lobby);
   const sessionState = useRealtimeMatchStore(state => state.sessionState);
-  const siteOnline = useSiteOnlineStore(state => state.siteOnline);
   const error = useRealtimeMatchStore(state => state.error);
   const clearRealtimeError = useRealtimeMatchStore(state => state.clearError);
   
@@ -173,18 +170,7 @@ export function FriendMatchHubPage() {
             </p>
          </div>
 
-         {/* Gamified Stat/Decor (Optional) */}
-         <div
-            className="hidden lg:flex items-center gap-2 text-white uppercase"
-            style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: '0.06em' }}
-         >
-            <Users className="size-4 text-brand-green" />
-            <span>
-              {siteOnline === null
-                ? t("presence.onlineLoading")
-                : t("presence.online", { count: siteOnline.toLocaleString() })}
-            </span>
-         </div>
+         {/* Online-presence count hidden per product decision. */}
       </div>
 
       {(isSessionRecovering || isSessionTransitioning) && (
