@@ -5,11 +5,7 @@ import { useShallow } from 'zustand/shallow';
 import { useRealtimeGameLogic } from '@/lib/match/useRealtimeGameLogic';
 import { useGameSounds } from '@/lib/sounds/useGameSounds';
 import { usePreloadImages } from '@/lib/usePreloadImages';
-import {
-  CATEGORY_CARD_IMAGE_TRANSFORM,
-  optimizeSupabaseImage,
-  QUESTION_IMAGE_TRANSFORM,
-} from '@/lib/images/optimizeSupabaseImage';
+import { preloadableRemoteImageUrl } from '@/lib/images/remoteImage';
 
 /** Static art shown during goal celebrations — decoded at match start. */
 const GOAL_OVERLAY_ASSETS = ['/assets/goal.webp'];
@@ -169,12 +165,13 @@ export function useRealtimePossessionMatchController({
   // Warm the ban-category images as soon as the halftime options arrive in the
   // socket payload — usually a beat before the ban UI renders — so the cards
   // don't show blank while images download. Must warm the same optimized URL
-  // that BanCategoryCard renders (the Supabase CDN transform), otherwise the
-  // preload caches a different variant and the card still fetches cold.
+  // that BanCategoryCard renders (the Next optimizer's largest srcSet candidate
+  // at 400px), otherwise the preload caches a different variant and the card
+  // still fetches cold.
   const banImageUrls = useMemo(
     () =>
       (possessionState?.halftime.categoryOptions ?? []).map((c) =>
-        optimizeSupabaseImage(c.imageUrl, CATEGORY_CARD_IMAGE_TRANSFORM),
+        c.imageUrl ? preloadableRemoteImageUrl(c.imageUrl, 400) : null,
       ),
     [possessionState?.halftime.categoryOptions],
   );
@@ -185,11 +182,12 @@ export function useRealtimePossessionMatchController({
   // Warm the half's upcoming image-MCQ picture as soon as the server announces
   // it on match:state (the half's first question) so it's fully loaded long
   // before the image slot (Q4) starts. Must be the SAME optimized URL the
-  // QuestionImageCard renders, otherwise the card's WebP fetch is still cold.
+  // QuestionImageCard renders (Next optimizer's largest candidate at 450px),
+  // otherwise the card's fetch is still cold.
   const announcedPreloadUrls = useMemo(
     () =>
       (possessionState?.preloadImageUrls ?? []).map((url) =>
-        optimizeSupabaseImage(url, QUESTION_IMAGE_TRANSFORM),
+        url ? preloadableRemoteImageUrl(url, 450) : null,
       ),
     [possessionState?.preloadImageUrls],
   );
@@ -407,10 +405,13 @@ export function useRealtimePossessionMatchController({
 
   // Warm the image-MCQ picture as soon as the question payload lands (a beat
   // before the panel mounts) so it's already decoded when it renders. Preload
-  // the SAME optimized (WebP) URL the card renders — otherwise we'd warm the
-  // raw PNG and the card's WebP request would still be a cold fetch.
-  const questionImageUrl = localQuestion?.question.kind === 'multipleChoice'
-    ? optimizeSupabaseImage(localQuestion.question.image?.url, QUESTION_IMAGE_TRANSFORM)
+  // the SAME optimized URL the card renders — otherwise the card's request
+  // would still be a cold fetch.
+  const mcqImageUrl = localQuestion?.question.kind === 'multipleChoice'
+    ? localQuestion.question.image?.url
+    : null;
+  const questionImageUrl = mcqImageUrl
+    ? preloadableRemoteImageUrl(mcqImageUrl, 450)
     : null;
   usePreloadImages(useMemo(() => [questionImageUrl], [questionImageUrl]));
 

@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import type { GameQuestionImage } from '@/lib/domain/gameQuestion';
-import { optimizeSupabaseImage, QUESTION_IMAGE_TRANSFORM } from '@/lib/images/optimizeSupabaseImage';
+import { optimizedRemoteImageProps } from '@/lib/images/remoteImage';
 
 interface QuestionImageCardProps {
   image: GameQuestionImage;
@@ -30,8 +30,11 @@ export function QuestionImageCard({ image }: QuestionImageCardProps) {
   const [useRaw, setUseRaw] = useState(false);
   if (failed || !image.url) return null;
 
-  const optimized = optimizeSupabaseImage(image.url, QUESTION_IMAGE_TRANSFORM) ?? image.url;
-  const src = useRaw ? image.url : optimized;
+  // 450px ≈ the card's max rendered width (260px tall, landscape source); the
+  // optimizer serves the right density candidate from `sizes`.
+  const optimized = optimizedRemoteImageProps(image.url, 450);
+  const imgProps = useRaw ? { src: image.url } : optimized;
+  const sizes = '(min-width: 1024px) 450px, 100vw';
 
   return (
     <motion.div
@@ -52,7 +55,8 @@ export function QuestionImageCard({ image }: QuestionImageCardProps) {
             as plain black on the dark card and the effect disappears.
             Decorative only — errors are handled by the foreground image. */}
         <img
-          src={src}
+          {...imgProps}
+          sizes={sizes}
           alt=""
           aria-hidden
           loading="eager"
@@ -69,7 +73,8 @@ export function QuestionImageCard({ image }: QuestionImageCardProps) {
             question for screen-reader users. A curated, spoiler-free alt
             field can be added to the CMS payload later if needed. */}
         <img
-          src={src}
+          {...imgProps}
+          sizes={sizes}
           alt=""
           width={image.width}
           height={image.height}
