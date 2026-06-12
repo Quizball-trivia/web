@@ -142,6 +142,7 @@ export function WelcomeHero({ sim, duelsCount, onKickOff }: WelcomeHeroProps) {
                   ballOnPlayer={landingBallOnPlayer}
                   barBattle={landingBattle}
                   barBattleVariant="ranked_sim"
+                  ambientPulses={false}
                   shotMode={landingShotMode}
                   simpleShotAnimation
                   hideBall={showGoal}
@@ -179,7 +180,17 @@ export function WelcomeHero({ sim, duelsCount, onKickOff }: WelcomeHeroProps) {
                         animate={{ scale: [1 / 4.6, 1, 1 / 4.6], y: [10, -32, 0], opacity: [0.94, 1, 1] }}
                         transition={{ duration: 1.85, times: [0, 0.45, 1], ease: 'easeInOut' }}
                       >
-                        <Image src="/assets/brand/goal-ball.webp" alt="" width={512} height={512} priority className="size-[221px] object-contain drop-shadow-[0_0_14px_rgba(255,255,255,0.32)] md:size-[258px]" />
+                        {/* Glow as a radial gradient, not drop-shadow():
+                            filters on a scale-animated layer re-rasterize per
+                            frame on Blink. */}
+                        <div
+                          className="absolute inset-[-12%] rounded-full"
+                          style={{
+                            background:
+                              'radial-gradient(circle, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.10) 55%, rgba(255,255,255,0) 72%)',
+                          }}
+                        />
+                        <Image src="/assets/brand/goal-ball.webp" alt="" width={512} height={512} priority className="relative size-[221px] object-contain md:size-[258px]" />
                       </motion.div>
                     </motion.div>
                   </motion.div>
@@ -203,6 +214,10 @@ export function WelcomeHero({ sim, duelsCount, onKickOff }: WelcomeHeroProps) {
             style={{
               maskImage: 'linear-gradient(to top, black 60%, transparent 100%), linear-gradient(to right, transparent 0%, black 22%, black 100%)',
               WebkitMaskImage: 'linear-gradient(to top, black 60%, transparent 100%), linear-gradient(to right, transparent 0%, black 22%, black 100%)',
+              // Promote to its own compositor layer: without this, Blink
+              // re-rasterizes the masked image on every frame of the infinite
+              // rotation (mobile-only element — a top cause of Chrome jank).
+              willChange: 'transform',
             }}
             animate={{ rotate: [-8, 8, -8] }}
             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
@@ -217,6 +232,7 @@ export function WelcomeHero({ sim, duelsCount, onKickOff }: WelcomeHeroProps) {
             style={{
               maskImage: 'linear-gradient(to top, black 60%, transparent 100%), linear-gradient(to left, transparent 0%, black 22%, black 100%)',
               WebkitMaskImage: 'linear-gradient(to top, black 60%, transparent 100%), linear-gradient(to left, transparent 0%, black 22%, black 100%)',
+              willChange: 'transform',
             }}
             animate={{ rotate: [8, -8, 8] }}
             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
