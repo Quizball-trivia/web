@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { PitchVisualization } from './PitchVisualization';
@@ -173,12 +173,33 @@ export function HalftimeScreen({
     [bothBansSubmitted, categoryOptions, bannedIds]
   );
 
+  // Latch "I have already banned" for this ban phase. Server state can briefly
+  // wobble (e.g. when the opponent's ban update lands the snapshot can momentarily
+  // report my own ban as null), which would flip the turn indicator back to
+  // "your turn" for a few seconds. Once I've banned, I must never be told it's my
+  // turn again this phase. The latch resets when a NEW ban phase starts (the
+  // category set changes) so the second half / penalty ban works normally.
+  const phaseKey = useMemo(
+    () => categoryOptions.map((c) => c.id).join('|'),
+    [categoryOptions],
+  );
+  const bannedThisPhaseRef = useRef<{ phaseKey: string; banned: boolean }>({ phaseKey, banned: false });
+  if (bannedThisPhaseRef.current.phaseKey !== phaseKey) {
+    bannedThisPhaseRef.current = { phaseKey, banned: false };
+  }
+  if (myBan) {
+    bannedThisPhaseRef.current.banned = true;
+  }
+  const alreadyBanned = bannedThisPhaseRef.current.banned;
+
   const myTurn = mySeat === (firstBanSeat ?? 2)
     ? !myBan
     : mySeat === 1 || mySeat === 2
       ? Boolean(opponentBan && !myBan)
       : false;
-  const canBan = myTurn;
+  // `alreadyBanned` guard: never show "your turn" again after I've banned, even
+  // if a transient server snapshot drops my ban.
+  const canBan = myTurn && !alreadyBanned;
 
   if (!visible) {
     return null;

@@ -251,7 +251,7 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
   const revealTierVisual = getTierVisual(revealTier);
   const resultHeading: 'VICTORY' | 'DEFEAT' | 'DRAW' = isDraw ? 'DRAW' : playerWon ? 'VICTORY' : 'DEFEAT';
   const totalGamesLabel = totalMatches > 0
-    ? `${totalMatches} GAME${totalMatches === 1 ? '' : 'S'} PLAYED`
+    ? t(totalMatches === 1 ? 'results.gamePlayed' : 'results.gamesPlayed', { count: totalMatches })
     : t('results.matchComplete');
 
   // Hero cards show the PRE-match identity (rank you entered the match with);

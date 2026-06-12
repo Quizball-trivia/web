@@ -8,6 +8,14 @@ import { useActiveEventMode } from "@/lib/hooks/useActiveEventMode";
 interface LeaderboardPodiumProps {
   topThree: LeaderboardEntry[];
   onEntryClick?: (userId: string) => void;
+  /**
+   * Force the event (Betsson/World Cup) styling regardless of region. The
+   * landing page uses this so the leaderboard matches the rest of its event UI
+   * (which is gated on `eventEnabled`, shown to everyone while the flag is on),
+   * whereas in-app surfaces leave it undefined and fall back to the
+   * region-gated `isEventMode`.
+   */
+  eventMode?: boolean;
 }
 
 const poppins = {
@@ -104,8 +112,9 @@ const podiumConfig: Record<
   },
 };
 
-export function LeaderboardPodium({ topThree, onEntryClick }: LeaderboardPodiumProps) {
-  const { isEventMode } = useActiveEventMode();
+export function LeaderboardPodium({ topThree, onEntryClick, eventMode }: LeaderboardPodiumProps) {
+  const { isEventMode: regionEventMode } = useActiveEventMode();
+  const isEventMode = eventMode ?? regionEventMode;
 
   const [first, second, third] = [
     topThree.find((p) => p.rank === 1),

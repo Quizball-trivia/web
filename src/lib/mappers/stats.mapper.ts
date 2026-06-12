@@ -94,5 +94,26 @@ export function toMatchStatsSummary(response: StatsSummaryResponse): MatchStatsS
       draws: response.friendly.draws,
       winRate: response.friendly.winRate,
     },
+    // Optional until the backend stats split (PR) is deployed.
+    ...(toRankedSeasons(response)),
   };
+}
+
+function toRankedSeasons(
+  response: StatsSummaryResponse,
+): Pick<MatchStatsSummary, 'rankedSeasons'> {
+  const split = (response as { rankedSeasons?: { regular: ModeStats; event: ModeStats } })
+    .rankedSeasons;
+  if (!split) return {};
+  return {
+    rankedSeasons: {
+      regular: toMode(split.regular),
+      event: toMode(split.event),
+    },
+  };
+}
+
+type ModeStats = { gamesPlayed: number; wins: number; losses: number; draws: number; winRate: number };
+function toMode(m: ModeStats): ModeStats {
+  return { gamesPlayed: m.gamesPlayed, wins: m.wins, losses: m.losses, draws: m.draws, winRate: m.winRate };
 }

@@ -120,6 +120,11 @@ function PublicProfileContent({ userId }: { userId: string }) {
     overall: profile.stats.overall,
     ranked: profile.stats.ranked,
     friendly: profile.stats.friendly,
+    // Pass through the World Cup event split so the opponent profile shows the
+    // same event stats card we show on our own profile (when present).
+    ...(profile.stats.rankedSeasons
+      ? { rankedSeasons: profile.stats.rankedSeasons }
+      : {}),
   };
 
   const mappedMatches = recentMatches.map(toProfileRecentMatch);

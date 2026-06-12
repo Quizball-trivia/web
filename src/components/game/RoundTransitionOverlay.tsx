@@ -90,7 +90,7 @@ function ModernRoundTransitionOverlay({ title, categoryName, subtitle }: RoundTr
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
-      className="absolute inset-0 z-20 flex flex-col items-center justify-center overflow-hidden bg-transparent px-6 text-center"
+      className="absolute inset-0 z-20 flex flex-col items-center justify-center overflow-hidden bg-transparent px-6 text-center [transform:translateY(-9%)] sm:[transform:none]"
     >
       {/* Top + bottom accent rails — kept from the classic variant so the
           overlay still reads as a discrete "round break" beat. Brand green

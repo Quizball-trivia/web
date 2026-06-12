@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- Category artwork URLs come from realtime/backend payloads. */
 
-import { CATEGORY_CARD_IMAGE_TRANSFORM, optimizeSupabaseImage } from "@/lib/images/optimizeSupabaseImage";
+import { optimizedRemoteImageProps } from "@/lib/images/remoteImage";
 import { memo, useMemo } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -118,10 +118,11 @@ function BanCategoryCardComponent({
         <>
           <div className="absolute inset-0" style={{ backgroundColor: color.bg }} />
           <img
-            src={optimizeSupabaseImage(imageUrl, CATEGORY_CARD_IMAGE_TRANSFORM) ?? undefined}
+            {...optimizedRemoteImageProps(imageUrl!, 400)}
             alt=""
             width={400}
             height={500}
+            sizes="(min-width: 1024px) 22vw, (min-width: 640px) 30vw, 45vw"
             decoding="async"
             loading="eager"
             fetchPriority="high"
@@ -152,8 +153,8 @@ function BanCategoryCardComponent({
         </div>
       )}
 
-      {/* Title — centered at the bottom */}
-      <div className="relative z-10 flex h-full flex-col justify-end items-center p-3 sm:p-4">
+      {/* Title — centered in the card */}
+      <div className="relative z-10 flex h-full flex-col justify-center items-center p-3 sm:p-4">
         <h3
           className={cn(
             'text-[clamp(0.62rem,3.1vw,1.25rem)] uppercase leading-tight text-balance text-center w-full [overflow-wrap:break-word]',
@@ -197,16 +198,16 @@ function BanCategoryCardComponent({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none"
+            className="absolute inset-0 z-30 flex items-center justify-center bg-black/30 pointer-events-none"
           >
             <motion.div
               initial={{ scale: 0, rotate: -20 }}
               animate={{ scale: 1, rotate: -8 }}
               transition={{ type: 'spring', stiffness: 400, damping: 14 }}
-              className="rounded-lg bg-brand-red-soft px-3 py-1.5 sm:rounded-xl sm:px-5 sm:py-2"
+              className="max-w-[90%] rounded-lg bg-brand-red-soft px-3 py-1.5 sm:rounded-xl sm:px-6 sm:py-2.5 md:px-7 md:py-3"
             >
               <span
-                className="text-xs uppercase tracking-[0.15em] text-white sm:text-base"
+                className="block whitespace-nowrap text-center text-[11px] uppercase tracking-[0.08em] text-white sm:text-base md:text-lg"
                 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
               >
                 {t('banCategory.banned')}

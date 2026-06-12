@@ -339,7 +339,7 @@ export function RankedProgressionPanel({
               cap-to-cap between the two markers. `items-end` aligns the
               short bar with the bottom of each marker column. */}
           <div className="mt-6 flex items-end md:mt-8">
-            <TierEndMarker label={rpTierInfo.tier} align="left" />
+            <TierEndMarker label={tierLabelOf(rpTierInfo.tier)} align="left" />
             <div
               className="relative h-[18px] flex-1 overflow-hidden md:h-[24px]"
               style={{ backgroundColor: '#1F5D0E' }}
@@ -358,7 +358,7 @@ export function RankedProgressionPanel({
                 className="absolute inset-y-0 left-0 bg-brand-green"
               />
             </div>
-            <TierEndMarker label={nextTierBand?.tier ?? t('results.nextStage')} align="right" />
+            <TierEndMarker label={nextTierBand ? tierLabelOf(nextTierBand.tier) : t('results.nextStage')} align="right" />
           </div>
 
           <div

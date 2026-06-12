@@ -62,3 +62,26 @@ export function optimizedRemoteImageProps(
   });
   return { src: props.src, srcSet: props.srcSet };
 }
+
+/**
+ * The single optimizer URL to PRELOAD so the eager image is warm by the time it
+ * renders. A `<img srcSet>` with no `sizes` picks the LARGEST candidate (the
+ * browser assumes 100vw), and even with `sizes` a retina screen pulls the 2x
+ * candidate — so preloading the bare `src` (1x) would cache-miss the variant the
+ * card actually fetches. We preload the highest-resolution srcSet candidate
+ * instead, which is the one a retina/100vw render requests.
+ *
+ * Returns the original URL unchanged for non-Supabase hosts (no optimizer URL).
+ */
+export function preloadableRemoteImageUrl(
+  src: string,
+  displayWidth: number,
+): string {
+  const { src: baseSrc, srcSet } = optimizedRemoteImageProps(src, displayWidth);
+  if (!srcSet) return baseSrc;
+  // srcSet is "url1 1x, url2 2x" (or "url1 640w, ..."). Take the LAST entry —
+  // getImageProps emits candidates in ascending order, so the last is largest.
+  const last = srcSet.split(",").pop()?.trim();
+  const url = last?.split(/\s+/)[0];
+  return url || baseSrc;
+}
