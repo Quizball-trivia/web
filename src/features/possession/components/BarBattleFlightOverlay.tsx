@@ -63,7 +63,12 @@ export const FAILED_FLIGHT_TOTAL_MS = 2000;
 // renders the same path with a small delay offset so visually they form
 // a comet smear behind the lead +N. Tune up for chunkier trail, down for
 // crisper read.
-const TRAIL_GHOST_COUNT = 6;
+// PERF: every ghost is its own composited layer whose stroked text must be
+// rasterized at DPR scale the moment the flight mounts. 6 ghosts × 2
+// simultaneous landing flights caused a 14-layer raster storm that froze
+// mobile Blink for a few frames at every launch. 3 ghosts read the same
+// (they overlap heavily) at half the cost.
+const TRAIL_GHOST_COUNT = 3;
 
 export function BarBattleFlightOverlay({
   flights,
@@ -319,7 +324,7 @@ function FlightSprite({
       }}
       onAnimationComplete={() => onArrive?.(flight.id)}
     >
-      <PlusNText points={flight.points} dim={isTrail} />
+      <PlusNText points={flight.points} ghost={isTrail} />
     </motion.div>
     </div>
   );
@@ -392,7 +397,7 @@ function BoostFlightSprite({
         }}
         onAnimationComplete={() => onArrive?.(flight.id)}
       >
-        <PlusNText points={doubled ? flight.points * 2 : flight.points} dim={isTrail} />
+        <PlusNText points={doubled ? flight.points * 2 : flight.points} ghost={isTrail} />
       </motion.div>
     </div>
   );
@@ -464,8 +469,23 @@ function FailedFlight({
 
 /** Shared +N text — Poppins Black, brand yellow, tilted -6.8° per Figma.
  *  `dim` desaturates trail ghosts and failed flights so the main success
- *  flight reads as the brightest element on screen. */
-function PlusNText({ points, dim = false }: { points: number; dim?: boolean }) {
+ *  flight reads as the brightest element on screen.
+ *
+ *  PERF: only the lead sprite gets the stroke + layered shadows. Trail
+ *  ghosts are ≤55% opacity and stacked on top of each other, so their
+ *  stroke/shadow is visually indistinguishable — but rasterizing stroked
+ *  text for every ghost layer at mobile DPR was the bulk of the launch
+ *  raster storm (lag/tearing on mobile Chrome). Ghosts render plain text. */
+function PlusNText({
+  points,
+  dim = false,
+  ghost = false,
+}: {
+  points: number;
+  dim?: boolean;
+  /** Trail ghosts skip stroke/shadows entirely (see PERF note above). */
+  ghost?: boolean;
+}) {
   return (
     <motion.div
       className="relative"
@@ -478,13 +498,17 @@ function PlusNText({ points, dim = false }: { points: number; dim?: boolean }) {
         fontSize: 'clamp(40px, 7vw, 64px)',
         lineHeight: 1,
         letterSpacing: 0,
-        color: dim ? 'rgba(255, 229, 0, 0.85)' : '#FFE500',
-        textShadow: dim
-          ? '0 4px 0 rgba(0,0,0,0.6), 0 8px 14px rgba(0,0,0,0.3)'
-          : '0 6px 0 rgba(0,0,0,0.78), 0 10px 18px rgba(0,0,0,0.4)',
-        WebkitTextStrokeWidth: 3,
-        WebkitTextStrokeColor: 'rgba(0,0,0,0.92)',
-        paintOrder: 'stroke fill',
+        color: ghost ? 'rgba(214, 184, 0, 0.9)' : dim ? 'rgba(255, 229, 0, 0.85)' : '#FFE500',
+        ...(ghost
+          ? null
+          : {
+              textShadow: dim
+                ? '0 4px 0 rgba(0,0,0,0.6), 0 8px 14px rgba(0,0,0,0.3)'
+                : '0 6px 0 rgba(0,0,0,0.78), 0 10px 18px rgba(0,0,0,0.4)',
+              WebkitTextStrokeWidth: 3,
+              WebkitTextStrokeColor: 'rgba(0,0,0,0.92)',
+              paintOrder: 'stroke fill',
+            }),
       }}
     >
       +{points}
