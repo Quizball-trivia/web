@@ -854,6 +854,8 @@
     "nextPage": "Go to next page"
   },
   "results": {
+    "gamePlayed": "{count} game played",
+    "gamesPlayed": "{count} games played",
     "newRank": "New Rank",
     "rankUnlocked": "New rank unlocked!",
     "rankLost": "Rank lost",
@@ -995,6 +997,11 @@
     "lobbyVisibilityPrivateHint": "Only players with the code can join"
   },
   "possession": {
+    "cluesGuessedAtClue": "clue {index}",
+    "cluesAnswerSubmitted": "answer submitted",
+    "cluesNotAnswered": "not answered",
+    "cluesNoCorrectAnswer": "no correct answer",
+    "cluesResultPending": "result pending",
     "penaltyShootout": "Penalty Shootout",
     "finalizingMatch": "Finalizing Match",
     "finalizingResults": "Finalizing results...",

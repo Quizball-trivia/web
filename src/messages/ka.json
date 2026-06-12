@@ -391,6 +391,8 @@
   },
   "results": {
     "xp": "XP",
+    "gamePlayed": "{count} ნათამაშები მატჩი",
+    "gamesPlayed": "{count} ნათამაშები მატჩი",
     "newRank": "ახალი რანგი",
     "rankUnlocked": "ახალი რანგი გახსნილია!",
     "rankLost": "რანგი დაკარგულია",
@@ -1041,6 +1043,11 @@
     "lobbyVisibilityPrivateHint": "შეერთება მხოლოდ კოდის მქონე მოთამაშეებს შეუძლიათ"
   },
   "possession": {
+    "cluesGuessedAtClue": "მინიშნება {index}",
+    "cluesAnswerSubmitted": "პასუხი გაგზავნილია",
+    "cluesNotAnswered": "უპასუხოდ",
+    "cluesNoCorrectAnswer": "სწორი პასუხი არ არის",
+    "cluesResultPending": "შედეგი მუშავდება",
     "penaltyShootout": "პენალტების სერია",
     "finalizingMatch": "მატჩის დასრულება",
     "finalizingResults": "შედეგების დასრულება...",

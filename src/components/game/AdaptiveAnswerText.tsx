@@ -69,12 +69,25 @@ export function AdaptiveAnswerText({
     const parent = el?.parentElement;
     if (!el || !parent) return;
 
+    // Available space = the parent's CONTENT box (inside its padding). `el` is a
+    // width:100% block, so its own clientWidth already excludes the parent's
+    // horizontal padding — using parent.clientWidth here would over-report the
+    // width by the px-* padding and let the text overflow + clip. For height the
+    // span has no fixed box, so subtract the parent's vertical padding from its
+    // clientHeight to get the real room.
+    const avail = () => {
+      const cs = getComputedStyle(parent);
+      const padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+      return {
+        width: el.clientWidth,
+        height: Math.max(0, parent.clientHeight - padY),
+      };
+    };
+
     const fits = (size: number): boolean => {
       el.style.fontSize = `${size}px`;
-      return (
-        el.scrollHeight <= parent.clientHeight + 0.5 &&
-        el.scrollWidth <= parent.clientWidth + 0.5
-      );
+      const { width, height } = avail();
+      return el.scrollHeight <= height + 0.5 && el.scrollWidth <= width + 0.5;
     };
 
     const measure = () => {
@@ -83,8 +96,9 @@ export function AdaptiveAnswerText({
         return;
       }
       if (!fits(gridMinFontSize)) {
-        const wr = el.scrollWidth > 0 ? parent.clientWidth / el.scrollWidth : 1;
-        const hr = el.scrollHeight > 0 ? parent.clientHeight / el.scrollHeight : 1;
+        const { width, height } = avail();
+        const wr = el.scrollWidth > 0 ? width / el.scrollWidth : 1;
+        const hr = el.scrollHeight > 0 ? height / el.scrollHeight : 1;
         const scale = Math.min(wr, hr, 1);
         setFontSize(Math.max(8, Math.floor(gridMinFontSize * scale)));
         return;
