@@ -26,6 +26,8 @@ interface PenaltyHUDProps {
   opponentAvatarUrl: string;
   playerAvatarCustomization?: AvatarCustomization | null;
   opponentAvatarCustomization?: AvatarCustomization | null;
+  playerRankPoints?: number | null;
+  opponentRankPoints?: number | null;
   timeRemaining: number;
   phase: Phase;
   onQuit?: () => void;
@@ -44,6 +46,8 @@ export function PenaltyHUD({
   opponentName,
   playerAvatarCustomization = null,
   opponentAvatarCustomization = null,
+  playerRankPoints = null,
+  opponentRankPoints = null,
   timeRemaining,
   phase,
   onQuit,
@@ -111,7 +115,7 @@ export function PenaltyHUD({
 
       <div className="flex items-center justify-between gap-1 px-12 sm:gap-3 sm:px-3">
         <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-3">
-          <MatchHudAvatar customization={playerAvatarCustomization} side="player" />
+          <MatchHudAvatar customization={playerAvatarCustomization} side="player" rankPoints={playerRankPoints} />
           <div className="min-w-0">
             <div className="hidden truncate text-xs font-bold text-white/85 sm:block">{playerName}</div>
             <div className="text-2xl font-black leading-6 tabular-nums text-white sm:text-3xl sm:leading-7">{penaltyPlayerScore}</div>
@@ -156,7 +160,7 @@ export function PenaltyHUD({
               {opponentPoints} {t('possession.pointsLabel')}
             </div>
           </div>
-          <MatchHudAvatar customization={opponentAvatarCustomization} side="opponent" />
+          <MatchHudAvatar customization={opponentAvatarCustomization} side="opponent" rankPoints={opponentRankPoints} />
         </div>
       </div>
       {/* Penalty score pips */}

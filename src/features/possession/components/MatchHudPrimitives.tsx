@@ -1,7 +1,8 @@
 'use client';
 
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
-import { AvatarDisplay } from '@/components/AvatarDisplay';
+import { TierFrameAvatar } from '@/components/TierFrameAvatar';
+import { tierFromRp } from '@/utils/rankedTier';
 import { cn } from '@/lib/utils';
 import type { AvatarCustomization } from '@/types/game';
 
@@ -33,17 +34,26 @@ interface MatchHudAvatarProps {
   customization?: AvatarCustomization | null;
   side: 'player' | 'opponent';
   flipped?: boolean;
+  /** Pre-match ranked points used to pick the tier shield frame. Null RP falls
+   *  back to the Academy frame (RP 0), matching the draft/halftime ban screens —
+   *  the HUD avatar is always framed. */
+  rankPoints?: number | null;
 }
 
-export function MatchHudAvatar({ customization = null, side, flipped = false }: MatchHudAvatarProps) {
+export function MatchHudAvatar({ customization = null, side, flipped = false, rankPoints = null }: MatchHudAvatarProps) {
   void side;
 
+  // TierFrameAvatar is a FIFA-style CARD (taller than wide, fixed inline size),
+  // not a circle — so we don't constrain it to a square slot. It renders at its
+  // own `sm` size (44×62) and the header row sizes around it.
   return (
-    <div className="relative flex size-10 shrink-0 items-center justify-center sm:size-12">
-      <AvatarDisplay
-        customization={customization ?? {}}
-        size="xs"
-        className={cn('size-full drop-shadow-[0_8px_16px_rgba(0,0,0,0.35)]', flipped && '-scale-x-100')}
+    <div className="relative flex shrink-0 items-center justify-center">
+      <TierFrameAvatar
+        tier={tierFromRp(rankPoints ?? 0)}
+        avatarCustomization={customization ?? {}}
+        size="sm"
+        mirrorAvatar={flipped}
+        className="drop-shadow-[0_8px_16px_rgba(0,0,0,0.35)]"
       />
     </div>
   );

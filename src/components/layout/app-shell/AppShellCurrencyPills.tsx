@@ -21,7 +21,7 @@ interface AppShellCurrencyPillsProps {
 export function AppShellCurrencyPills({ variant, coins, tickets }: AppShellCurrencyPillsProps) {
   if (variant === 'desktop') {
     return (
-      <div className="flex items-center gap-3 mr-4">
+      <div className="flex items-center gap-3">
         <Link
           href="/store"
           className="flex items-center gap-1 pl-1.5 pr-3.5 py-1 rounded-full bg-brand-yellow hover:bg-brand-yellow-deep transition-all active:scale-95"

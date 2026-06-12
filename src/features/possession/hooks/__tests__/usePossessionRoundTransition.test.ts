@@ -243,8 +243,11 @@ describe('usePossessionRoundTransition', () => {
     expect(result.current.penaltyCountdownActive).toBe(false);
     expect(result.current.showPenaltyTransition).toBe(true);
     expect(result.current.transitionSnapshot).toEqual({
+      // categoryName is intentionally empty: it duplicated the subtitle in
+      // Georgian (both "პენალტების სერია"), so the penalty overlay only shows
+      // the title + subtitle now.
       title: 'Penalty 1',
-      categoryName: 'Penalty Shootout',
+      categoryName: '',
       subtitle: 'Sudden Death',
       upcomingQIndex: 12,
     });
@@ -256,8 +259,11 @@ describe('usePossessionRoundTransition', () => {
     });
 
     expect(result.current.transitionSnapshot).toEqual({
+      // categoryName is intentionally empty: it duplicated the subtitle in
+      // Georgian (both "პენალტების სერია"), so the penalty overlay only shows
+      // the title + subtitle now.
       title: 'Penalty 1',
-      categoryName: 'Penalty Shootout',
+      categoryName: '',
       subtitle: 'Sudden Death',
       upcomingQIndex: 12,
     });
@@ -271,7 +277,7 @@ describe('usePossessionRoundTransition', () => {
 
     expect(result.current.transitionSnapshot).toEqual({
       title: 'Penalty 2',
-      categoryName: 'Penalty Shootout',
+      categoryName: '',
       subtitle: 'Sudden Death',
       upcomingQIndex: 13,
     });

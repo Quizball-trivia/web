@@ -123,16 +123,19 @@ export const DEMO_AVATAR_LOADOUTS: AvatarCustomization[] = [
 ];
 
 /** Demo leaderboard shown on the landing page before the user logs in.
- *  All Georgian flags + placeholder names to make it clear this is sample data. */
+ *  All Georgian flags + placeholder names to make it clear this is sample data.
+ *  Each player is dressed in real store cosmetics (valid avatar_customization
+ *  enums) so the preview shows the kind of avatars players can build, not bare
+ *  defaults. */
 export const DEMO_LEADERBOARD: LeaderboardEntry[] = [
-  { id: '1', rank: 1, username: 'Player_1', avatar: 'avatar-1', country: 'ge', tier: 'GOAT', rankPoints: 4820, isCurrentUser: false, trend: 'same', trendValue: 0 },
-  { id: '2', rank: 2, username: 'Player_2', avatar: 'avatar-2', country: 'ge', tier: 'Legend', rankPoints: 4615, isCurrentUser: false, trend: 'up', trendValue: 2 },
-  { id: '3', rank: 3, username: 'Player_3', avatar: 'avatar-3', country: 'ge', tier: 'Legend', rankPoints: 4490, isCurrentUser: false, trend: 'down', trendValue: 1 },
-  { id: '4', rank: 4, username: 'Player_4', avatar: 'avatar-4', country: 'ge', tier: 'World-Class', rankPoints: 4210, isCurrentUser: false, trend: 'up', trendValue: 3 },
-  { id: '5', rank: 5, username: 'Player_5', avatar: 'avatar-5', country: 'ge', tier: 'World-Class', rankPoints: 3980, isCurrentUser: false, trend: 'down', trendValue: 2 },
-  { id: '6', rank: 6, username: 'Player_6', avatar: 'avatar-6', country: 'ge', tier: 'Captain', rankPoints: 3755, isCurrentUser: false, trend: 'up', trendValue: 1 },
-  { id: '7', rank: 7, username: 'Player_7', avatar: 'avatar-7', country: 'ge', tier: 'Captain', rankPoints: 3640, isCurrentUser: false, trend: 'same', trendValue: 0 },
-  { id: '8', rank: 8, username: 'Player_8', avatar: 'avatar-8', country: 'ge', tier: 'Key Player', rankPoints: 3510, isCurrentUser: false, trend: 'up', trendValue: 4 },
+  { id: '1', rank: 1, username: 'Player_1', avatar: 'avatar-1', avatarCustomization: { skin: 'skin_male_white', jersey: 'jersey_georgia_retro', hair: 'hair_ronaldo_goat', facialHair: 'beard' }, country: 'ge', tier: 'GOAT', rankPoints: 4820, isCurrentUser: false, trend: 'same', trendValue: 0 },
+  { id: '2', rank: 2, username: 'Player_2', avatar: 'avatar-2', avatarCustomization: { skin: 'skin_male_dark', jersey: 'jersey_brazil_retro', hair: 'hair_ronaldo_brazil' }, country: 'ge', tier: 'Legend', rankPoints: 4615, isCurrentUser: false, trend: 'up', trendValue: 2 },
+  { id: '3', rank: 3, username: 'Player_3', avatar: 'avatar-3', avatarCustomization: { skin: 'skin_male_white_alt', jersey: 'jersey_real', hair: 'hair_ramos', facialHair: 'stache' }, country: 'ge', tier: 'Legend', rankPoints: 4490, isCurrentUser: false, trend: 'down', trendValue: 1 },
+  { id: '4', rank: 4, username: 'Player_4', avatar: 'avatar-4', avatarCustomization: { skin: 'skin_male_white', jersey: 'jersey_barcelona', hair: 'hair_boy_basic', glasses: 'glasses_wayfarer' }, country: 'ge', tier: 'World-Class', rankPoints: 4210, isCurrentUser: false, trend: 'up', trendValue: 3 },
+  { id: '5', rank: 5, username: 'Player_5', avatar: 'avatar-5', avatarCustomization: { skin: 'skin_male_dark_alt', jersey: 'jersey_liverpool', hair: 'hair_hamsik' }, country: 'ge', tier: 'World-Class', rankPoints: 3980, isCurrentUser: false, trend: 'down', trendValue: 2 },
+  { id: '6', rank: 6, username: 'Player_6', avatar: 'avatar-6', avatarCustomization: { skin: 'skin_male_white', jersey: 'jersey_argentina_retro', hair: 'hair_boy_basic', facialHair: 'beard' }, country: 'ge', tier: 'Captain', rankPoints: 3755, isCurrentUser: false, trend: 'up', trendValue: 1 },
+  { id: '7', rank: 7, username: 'Player_7', avatar: 'avatar-7', avatarCustomization: { skin: 'skin_male_dark', jersey: 'jersey_bayern', hair: 'hair_girl_basic', glasses: 'glasses_round' }, country: 'ge', tier: 'Captain', rankPoints: 3640, isCurrentUser: false, trend: 'same', trendValue: 0 },
+  { id: '8', rank: 8, username: 'Player_8', avatar: 'avatar-8', avatarCustomization: { skin: 'skin_male_white_alt', jersey: 'jersey_milan', hair: 'hair_hamsik' }, country: 'ge', tier: 'Key Player', rankPoints: 3510, isCurrentUser: false, trend: 'up', trendValue: 4 },
 ];
 
 export const LANDING_SCENARIOS: LandingScenario[] = [

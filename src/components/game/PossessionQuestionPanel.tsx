@@ -6,7 +6,7 @@ import { Volume2, VolumeX, X } from 'lucide-react';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import type { AnswerStateArray, Phase } from '@/lib/types/game.types';
 import { ArenaScoreSplash } from '@/components/game/ArenaScoreSplash';
-import { FitText } from '@/components/game/FitText';
+import { AdaptiveAnswerText, isLongAnswerSet } from '@/components/game/AdaptiveAnswerText';
 import { QuestionImageCard } from '@/components/game/QuestionImageCard';
 import { MatchHudIconButton } from '@/features/possession/components/MatchHudPrimitives';
 import { MAX_PENALTY_ROUNDS } from '@/features/possession/types/possession.types';
@@ -195,6 +195,9 @@ export function PossessionQuestionPanel({
   // Image MCQs render a photo band above the prompt; everything below it uses
   // a compact variant so the options grid stays above the fold.
   const hasQuestionImage = Boolean(question.image) && !isPenaltyPhase && !isShotPhase;
+  // Variant C: stack answers in one full-width column when any is long, so long
+  // sentences read well; otherwise keep the compact 2×2 grid.
+  const stackedAnswers = isLongAnswerSet(question.options);
 
   const questionPillClass =
     'flex items-center justify-center rounded-[16px] bg-brand-blue text-white';
@@ -380,9 +383,9 @@ export function PossessionQuestionPanel({
           answer text inside fades in when showOptions flips true. */}
       <div
         ref={optionsRef}
-        className={`mt-2.5 grid grid-cols-2 gap-2.5 ${
-          showOptions ? 'pointer-events-auto' : 'pointer-events-none'
-        }`}
+        className={`mt-2.5 gap-2.5 ${
+          stackedAnswers ? 'flex flex-col' : 'grid grid-cols-2 items-stretch'
+        } ${showOptions ? 'pointer-events-auto' : 'pointer-events-none'}`}
         aria-hidden={!showOptions}
       >
         {question.options.map((opt, i) => {
@@ -429,10 +432,12 @@ export function PossessionQuestionPanel({
                 damping: 24,
                 mass: 0.75,
               }}
-              className={`relative flex items-center justify-center overflow-hidden rounded-[16px] px-3 transition-shadow duration-150 ${
-                hasQuestionImage
-                  ? 'h-[62px] sm:h-[72px] md:h-[82px] lg:h-[92px]'
-                  : 'h-[68px] sm:h-[86px] md:h-[100px] lg:h-[120px]'
+              className={`relative flex items-center justify-center overflow-hidden rounded-[16px] transition-shadow duration-150 ${
+                stackedAnswers
+                  ? 'min-h-[64px]'
+                  : hasQuestionImage
+                    ? 'min-h-[78px] sm:min-h-[88px] md:min-h-[96px] lg:min-h-[108px]'
+                    : 'min-h-[88px] sm:min-h-[104px] md:min-h-[116px] lg:min-h-[136px]'
               }`}
               style={{
                 ...poppins,
@@ -497,18 +502,21 @@ export function PossessionQuestionPanel({
               )}
 
               <motion.span
-                className="relative z-[1] flex h-full w-full items-center justify-center overflow-hidden px-3 py-2 sm:px-4 sm:py-2.5"
+                className={`relative z-[1] flex w-full items-center justify-center px-5 py-4 ${
+                  stackedAnswers ? '' : 'h-full overflow-hidden'
+                }`}
                 initial={false}
                 animate={{ opacity: showOptions ? 1 : 0, y: showOptions ? 0 : 6 }}
                 transition={{ duration: 0.25, delay: showOptions ? i * 0.08 : 0, ease: 'easeOut' }}
               >
-                <FitText
-                  className="text-center leading-snug [overflow-wrap:anywhere]"
-                  maxFontSize={hasQuestionImage ? 20 : 26}
-                  minFontSize={hasQuestionImage ? 9 : 10}
+                <AdaptiveAnswerText
+                  stacked={stackedAnswers}
+                  gridMaxFontSize={hasQuestionImage ? 22 : 28}
+                  gridMinFontSize={hasQuestionImage ? 9 : 11}
+                  stackedFontSize={16}
                 >
                   {opt}
-                </FitText>
+                </AdaptiveAnswerText>
               </motion.span>
             </motion.button>
           );

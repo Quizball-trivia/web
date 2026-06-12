@@ -175,7 +175,7 @@ export function WelcomeCategoriesSection({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.04 }}
-                className="group relative aspect-[3/4] md:min-h-[190px] cursor-pointer overflow-hidden rounded-2xl border border-white/10 p-3 md:p-6 transition-all duration-200 hover:scale-[1.03] hover:-translate-y-1 hover:brightness-110 hover:border-brand-yellow/30 hover:shadow-[0_8px_40px_rgba(212,175,55,0.15)]"
+                className="group relative aspect-[3/4] md:aspect-auto md:min-h-[190px] md:max-h-[240px] cursor-pointer overflow-hidden rounded-2xl border border-white/10 p-3 md:p-6 transition-all duration-200 hover:scale-[1.03] hover:-translate-y-1 hover:brightness-110 hover:border-brand-yellow/30 hover:shadow-[0_8px_40px_rgba(212,175,55,0.15)]"
                 style={{ backgroundColor: style.color }}
                 onClick={onCategorySelect}
               >

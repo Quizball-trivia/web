@@ -77,8 +77,9 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
               {t("leaderboard.subtitle")}
             </p>
             {isEventMode && (
-              <div className="mt-2">
+              <div className="mt-2 flex flex-wrap items-center gap-2">
                 <WorldCupRulesButton variant="pill" />
+                <ResetsInBadge />
               </div>
             )}
           </div>
@@ -92,7 +93,6 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
                 {userEntry.rankPoints.toLocaleString()} RP
               </div>
             )}
-            <ResetsInBadge />
           </div>
         </motion.div>
 

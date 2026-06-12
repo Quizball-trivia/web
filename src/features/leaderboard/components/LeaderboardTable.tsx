@@ -10,6 +10,13 @@ interface LeaderboardTableProps {
   entries: LeaderboardEntry[];
   currentUserId?: string;
   onEntryClick?: (userId: string) => void;
+  /**
+   * Force the event (Betsson/World Cup) styling regardless of region. The
+   * landing page passes this so the leaderboard matches the rest of its event
+   * UI (gated on `eventEnabled`); in-app surfaces leave it undefined and fall
+   * back to the region-gated `isEventMode`.
+   */
+  eventMode?: boolean;
 }
 
 const poppins = {
@@ -25,9 +32,10 @@ const PRIZE_IMAGES: Record<number, { src: string; alt: string }> = {
   3: { src: "/assets/world-cup-promotion/pngtree-apple-airpods-pro-in-a-charging-case-with-the-lid-open-png-image_16254552.png", alt: "AirPods" },
 };
 
-export function LeaderboardTable({ entries, currentUserId, onEntryClick }: LeaderboardTableProps) {
+export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMode }: LeaderboardTableProps) {
   const { t } = useLocale();
-  const { isEventMode } = useActiveEventMode();
+  const { isEventMode: regionEventMode } = useActiveEventMode();
+  const isEventMode = eventMode ?? regionEventMode;
   return (
     <div className="relative">
       {/* Column labels */}

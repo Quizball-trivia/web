@@ -92,15 +92,15 @@ export function LiveCluesPanel({
     : (submitted ? answerAck?.pointsEarned ?? null : null);
   const cluesOpponentPoints = roundResolved ? (opponentRound?.pointsEarned ?? 0) : null;
   const cluesPlayerDetail = roundResolved && typeof myRound?.clueIndex === 'number'
-    ? `clue ${myRound.clueIndex + 1}`
+    ? t('possession.cluesGuessedAtClue', { index: myRound.clueIndex + 1 })
     : submitted
-      ? 'answer submitted'
-      : 'not answered';
+      ? t('possession.cluesAnswerSubmitted')
+      : t('possession.cluesNotAnswered');
   const cluesOpponentDetail = roundResolved && opponentRound?.isCorrect && typeof opponentRound.clueIndex === 'number'
-    ? `clue ${opponentRound.clueIndex + 1}`
+    ? t('possession.cluesGuessedAtClue', { index: opponentRound.clueIndex + 1 })
     : roundResolved
-      ? 'no correct answer'
-      : 'result pending';
+      ? t('possession.cluesNoCorrectAnswer')
+      : t('possession.cluesResultPending');
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -157,13 +157,10 @@ export function LiveCluesPanel({
         <QuestionKindBadge key={qIndex} kind="clues" />
       </div>
 
-      {/* Prompt — plain text, no card chrome. Matches the countdown /
-          put-in-order layout: the prompt line sits above the You/Opp
-          summary and the clues so the player has the question's framing
-          before any clues drop. */}
-      <div className="px-1">
-        <p className="text-base font-black font-fun leading-snug text-white">{question.prompt}</p>
-      </div>
+      {/* No prompt line here: for "Who am I?" clue questions the prompt text is
+          the same as the kind badge above ("ვინ ვარ მე? / Who am I?"), so
+          rendering it again is a redundant duplicate. The badge + the clue cards
+          give the player all the framing they need. */}
 
       <SpecialResultSummary
         visible={submitted || roundResolved}
