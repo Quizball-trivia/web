@@ -275,6 +275,8 @@
     "draws": "Draws",
     "totalMatches": "Total Matches",
     "rankedLabel": "Ranked",
+    "wcEventLabel": "World Cup Event",
+    "newSeasonLabel": "New Season",
     "friendlyLabel": "Friendly",
     "club": "Club",
     "win": "Win",
@@ -621,7 +623,7 @@
     "colTier": "Tier",
     "colRP": "RP",
     "resetsIn": "Resets in",
-    "wcSeasonEnds": "World Cup season ends in {count} days"
+    "wcSeasonEnds": "Ends in {count} days"
   },
   "welcome": {
     "untilKickoff": "until kickoff",

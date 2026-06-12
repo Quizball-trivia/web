@@ -172,6 +172,8 @@
     "draws": "ფრე",
     "totalMatches": "სულ მატჩები",
     "rankedLabel": "რეიტინგული",
+    "wcEventLabel": "მსოფლიო თასის ივენთი",
+    "newSeasonLabel": "ახალი სეზონი",
     "friendlyLabel": "ამხანაგური",
     "club": "კლუბი",
     "win": "მოგება",
@@ -837,7 +839,7 @@
     "colTier": "ლიგა",
     "colRP": "RP",
     "resetsIn": "განახლდება",
-    "wcSeasonEnds": "მსოფლიო თასის სეზონი მთავრდება {count} დღეში"
+    "wcSeasonEnds": "მთავრდება {count} დღეში"
   },
   "appAuthGate": {
     "warmingUp": "გახურება...",
