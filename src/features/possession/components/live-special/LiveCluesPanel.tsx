@@ -92,15 +92,15 @@ export function LiveCluesPanel({
     : (submitted ? answerAck?.pointsEarned ?? null : null);
   const cluesOpponentPoints = roundResolved ? (opponentRound?.pointsEarned ?? 0) : null;
   const cluesPlayerDetail = roundResolved && typeof myRound?.clueIndex === 'number'
-    ? `clue ${myRound.clueIndex + 1}`
+    ? t('possession.cluesGuessedAtClue', { index: myRound.clueIndex + 1 })
     : submitted
-      ? 'answer submitted'
-      : 'not answered';
+      ? t('possession.cluesAnswerSubmitted')
+      : t('possession.cluesNotAnswered');
   const cluesOpponentDetail = roundResolved && opponentRound?.isCorrect && typeof opponentRound.clueIndex === 'number'
-    ? `clue ${opponentRound.clueIndex + 1}`
+    ? t('possession.cluesGuessedAtClue', { index: opponentRound.clueIndex + 1 })
     : roundResolved
-      ? 'no correct answer'
-      : 'result pending';
+      ? t('possession.cluesNoCorrectAnswer')
+      : t('possession.cluesResultPending');
 
   useEffect(() => {
     queueMicrotask(() => {
