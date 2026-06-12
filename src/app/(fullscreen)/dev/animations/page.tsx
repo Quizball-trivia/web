@@ -848,6 +848,8 @@ function DevAnimationsContent() {
   // Jump straight to a specific SAMPLE_QUESTIONS entry (for testing the long
   // Georgian worst-case answers). Picks a qIndex whose `% length` == sampleIdx.
   function jumpToSample(sampleIdx: number) {
+    pendingTimers.current.forEach((t) => window.clearTimeout(t));
+    pendingTimers.current = [];
     const s = store();
     s.setSelfUserId(SELF_ID);
     s.setMatchStart(makeStartPayload());
@@ -2392,9 +2394,9 @@ function DevAnimationsContent() {
         </Group>
 
         <Group label="🇬🇪 Long-answer stress tests (KA)">
-          <Btn variant="yellow" onClick={() => jumpToSample(2)}>ხორვატია (mid-word break)</Btn>
-          <Btn variant="yellow" onClick={() => jumpToSample(3)}>longest option (89 chars)</Btn>
-          <Btn variant="yellow" onClick={() => jumpToSample(4)}>longest prompt (186 chars)</Btn>
+          <Btn variant="yellow" onClick={() => jumpToSample(1)}>ხორვატია (mid-word break)</Btn>
+          <Btn variant="yellow" onClick={() => jumpToSample(2)}>longest option (89 chars)</Btn>
+          <Btn variant="yellow" onClick={() => jumpToSample(3)}>longest prompt (186 chars)</Btn>
         </Group>
 
         <Group label="Spawn question kind (drops badge)">

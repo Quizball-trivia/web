@@ -84,7 +84,7 @@ export function WorldCupRulesButton({ variant = 'pill', className }: WorldCupRul
             <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={28} height={28} className="h-6 w-auto shrink-0 object-contain" />
             {t('welcome.wcPromoRulesTitle')}
           </DialogTitle>
-          <DialogDescription className="sr-only">World Cup event rules and prizes</DialogDescription>
+          <DialogDescription className="sr-only">{t('welcome.wcPromoRulesDescription')}</DialogDescription>
         </DialogHeader>
 
         <div className="mt-4 space-y-5 text-sm text-white/80 leading-relaxed">
