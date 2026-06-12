@@ -3,13 +3,14 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, Megaphone } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
+import type { MessageKey } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
 interface Announcement {
   id: string;
   date: string;
-  titleKey: string;
-  bodyKey: string;
+  titleKey: MessageKey;
+  bodyKey: MessageKey;
   type: 'update' | 'info' | 'event';
 }
 
