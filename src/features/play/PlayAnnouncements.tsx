@@ -31,7 +31,12 @@ const TYPE_STYLES: Record<Announcement['type'], { bg: string; icon: string }> = 
 };
 
 export function PlayAnnouncements() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const dateFormatter = new Intl.DateTimeFormat(locale === 'ka' ? 'ka-GE' : 'en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
   // Collapsed by default — the announcement is shown as a tappable header the
   // user can expand, not an auto-opened modal. (Proper notifications system TBD.)
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -49,11 +54,14 @@ export function PlayAnnouncements() {
       {ANNOUNCEMENTS.map((a) => {
         const expanded = expandedId === a.id;
         const style = TYPE_STYLES[a.type];
+        const panelId = `announcement-panel-${a.id}`;
         return (
           <button
             key={a.id}
             type="button"
             onClick={() => setExpandedId(expanded ? null : a.id)}
+            aria-expanded={expanded}
+            aria-controls={panelId}
             className={cn(
               'w-full rounded-xl border border-white/10 px-4 py-3 text-left transition-colors',
               style.bg,
@@ -67,7 +75,7 @@ export function PlayAnnouncements() {
                     {t(a.titleKey)}
                   </span>
                   <span className="font-poppins text-[11px] font-medium tracking-[0.08em] text-white/70">
-                    {a.date}
+                    {dateFormatter.format(new Date(a.date))}
                   </span>
                 </div>
               </div>
@@ -78,7 +86,7 @@ export function PlayAnnouncements() {
               )}
             </div>
             {expanded && (
-              <div className="mt-3 space-y-2.5 text-[13px] leading-relaxed text-white">
+              <div id={panelId} className="mt-3 space-y-2.5 text-[13px] leading-relaxed text-white">
                 {t(a.bodyKey).split('\n\n').map((paragraph, idx) => (
                   <p key={idx}>{paragraph}</p>
                 ))}

@@ -935,22 +935,23 @@ function WinDrawLossGrid({
   t: (key: MessageKey, params?: Record<string, string | number>) => string;
   size?: 'lg' | 'sm';
 }) {
-  const numClass = 'text-5xl';
+  const numClass = size === 'lg' ? 'text-5xl' : 'text-4xl';
   const pad = size === 'lg' ? 'px-6 py-8' : 'px-4 py-5';
   const labelMt = 'mt-3';
+  const labelClass = size === 'lg' ? 'text-sm' : 'text-xs';
   return (
     <div className={`grid w-full grid-cols-3 ${pad} text-center`}>
       <div>
         <div className={`${numClass} tabular-nums text-brand-green`} style={WDL_NUM_STYLE}>{wins}</div>
-        <div className={`${labelMt} font-poppins text-sm font-semibold uppercase text-white`}>{t('profileScreen.win')}</div>
+        <div className={`${labelMt} font-poppins ${labelClass} font-semibold uppercase text-white`}>{t('profileScreen.win')}</div>
       </div>
       <div>
         <div className={`${numClass} tabular-nums text-white`} style={WDL_NUM_STYLE}>{draws}</div>
-        <div className={`${labelMt} font-poppins text-sm font-semibold uppercase text-white`}>{t('profileScreen.draw')}</div>
+        <div className={`${labelMt} font-poppins ${labelClass} font-semibold uppercase text-white`}>{t('profileScreen.draw')}</div>
       </div>
       <div>
         <div className={`${numClass} tabular-nums text-brand-red`} style={WDL_NUM_STYLE}>{losses}</div>
-        <div className={`${labelMt} font-poppins text-sm font-semibold uppercase text-white`}>{t('profileScreen.lose')}</div>
+        <div className={`${labelMt} font-poppins ${labelClass} font-semibold uppercase text-white`}>{t('profileScreen.lose')}</div>
       </div>
     </div>
   );
