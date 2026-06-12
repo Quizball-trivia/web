@@ -19,6 +19,35 @@ interface WorldCupRulesButtonProps {
   className?: string;
 }
 
+function SectionHeading({ emoji, children }: { emoji: string; children: React.ReactNode }) {
+  return (
+    <h3 className="text-xs font-black uppercase tracking-wide text-white mb-1.5">
+      {emoji} {children}
+    </h3>
+  );
+}
+
+function RpTable({ rows }: { rows: { label: string; value: string; positive?: boolean }[] }) {
+  return (
+    <div className="rounded-xl border border-white/10 overflow-hidden">
+      {rows.map((row, i) => (
+        <div
+          key={i}
+          className={cn(
+            'flex items-center justify-between px-3 py-1.5 text-xs',
+            i % 2 === 0 ? 'bg-white/[0.03]' : 'bg-transparent',
+          )}
+        >
+          <span className="text-white/70">{row.label}</span>
+          <span className={cn('font-bold tabular-nums', row.positive === false ? 'text-red-400' : 'text-emerald-400')}>
+            {row.value}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function WorldCupRulesButton({ variant = 'pill', className }: WorldCupRulesButtonProps) {
   const [open, setOpen] = useState(false);
   const { t } = useLocale();
@@ -35,7 +64,7 @@ export function WorldCupRulesButton({ variant = 'pill', className }: WorldCupRul
             ?
           </button>
         ) : (
-          <button type="button" className={`rounded-full bg-brand-orange px-3 py-1 text-[10px] sm:text-xs font-black uppercase tracking-wide text-white hover:bg-brand-orange/90 transition-colors ${className ?? ''}`}>
+          <button type="button" className={`rounded-full px-3 py-1 text-[10px] sm:text-xs font-black uppercase tracking-wide text-white transition-colors ${className ?? ''}`} style={{ backgroundColor: '#FF6C0A' }}>
             {t('welcome.wcPromoRules')}
           </button>
         )}
@@ -44,7 +73,7 @@ export function WorldCupRulesButton({ variant = 'pill', className }: WorldCupRul
         className={cn(
           'max-w-lg w-[95vw] rounded-[24px] border-0 bg-brand-blue',
           'max-h-[85vh] overflow-y-auto p-6 sm:p-8',
-          '[&>button]:hidden', // hide shadcn's default close — we render our own red X
+          '[&>button]:hidden',
         )}
       >
         <div className="absolute top-5 right-5 z-30">
@@ -61,19 +90,13 @@ export function WorldCupRulesButton({ variant = 'pill', className }: WorldCupRul
         <div className="mt-4 space-y-5 text-sm text-white/80 leading-relaxed">
           {/* Duration */}
           <div>
-            <h3 className="text-xs font-black uppercase tracking-wide text-white mb-1">📅 {t('welcome.wcPromoRulesDuration')}</h3>
-            <p>{t('welcome.wcPromoDateRange')}</p>
-          </div>
-
-          {/* How it works */}
-          <div>
-            <h3 className="text-xs font-black uppercase tracking-wide text-white mb-1">⚽ {t('welcome.wcPromoRulesHow')}</h3>
-            <p>{t('welcome.wcPromoRulesHowText')}</p>
+            <SectionHeading emoji="📅">{t('welcome.wcPromoRulesDuration')}</SectionHeading>
+            <p>{t('welcome.wcPromoRulesDurationText')}</p>
           </div>
 
           {/* Prizes */}
           <div>
-            <h3 className="text-xs font-black uppercase tracking-wide text-white mb-2">🎁 {t('welcome.wcPromoRulesPrizes')}</h3>
+            <SectionHeading emoji="🎁">{t('welcome.wcPromoRulesPrizes')}</SectionHeading>
             <div className="space-y-2">
               <div className="flex items-center gap-3 rounded-xl border border-brand-yellow/15 bg-brand-yellow/5 px-3 py-2.5">
                 <span className="text-lg">🥇</span>
@@ -97,21 +120,84 @@ export function WorldCupRulesButton({ variant = 'pill', className }: WorldCupRul
             </div>
           </div>
 
-          {/* Ranked matches */}
+          {/* Ranked Match Tickets */}
           <div>
-            <h3 className="text-xs font-black uppercase tracking-wide text-white mb-1">🎮 {t('welcome.wcPromoRulesMatches')}</h3>
-            <ul className="space-y-1 list-disc list-inside text-white/70">
-              <li>{t('welcome.wcPromoRulesTickets')}</li>
-              <li>{t('welcome.wcPromoRulesWin')}</li>
-              <li>{t('welcome.wcPromoRulesLeaderboard')}</li>
+            <SectionHeading emoji="🎮">{t('welcome.wcPromoRulesTicketsTitle')}</SectionHeading>
+            <p>{t('welcome.wcPromoRulesTicketsText')}</p>
+            <p className="mt-1.5 text-xs font-bold text-white">{t('welcome.wcPromoRulesTicketsMax')}</p>
+            <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] p-3 space-y-2">
+              <p className="text-xs text-white/60">{t('welcome.wcPromoRulesTicketsForfeit')}</p>
+              <ul className="space-y-1 list-disc list-inside text-xs text-white/50">
+                <li>{t('welcome.wcPromoRulesTicketsForfeitNo1')}</li>
+                <li>{t('welcome.wcPromoRulesTicketsForfeitNo2')}</li>
+                <li>{t('welcome.wcPromoRulesTicketsForfeitNo3')}</li>
+              </ul>
+              <p className="text-[11px] text-white/40 italic">{t('welcome.wcPromoRulesTicketsForfeitWhy')}</p>
+            </div>
+          </div>
+
+          {/* Ranked Point System */}
+          <div>
+            <SectionHeading emoji="📈">{t('welcome.wcPromoRulesRpTitle')}</SectionHeading>
+
+            {/* Match Result */}
+            <p className="text-xs font-bold text-white mb-1.5">{t('welcome.wcPromoRulesRpMatch')}</p>
+            <RpTable rows={[
+              { label: t('welcome.wcPromoRulesRpRegularWin'), value: '+50', positive: true },
+              { label: t('welcome.wcPromoRulesRpPenaltyWin'), value: '+35', positive: true },
+              { label: t('welcome.wcPromoRulesRpRegularLoss'), value: '-25', positive: false },
+              { label: t('welcome.wcPromoRulesRpPenaltyLoss'), value: '-15', positive: false },
+              { label: t('welcome.wcPromoRulesRpForfeit'), value: '-50', positive: false },
+              { label: t('welcome.wcPromoRulesRpOppForfeit'), value: '+50', positive: true },
+            ]} />
+          </div>
+
+          {/* Winning Margin Bonus */}
+          <div>
+            <p className="text-xs font-bold text-white mb-1.5">{t('welcome.wcPromoRulesMarginTitle')}</p>
+            <RpTable rows={[
+              { label: t('welcome.wcPromoRulesMarginBy1'), value: '+0', positive: true },
+              { label: t('welcome.wcPromoRulesMarginBy2'), value: '+15', positive: true },
+              { label: t('welcome.wcPromoRulesMarginBy3'), value: '+30', positive: true },
+              { label: t('welcome.wcPromoRulesMarginBy4'), value: '+40', positive: true },
+            ]} />
+            <p className="mt-1.5 text-xs text-white/50">{t('welcome.wcPromoRulesMarginText')}</p>
+          </div>
+
+          {/* Opponent Strength Bonus */}
+          <div>
+            <p className="text-xs font-bold text-white mb-1.5">{t('welcome.wcPromoRulesStrengthTitle')}</p>
+            <RpTable rows={[
+              { label: t('welcome.wcPromoRulesStrengthCondition'), value: '+10', positive: true },
+            ]} />
+            <p className="mt-1.5 text-xs text-white/50">{t('welcome.wcPromoRulesStrengthText')}</p>
+            <ul className="mt-1 space-y-0.5 list-disc list-inside text-xs text-white/50">
+              <li>{t('welcome.wcPromoRulesStrengthEx1')}</li>
+              <li>{t('welcome.wcPromoRulesStrengthEx2')}</li>
             </ul>
           </div>
 
+          {/* Fair Play Policy */}
+          <div>
+            <SectionHeading emoji="⚠️">{t('welcome.wcPromoRulesFairTitle')}</SectionHeading>
+            <p>{t('welcome.wcPromoRulesFairText')}</p>
+            <p className="mt-2 text-xs text-white/60">{t('welcome.wcPromoRulesFairReview')}</p>
+            <ul className="mt-1 space-y-0.5 list-disc list-inside text-xs text-white/50">
+              <li>{t('welcome.wcPromoRulesFair1')}</li>
+              <li>{t('welcome.wcPromoRulesFair2')}</li>
+              <li>{t('welcome.wcPromoRulesFair3')}</li>
+              <li>{t('welcome.wcPromoRulesFair4')}</li>
+            </ul>
+            <p className="mt-2 text-xs font-medium text-red-400/80">{t('welcome.wcPromoRulesFairWarn')}</p>
+          </div>
+
           {/* Footer */}
-          <p className="flex items-center justify-center gap-1.5 text-center text-xs text-white/40 pt-2">
-            <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={16} height={16} className="h-3.5 w-auto object-contain opacity-70" />
-            {t('welcome.wcPromoRulesFooter')}
-          </p>
+          <div className="border-t border-white/10 pt-4">
+            <p className="flex items-start gap-2 text-center text-xs text-white/50">
+              <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={16} height={16} className="h-3.5 w-auto shrink-0 object-contain opacity-70 mt-0.5" />
+              <span>{t('welcome.wcPromoRulesFooter')}</span>
+            </p>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

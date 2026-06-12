@@ -22,10 +22,11 @@ export function ResetsInBadge({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-2 rounded-full bg-brand-orange px-3.5 py-1.5",
+        "inline-flex items-center gap-2 rounded-full px-3.5 py-1.5",
         "shadow-[0_2px_12px_rgba(255,108,10,0.25)]",
         className,
       )}
+      style={{ backgroundColor: '#FF6C0A' }}
       aria-label={t("leaderboard.wcSeasonEnds", { count: wcDaysLeft })}
     >
       <Trophy className="h-3.5 w-3.5 shrink-0 text-white/90" aria-hidden />

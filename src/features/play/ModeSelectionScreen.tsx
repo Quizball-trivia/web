@@ -16,6 +16,7 @@ import { useObjectivesEnabled } from '@/lib/hooks/useObjectivesEnabled';
 import { useActiveEventMode } from '@/lib/hooks/useActiveEventMode';
 
 import { colors } from '@/lib/colors';
+import { PlayAnnouncements } from './PlayAnnouncements';
 
 import { getNextTierBand } from '@/utils/rankedTier';
 
@@ -382,6 +383,9 @@ export function ModeSelectionScreen({
           </div>
         )}
       </div>
+
+      {/* ─── 1b. Announcements ─── */}
+      <PlayAnnouncements />
 
       {/* ─── 2. Secondary Modes Grid ─── */}
       <div
