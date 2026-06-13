@@ -21,6 +21,12 @@ import {
   acceptFriendRequest,
   declineFriendRequest,
 } from "@/lib/repositories/social.repo";
+import {
+  useMarkAllNotificationsRead,
+  useNotifications,
+  type NotificationItem,
+} from "@/lib/queries/notifications.queries";
+import { getI18nText } from "@/lib/utils/i18n";
 import { useLocale } from "@/contexts/LocaleContext";
 import { getSocket } from "@/lib/realtime/socket-client";
 import type { ErrorPayload, LobbyChallengeStatusPayload } from "@/lib/realtime/socket.types";
@@ -194,9 +200,41 @@ function ChallengeRow({
   );
 }
 
+function NotificationRow({
+  item,
+  index,
+  locale,
+}: {
+  item: NotificationItem;
+  index: number;
+  locale: string;
+}) {
+  const title = getI18nText(item.title, locale);
+  const body = item.body ? getI18nText(item.body, locale) : null;
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: -6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -6 }}
+      transition={{ delay: index * 0.02 }}
+      className="flex items-start gap-3 rounded-2xl bg-white/10 px-3 py-2.5"
+    >
+      <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-yellow/90">
+        <Bell className="size-4 text-black" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-poppins text-xs font-semibold text-white">{title}</p>
+        {body && <p className="font-poppins text-[11px] leading-snug text-white/75">{body}</p>}
+      </div>
+      {!item.readAt && <span className="mt-1 size-2 shrink-0 rounded-full bg-brand-yellow" />}
+    </motion.div>
+  );
+}
+
 export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
   const router = useRouter();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const badgeDisplay = badgeCount > 99 ? "99+" : String(badgeCount);
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -207,7 +245,20 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
   const beginLobbyHandoff = useRealtimeMatchStore((state) => state.beginLobbyHandoff);
   const { data: requests } = useFriendRequests();
   const incoming = requests?.incoming ?? [];
+  const { data: notificationsData } = useNotifications();
+  const notifications = notificationsData?.items ?? [];
+  const markAllRead = useMarkAllNotificationsRead();
   const totalIncoming = incoming.length + challengeInvites.length;
+  const hasContent = totalIncoming > 0 || notifications.length > 0;
+
+  // Mark notifications read when the user opens the bell (clears the badge).
+  useEffect(() => {
+    if (open && (notificationsData?.unreadCount ?? 0) > 0) {
+      markAllRead.mutate();
+    }
+    // Only react to open transitions; markAllRead/data identity must not retrigger.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const invalidate = async () => {
     await queryClient.invalidateQueries({ queryKey: queryKeys.social.all });
@@ -352,7 +403,7 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
 
         {/* Body */}
         <div className="max-h-[320px] overflow-y-auto overscroll-contain">
-          {totalIncoming === 0 ? (
+          {!hasContent ? (
             <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
               <div className="flex size-10 items-center justify-center rounded-full bg-white/15">
                 <Bell className="size-5 text-white/80" />
@@ -386,6 +437,14 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
                     onDecline={handleDecline}
                     pendingAction={pendingAction?.requestId === item.requestId ? pendingAction.action : null}
                     t={t}
+                  />
+                ))}
+                {notifications.map((item, index) => (
+                  <NotificationRow
+                    key={item.id}
+                    item={item}
+                    index={challengeInvites.length + incoming.length + index}
+                    locale={locale}
                   />
                 ))}
               </AnimatePresence>
