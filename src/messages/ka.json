@@ -1082,6 +1082,8 @@
     "penaltyAriaLabel": "პენალტების სერია იწყება: უპასუხე სწორად და სწრაფად გოლის გასატანად",
     "getReady": "მოემზადე",
     "waitingForReconnect": "ველოდებით მის დაბრუნებას",
+    "safeLeaveWinIn": "თუ არ დაბრუნდა, მოიგებ {seconds} წამში",
+    "leaveSafely": "უსაფრთხოდ გასვლა",
     "bestOf5": "საუკეთესო 5-დან",
     "highPressure": "🔥 მაღალი წნეხი 🔥",
     "answerCorrectlyAndFaster": "უპასუხე სწორად და სწრაფად გოლის გასატანად",
