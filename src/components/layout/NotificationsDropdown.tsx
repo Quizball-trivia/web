@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Bell, Check, Loader2, X } from "lucide-react";
@@ -336,17 +336,24 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
   const { data: notificationsData } = useNotifications();
   const notifications = notificationsData?.items ?? [];
   const markAllRead = useMarkAllNotificationsRead();
+  const markedReadThisOpenRef = useRef(false);
   const totalIncoming = incoming.length + challengeInvites.length;
   const hasContent = totalIncoming > 0 || notifications.length > 0;
 
-  // Mark notifications read when the user opens the bell (clears the badge).
+  // Mark notifications read once per open session, clearing the badge. Reacting
+  // to unreadCount too (not just `open`) handles the case where the dropdown is
+  // opened before the feed has loaded — otherwise the effect wouldn't re-run
+  // when the data arrives and the notifications would stay unread.
   useEffect(() => {
-    if (open && (notificationsData?.unreadCount ?? 0) > 0) {
+    if (!open) {
+      markedReadThisOpenRef.current = false;
+      return;
+    }
+    if (!markedReadThisOpenRef.current && (notificationsData?.unreadCount ?? 0) > 0) {
+      markedReadThisOpenRef.current = true;
       markAllRead.mutate();
     }
-    // Only react to open transitions; markAllRead/data identity must not retrigger.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, notificationsData?.unreadCount, markAllRead]);
 
   const invalidate = async () => {
     await queryClient.invalidateQueries({ queryKey: queryKeys.social.all });
