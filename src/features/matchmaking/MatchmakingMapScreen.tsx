@@ -9,6 +9,7 @@ import {
   animate,
 } from "motion/react";
 import { RotateCcw, TriangleAlert, Volume2, VolumeX } from "lucide-react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import type { OpponentInfo } from "@/lib/realtime/socket.types";
@@ -129,26 +130,210 @@ function readCachedGeoHint(): CachedGeoHint | null {
   }
 }
 
-// ── Pin colors ──
+// ── World Cup 2026 theme ──
+// The 2026 brand identity is a neon-bright multicolor look on dark — led by
+// magenta/pink + electric blue, with cyan, lime, violet, orange, yellow.
+
+const WC_GOLD = "#FFC23C"; // rival / "found" accent
+const WC_BALL_SRC = "/assets/brand/goal-ball.webp";
+const WC_TROPHY_SRC = "/assets/brand/world-cup-trophy.webp";
+
+// ── Pin colors (WC26 spectrum) ──
 
 const PIN_COLORS = [
-  "#58CC02",
-  "#1CB0F6",
-  "#FF4B4B",
-  "#FF9600",
-  "#CE82FF",
-  "#FFD700",
-  "#FF6B9D",
-  "#00D4AA",
-  "#FF8C42",
-  "#7B68EE",
-  "#20B2AA",
-  "#FF69B4",
-  "#4ECDC4",
-  "#FF6347",
-  "#9370DB",
+  "#FF2E92", // hot pink (WC26 signature)
+  "#1E7BFF", // electric blue
+  "#00E0C7", // teal/cyan
+  "#9BFF1E", // lime/chartreuse
+  "#B85CFF", // violet
+  "#FF7A1A", // orange
+  "#FFD400", // yellow
+  "#FF4D6D", // coral red
+  "#2BD4FF", // sky cyan
+  "#C6FF3D", // acid green
+  "#FF5CE1", // magenta
+  "#5C7BFF", // periwinkle blue
+  "#3DF0A0", // mint
+  "#FF9F1C", // amber
+  "#E14BFF", // purple-pink
 ] as const;
 
+// ── World Cup ball-pass + confetti + starfield (search-state decoration) ──
+
+interface Pt {
+  x: number;
+  y: number;
+}
+
+function seededRand(seed: number) {
+  let a = seed;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * A single WC ball passed pin → pin → pin (in map coords, so it pans/zooms with
+ * the map) along a random walk over every pin. When `target` is set (opponent
+ * found) it finishes the current pass, makes one final pass onto that point and
+ * stops there, then calls `onLanded`. The ball does not spin.
+ */
+function PassingBall({
+  pins,
+  trailColor,
+  target,
+  onLanded,
+  size = 15,
+}: {
+  pins: { id: number; x: number; y: number }[];
+  trailColor: string;
+  target: Pt | null;
+  onLanded?: () => void;
+  size?: number;
+}) {
+  const first = pins[0];
+  const x = useMotionValue(first.x);
+  const y = useMotionValue(first.y);
+  const [trail, setTrail] = useState<{ d: string; key: number; dur: number } | null>(null);
+  const targetRef = useRef<Pt | null>(target);
+  const landedRef = useRef(onLanded);
+  targetRef.current = target;
+  landedRef.current = onLanded;
+
+  useEffect(() => {
+    if (pins.length < 2) return;
+    let cancelled = false;
+    let key = 0;
+    const rand = seededRand(0x9e37);
+
+    const nextOrder = (lastId: number | null) => {
+      const order = [...pins];
+      for (let i = order.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(rand() * (i + 1));
+        [order[i], order[j]] = [order[j], order[i]];
+      }
+      if (lastId !== null && order[0].id === lastId && order.length > 1) {
+        [order[0], order[1]] = [order[1], order[0]];
+      }
+      return order;
+    };
+
+    // Roughly constant travel speed: short passes are quick, long cross-map
+    // balls get proportionally more time (capped) so they never whip across.
+    const passDuration = (dist: number) => {
+      const d = Math.min(dist, 620);
+      return Math.max(0.55, (d / 620) * 2.2);
+    };
+
+    const passTo = async (a: Pt, b: Pt) => {
+      const dist = Math.hypot(b.x - a.x, b.y - a.y);
+      const my = Math.min(a.y, b.y) - dist * 0.22;
+      const dur = passDuration(dist);
+      setTrail({ d: `M ${a.x} ${a.y} Q ${(a.x + b.x) / 2} ${my} ${b.x} ${b.y}`, key: key++, dur });
+      x.set(a.x);
+      y.set(a.y);
+      const ax = animate(x, b.x, { duration: dur, ease: "easeInOut" });
+      const ay = animate(y, [a.y, my, b.y], { duration: dur, ease: "easeInOut" });
+      await Promise.all([ax.finished, ay.finished]).catch(() => {});
+    };
+
+    const run = async () => {
+      let cur: Pt = { x: first.x, y: first.y };
+      let lastId: number | null = first.id;
+      while (!cancelled) {
+        if (targetRef.current) {
+          await passTo(cur, targetRef.current);
+          if (!cancelled) landedRef.current?.();
+          return;
+        }
+        for (const t of nextOrder(lastId)) {
+          if (cancelled) return;
+          if (targetRef.current) {
+            await passTo(cur, targetRef.current);
+            if (!cancelled) landedRef.current?.();
+            return;
+          }
+          const b: Pt = { x: t.x, y: t.y };
+          await passTo(cur, b);
+          cur = b;
+          lastId = t.id;
+          if (cancelled) return;
+          await new Promise((res) => setTimeout(res, 150));
+        }
+      }
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pins]);
+
+  return (
+    <>
+      <AnimatePresence>
+        {trail && (
+          <motion.path
+            key={trail.key}
+            d={trail.d}
+            fill="none"
+            stroke={trailColor}
+            strokeWidth={1.4}
+            strokeLinecap="round"
+            initial={{ pathLength: 0, opacity: 0.85 }}
+            animate={{ pathLength: 1, opacity: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: trail.dur + 0.5, ease: "easeOut" }}
+          />
+        )}
+      </AnimatePresence>
+      <motion.g style={{ x, y }}>
+        <image
+          href={WC_BALL_SRC}
+          width={size}
+          height={size}
+          x={-size / 2}
+          y={-size / 2}
+          style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.5))" }}
+        />
+      </motion.g>
+    </>
+  );
+}
+
+function SearchConfetti({ seed = 42, count = 30 }: { seed?: number; count?: number }) {
+  const pieces = useMemo(() => {
+    const rand = seededRand(seed);
+    const colors = ["#FF2E92", "#1E7BFF", "#00E0C7", "#9BFF1E", WC_GOLD];
+    return Array.from({ length: count }, (_, i) => ({
+      id: i,
+      left: rand() * 100,
+      size: 5 + rand() * 6,
+      color: colors[Math.floor(rand() * colors.length)],
+      duration: 6 + rand() * 6,
+      delay: rand() * 7,
+      drift: (rand() - 0.5) * 70,
+      spin: rand() > 0.5 ? 360 : -360,
+    }));
+  }, [seed, count]);
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+      {pieces.map((p) => (
+        <motion.span
+          key={p.id}
+          className="absolute top-0 block"
+          style={{ left: `${p.left}%`, width: p.size, height: p.size * 0.45, background: p.color, borderRadius: 1 }}
+          animate={{ y: ["-6vh", "106vh"], x: [0, p.drift], rotate: [0, p.spin], opacity: [0, 0.9, 0.9, 0] }}
+          transition={{ duration: p.duration, delay: p.delay, repeat: Infinity, ease: "linear", times: [0, 0.1, 0.85, 1] }}
+        />
+      ))}
+    </div>
+  );
+}
 
 // Tiny non-cryptographic hash used to derive a stable pseudo-random pin id
 // from the opponent's user id/username so the same opponent always lands on
@@ -336,6 +521,10 @@ export function MatchmakingMapScreen({
   const [searchTime, setSearchTime] = useState(0);
   const [preparingMatchStuck, setPreparingMatchStuck] = useState(false);
   const [highlightedPin, setHighlightedPin] = useState<number | null>(null);
+  // Flips once the World Cup ball has made its final pass and landed on the
+  // opponent's pin; the zoom + opponent card wait for it so the ball visibly
+  // arrives on the opponent before the camera moves.
+  const [ballLanded, setBallLanded] = useState(false);
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined"
       ? window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`).matches
@@ -547,6 +736,13 @@ export function MatchmakingMapScreen({
     [fakePlayers, opponentPin],
   );
 
+  // Stable {id,x,y} list the World Cup ball walks during search. Derived from
+  // the search pins only (the opponent is the ball's final target, not a hop).
+  const ballPins = useMemo(
+    () => fakePlayers.map((p) => ({ id: p.id, x: p.x, y: p.y })),
+    [fakePlayers],
+  );
+
   // Sync mobile camera defaults with viewport.
   useEffect(() => {
     const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`);
@@ -579,11 +775,23 @@ export function MatchmakingMapScreen({
     };
   }, [showFoundState, searchCamera, mapX, mapY, mapScale]);
 
-  // Zoom to opponent when found
+  // When found, immediately halt the search pan so the map holds still while
+  // the World Cup ball makes its final pass onto the opponent's pin. The actual
+  // zoom is deferred to the effect below until the ball has landed.
   useEffect(() => {
-    if (!showFoundState || !opponentPin) return;
+    if (!showFoundState) return;
+    panAnimRef.current?.stop();
+  }, [showFoundState]);
 
-    // Stop pan animation
+  // Reset the landed flag whenever we leave the found state.
+  useEffect(() => {
+    if (!showFoundState) queueMicrotask(() => setBallLanded(false));
+  }, [showFoundState]);
+
+  // Zoom to opponent — AFTER the ball has landed on the opponent pin.
+  useEffect(() => {
+    if (!showFoundState || !opponentPin || !ballLanded) return;
+
     panAnimRef.current?.stop();
 
     // Zoom into opponent location
@@ -610,7 +818,7 @@ export function MatchmakingMapScreen({
       duration: zoomDuration,
       ease: [0.32, 0.72, 0, 1],
     });
-  }, [showFoundState, opponentPin, isMobile, mapScale, mapX, mapY]);
+  }, [showFoundState, ballLanded, opponentPin, isMobile, mapScale, mapX, mapY]);
 
   // Pin appearances: stagger them in, then keep the map alive by randomly
   // toggling a few pins off and back on throughout the search — so players
@@ -696,7 +904,16 @@ export function MatchmakingMapScreen({
   }, [showFoundState, fakePlayers, opponentPinId]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-surface-darkest bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat overflow-hidden font-fun select-none">
+    <div className="fixed inset-0 z-50 bg-surface-darkest overflow-hidden font-fun select-none">
+      {/* ── World Cup atmosphere: magenta / electric-blue / cyan glow on navy ── */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(110% 80% at 84% 4%, rgba(255,46,146,0.22), transparent 52%), radial-gradient(120% 90% at 8% 14%, rgba(30,123,255,0.26), transparent 55%), radial-gradient(120% 85% at 50% 102%, rgba(0,224,199,0.16), transparent 55%), #070C24",
+        }}
+      />
+
       {/* ── Map ──
           Cover the whole screen (like QuizUp) instead of letterboxing: the map
           box is sized to the LARGER of "fit by width" / "fit by height" so it
@@ -719,9 +936,17 @@ export function MatchmakingMapScreen({
             height: "100%",
             position: "absolute",
             inset: 0,
-            background: "#0D1117",
+            background: "transparent",
           }}
         >
+          <defs>
+            {/* vibrant WC26 land — blue → indigo → violet, lit from the top */}
+            <linearGradient id="wcMapLand" x1="0" y1="0" x2="0.25" y2="1">
+              <stop offset="0%" stopColor="#2C49A8" />
+              <stop offset="50%" stopColor="#28306E" />
+              <stop offset="100%" stopColor="#3A2370" />
+            </linearGradient>
+          </defs>
           {/* transformBox MUST be view-box (not fill-box): with fill-box the
               <g> scales around the projected land bounding box origin
               (~14.8, 55.6) while the HTML pin overlay below scales around the
@@ -747,9 +972,9 @@ export function MatchmakingMapScreen({
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
-                    fill="#1C2733"
-                    stroke="#2D3F4E"
-                    strokeWidth={0.5}
+                    fill="url(#wcMapLand)"
+                    stroke="#5C6CC8"
+                    strokeWidth={0.6}
                     style={{
                       default: { outline: "none" },
                       hover: { outline: "none" },
@@ -759,6 +984,18 @@ export function MatchmakingMapScreen({
                 ))
               }
             </Geographies>
+            {/* World Cup ball passed between players; on found it makes its final
+                pass onto the opponent pin, then triggers the zoom. */}
+            <PassingBall
+              pins={ballPins}
+              trailColor={WC_GOLD}
+              target={
+                showFoundState && opponentPin
+                  ? { x: opponentPin.x, y: opponentPin.y }
+                  : null
+              }
+              onLanded={() => setBallLanded(true)}
+            />
           </motion.g>
         </ComposableMap>
 
@@ -798,11 +1035,14 @@ export function MatchmakingMapScreen({
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "radial-gradient(ellipse at center, transparent 25%, rgba(13,17,23,0.7) 100%)",
+            "radial-gradient(ellipse at center, transparent 30%, rgba(7,12,36,0.78) 100%)",
         }}
       />
-      <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-surface-darkest to-transparent pointer-events-none" />
-      <div className="absolute bottom-0 left-0 right-0 h-52 bg-gradient-to-t from-surface-darkest via-surface-darkest/90 to-transparent pointer-events-none" />
+      <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-[#070C24] to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 left-0 right-0 h-52 bg-gradient-to-t from-[#070C24] via-[#070C24]/90 to-transparent pointer-events-none" />
+
+      {/* WC confetti accents while searching */}
+      {!showFoundState && <SearchConfetti seed={42} count={30} />}
 
       {/* ── Mute (top-left) ── */}
       <motion.button
@@ -847,6 +1087,24 @@ export function MatchmakingMapScreen({
               exit={{ opacity: 0, y: -20 }}
               className="flex flex-col items-center gap-3"
             >
+              {/* World Cup trophy + spinning ball */}
+              <div className="flex items-center gap-2.5">
+                <Image
+                  src={WC_TROPHY_SRC}
+                  alt=""
+                  width={44}
+                  height={44}
+                  className="size-9 drop-shadow-[0_0_12px_rgba(255,194,60,0.6)]"
+                />
+                <Image
+                  src={WC_BALL_SRC}
+                  alt=""
+                  width={36}
+                  height={36}
+                  className="size-8 animate-spin [animation-duration:2.2s] drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]"
+                />
+              </div>
+
               {/* Pulsing dots */}
               <div className="flex items-center gap-1.5">
                 {[0, 1, 2].map((i) => (
@@ -859,7 +1117,8 @@ export function MatchmakingMapScreen({
                       delay: i * 0.2,
                       ease: "easeInOut",
                     }}
-                    className="size-2 rounded-full bg-brand-cyan"
+                    className="size-2 rounded-full"
+                    style={{ background: WC_GOLD }}
                   />
                 ))}
               </div>
@@ -881,6 +1140,11 @@ export function MatchmakingMapScreen({
                 {t("matchmaking.cancel")}
               </button>
             </motion.div>
+          ) : !ballLanded && !showPreparationFailure ? (
+            // Found, but the ball is still making its final pass onto the
+            // opponent pin — hold the card until it lands (unless preparation
+            // failed, in which case surface that immediately).
+            <motion.div key="found-pending" />
           ) : (
             <motion.div
               key="found"
