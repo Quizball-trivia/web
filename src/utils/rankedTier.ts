@@ -26,8 +26,8 @@ export interface RankedTierBand {
 }
 
 export const RANKED_TIER_BANDS: RankedTierBand[] = [
-  { tier: "GOAT", minRp: 3200, maxRpExclusive: null },
-  { tier: "Legend", minRp: 2900, maxRpExclusive: 3200 },
+  { tier: "GOAT", minRp: 5000, maxRpExclusive: null },
+  { tier: "Legend", minRp: 2900, maxRpExclusive: 5000 },
   { tier: "World-Class", minRp: 2600, maxRpExclusive: 2900 },
   { tier: "Captain", minRp: 2200, maxRpExclusive: 2600 },
   { tier: "Key Player", minRp: 1850, maxRpExclusive: 2200 },
