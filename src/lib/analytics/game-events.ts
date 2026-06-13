@@ -262,50 +262,9 @@ export function trackMatchReconnected(matchId: string, downtimeSec: number) {
   });
 }
 
-export type AnswerQuestionKind = 'multipleChoice' | 'countdown' | 'putInOrder' | 'clues';
-export type AnswerPhaseKind = 'normal' | 'last_attack' | 'shot' | 'penalty';
-
-export interface TrackAnswerSubmittedProps {
-  questionId: string;
-  isCorrect: boolean;
-  timeMs: number;
-  questionIndex: number;
-  difficulty?: string;
-  categoryName?: string;
-  matchId?: string;
-  /** Question kind (mcq / countdown / put-in-order / clues). Required to compute per-kind accuracy in PostHog. */
-  questionKind?: AnswerQuestionKind;
-  /** Possession phase kind at the time the answer was committed. */
-  phaseKind?: AnswerPhaseKind;
-  /** Match mode (`ranked` / `friendly`). */
-  mode?: string;
-  /** Match variant (`friendly_party_quiz`, `friendly_possession`, etc.). */
-  variant?: string;
-  /** Points earned for this answer (server-authoritative). */
-  pointsEarned?: number;
-  /** MCQ selected option index (null when the round timed out without a selection). */
-  selectedIndex?: number | null;
-}
-
-export function trackAnswerSubmitted(props: TrackAnswerSubmittedProps): void {
-  trackEvent('answer_submitted', {
-    question_id: props.questionId,
-    is_correct: props.isCorrect,
-    time_ms: props.timeMs,
-    question_index: props.questionIndex,
-    difficulty: props.difficulty,
-    category_name: props.categoryName,
-    match_id: props.matchId,
-    question_kind: props.questionKind,
-    phase_kind: props.phaseKind,
-    mode: props.mode,
-    variant: props.variant,
-    points_earned: props.pointsEarned,
-    selected_index: props.selectedIndex,
-    /** Convenience flag for skip-rate analysis. */
-    timed_out: props.selectedIndex === null,
-  });
-}
+// NOTE: `answer_submitted` was removed — it fired ~12× per match and is fully
+// redundant with the `match_answers` Postgres table (is_correct, time_ms,
+// points_earned, selected_index, etc. per answer). Query that table with SQL.
 
 export function trackQuestionSkipped(props: {
   matchId?: string;
