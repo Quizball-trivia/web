@@ -92,17 +92,3 @@ export function setPersonProperties(
     console.error('PostHog setPersonProperties error:', error);
   }
 }
-
-// Feature flag helpers
-export function getFeatureFlag(flagKey: string): boolean | string | undefined {
-  if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_POSTHOG_KEY || !isTrackingEnv()) {
-    return undefined;
-  }
-
-  try {
-    return posthog.getFeatureFlag(flagKey);
-  } catch (error) {
-    console.error('PostHog getFeatureFlag error:', error);
-    return undefined;
-  }
-}
