@@ -833,13 +833,18 @@ function DevAnimationsContent() {
     const s = store();
     s.reset();
     s.setSelfUserId(SELF_ID);
-    // Keep the real 5s kickoff countdown from setMatchStart, then seed the
-    // first MCQ underneath it. The production game logic blocks reveal/options
-    // until the countdown expires, so this previews the full handoff.
+    // Keep the real 5s kickoff countdown from setMatchStart, then send the
+    // first MCQ after it expires. This mirrors production: q0 is authoritative
+    // once it arrives and should not remain gated by the kickoff countdown.
     s.setMatchStart(makeStartPayload());
     stateVersion.current += 1;
     s.setMatchState(makeMatchState('NORMAL_PLAY', { stateVersion: stateVersion.current }));
-    s.setMatchQuestion(makeQuestion(0, 'multipleChoice'));
+    const kickoffTimer = window.setTimeout(() => {
+      const latest = store();
+      if (latest.match?.matchId !== MATCH_ID || latest.match.currentQuestion) return;
+      latest.setMatchQuestion(makeQuestion(0, 'multipleChoice'));
+    }, 5000);
+    pendingTimers.current.push(kickoffTimer);
     setNextQuestionKind('multipleChoice');
     setRemountKey((k) => k + 1);
     setMobilePanelOpen(false);

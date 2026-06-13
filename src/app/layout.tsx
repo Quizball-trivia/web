@@ -163,6 +163,7 @@ export default async function RootLayout({
         <script
           nonce={cspNonce}
           type="application/ld+json"
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <Providers initialLocale={explicitLocale} cspNonce={cspNonce}>{children}</Providers>

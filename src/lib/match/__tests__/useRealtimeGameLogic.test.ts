@@ -36,7 +36,8 @@ const MATCH_ID = 'match-1';
 const USER_A = 'user-a';
 const USER_B = 'user-b';
 
-function seedMatch() {
+function seedMatch(options: { clearCountdown?: boolean } = {}) {
+  const { clearCountdown = true } = options;
   const store = useRealtimeMatchStore.getState();
   store.setMatchStart({
     matchId: MATCH_ID,
@@ -51,12 +52,14 @@ function seedMatch() {
   });
   // Set selfUserId so the hook can identify "me"
   store.setSelfUserId(USER_A);
-  // Clear the countdown so startCountdownActive won't block
-  store.setMatchCountdown({
-    matchId: MATCH_ID,
-    seconds: 0,
-    startsAt: new Date(Date.now() - 10_000).toISOString(),
-  });
+  if (clearCountdown) {
+    // Clear the countdown so startCountdownActive won't block
+    store.setMatchCountdown({
+      matchId: MATCH_ID,
+      seconds: 0,
+      startsAt: new Date(Date.now() - 10_000).toISOString(),
+    });
+  }
 }
 
 function makeQuestion(
@@ -171,6 +174,28 @@ describe('useRealtimeGameLogic — roundResultHoldDone for goals', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  it('does not keep q0 hidden behind a stale kickoff countdown once the server sends the first question', async () => {
+    vi.setSystemTime(new Date('2026-06-13T12:00:00.000Z'));
+    seedMatch({ clearCountdown: false });
+    const store = useRealtimeMatchStore.getState();
+
+    const { result } = renderHook(() =>
+      useRealtimeGameLogic({ transitionDelayMs: 1600 })
+    );
+
+    expect(result.current.state.startCountdownActive).toBe(true);
+
+    act(() => store.setMatchQuestion(makeQuestionWithImmediatePlay(0)));
+
+    expect(useRealtimeMatchStore.getState().match?.countdownEndsAt).toBeNull();
+    expect(result.current.state.startCountdownActive).toBe(false);
+
+    await act(async () => { vi.advanceTimersByTime(50); });
+
+    expect(result.current.state.currentQuestion?.qIndex).toBe(0);
+    expect(result.current.state.showOptions).toBe(true);
   });
 
   it('sets roundResultHoldDone=true for normal goal round (baseline)', async () => {
