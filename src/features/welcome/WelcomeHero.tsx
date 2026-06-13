@@ -170,7 +170,7 @@ export function WelcomeHero({ sim, duelsCount, onKickOff }: WelcomeHeroProps) {
                       transition={{ duration: 0.35, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
                       className="relative w-[78%] max-w-[520px]"
                     >
-                      <Image src="/assets/goal.webp" alt="Goal celebration" width={760} height={538} priority className="w-full h-auto object-contain" />
+                      <Image src="/assets/goal.webp" alt="Goal celebration" width={760} height={538} className="w-full h-auto object-contain" />
                       {/* Rendered at peak size and scaled 1/4.6 -> 1 -> 1/4.6 so
                           the ball stays crisp at the apex (real pixels, not an
                           upscaled tiny render). */}
@@ -180,7 +180,7 @@ export function WelcomeHero({ sim, duelsCount, onKickOff }: WelcomeHeroProps) {
                         animate={{ scale: [1 / 4.6, 1, 1 / 4.6], y: [10, -32, 0], opacity: [0.94, 1, 1] }}
                         transition={{ duration: 1.85, times: [0, 0.45, 1], ease: 'easeInOut' }}
                       >
-                        <Image src="/assets/brand/goal-ball.webp" alt="" width={512} height={512} priority className="size-[221px] object-contain drop-shadow-[0_0_14px_rgba(255,255,255,0.32)] md:size-[258px]" />
+                        <Image src="/assets/brand/goal-ball.webp" alt="" width={512} height={512} className="size-[221px] object-contain drop-shadow-[0_0_14px_rgba(255,255,255,0.32)] md:size-[258px]" />
                       </motion.div>
                     </motion.div>
                   </motion.div>
@@ -259,7 +259,7 @@ export function WelcomeHero({ sim, duelsCount, onKickOff }: WelcomeHeroProps) {
 
         <Button
           onClick={onKickOff}
-          className="h-16 min-w-[320px] rounded-[22px] bg-brand-green px-12 font-poppins text-2xl font-bold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none sm:w-auto"
+          className="h-16 min-w-[320px] rounded-[22px] bg-brand-green-accessible px-12 font-poppins text-2xl font-bold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green-accessible-hover hover:shadow-none sm:w-auto"
         >
           {t('welcome.kickOff')}
         </Button>

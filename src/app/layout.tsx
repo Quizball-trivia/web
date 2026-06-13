@@ -146,6 +146,7 @@ export default async function RootLayout({
   // to the root layout otherwise).
   const headerList = await headers();
   const pathname = headerList.get("x-pathname") ?? "/";
+  const cspNonce = headerList.get("x-nonce") ?? undefined;
   const locale = localeFromPathname(pathname);
   // Only URL-prefixed marketing/legal routes should seed the client locale.
   // App routes like /store and /play must hydrate from saved user choice.
@@ -160,10 +161,11 @@ export default async function RootLayout({
       >
         {/* JSON-LD in <body> not <head> to avoid hydration collision with Messenger's pcm.js injection. */}
         <script
+          nonce={cspNonce}
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <Providers initialLocale={explicitLocale}>{children}</Providers>
+        <Providers initialLocale={explicitLocale} cspNonce={cspNonce}>{children}</Providers>
         <Analytics />
       </body>
     </html>

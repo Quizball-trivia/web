@@ -810,8 +810,7 @@ describe('AppShell — banner callbacks fire the right store / socket actions', 
       reset,
     });
     renderShell();
-    // Desktop variant uses the literal "Dismiss" label (not a translation key)
-    const dismiss = screen.getAllByText('Dismiss');
+    const dismiss = screen.getAllByText(/appShell.dismiss/);
     fireEvent.click(dismiss[0]);
     expect(reset).toHaveBeenCalled();
     expect(clearRankedMatchmakingMock).toHaveBeenCalled();

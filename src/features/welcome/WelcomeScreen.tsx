@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
 import Script from 'next/script';
 import { useLeaderboard } from '@/lib/queries/leaderboard.queries';
 import { BarBattleFlightOverlay } from '@/features/possession/components/BarBattleFlightOverlay';
 import { useGeorgianPhoneAuthAvailability } from '@/lib/auth/useGeorgianPhoneAuthAvailability';
+import { useCspNonce } from '@/contexts/CspNonceContext';
 
 import { DEMO_LEADERBOARD } from './welcome.content';
 import {
@@ -30,6 +30,7 @@ import { WelcomeWorldCupBanner } from './WelcomeWorldCupBanner';
 import { useActiveEventMode } from '@/lib/hooks/useActiveEventMode';
 
 export function WelcomeScreen() {
+  const cspNonce = useCspNonce();
   // Landing shows the Betsson/World Cup layer to EVERYONE while the event flag
   // is on — no region gating here. In-game surfaces (leaderboard, play, modals)
   // keep the region-gated `isEventMode`.
@@ -128,6 +129,7 @@ export function WelcomeScreen() {
       {googleClientId ? (
         <Script
           src="https://accounts.google.com/gsi/client"
+          nonce={cspNonce}
           strategy="afterInteractive"
           async
           defer

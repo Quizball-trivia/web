@@ -500,7 +500,7 @@ function PlusNText({
         letterSpacing: 0,
         color: ghost ? 'rgba(214, 184, 0, 0.9)' : dim ? 'rgba(255, 229, 0, 0.85)' : '#FFE500',
         ...(ghost
-          ? null
+          ? {}
           : {
               textShadow: dim
                 ? '0 4px 0 rgba(0,0,0,0.6), 0 8px 14px rgba(0,0,0,0.3)'
