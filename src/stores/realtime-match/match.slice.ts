@@ -1,6 +1,6 @@
 import type { StateCreator } from 'zustand';
 import { logger } from '@/utils/logger';
-import { trackAnswerSubmitted, trackMatchStarted } from '@/lib/analytics/game-events';
+import { trackMatchStarted } from '@/lib/analytics/game-events';
 import type {
   MatchAnswerAckPayload,
   MatchCluesGuessAckPayload,
@@ -419,33 +419,8 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
         });
         return state;
       }
-      try {
-        const q = state.match.currentQuestion;
-        // MCQ submissions are tracked by useRealtimeGameLogic with the local
-        // submit elapsed time. Keep this store fallback for special rounds.
-        if (q && q.qIndex === payload.qIndex && q.question.kind !== 'multipleChoice') {
-          const startedAt = q.playableAt ? new Date(q.playableAt).getTime() : 0;
-          const syncedNowMs = Date.now() + (q.serverTimeOffsetMs ?? state.match.serverTimeOffsetMs ?? 0);
-          const timeMs = startedAt ? Math.max(0, syncedNowMs - startedAt) : 0;
-          trackAnswerSubmitted({
-            questionId: q.question.id,
-            isCorrect: payload.isCorrect,
-            timeMs,
-            questionIndex: payload.qIndex,
-            difficulty: q.question.difficulty,
-            categoryName: q.question.categoryName,
-            matchId: payload.matchId,
-            questionKind: q.question.kind,
-            phaseKind: q.phaseKind ?? payload.phaseKind,
-            mode: state.match.mode,
-            variant: state.match.variant,
-            pointsEarned: payload.pointsEarned,
-            selectedIndex: payload.selectedIndex,
-          });
-        }
-      } catch {
-        /* analytics best-effort */
-      }
+      // (Removed the per-answer `answer_submitted` PostHog event — fully
+      // redundant with the `match_answers` Postgres table.)
       const currentQIndex = state.match.currentQuestion?.qIndex;
       if (isStaleAnswerAck(payload, currentQIndex)) {
         logger.warn('Ignoring stale match:answer_ack event', {

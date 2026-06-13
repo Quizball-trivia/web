@@ -9,7 +9,6 @@ import {
   PENALTY_SCORE_FLIGHT_HANDOFF_MS,
 } from '@/features/possession/realtimePossession.helpers';
 import { getBarBattleGoalAttackDelayMs } from '@/features/possession/hooks/useBarBattle';
-import { trackAnswerSubmitted } from '@/lib/analytics/game-events';
 import type {
   MatchRoundResultPayload,
   MatchStatePayload,
@@ -24,9 +23,6 @@ vi.mock('@/lib/realtime/socket-client', () => ({
   getSocket: () => ({ emit: vi.fn() }),
 }));
 
-vi.mock('@/lib/analytics/game-events', () => ({
-  trackAnswerSubmitted: vi.fn(),
-}));
 
 // ---------------------------------------------------------------------------
 // Constants (mirroring the hook)
@@ -425,37 +421,6 @@ describe('useRealtimeGameLogic — roundResultHoldDone for goals', () => {
     expect(result.current.state.showOptions).toBe(false);
   });
 
-  it('tracks MCQ answer submissions once when the answer ack arrives', async () => {
-    vi.setSystemTime(new Date('2026-05-29T13:00:00.000Z'));
-    seedMatch();
-    const store = useRealtimeMatchStore.getState();
-
-    const { result } = renderHook(() =>
-      useRealtimeGameLogic({ transitionDelayMs: 1600 })
-    );
-
-    act(() => store.setMatchQuestion(makeQuestionWithImmediatePlay(9)));
-    await act(async () => { vi.advanceTimersByTime(50); });
-
-    act(() => result.current.actions.submitAnswer(0));
-    act(() => store.setAnswerAck({
-      matchId: MATCH_ID,
-      qIndex: 9,
-      questionKind: 'multipleChoice',
-      selectedIndex: 0,
-      isCorrect: true,
-      correctIndex: 0,
-      myTotalPoints: 100,
-      oppAnswered: false,
-      pointsEarned: 100,
-      phaseKind: 'normal',
-      phaseRound: 9,
-      shooterSeat: null,
-    }));
-    await act(async () => {});
-
-    expect(trackAnswerSubmitted).toHaveBeenCalledTimes(1);
-  });
 
   it('does not expose opponent answered UI before the local question is playable', async () => {
     vi.setSystemTime(new Date('2026-05-29T12:30:00.000Z'));

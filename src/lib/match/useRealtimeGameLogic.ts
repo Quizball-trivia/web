@@ -12,7 +12,6 @@ import {
   PENALTY_SCORE_FLIGHT_HANDOFF_MS,
 } from '@/features/possession/realtimePossession.helpers';
 import { getBarBattleGoalAttackDelayMs, resolvePossessionBattlePoints } from '@/features/possession/hooks/useBarBattle';
-import { trackAnswerSubmitted } from '@/lib/analytics/game-events';
 
 const QUESTION_PLAYING_MS = 10000; // 10 second playing phase
 export const ROUND_RESULT_HOLD_MS = 2000; // hold result for 2s before transitioning to next question
@@ -67,7 +66,6 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
   const answerAckRetryCountRef = useRef(0);
   const answerPayloadRef = useRef<{ matchId: string; qIndex: number; selectedIndex: number; timeMs: number } | null>(null);
   const answerSubmitElapsedRef = useRef<number | null>(null);
-  const trackedAckQIndexRef = useRef<number | null>(null);
 
   useEffect(() => {
     matchPausedRef.current = matchPaused;
@@ -127,7 +125,6 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     answerAckRetryCountRef.current = 0;
     answerPayloadRef.current = null;
     answerSubmitElapsedRef.current = null;
-    trackedAckQIndexRef.current = null;
     setShowOptions(false);
     setTimeRemaining(initialTimeRemaining);
 
@@ -465,28 +462,10 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     startCountdownActive,
   ]);
 
-  useEffect(() => {
-    if (!answerAck || !currentQuestion) return;
-    if (answerAck.qIndex !== currentQuestion.qIndex) return;
-    if (trackedAckQIndexRef.current === answerAck.qIndex) return;
-    if (answerSubmitElapsedRef.current === null) return;
-    trackedAckQIndexRef.current = answerAck.qIndex;
-    trackAnswerSubmitted({
-      questionId: currentQuestion.question.id,
-      isCorrect: answerAck.isCorrect,
-      timeMs: answerSubmitElapsedRef.current,
-      questionIndex: currentQuestion.qIndex,
-      difficulty: currentQuestion.question.difficulty,
-      categoryName: currentQuestion.question.categoryName,
-      matchId: matchSlice.matchId ?? undefined,
-      questionKind: currentQuestion.question.kind,
-      phaseKind: currentQuestion.phaseKind ?? answerAck.phaseKind,
-      mode: matchSlice.mode ?? undefined,
-      variant: matchSlice.variant ?? undefined,
-      pointsEarned: answerAck.pointsEarned,
-      selectedIndex: answerAck.selectedIndex,
-    });
-  }, [answerAck, currentQuestion, matchSlice.matchId, matchSlice.mode, matchSlice.variant]);
+  // (Removed the per-answer `answer_submitted` PostHog event — it fired ~12×
+  // per match and is fully redundant with the `match_answers` Postgres table,
+  // which already stores is_correct/time_ms/points_earned/etc. per answer.
+  // Query that table with SQL instead.)
 
   return {
     state: {
