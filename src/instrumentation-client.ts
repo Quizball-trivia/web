@@ -11,11 +11,18 @@ if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
       api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
       person_profiles: 'identified_only',
       capture_pageview: false,
-      capture_pageleave: true,
-      autocapture: {
-        dom_event_allowlist: ['click', 'submit', 'change'],
-        element_allowlist: ['button', 'a', 'input', 'select', 'textarea', 'form'],
-      },
+      // $pageleave on every navigation — redundant with our explicit funnel
+      // events, so off to cut event volume.
+      capture_pageleave: false,
+      // Autocapture fires a $autocapture on every click/submit/change. In a
+      // tap-heavy game that's huge event volume and fully redundant with our
+      // ~60 named events — disabled to cut the bill.
+      autocapture: false,
+      // The one event toggle is driven by NEXT_PUBLIC_GEORGIA_WC_EVENT_ENABLED
+      // (Vercel env), not a PostHog flag, so PostHog never fetches flags (was
+      // ~15k flag requests/day for one boolean).
+      advanced_disable_feature_flags: true,
+      advanced_disable_feature_flags_on_first_load: true,
       session_recording: {
         recordCrossOriginIframes: true,
       },
