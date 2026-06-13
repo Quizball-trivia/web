@@ -25,6 +25,7 @@ import {
   parseCountdownDeadline,
   resolvePartyPlayers,
   shouldBufferQuestion,
+  shouldClearCountdownOnNewQuestion,
   shouldClearCountdownOnStateChange,
   shouldClearQuestionOnStateChange,
 } from './reducers';
@@ -302,6 +303,8 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
             ...state.match,
             currentQuestion: payload,
             pendingQuestion: null,
+            countdownEndsAt: state.match.countdownReason === 'kickoff' ? null : state.match.countdownEndsAt,
+            countdownReason: state.match.countdownReason === 'kickoff' ? null : state.match.countdownReason,
             serverTimeOffsetMs: payload.serverTimeOffsetMs ?? state.match.serverTimeOffsetMs,
             questions: {
               ...state.match.questions,
@@ -321,12 +324,16 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
         logger.info('Buffering match:question as pendingQuestion (result still showing)', {
           qIndex: payload.qIndex,
         });
+        const shouldClearCountdown = shouldClearCountdownOnNewQuestion(
+          payload.qIndex,
+          state.match.countdownReason,
+        );
         return {
           match: {
             ...state.match,
             pendingQuestion: payload,
-            countdownEndsAt: payload.qIndex > 0 ? null : state.match.countdownEndsAt,
-            countdownReason: payload.qIndex > 0 ? null : state.match.countdownReason,
+            countdownEndsAt: shouldClearCountdown ? null : state.match.countdownEndsAt,
+            countdownReason: shouldClearCountdown ? null : state.match.countdownReason,
             serverTimeOffsetMs: payload.serverTimeOffsetMs ?? state.match.serverTimeOffsetMs,
             questions: {
               ...state.match.questions,
@@ -346,13 +353,17 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
         categoryName: payload.question.categoryName,
       });
 
+      const shouldClearCountdown = shouldClearCountdownOnNewQuestion(
+        payload.qIndex,
+        state.match.countdownReason,
+      );
       return {
         match: {
           ...state.match,
           currentQuestion: payload,
           pendingQuestion: null,
-          countdownEndsAt: payload.qIndex > 0 ? null : state.match.countdownEndsAt,
-          countdownReason: payload.qIndex > 0 ? null : state.match.countdownReason,
+          countdownEndsAt: shouldClearCountdown ? null : state.match.countdownEndsAt,
+          countdownReason: shouldClearCountdown ? null : state.match.countdownReason,
           serverTimeOffsetMs: payload.serverTimeOffsetMs ?? state.match.serverTimeOffsetMs,
           answerAck: null,
           countdownGuessAck: null,
@@ -381,13 +392,17 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
       if (!state.match || !state.match.pendingQuestion) return state;
       const pending = state.match.pendingQuestion;
       logger.info('Promoting pending question to current', { qIndex: pending.qIndex });
+      const shouldClearCountdown = shouldClearCountdownOnNewQuestion(
+        pending.qIndex,
+        state.match.countdownReason,
+      );
       return {
         match: {
           ...state.match,
           currentQuestion: pending,
           pendingQuestion: null,
-          countdownEndsAt: pending.qIndex > 0 ? null : state.match.countdownEndsAt,
-          countdownReason: pending.qIndex > 0 ? null : state.match.countdownReason,
+          countdownEndsAt: shouldClearCountdown ? null : state.match.countdownEndsAt,
+          countdownReason: shouldClearCountdown ? null : state.match.countdownReason,
           answerAck: null,
           countdownGuessAck: null,
           opponentCountdownFoundCount: 0,
