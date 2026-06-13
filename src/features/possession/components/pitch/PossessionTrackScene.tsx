@@ -39,6 +39,8 @@ interface PossessionTrackSceneProps {
   renderHtmlPitchActors: boolean;
   barBattle?: BarBattleState | null;
   barBattleVariant?: 'ranked_sim' | 'friendly_possession';
+  /** Infinite fill/boundary opacity pulses; landing passes false (Blink repaints the whole svg per pulse frame). */
+  ambientPulses?: boolean;
 }
 
 export function PossessionTrackScene({
@@ -64,6 +66,7 @@ export function PossessionTrackScene({
   renderHtmlPitchActors,
   barBattle,
   barBattleVariant,
+  ambientPulses = true,
 }: PossessionTrackSceneProps) {
   return (
     <g>
@@ -82,9 +85,7 @@ export function PossessionTrackScene({
         fill="#1CB0F6"
         opacity="0.18"
         rx="6"
-        animate={{
-          opacity: [0.15, 0.22, 0.15],
-        }}
+        animate={!ambientPulses ? undefined : { opacity: [0.15, 0.22, 0.15] }}
         transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
       />
 
@@ -97,9 +98,7 @@ export function PossessionTrackScene({
         fill="#FF4B4B"
         opacity="0.12"
         rx="6"
-        animate={{
-          opacity: [0.08, 0.15, 0.08],
-        }}
+        animate={!ambientPulses ? undefined : { opacity: [0.08, 0.15, 0.08] }}
         transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
       />
 
@@ -210,9 +209,7 @@ export function PossessionTrackScene({
           stroke="white"
           strokeWidth="2.5"
           opacity="0.9"
-          animate={{
-            opacity: [0.7, 1, 0.7],
-          }}
+          animate={!ambientPulses ? undefined : { opacity: [0.7, 1, 0.7] }}
           transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
         />
       </motion.g>

@@ -142,6 +142,7 @@ export function WelcomeHero({ sim, duelsCount, onKickOff }: WelcomeHeroProps) {
                   ballOnPlayer={landingBallOnPlayer}
                   barBattle={landingBattle}
                   barBattleVariant="ranked_sim"
+                  ambientPulses={false}
                   shotMode={landingShotMode}
                   simpleShotAnimation
                   hideBall={showGoal}
@@ -197,31 +198,29 @@ export function WelcomeHero({ sim, duelsCount, onKickOff }: WelcomeHeroProps) {
         transition={{ duration: 0.5, delay: 0.2 }}
         className="order-1 lg:order-2 flex-1 flex flex-col items-center lg:items-start text-center lg:text-left max-w-xl relative lg:pl-8 xl:pl-12"
       >
-        <div className="absolute -left-11 md:-left-22 top-10 md:top-14 w-16 md:w-24 h-32 md:h-48 overflow-hidden pointer-events-none md:hidden">
+                <div className="absolute -left-11 md:-left-22 top-10 md:top-14 w-16 md:w-24 h-32 md:h-48 overflow-hidden pointer-events-none md:hidden">
+          {/* PERF: the edge fade is BAKED into the -faded asset instead of a
+              runtime mask-image. A masked element under an infinite rotate
+              re-rasterizes every frame on mobile Blink; a plain bitmap
+              rotation stays on the compositor. */}
           <motion.div
             className="origin-bottom"
-            style={{
-              maskImage: 'linear-gradient(to top, black 60%, transparent 100%), linear-gradient(to right, transparent 0%, black 22%, black 100%)',
-              WebkitMaskImage: 'linear-gradient(to top, black 60%, transparent 100%), linear-gradient(to right, transparent 0%, black 22%, black 100%)',
-            }}
+            style={{ willChange: 'transform' }}
             animate={{ rotate: [-8, 8, -8] }}
             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
           >
-            <Image src="/assets/brand/hand-left.webp" alt="" width={120} height={200} className="w-14 md:w-24 h-auto" />
+            <Image src="/assets/brand/hand-left-faded.webp" alt="" width={120} height={200} className="w-14 md:w-24 h-auto" />
           </motion.div>
         </div>
 
         <div className="absolute -right-11 md:-right-22 top-10 md:top-14 w-16 md:w-24 h-32 md:h-48 overflow-hidden pointer-events-none md:hidden">
           <motion.div
             className="origin-bottom"
-            style={{
-              maskImage: 'linear-gradient(to top, black 60%, transparent 100%), linear-gradient(to left, transparent 0%, black 22%, black 100%)',
-              WebkitMaskImage: 'linear-gradient(to top, black 60%, transparent 100%), linear-gradient(to left, transparent 0%, black 22%, black 100%)',
-            }}
+            style={{ willChange: 'transform' }}
             animate={{ rotate: [8, -8, 8] }}
             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
           >
-            <Image src="/assets/brand/hand-right.webp" alt="" width={120} height={200} className="w-14 md:w-24 h-auto" />
+            <Image src="/assets/brand/hand-right-faded.webp" alt="" width={120} height={200} className="w-14 md:w-24 h-auto" />
           </motion.div>
         </div>
 

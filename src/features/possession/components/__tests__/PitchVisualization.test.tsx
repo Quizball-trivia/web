@@ -271,7 +271,10 @@ describe('PitchVisualization — scoped SVG ids', () => {
     const { container } = renderPitch({ svgIdPrefix: 'test-pitch' });
 
     expect(container.querySelector('#test-pitch-fieldClip')).toBeInTheDocument();
-    expect(container.querySelector('image')?.getAttribute('clip-path')).toBe('url(#test-pitch-fieldClip)');
+    // The stadium bitmap lives in its own background svg layer with a locally
+    // defined clip (see the PERF note in PitchVisualization).
+    expect(container.querySelector('#test-pitch-fieldClipBg')).toBeInTheDocument();
+    expect(container.querySelector('image')?.getAttribute('clip-path')).toBe('url(#test-pitch-fieldClipBg)');
   });
 
   it('uses unique scoped ids per instance so multiple pitches do not clash', () => {
