@@ -310,7 +310,7 @@ export function ProfileWeb({
             </div>
           ) : (() => {
             const ladder = [...RANKED_TIER_BANDS].reverse(); // ascending: Academy → GOAT
-            const goatRp = ladder[ladder.length - 1].minRp; // 3200
+            const goatRp = ladder[ladder.length - 1].minRp; // 5000
             const currentIdx = (() => {
               if (isPlacementInProgress) return -1;
               for (let i = ladder.length - 1; i >= 0; i--) {
