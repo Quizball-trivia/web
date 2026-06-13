@@ -102,7 +102,7 @@ export function WelcomeTierRoadSection({ onStartClimbing }: WelcomeTierRoadSecti
         >
           <Button
             onClick={onStartClimbing}
-            className="h-14 rounded-[20px] bg-brand-green px-10 font-poppins text-lg font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none"
+            className="h-14 rounded-[20px] bg-brand-green-accessible px-10 font-poppins text-lg font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green-accessible-hover hover:shadow-none"
           >
             {t('welcome.startClimbing')}
           </Button>

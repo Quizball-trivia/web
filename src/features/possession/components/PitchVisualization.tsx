@@ -24,7 +24,7 @@ export function PitchVisualization(props: PitchVisualizationProps) {
     targetGoal,
     barBattle,
     barBattleVariant,
-    ambientPulses,
+    ambientPulses = true,
     hideBall = false,
   } = props;
   // RENDER-TIME field clamp: avatars/ball/track must stay visually inside the

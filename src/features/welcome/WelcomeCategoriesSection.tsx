@@ -42,6 +42,33 @@ const WC_SHOWCASE_SLUGS = [
   'world-cup-qatar-2022',
 ];
 
+const EVENT_CATEGORY_IMAGE_SIZES = '(min-width: 1280px) 405px, (min-width: 768px) 30vw, 31vw';
+const STANDARD_CATEGORY_IMAGE_SIZES = '(min-width: 1024px) 240px, (min-width: 640px) 30vw, 45vw';
+
+function WelcomeCategoriesSkeleton() {
+  return (
+    <section className="py-6 md:py-8" aria-hidden="true">
+      <div>
+        <div className="mb-6">
+          <div className="h-6 w-56 rounded-md bg-white/10" />
+          <div className="mt-2 h-4 w-44 rounded-md bg-white/5" />
+        </div>
+        <div className="grid grid-cols-3 gap-2.5 md:gap-5">
+          {Array.from({ length: 15 }).map((_, i) => (
+            <div
+              key={i}
+              className="aspect-[3/4] rounded-2xl border border-white/10 bg-white/[0.04] md:aspect-auto md:min-h-[190px] md:max-h-[240px]"
+            />
+          ))}
+        </div>
+        <div className="mt-6 flex justify-center">
+          <div className="h-11 w-64 rounded-xl bg-white/[0.06]" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function WelcomeCategoriesSection({
   allCategoriesCount,
   featuredCategories,
@@ -53,7 +80,7 @@ export function WelcomeCategoriesSection({
   // Landing is region-free: the World Cup showcase renders for everyone while
   // the event flag is on (in-game surfaces keep the region-gated isEventMode).
   const { eventEnabled } = useActiveEventMode();
-  if (featuredCategories.length === 0) return null;
+  if (featuredCategories.length === 0) return <WelcomeCategoriesSkeleton />;
 
   if (!eventEnabled) {
     return (
@@ -79,7 +106,12 @@ export function WelcomeCategoriesSection({
                   style={{ backgroundColor: style.color }}
                   onClick={onCategorySelect}
                 >
-                  <CategoryArtwork src={cat.imageUrl} className="absolute inset-0" />
+                  <CategoryArtwork
+                    src={cat.imageUrl}
+                    className="absolute inset-0"
+                    displayWidth={320}
+                    sizes={STANDARD_CATEGORY_IMAGE_SIZES}
+                  />
                   {cat.imageUrl ? (
                     <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/18 to-black/10" />
                   ) : null}
@@ -116,7 +148,7 @@ export function WelcomeCategoriesSection({
             <div className="mt-8 text-center">
               <Button
                 onClick={onBrowseAll}
-                className="h-14 min-w-[280px] rounded-[20px] bg-brand-green px-10 font-poppins text-base font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none"
+                className="h-14 min-w-[280px] rounded-[20px] bg-brand-green-accessible px-10 font-poppins text-base font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green-accessible-hover hover:shadow-none"
               >
                 {t('welcome.browseAllCategories', { count: allCategoriesCount })}
               </Button>
@@ -179,7 +211,12 @@ export function WelcomeCategoriesSection({
                 style={{ backgroundColor: style.color }}
                 onClick={onCategorySelect}
               >
-                <CategoryArtwork src={cat.imageUrl} className="absolute inset-0" />
+                <CategoryArtwork
+                  src={cat.imageUrl}
+                  className="absolute inset-0"
+                  displayWidth={420}
+                  sizes={EVENT_CATEGORY_IMAGE_SIZES}
+                />
                 {cat.imageUrl ? (
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
                 ) : null}
@@ -224,7 +261,7 @@ export function WelcomeCategoriesSection({
           >
             <Button
               onClick={onBrowseAll}
-              className="h-11 rounded-xl bg-brand-green px-6 font-poppins text-sm font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none"
+              className="h-11 rounded-xl bg-brand-green-accessible px-6 font-poppins text-sm font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green-accessible-hover hover:shadow-none"
             >
               {t('welcome.browseAllCategories', { count: allCategoriesCount })}
             </Button>

@@ -7,15 +7,15 @@ import { getImageProps } from "next/image";
  * pipeline); serving them raw means every small card downloads ~the full
  * megapixel PNG. The optimizer resizes them and negotiates AVIF/WebP instead.
  *
- * Quality is pinned at 90 (Next defaults to 75) so the re-encode stays
- * visually indistinguishable from the source.
+ * Quality defaults to 75 to keep card art small; callers can opt into higher
+ * quality for detail-critical images.
  *
  * URLs from other hosts (e.g. `external_fallback` question images that still
  * point at arbitrary third-party domains) are returned untouched, since they
  * aren't covered by `images.remotePatterns` and would 400 in the optimizer.
  */
 
-const QUALITY = 90;
+const DEFAULT_QUALITY = 75;
 
 function isOwnSupabaseUrl(src: string): boolean {
   let url: URL;
@@ -37,6 +37,12 @@ function isOwnSupabaseUrl(src: string): boolean {
 export interface OptimizedRemoteImageProps {
   src: string;
   srcSet?: string;
+  sizes?: string;
+}
+
+export interface OptimizedRemoteImageOptions {
+  quality?: 70 | 75 | 90;
+  sizes?: string;
 }
 
 /**
@@ -49,6 +55,7 @@ export interface OptimizedRemoteImageProps {
 export function optimizedRemoteImageProps(
   src: string,
   displayWidth: number,
+  options: OptimizedRemoteImageOptions = {},
 ): OptimizedRemoteImageProps {
   if (!isOwnSupabaseUrl(src)) return { src };
   const { props } = getImageProps({
@@ -58,9 +65,10 @@ export function optimizedRemoteImageProps(
     // Height only informs the generated (discarded) layout props, not the
     // optimizer URL — the original aspect ratio is always preserved.
     height: displayWidth,
-    quality: QUALITY,
+    quality: options.quality ?? DEFAULT_QUALITY,
+    sizes: options.sizes,
   });
-  return { src: props.src, srcSet: props.srcSet };
+  return { src: props.src, srcSet: props.srcSet, sizes: props.sizes };
 }
 
 /**
@@ -76,8 +84,9 @@ export function optimizedRemoteImageProps(
 export function preloadableRemoteImageUrl(
   src: string,
   displayWidth: number,
+  options: OptimizedRemoteImageOptions = {},
 ): string {
-  const { src: baseSrc, srcSet } = optimizedRemoteImageProps(src, displayWidth);
+  const { src: baseSrc, srcSet } = optimizedRemoteImageProps(src, displayWidth, options);
   if (!srcSet) return baseSrc;
   // srcSet is "url1 1x, url2 2x" (or "url1 640w, ..."). Take the LAST entry —
   // getImageProps emits candidates in ascending order, so the last is largest.

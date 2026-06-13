@@ -23,6 +23,9 @@ interface CategoryArtworkProps {
    * full-bleed photos get `cover`.
    */
   fit?: 'cover' | 'contain' | 'auto';
+  displayWidth?: number;
+  sizes?: string;
+  quality?: 70 | 75 | 90;
 }
 
 /**
@@ -55,7 +58,15 @@ function detectFit(img: HTMLImageElement): 'cover' | 'contain' {
   }
 }
 
-export function CategoryArtwork({ src, className, imageClassName, fit = 'auto' }: CategoryArtworkProps) {
+export function CategoryArtwork({
+  src,
+  className,
+  imageClassName,
+  fit = 'auto',
+  displayWidth = 384,
+  sizes,
+  quality = 70,
+}: CategoryArtworkProps) {
   const [failed, setFailed] = useState(false);
   const [detectedFit, setDetectedFit] = useState<'cover' | 'contain' | null>(null);
 
@@ -68,7 +79,7 @@ export function CategoryArtwork({ src, className, imageClassName, fit = 'auto' }
     // Crests keep the previous letterboxed-with-breathing-room look.
     <div className={`${className} ${contain ? 'p-1.5' : ''}`}>
       <img
-        {...optimizedRemoteImageProps(src, 384)}
+        {...optimizedRemoteImageProps(src, displayWidth, { sizes, quality })}
         alt=""
         loading="lazy"
         decoding="async"

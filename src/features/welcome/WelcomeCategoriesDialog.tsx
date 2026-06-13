@@ -90,7 +90,12 @@ export function WelcomeCategoriesDialog({
               style={{ backgroundColor: style.color }}
               onClick={onCategorySelect}
             >
-              <CategoryArtwork src={cat.imageUrl} className="absolute inset-0" />
+              <CategoryArtwork
+                src={cat.imageUrl}
+                className="absolute inset-0"
+                displayWidth={420}
+                sizes="(min-width: 768px) 520px, 88vw"
+              />
               {cat.imageUrl ? (
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/5" />
               ) : null}
