@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LiveSpecialQuestionPanel } from '../LiveSpecialQuestionPanel';
 import type {
   ResolvedCluesQuestion,
@@ -581,6 +581,113 @@ describe('LiveSpecialQuestionPanel clues input (pre-split regression)', () => {
     expect(screen.queryByText('???')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /submit answer/i }));
+    expect(emitMock).not.toHaveBeenCalledWith('match:clues_answer', expect.anything());
+  });
+});
+
+// Freeze guards added after the Jun 2026 prod audit: clue_chain (Who Am I)
+// rounds died at ~4× the MCQ rate. Root cause on the client: `pendingGuess`
+// was only ever cleared by a server event, so one lost guess-ack disabled the
+// input + Submit + Give Up forever; and clues (unlike put-in-order) had no
+// deadline auto-submit, so a frozen/idle player contributed no answer at all.
+describe('LiveCluesPanel freeze guards (whoami)', () => {
+  beforeEach(() => {
+    emitMock.mockClear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  function renderClues(overrides: Partial<Parameters<typeof LiveSpecialQuestionPanel>[0]> = {}) {
+    return render(
+      <LiveSpecialQuestionPanel
+        matchId="match-1"
+        qIndex={4}
+        totalQuestions={12}
+        question={cluesQuestion}
+        showOptions
+        timeRemaining={50}
+        questionDurationSeconds={50}
+        roundResolved={false}
+        answerAck={null}
+        roundResult={null}
+        myRound={null}
+        opponentRound={null}
+        countdownGuessAck={null}
+        cluesGuessAck={null}
+        {...overrides}
+      />
+    );
+  }
+
+  it('unlocks the input again when a guess ack never arrives (pendingGuess watchdog)', () => {
+    vi.useFakeTimers();
+    renderClues({ timeRemaining: 38 });
+
+    fireEvent.change(screen.getByPlaceholderText('TYPE YOUR ANSWER'), {
+      target: { value: 'Ake' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /submit answer/i }));
+
+    // Guess emitted; panel locks while the ack is pending.
+    expect(emitMock).toHaveBeenCalledTimes(1);
+    expect(screen.getByPlaceholderText('TYPE YOUR ANSWER')).toBeDisabled();
+    expect(screen.getByRole('button', { name: /give up/i })).toBeDisabled();
+
+    // No ack ever arrives — the watchdog must unlock so the player can retry
+    // instead of staring at a dead panel until the round times out.
+    act(() => {
+      vi.advanceTimersByTime(2100);
+    });
+    expect(screen.getByPlaceholderText('TYPE YOUR ANSWER')).not.toBeDisabled();
+    expect(screen.getByRole('button', { name: /give up/i })).not.toBeDisabled();
+  });
+
+  it('auto-gives-up exactly once when the timer hits zero with no submission', () => {
+    vi.useFakeTimers();
+    renderClues({ timeRemaining: 0 });
+
+    expect(emitMock).not.toHaveBeenCalled();
+    act(() => {
+      vi.advanceTimersByTime(1100);
+    });
+    expect(emitMock).toHaveBeenCalledWith('match:clues_answer', {
+      kind: 'giveUp',
+      matchId: 'match-1',
+      qIndex: 4,
+      giveUp: true,
+      timeMs: 50000,
+    });
+
+    // Further time at zero must not double-fire the give-up.
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+    const cluesEmits = emitMock.mock.calls.filter(([event]) => event === 'match:clues_answer');
+    expect(cluesEmits).toHaveLength(1);
+  });
+
+  it('does not auto-give-up when the answer was already submitted', () => {
+    vi.useFakeTimers();
+    renderClues({
+      timeRemaining: 0,
+      answerAck: {
+        matchId: 'match-1',
+        qIndex: 4,
+        questionKind: 'clues',
+        selectedIndex: null,
+        isCorrect: true,
+        myTotalPoints: 100,
+        oppAnswered: false,
+        pointsEarned: 100,
+        cluesDisplayAnswer: { en: 'Roman Burki' },
+      } as never,
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
     expect(emitMock).not.toHaveBeenCalledWith('match:clues_answer', expect.anything());
   });
 });

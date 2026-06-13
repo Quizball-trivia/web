@@ -281,6 +281,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   });
 
   socket.on('match:question', (data: MatchQuestionPayload) => {
+    try {
     const serverTimeOffsetMs = computeServerTimeOffsetMs(data.serverNow);
     logger.info('Socket event match:question', {
       matchId: data.matchId,
@@ -336,7 +337,11 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
                   ...data.question,
                   resolvedLocale: locale,
                   prompt: getI18nText(data.question.prompt, locale),
-                  clues: data.question.clues.map((clue) => ({
+                  // Defensive: a malformed payload without a clues array used
+                  // to throw inside this socket callback, silently swallowing
+                  // the question — the client then waited on the previous
+                  // screen forever (no error boundary catches socket handlers).
+                  clues: (Array.isArray(data.question.clues) ? data.question.clues : []).map((clue) => ({
                     ...clue,
                     content: getI18nText(clue.content, locale),
                   })),
@@ -344,6 +349,18 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
                 },
     };
     store.setMatchQuestion(resolvedData);
+    } catch (error) {
+      // A throw here used to vanish the question entirely (the store never
+      // received it and the match froze on the previous screen with no UI
+      // error). Log loudly instead — the server-side round timeout will still
+      // resolve the round even if this client cannot render the question.
+      logger.error('Failed to process match:question payload', {
+        matchId: data?.matchId,
+        qIndex: data?.qIndex,
+        questionKind: data?.question?.kind,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   });
 
   socket.on('match:opponent_answered', (data: MatchOpponentAnsweredPayload) => {
