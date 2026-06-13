@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Bell, Check, Loader2, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
@@ -200,6 +201,64 @@ function ChallengeRow({
   );
 }
 
+// Compact relative time ("just now" / "5m" / "2h" / "3d") for the feed row,
+// with the full timestamp shown on hover via the title attribute.
+function formatRelativeTime(iso: string): string {
+  const then = new Date(iso).getTime();
+  const diffSec = Math.max(0, Math.round((Date.now() - then) / 1000));
+  if (diffSec < 45) return "just now";
+  const diffMin = Math.round(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m`;
+  const diffHr = Math.round(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h`;
+  const diffDay = Math.round(diffHr / 24);
+  return `${diffDay}d`;
+}
+
+function toNumber(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+// A single signed delta chip. Negatives are red; positives are green and shown
+// larger / brighter (gains should pop). `icon` is an asset path (coins/tickets);
+// `label` is used for non-currency deltas (XP/RP).
+function DeltaChip({
+  value,
+  icon,
+  label,
+}: {
+  value: number;
+  icon?: string;
+  label?: string;
+}) {
+  if (value === 0) return null;
+  const positive = value > 0;
+  const sign = positive ? "+" : "";
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-poppins font-bold tabular-nums",
+        positive
+          ? "bg-brand-green/20 text-white text-sm"
+          : "bg-brand-red-soft/15 text-brand-red-soft text-xs",
+      )}
+    >
+      {icon && (
+        <Image
+          src={icon}
+          alt=""
+          width={16}
+          height={16}
+          className={positive ? "size-4" : "size-3.5"}
+        />
+      )}
+      {sign}
+      {value.toLocaleString()}
+      {label && <span className="opacity-80">{label}</span>}
+    </span>
+  );
+}
+
 function NotificationRow({
   item,
   index,
@@ -210,7 +269,20 @@ function NotificationRow({
   locale: string;
 }) {
   const title = getI18nText(item.title, locale);
-  const body = item.body ? getI18nText(item.body, locale) : null;
+  const data = (item.data ?? {}) as Record<string, unknown>;
+  const coinsDelta = toNumber(data.coinsDelta);
+  const ticketsDelta = toNumber(data.ticketsDelta);
+  const xpDelta = toNumber(data.xpDelta);
+  const rpDelta = toNumber(data.rpDelta);
+  const hasDeltas = coinsDelta || ticketsDelta || xpDelta || rpDelta;
+  // Fall back to the server body text only when there are no structured deltas
+  // to render as chips (keeps non-points notification types working).
+  const body = !hasDeltas && item.body ? getI18nText(item.body, locale) : null;
+
+  const created = new Date(item.createdAt);
+  const relative = formatRelativeTime(item.createdAt);
+  const absolute = created.toLocaleString();
+
   return (
     <motion.div
       layout
@@ -224,8 +296,24 @@ function NotificationRow({
         <Bell className="size-4 text-black" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate font-poppins text-xs font-semibold text-white">{title}</p>
+        <div className="flex items-baseline justify-between gap-2">
+          <p className="truncate font-poppins text-xs font-semibold text-white">{title}</p>
+          <span
+            className="shrink-0 font-poppins text-[10px] text-white/45"
+            title={absolute}
+          >
+            {relative}
+          </span>
+        </div>
         {body && <p className="font-poppins text-[11px] leading-snug text-white/75">{body}</p>}
+        {hasDeltas ? (
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <DeltaChip value={coinsDelta} icon="/assets/coin-1.png" />
+            <DeltaChip value={ticketsDelta} icon="/assets/ticket-1.png" />
+            <DeltaChip value={xpDelta} label="XP" />
+            <DeltaChip value={rpDelta} label="RP" />
+          </div>
+        ) : null}
       </div>
       {!item.readAt && <span className="mt-1 size-2 shrink-0 rounded-full bg-brand-yellow" />}
     </motion.div>
