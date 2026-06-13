@@ -23,6 +23,7 @@ import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
 import { useGameSessionStore } from '@/stores/gameSession.store';
 import { useStoreWallet } from '@/lib/queries/store.queries';
 import { useIncomingFriendRequestCount } from '@/lib/queries/social.queries';
+import { useUnreadNotificationCount } from '@/lib/queries/notifications.queries';
 import { getSocket } from '@/lib/realtime/socket-client';
 import { useRealtimeConnection } from '@/lib/realtime/useRealtimeConnection';
 import { logger } from '@/utils/logger';
@@ -43,6 +44,7 @@ export function useAppShellViewModel() {
   const { player: playerStats } = usePlayer();
   const { data: storeWallet } = useStoreWallet();
   const { data: incomingFriendRequestCount = 0 } = useIncomingFriendRequestCount();
+  const unreadNotificationCount = useUnreadNotificationCount();
   const authUser = useAuthStore((state) => state.user);
   const authStatus = useAuthStore((state) => state.status);
   const logout = useAuthStore((state) => state.logout);
@@ -198,7 +200,7 @@ export function useAppShellViewModel() {
   const sessionStateLabel = sessionState?.state ?? 'NO_SESSION';
   const navbarCoins = storeWallet?.coins ?? 0;
   const navbarTickets = storeWallet?.tickets ?? 0;
-  const socialBadgeCount = incomingFriendRequestCount + challengeInviteCount;
+  const socialBadgeCount = incomingFriendRequestCount + challengeInviteCount + unreadNotificationCount;
 
   useEffect(() => {
     const socket = getSocket();

@@ -41,6 +41,8 @@ import type {
   SessionBlockedPayload,
   LobbyChallengeInvitePayload,
   LobbyChallengeStatusPayload,
+  NotificationPayload,
+  NotificationUnreadCountPayload,
 } from './socket.types';
 
 // Module-level ref so handlers always read the latest queryClient
@@ -104,6 +106,22 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     if (typeof window !== 'undefined') {
       window.location.href = '/';
     }
+  });
+
+  socket.on('notification:new', (data: NotificationPayload) => {
+    logger.info('Socket event notification:new', { notificationId: data.id, type: data.type });
+    const queryClient = getQueryClient();
+    queryClient?.invalidateQueries({ queryKey: queryKeys.notifications.all });
+    const locale = normalizeLocale(storage.get<string>(STORAGE_KEYS.LOCALE, 'en'));
+    const title = getI18nText(data.title, locale);
+    if (title) toast.info(title);
+  });
+
+  socket.on('notification:unread_count', (data: NotificationUnreadCountPayload) => {
+    logger.info('Socket event notification:unread_count', data);
+    const queryClient = getQueryClient();
+    queryClient?.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
+    queryClient?.invalidateQueries({ queryKey: queryKeys.notifications.list() });
   });
 
   socket.on('lobby:state', (data: LobbyState) => {
