@@ -1036,6 +1036,8 @@
     "penaltyAriaLabel": "Penalty shootout starting: answer correctly and faster to score",
     "getReady": "Get Ready",
     "waitingForReconnect": "Waiting for them to reconnect",
+    "safeLeaveWinIn": "You win in {seconds}s if they don't return",
+    "leaveSafely": "Leave safely",
     "bestOf5": "Best of 5",
     "highPressure": "🔥 High Pressure 🔥",
     "answerCorrectlyAndFaster": "Answer correctly and faster to score",
