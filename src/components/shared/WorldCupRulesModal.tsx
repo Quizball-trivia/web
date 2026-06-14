@@ -21,7 +21,7 @@ interface WorldCupRulesButtonProps {
 
 function SectionHeading({ emoji, children }: { emoji: string; children: React.ReactNode }) {
   return (
-    <h3 className="text-xs font-black uppercase tracking-wide text-white mb-1.5">
+    <h3 className="text-sm font-black uppercase tracking-wide text-white mb-2">
       {emoji} {children}
     </h3>
   );
@@ -34,11 +34,11 @@ function RpTable({ rows }: { rows: { label: string; value: string; positive?: bo
         <div
           key={i}
           className={cn(
-            'flex items-center justify-between px-3 py-1.5 text-xs',
+            'flex items-center justify-between px-3 py-2 text-sm',
             i % 2 === 0 ? 'bg-white/[0.03]' : 'bg-transparent',
           )}
         >
-          <span className="text-white/70">{row.label}</span>
+          <span className="text-white/90">{row.label}</span>
           <span className={cn('font-bold tabular-nums', row.positive === false ? 'text-red-400' : 'text-emerald-400')}>
             {row.value}
           </span>
@@ -56,7 +56,7 @@ export function WorldCupRulesButton({ variant = 'pill', className }: WorldCupRul
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {variant === 'text' ? (
-          <button type="button" className={`text-[10px] sm:text-xs font-bold uppercase tracking-wide text-brand-yellow underline underline-offset-2 hover:text-brand-yellow/80 ${className ?? ''}`}>
+          <button type="button" className={`text-xs sm:text-sm font-bold uppercase tracking-wide text-brand-yellow underline underline-offset-2 hover:text-brand-yellow/80 ${className ?? ''}`}>
             {t('welcome.wcPromoRules')}
           </button>
         ) : variant === 'icon' ? (
@@ -87,7 +87,7 @@ export function WorldCupRulesButton({ variant = 'pill', className }: WorldCupRul
           <DialogDescription className="sr-only">{t('welcome.wcPromoRulesDescription')}</DialogDescription>
         </DialogHeader>
 
-        <div className="mt-4 space-y-5 text-sm text-white/80 leading-relaxed">
+        <div className="mt-4 space-y-5 text-sm text-white/90 leading-relaxed">
           {/* Duration */}
           <div>
             <SectionHeading emoji="📅">{t('welcome.wcPromoRulesDuration')}</SectionHeading>
@@ -115,7 +115,7 @@ export function WorldCupRulesButton({ variant = 'pill', className }: WorldCupRul
               </div>
               <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
                 <span className="text-lg">🏅</span>
-                <span className="text-sm font-bold text-white/70">{t('welcome.wcPromoMerch')}</span>
+                <span className="text-sm font-bold text-white/90">{t('welcome.wcPromoMerch')}</span>
               </div>
             </div>
           </div>
@@ -124,15 +124,24 @@ export function WorldCupRulesButton({ variant = 'pill', className }: WorldCupRul
           <div>
             <SectionHeading emoji="🎮">{t('welcome.wcPromoRulesTicketsTitle')}</SectionHeading>
             <p>{t('welcome.wcPromoRulesTicketsText')}</p>
-            <p className="mt-1.5 text-xs font-bold text-white">{t('welcome.wcPromoRulesTicketsMax')}</p>
-            <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] p-3 space-y-2">
-              <p className="text-xs text-white/60">{t('welcome.wcPromoRulesTicketsForfeit')}</p>
-              <ul className="space-y-1 list-disc list-inside text-xs text-white/50">
-                <li>{t('welcome.wcPromoRulesTicketsForfeitNo1')}</li>
-                <li>{t('welcome.wcPromoRulesTicketsForfeitNo2')}</li>
-                <li>{t('welcome.wcPromoRulesTicketsForfeitNo3')}</li>
-              </ul>
-              <p className="text-[11px] text-white/40 italic">{t('welcome.wcPromoRulesTicketsForfeitWhy')}</p>
+            <p className="mt-2 text-sm font-bold text-white">{t('welcome.wcPromoRulesTicketsMax')}</p>
+            <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] p-3 space-y-3">
+              <div className="space-y-1.5">
+                <p className="text-sm font-bold text-white">{t('welcome.wcPromoRulesForfeitEarlyTitle')}</p>
+                <ul className="space-y-1 list-disc list-outside pl-4 text-sm text-white/90">
+                  <li>{t('welcome.wcPromoRulesForfeitEarlyNo1')}</li>
+                  <li>{t('welcome.wcPromoRulesForfeitEarlyNo2')}</li>
+                </ul>
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-sm font-bold text-white">{t('welcome.wcPromoRulesForfeitLateTitle')}</p>
+                <ul className="space-y-1 list-disc list-outside pl-4 text-sm text-white/90">
+                  <li>{t('welcome.wcPromoRulesForfeitLateNo1')}</li>
+                  <li>{t('welcome.wcPromoRulesForfeitLateNo2')}</li>
+                  <li>{t('welcome.wcPromoRulesForfeitLateNo3')}</li>
+                </ul>
+              </div>
+              <p className="text-sm text-white/80 italic">{t('welcome.wcPromoRulesTicketsForfeitWhy')}</p>
             </div>
           </div>
 
@@ -141,7 +150,7 @@ export function WorldCupRulesButton({ variant = 'pill', className }: WorldCupRul
             <SectionHeading emoji="📈">{t('welcome.wcPromoRulesRpTitle')}</SectionHeading>
 
             {/* Match Result */}
-            <p className="text-xs font-bold text-white mb-1.5">{t('welcome.wcPromoRulesRpMatch')}</p>
+            <p className="text-sm font-bold text-white mb-2">{t('welcome.wcPromoRulesRpMatch')}</p>
             <RpTable rows={[
               { label: t('welcome.wcPromoRulesRpRegularWin'), value: '+50', positive: true },
               { label: t('welcome.wcPromoRulesRpPenaltyWin'), value: '+35', positive: true },
@@ -154,24 +163,24 @@ export function WorldCupRulesButton({ variant = 'pill', className }: WorldCupRul
 
           {/* Winning Margin Bonus */}
           <div>
-            <p className="text-xs font-bold text-white mb-1.5">{t('welcome.wcPromoRulesMarginTitle')}</p>
+            <p className="text-sm font-bold text-white mb-2">{t('welcome.wcPromoRulesMarginTitle')}</p>
             <RpTable rows={[
               { label: t('welcome.wcPromoRulesMarginBy1'), value: '+0', positive: true },
               { label: t('welcome.wcPromoRulesMarginBy2'), value: '+15', positive: true },
               { label: t('welcome.wcPromoRulesMarginBy3'), value: '+30', positive: true },
               { label: t('welcome.wcPromoRulesMarginBy4'), value: '+40', positive: true },
             ]} />
-            <p className="mt-1.5 text-xs text-white/50">{t('welcome.wcPromoRulesMarginText')}</p>
+            <p className="mt-2 text-sm text-white/80">{t('welcome.wcPromoRulesMarginText')}</p>
           </div>
 
           {/* Opponent Strength Bonus */}
           <div>
-            <p className="text-xs font-bold text-white mb-1.5">{t('welcome.wcPromoRulesStrengthTitle')}</p>
+            <p className="text-sm font-bold text-white mb-2">{t('welcome.wcPromoRulesStrengthTitle')}</p>
             <RpTable rows={[
               { label: t('welcome.wcPromoRulesStrengthCondition'), value: '+10', positive: true },
             ]} />
-            <p className="mt-1.5 text-xs text-white/50">{t('welcome.wcPromoRulesStrengthText')}</p>
-            <ul className="mt-1 space-y-0.5 list-disc list-inside text-xs text-white/50">
+            <p className="mt-2 text-sm text-white/80">{t('welcome.wcPromoRulesStrengthText')}</p>
+            <ul className="mt-1.5 space-y-1 list-disc list-outside pl-4 text-sm text-white/80">
               <li>{t('welcome.wcPromoRulesStrengthEx1')}</li>
               <li>{t('welcome.wcPromoRulesStrengthEx2')}</li>
             </ul>
@@ -181,20 +190,20 @@ export function WorldCupRulesButton({ variant = 'pill', className }: WorldCupRul
           <div>
             <SectionHeading emoji="⚠️">{t('welcome.wcPromoRulesFairTitle')}</SectionHeading>
             <p>{t('welcome.wcPromoRulesFairText')}</p>
-            <p className="mt-2 text-xs text-white/60">{t('welcome.wcPromoRulesFairReview')}</p>
-            <ul className="mt-1 space-y-0.5 list-disc list-inside text-xs text-white/50">
+            <p className="mt-2 text-sm text-white/90">{t('welcome.wcPromoRulesFairReview')}</p>
+            <ul className="mt-1.5 space-y-1 list-disc list-outside pl-4 text-sm text-white/80">
               <li>{t('welcome.wcPromoRulesFair1')}</li>
               <li>{t('welcome.wcPromoRulesFair2')}</li>
               <li>{t('welcome.wcPromoRulesFair3')}</li>
               <li>{t('welcome.wcPromoRulesFair4')}</li>
             </ul>
-            <p className="mt-2 text-xs font-medium text-red-400/80">{t('welcome.wcPromoRulesFairWarn')}</p>
+            <p className="mt-2 text-sm font-medium text-red-400">{t('welcome.wcPromoRulesFairWarn')}</p>
           </div>
 
           {/* Footer */}
           <div className="border-t border-white/10 pt-4">
-            <p className="flex items-start gap-2 text-center text-xs text-white/50">
-              <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={16} height={16} className="h-3.5 w-auto shrink-0 object-contain opacity-70 mt-0.5" />
+            <p className="flex items-start gap-2 text-left text-sm text-white/80 leading-relaxed">
+              <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={16} height={16} className="h-3.5 w-auto shrink-0 object-contain opacity-80 mt-0.5" />
               <span>{t('welcome.wcPromoRulesFooter')}</span>
             </p>
           </div>

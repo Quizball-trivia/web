@@ -89,10 +89,16 @@ export function middleware(req: NextRequest) {
   const redirectTarget = REDIRECT_FROM_ROOT[pathname];
   if (redirectTarget) {
     const url = req.nextUrl.clone();
-    url.pathname = redirectTarget;
+    // Geo-aware landing locale: send visitors physically in Georgia to /ka,
+    // everyone else to the default (/en). Only the bare entry routes here are
+    // affected; an explicit /en or /ka URL is never rewritten.
+    const country =
+      req.headers.get("x-vercel-ip-country")?.trim().toUpperCase() ?? "";
+    const landingLocale = country === "GE" ? "ka" : DEFAULT_LOCALE;
+    url.pathname = redirectTarget.replace(`/${DEFAULT_LOCALE}`, `/${landingLocale}`);
     const res = NextResponse.redirect(url, 308);
     res.headers.set("Content-Security-Policy", csp);
-    res.headers.set("x-pathname", pathname);
+    res.headers.set("x-pathname", url.pathname);
     return res;
   }
 

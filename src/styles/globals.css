@@ -48,8 +48,6 @@
   /* Brand accent palette — neutrals + secondary brand colors. */
   --brand-green-light: 88 98% 40%;  /* #58CC02 — bright lime, success accents */
   --brand-green-bright: 84 100% 44%; /* #85E000 — placement counter / progress gradient stop */
-  --brand-green-accessible: 105 83% 27%; /* #247F0C — CTA green with white text contrast */
-  --brand-green-accessible-hover: 105 83% 24%; /* #1F6F0B — accessible CTA hover */
   --brand-orange: 36 100% 50%;      /* #FF9600 — warm accent / warning */
   --brand-purple: 273 100% 75%;     /* #CE82FF — special-mode accent */
   --brand-gold: 51 100% 50%;        /* #FFD700 — RP / leaderboard highlight */
@@ -138,8 +136,6 @@
   --color-brand-green: hsl(var(--brand-green));
   --color-brand-green-light: hsl(var(--brand-green-light));
   --color-brand-green-bright: hsl(var(--brand-green-bright));
-  --color-brand-green-accessible: hsl(var(--brand-green-accessible));
-  --color-brand-green-accessible-hover: hsl(var(--brand-green-accessible-hover));
   --color-brand-red: hsl(var(--brand-red));
   --color-brand-red-soft: hsl(var(--brand-red-soft));
   --color-brand-cyan: hsl(var(--brand-cyan));
@@ -349,7 +345,7 @@
   }
 
   .font-fun {
-    font-family: 'Nunito Variable', sans-serif;
+    font-family: 'Poppins', sans-serif;
   }
 
   .font-poppins {

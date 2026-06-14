@@ -18,7 +18,6 @@
 //   • Footer: "YOU HAVE <N> TICKETS 🎫" small caps, white/80.
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { WorldCupRulesButton } from "./WorldCupRulesModal";
 import {
@@ -175,18 +174,15 @@ export function ModeConfirmModal({
 
       {isEventMode && isRanked && (
         <>
-          {/* Event countdown (prominent) + leaderboard link + rules */}
+          {/* Event countdown (prominent) + rules */}
           <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-            <span className="rounded-full bg-white/10 px-3.5 py-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wide text-white/70">
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] sm:text-xs font-black uppercase tracking-wide text-white shadow-[0_2px_12px_rgba(255,108,10,0.25)]"
+              style={{ backgroundColor: '#FF6C0A' }}
+            >
+              <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={14} height={14} className="h-3.5 w-auto object-contain" />
               {t('play.eventDaysLeft', { count: wcDaysLeft })}
             </span>
-            <Link
-              href="/leaderboard"
-              onClick={() => onOpenChange(false)}
-              className="text-[11px] sm:text-xs font-bold uppercase tracking-wide text-brand-yellow underline underline-offset-2 hover:text-brand-yellow/80"
-            >
-              {t('play.eventViewLeaderboard')} →
-            </Link>
             <WorldCupRulesButton variant="text" />
           </div>
         </>

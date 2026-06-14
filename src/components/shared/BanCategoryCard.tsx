@@ -204,11 +204,15 @@ function BanCategoryCardComponent({
               initial={{ scale: 0, rotate: -20 }}
               animate={{ scale: 1, rotate: -8 }}
               transition={{ type: 'spring', stiffness: 400, damping: 14 }}
-              className="max-w-[90%] rounded-lg bg-brand-red-soft px-3 py-1.5 sm:rounded-xl sm:px-6 sm:py-2.5 md:px-7 md:py-3"
+              className="max-w-[94%] rounded-lg bg-brand-red-soft px-2.5 py-1.5 sm:rounded-xl sm:px-6 sm:py-2.5 md:px-7 md:py-3"
             >
               <span
-                className="block whitespace-nowrap text-center text-[11px] uppercase tracking-[0.08em] text-white sm:text-base md:text-lg"
-                style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
+                className="block whitespace-nowrap text-center uppercase tracking-[0.02em] text-white sm:tracking-[0.08em]"
+                style={{
+                  fontFamily: "'Poppins', sans-serif",
+                  fontWeight: 600,
+                  fontSize: 'clamp(0.5rem, 2.6vw, 1.125rem)',
+                }}
               >
                 {t('banCategory.banned')}
               </span>

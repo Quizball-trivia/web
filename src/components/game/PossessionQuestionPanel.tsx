@@ -6,7 +6,7 @@ import { Volume2, VolumeX, X } from 'lucide-react';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import type { AnswerStateArray, Phase } from '@/lib/types/game.types';
 import { ArenaScoreSplash } from '@/components/game/ArenaScoreSplash';
-import { AdaptiveAnswerText, isLongAnswerSet } from '@/components/game/AdaptiveAnswerText';
+import { AdaptiveAnswerText, AnswerFitGroup, isLongAnswerSet } from '@/components/game/AdaptiveAnswerText';
 import { QuestionImageCard } from '@/components/game/QuestionImageCard';
 import { MatchHudIconButton } from '@/features/possession/components/MatchHudPrimitives';
 import { MAX_PENALTY_ROUNDS } from '@/features/possession/types/possession.types';
@@ -167,6 +167,7 @@ export function PossessionQuestionPanel({
   const optionsRef = useRef<HTMLDivElement | null>(null);
   const hasImage = Boolean(question?.image?.url);
   const questionId = question?.id ?? null;
+  const autoScrolledQuestionRef = useRef<string | null>(null);
   useEffect(() => {
     if (!hasImage) return;
     const grid = optionsRef.current;
@@ -178,6 +179,26 @@ export function PossessionQuestionPanel({
     });
     return () => cancelAnimationFrame(raf);
   }, [hasImage, questionId]);
+
+  useEffect(() => {
+    if (!showOptions || !questionId) return;
+    if (autoScrolledQuestionRef.current === questionId) return;
+
+    const grid = optionsRef.current;
+    if (!grid || grid.offsetParent === null) return; // hidden (e.g. desktop split layout)
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) return; // lg+: panel fits
+
+    const raf = requestAnimationFrame(() => {
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+      const gridRect = grid.getBoundingClientRect();
+      if (gridRect.bottom <= viewportHeight - 12) return;
+
+      autoScrolledQuestionRef.current = questionId;
+      grid.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
+    });
+
+    return () => cancelAnimationFrame(raf);
+  }, [questionId, showOptions]);
 
   if (phase === 'goal') return null;
   if (!question) return null;
@@ -235,15 +256,6 @@ export function PossessionQuestionPanel({
     <div
       className={`${timerPillClass} h-[40px] w-[64px] sm:h-[52px] sm:w-[92px] md:h-[62px] md:w-[116px] lg:h-[72px] lg:w-[136px]`}
       style={{ ...poppins, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
-    >
-      {timerLabel}
-    </div>
-  );
-
-  const mobileTimerCircle = (
-    <div
-      className={`${timerPillClass} size-10 shrink-0 rounded-full sm:size-12`}
-      style={{ ...poppins, fontSize: 'clamp(14px, 4vw, 20px)' }}
     >
       {timerLabel}
     </div>
@@ -383,11 +395,13 @@ export function PossessionQuestionPanel({
           answer text inside fades in when showOptions flips true. */}
       <div
         ref={optionsRef}
+        data-mcq-options-grid="true"
         className={`mt-2.5 gap-2.5 ${
           stackedAnswers ? 'flex flex-col' : 'grid grid-cols-2 items-stretch'
-        } ${showOptions ? 'pointer-events-auto' : 'pointer-events-none'}`}
+        } ${showOptions ? 'pointer-events-auto' : 'pointer-events-none'} scroll-mb-4`}
         aria-hidden={!showOptions}
       >
+        <AnswerFitGroup>
         {question.options.map((opt, i) => {
           const buttonState = getButtonState(
             i,
@@ -436,8 +450,8 @@ export function PossessionQuestionPanel({
                 stackedAnswers
                   ? 'min-h-[64px]'
                   : hasQuestionImage
-                    ? 'min-h-[78px] sm:min-h-[88px] md:min-h-[96px] lg:min-h-[108px]'
-                    : 'min-h-[88px] sm:min-h-[104px] md:min-h-[116px] lg:min-h-[136px]'
+                    ? 'min-h-[62px] sm:min-h-[72px] md:min-h-[82px] lg:min-h-[92px]'
+                    : 'min-h-[68px] sm:min-h-[86px] md:min-h-[100px] lg:min-h-[120px]'
               }`}
               style={{
                 ...poppins,
@@ -502,8 +516,10 @@ export function PossessionQuestionPanel({
               )}
 
               <motion.span
-                className={`relative z-[1] flex w-full items-center justify-center px-5 py-4 ${
-                  stackedAnswers ? '' : 'h-full overflow-hidden'
+                className={`relative z-[1] flex w-full items-center justify-center ${
+                  stackedAnswers
+                    ? 'px-5 py-4'
+                    : 'h-full overflow-hidden px-3.5 py-2.5 sm:px-4 sm:py-3'
                 }`}
                 initial={false}
                 animate={{ opacity: showOptions ? 1 : 0, y: showOptions ? 0 : 6 }}
@@ -511,8 +527,8 @@ export function PossessionQuestionPanel({
               >
                 <AdaptiveAnswerText
                   stacked={stackedAnswers}
-                  gridMaxFontSize={hasQuestionImage ? 22 : 28}
-                  gridMinFontSize={hasQuestionImage ? 9 : 11}
+                  gridMaxFontSize={hasQuestionImage ? 20 : 26}
+                  gridMinFontSize={hasQuestionImage ? 9 : 10}
                   stackedFontSize={16}
                 >
                   {opt}
@@ -521,6 +537,7 @@ export function PossessionQuestionPanel({
             </motion.button>
           );
         })}
+        </AnswerFitGroup>
       </div>
     </div>
   );
