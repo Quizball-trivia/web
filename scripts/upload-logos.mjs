@@ -9,7 +9,7 @@
  *
  * Requires SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY in env.
  */
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -27,18 +27,20 @@ const publicBase = `${SUPA_URL}/storage/v1/object/public/${BUCKET}/${PREFIX}`;
 const clubsPath = join(ROOT, 'src', 'data', 'clubs.json');
 const clubs = JSON.parse(readFileSync(clubsPath, 'utf8'));
 
-// Each club id maps to public/clubs/<localId>.webp. The local file id is derived
-// from the current logo path (so we reuse the exact normalized file).
+// Source dir of the final normalized webp files (one per club, named <file>).
+// clubs.json now stores bare filenames (e.g. "arsenal.webp"); the URL is built
+// at runtime from the env (see clubLogoUrl in src/lib/clubs.ts), so this script
+// ONLY uploads files — it does not rewrite clubs.json.
+const SRC_DIR = join(__dirname, '_logos_out');
 const uploaded = [];
 const failed = [];
 
 for (const club of clubs) {
-  const localId = String(club.logo).replace(/^\/clubs\//, '').replace(/\.webp$/, '');
-  const localFile = join(ROOT, 'public', 'clubs', `${localId}.webp`);
-  const remoteName = `${club.id}.webp`;
-  if (!existsSync(localFile)) { failed.push(`${club.id}: missing local ${localId}.webp`); continue; }
+  const file = String(club.logo); // bare filename
+  const localFile = join(SRC_DIR, file);
+  if (!existsSync(localFile)) { failed.push(`${club.id}: missing ${SRC_DIR}/${file}`); continue; }
   const body = readFileSync(localFile);
-  const url = `${SUPA_URL}/storage/v1/object/${BUCKET}/${PREFIX}/${remoteName}`;
+  const url = `${SUPA_URL}/storage/v1/object/${BUCKET}/${PREFIX}/${file}`;
   const res = await fetch(url, {
     method: 'POST',
     headers: {
@@ -49,14 +51,10 @@ for (const club of clubs) {
     },
     body,
   });
-  if (res.ok) uploaded.push(club.id);
-  else failed.push(`${club.id}: HTTP ${res.status} ${(await res.text()).slice(0, 120)}`);
-  // rewrite the JSON logo URL to the CDN regardless (so a re-run fixes paths)
-  club.logo = `${publicBase}/${remoteName}`;
+  if (res.ok) uploaded.push(file);
+  else failed.push(`${file}: HTTP ${res.status} ${(await res.text()).slice(0, 120)}`);
 }
 
-writeFileSync(clubsPath, JSON.stringify(clubs, null, 2) + '\n');
-
-console.log(`Uploaded ${uploaded.length}/${clubs.length} logos to ${BUCKET}/${PREFIX}/`);
-console.log(`clubs.json logo URLs -> ${publicBase}/<id>.webp`);
+console.log(`Uploaded ${uploaded.length}/${clubs.length} logos to ${SUPA_URL} → ${BUCKET}/${PREFIX}/`);
+console.log(`(public base: ${publicBase}/<file>)`);
 if (failed.length) { console.log(`\nFAILED (${failed.length}):`); for (const f of failed) console.log('  ' + f); }
