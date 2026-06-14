@@ -1392,6 +1392,7 @@
     "attachmentsLabel": "Attachments (optional)",
     "attachmentsHint": "Screenshots or a short clip — up to 3 files, 50MB each. For a full match, please trim to the key moment or paste a link.",
     "addFile": "Add file",
+    "removeFile": "Remove file",
     "fileTooLarge": "Each file must be under 50MB.",
     "tooManyFiles": "You can attach up to 3 files.",
     "fileTypeInvalid": "Only images and videos are allowed.",

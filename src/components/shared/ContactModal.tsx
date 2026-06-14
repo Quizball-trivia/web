@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { CheckCircle2, Loader2, Paperclip, X } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { MessageKey } from '@/lib/i18n/messages';
@@ -59,6 +59,24 @@ export function ContactModal({ trigger }: ContactModalProps) {
   const [fileError, setFileError] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Track whether the user edited a field so async-arriving auth never clobbers
+  // their input.
+  const emailTouchedRef = useRef(false);
+  const nicknameTouchedRef = useRef(false);
+
+  // Auth may hydrate after mount — prefill identity when it arrives, but only if
+  // the user hasn't typed anything there yet. Deferred so it doesn't setState
+  // synchronously inside the effect body.
+  useEffect(() => {
+    const email = user?.email;
+    const nickname = user?.nickname;
+    if (!email && !nickname) return;
+    queueMicrotask(() => {
+      if (!emailTouchedRef.current && email) setEmail(email);
+      if (!nicknameTouchedRef.current && nickname) setNickname(nickname);
+    });
+  }, [user?.email, user?.nickname]);
 
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
@@ -77,6 +95,8 @@ export function ContactModal({ trigger }: ContactModalProps) {
     setFiles([]);
     setFileError(null);
     setStatus('idle');
+    emailTouchedRef.current = false;
+    nicknameTouchedRef.current = false;
   };
 
   const handleAddFiles = (picked: FileList | null) => {
@@ -113,7 +133,15 @@ export function ContactModal({ trigger }: ContactModalProps) {
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
-    if (!next) window.setTimeout(reset, 200);
+    if (next) {
+      // Reopened — cancel any pending close-reset so it can't wipe the form.
+      if (resetTimerRef.current) {
+        clearTimeout(resetTimerRef.current);
+        resetTimerRef.current = null;
+      }
+    } else {
+      resetTimerRef.current = setTimeout(reset, 200);
+    }
   };
 
   // Which required field (if any) is missing — drives inline validation text.
@@ -133,7 +161,7 @@ export function ContactModal({ trigger }: ContactModalProps) {
     setStatus('sending');
     try {
       const attachments = files.length > 0 ? await Promise.all(files.map(readAsDataUrl)) : undefined;
-      await submitFeedback({
+      const response = await submitFeedback({
         category,
         message: message.trim(),
         email: email.trim(),
@@ -141,7 +169,7 @@ export function ContactModal({ trigger }: ContactModalProps) {
         context: typeof window !== 'undefined' ? window.location.pathname : undefined,
         attachments,
       });
-      setStatus('sent');
+      setStatus(response.ok ? 'sent' : 'error');
     } catch {
       setStatus('error');
     }
@@ -238,6 +266,7 @@ export function ContactModal({ trigger }: ContactModalProps) {
                   id="feedback-nickname"
                   value={nickname}
                   onChange={(e) => {
+                    nicknameTouchedRef.current = true;
                     setNickname(e.target.value);
                     if (status === 'error') setStatus('idle');
                   }}
@@ -254,6 +283,7 @@ export function ContactModal({ trigger }: ContactModalProps) {
                   type="email"
                   value={email}
                   onChange={(e) => {
+                    emailTouchedRef.current = true;
                     setEmail(e.target.value);
                     if (status === 'error') setStatus('idle');
                   }}
@@ -285,7 +315,7 @@ export function ContactModal({ trigger }: ContactModalProps) {
                         <button
                           type="button"
                           onClick={() => removeFile(i)}
-                          aria-label="Remove"
+                          aria-label={t('feedback.removeFile')}
                           className="shrink-0 text-white/50 hover:text-white"
                         >
                           <X className="size-4" />
