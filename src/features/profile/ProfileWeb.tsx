@@ -591,14 +591,21 @@ export function ProfileWeb({
                     </div>
                   )}
                   {/* Club */}
-                  <div className="flex items-center justify-between py-3.5">
-                    <span className="font-poppins text-sm font-semibold uppercase text-white/50">{t('profileScreen.club')}</span>
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between gap-3 py-3.5">
+                    <span className="shrink-0 font-poppins text-sm font-semibold uppercase text-white/50">{t('profileScreen.club')}</span>
+                    <div className={`flex items-center gap-2 ${isEditingClub ? 'min-w-0 flex-1' : ''}`}>
                       {isEditingClub ? (
-                        <div className="w-48">
+                        <div className="w-full min-w-0">
                           <ClubSelect
                             value={favoriteClub ?? ''}
                             onChange={async (val) => {
+                              // Close without saving when nothing changed OR when
+                              // cleared (×): the backend requires a non-empty club,
+                              // so an empty value just keeps the current pick.
+                              if (!val || val === (favoriteClub ?? '')) {
+                                setIsEditingClub(false);
+                                return;
+                              }
                               try {
                                 await onClubChange?.(val);
                                 setIsEditingClub(false);
