@@ -7,6 +7,9 @@ import { useRouter } from 'next/navigation';
 import { ModeConfirmModal } from '@/components/shared/ModeConfirmModal';
 import { FriendPlayModal } from '@/components/shared/FriendPlayModal';
 import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
+import { MessageCircle } from 'lucide-react';
+import { SocialLinks } from '@/components/shared/SocialLinks';
+import { ContactModal } from '@/components/shared/ContactModal';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useTierLabel } from '@/hooks/useTierLabel';
 import { getI18nText } from '@/lib/utils/i18n';
@@ -656,6 +659,29 @@ export function ModeSelectionScreen({
 
       {/* ─── 5. Recent Matches ─── */}
       <HomeRecentMatches collapsedOnly />
+
+      {/* ─── 5b. Socials + contact (mobile only — desktop uses the top-left
+              header cluster in AppShell) ─── */}
+      <div className="mt-6 flex flex-col items-center gap-3 border-t border-white/6 pt-6 xl:hidden">
+        <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-white/35">
+          {t('welcome.followUs')}
+        </p>
+        <div className="flex items-center gap-2.5">
+          <SocialLinks size="sm" className="gap-2.5" />
+          <ContactModal
+            trigger={
+              <button
+                type="button"
+                aria-label={t('feedback.contactUs')}
+                title={t('feedback.contactUs')}
+                className="flex size-9 items-center justify-center rounded-[14px] bg-brand-yellow text-black shadow-[0_4px_0_rgba(0,0,0,0.25)] transition-transform hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <MessageCircle className="size-4" />
+              </button>
+            }
+          />
+        </div>
+      </div>
 
       {/* ─── 6. Modals ─── */}
       <ModeConfirmModal
