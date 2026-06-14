@@ -5,7 +5,7 @@ import { logout as logoutService } from "@/lib/auth/auth.service";
 import { ApiError } from "@/lib/api/api";
 import type { User } from "@/lib/types";
 import { logger } from "@/utils/logger";
-import { identifyUser, resetUser, setPersonProperties } from "@/lib/posthog";
+import { identifyUser, resetUser } from "@/lib/posthog";
 import { trackLogout } from "@/lib/analytics/game-events";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { getSupabaseSession, signOutLocal } from "@/lib/auth/supabase";
@@ -32,36 +32,27 @@ function syncAnalyticsUser(user: User): void {
 
   const displayName = user.nickname ?? user.email ?? user.id;
 
-  identifyUser(user.id, {
-    $email: user.email,
-    $name: displayName,
-    email: user.email,
-    name: displayName,
-    nickname: user.nickname,
-    created_at: user.created_at,
-  });
-
-  try {
-    setPersonProperties(
-      {
-        $email: user.email,
-        $name: displayName,
-        email: user.email,
-        name: displayName,
-        nickname: user.nickname,
-        country: user.country,
-        favorite_club: user.favorite_club,
-        preferred_language: user.preferred_language,
-        level: user.progression?.level,
-      },
-      {
-        signup_date: user.created_at,
-        first_email: user.email,
-      },
-    );
-  } catch (error) {
-    logger.error('Analytics setPersonProperties failed', error);
-  }
+  // All person properties ride on the $identify call (free) — no separate $set
+  // event, which was ~21k billable events/day for what identify already does.
+  identifyUser(
+    user.id,
+    {
+      $email: user.email,
+      $name: displayName,
+      email: user.email,
+      name: displayName,
+      nickname: user.nickname,
+      created_at: user.created_at,
+      country: user.country,
+      favorite_club: user.favorite_club,
+      preferred_language: user.preferred_language,
+      level: user.progression?.level,
+    },
+    {
+      signup_date: user.created_at,
+      first_email: user.email,
+    },
+  );
 }
 
 function wait(ms: number): Promise<void> {
