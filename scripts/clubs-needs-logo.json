@@ -1,0 +1,242 @@
+[
+  {
+    "id": "blackburn-rovers",
+    "logoId": "blackburn-rovers",
+    "name": "Blackburn Rovers",
+    "country": "England"
+  },
+  {
+    "id": "leicester-city",
+    "logoId": "leicester-city",
+    "name": "Leicester City",
+    "country": "England"
+  },
+  {
+    "id": "rc-deportivo-de-la-coruna",
+    "logoId": "rc-deportivo-de-la-coruna",
+    "name": "RC Deportivo de La Coruña",
+    "country": "Spain"
+  },
+  {
+    "id": "real-zaragoza",
+    "logoId": "real-zaragoza",
+    "name": "Real Zaragoza",
+    "country": "Spain"
+  },
+  {
+    "id": "palermo-fc",
+    "logoId": "palermo-fc",
+    "name": "Palermo FC",
+    "country": "Italy"
+  },
+  {
+    "id": "sampdoria",
+    "logoId": "sampdoria",
+    "name": "Sampdoria",
+    "country": "Italy"
+  },
+  {
+    "id": "1-fc-kaiserslautern",
+    "logoId": "1-fc-kaiserslautern",
+    "name": "1. FC Kaiserslautern",
+    "country": "Germany"
+  },
+  {
+    "id": "fc-schalke-04",
+    "logoId": "fc-schalke-04",
+    "name": "FC Schalke 04",
+    "country": "Germany"
+  },
+  {
+    "id": "hertha-bsc",
+    "logoId": "hertha-bsc",
+    "name": "Hertha BSC",
+    "country": "Germany"
+  },
+  {
+    "id": "tsv-1860-munich",
+    "logoId": "tsv-1860-munich",
+    "name": "TSV 1860 Munich",
+    "country": "Germany"
+  },
+  {
+    "id": "as-saint-etienne",
+    "logoId": "as-saint-etienne",
+    "name": "AS Saint-Étienne",
+    "country": "France"
+  },
+  {
+    "id": "fc-girondins-de-bordeaux",
+    "logoId": "fc-girondins-de-bordeaux",
+    "name": "FC Girondins de Bordeaux",
+    "country": "France"
+  },
+  {
+    "id": "montpellier-hsc",
+    "logoId": "montpellier-hsc",
+    "name": "Montpellier HSC",
+    "country": "France"
+  },
+  {
+    "id": "stade-de-reims",
+    "logoId": "stade-de-reims",
+    "name": "Stade de Reims",
+    "country": "France"
+  },
+  {
+    "id": "afc-ajax",
+    "logoId": "afc-ajax",
+    "name": "AFC Ajax",
+    "country": "Netherlands"
+  },
+  {
+    "id": "feyenoord",
+    "logoId": "feyenoord",
+    "name": "Feyenoord",
+    "country": "Netherlands"
+  },
+  {
+    "id": "psv-eindhoven",
+    "logoId": "psv-eindhoven",
+    "name": "PSV Eindhoven",
+    "country": "Netherlands"
+  },
+  {
+    "id": "fc-porto",
+    "logoId": "fc-porto",
+    "name": "FC Porto",
+    "country": "Portugal"
+  },
+  {
+    "id": "sc-braga",
+    "logoId": "sc-braga",
+    "name": "SC Braga",
+    "country": "Portugal"
+  },
+  {
+    "id": "sl-benfica",
+    "logoId": "sl-benfica",
+    "name": "SL Benfica",
+    "country": "Portugal"
+  },
+  {
+    "id": "sporting-cp",
+    "logoId": "sporting-cp",
+    "name": "Sporting CP",
+    "country": "Portugal"
+  },
+  {
+    "id": "celtic",
+    "logoId": "celtic",
+    "name": "Celtic",
+    "country": "Scotland"
+  },
+  {
+    "id": "rangers",
+    "logoId": "rangers",
+    "name": "Rangers",
+    "country": "Scotland"
+  },
+  {
+    "id": "boca-juniors",
+    "logoId": "boca-juniors",
+    "name": "Boca Juniors",
+    "country": "Argentina"
+  },
+  {
+    "id": "independiente",
+    "logoId": "independiente",
+    "name": "Independiente",
+    "country": "Argentina"
+  },
+  {
+    "id": "racing-club",
+    "logoId": "racing-club",
+    "name": "Racing Club",
+    "country": "Argentina"
+  },
+  {
+    "id": "river-plate",
+    "logoId": "river-plate",
+    "name": "River Plate",
+    "country": "Argentina"
+  },
+  {
+    "id": "san-lorenzo-de-almagro",
+    "logoId": "san-lorenzo-de-almagro",
+    "name": "San Lorenzo de Almagro",
+    "country": "Argentina"
+  },
+  {
+    "id": "corinthians",
+    "logoId": "corinthians",
+    "name": "Corinthians",
+    "country": "Brazil"
+  },
+  {
+    "id": "flamengo",
+    "logoId": "flamengo",
+    "name": "Flamengo",
+    "country": "Brazil"
+  },
+  {
+    "id": "santos-fc",
+    "logoId": "santos-fc",
+    "name": "Santos FC",
+    "country": "Brazil"
+  },
+  {
+    "id": "sao-paulo-fc",
+    "logoId": "sao-paulo-fc",
+    "name": "São Paulo FC",
+    "country": "Brazil"
+  },
+  {
+    "id": "fc-dinamo-tbilisi",
+    "logoId": "fc-dinamo-tbilisi",
+    "name": "FC Dinamo Tbilisi",
+    "country": "Georgia"
+  },
+  {
+    "id": "fc-dinamo-batumi",
+    "logoId": "fc-dinamo-batumi",
+    "name": "FC Dinamo Batumi",
+    "country": "Georgia"
+  },
+  {
+    "id": "fc-torpedo-kutaisi",
+    "logoId": "fc-torpedo-kutaisi",
+    "name": "FC Torpedo Kutaisi",
+    "country": "Georgia"
+  },
+  {
+    "id": "fc-dila-gori",
+    "logoId": "fc-dila-gori",
+    "name": "FC Dila Gori",
+    "country": "Georgia"
+  },
+  {
+    "id": "fc-samtredia",
+    "logoId": "fc-samtredia",
+    "name": "FC Samtredia",
+    "country": "Georgia"
+  },
+  {
+    "id": "fc-kolkheti-1913-poti",
+    "logoId": "fc-kolkheti-1913-poti",
+    "name": "FC Kolkheti-1913 Poti",
+    "country": "Georgia"
+  },
+  {
+    "id": "fc-iberia-1999",
+    "logoId": "fc-iberia-1999",
+    "name": "FC Iberia 1999",
+    "country": "Georgia"
+  },
+  {
+    "id": "zlatan-fc",
+    "logoId": "zlatan-fc",
+    "name": "Zlatan F.C.",
+    "country": "Special"
+  }
+]
