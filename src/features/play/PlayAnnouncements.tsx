@@ -3,28 +3,13 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, Megaphone } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
-import type { MessageKey } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
+import { getI18nText } from '@/lib/utils/i18n';
+import { useActiveAnnouncements, type AnnouncementItem } from '@/lib/queries/announcements.queries';
 
-interface Announcement {
-  id: string;
-  date: string;
-  titleKey: MessageKey;
-  bodyKey: MessageKey;
-  type: 'update' | 'info' | 'event';
-}
+type AnnouncementType = AnnouncementItem['type'];
 
-const ANNOUNCEMENTS: Announcement[] = [
-  {
-    id: 'rp-rebalance-june-2026',
-    date: '2026-06-12',
-    titleKey: 'announcements.rpRebalanceTitle',
-    bodyKey: 'announcements.rpRebalanceBody',
-    type: 'update',
-  },
-];
-
-const TYPE_STYLES: Record<Announcement['type'], { bg: string; icon: string }> = {
+const TYPE_STYLES: Record<AnnouncementType, { bg: string; icon: string }> = {
   update: { bg: 'bg-brand-blue', icon: '📢' },
   info: { bg: 'bg-white/5', icon: 'ℹ️' },
   event: { bg: 'bg-brand-orange', icon: '🏆' },
@@ -38,23 +23,25 @@ const MONTHS_SHORT: Record<'en' | 'ka', readonly string[]> = {
   ka: ['იან', 'თებ', 'მარ', 'აპრ', 'მაი', 'ივნ', 'ივლ', 'აგვ', 'სექ', 'ოქტ', 'ნოე', 'დეკ'],
 };
 
-// Parse 'YYYY-MM-DD' as a LOCAL date (not UTC) so a viewer behind UTC doesn't
-// see the day shifted back by one (e.g. "Jun 12" rendering as "Jun 11").
 function formatAnnouncementDate(iso: string, locale: 'en' | 'ka'): string {
-  const [y, m, d] = iso.split('-').map(Number);
-  if (!y || !m || !d) return iso;
-  const month = MONTHS_SHORT[locale][m - 1] ?? '';
-  return locale === 'ka' ? `${d} ${month} ${y}` : `${month} ${d}, ${y}`;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const month = MONTHS_SHORT[locale][d.getMonth()] ?? '';
+  const day = d.getDate();
+  const year = d.getFullYear();
+  return locale === 'ka' ? `${day} ${month} ${year}` : `${month} ${day}, ${year}`;
 }
 
 export function PlayAnnouncements() {
   const { t, locale } = useLocale();
   const dateLocale: 'en' | 'ka' = locale === 'ka' ? 'ka' : 'en';
-  // Collapsed by default — the announcement is shown as a tappable header the
-  // user can expand, not an auto-opened modal. (Proper notifications system TBD.)
+  const { data } = useActiveAnnouncements();
+  const announcements = data?.items ?? [];
+  // Collapsed by default — each item is a tappable header the user can expand.
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  if (ANNOUNCEMENTS.length === 0) return null;
+  // Hide the entire section (header included) when there are no announcements.
+  if (announcements.length === 0) return null;
 
   return (
     <div className="space-y-2">
@@ -64,10 +51,12 @@ export function PlayAnnouncements() {
           {t('announcements.sectionTitle')}
         </h2>
       </div>
-      {ANNOUNCEMENTS.map((a) => {
+      {announcements.map((a) => {
         const expanded = expandedId === a.id;
-        const style = TYPE_STYLES[a.type];
+        const style = TYPE_STYLES[a.type] ?? TYPE_STYLES.update;
         const panelId = `announcement-panel-${a.id}`;
+        const title = getI18nText(a.title, locale);
+        const body = getI18nText(a.body, locale);
         return (
           <button
             key={a.id}
@@ -84,11 +73,9 @@ export function PlayAnnouncements() {
               <span className="text-base">{style.icon}</span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-poppins text-sm font-bold text-white">
-                    {t(a.titleKey)}
-                  </span>
+                  <span className="font-poppins text-sm font-bold text-white">{title}</span>
                   <span className="font-poppins text-[11px] font-medium tracking-[0.08em] text-white/70">
-                    {formatAnnouncementDate(a.date, dateLocale)}
+                    {formatAnnouncementDate(a.createdAt, dateLocale)}
                   </span>
                 </div>
               </div>
@@ -100,7 +87,7 @@ export function PlayAnnouncements() {
             </div>
             {expanded && (
               <div id={panelId} className="mt-3 space-y-2.5 text-[13px] leading-relaxed text-white">
-                {t(a.bodyKey).split('\n\n').map((paragraph, idx) => (
+                {body.split('\n\n').map((paragraph, idx) => (
                   <p key={idx}>{paragraph}</p>
                 ))}
               </div>
