@@ -50,10 +50,10 @@ function ClubSingleValue(props: SingleValueProps<Club, false, ClubGroup>) {
   const { data } = props;
   return (
     <components.SingleValue {...props}>
-      <span className="flex items-center justify-center gap-2">
+      <span className="flex min-w-0 items-center justify-center gap-2">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={data.logo} alt="" className="h-7 w-7 shrink-0 object-contain" />
-        <span>{data.label}</span>
+        <img src={data.logo} alt="" className="h-6 w-6 shrink-0 object-contain" />
+        <span className="truncate">{data.label}</span>
       </span>
     </components.SingleValue>
   );
@@ -93,8 +93,8 @@ export default function ClubSelect({ value, onChange }: ClubSelectProps) {
         control: (base, state) => ({
           ...base,
           minHeight: 64,
-          paddingInline: 16,
-          fontSize: 22,
+          paddingInline: 12,
+          fontSize: 16,
           fontWeight: 600,
           textTransform: 'uppercase',
           fontFamily: 'var(--font-poppins), Poppins, sans-serif',
@@ -104,6 +104,7 @@ export default function ClubSelect({ value, onChange }: ClubSelectProps) {
           boxShadow: state.isFocused ? '0 0 0 2px #fff' : 'none',
           color: '#fff',
           textAlign: 'center',
+          flexWrap: 'nowrap',
           ':hover': { borderColor: 'transparent' },
         }),
         menu: (base) => ({
@@ -125,13 +126,20 @@ export default function ClubSelect({ value, onChange }: ClubSelectProps) {
           color: '#fff',
           fontWeight: state.isSelected ? 700 : 500,
         }),
-        singleValue: (base) => ({ ...base, color: '#fff', textAlign: 'center', width: '100%' }),
-        placeholder: (base) => ({ ...base, color: 'rgba(255,255,255,0.7)', textAlign: 'center', width: '100%' }),
+        singleValue: (base) => ({
+          ...base,
+          color: '#fff',
+          textAlign: 'center',
+          margin: 0,
+          maxWidth: '100%',
+          overflow: 'hidden',
+        }),
+        placeholder: (base) => ({ ...base, color: 'rgba(255,255,255,0.7)', textAlign: 'center', width: '100%', fontSize: 15 }),
         input: (base) => ({ ...base, color: '#fff' }),
         indicatorSeparator: () => ({ display: 'none' }),
-        dropdownIndicator: (base) => ({ ...base, color: 'rgba(255,255,255,0.8)' }),
-        clearIndicator: (base) => ({ ...base, color: 'rgba(255,255,255,0.8)' }),
-        valueContainer: (base) => ({ ...base, justifyContent: 'center' }),
+        dropdownIndicator: (base) => ({ ...base, color: 'rgba(255,255,255,0.8)', padding: 4 }),
+        clearIndicator: (base) => ({ ...base, color: 'rgba(255,255,255,0.8)', padding: 4 }),
+        valueContainer: (base) => ({ ...base, justifyContent: 'center', overflow: 'hidden', flexWrap: 'nowrap', paddingInline: 4 }),
       }}
     />
   );
