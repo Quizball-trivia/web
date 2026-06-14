@@ -13,6 +13,7 @@ import { AppShellCurrencyPills } from "./app-shell/AppShellCurrencyPills";
 import { AppShellLobbyDebugBadge } from "./app-shell/AppShellLobbyDebugBadge";
 import { AppShellMobileBottomNav } from "./app-shell/AppShellMobileBottomNav";
 import { AppShellProfileMenu } from "./app-shell/AppShellProfileMenu";
+import { AppShellSocials } from "./app-shell/AppShellSocials";
 
 export function AppShell({ children }: AppShellProps) {
   const vm = useAppShellViewModel();
@@ -51,7 +52,7 @@ export function AppShell({ children }: AppShellProps) {
         <div className="flex min-h-screen min-w-0 flex-col xl:min-h-0">
           {/* DESKTOP TOPBAR (>= xl) */}
           <header className="sticky top-0 z-30 hidden h-16 items-center justify-between bg-background/60 px-6 backdrop-blur-md xl:flex">
-            <div className="flex-1" />
+            <AppShellSocials />
 
             <div className="flex items-center gap-4">
               {showLobbyDebug && (
