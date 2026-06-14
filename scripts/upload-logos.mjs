@@ -35,8 +35,13 @@ const SRC_DIR = join(__dirname, '_logos_out');
 const uploaded = [];
 const failed = [];
 
+// Only plain webp basenames are allowed — no slashes or parent refs — so a
+// stray clubs.json value can't escape SRC_DIR or write outside the bucket prefix.
+const SAFE_LOGO = /^[a-z0-9][a-z0-9-]*\.webp$/;
+
 for (const club of clubs) {
   const file = String(club.logo); // bare filename
+  if (!SAFE_LOGO.test(file)) { failed.push(`${club.id}: unsafe logo filename "${file}"`); continue; }
   const localFile = join(SRC_DIR, file);
   if (!existsSync(localFile)) { failed.push(`${club.id}: missing ${SRC_DIR}/${file}`); continue; }
   const body = readFileSync(localFile);
