@@ -2,8 +2,7 @@
 
 import { Suspense, useEffect } from 'react';
 import type { ReactElement } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
-import posthog from 'posthog-js';
+import { usePathname } from 'next/navigation';
 import { consumeExitToPlayPending, trackExitToPlayLanded } from '@/lib/analytics/game-events';
 
 export function PostHogPageView(): ReactElement {
@@ -16,20 +15,10 @@ export function PostHogPageView(): ReactElement {
 
 function PostHogPageViewInner(): ReactElement {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
-  useEffect(() => {
-    // Track pageviews wherever a PostHog key is configured (prod + staging).
-    if (pathname && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
-      let url = window.origin + pathname;
-      if (searchParams && searchParams.toString()) {
-        url = url + `?${searchParams.toString()}`;
-      }
-      posthog.capture('$pageview', {
-        $current_url: url,
-      });
-    }
-  }, [pathname, searchParams]);
+  // ($pageview capture removed — ~20k events/day of pure cost. We don't analyze
+  // pageviews/funnels by URL; our funnels run on named events. capture_pageview
+  // is already false in the PostHog init, so nothing else emits them.)
 
   useEffect(() => {
     if (!pathname) return;

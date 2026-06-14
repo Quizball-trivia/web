@@ -9,7 +9,6 @@ const clearTokensMock = vi.fn();
 const storageRemoveMock = vi.fn();
 const identifyUserMock = vi.fn();
 const resetUserMock = vi.fn();
-const setPersonPropertiesMock = vi.fn();
 const logoutServiceMock = vi.fn();
 const disconnectSocketMock = vi.fn();
 
@@ -37,7 +36,6 @@ vi.mock("@/lib/realtime/socket-client", () => ({
 vi.mock("@/lib/posthog", () => ({
   identifyUser: (...args: unknown[]) => identifyUserMock(...args),
   resetUser: () => resetUserMock(),
-  setPersonProperties: (...args: unknown[]) => setPersonPropertiesMock(...args),
 }));
 
 vi.mock("@/lib/analytics/game-events", () => ({
@@ -185,6 +183,12 @@ describe("auth store bootstrap", () => {
         $name: "user@example.com",
         email: "user@example.com",
         name: "user@example.com",
+      }),
+      // Person properties now ride on the $identify call (no separate $set
+      // event); the 3rd arg is the $set_once block.
+      expect.objectContaining({
+        signup_date: expect.anything(),
+        first_email: "user@example.com",
       }),
     );
   });
