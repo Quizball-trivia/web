@@ -1,0 +1,974 @@
+[
+  {
+    "id": "arsenal",
+    "label": "Arsenal",
+    "value": "Arsenal",
+    "country": "England",
+    "countryKa": "ინგლისი",
+    "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/arsenal.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "aston-villa",
+    "label": "Aston Villa",
+    "value": "Aston Villa",
+    "country": "England",
+    "countryKa": "ინგლისი",
+    "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/aston-villa.webp",
+    "primaryColor": "#670E36"
+  },
+  {
+    "id": "blackburn-rovers",
+    "label": "Blackburn Rovers",
+    "value": "Blackburn Rovers",
+    "country": "England",
+    "countryKa": "ინგლისი",
+    "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/blackburn-rovers.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "chelsea",
+    "label": "Chelsea",
+    "value": "Chelsea",
+    "country": "England",
+    "countryKa": "ინგლისი",
+    "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/chelsea.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "everton",
+    "label": "Everton",
+    "value": "Everton",
+    "country": "England",
+    "countryKa": "ინგლისი",
+    "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/everton.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "leeds-united",
+    "label": "Leeds United",
+    "value": "Leeds United",
+    "country": "England",
+    "countryKa": "ინგლისი",
+    "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/leeds-united.webp",
+    "primaryColor": "#FFCD00"
+  },
+  {
+    "id": "leicester-city",
+    "label": "Leicester City",
+    "value": "Leicester City",
+    "country": "England",
+    "countryKa": "ინგლისი",
+    "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/leicester-city.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "liverpool",
+    "label": "Liverpool",
+    "value": "Liverpool",
+    "country": "England",
+    "countryKa": "ინგლისი",
+    "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/liverpool.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "manchester-city",
+    "label": "Manchester City",
+    "value": "Manchester City",
+    "country": "England",
+    "countryKa": "ინგლისი",
+    "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/manchester-city.webp",
+    "primaryColor": "#6CABDD"
+  },
+  {
+    "id": "manchester-united",
+    "label": "Manchester United",
+    "value": "Manchester United",
+    "country": "England",
+    "countryKa": "ინგლისი",
+    "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/manchester-united.webp",
+    "primaryColor": "#DA020E"
+  },
+  {
+    "id": "newcastle-united",
+    "label": "Newcastle United",
+    "value": "Newcastle United",
+    "country": "England",
+    "countryKa": "ინგლისი",
+    "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/newcastle-united.webp",
+    "primaryColor": "#241F20"
+  },
+  {
+    "id": "nottingham-forest",
+    "label": "Nottingham Forest",
+    "value": "Nottingham Forest",
+    "country": "England",
+    "countryKa": "ინგლისი",
+    "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/nottingham-forest.webp",
+    "primaryColor": "#DD0000"
+  },
+  {
+    "id": "sunderland",
+    "label": "Sunderland",
+    "value": "Sunderland",
+    "country": "England",
+    "countryKa": "ინგლისი",
+    "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/sunderland.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "tottenham-hotspur",
+    "label": "Tottenham Hotspur",
+    "value": "Tottenham Hotspur",
+    "country": "England",
+    "countryKa": "ინგლისი",
+    "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/tottenham-hotspur.webp",
+    "primaryColor": "#132257"
+  },
+  {
+    "id": "west-ham-united",
+    "label": "West Ham United",
+    "value": "West Ham United",
+    "country": "England",
+    "countryKa": "ინგლისი",
+    "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/west-ham-united.webp",
+    "primaryColor": "#7A263A"
+  },
+  {
+    "id": "athletic-club",
+    "label": "Athletic Club",
+    "value": "Athletic Club",
+    "country": "Spain",
+    "countryKa": "ესპანეთი",
+    "flag": "🇪🇸",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/athletic-club.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "atletico-de-madrid",
+    "label": "Atlético de Madrid",
+    "value": "Atlético de Madrid",
+    "country": "Spain",
+    "countryKa": "ესპანეთი",
+    "flag": "🇪🇸",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/atletico-de-madrid.webp",
+    "primaryColor": "#CB3524"
+  },
+  {
+    "id": "ca-osasuna",
+    "label": "CA Osasuna",
+    "value": "CA Osasuna",
+    "country": "Spain",
+    "countryKa": "ესპანეთი",
+    "flag": "🇪🇸",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/ca-osasuna.webp",
+    "primaryColor": "#C30101"
+  },
+  {
+    "id": "celta-de-vigo",
+    "label": "Celta de Vigo",
+    "value": "Celta de Vigo",
+    "country": "Spain",
+    "countryKa": "ესპანეთი",
+    "flag": "🇪🇸",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/celta-de-vigo.webp",
+    "primaryColor": "#8AC3EE"
+  },
+  {
+    "id": "fc-barcelona",
+    "label": "FC Barcelona",
+    "value": "FC Barcelona",
+    "country": "Spain",
+    "countryKa": "ესპანეთი",
+    "flag": "🇪🇸",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/fc-barcelona.webp",
+    "primaryColor": "#A50044"
+  },
+  {
+    "id": "rc-deportivo-de-la-coruna",
+    "label": "RC Deportivo de La Coruña",
+    "value": "RC Deportivo de La Coruña",
+    "country": "Spain",
+    "countryKa": "ესპანეთი",
+    "flag": "🇪🇸",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/rc-deportivo-de-la-coruna.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "rcd-espanyol",
+    "label": "RCD Espanyol",
+    "value": "RCD Espanyol",
+    "country": "Spain",
+    "countryKa": "ესპანეთი",
+    "flag": "🇪🇸",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/rcd-espanyol.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "real-betis",
+    "label": "Real Betis",
+    "value": "Real Betis",
+    "country": "Spain",
+    "countryKa": "ესპანეთი",
+    "flag": "🇪🇸",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/real-betis.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "real-madrid-cf",
+    "label": "Real Madrid CF",
+    "value": "Real Madrid CF",
+    "country": "Spain",
+    "countryKa": "ესპანეთი",
+    "flag": "🇪🇸",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/real-madrid-cf.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "real-sociedad",
+    "label": "Real Sociedad",
+    "value": "Real Sociedad",
+    "country": "Spain",
+    "countryKa": "ესპანეთი",
+    "flag": "🇪🇸",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/real-sociedad.webp",
+    "primaryColor": "#143C8B"
+  },
+  {
+    "id": "real-zaragoza",
+    "label": "Real Zaragoza",
+    "value": "Real Zaragoza",
+    "country": "Spain",
+    "countryKa": "ესპანეთი",
+    "flag": "🇪🇸",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/real-zaragoza.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "sevilla-fc",
+    "label": "Sevilla FC",
+    "value": "Sevilla FC",
+    "country": "Spain",
+    "countryKa": "ესპანეთი",
+    "flag": "🇪🇸",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/sevilla-fc.webp",
+    "primaryColor": "#D40029"
+  },
+  {
+    "id": "valencia-cf",
+    "label": "Valencia CF",
+    "value": "Valencia CF",
+    "country": "Spain",
+    "countryKa": "ესპანეთი",
+    "flag": "🇪🇸",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/valencia-cf.webp",
+    "primaryColor": "#EE3524"
+  },
+  {
+    "id": "villarreal-cf",
+    "label": "Villarreal CF",
+    "value": "Villarreal CF",
+    "country": "Spain",
+    "countryKa": "ესპანეთი",
+    "flag": "🇪🇸",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/villarreal-cf.webp",
+    "primaryColor": "#FFE667"
+  },
+  {
+    "id": "ac-milan",
+    "label": "AC Milan",
+    "value": "AC Milan",
+    "country": "Italy",
+    "countryKa": "იტალია",
+    "flag": "🇮🇹",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/ac-milan.webp",
+    "primaryColor": "#FB090B"
+  },
+  {
+    "id": "acf-fiorentina",
+    "label": "ACF Fiorentina",
+    "value": "ACF Fiorentina",
+    "country": "Italy",
+    "countryKa": "იტალია",
+    "flag": "🇮🇹",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/acf-fiorentina.webp",
+    "primaryColor": "#612F8B"
+  },
+  {
+    "id": "as-roma",
+    "label": "AS Roma",
+    "value": "AS Roma",
+    "country": "Italy",
+    "countryKa": "იტალია",
+    "flag": "🇮🇹",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/as-roma.webp",
+    "primaryColor": "#8E1F2F"
+  },
+  {
+    "id": "atalanta-bc",
+    "label": "Atalanta BC",
+    "value": "Atalanta BC",
+    "country": "Italy",
+    "countryKa": "იტალია",
+    "flag": "🇮🇹",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/atalanta-bc.webp",
+    "primaryColor": "#1E71B8"
+  },
+  {
+    "id": "bologna-fc-1909",
+    "label": "Bologna FC 1909",
+    "value": "Bologna FC 1909",
+    "country": "Italy",
+    "countryKa": "იტალია",
+    "flag": "🇮🇹",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/bologna-fc-1909.webp",
+    "primaryColor": "#9F1E27"
+  },
+  {
+    "id": "genoa-cfc",
+    "label": "Genoa CFC",
+    "value": "Genoa CFC",
+    "country": "Italy",
+    "countryKa": "იტალია",
+    "flag": "🇮🇹",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/genoa-cfc.webp",
+    "primaryColor": "#001E62"
+  },
+  {
+    "id": "inter-milan",
+    "label": "Inter Milan",
+    "value": "Inter Milan",
+    "country": "Italy",
+    "countryKa": "იტალია",
+    "flag": "🇮🇹",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/inter-milan.webp",
+    "primaryColor": "#0068A8"
+  },
+  {
+    "id": "juventus",
+    "label": "Juventus",
+    "value": "Juventus",
+    "country": "Italy",
+    "countryKa": "იტალია",
+    "flag": "🇮🇹",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/juventus.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "palermo-fc",
+    "label": "Palermo FC",
+    "value": "Palermo FC",
+    "country": "Italy",
+    "countryKa": "იტალია",
+    "flag": "🇮🇹",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/palermo-fc.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "parma-calcio-1913",
+    "label": "Parma Calcio 1913",
+    "value": "Parma Calcio 1913",
+    "country": "Italy",
+    "countryKa": "იტალია",
+    "flag": "🇮🇹",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/parma-calcio-1913.webp",
+    "primaryColor": "#FFC72C"
+  },
+  {
+    "id": "sampdoria",
+    "label": "Sampdoria",
+    "value": "Sampdoria",
+    "country": "Italy",
+    "countryKa": "იტალია",
+    "flag": "🇮🇹",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/sampdoria.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "ss-lazio",
+    "label": "SS Lazio",
+    "value": "SS Lazio",
+    "country": "Italy",
+    "countryKa": "იტალია",
+    "flag": "🇮🇹",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/ss-lazio.webp",
+    "primaryColor": "#87CEEB"
+  },
+  {
+    "id": "ssc-napoli",
+    "label": "SSC Napoli",
+    "value": "SSC Napoli",
+    "country": "Italy",
+    "countryKa": "იტალია",
+    "flag": "🇮🇹",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/ssc-napoli.webp",
+    "primaryColor": "#12A0D7"
+  },
+  {
+    "id": "torino-fc",
+    "label": "Torino FC",
+    "value": "Torino FC",
+    "country": "Italy",
+    "countryKa": "იტალია",
+    "flag": "🇮🇹",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/torino-fc.webp",
+    "primaryColor": "#8A1538"
+  },
+  {
+    "id": "1-fc-kaiserslautern",
+    "label": "1. FC Kaiserslautern",
+    "value": "1. FC Kaiserslautern",
+    "country": "Germany",
+    "countryKa": "გერმანია",
+    "flag": "🇩🇪",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/1-fc-kaiserslautern.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "1-fc-koln",
+    "label": "1. FC Köln",
+    "value": "1. FC Köln",
+    "country": "Germany",
+    "countryKa": "გერმანია",
+    "flag": "🇩🇪",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/1-fc-koln.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "bayer-04-leverkusen",
+    "label": "Bayer 04 Leverkusen",
+    "value": "Bayer 04 Leverkusen",
+    "country": "Germany",
+    "countryKa": "გერმანია",
+    "flag": "🇩🇪",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/bayer-04-leverkusen.webp",
+    "primaryColor": "#E32219"
+  },
+  {
+    "id": "borussia-dortmund",
+    "label": "Borussia Dortmund",
+    "value": "Borussia Dortmund",
+    "country": "Germany",
+    "countryKa": "გერმანია",
+    "flag": "🇩🇪",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/borussia-dortmund.webp",
+    "primaryColor": "#FDE100"
+  },
+  {
+    "id": "borussia-monchengladbach",
+    "label": "Borussia Mönchengladbach",
+    "value": "Borussia Mönchengladbach",
+    "country": "Germany",
+    "countryKa": "გერმანია",
+    "flag": "🇩🇪",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/borussia-monchengladbach.webp",
+    "primaryColor": "#000000"
+  },
+  {
+    "id": "eintracht-frankfurt",
+    "label": "Eintracht Frankfurt",
+    "value": "Eintracht Frankfurt",
+    "country": "Germany",
+    "countryKa": "გერმანია",
+    "flag": "🇩🇪",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/eintracht-frankfurt.webp",
+    "primaryColor": "#E1000F"
+  },
+  {
+    "id": "fc-bayern-munich",
+    "label": "FC Bayern Munich",
+    "value": "FC Bayern Munich",
+    "country": "Germany",
+    "countryKa": "გერმანია",
+    "flag": "🇩🇪",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/fc-bayern-munich.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "fc-schalke-04",
+    "label": "FC Schalke 04",
+    "value": "FC Schalke 04",
+    "country": "Germany",
+    "countryKa": "გერმანია",
+    "flag": "🇩🇪",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/fc-schalke-04.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "fc-st-pauli",
+    "label": "FC St. Pauli",
+    "value": "FC St. Pauli",
+    "country": "Germany",
+    "countryKa": "გერმანია",
+    "flag": "🇩🇪",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/fc-st-pauli.webp",
+    "primaryColor": "#67351F"
+  },
+  {
+    "id": "hamburger-sv",
+    "label": "Hamburger SV",
+    "value": "Hamburger SV",
+    "country": "Germany",
+    "countryKa": "გერმანია",
+    "flag": "🇩🇪",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/hamburger-sv.webp",
+    "primaryColor": "#005EAE"
+  },
+  {
+    "id": "hertha-bsc",
+    "label": "Hertha BSC",
+    "value": "Hertha BSC",
+    "country": "Germany",
+    "countryKa": "გერმანია",
+    "flag": "🇩🇪",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/hertha-bsc.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "sc-freiburg",
+    "label": "SC Freiburg",
+    "value": "SC Freiburg",
+    "country": "Germany",
+    "countryKa": "გერმანია",
+    "flag": "🇩🇪",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/sc-freiburg.webp",
+    "primaryColor": "#5B6770"
+  },
+  {
+    "id": "tsv-1860-munich",
+    "label": "TSV 1860 Munich",
+    "value": "TSV 1860 Munich",
+    "country": "Germany",
+    "countryKa": "გერმანია",
+    "flag": "🇩🇪",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/tsv-1860-munich.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "vfb-stuttgart",
+    "label": "VfB Stuttgart",
+    "value": "VfB Stuttgart",
+    "country": "Germany",
+    "countryKa": "გერმანია",
+    "flag": "🇩🇪",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/vfb-stuttgart.webp",
+    "primaryColor": "#E32219"
+  },
+  {
+    "id": "werder-bremen",
+    "label": "Werder Bremen",
+    "value": "Werder Bremen",
+    "country": "Germany",
+    "countryKa": "გერმანია",
+    "flag": "🇩🇪",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/werder-bremen.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "as-monaco",
+    "label": "AS Monaco",
+    "value": "AS Monaco",
+    "country": "France",
+    "countryKa": "საფრანგეთი",
+    "flag": "🇫🇷",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/as-monaco.webp",
+    "primaryColor": "#CD1719"
+  },
+  {
+    "id": "as-saint-etienne",
+    "label": "AS Saint-Étienne",
+    "value": "AS Saint-Étienne",
+    "country": "France",
+    "countryKa": "საფრანგეთი",
+    "flag": "🇫🇷",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/as-saint-etienne.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "fc-girondins-de-bordeaux",
+    "label": "FC Girondins de Bordeaux",
+    "value": "FC Girondins de Bordeaux",
+    "country": "France",
+    "countryKa": "საფრანგეთი",
+    "flag": "🇫🇷",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/fc-girondins-de-bordeaux.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "losc-lille",
+    "label": "LOSC Lille",
+    "value": "LOSC Lille",
+    "country": "France",
+    "countryKa": "საფრანგეთი",
+    "flag": "🇫🇷",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/losc-lille.webp",
+    "primaryColor": "#E2231A"
+  },
+  {
+    "id": "montpellier-hsc",
+    "label": "Montpellier HSC",
+    "value": "Montpellier HSC",
+    "country": "France",
+    "countryKa": "საფრანგეთი",
+    "flag": "🇫🇷",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/montpellier-hsc.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "ogc-nice",
+    "label": "OGC Nice",
+    "value": "OGC Nice",
+    "country": "France",
+    "countryKa": "საფრანგეთი",
+    "flag": "🇫🇷",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/ogc-nice.webp",
+    "primaryColor": "#E2231A"
+  },
+  {
+    "id": "olympique-de-marseille",
+    "label": "Olympique de Marseille",
+    "value": "Olympique de Marseille",
+    "country": "France",
+    "countryKa": "საფრანგეთი",
+    "flag": "🇫🇷",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/olympique-de-marseille.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "olympique-lyonnais",
+    "label": "Olympique Lyonnais",
+    "value": "Olympique Lyonnais",
+    "country": "France",
+    "countryKa": "საფრანგეთი",
+    "flag": "🇫🇷",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/olympique-lyonnais.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "paris-saint-germain",
+    "label": "Paris Saint-Germain",
+    "value": "Paris Saint-Germain",
+    "country": "France",
+    "countryKa": "საფრანგეთი",
+    "flag": "🇫🇷",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/paris-saint-germain.webp",
+    "primaryColor": "#004170"
+  },
+  {
+    "id": "rc-lens",
+    "label": "RC Lens",
+    "value": "RC Lens",
+    "country": "France",
+    "countryKa": "საფრანგეთი",
+    "flag": "🇫🇷",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/rc-lens.webp",
+    "primaryColor": "#FFE800"
+  },
+  {
+    "id": "rc-strasbourg-alsace",
+    "label": "RC Strasbourg Alsace",
+    "value": "RC Strasbourg Alsace",
+    "country": "France",
+    "countryKa": "საფრანგეთი",
+    "flag": "🇫🇷",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/rc-strasbourg-alsace.webp",
+    "primaryColor": "#1B82C3"
+  },
+  {
+    "id": "stade-de-reims",
+    "label": "Stade de Reims",
+    "value": "Stade de Reims",
+    "country": "France",
+    "countryKa": "საფრანგეთი",
+    "flag": "🇫🇷",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/stade-de-reims.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "stade-rennais-fc",
+    "label": "Stade Rennais FC",
+    "value": "Stade Rennais FC",
+    "country": "France",
+    "countryKa": "საფრანგეთი",
+    "flag": "🇫🇷",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/stade-rennais-fc.webp",
+    "primaryColor": "#E2231A"
+  },
+  {
+    "id": "afc-ajax",
+    "label": "AFC Ajax",
+    "value": "AFC Ajax",
+    "country": "Netherlands",
+    "countryKa": "ჰოლანდია",
+    "flag": "🇳🇱",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/afc-ajax.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "feyenoord",
+    "label": "Feyenoord",
+    "value": "Feyenoord",
+    "country": "Netherlands",
+    "countryKa": "ჰოლანდია",
+    "flag": "🇳🇱",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/feyenoord.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "psv-eindhoven",
+    "label": "PSV Eindhoven",
+    "value": "PSV Eindhoven",
+    "country": "Netherlands",
+    "countryKa": "ჰოლანდია",
+    "flag": "🇳🇱",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/psv-eindhoven.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "fc-porto",
+    "label": "FC Porto",
+    "value": "FC Porto",
+    "country": "Portugal",
+    "countryKa": "პორტუგალია",
+    "flag": "🇵🇹",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/fc-porto.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "sc-braga",
+    "label": "SC Braga",
+    "value": "SC Braga",
+    "country": "Portugal",
+    "countryKa": "პორტუგალია",
+    "flag": "🇵🇹",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/sc-braga.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "sl-benfica",
+    "label": "SL Benfica",
+    "value": "SL Benfica",
+    "country": "Portugal",
+    "countryKa": "პორტუგალია",
+    "flag": "🇵🇹",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/sl-benfica.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "sporting-cp",
+    "label": "Sporting CP",
+    "value": "Sporting CP",
+    "country": "Portugal",
+    "countryKa": "პორტუგალია",
+    "flag": "🇵🇹",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/sporting-cp.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "celtic",
+    "label": "Celtic",
+    "value": "Celtic",
+    "country": "Scotland",
+    "countryKa": "შოტლანდია",
+    "flag": "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/celtic.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "rangers",
+    "label": "Rangers",
+    "value": "Rangers",
+    "country": "Scotland",
+    "countryKa": "შოტლანდია",
+    "flag": "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/rangers.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "boca-juniors",
+    "label": "Boca Juniors",
+    "value": "Boca Juniors",
+    "country": "Argentina",
+    "countryKa": "არგენტინა",
+    "flag": "🇦🇷",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/boca-juniors.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "independiente",
+    "label": "Independiente",
+    "value": "Independiente",
+    "country": "Argentina",
+    "countryKa": "არგენტინა",
+    "flag": "🇦🇷",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/independiente.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "racing-club",
+    "label": "Racing Club",
+    "value": "Racing Club",
+    "country": "Argentina",
+    "countryKa": "არგენტინა",
+    "flag": "🇦🇷",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/racing-club.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "river-plate",
+    "label": "River Plate",
+    "value": "River Plate",
+    "country": "Argentina",
+    "countryKa": "არგენტინა",
+    "flag": "🇦🇷",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/river-plate.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "san-lorenzo-de-almagro",
+    "label": "San Lorenzo de Almagro",
+    "value": "San Lorenzo de Almagro",
+    "country": "Argentina",
+    "countryKa": "არგენტინა",
+    "flag": "🇦🇷",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/san-lorenzo-de-almagro.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "corinthians",
+    "label": "Corinthians",
+    "value": "Corinthians",
+    "country": "Brazil",
+    "countryKa": "ბრაზილია",
+    "flag": "🇧🇷",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/corinthians.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "flamengo",
+    "label": "Flamengo",
+    "value": "Flamengo",
+    "country": "Brazil",
+    "countryKa": "ბრაზილია",
+    "flag": "🇧🇷",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/flamengo.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "santos-fc",
+    "label": "Santos FC",
+    "value": "Santos FC",
+    "country": "Brazil",
+    "countryKa": "ბრაზილია",
+    "flag": "🇧🇷",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/santos-fc.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "sao-paulo-fc",
+    "label": "São Paulo FC",
+    "value": "São Paulo FC",
+    "country": "Brazil",
+    "countryKa": "ბრაზილია",
+    "flag": "🇧🇷",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/sao-paulo-fc.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "fc-dinamo-tbilisi",
+    "label": "FC Dinamo Tbilisi",
+    "value": "FC Dinamo Tbilisi",
+    "country": "Georgia",
+    "countryKa": "საქართველო",
+    "flag": "🇬🇪",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/fc-dinamo-tbilisi.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "fc-dinamo-batumi",
+    "label": "FC Dinamo Batumi",
+    "value": "FC Dinamo Batumi",
+    "country": "Georgia",
+    "countryKa": "საქართველო",
+    "flag": "🇬🇪",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/fc-dinamo-batumi.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "fc-torpedo-kutaisi",
+    "label": "FC Torpedo Kutaisi",
+    "value": "FC Torpedo Kutaisi",
+    "country": "Georgia",
+    "countryKa": "საქართველო",
+    "flag": "🇬🇪",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/fc-torpedo-kutaisi.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "fc-dila-gori",
+    "label": "FC Dila Gori",
+    "value": "FC Dila Gori",
+    "country": "Georgia",
+    "countryKa": "საქართველო",
+    "flag": "🇬🇪",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/fc-dila-gori.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "fc-samtredia",
+    "label": "FC Samtredia",
+    "value": "FC Samtredia",
+    "country": "Georgia",
+    "countryKa": "საქართველო",
+    "flag": "🇬🇪",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/fc-samtredia.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "fc-kolkheti-1913-poti",
+    "label": "FC Kolkheti-1913 Poti",
+    "value": "FC Kolkheti-1913 Poti",
+    "country": "Georgia",
+    "countryKa": "საქართველო",
+    "flag": "🇬🇪",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/fc-kolkheti-1913-poti.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "fc-iberia-1999",
+    "label": "FC Iberia 1999",
+    "value": "FC Iberia 1999",
+    "country": "Georgia",
+    "countryKa": "საქართველო",
+    "flag": "🇬🇪",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/fc-iberia-1999.webp",
+    "primaryColor": "#1f2937"
+  },
+  {
+    "id": "zlatan-fc",
+    "label": "Zlatan F.C.",
+    "value": "Zlatan F.C.",
+    "country": "Special",
+    "countryKa": "სპეციალური",
+    "flag": "🦁",
+    "logo": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/club-logos/zlatan-fc.webp",
+    "primaryColor": "#0b1f3a",
+    "hidden": true,
+    "restrictedToUserId": "e015028e-6ae8-45f5-9701-5831fd8d8df1"
+  }
+]
