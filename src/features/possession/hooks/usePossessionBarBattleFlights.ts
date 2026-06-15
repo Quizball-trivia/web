@@ -89,6 +89,13 @@ function findPitchBarTarget(side: Side): DOMRect | null {
   return findVisibleRect(`[data-pitch-bar-target="${side}"]`);
 }
 
+// The "?" thinking badge above a player's pitch character (clue rounds). A
+// wrong-answer "+0" flight is retargeted here so it visibly kicks the badge.
+function findQuestionBadge(side: Side): DOMRect | null {
+  if (typeof document === 'undefined') return null;
+  return findVisibleRect(`[data-pitch-question-badge="${side}"]`);
+}
+
 // The 2× speed-streak badge in the HUD. When visible, the +N flight detours
 // through it and the number doubles (the badge stays put).
 function findSpeedStreakBadge(side: Side): DOMRect | null {
@@ -341,6 +348,11 @@ export function usePossessionBarBattleFlights() {
   }) => {
     const id = ++flightSeqRef.current;
       const addFlight = () => {
+        // Wrong-answer "+0" on a clue round: if the "?" thinking badge is on
+        // screen, aim the failed flight AT the badge so it visibly kicks it
+        // (the badge tumbles off-screen in sync, see PitchHtmlActors). Falls
+        // back to the normal bar target when there is no badge.
+        const questionBadgeRect = params.failed ? findQuestionBadge(params.side) : null;
         const barTargetRect = findPitchBarTarget(params.side);
         const possessionPoints = params.possessionPoints ?? params.points;
       const hasBoostedPoints = possessionPoints === params.points * 2 && params.points > 0;
@@ -349,16 +361,27 @@ export function usePossessionBarBattleFlights() {
       // possession-resolved value directly so the landing value still matches
       // the bars.
       const badgeRect = !params.failed && hasBoostedPoints ? findSpeedStreakBadge(params.side) : null;
+      // Correct-answer "Who am I": when the "?" badge is on screen and there's
+      // no 2× detour, route the +N THROUGH the badge (knocking it) before it
+      // continues to the bar target → bar battle. Uses kickVia (a non-doubling
+      // waypoint), unlike boostVia which doubles the number at the 2× badge.
+      // Clue-only because the badge only exists on clue rounds.
+      const successViaQuestion = !params.failed && !badgeRect && !questionBadgeRect
+        ? findQuestionBadge(params.side)
+        : null;
       setFlights((prev) => [...prev, {
         id,
         side: params.side,
         source: clampFlightPoint(rectCentre(params.sourceRect)),
-        target: barTargetRect
+        target: questionBadgeRect
+          ? clampFlightPoint(rectCentre(questionBadgeRect))
+          : barTargetRect
           ? clampFlightPoint(rectCentre(barTargetRect))
           : computeFallbackBarLaneTarget(params.targetRect, params.opponentRect, params.pitchRect),
         points: badgeRect ? params.points : possessionPoints,
         failed: params.failed,
         boostVia: badgeRect ? clampFlightPoint(rectCentre(badgeRect)) : undefined,
+        kickVia: successViaQuestion ? clampFlightPoint(rectCentre(successViaQuestion)) : undefined,
       }]);
     };
 

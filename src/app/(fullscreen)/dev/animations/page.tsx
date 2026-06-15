@@ -1229,6 +1229,162 @@ function DevAnimationsContent() {
     }
   }
 
+  // Live "Who am I" round with NOTHING submitted yet — the player can still type
+  // and the round is unresolved. `opponentAnswered` toggles the new live
+  // opponent indicator (pulsing "thinking…" vs "answered") so it can be QA'd in
+  // isolation, without having to race a real opponent.
+  function loadCluesLiveScenario(
+    opponentAnswered: boolean,
+    opponentAnsweredCorrectly: boolean | null = null,
+  ) {
+    setMobilePanelOpen(false);
+    pendingTimers.current.forEach((t) => window.clearTimeout(t));
+    pendingTimers.current = [];
+
+    const s = store();
+    const activeQIndex = s.match?.currentQuestion?.qIndex ?? -1;
+    const qIndex = Math.min(activeQIndex + 1, TOTAL_QUESTIONS - 1);
+
+    stateVersion.current += 1;
+    s.setMatchState(makeMatchState('NORMAL_PLAY', {
+      stateVersion: stateVersion.current,
+      goals: goalsRef.current,
+      possessionDiff: possessionDiffRef.current,
+    }));
+
+    useRealtimeMatchStore.setState((prev) =>
+      prev.match
+        ? {
+            ...prev,
+            match: {
+              ...prev.match,
+              lastRoundResult: null,
+              answerAck: null,
+              countdownGuessAck: null,
+              cluesGuessAck: null,
+              opponentAnswered,
+              opponentSelectedIndex: null,
+              opponentRecentPoints: 0,
+              opponentAnsweredCorrectly,
+              currentQuestionPhase: 'reveal',
+            },
+          }
+        : prev
+    );
+
+    s.setMatchQuestion(makePlayableQuestion(qIndex, 'clues'));
+    setNextQuestionKind('clues');
+    setRemountKey((k) => k + 1);
+  }
+
+  // Drive the on-pitch "?" badge kick: start in the thinking state (badge
+  // floating), then after a beat flip the opponent to answered-WRONG so the
+  // "+0 kicks the ? and both drop" animation plays — the way it happens live.
+  function loadCluesOppWrongKick() {
+    loadCluesLiveScenario(false, null);
+    pendingTimers.current.push(
+      window.setTimeout(() => {
+        useRealtimeMatchStore.setState((prev) =>
+          prev.match
+            ? { ...prev, match: { ...prev.match, opponentAnswered: true, opponentAnsweredCorrectly: false, opponentRecentPoints: 0 } }
+            : prev
+        );
+      }, 1400)
+    );
+  }
+
+  // Same, but the opponent answers CORRECTLY: the "+N" detours through the "?"
+  // (knocking it off), then continues to the possession bars / bar battle.
+  function loadCluesOppCorrectKick() {
+    loadCluesLiveScenario(false, null);
+    pendingTimers.current.push(
+      window.setTimeout(() => {
+        useRealtimeMatchStore.setState((prev) =>
+          prev.match
+            ? { ...prev, match: { ...prev.match, opponentAnswered: true, opponentAnsweredCorrectly: true, opponentRecentPoints: 80 } }
+            : prev
+        );
+      }, 1400)
+    );
+  }
+
+  // I have submitted my guess (input locks, my answer is revealed locally) but
+  // the opponent is STILL thinking — the round is not resolved. `opponentAnswered`
+  // flips the opponent column of the You-vs-Opp summary between "thinking…" and
+  // "answered" so both post-submit waiting states can be eyeballed.
+  function loadCluesMeAnsweredScenario(opponentAnswered: boolean) {
+    setMobilePanelOpen(false);
+    pendingTimers.current.forEach((t) => window.clearTimeout(t));
+    pendingTimers.current = [];
+
+    const s = store();
+    const activeQIndex = s.match?.currentQuestion?.qIndex ?? -1;
+    const qIndex = Math.min(activeQIndex + 1, TOTAL_QUESTIONS - 1);
+    const result = makeCluesRoundResult(qIndex, scoreRef.current, {
+      mePoints: 100,
+      oppPoints: 0,
+      meClueIndex: 0,
+      oppClueIndex: null,
+    });
+    const me = result.players[SELF_ID];
+    if (!me || result.reveal.kind !== 'clues') return;
+    const cluesDisplayAnswer = result.reveal.displayAnswer;
+
+    stateVersion.current += 1;
+    s.setMatchState(makeMatchState('NORMAL_PLAY', {
+      stateVersion: stateVersion.current,
+      goals: goalsRef.current,
+      possessionDiff: possessionDiffRef.current,
+    }));
+
+    useRealtimeMatchStore.setState((prev) =>
+      prev.match
+        ? {
+            ...prev,
+            match: {
+              ...prev.match,
+              lastRoundResult: null,
+              answerAck: null,
+              countdownGuessAck: null,
+              cluesGuessAck: null,
+              opponentAnswered,
+              opponentSelectedIndex: null,
+              opponentRecentPoints: 0,
+              opponentAnsweredCorrectly: null,
+              currentQuestionPhase: 'reveal',
+            },
+          }
+        : prev
+    );
+
+    s.setMatchQuestion(makePlayableQuestion(qIndex, 'clues'));
+    setNextQuestionKind('clues');
+    setRemountKey((k) => k + 1);
+
+    waitForAnchors(() => {
+      pendingTimers.current.push(
+        window.setTimeout(() => {
+          s.setAnswerAck({
+            matchId: MATCH_ID,
+            qIndex,
+            questionKind: 'clues',
+            selectedIndex: null,
+            isCorrect: me.isCorrect,
+            myTotalPoints: me.totalPoints,
+            oppAnswered: opponentAnswered,
+            pointsEarned: me.pointsEarned,
+            phaseKind: 'normal',
+            phaseRound: result.phaseRound ?? null,
+            clueIndex: me.clueIndex,
+            cluesDisplayAnswer,
+          });
+        }, 300)
+      );
+    });
+
+    scoreRef.current.meTotal = me.totalPoints;
+  }
+
   function loadEdgeBarDemo(winner: 'green' | 'red') {
     setMobilePanelOpen(false);
     pendingTimers.current.forEach((t) => window.clearTimeout(t));
@@ -2502,6 +2658,19 @@ function DevAnimationsContent() {
           <p className="mt-1 text-[9px] text-brand-slate">
             Previews the new answer_ack flow: input locks, every clue opens,
             the answer appears locally, then the round can resolve later.
+          </p>
+        </Group>
+
+        <Group label="Who Am I live indicator">
+          <Btn onClick={() => loadCluesLiveScenario(false)}>live · opponent thinking</Btn>
+          <Btn variant="green" onClick={() => loadCluesOppCorrectKick()}>opp answers CORRECT · +N kicks ? → bars</Btn>
+          <Btn variant="red" onClick={() => loadCluesOppWrongKick()}>opp answers WRONG · +0 kicks ? → drop</Btn>
+          <Btn variant="yellow" onClick={() => loadCluesMeAnsweredScenario(false)}>me answered · opp thinking</Btn>
+          <Btn variant="green" onClick={() => loadCluesMeAnsweredScenario(true)}>me answered · opp answered</Btn>
+          <p className="mt-1 text-[9px] text-brand-slate">
+            First two: pre-submit round, toggles the standalone opponent
+            indicator (“thinking…” vs “answered”). Last two: you’ve submitted —
+            the You-vs-Opp summary shows the opponent still thinking vs answered.
           </p>
         </Group>
 
