@@ -57,7 +57,7 @@ export default function DevHalftimesPage() {
     const pool = (withImage.length >= CARD_COUNT ? withImage : items);
     return pool.slice(0, CARD_COUNT).map((c) => ({
       id: c.id,
-      name: c.name,
+      name: { en: c.name },
       icon: c.icon ?? null,
       imageUrl: c.imageUrl ?? null,
     }));

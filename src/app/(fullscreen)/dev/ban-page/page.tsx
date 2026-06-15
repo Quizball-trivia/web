@@ -8,9 +8,9 @@ import type { AvatarCustomization } from '@/types/game';
 type BanPhase = 'first' | 'second' | 'penalty';
 
 const MOCK_CATEGORIES = [
-  { id: 'cat-league-1', name: 'League 1', icon: '⚽', imageUrl: null },
-  { id: 'cat-champions', name: 'Champions League', icon: '🏆', imageUrl: null },
-  { id: 'cat-00s-era', name: '00s Era', icon: '⚽', imageUrl: null },
+  { id: 'cat-league-1', name: { en: 'League 1' }, icon: '⚽', imageUrl: null },
+  { id: 'cat-champions', name: { en: 'Champions League' }, icon: '🏆', imageUrl: null },
+  { id: 'cat-00s-era', name: { en: '00s Era' }, icon: '⚽', imageUrl: null },
 ];
 
 const MOCK_PLAYER_AVATAR_CUSTOMIZATION = {

@@ -558,8 +558,8 @@ describe('realtimeMatch.store — setMatchState shouldClearQuestion', () => {
       store.setDraftStart({
         lobbyId: NEW_LOBBY_ID,
         categories: [
-          { id: 'cat-1', name: 'Premier League', icon: null },
-          { id: 'cat-2', name: 'World Cup', icon: null },
+          { id: 'cat-1', name: { en: 'Premier League' }, icon: null },
+          { id: 'cat-2', name: { en: 'World Cup' }, icon: null },
         ],
         turnUserId: USER_A,
       });

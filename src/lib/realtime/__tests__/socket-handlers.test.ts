@@ -107,8 +107,8 @@ describe('registerSocketHandlers', () => {
     useRealtimeMatchStore.getState().setDraftStart({
       lobbyId: 'lobby-1',
       categories: [
-        { id: 'cat-1', name: 'Science', icon: '🔬' },
-        { id: 'cat-2', name: 'History', icon: '📜' },
+        { id: 'cat-1', name: { en: 'Science' }, icon: '🔬' },
+        { id: 'cat-2', name: { en: 'History' }, icon: '📜' },
       ],
       turnUserId: 'user-123',
     });
@@ -141,8 +141,8 @@ describe('registerSocketHandlers', () => {
     useRealtimeMatchStore.getState().setDraftStart({
       lobbyId: 'lobby-1',
       categories: [
-        { id: 'cat-1', name: 'Science', icon: '🔬' },
-        { id: 'cat-2', name: 'History', icon: '📜' },
+        { id: 'cat-1', name: { en: 'Science' }, icon: '🔬' },
+        { id: 'cat-2', name: { en: 'History' }, icon: '📜' },
       ],
       turnUserId: 'user-456',
     });

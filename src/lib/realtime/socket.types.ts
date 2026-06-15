@@ -1,4 +1,8 @@
 import type { AvatarCustomization } from "@/types/game";
+import type { components } from "@/types/api.generated";
+
+/** Localized text map (e.g. { en, ka }) as served by the API/socket. */
+export type I18nField = components["schemas"]["I18nField"];
 
 export type MatchMode = 'friendly' | 'ranked';
 export type LobbyGameMode = 'friendly_possession' | 'friendly_party_quiz' | 'ranked_sim';
@@ -64,7 +68,8 @@ export interface LobbySettings {
 
 export interface DraftCategory {
   id: string;
-  name: string;
+  /** Full i18n object ({ en, ka }); localize client-side per the viewer's locale. */
+  name: I18nField;
   icon: string | null;
   imageUrl?: string | null;
 }
