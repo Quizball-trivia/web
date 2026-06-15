@@ -2,10 +2,13 @@
 
 import { Volume2, VolumeX, X } from 'lucide-react';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
+import { MatchWaitingForReadyOverlay } from '@/components/shared/MatchWaitingForReadyOverlay';
 import { MatchHudIconButton } from '@/features/possession/components/MatchHudPrimitives';
 import { MatchCountdownPuck } from '@/components/shared/MatchCountdownPuck';
 import { useLocale } from '@/contexts/LocaleContext';
+import { useMatchUiReadyAcks } from '@/lib/match/useMatchUiReadyAcks';
 import { cn } from '@/lib/utils';
+import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 
 import type { RealtimePartyQuizScreenProps } from './realtime/partyQuizScreen.types';
 import { useRealtimePartyQuizViewModel } from './realtime/useRealtimePartyQuizViewModel';
@@ -49,6 +52,18 @@ export function RealtimePartyQuizScreen({
     scoreFlights,
   } = useRealtimePartyQuizViewModel({ mobileStandingsPlacement, disableBgm });
   const { t } = useLocale();
+  const matchId = useRealtimeMatchStore((store) => store.match?.matchId ?? null);
+  const currentQuestionIndex = useRealtimeMatchStore((store) => store.match?.currentQuestion?.qIndex ?? null);
+  const waitingForReady = useRealtimeMatchStore((store) => store.match?.waitingForReady ?? null);
+
+  useMatchUiReadyAcks({ matchId, currentQuestionIndex, waitingForReady });
+
+  const waitingReadyLabel = waitingForReady
+    ? t('partyResults.playersReadyCount', { ready: waitingForReady.readyCount, total: waitingForReady.totalCount })
+    : '';
+  const waitingTitle = waitingForReady?.totalCount && waitingForReady.totalCount > 2
+    ? t('partyResults.waitingForPlayers')
+    : t('partyResults.waitingForOpponent');
 
   // ---------------------------------------------------------------------------
   // Pre-match / loading
@@ -57,7 +72,15 @@ export function RealtimePartyQuizScreen({
   if (!partyState) {
     return (
       <div className="flex min-h-dvh w-full items-center justify-center bg-surface-page-alt">
-        {state.startCountdownActive ? (
+        {waitingForReady ? (
+          <MatchWaitingForReadyOverlay
+            title={waitingTitle}
+            readyLabel={waitingReadyLabel}
+            startingLabel={t('partyResults.startingSoon')}
+            forceStartsAtMs={waitingForReady.forceStartsAtMs}
+            serverTimeOffsetMs={waitingForReady.serverTimeOffsetMs}
+          />
+        ) : state.startCountdownActive ? (
           <MatchCountdownPuck
             label={t('partyResults.quizStartsIn')}
             seconds={Math.max(1, state.countdownSeconds)}
@@ -84,6 +107,7 @@ export function RealtimePartyQuizScreen({
         forfeitPendingTitle={forfeitPendingTitle}
         matchPaused={state.matchPaused}
         pauseSeconds={pauseSeconds}
+        waitingForReady={waitingForReady}
       />
 
       {/* Desktop: corner mute / quit (mobile uses inline header row in question panel) */}

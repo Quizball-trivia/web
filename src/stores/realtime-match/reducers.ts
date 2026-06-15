@@ -245,6 +245,7 @@ export function constructFallbackMatchFromResults(
     participants,
     countdownEndsAt: null,
     countdownReason: null,
+    waitingForReady: null,
     currentQuestion: null,
     pendingQuestion: null,
     questions: {},

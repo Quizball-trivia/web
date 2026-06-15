@@ -12,7 +12,9 @@
 import { AnimatePresence, motion } from 'motion/react';
 import type { MatchForfeitPendingPayload } from '@/lib/realtime/socket.types';
 import { MatchCountdownPuck } from '@/components/shared/MatchCountdownPuck';
+import { MatchWaitingForReadyOverlay } from '@/components/shared/MatchWaitingForReadyOverlay';
 import { useLocale } from '@/contexts/LocaleContext';
+import type { MatchStatus } from '@/stores/realtime-match/types';
 
 interface PartyQuizOverlaysProps {
   startCountdownActive: boolean;
@@ -22,6 +24,7 @@ interface PartyQuizOverlaysProps {
   forfeitPendingTitle: string;
   matchPaused: boolean;
   pauseSeconds: number;
+  waitingForReady: MatchStatus['waitingForReady'];
 }
 
 export function PartyQuizOverlays({
@@ -32,11 +35,32 @@ export function PartyQuizOverlays({
   forfeitPendingTitle,
   matchPaused,
   pauseSeconds,
+  waitingForReady,
 }: PartyQuizOverlaysProps) {
   const { t } = useLocale();
+  const waitingReadyLabel = waitingForReady
+    ? t('partyResults.playersReadyCount', { ready: waitingForReady.readyCount, total: waitingForReady.totalCount })
+    : '';
+  const waitingTitle = waitingForReady?.totalCount && waitingForReady.totalCount > 2
+    ? t('partyResults.waitingForPlayers')
+    : t('partyResults.waitingForOpponent');
 
   return (
     <>
+      <AnimatePresence>
+        {waitingForReady && !startCountdownActive && (
+          <MatchWaitingForReadyOverlay
+            key="party-waiting-for-ready"
+            title={waitingTitle}
+            readyLabel={waitingReadyLabel}
+            startingLabel={t('partyResults.startingSoon')}
+            forceStartsAtMs={waitingForReady.forceStartsAtMs}
+            serverTimeOffsetMs={waitingForReady.serverTimeOffsetMs}
+            className="absolute inset-0 z-40 min-h-full"
+          />
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {startCountdownActive && (
           <motion.div

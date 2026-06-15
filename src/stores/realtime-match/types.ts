@@ -13,6 +13,7 @@ import type {
   MatchPartyStatePayload,
   MatchRoundResultPayload,
   MatchStatePayload,
+  MatchWaitingForReadyPayload,
   MatchVariant,
   OpponentInfo,
   ResolvedMatchQuestionPayload,
@@ -49,6 +50,7 @@ export interface MatchStatus {
   categoryName?: Record<string, string>;
   countdownEndsAt: number | null;
   countdownReason: 'kickoff' | 'resume' | null;
+  waitingForReady: (MatchWaitingForReadyPayload & { forceStartsAtMs: number }) | null;
   currentQuestion: ResolvedMatchQuestionPayload | null;
   pendingQuestion: ResolvedMatchQuestionPayload | null;
   questions: Record<number, MatchQuestionState>;
@@ -145,6 +147,7 @@ export interface RealtimeState {
   setDraftComplete: (halfOneCategoryId: string) => void;
   setMatchStart: (payload: import('@/lib/realtime/socket.types').MatchStartPayload) => void;
   setMatchCountdown: (payload: import('@/lib/realtime/socket.types').MatchCountdownPayload) => void;
+  setMatchWaitingForReady: (payload: MatchWaitingForReadyPayload) => void;
   setMatchQuestion: (payload: ResolvedMatchQuestionPayload) => void;
   promotePendingQuestion: () => void;
   setMatchState: (payload: MatchStatePayload) => void;

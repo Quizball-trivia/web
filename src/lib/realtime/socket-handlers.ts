@@ -33,6 +33,7 @@ import type {
   MatchQuestionPayload,
   MatchRoundResultPayload,
   MatchCountdownPayload,
+  MatchWaitingForReadyPayload,
   MatchRejoinAvailablePayload,
   MatchResumePayload,
   MatchStartPayload,
@@ -273,6 +274,19 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       serverTimeOffsetMs,
     });
     store.setMatchCountdown({ ...data, serverTimeOffsetMs });
+  });
+
+  socket.on('match:waiting_for_ready', (data: MatchWaitingForReadyPayload) => {
+    const serverTimeOffsetMs = computeServerTimeOffsetMs(data.serverNow);
+    logger.info('Socket event match:waiting_for_ready', {
+      matchId: data.matchId,
+      phase: data.phase,
+      readyCount: data.readyCount,
+      totalCount: data.totalCount,
+      forceStartsAt: data.forceStartsAt,
+      serverTimeOffsetMs,
+    });
+    store.setMatchWaitingForReady({ ...data, serverTimeOffsetMs });
   });
 
   socket.on('match:state', (data: MatchStatePayload) => {

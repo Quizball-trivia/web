@@ -5,7 +5,9 @@ import { AnimatePresence, motion } from 'motion/react';
 import { LogOut, Volume2, VolumeX } from 'lucide-react';
 import { QuitMatchModal } from '@/components/match/QuitMatchModal';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
+import { MatchWaitingForReadyOverlay } from '@/components/shared/MatchWaitingForReadyOverlay';
 import { useLocale } from '@/contexts/LocaleContext';
+import { useMatchUiReadyAcks } from '@/lib/match/useMatchUiReadyAcks';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { BarBattleFlightOverlay } from './components/BarBattleFlightOverlay';
 import { HalftimeScreen } from './components/HalftimeScreen';
@@ -55,6 +57,9 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
   const barBattleFlights = usePossessionBarBattleFlights();
   const matchPaused = useRealtimeMatchStore((state) => state.matchPaused);
   const hasMatch = useRealtimeMatchStore((state) => state.match != null);
+  const matchId = useRealtimeMatchStore((state) => state.match?.matchId ?? null);
+  const currentQuestionIndex = useRealtimeMatchStore((state) => state.match?.currentQuestion?.qIndex ?? null);
+  const waitingForReady = useRealtimeMatchStore((state) => state.match?.waitingForReady ?? null);
   const finalResults = useRealtimeMatchStore((state) => state.match?.finalResults ?? null);
   const selfUserId = useRealtimeMatchStore((state) => state.selfUserId);
   const opponentInfo = useRealtimeMatchStore((state) => state.match?.opponent ?? null);
@@ -88,6 +93,15 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
     ...props,
     suppressAvatarScoreSplash: barBattleFlights.suppressScoreSplash,
   });
+
+  useMatchUiReadyAcks({ matchId, currentQuestionIndex, waitingForReady });
+
+  const waitingReadyLabel = waitingForReady
+    ? t('possession.playersReadyCount', { ready: waitingForReady.readyCount, total: waitingForReady.totalCount })
+    : '';
+  const waitingTitle = waitingForReady?.totalCount && waitingForReady.totalCount > 2
+    ? t('possession.waitingForPlayers')
+    : t('possession.waitingForOpponent');
 
   useEffect(() => {
     if (!matchPaused || !pauseUntil) return;
@@ -156,7 +170,15 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
 
     return (
       <div className="flex min-h-dvh w-full items-center justify-center bg-surface-page-alt">
-        {showPendingKickoff ? (
+        {waitingForReady ? (
+          <MatchWaitingForReadyOverlay
+            title={waitingTitle}
+            readyLabel={waitingReadyLabel}
+            startingLabel={t('possession.startingSoon')}
+            forceStartsAtMs={waitingForReady.forceStartsAtMs}
+            serverTimeOffsetMs={waitingForReady.serverTimeOffsetMs}
+          />
+        ) : showPendingKickoff ? (
           <KickoffCountdownOverlay
             countdownDisplay={countdownDisplay}
             phase={countdownPhase}
@@ -190,6 +212,20 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
       >
         {muted ? <VolumeX className="size-4 sm:size-5" /> : <Volume2 className="size-4 sm:size-5" />}
       </MatchHudIconButton>
+
+      <AnimatePresence>
+        {waitingForReady && !showStartCountdown && (
+          <MatchWaitingForReadyOverlay
+            key="possession-waiting-for-ready"
+            title={waitingTitle}
+            readyLabel={waitingReadyLabel}
+            startingLabel={t('possession.startingSoon')}
+            forceStartsAtMs={waitingForReady.forceStartsAtMs}
+            serverTimeOffsetMs={waitingForReady.serverTimeOffsetMs}
+            className="fixed inset-0 z-[95]"
+          />
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {showStartCountdown && (

@@ -12,6 +12,7 @@ import type {
   MatchRoundResultPayload,
   MatchStartPayload,
   MatchStatePayload,
+  MatchWaitingForReadyPayload,
   ResolvedMatchQuestionPayload,
 } from '@/lib/realtime/socket.types';
 import type { DevPossessionAnimation, MatchStatus, RealtimeState } from './types';
@@ -48,6 +49,7 @@ export interface MatchSlice {
   devPossessionAnimation: DevPossessionAnimation | null;
   setMatchStart: (payload: MatchStartPayload) => void;
   setMatchCountdown: (payload: MatchCountdownPayload) => void;
+  setMatchWaitingForReady: (payload: MatchWaitingForReadyPayload) => void;
   setMatchState: (payload: MatchStatePayload) => void;
   setPartyState: (payload: MatchPartyStatePayload) => void;
   setMatchQuestion: (payload: ResolvedMatchQuestionPayload) => void;
@@ -120,6 +122,7 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
           ? PARTY_QUIZ_DEFAULT_COUNTDOWN_MS
           : DEFAULT_COUNTDOWN_MS),
         countdownReason: 'kickoff',
+        waitingForReady: null,
         currentQuestion: null,
         pendingQuestion: null,
         questions: {},
@@ -164,6 +167,35 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
           ...state.match,
           countdownEndsAt: startsAtMs,
           countdownReason: payload.reason ?? 'kickoff',
+          waitingForReady: null,
+          serverTimeOffsetMs: payload.serverTimeOffsetMs ?? state.match.serverTimeOffsetMs,
+        },
+      };
+    });
+  },
+
+  setMatchWaitingForReady: (payload) => {
+    logger.info('Realtime store set match waiting for ready', {
+      matchId: payload.matchId,
+      phase: payload.phase,
+      readyCount: payload.readyCount,
+      totalCount: payload.totalCount,
+      forceStartsAt: payload.forceStartsAt,
+    });
+    set((state) => {
+      if (!state.match || state.match.matchId !== payload.matchId) return state;
+      const forceStartsAtMs = new Date(payload.forceStartsAt).getTime();
+      return {
+        matchPaused: payload.phase === 'resume' ? true : state.matchPaused,
+        pauseUntil: payload.phase === 'resume' ? null : state.pauseUntil,
+        pausedAt: state.pausedAt,
+        remainingReconnects: payload.phase === 'resume' ? null : state.remainingReconnects,
+        match: {
+          ...state.match,
+          waitingForReady: {
+            ...payload,
+            forceStartsAtMs: Number.isFinite(forceStartsAtMs) ? forceStartsAtMs : Date.now(),
+          },
           serverTimeOffsetMs: payload.serverTimeOffsetMs ?? state.match.serverTimeOffsetMs,
         },
       };
@@ -204,6 +236,7 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
           stateVersion: incomingVersion > 0 ? incomingVersion : state.match.stateVersion,
           countdownEndsAt: shouldClearCountdown ? null : state.match.countdownEndsAt,
           countdownReason: shouldClearCountdown ? null : state.match.countdownReason,
+          waitingForReady: shouldClearCountdown ? null : state.match.waitingForReady,
           currentQuestion: shouldClearQuestion ? null : state.match.currentQuestion,
           pendingQuestion: shouldClearQuestion ? null : state.match.pendingQuestion,
           answerAck: shouldClearQuestion ? null : state.match.answerAck,
@@ -303,6 +336,7 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
             ...state.match,
             currentQuestion: payload,
             pendingQuestion: null,
+            waitingForReady: null,
             countdownEndsAt: state.match.countdownReason === 'kickoff' ? null : state.match.countdownEndsAt,
             countdownReason: state.match.countdownReason === 'kickoff' ? null : state.match.countdownReason,
             serverTimeOffsetMs: payload.serverTimeOffsetMs ?? state.match.serverTimeOffsetMs,
@@ -332,6 +366,7 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
           match: {
             ...state.match,
             pendingQuestion: payload,
+            waitingForReady: null,
             countdownEndsAt: shouldClearCountdown ? null : state.match.countdownEndsAt,
             countdownReason: shouldClearCountdown ? null : state.match.countdownReason,
             serverTimeOffsetMs: payload.serverTimeOffsetMs ?? state.match.serverTimeOffsetMs,
@@ -362,6 +397,7 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
           ...state.match,
           currentQuestion: payload,
           pendingQuestion: null,
+          waitingForReady: null,
           countdownEndsAt: shouldClearCountdown ? null : state.match.countdownEndsAt,
           countdownReason: shouldClearCountdown ? null : state.match.countdownReason,
           serverTimeOffsetMs: payload.serverTimeOffsetMs ?? state.match.serverTimeOffsetMs,
@@ -401,6 +437,7 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
           ...state.match,
           currentQuestion: pending,
           pendingQuestion: null,
+          waitingForReady: null,
           countdownEndsAt: shouldClearCountdown ? null : state.match.countdownEndsAt,
           countdownReason: shouldClearCountdown ? null : state.match.countdownReason,
           answerAck: null,
@@ -729,6 +766,7 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
           participants,
           countdownEndsAt: null,
           countdownReason: null,
+          waitingForReady: null,
           finalResults: payload,
         },
       };
