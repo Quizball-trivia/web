@@ -505,7 +505,14 @@
     "processing": "მუშავდება",
     "edit": "რედაქტირება",
     "price": "ფასი",
-    "notSet": "არ არის მითითებული"
+    "notSet": "არ არის მითითებული",
+    "reconnecting": "ხელახლა დაკავშირება…",
+    "connectionUnstable": "კავშირი არასტაბილურია",
+    "connectionBad": "კავშირის პრობლემა",
+    "connectionStable": "კავშირი სტაბილურია",
+    "connectionChecking": "კავშირის შემოწმება",
+    "connectionPingMs": "{ms} მწმ",
+    "backOnline": "კავშირი აღდგა"
   },
   "navigation": {
     "events": "ღონისძიებები",
@@ -634,6 +641,8 @@
     "calculatingFinalScores": "საბოლოო ქულების დათვლა…",
     "matchPaused": "მატჩი შეჩერებულია",
     "waitingForReconnect": "ველოდებით მოთამაშის დაბრუნებას",
+    "opponentDisconnectedContinueIfNotReturn": "თუ არ დაბრუნდა, გაგრძელდება {seconds} წამში",
+    "opponentRestoringMatch": "მოთამაშე ბრუნდება… მატჩი აღდგება",
     "resumesInSeconds": "ავტომატურად განახლდება {seconds} წამში",
     "waitingForOpponent": "ველოდებით მოწინააღმდეგეს",
     "waitingForPlayers": "ველოდებით მოთამაშეებს",
@@ -1094,6 +1103,8 @@
     "penaltyAriaLabel": "პენალტების სერია იწყება: უპასუხე სწორად და სწრაფად გოლის გასატანად",
     "getReady": "მოემზადე",
     "waitingForReconnect": "ველოდებით მის დაბრუნებას",
+    "opponentDisconnectedWinIfNotReturn": "თუ არ დაბრუნდა, მოიგებ {seconds} წამში",
+    "opponentRestoringMatch": "მოწინააღმდეგე ბრუნდება… მატჩი აღდგება",
     "safeLeaveWinIn": "თუ არ დაბრუნდა, მოიგებ {seconds} წამში",
     "leaveSafely": "უსაფრთხოდ გასვლა",
     "bestOf5": "საუკეთესო 5-დან",

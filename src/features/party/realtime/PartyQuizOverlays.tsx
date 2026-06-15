@@ -119,10 +119,10 @@ export function PartyQuizOverlays({
             exit={{ opacity: 0, y: -16 }}
             className="absolute left-1/2 top-4 z-30 w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 rounded-[20px] bg-brand-blue px-5 py-3 shadow-2xl"
           >
-            <div className="text-center font-poppins">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/60">{t('partyResults.matchPaused')}</div>
-              <div className="mt-1 text-base font-semibold uppercase text-white">{t('partyResults.waitingForReconnect')}</div>
-              <div className="mt-1 text-xs font-semibold text-brand-yellow">{t('partyResults.resumesInSeconds', { seconds: pauseSeconds })}</div>
+              <div className="text-center font-poppins">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/60">{t('partyResults.matchPaused')}</div>
+                <div className="mt-1 text-base font-semibold uppercase text-white">{t('partyResults.waitingForReconnect')}</div>
+              <div className="mt-1 text-xs font-semibold text-brand-yellow">{t('partyResults.opponentDisconnectedContinueIfNotReturn', { seconds: pauseSeconds })}</div>
             </div>
           </motion.div>
         )}
