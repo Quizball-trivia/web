@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { MATCH_STAGE_PRESENCE_ENABLED } from '@/lib/config';
 import { getSocket } from './socket-client';
 
 const HEARTBEAT_INTERVAL_MS = 2_500;
@@ -22,7 +21,7 @@ export function useMatchStagePresence({
   enabled = true,
 }: UseMatchStagePresenceOptions): void {
   useEffect(() => {
-    if (!MATCH_STAGE_PRESENCE_ENABLED || !enabled || !matchId || !stageKey) return;
+    if (!enabled || !matchId || !stageKey) return;
 
     let stopped = false;
     const payload = { matchId, stageKey };

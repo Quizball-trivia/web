@@ -15,17 +15,15 @@ describe('useMatchStagePresence', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.resetModules();
-    vi.stubEnv('NEXT_PUBLIC_MATCH_STAGE_PRESENCE_ENABLED', 'true');
     emitMock.mockReset();
     socketMock.connected = true;
   });
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.unstubAllEnvs();
   });
 
-  it('emits ready once and heartbeats while the feature flag is enabled', async () => {
+  it('emits ready once and heartbeats while the match stage is mounted', async () => {
     const { useMatchStagePresence } = await import('../useMatchStagePresence');
 
     renderHook(() => useMatchStagePresence({ matchId: 'm1', stageKey: 'penalties' }));
