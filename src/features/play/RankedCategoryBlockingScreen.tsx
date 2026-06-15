@@ -22,6 +22,7 @@ import { BanCategoryCard } from '@/components/shared/BanCategoryCard';
 import { getTierAccent } from '@/utils/tierVisuals';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { AvatarCustomization } from '@/types/game';
+import type { I18nField } from '@/lib/realtime/socket.types';
 
 const poppins = {
   fontFamily: "'Poppins', sans-serif",
@@ -32,7 +33,7 @@ const poppins = {
 
 export interface BanCategoryViewCategory {
   id: string;
-  name: string;
+  name: I18nField;
   icon?: string | null;
   imageUrl?: string | null;
 }

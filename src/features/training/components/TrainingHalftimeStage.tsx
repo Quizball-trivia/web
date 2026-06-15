@@ -8,7 +8,9 @@ import { BOT_AVATAR, BOT_NAME } from "../constants";
 
 interface HalftimeDraftCategory {
   id: string;
-  name: string;
+  // banCategories already carry a locale-resolved string; wrap it so the shape
+  // matches the socket DraftCategory the halftime card now expects.
+  name: Record<string, string>;
   icon: string | null;
   imageUrl: string | null;
 }
@@ -51,7 +53,7 @@ export function TrainingHalftimeStage() {
 
   const categoryOptions: HalftimeDraftCategory[] = banCategories.map((c) => ({
     id: c.id,
-    name: c.name,
+    name: { en: c.name },
     icon: c.icon ?? null,
     imageUrl: c.imageUrl ?? null,
   }));

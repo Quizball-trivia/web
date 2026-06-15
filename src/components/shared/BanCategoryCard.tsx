@@ -7,6 +7,8 @@ import { memo, useMemo } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
+import { getI18nText } from '@/lib/utils/i18n';
+import type { I18nField } from '@/lib/realtime/socket.types';
 
 /**
  * Vibrant card palette — mirrors the /play mode-selection cards. Each ban card
@@ -27,7 +29,7 @@ export const BAN_CARD_TITLE_STYLE = {
   fontFamily: "'Poppins', sans-serif",
   fontWeight: 600,
   letterSpacing: '0',
-  lineHeight: 1,
+  lineHeight: 1.08,
 } as const;
 
 const CARD_ENTRANCE_INITIAL = { opacity: 0, y: 20 } as const;
@@ -36,7 +38,8 @@ const CARD_SPRING = { type: 'spring', stiffness: 200, damping: 20 } as const;
 
 export interface BanCategoryCardCategory {
   id: string;
-  name: string;
+  /** Full i18n object ({ en, ka }); localized for display via the active locale. */
+  name: I18nField;
   icon?: string | null;
   imageUrl?: string | null;
 }
@@ -77,7 +80,8 @@ function BanCategoryCardComponent({
   animationIndex = 0,
   onClick,
 }: BanCategoryCardProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const categoryName = getI18nText(category.name, locale);
   const color = BAN_CARD_COLORS[colorIndex % BAN_CARD_COLORS.length];
   const imageUrl = category.imageUrl ?? null;
   const hasImage = Boolean(imageUrl);
@@ -157,7 +161,10 @@ function BanCategoryCardComponent({
       <div className="relative z-10 flex h-full flex-col justify-center items-center p-3 sm:p-4">
         <h3
           className={cn(
-            'text-[clamp(0.62rem,3.1vw,1.25rem)] uppercase leading-tight text-balance text-center w-full [overflow-wrap:break-word]',
+            // Floor is kept small so long Georgian names (≈50% longer than the
+            // English equivalents, up to ~40 chars) shrink to fit on narrow
+            // mobile cards instead of overflowing/clipping.
+            'text-[clamp(0.5rem,2.9vw,1.25rem)] uppercase leading-tight text-balance text-center w-full [overflow-wrap:break-word] [word-break:break-word] [hyphens:auto]',
             isBanned && 'grayscale opacity-70'
           )}
           style={{
@@ -167,13 +174,13 @@ function BanCategoryCardComponent({
             color: isBanned ? '#E3E9EC' : (hasImage ? '#ffffff' : color.text),
             textShadow: hasImage ? '0 2px 8px rgba(0,0,0,0.75), 0 0 4px rgba(0,0,0,0.6)' : 'none',
             display: '-webkit-box',
-            WebkitLineClamp: 3,
+            WebkitLineClamp: 4,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
           }}
-          title={category.name}
+          title={categoryName}
         >
-          {category.name}
+          {categoryName}
         </h3>
       </div>
 
