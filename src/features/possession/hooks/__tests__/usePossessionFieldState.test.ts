@@ -104,6 +104,7 @@ function makeMatch(possessionDiff: number, overrides: Partial<MatchStatus['posse
     participants: [],
     countdownEndsAt: null,
     countdownReason: null,
+    waitingForReady: null,
     currentQuestion: null,
     pendingQuestion: null,
     questions: {},

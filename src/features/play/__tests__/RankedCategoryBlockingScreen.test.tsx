@@ -208,6 +208,6 @@ describe('RankedCategoryBlockingScreen', () => {
 
     render(<RankedCategoryBlockingScreen />);
 
-    expect(socket.emit).not.toHaveBeenCalledWith('draft:ui_ready', { lobbyId: 'l1' });
+    expect(socket.emit.mock.calls.filter(([eventName]) => eventName === 'draft:ui_ready')).toHaveLength(0);
   });
 });
