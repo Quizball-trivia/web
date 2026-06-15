@@ -17,3 +17,7 @@ export const API_BASE_URL = nonBlank(
  * ON for now — being tested on staging. Flip to `false` to hide.
  */
 export const PHONE_AUTH_ENABLED = true;
+
+export const MATCH_STAGE_PRESENCE_ENABLED =
+  process.env.NEXT_PUBLIC_MATCH_STAGE_PRESENCE_ENABLED === "true" ||
+  process.env.NEXT_PUBLIC_MATCH_STAGE_PRESENCE_ENABLED === "1";

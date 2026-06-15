@@ -10,6 +10,7 @@ import { ConnectionQualitySignal } from '@/components/shared/ConnectionQualitySi
 import { RealtimeConnectionBanner } from '@/components/shared/RealtimeConnectionBanner';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useMatchUiReadyAcks } from '@/lib/match/useMatchUiReadyAcks';
+import { useMatchStagePresence } from '@/lib/realtime/useMatchStagePresence';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { BarBattleFlightOverlay } from './components/BarBattleFlightOverlay';
 import { HalftimeScreen } from './components/HalftimeScreen';
@@ -61,6 +62,9 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
   const hasMatch = useRealtimeMatchStore((state) => state.match != null);
   const matchId = useRealtimeMatchStore((state) => state.match?.matchId ?? null);
   const currentQuestionIndex = useRealtimeMatchStore((state) => state.match?.currentQuestion?.qIndex ?? null);
+  const currentPhaseKind = useRealtimeMatchStore((state) =>
+    state.match?.currentQuestion?.phaseKind ?? state.match?.possessionState?.phaseKind ?? null
+  );
   const waitingForReady = useRealtimeMatchStore((state) => state.match?.waitingForReady ?? null);
   const finalResults = useRealtimeMatchStore((state) => state.match?.finalResults ?? null);
   const selfUserId = useRealtimeMatchStore((state) => state.selfUserId);
@@ -97,6 +101,25 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
   });
 
   useMatchUiReadyAcks({ matchId, currentQuestionIndex, waitingForReady });
+
+  const stagePresenceKey = useMemo(() => {
+    if (!hasMatch || finalResults) return null;
+    if (matchPaused || waitingForReady?.phase === 'resume') return 'resume';
+    if (halftimeModel) return 'category_ban';
+    if (showStartCountdown) return 'kickoff';
+    if (penaltyCountdownActive || currentPhaseKind === 'penalty') return 'penalties';
+    return 'question';
+  }, [
+    currentPhaseKind,
+    finalResults,
+    halftimeModel,
+    hasMatch,
+    matchPaused,
+    penaltyCountdownActive,
+    showStartCountdown,
+    waitingForReady?.phase,
+  ]);
+  useMatchStagePresence({ matchId, stageKey: stagePresenceKey, enabled: hasMatch && !finalResults });
 
   const waitingReadyLabel = waitingForReady
     ? t('possession.playersReadyCount', { ready: waitingForReady.readyCount, total: waitingForReady.totalCount })

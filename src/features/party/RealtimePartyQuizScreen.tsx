@@ -9,6 +9,7 @@ import { MatchHudIconButton } from '@/features/possession/components/MatchHudPri
 import { MatchCountdownPuck } from '@/components/shared/MatchCountdownPuck';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useMatchUiReadyAcks } from '@/lib/match/useMatchUiReadyAcks';
+import { useMatchStagePresence } from '@/lib/realtime/useMatchStagePresence';
 import { cn } from '@/lib/utils';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 
@@ -59,6 +60,17 @@ export function RealtimePartyQuizScreen({
   const waitingForReady = useRealtimeMatchStore((store) => store.match?.waitingForReady ?? null);
 
   useMatchUiReadyAcks({ matchId, currentQuestionIndex, waitingForReady });
+  useMatchStagePresence({
+    matchId,
+    stageKey: state.matchPaused || waitingForReady?.phase === 'resume'
+      ? 'resume'
+      : state.startCountdownActive
+        ? 'kickoff'
+        : partyState
+          ? 'party_quiz'
+          : null,
+    enabled: !showFinalizingResults,
+  });
 
   const waitingReadyLabel = waitingForReady
     ? t('partyResults.playersReadyCount', { ready: waitingForReady.readyCount, total: waitingForReady.totalCount })
