@@ -1,8 +1,61 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+
+/**
+ * Optional coordination so all answers in one 2×2 grid render at the SAME font
+ * size — each card measures its own best-fit size and reports it; the group
+ * applies the MIN across all cards (the largest size that fits every answer).
+ * Without this, a short word fits at maxFontSize while a longer one shrinks,
+ * leaving the four cards at mismatched sizes (looks uneven).
+ */
+interface FitGroupValue {
+  report: (id: number, size: number) => void;
+  release: (id: number) => void;
+  groupSize: number | null;
+}
+
+const FitGroupContext = createContext<FitGroupValue | null>(null);
+
+export function AnswerFitGroup({ children }: { children: React.ReactNode }) {
+  const [sizes, setSizes] = useState<Record<number, number>>({});
+
+  const report = useCallback((id: number, size: number) => {
+    setSizes((prev) => (prev[id] === size ? prev : { ...prev, [id]: size }));
+  }, []);
+
+  const release = useCallback((id: number) => {
+    setSizes((prev) => {
+      if (!(id in prev)) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }, []);
+
+  const groupSize = useMemo(() => {
+    const values = Object.values(sizes);
+    return values.length ? Math.min(...values) : null;
+  }, [sizes]);
+
+  const value = useMemo<FitGroupValue>(
+    () => ({ report, release, groupSize }),
+    [report, release, groupSize],
+  );
+
+  return <FitGroupContext.Provider value={value}>{children}</FitGroupContext.Provider>;
+}
 
 /**
  * Shared MCQ answer-layout helpers (the chosen "Variant C").
@@ -59,6 +112,19 @@ export function AdaptiveAnswerText({
 }: AdaptiveAnswerTextProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const [fontSize, setFontSize] = useState(stacked ? stackedFontSize : gridMaxFontSize);
+
+  // Coordinate with sibling answers (if wrapped in <AnswerFitGroup>) so all
+  // cards render at one uniform size. Each instance reports its own best-fit
+  // size and renders at the group MIN.
+  const group = useContext(FitGroupContext);
+  const groupIdRef = useRef<number>(nextFitGroupId());
+  useEffect(() => {
+    const id = groupIdRef.current;
+    return () => group?.release(id);
+  }, [group]);
+  useEffect(() => {
+    if (group && !stacked) group.report(groupIdRef.current, fontSize);
+  }, [group, stacked, fontSize]);
 
   useIsoLayoutEffect(() => {
     if (stacked) {
@@ -125,13 +191,23 @@ export function AdaptiveAnswerText({
     return () => ro.disconnect();
   }, [children, stacked, gridMaxFontSize, gridMinFontSize, stackedFontSize]);
 
+  // In a group, render at the shared min (uniform across all cards); otherwise
+  // at this card's own best-fit size. Stacked path always uses its fixed size.
+  const renderSize = !stacked && group?.groupSize != null ? group.groupSize : fontSize;
+
   return (
     <span
       ref={ref}
       className={`${TEXT_CLASS} ${className ?? ''}`}
-      style={{ ...style, fontSize: `${fontSize}px`, display: 'block', width: '100%' }}
+      style={{ ...style, fontSize: `${renderSize}px`, display: 'block', width: '100%' }}
     >
       {children}
     </span>
   );
+}
+
+let fitGroupIdCounter = 0;
+function nextFitGroupId(): number {
+  fitGroupIdCounter += 1;
+  return fitGroupIdCounter;
 }

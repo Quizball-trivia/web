@@ -5,7 +5,7 @@ import { BanCategoryView } from '@/features/play/RankedCategoryBlockingScreen';
 import { HalftimeScreen } from '@/features/possession/components/HalftimeScreen';
 import type { AvatarCustomization } from '@/types/game';
 
-type BanPhase = 'first' | 'second';
+type BanPhase = 'first' | 'second' | 'penalty';
 
 const MOCK_CATEGORIES = [
   { id: 'cat-league-1', name: 'League 1', icon: '⚽', imageUrl: null },
@@ -48,10 +48,11 @@ export default function BanPagePreview() {
   const firstHalfCurrentActor: 'player' | 'opponent' = firstHalfPlayerBannedId ? 'opponent' : 'player';
   const firstHalfPhase: 'ban' | 'ready' = firstHalfPlayerBannedId ? 'ready' : 'ban';
 
-  // Reset halftime state when the toggle is switched so the user sees the
-  // clean initial UI (no pre-banned cards) on every switch into second-half.
+  // Reset halftime/penalty ban state when the toggle is switched so the user
+  // sees the clean initial UI (no pre-banned cards) on every switch into a
+  // halftime-style ban screen (2nd Half and Penalty share the same component).
   useEffect(() => {
-    if (phaseMode !== 'second') return;
+    if (phaseMode === 'first') return;
     queueMicrotask(() => {
       setHalftimeMyBan(null);
       setHalftimeOppBan(null);
@@ -67,7 +68,7 @@ export default function BanPagePreview() {
 
   // Once the player bans, simulate the AI taking its turn after ~1.2s.
   useEffect(() => {
-    if (phaseMode !== 'second') return;
+    if (phaseMode === 'first') return;
     if (!halftimeMyBan || halftimeOppBan) return;
     if (aiBanTimerRef.current) clearTimeout(aiBanTimerRef.current);
     aiBanTimerRef.current = setTimeout(() => {
@@ -110,6 +111,18 @@ export default function BanPagePreview() {
             style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
           >
             2nd Half
+          </button>
+          {/* Penalty ban = the halftime ban UI with the "Penalties" heading
+              (HalftimeScreen isPenaltyBan) — pure mock, no live match. */}
+          <button
+            type="button"
+            onClick={() => setPhaseMode('penalty')}
+            className={`rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] transition ${
+              phaseMode === 'penalty' ? 'bg-brand-purple text-white' : 'text-white/60 hover:text-white'
+            }`}
+            style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
+          >
+            Penalty
           </button>
         </div>
       </div>
@@ -165,6 +178,7 @@ export default function BanPagePreview() {
           firstBanSeat={1}
           myBan={halftimeMyBan}
           opponentBan={halftimeOppBan}
+          isPenaltyBan={phaseMode === 'penalty'}
           onBanCategory={(id) => setHalftimeMyBan(id)}
         />
       )}

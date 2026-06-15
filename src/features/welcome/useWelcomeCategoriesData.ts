@@ -12,7 +12,7 @@ import { useMemo } from 'react';
 
 import { useAllCategoriesList } from '@/lib/queries/categories.queries';
 import { useFeaturedCategories } from '@/lib/queries/featuredCategories.queries';
-import { FEATURED_CATEGORY_LIMIT, FEATURED_NAMES } from './welcome.content';
+import { FEATURED_CATEGORY_LIMIT } from './welcome.content';
 import { isWelcomeCategoryExcluded } from './welcome.helpers';
 
 export function useWelcomeCategoriesData() {
@@ -27,6 +27,11 @@ export function useWelcomeCategoriesData() {
     const used = new Set<string>();
 
     // 1. Use admin-panel featured collection first (World Cup categories etc.)
+    // Show ONLY the admin-panel featured collection (the World Cup set curated
+    // in the CMS). We intentionally do NOT back-fill with league names or
+    // arbitrary categories — the welcome grid mirrors exactly what's marked
+    // featured, so non-featured leagues (Champions League, Premier League, …)
+    // never leak onto the landing page.
     const adminFeatured = featuredData?.items ?? [];
     const sortedAdminFeatured = [...adminFeatured].sort(
       (a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999),
@@ -34,41 +39,17 @@ export function useWelcomeCategoriesData() {
     for (const fc of sortedAdminFeatured) {
       const cat = fc.category;
       if (used.has(cat.id) || isWelcomeCategoryExcluded(cat.slug, cat.name)) continue;
+      if (featuredCategories.length >= FEATURED_CATEGORY_LIMIT) break;
       featuredCategories.push(cat);
       used.add(cat.id);
     }
 
-    // 2. If admin featured filled the grid, skip the hardcoded fallback
-    if (featuredCategories.length < FEATURED_CATEGORY_LIMIT) {
-      for (const search of FEATURED_NAMES) {
-        if (featuredCategories.length >= FEATURED_CATEGORY_LIMIT) break;
-        const normalizedSearch = search.toLowerCase();
-        const normalizedSlugSearch = normalizedSearch.replace(/\s+/g, '-');
-        const exactMatch = allCategories.find(
-          (c) => !used.has(c.id) && (c.name.toLowerCase() === normalizedSearch || c.slug === normalizedSlugSearch),
-        );
-        const match = exactMatch ?? allCategories.find(
-          (c) => !used.has(c.id) && (c.name.toLowerCase().includes(normalizedSearch) || c.slug.includes(normalizedSlugSearch)),
-        );
-        if (match && !used.has(match.id)) {
-          featuredCategories.push(match);
-          used.add(match.id);
-        }
-      }
-    }
-
-    // 3. Back-fill with remaining categories if still under the limit
-    if (featuredCategories.length < FEATURED_CATEGORY_LIMIT) {
-      const fillerCategories = [
-        ...allCategories.filter((c) => !used.has(c.id) && Boolean(c.imageUrl)),
-        ...allCategories.filter((c) => !used.has(c.id) && !c.imageUrl),
-      ];
-      for (const category of fillerCategories) {
-        if (featuredCategories.length >= FEATURED_CATEGORY_LIMIT) break;
-        featuredCategories.push(category);
-        used.add(category.id);
-      }
-    }
+    // Trim to a multiple of the widest column count (4) so the grid never shows
+    // a half-empty last row. The dropped ones fall back into `remaining`.
+    const evenCount = Math.floor(featuredCategories.length / 4) * 4;
+    const trimmed = featuredCategories.slice(evenCount);
+    for (const cat of trimmed) used.delete(cat.id);
+    featuredCategories.length = evenCount;
 
     const remainingCategories = allCategories.filter((c) => !used.has(c.id));
 

@@ -33,6 +33,10 @@ interface LocaleProviderProps {
   // it takes precedence over localStorage so SEO pages render in the URL's
   // language on the FIRST paint, not after client hydration.
   initialLocale?: Locale;
+  // Server-detected IP country (e.g. "GE"). Used only as a geo signal inside
+  // the browser-inference fallback — it never overrides a saved choice, account
+  // preference, or an explicit URL locale.
+  geoCountry?: string | null;
 }
 
 // Extract the locale prefix from a URL path. Returns null when the path has
@@ -59,7 +63,7 @@ function readStoredLocale(): { locale: Locale; hasStoredLocale: boolean } {
   };
 }
 
-export function LocaleProvider({ children, initialLocale }: LocaleProviderProps) {
+export function LocaleProvider({ children, initialLocale, geoCountry }: LocaleProviderProps) {
   const preferredLanguage = useAuthStore((state) => state.user?.preferred_language);
   const lastSyncedPreferredLanguage = useRef<string | null | undefined>(undefined);
   // usePathname updates on every client-side navigation, so we can derive the
@@ -92,14 +96,16 @@ export function LocaleProvider({ children, initialLocale }: LocaleProviderProps)
     if (initialLocale || pathLocale) return;
     const { locale: stored, hasStoredLocale } = readStoredLocale();
     const preferredLocale = isSupportedLocale(preferredLanguage) ? preferredLanguage : null;
-    const nextLocale = hasStoredLocale ? stored : preferredLocale ?? inferLocaleFromBrowser();
+    const nextLocale = hasStoredLocale
+      ? stored
+      : preferredLocale ?? inferLocaleFromBrowser(geoCountry);
     if (nextLocale !== 'en') {
       queueMicrotask(() => {
         localeSourceRef.current = 'app';
         setLocaleState(nextLocale);
       });
     }
-  }, [initialLocale, pathLocale, preferredLanguage]);
+  }, [initialLocale, pathLocale, preferredLanguage, geoCountry]);
 
   useEffect(() => {
     if (!hasHydratedRef.current) return;

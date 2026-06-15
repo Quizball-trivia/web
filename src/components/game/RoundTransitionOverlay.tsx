@@ -1,11 +1,13 @@
 'use client';
 
 import { motion } from 'motion/react';
+import { cn } from '@/lib/utils';
 
 interface RoundTransitionOverlayProps {
   title: string;
   categoryName?: string | null;
   subtitle?: string | null;
+  className?: string;
 }
 
 // Promoted from dev preview to production: the redesigned overlay is now
@@ -83,14 +85,17 @@ function ClassicRoundTransitionOverlay({ title, categoryName, subtitle }: RoundT
  *  - Title stays bold uppercase but sized down slightly and pulls the focus
  *    via a soft drop shadow instead of stadium glow
  */
-function ModernRoundTransitionOverlay({ title, categoryName, subtitle }: RoundTransitionOverlayProps) {
+function ModernRoundTransitionOverlay({ title, categoryName, subtitle, className }: RoundTransitionOverlayProps) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
-      className="absolute inset-0 z-20 flex flex-col items-center justify-center overflow-hidden bg-transparent px-6 text-center [transform:translateY(-9%)] sm:[transform:none]"
+      className={cn(
+        'absolute inset-x-0 bottom-0 top-0 z-20 flex flex-col items-center justify-center overflow-hidden bg-transparent px-6 text-center [transform:translateY(-9%)] sm:[transform:none]',
+        className,
+      )}
     >
       {/* Top + bottom accent rails — kept from the classic variant so the
           overlay still reads as a discrete "round break" beat. Brand green

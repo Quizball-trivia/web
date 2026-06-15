@@ -15,10 +15,11 @@ import type { Locale } from "@/lib/i18n/messages";
 type ProvidersProps = {
   children: React.ReactNode;
   initialLocale?: Locale;
+  geoCountry?: string | null;
   cspNonce?: string;
 };
 
-export function Providers({ children, initialLocale, cspNonce }: ProvidersProps) {
+export function Providers({ children, initialLocale, geoCountry, cspNonce }: ProvidersProps) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -35,7 +36,7 @@ export function Providers({ children, initialLocale, cspNonce }: ProvidersProps)
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-        <LocaleProvider initialLocale={initialLocale}>
+        <LocaleProvider initialLocale={initialLocale} geoCountry={geoCountry}>
           <CspNonceProvider nonce={cspNonce}>
             <PlayerProvider>
               <AuthSessionBridge />

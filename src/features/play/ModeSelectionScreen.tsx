@@ -240,11 +240,15 @@ export function ModeSelectionScreen({
               {/* World Cup event info — event only */}
               {isEventMode && (
                 <div className="mt-2 flex items-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-brand-yellow px-3 py-1 text-[10px] font-black uppercase tracking-wide text-black">
-                    <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={14} height={14} className="h-3.5 w-auto object-contain" />
+                  <span className="inline-flex items-center gap-1 rounded-full bg-brand-yellow px-3 py-1 text-xs font-black uppercase tracking-wide text-black">
+                    <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={16} height={16} className="h-4 w-auto object-contain" />
                     {t('play.eventWinPrizes')}
                   </span>
-                  <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white/70">
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-black uppercase tracking-wide text-white shadow-[0_2px_12px_rgba(255,108,10,0.25)]"
+                    style={{ backgroundColor: '#FF6C0A' }}
+                  >
+                    <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={16} height={16} className="h-4 w-auto object-contain" />
                     {t('play.eventDaysLeft', { count: wcDaysLeft })}
                   </span>
                 </div>
@@ -310,11 +314,15 @@ export function ModeSelectionScreen({
                 {/* World Cup event info — mobile, event only */}
                 {isEventMode && (
                   <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-brand-yellow px-2 py-0.5 text-[8px] font-black uppercase tracking-wide text-black">
-                      <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={12} height={12} className="h-3 w-auto object-contain" />
+                    <span className="inline-flex items-center gap-1 rounded-full bg-brand-yellow px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-black">
+                      <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={14} height={14} className="h-3.5 w-auto object-contain" />
                       {t('play.eventWinPrizes')}
                     </span>
-                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white/70">
+                    <span
+                      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-white shadow-[0_2px_12px_rgba(255,108,10,0.25)]"
+                      style={{ backgroundColor: '#FF6C0A' }}
+                    >
+                      <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={14} height={14} className="h-3.5 w-auto object-contain" />
                       {t('play.eventDaysLeftShort', { count: wcDaysLeft })}
                     </span>
                   </div>

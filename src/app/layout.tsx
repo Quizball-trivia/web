@@ -1,8 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
-import "@fontsource-variable/nunito";
+import "@fontsource/poppins/400.css";
+import "@fontsource/poppins/500.css";
 import "@fontsource/poppins/600.css";
 import "@fontsource/poppins/700.css";
+import "@fontsource/poppins/800.css";
+import "@fontsource/poppins/900.css";
 import "flag-icons/css/flag-icons.min.css";
 import { Providers } from "./providers";
 import { Analytics } from "@vercel/analytics/next";
@@ -151,12 +154,16 @@ export default async function RootLayout({
   // Only URL-prefixed marketing/legal routes should seed the client locale.
   // App routes like /store and /play must hydrate from saved user choice.
   const explicitLocale = explicitLocaleFromPathname(pathname);
+  // IP country (set by Vercel's edge). Threaded to the locale provider as a
+  // geo signal so first-time visitors in Georgia default to Georgian — without
+  // overriding a saved choice, account preference, or explicit URL locale.
+  const geoCountry = headerList.get("x-vercel-ip-country");
 
   return (
     <html lang={locale} className="dark" suppressHydrationWarning>
       <body
         className="antialiased"
-        style={{ fontFamily: "'Nunito Variable', sans-serif" }}
+        style={{ fontFamily: "'Poppins', sans-serif" }}
         suppressHydrationWarning
       >
         {/* JSON-LD in <body> not <head> to avoid hydration collision with Messenger's pcm.js injection. */}
@@ -166,7 +173,7 @@ export default async function RootLayout({
           suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <Providers initialLocale={explicitLocale} cspNonce={cspNonce}>{children}</Providers>
+        <Providers initialLocale={explicitLocale} geoCountry={geoCountry} cspNonce={cspNonce}>{children}</Providers>
         <Analytics />
       </body>
     </html>

@@ -17,7 +17,7 @@ import { cn, parseRp } from '@/lib/utils';
 import { resolveAvatarUrl } from '@/lib/avatars';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { tierFromRp, type RankedTier } from '@/utils/rankedTier';
-import { AvatarDisplay } from '@/components/AvatarDisplay';
+import { TierFrameAvatar } from '@/components/TierFrameAvatar';
 import { BanCategoryCard } from '@/components/shared/BanCategoryCard';
 import { getTierAccent } from '@/utils/tierVisuals';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -66,13 +66,11 @@ export interface BanCategoryViewProps {
 function PlayerHeader({
   info,
   tierColor,
-  bgColor,
   align,
   dimmed,
 }: {
   info: BanCategoryViewPlayer;
   tierColor: string;
-  bgColor: string;
   align: 'left' | 'right';
   dimmed: boolean;
 }) {
@@ -85,14 +83,13 @@ function PlayerHeader({
         dimmed && 'opacity-50'
       )}
     >
-      <div className="rounded-full p-3" style={{ backgroundColor: bgColor }}>
-        <AvatarDisplay
-          customization={info.avatarCustomization ?? { base: info.avatar }}
-          size="md"
-          countryCode={info.countryCode ?? null}
-          className={!isLeft ? '-scale-x-100' : undefined}
-        />
-      </div>
+      <TierFrameAvatar
+        tier={info.tier ?? tierFromRp(info.rankPoints ?? 0)}
+        avatarCustomization={info.avatarCustomization ?? { base: info.avatar }}
+        countryCode={info.countryCode ?? null}
+        size="md"
+        mirrorAvatar={!isLeft}
+      />
       <div
         className={cn('hidden min-w-0 sm:block', !isLeft && 'text-right')}
       >
@@ -131,7 +128,7 @@ function PlayerHeader({
 /**
  * Pure presentational ban-category view. Accepts all data via props so it can
  * be rendered both in a live match (via `RankedCategoryBlockingScreen`) and in
- * preview routes like `/ban-page` without real socket/store wiring.
+ * preview routes like `/dev/ban-page` without real socket/store wiring.
  */
 export function BanCategoryView({
   player,
@@ -195,7 +192,6 @@ export function BanCategoryView({
           <PlayerHeader
             info={player}
             tierColor={playerTierColor}
-            bgColor="#1645FF"
             align="left"
             dimmed={currentActor === 'opponent'}
           />
@@ -215,7 +211,6 @@ export function BanCategoryView({
           <PlayerHeader
             info={opponent}
             tierColor={opponentTierColor}
-            bgColor="#FF4B4B"
             align="right"
             dimmed={currentActor === 'player'}
           />

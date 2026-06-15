@@ -136,7 +136,7 @@ export function WelcomeCategoriesSection({
                     <IconComponent className="absolute -bottom-3 -right-3 size-24 md:size-28 opacity-[0.1] text-white pointer-events-none" />
                   ) : null}
 
-                  <div className="relative z-10 flex h-full items-center justify-center text-center text-sm md:text-base font-black uppercase tracking-wide leading-tight text-white drop-shadow-[0_2px_14px_rgba(0,0,0,0.45)]">
+                  <div className="relative z-10 flex h-full items-center justify-center text-center text-sm md:text-base font-black uppercase tracking-wide leading-tight text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100 drop-shadow-[0_2px_14px_rgba(0,0,0,0.45)]">
                     {cat.name}
                   </div>
                 </button>
@@ -148,7 +148,7 @@ export function WelcomeCategoriesSection({
             <div className="mt-8 text-center">
               <Button
                 onClick={onBrowseAll}
-                className="h-14 min-w-[280px] rounded-[20px] bg-brand-green-accessible px-10 font-poppins text-base font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green-accessible-hover hover:shadow-none"
+                className="h-14 min-w-[280px] rounded-[20px] bg-brand-green px-10 font-poppins text-base font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none"
               >
                 {t('welcome.browseAllCategories', { count: allCategoriesCount })}
               </Button>
@@ -242,7 +242,7 @@ export function WelcomeCategoriesSection({
                 ) : null}
 
                 <div className="relative z-10 flex h-full items-center justify-center text-center">
-                  <span className="text-base md:text-lg font-black uppercase tracking-wide leading-tight text-white drop-shadow-[0_2px_14px_rgba(0,0,0,0.5)]">
+                  <span className="text-base md:text-lg font-black uppercase tracking-wide leading-tight text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100 drop-shadow-[0_2px_14px_rgba(0,0,0,0.5)]">
                     {cat.name}
                   </span>
                 </div>
@@ -261,7 +261,7 @@ export function WelcomeCategoriesSection({
           >
             <Button
               onClick={onBrowseAll}
-              className="h-11 rounded-xl bg-brand-green-accessible px-6 font-poppins text-sm font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green-accessible-hover hover:shadow-none"
+              className="h-11 rounded-xl bg-brand-green px-6 font-poppins text-sm font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none"
             >
               {t('welcome.browseAllCategories', { count: allCategoriesCount })}
             </Button>

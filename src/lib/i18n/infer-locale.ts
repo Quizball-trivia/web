@@ -4,6 +4,8 @@ interface LocaleInferenceSignals {
   languages?: readonly string[] | null;
   language?: string | null;
   timeZone?: string | null;
+  /** ISO country code from IP geolocation (e.g. "GE"). */
+  country?: string | null;
 }
 
 function isGeorgianLanguageTag(value: string | null | undefined): boolean {
@@ -15,7 +17,13 @@ export function inferLocaleFromSignals({
   languages,
   language,
   timeZone,
+  country,
 }: LocaleInferenceSignals): Locale {
+  // IP geolocation: a visitor physically in Georgia gets Georgian by default.
+  if (country?.trim().toUpperCase() === 'GE') {
+    return 'ka';
+  }
+
   const browserLanguages = [
     ...(languages ?? []),
     language,
@@ -32,7 +40,7 @@ export function inferLocaleFromSignals({
   return 'en';
 }
 
-export function inferLocaleFromBrowser(): Locale {
+export function inferLocaleFromBrowser(country?: string | null): Locale {
   const languages =
     typeof navigator !== 'undefined' && Array.isArray(navigator.languages)
       ? navigator.languages
@@ -43,5 +51,5 @@ export function inferLocaleFromBrowser(): Locale {
       ? Intl.DateTimeFormat().resolvedOptions().timeZone
       : null;
 
-  return inferLocaleFromSignals({ languages, language, timeZone });
+  return inferLocaleFromSignals({ languages, language, timeZone, country });
 }
