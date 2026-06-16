@@ -3,9 +3,21 @@ import { API_BASE_URL } from '@/lib/config';
 import { getSupabaseAccessToken, getSupabaseClient } from '@/lib/auth/supabase';
 import { logger } from '@/utils/logger';
 import { trackSocketConnectionFailed, trackSocketReconnected } from '@/lib/analytics/game-events';
+import {
+  markRealtimeConnected,
+  markRealtimeConnecting,
+  markRealtimeConnectionError,
+  markRealtimeDisconnected,
+  markRealtimePingMissed,
+  markRealtimeReconnectAttempt,
+  recordRealtimeRtt,
+} from './connection-health';
 import type { ClientToServerEvents, ServerToClientEvents } from './socket.types';
 
 let lastDisconnectAtMs: number | null = null;
+let connectionPingIntervalId: ReturnType<typeof setInterval> | null = null;
+let connectionPingMonitorRunId = 0;
+const pendingPingTimeoutIds = new Set<ReturnType<typeof setTimeout>>();
 
 let socketInstance: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
 let socketOverride: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
@@ -22,6 +34,8 @@ const ACCESS_TOKEN_REFRESH_SKEW_MS = 30_000;
 const RECENT_ACCESS_TOKEN_SETTLE_MS = 1_500;
 const AUTH_RECOVERY_RETRY_MS = 1_000;
 const SOCKET_DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_SOCKET === 'true';
+const CONNECTION_PING_INTERVAL_MS = 4_000;
+const CONNECTION_PING_TIMEOUT_MS = 2_500;
 
 function socketDebug(event: string, meta?: Record<string, unknown>): void {
   if (!SOCKET_DEBUG_ENABLED) return;
@@ -233,6 +247,7 @@ async function connectWithFreshAuth(
     // handshake time — never overwrite socket.auth with a static object, or
     // future automatic reconnects would reuse this token after it expires.
     logger.info('Socket connect requested');
+    markRealtimeConnecting();
     socket.connect();
   })().finally(() => {
     connectInFlight = null;
@@ -261,6 +276,7 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
   socket.on('connect', () => {
     socketDebug('socket authenticated/connected', socketSnapshot(socket));
     logger.info('Socket connected', { socketId: socket.id });
+    markRealtimeConnected();
     if (lastDisconnectAtMs !== null) {
       const downtimeSec = Math.max(0, Math.round((Date.now() - lastDisconnectAtMs) / 1000));
       lastDisconnectAtMs = null;
@@ -273,6 +289,7 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
       ...socketSnapshot(socket),
     });
     logger.warn('Socket disconnected', { reason });
+    markRealtimeDisconnected(reason);
     lastDisconnectAtMs = Date.now();
   });
   socket.on('connect_error', (error) => {
@@ -287,6 +304,7 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
       return;
     }
     logger.warn('Socket connect error', { message: error.message });
+    markRealtimeConnectionError(error.message);
     try { trackSocketConnectionFailed(error.message); } catch { /* best-effort */ }
   });
   // Reconnect lifecycle events fire on the MANAGER (socket.io), not the
@@ -295,12 +313,59 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
   socket.io.on('reconnect_attempt', (attempt) => {
     socketDebug('reconnect attempt', { attempt, ...socketSnapshot(socket) });
     logger.info('Socket reconnect attempt', { attempt });
+    markRealtimeReconnectAttempt();
   });
   socket.io.on('reconnect_failed', () => {
     logger.warn('Socket reconnect failed');
+    markRealtimeConnectionError('reconnect_failed');
     try { trackSocketConnectionFailed('reconnect_failed'); } catch { /* best-effort */ }
   });
   return socket;
+}
+
+export function startConnectionQualityMonitor(): void {
+  if (connectionPingIntervalId !== null) return;
+  const runId = ++connectionPingMonitorRunId;
+
+  const sample = () => {
+    const socket = getSocket();
+    if (!socket.connected) return;
+
+    const sentAt = Date.now();
+    const socketIdAtSend = socket.id ?? null;
+    let settled = false;
+    const timeoutId = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      pendingPingTimeoutIds.delete(timeoutId);
+      if (runId !== connectionPingMonitorRunId) return;
+      if (!socket.connected || (socket.id ?? null) !== socketIdAtSend) return;
+      markRealtimePingMissed();
+    }, CONNECTION_PING_TIMEOUT_MS);
+    pendingPingTimeoutIds.add(timeoutId);
+
+    socket.emit('connection:ping', { sentAt }, () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeoutId);
+      pendingPingTimeoutIds.delete(timeoutId);
+      if (runId !== connectionPingMonitorRunId) return;
+      if (!socket.connected || (socket.id ?? null) !== socketIdAtSend) return;
+      recordRealtimeRtt(Date.now() - sentAt);
+    });
+  };
+
+  sample();
+  connectionPingIntervalId = setInterval(sample, CONNECTION_PING_INTERVAL_MS);
+}
+
+export function stopConnectionQualityMonitor(): void {
+  if (connectionPingIntervalId === null) return;
+  clearInterval(connectionPingIntervalId);
+  connectionPingIntervalId = null;
+  connectionPingMonitorRunId += 1;
+  pendingPingTimeoutIds.forEach((timeoutId) => clearTimeout(timeoutId));
+  pendingPingTimeoutIds.clear();
 }
 
 /** Override the socket singleton (used by test/mock pages to inject a fake socket). */
@@ -330,6 +395,7 @@ export function disconnectSocket(): void {
   });
   connectAttemptId += 1;
   cancelAuthRecovery('manual-disconnect-cleanup');
+  stopConnectionQualityMonitor();
   if (socketInstance && (socketInstance.connected || socketInstance.active)) {
     logger.info('Socket disconnect requested');
     socketInstance.disconnect();

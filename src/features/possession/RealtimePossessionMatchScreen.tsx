@@ -6,8 +6,11 @@ import { LogOut, Volume2, VolumeX } from 'lucide-react';
 import { QuitMatchModal } from '@/components/match/QuitMatchModal';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { MatchWaitingForReadyOverlay } from '@/components/shared/MatchWaitingForReadyOverlay';
+import { ConnectionQualitySignal } from '@/components/shared/ConnectionQualitySignal';
+import { RealtimeConnectionBanner } from '@/components/shared/RealtimeConnectionBanner';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useMatchUiReadyAcks } from '@/lib/match/useMatchUiReadyAcks';
+import { useMatchStagePresence } from '@/lib/realtime/useMatchStagePresence';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { BarBattleFlightOverlay } from './components/BarBattleFlightOverlay';
 import { HalftimeScreen } from './components/HalftimeScreen';
@@ -59,6 +62,9 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
   const hasMatch = useRealtimeMatchStore((state) => state.match != null);
   const matchId = useRealtimeMatchStore((state) => state.match?.matchId ?? null);
   const currentQuestionIndex = useRealtimeMatchStore((state) => state.match?.currentQuestion?.qIndex ?? null);
+  const currentPhaseKind = useRealtimeMatchStore((state) =>
+    state.match?.currentQuestion?.phaseKind ?? state.match?.possessionState?.phaseKind ?? null
+  );
   const waitingForReady = useRealtimeMatchStore((state) => state.match?.waitingForReady ?? null);
   const finalResults = useRealtimeMatchStore((state) => state.match?.finalResults ?? null);
   const selfUserId = useRealtimeMatchStore((state) => state.selfUserId);
@@ -95,6 +101,25 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
   });
 
   useMatchUiReadyAcks({ matchId, currentQuestionIndex, waitingForReady });
+
+  const stagePresenceKey = useMemo(() => {
+    if (!hasMatch || finalResults) return null;
+    if (matchPaused || waitingForReady?.phase === 'resume') return 'resume';
+    if (halftimeModel) return 'category_ban';
+    if (showStartCountdown) return 'kickoff';
+    if (penaltyCountdownActive || currentPhaseKind === 'penalty') return 'penalties';
+    return 'question';
+  }, [
+    currentPhaseKind,
+    finalResults,
+    halftimeModel,
+    hasMatch,
+    matchPaused,
+    penaltyCountdownActive,
+    showStartCountdown,
+    waitingForReady?.phase,
+  ]);
+  useMatchStagePresence({ matchId, stageKey: stagePresenceKey, enabled: hasMatch && !finalResults });
 
   const waitingReadyLabel = waitingForReady
     ? t('possession.playersReadyCount', { ready: waitingForReady.readyCount, total: waitingForReady.totalCount })
@@ -170,6 +195,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
 
     return (
       <div className="flex min-h-dvh w-full items-center justify-center bg-surface-page-alt">
+        <RealtimeConnectionBanner />
         {waitingForReady ? (
           <MatchWaitingForReadyOverlay
             title={waitingTitle}
@@ -203,6 +229,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
 
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat">
+      <RealtimeConnectionBanner />
       <MatchHudIconButton
         onClick={toggleMuted}
         className="absolute left-[calc(env(safe-area-inset-left)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.25rem)] z-[70] sm:left-[calc(env(safe-area-inset-left)+0.5rem)] sm:top-[calc(env(safe-area-inset-top)+0.5rem)]"
@@ -212,6 +239,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
       >
         {muted ? <VolumeX className="size-4 sm:size-5" /> : <Volume2 className="size-4 sm:size-5" />}
       </MatchHudIconButton>
+      <ConnectionQualitySignal className="absolute left-[calc(env(safe-area-inset-left)+0.75rem)] top-[calc(env(safe-area-inset-top)+3rem)] z-[70] sm:left-[calc(env(safe-area-inset-left)+3.25rem)] sm:top-[calc(env(safe-area-inset-top)+0.5rem)]" />
 
       <AnimatePresence>
         {waitingForReady && !showStartCountdown && (
@@ -317,7 +345,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
                 {t('possession.opponentDisconnected')}
               </div>
               <div className="mt-1 font-poppins text-sm font-semibold text-white/70">
-                {t('possession.safeLeaveWinIn', { seconds: pauseSeconds })}
+                {t('possession.opponentDisconnectedWinIfNotReturn', { seconds: pauseSeconds })}
               </div>
               <div className="mt-4 inline-flex items-center justify-center rounded-full bg-black/30 px-6 py-2 font-poppins text-3xl font-semibold tabular-nums text-white">
                 {pauseSeconds}

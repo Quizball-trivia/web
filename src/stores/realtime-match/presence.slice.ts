@@ -148,6 +148,12 @@ export const createPresenceSlice: StateCreator<RealtimeState, [], [], PresenceSl
         pauseUntil: Date.now() + graceMs,
         pausedAt: Date.now(),
         remainingReconnects,
+        match: state.match
+          ? {
+            ...state.match,
+            waitingForReady: null,
+          }
+          : state.match,
       };
     });
   },

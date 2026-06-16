@@ -37,7 +37,14 @@
     "processing": "Processing",
     "edit": "Edit",
     "price": "Price",
-    "notSet": "Not set"
+    "notSet": "Not set",
+    "reconnecting": "Reconnecting…",
+    "connectionUnstable": "Connection unstable",
+    "connectionBad": "Connection problem",
+    "connectionStable": "Connection stable",
+    "connectionChecking": "Checking connection",
+    "connectionPingMs": "{ms} ms",
+    "backOnline": "Back online"
   },
   "navigation": {
     "events": "Events",
@@ -369,6 +376,8 @@
     "calculatingFinalScores": "Calculating final scores…",
     "matchPaused": "Match Paused",
     "waitingForReconnect": "Waiting for a player to reconnect",
+    "opponentDisconnectedContinueIfNotReturn": "Continues if they don't return in {seconds}s",
+    "opponentRestoringMatch": "Player reconnecting… restoring match",
     "resumesInSeconds": "Resumes automatically in {seconds}s",
     "waitingForOpponent": "Waiting for opponent",
     "waitingForPlayers": "Waiting for players",
@@ -1053,6 +1062,8 @@
     "penaltyAriaLabel": "Penalty shootout starting: answer correctly and faster to score",
     "getReady": "Get Ready",
     "waitingForReconnect": "Waiting for them to reconnect",
+    "opponentDisconnectedWinIfNotReturn": "You win if they don't return in {seconds}s",
+    "opponentRestoringMatch": "Opponent reconnecting… restoring match",
     "safeLeaveWinIn": "You win in {seconds}s if they don't return",
     "leaveSafely": "Leave safely",
     "bestOf5": "Best of 5",

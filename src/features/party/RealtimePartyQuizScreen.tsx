@@ -1,12 +1,15 @@
 'use client';
 
 import { Volume2, VolumeX, X } from 'lucide-react';
+import { ConnectionQualitySignal } from '@/components/shared/ConnectionQualitySignal';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { MatchWaitingForReadyOverlay } from '@/components/shared/MatchWaitingForReadyOverlay';
+import { RealtimeConnectionBanner } from '@/components/shared/RealtimeConnectionBanner';
 import { MatchHudIconButton } from '@/features/possession/components/MatchHudPrimitives';
 import { MatchCountdownPuck } from '@/components/shared/MatchCountdownPuck';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useMatchUiReadyAcks } from '@/lib/match/useMatchUiReadyAcks';
+import { useMatchStagePresence } from '@/lib/realtime/useMatchStagePresence';
 import { cn } from '@/lib/utils';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 
@@ -57,6 +60,17 @@ export function RealtimePartyQuizScreen({
   const waitingForReady = useRealtimeMatchStore((store) => store.match?.waitingForReady ?? null);
 
   useMatchUiReadyAcks({ matchId, currentQuestionIndex, waitingForReady });
+  useMatchStagePresence({
+    matchId,
+    stageKey: state.matchPaused || waitingForReady?.phase === 'resume'
+      ? 'resume'
+      : state.startCountdownActive
+        ? 'kickoff'
+        : partyState
+          ? 'party_quiz'
+          : null,
+    enabled: !showFinalizingResults,
+  });
 
   const waitingReadyLabel = waitingForReady
     ? t('partyResults.playersReadyCount', { ready: waitingForReady.readyCount, total: waitingForReady.totalCount })
@@ -72,6 +86,7 @@ export function RealtimePartyQuizScreen({
   if (!partyState) {
     return (
       <div className="flex min-h-dvh w-full items-center justify-center bg-surface-page-alt">
+        <RealtimeConnectionBanner />
         {waitingForReady ? (
           <MatchWaitingForReadyOverlay
             title={waitingTitle}
@@ -99,6 +114,7 @@ export function RealtimePartyQuizScreen({
 
   return (
     <div className="relative min-h-dvh overflow-hidden bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat text-white">
+      <RealtimeConnectionBanner />
       <PartyQuizOverlays
         startCountdownActive={state.startCountdownActive}
         countdownSeconds={state.countdownSeconds}
@@ -120,6 +136,7 @@ export function RealtimePartyQuizScreen({
       >
         {muted ? <VolumeX className="size-4 sm:size-5" /> : <Volume2 className="size-4 sm:size-5" />}
       </MatchHudIconButton>
+      <ConnectionQualitySignal className="absolute left-[calc(env(safe-area-inset-left)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.25rem)] z-[70] sm:left-[calc(env(safe-area-inset-left)+3.25rem)] sm:top-[calc(env(safe-area-inset-top)+0.5rem)]" />
       <MatchHudIconButton
         onClick={() => setShowQuitModal(true)}
         className="absolute right-[calc(env(safe-area-inset-right)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.25rem)] z-[70] hidden sm:right-[calc(env(safe-area-inset-right)+0.5rem)] sm:top-[calc(env(safe-area-inset-top)+0.5rem)] lg:flex lg:fixed lg:right-[calc(env(safe-area-inset-right)+1rem)] lg:top-[calc(env(safe-area-inset-top)+1rem)]"
