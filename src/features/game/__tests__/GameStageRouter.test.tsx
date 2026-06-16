@@ -313,7 +313,7 @@ describe('GameStageRouter', () => {
     expect(router.push).toHaveBeenCalledWith('/play');
   });
 
-  it('forfeit emits match:forfeit and immediately returns the forfeiting player home', () => {
+  it('forfeit emits match:forfeit and moves the forfeiting player to the settling/results stage without navigating away', () => {
     gameSessionState.stage = 'playing';
     realtimeMatchState.match = {
       ...realtimeMatchState.match,
@@ -325,10 +325,19 @@ describe('GameStageRouter', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Forfeit Match' }));
 
+    // The forfeit is reported and the trailing rejoin offer is suppressed.
     expect(socket.emit).toHaveBeenCalledWith('match:forfeit', { matchId: 'match-forfeit-1' });
-    expect(realtimeMatchState.reset).toHaveBeenCalled();
-    expect(gameSessionState.reset).toHaveBeenCalled();
-    expect(router.push).toHaveBeenCalledWith('/');
+    expect(realtimeMatchState.suppressAutoRejoin).toHaveBeenCalledWith('match-forfeit-1');
+
+    // The forfeiter stays on the game route and is dropped into the
+    // finalResults stage (the "match settling" loading screen), where the
+    // authoritative match:final_results then renders the real results — rather
+    // than being reset and bounced to /play/home where the result only showed
+    // up later as a clickable badge.
+    expect(gameSessionState.setStage).toHaveBeenCalledWith('finalResults');
+    expect(realtimeMatchState.reset).not.toHaveBeenCalled();
+    expect(gameSessionState.reset).not.toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalledWith('/');
   });
 
   it('shows loading instead of possession final results until authoritative final payload arrives', () => {
