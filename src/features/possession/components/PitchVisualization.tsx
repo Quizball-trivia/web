@@ -135,7 +135,7 @@ export function PitchVisualization(props: PitchVisualizationProps) {
           data-pitch-field="possession-bg"
           aria-hidden="true"
           viewBox={isPortrait ? '-30 0 290 500' : '0 -30 500 290'}
-          className="absolute inset-0 h-full w-full"
+          className="pointer-events-none absolute inset-0 z-0 h-full w-full"
           style={{ willChange: 'transform' }}
         >
           <defs>
@@ -151,7 +151,7 @@ export function PitchVisualization(props: PitchVisualizationProps) {
         <svg
           data-pitch-field="possession"
           viewBox={isPortrait ? '-30 0 290 500' : '0 -30 500 290'}
-          className={isPortrait ? 'w-full h-full' : 'w-full h-auto'}
+          className={isPortrait ? 'relative z-10 h-full w-full' : 'relative z-10 h-auto w-full'}
         >
           <PitchSvgDefs uid={uid} />
 
