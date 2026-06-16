@@ -124,9 +124,15 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
   const waitingReadyLabel = waitingForReady
     ? t('possession.playersReadyCount', { ready: waitingForReady.readyCount, total: waitingForReady.totalCount })
     : '';
-  const waitingTitle = waitingForReady?.totalCount && waitingForReady.totalCount > 2
-    ? t('possession.waitingForPlayers')
-    : t('possession.waitingForOpponent');
+  const waitingTotalCount = waitingForReady?.totalCount ?? 0;
+  const waitingTitle = waitingTotalCount <= 1
+    ? t('possession.gettingMatchReady')
+    : waitingTotalCount > 2
+      ? t('possession.waitingForPlayers')
+      : t('possession.waitingForOpponent');
+  const waitingDetailLabel = waitingForReady?.phase === 'resume'
+    ? t('possession.resumesAfterReady')
+    : t('possession.startsAfterReady');
 
   useEffect(() => {
     if (!matchPaused || !pauseUntil) return;
@@ -206,9 +212,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
           <MatchWaitingForReadyOverlay
             title={waitingTitle}
             readyLabel={waitingReadyLabel}
-            startingLabel={t('possession.startingSoon')}
-            forceStartsAtMs={waitingForReady.forceStartsAtMs}
-            serverTimeOffsetMs={waitingForReady.serverTimeOffsetMs}
+            detailLabel={waitingDetailLabel}
           />
         ) : showPendingKickoff ? (
           <KickoffCountdownOverlay
@@ -261,9 +265,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
             key="possession-waiting-for-ready"
             title={waitingTitle}
             readyLabel={waitingReadyLabel}
-            startingLabel={t('possession.startingSoon')}
-            forceStartsAtMs={waitingForReady.forceStartsAtMs}
-            serverTimeOffsetMs={waitingForReady.serverTimeOffsetMs}
+            detailLabel={waitingDetailLabel}
             className="fixed inset-0 z-[95]"
           />
         )}
