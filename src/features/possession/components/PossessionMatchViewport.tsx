@@ -10,6 +10,7 @@ import { PenaltyHUD } from './PenaltyHUD';
 import { PitchVisualization } from './PitchVisualization';
 import { PossessionHUD } from './PossessionHUD';
 import { ShotHUD } from './ShotHUD';
+import { ConnectionQualitySignal } from '@/components/shared/ConnectionQualitySignal';
 import type { GoalCelebrationState } from '../realtimePossession.helpers';
 
 type PitchProps = ComponentProps<typeof PitchVisualization>;
@@ -223,6 +224,12 @@ export function PossessionMatchViewport({ model, children, onPenaltySplashComple
 
             <div ref={mobilePitchRef} className="lg:hidden relative">
               <PitchVisualization {...pitchProps} orientation="landscape" hideBall={celebrationOwnsBall} />
+              {/* Connection ping pill — anchored to the bottom-left corner of
+                  the pitch (mobile only; desktop shows it in the top HUD). */}
+              <ConnectionQualitySignal
+                size="xs"
+                className="absolute bottom-2 left-2 z-40"
+              />
               <AnimatePresence>
                 {goalCelebration && (
                   <GoalCelebrationOverlay

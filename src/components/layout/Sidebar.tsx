@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { MessageCircle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AppLogo } from "@/components/AppLogo";
+import { SocialLinks } from "@/components/shared/SocialLinks";
+import { ContactModal } from "@/components/shared/ContactModal";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { MessageKey } from "@/lib/i18n/messages";
@@ -92,7 +95,27 @@ export function Sidebar({ currentPath, socialBadgeCount = 0, className }: Sideba
         </nav>
       </ScrollArea>
 
-      <div className="flex items-center justify-center px-6 pb-8 pt-4">
+      <div className="flex flex-col items-center gap-3 px-6 pb-8 pt-4">
+        {/* Socials + Contact — moved here from the top navbar, sits above the
+            World Cup trophy. Smaller (xs) tiles so the cluster stays compact. */}
+        <div className="flex items-center justify-center gap-2">
+          <SocialLinks size="xs" className="gap-2" />
+          <ContactModal
+            trigger={
+              <button
+                type="button"
+                aria-label={t('feedback.contactUs')}
+                title={t('feedback.contactUs')}
+                className={cn(
+                  'flex size-7 items-center justify-center rounded-[14px] bg-brand-yellow text-black',
+                  'shadow-[0_4px_0_rgba(0,0,0,0.25)] transition-transform hover:-translate-y-0.5 active:translate-y-0',
+                )}
+              >
+                <MessageCircle className="size-3.5" />
+              </button>
+            }
+          />
+        </div>
         <div className="relative">
           <Image
             src="/assets/brand/world-cup-trophy.webp"

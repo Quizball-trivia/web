@@ -31,6 +31,12 @@ const poppins = {
   lineHeight: 1,
 } as const;
 
+function isAiOpponentInfo(opponentInfo: { id?: string; isAiOpponent?: boolean } | null | undefined): boolean {
+  if (!opponentInfo) return false;
+  if (typeof opponentInfo.isAiOpponent === 'boolean') return opponentInfo.isAiOpponent;
+  return typeof opponentInfo.id === 'string' && !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(opponentInfo.id);
+}
+
 export interface BanCategoryViewCategory {
   id: string;
   name: I18nField;
@@ -460,6 +466,7 @@ export function RankedCategoryBlockingScreen() {
   const opponentRp = parseRp(matchOpponent?.rp ?? rankedFoundOpponent?.rp) ?? opponentMember?.rankPoints;
   const playerTier = playerRp != null ? tierFromRp(playerRp) : undefined;
   const opponentTier = opponentRp != null ? tierFromRp(opponentRp) : undefined;
+  const opponentIsAi = isAiOpponentInfo(matchOpponent) || isAiOpponentInfo(rankedFoundOpponent);
   const opponentCountryCode =
     matchOpponent?.countryCode
     ?? matchOpponent?.country
@@ -507,6 +514,8 @@ export function RankedCategoryBlockingScreen() {
           countryCode: opponentCountryCode ?? undefined,
           favoriteClub: matchOpponent?.favoriteClub ?? rankedFoundOpponent?.favoriteClub ?? null,
           recentForm: matchOpponent?.recentForm ?? rankedFoundOpponent?.recentForm,
+          pingMs: matchOpponent?.pingMs ?? rankedFoundOpponent?.pingMs,
+          isAi: opponentIsAi,
         }}
       />
     );

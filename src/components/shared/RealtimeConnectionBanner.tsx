@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CheckCircle2, WifiOff, Wifi } from 'lucide-react';
+import { CheckCircle2, WifiOff } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useRealtimeConnectionHealth } from '@/lib/realtime/connection-health';
@@ -24,15 +24,12 @@ export function RealtimeConnectionBanner({ className }: RealtimeConnectionBanner
   }, [health.recoveredUntilMs]);
 
   const showReconnecting = health.phase === 'reconnecting' || health.phase === 'disconnected' || health.phase === 'error';
-  const showUnstable = !showReconnecting && (health.tier === 'unstable' || health.tier === 'bad');
-  const showRecovered = !showReconnecting && !showUnstable && health.recoveredUntilMs !== null && health.recoveredUntilMs > nowMs;
-  const visible = showReconnecting || showUnstable || showRecovered;
+  const showRecovered = !showReconnecting && health.recoveredUntilMs !== null && health.recoveredUntilMs > nowMs;
+  const visible = showReconnecting || showRecovered;
 
   const label = showReconnecting
     ? t('common.reconnecting')
-    : showUnstable
-      ? t('common.connectionUnstable')
-      : t('common.backOnline');
+    : t('common.backOnline');
 
   return (
     <AnimatePresence>
@@ -53,15 +50,11 @@ export function RealtimeConnectionBanner({ className }: RealtimeConnectionBanner
               'mx-auto flex min-h-9 items-center justify-center gap-2 rounded-full border px-3 py-2 text-center font-poppins text-[11px] font-semibold uppercase leading-tight shadow-2xl backdrop-blur-md sm:min-h-10 sm:px-4 sm:text-xs',
               showReconnecting
                 ? 'border-red-300/60 bg-red-500/90 text-white'
-                : showUnstable
-                  ? 'border-brand-yellow/70 bg-brand-yellow/95 text-brand-blue'
-                  : 'border-emerald-200/60 bg-emerald-500/90 text-white',
+                : 'border-emerald-200/60 bg-emerald-500/90 text-white',
             )}
           >
             {showReconnecting ? (
               <WifiOff className="size-4 shrink-0" />
-            ) : showUnstable ? (
-              <Wifi className="size-4 shrink-0" />
             ) : (
               <CheckCircle2 className="size-4 shrink-0" />
             )}

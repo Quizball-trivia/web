@@ -28,6 +28,7 @@ import {
   startGeorgianPhoneOtp,
   verifyGeorgianPhoneOtp,
 } from '@/lib/auth/auth.service';
+import { getAuthRedirectUrl } from '@/lib/auth/authRedirectUrl';
 import { signInWithGoogleIdentity, type GoogleCredential } from '@/lib/auth/google-identity';
 import { getInAppBrowserApp, getPlatform } from '@/lib/auth/in-app-browser';
 import { useAuthStore } from '@/stores/auth.store';
@@ -261,7 +262,7 @@ export function useWelcomeAuthController() {
 
     try {
       // Navigates away (window.location); the spinner stays until the page unloads.
-      const redirectTo = `${window.location.origin}/auth/callback`;
+      const redirectTo = getAuthRedirectUrl('/auth/callback');
       await socialLogin('google', redirectTo);
     } catch (error) {
       console.error('Google login failed', error);
@@ -286,7 +287,7 @@ export function useWelcomeAuthController() {
 
     try {
       // Navigates away (window.location); the spinner stays until the page unloads.
-      const redirectTo = `${window.location.origin}/auth/callback`;
+      const redirectTo = getAuthRedirectUrl('/auth/callback');
       await socialLogin('facebook', redirectTo);
     } catch (error) {
       console.error('Facebook login failed', error);
@@ -313,7 +314,7 @@ export function useWelcomeAuthController() {
       try {
         if (authMode === 'signup') {
           trackSignupStarted('email');
-          const redirectTo = `${window.location.origin}/auth/callback`;
+          const redirectTo = getAuthRedirectUrl('/auth/callback');
           const result = await register({
             email: authEmail,
             password: authPassword,
@@ -455,7 +456,7 @@ export function useWelcomeAuthController() {
 
       setForgotSubmitting(true);
       try {
-        const redirectTo = `${window.location.origin}/auth/reset-password`;
+        const redirectTo = getAuthRedirectUrl('/auth/reset-password');
         await forgotPassword(authEmail, redirectTo);
         // Generic success only after the request succeeds; never disclose
         // whether the account exists.

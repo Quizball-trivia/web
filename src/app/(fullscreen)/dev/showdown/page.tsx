@@ -18,6 +18,7 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShowdownScreen } from '@/components/ShowdownScreen';
+import { setUserPreferences, useUserPreferences } from '@/lib/preferences/userPreferences';
 
 type MatchType = 'ranked' | 'friendly';
 type FormResult = 'W' | 'L' | 'D';
@@ -44,16 +45,17 @@ const COUNTRIES: Array<{ code: string; name: string }> = [
   { code: 'JP', name: 'Japan' },
 ];
 
-// Club IDs match the kebab-case slugs in `src/data/top5leagues-clubs.json`
-// so `getClub()` resolves them and the showdown card renders the logo.
+// Club IDs must match the `id` slugs in `src/data/clubs.json` so `getClub()`
+// resolves them and the showdown card renders the crest (e.g. Real Madrid's id
+// is `real-madrid-cf`, not `real-madrid`).
 const CLUBS: Array<{ value: string | null; label: string }> = [
   { value: null, label: 'None' },
-  { value: 'real-madrid', label: 'Real Madrid' },
+  { value: 'real-madrid-cf', label: 'Real Madrid' },
   { value: 'fc-barcelona', label: 'Barcelona' },
   { value: 'manchester-united', label: 'Man United' },
   { value: 'manchester-city', label: 'Man City' },
-  { value: 'liverpool-fc', label: 'Liverpool' },
-  { value: 'arsenal-fc', label: 'Arsenal' },
+  { value: 'liverpool', label: 'Liverpool' },
+  { value: 'arsenal', label: 'Arsenal' },
 ];
 
 export default function DevShowdownPage() {
@@ -69,6 +71,7 @@ export default function DevShowdownPage() {
 
 function DevShowdownContent() {
   const router = useRouter();
+  const preferences = useUserPreferences();
 
   const [matchType, setMatchType] = useState<MatchType>('ranked');
   const [layout, setLayout] = useState<'horizontal' | 'vertical' | 'auto'>('auto');
@@ -88,6 +91,9 @@ function DevShowdownContent() {
   const [oppCountry, setOppCountry] = useState<string>('US');
   const [oppClub, setOppClub] = useState<string | null>('fc-barcelona');
   const [oppForm, setOppForm] = useState<FormResult[]>(['W', 'W', 'D']);
+  const [playerPing, setPlayerPing] = useState(82);
+  const [oppPing, setOppPing] = useState(94);
+  const [opponentKind, setOpponentKind] = useState<'human' | 'ai'>('human');
 
   const playerInfo = useMemo(
     () => ({
@@ -99,8 +105,9 @@ function DevShowdownContent() {
       countryCode: playerCountry,
       favoriteClub: playerClub,
       recentForm: playerForm,
+      pingMs: playerPing,
     }),
-    [playerUsername, playerRp, playerTier, playerCountry, playerClub, playerForm, matchType]
+    [playerUsername, playerRp, playerTier, playerCountry, playerClub, playerForm, playerPing, matchType]
   );
 
   const opponentInfo = useMemo(
@@ -113,8 +120,10 @@ function DevShowdownContent() {
       countryCode: oppCountry,
       favoriteClub: oppClub,
       recentForm: oppForm,
+      pingMs: opponentKind === 'ai' ? null : oppPing,
+      isAi: opponentKind === 'ai',
     }),
-    [oppUsername, oppRp, oppTier, oppCountry, oppClub, oppForm, matchType]
+    [oppUsername, oppRp, oppTier, oppCountry, oppClub, oppForm, oppPing, opponentKind, matchType]
   );
 
   return (
@@ -169,6 +178,27 @@ function DevShowdownContent() {
             default). Override to either to preview both layouts at the
             same viewport.
           </p>
+        </Group>
+
+        <Group label="Ping UI">
+          <Segmented
+            options={['off', 'on'] as const}
+            value={preferences.pingIndicatorEnabled ? 'on' : 'off'}
+            onChange={(value) => setUserPreferences({ pingIndicatorEnabled: value === 'on' })}
+          />
+          <Slider min={15} max={350} step={5} value={playerPing} onChange={setPlayerPing} label="Player ping ms" />
+          <Segmented
+            options={['human', 'ai'] as const}
+            value={opponentKind}
+            onChange={setOpponentKind}
+          />
+          {opponentKind === 'human' ? (
+            <Slider min={15} max={350} step={5} value={oppPing} onChange={setOppPing} label="Opponent ping ms" />
+          ) : (
+            <p className="rounded-md bg-surface-deep px-2 py-1.5 text-[10px] leading-tight text-brand-slate">
+              AI preview uses a ping close to the player ping.
+            </p>
+          )}
         </Group>
 
         <Group label="Player (you)">

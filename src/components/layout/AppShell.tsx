@@ -13,7 +13,7 @@ import { AppShellCurrencyPills } from "./app-shell/AppShellCurrencyPills";
 import { AppShellLobbyDebugBadge } from "./app-shell/AppShellLobbyDebugBadge";
 import { AppShellMobileBottomNav } from "./app-shell/AppShellMobileBottomNav";
 import { AppShellProfileMenu } from "./app-shell/AppShellProfileMenu";
-import { AppShellSocials } from "./app-shell/AppShellSocials";
+import { ConnectionQualitySignal } from "@/components/shared/ConnectionQualitySignal";
 import { RealtimeConnectionBanner } from "@/components/shared/RealtimeConnectionBanner";
 
 export function AppShell({ children }: AppShellProps) {
@@ -54,7 +54,9 @@ export function AppShell({ children }: AppShellProps) {
         <div className="flex min-h-screen min-w-0 flex-col xl:min-h-0">
           {/* DESKTOP TOPBAR (>= xl) */}
           <header className="sticky top-0 z-30 hidden h-16 items-center justify-between bg-background/60 px-6 backdrop-blur-md xl:flex">
-            <AppShellSocials />
+            {/* Socials + Contact moved into the Sidebar (above the World Cup
+                trophy); spacer keeps the right control cluster right-aligned. */}
+            <div aria-hidden />
 
             <div className="flex items-center gap-4">
               {showLobbyDebug && (
@@ -66,6 +68,7 @@ export function AppShell({ children }: AppShellProps) {
                   rankedGeoHintDebug={rankedGeoHintDebug}
                 />
               )}
+              <ConnectionQualitySignal />
               <AppShellCurrencyPills variant="desktop" coins={navbarCoins} tickets={navbarTickets} />
 
               <div className="h-6 w-px bg-border/50" />
@@ -95,7 +98,8 @@ export function AppShell({ children }: AppShellProps) {
                     />
                   </div>
 
-                  <div className="z-10 flex items-center gap-2">
+                  <div className="z-10 flex items-center gap-2 pl-3">
+                    <ConnectionQualitySignal size="xs" />
                     <AppShellCurrencyPills variant="mobile" coins={navbarCoins} tickets={navbarTickets} />
                     <NotificationsDropdown badgeCount={socialBadgeCount} />
                   </div>

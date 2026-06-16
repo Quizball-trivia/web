@@ -33,6 +33,12 @@ import {
 
 const POSSESSION_TOTAL_QUESTIONS_FALLBACK = 12;
 
+function isAiOpponentInfo(opponentInfo: { id?: string; isAiOpponent?: boolean } | null | undefined): boolean {
+  if (!opponentInfo) return false;
+  if (typeof opponentInfo.isAiOpponent === 'boolean') return opponentInfo.isAiOpponent;
+  return typeof opponentInfo.id === 'string' && !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(opponentInfo.id);
+}
+
 export function GameStageRouter() {
   const router = useRouter();
   const { t } = useLocale();
@@ -508,6 +514,7 @@ export function GameStageRouter() {
     const playerRankPoints = isPlaced ? (rankedProfile?.rp ?? player.rankPoints) : undefined;
     const opponentRankPoints = parseRp(oppInfo?.rp);
     const showdownOpponentUsername = oppInfo?.username ?? opponent.username;
+    const opponentIsAi = isAiOpponentInfo(oppInfo);
     const showdownOpponentAvatar = resolveAvatarUrl(
       oppInfo?.avatarUrl ?? opponent.avatar);
     // Extract opponent country from various possible fields
@@ -545,6 +552,8 @@ export function GameStageRouter() {
           flag: oppInfo.flag,
           favoriteClub: oppInfo.favoriteClub ?? null,
           recentForm: oppInfo.recentForm,
+          pingMs: oppInfo.pingMs,
+          isAi: opponentIsAi,
         } : undefined}
       />
     );

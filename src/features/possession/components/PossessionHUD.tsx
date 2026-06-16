@@ -72,7 +72,12 @@ export function PossessionHUD({
       {onQuit && (
         <MatchHudIconButton
           onClick={onQuit}
-          className="absolute right-[calc(env(safe-area-inset-right)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.25rem)] z-[70] sm:right-[calc(env(safe-area-inset-right)+0.5rem)] sm:top-[calc(env(safe-area-inset-top)+0.5rem)] lg:fixed lg:right-[calc(env(safe-area-inset-right)+1rem)] lg:top-[calc(env(safe-area-inset-top)+1rem)]"
+          // Pinned to the screen (fixed) with the SAME top offsets as the mute
+          // button in RealtimePossessionMatchScreen, so the two top-corner HUD
+          // buttons stay vertically aligned on every screen. (Previously this
+          // was `absolute` relative to the vertically-centered HUD row, so it
+          // sat lower than the screen-pinned mute button.)
+          className="fixed right-[calc(env(safe-area-inset-right)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.25rem)] z-[70] sm:right-[calc(env(safe-area-inset-right)+0.5rem)] sm:top-[calc(env(safe-area-inset-top)+0.5rem)] lg:right-[calc(env(safe-area-inset-right)+1rem)] lg:top-[calc(env(safe-area-inset-top)+1rem)]"
           title={t('possession.leaveMatch')}
           aria-label={t('possession.leaveMatch')}
         >

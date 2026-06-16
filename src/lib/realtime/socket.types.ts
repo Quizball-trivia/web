@@ -102,6 +102,8 @@ export interface OpponentInfo {
   username: string;
   avatarUrl: string | null;
   avatarCustomization?: AvatarCustomization | null;
+  isAiOpponent?: boolean;
+  pingMs?: number | null;
   rp?: number;
   country?: string;
   countryCode?: string;

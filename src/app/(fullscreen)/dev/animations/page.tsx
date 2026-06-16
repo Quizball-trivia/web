@@ -21,6 +21,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
 import { RealtimePossessionMatchScreen } from '@/features/possession/RealtimePossessionMatchScreen';
+import { ConnectionQualitySignal } from '@/components/shared/ConnectionQualitySignal';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import type { Socket } from 'socket.io-client';
 import { __setSocketOverride } from '@/lib/realtime/socket-client';
@@ -2719,6 +2720,29 @@ function DevAnimationsContent() {
           <p className="mt-1 text-[9px] text-brand-slate">
             The deciding shot/save animation fully plays, then a WON/LOST +
             final-score overlay appears before the results transition.
+          </p>
+        </Group>
+
+        <Group label="Connection signal (ping pill)">
+          <div className="space-y-2 rounded-lg bg-black/40 p-3">
+            {([
+              { key: 'checking', label: 'checking (no pings yet — match start / no socket)', health: { phase: 'connecting' as const, tier: 'unknown' as const, rttMs: null } },
+              { key: 'good', label: 'good · 1 ms', health: { phase: 'connected' as const, tier: 'good' as const, rttMs: 1 } },
+              { key: 'good-hi', label: 'good · 82 ms', health: { phase: 'connected' as const, tier: 'good' as const, rttMs: 82 } },
+              { key: 'unstable', label: 'unstable · 180 ms', health: { phase: 'connected' as const, tier: 'unstable' as const, rttMs: 180 } },
+              { key: 'bad', label: 'bad · 320 ms', health: { phase: 'connected' as const, tier: 'bad' as const, rttMs: 320 } },
+              { key: 'reconnecting', label: 'reconnecting', health: { phase: 'reconnecting' as const, tier: 'bad' as const, rttMs: null } },
+            ]).map((row) => (
+              <div key={row.key} className="flex items-center gap-3">
+                <ConnectionQualitySignal size="sm" healthOverride={row.health} />
+                <ConnectionQualitySignal size="xs" healthOverride={row.health} />
+                <span className="text-[9px] text-brand-slate">{row.label}</span>
+              </div>
+            ))}
+          </div>
+          <p className="mt-1 text-[9px] text-brand-slate">
+            Each row: sm (desktop) + xs (mobile) at every tier. Previews the
+            in-app ping pill without a live socket.
           </p>
         </Group>
 
