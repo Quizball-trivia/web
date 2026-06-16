@@ -6,7 +6,7 @@ import { Volume2, VolumeX, X } from 'lucide-react';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import type { AnswerStateArray, Phase } from '@/lib/types/game.types';
 import { ArenaScoreSplash } from '@/components/game/ArenaScoreSplash';
-import { AdaptiveAnswerText, AnswerFitGroup, isLongAnswerSet } from '@/components/game/AdaptiveAnswerText';
+import { isLongAnswerSet } from '@/components/game/AdaptiveAnswerText';
 import { QuestionImageCard } from '@/components/game/QuestionImageCard';
 import { MatchHudIconButton } from '@/features/possession/components/MatchHudPrimitives';
 import { MAX_PENALTY_ROUNDS } from '@/features/possession/types/possession.types';
@@ -401,7 +401,6 @@ export function PossessionQuestionPanel({
         } ${showOptions ? 'pointer-events-auto' : 'pointer-events-none'} scroll-mb-4`}
         aria-hidden={!showOptions}
       >
-        <AnswerFitGroup>
         {question.options.map((opt, i) => {
           const buttonState = getButtonState(
             i,
@@ -525,19 +524,24 @@ export function PossessionQuestionPanel({
                 animate={{ opacity: showOptions ? 1 : 0, y: showOptions ? 0 : 6 }}
                 transition={{ duration: 0.25, delay: showOptions ? i * 0.08 : 0, ease: 'easeOut' }}
               >
-                <AdaptiveAnswerText
-                  stacked={stackedAnswers}
-                  gridMaxFontSize={hasQuestionImage ? 20 : 26}
-                  gridMinFontSize={hasQuestionImage ? 9 : 10}
-                  stackedFontSize={16}
+                {/* Uniform fixed font for every option (no per-answer
+                    auto-fit) — short and long answers render at the same size;
+                    long ones simply wrap. Replaces the adaptive measurer that
+                    made answers different sizes / too big. */}
+                <span
+                  className="block w-full text-center leading-[1.15] [overflow-wrap:anywhere]"
+                  style={{
+                    fontSize: hasQuestionImage
+                      ? 'clamp(13px, 3.4vw, 18px)'
+                      : 'clamp(14px, 3.8vw, 20px)',
+                  }}
                 >
                   {opt}
-                </AdaptiveAnswerText>
+                </span>
               </motion.span>
             </motion.button>
           );
         })}
-        </AnswerFitGroup>
       </div>
     </div>
   );
