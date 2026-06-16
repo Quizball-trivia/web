@@ -17,7 +17,7 @@
  */
 
 import { useState } from 'react';
-import { AdaptiveAnswerText, AnswerFitGroup, isLongAnswerSet } from '@/components/game/AdaptiveAnswerText';
+import { isLongAnswerSet } from '@/components/game/AdaptiveAnswerText';
 
 const poppins = {
   fontFamily: "'Poppins', sans-serif",
@@ -26,6 +26,14 @@ const poppins = {
 } as const;
 
 const SHORT = ['ხორვატია', 'ნიდერლანდები', 'საფრანგეთი', 'ავსტრალია'];
+// Medium: a few words each, still under the long-answer stack threshold so it
+// stays a 2×2 grid (the common multi-word case).
+const MEDIUM = [
+  'მანჩესტერ იუნაიტედი',
+  'რეალ მადრიდი',
+  'ბორუსია დორტმუნდი',
+  'პარი სენ-ჟერმენი',
+];
 const LONG = [
   'არგენტინამ მოიგო ფინალი პენალტების სერიაში საფრანგეთთან',
   'საფრანგეთი',
@@ -34,43 +42,17 @@ const LONG = [
 ];
 
 type SizePreset = {
-  key: string;
-  label: string;
   /** Card min-height classes for the 2×2 grid (non-image). */
   gridMinH: string;
   /** Inner text padding. */
   pad: string;
-  /** AdaptiveAnswerText grid font range. */
-  gridMaxFontSize: number;
-  gridMinFontSize: number;
 };
 
-const PRESETS: SizePreset[] = [
-  {
-    key: 'old',
-    label: 'OLD (pre-Variant-C)',
-    gridMinH: 'h-[68px] sm:h-[86px] md:h-[100px] lg:h-[120px]',
-    pad: 'px-3 py-2 sm:px-4 sm:py-2.5',
-    gridMaxFontSize: 26,
-    gridMinFontSize: 10,
-  },
-  {
-    key: 'current',
-    label: 'CURRENT (ships today — too big)',
-    gridMinH: 'min-h-[88px] sm:min-h-[104px] md:min-h-[116px] lg:min-h-[136px]',
-    pad: 'px-5 py-4',
-    gridMaxFontSize: 28,
-    gridMinFontSize: 11,
-  },
-  {
-    key: 'proposed',
-    label: 'PROPOSED (old size + keep adaptive stack)',
-    gridMinH: 'min-h-[68px] sm:min-h-[86px] md:min-h-[100px] lg:min-h-[120px]',
-    pad: 'px-3.5 py-2.5 sm:px-4 sm:py-3',
-    gridMaxFontSize: 26,
-    gridMinFontSize: 10,
-  },
-];
+// The shipping MCQ card chrome (mirrors PossessionQuestionPanel).
+const CURRENT_PRESET: SizePreset = {
+  gridMinH: 'min-h-[68px] sm:min-h-[86px] md:min-h-[100px] lg:min-h-[120px]',
+  pad: 'px-3.5 py-2.5 sm:px-4 sm:py-3',
+};
 
 function CardGrid({ options, preset }: { options: string[]; preset: SizePreset }) {
   const stacked = isLongAnswerSet(options);
@@ -78,7 +60,6 @@ function CardGrid({ options, preset }: { options: string[]; preset: SizePreset }
     <div
       className={`mt-2.5 gap-2.5 ${stacked ? 'flex flex-col' : 'grid grid-cols-2 items-stretch'}`}
     >
-      <AnswerFitGroup>
       {options.map((opt, i) => (
         <button
           key={i}
@@ -100,18 +81,17 @@ function CardGrid({ options, preset }: { options: string[]; preset: SizePreset }
               stacked ? '' : 'h-full overflow-hidden'
             }`}
           >
-            <AdaptiveAnswerText
-              stacked={stacked}
-              gridMaxFontSize={preset.gridMaxFontSize}
-              gridMinFontSize={preset.gridMinFontSize}
-              stackedFontSize={16}
+            {/* Fixed uniform font for every option (matches the shipping
+                PossessionQuestionPanel) — no per-answer auto-fit. */}
+            <span
+              className="block w-full text-center leading-[1.15] [overflow-wrap:anywhere]"
+              style={{ fontSize: 'clamp(14px, 3.8vw, 20px)' }}
             >
               {opt}
-            </AdaptiveAnswerText>
+            </span>
           </span>
         </button>
       ))}
-      </AnswerFitGroup>
     </div>
   );
 }
@@ -129,15 +109,15 @@ export default function DevQuestionsPage() {
 }
 
 function DevQuestionsContent() {
-  const [answerSet, setAnswerSet] = useState<'short' | 'long'>('short');
-  const options = answerSet === 'short' ? SHORT : LONG;
+  const [answerSet, setAnswerSet] = useState<'short' | 'medium' | 'long'>('short');
+  const options = answerSet === 'short' ? SHORT : answerSet === 'medium' ? MEDIUM : LONG;
 
   return (
     <div className="min-h-dvh bg-surface-page px-4 py-6 text-white">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-md">
         <div className="mb-4 flex items-center justify-between gap-3">
           <h1 className="font-poppins text-lg font-black uppercase tracking-wide">
-            MCQ card size comparison
+            MCQ answer cards
           </h1>
           <div className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 p-1">
             <button
@@ -151,6 +131,15 @@ function DevQuestionsContent() {
             </button>
             <button
               type="button"
+              onClick={() => setAnswerSet('medium')}
+              className={`rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] transition ${
+                answerSet === 'medium' ? 'bg-brand-yellow text-black' : 'text-white/60 hover:text-white'
+              }`}
+            >
+              Medium
+            </button>
+            <button
+              type="button"
               onClick={() => setAnswerSet('long')}
               className={`rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] transition ${
                 answerSet === 'long' ? 'bg-brand-orange text-white' : 'text-white/60 hover:text-white'
@@ -161,19 +150,12 @@ function DevQuestionsContent() {
           </div>
         </div>
         <p className="mb-6 text-sm text-white/60">
-          Same card markup, three size presets. View at mobile width (~390px) to judge. Short =
-          2×2 grid; Long = auto-stacks (the adaptive behavior we keep).
+          The shipping MCQ answer cards (uniform fixed font). View at mobile
+          width (~390px) to judge. Short / Medium = 2×2 grid; Long = auto-stacks.
         </p>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {PRESETS.map((preset) => (
-            <div key={preset.key} className="rounded-2xl border border-white/10 bg-black/20 p-4">
-              <div className="mb-3 text-[11px] font-black uppercase tracking-[0.16em] text-brand-yellow">
-                {preset.label}
-              </div>
-              <CardGrid options={options} preset={preset} />
-            </div>
-          ))}
+        <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+          <CardGrid options={options} preset={CURRENT_PRESET} />
         </div>
       </div>
     </div>
