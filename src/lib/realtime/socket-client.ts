@@ -16,6 +16,8 @@ import type { ClientToServerEvents, ServerToClientEvents } from './socket.types'
 
 let lastDisconnectAtMs: number | null = null;
 let connectionPingIntervalId: ReturnType<typeof setInterval> | null = null;
+let connectionPingMonitorRunId = 0;
+const pendingPingTimeoutIds = new Set<ReturnType<typeof setTimeout>>();
 
 let socketInstance: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
 let socketOverride: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
@@ -323,23 +325,32 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
 
 export function startConnectionQualityMonitor(): void {
   if (connectionPingIntervalId !== null) return;
+  const runId = ++connectionPingMonitorRunId;
 
   const sample = () => {
     const socket = getSocket();
     if (!socket.connected) return;
 
     const sentAt = Date.now();
+    const socketIdAtSend = socket.id ?? null;
     let settled = false;
     const timeoutId = setTimeout(() => {
       if (settled) return;
       settled = true;
+      pendingPingTimeoutIds.delete(timeoutId);
+      if (runId !== connectionPingMonitorRunId) return;
+      if (!socket.connected || (socket.id ?? null) !== socketIdAtSend) return;
       markRealtimePingMissed();
     }, CONNECTION_PING_TIMEOUT_MS);
+    pendingPingTimeoutIds.add(timeoutId);
 
     socket.emit('connection:ping', { sentAt }, () => {
       if (settled) return;
       settled = true;
       clearTimeout(timeoutId);
+      pendingPingTimeoutIds.delete(timeoutId);
+      if (runId !== connectionPingMonitorRunId) return;
+      if (!socket.connected || (socket.id ?? null) !== socketIdAtSend) return;
       recordRealtimeRtt(Date.now() - sentAt);
     });
   };
@@ -352,6 +363,9 @@ export function stopConnectionQualityMonitor(): void {
   if (connectionPingIntervalId === null) return;
   clearInterval(connectionPingIntervalId);
   connectionPingIntervalId = null;
+  connectionPingMonitorRunId += 1;
+  pendingPingTimeoutIds.forEach((timeoutId) => clearTimeout(timeoutId));
+  pendingPingTimeoutIds.clear();
 }
 
 /** Override the socket singleton (used by test/mock pages to inject a fake socket). */

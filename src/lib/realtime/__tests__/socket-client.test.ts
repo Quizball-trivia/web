@@ -34,6 +34,7 @@ type FakeSocket = {
   auth?: unknown;
   connect: ReturnType<typeof vi.fn>;
   disconnect: ReturnType<typeof vi.fn>;
+  emit: ReturnType<typeof vi.fn>;
   on: ReturnType<typeof vi.fn>;
   io: { on: ReturnType<typeof vi.fn> };
 };
@@ -52,6 +53,7 @@ function createFakeSocket(): { socket: FakeSocket; handlers: Map<string, (...arg
     active: false,
     connect: vi.fn(),
     disconnect: vi.fn(),
+    emit: vi.fn(),
     on: vi.fn((event: string, handler: (...args: unknown[]) => void) => {
       handlers.set(event, handler);
       return socket;
@@ -151,14 +153,14 @@ describe('socket-client auth/reconnect reliability', () => {
 
     const { socket, mod } = await setup();
 
-    // Disconnected + idle → nudge connects.
+    // Disconnected + idle -> nudge connects.
     socket.connected = false;
     socket.active = false;
     mod.nudgeSocketReconnectAfterTokenRefresh();
     await vi.runAllTimersAsync();
     expect(socket.connect).toHaveBeenCalledTimes(1);
 
-    // Already reconnecting (active) → no extra connect.
+    // Already reconnecting (active) -> no extra connect.
     socket.active = true;
     mod.nudgeSocketReconnectAfterTokenRefresh();
     await vi.runAllTimersAsync();
@@ -171,5 +173,52 @@ describe('socket-client auth/reconnect reliability', () => {
     const mod = await import('../socket-client');
     mod.nudgeSocketReconnectAfterTokenRefresh();
     expect(ioMock).not.toHaveBeenCalled();
+  });
+
+  it('connection quality monitor ignores in-flight ping acknowledgements after stop', async () => {
+    const { socket, mod } = await setup();
+    const health = await import('../connection-health');
+    let pingAck: (() => void) | undefined;
+    socket.connected = true;
+    socket.id = 'socket-1';
+    socket.emit.mockImplementation((_eventName: string, _payload: unknown, ack?: () => void) => {
+      pingAck = ack;
+    });
+    health.__resetRealtimeConnectionHealthForTests();
+    health.markRealtimeConnected();
+
+    mod.startConnectionQualityMonitor();
+    mod.stopConnectionQualityMonitor();
+    pingAck?.();
+    await vi.advanceTimersByTimeAsync(2500);
+
+    expect(health.getRealtimeConnectionHealth()).toMatchObject({
+      sampleCount: 0,
+      missedPongs: 0,
+    });
+  });
+
+  it('connection quality monitor ignores stale callbacks after socket id changes', async () => {
+    const { socket, mod } = await setup();
+    const health = await import('../connection-health');
+    let pingAck: (() => void) | undefined;
+    socket.connected = true;
+    socket.id = 'socket-1';
+    socket.emit.mockImplementation((_eventName: string, _payload: unknown, ack?: () => void) => {
+      pingAck = ack;
+    });
+    health.__resetRealtimeConnectionHealthForTests();
+    health.markRealtimeConnected();
+
+    mod.startConnectionQualityMonitor();
+    socket.id = 'socket-2';
+    pingAck?.();
+    await vi.advanceTimersByTimeAsync(2500);
+    mod.stopConnectionQualityMonitor();
+
+    expect(health.getRealtimeConnectionHealth()).toMatchObject({
+      sampleCount: 0,
+      missedPongs: 0,
+    });
   });
 });

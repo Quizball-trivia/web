@@ -24,16 +24,15 @@ export function useMatchStagePresence({
     if (!enabled || !matchId || !stageKey) return;
 
     let stopped = false;
+    const socket = getSocket();
     const payload = { matchId, stageKey };
     const emitHeartbeat = () => {
       if (stopped || !shouldEmit()) return;
-      const socket = getSocket();
       if (!socket.connected) return;
       socket.emit('match:presence_heartbeat', payload);
     };
     const emitReady = () => {
       if (stopped || !shouldEmit()) return;
-      const socket = getSocket();
       if (!socket.connected) return;
       socket.emit('match:stage_ready', payload);
     };
@@ -41,6 +40,11 @@ export function useMatchStagePresence({
     const readyTimer = window.setTimeout(emitReady, 0);
     emitHeartbeat();
     const heartbeatTimer = window.setInterval(emitHeartbeat, HEARTBEAT_INTERVAL_MS);
+    const handleConnect = () => {
+      emitHeartbeat();
+      emitReady();
+    };
+    socket.on('connect', handleConnect);
 
     const handleVisibilityChange = () => {
       if (shouldEmit()) {
@@ -54,6 +58,7 @@ export function useMatchStagePresence({
       stopped = true;
       window.clearTimeout(readyTimer);
       window.clearInterval(heartbeatTimer);
+      socket.off('connect', handleConnect);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [enabled, matchId, stageKey]);

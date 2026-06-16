@@ -18,8 +18,9 @@ export function RealtimeConnectionBanner({ className }: RealtimeConnectionBanner
 
   useEffect(() => {
     if (!health.recoveredUntilMs) return;
-    const id = window.setInterval(() => setNowMs(Date.now()), 250);
-    return () => window.clearInterval(id);
+    const remainingMs = health.recoveredUntilMs - Date.now();
+    const id = window.setTimeout(() => setNowMs(Date.now()), Math.max(0, remainingMs));
+    return () => window.clearTimeout(id);
   }, [health.recoveredUntilMs]);
 
   const showReconnecting = health.phase === 'reconnecting' || health.phase === 'disconnected' || health.phase === 'error';
