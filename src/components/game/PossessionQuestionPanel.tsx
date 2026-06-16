@@ -159,27 +159,15 @@ export function PossessionQuestionPanel({
 }: PossessionQuestionPanelProps) {
   const { t } = useLocale();
 
-  // Image MCQs push the options below the fold on mobile (the image eats
-  // vertical space). Scroll the answer grid into view as soon as the image
-  // question renders so the options are visible without manual scrolling. The
-  // grid is always mounted (empty slots during the read phase), so we don't
-  // wait for showOptions. Mobile only — desktop's split layout already fits.
+  // On small screens the pitch + header push the 4 answer options below the
+  // fold, so the player has to scroll to see them all. When a question's
+  // options appear, auto-scroll the answer grid fully into view (its
+  // scroll-mb-* keeps clearance below the last row). Fires once per question,
+  // for every question kind (image or text). Mobile only — desktop's split
+  // layout already fits both pitch and options.
   const optionsRef = useRef<HTMLDivElement | null>(null);
-  const hasImage = Boolean(question?.image?.url);
   const questionId = question?.id ?? null;
   const autoScrolledQuestionRef = useRef<string | null>(null);
-  useEffect(() => {
-    if (!hasImage) return;
-    const grid = optionsRef.current;
-    if (!grid || grid.offsetParent === null) return; // hidden (e.g. desktop split layout)
-    if (typeof window !== 'undefined' && window.innerWidth >= 1024) return; // lg+: panel fits
-    // Wait a frame so the image + prompt have laid out before measuring.
-    const raf = requestAnimationFrame(() => {
-      grid.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [hasImage, questionId]);
-
   useEffect(() => {
     if (!showOptions || !questionId) return;
     if (autoScrolledQuestionRef.current === questionId) return;
@@ -188,16 +176,19 @@ export function PossessionQuestionPanel({
     if (!grid || grid.offsetParent === null) return; // hidden (e.g. desktop split layout)
     if (typeof window !== 'undefined' && window.innerWidth >= 1024) return; // lg+: panel fits
 
-    const raf = requestAnimationFrame(() => {
-      const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-      const gridRect = grid.getBoundingClientRect();
-      if (gridRect.bottom <= viewportHeight - 12) return;
-
-      autoScrolledQuestionRef.current = questionId;
-      grid.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
+    autoScrolledQuestionRef.current = questionId;
+    // Two RAFs so the option cards (which fade/translate in on showOptions) have
+    // finished their entry layout before we measure + scroll.
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        optionsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
+      });
     });
-
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+    };
   }, [questionId, showOptions]);
 
   if (phase === 'goal') return null;
@@ -398,7 +389,7 @@ export function PossessionQuestionPanel({
         data-mcq-options-grid="true"
         className={`mt-2.5 gap-2.5 ${
           stackedAnswers ? 'flex flex-col' : 'grid grid-cols-2 items-stretch'
-        } ${showOptions ? 'pointer-events-auto' : 'pointer-events-none'} scroll-mb-4`}
+        } ${showOptions ? 'pointer-events-auto' : 'pointer-events-none'} scroll-mb-[calc(env(safe-area-inset-bottom)+1.5rem)]`}
         aria-hidden={!showOptions}
       >
         {question.options.map((opt, i) => {
