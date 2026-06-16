@@ -52,6 +52,7 @@ export function LiveCluesPanel({
   roundResult,
   myRound,
   opponentRound,
+  opponentAnswered = false,
   cluesGuessAck,
 }: {
   matchId: string;
@@ -65,6 +66,8 @@ export function LiveCluesPanel({
   roundResult: MatchRoundResultPayload | null;
   myRound: MatchRoundResultPlayer | null;
   opponentRound: MatchRoundResultPlayer | null;
+  /** Opponent has locked in their guess for this live round (pre-resolve). */
+  opponentAnswered?: boolean;
   cluesGuessAck: MatchCluesGuessAckPayload | null;
 }) {
   const { t } = useLocale();
@@ -120,7 +123,9 @@ export function LiveCluesPanel({
     ? t('possession.cluesGuessedAtClue', { index: opponentRound.clueIndex + 1 })
     : roundResolved
       ? t('possession.cluesNoCorrectAnswer')
-      : t('possession.cluesResultPending');
+      : opponentAnswered
+        ? t('possession.opponentLockedIn')
+        : t('possession.opponentThinking');
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -233,7 +238,9 @@ export function LiveCluesPanel({
           count: opponentAnswerCount,
           total: 1,
           points: cluesOpponentPoints,
-          badge: roundResolved ? (opponentRound?.isCorrect ? t('possession.correct') : t('possession.wrong')) : t('possession.waiting'),
+          badge: roundResolved
+            ? (opponentRound?.isCorrect ? t('possession.correct') : t('possession.wrong'))
+            : (opponentAnswered ? t('possession.opponentLockedIn') : t('possession.opponentThinking')),
           status: roundResolved ? (opponentRound?.isCorrect ? 'positive' : 'negative') : 'pending',
           detail: cluesOpponentDetail,
         }}
@@ -263,7 +270,7 @@ export function LiveCluesPanel({
               }`}>
                 {cluesPlayerCorrect ? t('possession.correctAnswerLabel') : t('possession.theAnswerWas')}
               </p>
-              <p className="truncate text-sm font-fun font-black uppercase tracking-wide text-white">
+              <p className="text-sm font-fun font-black uppercase tracking-wide text-white [overflow-wrap:anywhere]">
                 {displayAnswer}
               </p>
             </div>
@@ -359,6 +366,71 @@ export function LiveCluesPanel({
             );
           })}
         </div>
+      )}
+
+      {/* Live opponent indicator — two treatments:
+          • PRE-submit: a small unobtrusive hint while the player is still typing.
+          • POST-submit: a prominent green banner — once the player has locked in
+            their own answer there's nothing left to do but wait, so the
+            opponent's status becomes the primary thing on screen (replaces the
+            old tiny grey "result processing" line). Pulsing while they think,
+            a check once they answer. */}
+      {!roundResolved && showOptions && !submitted && (
+        <div
+          aria-live="polite"
+          className={`flex items-center justify-center gap-2 rounded-[12px] px-3 py-2 ${
+            opponentAnswered
+              ? 'bg-brand-green/10 text-brand-green'
+              : 'bg-white/[0.04] text-white/55'
+          }`}
+        >
+          {opponentAnswered ? (
+            <CheckCircle2 className="size-4 shrink-0" />
+          ) : (
+            <span className="flex items-center gap-1" aria-hidden="true">
+              {[0, 1, 2].map((i) => (
+                <motion.span
+                  key={i}
+                  className="block size-1.5 rounded-full bg-current"
+                  animate={{ opacity: [0.25, 1, 0.25] }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut', delay: i * 0.18 }}
+                />
+              ))}
+            </span>
+          )}
+          <span className="text-[11px] font-fun font-black uppercase tracking-[0.14em]">
+            {opponentAnswered ? t('possession.opponentLockedIn') : t('possession.opponentThinking')}
+          </span>
+        </div>
+      )}
+
+      {!roundResolved && submitted && (
+        <motion.div
+          key={opponentAnswered ? 'opp-answered' : 'opp-thinking'}
+          aria-live="polite"
+          initial={{ opacity: 0, y: 8, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
+          className="flex items-center justify-center gap-3 rounded-[16px] border border-brand-green/30 bg-brand-green/10 px-4 py-3.5 text-brand-green"
+        >
+          {opponentAnswered ? (
+            <CheckCircle2 className="size-6 shrink-0" />
+          ) : (
+            <span className="flex items-center gap-1.5" aria-hidden="true">
+              {[0, 1, 2].map((i) => (
+                <motion.span
+                  key={i}
+                  className="block size-2.5 rounded-full bg-current"
+                  animate={{ opacity: [0.3, 1, 0.3], y: [0, -3, 0] }}
+                  transition={{ duration: 0.9, repeat: Infinity, ease: 'easeInOut', delay: i * 0.16 }}
+                />
+              ))}
+            </span>
+          )}
+          <span className="font-fun font-black uppercase tracking-[0.1em] text-base sm:text-lg">
+            {opponentAnswered ? t('possession.opponentLockedIn') : t('possession.opponentThinking')}
+          </span>
+        </motion.div>
       )}
 
       {!roundResolved && (

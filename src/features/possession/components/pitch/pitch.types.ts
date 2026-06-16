@@ -78,6 +78,15 @@ export interface PitchVisualizationProps {
   disableShotActorResultMotion?: boolean;
   /** Hide the pitch-owned ball while a full-screen celebration owns the visible ball. */
   hideBall?: boolean;
+  /** Show a "?" thinking badge above the opponent character (live round, opponent
+   *  has not answered yet). Cleared once they answer. */
+  opponentThinking?: boolean;
+  /** Opponent just answered incorrectly this live round — plays the "+0 kicks the
+   *  ? and both drop away" animation on the opponent character. */
+  opponentAnsweredWrong?: boolean;
+  /** Opponent just answered correctly this live round — the incoming "+N" flight
+   *  knocks the "?" off (then continues to the bars). */
+  opponentAnsweredCorrect?: boolean;
   /** Optional stable SVG id prefix. Caller must keep it unique on a page. */
   svgIdPrefix?: string;
 }

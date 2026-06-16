@@ -49,6 +49,10 @@ export interface LiveSpecialQuestionPanelProps {
   roundResult: MatchRoundResultPayload | null;
   myRound: MatchRoundResultPlayer | null;
   opponentRound: MatchRoundResultPlayer | null;
+  /** True once the opponent has submitted their answer for the live round but
+   *  before the round resolves — drives the "opponent is answering / answered"
+   *  indicator on the special panels. */
+  opponentAnswered?: boolean;
   countdownGuessAck: MatchCountdownGuessAckPayload | null;
   cluesGuessAck: MatchCluesGuessAckPayload | null;
 }

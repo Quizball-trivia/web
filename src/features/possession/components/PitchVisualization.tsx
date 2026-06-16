@@ -340,6 +340,9 @@ export function PitchVisualization(props: PitchVisualizationProps) {
             htmlActorResultActive={htmlActorResultActive}
             playerHtmlIsShooter={playerHtmlIsShooter}
             opponentHtmlIsShooter={opponentHtmlIsShooter}
+            opponentThinking={props.opponentThinking ?? false}
+            opponentAnsweredWrong={props.opponentAnsweredWrong ?? false}
+            opponentAnsweredCorrect={props.opponentAnsweredCorrect ?? false}
           />
         )}
         </motion.div>
