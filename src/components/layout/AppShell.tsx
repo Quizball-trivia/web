@@ -88,8 +88,10 @@ export function AppShell({ children }: AppShellProps) {
           {showHeader && (
             <div className="xl:hidden">
               <div className="px-4 pb-5 pt-6">
-                <div className="relative mb-3 flex items-center justify-between">
-                  <div className="z-10 flex items-center gap-2">
+                <div className="relative mb-3 flex items-center justify-between gap-2">
+                  {/* min-w-0 lets a long username truncate rather than push the
+                      right cluster (incl. the bell) off-screen on narrow phones. */}
+                  <div className="z-10 flex min-w-0 items-center gap-2">
                     <AppShellProfileMenu
                       variant="mobile"
                       playerStats={playerStats}
@@ -98,8 +100,10 @@ export function AppShell({ children }: AppShellProps) {
                     />
                   </div>
 
-                  <div className="z-10 flex items-center gap-2 pl-3">
-                    <ConnectionQualitySignal size="xs" />
+                  {/* No ping pill on mobile — it crowded the row / pushed the
+                      card down. It stays on desktop and in-match. shrink-0 keeps
+                      coins/tickets/bell intact. */}
+                  <div className="z-10 flex shrink-0 items-center gap-2">
                     <AppShellCurrencyPills variant="mobile" coins={navbarCoins} tickets={navbarTickets} />
                     <NotificationsDropdown badgeCount={socialBadgeCount} />
                   </div>

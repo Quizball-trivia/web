@@ -110,7 +110,11 @@ function BanCategoryCardComponent({
         }
       }}
       className={cn(
-        'group relative aspect-[3/4] sm:aspect-[4/5] w-full overflow-hidden rounded-xl md:rounded-2xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60',
+        // @container: the title sizes to THIS card's width (cqw), not the
+        // viewport. With 3 cards across on a narrow draft screen each card is
+        // ~1/3 the width, so vw-based sizing rendered the font too big and long
+        // KA names wrapped/clipped mid-word. cqw shrinks per-card so they fit.
+        '@container group relative aspect-[3/4] sm:aspect-[4/5] w-full overflow-hidden rounded-xl md:rounded-2xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60',
         interactive && 'cursor-pointer active:translate-y-[2px]',
         !interactive && 'cursor-default',
         fadedOut && 'opacity-30 pointer-events-none',
@@ -161,10 +165,11 @@ function BanCategoryCardComponent({
       <div className="relative z-10 flex h-full flex-col justify-center items-center p-3 sm:p-4">
         <h3
           className={cn(
-            // Floor is kept small so long Georgian names (≈50% longer than the
-            // English equivalents, up to ~40 chars) shrink to fit on narrow
-            // mobile cards instead of overflowing/clipping.
-            'text-[clamp(0.5rem,2.9vw,1.25rem)] uppercase leading-tight text-balance text-center w-full [overflow-wrap:break-word] [word-break:break-word] [hyphens:auto]',
+            // Font sizes to the CARD width (cqw), so long Georgian names shrink
+            // to fit on narrow draft cards instead of clipping. Break only
+            // between words (overflow-wrap), never mid-word (word-break: normal),
+            // so a name like "გერმანია" never gets cut as "გერმანი…".
+            'text-[clamp(0.5rem,8cqw,1.25rem)] uppercase leading-tight text-balance text-center w-full [overflow-wrap:anywhere] [word-break:normal]',
             isBanned && 'grayscale opacity-70'
           )}
           style={{
@@ -174,7 +179,7 @@ function BanCategoryCardComponent({
             color: isBanned ? '#E3E9EC' : (hasImage ? '#ffffff' : color.text),
             textShadow: hasImage ? '0 2px 8px rgba(0,0,0,0.75), 0 0 4px rgba(0,0,0,0.6)' : 'none',
             display: '-webkit-box',
-            WebkitLineClamp: 4,
+            WebkitLineClamp: 5,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
           }}
