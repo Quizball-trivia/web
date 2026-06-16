@@ -81,6 +81,9 @@ export function RealtimePartyQuizScreen({
     : waitingTotalCount > 2
       ? t('partyResults.waitingForPlayers')
       : t('partyResults.waitingForOpponent');
+  const waitingDetailLabel = waitingForReady?.phase === 'resume'
+    ? t('partyResults.resumesAfterReady')
+    : t('partyResults.startsAfterReady');
 
   // ---------------------------------------------------------------------------
   // Pre-match / loading
@@ -94,9 +97,7 @@ export function RealtimePartyQuizScreen({
           <MatchWaitingForReadyOverlay
             title={waitingTitle}
             readyLabel={waitingReadyLabel}
-            startingLabel={t('partyResults.startingSoon')}
-            forceStartsAtMs={waitingForReady.forceStartsAtMs}
-            serverTimeOffsetMs={waitingForReady.serverTimeOffsetMs}
+            detailLabel={waitingDetailLabel}
           />
         ) : state.startCountdownActive ? (
           <MatchCountdownPuck

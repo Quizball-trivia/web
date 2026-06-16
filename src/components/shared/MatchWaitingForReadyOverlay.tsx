@@ -1,37 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { LoaderCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
-import { MatchCountdownPuck } from './MatchCountdownPuck';
 
 interface MatchWaitingForReadyOverlayProps {
   title: string;
   readyLabel: string;
-  startingLabel: string;
-  forceStartsAtMs: number;
-  serverTimeOffsetMs?: number | null;
+  detailLabel: string;
   className?: string;
 }
 
 export function MatchWaitingForReadyOverlay({
   title,
   readyLabel,
-  startingLabel,
-  forceStartsAtMs,
-  serverTimeOffsetMs = null,
+  detailLabel,
   className,
 }: MatchWaitingForReadyOverlayProps) {
-  const [nowMs, setNowMs] = useState(() => Date.now());
-
-  useEffect(() => {
-    const intervalId = window.setInterval(() => setNowMs(Date.now()), 250);
-    return () => window.clearInterval(intervalId);
-  }, []);
-
-  const serverNowMs = nowMs + (serverTimeOffsetMs ?? 0);
-  const seconds = Math.max(1, Math.ceil((forceStartsAtMs - serverNowMs) / 1000));
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -49,20 +34,24 @@ export function MatchWaitingForReadyOverlay({
         animate={{ y: 0, scale: 1, opacity: 1 }}
         exit={{ y: 12, scale: 0.98, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 280, damping: 25 }}
-        className="relative flex w-full max-w-sm flex-col items-center rounded-[20px] bg-brand-blue px-6 py-7 text-center shadow-2xl"
+        className="relative flex w-full max-w-sm flex-col items-center overflow-hidden rounded-[20px] bg-brand-blue px-6 py-7 text-center shadow-2xl sm:px-7"
       >
+        <div className="absolute inset-x-0 top-0 h-1 bg-brand-cyan" />
         <div className="font-poppins text-[11px] font-semibold uppercase leading-tight tracking-[0.2em] text-brand-yellow">
           {readyLabel}
         </div>
-        <div className="mt-2 text-balance font-poppins text-2xl font-semibold uppercase leading-tight text-white">
+        <div className="mt-2 max-w-[18rem] text-balance font-poppins text-2xl font-semibold uppercase leading-tight text-white sm:text-[1.65rem]">
           {title}
         </div>
-        <div className="mt-5">
-          <MatchCountdownPuck
-            label={startingLabel}
-            seconds={seconds}
-            size="sm"
+        <div className="mt-5 flex size-20 items-center justify-center rounded-full border border-white/15 bg-white/8 shadow-[0_0_48px_rgba(28,176,246,0.35)]">
+          <LoaderCircle
+            data-testid="match-ready-spinner"
+            className="size-10 animate-spin text-brand-cyan"
+            aria-hidden="true"
           />
+        </div>
+        <div className="mt-4 max-w-[17rem] text-balance font-poppins text-sm font-semibold leading-snug text-white/75">
+          {detailLabel}
         </div>
       </motion.div>
     </motion.div>

@@ -47,6 +47,9 @@ export function PartyQuizOverlays({
     : waitingTotalCount > 2
       ? t('partyResults.waitingForPlayers')
       : t('partyResults.waitingForOpponent');
+  const waitingDetailLabel = waitingForReady?.phase === 'resume'
+    ? t('partyResults.resumesAfterReady')
+    : t('partyResults.startsAfterReady');
   // i18n subtitle keyed off the reason — the server's payload.message is
   // English-only, so rendering it raw leaked English onto the KA client.
   const forfeitPendingSubtitle =
@@ -62,9 +65,7 @@ export function PartyQuizOverlays({
             key="party-waiting-for-ready"
             title={waitingTitle}
             readyLabel={waitingReadyLabel}
-            startingLabel={t('partyResults.startingSoon')}
-            forceStartsAtMs={waitingForReady.forceStartsAtMs}
-            serverTimeOffsetMs={waitingForReady.serverTimeOffsetMs}
+            detailLabel={waitingDetailLabel}
             className="absolute inset-0 z-40 min-h-full"
           />
         )}
