@@ -44,6 +44,12 @@ export function PartyQuizOverlays({
   const waitingTitle = waitingForReady?.totalCount && waitingForReady.totalCount > 2
     ? t('partyResults.waitingForPlayers')
     : t('partyResults.waitingForOpponent');
+  // i18n subtitle keyed off the reason — the server's payload.message is
+  // English-only, so rendering it raw leaked English onto the KA client.
+  const forfeitPendingSubtitle =
+    forfeitPending?.reason === 'opponent_forfeit' || forfeitPending?.reason === 'opponent_reconnect_limit'
+      ? t('forfeit.youWinByForfeit')
+      : t('forfeit.youLostMatch');
 
   return (
     <>
@@ -104,7 +110,7 @@ export function PartyQuizOverlays({
                 {t('possession.finalizingMatch')}
               </div>
               <div className="mt-2 font-poppins text-xl font-semibold uppercase text-white">{forfeitPendingTitle}</div>
-              <div className="mt-1 font-poppins text-sm font-semibold text-white/70">{forfeitPending.message}</div>
+              <div className="mt-1 font-poppins text-sm font-semibold text-white/70">{forfeitPendingSubtitle}</div>
             </motion.div>
           </motion.div>
         )}

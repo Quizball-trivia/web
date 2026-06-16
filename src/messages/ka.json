@@ -1343,6 +1343,7 @@
     "opponentDidNotReconnect": "მოწინააღმდეგე აღარ შემოვიდა",
     "matchForfeited": "მატჩი შეწყდა",
     "youLostMatch": "შენ წააგე მატჩი",
+    "youWinByForfeit": "შენ იგებ — მოწინააღმდეგემ დატოვა",
     "reconnectsLeftOne": "დარჩა {n} ხელახალი დაკავშირება.",
     "reconnectsLeftOther": "დარჩა {n} ხელახალი დაკავშირება.",
     "lastReconnect": "ეს მათი ბოლო ხელახალი დაკავშირებაა.",
