@@ -630,7 +630,11 @@ export function useRealtimePossessionMatchController({
         // opponent hasn't answered. On answer the incoming score-flight knocks
         // the badge (PitchHtmlActors): a wrong "+0" kicks it and both drop; a
         // correct "+N" detours through it (kick) then continues to the bars.
-        opponentThinking: !state.roundResolved && !state.opponentAnswered,
+        // Keep it visible while correctness is still unknown (opponentAnswered
+        // can flip true via match:opponent_answered before isCorrect arrives) —
+        // otherwise the badge briefly unmounts, then the kick variant remounts
+        // from scratch once correctness lands.
+        opponentThinking: !state.roundResolved && (!state.opponentAnswered || opponentAnsweredCorrectly === null),
         opponentAnsweredWrong: !state.roundResolved && state.opponentAnswered && opponentAnsweredCorrectly === false,
         opponentAnsweredCorrect: !state.roundResolved && state.opponentAnswered && opponentAnsweredCorrectly === true,
       },
