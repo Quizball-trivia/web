@@ -351,7 +351,11 @@ export function startConnectionQualityMonitor(): void {
       pendingPingTimeoutIds.delete(timeoutId);
       if (runId !== connectionPingMonitorRunId) return;
       if (!socket.connected || (socket.id ?? null) !== socketIdAtSend) return;
-      recordRealtimeRtt(Date.now() - sentAt);
+      const rttMs = Date.now() - sentAt;
+      recordRealtimeRtt(rttMs);
+      // Report our RTT so the opponent can be shown this player's ping (the
+      // server only knows each client's RTT if the client tells it). Best-effort.
+      socket.emit('connection:rtt', { rttMs });
     });
   };
 

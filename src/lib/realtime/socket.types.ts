@@ -918,6 +918,8 @@ export interface ClientToServerEvents {
     data: { sentAt: number },
     ack?: (result: { sentAt: number; serverNow: string }) => void
   ) => void;
+  // Report our measured RTT so the server can surface it to the opponent.
+  'connection:rtt': (data: { rttMs: number }) => void;
   'warmup:tap': (data: WarmupTapPayload) => void;
   'warmup:dropped': (data: WarmupDroppedPayload) => void;
   'warmup:restart': () => void;
