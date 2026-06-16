@@ -166,10 +166,12 @@ function BanCategoryCardComponent({
         <h3
           className={cn(
             // Font sizes to the CARD width (cqw), so long Georgian names shrink
-            // to fit on narrow draft cards instead of clipping. Break only
-            // between words (overflow-wrap), never mid-word (word-break: normal),
-            // so a name like "გერმანია" never gets cut as "გერმანი…".
-            'text-[clamp(0.5rem,8cqw,1.25rem)] uppercase leading-tight text-balance text-center w-full [overflow-wrap:anywhere] [word-break:normal]',
+            // to fit on narrow draft cards instead of clipping. Word-only
+            // wrapping: overflow-wrap/word-break stay `normal` and hyphens are
+            // off, so a name like "გერმანია" is never cut mid-word as
+            // "გერმანი-ა". If a single KA word still overflows, lower the cqw
+            // floor rather than allowing a mid-word break.
+            'text-[clamp(0.48rem,7.5cqw,1.25rem)] uppercase leading-tight text-balance text-center w-full [overflow-wrap:normal] [word-break:normal] [hyphens:none]',
             isBanned && 'grayscale opacity-70'
           )}
           style={{
@@ -179,7 +181,10 @@ function BanCategoryCardComponent({
             color: isBanned ? '#E3E9EC' : (hasImage ? '#ffffff' : color.text),
             textShadow: hasImage ? '0 2px 8px rgba(0,0,0,0.75), 0 0 4px rgba(0,0,0,0.6)' : 'none',
             display: '-webkit-box',
-            WebkitLineClamp: 5,
+            // 7 lines: long KA names wrap to ~5-6 lines at the shrunk cqw font,
+            // so this is a safety net for extreme names, not the thing clipping
+            // normal ones.
+            WebkitLineClamp: 7,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
           }}
