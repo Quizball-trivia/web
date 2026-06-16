@@ -1343,6 +1343,7 @@
     "opponentDidNotReconnect": "Opponent did not reconnect",
     "matchForfeited": "Match forfeited",
     "youLostMatch": "You lost the match",
+    "youWinByForfeit": "You win — your opponent left",
     "reconnectsLeftOne": "{n} reconnect left.",
     "reconnectsLeftOther": "{n} reconnects left.",
     "lastReconnect": "This is their last reconnect.",

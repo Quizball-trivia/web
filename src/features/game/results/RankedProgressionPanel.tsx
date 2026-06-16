@@ -131,20 +131,19 @@ export function RankedProgressionPanel({
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ type: 'spring', damping: 12, stiffness: 150 }}
                   className={cn(
-                    'border-t border-white/10 pt-4 md:pt-6 text-center relative overflow-hidden',
+                    // No overflow-hidden: it would clip the tier glow into a
+                    // hard-edged box. Nothing here needs clipping anymore.
+                    'border-t border-white/10 pt-4 md:pt-6 text-center relative',
                     hasServerReveal && revealTierVisual.glow
                   )}
                 >
                   {hasServerReveal ? (
                     <>
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: [0, 0.3, 0.15] }}
-                        transition={{ duration: 1.5 }}
-                        className="absolute inset-0 bg-gradient-to-b from-emerald-500/10 via-emerald-500/5 to-transparent pointer-events-none"
-                      />
                       {/* New rank frame unlock — avatar inside the freshly
-                          earned tier frame pops in (replaces the old emoji). */}
+                          earned tier frame pops in (replaces the old emoji).
+                          (The old full-bleed emerald gradient overlay was
+                          removed — it read as a dark box behind the frame on
+                          the dark page; the frame's own tier glow is enough.) */}
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: [0, 1.15, 1] }}

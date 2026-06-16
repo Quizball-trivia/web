@@ -153,6 +153,12 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
       : forfeitPending?.reason === 'opponent_reconnect_limit'
         ? t('forfeit.opponentDidNotReconnect')
         : t('forfeit.matchForfeited');
+  // Subtitle is i18n-keyed off the reason (the server's payload.message is
+  // English-only, so rendering it raw leaked English onto the KA client).
+  const forfeitPendingSubtitle =
+    forfeitPending?.reason === 'opponent_forfeit' || forfeitPending?.reason === 'opponent_reconnect_limit'
+      ? t('forfeit.youWinByForfeit')
+      : t('forfeit.youLostMatch');
   const penaltyMatchEndOverlay = useMemo(() => {
     if (!finalResults || finalResults.winnerDecisionMethod !== 'penalty_goals' || !selfUserId) {
       return null;
@@ -322,7 +328,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
                 {forfeitPendingTitle}
               </div>
               <div className="mt-1 font-poppins text-sm font-semibold text-white/70">
-                {forfeitPending.message}
+                {forfeitPendingSubtitle}
               </div>
             </motion.div>
           </motion.div>
