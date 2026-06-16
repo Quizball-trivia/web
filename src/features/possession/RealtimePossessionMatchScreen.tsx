@@ -334,7 +334,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="absolute inset-0 z-40 flex items-center justify-center bg-surface-page-alt/70 px-4 backdrop-blur-[2px]"
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-surface-page-alt/70 px-4 backdrop-blur-[2px]"
           >
             <motion.div
               initial={{ y: -12, scale: 0.96, opacity: 0 }}
