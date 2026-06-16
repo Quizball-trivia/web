@@ -161,17 +161,22 @@ function BanCategoryCardComponent({
         </div>
       )}
 
-      {/* Title — centered in the card */}
-      <div className="relative z-10 flex h-full flex-col justify-center items-center p-3 sm:p-4">
+      {/* Title — centered in the card. Tight horizontal padding (px-1.5) gives
+          the text more width before it has to shrink; cards have plenty of
+          vertical room so long names wrap onto more lines rather than getting
+          tiny. */}
+      <div className="relative z-10 flex h-full flex-col justify-center items-center px-1.5 py-3 sm:px-3 sm:py-4">
         <h3
           className={cn(
             // Font sizes to the CARD width (cqw), so long Georgian names shrink
-            // to fit on narrow draft cards instead of clipping. Word-only
-            // wrapping: overflow-wrap/word-break stay `normal` and hyphens are
-            // off, so a name like "გერმანია" is never cut mid-word as
-            // "გერმანი-ა". If a single KA word still overflows, lower the cqw
-            // floor rather than allowing a mid-word break.
-            'text-[clamp(0.48rem,7.5cqw,1.25rem)] uppercase leading-tight text-balance text-center w-full [overflow-wrap:normal] [word-break:normal] [hyphens:none]',
+            // to fit on narrow draft cards instead of clipping. The cards have
+            // ample vertical room, so we prefer a LARGER, readable font that
+            // wraps onto more lines over a tiny font in fewer lines — hence a
+            // higher cqw multiplier and a higher floor than a pure shrink-to-fit
+            // would use. Word-only wrapping: overflow-wrap/word-break stay
+            // `normal` and hyphens are off, so a name like "გერმანია" is never
+            // cut mid-word as "გერმანი-ა".
+            'text-[clamp(0.72rem,11cqw,1.35rem)] uppercase leading-tight text-balance text-center w-full [overflow-wrap:normal] [word-break:normal] [hyphens:none]',
             isBanned && 'grayscale opacity-70'
           )}
           style={{
