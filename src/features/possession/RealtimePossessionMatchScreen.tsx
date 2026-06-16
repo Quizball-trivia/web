@@ -239,11 +239,14 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
       >
         {muted ? <VolumeX className="size-4 sm:size-5" /> : <Volume2 className="size-4 sm:size-5" />}
       </MatchHudIconButton>
-      {/* Desktop (sm+) only: sits inline in the top-left HUD, beside the mute.
+      {/* Desktop (sm+) only: sits beside the mute button in the top-left HUD.
+          Both are `fixed` with matching top offsets, and the pill (h-8) is
+          nudged down ~0.25rem so its center lines up with the taller mute
+          button (h-10) — otherwise the shorter pill reads as sitting too high.
           On mobile the pill is anchored to the bottom-left corner of the pitch
           inside PossessionMatchViewport instead (the top HUD bar is too tight). */}
       <ConnectionQualitySignal
-        className="hidden sm:absolute sm:flex sm:left-[calc(env(safe-area-inset-left)+3.25rem)] sm:top-[calc(env(safe-area-inset-top)+0.5rem)] sm:z-[70]"
+        className="hidden sm:fixed sm:flex sm:left-[calc(env(safe-area-inset-left)+3.5rem)] sm:top-[calc(env(safe-area-inset-top)+0.75rem)] sm:z-[70] lg:left-[calc(env(safe-area-inset-left)+4rem)] lg:top-[calc(env(safe-area-inset-top)+1.25rem)]"
       />
 
       <AnimatePresence>
