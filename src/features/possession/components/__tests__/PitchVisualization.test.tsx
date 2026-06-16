@@ -242,6 +242,31 @@ describe('PitchVisualization — orientation + mirror + barBattle', () => {
     expect(container.querySelector('[data-testid="bar-battle"]')).not.toBeNull();
   });
 
+  it('layers the animated pitch above the static stadium background', () => {
+    const { container } = renderPitch({
+      barBattle: {
+        key: 1,
+        phase: 'bars',
+        playerBars: 10,
+        opponentBars: 0,
+        playerPoints: 100,
+        opponentPoints: 0,
+        remainingDelta: 10,
+        dividerX: 250,
+      },
+      barBattleVariant: 'ranked_sim',
+    });
+
+    const background = container.querySelector('svg[data-pitch-field="possession-bg"]');
+    const pitch = container.querySelector('svg[data-pitch-field="possession"]');
+
+    expect(background).toHaveClass('z-0');
+    expect(background).toHaveClass('pointer-events-none');
+    expect(pitch).toHaveClass('z-10');
+    expect(pitch).toHaveClass('relative');
+    expect(container.querySelector('[data-testid="bar-battle"]')).not.toBeNull();
+  });
+
   it('does not mount the bar-battle slot when no battle prop is supplied', () => {
     const { container } = renderPitch();
     expect(container.querySelector('[data-testid="bar-battle"]')).toBeNull();
