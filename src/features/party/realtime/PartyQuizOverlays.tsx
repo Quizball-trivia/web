@@ -41,9 +41,12 @@ export function PartyQuizOverlays({
   const waitingReadyLabel = waitingForReady
     ? t('partyResults.playersReadyCount', { ready: waitingForReady.readyCount, total: waitingForReady.totalCount })
     : '';
-  const waitingTitle = waitingForReady?.totalCount && waitingForReady.totalCount > 2
-    ? t('partyResults.waitingForPlayers')
-    : t('partyResults.waitingForOpponent');
+  const waitingTotalCount = waitingForReady?.totalCount ?? 0;
+  const waitingTitle = waitingTotalCount <= 1
+    ? t('partyResults.gettingMatchReady')
+    : waitingTotalCount > 2
+      ? t('partyResults.waitingForPlayers')
+      : t('partyResults.waitingForOpponent');
   // i18n subtitle keyed off the reason — the server's payload.message is
   // English-only, so rendering it raw leaked English onto the KA client.
   const forfeitPendingSubtitle =

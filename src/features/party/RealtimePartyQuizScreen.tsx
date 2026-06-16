@@ -75,9 +75,12 @@ export function RealtimePartyQuizScreen({
   const waitingReadyLabel = waitingForReady
     ? t('partyResults.playersReadyCount', { ready: waitingForReady.readyCount, total: waitingForReady.totalCount })
     : '';
-  const waitingTitle = waitingForReady?.totalCount && waitingForReady.totalCount > 2
-    ? t('partyResults.waitingForPlayers')
-    : t('partyResults.waitingForOpponent');
+  const waitingTotalCount = waitingForReady?.totalCount ?? 0;
+  const waitingTitle = waitingTotalCount <= 1
+    ? t('partyResults.gettingMatchReady')
+    : waitingTotalCount > 2
+      ? t('partyResults.waitingForPlayers')
+      : t('partyResults.waitingForOpponent');
 
   // ---------------------------------------------------------------------------
   // Pre-match / loading

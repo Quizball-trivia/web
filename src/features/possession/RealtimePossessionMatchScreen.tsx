@@ -124,9 +124,12 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
   const waitingReadyLabel = waitingForReady
     ? t('possession.playersReadyCount', { ready: waitingForReady.readyCount, total: waitingForReady.totalCount })
     : '';
-  const waitingTitle = waitingForReady?.totalCount && waitingForReady.totalCount > 2
-    ? t('possession.waitingForPlayers')
-    : t('possession.waitingForOpponent');
+  const waitingTotalCount = waitingForReady?.totalCount ?? 0;
+  const waitingTitle = waitingTotalCount <= 1
+    ? t('possession.gettingMatchReady')
+    : waitingTotalCount > 2
+      ? t('possession.waitingForPlayers')
+      : t('possession.waitingForOpponent');
 
   useEffect(() => {
     if (!matchPaused || !pauseUntil) return;
