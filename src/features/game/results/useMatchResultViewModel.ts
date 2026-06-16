@@ -33,7 +33,8 @@ export interface MatchResultViewModel {
   // Win/loss/draw resolution
   playerWon: boolean;
   isDraw: boolean;
-  resultHeading: 'VICTORY' | 'DEFEAT' | 'DRAW';
+  isCancelledNoContest: boolean;
+  resultHeading: string;
 
   // Head-to-head label
   totalGamesLabel: string;
@@ -93,6 +94,7 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
     selfUserId,
     finalWinnerId,
     winnerDecisionMethod,
+    cancelledNoContest = false,
     preMatchRp,
     opponentId,
     opponentRankPoints = null,
@@ -108,6 +110,7 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
   const isDraw = hasAuthoritativeWinner
     ? finalWinnerId === null
     : playerScore === opponentScore;
+  const isCancelledNoContest = cancelledNoContest === true;
 
   // H2H record (already includes this match)
   const { data: h2hSummary } = useHeadToHead(selfUserId, opponentId);
@@ -124,7 +127,8 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
 
   // Placement state: use pre-match profile (already known) + increment by 1
   const preIsPlacement = preMatchRankedProfile ? preMatchRankedProfile.placementStatus !== 'placed' : false;
-  const isPlacementMatch = myOutcome ? myOutcome.isPlacement === true : (matchType === 'ranked' && preIsPlacement);
+  const isPlacementMatch = !isCancelledNoContest
+    && (myOutcome ? myOutcome.isPlacement === true : (matchType === 'ranked' && preIsPlacement));
   const placementPlayed = myOutcome?.placementPlayed ?? (preIsPlacement ? Math.min(preMatchRankedProfile!.placementPlayed + 1, preMatchRankedProfile!.placementRequired) : 0);
   const placementRequired = Math.max(1, myOutcome?.placementRequired ?? preMatchRankedProfile?.placementRequired ?? 3);
   const placementMatchesLeft = Math.max(0, placementRequired - placementPlayed);
@@ -137,11 +141,13 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
   const isSelfWinner = playerWon;
   const isForfeitLoss = winnerDecisionMethod === 'forfeit' && !isSelfWinner;
   const matchResult: 'win' | 'loss' | 'draw' = isDraw ? 'draw' : isSelfWinner ? 'win' : 'loss';
-  const xpEarned = getMatchXpReward({
-    mode: matchType,
-    result: matchResult,
-    isForfeitLoss,
-  });
+  const xpEarned = isCancelledNoContest
+    ? 0
+    : getMatchXpReward({
+      mode: matchType,
+      result: matchResult,
+      isForfeitLoss,
+    });
   const projectedProgression = preMatchProgression
     ? applyXpReward(preMatchProgression, xpEarned)
     : null;
@@ -186,8 +192,10 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
       isPlacementMatch,
       showRankedRpCard,
       winnerDecisionMethod,
+      cancelledNoContest: isCancelledNoContest,
     });
   }, [
+    isCancelledNoContest,
     isPlacementMatch,
     matchType,
     myOutcome,
@@ -249,8 +257,10 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
   const hasServerReveal = myOutcome != null;
   const revealTier = tierFromRp(myOutcome?.newRp ?? newRP);
   const revealTierVisual = getTierVisual(revealTier);
-  const resultHeading: 'VICTORY' | 'DEFEAT' | 'DRAW' = isDraw ? 'DRAW' : playerWon ? 'VICTORY' : 'DEFEAT';
-  const totalGamesLabel = totalMatches > 0
+  const resultHeading = isCancelledNoContest ? t('results.cancelled') : isDraw ? 'DRAW' : playerWon ? 'VICTORY' : 'DEFEAT';
+  const totalGamesLabel = isCancelledNoContest
+    ? t('results.noContest')
+    : totalMatches > 0
     ? t(totalMatches === 1 ? 'results.gamePlayed' : 'results.gamesPlayed', { count: totalMatches })
     : t('results.matchComplete');
 
@@ -271,6 +281,7 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
   return {
     playerWon,
     isDraw,
+    isCancelledNoContest,
     resultHeading,
     totalGamesLabel,
     myOutcome,

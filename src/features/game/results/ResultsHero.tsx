@@ -22,6 +22,7 @@ import { AnimatedCounter } from './AnimatedCounter';
 export function ResultsHero({
   playerWon,
   isDraw,
+  isCancelledNoContest,
   resultHeading,
   playerUsername,
   playerAvatar,
@@ -40,6 +41,7 @@ export function ResultsHero({
 }: {
   playerWon: boolean;
   isDraw: boolean;
+  isCancelledNoContest: boolean;
   resultHeading: string;
   playerUsername: string;
   playerAvatar: string;
@@ -65,7 +67,7 @@ export function ResultsHero({
           className="font-poppins text-[3rem] font-black uppercase tracking-[0] md:text-[3.75rem]"
           style={{
             lineHeight: '1.3',
-            color: playerWon ? '#22C55E' : isDraw ? '#FACC15' : '#FB3101',
+            color: isCancelledNoContest ? '#CBD5E1' : playerWon ? '#22C55E' : isDraw ? '#FACC15' : '#FB3101',
           }}
         >
           {resultHeading}

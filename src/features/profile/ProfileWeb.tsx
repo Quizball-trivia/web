@@ -829,6 +829,15 @@ export function ProfileWeb({
                             {match.scoreFormatted.badge}
                           </span>
                         )}
+                        {match.scoreFormatted.badgeI18nKey && (
+                          <span className={`rounded-[8px] px-2 py-1 font-poppins text-[9px] md:text-[10px] font-semibold uppercase ${
+                            match.scoreFormatted.badgeVariant === 'red'
+                              ? 'bg-brand-red-rust-deep text-brand-red-light'
+                              : 'bg-white/10 text-white/70'
+                          }`}>
+                            {t(match.scoreFormatted.badgeI18nKey)}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </motion.div>
@@ -1031,4 +1040,3 @@ function SeasonToggleCard({
     </div>
   );
 }
-

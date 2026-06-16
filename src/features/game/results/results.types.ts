@@ -31,6 +31,7 @@ export interface RealtimeResultsScreenProps {
   selfUserId: string;
   finalWinnerId?: string | null;
   winnerDecisionMethod?: 'goals' | 'penalty_goals' | 'total_points' | 'total_points_fallback' | 'forfeit' | null;
+  cancelledNoContest?: boolean;
   preMatchRp?: number;
   opponentId: string;
   opponentRankPoints?: number | null;

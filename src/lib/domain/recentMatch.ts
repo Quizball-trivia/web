@@ -18,6 +18,7 @@ export interface RecentMatchSummary {
   opponentGoals: number;
   opponentPenaltyGoals: number;
   winnerDecisionMethod: WinnerDecisionMethod | null;
+  cancelledNoContest: boolean;
   rpDelta: number | null;
   opponent: {
     id: string | null;

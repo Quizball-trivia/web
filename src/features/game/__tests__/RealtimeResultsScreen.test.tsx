@@ -92,6 +92,20 @@ describe('RealtimeResultsScreen — result heading branches', () => {
     expect(screen.getByRole('heading', { level: 1, name: /draw/i })).toBeInTheDocument();
   });
 
+  it('renders Cancelled for cancelled no-contest results', () => {
+    renderResults({
+      matchType: 'ranked',
+      finalWinnerId: null,
+      winnerDecisionMethod: 'forfeit',
+      cancelledNoContest: true,
+      playerScore: 0,
+      opponentScore: 0,
+    });
+
+    expect(screen.getByRole('heading', { level: 1, name: /cancelled/i })).toBeInTheDocument();
+    expect(screen.getByText(/no contest/i)).toBeInTheDocument();
+  });
+
   it('falls back to score comparison when finalWinnerId is undefined', () => {
     renderResults({ finalWinnerId: undefined, playerScore: 5, opponentScore: 2 });
     expect(screen.getByRole('heading', { level: 1, name: /victory/i })).toBeInTheDocument();
