@@ -209,11 +209,15 @@ export function GameStageRouter() {
     } else {
       logger.info("Socket emit match:forfeit skipped (missing matchId)");
     }
-    resetRealtime();
-    clearRankedMatchmaking();
-    resetGameSession();
-    router.push("/");
-  }, [clearRankedMatchmaking, realtimeMatchId, resetGameSession, resetRealtime, router]);
+    // Keep the forfeiter on the game route and drop them into the same
+    // "match settling" loading screen a normal match end shows. We do NOT
+    // reset the realtime store or navigate away — doing so threw away the
+    // incoming match:final_results and bounced the player to /play, where the
+    // result only surfaced later as a badge they had to click. Moving to the
+    // finalResults stage renders the LoadingScreen ("Updating rank…") until
+    // match:final_results lands, then the full results screen with real RP.
+    setStage("finalResults");
+  }, [realtimeMatchId, setStage]);
 
   const handleMatchmakingExit = useCallback(() => {
     if (matchType === "ranked") {
