@@ -232,14 +232,19 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
       <RealtimeConnectionBanner />
       <MatchHudIconButton
         onClick={toggleMuted}
-        className="absolute left-[calc(env(safe-area-inset-left)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.25rem)] z-[70] sm:left-[calc(env(safe-area-inset-left)+0.5rem)] sm:top-[calc(env(safe-area-inset-top)+0.5rem)]"
+        className="fixed left-[calc(env(safe-area-inset-left)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.25rem)] z-[70] sm:left-[calc(env(safe-area-inset-left)+0.5rem)] sm:top-[calc(env(safe-area-inset-top)+0.5rem)] lg:left-[calc(env(safe-area-inset-left)+1rem)] lg:top-[calc(env(safe-area-inset-top)+1rem)]"
         aria-label={muted ? t('possession.unmuteAudio') : t('possession.muteAudio')}
         aria-pressed={muted}
         title={muted ? t('common.unmute') : t('common.mute')}
       >
         {muted ? <VolumeX className="size-4 sm:size-5" /> : <Volume2 className="size-4 sm:size-5" />}
       </MatchHudIconButton>
-      <ConnectionQualitySignal className="absolute left-[calc(env(safe-area-inset-left)+0.75rem)] top-[calc(env(safe-area-inset-top)+3rem)] z-[70] sm:left-[calc(env(safe-area-inset-left)+3.25rem)] sm:top-[calc(env(safe-area-inset-top)+0.5rem)]" />
+      {/* Desktop (sm+) only: sits inline in the top-left HUD, beside the mute.
+          On mobile the pill is anchored to the bottom-left corner of the pitch
+          inside PossessionMatchViewport instead (the top HUD bar is too tight). */}
+      <ConnectionQualitySignal
+        className="hidden sm:absolute sm:flex sm:left-[calc(env(safe-area-inset-left)+3.25rem)] sm:top-[calc(env(safe-area-inset-top)+0.5rem)] sm:z-[70]"
+      />
 
       <AnimatePresence>
         {waitingForReady && !showStartCountdown && (

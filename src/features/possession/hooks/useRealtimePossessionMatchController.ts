@@ -416,6 +416,9 @@ export function useRealtimePossessionMatchController({
   usePreloadImages(useMemo(() => [questionImageUrl], [questionImageUrl]));
 
   const isMultipleChoiceQuestion = localQuestion?.question.kind === 'multipleChoice';
+  // The opponent "?" thinking badge / kick animation is a "Who am I" (clues)
+  // affordance only — not MCQ/countdown/put-in-order.
+  const isCluesQuestion = localQuestion?.question.kind === 'clues';
   const specialQuestion = localQuestion && localQuestion.question.kind !== 'multipleChoice'
     ? localQuestion.question
     : null;
@@ -626,17 +629,18 @@ export function useRealtimePossessionMatchController({
         centerPossessionTrack,
         simpleShotAnimation,
         barBattle,
-        // Opponent "?" thinking badge: show while the round is live and the
-        // opponent hasn't answered. On answer the incoming score-flight knocks
-        // the badge (PitchHtmlActors): a wrong "+0" kicks it and both drop; a
-        // correct "+N" detours through it (kick) then continues to the bars.
-        // Keep it visible while correctness is still unknown (opponentAnswered
-        // can flip true via match:opponent_answered before isCorrect arrives) —
-        // otherwise the badge briefly unmounts, then the kick variant remounts
-        // from scratch once correctness lands.
-        opponentThinking: !state.roundResolved && (!state.opponentAnswered || opponentAnsweredCorrectly === null),
-        opponentAnsweredWrong: !state.roundResolved && state.opponentAnswered && opponentAnsweredCorrectly === false,
-        opponentAnsweredCorrect: !state.roundResolved && state.opponentAnswered && opponentAnsweredCorrectly === true,
+        // Opponent "?" thinking badge — "Who am I" (clues) rounds ONLY (gated by
+        // isCluesQuestion; never on MCQ/countdown/put-in-order). Show while the
+        // round is live and the opponent hasn't answered. On answer the incoming
+        // score-flight knocks the badge (PitchHtmlActors): a wrong "+0" kicks it
+        // and both drop; a correct "+N" detours through it (kick) then continues
+        // to the bars. Keep it visible while correctness is still unknown
+        // (opponentAnswered can flip true via match:opponent_answered before
+        // isCorrect arrives) — otherwise the badge briefly unmounts, then the
+        // kick variant remounts from scratch once correctness lands.
+        opponentThinking: isCluesQuestion && !state.roundResolved && (!state.opponentAnswered || opponentAnsweredCorrectly === null),
+        opponentAnsweredWrong: isCluesQuestion && !state.roundResolved && state.opponentAnswered && opponentAnsweredCorrectly === false,
+        opponentAnsweredCorrect: isCluesQuestion && !state.roundResolved && state.opponentAnswered && opponentAnsweredCorrectly === true,
       },
       goalCelebration,
       penaltySplash: fieldState.isPenaltyQuestion
