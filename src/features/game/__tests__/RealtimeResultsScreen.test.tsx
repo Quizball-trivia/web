@@ -104,6 +104,8 @@ describe('RealtimeResultsScreen — result heading branches', () => {
 
     expect(screen.getByRole('heading', { level: 1, name: /cancelled/i })).toBeInTheDocument();
     expect(screen.getByText(/no contest/i)).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: /ranked ticket refunded/i })).toBeInTheDocument();
+    expect(screen.getByText('+1')).toBeInTheDocument();
   });
 
   it('falls back to score comparison when finalWinnerId is undefined', () => {

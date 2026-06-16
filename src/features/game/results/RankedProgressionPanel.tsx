@@ -32,8 +32,10 @@ type LocaleT = ReturnType<typeof useLocale>['t'];
 type RankedFields = Pick<
   MatchResultViewModel,
   | 'showRankedRpCard'
+  | 'isCancelledNoContest'
   | 'rpChange'
   | 'coinsAwarded'
+  | 'refundedTickets'
   | 'oldRP'
   | 'newRP'
   | 'rpTierInfo'
@@ -67,8 +69,10 @@ export function RankedProgressionPanel({
   const tierLabelOf = useTierLabel();
   const {
     showRankedRpCard,
+    isCancelledNoContest,
     rpChange,
     coinsAwarded,
+    refundedTickets,
     oldRP,
     newRP,
     rpTierInfo,
@@ -92,6 +96,12 @@ export function RankedProgressionPanel({
     <>
       {matchType === 'ranked' && (
         <>
+          {isCancelledNoContest && refundedTickets > 0 && (
+            <div className="flex justify-center border-t border-white/10 pt-4 md:pt-6">
+              <TicketRefundChip amount={refundedTickets} label={t('results.ticketRefunded')} delay={0.45} />
+            </div>
+          )}
+
           {isPlacementMatch && (
             <AnimatePresence mode="wait">
               {!showRankReveal ? (
@@ -393,6 +403,34 @@ function CoinRewardChip({ amount, delay }: { amount: number; delay: number }) {
       style={{ backgroundColor: '#FFE500', color: '#071013', boxShadow: '0 4px 0 rgba(0,0,0,0.35)' }}
     >
       <CoinIcon size={24} />
+      +{amount}
+    </motion.div>
+  );
+}
+
+/**
+ * Ticket refund pill for ranked no-contest/cancelled matches. It mirrors the
+ * coin reward pop so refunds feel like a concrete wallet event, not just copy.
+ */
+function TicketRefundChip({ amount, label, delay }: { amount: number; label: string; delay: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24, scale: 0 }}
+      animate={{ opacity: 1, y: 0, scale: [0, 1.25, 0.95, 1] }}
+      transition={{
+        delay,
+        duration: 0.55,
+        times: [0, 0.55, 0.8, 1],
+        ease: 'easeOut',
+      }}
+      className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 font-poppins font-semibold tabular-nums leading-none text-[17px] sm:py-2 sm:text-[21px]"
+      style={{ backgroundColor: '#FFE500', color: '#071013', boxShadow: '0 4px 0 rgba(0,0,0,0.35)' }}
+      role="status"
+      aria-live="polite"
+      aria-label={label}
+      title={label}
+    >
+      <img src="/assets/ticket-1.png" alt="" aria-hidden="true" className="size-6 object-contain" />
       +{amount}
     </motion.div>
   );

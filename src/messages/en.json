@@ -910,7 +910,8 @@
     "placementsRemaining": "Complete placements to unlock your rank. {n} matches left.",
     "matchComplete": "MATCH COMPLETE",
     "cancelled": "Cancelled",
-    "noContest": "No contest"
+    "noContest": "No contest",
+    "ticketRefunded": "Ranked ticket refunded"
   },
   "friendHub": {
     "title": "Friend Match",

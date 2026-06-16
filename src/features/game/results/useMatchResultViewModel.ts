@@ -35,6 +35,7 @@ export interface MatchResultViewModel {
   isDraw: boolean;
   isCancelledNoContest: boolean;
   resultHeading: string;
+  refundedTickets: number;
 
   // Head-to-head label
   totalGamesLabel: string;
@@ -162,6 +163,7 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
   // authoritative settlement data so profile and result screens cannot diverge.
   const rpChange = myOutcome?.deltaRp ?? 0;
   const coinsAwarded = myOutcome?.coinsAwarded ?? null;
+  const refundedTickets = isCancelledNoContest && matchType === 'ranked' ? 1 : 0;
   const oldRP = myOutcome?.oldRp ?? oldRpBase;
   const newRP = myOutcome?.newRp ?? oldRP;
 
@@ -283,6 +285,7 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
     isDraw,
     isCancelledNoContest,
     resultHeading,
+    refundedTickets,
     totalGamesLabel,
     myOutcome,
     showRankedRpCard,
