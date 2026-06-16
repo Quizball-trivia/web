@@ -2,6 +2,7 @@
 
 import { Wifi, WifiOff } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
+import { useUserPreferences } from '@/lib/preferences/userPreferences';
 import { useRealtimeConnectionHealth } from '@/lib/realtime/connection-health';
 import { cn } from '@/lib/utils';
 
@@ -11,7 +12,10 @@ interface ConnectionQualitySignalProps {
 
 export function ConnectionQualitySignal({ className }: ConnectionQualitySignalProps) {
   const { t } = useLocale();
+  const { pingIndicatorEnabled } = useUserPreferences();
   const health = useRealtimeConnectionHealth();
+  if (!pingIndicatorEnabled) return null;
+
   const disconnected = health.phase === 'reconnecting' || health.phase === 'disconnected' || health.phase === 'error';
   const label = disconnected
     ? t('common.reconnecting')
@@ -25,6 +29,9 @@ export function ConnectionQualitySignal({ className }: ConnectionQualitySignalPr
   const title = health.rttMs !== null
     ? `${label} · ${t('common.connectionPingMs', { ms: health.rttMs })}`
     : label;
+  const pingText = health.rttMs !== null
+    ? t('common.connectionPingMs', { ms: health.rttMs })
+    : '...';
 
   return (
     <div
@@ -32,7 +39,7 @@ export function ConnectionQualitySignal({ className }: ConnectionQualitySignalPr
       aria-label={label}
       title={title}
       className={cn(
-        'flex size-8 shrink-0 items-center justify-center rounded-full border text-white shadow-[0_8px_26px_rgba(0,0,0,0.22)] backdrop-blur-md sm:size-10',
+        'flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-full border px-2.5 font-poppins text-[11px] font-semibold tabular-nums text-white shadow-[0_8px_26px_rgba(0,0,0,0.22)] backdrop-blur-md sm:h-10 sm:px-3 sm:text-xs',
         disconnected || health.tier === 'bad'
           ? 'border-red-300/70 bg-red-500/80'
           : health.tier === 'unstable'
@@ -44,6 +51,7 @@ export function ConnectionQualitySignal({ className }: ConnectionQualitySignalPr
       )}
     >
       {disconnected ? <WifiOff className="size-4 sm:size-5" /> : <Wifi className="size-4 sm:size-5" />}
+      <span>{pingText}</span>
       <span className="sr-only">{label}</span>
     </div>
   );

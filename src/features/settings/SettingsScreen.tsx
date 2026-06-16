@@ -20,7 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Bell, ChevronLeft, Globe, KeyRound, LogOut, Phone, Shield, Trash2, Volume2, HelpCircle, RotateCcw } from "lucide-react";
+import { Bell, ChevronLeft, Globe, KeyRound, LogOut, Phone, Shield, Trash2, Volume2, HelpCircle, RotateCcw, Wifi } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { SettingsSection } from "./components/SettingsSection";
 import { SettingsToggle } from "./components/SettingsToggle";
@@ -37,20 +37,12 @@ import { ApiError } from "@/lib/api/api";
 import { requestAccountDeletion } from "@/lib/repositories/users.repo";
 import { type Locale } from "@/lib/i18n/messages";
 import { trackLanguageSwitched } from "@/lib/analytics/game-events";
-
-interface UserPreferences {
-  soundEnabled: boolean;
-  musicEnabled: boolean;
-  invitesEnabled: boolean;
-  questAlertsEnabled: boolean;
-}
-
-const DEFAULT_PREFERENCES: UserPreferences = {
-  soundEnabled: true,
-  musicEnabled: true,
-  invitesEnabled: true,
-  questAlertsEnabled: true,
-};
+import {
+  DEFAULT_USER_PREFERENCES,
+  getUserPreferences,
+  setUserPreferences,
+  type UserPreferences,
+} from "@/lib/preferences/userPreferences";
 
 interface SettingsScreenProps {
   onBack: () => void;
@@ -70,10 +62,11 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   }, []);
 
   // Preferences state - initialized from storage
-  const [soundEnabled, setSoundEnabled] = useState(DEFAULT_PREFERENCES.soundEnabled);
-  const [musicEnabled, setMusicEnabled] = useState(DEFAULT_PREFERENCES.musicEnabled);
-  const [invitesEnabled, setInvitesEnabled] = useState(DEFAULT_PREFERENCES.invitesEnabled);
-  const [questAlertsEnabled, setQuestAlertsEnabled] = useState(DEFAULT_PREFERENCES.questAlertsEnabled);
+  const [soundEnabled, setSoundEnabled] = useState(DEFAULT_USER_PREFERENCES.soundEnabled);
+  const [musicEnabled, setMusicEnabled] = useState(DEFAULT_USER_PREFERENCES.musicEnabled);
+  const [invitesEnabled, setInvitesEnabled] = useState(DEFAULT_USER_PREFERENCES.invitesEnabled);
+  const [questAlertsEnabled, setQuestAlertsEnabled] = useState(DEFAULT_USER_PREFERENCES.questAlertsEnabled);
+  const [pingIndicatorEnabled, setPingIndicatorEnabled] = useState(DEFAULT_USER_PREFERENCES.pingIndicatorEnabled);
   const [isLanguageSaving, setIsLanguageSaving] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
@@ -106,12 +99,13 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
 
   // Load preferences from storage on mount - intentional initialization pattern
   useEffect(() => {
-    const savedPrefs = storage.get<UserPreferences>(STORAGE_KEYS.USER_PREFERENCES, DEFAULT_PREFERENCES);
+    const savedPrefs = getUserPreferences();
     queueMicrotask(() => {
-      setSoundEnabled(savedPrefs.soundEnabled ?? DEFAULT_PREFERENCES.soundEnabled);
-      setMusicEnabled(savedPrefs.musicEnabled ?? DEFAULT_PREFERENCES.musicEnabled);
-      setInvitesEnabled(savedPrefs.invitesEnabled ?? DEFAULT_PREFERENCES.invitesEnabled);
-      setQuestAlertsEnabled(savedPrefs.questAlertsEnabled ?? DEFAULT_PREFERENCES.questAlertsEnabled);
+      setSoundEnabled(savedPrefs.soundEnabled);
+      setMusicEnabled(savedPrefs.musicEnabled);
+      setInvitesEnabled(savedPrefs.invitesEnabled);
+      setQuestAlertsEnabled(savedPrefs.questAlertsEnabled);
+      setPingIndicatorEnabled(savedPrefs.pingIndicatorEnabled);
     });
   }, []);
 
@@ -127,9 +121,10 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
       musicEnabled,
       invitesEnabled,
       questAlertsEnabled,
+      pingIndicatorEnabled,
     };
-    storage.set(STORAGE_KEYS.USER_PREFERENCES, prefs);
-  }, [soundEnabled, musicEnabled, invitesEnabled, questAlertsEnabled]);
+    setUserPreferences(prefs);
+  }, [soundEnabled, musicEnabled, invitesEnabled, questAlertsEnabled, pingIndicatorEnabled]);
 
   useEffect(() => {
     if (!canUseGeorgianPhoneAuth && phoneDialogOpen) {
@@ -312,9 +307,17 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                   </div>
                </div>
                <Button variant="ghost" size="sm" className="font-semibold text-brand-green hover:text-brand-green hover:bg-brand-green/10" disabled={isLanguageSaving}>
-                 {t("common.change")}
+                  {t("common.change")}
                </Button>
             </div>
+            <SettingsToggle
+               label={t("settings.pingIndicator")}
+               description={t("settings.pingIndicatorDescription")}
+               icon={<Wifi className="size-4" />}
+               checked={pingIndicatorEnabled}
+               onCheckedChange={setPingIndicatorEnabled}
+               toastMessage={t("settings.pingIndicatorEnabled")}
+            />
          </SettingsSection>
 
          {/* Match Atmosphere */}

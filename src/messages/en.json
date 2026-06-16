@@ -84,6 +84,9 @@
     "languageUpdateFailed": "Failed to update language",
     "languageSwitchedEnglish": "Language switched to English",
     "languageSwitchedGeorgian": "Language switched to Georgian",
+    "pingIndicator": "Ping Indicator",
+    "pingIndicatorDescription": "Show live connection ping during matches and showdown.",
+    "pingIndicatorEnabled": "Ping indicator enabled",
     "matchAtmosphere": "Match Atmosphere",
     "matchSounds": "Match Sounds",
     "matchSoundsDescription": "Crowd reactions, kick effects, and whistles",
@@ -1364,7 +1367,8 @@
     "kickoff": "Kickoff",
     "getReadyForKickoff": "Get ready for kickoff",
     "ranked": "Ranked",
-    "friendly": "Friendly"
+    "friendly": "Friendly",
+    "pingLabel": "Ping"
   },
   "inviteCode": {
     "invalid": "Invalid Room Code"

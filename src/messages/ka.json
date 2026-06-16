@@ -12,6 +12,9 @@
     "languageUpdateFailed": "ენის განახლება ვერ მოხერხდა",
     "languageSwitchedEnglish": "ენა შეიცვალა ინგლისურით",
     "languageSwitchedGeorgian": "ენა შეიცვალა ქართულით",
+    "pingIndicator": "პინგის მაჩვენებელი",
+    "pingIndicatorDescription": "აჩვენებს კავშირის პინგს მატჩისა და showdown-ის დროს.",
+    "pingIndicatorEnabled": "პინგის მაჩვენებელი ჩართულია",
     "matchAtmosphere": "მატჩის ატმოსფერო",
     "matchSounds": "მატჩის ხმა",
     "matchSoundsDescription": "გულშემატკივრების რეაქციები, დარტყმის ეფექტები და სასტვენები",
@@ -1364,7 +1367,8 @@
     "kickoff": "თამაშის დაწყება",
     "getReadyForKickoff": "მოემზადე თამაშის დაწყებისთვის",
     "ranked": "რეიტინგული",
-    "friendly": "ამხანაგური"
+    "friendly": "ამხანაგური",
+    "pingLabel": "პინგი"
   },
   "inviteCode": {
     "invalid": "ოთახის კოდი არასწორია"
