@@ -227,8 +227,20 @@ function DevReadyOverlayContent() {
                 waiting={scenario.surface === 'kickoff-wait'}
                 waitingLabel={scenario.total > 1 ? t('possession.waitingForOpponent') : t('possession.startingSoon')}
                 waitingDetailLabel={scenario.total > 1 ? t('possession.startsAfterReady') : undefined}
-                playerReady={scenario.surface === 'kickoff-wait' ? scenario.ready >= 1 : undefined}
-                opponentReady={scenario.surface === 'kickoff-wait' ? (scenario.total <= 1 || scenario.ready >= 2) : undefined}
+                playerReady={
+                  scenario.surface === 'kickoff-wait'
+                    ? scenario.ready >= 1
+                    : scenario.surface === 'countdown'
+                      ? true
+                      : undefined
+                }
+                opponentReady={
+                  scenario.surface === 'kickoff-wait'
+                    ? (scenario.total <= 1 || scenario.ready >= 2)
+                    : scenario.surface === 'countdown'
+                      ? true
+                      : undefined
+                }
                 durationMs={5_000}
                 runKey={`dev-ready-${countdownStartedAt}`}
                 playerName="You"
