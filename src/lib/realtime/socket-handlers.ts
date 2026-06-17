@@ -283,6 +283,8 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       phase: data.phase,
       readyCount: data.readyCount,
       totalCount: data.totalCount,
+      readyUserIds: data.readyUserIds,
+      waitingUserIds: data.waitingUserIds,
       forceStartsAt: data.forceStartsAt,
       serverTimeOffsetMs,
     });

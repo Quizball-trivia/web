@@ -139,13 +139,22 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
     && waitingForReady?.phase === 'kickoff'
     && currentQuestionIndex === null
     && !finalResults;
-  // The backend currently sends counts, not per-user IDs. In 1v1 ranked,
-  // this maps cleanly: after this screen paints our client acks readiness,
-  // then readyCount reaches 2 only when the opponent is ready too.
-  const kickoffPlayerReady = Boolean(waitingForReady && waitingForReady.readyCount >= 1);
-  const kickoffOpponentReady = Boolean(waitingForReady && (
-    waitingForReady.totalCount <= 1 || waitingForReady.readyCount >= 2
-  ));
+  const hasReadyIdentity = Array.isArray(waitingForReady?.readyUserIds)
+    && Array.isArray(waitingForReady?.waitingUserIds);
+  const kickoffParticipantReady = (userId: string | null | undefined, readyIfNotWaiting: boolean): boolean => {
+    if (!waitingForReady) return false;
+
+    if (hasReadyIdentity) {
+      if (!userId) return readyIfNotWaiting;
+      if (!waitingForReady.waitingUserIds?.includes(userId)) return readyIfNotWaiting;
+      return Boolean(waitingForReady.readyUserIds?.includes(userId));
+    }
+
+    if (waitingForReady.totalCount <= 1 && readyIfNotWaiting) return true;
+    return waitingForReady.readyCount >= waitingForReady.totalCount;
+  };
+  const kickoffPlayerReady = kickoffParticipantReady(selfUserId, false);
+  const kickoffOpponentReady = kickoffParticipantReady(opponentInfo?.id, waitingForReady?.totalCount === 1);
   const showKickoffCountdownReadyBadges = props.matchType === 'ranked'
     && showStartCountdown
     && countdownPhase === 'kickoff'

@@ -139,6 +139,7 @@ describe('RealtimePossessionMatchScreen pause overlay', () => {
     vi.setSystemTime(new Date('2026-06-16T12:00:00.000Z'));
     useRealtimeMatchStore.getState().reset();
     const store = useRealtimeMatchStore.getState();
+    store.setSelfUserId('u1');
     store.setMatchStart({
       matchId: 'match-1',
       mode: 'ranked',
@@ -171,6 +172,7 @@ describe('RealtimePossessionMatchScreen pause overlay', () => {
   it('uses kickoff ready badges instead of the ready overlay before ranked kickoff countdown starts', () => {
     useRealtimeMatchStore.getState().reset();
     const store = useRealtimeMatchStore.getState();
+    store.setSelfUserId('u1');
     store.setMatchStart({
       matchId: 'match-2',
       mode: 'ranked',
@@ -187,6 +189,8 @@ describe('RealtimePossessionMatchScreen pause overlay', () => {
       phase: 'kickoff',
       readyCount: 1,
       totalCount: 2,
+      readyUserIds: ['u1'],
+      waitingUserIds: ['u1', 'u2'],
       forceStartsAt: new Date(Date.now() + 10_000).toISOString(),
     });
 
@@ -203,5 +207,65 @@ describe('RealtimePossessionMatchScreen pause overlay', () => {
         stageKey: 'kickoff',
       }),
     );
+  });
+
+  it('maps kickoff ready badges by user id instead of ready count order', () => {
+    useRealtimeMatchStore.getState().reset();
+    const store = useRealtimeMatchStore.getState();
+    store.setSelfUserId('u1');
+    store.setMatchStart({
+      matchId: 'match-3',
+      mode: 'ranked',
+      variant: 'ranked_sim',
+      mySeat: 1,
+      opponent: { id: 'u2', username: 'Opponent', avatarUrl: null },
+      participants: [
+        { userId: 'u1', username: 'Me', avatarUrl: null, seat: 1 },
+        { userId: 'u2', username: 'Opponent', avatarUrl: null, seat: 2 },
+      ],
+    });
+    store.setMatchWaitingForReady({
+      matchId: 'match-3',
+      phase: 'kickoff',
+      readyCount: 1,
+      totalCount: 2,
+      readyUserIds: ['u2'],
+      waitingUserIds: ['u1', 'u2'],
+      forceStartsAt: new Date(Date.now() + 10_000).toISOString(),
+    });
+
+    render(<RealtimePossessionMatchScreen {...baseProps} matchType="ranked" />);
+
+    expect(screen.getByTestId('kickoff-overlay')).toHaveTextContent('player-waiting');
+    expect(screen.getByTestId('kickoff-overlay')).toHaveTextContent('opponent-ready');
+  });
+
+  it('does not guess a ready side from count-only two-human ready payloads', () => {
+    useRealtimeMatchStore.getState().reset();
+    const store = useRealtimeMatchStore.getState();
+    store.setSelfUserId('u1');
+    store.setMatchStart({
+      matchId: 'match-4',
+      mode: 'ranked',
+      variant: 'ranked_sim',
+      mySeat: 1,
+      opponent: { id: 'u2', username: 'Opponent', avatarUrl: null },
+      participants: [
+        { userId: 'u1', username: 'Me', avatarUrl: null, seat: 1 },
+        { userId: 'u2', username: 'Opponent', avatarUrl: null, seat: 2 },
+      ],
+    });
+    store.setMatchWaitingForReady({
+      matchId: 'match-4',
+      phase: 'kickoff',
+      readyCount: 1,
+      totalCount: 2,
+      forceStartsAt: new Date(Date.now() + 10_000).toISOString(),
+    });
+
+    render(<RealtimePossessionMatchScreen {...baseProps} matchType="ranked" />);
+
+    expect(screen.getByTestId('kickoff-overlay')).toHaveTextContent('player-waiting');
+    expect(screen.getByTestId('kickoff-overlay')).toHaveTextContent('opponent-waiting');
   });
 });
