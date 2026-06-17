@@ -1373,6 +1373,8 @@
   "showdown": {
     "kickoff": "თამაშის დაწყება",
     "getReadyForKickoff": "მოემზადე თამაშის დაწყებისთვის",
+    "syncingMatch": "მატჩის სინქრონიზაცია",
+    "waitingForOpponent": "ველოდებით მოწინააღმდეგეს",
     "ranked": "რეიტინგული",
     "friendly": "ამხანაგური",
     "pingLabel": "პინგი"

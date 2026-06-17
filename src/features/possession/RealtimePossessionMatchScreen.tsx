@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { LogOut, Volume2, VolumeX } from 'lucide-react';
 import { QuitMatchModal } from '@/components/match/QuitMatchModal';
+import { ShowdownScreen } from '@/components/ShowdownScreen';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { MatchWaitingForReadyOverlay } from '@/components/shared/MatchWaitingForReadyOverlay';
 import { ConnectionQualitySignal } from '@/components/shared/ConnectionQualitySignal';
@@ -42,6 +43,7 @@ interface RealtimePossessionMatchScreenProps {
    *  kickoff/resume countdown overlay when provided. */
   playerRankPoints?: number | null;
   opponentRankPoints?: number | null;
+  matchType?: 'ranked' | 'friendly';
   centerPossessionTrack?: boolean;
   simpleShotAnimation?: boolean;
   /** Dev prototype: glow one-sided surviving bars before normal possession moves. */
@@ -105,6 +107,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
   const stagePresenceKey = useMemo(() => {
     if (!hasMatch || finalResults) return null;
     if (matchPaused || waitingForReady?.phase === 'resume') return 'resume';
+    if (waitingForReady?.phase === 'kickoff') return 'kickoff';
     if (halftimeModel) return 'category_ban';
     if (showStartCountdown) return 'kickoff';
     if (penaltyCountdownActive || currentPhaseKind === 'penalty') return 'penalties';
@@ -133,6 +136,16 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
   const waitingDetailLabel = waitingForReady?.phase === 'resume'
     ? t('possession.resumesAfterReady')
     : t('possession.startsAfterReady');
+  const isRankedKickoffReadyWait =
+    props.matchType === 'ranked' &&
+    !finalResults &&
+    (
+      waitingForReady?.phase === 'kickoff' ||
+      (!showStartCountdown && !isReady && hasMatch && !waitingForReady)
+    );
+  const rankedShowdownStatusLabel = waitingForReady?.phase === 'kickoff' && waitingTotalCount > 1
+    ? t('showdown.waitingForOpponent')
+    : t('showdown.syncingMatch');
 
   useEffect(() => {
     if (!matchPaused || !pauseUntil) return;
@@ -202,6 +215,40 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
     ));
   }, [penaltyFinalResultKey, penaltyMatchEndOverlay]);
 
+  if (isRankedKickoffReadyWait) {
+    return (
+      <div className="relative min-h-dvh w-full bg-surface-page">
+        <RealtimeConnectionBanner />
+        <ShowdownScreen
+          matchType="ranked"
+          playerUsername={props.playerUsername}
+          playerAvatar={props.playerAvatar}
+          opponentUsername={props.opponentUsername}
+          opponentAvatar={props.opponentAvatar}
+          onComplete={() => {}}
+          autoComplete={false}
+          statusLabel={rankedShowdownStatusLabel}
+          statusWaiting
+          playerInfo={{
+            username: props.playerUsername,
+            avatar: props.playerAvatar,
+            avatarCustomization: props.playerAvatarCustomization,
+            rankPoints: props.playerRankPoints ?? 0,
+          }}
+          opponentInfo={{
+            username: props.opponentUsername,
+            avatar: props.opponentAvatar,
+            avatarCustomization: props.opponentAvatarCustomization,
+            rankPoints: props.opponentRankPoints ?? opponentInfo?.rp ?? 0,
+            pingMs: opponentInfo?.pingMs,
+            isAi: opponentInfo?.isAiOpponent,
+          }}
+          wrapperClassName="h-dvh min-h-dvh w-screen"
+        />
+      </div>
+    );
+  }
+
   if (!isReady) {
     const showPendingKickoff = showStartCountdown || hasMatch;
 
@@ -260,7 +307,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
       />
 
       <AnimatePresence>
-        {waitingForReady && !showStartCountdown && (
+        {waitingForReady && !showStartCountdown && waitingForReady.phase !== 'kickoff' && (
           <MatchWaitingForReadyOverlay
             key="possession-waiting-for-ready"
             title={waitingTitle}

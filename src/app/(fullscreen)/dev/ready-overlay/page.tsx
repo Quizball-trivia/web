@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { RotateCcw } from 'lucide-react';
+import { ShowdownScreen } from '@/components/ShowdownScreen';
 import { MatchWaitingForReadyOverlay } from '@/components/shared/MatchWaitingForReadyOverlay';
 import { KickoffCountdownOverlay } from '@/features/possession/components/KickoffCountdownOverlay';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -21,6 +22,10 @@ type ScenarioTitleKey =
   | 'possession.kickoffIn'
   | 'partyResults.waitingForPlayers';
 
+type ShowdownStatusKey =
+  | 'showdown.syncingMatch'
+  | 'showdown.waitingForOpponent';
+
 type ScenarioDetailKey =
   | 'possession.startsAfterReady'
   | 'possession.resumesAfterReady'
@@ -36,7 +41,8 @@ type Scenario = {
   total: number;
   phase: 'kickoff' | 'resume';
   description: string;
-  surface: 'pregame' | 'match' | 'party' | 'countdown';
+  surface: 'showdown' | 'pregame' | 'match' | 'party' | 'countdown';
+  showdownStatusKey?: ShowdownStatusKey;
 };
 
 const SCENARIOS: Scenario[] = [
@@ -49,8 +55,9 @@ const SCENARIOS: Scenario[] = [
     ready: 0,
     total: 1,
     phase: 'kickoff',
-    description: 'Only the human client must paint the match screen. AI does not count as a ready UI.',
-    surface: 'pregame',
+    description: 'Ranked kickoff hides the ready wait inside showdown. AI does not count as a ready UI.',
+    surface: 'showdown',
+    showdownStatusKey: 'showdown.syncingMatch',
   },
   {
     id: 'kickoff-human',
@@ -61,8 +68,9 @@ const SCENARIOS: Scenario[] = [
     ready: 1,
     total: 2,
     phase: 'kickoff',
-    description: 'One player is ready, the other is still mounting the actual game screen.',
-    surface: 'pregame',
+    description: 'One player is ready, so showdown quietly holds until the opponent screen is ready.',
+    surface: 'showdown',
+    showdownStatusKey: 'showdown.waitingForOpponent',
   },
   {
     id: 'party-six',
@@ -166,10 +174,10 @@ function DevReadyOverlayContent() {
             Ready Overlay Lab
           </div>
           <h1 className="mt-2 font-poppins text-2xl font-semibold uppercase leading-tight">
-            Waiting vs kickoff
+            Showdown vs kickoff
           </h1>
           <p className="mt-2 text-sm font-semibold leading-snug text-white/65">
-            Waiting states use a spinner. The 5-second number appears only after the ready gate releases.
+            Ranked kickoff waits inside showdown. The 5-second number appears only after the ready gate releases.
           </p>
 
           <div className="mt-5 grid gap-2">
@@ -219,7 +227,35 @@ function DevReadyOverlayContent() {
 
         <main className="flex min-h-[720px] items-center justify-center rounded-[24px] border border-white/8 bg-black/20 p-3 shadow-inner sm:p-6">
           <div className="relative h-[760px] w-full max-w-[430px] overflow-hidden rounded-[28px] border border-white/12 bg-surface-page-alt shadow-2xl sm:h-[820px]">
-            <MockMatchSurface surface={scenario.surface} />
+            {scenario.surface === 'showdown' ? (
+              <ShowdownScreen
+                matchType="ranked"
+                playerUsername="You"
+                playerAvatar="avatar-1"
+                opponentUsername="Opponent"
+                opponentAvatar="avatar-2"
+                onComplete={() => {}}
+                autoComplete={false}
+                statusLabel={t(scenario.showdownStatusKey ?? 'showdown.syncingMatch')}
+                statusWaiting
+                variant="vertical"
+                wrapperClassName="absolute inset-0 h-full min-h-full"
+                playerInfo={{
+                  username: 'You',
+                  avatar: 'avatar-1',
+                  rankPoints: 495,
+                  tier: 'Academy',
+                }}
+                opponentInfo={{
+                  username: 'Opponent',
+                  avatar: 'avatar-2',
+                  rankPoints: 980,
+                  tier: 'Pro',
+                }}
+              />
+            ) : (
+              <MockMatchSurface surface={scenario.surface} />
+            )}
             {scenario.surface === 'countdown' ? (
               <KickoffCountdownOverlay
                 countdownDisplay={countdownDisplay}
@@ -234,14 +270,14 @@ function DevReadyOverlayContent() {
                 opponentRankPoints={980}
                 className="absolute inset-0 h-full min-h-full w-full bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat"
               />
-            ) : (
+            ) : scenario.surface !== 'showdown' ? (
               <MatchWaitingForReadyOverlay
                 title={t(scenario.titleKey)}
                 readyLabel={readyLabel}
                 detailLabel={t(scenario.detailKey)}
                 className="absolute inset-0 h-full min-h-full"
               />
-            )}
+            ) : null}
           </div>
         </main>
       </div>

@@ -343,6 +343,7 @@ export function GameStageRouter() {
               : 0
           }
           opponentRankPoints={parseRp(playingOppInfo?.rp) ?? 0}
+          matchType={matchType === "ranked" ? "ranked" : "friendly"}
           onQuit={handleQuit}
           onForfeit={handleForfeit}
         />

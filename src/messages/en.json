@@ -1373,6 +1373,8 @@
   "showdown": {
     "kickoff": "Kickoff",
     "getReadyForKickoff": "Get ready for kickoff",
+    "syncingMatch": "Syncing match",
+    "waitingForOpponent": "Waiting for opponent",
     "ranked": "Ranked",
     "friendly": "Friendly",
     "pingLabel": "Ping"
