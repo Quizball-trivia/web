@@ -16,8 +16,16 @@ interface MatchCountdownPuckProps {
 
 const SIZE_TOKENS = {
   sm: { circle: 'size-24', text: 'text-5xl', bar: 'w-20' },
-  md: { circle: 'size-28 sm:size-32', text: 'text-5xl sm:text-6xl', bar: 'w-24 sm:w-28' },
-  lg: { circle: 'size-24 sm:size-36', text: 'text-5xl sm:text-7xl', bar: 'w-20 sm:w-28' },
+  md: {
+    circle: 'size-[clamp(6.5rem,28cqw,8rem)]',
+    text: 'text-[clamp(2.75rem,13cqw,3.75rem)]',
+    bar: 'w-[clamp(5rem,24cqw,7rem)]',
+  },
+  lg: {
+    circle: 'size-[clamp(5.25rem,22cqw,9rem)]',
+    text: 'text-[clamp(2.6rem,11cqw,4.5rem)]',
+    bar: 'w-[clamp(4.5rem,20cqw,7rem)]',
+  },
 };
 
 export function MatchCountdownPuck({
@@ -33,7 +41,7 @@ export function MatchCountdownPuck({
   const tokens = SIZE_TOKENS[size];
   return (
     <div className={cn('flex flex-col items-center', className)}>
-      <div className="w-full min-w-[8rem] text-balance text-center font-poppins text-[10px] font-semibold uppercase leading-tight tracking-[0.16em] text-brand-yellow sm:text-[11px]">
+      <div className="w-full min-w-0 text-balance text-center font-poppins text-[clamp(0.55rem,1.8cqw,0.7rem)] font-semibold uppercase leading-tight tracking-[0.16em] text-brand-yellow">
         {label}
       </div>
       <motion.div
@@ -47,10 +55,9 @@ export function MatchCountdownPuck({
         )}
       >
         {waiting ? (
-          <span
-            aria-hidden="true"
-            className="size-11 rounded-full border-[6px] border-white/20 border-t-brand-cyan motion-safe:animate-spin sm:size-16"
-          />
+          <span className="font-poppins text-[clamp(1rem,5cqw,1.75rem)] font-black uppercase tracking-[0.08em] text-white">
+            VS
+          </span>
         ) : (
           <span className={cn('font-poppins font-semibold leading-none tabular-nums text-white', tokens.text)}>
             {seconds}
@@ -58,7 +65,7 @@ export function MatchCountdownPuck({
         )}
       </motion.div>
       {waiting && detailLabel ? (
-        <div className={cn('mt-3 max-w-36 text-balance text-center font-poppins text-[10px] font-semibold uppercase leading-tight text-white/55 sm:max-w-44 sm:text-xs', tokens.bar)}>
+        <div className={cn('mt-3 text-balance text-center font-poppins text-[clamp(0.55rem,1.8cqw,0.75rem)] font-semibold uppercase leading-tight text-white/55', tokens.bar)}>
           {detailLabel}
         </div>
       ) : durationMs ? (

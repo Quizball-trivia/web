@@ -79,7 +79,7 @@ export function KickoffCountdownOverlay({
   return (
     <div
       className={cn(
-        'relative flex min-h-[420px] items-center justify-center overflow-hidden px-4 py-8 sm:min-h-[500px] sm:px-8',
+        '@container relative flex min-h-[420px] items-center justify-center overflow-hidden px-[clamp(0.75rem,4cqw,2rem)] py-[clamp(1.5rem,5cqw,2.5rem)]',
         className,
       )}
     >
@@ -94,7 +94,7 @@ export function KickoffCountdownOverlay({
       <motion.div
         animate={finished ? { y: -110, opacity: 0, scale: 0.96 } : { y: 0, opacity: 1, scale: 1 }}
         transition={{ duration: 0.45, ease: 'easeInOut' }}
-        className="relative grid w-full max-w-5xl grid-cols-[minmax(0,1fr)_116px_minmax(0,1fr)] items-center gap-2 bg-transparent p-3 sm:grid-cols-[minmax(0,1fr)_180px_minmax(0,1fr)] sm:gap-8 sm:p-5 md:gap-12"
+        className="relative grid w-full max-w-5xl grid-cols-[minmax(0,1fr)_clamp(5rem,23cqw,10rem)_minmax(0,1fr)] items-center gap-[clamp(0.25rem,2.2cqw,3rem)] bg-transparent p-[clamp(0.5rem,2cqw,1.25rem)]"
       >
         <KickoffPlayerCard
           align="left"
@@ -168,16 +168,16 @@ function KickoffPlayerCard({
       initial={{ x: align === 'left' ? -28 : 28, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 250, damping: 22 }}
-      className="flex min-w-0 flex-col items-center bg-transparent px-1 py-2 sm:px-3"
+      className="flex min-w-0 flex-col items-center bg-transparent px-[clamp(0.125rem,1cqw,0.75rem)] py-2"
     >
-      <div className="font-fun text-[8px] font-black uppercase tracking-[0.25em] text-white/45 sm:text-[10px]">
+      <div className="font-fun text-[clamp(0.45rem,1.6cqw,0.625rem)] font-black uppercase tracking-[0.25em] text-white/45">
         {label}
       </div>
       <motion.div
         initial={{ scale: 0.82 }}
         animate={{ scale: 1 }}
         transition={{ delay: 0.12, type: 'spring', stiffness: 200 }}
-        className="relative mt-2"
+        className="relative mt-[clamp(0.35rem,1.6cqw,0.75rem)]"
       >
         {showReadyStatus && (
           <motion.div
@@ -185,17 +185,16 @@ function KickoffPlayerCard({
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 360, damping: 18 }}
             className={cn(
-              'absolute top-1 z-20 flex size-9 items-center justify-center rounded-full border-2 border-white/90 shadow-[0_8px_24px_rgba(0,0,0,0.3)] sm:size-11',
-              isOpponent ? 'right-0 sm:right-1' : 'left-0 sm:left-1',
-              ready ? 'bg-brand-green text-white' : 'bg-white/12 text-white backdrop-blur-md',
+              'absolute left-1/2 top-[7%] z-20 flex size-[clamp(2rem,7.5cqw,2.75rem)] -translate-x-1/2 items-center justify-center rounded-full border-2 border-white/90 shadow-[0_8px_24px_rgba(0,0,0,0.36)]',
+              ready ? 'bg-brand-green text-white' : 'bg-black/55 text-brand-cyan backdrop-blur-md',
             )}
             aria-label={ready ? t('friend.ready') : t('friend.waiting')}
             title={ready ? t('friend.ready') : t('friend.waiting')}
           >
             {ready ? (
-              <Check className="size-5 stroke-[4] sm:size-6" />
+              <Check className="size-[clamp(1.1rem,4cqw,1.5rem)] stroke-[4]" />
             ) : (
-              <LoaderCircle className="size-5 animate-spin sm:size-6" />
+              <LoaderCircle className="size-[clamp(1.1rem,4cqw,1.5rem)] animate-spin" />
             )}
           </motion.div>
         )}
@@ -205,11 +204,11 @@ function KickoffPlayerCard({
           rpLabel={`${rankPoints ?? 0}RP`}
           customization={avatarCustomization}
           mirrored={isOpponent}
-          sizes="(min-width: 768px) 240px, (min-width: 640px) 200px, 112px"
-          className="w-[112px] sm:w-[200px] md:w-[240px]"
+          sizes="(min-width: 1024px) 240px, (min-width: 640px) 160px, 120px"
+          className="w-[clamp(5.75rem,30cqw,15rem)]"
         />
       </motion.div>
-      <div className="mt-2 max-w-[130px] truncate text-center font-poppins text-base font-black uppercase tracking-wide text-white sm:mt-4 sm:max-w-[260px] sm:text-2xl md:text-3xl">
+      <div className="mt-[clamp(0.5rem,1.8cqw,1rem)] max-w-[min(34cqw,16rem)] truncate text-center font-poppins text-[clamp(0.95rem,4.4cqw,1.875rem)] font-black uppercase tracking-wide text-white">
         {name}
       </div>
     </motion.div>
