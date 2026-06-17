@@ -94,35 +94,43 @@ export function KickoffCountdownOverlay({
       <motion.div
         animate={finished ? { y: -110, opacity: 0, scale: 0.96 } : { y: 0, opacity: 1, scale: 1 }}
         transition={{ duration: 0.45, ease: 'easeInOut' }}
-        className="relative grid w-full max-w-5xl grid-cols-[minmax(0,1fr)_clamp(3.75rem,12cqw,6rem)_minmax(0,1fr)] items-center gap-[clamp(0.35rem,1.6cqw,1rem)] bg-transparent p-[clamp(0.375rem,1.5cqw,1rem)]"
+        className="relative flex w-full max-w-5xl flex-col items-center bg-transparent p-[clamp(0.375rem,1.5cqw,1rem)]"
       >
-        <KickoffPlayerCard
-          align="left"
-          name={playerName}
-          avatarCustomization={playerCustomization}
-          rankPoints={playerRankPoints}
-          ready={playerReady}
-          showReadyStatus={waiting || playerReady !== undefined}
-        />
+        {!waiting ? (
+          <div className="relative z-10 mb-[clamp(0.6rem,2.4cqw,1rem)] max-w-[min(86cqw,28rem)] rounded-2xl bg-black/28 px-[clamp(0.75rem,3cqw,1.25rem)] py-[clamp(0.35rem,1.4cqw,0.55rem)] text-balance text-center font-poppins text-[clamp(0.72rem,3.2cqw,0.95rem)] font-black uppercase leading-tight tracking-[0.12em] text-brand-yellow shadow-[0_0_28px_rgba(28,176,246,0.14)] backdrop-blur-sm">
+            {headerLabel}
+          </div>
+        ) : null}
 
-        <MatchCountdownPuck
-          label={headerLabel}
-          seconds={countdownDisplay}
-          waiting={waiting}
-          detailLabel={waitingDetailLabel}
-          durationMs={waiting ? undefined : durationMs}
-          runKey={runKey}
-          size={waiting ? 'sm' : 'lg'}
-        />
+        <div className="grid w-full grid-cols-[minmax(0,1fr)_clamp(5rem,21cqw,6.5rem)_minmax(0,1fr)] items-center gap-[clamp(0.4rem,1.8cqw,1rem)]">
+          <KickoffPlayerCard
+            align="left"
+            name={playerName}
+            avatarCustomization={playerCustomization}
+            rankPoints={playerRankPoints}
+            ready={playerReady}
+            showReadyStatus={waiting || playerReady !== undefined}
+          />
 
-        <KickoffPlayerCard
-          align="right"
-          name={opponentName}
-          avatarCustomization={opponentCustomization}
-          rankPoints={opponentRankPoints}
-          ready={opponentReady}
-          showReadyStatus={waiting || opponentReady !== undefined}
-        />
+          <MatchCountdownPuck
+            label=""
+            seconds={countdownDisplay}
+            waiting={waiting}
+            detailLabel={waitingDetailLabel}
+            durationMs={waiting ? undefined : durationMs}
+            runKey={runKey}
+            size={waiting ? 'sm' : 'kickoff'}
+          />
+
+          <KickoffPlayerCard
+            align="right"
+            name={opponentName}
+            avatarCustomization={opponentCustomization}
+            rankPoints={opponentRankPoints}
+            ready={opponentReady}
+            showReadyStatus={waiting || opponentReady !== undefined}
+          />
+        </div>
       </motion.div>
 
       <motion.div
@@ -199,11 +207,11 @@ function KickoffPlayerCard({
           rpLabel={`${rankPoints ?? 0}RP`}
           customization={avatarCustomization}
           mirrored={isOpponent}
-          sizes="(min-width: 1024px) 240px, (min-width: 640px) 176px, 144px"
-          className="w-[clamp(7.25rem,36cqw,15rem)]"
+          sizes="(min-width: 1024px) 224px, (min-width: 640px) 168px, 136px"
+          className="w-[clamp(6.8rem,34cqw,14rem)]"
         />
       </motion.div>
-      <div className="mt-[clamp(0.5rem,1.8cqw,1rem)] max-w-[min(38cqw,16rem)] truncate text-center font-poppins text-[clamp(1.05rem,5cqw,1.875rem)] font-black uppercase tracking-wide text-white">
+      <div className="mt-[clamp(0.5rem,1.8cqw,1rem)] max-w-[min(35cqw,15rem)] truncate text-center font-poppins text-[clamp(1rem,4.6cqw,1.75rem)] font-black uppercase tracking-wide text-white">
         {name}
       </div>
     </motion.div>
