@@ -91,6 +91,28 @@ describe('usePossessionRoundTransition', () => {
     expect(result.current).toBe(false);
   });
 
+  it('does not arm the first-question intro in the second half', () => {
+    type Props = {
+      currentQuestionIndex: number | null;
+    };
+    const initialProps: Props = {
+      currentQuestionIndex: null,
+    };
+    const { result, rerender } = renderHook((props: Props) => usePossessionFirstQuestionIntro({
+      countdownEndsAt: null,
+      currentQuestionIndex: props.currentQuestionIndex,
+      half: 2,
+    }), {
+      initialProps,
+    });
+
+    expect(result.current).toBe(false);
+
+    rerender({ currentQuestionIndex: 6 });
+
+    expect(result.current).toBe(false);
+  });
+
   it('keeps the normal transition snapshot stable while the overlay remains visible', async () => {
     const { result, rerender } = renderHook((props: {
       pendingQuestion: ResolvedMatchQuestionPayload | null;
@@ -484,6 +506,30 @@ describe('usePossessionRoundTransition', () => {
     expect(result.current.transitionSnapshot.title).toBe('Question 7');
     expect(result.current.transitionSnapshot.subtitle).toBe('Second Half');
     expect(result.current.transitionSnapshot.upcomingQIndex).toBe(6);
+  });
+
+  it('ignores a stale first-question intro flag during second-half kickoff', async () => {
+    const { result } = renderHook(() => usePossessionRoundTransition({
+      phase: 'NORMAL_PLAY',
+      half: 2,
+      penaltySuddenDeath: false,
+      firstQuestionIntro: true,
+      secondHalfQuestionIntro: false,
+      currentQuestionIndex: null,
+      localQuestion: null,
+      pendingQuestion: null,
+      roundResult: null,
+      roundResultHoldDone: false,
+      isPenaltyQuestion: false,
+      isShotQuestion: false,
+      isLastAttackQuestion: false,
+      goalCelebration: null,
+    }));
+
+    await act(async () => {});
+
+    expect(result.current.showRoundTransition).toBe(false);
+    expect(result.current.transitionSnapshot.title).toBe('Question 1');
   });
 
   it('does not show the second-half transition until the authoritative question index is known', async () => {
