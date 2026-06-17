@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { LogOut, Volume2, VolumeX } from 'lucide-react';
 import { QuitMatchModal } from '@/components/match/QuitMatchModal';
-import { ShowdownScreen } from '@/components/ShowdownScreen';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { MatchWaitingForReadyOverlay } from '@/components/shared/MatchWaitingForReadyOverlay';
 import { ConnectionQualitySignal } from '@/components/shared/ConnectionQualitySignal';
@@ -136,16 +135,17 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
   const waitingDetailLabel = waitingForReady?.phase === 'resume'
     ? t('possession.resumesAfterReady')
     : t('possession.startsAfterReady');
-  const isRankedKickoffReadyWait =
-    props.matchType === 'ranked' &&
-    !finalResults &&
-    (
-      waitingForReady?.phase === 'kickoff' ||
-      (!showStartCountdown && !isReady && hasMatch && !waitingForReady)
-    );
-  const rankedShowdownStatusLabel = waitingForReady?.phase === 'kickoff' && waitingTotalCount > 1
-    ? t('showdown.waitingForOpponent')
-    : t('showdown.syncingMatch');
+  const showKickoffReadyGate = props.matchType === 'ranked'
+    && waitingForReady?.phase === 'kickoff'
+    && currentQuestionIndex === null
+    && !finalResults;
+  // The backend currently sends counts, not per-user IDs. In 1v1 ranked,
+  // this maps cleanly: after this screen paints our client acks readiness,
+  // then readyCount reaches 2 only when the opponent is ready too.
+  const kickoffPlayerReady = Boolean(waitingForReady && waitingForReady.readyCount >= 1);
+  const kickoffOpponentReady = Boolean(waitingForReady && (
+    waitingForReady.totalCount <= 1 || waitingForReady.readyCount >= 2
+  ));
 
   useEffect(() => {
     if (!matchPaused || !pauseUntil) return;
@@ -215,47 +215,34 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
     ));
   }, [penaltyFinalResultKey, penaltyMatchEndOverlay]);
 
-  if (isRankedKickoffReadyWait) {
-    return (
-      <div className="relative min-h-dvh w-full bg-surface-page">
-        <RealtimeConnectionBanner />
-        <ShowdownScreen
-          matchType="ranked"
-          playerUsername={props.playerUsername}
-          playerAvatar={props.playerAvatar}
-          opponentUsername={props.opponentUsername}
-          opponentAvatar={props.opponentAvatar}
-          onComplete={() => {}}
-          autoComplete={false}
-          statusLabel={rankedShowdownStatusLabel}
-          statusWaiting
-          playerInfo={{
-            username: props.playerUsername,
-            avatar: props.playerAvatar,
-            avatarCustomization: props.playerAvatarCustomization,
-            rankPoints: props.playerRankPoints ?? 0,
-          }}
-          opponentInfo={{
-            username: props.opponentUsername,
-            avatar: props.opponentAvatar,
-            avatarCustomization: props.opponentAvatarCustomization,
-            rankPoints: props.opponentRankPoints ?? opponentInfo?.rp ?? 0,
-            pingMs: opponentInfo?.pingMs,
-            isAi: opponentInfo?.isAiOpponent,
-          }}
-          wrapperClassName="h-dvh min-h-dvh w-screen"
-        />
-      </div>
-    );
-  }
-
   if (!isReady) {
     const showPendingKickoff = showStartCountdown || hasMatch;
 
     return (
       <div className="flex min-h-dvh w-full items-center justify-center bg-surface-page-alt">
         <RealtimeConnectionBanner />
-        {waitingForReady ? (
+        {showKickoffReadyGate ? (
+          <KickoffCountdownOverlay
+            countdownDisplay={countdownDisplay}
+            phase="kickoff"
+            waiting
+            waitingLabel={waitingTitle}
+            waitingDetailLabel={waitingDetailLabel}
+            playerReady={kickoffPlayerReady}
+            opponentReady={kickoffOpponentReady}
+            durationMs={5_000}
+            runKey={waitingForReady.forceStartsAt}
+            playerName={props.playerUsername}
+            opponentName={props.opponentUsername}
+            playerAvatarBase={props.playerAvatar}
+            opponentAvatarBase={props.opponentAvatar}
+            playerAvatarCustomization={props.playerAvatarCustomization}
+            opponentAvatarCustomization={props.opponentAvatarCustomization}
+            playerRankPoints={props.playerRankPoints}
+            opponentRankPoints={props.opponentRankPoints ?? opponentInfo?.rp ?? null}
+            className="h-dvh min-h-dvh w-screen bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat"
+          />
+        ) : waitingForReady ? (
           <MatchWaitingForReadyOverlay
             title={waitingTitle}
             readyLabel={waitingReadyLabel}
@@ -319,7 +306,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
       </AnimatePresence>
 
       <AnimatePresence>
-        {showStartCountdown && (
+        {(showStartCountdown || showKickoffReadyGate) && (
           <motion.div
             key="match-start-countdown"
             initial={{ opacity: 0 }}
@@ -331,8 +318,13 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
             <KickoffCountdownOverlay
               countdownDisplay={countdownDisplay}
               phase={countdownPhase}
+              waiting={showKickoffReadyGate}
+              waitingLabel={waitingTitle}
+              waitingDetailLabel={waitingDetailLabel}
+              playerReady={showKickoffReadyGate ? kickoffPlayerReady : undefined}
+              opponentReady={showKickoffReadyGate ? kickoffOpponentReady : undefined}
               durationMs={5_000}
-              runKey={countdownPhase}
+              runKey={showKickoffReadyGate ? waitingForReady.forceStartsAt : countdownPhase}
               playerName={props.playerUsername}
               opponentName={props.opponentUsername}
               playerAvatarBase={props.playerAvatar}

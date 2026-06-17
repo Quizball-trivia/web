@@ -6,6 +6,8 @@ import { cn } from '@/lib/utils';
 interface MatchCountdownPuckProps {
   label: string;
   seconds: number;
+  waiting?: boolean;
+  detailLabel?: string;
   durationMs?: number;
   runKey?: string | number;
   size?: 'sm' | 'md' | 'lg';
@@ -21,6 +23,8 @@ const SIZE_TOKENS = {
 export function MatchCountdownPuck({
   label,
   seconds,
+  waiting = false,
+  detailLabel,
   durationMs,
   runKey = 'countdown',
   size = 'md',
@@ -33,7 +37,7 @@ export function MatchCountdownPuck({
         {label}
       </div>
       <motion.div
-        key={seconds}
+        key={waiting ? 'waiting' : seconds}
         initial={{ y: -22, scale: 1.55, opacity: 0 }}
         animate={{ y: 0, scale: 1, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 460, damping: 17 }}
@@ -42,11 +46,22 @@ export function MatchCountdownPuck({
           tokens.circle,
         )}
       >
-        <span className={cn('font-poppins font-semibold leading-none tabular-nums text-white', tokens.text)}>
-          {seconds}
-        </span>
+        {waiting ? (
+          <span
+            aria-hidden="true"
+            className="size-11 rounded-full border-[6px] border-white/20 border-t-brand-cyan motion-safe:animate-spin sm:size-16"
+          />
+        ) : (
+          <span className={cn('font-poppins font-semibold leading-none tabular-nums text-white', tokens.text)}>
+            {seconds}
+          </span>
+        )}
       </motion.div>
-      {durationMs ? (
+      {waiting && detailLabel ? (
+        <div className={cn('mt-3 max-w-36 text-balance text-center font-poppins text-[10px] font-semibold uppercase leading-tight text-white/55 sm:max-w-44 sm:text-xs', tokens.bar)}>
+          {detailLabel}
+        </div>
+      ) : durationMs ? (
         <div className={cn('mt-3 h-1 overflow-hidden rounded-full bg-white/15', tokens.bar)}>
           <motion.div
             key={`bar-${runKey}`}

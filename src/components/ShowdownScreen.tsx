@@ -122,13 +122,6 @@ interface ShowdownScreenProps {
   opponentAvatar: string;
   matchType: 'ranked' | 'friendly';
   onComplete: () => void;
-  /** Disable the built-in timeout when the caller owns the transition. */
-  autoComplete?: boolean;
-  /** Override the built-in 4.5s cinematic duration. */
-  completionDelayMs?: number;
-  /** Small status line under VS. Used to hide ready-gate waiting inside showdown. */
-  statusLabel?: string;
-  statusWaiting?: boolean;
   /** Extended player info for richer display */
   playerInfo?: ShowdownPlayerInfo;
   /** Extended opponent info for richer display */
@@ -381,39 +374,6 @@ function PlayerSide({
   );
 }
 
-function ShowdownStatusLine({
-  label,
-  waiting,
-  isVertical,
-}: {
-  label: string;
-  waiting: boolean;
-  isVertical: boolean;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={waiting ? { opacity: 1 } : { opacity: [0.45, 1, 0.45] }}
-      transition={waiting ? { delay: 1.2, duration: 0.2 } : { delay: 1.2, duration: 2, repeat: Infinity }}
-      className={cn(
-        'mt-1 inline-flex items-center justify-center gap-2 uppercase text-white/60',
-        isVertical
-          ? 'text-[10px] tracking-[0.18em]'
-          : 'text-[9px] tracking-[0.12em] sm:mt-2 sm:text-xs sm:tracking-[0.16em]',
-      )}
-      style={poppins}
-    >
-      {waiting && (
-        <span
-          aria-hidden="true"
-          className="size-3 rounded-full border-2 border-white/25 border-t-brand-cyan motion-safe:animate-spin"
-        />
-      )}
-      <span>{label}</span>
-    </motion.div>
-  );
-}
-
 export function ShowdownScreen({
   playerUsername,
   playerAvatar,
@@ -421,10 +381,6 @@ export function ShowdownScreen({
   opponentAvatar,
   matchType,
   onComplete,
-  autoComplete = true,
-  completionDelayMs = 4500,
-  statusLabel,
-  statusWaiting = false,
   playerInfo,
   opponentInfo,
   wrapperClassName = 'min-h-screen',
@@ -434,10 +390,9 @@ export function ShowdownScreen({
   const { pingIndicatorEnabled } = useUserPreferences();
   const connectionHealth = useRealtimeConnectionHealth();
   useEffect(() => {
-    if (!autoComplete) return;
-    const timer = setTimeout(() => onComplete(), completionDelayMs);
+    const timer = setTimeout(() => onComplete(), 4500);
     return () => clearTimeout(timer);
-  }, [autoComplete, completionDelayMs, onComplete]);
+  }, [onComplete]);
 
   // Auto-pick layout: mobile → vertical (stack), desktop → horizontal (side-by-side).
   // Callers can force either via the explicit prop.
@@ -455,8 +410,6 @@ export function ShowdownScreen({
   const isRanked = matchType === 'ranked';
   const accentMatch = '#1645FF';
   const isVertical = resolvedVariant === 'vertical';
-  const matchTypeLabel = isRanked ? t('showdown.ranked') : t('showdown.friendly');
-  const readyStatusLabel = statusLabel ?? t('showdown.getReadyForKickoff');
 
   // ── Vertical variant — opponent on top with reversed content order
   // (text above card, card just above the VS divider). Player on bottom
@@ -497,10 +450,18 @@ export function ShowdownScreen({
               className="mt-1.5 text-[13px] uppercase text-white"
               style={poppins}
             >
-              {matchTypeLabel}{' '}
+              {isRanked ? 'Ranked' : 'Friendly'}{' '}
               <span style={{ color: accentMatch }}>1v1</span>
             </motion.div>
-            <ShowdownStatusLine label={readyStatusLabel} waiting={statusWaiting} isVertical />
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0.45, 1, 0.45] }}
+              transition={{ delay: 1.2, duration: 2, repeat: Infinity }}
+              className="mt-1 text-[10px] uppercase tracking-[0.18em] text-white/55"
+              style={poppins}
+            >
+              Get ready for kickoff
+            </motion.div>
           </motion.div>
 
           {/* Player on bottom, normal order (card top, text bottom). */}
@@ -548,14 +509,19 @@ export function ShowdownScreen({
             className="mt-2 text-[10px] uppercase text-white sm:mt-5 sm:text-xl md:text-2xl"
             style={poppins}
           >
-            {matchTypeLabel}{' '}
+            {isRanked ? 'Ranked' : 'Friendly'}{' '}
             <span style={{ color: accentMatch }}>1v1</span>
           </motion.div>
-          <ShowdownStatusLine
-            label={readyStatusLabel}
-            waiting={statusWaiting}
-            isVertical={isVertical}
-          />
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.45, 1, 0.45] }}
+            transition={{ delay: 1.2, duration: 2, repeat: Infinity }}
+            className="mt-1 text-[9px] uppercase tracking-[0.12em] text-white/55 sm:mt-2 sm:text-xs sm:tracking-[0.16em]"
+            style={poppins}
+          >
+            <span className="sm:hidden">Kickoff</span>
+            <span className="hidden sm:inline">Get ready for kickoff</span>
+          </motion.div>
         </motion.div>
 
         <div className="flex justify-center">

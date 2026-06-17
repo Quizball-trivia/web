@@ -13,8 +13,8 @@ vi.mock('@/contexts/LocaleContext', () => ({
         'possession.leaveSafely': 'Leave safely',
         'possession.muteAudio': 'Mute audio',
         'possession.unmuteAudio': 'Unmute audio',
-        'showdown.syncingMatch': 'Syncing match',
-        'showdown.waitingForOpponent': 'Waiting for opponent',
+        'possession.waitingForOpponent': 'Waiting for opponent',
+        'possession.startsAfterReady': 'Starts after ready',
         'common.mute': 'Mute',
         'common.unmute': 'Unmute',
       };
@@ -64,15 +64,6 @@ vi.mock('@/components/match/QuitMatchModal', () => ({
   QuitMatchModal: () => null,
 }));
 
-vi.mock('@/components/ShowdownScreen', () => ({
-  ShowdownScreen: ({ statusLabel, statusWaiting }: { statusLabel?: string; statusWaiting?: boolean }) => (
-    <div data-testid="showdown-screen">
-      <span>{statusLabel}</span>
-      <span>{statusWaiting ? 'waiting' : 'ready'}</span>
-    </div>
-  ),
-}));
-
 vi.mock('../components/PossessionMatchViewport', () => ({
   PossessionMatchViewport: ({ children }: { children?: React.ReactNode }) => (
     <div data-testid="viewport">{children}</div>
@@ -90,7 +81,19 @@ vi.mock('../components/MatchHudPrimitives', () => ({
 }));
 
 vi.mock('../components/KickoffCountdownOverlay', () => ({
-  KickoffCountdownOverlay: () => null,
+  KickoffCountdownOverlay: (props: {
+    waiting?: boolean;
+    waitingLabel?: string;
+    playerReady?: boolean;
+    opponentReady?: boolean;
+  }) => (
+    <div data-testid="kickoff-overlay">
+      <span>{props.waiting ? 'waiting' : 'countdown'}</span>
+      <span>{props.waitingLabel}</span>
+      <span>{props.playerReady ? 'player-ready' : 'player-waiting'}</span>
+      <span>{props.opponentReady ? 'opponent-ready' : 'opponent-waiting'}</span>
+    </div>
+  ),
 }));
 
 vi.mock('../components/PenaltyStartCountdownOverlay', () => ({
@@ -165,7 +168,7 @@ describe('RealtimePossessionMatchScreen pause overlay', () => {
     expect(overlay?.className.toString()).toContain('z-[80]');
   });
 
-  it('uses showdown instead of the ready overlay while ranked kickoff waits for the opponent screen', () => {
+  it('uses kickoff ready badges instead of the ready overlay before ranked kickoff countdown starts', () => {
     useRealtimeMatchStore.getState().reset();
     const store = useRealtimeMatchStore.getState();
     store.setMatchStart({
@@ -189,7 +192,10 @@ describe('RealtimePossessionMatchScreen pause overlay', () => {
 
     render(<RealtimePossessionMatchScreen {...baseProps} matchType="ranked" />);
 
-    expect(screen.getByTestId('showdown-screen')).toHaveTextContent('Waiting for opponent');
+    expect(screen.getByTestId('kickoff-overlay')).toHaveTextContent('waiting');
+    expect(screen.getByTestId('kickoff-overlay')).toHaveTextContent('Waiting for opponent');
+    expect(screen.getByTestId('kickoff-overlay')).toHaveTextContent('player-ready');
+    expect(screen.getByTestId('kickoff-overlay')).toHaveTextContent('opponent-waiting');
     expect(screen.queryByText('possession.playersReadyCount')).not.toBeInTheDocument();
     expect(vi.mocked(useMatchStagePresence)).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { motion } from 'motion/react';
+import { Check, LoaderCircle } from 'lucide-react';
 
 import { MatchCountdownPuck } from '@/components/shared/MatchCountdownPuck';
 import { RankFrameCard } from '@/features/profile/components/RankFrameCard';
@@ -18,6 +19,11 @@ interface KickoffCountdownOverlayProps {
   countdownDisplay: number;
   phase?: CountdownPhase;
   finished?: boolean;
+  waiting?: boolean;
+  waitingLabel?: string;
+  waitingDetailLabel?: string;
+  playerReady?: boolean;
+  opponentReady?: boolean;
   durationMs?: number;
   runKey?: string | number;
   playerName: string;
@@ -37,6 +43,11 @@ export function KickoffCountdownOverlay({
   countdownDisplay,
   phase = 'kickoff',
   finished = false,
+  waiting = false,
+  waitingLabel,
+  waitingDetailLabel,
+  playerReady,
+  opponentReady,
   durationMs = 5_000,
   runKey = 'kickoff',
   playerName,
@@ -53,7 +64,11 @@ export function KickoffCountdownOverlay({
   const playerCustomization = playerAvatarCustomization ?? { base: playerAvatarBase };
   const opponentCustomization = opponentAvatarCustomization ?? { base: opponentAvatarBase };
   const isKickoff = phase === 'kickoff';
-  const headerLabel = isKickoff ? t('possession.kickoffIn') : t('possession.resumingIn');
+  const headerLabel = waiting
+    ? (waitingLabel ?? t('possession.startingSoon'))
+    : isKickoff
+      ? t('possession.kickoffIn')
+      : t('possession.resumingIn');
   const resolvedLabel = isKickoff ? t('possession.kickoff') : t('possession.resuming');
 
   useEffect(() => {
@@ -87,12 +102,16 @@ export function KickoffCountdownOverlay({
           label="Home"
           avatarCustomization={playerCustomization}
           rankPoints={playerRankPoints}
+          ready={playerReady}
+          showReadyStatus={waiting}
         />
 
         <MatchCountdownPuck
           label={headerLabel}
           seconds={countdownDisplay}
-          durationMs={durationMs}
+          waiting={waiting}
+          detailLabel={waitingDetailLabel}
+          durationMs={waiting ? undefined : durationMs}
           runKey={runKey}
           size="lg"
         />
@@ -103,6 +122,8 @@ export function KickoffCountdownOverlay({
           label="Away"
           avatarCustomization={opponentCustomization}
           rankPoints={opponentRankPoints}
+          ready={opponentReady}
+          showReadyStatus={waiting}
         />
       </motion.div>
 
@@ -126,14 +147,19 @@ function KickoffPlayerCard({
   label,
   avatarCustomization,
   rankPoints,
+  ready,
+  showReadyStatus = false,
 }: {
   align: 'left' | 'right';
   name: string;
   label: string;
   avatarCustomization: AvatarCustomization;
   rankPoints?: number | null;
+  ready?: boolean;
+  showReadyStatus?: boolean;
 }) {
   const isOpponent = align === 'right';
+  const { t } = useLocale();
   const tierLabelOf = useTierLabel();
   const tier = tierFromRp(rankPoints ?? 0);
 
@@ -153,6 +179,26 @@ function KickoffPlayerCard({
         transition={{ delay: 0.12, type: 'spring', stiffness: 200 }}
         className="relative mt-2"
       >
+        {showReadyStatus && (
+          <motion.div
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 360, damping: 18 }}
+            className={cn(
+              'absolute top-1 z-20 flex size-9 items-center justify-center rounded-full border-2 border-white/90 shadow-[0_8px_24px_rgba(0,0,0,0.3)] sm:size-11',
+              isOpponent ? 'right-0 sm:right-1' : 'left-0 sm:left-1',
+              ready ? 'bg-brand-green text-white' : 'bg-white/12 text-white backdrop-blur-md',
+            )}
+            aria-label={ready ? t('friend.ready') : t('friend.waiting')}
+            title={ready ? t('friend.ready') : t('friend.waiting')}
+          >
+            {ready ? (
+              <Check className="size-5 stroke-[4] sm:size-6" />
+            ) : (
+              <LoaderCircle className="size-5 animate-spin sm:size-6" />
+            )}
+          </motion.div>
+        )}
         <RankFrameCard
           tier={tier}
           tierLabel={tierLabelOf(tier)}
