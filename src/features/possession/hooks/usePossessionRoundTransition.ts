@@ -126,6 +126,13 @@ interface UsePossessionRoundTransitionParams {
   penaltySuddenDeath: boolean | undefined;
   firstQuestionIntro: boolean;
   secondHalfQuestionIntro: boolean;
+  /**
+   * Authoritative current question index from the server payload. At the second-
+   * half intro it already points at the upcoming question (e.g. 6 → "Question 7")
+   * even while the gated `localQuestion`/`pendingQuestion` still lag, so it is the
+   * reliable source for the second-half splash number.
+   */
+  currentQuestionIndex: number | null;
   localQuestion: ResolvedMatchQuestionPayload | null;
   pendingQuestion: ResolvedMatchQuestionPayload | null;
   roundResult: MatchRoundResultPayload | null;
@@ -142,6 +149,7 @@ export function usePossessionRoundTransition({
   penaltySuddenDeath,
   firstQuestionIntro,
   secondHalfQuestionIntro,
+  currentQuestionIndex,
   localQuestion,
   pendingQuestion,
   roundResult,
@@ -299,8 +307,18 @@ export function usePossessionRoundTransition({
       // produced a stale "QUESTION 3" splash while entering question 4.
       const upcomingQIndex = firstQuestionIntro
         ? (localQuestion?.qIndex ?? 0)
-        : pendingQuestion?.qIndex
-          ?? (typeof roundResult?.qIndex === 'number' ? roundResult.qIndex + 1 : localQuestion?.qIndex ?? null);
+        : secondHalfQuestionIntro
+          // The second half opens with no roundResult and a still-lagging
+          // pendingQuestion/localQuestion (reveal is gated during the intro), so
+          // those fallbacks resolve to a stale first-half index or null →
+          // "Question 1". The server's currentQuestionIndex already points at
+          // the upcoming question here, so it's the authoritative source.
+          ? (currentQuestionIndex
+            ?? pendingQuestion?.qIndex
+            ?? localQuestion?.qIndex
+            ?? null)
+          : pendingQuestion?.qIndex
+            ?? (typeof roundResult?.qIndex === 'number' ? roundResult.qIndex + 1 : localQuestion?.qIndex ?? null);
       // Re-capture keyed on the announced question: back-to-back transitions
       // (or a pendingQuestion arriving late with a different category) must
       // refresh the frozen snapshot instead of replaying the previous round's.
@@ -362,6 +380,7 @@ export function usePossessionRoundTransition({
       transitionVisibleRef.current = null;
     }
   }, [
+    currentQuestionIndex,
     firstQuestionIntro,
     half,
     localQuestion?.phaseKind,
