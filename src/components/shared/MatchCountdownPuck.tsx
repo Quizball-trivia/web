@@ -45,16 +45,19 @@ export function MatchCountdownPuck({
   const tokens = SIZE_TOKENS[size];
   return (
     <div className={cn('flex flex-col items-center', className)}>
-      <div className="w-full min-w-0 text-balance text-center font-poppins text-[clamp(0.55rem,1.8cqw,0.7rem)] font-semibold uppercase leading-tight tracking-[0.16em] text-brand-yellow">
-        {label}
-      </div>
+      {!waiting ? (
+        <div className="w-full min-w-0 text-balance text-center font-poppins text-[clamp(0.55rem,1.8cqw,0.7rem)] font-semibold uppercase leading-tight tracking-[0.16em] text-brand-yellow">
+          {label}
+        </div>
+      ) : null}
       <motion.div
         key={waiting ? 'waiting' : seconds}
         initial={{ y: -22, scale: 1.55, opacity: 0 }}
         animate={{ y: 0, scale: 1, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 460, damping: 17 }}
         className={cn(
-          'mt-2 flex items-center justify-center rounded-full border-4',
+          'flex items-center justify-center rounded-full border-4',
+          waiting ? 'mt-0' : 'mt-2',
           waiting
             ? 'border-white/18 bg-white/8 shadow-[0_0_28px_rgba(28,176,246,0.22)] backdrop-blur-sm'
             : 'border-brand-cyan bg-brand-blue shadow-[0_0_60px_rgba(28,176,246,0.45)]',
@@ -71,11 +74,7 @@ export function MatchCountdownPuck({
           </span>
         )}
       </motion.div>
-      {waiting && detailLabel ? (
-        <div className={cn('mt-3 text-balance text-center font-poppins text-[clamp(0.55rem,1.8cqw,0.75rem)] font-semibold uppercase leading-tight text-white/55', tokens.bar)}>
-          {detailLabel}
-        </div>
-      ) : durationMs ? (
+      {!waiting && durationMs ? (
         <div className={cn('mt-3 h-1 overflow-hidden rounded-full bg-white/15', tokens.bar)}>
           <motion.div
             key={`bar-${runKey}`}
