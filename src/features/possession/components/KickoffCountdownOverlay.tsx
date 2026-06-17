@@ -99,11 +99,10 @@ export function KickoffCountdownOverlay({
         <KickoffPlayerCard
           align="left"
           name={playerName}
-          label="Home"
           avatarCustomization={playerCustomization}
           rankPoints={playerRankPoints}
           ready={playerReady}
-          showReadyStatus={waiting}
+          showReadyStatus={waiting || playerReady !== undefined}
         />
 
         <MatchCountdownPuck
@@ -119,11 +118,10 @@ export function KickoffCountdownOverlay({
         <KickoffPlayerCard
           align="right"
           name={opponentName}
-          label="Away"
           avatarCustomization={opponentCustomization}
           rankPoints={opponentRankPoints}
           ready={opponentReady}
-          showReadyStatus={waiting}
+          showReadyStatus={waiting || opponentReady !== undefined}
         />
       </motion.div>
 
@@ -144,7 +142,6 @@ export function KickoffCountdownOverlay({
 function KickoffPlayerCard({
   align,
   name,
-  label,
   avatarCustomization,
   rankPoints,
   ready,
@@ -152,7 +149,6 @@ function KickoffPlayerCard({
 }: {
   align: 'left' | 'right';
   name: string;
-  label: string;
   avatarCustomization: AvatarCustomization;
   rankPoints?: number | null;
   ready?: boolean;
@@ -170,14 +166,11 @@ function KickoffPlayerCard({
       transition={{ type: 'spring', stiffness: 250, damping: 22 }}
       className="flex min-w-0 flex-col items-center bg-transparent px-[clamp(0.125rem,1cqw,0.75rem)] py-2"
     >
-      <div className="font-fun text-[clamp(0.45rem,1.6cqw,0.625rem)] font-black uppercase tracking-[0.25em] text-white/45">
-        {label}
-      </div>
       <motion.div
         initial={{ scale: 0.82 }}
         animate={{ scale: 1 }}
         transition={{ delay: 0.12, type: 'spring', stiffness: 200 }}
-        className="relative mt-[clamp(0.35rem,1.6cqw,0.75rem)]"
+        className="relative"
       >
         {showReadyStatus && (
           <motion.div
