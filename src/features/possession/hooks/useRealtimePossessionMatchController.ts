@@ -311,6 +311,7 @@ export function useRealtimePossessionMatchController({
     penaltySuddenDeath: possessionState?.penaltySuddenDeath,
     firstQuestionIntro,
     secondHalfQuestionIntro,
+    currentQuestionIndex: possessionMatch.currentQuestion?.qIndex ?? null,
     localQuestion,
     pendingQuestion,
     roundResult: state.roundResult,

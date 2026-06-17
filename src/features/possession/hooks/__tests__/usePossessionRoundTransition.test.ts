@@ -100,6 +100,7 @@ describe('usePossessionRoundTransition', () => {
       penaltySuddenDeath: false,
       firstQuestionIntro: false,
       secondHalfQuestionIntro: false,
+      currentQuestionIndex: 4,
       localQuestion: makeQuestion(4, 5, 'normal', 'Current'),
       pendingQuestion: props.pendingQuestion,
       roundResult: makeRoundResult('normal', 5),
@@ -166,6 +167,7 @@ describe('usePossessionRoundTransition', () => {
       penaltySuddenDeath: false,
       firstQuestionIntro: false,
       secondHalfQuestionIntro: false,
+      currentQuestionIndex: 4,
       localQuestion: makeQuestion(4, 5, 'normal', 'Current'),
       pendingQuestion: props.pendingQuestion,
       roundResult: makeRoundResult('normal', 5),
@@ -210,6 +212,7 @@ describe('usePossessionRoundTransition', () => {
       penaltySuddenDeath: true,
       firstQuestionIntro: false,
       secondHalfQuestionIntro: false,
+      currentQuestionIndex: 11,
       localQuestion: makeQuestion(11, 6, 'normal', 'Current'),
       pendingQuestion: props.pendingQuestion,
       roundResult: makeRoundResult('penalty', 1),
@@ -293,6 +296,7 @@ describe('usePossessionRoundTransition', () => {
       penaltySuddenDeath: false,
       firstQuestionIntro: false,
       secondHalfQuestionIntro: false,
+      currentQuestionIndex: 11,
       localQuestion: makeQuestion(11, 6, 'normal', 'Current'),
       pendingQuestion: makeQuestion(12, 1, 'penalty', 'Penalty'),
       roundResult: makeRoundResult('normal', 6),
@@ -341,6 +345,7 @@ describe('usePossessionRoundTransition', () => {
       penaltySuddenDeath: false,
       firstQuestionIntro: false,
       secondHalfQuestionIntro: false,
+      currentQuestionIndex: 11,
       localQuestion: makeQuestion(11, 6, 'normal', 'Current'),
       pendingQuestion: makeQuestion(12, 1, 'penalty', 'Penalty'),
       roundResult: makeRoundResult('normal', 6, 1),
@@ -396,6 +401,7 @@ describe('usePossessionRoundTransition', () => {
       penaltySuddenDeath: false,
       firstQuestionIntro: false,
       secondHalfQuestionIntro: true,
+      currentQuestionIndex: 6,
       localQuestion: makeQuestion(6, 1, 'normal', 'Second Half Category'),
       pendingQuestion: null,
       roundResult: null,
@@ -421,6 +427,7 @@ describe('usePossessionRoundTransition', () => {
     type Props = {
       firstQuestionIntro: boolean;
       secondHalfQuestionIntro: boolean;
+      currentQuestionIndex: number | null;
       localQuestion: ResolvedMatchQuestionPayload | null;
       half: 1 | 2;
     };
@@ -430,6 +437,7 @@ describe('usePossessionRoundTransition', () => {
       penaltySuddenDeath: false,
       firstQuestionIntro: props.firstQuestionIntro,
       secondHalfQuestionIntro: props.secondHalfQuestionIntro,
+      currentQuestionIndex: props.currentQuestionIndex,
       localQuestion: props.localQuestion,
       pendingQuestion: null,
       roundResult: null,
@@ -442,6 +450,7 @@ describe('usePossessionRoundTransition', () => {
       initialProps: {
         firstQuestionIntro: true,
         secondHalfQuestionIntro: false,
+        currentQuestionIndex: 0,
         localQuestion: makeQuestion(0, 1, 'normal', 'Football'),
         half: 1,
       },
@@ -454,24 +463,27 @@ describe('usePossessionRoundTransition', () => {
     rerender({
       firstQuestionIntro: false,
       secondHalfQuestionIntro: false,
+      currentQuestionIndex: null,
       localQuestion: null,
       half: 2,
     });
 
+    // Second-half intro fires while the gated localQuestion still LAGS (null
+    // here) — the bug was that the snapshot then fell back to "Question 1".
+    // The authoritative currentQuestionIndex (6) must drive the number instead,
+    // so the splash shows "Question 7" with no stale flash.
     rerender({
       firstQuestionIntro: false,
       secondHalfQuestionIntro: true,
-      localQuestion: makeQuestion(6, 1, 'normal', 'Dortmund'),
+      currentQuestionIndex: 6,
+      localQuestion: null,
       half: 2,
     });
 
     expect(result.current.showRoundTransition).toBe(true);
-    expect(result.current.transitionSnapshot).toEqual({
-      title: 'Question 7',
-      categoryName: 'Dortmund',
-      subtitle: 'Second Half',
-      upcomingQIndex: 6,
-    });
+    expect(result.current.transitionSnapshot.title).toBe('Question 7');
+    expect(result.current.transitionSnapshot.subtitle).toBe('Second Half');
+    expect(result.current.transitionSnapshot.upcomingQIndex).toBe(6);
   });
 
   it('shows an extra-question transition before a pending last-attack question', async () => {
@@ -481,6 +493,7 @@ describe('usePossessionRoundTransition', () => {
       penaltySuddenDeath: false,
       firstQuestionIntro: false,
       secondHalfQuestionIntro: false,
+      currentQuestionIndex: 5,
       localQuestion: makeQuestion(5, 6, 'normal', 'Current'),
       pendingQuestion: makeQuestion(6, 1, 'last_attack', 'Extra Category'),
       roundResult: makeRoundResult('normal', 6),
