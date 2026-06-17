@@ -486,6 +486,86 @@ describe('usePossessionRoundTransition', () => {
     expect(result.current.transitionSnapshot.upcomingQIndex).toBe(6);
   });
 
+  it('does not show the second-half transition until the authoritative question index is known', async () => {
+    type Props = {
+      currentQuestionIndex: number | null;
+      localQuestion: ResolvedMatchQuestionPayload | null;
+    };
+    const { result, rerender } = renderHook((props: Props) => usePossessionRoundTransition({
+      phase: 'NORMAL_PLAY',
+      half: 2,
+      penaltySuddenDeath: false,
+      firstQuestionIntro: false,
+      secondHalfQuestionIntro: true,
+      currentQuestionIndex: props.currentQuestionIndex,
+      localQuestion: props.localQuestion,
+      pendingQuestion: null,
+      roundResult: null,
+      roundResultHoldDone: false,
+      isPenaltyQuestion: false,
+      isShotQuestion: false,
+      isLastAttackQuestion: false,
+      goalCelebration: null,
+    }), {
+      initialProps: {
+        currentQuestionIndex: null as number | null,
+        localQuestion: null,
+      },
+    });
+
+    await act(async () => {});
+
+    expect(result.current.showRoundTransition).toBe(false);
+
+    rerender({
+      currentQuestionIndex: 6,
+      localQuestion: null,
+    });
+
+    expect(result.current.showRoundTransition).toBe(true);
+    expect(result.current.transitionSnapshot.title).toBe('Question 7');
+    expect(result.current.transitionSnapshot.upcomingQIndex).toBe(6);
+  });
+
+  it('ignores a stale first-half local question during the second-half intro', async () => {
+    const { result, rerender } = renderHook((props: {
+      currentQuestionIndex: number | null;
+    }) => usePossessionRoundTransition({
+      phase: 'NORMAL_PLAY',
+      half: 2,
+      penaltySuddenDeath: false,
+      firstQuestionIntro: false,
+      secondHalfQuestionIntro: true,
+      currentQuestionIndex: props.currentQuestionIndex,
+      localQuestion: makeQuestion(5, 6, 'normal', 'Stale First Half Category'),
+      pendingQuestion: null,
+      roundResult: null,
+      roundResultHoldDone: false,
+      isPenaltyQuestion: false,
+      isShotQuestion: false,
+      isLastAttackQuestion: false,
+      goalCelebration: null,
+    }), {
+      initialProps: {
+        currentQuestionIndex: null as number | null,
+      },
+    });
+
+    await act(async () => {});
+
+    expect(result.current.showRoundTransition).toBe(false);
+
+    rerender({ currentQuestionIndex: 6 });
+
+    expect(result.current.showRoundTransition).toBe(true);
+    expect(result.current.transitionSnapshot).toEqual({
+      title: 'Question 7',
+      categoryName: '',
+      subtitle: 'Second Half',
+      upcomingQIndex: 6,
+    });
+  });
+
   it('shows an extra-question transition before a pending last-attack question', async () => {
     const { result } = renderHook(() => usePossessionRoundTransition({
       phase: 'LAST_ATTACK',
