@@ -271,10 +271,20 @@ export function usePossessionRoundTransition({
   const allowBoundaryTransition = !isHalfBoundaryRound || hasConcreteNextQuestion;
   const isRoundTransitionPhase = phase === 'NORMAL_PLAY'
     || (phase === 'LAST_ATTACK' && hasPendingLastAttackQuestion);
+  const secondHalfUpcomingQIndex = secondHalfQuestionIntro
+    ? (typeof currentQuestionIndex === 'number'
+      ? currentQuestionIndex
+      : typeof pendingQuestion?.qIndex === 'number'
+        ? pendingQuestion.qIndex
+        : null)
+    : null;
+  const hasSecondHalfQuestionIndex = !secondHalfQuestionIntro
+    || typeof secondHalfUpcomingQIndex === 'number';
 
   const showRoundTransition = isRoundTransitionPhase
     && (roundResultHoldDone || firstQuestionIntro || secondHalfQuestionIntro)
     && allowBoundaryTransition
+    && hasSecondHalfQuestionIndex
     && !isPenaltyQuestion
     && !isShotQuestion
     && !isLastAttackQuestion
@@ -308,17 +318,14 @@ export function usePossessionRoundTransition({
       const upcomingQIndex = firstQuestionIntro
         ? (localQuestion?.qIndex ?? 0)
         : secondHalfQuestionIntro
-          // The second half opens with no roundResult and a still-lagging
-          // pendingQuestion/localQuestion (reveal is gated during the intro), so
-          // those fallbacks resolve to a stale first-half index or null →
-          // "Question 1". The server's currentQuestionIndex already points at
-          // the upcoming question here, so it's the authoritative source.
-          ? (currentQuestionIndex
-            ?? pendingQuestion?.qIndex
-            ?? localQuestion?.qIndex
-            ?? null)
+          // The second half opens with no roundResult and a cleared/still-
+          // lagging localQuestion. Never fall back to localQuestion here: it can
+          // still be the last first-half question for one render. The transition
+          // is gated above until an authoritative server qIndex is known.
+          ? secondHalfUpcomingQIndex
           : pendingQuestion?.qIndex
             ?? (typeof roundResult?.qIndex === 'number' ? roundResult.qIndex + 1 : localQuestion?.qIndex ?? null);
+      if (secondHalfQuestionIntro && typeof upcomingQIndex !== 'number') return;
       // Re-capture keyed on the announced question: back-to-back transitions
       // (or a pendingQuestion arriving late with a different category) must
       // refresh the frozen snapshot instead of replaying the previous round's.
@@ -338,9 +345,15 @@ export function usePossessionRoundTransition({
           : t('possession.questionN', { n: questionNumber });
       const categoryName = firstQuestionIntro
         ? (localQuestion?.question.categoryName ?? '')
-        : (pendingQuestion?.question.categoryName
-          ?? localQuestion?.question.categoryName
-          ?? '');
+        : secondHalfQuestionIntro
+          ? (pendingQuestion?.qIndex === upcomingQIndex
+            ? (pendingQuestion.question.categoryName ?? '')
+            : localQuestion?.qIndex === upcomingQIndex
+              ? (localQuestion.question.categoryName ?? '')
+              : '')
+          : (pendingQuestion?.question.categoryName
+            ?? localQuestion?.question.categoryName
+            ?? '');
 
       // eslint-disable-next-line react-hooks/set-state-in-effect -- layout effect commits the new label before paint, avoiding a one-frame stale "Question 1" flash.
       setTransitionSnapshot({
@@ -395,6 +408,7 @@ export function usePossessionRoundTransition({
     roundResult?.phaseRound,
     roundResult?.qIndex,
     secondHalfQuestionIntro,
+    secondHalfUpcomingQIndex,
     showPenaltyTransition,
     showRoundTransition,
     t,
