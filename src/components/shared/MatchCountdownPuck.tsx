@@ -10,7 +10,7 @@ interface MatchCountdownPuckProps {
   detailLabel?: string;
   durationMs?: number;
   runKey?: string | number;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'kickoff';
   className?: string;
 }
 
@@ -30,6 +30,11 @@ const SIZE_TOKENS = {
     text: 'text-[clamp(2.6rem,11cqw,4.5rem)]',
     bar: 'w-[clamp(4.5rem,20cqw,7rem)]',
   },
+  kickoff: {
+    circle: 'size-[clamp(4.25rem,18cqw,5.75rem)]',
+    text: 'text-[clamp(2.15rem,8.5cqw,3.25rem)]',
+    bar: 'w-[clamp(4.25rem,18cqw,5.75rem)]',
+  },
 };
 
 export function MatchCountdownPuck({
@@ -44,7 +49,7 @@ export function MatchCountdownPuck({
   const tokens = SIZE_TOKENS[size];
   return (
     <div className={cn('flex flex-col items-center', className)}>
-      {!waiting ? (
+      {!waiting && label ? (
         <div className="w-full min-w-0 text-balance text-center font-poppins text-[clamp(0.55rem,1.8cqw,0.7rem)] font-semibold uppercase leading-tight tracking-[0.16em] text-brand-yellow">
           {label}
         </div>

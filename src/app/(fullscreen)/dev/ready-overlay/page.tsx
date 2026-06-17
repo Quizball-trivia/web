@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RotateCcw } from 'lucide-react';
 import { MatchWaitingForReadyOverlay } from '@/components/shared/MatchWaitingForReadyOverlay';
 import { KickoffCountdownOverlay } from '@/features/possession/components/KickoffCountdownOverlay';
@@ -12,6 +12,7 @@ type ScenarioId =
   | 'kickoff-human'
   | 'party-six'
   | 'resume-human'
+  | 'resume-countdown'
   | 'safety-ceiling'
   | 'countdown-ready';
 
@@ -89,6 +90,18 @@ const SCENARIOS: Scenario[] = [
     surface: 'match',
   },
   {
+    id: 'resume-countdown',
+    label: 'Resume countdown',
+    group: 'possession',
+    titleKey: 'possession.kickoffIn',
+    detailKey: 'possession.resumesAfterReady',
+    ready: 2,
+    total: 2,
+    phase: 'resume',
+    description: 'Both match screens are restored. This is the compact 5-second resume countdown before play continues.',
+    surface: 'countdown',
+  },
+  {
     id: 'safety-ceiling',
     label: 'Safety ceiling',
     group: 'partyResults',
@@ -114,6 +127,27 @@ const SCENARIOS: Scenario[] = [
   },
 ];
 
+function isScenarioId(value: string | null): value is ScenarioId {
+  return SCENARIOS.some((item) => item.id === value);
+}
+
+function readInitialScenarioId(): ScenarioId {
+  if (typeof window === 'undefined') return 'kickoff-ai';
+  const scenario = new URLSearchParams(window.location.search).get('case');
+  return isScenarioId(scenario) ? scenario : 'kickoff-ai';
+}
+
+function readInitialDevLocale(): 'en' | 'ka' | null {
+  if (typeof window === 'undefined') return null;
+  const locale = new URLSearchParams(window.location.search).get('locale');
+  return locale === 'en' || locale === 'ka' ? locale : null;
+}
+
+function readFullscreenPreview(): boolean {
+  if (typeof window === 'undefined') return false;
+  return new URLSearchParams(window.location.search).get('preview') === 'full';
+}
+
 export default function DevReadyOverlayPage() {
   if (process.env.NODE_ENV !== 'development') {
     return (
@@ -127,8 +161,8 @@ export default function DevReadyOverlayPage() {
 }
 
 function DevReadyOverlayContent() {
-  const { t } = useLocale();
-  const [scenarioId, setScenarioId] = useState<ScenarioId>('kickoff-ai');
+  const { locale, setLocale, t } = useLocale();
+  const [scenarioId, setScenarioId] = useState<ScenarioId>(readInitialScenarioId);
   const [countdownStartedAt, setCountdownStartedAt] = useState(() => Date.now());
   const [nowMs, setNowMs] = useState(() => Date.now());
 
@@ -141,6 +175,38 @@ function DevReadyOverlayContent() {
     const intervalId = window.setInterval(() => setNowMs(Date.now()), 250);
     return () => window.clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    const initialLocale = readInitialDevLocale();
+    if (initialLocale && initialLocale !== locale) {
+      setLocale(initialLocale);
+    }
+  }, [locale, setLocale]);
+
+  const updateDevUrl = useCallback((updates: { scenarioId?: ScenarioId; locale?: 'en' | 'ka' }) => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    if (updates.scenarioId) {
+      url.searchParams.set('case', updates.scenarioId);
+    }
+    if (updates.locale) {
+      url.searchParams.set('locale', updates.locale);
+    }
+    const query = url.searchParams.toString();
+    window.history.replaceState(null, '', `${url.pathname}${query ? `?${query}` : ''}${url.hash}`);
+  }, []);
+
+  const resetCountdown = useCallback(() => {
+    const now = Date.now();
+    setCountdownStartedAt(now);
+    setNowMs(now);
+  }, []);
+
+  const selectScenario = useCallback((nextScenarioId: ScenarioId) => {
+    setScenarioId(nextScenarioId);
+    resetCountdown();
+    updateDevUrl({ scenarioId: nextScenarioId });
+  }, [resetCountdown, updateDevUrl]);
 
   const countdownDisplay = Math.max(1, Math.ceil((countdownStartedAt + 5_000 - nowMs) / 1000));
 
@@ -158,6 +224,18 @@ function DevReadyOverlayContent() {
     total: scenario.total,
   });
 
+  if (readFullscreenPreview()) {
+    return (
+      <ScenarioPreview
+        scenario={scenario}
+        countdownDisplay={countdownDisplay}
+        countdownStartedAt={countdownStartedAt}
+        readyLabel={readyLabel}
+        className="h-dvh min-h-dvh w-screen"
+      />
+    );
+  }
+
   return (
     <div className="min-h-dvh bg-surface-page-alt text-white">
       <div className="mx-auto grid min-h-dvh w-full max-w-7xl grid-cols-1 gap-6 px-4 py-5 lg:grid-cols-[300px_minmax(0,1fr)] lg:px-6">
@@ -171,17 +249,33 @@ function DevReadyOverlayContent() {
           <p className="mt-2 text-sm font-semibold leading-snug text-white/65">
             Ranked shows ready checkmarks first. The 5-second kickoff countdown starts only after all screens are ready.
           </p>
+          <div className="mt-4 inline-flex rounded-xl border border-white/10 bg-black/20 p-1">
+            {(['en', 'ka'] as const).map((nextLocale) => (
+              <button
+                key={nextLocale}
+                type="button"
+                onClick={() => {
+                  setLocale(nextLocale);
+                  updateDevUrl({ locale: nextLocale });
+                }}
+                className={cn(
+                  'rounded-lg px-3 py-1.5 font-poppins text-xs font-black uppercase tracking-[0.14em] transition',
+                  locale === nextLocale
+                    ? 'bg-brand-yellow text-surface-page'
+                    : 'text-white/70 hover:bg-white/10 hover:text-white',
+                )}
+              >
+                {nextLocale}
+              </button>
+            ))}
+          </div>
 
           <div className="mt-5 grid gap-2">
             {SCENARIOS.map((item) => (
               <button
                 key={item.id}
                 type="button"
-                onClick={() => {
-                  setScenarioId(item.id);
-                  setCountdownStartedAt(Date.now());
-                  setNowMs(Date.now());
-                }}
+                onClick={() => selectScenario(item.id)}
                 className={cn(
                   'rounded-xl border px-3 py-3 text-left font-poppins text-sm font-semibold transition',
                   scenario.id === item.id
@@ -204,10 +298,7 @@ function DevReadyOverlayContent() {
             {scenario.surface === 'countdown' ? (
               <button
                 type="button"
-                onClick={() => {
-                  setCountdownStartedAt(Date.now());
-                  setNowMs(Date.now());
-                }}
+                onClick={resetCountdown}
                 className="mt-3 inline-flex items-center gap-2 rounded-lg bg-brand-blue px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-white"
               >
                 <RotateCcw className="size-3.5" />
@@ -217,51 +308,77 @@ function DevReadyOverlayContent() {
           </div>
         </aside>
 
-        <main className="flex min-h-[720px] items-center justify-center rounded-[24px] border border-white/8 bg-black/20 p-3 shadow-inner sm:p-6">
-          <div className="relative h-[760px] w-full max-w-[430px] overflow-hidden rounded-[28px] border border-white/12 bg-surface-page-alt shadow-2xl sm:h-[820px]">
-            <MockMatchSurface surface={scenario.surface} />
-            {scenario.surface === 'countdown' || scenario.surface === 'kickoff-wait' ? (
-              <KickoffCountdownOverlay
-                countdownDisplay={countdownDisplay}
-                phase="kickoff"
-                waiting={scenario.surface === 'kickoff-wait'}
-                waitingLabel={scenario.total > 1 ? t('possession.waitingForOpponent') : t('possession.startingSoon')}
-                waitingDetailLabel={scenario.total > 1 ? t('possession.startsAfterReady') : undefined}
-                playerReady={
-                  scenario.surface === 'kickoff-wait'
-                    ? scenario.ready >= 1
-                    : scenario.surface === 'countdown'
-                      ? true
-                      : undefined
-                }
-                opponentReady={
-                  scenario.surface === 'kickoff-wait'
-                    ? (scenario.total <= 1 || scenario.ready >= 2)
-                    : scenario.surface === 'countdown'
-                      ? true
-                      : undefined
-                }
-                durationMs={5_000}
-                runKey={`dev-ready-${countdownStartedAt}`}
-                playerName="You"
-                opponentName="Opponent"
-                playerAvatarBase="avatar-1"
-                opponentAvatarBase="avatar-2"
-                playerRankPoints={495}
-                opponentRankPoints={980}
-                className="absolute inset-0 h-full min-h-full w-full bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat"
-              />
-            ) : (
-              <MatchWaitingForReadyOverlay
-                title={t(scenario.titleKey)}
-                readyLabel={readyLabel}
-                detailLabel={t(scenario.detailKey)}
-                className="absolute inset-0 h-full min-h-full"
-              />
-            )}
-          </div>
+        <main className="min-h-[720px] overflow-hidden rounded-[24px] border border-white/8 bg-black/20 shadow-inner">
+          <ScenarioPreview
+            scenario={scenario}
+            countdownDisplay={countdownDisplay}
+            countdownStartedAt={countdownStartedAt}
+            readyLabel={readyLabel}
+            className="min-h-[720px]"
+          />
         </main>
       </div>
+    </div>
+  );
+}
+
+function ScenarioPreview({
+  scenario,
+  countdownDisplay,
+  countdownStartedAt,
+  readyLabel,
+  className,
+}: {
+  scenario: Scenario;
+  countdownDisplay: number;
+  countdownStartedAt: number;
+  readyLabel: string;
+  className?: string;
+}) {
+  const { t } = useLocale();
+
+  return (
+    <div className={cn('relative w-full overflow-hidden bg-surface-page-alt text-white', className)}>
+      <MockMatchSurface surface={scenario.surface} />
+      {scenario.surface === 'countdown' || scenario.surface === 'kickoff-wait' ? (
+        <KickoffCountdownOverlay
+          countdownDisplay={countdownDisplay}
+          phase={scenario.phase}
+          waiting={scenario.surface === 'kickoff-wait'}
+          waitingLabel={scenario.total > 1 ? t('possession.waitingForOpponent') : t('possession.startingSoon')}
+          waitingDetailLabel={scenario.total > 1 ? t('possession.startsAfterReady') : undefined}
+          playerReady={
+            scenario.surface === 'kickoff-wait'
+              ? scenario.ready >= 1
+              : scenario.surface === 'countdown' && scenario.phase === 'kickoff'
+                ? true
+                : undefined
+          }
+          opponentReady={
+            scenario.surface === 'kickoff-wait'
+              ? (scenario.total <= 1 || scenario.ready >= 2)
+              : scenario.surface === 'countdown' && scenario.phase === 'kickoff'
+                ? true
+                : undefined
+          }
+          durationMs={5_000}
+          runKey={`dev-ready-${countdownStartedAt}`}
+          playerName="You"
+          opponentName="Opponent"
+          playerAvatarBase="avatar-1"
+          opponentAvatarBase="avatar-2"
+          playerRankPoints={495}
+          opponentRankPoints={980}
+          className="absolute inset-0 h-full min-h-full w-full bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat"
+        />
+      ) : (
+        <MatchWaitingForReadyOverlay
+          title={t(scenario.titleKey)}
+          readyLabel={readyLabel}
+          detailLabel={t(scenario.detailKey)}
+          className="absolute inset-0 h-full min-h-full"
+        />
+      )}
     </div>
   );
 }
