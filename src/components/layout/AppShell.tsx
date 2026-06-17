@@ -14,7 +14,6 @@ import { AppShellLobbyDebugBadge } from "./app-shell/AppShellLobbyDebugBadge";
 import { AppShellMobileBottomNav } from "./app-shell/AppShellMobileBottomNav";
 import { AppShellProfileMenu } from "./app-shell/AppShellProfileMenu";
 import { ConnectionQualitySignal } from "@/components/shared/ConnectionQualitySignal";
-import { RealtimeConnectionBanner } from "@/components/shared/RealtimeConnectionBanner";
 
 export function AppShell({ children }: AppShellProps) {
   const vm = useAppShellViewModel();
@@ -42,7 +41,6 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <div className="relative min-h-screen text-foreground">
       <ChallengeInvitePrompt />
-      <RealtimeConnectionBanner />
       <AppShellPageChrome />
 
       <div className="relative z-10 flex min-h-screen flex-col xl:grid xl:h-dvh xl:grid-cols-[auto_minmax(0,1fr)] xl:overflow-hidden">

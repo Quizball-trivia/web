@@ -137,11 +137,12 @@ export function useRealtimePossessionMatchController({
   const [muted, setMuted] = useState(false);
   const [quitModalOpen, setQuitModalOpen] = useState(false);
 
+  const possessionState = possessionMatch.possessionState;
   const firstQuestionIntro = usePossessionFirstQuestionIntro({
     countdownEndsAt: possessionMatch.countdownEndsAt,
     currentQuestionIndex: possessionMatch.currentQuestion?.qIndex ?? null,
+    half: possessionState?.half,
   });
-  const possessionState = possessionMatch.possessionState;
   const secondHalfQuestionIntro = usePossessionSecondHalfQuestionIntro({
     phase: possessionState?.phase,
     half: possessionState?.half,

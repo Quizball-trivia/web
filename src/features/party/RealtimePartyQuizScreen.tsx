@@ -4,7 +4,6 @@ import { Volume2, VolumeX, X } from 'lucide-react';
 import { ConnectionQualitySignal } from '@/components/shared/ConnectionQualitySignal';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { MatchWaitingForReadyOverlay } from '@/components/shared/MatchWaitingForReadyOverlay';
-import { RealtimeConnectionBanner } from '@/components/shared/RealtimeConnectionBanner';
 import { MatchHudIconButton } from '@/features/possession/components/MatchHudPrimitives';
 import { MatchCountdownPuck } from '@/components/shared/MatchCountdownPuck';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -92,7 +91,6 @@ export function RealtimePartyQuizScreen({
   if (!partyState) {
     return (
       <div className="flex min-h-dvh w-full items-center justify-center bg-surface-page-alt">
-        <RealtimeConnectionBanner />
         {waitingForReady ? (
           <MatchWaitingForReadyOverlay
             title={waitingTitle}
@@ -118,7 +116,6 @@ export function RealtimePartyQuizScreen({
 
   return (
     <div className="relative min-h-dvh overflow-hidden bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat text-white">
-      <RealtimeConnectionBanner />
       <PartyQuizOverlays
         startCountdownActive={state.startCountdownActive}
         countdownSeconds={state.countdownSeconds}

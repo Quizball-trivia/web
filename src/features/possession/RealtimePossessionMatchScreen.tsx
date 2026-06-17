@@ -7,7 +7,6 @@ import { QuitMatchModal } from '@/components/match/QuitMatchModal';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { MatchWaitingForReadyOverlay } from '@/components/shared/MatchWaitingForReadyOverlay';
 import { ConnectionQualitySignal } from '@/components/shared/ConnectionQualitySignal';
-import { RealtimeConnectionBanner } from '@/components/shared/RealtimeConnectionBanner';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useMatchUiReadyAcks } from '@/lib/match/useMatchUiReadyAcks';
 import { useMatchStagePresence } from '@/lib/realtime/useMatchStagePresence';
@@ -234,7 +233,6 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
 
     return (
       <div className="flex min-h-dvh w-full items-center justify-center bg-surface-page-alt">
-        <RealtimeConnectionBanner />
         {showKickoffReadyGate ? (
           <KickoffCountdownOverlay
             countdownDisplay={countdownDisplay}
@@ -289,7 +287,6 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
 
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat">
-      <RealtimeConnectionBanner />
       <MatchHudIconButton
         onClick={toggleMuted}
         className="fixed left-[calc(env(safe-area-inset-left)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.25rem)] z-[70] sm:left-[calc(env(safe-area-inset-left)+0.5rem)] sm:top-[calc(env(safe-area-inset-top)+0.5rem)] lg:left-[calc(env(safe-area-inset-left)+1rem)] lg:top-[calc(env(safe-area-inset-top)+1rem)]"

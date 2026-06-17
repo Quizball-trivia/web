@@ -29,13 +29,16 @@ export interface PossessionOverlayModel {
 interface UsePossessionFirstQuestionIntroParams {
   countdownEndsAt: number | null | undefined;
   currentQuestionIndex: number | null;
+  half?: 1 | 2;
 }
 
 export function usePossessionFirstQuestionIntro({
   countdownEndsAt,
   currentQuestionIndex,
+  half,
 }: UsePossessionFirstQuestionIntroParams): boolean {
-  const [firstQuestionIntro, setFirstQuestionIntro] = useState(true);
+  const firstIntroEligible = half !== 2;
+  const [firstQuestionIntro, setFirstQuestionIntro] = useState(() => firstIntroEligible);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const firstIntroExpiredRef = useRef(false);
 
@@ -59,6 +62,14 @@ export function usePossessionFirstQuestionIntro({
   }, [countdownEndsAt]);
 
   useEffect(() => {
+    if (!firstIntroEligible) {
+      firstIntroExpiredRef.current = true;
+      queueMicrotask(() => {
+        setFirstQuestionIntro(false);
+      });
+      return;
+    }
+
     if (firstIntroExpiredRef.current) return;
 
     const startCountdownActive = Boolean(countdownEndsAt && countdownEndsAt > nowMs && currentQuestionIndex === 0);
@@ -79,9 +90,9 @@ export function usePossessionFirstQuestionIntro({
     }, FIRST_QUESTION_INTRO_MS);
 
     return () => clearTimeout(timer);
-  }, [countdownEndsAt, currentQuestionIndex, nowMs]);
+  }, [countdownEndsAt, currentQuestionIndex, firstIntroEligible, nowMs]);
 
-  return firstQuestionIntro;
+  return firstIntroEligible && firstQuestionIntro;
 }
 
 interface UsePossessionSecondHalfQuestionIntroParams {
@@ -265,6 +276,7 @@ export function usePossessionRoundTransition({
   const penaltyCountdownActive = penaltyCountdownRemainingMs > 0;
   const penaltyCountdownDisplay = Math.max(1, Math.ceil(penaltyCountdownRemainingMs / 1000));
 
+  const firstQuestionIntroVisible = firstQuestionIntro && (half ?? 1) === 1;
   const hasPendingLastAttackQuestion = pendingQuestion?.phaseKind === 'last_attack';
   const isHalfBoundaryRound = roundResult?.phaseKind === 'normal' && roundResult.phaseRound === 6;
   const hasConcreteNextQuestion = Boolean(pendingQuestion);
@@ -282,7 +294,7 @@ export function usePossessionRoundTransition({
     || typeof secondHalfUpcomingQIndex === 'number';
 
   const showRoundTransition = isRoundTransitionPhase
-    && (roundResultHoldDone || firstQuestionIntro || secondHalfQuestionIntro)
+    && (roundResultHoldDone || firstQuestionIntroVisible || secondHalfQuestionIntro)
     && allowBoundaryTransition
     && hasSecondHalfQuestionIndex
     && !isPenaltyQuestion
@@ -298,7 +310,7 @@ export function usePossessionRoundTransition({
   // shootout "snaps" between questions with no intro.
   const hasNextPenaltyQuestion = pendingQuestion?.phaseKind === 'penalty'
     || localQuestion?.phaseKind === 'penalty';
-  const showPenaltyTransition = !firstQuestionIntro
+  const showPenaltyTransition = !firstQuestionIntroVisible
     && !penaltyCountdownActive
     && !goalCelebration
     && phase !== 'COMPLETED'
@@ -315,7 +327,7 @@ export function usePossessionRoundTransition({
       // the upcoming question is deterministically roundResult.qIndex + 1.
       // Falling back to localQuestion.qIndex (the just-answered question)
       // produced a stale "QUESTION 3" splash while entering question 4.
-      const upcomingQIndex = firstQuestionIntro
+      const upcomingQIndex = firstQuestionIntroVisible
         ? (localQuestion?.qIndex ?? 0)
         : secondHalfQuestionIntro
           // The second half opens with no roundResult and a cleared/still-
@@ -338,12 +350,12 @@ export function usePossessionRoundTransition({
         ? upcomingQIndex + 1
         : pendingQuestion?.phaseRound
           ?? (typeof localQuestion?.phaseRound === 'number' ? localQuestion.phaseRound + 1 : 1);
-      const title = firstQuestionIntro
+      const title = firstQuestionIntroVisible
         ? t('possession.questionN', { n: 1 })
         : isExtra
           ? t('possession.extraQuestion')
           : t('possession.questionN', { n: questionNumber });
-      const categoryName = firstQuestionIntro
+      const categoryName = firstQuestionIntroVisible
         ? (localQuestion?.question.categoryName ?? '')
         : secondHalfQuestionIntro
           ? (pendingQuestion?.qIndex === upcomingQIndex
@@ -394,7 +406,7 @@ export function usePossessionRoundTransition({
     }
   }, [
     currentQuestionIndex,
-    firstQuestionIntro,
+    firstQuestionIntroVisible,
     half,
     localQuestion?.phaseKind,
     localQuestion?.phaseRound,
