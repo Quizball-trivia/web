@@ -17,6 +17,18 @@ import {
   type TransitionSnapshot,
 } from '../realtimePossession.helpers';
 
+type TransitionCapture = {
+  captureKey: string;
+  snapshot: TransitionSnapshot;
+};
+
+const EMPTY_TRANSITION_SNAPSHOT: TransitionSnapshot = {
+  title: '',
+  categoryName: '',
+  subtitle: '',
+  upcomingQIndex: null,
+};
+
 export interface PossessionOverlayModel {
   isHalftime: boolean;
   penaltyCountdownActive: boolean;
@@ -38,6 +50,7 @@ export function usePossessionFirstQuestionIntro({
   half,
 }: UsePossessionFirstQuestionIntroParams): boolean {
   const firstIntroEligible = half !== 2;
+  const hasAuthoritativeFirstQuestion = currentQuestionIndex === 0;
   const [firstQuestionIntro, setFirstQuestionIntro] = useState(() => firstIntroEligible);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const firstIntroExpiredRef = useRef(false);
@@ -92,7 +105,7 @@ export function usePossessionFirstQuestionIntro({
     return () => clearTimeout(timer);
   }, [countdownEndsAt, currentQuestionIndex, firstIntroEligible, nowMs]);
 
-  return firstIntroEligible && firstQuestionIntro;
+  return firstIntroEligible && hasAuthoritativeFirstQuestion && firstQuestionIntro;
 }
 
 interface UsePossessionSecondHalfQuestionIntroParams {
@@ -174,19 +187,19 @@ export function usePossessionRoundTransition({
   const [isHalftime, setIsHalftime] = useState(false);
   const [penaltyCountdownEndsAt, setPenaltyCountdownEndsAt] = useState<number | null>(null);
   const [penaltyCountdownNow, setPenaltyCountdownNow] = useState(() => Date.now());
-  const [transitionSnapshot, setTransitionSnapshot] = useState<TransitionSnapshot>({
-    title: t('possession.questionN', { n: 1 }),
-    categoryName: '',
-    subtitle: t('possession.firstHalf'),
-    upcomingQIndex: null,
+  const [capturedTransition, setCapturedTransition] = useState<{
+    captureKey: string | null;
+    snapshot: TransitionSnapshot;
+  }>({
+    captureKey: null,
+    snapshot: EMPTY_TRANSITION_SNAPSHOT,
   });
 
   const prevPenaltyPhaseRef = useRef(phase === 'PENALTY_SHOOTOUT');
   const pendingPenaltyCountdownRef = useRef(false);
-  // Capture key of the currently shown transition snapshot (null = hidden).
+  // Capture key of the currently shown transition snapshot.
   // Keyed (rather than boolean) so a back-to-back transition for a NEW round,
   // or a pendingQuestion arriving mid-transition, re-captures the snapshot.
-  const transitionVisibleRef = useRef<string | null>(null);
   const hasBoundaryGoalRound = Boolean(
     (roundResult?.phaseKind === 'normal' || roundResult?.phaseKind === 'last_attack') &&
     roundResult.deltas?.goalScoredBySeat
@@ -276,7 +289,7 @@ export function usePossessionRoundTransition({
   const penaltyCountdownActive = penaltyCountdownRemainingMs > 0;
   const penaltyCountdownDisplay = Math.max(1, Math.ceil(penaltyCountdownRemainingMs / 1000));
 
-  const firstQuestionIntroVisible = firstQuestionIntro && (half ?? 1) === 1;
+  const firstQuestionIntroVisible = firstQuestionIntro && currentQuestionIndex === 0 && (half ?? 1) === 1;
   const hasPendingLastAttackQuestion = pendingQuestion?.phaseKind === 'last_attack';
   const isHalfBoundaryRound = roundResult?.phaseKind === 'normal' && roundResult.phaseRound === 6;
   const hasConcreteNextQuestion = Boolean(pendingQuestion);
@@ -318,38 +331,22 @@ export function usePossessionRoundTransition({
     && roundResult?.phaseKind === 'penalty'
     && hasNextPenaltyQuestion;
 
-  useLayoutEffect(() => {
-    if (showRoundTransition) {
-      // The transition announces the UPCOMING question. The buffered
-      // pendingQuestion is authoritative when it has already arrived, but on a
-      // slow network it can land AFTER the transition becomes visible — the
-      // round result that triggered this transition is always available, and
-      // the upcoming question is deterministically roundResult.qIndex + 1.
-      // Falling back to localQuestion.qIndex (the just-answered question)
-      // produced a stale "QUESTION 3" splash while entering question 4.
+  const roundTransitionCapture: TransitionCapture | null = showRoundTransition
+    ? (() => {
       const upcomingQIndex = firstQuestionIntroVisible
         ? (localQuestion?.qIndex ?? 0)
         : secondHalfQuestionIntro
           // The second half opens with no roundResult and a cleared/still-
           // lagging localQuestion. Never fall back to localQuestion here: it can
           // still be the last first-half question for one render. The transition
-          // is gated above until an authoritative server qIndex is known.
+          // is gated until an authoritative server qIndex is known.
           ? secondHalfUpcomingQIndex
           : pendingQuestion?.qIndex
             ?? (typeof roundResult?.qIndex === 'number' ? roundResult.qIndex + 1 : localQuestion?.qIndex ?? null);
-      if (secondHalfQuestionIntro && typeof upcomingQIndex !== 'number') return;
-      // Re-capture keyed on the announced question: back-to-back transitions
-      // (or a pendingQuestion arriving late with a different category) must
-      // refresh the frozen snapshot instead of replaying the previous round's.
-      const captureKey = `round:${upcomingQIndex ?? 'unknown'}:${pendingQuestion?.qIndex ?? 'pending-missing'}`;
-      if (transitionVisibleRef.current === captureKey) return;
-      transitionVisibleRef.current = captureKey;
+      if (typeof upcomingQIndex !== 'number') return null;
 
       const isExtra = pendingQuestion?.phaseKind === 'last_attack';
-      const questionNumber = typeof upcomingQIndex === 'number'
-        ? upcomingQIndex + 1
-        : pendingQuestion?.phaseRound
-          ?? (typeof localQuestion?.phaseRound === 'number' ? localQuestion.phaseRound + 1 : 1);
+      const questionNumber = upcomingQIndex + 1;
       const title = firstQuestionIntroVisible
         ? t('possession.questionN', { n: 1 })
         : isExtra
@@ -367,71 +364,89 @@ export function usePossessionRoundTransition({
             ?? localQuestion?.question.categoryName
             ?? '');
 
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- layout effect commits the new label before paint, avoiding a one-frame stale "Question 1" flash.
-      setTransitionSnapshot({
-        title,
-        categoryName,
-        subtitle: (half ?? 1) === 1 ? t('possession.firstHalf') : t('possession.secondHalf'),
-        upcomingQIndex,
-      });
-      return;
-    }
+      return {
+        captureKey: `round:${upcomingQIndex}:${pendingQuestion?.qIndex ?? 'pending-missing'}`,
+        snapshot: {
+          title,
+          categoryName,
+          subtitle: (half ?? 1) === 1 ? t('possession.firstHalf') : t('possession.secondHalf'),
+          upcomingQIndex,
+        },
+      };
+    })()
+    : null;
+  const renderedShowRoundTransition = showRoundTransition && roundTransitionCapture !== null;
 
-    if (showPenaltyTransition) {
-      // Prefer the buffered next question, else the promoted current penalty
-      // question, else derive from the just-finished round.
+  const penaltyTransitionCapture: TransitionCapture | null = showPenaltyTransition
+    ? (() => {
       const penaltyRound = pendingQuestion?.phaseRound
         ?? (localQuestion?.phaseKind === 'penalty' ? localQuestion.phaseRound : undefined)
         ?? (typeof roundResult?.phaseRound === 'number' ? roundResult.phaseRound + 1 : undefined)
         ?? 1;
-      const captureKey = `penalty:${penaltyRound}`;
-      if (transitionVisibleRef.current === captureKey) return;
-      transitionVisibleRef.current = captureKey;
-      setTransitionSnapshot({
-        // No `categoryName`: in Georgian both `penaltyShootout` and `shootout`
-        // translate to the same "პენალტების სერია", so showing it as the top
-        // line AND the subtitle rendered a duplicate. The title ("პენალტი N")
-        // plus a single subtitle is all we need.
-        title: t('possession.penaltyN', { n: penaltyRound }),
-        categoryName: '',
-        subtitle: penaltySuddenDeath ? t('possession.suddenDeath') : t('possession.shootout'),
-        upcomingQIndex: pendingQuestion?.qIndex
-          ?? (localQuestion?.phaseKind === 'penalty' ? localQuestion.qIndex : null),
-      });
+      return {
+        captureKey: `penalty:${penaltyRound}`,
+        snapshot: {
+          // No `categoryName`: in Georgian both `penaltyShootout` and `shootout`
+          // translate to the same "პენალტების სერია", so showing it as the top
+          // line AND the subtitle rendered a duplicate. The title ("პენალტი N")
+          // plus a single subtitle is all we need.
+          title: t('possession.penaltyN', { n: penaltyRound }),
+          categoryName: '',
+          subtitle: penaltySuddenDeath ? t('possession.suddenDeath') : t('possession.shootout'),
+          upcomingQIndex: pendingQuestion?.qIndex
+            ?? (localQuestion?.phaseKind === 'penalty' ? localQuestion.qIndex : null),
+        },
+      };
+    })()
+    : null;
+  const renderedShowPenaltyTransition = showPenaltyTransition && penaltyTransitionCapture !== null;
+  const visibleTransitionSnapshot = roundTransitionCapture
+    ? (capturedTransition.captureKey === roundTransitionCapture.captureKey
+      ? capturedTransition.snapshot
+      : roundTransitionCapture.snapshot)
+    : penaltyTransitionCapture
+      ? (capturedTransition.captureKey === penaltyTransitionCapture.captureKey
+        ? capturedTransition.snapshot
+        : penaltyTransitionCapture.snapshot)
+      : capturedTransition.snapshot;
+
+  useLayoutEffect(() => {
+    if (roundTransitionCapture) {
+      // Re-capture keyed on the announced question: back-to-back transitions
+      // (or a pendingQuestion arriving late with a different category) must
+      // refresh the frozen snapshot instead of replaying the previous round's.
+      if (capturedTransition.captureKey === roundTransitionCapture.captureKey) return;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- stores the snapshot that was already rendered synchronously for this transition.
+      setCapturedTransition(roundTransitionCapture);
       return;
     }
 
-    if (!showRoundTransition && !showPenaltyTransition && transitionVisibleRef.current !== null) {
-      transitionVisibleRef.current = null;
+    if (penaltyTransitionCapture) {
+      if (capturedTransition.captureKey === penaltyTransitionCapture.captureKey) return;
+      setCapturedTransition(penaltyTransitionCapture);
+      return;
+    }
+
+    if (!renderedShowRoundTransition && !renderedShowPenaltyTransition && capturedTransition.captureKey !== null) {
+      setCapturedTransition((current) => ({
+        ...current,
+        captureKey: null,
+      }));
     }
   }, [
-    currentQuestionIndex,
-    firstQuestionIntroVisible,
-    half,
-    localQuestion?.phaseKind,
-    localQuestion?.phaseRound,
-    localQuestion?.qIndex,
-    localQuestion?.question.categoryName,
-    pendingQuestion?.phaseKind,
-    pendingQuestion?.phaseRound,
-    pendingQuestion?.qIndex,
-    pendingQuestion?.question.categoryName,
-    penaltySuddenDeath,
-    roundResult?.phaseRound,
-    roundResult?.qIndex,
-    secondHalfQuestionIntro,
-    secondHalfUpcomingQIndex,
-    showPenaltyTransition,
-    showRoundTransition,
-    t,
+    capturedTransition.captureKey,
+    penaltyTransitionCapture,
+    renderedShowPenaltyTransition,
+    renderedShowRoundTransition,
+    roundTransitionCapture,
   ]);
 
   return {
     isHalftime,
     penaltyCountdownActive,
     penaltyCountdownDisplay,
-    showRoundTransition,
-    showPenaltyTransition,
-    transitionSnapshot,
+    showRoundTransition: renderedShowRoundTransition,
+    showPenaltyTransition: renderedShowPenaltyTransition,
+    transitionSnapshot: visibleTransitionSnapshot,
   };
 }

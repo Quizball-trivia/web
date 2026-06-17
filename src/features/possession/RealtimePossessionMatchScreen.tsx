@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { LogOut, Volume2, VolumeX } from 'lucide-react';
+import { Volume2, VolumeX } from 'lucide-react';
 import { QuitMatchModal } from '@/components/match/QuitMatchModal';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { MatchWaitingForReadyOverlay } from '@/components/shared/MatchWaitingForReadyOverlay';
@@ -423,14 +423,6 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
                   {reconnectCopy}
                 </div>
               )}
-              <button
-                type="button"
-                onClick={handleTemporaryQuit}
-                className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-brand-yellow px-5 py-2.5 font-poppins text-sm font-semibold uppercase tracking-wide text-brand-blue shadow-lg transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow focus-visible:ring-offset-2 focus-visible:ring-offset-brand-blue"
-              >
-                <LogOut className="size-4" aria-hidden="true" />
-                {t('possession.leaveSafely')}
-              </button>
             </motion.div>
           </motion.div>
         )}

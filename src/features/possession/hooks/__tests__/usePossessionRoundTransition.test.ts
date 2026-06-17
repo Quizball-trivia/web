@@ -91,6 +91,28 @@ describe('usePossessionRoundTransition', () => {
     expect(result.current).toBe(false);
   });
 
+  it('does not expose the first-question intro before question zero is known', () => {
+    const { result, rerender } = renderHook((props: {
+      currentQuestionIndex: number | null;
+      half?: 1 | 2;
+    }) => usePossessionFirstQuestionIntro({
+      countdownEndsAt: null,
+      currentQuestionIndex: props.currentQuestionIndex,
+      half: props.half,
+    }), {
+      initialProps: {
+        currentQuestionIndex: null as number | null,
+        half: undefined as 1 | 2 | undefined,
+      },
+    });
+
+    expect(result.current).toBe(false);
+
+    rerender({ currentQuestionIndex: 6, half: undefined });
+
+    expect(result.current).toBe(false);
+  });
+
   it('does not arm the first-question intro in the second half', () => {
     type Props = {
       currentQuestionIndex: number | null;
@@ -529,7 +551,95 @@ describe('usePossessionRoundTransition', () => {
     await act(async () => {});
 
     expect(result.current.showRoundTransition).toBe(false);
-    expect(result.current.transitionSnapshot.title).toBe('Question 1');
+    expect(result.current.transitionSnapshot.title).not.toBe('Question 1');
+  });
+
+  it('ignores a stale first-question intro flag when half is temporarily unknown after reconnect', async () => {
+    const { result } = renderHook(() => usePossessionRoundTransition({
+      phase: 'NORMAL_PLAY',
+      half: undefined,
+      penaltySuddenDeath: false,
+      firstQuestionIntro: true,
+      secondHalfQuestionIntro: false,
+      currentQuestionIndex: 6,
+      localQuestion: makeQuestion(6, 1, 'normal', 'Second Half Category'),
+      pendingQuestion: null,
+      roundResult: null,
+      roundResultHoldDone: false,
+      isPenaltyQuestion: false,
+      isShotQuestion: false,
+      isLastAttackQuestion: false,
+      goalCelebration: null,
+    }));
+
+    await act(async () => {});
+
+    expect(result.current.showRoundTransition).toBe(false);
+    expect(result.current.transitionSnapshot.title).not.toBe('Question 1');
+  });
+
+  it('never exposes a visible Question 1 transition for non-first-question reconnect states', async () => {
+    const scenarios = [
+      {
+        name: 'half unknown with current question 7',
+        half: undefined,
+        firstQuestionIntro: true,
+        secondHalfQuestionIntro: false,
+        currentQuestionIndex: 6,
+        localQuestion: makeQuestion(6, 1, 'normal', 'Second Half Category'),
+        pendingQuestion: null,
+        roundResult: null,
+        roundResultHoldDone: false,
+      },
+      {
+        name: 'second-half intro before question payload',
+        half: 2 as const,
+        firstQuestionIntro: false,
+        secondHalfQuestionIntro: true,
+        currentQuestionIndex: null,
+        localQuestion: null,
+        pendingQuestion: null,
+        roundResult: null,
+        roundResultHoldDone: false,
+      },
+      {
+        name: 'normal play with no authoritative upcoming index',
+        half: 2 as const,
+        firstQuestionIntro: false,
+        secondHalfQuestionIntro: false,
+        currentQuestionIndex: null,
+        localQuestion: null,
+        pendingQuestion: null,
+        roundResult: null,
+        roundResultHoldDone: true,
+      },
+    ];
+
+    for (const scenario of scenarios) {
+      const { result, unmount } = renderHook(() => usePossessionRoundTransition({
+        phase: 'NORMAL_PLAY',
+        half: scenario.half,
+        penaltySuddenDeath: false,
+        firstQuestionIntro: scenario.firstQuestionIntro,
+        secondHalfQuestionIntro: scenario.secondHalfQuestionIntro,
+        currentQuestionIndex: scenario.currentQuestionIndex,
+        localQuestion: scenario.localQuestion,
+        pendingQuestion: scenario.pendingQuestion,
+        roundResult: scenario.roundResult,
+        roundResultHoldDone: scenario.roundResultHoldDone,
+        isPenaltyQuestion: false,
+        isShotQuestion: false,
+        isLastAttackQuestion: false,
+        goalCelebration: null,
+      }));
+
+      await act(async () => {});
+
+      const visibleQuestionOne = result.current.showRoundTransition
+        && result.current.transitionSnapshot.title === 'Question 1';
+      expect(visibleQuestionOne, scenario.name).toBe(false);
+      unmount();
+    }
   });
 
   it('does not show the second-half transition until the authoritative question index is known', async () => {

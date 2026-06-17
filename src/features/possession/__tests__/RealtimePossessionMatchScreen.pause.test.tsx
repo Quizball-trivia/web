@@ -165,6 +165,13 @@ describe('RealtimePossessionMatchScreen pause overlay', () => {
     expect(overlay?.className.toString()).toContain('z-[80]');
   });
 
+  it('does not render the safe-leave action while waiting on a disconnected opponent', () => {
+    render(<RealtimePossessionMatchScreen {...baseProps} />);
+
+    expect(screen.getByText('Opponent disconnected')).toBeInTheDocument();
+    expect(screen.queryByText('Leave safely')).not.toBeInTheDocument();
+  });
+
   it('uses kickoff ready badges instead of the ready overlay before ranked kickoff countdown starts', () => {
     useRealtimeMatchStore.getState().reset();
     const store = useRealtimeMatchStore.getState();
