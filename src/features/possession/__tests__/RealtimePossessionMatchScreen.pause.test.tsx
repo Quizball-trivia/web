@@ -52,10 +52,6 @@ vi.mock('@/lib/realtime/useMatchStagePresence', () => ({
   useMatchStagePresence: vi.fn(),
 }));
 
-vi.mock('@/components/shared/RealtimeConnectionBanner', () => ({
-  RealtimeConnectionBanner: () => null,
-}));
-
 vi.mock('@/components/shared/ConnectionQualitySignal', () => ({
   ConnectionQualitySignal: () => null,
 }));
