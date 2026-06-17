@@ -59,6 +59,7 @@ export function toRecentMatchSummaries(response: RecentMatchesResponse): RecentM
     opponentGoals: item.opponentGoals,
     opponentPenaltyGoals: item.opponentPenaltyGoals,
     winnerDecisionMethod: item.winnerDecisionMethod,
+    cancelledNoContest: item.cancelledNoContest ?? false,
     rpDelta: item.rpDelta ?? null,
     opponent: {
       id: item.opponent.id,

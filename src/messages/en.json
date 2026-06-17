@@ -821,6 +821,7 @@
     "vs": "vs {opponent}",
     "modeRanked": "Ranked",
     "modeFriendly": "Friendly",
+    "cancelled": "Cancelled",
     "placementMatch": "Placement",
     "showLess": "Show less",
     "showMore": "Show {count} more"
@@ -907,7 +908,10 @@
     "calculatingRank": "Calculating your rank...",
     "placementsComplete": "Placements complete! Revealing your rank...",
     "placementsRemaining": "Complete placements to unlock your rank. {n} matches left.",
-    "matchComplete": "MATCH COMPLETE"
+    "matchComplete": "MATCH COMPLETE",
+    "cancelled": "Cancelled",
+    "noContest": "No contest",
+    "ticketRefunded": "Ranked ticket refunded"
   },
   "friendHub": {
     "title": "Friend Match",

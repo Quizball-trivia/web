@@ -427,7 +427,10 @@
     "calculatingRank": "შენი რანგი გამოითვლება...",
     "placementsComplete": "საკვალიფიკაციო მატჩები დასრულდა! შენი რანგია...",
     "placementsRemaining": "დაასრულე საკვალიფიკაციო მატჩები რანგის გასახსნელად. დარჩა {n} მატჩი.",
-    "matchComplete": "მატჩი დასრულდა"
+    "matchComplete": "მატჩი დასრულდა",
+    "cancelled": "გაუქმდა",
+    "noContest": "შედეგი არ დაფიქსირდა",
+    "ticketRefunded": "რეიტინგული ბილეთი დაბრუნდა"
   },
   "matchmaking": {
     "vs": "VS",
@@ -933,6 +936,7 @@
     "vs": "vs {opponent}",
     "modeRanked": "რეიტინგული",
     "modeFriendly": "მეგობრული",
+    "cancelled": "გაუქმდა",
     "placementMatch": "საკვალიფიკაციო",
     "showLess": "ნაკლების ჩვენება",
     "showMore": "კიდევ {count}-ის ჩვენება"
