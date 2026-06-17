@@ -326,6 +326,8 @@ export interface MatchWaitingForReadyPayload {
   phase: MatchUiReadyPhase;
   readyCount: number;
   totalCount: number;
+  readyUserIds?: string[];
+  waitingUserIds?: string[];
   forceStartsAt: string;
   serverNow?: string;
   /** Client-computed offset from local Date.now() to server time. Not sent over the socket. */
