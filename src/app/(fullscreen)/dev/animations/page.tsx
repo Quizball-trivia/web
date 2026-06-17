@@ -21,6 +21,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
 import { RealtimePossessionMatchScreen } from '@/features/possession/RealtimePossessionMatchScreen';
+import { ConnectionQualitySignal } from '@/components/shared/ConnectionQualitySignal';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import type { Socket } from 'socket.io-client';
 import { __setSocketOverride } from '@/lib/realtime/socket-client';
@@ -833,13 +834,18 @@ function DevAnimationsContent() {
     const s = store();
     s.reset();
     s.setSelfUserId(SELF_ID);
-    // Keep the real 5s kickoff countdown from setMatchStart, then seed the
-    // first MCQ underneath it. The production game logic blocks reveal/options
-    // until the countdown expires, so this previews the full handoff.
+    // Keep the real 5s kickoff countdown from setMatchStart, then send the
+    // first MCQ after it expires. This mirrors production: q0 is authoritative
+    // once it arrives and should not remain gated by the kickoff countdown.
     s.setMatchStart(makeStartPayload());
     stateVersion.current += 1;
     s.setMatchState(makeMatchState('NORMAL_PLAY', { stateVersion: stateVersion.current }));
-    s.setMatchQuestion(makeQuestion(0, 'multipleChoice'));
+    const kickoffTimer = window.setTimeout(() => {
+      const latest = store();
+      if (latest.match?.matchId !== MATCH_ID || latest.match.currentQuestion) return;
+      latest.setMatchQuestion(makeQuestion(0, 'multipleChoice'));
+    }, 5000);
+    pendingTimers.current.push(kickoffTimer);
     setNextQuestionKind('multipleChoice');
     setRemountKey((k) => k + 1);
     setMobilePanelOpen(false);
@@ -1222,6 +1228,162 @@ function DevAnimationsContent() {
       if (result.deltas?.goalScoredBySeat === 1) goalsRef.current.seat1 += 1;
       if (result.deltas?.goalScoredBySeat === 2) goalsRef.current.seat2 += 1;
     }
+  }
+
+  // Live "Who am I" round with NOTHING submitted yet — the player can still type
+  // and the round is unresolved. `opponentAnswered` toggles the new live
+  // opponent indicator (pulsing "thinking…" vs "answered") so it can be QA'd in
+  // isolation, without having to race a real opponent.
+  function loadCluesLiveScenario(
+    opponentAnswered: boolean,
+    opponentAnsweredCorrectly: boolean | null = null,
+  ) {
+    setMobilePanelOpen(false);
+    pendingTimers.current.forEach((t) => window.clearTimeout(t));
+    pendingTimers.current = [];
+
+    const s = store();
+    const activeQIndex = s.match?.currentQuestion?.qIndex ?? -1;
+    const qIndex = Math.min(activeQIndex + 1, TOTAL_QUESTIONS - 1);
+
+    stateVersion.current += 1;
+    s.setMatchState(makeMatchState('NORMAL_PLAY', {
+      stateVersion: stateVersion.current,
+      goals: goalsRef.current,
+      possessionDiff: possessionDiffRef.current,
+    }));
+
+    useRealtimeMatchStore.setState((prev) =>
+      prev.match
+        ? {
+            ...prev,
+            match: {
+              ...prev.match,
+              lastRoundResult: null,
+              answerAck: null,
+              countdownGuessAck: null,
+              cluesGuessAck: null,
+              opponentAnswered,
+              opponentSelectedIndex: null,
+              opponentRecentPoints: 0,
+              opponentAnsweredCorrectly,
+              currentQuestionPhase: 'reveal',
+            },
+          }
+        : prev
+    );
+
+    s.setMatchQuestion(makePlayableQuestion(qIndex, 'clues'));
+    setNextQuestionKind('clues');
+    setRemountKey((k) => k + 1);
+  }
+
+  // Drive the on-pitch "?" badge kick: start in the thinking state (badge
+  // floating), then after a beat flip the opponent to answered-WRONG so the
+  // "+0 kicks the ? and both drop" animation plays — the way it happens live.
+  function loadCluesOppWrongKick() {
+    loadCluesLiveScenario(false, null);
+    pendingTimers.current.push(
+      window.setTimeout(() => {
+        useRealtimeMatchStore.setState((prev) =>
+          prev.match
+            ? { ...prev, match: { ...prev.match, opponentAnswered: true, opponentAnsweredCorrectly: false, opponentRecentPoints: 0 } }
+            : prev
+        );
+      }, 1400)
+    );
+  }
+
+  // Same, but the opponent answers CORRECTLY: the "+N" detours through the "?"
+  // (knocking it off), then continues to the possession bars / bar battle.
+  function loadCluesOppCorrectKick() {
+    loadCluesLiveScenario(false, null);
+    pendingTimers.current.push(
+      window.setTimeout(() => {
+        useRealtimeMatchStore.setState((prev) =>
+          prev.match
+            ? { ...prev, match: { ...prev.match, opponentAnswered: true, opponentAnsweredCorrectly: true, opponentRecentPoints: 80 } }
+            : prev
+        );
+      }, 1400)
+    );
+  }
+
+  // I have submitted my guess (input locks, my answer is revealed locally) but
+  // the opponent is STILL thinking — the round is not resolved. `opponentAnswered`
+  // flips the opponent column of the You-vs-Opp summary between "thinking…" and
+  // "answered" so both post-submit waiting states can be eyeballed.
+  function loadCluesMeAnsweredScenario(opponentAnswered: boolean) {
+    setMobilePanelOpen(false);
+    pendingTimers.current.forEach((t) => window.clearTimeout(t));
+    pendingTimers.current = [];
+
+    const s = store();
+    const activeQIndex = s.match?.currentQuestion?.qIndex ?? -1;
+    const qIndex = Math.min(activeQIndex + 1, TOTAL_QUESTIONS - 1);
+    const result = makeCluesRoundResult(qIndex, scoreRef.current, {
+      mePoints: 100,
+      oppPoints: 0,
+      meClueIndex: 0,
+      oppClueIndex: null,
+    });
+    const me = result.players[SELF_ID];
+    if (!me || result.reveal.kind !== 'clues') return;
+    const cluesDisplayAnswer = result.reveal.displayAnswer;
+
+    stateVersion.current += 1;
+    s.setMatchState(makeMatchState('NORMAL_PLAY', {
+      stateVersion: stateVersion.current,
+      goals: goalsRef.current,
+      possessionDiff: possessionDiffRef.current,
+    }));
+
+    useRealtimeMatchStore.setState((prev) =>
+      prev.match
+        ? {
+            ...prev,
+            match: {
+              ...prev.match,
+              lastRoundResult: null,
+              answerAck: null,
+              countdownGuessAck: null,
+              cluesGuessAck: null,
+              opponentAnswered,
+              opponentSelectedIndex: null,
+              opponentRecentPoints: 0,
+              opponentAnsweredCorrectly: null,
+              currentQuestionPhase: 'reveal',
+            },
+          }
+        : prev
+    );
+
+    s.setMatchQuestion(makePlayableQuestion(qIndex, 'clues'));
+    setNextQuestionKind('clues');
+    setRemountKey((k) => k + 1);
+
+    waitForAnchors(() => {
+      pendingTimers.current.push(
+        window.setTimeout(() => {
+          s.setAnswerAck({
+            matchId: MATCH_ID,
+            qIndex,
+            questionKind: 'clues',
+            selectedIndex: null,
+            isCorrect: me.isCorrect,
+            myTotalPoints: me.totalPoints,
+            oppAnswered: opponentAnswered,
+            pointsEarned: me.pointsEarned,
+            phaseKind: 'normal',
+            phaseRound: result.phaseRound ?? null,
+            clueIndex: me.clueIndex,
+            cluesDisplayAnswer,
+          });
+        }, 300)
+      );
+    });
+
+    scoreRef.current.meTotal = me.totalPoints;
   }
 
   function loadEdgeBarDemo(winner: 'green' | 'red') {
@@ -2500,6 +2662,19 @@ function DevAnimationsContent() {
           </p>
         </Group>
 
+        <Group label="Who Am I live indicator">
+          <Btn onClick={() => loadCluesLiveScenario(false)}>live · opponent thinking</Btn>
+          <Btn variant="green" onClick={() => loadCluesOppCorrectKick()}>opp answers CORRECT · +N kicks ? → bars</Btn>
+          <Btn variant="red" onClick={() => loadCluesOppWrongKick()}>opp answers WRONG · +0 kicks ? → drop</Btn>
+          <Btn variant="yellow" onClick={() => loadCluesMeAnsweredScenario(false)}>me answered · opp thinking</Btn>
+          <Btn variant="green" onClick={() => loadCluesMeAnsweredScenario(true)}>me answered · opp answered</Btn>
+          <p className="mt-1 text-[9px] text-brand-slate">
+            First two: pre-submit round, toggles the standalone opponent
+            indicator (“thinking…” vs “answered”). Last two: you’ve submitted —
+            the You-vs-Opp summary shows the opponent still thinking vs answered.
+          </p>
+        </Group>
+
         <Group label="Score / shot">
           <Btn variant="yellow" onClick={() => loadPutInOrderScenario('goal')}>put-order goal sim</Btn>
           <Btn variant="yellow" onClick={() => loadPutInOrderScenario('partial')}>put-order partial sim</Btn>
@@ -2545,6 +2720,29 @@ function DevAnimationsContent() {
           <p className="mt-1 text-[9px] text-brand-slate">
             The deciding shot/save animation fully plays, then a WON/LOST +
             final-score overlay appears before the results transition.
+          </p>
+        </Group>
+
+        <Group label="Connection signal (ping pill)">
+          <div className="space-y-2 rounded-lg bg-black/40 p-3">
+            {([
+              { key: 'checking', label: 'checking (no pings yet — match start / no socket)', health: { phase: 'connecting' as const, tier: 'unknown' as const, rttMs: null } },
+              { key: 'good', label: 'good · 1 ms', health: { phase: 'connected' as const, tier: 'good' as const, rttMs: 1 } },
+              { key: 'good-hi', label: 'good · 82 ms', health: { phase: 'connected' as const, tier: 'good' as const, rttMs: 82 } },
+              { key: 'unstable', label: 'unstable · 180 ms', health: { phase: 'connected' as const, tier: 'unstable' as const, rttMs: 180 } },
+              { key: 'bad', label: 'bad · 320 ms', health: { phase: 'connected' as const, tier: 'bad' as const, rttMs: 320 } },
+              { key: 'reconnecting', label: 'reconnecting', health: { phase: 'reconnecting' as const, tier: 'bad' as const, rttMs: null } },
+            ]).map((row) => (
+              <div key={row.key} className="flex items-center gap-3">
+                <ConnectionQualitySignal size="sm" healthOverride={row.health} />
+                <ConnectionQualitySignal size="xs" healthOverride={row.health} />
+                <span className="text-[9px] text-brand-slate">{row.label}</span>
+              </div>
+            ))}
+          </div>
+          <p className="mt-1 text-[9px] text-brand-slate">
+            Each row: sm (desktop) + xs (mobile) at every tier. Previews the
+            in-app ping pill without a live socket.
           </p>
         </Group>
 

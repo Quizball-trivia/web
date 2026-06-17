@@ -81,6 +81,19 @@ export function shouldClearCountdownOnStateChange(
   );
 }
 
+/**
+ * A `match:question` payload is authoritative for question timing. The kickoff
+ * countdown is only a pre-question overlay, so it must not keep gating q0 once
+ * the server sends the first question. Resume countdowns are a separate
+ * reconnect handoff and must keep blocking until `match:resume` clears pause.
+ */
+export function shouldClearCountdownOnNewQuestion(
+  qIndex: number,
+  countdownReason: MatchStatus['countdownReason'],
+): boolean {
+  return qIndex > 0 || countdownReason === 'kickoff';
+}
+
 // ── Countdown timing ────────────────────────────────────────────────────────
 
 /**
@@ -232,6 +245,7 @@ export function constructFallbackMatchFromResults(
     participants,
     countdownEndsAt: null,
     countdownReason: null,
+    waitingForReady: null,
     currentQuestion: null,
     pendingQuestion: null,
     questions: {},

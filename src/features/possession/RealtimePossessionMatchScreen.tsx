@@ -5,7 +5,11 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Volume2, VolumeX } from 'lucide-react';
 import { QuitMatchModal } from '@/components/match/QuitMatchModal';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
+import { MatchWaitingForReadyOverlay } from '@/components/shared/MatchWaitingForReadyOverlay';
+import { ConnectionQualitySignal } from '@/components/shared/ConnectionQualitySignal';
 import { useLocale } from '@/contexts/LocaleContext';
+import { useMatchUiReadyAcks } from '@/lib/match/useMatchUiReadyAcks';
+import { useMatchStagePresence } from '@/lib/realtime/useMatchStagePresence';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { BarBattleFlightOverlay } from './components/BarBattleFlightOverlay';
 import { HalftimeScreen } from './components/HalftimeScreen';
@@ -37,6 +41,7 @@ interface RealtimePossessionMatchScreenProps {
    *  kickoff/resume countdown overlay when provided. */
   playerRankPoints?: number | null;
   opponentRankPoints?: number | null;
+  matchType?: 'ranked' | 'friendly';
   centerPossessionTrack?: boolean;
   simpleShotAnimation?: boolean;
   /** Dev prototype: glow one-sided surviving bars before normal possession moves. */
@@ -55,6 +60,12 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
   const barBattleFlights = usePossessionBarBattleFlights();
   const matchPaused = useRealtimeMatchStore((state) => state.matchPaused);
   const hasMatch = useRealtimeMatchStore((state) => state.match != null);
+  const matchId = useRealtimeMatchStore((state) => state.match?.matchId ?? null);
+  const currentQuestionIndex = useRealtimeMatchStore((state) => state.match?.currentQuestion?.qIndex ?? null);
+  const currentPhaseKind = useRealtimeMatchStore((state) =>
+    state.match?.currentQuestion?.phaseKind ?? state.match?.possessionState?.phaseKind ?? null
+  );
+  const waitingForReady = useRealtimeMatchStore((state) => state.match?.waitingForReady ?? null);
   const finalResults = useRealtimeMatchStore((state) => state.match?.finalResults ?? null);
   const selfUserId = useRealtimeMatchStore((state) => state.selfUserId);
   const opponentInfo = useRealtimeMatchStore((state) => state.match?.opponent ?? null);
@@ -89,6 +100,66 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
     suppressAvatarScoreSplash: barBattleFlights.suppressScoreSplash,
   });
 
+  useMatchUiReadyAcks({ matchId, currentQuestionIndex, waitingForReady });
+
+  const stagePresenceKey = useMemo(() => {
+    if (!hasMatch || finalResults) return null;
+    if (matchPaused || waitingForReady?.phase === 'resume') return 'resume';
+    if (waitingForReady?.phase === 'kickoff') return 'kickoff';
+    if (halftimeModel) return 'category_ban';
+    if (showStartCountdown) return 'kickoff';
+    if (penaltyCountdownActive || currentPhaseKind === 'penalty') return 'penalties';
+    return 'question';
+  }, [
+    currentPhaseKind,
+    finalResults,
+    halftimeModel,
+    hasMatch,
+    matchPaused,
+    penaltyCountdownActive,
+    showStartCountdown,
+    waitingForReady?.phase,
+  ]);
+  useMatchStagePresence({ matchId, stageKey: stagePresenceKey, enabled: hasMatch && !finalResults });
+
+  const waitingReadyLabel = waitingForReady
+    ? t('possession.playersReadyCount', { ready: waitingForReady.readyCount, total: waitingForReady.totalCount })
+    : '';
+  const waitingTotalCount = waitingForReady?.totalCount ?? 0;
+  const waitingTitle = waitingTotalCount <= 1
+    ? t('possession.gettingMatchReady')
+    : waitingTotalCount > 2
+      ? t('possession.waitingForPlayers')
+      : t('possession.waitingForOpponent');
+  const waitingDetailLabel = waitingForReady?.phase === 'resume'
+    ? t('possession.resumesAfterReady')
+    : t('possession.startsAfterReady');
+  const showKickoffReadyGate = props.matchType === 'ranked'
+    && waitingForReady?.phase === 'kickoff'
+    && currentQuestionIndex === null
+    && !finalResults;
+  const hasReadyIdentity = Array.isArray(waitingForReady?.readyUserIds)
+    && Array.isArray(waitingForReady?.waitingUserIds);
+  const kickoffParticipantReady = (userId: string | null | undefined, readyIfNotWaiting: boolean): boolean => {
+    if (!waitingForReady) return false;
+
+    if (hasReadyIdentity) {
+      if (!userId) return readyIfNotWaiting;
+      if (!waitingForReady.waitingUserIds?.includes(userId)) return readyIfNotWaiting;
+      return Boolean(waitingForReady.readyUserIds?.includes(userId));
+    }
+
+    if (waitingForReady.totalCount <= 1 && readyIfNotWaiting) return true;
+    return waitingForReady.readyCount >= waitingForReady.totalCount;
+  };
+  const kickoffPlayerReady = kickoffParticipantReady(selfUserId, false);
+  const kickoffOpponentReady = kickoffParticipantReady(opponentInfo?.id, waitingForReady?.totalCount === 1);
+  const showKickoffCountdownReadyBadges = props.matchType === 'ranked'
+    && showStartCountdown
+    && countdownPhase === 'kickoff'
+    && currentQuestionIndex === null
+    && !finalResults;
+
   useEffect(() => {
     if (!matchPaused || !pauseUntil) return;
     const tick = () => setPauseNowMs(Date.now());
@@ -114,6 +185,12 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
       : forfeitPending?.reason === 'opponent_reconnect_limit'
         ? t('forfeit.opponentDidNotReconnect')
         : t('forfeit.matchForfeited');
+  // Subtitle is i18n-keyed off the reason (the server's payload.message is
+  // English-only, so rendering it raw leaked English onto the KA client).
+  const forfeitPendingSubtitle =
+    forfeitPending?.reason === 'opponent_forfeit' || forfeitPending?.reason === 'opponent_reconnect_limit'
+      ? t('forfeit.youWinByForfeit')
+      : t('forfeit.youLostMatch');
   const penaltyMatchEndOverlay = useMemo(() => {
     if (!finalResults || finalResults.winnerDecisionMethod !== 'penalty_goals' || !selfUserId) {
       return null;
@@ -156,7 +233,34 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
 
     return (
       <div className="flex min-h-dvh w-full items-center justify-center bg-surface-page-alt">
-        {showPendingKickoff ? (
+        {showKickoffReadyGate ? (
+          <KickoffCountdownOverlay
+            countdownDisplay={countdownDisplay}
+            phase="kickoff"
+            waiting
+            waitingLabel={waitingTitle}
+            waitingDetailLabel={waitingDetailLabel}
+            playerReady={kickoffPlayerReady}
+            opponentReady={kickoffOpponentReady}
+            durationMs={5_000}
+            runKey={waitingForReady.forceStartsAt}
+            playerName={props.playerUsername}
+            opponentName={props.opponentUsername}
+            playerAvatarBase={props.playerAvatar}
+            opponentAvatarBase={props.opponentAvatar}
+            playerAvatarCustomization={props.playerAvatarCustomization}
+            opponentAvatarCustomization={props.opponentAvatarCustomization}
+            playerRankPoints={props.playerRankPoints}
+            opponentRankPoints={props.opponentRankPoints ?? opponentInfo?.rp ?? null}
+            className="h-dvh min-h-dvh w-screen bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat"
+          />
+        ) : waitingForReady ? (
+          <MatchWaitingForReadyOverlay
+            title={waitingTitle}
+            readyLabel={waitingReadyLabel}
+            detailLabel={waitingDetailLabel}
+          />
+        ) : showPendingKickoff ? (
           <KickoffCountdownOverlay
             countdownDisplay={countdownDisplay}
             phase={countdownPhase}
@@ -170,6 +274,8 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
             opponentAvatarCustomization={props.opponentAvatarCustomization}
             playerRankPoints={props.playerRankPoints}
             opponentRankPoints={props.opponentRankPoints ?? opponentInfo?.rp ?? null}
+            playerReady={showKickoffCountdownReadyBadges ? true : undefined}
+            opponentReady={showKickoffCountdownReadyBadges ? true : undefined}
             className="h-dvh min-h-dvh w-screen bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat"
           />
         ) : (
@@ -183,16 +289,37 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
     <div className="relative flex min-h-dvh flex-col items-center justify-center bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat">
       <MatchHudIconButton
         onClick={toggleMuted}
-        className="absolute left-[calc(env(safe-area-inset-left)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.25rem)] z-[70] sm:left-[calc(env(safe-area-inset-left)+0.5rem)] sm:top-[calc(env(safe-area-inset-top)+0.5rem)]"
+        className="fixed left-[calc(env(safe-area-inset-left)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.25rem)] z-[70] sm:left-[calc(env(safe-area-inset-left)+0.5rem)] sm:top-[calc(env(safe-area-inset-top)+0.5rem)] lg:left-[calc(env(safe-area-inset-left)+1rem)] lg:top-[calc(env(safe-area-inset-top)+1rem)]"
         aria-label={muted ? t('possession.unmuteAudio') : t('possession.muteAudio')}
         aria-pressed={muted}
         title={muted ? t('common.unmute') : t('common.mute')}
       >
         {muted ? <VolumeX className="size-4 sm:size-5" /> : <Volume2 className="size-4 sm:size-5" />}
       </MatchHudIconButton>
+      {/* Desktop (sm+) only: sits beside the mute button in the top-left HUD.
+          Both are `fixed` with matching top offsets, and the pill (h-8) is
+          nudged down ~0.25rem so its center lines up with the taller mute
+          button (h-10) — otherwise the shorter pill reads as sitting too high.
+          On mobile the pill is anchored to the bottom-left corner of the pitch
+          inside PossessionMatchViewport instead (the top HUD bar is too tight). */}
+      <ConnectionQualitySignal
+        className="hidden sm:fixed sm:flex sm:left-[calc(env(safe-area-inset-left)+3.5rem)] sm:top-[calc(env(safe-area-inset-top)+0.75rem)] sm:z-[70] lg:left-[calc(env(safe-area-inset-left)+4rem)] lg:top-[calc(env(safe-area-inset-top)+1.25rem)]"
+      />
 
       <AnimatePresence>
-        {showStartCountdown && (
+        {waitingForReady && !showStartCountdown && waitingForReady.phase !== 'kickoff' && (
+          <MatchWaitingForReadyOverlay
+            key="possession-waiting-for-ready"
+            title={waitingTitle}
+            readyLabel={waitingReadyLabel}
+            detailLabel={waitingDetailLabel}
+            className="fixed inset-0 z-[95]"
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {(showStartCountdown || showKickoffReadyGate) && (
           <motion.div
             key="match-start-countdown"
             initial={{ opacity: 0 }}
@@ -204,8 +331,13 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
             <KickoffCountdownOverlay
               countdownDisplay={countdownDisplay}
               phase={countdownPhase}
+              waiting={showKickoffReadyGate}
+              waitingLabel={waitingTitle}
+              waitingDetailLabel={waitingDetailLabel}
+              playerReady={showKickoffReadyGate ? kickoffPlayerReady : showKickoffCountdownReadyBadges ? true : undefined}
+              opponentReady={showKickoffReadyGate ? kickoffOpponentReady : showKickoffCountdownReadyBadges ? true : undefined}
               durationMs={5_000}
-              runKey={countdownPhase}
+              runKey={showKickoffReadyGate ? waitingForReady.forceStartsAt : countdownPhase}
               playerName={props.playerUsername}
               opponentName={props.opponentUsername}
               playerAvatarBase={props.playerAvatar}
@@ -250,7 +382,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
                 {forfeitPendingTitle}
               </div>
               <div className="mt-1 font-poppins text-sm font-semibold text-white/70">
-                {forfeitPending.message}
+                {forfeitPendingSubtitle}
               </div>
             </motion.div>
           </motion.div>
@@ -265,7 +397,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="absolute inset-0 z-40 flex items-center justify-center bg-surface-page-alt/70 px-4 backdrop-blur-[2px]"
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-surface-page-alt/70 px-4 backdrop-blur-[2px]"
           >
             <motion.div
               initial={{ y: -12, scale: 0.96, opacity: 0 }}
@@ -281,7 +413,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
                 {t('possession.opponentDisconnected')}
               </div>
               <div className="mt-1 font-poppins text-sm font-semibold text-white/70">
-                {t('possession.waitingForReconnect')}
+                {t('possession.opponentDisconnectedWinIfNotReturn', { seconds: pauseSeconds })}
               </div>
               <div className="mt-4 inline-flex items-center justify-center rounded-full bg-black/30 px-6 py-2 font-poppins text-3xl font-semibold tabular-nums text-white">
                 {pauseSeconds}

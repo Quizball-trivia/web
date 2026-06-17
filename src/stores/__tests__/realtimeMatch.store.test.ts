@@ -350,6 +350,111 @@ describe('realtimeMatch.store — setMatchState shouldClearQuestion', () => {
     });
   });
 
+  describe('kickoff countdown handoff', () => {
+    it('stores UI-ready waiting state and clears it when countdown starts', () => {
+      seedMatch();
+      const store = useRealtimeMatchStore.getState();
+      const forceStartsAt = new Date(Date.now() + 10_000).toISOString();
+
+      store.setMatchWaitingForReady({
+        matchId: MATCH_ID,
+        phase: 'kickoff',
+        readyCount: 1,
+        totalCount: 2,
+        forceStartsAt,
+        serverTimeOffsetMs: 25,
+      });
+
+      let state = useRealtimeMatchStore.getState();
+      expect(state.match?.waitingForReady?.phase).toBe('kickoff');
+      expect(state.match?.waitingForReady?.readyCount).toBe(1);
+      expect(state.match?.waitingForReady?.forceStartsAtMs).toBe(new Date(forceStartsAt).getTime());
+      expect(state.match?.serverTimeOffsetMs).toBe(25);
+
+      store.setMatchCountdown({
+        matchId: MATCH_ID,
+        seconds: 5,
+        startsAt: new Date(Date.now() + 5_000).toISOString(),
+        reason: 'kickoff',
+      });
+
+      state = useRealtimeMatchStore.getState();
+      expect(state.match?.waitingForReady).toBeNull();
+      expect(state.match?.countdownReason).toBe('kickoff');
+    });
+
+    it('keeps resume waiting state paused until the refreshed question arrives', () => {
+      seedMatch();
+      const store = useRealtimeMatchStore.getState();
+
+      store.setMatchPaused({ graceMs: 60_000, remainingReconnects: 2 });
+      store.setMatchWaitingForReady({
+        matchId: MATCH_ID,
+        phase: 'resume',
+        readyCount: 1,
+        totalCount: 2,
+        forceStartsAt: new Date(Date.now() + 8_000).toISOString(),
+      });
+
+      let state = useRealtimeMatchStore.getState();
+      expect(state.matchPaused).toBe(true);
+      expect(state.pauseUntil).toBeNull();
+      expect(state.remainingReconnects).toBeNull();
+      expect(state.match?.waitingForReady?.phase).toBe('resume');
+
+      store.setMatchQuestion(makeQuestion(0));
+
+      state = useRealtimeMatchStore.getState();
+      expect(state.match?.waitingForReady).toBeNull();
+      expect(state.match?.currentQuestion?.qIndex).toBe(0);
+    });
+
+    it('clears the kickoff countdown when the first authoritative question arrives', () => {
+      seedMatch();
+      const store = useRealtimeMatchStore.getState();
+
+      expect(useRealtimeMatchStore.getState().match?.countdownReason).toBe('kickoff');
+      expect(useRealtimeMatchStore.getState().match?.countdownEndsAt).toBeGreaterThan(Date.now());
+
+      store.setMatchQuestion(makeQuestion(0));
+
+      const state = useRealtimeMatchStore.getState();
+      expect(state.match?.currentQuestion?.qIndex).toBe(0);
+      expect(state.match?.countdownEndsAt).toBeNull();
+      expect(state.match?.countdownReason).toBeNull();
+    });
+
+    it('preserves a resume countdown when q0 timing is refreshed during reconnect handoff', () => {
+      seedMatch();
+      const store = useRealtimeMatchStore.getState();
+      const initialQuestion = makeQuestion(0);
+
+      store.setMatchQuestion(initialQuestion);
+      store.setMatchPaused({ graceMs: 60_000, remainingReconnects: 2 });
+      store.setMatchCountdown({
+        matchId: MATCH_ID,
+        seconds: 5,
+        startsAt: new Date(Date.now() + 5_000).toISOString(),
+        reason: 'resume',
+      });
+
+      const resumeCountdownEndsAt = useRealtimeMatchStore.getState().match?.countdownEndsAt;
+      const refreshedQuestion: ResolvedMatchQuestionPayload = {
+        ...initialQuestion,
+        playableAt: new Date(Date.now() + 1_000).toISOString(),
+        deadlineAt: new Date(Date.now() + 20_000).toISOString(),
+      };
+
+      store.setMatchQuestion(refreshedQuestion);
+
+      const state = useRealtimeMatchStore.getState();
+      expect(state.match?.currentQuestion?.deadlineAt).toBe(refreshedQuestion.deadlineAt);
+      expect(state.match?.countdownEndsAt).toBe(resumeCountdownEndsAt);
+      expect(state.match?.countdownReason).toBe('resume');
+      expect(state.matchPaused).toBe(true);
+    });
+  });
+
   describe('pause/rejoin question refresh', () => {
     it('keeps the match logically paused during a resume countdown until match:resume arrives', () => {
       seedMatch();
@@ -511,8 +616,8 @@ describe('realtimeMatch.store — setMatchState shouldClearQuestion', () => {
       store.setDraftStart({
         lobbyId: NEW_LOBBY_ID,
         categories: [
-          { id: 'cat-1', name: 'Premier League', icon: null },
-          { id: 'cat-2', name: 'World Cup', icon: null },
+          { id: 'cat-1', name: { en: 'Premier League' }, icon: null },
+          { id: 'cat-2', name: { en: 'World Cup' }, icon: null },
         ],
         turnUserId: USER_A,
       });

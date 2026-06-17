@@ -33,6 +33,7 @@ import {
   useFriendRequests,
   useSocialFriends,
   useSocialSearch,
+  SEARCH_MIN_CHARS,
   type FriendRequestListItem,
   type SocialPlayer,
 } from "@/lib/queries/social.queries";
@@ -524,7 +525,8 @@ export function SocialScreen() {
     friendsQuery.isError || requestsQuery.isError
       ? t('social.errorFriendsLoad')
       : null;
-  const isSearching = debouncedQuery.length > 0 && searchQuery.isLoading;
+  const searchActive = debouncedQuery.length >= SEARCH_MIN_CHARS;
+  const isSearching = searchActive && searchQuery.isLoading;
   const searchError = searchQuery.isError ? t('social.errorSearchFailed') : null;
   const hasNoSocialData =
     friendsQuery.isSuccess &&
@@ -673,7 +675,7 @@ export function SocialScreen() {
                 transition={{ duration: 0.2 }}
                 className="space-y-3"
               >
-                {!debouncedQuery && !isSearching && (
+                {!searchActive && !isSearching && (
                   <div className="pt-8 md:pt-12 pb-5 text-center">
                     <h2 className="font-poppins text-3xl md:text-4xl font-semibold uppercase text-white">
                       {t("socialScreen.findYourRivals")}
@@ -709,12 +711,12 @@ export function SocialScreen() {
                   </div>
                 ) : searchError ? (
                   <p className="pt-8 text-center font-poppins text-sm font-semibold uppercase text-brand-red-light">{searchError}</p>
-                ) : debouncedQuery && searchResults.length === 0 ? (
+                ) : searchActive && searchResults.length === 0 ? (
                   <div className="pt-8 text-center">
                     <h2 className="font-poppins text-xl md:text-2xl font-semibold uppercase text-white">{t("socialScreen.noPlayersFound")}</h2>
                     <p className="mt-2 font-poppins text-[11px] md:text-xs font-semibold uppercase text-white/50">{t("socialScreen.tryDifferentUsername")}</p>
                   </div>
-                ) : !debouncedQuery ? null : (
+                ) : !searchActive ? null : (
                   searchResults.map((player, index) => (
                     <PlayerCard
                       key={player.id}

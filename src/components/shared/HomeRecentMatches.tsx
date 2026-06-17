@@ -49,7 +49,7 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
         rpDelta: match.rpDelta,
         score: formatted.score,
         scoreSuffix: formatted.suffix,
-        scoreBadge: formatted.badge,
+        scoreBadge: formatted.badgeI18nKey ? t(formatted.badgeI18nKey) : formatted.badge,
         scoreBadgeVariant: formatted.badgeVariant,
         time: match.timeLabel,
       };

@@ -20,6 +20,26 @@ import {
   resolveI18nText,
 } from './shared';
 
+/**
+ * How long a guess may stay "pending" (input + Submit + Give Up disabled)
+ * waiting for the server's guess-ack before the panel unlocks itself again.
+ *
+ * `pendingGuess` used to be cleared ONLY by a server event (guess ack, answer
+ * ack, or round result). A single lost/stale-dropped ack therefore locked the
+ * whole panel forever — the "frozen on Who Am I" bug from the Jun 2026 prod
+ * audit (clue_chain rounds die at ~4× the MCQ rate). MCQ answers have a retry
+ * loop; clues now at least self-unlock so the player can re-submit.
+ */
+const PENDING_GUESS_UNLOCK_MS = 2000;
+
+/**
+ * Grace after the visible timer hits zero before the client force-submits a
+ * give-up. Ensures the server always receives SOME answer for this round even
+ * if the player never typed anything and the server-side timeout resolution
+ * is delayed — a late/duplicate answer is safely ignored server-side.
+ */
+const AUTO_GIVE_UP_GRACE_MS = 1000;
+
 export function LiveCluesPanel({
   matchId,
   qIndex,
@@ -45,6 +65,8 @@ export function LiveCluesPanel({
   roundResult: MatchRoundResultPayload | null;
   myRound: MatchRoundResultPlayer | null;
   opponentRound: MatchRoundResultPlayer | null;
+  /** Opponent has locked in their guess for this live round (pre-resolve). */
+  opponentAnswered?: boolean;
   cluesGuessAck: MatchCluesGuessAckPayload | null;
 }) {
   const { t } = useLocale();
@@ -100,7 +122,7 @@ export function LiveCluesPanel({
     ? t('possession.cluesGuessedAtClue', { index: opponentRound.clueIndex + 1 })
     : roundResolved
       ? t('possession.cluesNoCorrectAnswer')
-      : t('possession.cluesResultPending');
+      : '';
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -126,6 +148,40 @@ export function LiveCluesPanel({
       });
     }
   }, [roundResolved, submitted]);
+
+  // Watchdog: never let a lost guess-ack deadlock the input. If no server
+  // event cleared `pendingGuess` within the window, unlock so the player can
+  // submit again (re-submitting an already-committed answer is a server no-op).
+  useEffect(() => {
+    if (!pendingGuess) return;
+    const timer = setTimeout(() => {
+      setPendingGuess(false);
+    }, PENDING_GUESS_UNLOCK_MS);
+    return () => clearTimeout(timer);
+  }, [pendingGuess]);
+
+  // Deadline failsafe: when the timer hits zero and the player still hasn't
+  // submitted anything, auto give-up (once per question) so the server always
+  // has this player's answer for the round — parity with put-in-order's
+  // auto-submit. Cancelled if an ack/round result lands during the grace.
+  const autoGiveUpQIndexRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (autoGiveUpQIndexRef.current === qIndex) return;
+    if (!showOptions || submitted || roundResolved || timeRemaining > 0) return;
+    const timer = setTimeout(() => {
+      if (autoGiveUpQIndexRef.current === qIndex) return;
+      autoGiveUpQIndexRef.current = qIndex;
+      const payload: MatchCluesAnswerPayload = {
+        kind: 'giveUp',
+        matchId,
+        qIndex,
+        giveUp: true,
+        timeMs: Math.max(0, Math.round(questionDurationSeconds * 1000)),
+      };
+      getSocket().emit('match:clues_answer', payload);
+    }, AUTO_GIVE_UP_GRACE_MS);
+    return () => clearTimeout(timer);
+  }, [matchId, qIndex, questionDurationSeconds, roundResolved, showOptions, submitted, timeRemaining]);
 
   const emitGuess = useCallback((options?: { giveUp?: boolean }) => {
     if (inputLocked) return;
@@ -179,8 +235,10 @@ export function LiveCluesPanel({
           count: opponentAnswerCount,
           total: 1,
           points: cluesOpponentPoints,
-          badge: roundResolved ? (opponentRound?.isCorrect ? t('possession.correct') : t('possession.wrong')) : t('possession.waiting'),
-          status: roundResolved ? (opponentRound?.isCorrect ? 'positive' : 'negative') : 'pending',
+          badge: roundResolved
+            ? (opponentRound?.isCorrect ? t('possession.correct') : t('possession.wrong'))
+            : '',
+          status: roundResolved ? (opponentRound?.isCorrect ? 'positive' : 'negative') : 'neutral',
           detail: cluesOpponentDetail,
         }}
       />
@@ -209,7 +267,7 @@ export function LiveCluesPanel({
               }`}>
                 {cluesPlayerCorrect ? t('possession.correctAnswerLabel') : t('possession.theAnswerWas')}
               </p>
-              <p className="truncate text-sm font-fun font-black uppercase tracking-wide text-white">
+              <p className="text-sm font-fun font-black uppercase tracking-wide text-white [overflow-wrap:anywhere]">
                 {displayAnswer}
               </p>
             </div>

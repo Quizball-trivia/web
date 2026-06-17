@@ -7,6 +7,9 @@ import { useRouter } from 'next/navigation';
 import { ModeConfirmModal } from '@/components/shared/ModeConfirmModal';
 import { FriendPlayModal } from '@/components/shared/FriendPlayModal';
 import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
+import { MessageCircle } from 'lucide-react';
+import { SocialLinks } from '@/components/shared/SocialLinks';
+import { ContactModal } from '@/components/shared/ContactModal';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useTierLabel } from '@/hooks/useTierLabel';
 import { getI18nText } from '@/lib/utils/i18n';
@@ -237,11 +240,15 @@ export function ModeSelectionScreen({
               {/* World Cup event info — event only */}
               {isEventMode && (
                 <div className="mt-2 flex items-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-brand-yellow px-3 py-1 text-[10px] font-black uppercase tracking-wide text-black">
-                    <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={14} height={14} className="h-3.5 w-auto object-contain" />
+                  <span className="inline-flex items-center gap-1 rounded-full bg-brand-yellow px-3 py-1 text-xs font-black uppercase tracking-wide text-black">
+                    <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={16} height={16} className="h-4 w-auto object-contain" />
                     {t('play.eventWinPrizes')}
                   </span>
-                  <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white/70">
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-black uppercase tracking-wide text-white shadow-[0_2px_12px_rgba(255,108,10,0.25)]"
+                    style={{ backgroundColor: '#FF6C0A' }}
+                  >
+                    <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={16} height={16} className="h-4 w-auto object-contain" />
                     {t('play.eventDaysLeft', { count: wcDaysLeft })}
                   </span>
                 </div>
@@ -307,11 +314,15 @@ export function ModeSelectionScreen({
                 {/* World Cup event info — mobile, event only */}
                 {isEventMode && (
                   <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-brand-yellow px-2 py-0.5 text-[8px] font-black uppercase tracking-wide text-black">
-                      <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={12} height={12} className="h-3 w-auto object-contain" />
+                    <span className="inline-flex items-center gap-1 rounded-full bg-brand-yellow px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-black">
+                      <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={14} height={14} className="h-3.5 w-auto object-contain" />
                       {t('play.eventWinPrizes')}
                     </span>
-                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white/70">
+                    <span
+                      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-white shadow-[0_2px_12px_rgba(255,108,10,0.25)]"
+                      style={{ backgroundColor: '#FF6C0A' }}
+                    >
+                      <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={14} height={14} className="h-3.5 w-auto object-contain" />
                       {t('play.eventDaysLeftShort', { count: wcDaysLeft })}
                     </span>
                   </div>
@@ -656,6 +667,29 @@ export function ModeSelectionScreen({
 
       {/* ─── 5. Recent Matches ─── */}
       <HomeRecentMatches collapsedOnly />
+
+      {/* ─── 5b. Socials + contact (mobile only — desktop uses the top-left
+              header cluster in AppShell) ─── */}
+      <div className="mt-6 flex flex-col items-center gap-3 border-t border-white/6 pt-6 xl:hidden">
+        <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-white/35">
+          {t('welcome.followUs')}
+        </p>
+        <div className="flex items-center gap-2.5">
+          <SocialLinks size="sm" className="gap-2.5" />
+          <ContactModal
+            trigger={
+              <button
+                type="button"
+                aria-label={t('feedback.contactUs')}
+                title={t('feedback.contactUs')}
+                className="flex size-9 items-center justify-center rounded-[14px] bg-brand-yellow text-black shadow-[0_4px_0_rgba(0,0,0,0.25)] transition-transform hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <MessageCircle className="size-4" />
+              </button>
+            }
+          />
+        </div>
+      </div>
 
       {/* ─── 6. Modals ─── */}
       <ModeConfirmModal

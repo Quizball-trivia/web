@@ -91,6 +91,50 @@ describe('usePossessionRoundTransition', () => {
     expect(result.current).toBe(false);
   });
 
+  it('does not expose the first-question intro before question zero is known', () => {
+    const { result, rerender } = renderHook((props: {
+      currentQuestionIndex: number | null;
+      half?: 1 | 2;
+    }) => usePossessionFirstQuestionIntro({
+      countdownEndsAt: null,
+      currentQuestionIndex: props.currentQuestionIndex,
+      half: props.half,
+    }), {
+      initialProps: {
+        currentQuestionIndex: null as number | null,
+        half: undefined as 1 | 2 | undefined,
+      },
+    });
+
+    expect(result.current).toBe(false);
+
+    rerender({ currentQuestionIndex: 6, half: undefined });
+
+    expect(result.current).toBe(false);
+  });
+
+  it('does not arm the first-question intro in the second half', () => {
+    type Props = {
+      currentQuestionIndex: number | null;
+    };
+    const initialProps: Props = {
+      currentQuestionIndex: null,
+    };
+    const { result, rerender } = renderHook((props: Props) => usePossessionFirstQuestionIntro({
+      countdownEndsAt: null,
+      currentQuestionIndex: props.currentQuestionIndex,
+      half: 2,
+    }), {
+      initialProps,
+    });
+
+    expect(result.current).toBe(false);
+
+    rerender({ currentQuestionIndex: 6 });
+
+    expect(result.current).toBe(false);
+  });
+
   it('keeps the normal transition snapshot stable while the overlay remains visible', async () => {
     const { result, rerender } = renderHook((props: {
       pendingQuestion: ResolvedMatchQuestionPayload | null;
@@ -100,6 +144,7 @@ describe('usePossessionRoundTransition', () => {
       penaltySuddenDeath: false,
       firstQuestionIntro: false,
       secondHalfQuestionIntro: false,
+      currentQuestionIndex: 4,
       localQuestion: makeQuestion(4, 5, 'normal', 'Current'),
       pendingQuestion: props.pendingQuestion,
       roundResult: makeRoundResult('normal', 5),
@@ -166,6 +211,7 @@ describe('usePossessionRoundTransition', () => {
       penaltySuddenDeath: false,
       firstQuestionIntro: false,
       secondHalfQuestionIntro: false,
+      currentQuestionIndex: 4,
       localQuestion: makeQuestion(4, 5, 'normal', 'Current'),
       pendingQuestion: props.pendingQuestion,
       roundResult: makeRoundResult('normal', 5),
@@ -210,6 +256,7 @@ describe('usePossessionRoundTransition', () => {
       penaltySuddenDeath: true,
       firstQuestionIntro: false,
       secondHalfQuestionIntro: false,
+      currentQuestionIndex: 11,
       localQuestion: makeQuestion(11, 6, 'normal', 'Current'),
       pendingQuestion: props.pendingQuestion,
       roundResult: makeRoundResult('penalty', 1),
@@ -293,6 +340,7 @@ describe('usePossessionRoundTransition', () => {
       penaltySuddenDeath: false,
       firstQuestionIntro: false,
       secondHalfQuestionIntro: false,
+      currentQuestionIndex: 11,
       localQuestion: makeQuestion(11, 6, 'normal', 'Current'),
       pendingQuestion: makeQuestion(12, 1, 'penalty', 'Penalty'),
       roundResult: makeRoundResult('normal', 6),
@@ -341,6 +389,7 @@ describe('usePossessionRoundTransition', () => {
       penaltySuddenDeath: false,
       firstQuestionIntro: false,
       secondHalfQuestionIntro: false,
+      currentQuestionIndex: 11,
       localQuestion: makeQuestion(11, 6, 'normal', 'Current'),
       pendingQuestion: makeQuestion(12, 1, 'penalty', 'Penalty'),
       roundResult: makeRoundResult('normal', 6, 1),
@@ -396,6 +445,7 @@ describe('usePossessionRoundTransition', () => {
       penaltySuddenDeath: false,
       firstQuestionIntro: false,
       secondHalfQuestionIntro: true,
+      currentQuestionIndex: 6,
       localQuestion: makeQuestion(6, 1, 'normal', 'Second Half Category'),
       pendingQuestion: null,
       roundResult: null,
@@ -421,6 +471,7 @@ describe('usePossessionRoundTransition', () => {
     type Props = {
       firstQuestionIntro: boolean;
       secondHalfQuestionIntro: boolean;
+      currentQuestionIndex: number | null;
       localQuestion: ResolvedMatchQuestionPayload | null;
       half: 1 | 2;
     };
@@ -430,6 +481,7 @@ describe('usePossessionRoundTransition', () => {
       penaltySuddenDeath: false,
       firstQuestionIntro: props.firstQuestionIntro,
       secondHalfQuestionIntro: props.secondHalfQuestionIntro,
+      currentQuestionIndex: props.currentQuestionIndex,
       localQuestion: props.localQuestion,
       pendingQuestion: null,
       roundResult: null,
@@ -442,6 +494,7 @@ describe('usePossessionRoundTransition', () => {
       initialProps: {
         firstQuestionIntro: true,
         secondHalfQuestionIntro: false,
+        currentQuestionIndex: 0,
         localQuestion: makeQuestion(0, 1, 'normal', 'Football'),
         half: 1,
       },
@@ -454,21 +507,216 @@ describe('usePossessionRoundTransition', () => {
     rerender({
       firstQuestionIntro: false,
       secondHalfQuestionIntro: false,
+      currentQuestionIndex: null,
       localQuestion: null,
       half: 2,
     });
 
+    // Second-half intro fires while the gated localQuestion still LAGS (null
+    // here) — the bug was that the snapshot then fell back to "Question 1".
+    // The authoritative currentQuestionIndex (6) must drive the number instead,
+    // so the splash shows "Question 7" with no stale flash.
     rerender({
       firstQuestionIntro: false,
       secondHalfQuestionIntro: true,
-      localQuestion: makeQuestion(6, 1, 'normal', 'Dortmund'),
+      currentQuestionIndex: 6,
+      localQuestion: null,
       half: 2,
     });
 
     expect(result.current.showRoundTransition).toBe(true);
+    expect(result.current.transitionSnapshot.title).toBe('Question 7');
+    expect(result.current.transitionSnapshot.subtitle).toBe('Second Half');
+    expect(result.current.transitionSnapshot.upcomingQIndex).toBe(6);
+  });
+
+  it('ignores a stale first-question intro flag during second-half kickoff', async () => {
+    const { result } = renderHook(() => usePossessionRoundTransition({
+      phase: 'NORMAL_PLAY',
+      half: 2,
+      penaltySuddenDeath: false,
+      firstQuestionIntro: true,
+      secondHalfQuestionIntro: false,
+      currentQuestionIndex: null,
+      localQuestion: null,
+      pendingQuestion: null,
+      roundResult: null,
+      roundResultHoldDone: false,
+      isPenaltyQuestion: false,
+      isShotQuestion: false,
+      isLastAttackQuestion: false,
+      goalCelebration: null,
+    }));
+
+    await act(async () => {});
+
+    expect(result.current.showRoundTransition).toBe(false);
+    expect(result.current.transitionSnapshot.title).not.toBe('Question 1');
+  });
+
+  it('ignores a stale first-question intro flag when half is temporarily unknown after reconnect', async () => {
+    const { result } = renderHook(() => usePossessionRoundTransition({
+      phase: 'NORMAL_PLAY',
+      half: undefined,
+      penaltySuddenDeath: false,
+      firstQuestionIntro: true,
+      secondHalfQuestionIntro: false,
+      currentQuestionIndex: 6,
+      localQuestion: makeQuestion(6, 1, 'normal', 'Second Half Category'),
+      pendingQuestion: null,
+      roundResult: null,
+      roundResultHoldDone: false,
+      isPenaltyQuestion: false,
+      isShotQuestion: false,
+      isLastAttackQuestion: false,
+      goalCelebration: null,
+    }));
+
+    await act(async () => {});
+
+    expect(result.current.showRoundTransition).toBe(false);
+    expect(result.current.transitionSnapshot.title).not.toBe('Question 1');
+  });
+
+  it('never exposes a visible Question 1 transition for non-first-question reconnect states', async () => {
+    const scenarios = [
+      {
+        name: 'half unknown with current question 7',
+        half: undefined,
+        firstQuestionIntro: true,
+        secondHalfQuestionIntro: false,
+        currentQuestionIndex: 6,
+        localQuestion: makeQuestion(6, 1, 'normal', 'Second Half Category'),
+        pendingQuestion: null,
+        roundResult: null,
+        roundResultHoldDone: false,
+      },
+      {
+        name: 'second-half intro before question payload',
+        half: 2 as const,
+        firstQuestionIntro: false,
+        secondHalfQuestionIntro: true,
+        currentQuestionIndex: null,
+        localQuestion: null,
+        pendingQuestion: null,
+        roundResult: null,
+        roundResultHoldDone: false,
+      },
+      {
+        name: 'normal play with no authoritative upcoming index',
+        half: 2 as const,
+        firstQuestionIntro: false,
+        secondHalfQuestionIntro: false,
+        currentQuestionIndex: null,
+        localQuestion: null,
+        pendingQuestion: null,
+        roundResult: null,
+        roundResultHoldDone: true,
+      },
+    ];
+
+    for (const scenario of scenarios) {
+      const { result, unmount } = renderHook(() => usePossessionRoundTransition({
+        phase: 'NORMAL_PLAY',
+        half: scenario.half,
+        penaltySuddenDeath: false,
+        firstQuestionIntro: scenario.firstQuestionIntro,
+        secondHalfQuestionIntro: scenario.secondHalfQuestionIntro,
+        currentQuestionIndex: scenario.currentQuestionIndex,
+        localQuestion: scenario.localQuestion,
+        pendingQuestion: scenario.pendingQuestion,
+        roundResult: scenario.roundResult,
+        roundResultHoldDone: scenario.roundResultHoldDone,
+        isPenaltyQuestion: false,
+        isShotQuestion: false,
+        isLastAttackQuestion: false,
+        goalCelebration: null,
+      }));
+
+      await act(async () => {});
+
+      const visibleQuestionOne = result.current.showRoundTransition
+        && result.current.transitionSnapshot.title === 'Question 1';
+      expect(visibleQuestionOne, scenario.name).toBe(false);
+      unmount();
+    }
+  });
+
+  it('does not show the second-half transition until the authoritative question index is known', async () => {
+    type Props = {
+      currentQuestionIndex: number | null;
+      localQuestion: ResolvedMatchQuestionPayload | null;
+    };
+    const { result, rerender } = renderHook((props: Props) => usePossessionRoundTransition({
+      phase: 'NORMAL_PLAY',
+      half: 2,
+      penaltySuddenDeath: false,
+      firstQuestionIntro: false,
+      secondHalfQuestionIntro: true,
+      currentQuestionIndex: props.currentQuestionIndex,
+      localQuestion: props.localQuestion,
+      pendingQuestion: null,
+      roundResult: null,
+      roundResultHoldDone: false,
+      isPenaltyQuestion: false,
+      isShotQuestion: false,
+      isLastAttackQuestion: false,
+      goalCelebration: null,
+    }), {
+      initialProps: {
+        currentQuestionIndex: null as number | null,
+        localQuestion: null,
+      },
+    });
+
+    await act(async () => {});
+
+    expect(result.current.showRoundTransition).toBe(false);
+
+    rerender({
+      currentQuestionIndex: 6,
+      localQuestion: null,
+    });
+
+    expect(result.current.showRoundTransition).toBe(true);
+    expect(result.current.transitionSnapshot.title).toBe('Question 7');
+    expect(result.current.transitionSnapshot.upcomingQIndex).toBe(6);
+  });
+
+  it('ignores a stale first-half local question during the second-half intro', async () => {
+    const { result, rerender } = renderHook((props: {
+      currentQuestionIndex: number | null;
+    }) => usePossessionRoundTransition({
+      phase: 'NORMAL_PLAY',
+      half: 2,
+      penaltySuddenDeath: false,
+      firstQuestionIntro: false,
+      secondHalfQuestionIntro: true,
+      currentQuestionIndex: props.currentQuestionIndex,
+      localQuestion: makeQuestion(5, 6, 'normal', 'Stale First Half Category'),
+      pendingQuestion: null,
+      roundResult: null,
+      roundResultHoldDone: false,
+      isPenaltyQuestion: false,
+      isShotQuestion: false,
+      isLastAttackQuestion: false,
+      goalCelebration: null,
+    }), {
+      initialProps: {
+        currentQuestionIndex: null as number | null,
+      },
+    });
+
+    await act(async () => {});
+
+    expect(result.current.showRoundTransition).toBe(false);
+
+    rerender({ currentQuestionIndex: 6 });
+
+    expect(result.current.showRoundTransition).toBe(true);
     expect(result.current.transitionSnapshot).toEqual({
       title: 'Question 7',
-      categoryName: 'Dortmund',
+      categoryName: '',
       subtitle: 'Second Half',
       upcomingQIndex: 6,
     });
@@ -481,6 +729,7 @@ describe('usePossessionRoundTransition', () => {
       penaltySuddenDeath: false,
       firstQuestionIntro: false,
       secondHalfQuestionIntro: false,
+      currentQuestionIndex: 5,
       localQuestion: makeQuestion(5, 6, 'normal', 'Current'),
       pendingQuestion: makeQuestion(6, 1, 'last_attack', 'Extra Category'),
       roundResult: makeRoundResult('normal', 6),

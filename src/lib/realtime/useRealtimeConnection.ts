@@ -1,5 +1,12 @@
 import { useEffect } from 'react';
-import { connectSocket, disconnectSocket, getSocket, reconnectSocket } from './socket-client';
+import {
+  connectSocket,
+  disconnectSocket,
+  getSocket,
+  reconnectSocket,
+  startConnectionQualityMonitor,
+  stopConnectionQualityMonitor,
+} from './socket-client';
 import { registerSocketHandlers } from './socket-handlers';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
@@ -28,6 +35,7 @@ export function useRealtimeConnection({ enabled, selfUserId }: RealtimeConnectio
         realtimeStore.setSelfUserId(null);
         useRankedMatchmakingStore.getState().clearRankedMatchmaking();
         disconnectSocket();
+        stopConnectionQualityMonitor();
       }
       return;
     }
@@ -56,9 +64,11 @@ export function useRealtimeConnection({ enabled, selfUserId }: RealtimeConnectio
     connectedRealtimeUserId = selfUserId;
     const socket = getSocket();
     if (socket.connected || socket.active) {
+      startConnectionQualityMonitor();
       return;
     }
     connectSocket();
+    startConnectionQualityMonitor();
 
   }, [enabled, selfUserId, queryClient]);
 

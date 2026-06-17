@@ -39,6 +39,10 @@ export interface FlightSpec {
   /** 2× speed-streak boost: the +N detours through this point (the 2× badge),
    *  where the number doubles, then continues to the target. */
   boostVia?: { x: number; y: number };
+  /** "Who am I" correct answer: the +N detours through this point (the opponent's
+   *  "?" badge), knocking it, then continues to the target. Unlike boostVia the
+   *  number does NOT change here — it's a pure kick waypoint. */
+  kickVia?: { x: number; y: number };
   /** When 'badge', this flight carries the "2×" token from the answer source
    *  to the HUD badge slot (target) and lands there instead of "+N" to pitch. */
   kind?: 'score' | 'badge';
@@ -63,7 +67,12 @@ export const FAILED_FLIGHT_TOTAL_MS = 2000;
 // renders the same path with a small delay offset so visually they form
 // a comet smear behind the lead +N. Tune up for chunkier trail, down for
 // crisper read.
-const TRAIL_GHOST_COUNT = 6;
+// PERF: every ghost is its own composited layer whose stroked text must be
+// rasterized at DPR scale the moment the flight mounts. 6 ghosts × 2
+// simultaneous landing flights caused a 14-layer raster storm that froze
+// mobile Blink for a few frames at every launch. 3 ghosts read the same
+// (they overlap heavily) at half the cost.
+const TRAIL_GHOST_COUNT = 3;
 
 export function BarBattleFlightOverlay({
   flights,
@@ -268,6 +277,21 @@ function FlightSprite({
     );
   }
 
+  // "Who am I" correct answer: detour through the "?" badge (knock it), then
+  // continue to the bar target. Same waypoint shape as boost, no doubling.
+  if (flight.kickVia) {
+    return (
+      <KickViaFlightSprite
+        flight={flight}
+        mode={mode}
+        lag={lag}
+        maxOpacity={maxOpacity}
+        settledScale={settledScale}
+        onArrive={onArrive}
+      />
+    );
+  }
+
   return (
     <div
       className="pointer-events-none absolute left-0 top-0 will-change-transform"
@@ -319,7 +343,7 @@ function FlightSprite({
       }}
       onAnimationComplete={() => onArrive?.(flight.id)}
     >
-      <PlusNText points={flight.points} dim={isTrail} />
+      <PlusNText points={flight.points} ghost={isTrail} />
     </motion.div>
     </div>
   );
@@ -392,7 +416,72 @@ function BoostFlightSprite({
         }}
         onAnimationComplete={() => onArrive?.(flight.id)}
       >
-        <PlusNText points={doubled ? flight.points * 2 : flight.points} dim={isTrail} />
+        <PlusNText points={doubled ? flight.points * 2 : flight.points} ghost={isTrail} />
+      </motion.div>
+    </div>
+  );
+}
+
+// Timing for the "?" kick detour (seconds): brief hold at source, zip to the
+// badge (the kick), tiny pause, then continue to the bar target.
+const KICK_HOLD_S = 0.18;
+const KICK_TO_BADGE_S = 0.34;
+const KICK_PAUSE_S = 0.12;
+const KICK_TO_TARGET_S = 0.5;
+
+/** +N flight that detours through the opponent's "?" badge — knocking it —
+ *  before continuing to the bar target. The number is unchanged (this is a
+ *  kick waypoint, not a 2× doubling waypoint). */
+function KickViaFlightSprite({
+  flight,
+  mode,
+  lag = 0,
+  maxOpacity = 1,
+  settledScale = 1,
+  onArrive,
+}: {
+  flight: FlightSpec;
+  mode: 'main' | 'trail';
+  lag?: number;
+  maxOpacity?: number;
+  settledScale?: number;
+  onArrive?: (id: number) => void;
+}) {
+  const via = flight.kickVia!;
+  const isTrail = mode === 'trail';
+
+  const bx = via.x - flight.source.x;
+  const by = via.y - flight.source.y;
+  const tx = flight.target.x - flight.source.x;
+  const ty = flight.target.y - flight.source.y;
+
+  const total = KICK_HOLD_S + KICK_TO_BADGE_S + KICK_PAUSE_S + KICK_TO_TARGET_S + lag;
+  const tBadge = (KICK_HOLD_S + KICK_TO_BADGE_S) / total;
+  const tPause = (KICK_HOLD_S + KICK_TO_BADGE_S + KICK_PAUSE_S) / total;
+
+  return (
+    <div className="pointer-events-none absolute left-0 top-0 will-change-transform" style={{ transform: SCROLL_PIN_TRANSFORM }}>
+      <motion.div
+        className="absolute"
+        style={{ left: flight.source.x, top: flight.source.y, transform: 'translate(-50%, -50%)', willChange: 'transform' }}
+        initial={{ x: 0, y: 0, opacity: 0, scale: 0.4 }}
+        animate={{
+          opacity: [0, maxOpacity, maxOpacity, maxOpacity, isTrail ? 0 : maxOpacity],
+          // small punch at the badge, then settle into the bar target.
+          scale: [0.4, 1.15 * settledScale, 1.25 * settledScale, settledScale, settledScale],
+          x: [0, 0, bx, bx, tx],
+          y: [0, 0, by, by, ty],
+        }}
+        exit={{ opacity: 0, scale: 0.4, transition: { duration: 0.18 } }}
+        transition={{
+          opacity: { duration: total, times: [0, 0.1, tBadge, tPause, 1], ease: 'easeOut', delay: lag },
+          scale: { duration: total, times: [0, 0.1, tBadge, tPause, 1], ease: 'easeOut', delay: lag },
+          x: { duration: total, times: [0, KICK_HOLD_S / total, tBadge, tPause, 1], ease: [0.4, 0, 0.2, 1], delay: lag },
+          y: { duration: total, times: [0, KICK_HOLD_S / total, tBadge, tPause, 1], ease: [0.4, 0, 0.2, 1], delay: lag },
+        }}
+        onAnimationComplete={() => onArrive?.(flight.id)}
+      >
+        <PlusNText points={flight.points} ghost={isTrail} />
       </motion.div>
     </div>
   );
@@ -464,8 +553,23 @@ function FailedFlight({
 
 /** Shared +N text — Poppins Black, brand yellow, tilted -6.8° per Figma.
  *  `dim` desaturates trail ghosts and failed flights so the main success
- *  flight reads as the brightest element on screen. */
-function PlusNText({ points, dim = false }: { points: number; dim?: boolean }) {
+ *  flight reads as the brightest element on screen.
+ *
+ *  PERF: only the lead sprite gets the stroke + layered shadows. Trail
+ *  ghosts are ≤55% opacity and stacked on top of each other, so their
+ *  stroke/shadow is visually indistinguishable — but rasterizing stroked
+ *  text for every ghost layer at mobile DPR was the bulk of the launch
+ *  raster storm (lag/tearing on mobile Chrome). Ghosts render plain text. */
+function PlusNText({
+  points,
+  dim = false,
+  ghost = false,
+}: {
+  points: number;
+  dim?: boolean;
+  /** Trail ghosts skip stroke/shadows entirely (see PERF note above). */
+  ghost?: boolean;
+}) {
   return (
     <motion.div
       className="relative"
@@ -478,13 +582,17 @@ function PlusNText({ points, dim = false }: { points: number; dim?: boolean }) {
         fontSize: 'clamp(40px, 7vw, 64px)',
         lineHeight: 1,
         letterSpacing: 0,
-        color: dim ? 'rgba(255, 229, 0, 0.85)' : '#FFE500',
-        textShadow: dim
-          ? '0 4px 0 rgba(0,0,0,0.6), 0 8px 14px rgba(0,0,0,0.3)'
-          : '0 6px 0 rgba(0,0,0,0.78), 0 10px 18px rgba(0,0,0,0.4)',
-        WebkitTextStrokeWidth: 3,
-        WebkitTextStrokeColor: 'rgba(0,0,0,0.92)',
-        paintOrder: 'stroke fill',
+        color: ghost ? 'rgba(214, 184, 0, 0.9)' : dim ? 'rgba(255, 229, 0, 0.85)' : '#FFE500',
+        ...(ghost
+          ? {}
+          : {
+              textShadow: dim
+                ? '0 4px 0 rgba(0,0,0,0.6), 0 8px 14px rgba(0,0,0,0.3)'
+                : '0 6px 0 rgba(0,0,0,0.78), 0 10px 18px rgba(0,0,0,0.4)',
+              WebkitTextStrokeWidth: 3,
+              WebkitTextStrokeColor: 'rgba(0,0,0,0.92)',
+              paintOrder: 'stroke fill',
+            }),
       }}
     >
       +{points}

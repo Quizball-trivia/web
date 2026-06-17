@@ -42,6 +42,33 @@ const WC_SHOWCASE_SLUGS = [
   'world-cup-qatar-2022',
 ];
 
+const EVENT_CATEGORY_IMAGE_SIZES = '(min-width: 1280px) 405px, (min-width: 768px) 30vw, 31vw';
+const STANDARD_CATEGORY_IMAGE_SIZES = '(min-width: 1024px) 240px, (min-width: 640px) 30vw, 45vw';
+
+function WelcomeCategoriesSkeleton() {
+  return (
+    <section className="py-6 md:py-8" aria-hidden="true">
+      <div>
+        <div className="mb-6">
+          <div className="h-6 w-56 rounded-md bg-white/10" />
+          <div className="mt-2 h-4 w-44 rounded-md bg-white/5" />
+        </div>
+        <div className="grid grid-cols-3 gap-2.5 md:gap-5">
+          {Array.from({ length: 15 }).map((_, i) => (
+            <div
+              key={i}
+              className="aspect-[3/4] rounded-2xl border border-white/10 bg-white/[0.04] md:aspect-auto md:min-h-[190px] md:max-h-[240px]"
+            />
+          ))}
+        </div>
+        <div className="mt-6 flex justify-center">
+          <div className="h-11 w-64 rounded-xl bg-white/[0.06]" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function WelcomeCategoriesSection({
   allCategoriesCount,
   featuredCategories,
@@ -53,7 +80,7 @@ export function WelcomeCategoriesSection({
   // Landing is region-free: the World Cup showcase renders for everyone while
   // the event flag is on (in-game surfaces keep the region-gated isEventMode).
   const { eventEnabled } = useActiveEventMode();
-  if (featuredCategories.length === 0) return null;
+  if (featuredCategories.length === 0) return <WelcomeCategoriesSkeleton />;
 
   if (!eventEnabled) {
     return (
@@ -79,7 +106,12 @@ export function WelcomeCategoriesSection({
                   style={{ backgroundColor: style.color }}
                   onClick={onCategorySelect}
                 >
-                  <CategoryArtwork src={cat.imageUrl} className="absolute inset-0" />
+                  <CategoryArtwork
+                    src={cat.imageUrl}
+                    className="absolute inset-0"
+                    displayWidth={320}
+                    sizes={STANDARD_CATEGORY_IMAGE_SIZES}
+                  />
                   {cat.imageUrl ? (
                     <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/18 to-black/10" />
                   ) : null}
@@ -104,7 +136,7 @@ export function WelcomeCategoriesSection({
                     <IconComponent className="absolute -bottom-3 -right-3 size-24 md:size-28 opacity-[0.1] text-white pointer-events-none" />
                   ) : null}
 
-                  <div className="relative z-10 flex h-full items-center justify-center text-center text-sm md:text-base font-black uppercase tracking-wide leading-tight text-white drop-shadow-[0_2px_14px_rgba(0,0,0,0.45)]">
+                  <div className="relative z-10 flex h-full items-center justify-center text-center text-sm md:text-base font-black uppercase tracking-wide leading-tight text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100 drop-shadow-[0_2px_14px_rgba(0,0,0,0.45)]">
                     {cat.name}
                   </div>
                 </button>
@@ -179,7 +211,12 @@ export function WelcomeCategoriesSection({
                 style={{ backgroundColor: style.color }}
                 onClick={onCategorySelect}
               >
-                <CategoryArtwork src={cat.imageUrl} className="absolute inset-0" />
+                <CategoryArtwork
+                  src={cat.imageUrl}
+                  className="absolute inset-0"
+                  displayWidth={420}
+                  sizes={EVENT_CATEGORY_IMAGE_SIZES}
+                />
                 {cat.imageUrl ? (
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
                 ) : null}
@@ -205,7 +242,7 @@ export function WelcomeCategoriesSection({
                 ) : null}
 
                 <div className="relative z-10 flex h-full items-center justify-center text-center">
-                  <span className="text-base md:text-lg font-black uppercase tracking-wide leading-tight text-white drop-shadow-[0_2px_14px_rgba(0,0,0,0.5)]">
+                  <span className="text-base md:text-lg font-black uppercase tracking-wide leading-tight text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100 drop-shadow-[0_2px_14px_rgba(0,0,0,0.5)]">
                     {cat.name}
                   </span>
                 </div>

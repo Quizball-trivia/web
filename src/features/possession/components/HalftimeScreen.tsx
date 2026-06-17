@@ -8,6 +8,7 @@ import { BanCategoryCard } from '@/components/shared/BanCategoryCard';
 import { TierFrameAvatar } from '@/components/TierFrameAvatar';
 import { tierFromRp } from '@/utils/rankedTier';
 import { useLocale } from '@/contexts/LocaleContext';
+import { getI18nText } from '@/lib/utils/i18n';
 import type { DraftCategory } from '@/lib/realtime/socket.types';
 import type { AvatarCustomization } from '@/types/game';
 
@@ -108,7 +109,7 @@ export function HalftimeScreen({
   onBanPhaseShown,
   isPenaltyBan = false,
 }: HalftimeScreenProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [showBanPhase, setShowBanPhase] = useState(false);
 
@@ -371,7 +372,7 @@ export function HalftimeScreen({
               className="mt-4 sm:mt-6 text-xs sm:text-sm font-bold uppercase tracking-widest text-white/50 text-center"
             >
               {bothBansSubmitted
-                ? t('possession.halftime.secondHalfCategory', { name: remainingCategory?.name ?? t('possession.halftime.deciding') })
+                ? t('possession.halftime.secondHalfCategory', { name: remainingCategory ? getI18nText(remainingCategory.name, locale) : t('possession.halftime.deciding') })
                 : myBan
                   ? t('possession.halftime.banWaitingOpponent')
                   : !canBan

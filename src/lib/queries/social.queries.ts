@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queries/queryKeys";
 import {
   getFriends,
@@ -108,6 +108,12 @@ export function useIncomingFriendRequestCount() {
   });
 }
 
+// Minimum characters before a search hits the backend. A single keystroke
+// (e.g. "a") matches half the user base and forces the worst-case scan —
+// trigram indexes are also weakest on 1–2 char terms. Two chars is the
+// usual sweet spot between responsiveness and load.
+export const SEARCH_MIN_CHARS = 2;
+
 export function useSocialSearch(query?: string) {
   const normalizedQuery = query?.trim() ?? "";
 
@@ -117,8 +123,11 @@ export function useSocialSearch(query?: string) {
       const data = await searchUsers(normalizedQuery);
       return data.results.map(toSocialPlayer);
     },
-    enabled: normalizedQuery.length > 0,
+    enabled: normalizedQuery.length >= SEARCH_MIN_CHARS,
     staleTime: 30_000,
     gcTime: 5 * 60_000,
+    // Keep showing the previous term's results while the next term loads —
+    // avoids the list flashing to a spinner on every debounced keystroke.
+    placeholderData: keepPreviousData,
   });
 }

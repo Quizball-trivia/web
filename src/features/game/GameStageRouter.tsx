@@ -33,6 +33,12 @@ import {
 
 const POSSESSION_TOTAL_QUESTIONS_FALLBACK = 12;
 
+function isAiOpponentInfo(opponentInfo: { id?: string; isAiOpponent?: boolean } | null | undefined): boolean {
+  if (!opponentInfo) return false;
+  if (typeof opponentInfo.isAiOpponent === 'boolean') return opponentInfo.isAiOpponent;
+  return typeof opponentInfo.id === 'string' && !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(opponentInfo.id);
+}
+
 export function GameStageRouter() {
   const router = useRouter();
   const { t } = useLocale();
@@ -209,11 +215,15 @@ export function GameStageRouter() {
     } else {
       logger.info("Socket emit match:forfeit skipped (missing matchId)");
     }
-    resetRealtime();
-    clearRankedMatchmaking();
-    resetGameSession();
-    router.push("/");
-  }, [clearRankedMatchmaking, realtimeMatchId, resetGameSession, resetRealtime, router]);
+    // Keep the forfeiter on the game route and drop them into the same
+    // "match settling" loading screen a normal match end shows. We do NOT
+    // reset the realtime store or navigate away — doing so threw away the
+    // incoming match:final_results and bounced the player to /play, where the
+    // result only surfaced later as a badge they had to click. Moving to the
+    // finalResults stage renders the LoadingScreen ("Updating rank…") until
+    // match:final_results lands, then the full results screen with real RP.
+    setStage("finalResults");
+  }, [realtimeMatchId, setStage]);
 
   const handleMatchmakingExit = useCallback(() => {
     if (matchType === "ranked") {
@@ -333,6 +343,7 @@ export function GameStageRouter() {
               : 0
           }
           opponentRankPoints={parseRp(playingOppInfo?.rp) ?? 0}
+          matchType={matchType === "ranked" ? "ranked" : "friendly"}
           onQuit={handleQuit}
           onForfeit={handleForfeit}
         />
@@ -449,6 +460,7 @@ export function GameStageRouter() {
           selfUserId={selfUserId}
           finalWinnerId={final?.winnerId}
           winnerDecisionMethod={final?.winnerDecisionMethod ?? null}
+          cancelledNoContest={final?.cancelledNoContest === true}
           preMatchRp={stableRankedProfile?.placementStatus === 'placed' ? stableRankedProfile.rp : undefined}
           opponentId={finalOpponentUserId}
           opponentRankPoints={opponentRankPoints ?? null}
@@ -504,6 +516,7 @@ export function GameStageRouter() {
     const playerRankPoints = isPlaced ? (rankedProfile?.rp ?? player.rankPoints) : undefined;
     const opponentRankPoints = parseRp(oppInfo?.rp);
     const showdownOpponentUsername = oppInfo?.username ?? opponent.username;
+    const opponentIsAi = isAiOpponentInfo(oppInfo);
     const showdownOpponentAvatar = resolveAvatarUrl(
       oppInfo?.avatarUrl ?? opponent.avatar);
     // Extract opponent country from various possible fields
@@ -541,6 +554,8 @@ export function GameStageRouter() {
           flag: oppInfo.flag,
           favoriteClub: oppInfo.favoriteClub ?? null,
           recentForm: oppInfo.recentForm,
+          pingMs: oppInfo.pingMs,
+          isAi: opponentIsAi,
         } : undefined}
       />
     );

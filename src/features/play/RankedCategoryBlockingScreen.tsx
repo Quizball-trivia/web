@@ -17,11 +17,12 @@ import { cn, parseRp } from '@/lib/utils';
 import { resolveAvatarUrl } from '@/lib/avatars';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { tierFromRp, type RankedTier } from '@/utils/rankedTier';
-import { AvatarDisplay } from '@/components/AvatarDisplay';
+import { TierFrameAvatar } from '@/components/TierFrameAvatar';
 import { BanCategoryCard } from '@/components/shared/BanCategoryCard';
 import { getTierAccent } from '@/utils/tierVisuals';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { AvatarCustomization } from '@/types/game';
+import type { I18nField } from '@/lib/realtime/socket.types';
 
 const poppins = {
   fontFamily: "'Poppins', sans-serif",
@@ -30,9 +31,15 @@ const poppins = {
   lineHeight: 1,
 } as const;
 
+function isAiOpponentInfo(opponentInfo: { id?: string; isAiOpponent?: boolean } | null | undefined): boolean {
+  if (!opponentInfo) return false;
+  if (typeof opponentInfo.isAiOpponent === 'boolean') return opponentInfo.isAiOpponent;
+  return typeof opponentInfo.id === 'string' && !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(opponentInfo.id);
+}
+
 export interface BanCategoryViewCategory {
   id: string;
-  name: string;
+  name: I18nField;
   icon?: string | null;
   imageUrl?: string | null;
 }
@@ -66,13 +73,11 @@ export interface BanCategoryViewProps {
 function PlayerHeader({
   info,
   tierColor,
-  bgColor,
   align,
   dimmed,
 }: {
   info: BanCategoryViewPlayer;
   tierColor: string;
-  bgColor: string;
   align: 'left' | 'right';
   dimmed: boolean;
 }) {
@@ -85,14 +90,13 @@ function PlayerHeader({
         dimmed && 'opacity-50'
       )}
     >
-      <div className="rounded-full p-3" style={{ backgroundColor: bgColor }}>
-        <AvatarDisplay
-          customization={info.avatarCustomization ?? { base: info.avatar }}
-          size="md"
-          countryCode={info.countryCode ?? null}
-          className={!isLeft ? '-scale-x-100' : undefined}
-        />
-      </div>
+      <TierFrameAvatar
+        tier={info.tier ?? tierFromRp(info.rankPoints ?? 0)}
+        avatarCustomization={info.avatarCustomization ?? { base: info.avatar }}
+        countryCode={info.countryCode ?? null}
+        size="md"
+        mirrorAvatar={!isLeft}
+      />
       <div
         className={cn('hidden min-w-0 sm:block', !isLeft && 'text-right')}
       >
@@ -131,7 +135,7 @@ function PlayerHeader({
 /**
  * Pure presentational ban-category view. Accepts all data via props so it can
  * be rendered both in a live match (via `RankedCategoryBlockingScreen`) and in
- * preview routes like `/ban-page` without real socket/store wiring.
+ * preview routes like `/dev/ban-page` without real socket/store wiring.
  */
 export function BanCategoryView({
   player,
@@ -195,7 +199,6 @@ export function BanCategoryView({
           <PlayerHeader
             info={player}
             tierColor={playerTierColor}
-            bgColor="#1645FF"
             align="left"
             dimmed={currentActor === 'opponent'}
           />
@@ -215,7 +218,6 @@ export function BanCategoryView({
           <PlayerHeader
             info={opponent}
             tierColor={opponentTierColor}
-            bgColor="#FF4B4B"
             align="right"
             dimmed={currentActor === 'player'}
           />
@@ -342,6 +344,7 @@ export function RankedCategoryBlockingScreen() {
   });
   const autoBanFired = useRef(false);
   const rejoinedDraftLobbyRef = useRef<string | null>(null);
+  const draftUiReadyRef = useRef<string | null>(null);
   const [soundMuted, setSoundMuted] = useState(() => getIsMuted());
 
   const opponentMember = useMemo(
@@ -380,6 +383,37 @@ export function RankedCategoryBlockingScreen() {
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft?.turnUserId, draft?.halfOneCategoryId, draft?.categories, draftPaused, showShowdown]);
+
+  const draftBanCount = draft ? Object.keys(draft.bans).length : 0;
+
+  useEffect(() => {
+    if (!draft || !lobby || showShowdown || draftPaused || draft.halfOneCategoryId || !draft.turnUserId || !selfUserId) {
+      draftUiReadyRef.current = null;
+      return;
+    }
+
+    const lobbyId = draft.lobbyId ?? lobby.lobbyId;
+    const turnUserId = draft.turnUserId;
+    const readyKey = `${lobbyId}:${selfUserId}:${turnUserId}:${draftBanCount}`;
+    if (draftUiReadyRef.current === readyKey) return;
+
+    const frameId = window.requestAnimationFrame(() => {
+      getSocket().emit('draft:ui_ready', { lobbyId, turnUserId, banCount: draftBanCount });
+      draftUiReadyRef.current = readyKey;
+      logger.info('Socket emit draft:ui_ready', { lobbyId, turnUserId, banCount: draftBanCount });
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [
+    draft?.lobbyId,
+    lobby?.lobbyId,
+    showShowdown,
+    draftPaused,
+    draft?.halfOneCategoryId,
+    draft?.turnUserId,
+    draftBanCount,
+    selfUserId,
+  ]);
 
   useEffect(() => {
     if (!draftPaused || !draftPauseUntil) return;
@@ -432,6 +466,7 @@ export function RankedCategoryBlockingScreen() {
   const opponentRp = parseRp(matchOpponent?.rp ?? rankedFoundOpponent?.rp) ?? opponentMember?.rankPoints;
   const playerTier = playerRp != null ? tierFromRp(playerRp) : undefined;
   const opponentTier = opponentRp != null ? tierFromRp(opponentRp) : undefined;
+  const opponentIsAi = isAiOpponentInfo(matchOpponent) || isAiOpponentInfo(rankedFoundOpponent);
   const opponentCountryCode =
     matchOpponent?.countryCode
     ?? matchOpponent?.country
@@ -479,6 +514,8 @@ export function RankedCategoryBlockingScreen() {
           countryCode: opponentCountryCode ?? undefined,
           favoriteClub: matchOpponent?.favoriteClub ?? rankedFoundOpponent?.favoriteClub ?? null,
           recentForm: matchOpponent?.recentForm ?? rankedFoundOpponent?.recentForm,
+          pingMs: matchOpponent?.pingMs ?? rankedFoundOpponent?.pingMs,
+          isAi: opponentIsAi,
         }}
       />
     );

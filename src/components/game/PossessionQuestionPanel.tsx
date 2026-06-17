@@ -6,7 +6,7 @@ import { Volume2, VolumeX, X } from 'lucide-react';
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
 import type { AnswerStateArray, Phase } from '@/lib/types/game.types';
 import { ArenaScoreSplash } from '@/components/game/ArenaScoreSplash';
-import { AdaptiveAnswerText, isLongAnswerSet } from '@/components/game/AdaptiveAnswerText';
+import { isLongAnswerSet } from '@/components/game/AdaptiveAnswerText';
 import { QuestionImageCard } from '@/components/game/QuestionImageCard';
 import { MatchHudIconButton } from '@/features/possession/components/MatchHudPrimitives';
 import { MAX_PENALTY_ROUNDS } from '@/features/possession/types/possession.types';
@@ -159,25 +159,37 @@ export function PossessionQuestionPanel({
 }: PossessionQuestionPanelProps) {
   const { t } = useLocale();
 
-  // Image MCQs push the options below the fold on mobile (the image eats
-  // vertical space). Scroll the answer grid into view as soon as the image
-  // question renders so the options are visible without manual scrolling. The
-  // grid is always mounted (empty slots during the read phase), so we don't
-  // wait for showOptions. Mobile only — desktop's split layout already fits.
+  // On small screens the pitch + header push the 4 answer options below the
+  // fold, so the player has to scroll to see them all. When a question's
+  // options appear, auto-scroll the answer grid fully into view (its
+  // scroll-mb-* keeps clearance below the last row). Fires once per question,
+  // for every question kind (image or text). Mobile only — desktop's split
+  // layout already fits both pitch and options.
   const optionsRef = useRef<HTMLDivElement | null>(null);
-  const hasImage = Boolean(question?.image?.url);
   const questionId = question?.id ?? null;
+  const autoScrolledQuestionRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!hasImage) return;
+    if (!showOptions || !questionId) return;
+    if (autoScrolledQuestionRef.current === questionId) return;
+
     const grid = optionsRef.current;
     if (!grid || grid.offsetParent === null) return; // hidden (e.g. desktop split layout)
     if (typeof window !== 'undefined' && window.innerWidth >= 1024) return; // lg+: panel fits
-    // Wait a frame so the image + prompt have laid out before measuring.
-    const raf = requestAnimationFrame(() => {
-      grid.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+    autoScrolledQuestionRef.current = questionId;
+    // Two RAFs so the option cards (which fade/translate in on showOptions) have
+    // finished their entry layout before we measure + scroll.
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        optionsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
+      });
     });
-    return () => cancelAnimationFrame(raf);
-  }, [hasImage, questionId]);
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+    };
+  }, [questionId, showOptions]);
 
   if (phase === 'goal') return null;
   if (!question) return null;
@@ -235,15 +247,6 @@ export function PossessionQuestionPanel({
     <div
       className={`${timerPillClass} h-[40px] w-[64px] sm:h-[52px] sm:w-[92px] md:h-[62px] md:w-[116px] lg:h-[72px] lg:w-[136px]`}
       style={{ ...poppins, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
-    >
-      {timerLabel}
-    </div>
-  );
-
-  const mobileTimerCircle = (
-    <div
-      className={`${timerPillClass} size-10 shrink-0 rounded-full sm:size-12`}
-      style={{ ...poppins, fontSize: 'clamp(14px, 4vw, 20px)' }}
     >
       {timerLabel}
     </div>
@@ -383,9 +386,10 @@ export function PossessionQuestionPanel({
           answer text inside fades in when showOptions flips true. */}
       <div
         ref={optionsRef}
+        data-mcq-options-grid="true"
         className={`mt-2.5 gap-2.5 ${
           stackedAnswers ? 'flex flex-col' : 'grid grid-cols-2 items-stretch'
-        } ${showOptions ? 'pointer-events-auto' : 'pointer-events-none'}`}
+        } ${showOptions ? 'pointer-events-auto' : 'pointer-events-none'} scroll-mb-[calc(env(safe-area-inset-bottom)+1.5rem)]`}
         aria-hidden={!showOptions}
       >
         {question.options.map((opt, i) => {
@@ -436,8 +440,8 @@ export function PossessionQuestionPanel({
                 stackedAnswers
                   ? 'min-h-[64px]'
                   : hasQuestionImage
-                    ? 'min-h-[78px] sm:min-h-[88px] md:min-h-[96px] lg:min-h-[108px]'
-                    : 'min-h-[88px] sm:min-h-[104px] md:min-h-[116px] lg:min-h-[136px]'
+                    ? 'min-h-[62px] sm:min-h-[72px] md:min-h-[82px] lg:min-h-[92px]'
+                    : 'min-h-[68px] sm:min-h-[86px] md:min-h-[100px] lg:min-h-[120px]'
               }`}
               style={{
                 ...poppins,
@@ -502,21 +506,29 @@ export function PossessionQuestionPanel({
               )}
 
               <motion.span
-                className={`relative z-[1] flex w-full items-center justify-center px-5 py-4 ${
-                  stackedAnswers ? '' : 'h-full overflow-hidden'
+                className={`relative z-[1] flex w-full items-center justify-center ${
+                  stackedAnswers
+                    ? 'px-5 py-4'
+                    : 'h-full overflow-hidden px-3.5 py-2.5 sm:px-4 sm:py-3'
                 }`}
                 initial={false}
                 animate={{ opacity: showOptions ? 1 : 0, y: showOptions ? 0 : 6 }}
                 transition={{ duration: 0.25, delay: showOptions ? i * 0.08 : 0, ease: 'easeOut' }}
               >
-                <AdaptiveAnswerText
-                  stacked={stackedAnswers}
-                  gridMaxFontSize={hasQuestionImage ? 22 : 28}
-                  gridMinFontSize={hasQuestionImage ? 9 : 11}
-                  stackedFontSize={16}
+                {/* Uniform fixed font for every option (no per-answer
+                    auto-fit) — short and long answers render at the same size;
+                    long ones simply wrap. Replaces the adaptive measurer that
+                    made answers different sizes / too big. */}
+                <span
+                  className="block w-full text-center leading-[1.15] [overflow-wrap:anywhere]"
+                  style={{
+                    fontSize: hasQuestionImage
+                      ? 'clamp(13px, 3.4vw, 18px)'
+                      : 'clamp(14px, 3.8vw, 20px)',
+                  }}
                 >
                   {opt}
-                </AdaptiveAnswerText>
+                </span>
               </motion.span>
             </motion.button>
           );

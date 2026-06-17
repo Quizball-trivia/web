@@ -553,6 +553,7 @@ export function ProfileWeb({
                 <SeasonToggleCard
                   regular={rankedSeasons!.regular}
                   event={rankedSeasons!.event}
+                  defaultTab={isEventMode ? 'event' : 'ranked'}
                   t={t}
                 />
               ) : (
@@ -748,8 +749,8 @@ export function ProfileWeb({
               {!recentMatchesLoading && !recentMatchesError && recentMatches.length === 0 && (
                 <div className="p-6 text-center rounded-[16px] border-2 border-brand-slate-deep bg-surface-row-deep">
                   <div className="text-2xl mb-2">⚽</div>
-                  <div className="text-sm font-poppins font-black uppercase tracking-wide text-white/55">No recent matches yet.</div>
-                  <div className="text-[10px] font-poppins font-black uppercase tracking-[0.18em] text-white/30 mt-1">Play a match and it&apos;ll show up here.</div>
+                  <div className="text-sm font-poppins font-black uppercase tracking-wide text-white/55">{t('recentMatches.empty')}</div>
+                  <div className="text-[10px] font-poppins font-black uppercase tracking-[0.18em] text-white/30 mt-1">{t('profileScreen.recentMatchesEmptyHint')}</div>
                 </div>
               )}
               {!recentMatchesLoading && !recentMatchesError && visibleMatches.map((match, index) => {
@@ -826,6 +827,15 @@ export function ProfileWeb({
                               : 'bg-white/10 text-white/70'
                           }`}>
                             {match.scoreFormatted.badge}
+                          </span>
+                        )}
+                        {match.scoreFormatted.badgeI18nKey && (
+                          <span className={`rounded-[8px] px-2 py-1 font-poppins text-[9px] md:text-[10px] font-semibold uppercase ${
+                            match.scoreFormatted.badgeVariant === 'red'
+                              ? 'bg-brand-red-rust-deep text-brand-red-light'
+                              : 'bg-white/10 text-white/70'
+                          }`}>
+                            {t(match.scoreFormatted.badgeI18nKey)}
                           </span>
                         )}
                       </div>
@@ -970,13 +980,18 @@ function WinDrawLossGrid({
 function SeasonToggleCard({
   regular,
   event,
+  defaultTab = 'event',
   t,
 }: {
   regular: ModeMatchStatsSummary;
   event: ModeMatchStatsSummary;
+  /** Which season is selected on first render. Defaults to the World Cup
+   *  event — this card only renders while an event is active, so the event
+   *  season is the one the player wants to see first. */
+  defaultTab?: 'ranked' | 'event';
   t: (key: MessageKey, params?: Record<string, string | number>) => string;
 }) {
-  const [active, setActive] = useState<'ranked' | 'event'>('ranked');
+  const [active, setActive] = useState<'ranked' | 'event'>(defaultTab);
   const stats = active === 'event' ? event : regular;
   const total = stats.wins + stats.draws + stats.losses;
 
@@ -1025,4 +1040,3 @@ function SeasonToggleCard({
     </div>
   );
 }
-

@@ -142,6 +142,7 @@ export function WelcomeHero({ sim, duelsCount, onKickOff }: WelcomeHeroProps) {
                   ballOnPlayer={landingBallOnPlayer}
                   barBattle={landingBattle}
                   barBattleVariant="ranked_sim"
+                  ambientPulses={false}
                   shotMode={landingShotMode}
                   simpleShotAnimation
                   hideBall={showGoal}
@@ -169,7 +170,7 @@ export function WelcomeHero({ sim, duelsCount, onKickOff }: WelcomeHeroProps) {
                       transition={{ duration: 0.35, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
                       className="relative w-[78%] max-w-[520px]"
                     >
-                      <Image src="/assets/goal.webp" alt="Goal celebration" width={760} height={538} priority className="w-full h-auto object-contain" />
+                      <Image src="/assets/goal.webp" alt="Goal celebration" width={760} height={538} className="w-full h-auto object-contain" />
                       {/* Rendered at peak size and scaled 1/4.6 -> 1 -> 1/4.6 so
                           the ball stays crisp at the apex (real pixels, not an
                           upscaled tiny render). */}
@@ -179,7 +180,7 @@ export function WelcomeHero({ sim, duelsCount, onKickOff }: WelcomeHeroProps) {
                         animate={{ scale: [1 / 4.6, 1, 1 / 4.6], y: [10, -32, 0], opacity: [0.94, 1, 1] }}
                         transition={{ duration: 1.85, times: [0, 0.45, 1], ease: 'easeInOut' }}
                       >
-                        <Image src="/assets/brand/goal-ball.webp" alt="" width={512} height={512} priority className="size-[221px] object-contain drop-shadow-[0_0_14px_rgba(255,255,255,0.32)] md:size-[258px]" />
+                        <Image src="/assets/brand/goal-ball.webp" alt="" width={512} height={512} className="size-[221px] object-contain drop-shadow-[0_0_14px_rgba(255,255,255,0.32)] md:size-[258px]" />
                       </motion.div>
                     </motion.div>
                   </motion.div>
@@ -197,31 +198,29 @@ export function WelcomeHero({ sim, duelsCount, onKickOff }: WelcomeHeroProps) {
         transition={{ duration: 0.5, delay: 0.2 }}
         className="order-1 lg:order-2 flex-1 flex flex-col items-center lg:items-start text-center lg:text-left max-w-xl relative lg:pl-8 xl:pl-12"
       >
-        <div className="absolute -left-11 md:-left-22 top-10 md:top-14 w-16 md:w-24 h-32 md:h-48 overflow-hidden pointer-events-none md:hidden">
+                <div className="absolute -left-11 md:-left-22 top-10 md:top-14 w-16 md:w-24 h-32 md:h-48 overflow-hidden pointer-events-none md:hidden">
+          {/* PERF: the edge fade is BAKED into the -faded asset instead of a
+              runtime mask-image. A masked element under an infinite rotate
+              re-rasterizes every frame on mobile Blink; a plain bitmap
+              rotation stays on the compositor. */}
           <motion.div
             className="origin-bottom"
-            style={{
-              maskImage: 'linear-gradient(to top, black 60%, transparent 100%), linear-gradient(to right, transparent 0%, black 22%, black 100%)',
-              WebkitMaskImage: 'linear-gradient(to top, black 60%, transparent 100%), linear-gradient(to right, transparent 0%, black 22%, black 100%)',
-            }}
+            style={{ willChange: 'transform' }}
             animate={{ rotate: [-8, 8, -8] }}
             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
           >
-            <Image src="/assets/brand/hand-left.webp" alt="" width={120} height={200} className="w-14 md:w-24 h-auto" />
+            <Image src="/assets/brand/hand-left-faded.webp" alt="" width={120} height={200} className="w-14 md:w-24 h-auto" />
           </motion.div>
         </div>
 
         <div className="absolute -right-11 md:-right-22 top-10 md:top-14 w-16 md:w-24 h-32 md:h-48 overflow-hidden pointer-events-none md:hidden">
           <motion.div
             className="origin-bottom"
-            style={{
-              maskImage: 'linear-gradient(to top, black 60%, transparent 100%), linear-gradient(to left, transparent 0%, black 22%, black 100%)',
-              WebkitMaskImage: 'linear-gradient(to top, black 60%, transparent 100%), linear-gradient(to left, transparent 0%, black 22%, black 100%)',
-            }}
+            style={{ willChange: 'transform' }}
             animate={{ rotate: [8, -8, 8] }}
             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
           >
-            <Image src="/assets/brand/hand-right.webp" alt="" width={120} height={200} className="w-14 md:w-24 h-auto" />
+            <Image src="/assets/brand/hand-right-faded.webp" alt="" width={120} height={200} className="w-14 md:w-24 h-auto" />
           </motion.div>
         </div>
 

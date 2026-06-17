@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { PlayerProvider } from "@/contexts/PlayerContext";
 import { Toaster } from "@/components/ui/sonner";
 import { LocaleProvider } from "@/contexts/LocaleContext";
+import { CspNonceProvider } from "@/contexts/CspNonceContext";
 import { PostHogPageView } from "@/components/PostHogProvider";
 import { AuthSessionBridge } from "@/components/auth/AuthSessionBridge";
 import type { Locale } from "@/lib/i18n/messages";
@@ -14,9 +15,11 @@ import type { Locale } from "@/lib/i18n/messages";
 type ProvidersProps = {
   children: React.ReactNode;
   initialLocale?: Locale;
+  geoCountry?: string | null;
+  cspNonce?: string;
 };
 
-export function Providers({ children, initialLocale }: ProvidersProps) {
+export function Providers({ children, initialLocale, geoCountry, cspNonce }: ProvidersProps) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -33,13 +36,15 @@ export function Providers({ children, initialLocale }: ProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-        <LocaleProvider initialLocale={initialLocale}>
-          <PlayerProvider>
-            <AuthSessionBridge />
-            <PostHogPageView />
-            {children}
-            <Toaster />
-          </PlayerProvider>
+        <LocaleProvider initialLocale={initialLocale} geoCountry={geoCountry}>
+          <CspNonceProvider nonce={cspNonce}>
+            <PlayerProvider>
+              <AuthSessionBridge />
+              <PostHogPageView />
+              {children}
+              <Toaster />
+            </PlayerProvider>
+          </CspNonceProvider>
         </LocaleProvider>
       </ThemeProvider>
       {process.env.NODE_ENV === "development" ? (

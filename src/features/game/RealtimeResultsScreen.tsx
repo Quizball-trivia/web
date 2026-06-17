@@ -37,7 +37,9 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
   const {
     playerWon,
     isDraw,
+    isCancelledNoContest,
     resultHeading,
+    refundedTickets,
     totalGamesLabel,
     showRankedRpCard,
     rpChange,
@@ -91,6 +93,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
         <ResultsHero
           playerWon={playerWon}
           isDraw={isDraw}
+          isCancelledNoContest={isCancelledNoContest}
           resultHeading={resultHeading}
           playerUsername={playerUsername}
           playerAvatar={playerAvatar}
@@ -113,8 +116,10 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
           t={t}
           avatarCustomization={playerAvatarCustomization ?? { base: playerAvatar }}
           showRankedRpCard={showRankedRpCard}
+          isCancelledNoContest={isCancelledNoContest}
           rpChange={rpChange}
           coinsAwarded={coinsAwarded}
+          refundedTickets={refundedTickets}
           oldRP={oldRP}
           newRP={newRP}
           rpTierInfo={rpTierInfo}

@@ -1,5 +1,16 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render as rtlRender, screen, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ReactElement } from 'react';
+
+// AppShell reads the wallet/RP via TanStack Query, so renders need a
+// QueryClientProvider. A fresh client per render keeps tests isolated.
+function render(ui: ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return rtlRender(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+}
 
 // ---------------------------------------------------------------------------
 // External deps — every hook the AppShell touches is mocked here. The tests
@@ -810,8 +821,7 @@ describe('AppShell — banner callbacks fire the right store / socket actions', 
       reset,
     });
     renderShell();
-    // Desktop variant uses the literal "Dismiss" label (not a translation key)
-    const dismiss = screen.getAllByText('Dismiss');
+    const dismiss = screen.getAllByText(/appShell.dismiss/);
     fireEvent.click(dismiss[0]);
     expect(reset).toHaveBeenCalled();
     expect(clearRankedMatchmakingMock).toHaveBeenCalled();

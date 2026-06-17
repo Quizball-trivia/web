@@ -12,7 +12,9 @@
 import { AnimatePresence, motion } from 'motion/react';
 import type { MatchForfeitPendingPayload } from '@/lib/realtime/socket.types';
 import { MatchCountdownPuck } from '@/components/shared/MatchCountdownPuck';
+import { MatchWaitingForReadyOverlay } from '@/components/shared/MatchWaitingForReadyOverlay';
 import { useLocale } from '@/contexts/LocaleContext';
+import type { MatchStatus } from '@/stores/realtime-match/types';
 
 interface PartyQuizOverlaysProps {
   startCountdownActive: boolean;
@@ -22,6 +24,7 @@ interface PartyQuizOverlaysProps {
   forfeitPendingTitle: string;
   matchPaused: boolean;
   pauseSeconds: number;
+  waitingForReady: MatchStatus['waitingForReady'];
 }
 
 export function PartyQuizOverlays({
@@ -32,11 +35,42 @@ export function PartyQuizOverlays({
   forfeitPendingTitle,
   matchPaused,
   pauseSeconds,
+  waitingForReady,
 }: PartyQuizOverlaysProps) {
   const { t } = useLocale();
+  const waitingReadyLabel = waitingForReady
+    ? t('partyResults.playersReadyCount', { ready: waitingForReady.readyCount, total: waitingForReady.totalCount })
+    : '';
+  const waitingTotalCount = waitingForReady?.totalCount ?? 0;
+  const waitingTitle = waitingTotalCount <= 1
+    ? t('partyResults.gettingMatchReady')
+    : waitingTotalCount > 2
+      ? t('partyResults.waitingForPlayers')
+      : t('partyResults.waitingForOpponent');
+  const waitingDetailLabel = waitingForReady?.phase === 'resume'
+    ? t('partyResults.resumesAfterReady')
+    : t('partyResults.startsAfterReady');
+  // i18n subtitle keyed off the reason — the server's payload.message is
+  // English-only, so rendering it raw leaked English onto the KA client.
+  const forfeitPendingSubtitle =
+    forfeitPending?.reason === 'opponent_forfeit' || forfeitPending?.reason === 'opponent_reconnect_limit'
+      ? t('forfeit.youWinByForfeit')
+      : t('forfeit.youLostMatch');
 
   return (
     <>
+      <AnimatePresence>
+        {waitingForReady && !startCountdownActive && (
+          <MatchWaitingForReadyOverlay
+            key="party-waiting-for-ready"
+            title={waitingTitle}
+            readyLabel={waitingReadyLabel}
+            detailLabel={waitingDetailLabel}
+            className="absolute inset-0 z-40 min-h-full"
+          />
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {startCountdownActive && (
           <motion.div
@@ -80,7 +114,7 @@ export function PartyQuizOverlays({
                 {t('possession.finalizingMatch')}
               </div>
               <div className="mt-2 font-poppins text-xl font-semibold uppercase text-white">{forfeitPendingTitle}</div>
-              <div className="mt-1 font-poppins text-sm font-semibold text-white/70">{forfeitPending.message}</div>
+              <div className="mt-1 font-poppins text-sm font-semibold text-white/70">{forfeitPendingSubtitle}</div>
             </motion.div>
           </motion.div>
         )}
@@ -95,10 +129,10 @@ export function PartyQuizOverlays({
             exit={{ opacity: 0, y: -16 }}
             className="absolute left-1/2 top-4 z-30 w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 rounded-[20px] bg-brand-blue px-5 py-3 shadow-2xl"
           >
-            <div className="text-center font-poppins">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/60">{t('partyResults.matchPaused')}</div>
-              <div className="mt-1 text-base font-semibold uppercase text-white">{t('partyResults.waitingForReconnect')}</div>
-              <div className="mt-1 text-xs font-semibold text-brand-yellow">{t('partyResults.resumesInSeconds', { seconds: pauseSeconds })}</div>
+              <div className="text-center font-poppins">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/60">{t('partyResults.matchPaused')}</div>
+                <div className="mt-1 text-base font-semibold uppercase text-white">{t('partyResults.waitingForReconnect')}</div>
+              <div className="mt-1 text-xs font-semibold text-brand-yellow">{t('partyResults.opponentDisconnectedContinueIfNotReturn', { seconds: pauseSeconds })}</div>
             </div>
           </motion.div>
         )}

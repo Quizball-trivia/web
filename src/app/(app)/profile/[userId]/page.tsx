@@ -8,6 +8,7 @@ import { useRecentMatches } from "@/lib/queries/stats.queries";
 import { useAuthStore } from "@/stores/auth.store";
 import { ProfileWeb, toProfileRecentMatch } from "@/features/profile/ProfileWeb";
 import { ApiError } from "@/lib/api/api";
+import { useLocale } from "@/contexts/LocaleContext";
 import type { PlayerStats } from "@/types/game";
 import type { RankedProfileResponse } from "@/lib/repositories/ranked.repo";
 
@@ -31,6 +32,7 @@ export default function PublicProfilePage({
 
 function PublicProfileContent({ userId }: { userId: string }) {
   const router = useRouter();
+  const { t } = useLocale();
   const { data: profile, isLoading, error } = usePublicProfile(userId);
   const { data: achievements = [] } = useUserAchievements(userId);
   const {
@@ -44,7 +46,7 @@ function PublicProfileContent({ userId }: { userId: string }) {
       <div className="flex flex-col items-center justify-center py-32 gap-4">
         <Loader2 className="size-10 text-primary animate-spin" />
         <p className="text-muted-foreground font-fun font-bold animate-pulse">
-          Loading profile...
+          {t("profileScreen.loadingProfile")}
         </p>
       </div>
     );
@@ -59,17 +61,17 @@ function PublicProfileContent({ userId }: { userId: string }) {
           className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors mb-8"
         >
           <ArrowLeft className="size-4" />
-          Back
+          {t("common.back")}
         </button>
         <div className="text-center py-20 rounded-2xl bg-card border-2 border-border border-b-4">
           <div className="text-4xl mb-3">{is404 ? "👤" : "⚠️"}</div>
           <h2 className="text-xl font-black mb-1">
-            {is404 ? "Player not found" : "Something went wrong"}
+            {is404 ? t("profileScreen.playerNotFound") : t("errors.INTERNAL_ERROR")}
           </h2>
           <p className="text-sm text-muted-foreground">
             {is404
-              ? "This player doesn't exist or their profile is unavailable."
-              : "Failed to load profile. Please try again later."}
+              ? t("profileScreen.playerNotFoundDescription")
+              : t("profileScreen.failedToLoadProfile")}
           </p>
         </div>
       </div>

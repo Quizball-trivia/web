@@ -59,7 +59,7 @@ export function AppShellProfileMenu({
       </div>
     </button>
   ) : (
-    <button className="flex items-center gap-2 rounded-full focus:outline-none">
+    <button className="flex min-w-0 items-center gap-2 rounded-full focus:outline-none">
       <TierFrameAvatar
         tier={tier}
         avatarCustomization={playerStats.avatarCustomization || { base: playerStats.avatar }}
@@ -67,8 +67,8 @@ export function AppShellProfileMenu({
         countryCode={authUserCountry ?? undefined}
         size="sm"
       />
-      <div className="flex flex-col items-start text-left">
-        <div className="text-sm font-black uppercase tracking-[0.03em] text-white">
+      <div className="flex min-w-0 flex-col items-start text-left">
+        <div className="max-w-[8.5rem] truncate text-sm font-black uppercase tracking-[0.03em] text-white">
           {playerStats.username}
         </div>
         <div className="mt-1 inline-flex flex-col items-center self-start rounded-full bg-brand-yellow px-3 py-1 font-black uppercase leading-none text-black">

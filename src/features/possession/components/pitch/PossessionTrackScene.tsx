@@ -39,6 +39,8 @@ interface PossessionTrackSceneProps {
   renderHtmlPitchActors: boolean;
   barBattle?: BarBattleState | null;
   barBattleVariant?: 'ranked_sim' | 'friendly_possession';
+  /** Infinite fill/boundary opacity pulses; landing passes false (Blink repaints the whole svg per pulse frame). */
+  ambientPulses?: boolean;
 }
 
 export function PossessionTrackScene({
@@ -64,7 +66,11 @@ export function PossessionTrackScene({
   renderHtmlPitchActors,
   barBattle,
   barBattleVariant,
+  ambientPulses = true,
 }: PossessionTrackSceneProps) {
+  const playerPulse = ambientPulses ? playerAvatarPulse : 1;
+  const opponentPulse = ambientPulses ? opponentAvatarPulse : 1;
+
   return (
     <g>
       {/* Main possession bar container */}
@@ -82,10 +88,8 @@ export function PossessionTrackScene({
         fill="#1CB0F6"
         opacity="0.18"
         rx="6"
-        animate={{
-          opacity: [0.15, 0.22, 0.15],
-        }}
-        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+        animate={ambientPulses ? { opacity: [0.15, 0.22, 0.15] } : undefined}
+        transition={ambientPulses ? { duration: 2.5, repeat: Infinity, ease: 'easeInOut' } : undefined}
       />
 
       {/* Opponent's possession fill */}
@@ -97,10 +101,8 @@ export function PossessionTrackScene({
         fill="#FF4B4B"
         opacity="0.12"
         rx="6"
-        animate={{
-          opacity: [0.08, 0.15, 0.08],
-        }}
-        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
+        animate={ambientPulses ? { opacity: [0.08, 0.15, 0.08] } : undefined}
+        transition={ambientPulses ? { duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 } : undefined}
       />
 
       {/* Bar battle animation sits UNDER avatars. If bars overlap in
@@ -125,11 +127,11 @@ export function PossessionTrackScene({
           data-pitch-avatar="player"
           animate={{
             x: playerAvatarX,
-            scale: playerAvatarPulse,
+            scale: playerPulse,
           }}
           transition={{
             x: { type: 'spring', stiffness: 160, damping: 12, mass: 0.7 },
-            scale: { duration: 1.5, repeat: Infinity, ease: 'easeInOut' }
+            scale: ambientPulses ? { duration: 1.5, repeat: Infinity, ease: 'easeInOut' } : { duration: 0 }
           }}
         >
           <g transform={isPortrait ? 'rotate(90, 0, 115)' : undefined}>
@@ -165,11 +167,11 @@ export function PossessionTrackScene({
           data-pitch-avatar="opponent"
           animate={{
             x: opponentAvatarX,
-            scale: opponentAvatarPulse,
+            scale: opponentPulse,
           }}
           transition={{
             x: { type: 'spring', stiffness: 160, damping: 12, mass: 0.7 },
-            scale: { duration: 1.5, repeat: Infinity, ease: 'easeInOut' }
+            scale: ambientPulses ? { duration: 1.5, repeat: Infinity, ease: 'easeInOut' } : { duration: 0 }
           }}
         >
           <g transform={isPortrait ? 'rotate(90, 0, 115)' : undefined}>
@@ -210,10 +212,8 @@ export function PossessionTrackScene({
           stroke="white"
           strokeWidth="2.5"
           opacity="0.9"
-          animate={{
-            opacity: [0.7, 1, 0.7],
-          }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+          animate={ambientPulses ? { opacity: [0.7, 1, 0.7] } : undefined}
+          transition={ambientPulses ? { duration: 1.5, repeat: Infinity, ease: 'easeInOut' } : undefined}
         />
       </motion.g>
     </g>

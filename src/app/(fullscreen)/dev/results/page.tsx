@@ -26,7 +26,7 @@ import type { UserProgression } from '@/lib/domain';
 const SELF_ID = 'dev-self';
 const OPP_ID = 'dev-opp';
 
-type Outcome = 'win' | 'loss' | 'draw';
+type Outcome = 'win' | 'loss' | 'draw' | 'cancelled';
 
 const ACHIEVEMENT_SAMPLES: AchievementUnlockPayload[] = [
   {
@@ -65,39 +65,45 @@ export default function DevResultsPage() {
 function DevResultsContent() {
   const router = useRouter();
 
-  const [outcome, setOutcome] = useState<Outcome>('loss');
+  const [outcome, setOutcome] = useState<Outcome>('cancelled');
   const [preMatchRp, setPreMatchRp] = useState(495);
   const [rpDelta, setRpDelta] = useState(35);
   const [playerGoals, setPlayerGoals] = useState(0);
-  const [opponentGoals, setOpponentGoals] = useState(5);
-  const [playerCorrect, setPlayerCorrect] = useState(7);
-  const [opponentCorrect, setOpponentCorrect] = useState(10);
-  const [totalQuestions, setTotalQuestions] = useState(12);
+  const [opponentGoals, setOpponentGoals] = useState(0);
+  const [playerCorrect, setPlayerCorrect] = useState(0);
+  const [opponentCorrect, setOpponentCorrect] = useState(0);
+  const [totalQuestions, setTotalQuestions] = useState(0);
   const [withAchievements, setWithAchievements] = useState(false);
   const [withProgression, setWithProgression] = useState(true);
   const [withQuestionDots, setWithQuestionDots] = useState(true);
   // Tick to force-remount the results screen so internal animations replay.
   const [replayKey, setReplayKey] = useState(0);
+  const isCancelled = outcome === 'cancelled';
+  const displayTotalQuestions = isCancelled ? 0 : totalQuestions;
+  const displayPlayerCorrect = isCancelled ? 0 : playerCorrect;
+  const displayOpponentCorrect = isCancelled ? 0 : opponentCorrect;
+  const displayPlayerGoals = isCancelled ? 0 : playerGoals;
+  const displayOpponentGoals = isCancelled ? 0 : opponentGoals;
 
   // Build per-question result arrays from the correct/total counts. Marks the
   // first N as correct, the rest as wrong (questions beyond what either player
   // saw are left as null → hollow yellow rings).
   const playerQuestionResults = useMemo<Array<'correct' | 'wrong' | null>>(() => {
     if (!withQuestionDots) return [];
-    return Array.from({ length: totalQuestions }, (_, i) =>
-      i < playerCorrect ? 'correct' : 'wrong'
+    return Array.from({ length: displayTotalQuestions }, (_, i) =>
+      i < displayPlayerCorrect ? 'correct' : 'wrong'
     );
-  }, [withQuestionDots, totalQuestions, playerCorrect]);
+  }, [withQuestionDots, displayTotalQuestions, displayPlayerCorrect]);
 
   const opponentQuestionResults = useMemo<Array<'correct' | 'wrong' | null>>(() => {
     if (!withQuestionDots) return [];
-    return Array.from({ length: totalQuestions }, (_, i) =>
-      i < opponentCorrect ? 'correct' : 'wrong'
+    return Array.from({ length: displayTotalQuestions }, (_, i) =>
+      i < displayOpponentCorrect ? 'correct' : 'wrong'
     );
-  }, [withQuestionDots, totalQuestions, opponentCorrect]);
+  }, [withQuestionDots, displayTotalQuestions, displayOpponentCorrect]);
 
   const signedRpDelta = useMemo(() => {
-    if (outcome === 'draw') return 0;
+    if (outcome === 'draw' || outcome === 'cancelled') return 0;
     // For loss show a negative delta unless the slider is explicitly negative.
     if (outcome === 'loss') return -Math.abs(rpDelta);
     return Math.abs(rpDelta);
@@ -115,7 +121,8 @@ function DevResultsContent() {
   const opponentSignedRpDelta = -signedRpDelta;
   const opponentNewRp = Math.max(0, Math.min(3500, opponentPreMatchRp + opponentSignedRpDelta));
 
-  const rankedOutcome: RankedMatchOutcomePayload = useMemo(() => {
+  const rankedOutcome: RankedMatchOutcomePayload | null = useMemo(() => {
+    if (isCancelled) return null;
     const oldTier = getRankedTierProgress(preMatchRp).tier;
     const newTier = getRankedTierProgress(newRp).tier;
     const oppOldTier = getRankedTierProgress(opponentPreMatchRp).tier;
@@ -152,7 +159,7 @@ function DevResultsContent() {
         },
       },
     };
-  }, [preMatchRp, newRp, signedRpDelta, opponentPreMatchRp, opponentNewRp, opponentSignedRpDelta, outcome]);
+  }, [isCancelled, preMatchRp, newRp, signedRpDelta, opponentPreMatchRp, opponentNewRp, opponentSignedRpDelta, outcome]);
 
   const preMatchRankedProfile = useMemo<RankedProfileResponse>(() => ({
     rp: preMatchRp,
@@ -193,16 +200,17 @@ function DevResultsContent() {
           opponentUsername="Konstantine Kevlishvili"
           opponentAvatar="avatar-2"
           opponentAvatarCustomization={null}
-          playerScore={playerGoals}
-          opponentScore={opponentGoals}
-          playerCorrect={playerCorrect}
-          opponentCorrect={opponentCorrect}
-          totalQuestions={totalQuestions}
-          playerQuestionResults={withQuestionDots ? playerQuestionResults : undefined}
-          opponentQuestionResults={withQuestionDots ? opponentQuestionResults : undefined}
+          playerScore={displayPlayerGoals}
+          opponentScore={displayOpponentGoals}
+          playerCorrect={displayPlayerCorrect}
+          opponentCorrect={displayOpponentCorrect}
+          totalQuestions={displayTotalQuestions}
+          playerQuestionResults={withQuestionDots && !isCancelled ? playerQuestionResults : undefined}
+          opponentQuestionResults={withQuestionDots && !isCancelled ? opponentQuestionResults : undefined}
           selfUserId={SELF_ID}
           finalWinnerId={finalWinnerId}
-          winnerDecisionMethod="goals"
+          winnerDecisionMethod={isCancelled ? 'forfeit' : 'goals'}
+          cancelledNoContest={isCancelled}
           preMatchRp={preMatchRp}
           opponentId={OPP_ID}
           rankedOutcome={rankedOutcome}
@@ -231,7 +239,7 @@ function DevResultsContent() {
         {/* Outcome */}
         <Group label="Outcome">
           <Segmented
-            options={['win', 'loss', 'draw'] as const}
+            options={['cancelled', 'win', 'loss', 'draw'] as const}
             value={outcome}
             onChange={setOutcome}
           />
@@ -261,6 +269,20 @@ function DevResultsContent() {
               className="rounded-lg bg-surface-deep px-2 py-1.5 text-[10px] font-black uppercase tracking-wider text-brand-red"
             >
               ▼ Tier down
+            </button>
+            <button
+              onClick={() => {
+                setOutcome('cancelled');
+                setPlayerGoals(0);
+                setOpponentGoals(0);
+                setPlayerCorrect(0);
+                setOpponentCorrect(0);
+                setTotalQuestions(0);
+                setReplayKey((k) => k + 1);
+              }}
+              className="rounded-lg bg-white/10 px-2 py-1.5 text-[10px] font-black uppercase tracking-wider text-white"
+            >
+              ↺ Cancelled
             </button>
           </div>
           <p className="mt-1 text-[9px] text-brand-slate">
@@ -303,7 +325,7 @@ function DevResultsContent() {
         </Group>
         <Group label="Total questions">
           <Slider
-            min={1}
+            min={0}
             max={20}
             step={1}
             value={totalQuestions}

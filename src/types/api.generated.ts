@@ -1143,6 +1143,7 @@ export interface paths {
                                 opponentPenaltyGoals: number;
                                 /** @enum {string|null} */
                                 winnerDecisionMethod: "goals" | "penalty_goals" | "total_points" | "total_points_fallback" | "forfeit" | null;
+                                cancelledNoContest: boolean;
                                 rpDelta: number | null;
                                 opponent: {
                                     /** Format: uuid */
@@ -5376,6 +5377,7 @@ export interface components {
                 opponentPenaltyGoals: number;
                 /** @enum {string|null} */
                 winnerDecisionMethod: "goals" | "penalty_goals" | "total_points" | "total_points_fallback" | "forfeit" | null;
+                cancelledNoContest: boolean;
                 rpDelta: number | null;
                 opponent: {
                     /** Format: uuid */

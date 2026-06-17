@@ -51,6 +51,7 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
     roundResult,
     myRound,
     opponentRound,
+    opponentAnswered = false,
     countdownGuessAck,
     cluesGuessAck,
   } = props;
@@ -114,6 +115,7 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
         roundResult={roundResult}
         myRound={myRound}
         opponentRound={opponentRound}
+        opponentAnswered={opponentAnswered}
         cluesGuessAck={cluesGuessAck}
       />
     );

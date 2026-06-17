@@ -456,7 +456,7 @@ describe('RealtimePartyQuizScreen — overlays', () => {
     expect(screen.getByText(/match paused/i)).toBeInTheDocument();
     expect(screen.getByText(/waiting for a player to reconnect/i)).toBeInTheDocument();
     // Counts down — at +8s remaining, the copy should mention "8s"
-    expect(screen.getByText(/resumes automatically in 8s/i)).toBeInTheDocument();
+    expect(screen.getByText(/continues if they don't return in 8s/i)).toBeInTheDocument();
   });
 });
 

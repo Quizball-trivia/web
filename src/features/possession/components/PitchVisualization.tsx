@@ -24,6 +24,7 @@ export function PitchVisualization(props: PitchVisualizationProps) {
     targetGoal,
     barBattle,
     barBattleVariant,
+    ambientPulses = true,
     hideBall = false,
   } = props;
   // RENDER-TIME field clamp: avatars/ball/track must stay visually inside the
@@ -119,10 +120,38 @@ export function PitchVisualization(props: PitchVisualizationProps) {
             stays at y=0..230 so existing markings/avatar positions don't
             need to shift; we extend 30 units of green pitch above and below
             (y=-30..0 and y=230..260) to reach Figma's proportions. */}
+        {/* PERF: the stadium bitmap lives in its OWN svg layer, separate from
+            the animated content svg below. SVG children never get compositor
+            layers in Blink, so when bars/fills/ball animate, every damaged
+            tile of the SAME svg — including the DPR-scaled stadium bitmap —
+            re-rasterizes each frame. That continuous re-raster is what makes
+            the landing animation stutter on mobile Chrome while Safari
+            (different SVG caching) copes. Splitting the static bitmap into a
+            will-change-promoted sibling means it rasterizes once and the
+            per-frame damage only touches the (mostly transparent) dynamic
+            svg. Same DOM order inside the camera wrapper, so zoom still
+            applies to both. */}
+        <svg
+          data-pitch-field="possession-bg"
+          aria-hidden="true"
+          viewBox={isPortrait ? '-30 0 290 500' : '0 -30 500 290'}
+          className="pointer-events-none absolute inset-0 z-0 h-full w-full"
+          style={{ willChange: 'transform' }}
+        >
+          <defs>
+            <clipPath id={uid('fieldClipBg')}>
+              <rect x="0" y="-30" width="500" height="290" />
+            </clipPath>
+          </defs>
+          <g transform={isPortrait ? 'matrix(0,-1,1,0,0,500)' : undefined} clipPath={`url(#${uid('fieldClipBg')})`}>
+            <PitchBackground uid={() => uid('fieldClipBg')} isPenalty={isPenalty} zoneBands={zoneBands} />
+          </g>
+        </svg>
+
         <svg
           data-pitch-field="possession"
           viewBox={isPortrait ? '-30 0 290 500' : '0 -30 500 290'}
-          className={isPortrait ? 'w-full h-full' : 'w-full h-auto'}
+          className={isPortrait ? 'relative z-10 h-full w-full' : 'relative z-10 h-auto w-full'}
         >
           <PitchSvgDefs uid={uid} />
 
@@ -133,7 +162,7 @@ export function PitchVisualization(props: PitchVisualizationProps) {
               Animations operate in local coord space, parent transform maps to viewport. */}
           <g transform={isPortrait ? 'matrix(0,-1,1,0,0,500)' : undefined}>
 
-          <PitchBackground uid={uid} isPenalty={isPenalty} zoneBands={zoneBands} />
+          {/* Stadium bitmap moved to the dedicated background svg above. */}
 
           {/* Pitch markings removed — stadium-green.webp has its own lines */}
 
@@ -211,6 +240,7 @@ export function PitchVisualization(props: PitchVisualizationProps) {
               renderHtmlPitchActors={renderHtmlPitchActors}
               barBattle={barBattle}
               barBattleVariant={barBattleVariant}
+              ambientPulses={ambientPulses}
             />
           )}
 
@@ -310,6 +340,9 @@ export function PitchVisualization(props: PitchVisualizationProps) {
             htmlActorResultActive={htmlActorResultActive}
             playerHtmlIsShooter={playerHtmlIsShooter}
             opponentHtmlIsShooter={opponentHtmlIsShooter}
+            opponentThinking={props.opponentThinking ?? false}
+            opponentAnsweredWrong={props.opponentAnsweredWrong ?? false}
+            opponentAnsweredCorrect={props.opponentAnsweredCorrect ?? false}
           />
         )}
         </motion.div>

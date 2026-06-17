@@ -7,6 +7,8 @@ import { memo, useMemo } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
+import { getI18nText } from '@/lib/utils/i18n';
+import type { I18nField } from '@/lib/realtime/socket.types';
 
 /**
  * Vibrant card palette — mirrors the /play mode-selection cards. Each ban card
@@ -27,7 +29,7 @@ export const BAN_CARD_TITLE_STYLE = {
   fontFamily: "'Poppins', sans-serif",
   fontWeight: 600,
   letterSpacing: '0',
-  lineHeight: 1,
+  lineHeight: 1.08,
 } as const;
 
 const CARD_ENTRANCE_INITIAL = { opacity: 0, y: 20 } as const;
@@ -36,7 +38,8 @@ const CARD_SPRING = { type: 'spring', stiffness: 200, damping: 20 } as const;
 
 export interface BanCategoryCardCategory {
   id: string;
-  name: string;
+  /** Full i18n object ({ en, ka }); localized for display via the active locale. */
+  name: I18nField;
   icon?: string | null;
   imageUrl?: string | null;
 }
@@ -77,7 +80,8 @@ function BanCategoryCardComponent({
   animationIndex = 0,
   onClick,
 }: BanCategoryCardProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const categoryName = getI18nText(category.name, locale);
   const color = BAN_CARD_COLORS[colorIndex % BAN_CARD_COLORS.length];
   const imageUrl = category.imageUrl ?? null;
   const hasImage = Boolean(imageUrl);
@@ -106,7 +110,11 @@ function BanCategoryCardComponent({
         }
       }}
       className={cn(
-        'group relative aspect-[3/4] sm:aspect-[4/5] w-full overflow-hidden rounded-xl md:rounded-2xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60',
+        // @container: the title sizes to THIS card's width (cqw), not the
+        // viewport. With 3 cards across on a narrow draft screen each card is
+        // ~1/3 the width, so vw-based sizing rendered the font too big and long
+        // KA names wrapped/clipped mid-word. cqw shrinks per-card so they fit.
+        '@container group relative aspect-[3/4] sm:aspect-[4/5] w-full overflow-hidden rounded-xl md:rounded-2xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60',
         interactive && 'cursor-pointer active:translate-y-[2px]',
         !interactive && 'cursor-default',
         fadedOut && 'opacity-30 pointer-events-none',
@@ -153,11 +161,22 @@ function BanCategoryCardComponent({
         </div>
       )}
 
-      {/* Title — centered in the card */}
-      <div className="relative z-10 flex h-full flex-col justify-center items-center p-3 sm:p-4">
+      {/* Title — centered in the card. Tight horizontal padding (px-1.5) gives
+          the text more width before it has to shrink; cards have plenty of
+          vertical room so long names wrap onto more lines rather than getting
+          tiny. */}
+      <div className="relative z-10 flex h-full flex-col justify-center items-center px-1.5 py-3 sm:px-3 sm:py-4">
         <h3
           className={cn(
-            'text-[clamp(0.62rem,3.1vw,1.25rem)] uppercase leading-tight text-balance text-center w-full [overflow-wrap:break-word]',
+            // Font sizes to the CARD width (cqw), so long Georgian names shrink
+            // to fit on narrow draft cards instead of clipping. The cards have
+            // ample vertical room, so we prefer a LARGER, readable font that
+            // wraps onto more lines over a tiny font in fewer lines — hence a
+            // higher cqw multiplier and a higher floor than a pure shrink-to-fit
+            // would use. Word-only wrapping: overflow-wrap/word-break stay
+            // `normal` and hyphens are off, so a name like "გერმანია" is never
+            // cut mid-word as "გერმანი-ა".
+            'text-[clamp(0.72rem,11cqw,1.35rem)] uppercase leading-tight text-balance text-center w-full [overflow-wrap:normal] [word-break:normal] [hyphens:none]',
             isBanned && 'grayscale opacity-70'
           )}
           style={{
@@ -167,13 +186,16 @@ function BanCategoryCardComponent({
             color: isBanned ? '#E3E9EC' : (hasImage ? '#ffffff' : color.text),
             textShadow: hasImage ? '0 2px 8px rgba(0,0,0,0.75), 0 0 4px rgba(0,0,0,0.6)' : 'none',
             display: '-webkit-box',
-            WebkitLineClamp: 3,
+            // 7 lines: long KA names wrap to ~5-6 lines at the shrunk cqw font,
+            // so this is a safety net for extreme names, not the thing clipping
+            // normal ones.
+            WebkitLineClamp: 7,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
           }}
-          title={category.name}
+          title={categoryName}
         >
-          {category.name}
+          {categoryName}
         </h3>
       </div>
 
@@ -204,11 +226,15 @@ function BanCategoryCardComponent({
               initial={{ scale: 0, rotate: -20 }}
               animate={{ scale: 1, rotate: -8 }}
               transition={{ type: 'spring', stiffness: 400, damping: 14 }}
-              className="max-w-[90%] rounded-lg bg-brand-red-soft px-3 py-1.5 sm:rounded-xl sm:px-6 sm:py-2.5 md:px-7 md:py-3"
+              className="max-w-[94%] rounded-lg bg-brand-red-soft px-2.5 py-1.5 sm:rounded-xl sm:px-6 sm:py-2.5 md:px-7 md:py-3"
             >
               <span
-                className="block whitespace-nowrap text-center text-[11px] uppercase tracking-[0.08em] text-white sm:text-base md:text-lg"
-                style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
+                className="block whitespace-nowrap text-center uppercase tracking-[0.02em] text-white sm:tracking-[0.08em]"
+                style={{
+                  fontFamily: "'Poppins', sans-serif",
+                  fontWeight: 600,
+                  fontSize: 'clamp(0.5rem, 2.6vw, 1.125rem)',
+                }}
               >
                 {t('banCategory.banned')}
               </span>

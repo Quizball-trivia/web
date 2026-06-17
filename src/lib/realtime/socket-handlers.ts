@@ -33,6 +33,7 @@ import type {
   MatchQuestionPayload,
   MatchRoundResultPayload,
   MatchCountdownPayload,
+  MatchWaitingForReadyPayload,
   MatchRejoinAvailablePayload,
   MatchResumePayload,
   MatchStartPayload,
@@ -41,6 +42,8 @@ import type {
   SessionBlockedPayload,
   LobbyChallengeInvitePayload,
   LobbyChallengeStatusPayload,
+  NotificationPayload,
+  NotificationUnreadCountPayload,
 } from './socket.types';
 
 // Module-level ref so handlers always read the latest queryClient
@@ -104,6 +107,22 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     if (typeof window !== 'undefined') {
       window.location.href = '/';
     }
+  });
+
+  socket.on('notification:new', (data: NotificationPayload) => {
+    logger.info('Socket event notification:new', { notificationId: data.id, type: data.type });
+    const queryClient = getQueryClient();
+    queryClient?.invalidateQueries({ queryKey: queryKeys.notifications.all });
+    const locale = normalizeLocale(storage.get<string>(STORAGE_KEYS.LOCALE, 'en'));
+    const title = getI18nText(data.title, locale);
+    if (title) toast.info(title);
+  });
+
+  socket.on('notification:unread_count', (data: NotificationUnreadCountPayload) => {
+    logger.info('Socket event notification:unread_count', data);
+    const queryClient = getQueryClient();
+    queryClient?.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
+    queryClient?.invalidateQueries({ queryKey: queryKeys.notifications.list() });
   });
 
   socket.on('lobby:state', (data: LobbyState) => {
@@ -257,6 +276,21 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     store.setMatchCountdown({ ...data, serverTimeOffsetMs });
   });
 
+  socket.on('match:waiting_for_ready', (data: MatchWaitingForReadyPayload) => {
+    const serverTimeOffsetMs = computeServerTimeOffsetMs(data.serverNow);
+    logger.info('Socket event match:waiting_for_ready', {
+      matchId: data.matchId,
+      phase: data.phase,
+      readyCount: data.readyCount,
+      totalCount: data.totalCount,
+      readyUserIds: data.readyUserIds,
+      waitingUserIds: data.waitingUserIds,
+      forceStartsAt: data.forceStartsAt,
+      serverTimeOffsetMs,
+    });
+    store.setMatchWaitingForReady({ ...data, serverTimeOffsetMs });
+  });
+
   socket.on('match:state', (data: MatchStatePayload) => {
     logger.info('Socket event match:state', {
       matchId: data.matchId,
@@ -281,6 +315,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   });
 
   socket.on('match:question', (data: MatchQuestionPayload) => {
+    try {
     const serverTimeOffsetMs = computeServerTimeOffsetMs(data.serverNow);
     logger.info('Socket event match:question', {
       matchId: data.matchId,
@@ -336,7 +371,11 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
                   ...data.question,
                   resolvedLocale: locale,
                   prompt: getI18nText(data.question.prompt, locale),
-                  clues: data.question.clues.map((clue) => ({
+                  // Defensive: a malformed payload without a clues array used
+                  // to throw inside this socket callback, silently swallowing
+                  // the question — the client then waited on the previous
+                  // screen forever (no error boundary catches socket handlers).
+                  clues: (Array.isArray(data.question.clues) ? data.question.clues : []).map((clue) => ({
                     ...clue,
                     content: getI18nText(clue.content, locale),
                   })),
@@ -344,6 +383,18 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
                 },
     };
     store.setMatchQuestion(resolvedData);
+    } catch (error) {
+      // A throw here used to vanish the question entirely (the store never
+      // received it and the match froze on the previous screen with no UI
+      // error). Log loudly instead — the server-side round timeout will still
+      // resolve the round even if this client cannot render the question.
+      logger.error('Failed to process match:question payload', {
+        matchId: data?.matchId,
+        qIndex: data?.qIndex,
+        questionKind: data?.question?.kind,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   });
 
   socket.on('match:opponent_answered', (data: MatchOpponentAnsweredPayload) => {

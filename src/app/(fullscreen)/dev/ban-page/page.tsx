@@ -3,14 +3,38 @@
 import { useState, useEffect, useRef } from 'react';
 import { BanCategoryView } from '@/features/play/RankedCategoryBlockingScreen';
 import { HalftimeScreen } from '@/features/possession/components/HalftimeScreen';
+import { useLocale } from '@/contexts/LocaleContext';
 import type { AvatarCustomization } from '@/types/game';
 
-type BanPhase = 'first' | 'second';
+type BanPhase = 'first' | 'second' | 'penalty';
 
+// Real worst-case Georgian names from production so the ban-card layout can be
+// verified against the longest text it actually has to fit (no truncation).
 const MOCK_CATEGORIES = [
-  { id: 'cat-league-1', name: 'League 1', icon: '⚽', imageUrl: null },
-  { id: 'cat-champions', name: 'Champions League', icon: '🏆', imageUrl: null },
-  { id: 'cat-00s-era', name: '00s Era', icon: '⚽', imageUrl: null },
+  {
+    id: 'cat-wc-japan-2002',
+    name: {
+      en: 'World Cup Korea/Japan 2002',
+      ka: 'მსოფლიო ჩემპიონატის კოპა/იაპონია 2002',
+    },
+    icon: '⚽',
+    imageUrl: null,
+  },
+  {
+    id: 'cat-argentina-wc',
+    name: {
+      en: 'Argentina World Cup History',
+      ka: 'არგენტინის მსოფლიო ჩემპიონატის ისტორია',
+    },
+    icon: '🏆',
+    imageUrl: null,
+  },
+  {
+    id: 'cat-wc-emblems',
+    name: { en: 'World Cup Emblems', ka: 'მსოფლიო თასის ემბლემები' },
+    icon: '⚽',
+    imageUrl: null,
+  },
 ];
 
 const MOCK_PLAYER_AVATAR_CUSTOMIZATION = {
@@ -30,6 +54,7 @@ const MOCK_OPPONENT_AVATAR_CUSTOMIZATION = {
  * (second half) so the design can be iterated on without running a live ranked match.
  */
 export default function BanPagePreview() {
+  const { locale, setLocale } = useLocale();
   const [phaseMode, setPhaseMode] = useState<BanPhase>('first');
   const [halftimeDeadlineAt, setHalftimeDeadlineAt] = useState(() =>
     new Date(Date.now() + 20_000).toISOString()
@@ -48,10 +73,11 @@ export default function BanPagePreview() {
   const firstHalfCurrentActor: 'player' | 'opponent' = firstHalfPlayerBannedId ? 'opponent' : 'player';
   const firstHalfPhase: 'ban' | 'ready' = firstHalfPlayerBannedId ? 'ready' : 'ban';
 
-  // Reset halftime state when the toggle is switched so the user sees the
-  // clean initial UI (no pre-banned cards) on every switch into second-half.
+  // Reset halftime/penalty ban state when the toggle is switched so the user
+  // sees the clean initial UI (no pre-banned cards) on every switch into a
+  // halftime-style ban screen (2nd Half and Penalty share the same component).
   useEffect(() => {
-    if (phaseMode !== 'second') return;
+    if (phaseMode === 'first') return;
     queueMicrotask(() => {
       setHalftimeMyBan(null);
       setHalftimeOppBan(null);
@@ -67,7 +93,7 @@ export default function BanPagePreview() {
 
   // Once the player bans, simulate the AI taking its turn after ~1.2s.
   useEffect(() => {
-    if (phaseMode !== 'second') return;
+    if (phaseMode === 'first') return;
     if (!halftimeMyBan || halftimeOppBan) return;
     if (aiBanTimerRef.current) clearTimeout(aiBanTimerRef.current);
     aiBanTimerRef.current = setTimeout(() => {
@@ -111,6 +137,38 @@ export default function BanPagePreview() {
           >
             2nd Half
           </button>
+          {/* Penalty ban = the halftime ban UI with the "Penalties" heading
+              (HalftimeScreen isPenaltyBan) — pure mock, no live match. */}
+          <button
+            type="button"
+            onClick={() => setPhaseMode('penalty')}
+            className={`rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] transition ${
+              phaseMode === 'penalty' ? 'bg-brand-purple text-white' : 'text-white/60 hover:text-white'
+            }`}
+            style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
+          >
+            Penalty
+          </button>
+        </div>
+      </div>
+
+      {/* ── Locale toggle — force EN/KA so the long Georgian category names
+          can be checked regardless of browser/localStorage locale. ── */}
+      <div className="pointer-events-none fixed inset-x-0 top-14 z-[60] flex justify-center">
+        <div className="pointer-events-auto inline-flex items-center gap-1 rounded-full border border-white/10 bg-[#0a1318]/80 p-1 backdrop-blur-sm shadow-xl">
+          {(['en', 'ka'] as const).map((lng) => (
+            <button
+              key={lng}
+              type="button"
+              onClick={() => setLocale(lng)}
+              className={`rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] transition ${
+                locale === lng ? 'bg-brand-green text-white' : 'text-white/60 hover:text-white'
+              }`}
+              style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}
+            >
+              {lng}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -165,6 +223,7 @@ export default function BanPagePreview() {
           firstBanSeat={1}
           myBan={halftimeMyBan}
           opponentBan={halftimeOppBan}
+          isPenaltyBan={phaseMode === 'penalty'}
           onBanCategory={(id) => setHalftimeMyBan(id)}
         />
       )}

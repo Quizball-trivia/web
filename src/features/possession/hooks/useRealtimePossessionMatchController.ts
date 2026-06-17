@@ -137,11 +137,12 @@ export function useRealtimePossessionMatchController({
   const [muted, setMuted] = useState(false);
   const [quitModalOpen, setQuitModalOpen] = useState(false);
 
+  const possessionState = possessionMatch.possessionState;
   const firstQuestionIntro = usePossessionFirstQuestionIntro({
     countdownEndsAt: possessionMatch.countdownEndsAt,
     currentQuestionIndex: possessionMatch.currentQuestion?.qIndex ?? null,
+    half: possessionState?.half,
   });
-  const possessionState = possessionMatch.possessionState;
   const secondHalfQuestionIntro = usePossessionSecondHalfQuestionIntro({
     phase: possessionState?.phase,
     half: possessionState?.half,
@@ -311,6 +312,7 @@ export function useRealtimePossessionMatchController({
     penaltySuddenDeath: possessionState?.penaltySuddenDeath,
     firstQuestionIntro,
     secondHalfQuestionIntro,
+    currentQuestionIndex: possessionMatch.currentQuestion?.qIndex ?? null,
     localQuestion,
     pendingQuestion,
     roundResult: state.roundResult,
@@ -416,6 +418,9 @@ export function useRealtimePossessionMatchController({
   usePreloadImages(useMemo(() => [questionImageUrl], [questionImageUrl]));
 
   const isMultipleChoiceQuestion = localQuestion?.question.kind === 'multipleChoice';
+  // The opponent "?" thinking badge / kick animation is a "Who am I" (clues)
+  // affordance only — not MCQ/countdown/put-in-order.
+  const isCluesQuestion = localQuestion?.question.kind === 'clues';
   const specialQuestion = localQuestion && localQuestion.question.kind !== 'multipleChoice'
     ? localQuestion.question
     : null;
@@ -626,6 +631,18 @@ export function useRealtimePossessionMatchController({
         centerPossessionTrack,
         simpleShotAnimation,
         barBattle,
+        // Opponent "?" thinking badge — "Who am I" (clues) rounds ONLY (gated by
+        // isCluesQuestion; never on MCQ/countdown/put-in-order). Show while the
+        // round is live and the opponent hasn't answered. On answer the incoming
+        // score-flight knocks the badge (PitchHtmlActors): a wrong "+0" kicks it
+        // and both drop; a correct "+N" detours through it (kick) then continues
+        // to the bars. Keep it visible while correctness is still unknown
+        // (opponentAnswered can flip true via match:opponent_answered before
+        // isCorrect arrives) — otherwise the badge briefly unmounts, then the
+        // kick variant remounts from scratch once correctness lands.
+        opponentThinking: isCluesQuestion && !state.roundResolved && (!state.opponentAnswered || opponentAnsweredCorrectly === null),
+        opponentAnsweredWrong: isCluesQuestion && !state.roundResolved && state.opponentAnswered && opponentAnsweredCorrectly === false,
+        opponentAnsweredCorrect: isCluesQuestion && !state.roundResolved && state.opponentAnswered && opponentAnsweredCorrectly === true,
       },
       goalCelebration,
       penaltySplash: fieldState.isPenaltyQuestion
@@ -714,6 +731,7 @@ export function useRealtimePossessionMatchController({
               roundResult: state.roundResult,
               myRound,
               opponentRound,
+              opponentAnswered: state.opponentAnswered,
               countdownGuessAck,
               cluesGuessAck,
             },

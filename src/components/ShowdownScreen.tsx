@@ -2,9 +2,13 @@
 
 import Image from 'next/image';
 import { useEffect } from 'react';
+import { Wifi } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AvatarPreview } from '@/components/AvatarPreview';
 import { CountryFlag } from '@/components/CountryFlag';
+import { useLocale } from '@/contexts/LocaleContext';
+import { useUserPreferences } from '@/lib/preferences/userPreferences';
+import { useRealtimeConnectionHealth } from '@/lib/realtime/connection-health';
 import type { AvatarCustomization } from '@/types/game';
 import { getTierAccent, getTierFrameSrc } from '@/utils/tierVisuals';
 import { getClub } from '@/lib/clubs';
@@ -105,6 +109,10 @@ interface ShowdownPlayerInfo {
   favoriteClub?: string | null;
   /** Last 3 match results, most recent first — used to render a WWL-style form chip strip. */
   recentForm?: MatchResultLetter[];
+  /** Connection RTT in milliseconds when known. */
+  pingMs?: number | null;
+  /** AI opponents borrow a close-to-local ping for display only. */
+  isAi?: boolean;
 }
 
 interface ShowdownScreenProps {
@@ -136,15 +144,54 @@ const poppins = {
   lineHeight: 1,
 } as const;
 
+function deriveAiPingMs(playerPingMs: number | null): number | null {
+  if (playerPingMs === null) return null;
+  return Math.max(12, Math.min(999, Math.round(playerPingMs + 8)));
+}
+
+function PingPill({
+  pingMs,
+  label,
+  isVertical,
+}: {
+  pingMs: number | null;
+  label: string;
+  isVertical: boolean;
+}) {
+  const { t } = useLocale();
+  if (pingMs === null) return null;
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 1.12 }}
+      title={label}
+      className={cn(
+        // Brand blue label — matches the in-match blue pills (question counter /
+        // timer) rather than the old dark glass chip.
+        'mt-2 inline-flex items-center justify-center gap-1.5 rounded-full bg-brand-blue font-poppins font-semibold uppercase tracking-wide tabular-nums text-white shadow-[0_2px_8px_rgba(22,69,255,0.3)]',
+        isVertical ? 'h-7 px-3 text-[11px]' : 'h-6 px-2.5 text-[10px] sm:h-7 sm:px-3.5 sm:text-xs',
+      )}
+    >
+      <Wifi className={isVertical ? 'size-3.5' : 'size-3 sm:size-3.5'} />
+      <span>{t('common.connectionPingMs', { ms: pingMs })}</span>
+    </motion.div>
+  );
+}
+
 function PlayerSide({
   info,
   side,
   variant = 'horizontal',
   reversed = false,
+  showPing = false,
+  pingLabel,
 }: {
   info: ShowdownPlayerInfo;
   side: 'left' | 'right';
   variant?: 'horizontal' | 'vertical';
+  showPing?: boolean;
+  pingLabel: string;
   /** When true, render in reverse order (card at bottom, text at top) and
    *  flip the avatar character vertically so the player visually "faces"
    *  the other side. Used by the opponent in the vertical layout so they
@@ -316,6 +363,13 @@ function PlayerSide({
           ))}
         </motion.div>
       )}
+      {showPing && (
+        <PingPill
+          pingMs={info.pingMs ?? null}
+          label={pingLabel}
+          isVertical={isVertical}
+        />
+      )}
     </motion.div>
   );
 }
@@ -332,6 +386,9 @@ export function ShowdownScreen({
   wrapperClassName = 'min-h-screen',
   variant = 'auto',
 }: ShowdownScreenProps) {
+  const { t } = useLocale();
+  const { pingIndicatorEnabled } = useUserPreferences();
+  const connectionHealth = useRealtimeConnectionHealth();
   useEffect(() => {
     const timer = setTimeout(() => onComplete(), 4500);
     return () => clearTimeout(timer);
@@ -344,6 +401,12 @@ export function ShowdownScreen({
 
   const playerData: ShowdownPlayerInfo = { ...playerInfo, username: playerUsername, avatar: playerAvatar };
   const opponentData: ShowdownPlayerInfo = { ...opponentInfo, username: opponentUsername, avatar: opponentAvatar };
+  const localPingMs = connectionHealth.rttMs;
+  const playerPingMs = playerData.pingMs ?? localPingMs;
+  const opponentPingMs = opponentData.pingMs ?? (opponentData.isAi ? deriveAiPingMs(playerPingMs) : null);
+  const showdownPlayerData: ShowdownPlayerInfo = { ...playerData, pingMs: playerPingMs };
+  const showdownOpponentData: ShowdownPlayerInfo = { ...opponentData, pingMs: opponentPingMs };
+  const pingLabel = t('showdown.pingLabel');
   const isRanked = matchType === 'ranked';
   const accentMatch = '#1645FF';
   const isVertical = resolvedVariant === 'vertical';
@@ -361,7 +424,14 @@ export function ShowdownScreen({
           {/* Opponent on top — same content order as the player (card → stats)
               so the stats appear BELOW the avatar on both sides. `reversed`
               only controls the entrance direction (slides in from above). */}
-          <PlayerSide info={opponentData} side="right" variant="vertical" reversed />
+          <PlayerSide
+            info={showdownOpponentData}
+            side="right"
+            variant="vertical"
+            reversed
+            showPing={pingIndicatorEnabled}
+            pingLabel={pingLabel}
+          />
 
           {/* VS divider */}
           <motion.div
@@ -395,7 +465,13 @@ export function ShowdownScreen({
           </motion.div>
 
           {/* Player on bottom, normal order (card top, text bottom). */}
-          <PlayerSide info={playerData} side="left" variant="vertical" />
+          <PlayerSide
+            info={showdownPlayerData}
+            side="left"
+            variant="vertical"
+            showPing={pingIndicatorEnabled}
+            pingLabel={pingLabel}
+          />
         </div>
       </div>
     );
@@ -406,7 +482,12 @@ export function ShowdownScreen({
     <div className={`relative flex flex-col items-center justify-center overflow-hidden bg-surface-page px-2 sm:px-4 ${wrapperClassName}`}>
       <div className="relative z-10 grid w-full max-w-5xl grid-cols-[1fr_auto_1fr] items-start gap-1.5 sm:gap-8 md:gap-12">
         <div className="flex justify-center">
-          <PlayerSide info={playerData} side="left" />
+          <PlayerSide
+            info={showdownPlayerData}
+            side="left"
+            showPing={pingIndicatorEnabled}
+            pingLabel={pingLabel}
+          />
         </div>
 
         <motion.div
@@ -444,7 +525,12 @@ export function ShowdownScreen({
         </motion.div>
 
         <div className="flex justify-center">
-          <PlayerSide info={opponentData} side="right" />
+          <PlayerSide
+            info={showdownOpponentData}
+            side="right"
+            showPing={pingIndicatorEnabled}
+            pingLabel={pingLabel}
+          />
         </div>
       </div>
     </div>

@@ -6,59 +6,8 @@ import type { NextConfig } from "next";
 // missing) gets noindex headers.
 const IS_PRODUCTION_DEPLOYMENT = process.env.VERCEL_ENV === "production";
 
-function originFromEnv(name: string): string | null {
-  const value = process.env[name]?.trim();
-  if (!value) return null;
-  try {
-    return new URL(value).origin;
-  } catch {
-    return null;
-  }
-}
-
-function buildCspReportOnly(): string {
-  const apiOrigin = originFromEnv("NEXT_PUBLIC_API_URL");
-  const supabaseOrigin = originFromEnv("NEXT_PUBLIC_SUPABASE_URL");
-  const posthogOrigin = originFromEnv("NEXT_PUBLIC_POSTHOG_HOST");
-  const connectSrc = [
-    "'self'",
-    apiOrigin,
-    supabaseOrigin,
-    posthogOrigin,
-    "https://us.i.posthog.com",
-    "https://app.posthog.com",
-    "https://*.posthog.com",
-    "https://accounts.google.com",
-    "https://www.googleapis.com",
-    "https://graph.facebook.com",
-    "https://api-js.mixpanel.com",
-    "https://vitals.vercel-insights.com",
-    "wss:",
-    "ws:",
-  ].filter(Boolean);
-
-  return [
-    "default-src 'self'",
-    "base-uri 'none'",
-    "object-src 'none'",
-    "frame-ancestors 'none'",
-    "form-action 'self'",
-    "img-src 'self' data: blob: https:",
-    "font-src 'self' data:",
-    "style-src 'self' 'unsafe-inline'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://www.gstatic.com https://connect.facebook.net https://va.vercel-scripts.com https://vercel.live",
-    `connect-src ${connectSrc.join(" ")}`,
-    "frame-src 'self' https://accounts.google.com https://*.facebook.com https://www.facebook.com",
-    "worker-src 'self' blob:",
-    "media-src 'self' blob: data: https:",
-  ].join("; ");
-}
-
 const SECURITY_HEADERS = [
-  {
-    key: "Content-Security-Policy-Report-Only",
-    value: buildCspReportOnly(),
-  },
+  // CSP is generated in middleware so scripts can use a per-request nonce.
   {
     key: "Referrer-Policy",
     value: "strict-origin-when-cross-origin",
@@ -68,19 +17,35 @@ const SECURITY_HEADERS = [
     value: "nosniff",
   },
   {
+    key: "X-Frame-Options",
+    value: "DENY",
+  },
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=63072000; includeSubDomains; preload",
+  },
+  {
+    key: "Cross-Origin-Opener-Policy",
+    value: "same-origin-allow-popups",
+  },
+  {
+    key: "Cross-Origin-Resource-Policy",
+    value: "same-origin",
+  },
+  {
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=()",
   },
 ];
 
 const nextConfig: NextConfig = {
+  productionBrowserSourceMaps: true,
   images: {
     // Serve AVIF where the browser supports it (smaller than webp at the
     // same visual quality), webp otherwise.
     formats: ["image/avif", "image/webp"],
-    // Next 16 only allows q=75 unless whitelisted; 90 is used for remote
-    // Supabase question/category art (see lib/images/remoteImage.ts).
-    qualities: [75, 90],
+    // Whitelist the explicit qualities used by lib/images/remoteImage.ts.
+    qualities: [70, 75, 90],
     remotePatterns: [
       {
         // Own Supabase storage (question/category images) — lets the

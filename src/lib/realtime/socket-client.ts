@@ -3,9 +3,21 @@ import { API_BASE_URL } from '@/lib/config';
 import { getSupabaseAccessToken, getSupabaseClient } from '@/lib/auth/supabase';
 import { logger } from '@/utils/logger';
 import { trackSocketConnectionFailed, trackSocketReconnected } from '@/lib/analytics/game-events';
+import {
+  markRealtimeConnected,
+  markRealtimeConnecting,
+  markRealtimeConnectionError,
+  markRealtimeDisconnected,
+  markRealtimePingMissed,
+  markRealtimeReconnectAttempt,
+  recordRealtimeRtt,
+} from './connection-health';
 import type { ClientToServerEvents, ServerToClientEvents } from './socket.types';
 
 let lastDisconnectAtMs: number | null = null;
+let connectionPingIntervalId: ReturnType<typeof setInterval> | null = null;
+let connectionPingMonitorRunId = 0;
+const pendingPingTimeoutIds = new Set<ReturnType<typeof setTimeout>>();
 
 let socketInstance: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
 let socketOverride: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
@@ -22,6 +34,8 @@ const ACCESS_TOKEN_REFRESH_SKEW_MS = 30_000;
 const RECENT_ACCESS_TOKEN_SETTLE_MS = 1_500;
 const AUTH_RECOVERY_RETRY_MS = 1_000;
 const SOCKET_DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_SOCKET === 'true';
+const CONNECTION_PING_INTERVAL_MS = 4_000;
+const CONNECTION_PING_TIMEOUT_MS = 2_500;
 
 function socketDebug(event: string, meta?: Record<string, unknown>): void {
   if (!SOCKET_DEBUG_ENABLED) return;
@@ -162,7 +176,12 @@ async function recoverSocketAuthAndReconnect(
       return;
     }
 
-    socket.auth = { token };
+    // NOTE: deliberately no `socket.auth = { token }` here. Assigning a static
+    // auth object would permanently REPLACE the dynamic auth callback passed to
+    // io(), freezing this token into every future reconnect attempt — once it
+    // expired, automatic reconnects would fail forever. The dynamic callback
+    // fetches a fresh token on each attempt; ensureValidAccessToken() above
+    // already refreshed the Supabase session it reads from.
     if (!socket.connected) {
       logger.info('Socket reconnect requested after Supabase auth recovery');
       socket.connect();
@@ -224,8 +243,11 @@ async function connectWithFreshAuth(
       logger.warn('Socket connect skipped after token settle: no valid Supabase access token');
       return;
     }
-    socket.auth = { token: settledToken };
+    // The dynamic auth callback (see createSocket) supplies the token at
+    // handshake time — never overwrite socket.auth with a static object, or
+    // future automatic reconnects would reuse this token after it expires.
     logger.info('Socket connect requested');
+    markRealtimeConnecting();
     socket.connect();
   })().finally(() => {
     connectInFlight = null;
@@ -237,8 +259,14 @@ async function connectWithFreshAuth(
 function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
   const socket = io(API_BASE_URL, {
     autoConnect: false,
+    // Runs on EVERY connection attempt, including automatic manager
+    // reconnects. ensureValidAccessToken proactively refreshes the Supabase
+    // session when the token is expired/expiring (<=30s), so reconnects after
+    // an hourly token-expiry socket drop carry a fresh token instead of
+    // replaying the stale one (prod pattern: 'Token introspection failed'
+    // storms at token-expiry boundaries → players stuck frozen mid-match).
     auth: (cb) => {
-      void getSupabaseAccessToken()
+      void ensureValidAccessToken()
         .then((token) => cb({ token: token ?? undefined }))
         .catch(() => cb({ token: undefined }));
     },
@@ -248,6 +276,7 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
   socket.on('connect', () => {
     socketDebug('socket authenticated/connected', socketSnapshot(socket));
     logger.info('Socket connected', { socketId: socket.id });
+    markRealtimeConnected();
     if (lastDisconnectAtMs !== null) {
       const downtimeSec = Math.max(0, Math.round((Date.now() - lastDisconnectAtMs) / 1000));
       lastDisconnectAtMs = null;
@@ -260,6 +289,7 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
       ...socketSnapshot(socket),
     });
     logger.warn('Socket disconnected', { reason });
+    markRealtimeDisconnected(reason);
     lastDisconnectAtMs = Date.now();
   });
   socket.on('connect_error', (error) => {
@@ -274,15 +304,72 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
       return;
     }
     logger.warn('Socket connect error', { message: error.message });
+    markRealtimeConnectionError(error.message);
     try { trackSocketConnectionFailed(error.message); } catch { /* best-effort */ }
   });
-  socket.on('reconnect_attempt', (attempt) => {
+  // Reconnect lifecycle events fire on the MANAGER (socket.io), not the
+  // Socket — the previous socket.on('reconnect_attempt') listeners never
+  // fired at all in socket.io-client v4.
+  socket.io.on('reconnect_attempt', (attempt) => {
+    socketDebug('reconnect attempt', { attempt, ...socketSnapshot(socket) });
     logger.info('Socket reconnect attempt', { attempt });
+    markRealtimeReconnectAttempt();
   });
-  socket.on('reconnect_failed', () => {
+  socket.io.on('reconnect_failed', () => {
     logger.warn('Socket reconnect failed');
+    markRealtimeConnectionError('reconnect_failed');
+    try { trackSocketConnectionFailed('reconnect_failed'); } catch { /* best-effort */ }
   });
   return socket;
+}
+
+export function startConnectionQualityMonitor(): void {
+  if (connectionPingIntervalId !== null) return;
+  const runId = ++connectionPingMonitorRunId;
+
+  const sample = () => {
+    const socket = getSocket();
+    if (!socket.connected) return;
+
+    const sentAt = Date.now();
+    const socketIdAtSend = socket.id ?? null;
+    let settled = false;
+    const timeoutId = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      pendingPingTimeoutIds.delete(timeoutId);
+      if (runId !== connectionPingMonitorRunId) return;
+      if (!socket.connected || (socket.id ?? null) !== socketIdAtSend) return;
+      markRealtimePingMissed();
+    }, CONNECTION_PING_TIMEOUT_MS);
+    pendingPingTimeoutIds.add(timeoutId);
+
+    socket.emit('connection:ping', { sentAt }, () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeoutId);
+      pendingPingTimeoutIds.delete(timeoutId);
+      if (runId !== connectionPingMonitorRunId) return;
+      if (!socket.connected || (socket.id ?? null) !== socketIdAtSend) return;
+      const rttMs = Date.now() - sentAt;
+      recordRealtimeRtt(rttMs);
+      // Report our RTT so the opponent can be shown this player's ping (the
+      // server only knows each client's RTT if the client tells it). Best-effort.
+      socket.emit('connection:rtt', { rttMs });
+    });
+  };
+
+  sample();
+  connectionPingIntervalId = setInterval(sample, CONNECTION_PING_INTERVAL_MS);
+}
+
+export function stopConnectionQualityMonitor(): void {
+  if (connectionPingIntervalId === null) return;
+  clearInterval(connectionPingIntervalId);
+  connectionPingIntervalId = null;
+  connectionPingMonitorRunId += 1;
+  pendingPingTimeoutIds.forEach((timeoutId) => clearTimeout(timeoutId));
+  pendingPingTimeoutIds.clear();
 }
 
 /** Override the socket singleton (used by test/mock pages to inject a fake socket). */
@@ -312,10 +399,27 @@ export function disconnectSocket(): void {
   });
   connectAttemptId += 1;
   cancelAuthRecovery('manual-disconnect-cleanup');
+  stopConnectionQualityMonitor();
   if (socketInstance && (socketInstance.connected || socketInstance.active)) {
     logger.info('Socket disconnect requested');
     socketInstance.disconnect();
   }
+}
+
+/**
+ * Nudge a disconnected socket back to life after a Supabase token refresh.
+ * A refresh that lands while the socket happens to be down (e.g. mid
+ * token-expiry reconnect storm) previously did nothing socket-side — the
+ * manager could sit in backoff with no fresh trigger. No-ops when no socket
+ * was ever created, or when it is connected / already reconnecting.
+ */
+export function nudgeSocketReconnectAfterTokenRefresh(): void {
+  const socket = socketOverride ?? socketInstance;
+  if (!socket) return;
+  if (socket.connected || socket.active) return;
+  socketDebug('reconnect nudge after token refresh', socketSnapshot(socket));
+  logger.info('Socket reconnect nudged after Supabase token refresh');
+  void connectWithFreshAuth(socket);
 }
 
 export function reconnectSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {

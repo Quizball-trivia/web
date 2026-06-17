@@ -65,6 +65,7 @@ export function PossessionQuestionArea({ model }: PossessionQuestionAreaProps) {
               title={transitionSnapshot.title}
               categoryName={transitionSnapshot.categoryName}
               subtitle={transitionSnapshot.subtitle}
+              className="top-[52px] sm:top-[64px] md:top-[76px] lg:top-0"
             />
           )}
         </AnimatePresence>
