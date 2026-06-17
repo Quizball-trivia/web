@@ -94,7 +94,7 @@ export function KickoffCountdownOverlay({
       <motion.div
         animate={finished ? { y: -110, opacity: 0, scale: 0.96 } : { y: 0, opacity: 1, scale: 1 }}
         transition={{ duration: 0.45, ease: 'easeInOut' }}
-        className="relative grid w-full max-w-5xl grid-cols-[minmax(0,1fr)_clamp(5rem,23cqw,10rem)_minmax(0,1fr)] items-center gap-[clamp(0.25rem,2.2cqw,3rem)] bg-transparent p-[clamp(0.5rem,2cqw,1.25rem)]"
+        className="relative grid w-full max-w-5xl grid-cols-[minmax(0,1fr)_clamp(3.75rem,12cqw,6rem)_minmax(0,1fr)] items-center gap-[clamp(0.35rem,1.6cqw,1rem)] bg-transparent p-[clamp(0.375rem,1.5cqw,1rem)]"
       >
         <KickoffPlayerCard
           align="left"
@@ -113,7 +113,7 @@ export function KickoffCountdownOverlay({
           detailLabel={waitingDetailLabel}
           durationMs={waiting ? undefined : durationMs}
           runKey={runKey}
-          size="lg"
+          size={waiting ? 'sm' : 'lg'}
         />
 
         <KickoffPlayerCard
@@ -185,16 +185,18 @@ function KickoffPlayerCard({
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 360, damping: 18 }}
             className={cn(
-              'absolute left-1/2 top-[7%] z-20 flex size-[clamp(2rem,7.5cqw,2.75rem)] -translate-x-1/2 items-center justify-center rounded-full border-2 border-white/90 shadow-[0_8px_24px_rgba(0,0,0,0.36)]',
-              ready ? 'bg-brand-green text-white' : 'bg-black/55 text-brand-cyan backdrop-blur-md',
+              'absolute -top-[clamp(0.55rem,2.4cqw,0.85rem)] left-1/2 z-20 flex size-[clamp(1.85rem,6.7cqw,2.35rem)] -translate-x-1/2 items-center justify-center rounded-full border-2 border-surface-card shadow-[0_8px_24px_rgba(0,0,0,0.36)]',
+              ready
+                ? 'bg-brand-green text-white shadow-[0_6px_18px_rgba(88,204,2,0.45)]'
+                : 'bg-black/62 text-brand-cyan backdrop-blur-md',
             )}
             aria-label={ready ? t('friend.ready') : t('friend.waiting')}
             title={ready ? t('friend.ready') : t('friend.waiting')}
           >
             {ready ? (
-              <Check className="size-[clamp(1.1rem,4cqw,1.5rem)] stroke-[4]" />
+              <Check className="size-[clamp(0.95rem,3.6cqw,1.25rem)] stroke-[4]" />
             ) : (
-              <LoaderCircle className="size-[clamp(1.1rem,4cqw,1.5rem)] animate-spin" />
+              <LoaderCircle className="size-[clamp(0.95rem,3.6cqw,1.25rem)] animate-spin" />
             )}
           </motion.div>
         )}
@@ -204,11 +206,11 @@ function KickoffPlayerCard({
           rpLabel={`${rankPoints ?? 0}RP`}
           customization={avatarCustomization}
           mirrored={isOpponent}
-          sizes="(min-width: 1024px) 240px, (min-width: 640px) 160px, 120px"
-          className="w-[clamp(5.75rem,30cqw,15rem)]"
+          sizes="(min-width: 1024px) 240px, (min-width: 640px) 176px, 144px"
+          className="w-[clamp(7.25rem,36cqw,15rem)]"
         />
       </motion.div>
-      <div className="mt-[clamp(0.5rem,1.8cqw,1rem)] max-w-[min(34cqw,16rem)] truncate text-center font-poppins text-[clamp(0.95rem,4.4cqw,1.875rem)] font-black uppercase tracking-wide text-white">
+      <div className="mt-[clamp(0.5rem,1.8cqw,1rem)] max-w-[min(38cqw,16rem)] truncate text-center font-poppins text-[clamp(1.05rem,5cqw,1.875rem)] font-black uppercase tracking-wide text-white">
         {name}
       </div>
     </motion.div>

@@ -15,7 +15,11 @@ interface MatchCountdownPuckProps {
 }
 
 const SIZE_TOKENS = {
-  sm: { circle: 'size-24', text: 'text-5xl', bar: 'w-20' },
+  sm: {
+    circle: 'size-[clamp(3.5rem,12cqw,4.75rem)]',
+    text: 'text-[clamp(1.6rem,7cqw,2.25rem)]',
+    bar: 'w-[clamp(3.5rem,12cqw,4.75rem)]',
+  },
   md: {
     circle: 'size-[clamp(6.5rem,28cqw,8rem)]',
     text: 'text-[clamp(2.75rem,13cqw,3.75rem)]',
@@ -50,7 +54,10 @@ export function MatchCountdownPuck({
         animate={{ y: 0, scale: 1, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 460, damping: 17 }}
         className={cn(
-          'mt-2 flex items-center justify-center rounded-full border-4 border-brand-cyan bg-brand-blue shadow-[0_0_60px_rgba(28,176,246,0.45)]',
+          'mt-2 flex items-center justify-center rounded-full border-4',
+          waiting
+            ? 'border-white/18 bg-white/8 shadow-[0_0_28px_rgba(28,176,246,0.22)] backdrop-blur-sm'
+            : 'border-brand-cyan bg-brand-blue shadow-[0_0_60px_rgba(28,176,246,0.45)]',
           tokens.circle,
         )}
       >
