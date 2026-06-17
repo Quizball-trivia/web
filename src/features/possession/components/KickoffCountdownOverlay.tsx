@@ -185,7 +185,7 @@ function KickoffPlayerCard({
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 360, damping: 18 }}
             className={cn(
-              'absolute -top-[clamp(0.55rem,2.4cqw,0.85rem)] left-1/2 z-20 flex size-[clamp(1.85rem,6.7cqw,2.35rem)] -translate-x-1/2 items-center justify-center rounded-full border-2 border-surface-card shadow-[0_8px_24px_rgba(0,0,0,0.36)]',
+              'absolute -top-[clamp(0.95rem,3.6cqw,1.35rem)] left-1/2 z-20 flex size-[clamp(1.85rem,6.7cqw,2.35rem)] -translate-x-1/2 items-center justify-center rounded-full border-2 border-surface-card shadow-[0_8px_24px_rgba(0,0,0,0.36)]',
               ready
                 ? 'bg-brand-green text-white shadow-[0_6px_18px_rgba(88,204,2,0.45)]'
                 : 'bg-black/62 text-brand-cyan backdrop-blur-md',
