@@ -36,7 +36,6 @@ export function MatchCountdownPuck({
   label,
   seconds,
   waiting = false,
-  detailLabel,
   durationMs,
   runKey = 'countdown',
   size = 'md',
