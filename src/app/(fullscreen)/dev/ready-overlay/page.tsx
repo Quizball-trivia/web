@@ -36,7 +36,7 @@ type Scenario = {
   total: number;
   phase: 'kickoff' | 'resume';
   description: string;
-  surface: 'pregame' | 'match' | 'party' | 'countdown';
+  surface: 'kickoff-wait' | 'match' | 'party' | 'countdown';
 };
 
 const SCENARIOS: Scenario[] = [
@@ -49,8 +49,8 @@ const SCENARIOS: Scenario[] = [
     ready: 0,
     total: 1,
     phase: 'kickoff',
-    description: 'Only the human client must paint the match screen. AI does not count as a ready UI.',
-    surface: 'pregame',
+    description: 'AI is already ready. Your side shows a spinner until your game screen reports ready.',
+    surface: 'kickoff-wait',
   },
   {
     id: 'kickoff-human',
@@ -61,8 +61,8 @@ const SCENARIOS: Scenario[] = [
     ready: 1,
     total: 2,
     phase: 'kickoff',
-    description: 'One player is ready, the other is still mounting the actual game screen.',
-    surface: 'pregame',
+    description: 'You are ready, opponent is still loading. Kickoff countdown has not started yet.',
+    surface: 'kickoff-wait',
   },
   {
     id: 'party-six',
@@ -166,10 +166,10 @@ function DevReadyOverlayContent() {
             Ready Overlay Lab
           </div>
           <h1 className="mt-2 font-poppins text-2xl font-semibold uppercase leading-tight">
-            Waiting vs kickoff
+            Kickoff gate
           </h1>
           <p className="mt-2 text-sm font-semibold leading-snug text-white/65">
-            Waiting states use a spinner. The 5-second number appears only after the ready gate releases.
+            Ranked shows ready checkmarks first. The 5-second kickoff countdown starts only after all screens are ready.
           </p>
 
           <div className="mt-5 grid gap-2">
@@ -220,10 +220,15 @@ function DevReadyOverlayContent() {
         <main className="flex min-h-[720px] items-center justify-center rounded-[24px] border border-white/8 bg-black/20 p-3 shadow-inner sm:p-6">
           <div className="relative h-[760px] w-full max-w-[430px] overflow-hidden rounded-[28px] border border-white/12 bg-surface-page-alt shadow-2xl sm:h-[820px]">
             <MockMatchSurface surface={scenario.surface} />
-            {scenario.surface === 'countdown' ? (
+            {scenario.surface === 'countdown' || scenario.surface === 'kickoff-wait' ? (
               <KickoffCountdownOverlay
                 countdownDisplay={countdownDisplay}
                 phase="kickoff"
+                waiting={scenario.surface === 'kickoff-wait'}
+                waitingLabel={scenario.total > 1 ? t('possession.waitingForOpponent') : t('possession.startingSoon')}
+                waitingDetailLabel={scenario.total > 1 ? t('possession.startsAfterReady') : undefined}
+                playerReady={scenario.surface === 'kickoff-wait' ? scenario.ready >= 1 : undefined}
+                opponentReady={scenario.surface === 'kickoff-wait' ? (scenario.total <= 1 || scenario.ready >= 2) : undefined}
                 durationMs={5_000}
                 runKey={`dev-ready-${countdownStartedAt}`}
                 playerName="You"

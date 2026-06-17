@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { motion } from 'motion/react';
+import { Check, LoaderCircle } from 'lucide-react';
 
 import { MatchCountdownPuck } from '@/components/shared/MatchCountdownPuck';
 import { RankFrameCard } from '@/features/profile/components/RankFrameCard';
@@ -18,6 +19,11 @@ interface KickoffCountdownOverlayProps {
   countdownDisplay: number;
   phase?: CountdownPhase;
   finished?: boolean;
+  waiting?: boolean;
+  waitingLabel?: string;
+  waitingDetailLabel?: string;
+  playerReady?: boolean;
+  opponentReady?: boolean;
   durationMs?: number;
   runKey?: string | number;
   playerName: string;
@@ -37,6 +43,11 @@ export function KickoffCountdownOverlay({
   countdownDisplay,
   phase = 'kickoff',
   finished = false,
+  waiting = false,
+  waitingLabel,
+  waitingDetailLabel,
+  playerReady,
+  opponentReady,
   durationMs = 5_000,
   runKey = 'kickoff',
   playerName,
@@ -53,7 +64,11 @@ export function KickoffCountdownOverlay({
   const playerCustomization = playerAvatarCustomization ?? { base: playerAvatarBase };
   const opponentCustomization = opponentAvatarCustomization ?? { base: opponentAvatarBase };
   const isKickoff = phase === 'kickoff';
-  const headerLabel = isKickoff ? t('possession.kickoffIn') : t('possession.resumingIn');
+  const headerLabel = waiting
+    ? (waitingLabel ?? t('possession.startingSoon'))
+    : isKickoff
+      ? t('possession.kickoffIn')
+      : t('possession.resumingIn');
   const resolvedLabel = isKickoff ? t('possession.kickoff') : t('possession.resuming');
 
   useEffect(() => {
@@ -64,7 +79,7 @@ export function KickoffCountdownOverlay({
   return (
     <div
       className={cn(
-        'relative flex min-h-[420px] items-center justify-center overflow-hidden px-4 py-8 sm:min-h-[500px] sm:px-8',
+        '@container relative flex min-h-[420px] items-center justify-center overflow-hidden px-[clamp(0.75rem,4cqw,2rem)] py-[clamp(1.5rem,5cqw,2.5rem)]',
         className,
       )}
     >
@@ -79,7 +94,7 @@ export function KickoffCountdownOverlay({
       <motion.div
         animate={finished ? { y: -110, opacity: 0, scale: 0.96 } : { y: 0, opacity: 1, scale: 1 }}
         transition={{ duration: 0.45, ease: 'easeInOut' }}
-        className="relative grid w-full max-w-5xl grid-cols-[minmax(0,1fr)_116px_minmax(0,1fr)] items-center gap-2 bg-transparent p-3 sm:grid-cols-[minmax(0,1fr)_180px_minmax(0,1fr)] sm:gap-8 sm:p-5 md:gap-12"
+        className="relative grid w-full max-w-5xl grid-cols-[minmax(0,1fr)_clamp(3.75rem,12cqw,6rem)_minmax(0,1fr)] items-center gap-[clamp(0.35rem,1.6cqw,1rem)] bg-transparent p-[clamp(0.375rem,1.5cqw,1rem)]"
       >
         <KickoffPlayerCard
           align="left"
@@ -87,14 +102,18 @@ export function KickoffCountdownOverlay({
           label="Home"
           avatarCustomization={playerCustomization}
           rankPoints={playerRankPoints}
+          ready={playerReady}
+          showReadyStatus={waiting}
         />
 
         <MatchCountdownPuck
           label={headerLabel}
           seconds={countdownDisplay}
-          durationMs={durationMs}
+          waiting={waiting}
+          detailLabel={waitingDetailLabel}
+          durationMs={waiting ? undefined : durationMs}
           runKey={runKey}
-          size="lg"
+          size={waiting ? 'sm' : 'lg'}
         />
 
         <KickoffPlayerCard
@@ -103,6 +122,8 @@ export function KickoffCountdownOverlay({
           label="Away"
           avatarCustomization={opponentCustomization}
           rankPoints={opponentRankPoints}
+          ready={opponentReady}
+          showReadyStatus={waiting}
         />
       </motion.div>
 
@@ -126,14 +147,19 @@ function KickoffPlayerCard({
   label,
   avatarCustomization,
   rankPoints,
+  ready,
+  showReadyStatus = false,
 }: {
   align: 'left' | 'right';
   name: string;
   label: string;
   avatarCustomization: AvatarCustomization;
   rankPoints?: number | null;
+  ready?: boolean;
+  showReadyStatus?: boolean;
 }) {
   const isOpponent = align === 'right';
+  const { t } = useLocale();
   const tierLabelOf = useTierLabel();
   const tier = tierFromRp(rankPoints ?? 0);
 
@@ -142,28 +168,49 @@ function KickoffPlayerCard({
       initial={{ x: align === 'left' ? -28 : 28, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 250, damping: 22 }}
-      className="flex min-w-0 flex-col items-center bg-transparent px-1 py-2 sm:px-3"
+      className="flex min-w-0 flex-col items-center bg-transparent px-[clamp(0.125rem,1cqw,0.75rem)] py-2"
     >
-      <div className="font-fun text-[8px] font-black uppercase tracking-[0.25em] text-white/45 sm:text-[10px]">
+      <div className="font-fun text-[clamp(0.45rem,1.6cqw,0.625rem)] font-black uppercase tracking-[0.25em] text-white/45">
         {label}
       </div>
       <motion.div
         initial={{ scale: 0.82 }}
         animate={{ scale: 1 }}
         transition={{ delay: 0.12, type: 'spring', stiffness: 200 }}
-        className="relative mt-2"
+        className="relative mt-[clamp(0.35rem,1.6cqw,0.75rem)]"
       >
+        {showReadyStatus && (
+          <motion.div
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 360, damping: 18 }}
+            className={cn(
+              'absolute -top-[clamp(0.95rem,3.6cqw,1.35rem)] left-1/2 z-20 flex size-[clamp(1.85rem,6.7cqw,2.35rem)] -translate-x-1/2 items-center justify-center rounded-full border-2 border-surface-card shadow-[0_8px_24px_rgba(0,0,0,0.36)]',
+              ready
+                ? 'bg-brand-green text-white shadow-[0_6px_18px_rgba(88,204,2,0.45)]'
+                : 'bg-black/62 text-brand-cyan backdrop-blur-md',
+            )}
+            aria-label={ready ? t('friend.ready') : t('friend.waiting')}
+            title={ready ? t('friend.ready') : t('friend.waiting')}
+          >
+            {ready ? (
+              <Check className="size-[clamp(0.95rem,3.6cqw,1.25rem)] stroke-[4]" />
+            ) : (
+              <LoaderCircle className="size-[clamp(0.95rem,3.6cqw,1.25rem)] animate-spin" />
+            )}
+          </motion.div>
+        )}
         <RankFrameCard
           tier={tier}
           tierLabel={tierLabelOf(tier)}
           rpLabel={`${rankPoints ?? 0}RP`}
           customization={avatarCustomization}
           mirrored={isOpponent}
-          sizes="(min-width: 768px) 240px, (min-width: 640px) 200px, 112px"
-          className="w-[112px] sm:w-[200px] md:w-[240px]"
+          sizes="(min-width: 1024px) 240px, (min-width: 640px) 176px, 144px"
+          className="w-[clamp(7.25rem,36cqw,15rem)]"
         />
       </motion.div>
-      <div className="mt-2 max-w-[130px] truncate text-center font-poppins text-base font-black uppercase tracking-wide text-white sm:mt-4 sm:max-w-[260px] sm:text-2xl md:text-3xl">
+      <div className="mt-[clamp(0.5rem,1.8cqw,1rem)] max-w-[min(38cqw,16rem)] truncate text-center font-poppins text-[clamp(1.05rem,5cqw,1.875rem)] font-black uppercase tracking-wide text-white">
         {name}
       </div>
     </motion.div>

@@ -13,6 +13,8 @@ vi.mock('@/contexts/LocaleContext', () => ({
         'possession.leaveSafely': 'Leave safely',
         'possession.muteAudio': 'Mute audio',
         'possession.unmuteAudio': 'Unmute audio',
+        'possession.waitingForOpponent': 'Waiting for opponent',
+        'possession.startsAfterReady': 'Starts after ready',
         'common.mute': 'Mute',
         'common.unmute': 'Unmute',
       };
@@ -79,7 +81,19 @@ vi.mock('../components/MatchHudPrimitives', () => ({
 }));
 
 vi.mock('../components/KickoffCountdownOverlay', () => ({
-  KickoffCountdownOverlay: () => null,
+  KickoffCountdownOverlay: (props: {
+    waiting?: boolean;
+    waitingLabel?: string;
+    playerReady?: boolean;
+    opponentReady?: boolean;
+  }) => (
+    <div data-testid="kickoff-overlay">
+      <span>{props.waiting ? 'waiting' : 'countdown'}</span>
+      <span>{props.waitingLabel}</span>
+      <span>{props.playerReady ? 'player-ready' : 'player-waiting'}</span>
+      <span>{props.opponentReady ? 'opponent-ready' : 'opponent-waiting'}</span>
+    </div>
+  ),
 }));
 
 vi.mock('../components/PenaltyStartCountdownOverlay', () => ({
@@ -107,6 +121,7 @@ vi.mock('../hooks/usePossessionBarBattleFlights', () => ({
 }));
 
 import { RealtimePossessionMatchScreen } from '../RealtimePossessionMatchScreen';
+import { useMatchStagePresence } from '@/lib/realtime/useMatchStagePresence';
 
 const baseProps = {
   playerAvatar: 'me.png',
@@ -119,6 +134,7 @@ const baseProps = {
 
 describe('RealtimePossessionMatchScreen pause overlay', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-06-16T12:00:00.000Z'));
     useRealtimeMatchStore.getState().reset();
@@ -150,5 +166,42 @@ describe('RealtimePossessionMatchScreen pause overlay', () => {
     expect(overlay).not.toBeNull();
     expect(overlay?.className.toString()).toContain('fixed');
     expect(overlay?.className.toString()).toContain('z-[80]');
+  });
+
+  it('uses kickoff ready badges instead of the ready overlay before ranked kickoff countdown starts', () => {
+    useRealtimeMatchStore.getState().reset();
+    const store = useRealtimeMatchStore.getState();
+    store.setMatchStart({
+      matchId: 'match-2',
+      mode: 'ranked',
+      variant: 'ranked_sim',
+      mySeat: 1,
+      opponent: { id: 'u2', username: 'Opponent', avatarUrl: null },
+      participants: [
+        { userId: 'u1', username: 'Me', avatarUrl: null, seat: 1 },
+        { userId: 'u2', username: 'Opponent', avatarUrl: null, seat: 2 },
+      ],
+    });
+    store.setMatchWaitingForReady({
+      matchId: 'match-2',
+      phase: 'kickoff',
+      readyCount: 1,
+      totalCount: 2,
+      forceStartsAt: new Date(Date.now() + 10_000).toISOString(),
+    });
+
+    render(<RealtimePossessionMatchScreen {...baseProps} matchType="ranked" />);
+
+    expect(screen.getByTestId('kickoff-overlay')).toHaveTextContent('waiting');
+    expect(screen.getByTestId('kickoff-overlay')).toHaveTextContent('Waiting for opponent');
+    expect(screen.getByTestId('kickoff-overlay')).toHaveTextContent('player-ready');
+    expect(screen.getByTestId('kickoff-overlay')).toHaveTextContent('opponent-waiting');
+    expect(screen.queryByText('possession.playersReadyCount')).not.toBeInTheDocument();
+    expect(vi.mocked(useMatchStagePresence)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        matchId: 'match-2',
+        stageKey: 'kickoff',
+      }),
+    );
   });
 });
