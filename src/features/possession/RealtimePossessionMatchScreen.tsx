@@ -146,6 +146,11 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
   const kickoffOpponentReady = Boolean(waitingForReady && (
     waitingForReady.totalCount <= 1 || waitingForReady.readyCount >= 2
   ));
+  const showKickoffCountdownReadyBadges = props.matchType === 'ranked'
+    && showStartCountdown
+    && countdownPhase === 'kickoff'
+    && currentQuestionIndex === null
+    && !finalResults;
 
   useEffect(() => {
     if (!matchPaused || !pauseUntil) return;
@@ -262,6 +267,8 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
             opponentAvatarCustomization={props.opponentAvatarCustomization}
             playerRankPoints={props.playerRankPoints}
             opponentRankPoints={props.opponentRankPoints ?? opponentInfo?.rp ?? null}
+            playerReady={showKickoffCountdownReadyBadges ? true : undefined}
+            opponentReady={showKickoffCountdownReadyBadges ? true : undefined}
             className="h-dvh min-h-dvh w-screen bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat"
           />
         ) : (
@@ -321,8 +328,8 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
               waiting={showKickoffReadyGate}
               waitingLabel={waitingTitle}
               waitingDetailLabel={waitingDetailLabel}
-              playerReady={showKickoffReadyGate ? kickoffPlayerReady : undefined}
-              opponentReady={showKickoffReadyGate ? kickoffOpponentReady : undefined}
+              playerReady={showKickoffReadyGate ? kickoffPlayerReady : showKickoffCountdownReadyBadges ? true : undefined}
+              opponentReady={showKickoffReadyGate ? kickoffOpponentReady : showKickoffCountdownReadyBadges ? true : undefined}
               durationMs={5_000}
               runKey={showKickoffReadyGate ? waitingForReady.forceStartsAt : countdownPhase}
               playerName={props.playerUsername}
