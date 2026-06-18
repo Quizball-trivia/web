@@ -528,6 +528,14 @@ export function ModeSelectionScreen({
           className="relative col-span-2 lg:col-span-1 cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
           style={{ backgroundColor: '#6B2FB3' }}
         >
+          {/* Desktop watermark icon (mobile uses inline icon below) */}
+          <Image
+            src="/assets/auction-card-icon.webp"
+            alt=""
+            width={200}
+            height={200}
+            className="hidden lg:block absolute right-3 bottom-3 h-32 w-32 object-contain opacity-90 pointer-events-none"
+          />
           <div className="absolute top-2 right-2 lg:top-3 lg:right-3 z-20 rounded-full bg-brand-yellow px-2 py-0.5 text-[8px] lg:text-[10px] font-black uppercase tracking-wide text-black" style={poppins}>
             {t('play.auctionNewBadge')}
           </div>
@@ -543,11 +551,11 @@ export function ModeSelectionScreen({
             {/* Mobile: icon + PLAY */}
             <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
               <Image
-                src="/assets/brand/goal-ball-small.webp"
+                src="/assets/auction-card-icon.webp"
                 alt=""
-                width={140}
-                height={140}
-                className="h-[88px] w-[88px] object-contain pointer-events-none opacity-95"
+                width={200}
+                height={200}
+                className="h-[96px] w-[96px] object-contain pointer-events-none opacity-95"
               />
             </div>
             <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] uppercase tracking-wide text-white lg:hidden" style={poppins}>

@@ -80,7 +80,62 @@ export function SoloPickScreen({
           </h2>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 w-full">
+        {/* ── Mobile: compact horizontal rows ── */}
+        <div className="flex w-full flex-col gap-3 lg:hidden">
+          {/* Known */}
+          <motion.button
+            type="button"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => actions.pickSoloOption('A')}
+            className="flex w-full items-center gap-3 rounded-[18px] bg-brand-green p-4 text-left active:translate-y-[2px]"
+          >
+            <PlayerPhoto footballer={pick.optionA.footballer} size={56} className="shrink-0" />
+            <div className="min-w-0 flex-1">
+              <div className="font-poppins text-[10px] font-black uppercase text-black/70">{t('auctionGame.knownPlayer')}</div>
+              <div className="font-poppins text-base font-black text-white truncate">{pick.optionA.footballer.name}</div>
+              <div className="mt-0.5 flex items-center gap-1.5 font-poppins text-[11px] font-bold text-black/70">
+                <FlagChip country={pick.optionA.footballer.nationality} width={16} height={11} />
+                <span className="truncate">
+                  {pick.optionA.footballer.nationality} · {t('auctionGame.valueAmount', { amount: formatMoney(pick.optionA.footballer.value) })}
+                </span>
+              </div>
+            </div>
+            <div className="shrink-0 rounded-lg bg-black/85 px-3 py-1.5 font-poppins text-xl font-black text-brand-yellow">
+              {formatMoney(pick.optionA.footballer.startingPrice)}
+            </div>
+          </motion.button>
+
+          {/* Mystery */}
+          <motion.button
+            type="button"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => actions.pickSoloOption('B')}
+            className="flex w-full items-center gap-3 rounded-[18px] p-4 text-left active:translate-y-[2px]"
+            style={{ backgroundColor: AUCTION_PURPLE }}
+          >
+            <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-white/15 text-3xl">❓</div>
+            <div className="min-w-0 flex-1">
+              <div className="font-poppins text-[10px] font-black uppercase text-white/80">{t('auctionGame.mysteryPlayer')}</div>
+              <div className="space-y-0.5">
+                {pick.optionB.clues?.map((clue, i) => (
+                  <p key={i} className="font-poppins text-[10px] font-semibold text-white/85 leading-snug">{clue}</p>
+                ))}
+              </div>
+            </div>
+            <div className="shrink-0 rounded-lg bg-black/85 px-3 py-1.5 font-poppins text-xl font-black text-brand-yellow">
+              {formatMoney(pick.optionB.footballer.startingPrice)}
+            </div>
+          </motion.button>
+        </div>
+
+        {/* ── Desktop: two big centered cards ── */}
+        <div className="hidden lg:grid grid-cols-2 gap-4 w-full">
           {/* Option A — Revealed */}
           <motion.button
             type="button"

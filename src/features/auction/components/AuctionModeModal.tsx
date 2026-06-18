@@ -1,12 +1,12 @@
 'use client';
 
+import Image from 'next/image';
 import { motion } from 'motion/react';
 import { Swords } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { ModalCloseButton } from '@/components/shared/ModalCloseButton';
@@ -17,23 +17,20 @@ import { poppins, AUCTION_PURPLE } from '../constants/auction.constants';
 interface AuctionModeModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Reserved for when Create Room ships — currently the option is disabled ("Soon"). */
+  /** Reserved for when Create Room ships. */
   onCreateRoom?: () => void;
   onFindOnline: () => void;
 }
 
-export function AuctionModeModal({
-  isOpen,
-  onOpenChange,
-  onFindOnline,
-}: AuctionModeModalProps) {
+/** Auction mode dialog — icon hero on top → title → rules → yellow CTA. */
+export function AuctionModeModal({ isOpen, onOpenChange, onFindOnline }: AuctionModeModalProps) {
   const { t } = useLocale();
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
-          'max-w-md w-[95vw] rounded-[24px] border-0',
-          'p-6 sm:p-8',
+          'max-w-md w-[92vw] rounded-[24px] border-0',
+          '!flex flex-col !gap-0 px-6 pt-8 pb-6 sm:px-8',
           '[&>button]:hidden',
         )}
         style={{ backgroundColor: AUCTION_PURPLE }}
@@ -42,54 +39,44 @@ export function AuctionModeModal({
           <ModalCloseButton onClose={() => onOpenChange(false)} className="!static" />
         </div>
 
-        <DialogHeader>
-          <DialogTitle
-            className="text-center text-2xl sm:text-3xl uppercase text-white"
-            style={poppins}
-          >
-            <span className="text-brand-yellow">{t('play.auctionTitle')}</span>
-          </DialogTitle>
-          <DialogDescription className="text-center text-sm text-white/90 mt-1">
-            {t('play.auctionModalDescription')}
-          </DialogDescription>
-        </DialogHeader>
+        {/* Icon hero */}
+        <div className="mb-2 flex justify-center">
+          <Image
+            src="/assets/auction-card-icon.webp"
+            alt=""
+            width={320}
+            height={320}
+            className="h-28 w-auto object-contain drop-shadow-[0_6px_24px_rgba(0,0,0,0.35)] sm:h-32"
+          />
+        </div>
 
-        <div className="mt-6 space-y-3">
+        {/* Title */}
+        <DialogTitle
+          className="text-center text-3xl sm:text-4xl uppercase text-brand-yellow leading-[0.95]"
+          style={poppins}
+        >
+          {t('play.auctionTitle')}
+        </DialogTitle>
+
+        {/* Rules description */}
+        <DialogDescription className="mx-auto mt-3 mb-5 max-w-[22rem] text-center text-[13px] sm:text-sm font-medium leading-snug text-white/85">
+          {t('play.auctionRulesDescription')}
+        </DialogDescription>
+
+        {/* Primary CTA — yellow swords button. Wrapped so the dialog's
+            `[&>button]:hidden` (which hides shadcn's built-in close) doesn't
+            also hide our CTA. */}
+        <div>
           <motion.button
             type="button"
             whileTap={{ scale: 0.97 }}
             onClick={onFindOnline}
-            className="flex h-14 w-full items-center justify-center gap-2.5 rounded-[28px] bg-brand-yellow px-6 font-poppins text-sm font-bold uppercase tracking-wide text-black transition-colors hover:bg-brand-yellow-deep"
-            style={poppins}
+            className="flex h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-brand-yellow uppercase text-black transition-colors hover:bg-brand-yellow-deep"
+            style={{ fontSize: 'clamp(15px, 2.4vw, 18px)', ...poppins }}
           >
             <Swords className="size-5" strokeWidth={2.5} />
             {t('play.auctionFindOpponents')}
           </motion.button>
-
-          {/* Create Room — not available yet ("Soon"). Styled like the
-              Friendly modal's black "+" CTA but rendered disabled. */}
-          <button
-            type="button"
-            disabled
-            aria-disabled
-            className={cn(
-              'relative flex h-16 w-full items-center justify-center gap-3',
-              'rounded-2xl bg-black uppercase leading-none text-white/70',
-              'cursor-not-allowed opacity-60',
-            )}
-            style={{ fontSize: 'clamp(15px, 2vw, 18px)', ...poppins }}
-          >
-            <span aria-hidden className="font-poppins leading-none text-brand-yellow/70" style={{ fontSize: 'clamp(26px, 3.4vw, 34px)' }}>
-              +
-            </span>
-            {t('play.auctionCreateRoom')}
-            <span
-              className="absolute right-4 rounded-full bg-brand-yellow px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-black"
-              style={poppins}
-            >
-              {t('play.auctionCreateRoomSoon')}
-            </span>
-          </button>
         </div>
       </DialogContent>
     </Dialog>
