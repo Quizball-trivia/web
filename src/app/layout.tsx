@@ -8,7 +8,6 @@ import "@fontsource/poppins/800.css";
 import "@fontsource/poppins/900.css";
 import "flag-icons/css/flag-icons.min.css";
 import { Providers } from "./providers";
-import { Analytics } from "@vercel/analytics/next";
 import { SITE_URL, SITE_NAME, SITE_TAGLINE, SITE_DESCRIPTION, IS_PRODUCTION_DEPLOYMENT } from "@/lib/seo/site";
 import { explicitLocaleFromPathname, localeFromPathname } from "@/lib/i18n/locale";
 import "../styles/globals.css";
@@ -174,7 +173,6 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <Providers initialLocale={explicitLocale} geoCountry={geoCountry} cspNonce={cspNonce}>{children}</Providers>
-        <Analytics />
       </body>
     </html>
   );
