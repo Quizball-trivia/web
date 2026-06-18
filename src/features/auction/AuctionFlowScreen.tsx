@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLocale } from '@/contexts/LocaleContext';
 import { useAuctionGame } from './hooks/useAuctionGame';
 import { AuctionShowdownScreen } from './components/AuctionShowdownScreen';
 import { AuctionGameScreen } from './components/AuctionGameScreen';
@@ -100,6 +101,7 @@ export function AuctionFlowScreen({ username, avatarSeed }: AuctionFlowScreenPro
 }
 
 function MockSearchingScreen() {
+  const { t } = useLocale();
   const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
   return (
@@ -107,8 +109,17 @@ function MockSearchingScreen() {
       <div className="relative z-10 flex flex-col items-center gap-5">
         <div className="relative">
           <div className="size-20 rounded-full border-[5px] border-white/10 border-t-brand-yellow animate-spin" />
-          <div className="absolute inset-0 flex items-center justify-center text-2xl">
-            ⚽
+          <div className="absolute inset-0 flex items-center justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/assets/brand/goal-ball-small.webp"
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              width={28}
+              height={28}
+              className="block size-7 object-contain"
+            />
           </div>
         </div>
         <div className="text-center">
@@ -116,13 +127,13 @@ function MockSearchingScreen() {
             className="font-poppins text-xl font-black uppercase text-white"
             style={poppins}
           >
-            Finding Players
+            {t('auctionGame.findingPlayers')}
           </h2>
           <p
             className="mt-1.5 font-poppins text-xs font-semibold text-white/40 uppercase"
             style={poppins}
           >
-            Looking for 2 opponents...
+            {t('auctionGame.lookingForOpponents', { count: 2 })}
           </p>
         </div>
       </div>

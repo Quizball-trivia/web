@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'motion/react';
-import { Users, Globe } from 'lucide-react';
+import { Swords } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -11,11 +11,13 @@ import {
 } from '@/components/ui/dialog';
 import { ModalCloseButton } from '@/components/shared/ModalCloseButton';
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface AuctionModeModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateRoom: () => void;
+  /** Reserved for when Create Room ships — currently the option is disabled ("Soon"). */
+  onCreateRoom?: () => void;
   onFindOnline: () => void;
 }
 
@@ -24,9 +26,9 @@ const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as cons
 export function AuctionModeModal({
   isOpen,
   onOpenChange,
-  onCreateRoom,
   onFindOnline,
 }: AuctionModeModalProps) {
+  const { t } = useLocale();
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
@@ -35,7 +37,7 @@ export function AuctionModeModal({
           'p-6 sm:p-8',
           '[&>button]:hidden',
         )}
-        style={{ backgroundColor: '#1A0A2E' }}
+        style={{ backgroundColor: '#6B2FB3' }}
       >
         <div className="absolute top-5 right-5 z-30">
           <ModalCloseButton onClose={() => onOpenChange(false)} className="!static" />
@@ -46,10 +48,10 @@ export function AuctionModeModal({
             className="text-center text-2xl sm:text-3xl uppercase text-white"
             style={poppins}
           >
-            <span className="text-brand-yellow">Auction</span>
+            <span className="text-brand-yellow">{t('play.auctionTitle')}</span>
           </DialogTitle>
-          <DialogDescription className="text-center text-sm text-white/60 mt-1">
-            Build your dream team in a live auction
+          <DialogDescription className="text-center text-sm text-white/90 mt-1">
+            {t('play.auctionModalDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -57,43 +59,38 @@ export function AuctionModeModal({
           <motion.button
             type="button"
             whileTap={{ scale: 0.97 }}
-            onClick={onCreateRoom}
-            className="flex w-full items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition-colors hover:bg-white/10"
+            onClick={onFindOnline}
+            className="flex h-14 w-full items-center justify-center gap-2.5 rounded-[28px] bg-brand-yellow px-6 font-poppins text-sm font-bold uppercase tracking-wide text-black transition-colors hover:bg-brand-yellow-deep"
+            style={poppins}
           >
-            <div className="flex size-12 items-center justify-center rounded-xl bg-purple-500/20">
-              <Users className="size-6 text-purple-400" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-bold uppercase text-white" style={poppins}>
-                Create Room
-              </div>
-              <div className="text-xs text-white/50 mt-0.5">
-                Invite friends to play together
-              </div>
-            </div>
-            <span className="rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-bold uppercase text-white/40">
-              Soon
-            </span>
+            <Swords className="size-5" strokeWidth={2.5} />
+            {t('play.auctionFindOpponents')}
           </motion.button>
 
-          <motion.button
+          {/* Create Room — not available yet ("Soon"). Styled like the
+              Friendly modal's black "+" CTA but rendered disabled. */}
+          <button
             type="button"
-            whileTap={{ scale: 0.97 }}
-            onClick={onFindOnline}
-            className="flex w-full items-center gap-4 rounded-2xl border border-brand-yellow/20 bg-brand-yellow/5 p-4 text-left transition-colors hover:bg-brand-yellow/10"
+            disabled
+            aria-disabled
+            className={cn(
+              'relative flex h-16 w-full items-center justify-center gap-3',
+              'rounded-2xl bg-black uppercase leading-none text-white/70',
+              'cursor-not-allowed opacity-60',
+            )}
+            style={{ fontSize: 'clamp(15px, 2vw, 18px)', ...poppins }}
           >
-            <div className="flex size-12 items-center justify-center rounded-xl bg-brand-yellow/20">
-              <Globe className="size-6 text-brand-yellow" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-bold uppercase text-white" style={poppins}>
-                Find Opponents
-              </div>
-              <div className="text-xs text-white/50 mt-0.5">
-                Match with 2 other players online
-              </div>
-            </div>
-          </motion.button>
+            <span aria-hidden className="font-poppins leading-none text-brand-yellow/70" style={{ fontSize: 'clamp(26px, 3.4vw, 34px)' }}>
+              +
+            </span>
+            {t('play.auctionCreateRoom')}
+            <span
+              className="absolute right-4 rounded-full bg-brand-yellow px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-black"
+              style={poppins}
+            >
+              {t('play.auctionCreateRoomSoon')}
+            </span>
+          </button>
         </div>
       </DialogContent>
     </Dialog>

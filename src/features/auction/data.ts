@@ -16,11 +16,57 @@ export function getFootballerPlaceholderImage(id: string): string {
 }
 
 export const FORMATIONS: Formation[] = [
-  { name: '4-3-3', required: { GK: 1, DEF: 4, MID: 3, FWD: 3 } },
-  { name: '4-4-2', required: { GK: 1, DEF: 4, MID: 4, FWD: 2 } },
-  { name: '3-5-2', required: { GK: 1, DEF: 3, MID: 5, FWD: 2 } },
-  { name: '4-2-3-1', required: { GK: 1, DEF: 4, MID: 5, FWD: 1 } },
-  { name: '3-4-3', required: { GK: 1, DEF: 3, MID: 4, FWD: 3 } },
+  {
+    name: '4-3-3',
+    required: { GK: 1, DEF: 4, MID: 3, FWD: 3 },
+    rows: [
+      { pos: 'FWD', count: 3 },
+      { pos: 'MID', count: 3 },
+      { pos: 'DEF', count: 4 },
+      { pos: 'GK', count: 1 },
+    ],
+  },
+  {
+    name: '4-4-2',
+    required: { GK: 1, DEF: 4, MID: 4, FWD: 2 },
+    rows: [
+      { pos: 'FWD', count: 2 },
+      { pos: 'MID', count: 4 },
+      { pos: 'DEF', count: 4 },
+      { pos: 'GK', count: 1 },
+    ],
+  },
+  {
+    name: '3-5-2',
+    required: { GK: 1, DEF: 3, MID: 5, FWD: 2 },
+    rows: [
+      { pos: 'FWD', count: 2 },
+      { pos: 'MID', count: 5 },
+      { pos: 'DEF', count: 3 },
+      { pos: 'GK', count: 1 },
+    ],
+  },
+  {
+    name: '4-2-3-1',
+    required: { GK: 1, DEF: 4, MID: 5, FWD: 1 },
+    rows: [
+      { pos: 'FWD', count: 1 },
+      { pos: 'MID', count: 3 },
+      { pos: 'MID', count: 2 },
+      { pos: 'DEF', count: 4 },
+      { pos: 'GK', count: 1 },
+    ],
+  },
+  {
+    name: '3-4-3',
+    required: { GK: 1, DEF: 3, MID: 4, FWD: 3 },
+    rows: [
+      { pos: 'FWD', count: 3 },
+      { pos: 'MID', count: 4 },
+      { pos: 'DEF', count: 3 },
+      { pos: 'GK', count: 1 },
+    ],
+  },
 ];
 
 const RAW_FOOTBALLERS: Footballer[] = [

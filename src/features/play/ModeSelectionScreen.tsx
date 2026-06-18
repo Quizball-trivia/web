@@ -426,7 +426,7 @@ export function ModeSelectionScreen({
             alt=""
             width={160}
             height={160}
-            className="hidden lg:block absolute right-4 bottom-4 h-36 w-36 object-contain opacity-90 pointer-events-none"
+            className="hidden lg:block absolute right-4 bottom-4 h-28 w-28 object-contain opacity-90 pointer-events-none"
           />
           <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
             <h3
@@ -452,8 +452,8 @@ export function ModeSelectionScreen({
             </div>
 
             {/* Desktop: bottom-left PLAY */}
-            <div className="mt-auto hidden pt-8 lg:block">
-              <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-black text-xl uppercase tracking-wide text-white" style={poppins}>
+            <div className="mt-auto hidden pt-4 lg:block">
+              <div className="flex h-[44px] w-[130px] items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white" style={poppins}>
                 {t('common.play')}
               </div>
             </div>
@@ -480,7 +480,7 @@ export function ModeSelectionScreen({
             alt=""
             width={160}
             height={160}
-            className="hidden lg:block absolute right-2 bottom-2 h-40 w-40 object-contain opacity-90 pointer-events-none"
+            className="hidden lg:block absolute right-2 bottom-2 h-32 w-32 object-contain opacity-90 pointer-events-none"
           />
           <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
             <h3
@@ -506,8 +506,8 @@ export function ModeSelectionScreen({
             </div>
 
             {/* Desktop: bottom-left PLAY */}
-            <div className="mt-auto hidden pt-8 lg:block">
-              <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-black text-xl uppercase tracking-wide text-white" style={poppins}>
+            <div className="mt-auto hidden pt-4 lg:block">
+              <div className="flex h-[44px] w-[130px] items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white" style={poppins}>
                 {t('common.play')}
               </div>
             </div>
@@ -526,31 +526,37 @@ export function ModeSelectionScreen({
           role="button"
           tabIndex={0}
           className="relative col-span-2 lg:col-span-1 cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
-          style={{ backgroundColor: '#1A0A2E' }}
+          style={{ backgroundColor: '#6B2FB3' }}
         >
           <div className="absolute top-2 right-2 lg:top-3 lg:right-3 z-20 rounded-full bg-brand-yellow px-2 py-0.5 text-[8px] lg:text-[10px] font-black uppercase tracking-wide text-black" style={poppins}>
-            New
+            {t('play.auctionNewBadge')}
           </div>
           <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
             <h3
               className="text-[0.95rem] leading-[1.05] uppercase text-white break-words [hyphens:auto] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
               style={friendlyTitleStyle}
             >
-              Auction
+              {t('play.auctionTitle')}
             </h3>
-            <p className="mt-1 text-[10px] md:mt-1.5 md:text-base uppercase text-white/80" style={poppins}>Build your dream team</p>
+            <p className="mt-1 text-[10px] md:mt-1.5 md:text-base uppercase text-white/80" style={poppins}>{t('play.auctionSubtitle')}</p>
 
             {/* Mobile: icon + PLAY */}
             <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
-              <span className="text-[72px] leading-none pointer-events-none opacity-90">⚽</span>
+              <Image
+                src="/assets/brand/goal-ball-small.webp"
+                alt=""
+                width={140}
+                height={140}
+                className="h-[88px] w-[88px] object-contain pointer-events-none opacity-95"
+              />
             </div>
             <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] uppercase tracking-wide text-white lg:hidden" style={poppins}>
               {t('common.play')}
             </div>
 
             {/* Desktop: bottom-left PLAY */}
-            <div className="mt-auto hidden pt-8 lg:block">
-              <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-black text-xl uppercase tracking-wide text-white" style={poppins}>
+            <div className="mt-auto hidden pt-4 lg:block">
+              <div className="flex h-[44px] w-[130px] items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white" style={poppins}>
                 {t('common.play')}
               </div>
             </div>

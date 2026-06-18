@@ -29,6 +29,10 @@ export interface AuctionTeam {
 export interface Formation {
   name: string;
   required: Record<PositionGroup, number>;
+  /** Display-only pitch rows, top (FWD) → bottom (GK). Lets a position group
+   *  span multiple visual bands (e.g. 4-2-3-1 has two MID rows: 2 then 3) while
+   *  `required` keeps the single per-group totals the game logic relies on. */
+  rows: { pos: PositionGroup; count: number }[];
 }
 
 export type AuctionPhase =
