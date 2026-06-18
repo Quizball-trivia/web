@@ -12,6 +12,7 @@ import {
 import { ModalCloseButton } from '@/components/shared/ModalCloseButton';
 import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
+import { poppins, AUCTION_PURPLE } from '../constants/auction.constants';
 
 interface AuctionModeModalProps {
   isOpen: boolean;
@@ -20,8 +21,6 @@ interface AuctionModeModalProps {
   onCreateRoom?: () => void;
   onFindOnline: () => void;
 }
-
-const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
 export function AuctionModeModal({
   isOpen,
@@ -37,7 +36,7 @@ export function AuctionModeModal({
           'p-6 sm:p-8',
           '[&>button]:hidden',
         )}
-        style={{ backgroundColor: '#6B2FB3' }}
+        style={{ backgroundColor: AUCTION_PURPLE }}
       >
         <div className="absolute top-5 right-5 z-30">
           <ModalCloseButton onClose={() => onOpenChange(false)} className="!static" />

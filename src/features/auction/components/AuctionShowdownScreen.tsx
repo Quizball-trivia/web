@@ -17,13 +17,7 @@ import type { AuctionPlayer } from '../types';
 const PLACEHOLDER_COUNTRY_CODES = ['GE', 'BR', 'AR', 'ES'];
 const PLACEHOLDER_CLUB_IDS = ['liverpool', 'chelsea', 'arsenal', 'everton'];
 import { formatMoney, STARTING_BUDGET } from '../data';
-
-const poppins = {
-  fontFamily: "'Poppins', sans-serif",
-  fontWeight: 600,
-  letterSpacing: '0',
-  lineHeight: 1,
-} as const;
+import { poppins } from '../constants/auction.constants';
 
 function FramedAvatar({
   avatarSeed,

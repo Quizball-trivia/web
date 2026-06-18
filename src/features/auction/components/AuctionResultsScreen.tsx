@@ -6,21 +6,9 @@ import { Crown } from 'lucide-react';
 import { AvatarPreview } from '@/components/AvatarPreview';
 import type { AuctionGameState, AuctionPlayer, PositionGroup } from '../types';
 import { formatMoney, getTotalTeamValue, getFilledCount, isTeamComplete } from '../data';
+import { POS_COLORS, poppins, medalColor } from '../constants/auction.constants';
 import { useLocale } from '@/contexts/LocaleContext';
 import { cn } from '@/lib/utils';
-
-const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
-
-const POS_COLORS: Record<PositionGroup, string> = {
-  GK: '#FFE500',
-  DEF: '#1CB0F6',
-  MID: '#58CC02',
-  FWD: '#FF4B4B',
-};
-
-// Rank → medal accent colour (gold / silver / bronze), neutral for 4th+.
-const MEDAL_COLOR = ['#FFD700', '#C0C0C0', '#CD7F32'];
-const medalColor = (rank0: number) => MEDAL_COLOR[rank0] ?? '#566570';
 
 // ─── Podium (top 3) — gold / silver / bronze, matching the Betsson leaderboard ─
 const PODIUM_STYLE: Record<1 | 2 | 3, { medal: string; gradientFrom: string; gradientTo: string; height: string; order: string }> = {

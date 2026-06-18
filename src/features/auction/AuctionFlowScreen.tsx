@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale } from '@/contexts/LocaleContext';
+import { poppins } from './constants/auction.constants';
 import { useAuctionGame } from './hooks/useAuctionGame';
 import { AuctionShowdownScreen } from './components/AuctionShowdownScreen';
 import { AuctionGameScreen } from './components/AuctionGameScreen';
@@ -102,7 +103,6 @@ export function AuctionFlowScreen({ username, avatarSeed }: AuctionFlowScreenPro
 
 function MockSearchingScreen() {
   const { t } = useLocale();
-  const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-surface-page">
