@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ModeConfirmModal } from '@/components/shared/ModeConfirmModal';
 import { FriendPlayModal } from '@/components/shared/FriendPlayModal';
+import { AuctionModeModal } from '@/features/auction/components/AuctionModeModal';
 import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
 import { MessageCircle } from 'lucide-react';
 import { SocialLinks } from '@/components/shared/SocialLinks';
@@ -109,6 +110,7 @@ export function ModeSelectionScreen({
   const tierLabelOf = useTierLabel();
   const { isEventMode } = useActiveEventMode();
   const [selectedMode, setSelectedMode] = useState<'ranked' | 'friendly' | 'solo' | null>(null);
+  const [auctionModalOpen, setAuctionModalOpen] = useState(false);
   const [playEntranceAnimation] = useState(shouldPlayEntranceAnimation);
   const [wcDaysLeft] = useState(() => Math.max(0, Math.ceil((new Date('2026-07-19T23:59:59Z').getTime() - Date.now()) / 86_400_000)));
   const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
@@ -402,7 +404,7 @@ export function ModeSelectionScreen({
 
       {/* ─── 2. Secondary Modes Grid ─── */}
       <div
-        className="grid grid-cols-2 gap-3 md:gap-4"
+        className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4"
       >
         {/* Friendly Match */}
         <div
@@ -424,7 +426,7 @@ export function ModeSelectionScreen({
             alt=""
             width={160}
             height={160}
-            className="hidden lg:block absolute right-4 bottom-4 h-36 w-36 object-contain opacity-90 pointer-events-none"
+            className="hidden lg:block absolute right-4 bottom-4 h-28 w-28 object-contain opacity-90 pointer-events-none"
           />
           <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
             <h3
@@ -450,8 +452,8 @@ export function ModeSelectionScreen({
             </div>
 
             {/* Desktop: bottom-left PLAY */}
-            <div className="mt-auto hidden pt-8 lg:block">
-              <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-black text-xl uppercase tracking-wide text-white" style={poppins}>
+            <div className="mt-auto hidden pt-4 lg:block">
+              <div className="flex h-[44px] w-[130px] items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white" style={poppins}>
                 {t('common.play')}
               </div>
             </div>
@@ -478,7 +480,7 @@ export function ModeSelectionScreen({
             alt=""
             width={160}
             height={160}
-            className="hidden lg:block absolute right-2 bottom-2 h-40 w-40 object-contain opacity-90 pointer-events-none"
+            className="hidden lg:block absolute right-2 bottom-2 h-32 w-32 object-contain opacity-90 pointer-events-none"
           />
           <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
             <h3
@@ -504,8 +506,65 @@ export function ModeSelectionScreen({
             </div>
 
             {/* Desktop: bottom-left PLAY */}
-            <div className="mt-auto hidden pt-8 lg:block">
-              <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-black text-xl uppercase tracking-wide text-white" style={poppins}>
+            <div className="mt-auto hidden pt-4 lg:block">
+              <div className="flex h-[44px] w-[130px] items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white" style={poppins}>
+                {t('common.play')}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Auction */}
+        <div
+          onClick={() => setAuctionModalOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setAuctionModalOpen(true);
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          className="relative col-span-2 lg:col-span-1 cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
+          style={{ backgroundColor: '#6B2FB3' }}
+        >
+          {/* Desktop watermark icon (mobile uses inline icon below) */}
+          <Image
+            src="/assets/auction-card-icon.webp"
+            alt=""
+            width={200}
+            height={200}
+            className="hidden lg:block absolute right-3 bottom-3 h-32 w-32 object-contain opacity-90 pointer-events-none"
+          />
+          <div className="absolute top-2 right-2 lg:top-3 lg:right-3 z-20 rounded-full bg-brand-yellow px-2 py-0.5 text-[8px] lg:text-[10px] font-black uppercase tracking-wide text-black" style={poppins}>
+            {t('play.auctionNewBadge')}
+          </div>
+          <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
+            <h3
+              className="text-[0.95rem] leading-[1.05] uppercase text-white break-words [hyphens:auto] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
+              style={friendlyTitleStyle}
+            >
+              {t('play.auctionTitle')}
+            </h3>
+            <p className="mt-1 text-[10px] md:mt-1.5 md:text-base uppercase text-white/80" style={poppins}>{t('play.auctionSubtitle')}</p>
+
+            {/* Mobile: icon + PLAY */}
+            <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
+              <Image
+                src="/assets/auction-card-icon.webp"
+                alt=""
+                width={200}
+                height={200}
+                className="h-[96px] w-[96px] object-contain pointer-events-none opacity-95"
+              />
+            </div>
+            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] uppercase tracking-wide text-white lg:hidden" style={poppins}>
+              {t('common.play')}
+            </div>
+
+            {/* Desktop: bottom-left PLAY */}
+            <div className="mt-auto hidden pt-4 lg:block">
+              <div className="flex h-[44px] w-[130px] items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white" style={poppins}>
                 {t('common.play')}
               </div>
             </div>
@@ -702,6 +761,15 @@ export function ModeSelectionScreen({
       <FriendPlayModal
         isOpen={selectedMode === 'friendly'}
         onOpenChange={(open) => !open && setSelectedMode(null)}
+      />
+      <AuctionModeModal
+        isOpen={auctionModalOpen}
+        onOpenChange={setAuctionModalOpen}
+        onCreateRoom={() => {}}
+        onFindOnline={() => {
+          setAuctionModalOpen(false);
+          router.push('/auction');
+        }}
       />
     </motion.div>
   );
