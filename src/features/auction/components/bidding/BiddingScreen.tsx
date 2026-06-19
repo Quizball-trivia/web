@@ -42,15 +42,17 @@ export function BiddingScreen({
 
   if (!round || !humanPlayer) return null;
 
-  const canBid =
-    isBidding &&
-    needsPosition(humanPlayer, round.positionGroup) &&
-    !humanPlayer.isEliminated &&
-    humanPlayer.id !== round.highestBidderId;
+  // Turn-based: you only act on your turn.
+  const myTurn = isBidding && round.currentTurnId === humanPlayerId;
+  // Forced opener (no standing bid yet) must bid — fold is disabled.
+  const mustOpen = myTurn && !round.highestBidderId;
+  const currentTurnPlayer = round.currentTurnId
+    ? state.players.find((p) => p.id === round.currentTurnId)
+    : null;
+  const humanFolded = round.foldedIds.includes(humanPlayerId);
 
   const maxBid = getMaxBid(humanPlayer);
   const posColor = POS_COLORS[round.positionGroup];
-  const positionFilled = !needsPosition(humanPlayer, round.positionGroup);
 
   const highestBidder = round.highestBidderId
     ? state.players.find((p) => p.id === round.highestBidderId)
@@ -78,13 +80,9 @@ export function BiddingScreen({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="relative w-full rounded-[20px] bg-brand-yellow p-4 sm:p-5 pb-12"
+            className="relative w-full rounded-[20px] bg-brand-yellow p-4 sm:p-5"
             style={isCluePhase ? { boxShadow: `0 0 40px ${posColor}08` } : undefined}
           >
-            {/* Starting price — bottom-right corner */}
-            <div className="absolute bottom-3 right-4 rounded-[10px] bg-black px-3.5 py-1.5 font-poppins text-lg font-black uppercase tabular-nums text-brand-yellow">
-              {formatMoney(round.startingPrice)}
-            </div>
 
             {/* "Rivals want this" — tilted ribbon badge, top-left, outside the card.
                 Drops in from above + overshoots + bounces (slightly longer fall than
@@ -113,10 +111,14 @@ export function BiddingScreen({
               </motion.div>
             )}
 
-            {/* Countdown — absolutely pinned to the card's top-right corner */}
-            {isBidding && round.countdownEndsAt && (
+            {/* Turn countdown — shows the active player's clock, top-right */}
+            {isBidding && round.turnEndsAt && round.currentTurnId && (
               <div className="absolute right-3 top-3 z-20">
-                <CountdownTimer endsAt={round.countdownEndsAt} />
+                <CountdownTimer
+                  key={round.currentTurnId + String(round.turnEndsAt)}
+                  endsAt={round.turnEndsAt}
+                  totalMs={round.highestBidderId ? 10_000 : 30_000}
+                />
               </div>
             )}
 
@@ -175,6 +177,16 @@ export function BiddingScreen({
                   </span>
                 </motion.div>
               )}
+            </div>
+
+            {/* Starting price — own row below the clues (no overlap) */}
+            <div className="mt-3 flex items-center justify-between gap-2 border-t border-black/10 pt-3">
+              <span className="font-poppins text-[11px] font-black uppercase tracking-wide text-black/60">
+                {t('auctionGame.startingPriceLabel')}
+              </span>
+              <span className="rounded-[10px] bg-black px-3.5 py-1.5 font-poppins text-lg font-black uppercase tabular-nums text-brand-yellow">
+                {formatMoney(round.startingPrice)}
+              </span>
             </div>
           </motion.div>
 
@@ -260,25 +272,44 @@ export function BiddingScreen({
                 />
               )}
 
-              {/* Bid input or status */}
-              {canBid ? (
-                <QuickBidPanel
-                  key={minBid}
-                  minBid={minBid}
-                  maxBid={maxBid}
-                  currentBudget={humanPlayer.budget}
-                  onBid={actions.placeBid}
-                />
-              ) : isBidding && humanPlayer.id !== round.highestBidderId ? (
-                // Watching states only (eliminated / position filled / watching).
-                // No pill when you're already leading — the yellow bid bar shows that.
+              {/* Turn-based bid controls */}
+              {myTurn ? (
+                <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="w-full space-y-2">
+                  <div className="text-center font-poppins text-xs font-black uppercase tracking-wide text-brand-yellow">
+                    {t('auctionGame.yourTurn')}
+                  </div>
+                  <QuickBidPanel
+                    key={minBid}
+                    minBid={minBid}
+                    maxBid={maxBid}
+                    currentBudget={humanPlayer.budget}
+                    onBid={actions.placeBid}
+                  />
+                  {/* Fold only when there's a standing bid — the opener must bid. */}
+                  {!mustOpen && (
+                    <button
+                      type="button"
+                      onClick={actions.fold}
+                      className="flex h-11 w-full items-center justify-center rounded-[12px] border-2 border-brand-red/40 bg-brand-red/10 font-poppins text-sm font-black uppercase text-brand-red transition-colors hover:bg-brand-red/20"
+                    >
+                      {t('auctionGame.fold')}
+                    </button>
+                  )}
+                </motion.div>
+              ) : isBidding ? (
+                // Not your turn → status: folded / waiting for the active player.
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full">
-                  <div className="rounded-[14px] border-2 border-white/5 bg-white/[0.03] px-5 py-3 text-center font-poppins text-sm font-semibold uppercase text-white/45">
-                    {humanPlayer.isEliminated
-                      ? t('auctionGame.eliminatedWatching')
-                      : positionFilled
-                        ? t('auctionGame.positionFilledWatching', { position: posLabel(round.positionGroup) })
-                        : t('auctionGame.watching')}
+                  <div className="flex items-center justify-center gap-2 rounded-[14px] border-2 border-white/5 bg-white/[0.03] px-5 py-3 text-center font-poppins text-sm font-semibold uppercase text-white/45">
+                    {humanFolded ? (
+                      t('auctionGame.youFolded')
+                    ) : currentTurnPlayer ? (
+                      <>
+                        <span className="size-2 shrink-0 animate-pulse rounded-full bg-brand-yellow" />
+                        {t('auctionGame.waitingForTurn', { name: currentTurnPlayer.username })}
+                      </>
+                    ) : (
+                      t('auctionGame.watching')
+                    )}
                   </div>
                 </motion.div>
               ) : null}

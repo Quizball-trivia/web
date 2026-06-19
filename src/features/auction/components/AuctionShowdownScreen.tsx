@@ -1,8 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
+import { Check, LoaderCircle } from 'lucide-react';
 import { AvatarPreview } from '@/components/AvatarPreview';
 import { CountryFlag } from '@/components/CountryFlag';
 import { getTierFrameSrc } from '@/utils/tierVisuals';
@@ -95,10 +96,12 @@ function PlayerSide({
   player,
   isHuman,
   index,
+  ready,
 }: {
   player: AuctionPlayer;
   isHuman: boolean;
   index: number;
+  ready: boolean;
 }) {
   const { t } = useLocale();
   const mirror = index > 0;
@@ -121,6 +124,24 @@ function PlayerSide({
         transition={{ delay: 0.5 + index * 0.12, type: 'spring', stiffness: 200 }}
         className="relative flex w-[88px] sm:w-[180px] md:w-[220px] items-center justify-center"
       >
+        {/* Connecting → ready badge (spinner then green check), like ranked kickoff */}
+        <motion.div
+          initial={{ scale: 0.7, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 360, damping: 18 }}
+          className={cn(
+            'absolute -top-2 left-1/2 z-30 flex size-7 -translate-x-1/2 items-center justify-center rounded-full border-2 border-surface-page shadow-[0_8px_24px_rgba(0,0,0,0.36)] sm:size-9',
+            ready
+              ? 'bg-brand-green text-white shadow-[0_6px_18px_rgba(88,204,2,0.45)]'
+              : 'bg-black/62 text-brand-cyan backdrop-blur-md',
+          )}
+        >
+          {ready ? (
+            <Check className="size-4 stroke-[4] sm:size-5" />
+          ) : (
+            <LoaderCircle className="size-4 animate-spin sm:size-5" />
+          )}
+        </motion.div>
         <FramedAvatar
           avatarSeed={player.avatarSeed}
           width={88}
@@ -196,10 +217,26 @@ export function AuctionShowdownScreen({
   onComplete: () => void;
 }) {
   const { t } = useLocale();
+  // Simulate the ranked "connecting → ready" flow: each player flips ready on a
+  // staggered timer; once all are ready we hold a beat then advance. (No backend
+  // yet — when multiplayer lands, drive `readyIds` from real presence acks.)
+  const [readyIds, setReadyIds] = useState<Set<string>>(new Set());
+  const allReady = players.length > 0 && players.every((p) => readyIds.has(p.id));
+
   useEffect(() => {
-    const timer = setTimeout(() => onComplete(), 4500);
-    return () => clearTimeout(timer);
-  }, [onComplete]);
+    const timers = players.map((p, i) =>
+      setTimeout(() => {
+        setReadyIds((prev) => new Set(prev).add(p.id));
+      }, 1400 + i * 700),
+    );
+    return () => timers.forEach(clearTimeout);
+  }, [players]);
+
+  useEffect(() => {
+    if (!allReady) return;
+    const t = setTimeout(() => onComplete(), 900);
+    return () => clearTimeout(t);
+  }, [allReady, onComplete]);
 
   // Always horizontal — 3 players in a row with VS dividers (like the draft
   // banning banner). Cards scale down on mobile so all three fit side by side.
@@ -228,6 +265,7 @@ export function AuctionShowdownScreen({
                 player={player}
                 isHuman={player.id === humanPlayerId}
                 index={i}
+                ready={readyIds.has(player.id)}
               />
             </div>
           </div>
@@ -246,13 +284,15 @@ export function AuctionShowdownScreen({
       </motion.div>
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: [0.45, 1, 0.45] }}
-        transition={{ delay: 1.2, duration: 2, repeat: Infinity }}
-        className="relative z-10 mt-1 text-[9px] uppercase tracking-[0.12em] text-white/55 sm:mt-2 sm:text-xs sm:tracking-[0.16em]"
+        animate={allReady ? { opacity: 1 } : { opacity: [0.45, 1, 0.45] }}
+        transition={allReady ? { duration: 0.3 } : { delay: 1.2, duration: 2, repeat: Infinity }}
+        className={cn(
+          'relative z-10 mt-1 text-[9px] uppercase tracking-[0.12em] sm:mt-2 sm:text-xs sm:tracking-[0.16em]',
+          allReady ? 'font-black text-brand-green' : 'text-white/55',
+        )}
         style={poppins}
       >
-        <span className="sm:hidden">{t('auctionGame.getReady')}</span>
-        <span className="hidden sm:inline">{t('auctionGame.getReadyToBid')}</span>
+        {allReady ? t('friend.everyoneReady') : t('auctionGame.connectingPlayers')}
       </motion.div>
     </div>
   );

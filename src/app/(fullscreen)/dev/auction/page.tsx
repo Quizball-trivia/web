@@ -30,7 +30,6 @@ import {
   FOOTBALLERS,
   FORMATIONS,
   STARTING_BUDGET,
-  BID_COUNTDOWN_MS,
   createEmptyTeam,
 } from '@/features/auction/data';
 
@@ -80,6 +79,10 @@ function makeRound(overrides: Partial<AuctionRound> = {}): AuctionRound {
     winningBid: 0,
     revealed: false,
     countdownEndsAt: null,
+    turnOrder: ['human-player', 'bot-1', 'bot-2'],
+    currentTurnId: null,
+    foldedIds: [],
+    turnEndsAt: null,
     ...overrides,
   };
 }
@@ -103,7 +106,7 @@ function makeActions(over: Partial<AuctionActions> = {}): AuctionActions {
   return {
     startGame: () => {},
     placeBid: () => {},
-    skipBid: () => {},
+    fold: () => {},
     confirmReveal: () => {},
     pickSoloOption: () => {},
     setPhase: () => {},
@@ -178,22 +181,22 @@ const SCENARIOS: Scenario[] = [
     ),
   },
   {
-    id: 'bidding-open',
-    label: 'Bidding — open, no bids yet',
+    id: 'bidding-your-turn-open',
+    label: 'Bidding — your turn (open)',
     group: 'Round',
     render: () => (
       <Game
         state={baseState({
           phase: 'bidding',
-          // Bidding opens with the 10s clock already running (matches the real hook).
-          currentRound: makeRound({ countdownEndsAt: Date.now() + BID_COUNTDOWN_MS }),
+          // Your turn, no bids yet — open at the starting price or fold.
+          currentRound: makeRound({ currentTurnId: HUMAN_ID, turnEndsAt: Date.now() + 30_000 }),
         })}
       />
     ),
   },
   {
-    id: 'bidding-active',
-    label: 'Bidding — active war (you leading)',
+    id: 'bidding-your-turn-raise',
+    label: 'Bidding — your turn (raise)',
     group: 'Round',
     render: () => (
       <Game
@@ -203,21 +206,19 @@ const SCENARIOS: Scenario[] = [
             bids: [
               { playerId: 'bot-1', amount: 70_000_000 },
               { playerId: 'bot-2', amount: 90_000_000 },
-              { playerId: HUMAN_ID, amount: 120_000_000 },
-              { playerId: 'bot-1', amount: 150_000_000 },
-              { playerId: HUMAN_ID, amount: 180_000_000 },
             ],
-            highestBidderId: HUMAN_ID,
-            highestBid: 180_000_000,
-            countdownEndsAt: Date.now() + BID_COUNTDOWN_MS,
+            highestBidderId: 'bot-2',
+            highestBid: 90_000_000,
+            currentTurnId: HUMAN_ID,
+            turnEndsAt: Date.now() + 10_000,
           }),
         })}
       />
     ),
   },
   {
-    id: 'bidding-outbid',
-    label: 'Bidding — you are OUTBID',
+    id: 'bidding-waiting',
+    label: 'Bidding — waiting (opponent turn)',
     group: 'Round',
     render: () => (
       <Game
@@ -230,7 +231,8 @@ const SCENARIOS: Scenario[] = [
             ],
             highestBidderId: 'bot-1',
             highestBid: 160_000_000,
-            countdownEndsAt: Date.now() + 3000,
+            currentTurnId: 'bot-2',
+            turnEndsAt: Date.now() + 10_000,
           }),
         })}
       />

@@ -12,7 +12,6 @@ import {
   FOOTBALLERS,
   STARTING_BUDGET,
   MIN_PLAYER_COST,
-  BID_COUNTDOWN_MS,
   CLUE_REVEAL_INTERVAL_MS,
   MIN_BID_INCREMENT,
   createBotPlayer,
@@ -36,13 +35,54 @@ function shuffle<T>(arr: T[]): T[] {
 export interface AuctionActions {
   startGame: (playerCount?: number) => void;
   placeBid: (amount: number) => void;
-  skipBid: () => void;
+  fold: () => void;
   confirmReveal: () => void;
   pickSoloOption: (option: 'A' | 'B') => void;
   setPhase: (phase: AuctionPhase) => void;
 }
 
 const HUMAN_PLAYER_ID = 'human-player';
+
+// Turn time limits: the opener (first turn, no standing bid) gets longer to
+// read the clues and decide; every turn after that is fast. Same for everyone.
+const OPENING_TURN_MS = 30_000;
+const RAISE_TURN_MS = 10_000;
+
+/** Players still in the running for this round: in turn order, not folded,
+ *  not eliminated, and still need the position. */
+function remainingBidders(round: AuctionRound, players: AuctionPlayer[]): AuctionPlayer[] {
+  return round.turnOrder
+    .filter((id) => !round.foldedIds.includes(id))
+    .map((id) => players.find((p) => p.id === id))
+    .filter((p): p is AuctionPlayer => !!p && !p.isEliminated && needsPosition(p, round.positionGroup));
+}
+
+/** The next player to act after `currentTurnId`: the next in turn order who is
+ *  still in (not folded) and is NOT the current high bidder (you don't bid
+ *  against yourself). When there's no standing bid yet, the next player is a
+ *  *forced opener* who must afford the starting price — anyone who can't is
+ *  skipped. Returns null if nobody else can act. */
+function nextBidderId(round: AuctionRound, players: AuctionPlayer[]): string | null {
+  const order = round.turnOrder;
+  const startIdx = round.currentTurnId ? order.indexOf(round.currentTurnId) : -1;
+  const noBidYet = !round.highestBidderId;
+  for (let step = 1; step <= order.length; step++) {
+    const id = order[(startIdx + step) % order.length];
+    if (round.foldedIds.includes(id)) continue;
+    if (id === round.highestBidderId) continue; // skip the leader — no self-bidding
+    const p = players.find((x) => x.id === id);
+    if (!p || p.isEliminated || !needsPosition(p, round.positionGroup)) continue;
+    // Forced opener must be able to afford the starting price; skip if not.
+    if (noBidYet && getMaxBid(p) < round.startingPrice) continue;
+    return id;
+  }
+  return null;
+}
+
+/** 30s for the opening turn (no bid on the table yet), 10s for every raise. */
+function turnMsFor(round: AuctionRound): number {
+  return round.highestBidderId ? RAISE_TURN_MS : OPENING_TURN_MS;
+}
 
 export function useAuctionGame(humanUsername: string, humanAvatarSeed: string) {
   const [state, setState] = useState<AuctionGameState>({
@@ -62,21 +102,23 @@ export function useAuctionGame(humanUsername: string, humanAvatarSeed: string) {
     MID: [],
     FWD: [],
   });
-  const countdownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const botTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const turnTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const botTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clueRevealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearAllTimers = useCallback(() => {
-    if (countdownTimerRef.current) {
-      clearTimeout(countdownTimerRef.current);
-      countdownTimerRef.current = null;
+    if (turnTimerRef.current) {
+      clearTimeout(turnTimerRef.current);
+      turnTimerRef.current = null;
+    }
+    if (botTimerRef.current) {
+      clearTimeout(botTimerRef.current);
+      botTimerRef.current = null;
     }
     if (clueRevealTimerRef.current) {
       clearTimeout(clueRevealTimerRef.current);
       clueRevealTimerRef.current = null;
     }
-    botTimersRef.current.forEach(clearTimeout);
-    botTimersRef.current = [];
   }, []);
 
   useEffect(() => () => clearAllTimers(), [clearAllTimers]);
@@ -165,6 +207,11 @@ export function useAuctionGame(humanUsername: string, humanAvatarSeed: string) {
           winningBid: 0,
           revealed: false,
           countdownEndsAt: null,
+          // Random turn order among the players who need this position.
+          turnOrder: shuffle(needers.map((p) => p.id)),
+          currentTurnId: null,
+          foldedIds: [],
+          turnEndsAt: null,
         },
         soloPick: null,
       };
@@ -172,46 +219,53 @@ export function useAuctionGame(humanUsername: string, humanAvatarSeed: string) {
     [popFootballer],
   );
 
-  const endRound = useCallback(() => {
-    clearAllTimers();
-    setState((prev) => {
-      if (prev.phase !== 'bidding' || !prev.currentRound) return prev;
-      if (
-        prev.currentRound.countdownEndsAt &&
-        prev.currentRound.countdownEndsAt > Date.now()
-      ) {
-        return prev;
-      }
-
-      const round = prev.currentRound;
-      if (!round.highestBidderId) {
-        return advanceToNextRound({
-          ...prev,
-          completedRounds: [...prev.completedRounds, { ...round, revealed: true }],
-        });
-      }
-
-      const updatedPlayers = assignPlayer(
-        prev.players,
-        round.highestBidderId,
-        round.footballer,
-        round.highestBid,
-        round.positionGroup,
-      );
-
+  // Win → reveal the sold player.
+  const resolveWin = useCallback(
+    (prev: AuctionGameState, round: AuctionRound): AuctionGameState => {
+      const winnerId = round.highestBidderId!;
+      const updatedPlayers = assignPlayer(prev.players, winnerId, round.footballer, round.highestBid, round.positionGroup);
       return {
         ...prev,
         phase: 'reveal' as AuctionPhase,
         players: updatedPlayers,
-        currentRound: {
-          ...round,
-          winnerId: round.highestBidderId,
-          winningBid: round.highestBid,
-          revealed: true,
-        },
+        currentRound: { ...round, currentTurnId: null, turnEndsAt: null, winnerId, winningBid: round.highestBid, revealed: true },
       };
-    });
-  }, [clearAllTimers, advanceToNextRound, assignPlayer]);
+    },
+    [assignPlayer],
+  );
+
+  // After a bid or fold: decide the round's next state.
+  //   • someone bid + everyone else folded → that high bidder wins.
+  //   • nobody left who can act + no bid → player unsold, advance.
+  //   • else → hand the turn to the next eligible bidder.
+  const resolveOrAdvanceTurn = useCallback(
+    (prev: AuctionGameState, round: AuctionRound): AuctionGameState => {
+      const remaining = remainingBidders(round, prev.players);
+
+      // Win: a bid exists and at most one bidder remains in (the high bidder).
+      if (round.highestBidderId && remaining.length <= 1) {
+        return resolveWin(prev, round);
+      }
+
+      const nextId = nextBidderId(round, prev.players);
+
+      // Nobody else can act.
+      if (!nextId) {
+        if (round.highestBidderId) return resolveWin(prev, round);
+        // Everyone folded with no bid → unsold, move on.
+        return advanceToNextRound({
+          ...prev,
+          completedRounds: [...prev.completedRounds, { ...round, currentTurnId: null, turnEndsAt: null, revealed: true }],
+        });
+      }
+
+      return {
+        ...prev,
+        currentRound: { ...round, currentTurnId: nextId, turnEndsAt: Date.now() + turnMsFor(round) },
+      };
+    },
+    [resolveWin, advanceToNextRound],
+  );
 
   // --- Clue reveal effect ---
   useEffect(() => {
@@ -243,13 +297,20 @@ export function useAuctionGame(humanUsername: string, humanAvatarSeed: string) {
     const timer = setTimeout(() => {
       setState((prev) => {
         if (prev.phase !== 'clue-reveal' || !prev.currentRound) return prev;
+        // Open bidding: hand the first turn to the first eligible player in order.
+        const round = prev.currentRound;
+        const firstId = nextBidderId({ ...round, currentTurnId: round.turnOrder[round.turnOrder.length - 1] ?? null }, prev.players);
+        if (!firstId) {
+          // No one needs the player → unsold, advance.
+          return advanceToNextRound({
+            ...prev,
+            completedRounds: [...prev.completedRounds, { ...round, revealed: true }],
+          });
+        }
         return {
           ...prev,
           phase: 'bidding',
-          currentRound: {
-            ...prev.currentRound,
-            countdownEndsAt: Date.now() + BID_COUNTDOWN_MS,
-          },
+          currentRound: { ...round, currentTurnId: firstId, turnEndsAt: Date.now() + turnMsFor(round) },
         };
       });
     }, CLUE_REVEAL_INTERVAL_MS);
@@ -258,98 +319,90 @@ export function useAuctionGame(humanUsername: string, humanAvatarSeed: string) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase, state.currentRound?.clueRevealIndex]);
 
-  // --- Countdown + bot bids effect (enhanced with snipe bids + counter-bids) ---
+  // --- Turn timer: when a turn's clock runs out, the player auto-folds. ---
   useEffect(() => {
-    if (state.phase !== 'bidding' || !state.currentRound?.countdownEndsAt) return;
-
-    const timeLeft = state.currentRound.countdownEndsAt - Date.now();
-    if (timeLeft <= 0) {
-      endRound();
-      return;
-    }
-
-    countdownTimerRef.current = setTimeout(endRound, timeLeft);
-
-    const round = state.currentRound;
-    const bots = state.players.filter(
-      (p) =>
-        p.isBot &&
-        !p.isEliminated &&
-        needsPosition(p, round.positionGroup) &&
-        p.id !== round.highestBidderId,
-    );
-
-    const isHighValue = round.footballer.value >= 200_000_000;
-
-    const makeBotBid = (bot: AuctionPlayer, aggressive: boolean) => {
+    if (state.phase !== 'bidding' || !state.currentRound?.turnEndsAt || !state.currentRound.currentTurnId) return;
+    const delay = Math.max(0, state.currentRound.turnEndsAt - Date.now());
+    turnTimerRef.current = setTimeout(() => {
       setState((prev) => {
-        if (prev.phase !== 'bidding' || !prev.currentRound) return prev;
-        const r = prev.currentRound;
-        const currentBot = prev.players.find((p) => p.id === bot.id);
-        if (
-          !currentBot ||
-          currentBot.isEliminated ||
-          !needsPosition(currentBot, r.positionGroup)
-        )
-          return prev;
-        if (currentBot.id === r.highestBidderId) return prev;
-
-        const maxBid = getMaxBid(currentBot);
-        const minBid =
-          r.highestBid > 0 ? r.highestBid + MIN_BID_INCREMENT : r.startingPrice;
-        if (maxBid < minBid) return prev;
-
-        const valueFactor = aggressive
-          ? 0.85 + Math.random() * 0.55
-          : isHighValue
-            ? 0.8 + Math.random() * 0.5
-            : 0.7 + Math.random() * 0.6;
-        const targetBid = Math.round(r.footballer.value * valueFactor);
-        if (minBid > targetBid) return prev;
-
-        if (!aggressive && r.highestBid > 0 && Math.random() < 0.12) return prev;
-
-        const bidAmount = Math.min(maxBid, Math.max(minBid, targetBid));
-
-        return {
-          ...prev,
-          currentRound: {
-            ...r,
-            bids: [...r.bids, { playerId: bot.id, amount: bidAmount }],
-            highestBidderId: bot.id,
-            highestBid: bidAmount,
-            countdownEndsAt: Date.now() + BID_COUNTDOWN_MS,
-          },
-        };
-      });
-    };
-
-    for (const bot of bots) {
-      const wasOutbid = round.bids.some((b) => b.playerId === bot.id);
-
-      // Counter-bid: faster reaction when previously outbid
-      const normalDelay = wasOutbid
-        ? 600 + Math.random() * 1800
-        : 1200 + Math.random() * 3500;
-
-      if (normalDelay < timeLeft - 300) {
-        const timer = setTimeout(() => makeBotBid(bot, wasOutbid), normalDelay);
-        botTimersRef.current.push(timer);
-      }
-
-      // Snipe bid: 30% chance, fires 1-2.5s before end for dramatic last-second bids
-      if (Math.random() < 0.3 && timeLeft > 4000) {
-        const snipeDelay = timeLeft - (1000 + Math.random() * 1500);
-        if (snipeDelay > normalDelay + 800) {
-          const timer = setTimeout(() => makeBotBid(bot, true), snipeDelay);
-          botTimersRef.current.push(timer);
+        if (prev.phase !== 'bidding' || !prev.currentRound?.currentTurnId) return prev;
+        const round = prev.currentRound;
+        const turnId = round.currentTurnId!;
+        // Forced opener (no standing bid) can't fold on timeout — auto-bid the
+        // starting price (nextBidderId guaranteed they can afford it).
+        if (!round.highestBidderId) {
+          const bidded = {
+            ...round,
+            bids: [...round.bids, { playerId: turnId, amount: round.startingPrice }],
+            highestBidderId: turnId,
+            highestBid: round.startingPrice,
+          };
+          return resolveOrAdvanceTurn(prev, bidded);
         }
-      }
-    }
-
-    return () => clearAllTimers();
+        // Otherwise timeout = auto-fold.
+        const folded = { ...round, foldedIds: [...round.foldedIds, turnId] };
+        return resolveOrAdvanceTurn(prev, folded);
+      });
+    }, delay);
+    return () => {
+      if (turnTimerRef.current) { clearTimeout(turnTimerRef.current); turnTimerRef.current = null; }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.phase, state.currentRound?.countdownEndsAt]);
+  }, [state.phase, state.currentRound?.currentTurnId, state.currentRound?.turnEndsAt]);
+
+  // --- Bot turn: when it's a bot's turn, after a short think it bids or folds. ---
+  useEffect(() => {
+    if (state.phase !== 'bidding' || !state.currentRound?.currentTurnId) return;
+    const turnId = state.currentRound.currentTurnId;
+    if (turnId === HUMAN_PLAYER_ID) return;
+
+    const think = 800 + Math.random() * 2000; // 0.8–2.8s, well within the turn window
+    botTimerRef.current = setTimeout(() => {
+      setState((prev) => {
+        if (prev.phase !== 'bidding' || !prev.currentRound || prev.currentRound.currentTurnId !== turnId) return prev;
+        const r = prev.currentRound;
+        const bot = prev.players.find((p) => p.id === turnId);
+        if (!bot) return prev;
+
+        const maxBid = getMaxBid(bot);
+        const minBid = r.highestBid > 0 ? r.highestBid + MIN_BID_INCREMENT : r.startingPrice;
+
+        // Bot's max willingness: a fraction of the footballer's value (placeholder
+        // heuristic; replaced by the real AI difficulty system later).
+        const willingness = Math.round(r.footballer.value * (0.75 + Math.random() * 0.55));
+
+        // Forced opener (no standing bid) must bid — can't fold.
+        const mustOpen = !r.highestBidderId;
+        const canAfford = maxBid >= minBid;
+        const wantsIt = minBid <= willingness;
+        const randomFold = Math.random() < 0.12;
+
+        if (!mustOpen && (!canAfford || !wantsIt || randomFold)) {
+          const folded = { ...r, foldedIds: [...r.foldedIds, turnId] };
+          return resolveOrAdvanceTurn(prev, folded);
+        }
+        // (A forced opener always reaches here; nextBidderId guarantees they can
+        //  afford the starting price, so the bid below is valid.)
+
+        // Bid: minimum raise most of the time, sometimes a bump.
+        const bump = Math.random() < 0.35 ? MIN_BID_INCREMENT * (1 + Math.floor(Math.random() * 4)) : 0;
+        const bidAmount = Math.min(maxBid, willingness, minBid + bump);
+        const finalBid = Math.max(minBid, bidAmount);
+        const bidded = {
+          ...r,
+          bids: [...r.bids, { playerId: turnId, amount: finalBid }],
+          highestBidderId: turnId,
+          highestBid: finalBid,
+        };
+        return resolveOrAdvanceTurn(prev, bidded);
+      });
+    }, think);
+
+    return () => {
+      if (botTimerRef.current) { clearTimeout(botTimerRef.current); botTimerRef.current = null; }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.phase, state.currentRound?.currentTurnId]);
 
   const startGame = useCallback(
     (playerCount = 3) => {
@@ -405,34 +458,40 @@ export function useAuctionGame(humanUsername: string, humanAvatarSeed: string) {
       setState((prev) => {
         if (!prev.currentRound || prev.phase !== 'bidding') return prev;
         const round = prev.currentRound;
+        // Only the human, only on their turn.
+        if (round.currentTurnId !== HUMAN_PLAYER_ID) return prev;
         const human = prev.players.find((p) => p.id === HUMAN_PLAYER_ID);
         if (!human || human.isEliminated) return prev;
-        if (!needsPosition(human, round.positionGroup)) return prev;
-        if (human.id === round.highestBidderId) return prev;
 
         const maxBid = getMaxBid(human);
         if (amount > maxBid) return prev;
-
-        const minBid =
-          round.highestBid > 0 ? round.highestBid + MIN_BID_INCREMENT : round.startingPrice;
+        const minBid = round.highestBid > 0 ? round.highestBid + MIN_BID_INCREMENT : round.startingPrice;
         if (amount < minBid) return prev;
 
-        return {
-          ...prev,
-          currentRound: {
-            ...round,
-            bids: [...round.bids, { playerId: HUMAN_PLAYER_ID, amount }],
-            highestBidderId: HUMAN_PLAYER_ID,
-            highestBid: amount,
-            countdownEndsAt: Date.now() + BID_COUNTDOWN_MS,
-          },
+        const bidded = {
+          ...round,
+          bids: [...round.bids, { playerId: HUMAN_PLAYER_ID, amount }],
+          highestBidderId: HUMAN_PLAYER_ID,
+          highestBid: amount,
         };
+        return resolveOrAdvanceTurn(prev, bidded);
       });
     },
-    [clearAllTimers],
+    [clearAllTimers, resolveOrAdvanceTurn],
   );
 
-  const skipBid = useCallback(() => {}, []);
+  const fold = useCallback(() => {
+    clearAllTimers();
+    setState((prev) => {
+      if (!prev.currentRound || prev.phase !== 'bidding') return prev;
+      const round = prev.currentRound;
+      if (round.currentTurnId !== HUMAN_PLAYER_ID) return prev;
+      // The forced opener (no standing bid) cannot fold — they must bid.
+      if (!round.highestBidderId) return prev;
+      const folded = { ...round, foldedIds: [...round.foldedIds, HUMAN_PLAYER_ID] };
+      return resolveOrAdvanceTurn(prev, folded);
+    });
+  }, [clearAllTimers, resolveOrAdvanceTurn]);
 
   const confirmReveal = useCallback(() => {
     setState((prev) => {
@@ -473,6 +532,10 @@ export function useAuctionGame(humanUsername: string, humanAvatarSeed: string) {
           winningBid: cost,
           revealed: true,
           countdownEndsAt: null,
+          turnOrder: [playerId],
+          currentTurnId: null,
+          foldedIds: [],
+          turnEndsAt: null,
         };
 
         return advanceToNextRound({
@@ -488,7 +551,7 @@ export function useAuctionGame(humanUsername: string, humanAvatarSeed: string) {
 
   return {
     state,
-    actions: { startGame, placeBid, skipBid, confirmReveal, pickSoloOption, setPhase },
+    actions: { startGame, placeBid, fold, confirmReveal, pickSoloOption, setPhase },
     humanPlayerId: HUMAN_PLAYER_ID,
   };
 }

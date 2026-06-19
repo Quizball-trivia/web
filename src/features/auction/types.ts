@@ -66,6 +66,15 @@ export interface AuctionRound {
   winningBid: number;
   revealed: boolean;
   countdownEndsAt: number | null;
+  // ── Turn-based bidding ──────────────────────────────────────────────
+  /** Players (ids) eligible to bid this round, in turn order. */
+  turnOrder: string[];
+  /** Whose turn it is right now (null once the round is decided). */
+  currentTurnId: string | null;
+  /** Players who have folded out of this player's auction. */
+  foldedIds: string[];
+  /** When the current turn's timer expires (auto-fold). */
+  turnEndsAt: number | null;
 }
 
 export interface SoloPickOption {

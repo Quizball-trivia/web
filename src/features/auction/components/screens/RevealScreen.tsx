@@ -134,8 +134,11 @@ export function RevealScreen({
 
                 {winner && (
                   <div className="relative rounded-[16px] bg-brand-green px-6 py-3 text-center shadow-[0_4px_16px_rgba(56,182,14,0.25)]">
-                    {/* Deal-quality badge drops in tilted on the sold price */}
-                    {stage >= 4 && <DealBadge paid={round.winningBid} value={round.footballer.value} />}
+                    {/* Deal-quality badge — only for YOUR win (it's a you-centric
+                        judgement of your deal; meaningless for an opponent's buy). */}
+                    {stage >= 4 && isHumanWin && (
+                      <DealBadge paid={round.winningBid} value={round.footballer.value} />
+                    )}
                     <div className="text-[10px] font-black uppercase text-white/70" style={poppins}>
                       {t('auctionGame.soldFor')}
                     </div>
