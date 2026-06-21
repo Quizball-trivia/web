@@ -2,7 +2,7 @@
 
 import { motion } from 'motion/react';
 import type { AuctionPlayer, Formation, PositionGroup } from '../../types';
-import { getRemainingSlots } from '../../data';
+import { getRemainingSlots, lastName } from '../../data';
 import { POS_COLORS, poppins } from '../../constants/auction.constants';
 import { useLocale } from '@/contexts/LocaleContext';
 import { PlayerPhoto } from '../shared/PlayerPhoto';
@@ -170,7 +170,7 @@ export function SquadPitch({
                           className={`${nameFs} text-white/90 text-center leading-tight font-semibold`}
                           style={{ maxWidth: circle + 16, ...poppins, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}
                         >
-                          {f.name.split(' ').pop()}
+                          {lastName(f.name)}
                         </motion.span>
                       )}
                     </div>

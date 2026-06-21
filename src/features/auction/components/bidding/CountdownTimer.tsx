@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { BID_COUNTDOWN_MS } from '../../data';
+import { RAISE_TURN_MS } from '../../data';
 
 // Countdown timer styled like the ranked match puck (cyan ring + blue fill +
 // white number) but sized for the card corner, with a BLUE progress bar so it
@@ -10,7 +10,7 @@ import { BID_COUNTDOWN_MS } from '../../data';
 // re-arms (a new bid pushes `endsAt` forward).
 export function CountdownTimer({
   endsAt,
-  totalMs = BID_COUNTDOWN_MS,
+  totalMs = RAISE_TURN_MS,
 }: {
   endsAt: number;
   totalMs?: number;

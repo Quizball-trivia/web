@@ -4,7 +4,8 @@ import { motion } from 'motion/react';
 import type { AuctionGameState, AuctionPlayer } from '../../types';
 import { createEmptyTeam } from '../../data';
 import { useLocale } from '@/contexts/LocaleContext';
-import { ScreenBackdrop, SCREEN_GLOW } from '../shared/ScreenBackdrop';
+import { SCREEN_GLOW } from '../shared/ScreenBackdrop';
+import { AuctionScreen } from '../shared/AuctionScreen';
 import { SquadPitch } from '../pitch/SquadPitch';
 
 /** Intro screen: announces the (shared) formation and shows the empty pitch layout. */
@@ -29,8 +30,7 @@ export function FormationReveal({
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-surface-page-alt p-4">
-      <ScreenBackdrop glow={SCREEN_GLOW.formation} />
+    <AuctionScreen glow={SCREEN_GLOW.formation} className="flex flex-col items-center justify-center p-4">
 
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
@@ -95,6 +95,6 @@ export function FormationReveal({
           {t('auctionGame.startAuction')}
         </motion.button>
       </motion.div>
-    </div>
+    </AuctionScreen>
   );
 }

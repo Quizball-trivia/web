@@ -1,8 +1,12 @@
 import type { Footballer, Formation, AuctionPlayer, AuctionTeam, PositionGroup } from './types';
 
 export const STARTING_BUDGET = 1_000_000_000;
-export const BID_COUNTDOWN_MS = 10_000;
 export const MIN_BID_INCREMENT = 5_000_000;
+// Turn time limits: the opener (first turn, no standing bid) gets longer to read
+// the clues and decide; every turn after is fast. Shared by the game hook (timer
+// scheduling) and the UI (countdown bar) so they can never drift.
+export const OPENING_TURN_MS = 30_000;
+export const RAISE_TURN_MS = 10_000;
 // Delay between each clue reveal during the pre-bid clue-reveal phase.
 // One extra tick of this duration is added after the last clue so players have
 // a beat to read it before bidding opens.
@@ -561,6 +565,18 @@ export function getMaxBid(player: AuctionPlayer): number {
   return Math.max(0, player.budget - (emptySlots - 1) * MIN_PLAYER_COST);
 }
 
+/** Minimum legal bid: a min-increment raise over the standing bid, or the
+ *  starting price when no one has bid yet. Single source of truth shared by the
+ *  bot, human-bid validation, and the bidding UI so they cannot drift. */
+export function getMinBid(round: { highestBid: number; startingPrice: number }): number {
+  return round.highestBid > 0 ? round.highestBid + MIN_BID_INCREMENT : round.startingPrice;
+}
+
+/** Display surname: the last whitespace-separated token of a footballer's name. */
+export function lastName(name: string): string {
+  return name.split(' ').pop() ?? name;
+}
+
 export function formatMoney(amount: number): string {
   if (amount >= 1_000_000_000) {
     const val = amount / 1_000_000_000;
@@ -575,12 +591,5 @@ export function formatMoney(amount: number): string {
   }
   return `$${amount}`;
 }
-
-export const POSITION_LABELS: Record<PositionGroup, string> = {
-  GK: 'Goalkeeper',
-  DEF: 'Defender',
-  MID: 'Midfielder',
-  FWD: 'Forward',
-};
 
 export const POSITION_ORDER: PositionGroup[] = ['GK', 'DEF', 'MID', 'FWD'];

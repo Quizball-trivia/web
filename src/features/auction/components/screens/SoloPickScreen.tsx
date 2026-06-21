@@ -8,7 +8,9 @@ import { formatMoney } from '../../data';
 import { POS_COLORS, AUCTION_PURPLE } from '../../constants/auction.constants';
 import { useLocale } from '@/contexts/LocaleContext';
 import { usePositionLabel } from '../../hooks/usePositionLabel';
-import { ScreenBackdrop, SCREEN_GLOW } from '../shared/ScreenBackdrop';
+import { SCREEN_GLOW } from '../shared/ScreenBackdrop';
+import { AuctionScreen } from '../shared/AuctionScreen';
+import { MoneyChip } from '../shared/MoneyChip';
 import { PlayerPhoto } from '../shared/PlayerPhoto';
 import { FlagChip } from '../shared/FlagChip';
 
@@ -42,8 +44,7 @@ export function SoloPickScreen({
   if (!isHumanPicking) {
     const botPlayer = state.players.find((p) => p.id === pick.playerId);
     return (
-      <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-surface-page-alt p-4">
-        <ScreenBackdrop />
+      <AuctionScreen className="flex flex-col items-center justify-center p-4">
         <div className="relative z-10 text-center">
           <motion.div
             animate={{ rotate: [0, 10, -10, 0] }}
@@ -59,13 +60,12 @@ export function SoloPickScreen({
             })}
           </div>
         </div>
-      </div>
+      </AuctionScreen>
     );
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center overflow-hidden bg-surface-page-alt p-4 pt-[12vh] sm:pt-[14vh]">
-      <ScreenBackdrop glow={SCREEN_GLOW.soloPick} />
+    <AuctionScreen glow={SCREEN_GLOW.soloPick} className="flex flex-col items-center p-4 pt-[12vh] sm:pt-[14vh]">
 
       <div className="relative z-10 flex flex-col items-center gap-6 w-full max-w-2xl">
         <div className="text-center">
@@ -103,9 +103,7 @@ export function SoloPickScreen({
                 </span>
               </div>
             </div>
-            <div className="shrink-0 rounded-lg bg-black/85 px-3 py-1.5 font-poppins text-xl font-black text-brand-yellow">
-              {formatMoney(pick.optionA.footballer.startingPrice)}
-            </div>
+            <MoneyChip amount={pick.optionA.footballer.startingPrice} />
           </motion.button>
 
           {/* Mystery */}
@@ -128,9 +126,7 @@ export function SoloPickScreen({
                 ))}
               </div>
             </div>
-            <div className="shrink-0 rounded-lg bg-black/85 px-3 py-1.5 font-poppins text-xl font-black text-brand-yellow">
-              {formatMoney(pick.optionB.footballer.startingPrice)}
-            </div>
+            <MoneyChip amount={pick.optionB.footballer.startingPrice} />
           </motion.button>
         </div>
 
@@ -155,9 +151,7 @@ export function SoloPickScreen({
             <div className="font-poppins text-sm font-bold text-black/70">
               {t('auctionGame.valueAmount', { amount: formatMoney(pick.optionA.footballer.value) })}
             </div>
-            <div className="rounded-[10px] bg-black/85 px-4 py-1.5 font-poppins text-2xl font-black text-brand-yellow">
-              {formatMoney(pick.optionA.footballer.startingPrice)}
-            </div>
+            <MoneyChip amount={pick.optionA.footballer.startingPrice} size="lg" />
             <div className="flex items-center gap-2">
               <FlagChip country={pick.optionA.footballer.nationality} />
               <span className="font-poppins text-sm font-bold uppercase text-black/70">
@@ -195,12 +189,10 @@ export function SoloPickScreen({
                 </p>
               ))}
             </div>
-            <div className="mt-auto rounded-[10px] bg-black/85 px-4 py-1.5 font-poppins text-2xl font-black text-brand-yellow">
-              {formatMoney(pick.optionB.footballer.startingPrice)}
-            </div>
+            <MoneyChip amount={pick.optionB.footballer.startingPrice} size="lg" className="mt-auto" />
           </motion.button>
         </div>
       </div>
-    </div>
+    </AuctionScreen>
   );
 }

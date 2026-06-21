@@ -7,7 +7,9 @@ import type { AuctionActions } from '../../hooks/useAuctionGame';
 import { formatMoney } from '../../data';
 import { POS_COLORS, poppins } from '../../constants/auction.constants';
 import { useLocale } from '@/contexts/LocaleContext';
-import { ScreenBackdrop, SCREEN_GLOW } from '../shared/ScreenBackdrop';
+import { SCREEN_GLOW } from '../shared/ScreenBackdrop';
+import { AuctionScreen } from '../shared/AuctionScreen';
+import { AuctionPrimaryButton } from '../shared/AuctionPrimaryButton';
 import { SoldFlash } from '../shared/SoldFlash';
 import { MoneyFx } from '../shared/MoneyFx';
 import { DealBadge } from '../shared/DealBadge';
@@ -51,8 +53,7 @@ export function RevealScreen({
     round.footballer.id.length % 2 === 0 ? 'burst' : 'fountain';
 
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden bg-surface-page-alt">
-      <ScreenBackdrop glow={isHumanWin ? SCREEN_GLOW.win : SCREEN_GLOW.soloPick} />
+    <AuctionScreen glow={isHumanWin ? SCREEN_GLOW.win : SCREEN_GLOW.soloPick} className="flex flex-col">
 
       {/* SOLD! flash */}
       <SoldFlash visible={showSold && round.highestBid > 0} />
@@ -193,17 +194,13 @@ export function RevealScreen({
               transition={{ delay: 0.3 }}
               className="px-4 pb-6"
             >
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={actions.confirmReveal}
-                className="mx-auto flex h-14 w-full max-w-sm items-center justify-center rounded-[20px] bg-brand-green font-poppins text-lg font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none"
-              >
+              <AuctionPrimaryButton onClick={actions.confirmReveal} className="mx-auto">
                 {t('auctionGame.nextRound')}
-              </motion.button>
+              </AuctionPrimaryButton>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </AuctionScreen>
   );
 }
