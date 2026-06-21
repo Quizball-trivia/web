@@ -160,6 +160,117 @@ describe('auction realtime adapter', () => {
       imageUrl: 'https://example.com/player.png',
     });
   });
+
+  it('maps solo-pick snapshots with one revealed option and one mystery option', () => {
+    const publicState = matchState({
+      phase: 'solo_pick',
+      currentRound: null,
+      soloPick: {
+        playerSeatId: 'seat-human',
+        positionGroup: 'MID',
+        optionA: {
+          type: 'revealed',
+          footballer: {
+            id: 'card-a',
+            name: 'Known Midfielder',
+            positionGroup: 'MID',
+            trueValue: 60_000_000,
+            startingPrice: 20_000_000,
+            clues: ['Won a continental final', 'Captained his club', 'Moved leagues in 2022'],
+            nationality: 'Spain',
+            imageUrl: 'https://example.com/known-midfielder.png',
+          },
+        },
+        optionB: {
+          type: 'mystery',
+          footballer: {
+            positionGroup: 'MID',
+            startingPrice: 20_000_000,
+            clues: ['Developed at a famous academy', 'Played in a European semifinal'],
+          },
+          clues: ['Developed at a famous academy', 'Played in a European semifinal'],
+        },
+        selectedOption: null,
+        startedAt: '2026-06-20T10:01:00.000Z',
+      },
+    });
+
+    const clientState = toClientAuctionState(publicState);
+
+    expect(clientState.phase).toBe('solo-pick');
+    expect(clientState.soloPick).toMatchObject({
+      playerId: 'seat-human',
+      positionGroup: 'MID',
+      optionA: {
+        type: 'revealed',
+        footballer: {
+          id: 'card-a',
+          name: 'Known Midfielder',
+          value: 60_000_000,
+          imageUrl: 'https://example.com/known-midfielder.png',
+        },
+      },
+      optionB: {
+        type: 'mystery',
+        footballer: {
+          name: 'Mystery Player',
+          value: 0,
+          startingPrice: 20_000_000,
+        },
+      },
+    });
+    expect(clientState.soloPick?.optionB.clues).toEqual([
+      'Developed at a famous academy',
+      'Played in a European semifinal',
+    ]);
+  });
+
+  it('maps finished snapshots to results with completed rounds and filled squads', () => {
+    const completedRound = round({
+      revealed: true,
+      clueRevealIndex: 3,
+      winnerSeatId: 'seat-human',
+      winningBid: 45_000_000,
+      footballer: {
+        id: 'card-1',
+        name: 'Example Forward',
+        positionGroup: 'FWD',
+        trueValue: 80_000_000,
+        startingPrice: 20_000_000,
+        clues: ['Clue one', 'Clue two', 'Clue three'],
+      },
+      revealedClues: ['Clue one', 'Clue two', 'Clue three'],
+    });
+    const human = player('seat-human', 'You', 'user-1');
+    human.team.slots.FWD = [completedRound.footballer];
+
+    const clientState = toClientAuctionState(matchState({
+      phase: 'finished',
+      seats: [human, player('seat-bot-1', 'Bot 1', null), player('seat-bot-2', 'Bot 2', null)],
+      currentRound: null,
+      completedRounds: [completedRound],
+      rankings: [{
+        seatId: 'seat-human',
+        userId: 'user-1',
+        isBot: false,
+        displayName: 'You',
+        rank: 1,
+        isComplete: false,
+        totalTrueValue: 80_000_000,
+        budgetRemaining: 955_000_000,
+        player: human,
+      }],
+    }));
+
+    expect(clientState.phase).toBe('results');
+    expect(clientState.currentRound).toBeNull();
+    expect(clientState.completedRounds).toHaveLength(1);
+    expect(clientState.players[0].team.slots.FWD[0]).toMatchObject({
+      id: 'card-1',
+      name: 'Example Forward',
+      value: 80_000_000,
+    });
+  });
 });
 
 describe('auction realtime reducer', () => {
@@ -246,5 +357,36 @@ describe('auction realtime reducer', () => {
     expect(next.versionGapDetected).toBe(true);
     expect(next.publicState?.version).toBe(4);
     expect(next.publicState?.currentRound?.highestBid).toBe(40_000_000);
+  });
+
+  it('applies squad updates to the matching seat without replacing other seats', () => {
+    const current = applyAuctionRealtimeEvent(EMPTY_AUCTION_REALTIME_STATE, {
+      type: 'match_started',
+      payload: { matchId: 'match-1', locale: 'en', state: matchState({ version: 1 }) },
+    });
+    const updatedHuman = player('seat-human', 'You', 'user-1');
+    updatedHuman.budget = 955_000_000;
+    updatedHuman.team.slots.FWD = [{
+      id: 'card-1',
+      name: 'Example Forward',
+      positionGroup: 'FWD',
+      trueValue: 80_000_000,
+      startingPrice: 20_000_000,
+      clues: ['Clue one', 'Clue two', 'Clue three'],
+    }];
+
+    const next = applyAuctionRealtimeEvent(current, {
+      type: 'squad_updated',
+      payload: {
+        matchId: 'match-1',
+        seatId: 'seat-human',
+        player: updatedHuman,
+        stateVersion: 2,
+      },
+    });
+
+    expect(next.publicState?.seats.find((seat) => seat.seatId === 'seat-human')?.budget).toBe(955_000_000);
+    expect(next.publicState?.seats.find((seat) => seat.seatId === 'seat-human')?.team.slots.FWD).toHaveLength(1);
+    expect(next.publicState?.seats.find((seat) => seat.seatId === 'seat-bot-1')?.budget).toBe(1_000_000_000);
   });
 });
