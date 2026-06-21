@@ -75,7 +75,7 @@ function player(seatId: string, displayName: string, userId: string | null): Pub
   };
 }
 
-function round(): PublicAuctionRoundState {
+function round(overrides: Partial<PublicAuctionRoundState> = {}): PublicAuctionRoundState {
   return {
     roundId: 'round-1',
     roundIndex: 1,
@@ -100,10 +100,11 @@ function round(): PublicAuctionRoundState {
     startedAt: '2026-06-20T10:00:00.000Z',
     updatedAt: '2026-06-20T10:00:00.000Z',
     revealedClues: [],
+    ...overrides,
   };
 }
 
-function matchState(): PublicAuctionMatchState {
+function matchState(overrides: Partial<PublicAuctionMatchState> = {}): PublicAuctionMatchState {
   return {
     matchId: 'match-1',
     version: 1,
@@ -122,6 +123,7 @@ function matchState(): PublicAuctionMatchState {
     rankings: null,
     createdAt: '2026-06-20T10:00:00.000Z',
     updatedAt: '2026-06-20T10:00:00.000Z',
+    ...overrides,
   };
 }
 
@@ -219,6 +221,154 @@ describe('useRealtimeAuctionMatch', () => {
       matchId: 'match-1',
       option: 'B',
     });
+  });
+
+  it('applies a server event sequence through reveal and results', () => {
+    const { result } = renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      selfUserId: 'user-1',
+      locale: 'en',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    act(() => {
+      socketMock.trigger('auction:match_started', {
+        matchId: 'match-1',
+        locale: 'en',
+        state: matchState(),
+      });
+    });
+
+    act(() => {
+      socketMock.trigger('auction:clue_revealed', {
+        matchId: 'match-1',
+        roundId: 'round-1',
+        clueIndex: 0,
+        clue: 'Scored in a Champions League final',
+        round: round({
+          clueRevealIndex: 1,
+          revealedClues: ['Scored in a Champions League final'],
+          footballer: {
+            positionGroup: 'FWD',
+            startingPrice: 20_000_000,
+            clues: ['Scored in a Champions League final'],
+          },
+        }),
+        stateVersion: 2,
+      });
+    });
+
+    expect(result.current.state?.phase).toBe('clue-reveal');
+    expect(result.current.state?.currentRound?.footballer.name).toBe('Mystery Player');
+    expect(result.current.state?.currentRound?.clues).toEqual([
+      'Scored in a Champions League final',
+      '',
+      '',
+    ]);
+
+    act(() => {
+      socketMock.trigger('auction:turn_started', {
+        matchId: 'match-1',
+        roundId: 'round-1',
+        currentTurnSeatId: 'seat-human',
+        minBid: 20_000_000,
+        maxBid: 1_000_000_000,
+        turnEndsAt: '2026-06-20T10:00:05.000Z',
+        round: round({
+          clueRevealIndex: 1,
+          revealedClues: ['Scored in a Champions League final'],
+          currentTurnSeatId: 'seat-human',
+          turnEndsAt: '2026-06-20T10:00:05.000Z',
+        }),
+        stateVersion: 3,
+      });
+    });
+
+    expect(result.current.state?.phase).toBe('bidding');
+    expect(result.current.state?.currentRound?.currentTurnId).toBe('seat-human');
+    expect(result.current.state?.currentRound?.turnEndsAt).toBe(Date.parse('2026-06-20T10:00:05.000Z'));
+
+    const revealedRound = round({
+      revealed: true,
+      clueRevealIndex: 3,
+      winnerSeatId: 'seat-human',
+      winningBid: 70_000_000,
+      highestBidderSeatId: 'seat-human',
+      highestBid: 70_000_000,
+      revealedClues: [
+        'Scored in a Champions League final',
+        'Won the league with a German club',
+        'Moved to England before turning 23',
+      ],
+      footballer: {
+        id: 'card-1',
+        clueCardId: 'clue-card-1',
+        name: 'Example Forward',
+        positionGroup: 'FWD',
+        trueValue: 120_000_000,
+        startingPrice: 20_000_000,
+        clues: [
+          'Scored in a Champions League final',
+          'Won the league with a German club',
+          'Moved to England before turning 23',
+        ],
+        imageUrl: 'https://example.com/example-forward.png',
+        currentClub: 'Example FC',
+        nationality: 'Norway',
+      },
+    });
+
+    act(() => {
+      socketMock.trigger('auction:round_revealed', {
+        matchId: 'match-1',
+        roundId: 'round-1',
+        winnerSeatId: 'seat-human',
+        winningBid: 70_000_000,
+        round: revealedRound,
+        stateVersion: 4,
+      });
+    });
+
+    expect(result.current.state?.phase).toBe('reveal');
+    expect(result.current.state?.currentRound?.footballer).toMatchObject({
+      id: 'card-1',
+      name: 'Example Forward',
+      value: 120_000_000,
+      imageUrl: 'https://example.com/example-forward.png',
+    });
+    expect(result.current.state?.currentRound?.winnerId).toBe('seat-human');
+
+    const finishedState = matchState({
+      version: 5,
+      phase: 'finished',
+      currentRound: null,
+      completedRounds: [revealedRound],
+      rankings: [{
+        seatId: 'seat-human',
+        userId: 'user-1',
+        isBot: false,
+        displayName: 'You',
+        rank: 1,
+        isComplete: false,
+        totalTrueValue: 120_000_000,
+        budgetRemaining: 930_000_000,
+        player: player('seat-human', 'You', 'user-1'),
+      }],
+    });
+
+    act(() => {
+      socketMock.trigger('auction:match_finished', {
+        matchId: 'match-1',
+        rankings: finishedState.rankings,
+        winnerSeatId: 'seat-human',
+        state: finishedState,
+        stateVersion: 5,
+      });
+    });
+
+    expect(result.current.status).toBe('finished');
+    expect(result.current.state?.phase).toBe('results');
+    expect(result.current.state?.completedRounds).toHaveLength(1);
   });
 
   it('surfaces auction errors without logging sensitive metadata', () => {
