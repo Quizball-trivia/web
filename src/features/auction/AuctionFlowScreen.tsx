@@ -10,9 +10,14 @@ import { useRealtimeAuctionMatch } from './realtime/useRealtimeAuctionMatch';
 import { AuctionShowdownScreen } from './components/AuctionShowdownScreen';
 import { AuctionGameScreen } from './components/AuctionGameScreen';
 import { AuctionResultsScreen } from './components/AuctionResultsScreen';
+import { FormationReveal } from './components/screens/FormationReveal';
+import { FORMATIONS } from './data';
+import type { AuctionGameState, Formation } from './types';
 import type { AuctionFormationName } from '@/lib/realtime/socket.types';
 
-const LIVE_AUCTION_FORMATION: AuctionFormationName = '4-3-3';
+const LIVE_AUCTION_FORMATION_NAME: AuctionFormationName = '4-3-3';
+const LIVE_AUCTION_FORMATION =
+  FORMATIONS.find((formation) => formation.name === LIVE_AUCTION_FORMATION_NAME) ?? FORMATIONS[0];
 
 interface AuctionFlowScreenProps {
   username: string;
@@ -118,9 +123,10 @@ function AuctionMockFlowScreen({ username, avatarSeed }: Omit<AuctionFlowScreenP
 function AuctionRealtimeFlowScreen({ avatarSeed }: Omit<AuctionFlowScreenProps, 'mode'>) {
   const router = useRouter();
   const { locale } = useLocale();
+  const [auctionStarted, setAuctionStarted] = useState(false);
   const authUser = useAuthStore((store) => store.user);
   const authStatus = useAuthStore((store) => store.status);
-  const enabled = authStatus === 'authenticated' && Boolean(authUser?.id);
+  const enabled = auctionStarted && authStatus === 'authenticated' && Boolean(authUser?.id);
   const authRequired =
     authStatus === 'anonymous' ||
     (authStatus === 'authenticated' && !authUser?.id);
@@ -135,7 +141,7 @@ function AuctionRealtimeFlowScreen({ avatarSeed }: Omit<AuctionFlowScreenProps, 
     enabled,
     selfUserId: authUser?.id ?? null,
     locale: locale === 'ka' ? 'ka' : 'en',
-    formation: LIVE_AUCTION_FORMATION,
+    formation: LIVE_AUCTION_FORMATION_NAME,
     humanAvatarSeed: avatarSeed,
   });
 
@@ -143,12 +149,22 @@ function AuctionRealtimeFlowScreen({ avatarSeed }: Omit<AuctionFlowScreenProps, 
     humanPlayerId ?? state?.players.find((player) => !player.isBot)?.id ?? state?.players[0]?.id ?? null;
 
   const handlePlayAgain = useCallback(() => {
+    setAuctionStarted(true);
     actions.startGame(3);
   }, [actions]);
 
   const handleExit = useCallback(() => {
     router.push('/play');
   }, [router]);
+
+  if (!auctionStarted && authStatus === 'authenticated' && authUser?.id) {
+    return (
+      <FormationReveal
+        state={createLiveFormationPreviewState(LIVE_AUCTION_FORMATION)}
+        onContinue={() => setAuctionStarted(true)}
+      />
+    );
+  }
 
   if (!state || !resolvedHumanPlayerId || status === 'auth_required') {
     return (
@@ -196,6 +212,19 @@ function AuctionRealtimeFlowScreen({ avatarSeed }: Omit<AuctionFlowScreenProps, 
   }
 
   return <MockSearchingScreen error={error} />;
+}
+
+function createLiveFormationPreviewState(formation: Formation): AuctionGameState {
+  return {
+    phase: 'formation',
+    players: [],
+    formation,
+    currentRound: null,
+    roundIndex: 0,
+    totalRounds: 0,
+    completedRounds: [],
+    soloPick: null,
+  };
 }
 
 function MockSearchingScreen({ error }: { error?: string | null }) {
