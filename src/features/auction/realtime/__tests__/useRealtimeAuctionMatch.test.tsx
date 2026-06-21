@@ -251,7 +251,7 @@ describe('useRealtimeAuctionMatch', () => {
     expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en', formation: '4-3-3' });
   });
 
-  it('hydrates match state and emits bid/fold/solo-pick actions for the active match', async () => {
+  it('hydrates match state and blocks duplicate bid/fold emits while a turn action is pending', async () => {
     const { result } = renderHook(() => useRealtimeAuctionMatch({
       enabled: true,
       selfUserId: 'user-1',
@@ -264,27 +264,82 @@ describe('useRealtimeAuctionMatch', () => {
       socketMock.trigger('auction:match_started', {
         matchId: 'match-1',
         locale: 'en',
-        state: matchState(),
+        state: matchState({
+          phase: 'bidding',
+          currentRound: round({
+            currentTurnSeatId: 'seat-human',
+            turnEndsAt: new Date(Date.now() + 5_000).toISOString(),
+          }),
+        }),
       });
     });
 
     expect(result.current.matchId).toBe('match-1');
     expect(result.current.humanPlayerId).toBe('seat-human');
-    expect(result.current.state?.phase).toBe('clue-reveal');
+    expect(result.current.state?.phase).toBe('bidding');
 
     act(() => {
       result.current.actions.placeBid(25_000_000);
+      result.current.actions.placeBid(30_000_000);
       result.current.actions.fold();
-      result.current.actions.pickSoloOption('B');
     });
 
-    expect(socketMock.emit).toHaveBeenCalledWith('auction:bid', {
+    expect(socketMock.emit.mock.calls.filter(([event]) => event === 'auction:bid')).toEqual([
+      ['auction:bid', { matchId: 'match-1', amount: 25_000_000 }],
+    ]);
+    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:fold', {
       matchId: 'match-1',
-      amount: 25_000_000,
     });
+    expect(result.current.actions.pendingTurnAction).toMatchObject({
+      kind: 'bid',
+      amount: 25_000_000,
+      matchId: 'match-1',
+      roundId: 'round-1',
+    });
+
+    act(() => {
+      socketMock.trigger('auction:bid_accepted', {
+        matchId: 'match-1',
+        roundId: 'round-1',
+        seatId: 'seat-human',
+        amount: 25_000_000,
+        round: round({
+          bids: [{ seatId: 'seat-human', amount: 25_000_000, placedAt: '2026-06-20T10:00:01.000Z' }],
+          highestBidderSeatId: 'seat-human',
+          highestBid: 25_000_000,
+        }),
+        stateVersion: 2,
+      });
+    });
+
+    expect(result.current.actions.pendingTurnAction).toBeNull();
+
+    act(() => {
+      result.current.actions.fold();
+    });
+
     expect(socketMock.emit).toHaveBeenCalledWith('auction:fold', {
       matchId: 'match-1',
     });
+    expect(result.current.actions.pendingTurnAction).toMatchObject({
+      kind: 'fold',
+      matchId: 'match-1',
+      roundId: 'round-1',
+    });
+
+    act(() => {
+      socketMock.trigger('auction:error', {
+        code: 'auction_not_your_turn',
+        message: 'Not your turn',
+      });
+    });
+
+    expect(result.current.actions.pendingTurnAction).toBeNull();
+
+    act(() => {
+      result.current.actions.pickSoloOption('B');
+    });
+
     expect(socketMock.emit).toHaveBeenCalledWith('auction:solo_pick_select', {
       matchId: 'match-1',
       option: 'B',

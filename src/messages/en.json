@@ -1493,6 +1493,8 @@
     "watching": "Watching...",
     "yourTurn": "Your turn",
     "fold": "Fold",
+    "bidPlacedWaiting": "Bid placed - waiting...",
+    "foldPlacedWaiting": "Fold sent - waiting...",
     "youFolded": "You folded",
     "waitingForTurn": "{name}'s turn...",
     "youBadge": "YOU",

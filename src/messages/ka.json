@@ -1493,6 +1493,8 @@
     "watching": "უყურებ...",
     "yourTurn": "შენი სვლა",
     "fold": "პასი",
+    "bidPlacedWaiting": "ფსონი გაიგზავნა - ველოდებით...",
+    "foldPlacedWaiting": "პასი გაიგზავნა - ველოდებით...",
     "youFolded": "შენ დაიხიე",
     "waitingForTurn": "{name}-ის სვლა...",
     "youBadge": "შენ",

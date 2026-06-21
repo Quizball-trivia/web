@@ -97,6 +97,7 @@ export function BiddingScreen({
     isBidding &&
     round.bids.some((b) => b.playerId === humanPlayerId) &&
     round.highestBidderId !== humanPlayerId;
+  const pendingTurnAction = actions.pendingTurnAction ?? null;
 
   return (
     <AuctionScreen glow={SCREEN_GLOW.bidding} className="flex flex-col">
@@ -318,25 +319,36 @@ export function BiddingScreen({
               {/* Turn-based bid controls */}
               {myTurn ? (
                 <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="w-full space-y-2">
-                  <div className="text-center font-poppins text-xs font-black uppercase tracking-wide text-brand-yellow">
-                    {t('auctionGame.yourTurn')}
-                  </div>
-                  <QuickBidPanel
-                    key={minBid}
-                    minBid={minBid}
-                    maxBid={maxBid}
-                    currentBudget={humanPlayer.budget}
-                    onBid={actions.placeBid}
-                  />
-                  {/* Fold only when there's a standing bid — the opener must bid. */}
-                  {!mustOpen && (
-                    <button
-                      type="button"
-                      onClick={actions.fold}
-                      className="flex h-11 w-full items-center justify-center rounded-[12px] border-2 border-brand-red/40 bg-brand-red/10 font-poppins text-sm font-black uppercase text-brand-red transition-colors hover:bg-brand-red/20"
-                    >
-                      {t('auctionGame.fold')}
-                    </button>
+                  {pendingTurnAction ? (
+                    <div className="flex items-center justify-center gap-2 rounded-[14px] border-2 border-white/5 bg-white/[0.03] px-5 py-3 text-center font-poppins text-sm font-semibold uppercase text-white/45">
+                      <span className="size-3 shrink-0 animate-spin rounded-full border-2 border-white/15 border-t-brand-yellow" />
+                      {pendingTurnAction.kind === 'bid'
+                        ? t('auctionGame.bidPlacedWaiting')
+                        : t('auctionGame.foldPlacedWaiting')}
+                    </div>
+                  ) : (
+                    <>
+                      <div className="text-center font-poppins text-xs font-black uppercase tracking-wide text-brand-yellow">
+                        {t('auctionGame.yourTurn')}
+                      </div>
+                      <QuickBidPanel
+                        key={minBid}
+                        minBid={minBid}
+                        maxBid={maxBid}
+                        currentBudget={humanPlayer.budget}
+                        onBid={actions.placeBid}
+                      />
+                      {/* Fold only when there's a standing bid — the opener must bid. */}
+                      {!mustOpen && (
+                        <button
+                          type="button"
+                          onClick={actions.fold}
+                          className="flex h-11 w-full items-center justify-center rounded-[12px] border-2 border-brand-red/40 bg-brand-red/10 font-poppins text-sm font-black uppercase text-brand-red transition-colors hover:bg-brand-red/20"
+                        >
+                          {t('auctionGame.fold')}
+                        </button>
+                      )}
+                    </>
                   )}
                 </motion.div>
               ) : isBidding ? (

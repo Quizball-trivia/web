@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRealtimeConnection } from '@/lib/realtime/useRealtimeConnection';
 import { reconnectSocket } from '@/lib/realtime/socket-client';
 import { logger } from '@/utils/logger';
-import type { AuctionActions } from '../hooks/useAuctionGame';
+import type { AuctionActions, AuctionPendingTurnAction } from '../hooks/useAuctionGame';
 import type { AuctionGameState } from '../types';
 import type {
   AuctionBiddingStartedPayload,
@@ -77,12 +77,14 @@ export function useRealtimeAuctionMatch({
     EMPTY_AUCTION_REALTIME_STATE,
   );
   const [serverTimeOffsetMs, setServerTimeOffsetMs] = useState<number | null>(null);
+  const [pendingTurnAction, setPendingTurnAction] = useState<AuctionPendingTurnAction | null>(null);
   const [error, setError] = useState<string | null>(null);
   const startRequestedRef = useRef(false);
   const autoStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const versionGapReconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recoveredVersionGapKeyRef = useRef<string | null>(null);
   const serverTimeOffsetMsRef = useRef<number | null>(null);
+  const pendingTurnActionRef = useRef<AuctionPendingTurnAction | null>(null);
 
   const publicState = realtimeState.publicState;
   const matchId = publicState?.matchId ?? null;
@@ -111,6 +113,11 @@ export function useRealtimeAuctionMatch({
     return offset;
   }, []);
 
+  const setPendingTurnActionValue = useCallback((next: AuctionPendingTurnAction | null) => {
+    pendingTurnActionRef.current = next;
+    setPendingTurnAction(next);
+  }, []);
+
   const requestStart = useCallback(() => {
     if (!enabled || !selfUserId || !socket.connected) return;
     if (autoStartTimerRef.current) {
@@ -120,6 +127,7 @@ export function useRealtimeAuctionMatch({
     startRequestedRef.current = true;
     serverTimeOffsetMsRef.current = null;
     setServerTimeOffsetMs(null);
+    setPendingTurnActionValue(null);
     setError(null);
     setRealtimeState(EMPTY_AUCTION_REALTIME_STATE);
     socket.emit('auction:start_ai_match', { locale, formation });
@@ -155,6 +163,7 @@ export function useRealtimeAuctionMatch({
         setRealtimeState(EMPTY_AUCTION_REALTIME_STATE);
         serverTimeOffsetMsRef.current = null;
         setServerTimeOffsetMs(null);
+        setPendingTurnActionValue(null);
         setError(null);
       });
       return;
@@ -200,6 +209,13 @@ export function useRealtimeAuctionMatch({
   }, [enabled, isConnected, publicState, realtimeState.versionGapDetected]);
 
   useEffect(() => {
+    const clearPendingForMatch = (eventMatchId: string | null | undefined) => {
+      const pending = pendingTurnActionRef.current;
+      if (pending && (!eventMatchId || pending.matchId === eventMatchId)) {
+        setPendingTurnActionValue(null);
+      }
+    };
+
     const apply = <T extends Parameters<typeof applyAuctionRealtimeEvent>[1]>(event: T) => {
       const eventServerTimeOffsetMs = updateServerTimeOffset(getAuctionEventServerNow(event));
       setRealtimeState((prev) => {
@@ -225,10 +241,14 @@ export function useRealtimeAuctionMatch({
           return prev;
         }
       });
+      if (shouldClearPendingAfterEvent(event)) {
+        clearPendingForMatch(event.payload.matchId);
+      }
       setError(null);
     };
 
     const onError = (payload: AuctionErrorPayload) => {
+      clearPendingForMatch(null);
       setError(`${payload.message} (${payload.code})`);
     };
     const onMatchStarted = (payload: AuctionMatchStartedPayload) =>
@@ -293,7 +313,7 @@ export function useRealtimeAuctionMatch({
       socket.off('auction:solo_pick_selected', onSoloPickSelected);
       socket.off('auction:match_finished', onMatchFinished);
     };
-  }, [humanAvatarSeed, selfUserId, socket, updateServerTimeOffset]);
+  }, [humanAvatarSeed, selfUserId, setPendingTurnActionValue, socket, updateServerTimeOffset]);
 
   const actions = useMemo<AuctionActions>(() => ({
     startGame: () => {
@@ -302,10 +322,23 @@ export function useRealtimeAuctionMatch({
     },
     placeBid: (amount: number) => {
       if (!matchId) return;
+      if (pendingTurnActionRef.current) return;
+      setPendingTurnActionValue({
+        kind: 'bid',
+        amount,
+        matchId,
+        roundId: publicState?.currentRound?.roundId ?? null,
+      });
       socket.emit('auction:bid', { matchId, amount });
     },
     fold: () => {
       if (!matchId) return;
+      if (pendingTurnActionRef.current) return;
+      setPendingTurnActionValue({
+        kind: 'fold',
+        matchId,
+        roundId: publicState?.currentRound?.roundId ?? null,
+      });
       socket.emit('auction:fold', { matchId });
     },
     confirmReveal: () => {},
@@ -314,7 +347,8 @@ export function useRealtimeAuctionMatch({
       socket.emit('auction:solo_pick_select', { matchId, option });
     },
     setPhase: () => {},
-  }), [matchId, requestStart, socket]);
+    pendingTurnAction,
+  }), [matchId, pendingTurnAction, publicState?.currentRound?.roundId, requestStart, setPendingTurnActionValue, socket]);
 
   const status = getStatus({
     enabled,
@@ -343,6 +377,18 @@ function computeAuctionServerTimeOffsetMs(serverNow: string | undefined, receive
 
 function getAuctionEventServerNow(event: Parameters<typeof applyAuctionRealtimeEvent>[1]): string | undefined {
   return 'serverNow' in event.payload ? event.payload.serverNow : undefined;
+}
+
+function shouldClearPendingAfterEvent(event: Parameters<typeof applyAuctionRealtimeEvent>[1]): boolean {
+  return (
+    event.type === 'bid_accepted' ||
+    event.type === 'fold_accepted' ||
+    event.type === 'turn_started' ||
+    event.type === 'turn_timeout' ||
+    event.type === 'round_revealed' ||
+    event.type === 'state' ||
+    event.type === 'match_finished'
+  );
 }
 
 function getStatus({

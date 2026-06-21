@@ -36,6 +36,10 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+export type AuctionPendingTurnAction =
+  | { kind: 'bid'; amount: number; matchId: string; roundId: string | null }
+  | { kind: 'fold'; matchId: string; roundId: string | null };
+
 export interface AuctionActions {
   startGame: (playerCount?: number) => void;
   placeBid: (amount: number) => void;
@@ -43,6 +47,7 @@ export interface AuctionActions {
   confirmReveal: () => void;
   pickSoloOption: (option: 'A' | 'B') => void;
   setPhase: (phase: AuctionPhase) => void;
+  pendingTurnAction?: AuctionPendingTurnAction | null;
 }
 
 const HUMAN_PLAYER_ID = 'human-player';
