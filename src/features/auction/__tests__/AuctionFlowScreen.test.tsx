@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { UseRealtimeAuctionMatchParams } from '../realtime/useRealtimeAuctionMatch';
 import { AuctionFlowScreen } from '../AuctionFlowScreen';
 
@@ -18,6 +18,12 @@ vi.mock('@/contexts/LocaleContext', () => ({
       if (key === 'auctionGame.lookingForOpponents') return `Looking for ${String(params?.count ?? 0)} opponents`;
       if (key === 'common.reconnecting') return 'Reconnecting...';
       if (key === 'common.connectionBad') return 'Connection problem';
+      if (key === 'auctionGame.auctionPaused') return 'Auction paused';
+      if (key === 'auctionGame.playerDisconnected') return 'Player disconnected';
+      if (key === 'auctionGame.playerDisconnectedContinueIfNotReturn') return `Continues in ${String(params?.seconds ?? 0)}s`;
+      if (key === 'auctionGame.lastReconnect') return 'Last reconnect';
+      if (key === 'auctionGame.reconnectsLeftOne') return `${String(params?.count ?? 0)} reconnect left`;
+      if (key === 'auctionGame.reconnectsLeftMany') return `${String(params?.count ?? 0)} reconnects left`;
       return key;
     },
   }),
@@ -65,6 +71,16 @@ const realtimeMock = vi.hoisted(() => ({
     status?: string;
     error?: string | null;
     versionGapDetected?: boolean;
+    pause?: {
+      matchId: string;
+      seatId: string;
+      userId: string;
+      pauseUntil: string;
+      pauseUntilMs: number;
+      graceMs: number;
+      remainingReconnects: number;
+      reason: 'disconnect' | 'reconnect_limit' | 'disconnect_timeout';
+    } | null;
   },
 }));
 
@@ -86,6 +102,7 @@ vi.mock('../realtime/useRealtimeAuctionMatch', () => ({
         status: 'connected',
         error: null,
         versionGapDetected: false,
+        pause: null,
         ...realtimeMock.result,
       };
     }
@@ -105,6 +122,7 @@ vi.mock('../realtime/useRealtimeAuctionMatch', () => ({
       error: null,
       isConnected: params.enabled,
       versionGapDetected: false,
+      pause: null,
     };
   },
 }));
@@ -155,12 +173,17 @@ describe('AuctionFlowScreen live mode', () => {
     };
   });
 
-  it('waits on the formation screen before enabling the realtime Auction match', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('waits on the formation screen before auto-starting a new realtime Auction match', () => {
     render(<AuctionFlowScreen username="Player" avatarSeed="avatar-1" mode="live" />);
 
     expect(screen.getByTestId('formation-start')).toHaveTextContent('Start 4-3-3');
     expect(realtimeMock.calls.at(-1)).toMatchObject({
-      enabled: false,
+      enabled: true,
+      autoStart: false,
       selfUserId: 'user-1',
       locale: 'en',
       formation: '4-3-3',
@@ -170,6 +193,7 @@ describe('AuctionFlowScreen live mode', () => {
 
     expect(realtimeMock.calls.at(-1)).toMatchObject({
       enabled: true,
+      autoStart: true,
       selfUserId: 'user-1',
       locale: 'en',
       formation: '4-3-3',
@@ -209,9 +233,56 @@ describe('AuctionFlowScreen live mode', () => {
     };
 
     render(<AuctionFlowScreen username="Player" avatarSeed="avatar-1" mode="live" />);
-    fireEvent.click(screen.getByTestId('formation-start'));
 
     expect(screen.getByTestId('auction-game')).toHaveAttribute('data-server-driven-transitions', 'true');
     expect(screen.getByText('Reconnecting...')).toBeInTheDocument();
+  });
+
+  it('renders a rehydrated active match immediately after reload instead of blocking on formation', () => {
+    realtimeMock.result = {
+      state: {
+        phase: 'bidding',
+        players: [{ id: 'seat-human', isBot: false }],
+      },
+      humanPlayerId: 'seat-human',
+    };
+
+    render(<AuctionFlowScreen username="Player" avatarSeed="avatar-1" mode="live" />);
+
+    expect(screen.queryByTestId('formation-start')).not.toBeInTheDocument();
+    expect(screen.getByTestId('auction-game')).toBeInTheDocument();
+    expect(realtimeMock.calls.at(-1)).toMatchObject({
+      enabled: true,
+      autoStart: false,
+      selfUserId: 'user-1',
+    });
+  });
+
+  it('shows a live pause overlay when the server pauses for a disconnected auction player', () => {
+    vi.spyOn(Date, 'now').mockReturnValue(1_000);
+    realtimeMock.result = {
+      state: {
+        phase: 'bidding',
+        players: [{ id: 'seat-human', isBot: false }],
+      },
+      humanPlayerId: 'seat-human',
+      pause: {
+        matchId: 'match-1',
+        seatId: 'seat-human-2',
+        userId: 'user-2',
+        pauseUntil: new Date(31_000).toISOString(),
+        pauseUntilMs: 31_000,
+        graceMs: 30_000,
+        remainingReconnects: 2,
+        reason: 'disconnect',
+      },
+    };
+
+    render(<AuctionFlowScreen username="Player" avatarSeed="avatar-1" mode="live" />);
+
+    expect(screen.getByText('Auction paused')).toBeInTheDocument();
+    expect(screen.getByText('Player disconnected')).toBeInTheDocument();
+    expect(screen.getByText('Continues in 30s')).toBeInTheDocument();
+    expect(screen.getByText('2 reconnects left')).toBeInTheDocument();
   });
 });

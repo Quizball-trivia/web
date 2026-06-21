@@ -12,6 +12,10 @@ import type {
   AuctionClueRevealedPayload,
   AuctionErrorPayload,
   AuctionFoldAcceptedPayload,
+  AuctionOpponentDisconnectedPayload,
+  AuctionPausedPayload,
+  AuctionPlayerForfeitedPayload,
+  AuctionResumePayload,
   AuctionWaitingForReadyPayload,
   AuctionMatchFinishedPayload,
   AuctionMatchStartedPayload,
@@ -49,6 +53,7 @@ type AuctionConnectionStatus =
 
 export interface UseRealtimeAuctionMatchParams {
   enabled: boolean;
+  autoStart?: boolean;
   selfUserId: string | null;
   locale: 'en' | 'ka';
   formation?: AuctionFormationName;
@@ -65,14 +70,27 @@ export interface UseRealtimeAuctionMatchResult {
   isConnected: boolean;
   versionGapDetected: boolean;
   waitingForReady: AuctionWaitingForReadyState | null;
+  pause: AuctionPauseState | null;
 }
 
 export type AuctionWaitingForReadyState = AuctionWaitingForReadyPayload & {
   forceStartsAtMs: number;
 };
 
+export type AuctionPauseState = {
+  matchId: string;
+  seatId: string;
+  userId: string;
+  pauseUntil: string;
+  pauseUntilMs: number;
+  graceMs: number;
+  remainingReconnects: number;
+  reason: AuctionPausedPayload['reason'] | AuctionPlayerForfeitedPayload['reason'];
+};
+
 export function useRealtimeAuctionMatch({
   enabled,
+  autoStart = true,
   selfUserId,
   locale,
   formation,
@@ -86,6 +104,7 @@ export function useRealtimeAuctionMatch({
   const [serverTimeOffsetMs, setServerTimeOffsetMs] = useState<number | null>(null);
   const [pendingTurnAction, setPendingTurnAction] = useState<AuctionPendingTurnAction | null>(null);
   const [waitingForReady, setWaitingForReady] = useState<AuctionWaitingForReadyState | null>(null);
+  const [pause, setPause] = useState<AuctionPauseState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const startRequestedRef = useRef(false);
   const autoStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -177,11 +196,12 @@ export function useRealtimeAuctionMatch({
         setServerTimeOffsetMs(null);
         setPendingTurnActionValue(null);
         setWaitingForReady(null);
+        setPause(null);
         setError(null);
       });
       return;
     }
-    if (!isConnected || startRequestedRef.current || publicState) return;
+    if (!autoStart || !isConnected || startRequestedRef.current || publicState) return;
     autoStartTimerRef.current = setTimeout(() => {
       autoStartTimerRef.current = null;
       requestStart();
@@ -192,7 +212,7 @@ export function useRealtimeAuctionMatch({
         autoStartTimerRef.current = null;
       }
     };
-  }, [enabled, isConnected, publicState, requestStart, selfUserId, setPendingTurnActionValue]);
+  }, [autoStart, enabled, isConnected, publicState, requestStart, selfUserId, setPendingTurnActionValue]);
 
   useEffect(() => {
     if (!enabled || !selfUserId || !matchId || !socket.connected || !currentRoundId || publicStateVersion === null || !publicPhase) return;
@@ -340,6 +360,53 @@ export function useRealtimeAuctionMatch({
           : Date.now() + (offset ?? 0),
       });
     };
+    const onOpponentDisconnected = (payload: AuctionOpponentDisconnectedPayload) => {
+      updateServerTimeOffset(payload.serverNow);
+      setError(null);
+    };
+    const onPaused = (payload: AuctionPausedPayload) => {
+      updateServerTimeOffset(payload.serverNow);
+      apply({
+        type: 'state',
+        payload: {
+          matchId: payload.matchId,
+          state: payload.state,
+          stateVersion: payload.stateVersion,
+          serverNow: payload.serverNow,
+        },
+      });
+      setPause(toAuctionPauseState(payload));
+      setWaitingForReady(null);
+      setPendingTurnActionValue(null);
+    };
+    const onResume = (payload: AuctionResumePayload) => {
+      updateServerTimeOffset(payload.serverNow);
+      apply({
+        type: 'state',
+        payload: {
+          matchId: payload.matchId,
+          state: payload.state,
+          stateVersion: payload.stateVersion,
+          serverNow: payload.serverNow,
+        },
+      });
+      setPause(null);
+      setError(null);
+    };
+    const onPlayerForfeited = (payload: AuctionPlayerForfeitedPayload) => {
+      updateServerTimeOffset(payload.serverNow);
+      apply({
+        type: 'state',
+        payload: {
+          matchId: payload.matchId,
+          state: payload.state,
+          stateVersion: payload.stateVersion,
+          serverNow: payload.serverNow,
+        },
+      });
+      setPause(null);
+      setPendingTurnActionValue(null);
+    };
 
     socket.on('auction:error', onError);
     socket.on('auction:match_started', onMatchStarted);
@@ -351,6 +418,10 @@ export function useRealtimeAuctionMatch({
     socket.on('auction:bid_accepted', onBidAccepted);
     socket.on('auction:fold_accepted', onFoldAccepted);
     socket.on('auction:turn_timeout', onTurnTimeout);
+    socket.on('auction:opponent_disconnected', onOpponentDisconnected);
+    socket.on('auction:paused', onPaused);
+    socket.on('auction:resume', onResume);
+    socket.on('auction:player_forfeited', onPlayerForfeited);
     socket.on('auction:round_revealed', onRoundRevealed);
     socket.on('auction:squad_updated', onSquadUpdated);
     socket.on('auction:solo_pick_started', onSoloPickStarted);
@@ -369,6 +440,10 @@ export function useRealtimeAuctionMatch({
       socket.off('auction:bid_accepted', onBidAccepted);
       socket.off('auction:fold_accepted', onFoldAccepted);
       socket.off('auction:turn_timeout', onTurnTimeout);
+      socket.off('auction:opponent_disconnected', onOpponentDisconnected);
+      socket.off('auction:paused', onPaused);
+      socket.off('auction:resume', onResume);
+      socket.off('auction:player_forfeited', onPlayerForfeited);
       socket.off('auction:round_revealed', onRoundRevealed);
       socket.off('auction:squad_updated', onSquadUpdated);
       socket.off('auction:solo_pick_started', onSoloPickStarted);
@@ -430,6 +505,22 @@ export function useRealtimeAuctionMatch({
     isConnected,
     versionGapDetected: realtimeState.versionGapDetected,
     waitingForReady,
+    pause,
+  };
+}
+
+function toAuctionPauseState(payload: AuctionPausedPayload | AuctionPlayerForfeitedPayload): AuctionPauseState {
+  const pauseUntil = 'pauseUntil' in payload ? payload.pauseUntil : new Date().toISOString();
+  const parsedPauseUntilMs = Date.parse(pauseUntil);
+  return {
+    matchId: payload.matchId,
+    seatId: payload.seatId,
+    userId: payload.userId,
+    pauseUntil,
+    pauseUntilMs: Number.isFinite(parsedPauseUntilMs) ? parsedPauseUntilMs : Date.now(),
+    graceMs: 'graceMs' in payload ? payload.graceMs : 0,
+    remainingReconnects: 'remainingReconnects' in payload ? payload.remainingReconnects : 0,
+    reason: payload.reason,
   };
 }
 

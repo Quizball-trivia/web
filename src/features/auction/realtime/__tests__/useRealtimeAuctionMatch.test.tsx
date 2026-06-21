@@ -251,6 +251,68 @@ describe('useRealtimeAuctionMatch', () => {
     expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en', formation: '4-3-3' });
   });
 
+  it('applies auction pause state and clears it on resume hydration', () => {
+    const { result } = renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      selfUserId: 'user-1',
+      locale: 'en',
+      formation: '4-3-3',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    const pausedState = matchState({
+      version: 2,
+      phase: 'bidding',
+      currentRound: round({
+        currentTurnSeatId: 'seat-human',
+        turnEndsAt: '2026-06-20T10:00:30.000Z',
+      }),
+    });
+
+    act(() => {
+      socketMock.trigger('auction:paused', {
+        matchId: 'match-1',
+        seatId: 'seat-human',
+        userId: 'user-1',
+        pauseUntil: '2026-06-20T10:00:30.000Z',
+        graceMs: 30_000,
+        remainingReconnects: 2,
+        reason: 'disconnect',
+        state: pausedState,
+        stateVersion: 2,
+        serverNow: '2026-06-20T10:00:00.000Z',
+      });
+    });
+
+    expect(result.current.state?.phase).toBe('bidding');
+    expect(result.current.state?.currentRound?.currentTurnId).toBe('seat-human');
+    expect(result.current.pause).toMatchObject({
+      matchId: 'match-1',
+      seatId: 'seat-human',
+      userId: 'user-1',
+      remainingReconnects: 2,
+      reason: 'disconnect',
+    });
+
+    act(() => {
+      socketMock.trigger('auction:resume', {
+        matchId: 'match-1',
+        seatId: 'seat-human',
+        userId: 'user-1',
+        reason: 'reconnected',
+        state: {
+          ...pausedState,
+          version: 3,
+        },
+        stateVersion: 3,
+        serverNow: '2026-06-20T10:00:05.000Z',
+      });
+    });
+
+    expect(result.current.pause).toBeNull();
+    expect(result.current.matchId).toBe('match-1');
+  });
+
   it('hydrates match state and blocks duplicate bid/fold emits while a turn action is pending', async () => {
     const { result } = renderHook(() => useRealtimeAuctionMatch({
       enabled: true,

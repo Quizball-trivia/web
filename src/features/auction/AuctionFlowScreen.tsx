@@ -7,7 +7,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useRealtimeConnectionHealth } from '@/lib/realtime/connection-health';
 import { poppins } from './constants/auction.constants';
 import { useAuctionGame } from './hooks/useAuctionGame';
-import { useRealtimeAuctionMatch } from './realtime/useRealtimeAuctionMatch';
+import { useRealtimeAuctionMatch, type AuctionPauseState } from './realtime/useRealtimeAuctionMatch';
 import { AuctionShowdownScreen } from './components/AuctionShowdownScreen';
 import { AuctionGameScreen } from './components/AuctionGameScreen';
 import { AuctionResultsScreen } from './components/AuctionResultsScreen';
@@ -128,10 +128,10 @@ function AuctionRealtimeFlowScreen({ avatarSeed }: Omit<AuctionFlowScreenProps, 
   const authUser = useAuthStore((store) => store.user);
   const authStatus = useAuthStore((store) => store.status);
   const connectionHealth = useRealtimeConnectionHealth();
-  const enabled = auctionStarted && authStatus === 'authenticated' && Boolean(authUser?.id);
   const authRequired =
     authStatus === 'anonymous' ||
     (authStatus === 'authenticated' && !authUser?.id);
+  const realtimeEnabled = authStatus === 'authenticated' && Boolean(authUser?.id);
   const {
     state,
     actions,
@@ -140,8 +140,10 @@ function AuctionRealtimeFlowScreen({ avatarSeed }: Omit<AuctionFlowScreenProps, 
     error,
     versionGapDetected,
     waitingForReady,
+    pause,
   } = useRealtimeAuctionMatch({
-    enabled,
+    enabled: realtimeEnabled,
+    autoStart: auctionStarted,
     selfUserId: authUser?.id ?? null,
     locale: locale === 'ka' ? 'ka' : 'en',
     formation: LIVE_AUCTION_FORMATION_NAME,
@@ -171,7 +173,7 @@ function AuctionRealtimeFlowScreen({ avatarSeed }: Omit<AuctionFlowScreenProps, 
     router.push('/play');
   }, [router]);
 
-  if (!auctionStarted && authStatus === 'authenticated' && authUser?.id) {
+  if (!auctionStarted && authStatus === 'authenticated' && authUser?.id && !state) {
     return (
       <FormationReveal
         state={createLiveFormationPreviewState(LIVE_AUCTION_FORMATION)}
@@ -210,6 +212,9 @@ function AuctionRealtimeFlowScreen({ avatarSeed }: Omit<AuctionFlowScreenProps, 
           <LiveAuctionWarning
             message={liveWarningMessage}
           />
+        )}
+        {pause && (
+          <LiveAuctionPauseOverlay pause={pause} />
         )}
       </>
     );
@@ -290,6 +295,61 @@ function LiveAuctionWarning({ message }: { message: string }) {
         style={poppins}
       >
         {message}
+      </div>
+    </div>
+  );
+}
+
+function LiveAuctionPauseOverlay({ pause }: { pause: AuctionPauseState }) {
+  const { t } = useLocale();
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setNowMs(Date.now()), 250);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  const seconds = Math.max(0, Math.ceil((pause.pauseUntilMs - nowMs) / 1000));
+  const reconnectCopy =
+    pause.remainingReconnects <= 0
+      ? t('auctionGame.lastReconnect')
+      : pause.remainingReconnects === 1
+        ? t('auctionGame.reconnectsLeftOne', { count: pause.remainingReconnects })
+        : t('auctionGame.reconnectsLeftMany', { count: pause.remainingReconnects });
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-surface-page-alt/75 px-4 backdrop-blur-[2px]">
+      <div className="w-full max-w-sm rounded-[20px] bg-brand-blue px-6 py-6 text-center shadow-2xl">
+        <div
+          className="font-poppins text-[11px] font-semibold uppercase tracking-[0.28em] text-white/60"
+          style={poppins}
+        >
+          {t('auctionGame.auctionPaused')}
+        </div>
+        <div
+          className="mt-2 font-poppins text-xl font-semibold uppercase text-white"
+          style={poppins}
+        >
+          {t('auctionGame.playerDisconnected')}
+        </div>
+        <div
+          className="mt-1 font-poppins text-sm font-semibold text-white/70"
+          style={poppins}
+        >
+          {t('auctionGame.playerDisconnectedContinueIfNotReturn', { seconds })}
+        </div>
+        <div
+          className="mt-4 inline-flex items-center justify-center rounded-full bg-black/30 px-6 py-2 font-poppins text-3xl font-semibold tabular-nums text-white"
+          style={poppins}
+        >
+          {seconds}
+        </div>
+        <div
+          className="mt-3 font-poppins text-xs font-semibold uppercase tracking-wide text-brand-yellow"
+          style={poppins}
+        >
+          {reconnectCopy}
+        </div>
       </div>
     </div>
   );
