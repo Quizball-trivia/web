@@ -184,6 +184,55 @@ describe('useRealtimeAuctionMatch', () => {
     expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en' });
   });
 
+  it('hydrates updated state after reconnect without starting a duplicate match', () => {
+    vi.useFakeTimers();
+
+    const { result } = renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      selfUserId: 'user-1',
+      locale: 'en',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    act(() => {
+      socketMock.trigger('auction:match_started', {
+        matchId: 'match-1',
+        locale: 'en',
+        state: matchState(),
+      });
+    });
+    expect(result.current.matchId).toBe('match-1');
+
+    act(() => {
+      socketMock.socket.connected = false;
+      socketMock.trigger('disconnect');
+    });
+    expect(result.current.status).toBe('connecting');
+
+    act(() => {
+      socketMock.socket.connected = true;
+      socketMock.trigger('connect');
+      socketMock.trigger('auction:state', {
+        matchId: 'match-1',
+        state: matchState({
+          version: 2,
+          phase: 'bidding',
+          currentRound: round({
+            currentTurnSeatId: 'seat-bot-1',
+            turnEndsAt: '2026-06-20T10:00:08.000Z',
+          }),
+        }),
+        stateVersion: 2,
+      });
+      vi.advanceTimersByTime(500);
+    });
+
+    expect(result.current.status).toBe('playing');
+    expect(result.current.state?.phase).toBe('bidding');
+    expect(result.current.state?.currentRound?.currentTurnId).toBe('seat-bot-1');
+    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en' });
+  });
+
   it('hydrates match state and emits bid/fold/solo-pick actions for the active match', async () => {
     const { result } = renderHook(() => useRealtimeAuctionMatch({
       enabled: true,
