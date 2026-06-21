@@ -7,7 +7,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useRealtimeConnectionHealth } from '@/lib/realtime/connection-health';
 import { poppins } from './constants/auction.constants';
 import { useAuctionGame } from './hooks/useAuctionGame';
-import { useRealtimeAuctionMatch, type AuctionPauseState } from './realtime/useRealtimeAuctionMatch';
+import { useRealtimeAuctionMatch, type AuctionPauseState, type AuctionSearchState } from './realtime/useRealtimeAuctionMatch';
 import { AuctionShowdownScreen } from './components/AuctionShowdownScreen';
 import { AuctionGameScreen } from './components/AuctionGameScreen';
 import { AuctionResultsScreen } from './components/AuctionResultsScreen';
@@ -141,9 +141,11 @@ function AuctionRealtimeFlowScreen({ avatarSeed }: Omit<AuctionFlowScreenProps, 
     versionGapDetected,
     waitingForReady,
     pause,
+    search,
   } = useRealtimeAuctionMatch({
     enabled: realtimeEnabled,
     autoStart: auctionStarted,
+    matchmakingMode: 'search',
     selfUserId: authUser?.id ?? null,
     locale: locale === 'ka' ? 'ka' : 'en',
     formation: LIVE_AUCTION_FORMATION_NAME,
@@ -173,6 +175,11 @@ function AuctionRealtimeFlowScreen({ avatarSeed }: Omit<AuctionFlowScreenProps, 
     router.push('/play');
   }, [router]);
 
+  const handleCancelSearch = useCallback(() => {
+    actions.cancelSearch?.();
+    router.push('/play');
+  }, [actions, router]);
+
   if (!auctionStarted && authStatus === 'authenticated' && authUser?.id && !state) {
     return (
       <FormationReveal
@@ -185,6 +192,8 @@ function AuctionRealtimeFlowScreen({ avatarSeed }: Omit<AuctionFlowScreenProps, 
   if (!state || !resolvedHumanPlayerId || status === 'auth_required') {
     return (
       <MockSearchingScreen
+        search={search}
+        onCancel={auctionStarted && !state ? handleCancelSearch : undefined}
         error={
           status === 'auth_required' && authRequired
             ? 'Sign in to play Auction.'
@@ -247,8 +256,25 @@ function createLiveFormationPreviewState(formation: Formation): AuctionGameState
   };
 }
 
-function MockSearchingScreen({ error }: { error?: string | null }) {
+function MockSearchingScreen({
+  error,
+  search,
+  onCancel,
+}: {
+  error?: string | null;
+  search?: AuctionSearchState | null;
+  onCancel?: () => void;
+}) {
   const { t } = useLocale();
+  const detail = error
+    ?? (search?.phase === 'match_found'
+      ? t('auctionGame.connectingPlayers')
+      : search && search.phase !== 'cancelled'
+        ? t('auctionGame.searchStatus', {
+            count: search.queuedUserCount,
+            seats: search.seatsNeeded,
+          })
+        : t('auctionGame.lookingForOpponents', { count: 2 }));
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-surface-page">
@@ -279,8 +305,18 @@ function MockSearchingScreen({ error }: { error?: string | null }) {
             className="mt-1.5 font-poppins text-xs font-semibold text-white/40 uppercase"
             style={poppins}
           >
-            {error ?? t('auctionGame.lookingForOpponents', { count: 2 })}
+            {detail}
           </p>
+          {onCancel && !error && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="mt-5 rounded-full border border-white/20 bg-white/10 px-5 py-2 font-poppins text-xs font-black uppercase text-white shadow-lg transition hover:bg-white/15"
+              style={poppins}
+            >
+              {t('common.cancel')}
+            </button>
+          )}
         </div>
       </div>
     </div>

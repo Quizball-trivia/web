@@ -1455,6 +1455,7 @@
   "auctionGame": {
     "findingPlayers": "Finding Players",
     "lookingForOpponents": "Looking for {count} opponents...",
+    "searchStatus": "{count}/3 players found · {seats} seats can fill with bots",
     "waitingForPlayersReady": "Waiting for players...",
     "auctionPaused": "Auction paused",
     "playerDisconnected": "Player disconnected",

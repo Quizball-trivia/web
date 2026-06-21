@@ -16,6 +16,9 @@ vi.mock('@/contexts/LocaleContext', () => ({
       if (key === 'auctionGame.startAuction') return 'Start Auction';
       if (key === 'auctionGame.findingPlayers') return 'Finding players';
       if (key === 'auctionGame.lookingForOpponents') return `Looking for ${String(params?.count ?? 0)} opponents`;
+      if (key === 'auctionGame.searchStatus') return `${String(params?.count ?? 0)}/3 players found · ${String(params?.seats ?? 0)} seats`;
+      if (key === 'auctionGame.connectingPlayers') return 'Connecting players...';
+      if (key === 'common.cancel') return 'Cancel';
       if (key === 'common.reconnecting') return 'Reconnecting...';
       if (key === 'common.connectionBad') return 'Connection problem';
       if (key === 'auctionGame.auctionPaused') return 'Auction paused';
@@ -62,15 +65,25 @@ vi.mock('@/stores/auth.store', () => ({
 
 const realtimeMock = vi.hoisted(() => ({
   calls: [] as UseRealtimeAuctionMatchParams[],
+  cancelSearch: vi.fn(),
   result: null as null | {
     state: {
       phase: string;
       players: Array<{ id: string; isBot: boolean }>;
-    };
+    } | null;
     humanPlayerId: string | null;
     status?: string;
     error?: string | null;
     versionGapDetected?: boolean;
+    search?: {
+      phase: 'starting' | 'queued' | 'match_found' | 'cancelled';
+      searchId: string | null;
+      locale: 'en' | 'ka';
+      queuedUserCount: number;
+      seatsNeeded: number;
+      fallbackAt: string | null;
+      fallbackAtMs: number | null;
+    } | null;
     pause?: {
       matchId: string;
       seatId: string;
@@ -96,6 +109,7 @@ vi.mock('../realtime/useRealtimeAuctionMatch', () => ({
           confirmReveal: vi.fn(),
           pickSoloOption: vi.fn(),
           setPhase: vi.fn(),
+          cancelSearch: realtimeMock.cancelSearch,
         },
         matchId: 'match-1',
         isConnected: true,
@@ -103,6 +117,7 @@ vi.mock('../realtime/useRealtimeAuctionMatch', () => ({
         error: null,
         versionGapDetected: false,
         pause: null,
+        search: null,
         ...realtimeMock.result,
       };
     }
@@ -115,6 +130,7 @@ vi.mock('../realtime/useRealtimeAuctionMatch', () => ({
         confirmReveal: vi.fn(),
         pickSoloOption: vi.fn(),
         setPhase: vi.fn(),
+        cancelSearch: realtimeMock.cancelSearch,
       },
       humanPlayerId: null,
       matchId: null,
@@ -123,6 +139,7 @@ vi.mock('../realtime/useRealtimeAuctionMatch', () => ({
       isConnected: params.enabled,
       versionGapDetected: false,
       pause: null,
+      search: null,
     };
   },
 }));
@@ -154,6 +171,7 @@ describe('AuctionFlowScreen live mode', () => {
   beforeEach(() => {
     pushMock.mockClear();
     realtimeMock.calls = [];
+    realtimeMock.cancelSearch.mockClear();
     realtimeMock.result = null;
     connectionHealth.current = {
       phase: 'connected',
@@ -184,6 +202,7 @@ describe('AuctionFlowScreen live mode', () => {
     expect(realtimeMock.calls.at(-1)).toMatchObject({
       enabled: true,
       autoStart: false,
+      matchmakingMode: 'search',
       selfUserId: 'user-1',
       locale: 'en',
       formation: '4-3-3',
@@ -194,6 +213,7 @@ describe('AuctionFlowScreen live mode', () => {
     expect(realtimeMock.calls.at(-1)).toMatchObject({
       enabled: true,
       autoStart: true,
+      matchmakingMode: 'search',
       selfUserId: 'user-1',
       locale: 'en',
       formation: '4-3-3',
@@ -212,6 +232,7 @@ describe('AuctionFlowScreen live mode', () => {
     expect(screen.getByText('Sign in to play Auction.')).toBeInTheDocument();
     expect(realtimeMock.calls.at(-1)).toMatchObject({
       enabled: false,
+      matchmakingMode: 'search',
       selfUserId: null,
       formation: '4-3-3',
     });
@@ -254,8 +275,36 @@ describe('AuctionFlowScreen live mode', () => {
     expect(realtimeMock.calls.at(-1)).toMatchObject({
       enabled: true,
       autoStart: false,
+      matchmakingMode: 'search',
       selfUserId: 'user-1',
     });
+  });
+
+  it('shows live matchmaking queue status and lets the user cancel back to play', () => {
+    realtimeMock.result = {
+      state: null,
+      humanPlayerId: null,
+      search: {
+        phase: 'queued',
+        searchId: 'search-1',
+        locale: 'en',
+        queuedUserCount: 2,
+        seatsNeeded: 1,
+        fallbackAt: '2026-06-20T10:00:12.000Z',
+        fallbackAtMs: Date.parse('2026-06-20T10:00:12.000Z'),
+      },
+    };
+
+    render(<AuctionFlowScreen username="Player" avatarSeed="avatar-1" mode="live" />);
+    fireEvent.click(screen.getByTestId('formation-start'));
+
+    expect(screen.getByText('Finding players')).toBeInTheDocument();
+    expect(screen.getByText('2/3 players found · 1 seats')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(realtimeMock.cancelSearch).toHaveBeenCalledTimes(1);
+    expect(pushMock).toHaveBeenCalledWith('/play');
   });
 
   it('shows a live pause overlay when the server pauses for a disconnected auction player', () => {

@@ -175,6 +175,213 @@ describe('useRealtimeAuctionMatch', () => {
     expect(socketMock.emit).toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en', formation: '4-3-3' });
   });
 
+  it('starts live matchmaking in search mode instead of starting an immediate AI match', () => {
+    vi.useFakeTimers();
+
+    renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      autoStart: true,
+      matchmakingMode: 'search',
+      selfUserId: 'user-1',
+      locale: 'en',
+      formation: '4-3-3',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+
+    expect(socketMock.emit).toHaveBeenCalledWith('auction:search_start', { locale: 'en', formation: '4-3-3' });
+    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en', formation: '4-3-3' });
+  });
+
+  it('updates search status from auction matchmaking events', () => {
+    const { result } = renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      autoStart: false,
+      matchmakingMode: 'search',
+      selfUserId: 'user-1',
+      locale: 'en',
+      formation: '4-3-3',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    act(() => {
+      result.current.actions.startGame();
+      socketMock.trigger('auction:search_start', {
+        searchId: 'search-1',
+        locale: 'en',
+        queuedUserCount: 1,
+        seatsNeeded: 2,
+        fallbackAt: '2026-06-20T10:00:12.000Z',
+      });
+      socketMock.trigger('auction:search_status', {
+        searchId: 'search-1',
+        locale: 'en',
+        queuedUserCount: 2,
+        seatsNeeded: 1,
+        fallbackAt: '2026-06-20T10:00:12.000Z',
+      });
+    });
+
+    expect(result.current.search).toMatchObject({
+      phase: 'queued',
+      searchId: 'search-1',
+      queuedUserCount: 2,
+      seatsNeeded: 1,
+    });
+  });
+
+  it('tracks match_found and then reuses match_started hydration for the auction flow', () => {
+    const { result } = renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      autoStart: false,
+      matchmakingMode: 'search',
+      selfUserId: 'user-1',
+      locale: 'en',
+      formation: '4-3-3',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    act(() => {
+      result.current.actions.startGame();
+      socketMock.trigger('auction:search_start', {
+        searchId: 'search-1',
+        locale: 'en',
+        queuedUserCount: 1,
+        seatsNeeded: 2,
+        fallbackAt: '2026-06-20T10:00:12.000Z',
+      });
+      socketMock.trigger('auction:match_found', {
+        matchId: 'match-1',
+        humanUserIds: ['user-1', 'user-2'],
+        botCount: 1,
+        locale: 'en',
+        formation: '4-3-3',
+      });
+    });
+
+    expect(result.current.search).toMatchObject({
+      phase: 'match_found',
+      queuedUserCount: 2,
+      botCount: 1,
+    });
+    expect(result.current.matchId).toBeNull();
+
+    act(() => {
+      socketMock.trigger('auction:match_started', {
+        matchId: 'match-1',
+        locale: 'en',
+        state: matchState({
+          version: 1,
+          phase: 'bidding',
+          currentRound: round({ currentTurnSeatId: 'seat-human' }),
+        }),
+      });
+    });
+
+    expect(result.current.search).toBeNull();
+    expect(result.current.matchId).toBe('match-1');
+    expect(result.current.state?.phase).toBe('bidding');
+  });
+
+  it('cancels live matchmaking and ignores stale match_found hydration after cancel', () => {
+    const { result } = renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      autoStart: false,
+      matchmakingMode: 'search',
+      selfUserId: 'user-1',
+      locale: 'en',
+      formation: '4-3-3',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    act(() => {
+      result.current.actions.startGame();
+      socketMock.trigger('auction:search_start', {
+        searchId: 'search-1',
+        locale: 'en',
+        queuedUserCount: 1,
+        seatsNeeded: 2,
+        fallbackAt: '2026-06-20T10:00:12.000Z',
+      });
+      result.current.actions.cancelSearch?.();
+      socketMock.trigger('auction:match_found', {
+        matchId: 'match-late',
+        humanUserIds: ['user-1', 'user-2', 'user-3'],
+        botCount: 0,
+        locale: 'en',
+        formation: '4-3-3',
+      });
+      socketMock.trigger('auction:match_started', {
+        matchId: 'match-late',
+        locale: 'en',
+        state: matchState({ matchId: 'match-late', version: 1 }),
+      });
+    });
+
+    expect(socketMock.emit).toHaveBeenCalledWith('auction:search_cancel');
+    expect(result.current.search).toMatchObject({ phase: 'cancelled' });
+    expect(result.current.matchId).toBeNull();
+    expect(result.current.state).toBeNull();
+  });
+
+  it('blocks duplicate auction matchmaking queue requests', () => {
+    const { result } = renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      autoStart: false,
+      matchmakingMode: 'search',
+      selfUserId: 'user-1',
+      locale: 'en',
+      formation: '4-3-3',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    act(() => {
+      result.current.actions.startGame();
+      result.current.actions.startGame();
+    });
+
+    expect(socketMock.emit.mock.calls.filter(([event]) => event === 'auction:search_start')).toEqual([
+      ['auction:search_start', { locale: 'en', formation: '4-3-3' }],
+    ]);
+  });
+
+  it('reasserts auction matchmaking search after a socket reconnect while queued', () => {
+    const { result } = renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      autoStart: true,
+      matchmakingMode: 'search',
+      selfUserId: 'user-1',
+      locale: 'en',
+      formation: '4-3-3',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    act(() => {
+      result.current.actions.startGame();
+      socketMock.trigger('auction:search_start', {
+        searchId: 'search-1',
+        locale: 'en',
+        queuedUserCount: 1,
+        seatsNeeded: 2,
+        fallbackAt: '2026-06-20T10:00:12.000Z',
+      });
+    });
+
+    expect(socketMock.emit.mock.calls.filter(([event]) => event === 'auction:search_start')).toHaveLength(1);
+
+    act(() => {
+      socketMock.socket.connected = false;
+      socketMock.trigger('disconnect');
+      socketMock.socket.connected = true;
+      socketMock.trigger('connect');
+    });
+
+    expect(socketMock.emit.mock.calls.filter(([event]) => event === 'auction:search_start')).toHaveLength(2);
+  });
+
   it('does not start a duplicate match when reconnect hydration arrives first', () => {
     vi.useFakeTimers();
 

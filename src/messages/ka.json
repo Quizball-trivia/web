@@ -1455,6 +1455,7 @@
   "auctionGame": {
     "findingPlayers": "მოთამაშეების ძებნა",
     "lookingForOpponents": "მიმდინარეობს {count} მოწინააღმდეგის ძებნა...",
+    "searchStatus": "ნაპოვნია {count}/3 მოთამაშე · {seats} ადგილი შეიძლება ბოტებმა შეავსონ",
     "waitingForPlayersReady": "ველოდებით მოთამაშეებს...",
     "auctionPaused": "აუქციონი დაპაუზებულია",
     "playerDisconnected": "მოთამაშე გაითიშა",

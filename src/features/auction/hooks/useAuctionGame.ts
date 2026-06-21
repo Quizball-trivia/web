@@ -47,6 +47,7 @@ export interface AuctionActions {
   confirmReveal: () => void;
   pickSoloOption: (option: 'A' | 'B') => void;
   setPhase: (phase: AuctionPhase) => void;
+  cancelSearch?: () => void;
   pendingTurnAction?: AuctionPendingTurnAction | null;
 }
 

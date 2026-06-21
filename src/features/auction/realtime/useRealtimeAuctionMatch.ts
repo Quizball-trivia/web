@@ -16,7 +16,11 @@ import type {
   AuctionPausedPayload,
   AuctionPlayerForfeitedPayload,
   AuctionResumePayload,
+  AuctionSearchCancelledPayload,
+  AuctionSearchStartedPayload,
+  AuctionSearchStatusPayload,
   AuctionWaitingForReadyPayload,
+  AuctionMatchFoundPayload,
   AuctionMatchFinishedPayload,
   AuctionMatchStartedPayload,
   AuctionRoundRevealedPayload,
@@ -54,6 +58,7 @@ type AuctionConnectionStatus =
 export interface UseRealtimeAuctionMatchParams {
   enabled: boolean;
   autoStart?: boolean;
+  matchmakingMode?: 'ai' | 'search';
   selfUserId: string | null;
   locale: 'en' | 'ka';
   formation?: AuctionFormationName;
@@ -71,6 +76,7 @@ export interface UseRealtimeAuctionMatchResult {
   versionGapDetected: boolean;
   waitingForReady: AuctionWaitingForReadyState | null;
   pause: AuctionPauseState | null;
+  search: AuctionSearchState | null;
 }
 
 export type AuctionWaitingForReadyState = AuctionWaitingForReadyPayload & {
@@ -88,9 +94,22 @@ export type AuctionPauseState = {
   reason: AuctionPausedPayload['reason'] | AuctionPlayerForfeitedPayload['reason'];
 };
 
+export type AuctionSearchState = {
+  phase: 'starting' | 'queued' | 'match_found' | 'cancelled';
+  searchId: string | null;
+  locale: 'en' | 'ka';
+  queuedUserCount: number;
+  seatsNeeded: number;
+  fallbackAt: string | null;
+  fallbackAtMs: number | null;
+  botCount?: number;
+  humanUserIds?: string[];
+};
+
 export function useRealtimeAuctionMatch({
   enabled,
   autoStart = true,
+  matchmakingMode = 'ai',
   selfUserId,
   locale,
   formation,
@@ -105,6 +124,7 @@ export function useRealtimeAuctionMatch({
   const [pendingTurnAction, setPendingTurnAction] = useState<AuctionPendingTurnAction | null>(null);
   const [waitingForReady, setWaitingForReady] = useState<AuctionWaitingForReadyState | null>(null);
   const [pause, setPause] = useState<AuctionPauseState | null>(null);
+  const [search, setSearch] = useState<AuctionSearchState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const startRequestedRef = useRef(false);
   const autoStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -112,6 +132,10 @@ export function useRealtimeAuctionMatch({
   const recoveredVersionGapKeyRef = useRef<string | null>(null);
   const serverTimeOffsetMsRef = useRef<number | null>(null);
   const pendingTurnActionRef = useRef<AuctionPendingTurnAction | null>(null);
+  const publicStateRef = useRef<AuctionRealtimeState['publicState']>(null);
+  const searchRef = useRef<AuctionSearchState | null>(null);
+  const searchCancelledRef = useRef(false);
+  const ignoredMatchIdsRef = useRef(new Set<string>());
 
   const publicState = realtimeState.publicState;
   const matchId = publicState?.matchId ?? null;
@@ -148,8 +172,22 @@ export function useRealtimeAuctionMatch({
     setPendingTurnAction(next);
   }, []);
 
-  const requestStart = useCallback(() => {
+  const setSearchValue = useCallback((next: AuctionSearchState | null) => {
+    searchRef.current = next;
+    setSearch(next);
+  }, []);
+
+  useEffect(() => {
+    publicStateRef.current = publicState;
+  }, [publicState]);
+
+  const emitAuctionSearchStart = useCallback(() => {
+    socket.emit('auction:search_start', { locale, formation });
+  }, [formation, locale, socket]);
+
+  const requestStart = useCallback((options: { force?: boolean } = {}) => {
     if (!enabled || !selfUserId || !socket.connected) return;
+    if (!options.force && startRequestedRef.current) return;
     if (autoStartTimerRef.current) {
       clearTimeout(autoStartTimerRef.current);
       autoStartTimerRef.current = null;
@@ -159,13 +197,56 @@ export function useRealtimeAuctionMatch({
     setServerTimeOffsetMs(null);
     setPendingTurnActionValue(null);
     setWaitingForReady(null);
+    setPause(null);
     setError(null);
     setRealtimeState(EMPTY_AUCTION_REALTIME_STATE);
+    ignoredMatchIdsRef.current.clear();
+
+    if (matchmakingMode === 'search') {
+      searchCancelledRef.current = false;
+      setSearchValue({
+        phase: 'starting',
+        searchId: null,
+        locale,
+        queuedUserCount: 1,
+        seatsNeeded: 2,
+        fallbackAt: null,
+        fallbackAtMs: null,
+      });
+      emitAuctionSearchStart();
+      return;
+    }
+
+    setSearchValue(null);
     socket.emit('auction:start_ai_match', { locale, formation });
-  }, [enabled, formation, locale, selfUserId, setPendingTurnActionValue, socket]);
+  }, [
+    emitAuctionSearchStart,
+    enabled,
+    formation,
+    locale,
+    matchmakingMode,
+    selfUserId,
+    setPendingTurnActionValue,
+    setSearchValue,
+    socket,
+  ]);
 
   useEffect(() => {
-    const handleConnect = () => setIsConnected(true);
+    const handleConnect = () => {
+      setIsConnected(true);
+      const activeSearch = searchRef.current;
+      if (
+        enabled &&
+        autoStart &&
+        matchmakingMode === 'search' &&
+        activeSearch &&
+        activeSearch.phase !== 'cancelled' &&
+        !publicStateRef.current &&
+        !searchCancelledRef.current
+      ) {
+        emitAuctionSearchStart();
+      }
+    };
     const handleDisconnect = () => setIsConnected(false);
 
     socket.on('connect', handleConnect);
@@ -176,7 +257,7 @@ export function useRealtimeAuctionMatch({
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
     };
-  }, [socket]);
+  }, [autoStart, emitAuctionSearchStart, enabled, matchmakingMode, socket]);
 
   useEffect(() => {
     if (!enabled || !selfUserId) {
@@ -197,6 +278,9 @@ export function useRealtimeAuctionMatch({
         setPendingTurnActionValue(null);
         setWaitingForReady(null);
         setPause(null);
+        setSearchValue(null);
+        searchCancelledRef.current = false;
+        ignoredMatchIdsRef.current.clear();
         setError(null);
       });
       return;
@@ -212,7 +296,24 @@ export function useRealtimeAuctionMatch({
         autoStartTimerRef.current = null;
       }
     };
-  }, [autoStart, enabled, isConnected, publicState, requestStart, selfUserId, setPendingTurnActionValue]);
+  }, [autoStart, enabled, isConnected, publicState, requestStart, selfUserId, setPendingTurnActionValue, setSearchValue]);
+
+  useEffect(() => () => {
+    const activeSearch = searchRef.current;
+    if (
+      matchmakingMode !== 'search' ||
+      !activeSearch ||
+      activeSearch.phase === 'cancelled' ||
+      publicStateRef.current ||
+      searchCancelledRef.current
+    ) {
+      return;
+    }
+    searchCancelledRef.current = true;
+    if (socket.connected) {
+      socket.emit('auction:search_cancel');
+    }
+  }, [matchmakingMode, socket]);
 
   useEffect(() => {
     if (!enabled || !selfUserId || !matchId || !socket.connected || !currentRoundId || publicStateVersion === null || !publicPhase) return;
@@ -286,6 +387,7 @@ export function useRealtimeAuctionMatch({
     };
 
     const apply = <T extends Parameters<typeof applyAuctionRealtimeEvent>[1]>(event: T) => {
+      if (ignoredMatchIdsRef.current.has(event.payload.matchId)) return;
       const eventServerTimeOffsetMs = updateServerTimeOffset(getAuctionEventServerNow(event));
       setRealtimeState((prev) => {
         try {
@@ -315,6 +417,10 @@ export function useRealtimeAuctionMatch({
       }
       if (shouldClearWaitingForReadyAfterEvent(event)) {
         setWaitingForReady(null);
+      }
+      if (shouldClearSearchAfterEvent(event)) {
+        setSearchValue(null);
+        searchCancelledRef.current = false;
       }
       setError(null);
     };
@@ -359,6 +465,47 @@ export function useRealtimeAuctionMatch({
         forceStartsAtMs: Number.isFinite(forceStartsAtMs)
           ? forceStartsAtMs
           : Date.now() + (offset ?? 0),
+      });
+    };
+    const onSearchStarted = (payload: AuctionSearchStartedPayload) => {
+      if (searchCancelledRef.current) return;
+      setError(null);
+      setSearchValue(toAuctionSearchState('queued', payload));
+      startRequestedRef.current = true;
+    };
+    const onSearchStatus = (payload: AuctionSearchStatusPayload) => {
+      if (searchCancelledRef.current) return;
+      setSearchValue(toAuctionSearchState('queued', payload));
+    };
+    const onMatchFound = (payload: AuctionMatchFoundPayload) => {
+      if (searchCancelledRef.current) {
+        ignoredMatchIdsRef.current.add(payload.matchId);
+        return;
+      }
+      setSearchValue({
+        phase: 'match_found',
+        searchId: searchRef.current?.searchId ?? null,
+        locale: payload.locale,
+        queuedUserCount: payload.humanUserIds.length,
+        seatsNeeded: payload.botCount,
+        fallbackAt: null,
+        fallbackAtMs: null,
+        botCount: payload.botCount,
+        humanUserIds: [...payload.humanUserIds],
+      });
+      startRequestedRef.current = true;
+    };
+    const onSearchCancelled = (payload: AuctionSearchCancelledPayload) => {
+      searchCancelledRef.current = true;
+      startRequestedRef.current = false;
+      setSearchValue({
+        phase: 'cancelled',
+        searchId: payload.searchId,
+        locale,
+        queuedUserCount: 0,
+        seatsNeeded: 0,
+        fallbackAt: null,
+        fallbackAtMs: null,
       });
     };
     const onOpponentDisconnected = (payload: AuctionOpponentDisconnectedPayload) => {
@@ -410,6 +557,10 @@ export function useRealtimeAuctionMatch({
     };
 
     socket.on('auction:error', onError);
+    socket.on('auction:search_start', onSearchStarted);
+    socket.on('auction:search_status', onSearchStatus);
+    socket.on('auction:search_cancelled', onSearchCancelled);
+    socket.on('auction:match_found', onMatchFound);
     socket.on('auction:match_started', onMatchStarted);
     socket.on('auction:state', onState);
     socket.on('auction:round_started', onRoundStarted);
@@ -432,6 +583,10 @@ export function useRealtimeAuctionMatch({
 
     return () => {
       socket.off('auction:error', onError);
+      socket.off('auction:search_start', onSearchStarted);
+      socket.off('auction:search_status', onSearchStatus);
+      socket.off('auction:search_cancelled', onSearchCancelled);
+      socket.off('auction:match_found', onMatchFound);
       socket.off('auction:match_started', onMatchStarted);
       socket.off('auction:state', onState);
       socket.off('auction:round_started', onRoundStarted);
@@ -452,12 +607,11 @@ export function useRealtimeAuctionMatch({
       socket.off('auction:match_finished', onMatchFinished);
       socket.off('auction:waiting_for_ready', onWaitingForReady);
     };
-  }, [humanAvatarSeed, selfUserId, setPendingTurnActionValue, socket, updateServerTimeOffset]);
+  }, [humanAvatarSeed, locale, selfUserId, setPendingTurnActionValue, setSearchValue, socket, updateServerTimeOffset]);
 
   const actions = useMemo<AuctionActions>(() => ({
     startGame: () => {
-      startRequestedRef.current = false;
-      requestStart();
+      requestStart({ force: publicState?.phase === 'finished' });
     },
     placeBid: (amount: number) => {
       if (!matchId) return;
@@ -486,8 +640,37 @@ export function useRealtimeAuctionMatch({
       socket.emit('auction:solo_pick_select', { matchId, option });
     },
     setPhase: () => {},
+    cancelSearch: () => {
+      searchCancelledRef.current = true;
+      startRequestedRef.current = false;
+      setSearchValue((searchRef.current && {
+        ...searchRef.current,
+        phase: 'cancelled',
+      }) ?? {
+        phase: 'cancelled',
+        searchId: null,
+        locale,
+        queuedUserCount: 0,
+        seatsNeeded: 0,
+        fallbackAt: null,
+        fallbackAtMs: null,
+      });
+      if (socket.connected) {
+        socket.emit('auction:search_cancel');
+      }
+    },
     pendingTurnAction,
-  }), [matchId, pendingTurnAction, publicState?.currentRound?.roundId, requestStart, setPendingTurnActionValue, socket]);
+  }), [
+    locale,
+    matchId,
+    pendingTurnAction,
+    publicState?.currentRound?.roundId,
+    publicState?.phase,
+    requestStart,
+    setPendingTurnActionValue,
+    setSearchValue,
+    socket,
+  ]);
 
   const status = getStatus({
     enabled,
@@ -507,6 +690,23 @@ export function useRealtimeAuctionMatch({
     versionGapDetected: realtimeState.versionGapDetected,
     waitingForReady,
     pause,
+    search,
+  };
+}
+
+function toAuctionSearchState(
+  phase: AuctionSearchState['phase'],
+  payload: AuctionSearchStartedPayload | AuctionSearchStatusPayload,
+): AuctionSearchState {
+  const fallbackAtMs = Date.parse(payload.fallbackAt);
+  return {
+    phase,
+    searchId: payload.searchId,
+    locale: payload.locale,
+    queuedUserCount: payload.queuedUserCount,
+    seatsNeeded: payload.seatsNeeded,
+    fallbackAt: payload.fallbackAt,
+    fallbackAtMs: Number.isFinite(fallbackAtMs) ? fallbackAtMs : null,
   };
 }
 
@@ -555,6 +755,14 @@ function shouldClearWaitingForReadyAfterEvent(event: Parameters<typeof applyAuct
     event.type === 'solo_pick_started' ||
     event.type === 'match_finished' ||
     event.type === 'state'
+  );
+}
+
+function shouldClearSearchAfterEvent(event: Parameters<typeof applyAuctionRealtimeEvent>[1]): boolean {
+  return (
+    event.type === 'match_started' ||
+    event.type === 'state' ||
+    event.type === 'match_finished'
   );
 }
 
