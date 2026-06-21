@@ -66,6 +66,8 @@ export function applyAuctionRealtimeEvent(
 
   if (!current.publicState) return current;
 
+  if (event.payload.matchId !== current.publicState.matchId) return current;
+
   const stateVersion = getEventStateVersion(event);
   if (stateVersion < current.publicState.version) return current;
 
@@ -131,7 +133,11 @@ function withFullState(
   current: AuctionRealtimeState,
   publicState: PublicAuctionMatchState,
 ): AuctionRealtimeState {
-  if (current.publicState && publicState.version < current.publicState.version) {
+  if (
+    current.publicState &&
+    publicState.matchId === current.publicState.matchId &&
+    publicState.version < current.publicState.version
+  ) {
     return current;
   }
   return {
