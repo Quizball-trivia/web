@@ -593,6 +593,48 @@ describe('useRealtimeAuctionMatch', () => {
     expect(result.current.versionGapDetected).toBe(false);
   });
 
+  it('soft-reconnects for authoritative hydration when a live auction tab becomes visible', () => {
+    let visibilityState: DocumentVisibilityState = 'hidden';
+    const visibilitySpy = vi.spyOn(document, 'visibilityState', 'get').mockImplementation(() => visibilityState);
+    try {
+      const { result } = renderHook(() => useRealtimeAuctionMatch({
+        enabled: true,
+        selfUserId: 'user-1',
+        locale: 'en',
+        formation: '4-3-3',
+        humanAvatarSeed: 'avatar-1',
+      }));
+
+      act(() => {
+        socketMock.trigger('auction:match_started', {
+          matchId: 'match-1',
+          locale: 'en',
+          state: matchState({
+            version: 1,
+            phase: 'bidding',
+            currentRound: round({ currentTurnSeatId: 'seat-human' }),
+          }),
+        });
+      });
+
+      expect(result.current.matchId).toBe('match-1');
+
+      act(() => {
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+      expect(reconnectSocketMock).not.toHaveBeenCalled();
+
+      act(() => {
+        visibilityState = 'visible';
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+
+      expect(reconnectSocketMock).toHaveBeenCalledTimes(1);
+    } finally {
+      visibilitySpy.mockRestore();
+    }
+  });
+
   it('keeps the current state and reconnects when a malformed event would break adaptation', async () => {
     const { result } = renderHook(() => useRealtimeAuctionMatch({
       enabled: true,

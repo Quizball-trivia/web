@@ -209,6 +209,20 @@ export function useRealtimeAuctionMatch({
   }, [enabled, isConnected, publicState, realtimeState.versionGapDetected]);
 
   useEffect(() => {
+    if (!enabled || !matchId || publicState?.phase === 'finished') return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== 'visible') return;
+      reconnectSocket();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [enabled, matchId, publicState?.phase]);
+
+  useEffect(() => {
     const clearPendingForMatch = (eventMatchId: string | null | undefined) => {
       const pending = pendingTurnActionRef.current;
       if (pending && (!eventMatchId || pending.matchId === eventMatchId)) {
