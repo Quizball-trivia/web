@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import type { AuctionGameState } from '../../types';
 import type { AuctionActions } from '../../hooks/useAuctionGame';
@@ -32,6 +32,7 @@ export function RevealScreen({
   const round = state.currentRound;
   const [stage, setStage] = useState(0);
   const [showSold, setShowSold] = useState(true);
+  const serverRevealAckedRoundRef = useRef<string | null>(null);
 
   useEffect(() => {
     const timers = [
@@ -44,6 +45,14 @@ export function RevealScreen({
     ];
     return () => timers.forEach(clearTimeout);
   }, []);
+
+  useEffect(() => {
+    if (!serverDrivenTransitions || stage < 5 || !round) return;
+    const revealKey = `${state.roundIndex}:${round.footballer.id}`;
+    if (serverRevealAckedRoundRef.current === revealKey) return;
+    serverRevealAckedRoundRef.current = revealKey;
+    actions.confirmReveal();
+  }, [actions, round, serverDrivenTransitions, stage, state.roundIndex]);
 
   if (!round) return null;
 

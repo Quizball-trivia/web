@@ -130,4 +130,29 @@ describe('RevealScreen', () => {
 
     expect(screen.queryByRole('button', { name: 'Next Round' })).not.toBeInTheDocument();
   });
+
+  it('acks server-driven reveal only after the reveal animation completes', () => {
+    const testActions = actions();
+
+    render(
+      <RevealScreen
+        state={state()}
+        actions={testActions}
+        humanPlayerId="seat-human"
+        serverDrivenTransitions
+      />,
+    );
+
+    expect(testActions.confirmReveal).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(3199);
+    });
+    expect(testActions.confirmReveal).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(testActions.confirmReveal).toHaveBeenCalledTimes(1);
+  });
 });

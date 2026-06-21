@@ -707,6 +707,83 @@ describe('useRealtimeAuctionMatch', () => {
     expect(result.current.state?.phase).toBe('bidding');
   });
 
+  it('emits reveal ui-ready only after reveal completion and re-emits after reconnect', async () => {
+    const { result } = renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      selfUserId: 'user-1',
+      locale: 'en',
+      formation: '4-3-3',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    act(() => {
+      socketMock.trigger('auction:match_started', {
+        matchId: 'match-1',
+        locale: 'en',
+        state: matchState({
+          version: 3,
+          phase: 'reveal',
+          currentRound: round({
+            roundId: 'round-1',
+            revealed: true,
+            clueRevealIndex: 3,
+            winnerSeatId: 'seat-human',
+            winningBid: 30_000_000,
+            footballer: {
+              id: 'card-1',
+              name: 'Test Striker',
+              positionGroup: 'FWD',
+              trueValue: 80_000_000,
+              startingPrice: 20_000_000,
+              clues: ['clue 1', 'clue 2', 'clue 3'],
+              nationality: 'Georgia',
+            },
+            revealedClues: ['clue 1', 'clue 2', 'clue 3'],
+          }),
+        }),
+      });
+    });
+
+    await waitFor(() => {
+      expect(result.current.state?.phase).toBe('reveal');
+    });
+    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:ui_ready', {
+      matchId: 'match-1',
+      phase: 'reveal',
+      roundId: 'round-1',
+      stateVersion: 3,
+    });
+
+    act(() => {
+      result.current.actions.confirmReveal();
+    });
+
+    expect(socketMock.emit).toHaveBeenCalledWith('auction:ui_ready', {
+      matchId: 'match-1',
+      phase: 'reveal',
+      roundId: 'round-1',
+      stateVersion: 3,
+    });
+    expect(socketMock.emit.mock.calls.filter(([event, payload]) => (
+      event === 'auction:ui_ready' &&
+      (payload as { phase?: string }).phase === 'reveal'
+    ))).toHaveLength(1);
+
+    act(() => {
+      socketMock.socket.connected = false;
+      socketMock.trigger('disconnect');
+      socketMock.socket.connected = true;
+      socketMock.trigger('connect');
+    });
+
+    await waitFor(() => {
+      expect(socketMock.emit.mock.calls.filter(([event, payload]) => (
+        event === 'auction:ui_ready' &&
+        (payload as { phase?: string }).phase === 'reveal'
+      ))).toHaveLength(2);
+    });
+  });
+
   it('tracks auction waiting-for-ready state and clears it when the turn starts', async () => {
     const { result } = renderHook(() => useRealtimeAuctionMatch({
       enabled: true,

@@ -136,6 +136,8 @@ export function useRealtimeAuctionMatch({
   const searchRef = useRef<AuctionSearchState | null>(null);
   const searchCancelledRef = useRef(false);
   const ignoredMatchIdsRef = useRef(new Set<string>());
+  const lastUiReadyAckKeyRef = useRef<string | null>(null);
+  const revealReadyKeyRef = useRef<string | null>(null);
 
   const publicState = realtimeState.publicState;
   const matchId = publicState?.matchId ?? null;
@@ -184,6 +186,23 @@ export function useRealtimeAuctionMatch({
   const emitAuctionSearchStart = useCallback(() => {
     socket.emit('auction:search_start', { locale, formation });
   }, [formation, locale, socket]);
+
+  const emitRevealReadyIfComplete = useCallback(() => {
+    const activeState = publicStateRef.current;
+    const roundId = activeState?.currentRound?.roundId ?? null;
+    if (!activeState || activeState.phase !== 'reveal' || !roundId || !socket.connected) return;
+
+    const ackKey = getAuctionUiReadyKey(activeState.matchId, 'reveal', roundId, activeState.version);
+    if (revealReadyKeyRef.current !== ackKey || lastUiReadyAckKeyRef.current === ackKey) return;
+
+    lastUiReadyAckKeyRef.current = ackKey;
+    socket.emit('auction:ui_ready', {
+      matchId: activeState.matchId,
+      phase: 'reveal',
+      roundId,
+      stateVersion: activeState.version,
+    });
+  }, [socket]);
 
   const requestStart = useCallback((options: { force?: boolean } = {}) => {
     if (!enabled || !selfUserId || !socket.connected) return;
@@ -246,8 +265,12 @@ export function useRealtimeAuctionMatch({
       ) {
         emitAuctionSearchStart();
       }
+      emitRevealReadyIfComplete();
     };
-    const handleDisconnect = () => setIsConnected(false);
+    const handleDisconnect = () => {
+      lastUiReadyAckKeyRef.current = null;
+      setIsConnected(false);
+    };
 
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
@@ -257,7 +280,7 @@ export function useRealtimeAuctionMatch({
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
     };
-  }, [autoStart, emitAuctionSearchStart, enabled, matchmakingMode, socket]);
+  }, [autoStart, emitAuctionSearchStart, emitRevealReadyIfComplete, enabled, matchmakingMode, socket]);
 
   useEffect(() => {
     if (!enabled || !selfUserId) {
@@ -281,6 +304,8 @@ export function useRealtimeAuctionMatch({
         setSearchValue(null);
         searchCancelledRef.current = false;
         ignoredMatchIdsRef.current.clear();
+        lastUiReadyAckKeyRef.current = null;
+        revealReadyKeyRef.current = null;
         setError(null);
       });
       return;
@@ -316,10 +341,14 @@ export function useRealtimeAuctionMatch({
   }, [matchmakingMode, socket]);
 
   useEffect(() => {
-    if (!enabled || !selfUserId || !matchId || !socket.connected || !currentRoundId || publicStateVersion === null || !publicPhase) return;
+    if (!enabled || !selfUserId || !matchId || !isConnected || !currentRoundId || publicStateVersion === null || !publicPhase) return;
     const phase = getUiReadyPhase(publicPhase);
     if (!phase) return;
+    const ackKey = getAuctionUiReadyKey(matchId, phase, currentRoundId, publicStateVersion);
+    if (phase === 'reveal' && revealReadyKeyRef.current !== ackKey) return;
+    if (lastUiReadyAckKeyRef.current === ackKey) return;
 
+    lastUiReadyAckKeyRef.current = ackKey;
     socket.emit('auction:ui_ready', {
       matchId,
       phase,
@@ -329,6 +358,7 @@ export function useRealtimeAuctionMatch({
   }, [
     currentRoundId,
     enabled,
+    isConnected,
     matchId,
     publicPhase,
     publicStateVersion,
@@ -421,6 +451,9 @@ export function useRealtimeAuctionMatch({
       if (shouldClearSearchAfterEvent(event)) {
         setSearchValue(null);
         searchCancelledRef.current = false;
+      }
+      if (event.type === 'round_revealed') {
+        revealReadyKeyRef.current = null;
       }
       setError(null);
     };
@@ -611,7 +644,7 @@ export function useRealtimeAuctionMatch({
 
   const actions = useMemo<AuctionActions>(() => ({
     startGame: () => {
-      requestStart({ force: publicState?.phase === 'finished' });
+      requestStart({ force: publicPhase === 'finished' });
     },
     placeBid: (amount: number) => {
       if (!matchId) return;
@@ -620,7 +653,7 @@ export function useRealtimeAuctionMatch({
         kind: 'bid',
         amount,
         matchId,
-        roundId: publicState?.currentRound?.roundId ?? null,
+        roundId: currentRoundId,
       });
       socket.emit('auction:bid', { matchId, amount });
     },
@@ -630,11 +663,23 @@ export function useRealtimeAuctionMatch({
       setPendingTurnActionValue({
         kind: 'fold',
         matchId,
-        roundId: publicState?.currentRound?.roundId ?? null,
+        roundId: currentRoundId,
       });
       socket.emit('auction:fold', { matchId });
     },
-    confirmReveal: () => {},
+    confirmReveal: () => {
+      if (!matchId || publicPhase !== 'reveal' || !currentRoundId || publicStateVersion === null) return;
+      const ackKey = getAuctionUiReadyKey(matchId, 'reveal', currentRoundId, publicStateVersion);
+      revealReadyKeyRef.current = ackKey;
+      if (!socket.connected || lastUiReadyAckKeyRef.current === ackKey) return;
+      lastUiReadyAckKeyRef.current = ackKey;
+      socket.emit('auction:ui_ready', {
+        matchId,
+        phase: 'reveal',
+        roundId: currentRoundId,
+        stateVersion: publicStateVersion,
+      });
+    },
     pickSoloOption: (option: 'A' | 'B') => {
       if (!matchId) return;
       socket.emit('auction:solo_pick_select', { matchId, option });
@@ -662,10 +707,11 @@ export function useRealtimeAuctionMatch({
     pendingTurnAction,
   }), [
     locale,
+    currentRoundId,
     matchId,
     pendingTurnAction,
-    publicState?.currentRound?.roundId,
-    publicState?.phase,
+    publicPhase,
+    publicStateVersion,
     requestStart,
     setPendingTurnActionValue,
     setSearchValue,
@@ -769,7 +815,17 @@ function shouldClearSearchAfterEvent(event: Parameters<typeof applyAuctionRealti
 function getUiReadyPhase(phase: NonNullable<AuctionRealtimeState['publicState']>['phase']): AuctionUiReadyPhase | null {
   if (phase === 'clue_reveal') return 'round';
   if (phase === 'bidding') return 'bidding';
+  if (phase === 'reveal') return 'reveal';
   return null;
+}
+
+function getAuctionUiReadyKey(
+  matchId: string,
+  phase: AuctionUiReadyPhase,
+  roundId: string,
+  stateVersion: number,
+): string {
+  return `${matchId}:${phase}:${roundId}:${stateVersion}`;
 }
 
 function getStatus({
