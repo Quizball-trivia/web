@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   PublicAuctionFormation,
@@ -46,6 +46,7 @@ const socketMock = vi.hoisted(() => {
 });
 
 const reconnectSocketMock = vi.hoisted(() => vi.fn());
+const loggerWarnMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/realtime/useRealtimeConnection', () => ({
   useRealtimeConnection: () => socketMock.socket,
@@ -53,6 +54,12 @@ vi.mock('@/lib/realtime/useRealtimeConnection', () => ({
 
 vi.mock('@/lib/realtime/socket-client', () => ({
   reconnectSocket: reconnectSocketMock,
+}));
+
+vi.mock('@/utils/logger', () => ({
+  logger: {
+    warn: loggerWarnMock,
+  },
 }));
 
 const formation: PublicAuctionFormation = {
@@ -137,6 +144,7 @@ describe('useRealtimeAuctionMatch', () => {
   beforeEach(() => {
     socketMock.reset();
     reconnectSocketMock.mockClear();
+    loggerWarnMock.mockClear();
   });
 
   afterEach(() => {
@@ -494,6 +502,68 @@ describe('useRealtimeAuctionMatch', () => {
     });
 
     expect(result.current.versionGapDetected).toBe(false);
+  });
+
+  it('keeps the current state and reconnects when a malformed event would break adaptation', async () => {
+    const { result } = renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      selfUserId: 'user-1',
+      locale: 'en',
+      formation: '4-3-3',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    act(() => {
+      socketMock.trigger('auction:match_started', {
+        matchId: 'match-1',
+        locale: 'en',
+        state: matchState({
+          version: 1,
+          phase: 'bidding',
+          currentRound: round({
+            currentTurnSeatId: 'seat-human',
+            foldedSeatIds: [],
+          }),
+        }),
+      });
+    });
+
+    expect(result.current.state?.phase).toBe('bidding');
+    expect(result.current.state?.currentRound?.foldedIds).toEqual([]);
+
+    act(() => {
+      socketMock.trigger('auction:turn_started', {
+        matchId: 'match-1',
+        roundId: 'round-1',
+        currentTurnSeatId: 'seat-human',
+        minBid: 20_000_000,
+        maxBid: 1_000_000_000,
+        turnEndsAt: null,
+        round: {
+          ...round({
+            currentTurnSeatId: 'seat-human',
+          }),
+          foldedSeatIds: undefined,
+        } as unknown as PublicAuctionRoundState,
+        stateVersion: 2,
+      });
+    });
+
+    await waitFor(() => {
+      expect(reconnectSocketMock).toHaveBeenCalled();
+    });
+
+    expect(result.current.state?.phase).toBe('bidding');
+    expect(result.current.state?.currentRound?.foldedIds).toEqual([]);
+    expect(result.current.error).toBe('Auction state changed unexpectedly. Reconnecting.');
+    expect(loggerWarnMock).toHaveBeenCalledWith(
+      'Auction realtime event application failed; reconnecting for state repair',
+      expect.objectContaining({
+        eventType: 'turn_started',
+        message: expect.any(String),
+      }),
+    );
+    expect(loggerWarnMock.mock.calls[0]?.[1]).not.toHaveProperty('payload');
   });
 
   it('surfaces auction errors without logging sensitive metadata', () => {

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRealtimeConnection } from '@/lib/realtime/useRealtimeConnection';
 import { reconnectSocket } from '@/lib/realtime/socket-client';
+import { logger } from '@/utils/logger';
 import type { AuctionActions } from '../hooks/useAuctionGame';
 import type { AuctionGameState } from '../types';
 import type {
@@ -185,7 +186,28 @@ export function useRealtimeAuctionMatch({
 
   useEffect(() => {
     const apply = <T extends Parameters<typeof applyAuctionRealtimeEvent>[1]>(event: T) => {
-      setRealtimeState((prev) => applyAuctionRealtimeEvent(prev, event));
+      setRealtimeState((prev) => {
+        try {
+          const next = applyAuctionRealtimeEvent(prev, event);
+          if (next.publicState) {
+            toClientAuctionState(next.publicState, {
+              humanSeatId: findMyAuctionSeatId(next.publicState, selfUserId),
+              humanAvatarSeed,
+            });
+          }
+          return next;
+        } catch (applyError) {
+          queueMicrotask(() => {
+            logger.warn('Auction realtime event application failed; reconnecting for state repair', {
+              eventType: event.type,
+              message: applyError instanceof Error ? applyError.message : 'Unknown error',
+            });
+            setError('Auction state changed unexpectedly. Reconnecting.');
+            reconnectSocket();
+          });
+          return prev;
+        }
+      });
       setError(null);
     };
 
@@ -254,7 +276,7 @@ export function useRealtimeAuctionMatch({
       socket.off('auction:solo_pick_selected', onSoloPickSelected);
       socket.off('auction:match_finished', onMatchFinished);
     };
-  }, [socket]);
+  }, [humanAvatarSeed, selfUserId, socket]);
 
   const actions = useMemo<AuctionActions>(() => ({
     startGame: () => {
