@@ -131,7 +131,7 @@ export function useRealtimeAuctionMatch({
     setError(null);
     setRealtimeState(EMPTY_AUCTION_REALTIME_STATE);
     socket.emit('auction:start_ai_match', { locale, formation });
-  }, [enabled, formation, locale, selfUserId, socket]);
+  }, [enabled, formation, locale, selfUserId, setPendingTurnActionValue, socket]);
 
   useEffect(() => {
     const handleConnect = () => setIsConnected(true);
@@ -179,7 +179,7 @@ export function useRealtimeAuctionMatch({
         autoStartTimerRef.current = null;
       }
     };
-  }, [enabled, isConnected, publicState, requestStart, selfUserId]);
+  }, [enabled, isConnected, publicState, requestStart, selfUserId, setPendingTurnActionValue]);
 
   useEffect(() => {
     if (!enabled || !isConnected || !publicState || !realtimeState.versionGapDetected) {
