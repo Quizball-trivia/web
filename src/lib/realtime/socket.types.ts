@@ -907,18 +907,21 @@ export interface AuctionMatchStartedPayload {
   matchId: string;
   locale: 'en' | 'ka';
   state: PublicAuctionMatchState;
+  serverNow?: string;
 }
 
 export interface AuctionStatePayload {
   matchId: string;
   state: PublicAuctionMatchState;
   stateVersion: number;
+  serverNow?: string;
 }
 
 export interface AuctionRoundStartedPayload {
   matchId: string;
   round: PublicAuctionRoundState;
   stateVersion: number;
+  serverNow?: string;
 }
 
 export interface AuctionClueRevealedPayload {
@@ -928,6 +931,7 @@ export interface AuctionClueRevealedPayload {
   clue: string;
   round: PublicAuctionRoundState;
   stateVersion: number;
+  serverNow?: string;
 }
 
 export interface AuctionBiddingStartedPayload {
@@ -937,6 +941,7 @@ export interface AuctionBiddingStartedPayload {
   currentTurnSeatId: string | null;
   turnEndsAt: string | null;
   stateVersion: number;
+  serverNow?: string;
 }
 
 export interface AuctionTurnStartedPayload {
@@ -948,6 +953,7 @@ export interface AuctionTurnStartedPayload {
   turnEndsAt: string | null;
   round: PublicAuctionRoundState;
   stateVersion: number;
+  serverNow?: string;
 }
 
 export interface AuctionBidAcceptedPayload {

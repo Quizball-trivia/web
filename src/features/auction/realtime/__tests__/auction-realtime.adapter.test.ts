@@ -150,6 +150,25 @@ describe('auction realtime adapter', () => {
     }
   });
 
+  it('clamps turn deadlines against synced server time when an offset is available', () => {
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-06-20T09:59:50.000Z'));
+    try {
+      const clientState = toClientAuctionState(matchState({
+        phase: 'bidding',
+        currentRound: round({
+          currentTurnSeatId: 'seat-human',
+          turnEndsAt: '2026-06-20T10:00:05.000Z',
+        }),
+      }), {
+        serverTimeOffsetMs: 20_000,
+      });
+
+      expect(clientState.currentRound?.turnEndsAt).toBe(Date.parse('2026-06-20T10:00:10.000Z'));
+    } finally {
+      nowSpy.mockRestore();
+    }
+  });
+
   it('maps revealed rounds with player identity and true value', () => {
     const publicState = matchState({
       phase: 'reveal',

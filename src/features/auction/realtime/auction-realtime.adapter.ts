@@ -22,6 +22,7 @@ const DEFAULT_AUCTION_CLUE_COUNT = 3;
 export interface AuctionStateAdapterOptions {
   humanSeatId?: string | null;
   humanAvatarSeed?: string;
+  serverTimeOffsetMs?: number | null;
 }
 
 export function findMyAuctionSeatId(
@@ -49,11 +50,11 @@ export function toClientAuctionState(
     players,
     formation,
     currentRound: publicState.currentRound
-      ? toClientRound(publicState.currentRound)
+      ? toClientRound(publicState.currentRound, options)
       : null,
     roundIndex: publicState.currentRound?.roundIndex ?? publicState.completedRounds.length,
     totalRounds: getTotalRounds(formation, publicState.seats.length),
-    completedRounds: publicState.completedRounds.map(toClientRound),
+    completedRounds: publicState.completedRounds.map((round) => toClientRound(round, options)),
     soloPick: publicState.soloPick
       ? {
           playerId: publicState.soloPick.playerSeatId,
@@ -143,7 +144,7 @@ function toClientPlayer(
   };
 }
 
-function toClientRound(round: PublicAuctionRoundState): AuctionRound {
+function toClientRound(round: PublicAuctionRoundState, options: AuctionStateAdapterOptions): AuctionRound {
   return {
     positionGroup: round.positionGroup,
     footballer: toClientFootballer(round.footballer, round.roundId, round),
@@ -163,7 +164,7 @@ function toClientRound(round: PublicAuctionRoundState): AuctionRound {
     turnOrder: [...round.turnOrder],
     currentTurnId: round.currentTurnSeatId,
     foldedIds: [...round.foldedSeatIds],
-    turnEndsAt: toClientTurnEndsAt(round.turnEndsAt),
+    turnEndsAt: toClientTurnEndsAt(round.turnEndsAt, options.serverTimeOffsetMs),
   };
 }
 
@@ -210,11 +211,12 @@ function getRoundClues(round: PublicAuctionRoundState): string[] {
   ];
 }
 
-function toClientTurnEndsAt(turnEndsAt: string | null): number | null {
+function toClientTurnEndsAt(turnEndsAt: string | null, serverTimeOffsetMs: number | null | undefined): number | null {
   if (!turnEndsAt) return null;
   const parsed = Date.parse(turnEndsAt);
   if (!Number.isFinite(parsed)) return null;
-  return Math.max(Date.now(), parsed);
+  const syncedNowMs = Date.now() + (serverTimeOffsetMs ?? 0);
+  return Math.max(syncedNowMs, parsed);
 }
 
 function getTotalRounds(formation: Formation, playerCount: number): number {

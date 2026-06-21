@@ -76,11 +76,13 @@ export function useRealtimeAuctionMatch({
   const [realtimeState, setRealtimeState] = useState<AuctionRealtimeState>(
     EMPTY_AUCTION_REALTIME_STATE,
   );
+  const [serverTimeOffsetMs, setServerTimeOffsetMs] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const startRequestedRef = useRef(false);
   const autoStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const versionGapReconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recoveredVersionGapKeyRef = useRef<string | null>(null);
+  const serverTimeOffsetMsRef = useRef<number | null>(null);
 
   const publicState = realtimeState.publicState;
   const matchId = publicState?.matchId ?? null;
@@ -95,10 +97,19 @@ export function useRealtimeAuctionMatch({
         ? toClientAuctionState(publicState, {
             humanSeatId: humanPlayerId,
             humanAvatarSeed,
+            serverTimeOffsetMs,
           })
         : null,
-    [humanAvatarSeed, humanPlayerId, publicState],
+    [humanAvatarSeed, humanPlayerId, publicState, serverTimeOffsetMs],
   );
+
+  const updateServerTimeOffset = useCallback((serverNow: string | undefined): number | null => {
+    const offset = computeAuctionServerTimeOffsetMs(serverNow);
+    if (offset === undefined) return serverTimeOffsetMsRef.current;
+    serverTimeOffsetMsRef.current = offset;
+    setServerTimeOffsetMs(offset);
+    return offset;
+  }, []);
 
   const requestStart = useCallback(() => {
     if (!enabled || !selfUserId || !socket.connected) return;
@@ -107,6 +118,8 @@ export function useRealtimeAuctionMatch({
       autoStartTimerRef.current = null;
     }
     startRequestedRef.current = true;
+    serverTimeOffsetMsRef.current = null;
+    setServerTimeOffsetMs(null);
     setError(null);
     setRealtimeState(EMPTY_AUCTION_REALTIME_STATE);
     socket.emit('auction:start_ai_match', { locale, formation });
@@ -140,6 +153,8 @@ export function useRealtimeAuctionMatch({
       recoveredVersionGapKeyRef.current = null;
       queueMicrotask(() => {
         setRealtimeState(EMPTY_AUCTION_REALTIME_STATE);
+        serverTimeOffsetMsRef.current = null;
+        setServerTimeOffsetMs(null);
         setError(null);
       });
       return;
@@ -186,6 +201,7 @@ export function useRealtimeAuctionMatch({
 
   useEffect(() => {
     const apply = <T extends Parameters<typeof applyAuctionRealtimeEvent>[1]>(event: T) => {
+      const eventServerTimeOffsetMs = updateServerTimeOffset(getAuctionEventServerNow(event));
       setRealtimeState((prev) => {
         try {
           const next = applyAuctionRealtimeEvent(prev, event);
@@ -193,6 +209,7 @@ export function useRealtimeAuctionMatch({
             toClientAuctionState(next.publicState, {
               humanSeatId: findMyAuctionSeatId(next.publicState, selfUserId),
               humanAvatarSeed,
+              serverTimeOffsetMs: eventServerTimeOffsetMs,
             });
           }
           return next;
@@ -276,7 +293,7 @@ export function useRealtimeAuctionMatch({
       socket.off('auction:solo_pick_selected', onSoloPickSelected);
       socket.off('auction:match_finished', onMatchFinished);
     };
-  }, [humanAvatarSeed, selfUserId, socket]);
+  }, [humanAvatarSeed, selfUserId, socket, updateServerTimeOffset]);
 
   const actions = useMemo<AuctionActions>(() => ({
     startGame: () => {
@@ -316,6 +333,16 @@ export function useRealtimeAuctionMatch({
     isConnected,
     versionGapDetected: realtimeState.versionGapDetected,
   };
+}
+
+function computeAuctionServerTimeOffsetMs(serverNow: string | undefined, receivedAtMs = Date.now()): number | undefined {
+  if (!serverNow) return undefined;
+  const serverNowMs = Date.parse(serverNow);
+  return Number.isFinite(serverNowMs) ? serverNowMs - receivedAtMs : undefined;
+}
+
+function getAuctionEventServerNow(event: Parameters<typeof applyAuctionRealtimeEvent>[1]): string | undefined {
+  return 'serverNow' in event.payload ? event.payload.serverNow : undefined;
 }
 
 function getStatus({

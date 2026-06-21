@@ -291,6 +291,40 @@ describe('useRealtimeAuctionMatch', () => {
     });
   });
 
+  it('uses serverNow from auction events to adapt turn deadlines with server-clock offset', () => {
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-06-20T10:00:00.000Z'));
+    try {
+      const { result } = renderHook(() => useRealtimeAuctionMatch({
+        enabled: true,
+        selfUserId: 'user-1',
+        locale: 'en',
+        formation: '4-3-3',
+        humanAvatarSeed: 'avatar-1',
+      }));
+
+      act(() => {
+        socketMock.trigger('auction:match_started', {
+          matchId: 'match-1',
+          locale: 'en',
+          serverNow: '2026-06-20T10:00:10.000Z',
+          state: matchState({
+            version: 1,
+            phase: 'bidding',
+            currentRound: round({
+              currentTurnSeatId: 'seat-human',
+              turnEndsAt: '2026-06-20T10:00:05.000Z',
+            }),
+          }),
+        });
+      });
+
+      expect(result.current.state?.phase).toBe('bidding');
+      expect(result.current.state?.currentRound?.turnEndsAt).toBe(Date.parse('2026-06-20T10:00:10.000Z'));
+    } finally {
+      nowSpy.mockRestore();
+    }
+  });
+
   it('applies a server event sequence through reveal and results', () => {
     const { result } = renderHook(() => useRealtimeAuctionMatch({
       enabled: true,
