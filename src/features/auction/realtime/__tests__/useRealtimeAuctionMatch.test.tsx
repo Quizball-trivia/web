@@ -1,5 +1,5 @@
-import { act, renderHook, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, renderHook } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   PublicAuctionFormation,
   PublicAuctionMatchState,
@@ -130,7 +130,13 @@ describe('useRealtimeAuctionMatch', () => {
     socketMock.reset();
   });
 
-  it('starts an AI auction match after connecting', async () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('starts an AI auction match after the post-connect hydration grace window', () => {
+    vi.useFakeTimers();
+
     renderHook(() => useRealtimeAuctionMatch({
       enabled: true,
       selfUserId: 'user-1',
@@ -138,9 +144,42 @@ describe('useRealtimeAuctionMatch', () => {
       humanAvatarSeed: 'avatar-1',
     }));
 
-    await waitFor(() => {
-      expect(socketMock.emit).toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en' });
+    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en' });
+
+    act(() => {
+      vi.advanceTimersByTime(499);
     });
+    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en' });
+
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(socketMock.emit).toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en' });
+  });
+
+  it('does not start a duplicate match when reconnect hydration arrives first', () => {
+    vi.useFakeTimers();
+
+    const { result } = renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      selfUserId: 'user-1',
+      locale: 'en',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    act(() => {
+      socketMock.trigger('auction:state', {
+        matchId: 'match-1',
+        state: matchState(),
+        stateVersion: 1,
+      });
+    });
+    expect(result.current.matchId).toBe('match-1');
+
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en' });
   });
 
   it('hydrates match state and emits bid/fold/solo-pick actions for the active match', async () => {

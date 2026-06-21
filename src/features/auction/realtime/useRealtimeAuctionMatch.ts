@@ -31,6 +31,8 @@ import {
   type AuctionRealtimeState,
 } from './auction-realtime.reducer';
 
+const POST_CONNECT_AUCTION_HYDRATION_GRACE_MS = 500;
+
 type AuctionConnectionStatus =
   | 'auth_required'
   | 'connecting'
@@ -70,6 +72,7 @@ export function useRealtimeAuctionMatch({
   );
   const [error, setError] = useState<string | null>(null);
   const startRequestedRef = useRef(false);
+  const autoStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const publicState = realtimeState.publicState;
   const matchId = publicState?.matchId ?? null;
@@ -91,6 +94,10 @@ export function useRealtimeAuctionMatch({
 
   const requestStart = useCallback(() => {
     if (!enabled || !selfUserId || !socket.connected) return;
+    if (autoStartTimerRef.current) {
+      clearTimeout(autoStartTimerRef.current);
+      autoStartTimerRef.current = null;
+    }
     startRequestedRef.current = true;
     setError(null);
     setRealtimeState(EMPTY_AUCTION_REALTIME_STATE);
@@ -114,6 +121,10 @@ export function useRealtimeAuctionMatch({
   useEffect(() => {
     if (!enabled || !selfUserId) {
       startRequestedRef.current = false;
+      if (autoStartTimerRef.current) {
+        clearTimeout(autoStartTimerRef.current);
+        autoStartTimerRef.current = null;
+      }
       queueMicrotask(() => {
         setRealtimeState(EMPTY_AUCTION_REALTIME_STATE);
         setError(null);
@@ -121,7 +132,16 @@ export function useRealtimeAuctionMatch({
       return;
     }
     if (!isConnected || startRequestedRef.current || publicState) return;
-    queueMicrotask(() => requestStart());
+    autoStartTimerRef.current = setTimeout(() => {
+      autoStartTimerRef.current = null;
+      requestStart();
+    }, POST_CONNECT_AUCTION_HYDRATION_GRACE_MS);
+    return () => {
+      if (autoStartTimerRef.current) {
+        clearTimeout(autoStartTimerRef.current);
+        autoStartTimerRef.current = null;
+      }
+    };
   }, [enabled, isConnected, publicState, requestStart, selfUserId]);
 
   useEffect(() => {
