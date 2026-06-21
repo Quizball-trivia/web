@@ -23,9 +23,11 @@ if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
       // ~15k flag requests/day for one boolean).
       advanced_disable_feature_flags: true,
       advanced_disable_feature_flags_on_first_load: true,
-      session_recording: {
-        recordCrossOriginIframes: true,
-      },
+      // Session replays are a major event/ingest cost driver and are not part of
+      // our core analytics (we rely on ~60 named funnel events). Disabled to cut
+      // the bill; re-enable temporarily if a specific debugging/abuse
+      // investigation needs replays.
+      disable_session_recording: true,
       capture_performance: false,
     });
   } catch (error) {
