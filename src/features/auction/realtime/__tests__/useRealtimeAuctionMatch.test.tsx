@@ -143,20 +143,21 @@ describe('useRealtimeAuctionMatch', () => {
       enabled: true,
       selfUserId: 'user-1',
       locale: 'en',
+      formation: '4-3-3',
       humanAvatarSeed: 'avatar-1',
     }));
 
-    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en' });
+    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en', formation: '4-3-3' });
 
     act(() => {
       vi.advanceTimersByTime(499);
     });
-    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en' });
+    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en', formation: '4-3-3' });
 
     act(() => {
       vi.advanceTimersByTime(1);
     });
-    expect(socketMock.emit).toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en' });
+    expect(socketMock.emit).toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en', formation: '4-3-3' });
   });
 
   it('does not start a duplicate match when reconnect hydration arrives first', () => {
@@ -166,6 +167,7 @@ describe('useRealtimeAuctionMatch', () => {
       enabled: true,
       selfUserId: 'user-1',
       locale: 'en',
+      formation: '4-3-3',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -181,7 +183,7 @@ describe('useRealtimeAuctionMatch', () => {
     act(() => {
       vi.advanceTimersByTime(500);
     });
-    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en' });
+    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en', formation: '4-3-3' });
   });
 
   it('hydrates updated state after reconnect without starting a duplicate match', () => {
@@ -191,6 +193,7 @@ describe('useRealtimeAuctionMatch', () => {
       enabled: true,
       selfUserId: 'user-1',
       locale: 'en',
+      formation: '4-3-3',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -230,7 +233,7 @@ describe('useRealtimeAuctionMatch', () => {
     expect(result.current.status).toBe('playing');
     expect(result.current.state?.phase).toBe('bidding');
     expect(result.current.state?.currentRound?.currentTurnId).toBe('seat-bot-1');
-    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en' });
+    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en', formation: '4-3-3' });
   });
 
   it('hydrates match state and emits bid/fold/solo-pick actions for the active match', async () => {
@@ -238,6 +241,7 @@ describe('useRealtimeAuctionMatch', () => {
       enabled: true,
       selfUserId: 'user-1',
       locale: 'en',
+      formation: '4-3-3',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -277,6 +281,7 @@ describe('useRealtimeAuctionMatch', () => {
       enabled: true,
       selfUserId: 'user-1',
       locale: 'en',
+      formation: '4-3-3',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -425,6 +430,7 @@ describe('useRealtimeAuctionMatch', () => {
       enabled: true,
       selfUserId: 'user-1',
       locale: 'en',
+      formation: '4-3-3',
       humanAvatarSeed: 'avatar-1',
     }));
 

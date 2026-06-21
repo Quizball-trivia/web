@@ -20,6 +20,7 @@ import type {
   AuctionStatePayload,
   AuctionTurnStartedPayload,
   AuctionTurnTimeoutPayload,
+  AuctionFormationName,
 } from '@/lib/realtime/socket.types';
 import {
   findMyAuctionSeatId,
@@ -45,6 +46,7 @@ export interface UseRealtimeAuctionMatchParams {
   enabled: boolean;
   selfUserId: string | null;
   locale: 'en' | 'ka';
+  formation?: AuctionFormationName;
   humanAvatarSeed: string;
 }
 
@@ -63,6 +65,7 @@ export function useRealtimeAuctionMatch({
   enabled,
   selfUserId,
   locale,
+  formation,
   humanAvatarSeed,
 }: UseRealtimeAuctionMatchParams): UseRealtimeAuctionMatchResult {
   const socket = useRealtimeConnection({ enabled, selfUserId });
@@ -101,8 +104,8 @@ export function useRealtimeAuctionMatch({
     startRequestedRef.current = true;
     setError(null);
     setRealtimeState(EMPTY_AUCTION_REALTIME_STATE);
-    socket.emit('auction:start_ai_match', { locale });
-  }, [enabled, locale, selfUserId, socket]);
+    socket.emit('auction:start_ai_match', { locale, formation });
+  }, [enabled, formation, locale, selfUserId, socket]);
 
   useEffect(() => {
     const handleConnect = () => setIsConnected(true);

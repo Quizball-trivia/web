@@ -10,6 +10,9 @@ import { useRealtimeAuctionMatch } from './realtime/useRealtimeAuctionMatch';
 import { AuctionShowdownScreen } from './components/AuctionShowdownScreen';
 import { AuctionGameScreen } from './components/AuctionGameScreen';
 import { AuctionResultsScreen } from './components/AuctionResultsScreen';
+import type { AuctionFormationName } from '@/lib/realtime/socket.types';
+
+const LIVE_AUCTION_FORMATION: AuctionFormationName = '4-3-3';
 
 interface AuctionFlowScreenProps {
   username: string;
@@ -132,6 +135,7 @@ function AuctionRealtimeFlowScreen({ avatarSeed }: Omit<AuctionFlowScreenProps, 
     enabled,
     selfUserId: authUser?.id ?? null,
     locale: locale === 'ka' ? 'ka' : 'en',
+    formation: LIVE_AUCTION_FORMATION,
     humanAvatarSeed: avatarSeed,
   });
 
