@@ -327,6 +327,8 @@ describe('useRealtimeAuctionMatch', () => {
       '',
     ]);
 
+    const turnDeadline = new Date(Date.now() + 5_000).toISOString();
+
     act(() => {
       socketMock.trigger('auction:turn_started', {
         matchId: 'match-1',
@@ -334,12 +336,12 @@ describe('useRealtimeAuctionMatch', () => {
         currentTurnSeatId: 'seat-human',
         minBid: 20_000_000,
         maxBid: 1_000_000_000,
-        turnEndsAt: '2026-06-20T10:00:05.000Z',
+        turnEndsAt: turnDeadline,
         round: round({
           clueRevealIndex: 1,
           revealedClues: ['Scored in a Champions League final'],
           currentTurnSeatId: 'seat-human',
-          turnEndsAt: '2026-06-20T10:00:05.000Z',
+          turnEndsAt: turnDeadline,
         }),
         stateVersion: 3,
       });
@@ -347,7 +349,7 @@ describe('useRealtimeAuctionMatch', () => {
 
     expect(result.current.state?.phase).toBe('bidding');
     expect(result.current.state?.currentRound?.currentTurnId).toBe('seat-human');
-    expect(result.current.state?.currentRound?.turnEndsAt).toBe(Date.parse('2026-06-20T10:00:05.000Z'));
+    expect(result.current.state?.currentRound?.turnEndsAt).toBe(Date.parse(turnDeadline));
 
     const revealedRound = round({
       revealed: true,

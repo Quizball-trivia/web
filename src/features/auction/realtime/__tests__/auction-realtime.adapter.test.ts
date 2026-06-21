@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type {
   PublicAuctionFormation,
   PublicAuctionMatchState,
@@ -123,6 +123,31 @@ describe('auction realtime adapter', () => {
       '',
     ]);
     expect(clientState.currentRound?.clueRevealIndex).toBe(1);
+  });
+
+  it('clamps past turn deadlines and ignores invalid deadline strings', () => {
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-06-20T10:00:10.000Z'));
+    try {
+      const pastDeadlineState = toClientAuctionState(matchState({
+        phase: 'bidding',
+        currentRound: round({
+          currentTurnSeatId: 'seat-human',
+          turnEndsAt: '2026-06-20T10:00:05.000Z',
+        }),
+      }));
+      expect(pastDeadlineState.currentRound?.turnEndsAt).toBe(Date.parse('2026-06-20T10:00:10.000Z'));
+
+      const invalidDeadlineState = toClientAuctionState(matchState({
+        phase: 'bidding',
+        currentRound: round({
+          currentTurnSeatId: 'seat-human',
+          turnEndsAt: 'not-a-date',
+        }),
+      }));
+      expect(invalidDeadlineState.currentRound?.turnEndsAt).toBeNull();
+    } finally {
+      nowSpy.mockRestore();
+    }
   });
 
   it('maps revealed rounds with player identity and true value', () => {

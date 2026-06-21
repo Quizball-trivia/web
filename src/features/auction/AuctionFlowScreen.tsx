@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useAuthStore } from '@/stores/auth.store';
+import { useRealtimeConnectionHealth } from '@/lib/realtime/connection-health';
 import { poppins } from './constants/auction.constants';
 import { useAuctionGame } from './hooks/useAuctionGame';
 import { useRealtimeAuctionMatch } from './realtime/useRealtimeAuctionMatch';
@@ -122,10 +123,11 @@ function AuctionMockFlowScreen({ username, avatarSeed }: Omit<AuctionFlowScreenP
 
 function AuctionRealtimeFlowScreen({ avatarSeed }: Omit<AuctionFlowScreenProps, 'mode'>) {
   const router = useRouter();
-  const { locale } = useLocale();
+  const { locale, t } = useLocale();
   const [auctionStarted, setAuctionStarted] = useState(false);
   const authUser = useAuthStore((store) => store.user);
   const authStatus = useAuthStore((store) => store.status);
+  const connectionHealth = useRealtimeConnectionHealth();
   const enabled = auctionStarted && authStatus === 'authenticated' && Boolean(authUser?.id);
   const authRequired =
     authStatus === 'anonymous' ||
@@ -147,6 +149,16 @@ function AuctionRealtimeFlowScreen({ avatarSeed }: Omit<AuctionFlowScreenProps, 
 
   const resolvedHumanPlayerId =
     humanPlayerId ?? state?.players.find((player) => !player.isBot)?.id ?? state?.players[0]?.id ?? null;
+  const connectionWarning =
+    connectionHealth.phase === 'reconnecting' || connectionHealth.phase === 'disconnected'
+      ? t('common.reconnecting')
+      : connectionHealth.phase === 'error'
+        ? t('common.connectionBad')
+        : null;
+  const liveWarningMessage =
+    error ??
+    connectionWarning ??
+    (versionGapDetected ? 'Auction state changed while reconnecting. Latest event was applied.' : null);
 
   const handlePlayAgain = useCallback(() => {
     setAuctionStarted(true);
@@ -190,10 +202,11 @@ function AuctionRealtimeFlowScreen({ avatarSeed }: Omit<AuctionFlowScreenProps, 
           state={state}
           actions={actions}
           humanPlayerId={resolvedHumanPlayerId}
+          serverDrivenTransitions
         />
-        {(error || versionGapDetected) && (
+        {liveWarningMessage && (
           <LiveAuctionWarning
-            message={error ?? 'Auction state changed while reconnecting. Latest event was applied.'}
+            message={liveWarningMessage}
           />
         )}
       </>

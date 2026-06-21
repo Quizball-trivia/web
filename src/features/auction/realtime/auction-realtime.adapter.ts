@@ -163,7 +163,7 @@ function toClientRound(round: PublicAuctionRoundState): AuctionRound {
     turnOrder: [...round.turnOrder],
     currentTurnId: round.currentTurnSeatId,
     foldedIds: [...round.foldedSeatIds],
-    turnEndsAt: round.turnEndsAt ? Date.parse(round.turnEndsAt) : null,
+    turnEndsAt: toClientTurnEndsAt(round.turnEndsAt),
   };
 }
 
@@ -208,6 +208,13 @@ function getRoundClues(round: PublicAuctionRoundState): string[] {
     ...visibleClues,
     ...Array.from({ length: clueCount - visibleClues.length }, () => ''),
   ];
+}
+
+function toClientTurnEndsAt(turnEndsAt: string | null): number | null {
+  if (!turnEndsAt) return null;
+  const parsed = Date.parse(turnEndsAt);
+  if (!Number.isFinite(parsed)) return null;
+  return Math.max(Date.now(), parsed);
 }
 
 function getTotalRounds(formation: Formation, playerCount: number): number {

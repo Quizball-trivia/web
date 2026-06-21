@@ -21,10 +21,12 @@ export function RevealScreen({
   state,
   actions,
   humanPlayerId,
+  serverDrivenTransitions = false,
 }: {
   state: AuctionGameState;
   actions: AuctionActions;
   humanPlayerId: string;
+  serverDrivenTransitions?: boolean;
 }) {
   const { t } = useLocale();
   const round = state.currentRound;
@@ -187,7 +189,7 @@ export function RevealScreen({
 
         {/* Next round button — stage 5 */}
         <AnimatePresence>
-          {stage >= 5 && (
+          {stage >= 5 && !serverDrivenTransitions && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
