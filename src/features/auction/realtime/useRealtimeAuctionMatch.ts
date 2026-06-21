@@ -267,6 +267,7 @@ export function useRealtimeAuctionMatch({
 
     const handleVisibilityChange = () => {
       if (document.visibilityState !== 'visible') return;
+      if (socket.connected) return;
       reconnectSocket();
     };
 

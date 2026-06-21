@@ -774,7 +774,7 @@ describe('useRealtimeAuctionMatch', () => {
     expect(result.current.versionGapDetected).toBe(false);
   });
 
-  it('soft-reconnects for authoritative hydration when a live auction tab becomes visible', () => {
+  it('only reconnects for authoritative hydration on tab focus when the socket is stale', () => {
     let visibilityState: DocumentVisibilityState = 'hidden';
     const visibilitySpy = vi.spyOn(document, 'visibilityState', 'get').mockImplementation(() => visibilityState);
     try {
@@ -801,6 +801,21 @@ describe('useRealtimeAuctionMatch', () => {
       expect(result.current.matchId).toBe('match-1');
 
       act(() => {
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+      expect(reconnectSocketMock).not.toHaveBeenCalled();
+
+      act(() => {
+        visibilityState = 'visible';
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+
+      expect(reconnectSocketMock).not.toHaveBeenCalled();
+
+      act(() => {
+        socketMock.socket.connected = false;
+        socketMock.trigger('disconnect');
+        visibilityState = 'hidden';
         document.dispatchEvent(new Event('visibilitychange'));
       });
       expect(reconnectSocketMock).not.toHaveBeenCalled();
