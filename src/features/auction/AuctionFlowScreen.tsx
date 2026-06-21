@@ -139,6 +139,7 @@ function AuctionRealtimeFlowScreen({ avatarSeed }: Omit<AuctionFlowScreenProps, 
     status,
     error,
     versionGapDetected,
+    waitingForReady,
   } = useRealtimeAuctionMatch({
     enabled,
     selfUserId: authUser?.id ?? null,
@@ -158,6 +159,7 @@ function AuctionRealtimeFlowScreen({ avatarSeed }: Omit<AuctionFlowScreenProps, 
   const liveWarningMessage =
     error ??
     connectionWarning ??
+    (waitingForReady ? t('auctionGame.waitingForPlayersReady') : null) ??
     (versionGapDetected ? 'Auction state changed while reconnecting. Latest event was applied.' : null);
 
   const handlePlayAgain = useCallback(() => {

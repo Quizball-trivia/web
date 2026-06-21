@@ -12,6 +12,7 @@ import type {
   AuctionClueRevealedPayload,
   AuctionErrorPayload,
   AuctionFoldAcceptedPayload,
+  AuctionWaitingForReadyPayload,
   AuctionMatchFinishedPayload,
   AuctionMatchStartedPayload,
   AuctionRoundRevealedPayload,
@@ -23,6 +24,7 @@ import type {
   AuctionTurnStartedPayload,
   AuctionTurnTimeoutPayload,
   AuctionFormationName,
+  AuctionUiReadyPhase,
 } from '@/lib/realtime/socket.types';
 import {
   findMyAuctionSeatId,
@@ -62,7 +64,12 @@ export interface UseRealtimeAuctionMatchResult {
   error: string | null;
   isConnected: boolean;
   versionGapDetected: boolean;
+  waitingForReady: AuctionWaitingForReadyState | null;
 }
+
+export type AuctionWaitingForReadyState = AuctionWaitingForReadyPayload & {
+  forceStartsAtMs: number;
+};
 
 export function useRealtimeAuctionMatch({
   enabled,
@@ -78,6 +85,7 @@ export function useRealtimeAuctionMatch({
   );
   const [serverTimeOffsetMs, setServerTimeOffsetMs] = useState<number | null>(null);
   const [pendingTurnAction, setPendingTurnAction] = useState<AuctionPendingTurnAction | null>(null);
+  const [waitingForReady, setWaitingForReady] = useState<AuctionWaitingForReadyState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const startRequestedRef = useRef(false);
   const autoStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -88,6 +96,9 @@ export function useRealtimeAuctionMatch({
 
   const publicState = realtimeState.publicState;
   const matchId = publicState?.matchId ?? null;
+  const publicPhase = publicState?.phase ?? null;
+  const publicStateVersion = publicState?.version ?? null;
+  const currentRoundId = publicState?.currentRound?.roundId ?? null;
   const humanPlayerId = useMemo(
     () => findMyAuctionSeatId(publicState, selfUserId),
     [publicState, selfUserId],
@@ -128,6 +139,7 @@ export function useRealtimeAuctionMatch({
     serverTimeOffsetMsRef.current = null;
     setServerTimeOffsetMs(null);
     setPendingTurnActionValue(null);
+    setWaitingForReady(null);
     setError(null);
     setRealtimeState(EMPTY_AUCTION_REALTIME_STATE);
     socket.emit('auction:start_ai_match', { locale, formation });
@@ -164,6 +176,7 @@ export function useRealtimeAuctionMatch({
         serverTimeOffsetMsRef.current = null;
         setServerTimeOffsetMs(null);
         setPendingTurnActionValue(null);
+        setWaitingForReady(null);
         setError(null);
       });
       return;
@@ -180,6 +193,27 @@ export function useRealtimeAuctionMatch({
       }
     };
   }, [enabled, isConnected, publicState, requestStart, selfUserId, setPendingTurnActionValue]);
+
+  useEffect(() => {
+    if (!enabled || !selfUserId || !matchId || !socket.connected || !currentRoundId || publicStateVersion === null || !publicPhase) return;
+    const phase = getUiReadyPhase(publicPhase);
+    if (!phase) return;
+
+    socket.emit('auction:ui_ready', {
+      matchId,
+      phase,
+      roundId: currentRoundId,
+      stateVersion: publicStateVersion,
+    });
+  }, [
+    currentRoundId,
+    enabled,
+    matchId,
+    publicPhase,
+    publicStateVersion,
+    selfUserId,
+    socket,
+  ]);
 
   useEffect(() => {
     if (!enabled || !isConnected || !publicState || !realtimeState.versionGapDetected) {
@@ -258,6 +292,9 @@ export function useRealtimeAuctionMatch({
       if (shouldClearPendingAfterEvent(event)) {
         clearPendingForMatch(event.payload.matchId);
       }
+      if (shouldClearWaitingForReadyAfterEvent(event)) {
+        setWaitingForReady(null);
+      }
       setError(null);
     };
 
@@ -293,6 +330,16 @@ export function useRealtimeAuctionMatch({
       apply({ type: 'solo_pick_selected', payload });
     const onMatchFinished = (payload: AuctionMatchFinishedPayload) =>
       apply({ type: 'match_finished', payload });
+    const onWaitingForReady = (payload: AuctionWaitingForReadyPayload) => {
+      const offset = updateServerTimeOffset(payload.serverNow);
+      const forceStartsAtMs = Date.parse(payload.forceStartsAt);
+      setWaitingForReady({
+        ...payload,
+        forceStartsAtMs: Number.isFinite(forceStartsAtMs)
+          ? forceStartsAtMs
+          : Date.now() + (offset ?? 0),
+      });
+    };
 
     socket.on('auction:error', onError);
     socket.on('auction:match_started', onMatchStarted);
@@ -309,6 +356,7 @@ export function useRealtimeAuctionMatch({
     socket.on('auction:solo_pick_started', onSoloPickStarted);
     socket.on('auction:solo_pick_selected', onSoloPickSelected);
     socket.on('auction:match_finished', onMatchFinished);
+    socket.on('auction:waiting_for_ready', onWaitingForReady);
 
     return () => {
       socket.off('auction:error', onError);
@@ -326,6 +374,7 @@ export function useRealtimeAuctionMatch({
       socket.off('auction:solo_pick_started', onSoloPickStarted);
       socket.off('auction:solo_pick_selected', onSoloPickSelected);
       socket.off('auction:match_finished', onMatchFinished);
+      socket.off('auction:waiting_for_ready', onWaitingForReady);
     };
   }, [humanAvatarSeed, selfUserId, setPendingTurnActionValue, socket, updateServerTimeOffset]);
 
@@ -380,6 +429,7 @@ export function useRealtimeAuctionMatch({
     error,
     isConnected,
     versionGapDetected: realtimeState.versionGapDetected,
+    waitingForReady,
   };
 }
 
@@ -403,6 +453,23 @@ function shouldClearPendingAfterEvent(event: Parameters<typeof applyAuctionRealt
     event.type === 'state' ||
     event.type === 'match_finished'
   );
+}
+
+function shouldClearWaitingForReadyAfterEvent(event: Parameters<typeof applyAuctionRealtimeEvent>[1]): boolean {
+  return (
+    event.type === 'clue_revealed' ||
+    event.type === 'turn_started' ||
+    event.type === 'round_revealed' ||
+    event.type === 'solo_pick_started' ||
+    event.type === 'match_finished' ||
+    event.type === 'state'
+  );
+}
+
+function getUiReadyPhase(phase: NonNullable<AuctionRealtimeState['publicState']>['phase']): AuctionUiReadyPhase | null {
+  if (phase === 'clue_reveal') return 'round';
+  if (phase === 'bidding') return 'bidding';
+  return null;
 }
 
 function getStatus({

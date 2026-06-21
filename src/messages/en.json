@@ -1455,6 +1455,7 @@
   "auctionGame": {
     "findingPlayers": "Finding Players",
     "lookingForOpponents": "Looking for {count} opponents...",
+    "waitingForPlayersReady": "Waiting for players...",
     "formation": "Formation",
     "allPlayersSameFormation": "All players build with the same formation",
     "startAuction": "Start Auction",

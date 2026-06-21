@@ -380,6 +380,125 @@ describe('useRealtimeAuctionMatch', () => {
     }
   });
 
+  it('emits auction ui-ready for visible clue and bidding phases', async () => {
+    const { result } = renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      selfUserId: 'user-1',
+      locale: 'en',
+      formation: '4-3-3',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    act(() => {
+      socketMock.trigger('auction:match_started', {
+        matchId: 'match-1',
+        locale: 'en',
+        state: matchState({
+          version: 1,
+          phase: 'clue_reveal',
+          currentRound: round({ roundId: 'round-1' }),
+        }),
+      });
+    });
+
+    await waitFor(() => {
+      expect(socketMock.emit).toHaveBeenCalledWith('auction:ui_ready', {
+        matchId: 'match-1',
+        phase: 'round',
+        roundId: 'round-1',
+        stateVersion: 1,
+      });
+    });
+
+    act(() => {
+      socketMock.trigger('auction:bidding_started', {
+        matchId: 'match-1',
+        roundId: 'round-1',
+        round: round({
+          roundId: 'round-1',
+          clueRevealIndex: 3,
+          currentTurnSeatId: null,
+          turnEndsAt: null,
+        }),
+        currentTurnSeatId: null,
+        turnEndsAt: null,
+        stateVersion: 2,
+      });
+    });
+
+    await waitFor(() => {
+      expect(socketMock.emit).toHaveBeenCalledWith('auction:ui_ready', {
+        matchId: 'match-1',
+        phase: 'bidding',
+        roundId: 'round-1',
+        stateVersion: 2,
+      });
+    });
+
+    expect(result.current.state?.phase).toBe('bidding');
+  });
+
+  it('tracks auction waiting-for-ready state and clears it when the turn starts', async () => {
+    const { result } = renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      selfUserId: 'user-1',
+      locale: 'en',
+      formation: '4-3-3',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    act(() => {
+      socketMock.trigger('auction:waiting_for_ready', {
+        matchId: 'match-1',
+        phase: 'bidding',
+        roundId: 'round-1',
+        stateVersion: 2,
+        readyCount: 0,
+        totalCount: 2,
+        readyUserIds: [],
+        waitingUserIds: ['user-1', 'user-2'],
+        forceStartsAt: '2026-06-20T10:00:08.000Z',
+        serverNow: '2026-06-20T10:00:00.000Z',
+      });
+    });
+
+    expect(result.current.waitingForReady).toMatchObject({
+      matchId: 'match-1',
+      phase: 'bidding',
+      roundId: 'round-1',
+      totalCount: 2,
+      forceStartsAtMs: Date.parse('2026-06-20T10:00:08.000Z'),
+    });
+
+    act(() => {
+      socketMock.trigger('auction:match_started', {
+        matchId: 'match-1',
+        locale: 'en',
+        state: matchState({
+          version: 1,
+          phase: 'bidding',
+          currentRound: round({ roundId: 'round-1', currentTurnSeatId: null }),
+        }),
+      });
+      socketMock.trigger('auction:turn_started', {
+        matchId: 'match-1',
+        roundId: 'round-1',
+        currentTurnSeatId: 'seat-human',
+        minBid: 20_000_000,
+        maxBid: 1_000_000_000,
+        turnEndsAt: new Date(Date.now() + 5_000).toISOString(),
+        round: round({
+          roundId: 'round-1',
+          currentTurnSeatId: 'seat-human',
+          turnEndsAt: new Date(Date.now() + 5_000).toISOString(),
+        }),
+        stateVersion: 2,
+      });
+    });
+
+    expect(result.current.waitingForReady).toBeNull();
+  });
+
   it('applies a server event sequence through reveal and results', () => {
     const { result } = renderHook(() => useRealtimeAuctionMatch({
       enabled: true,

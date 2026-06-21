@@ -874,6 +874,15 @@ export interface AuctionSoloPickSelectPayload {
   option: 'A' | 'B';
 }
 
+export type AuctionUiReadyPhase = 'round' | 'bidding';
+
+export interface AuctionUiReadyPayload {
+  matchId: string;
+  phase: AuctionUiReadyPhase;
+  roundId: string;
+  stateVersion: number;
+}
+
 export interface AuctionSearchStartedPayload {
   searchId: string;
   locale: 'en' | 'ka';
@@ -921,6 +930,19 @@ export interface AuctionRoundStartedPayload {
   matchId: string;
   round: PublicAuctionRoundState;
   stateVersion: number;
+  serverNow?: string;
+}
+
+export interface AuctionWaitingForReadyPayload {
+  matchId: string;
+  phase: AuctionUiReadyPhase;
+  roundId: string;
+  stateVersion: number;
+  readyCount: number;
+  totalCount: number;
+  readyUserIds?: string[];
+  waitingUserIds?: string[];
+  forceStartsAt: string;
   serverNow?: string;
 }
 
@@ -1201,6 +1223,7 @@ export interface ClientToServerEvents {
   'auction:bid': (data: AuctionBidPayload) => void;
   'auction:fold': (data: AuctionFoldPayload) => void;
   'auction:solo_pick_select': (data: AuctionSoloPickSelectPayload) => void;
+  'auction:ui_ready': (data: AuctionUiReadyPayload) => void;
   'draft:rejoin': (data?: { lobbyId?: string }) => void;
   'draft:ui_ready': (data: { lobbyId: string; turnUserId: string; banCount: number }) => void;
   'draft:ban': (data: { categoryId: string }) => void;
@@ -1300,6 +1323,7 @@ export interface ServerToClientEvents {
   'auction:match_started': (data: AuctionMatchStartedPayload) => void;
   'auction:state': (data: AuctionStatePayload) => void;
   'auction:round_started': (data: AuctionRoundStartedPayload) => void;
+  'auction:waiting_for_ready': (data: AuctionWaitingForReadyPayload) => void;
   'auction:clue_revealed': (data: AuctionClueRevealedPayload) => void;
   'auction:bidding_started': (data: AuctionBiddingStartedPayload) => void;
   'auction:turn_started': (data: AuctionTurnStartedPayload) => void;

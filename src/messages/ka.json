@@ -1455,6 +1455,7 @@
   "auctionGame": {
     "findingPlayers": "მოთამაშეების ძებნა",
     "lookingForOpponents": "მიმდინარეობს {count} მოწინააღმდეგის ძებნა...",
+    "waitingForPlayersReady": "ველოდებით მოთამაშეებს...",
     "formation": "ფორმაცია",
     "allPlayersSameFormation": "ყველა მოთამაშე ერთი და იმავე ფორმაციით თამაშობს",
     "startAuction": "აუქციონის დაწყება",
