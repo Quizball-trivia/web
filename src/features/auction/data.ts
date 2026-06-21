@@ -15,6 +15,10 @@ export function getFootballerPlaceholderImage(id: string): string {
   return `https://api.dicebear.com/9.x/lorelei/svg?seed=${encodeURIComponent(id)}&radius=50`;
 }
 
+// Popular real / FIFA formations. `required` is the per-group total (always
+// sums to 11 outfield+GK) the game logic relies on; `rows` is display-only and
+// splits a group into visual bands (e.g. 4-2-3-1 shows MID as a 3-band over a
+// 2-band) so the pitch renders the recognisable shape.
 export const FORMATIONS: Formation[] = [
   {
     name: '4-3-3',
@@ -37,16 +41,6 @@ export const FORMATIONS: Formation[] = [
     ],
   },
   {
-    name: '3-5-2',
-    required: { GK: 1, DEF: 3, MID: 5, FWD: 2 },
-    rows: [
-      { pos: 'FWD', count: 2 },
-      { pos: 'MID', count: 5 },
-      { pos: 'DEF', count: 3 },
-      { pos: 'GK', count: 1 },
-    ],
-  },
-  {
     name: '4-2-3-1',
     required: { GK: 1, DEF: 4, MID: 5, FWD: 1 },
     rows: [
@@ -58,12 +52,88 @@ export const FORMATIONS: Formation[] = [
     ],
   },
   {
+    name: '4-3-1-2',
+    required: { GK: 1, DEF: 4, MID: 4, FWD: 2 },
+    rows: [
+      { pos: 'FWD', count: 2 },
+      { pos: 'MID', count: 1 },
+      { pos: 'MID', count: 3 },
+      { pos: 'DEF', count: 4 },
+      { pos: 'GK', count: 1 },
+    ],
+  },
+  {
+    name: '4-1-2-1-2',
+    required: { GK: 1, DEF: 4, MID: 4, FWD: 2 },
+    rows: [
+      { pos: 'FWD', count: 2 },
+      { pos: 'MID', count: 1 },
+      { pos: 'MID', count: 2 },
+      { pos: 'MID', count: 1 },
+      { pos: 'DEF', count: 4 },
+      { pos: 'GK', count: 1 },
+    ],
+  },
+  {
+    name: '4-2-2-2',
+    required: { GK: 1, DEF: 4, MID: 4, FWD: 2 },
+    rows: [
+      { pos: 'FWD', count: 2 },
+      { pos: 'MID', count: 2 },
+      { pos: 'MID', count: 2 },
+      { pos: 'DEF', count: 4 },
+      { pos: 'GK', count: 1 },
+    ],
+  },
+  {
+    name: '4-4-1-1',
+    required: { GK: 1, DEF: 4, MID: 4, FWD: 2 },
+    rows: [
+      { pos: 'FWD', count: 1 },
+      { pos: 'FWD', count: 1 },
+      { pos: 'MID', count: 4 },
+      { pos: 'DEF', count: 4 },
+      { pos: 'GK', count: 1 },
+    ],
+  },
+  {
+    name: '3-5-2',
+    required: { GK: 1, DEF: 3, MID: 5, FWD: 2 },
+    rows: [
+      { pos: 'FWD', count: 2 },
+      { pos: 'MID', count: 5 },
+      { pos: 'DEF', count: 3 },
+      { pos: 'GK', count: 1 },
+    ],
+  },
+  {
     name: '3-4-3',
     required: { GK: 1, DEF: 3, MID: 4, FWD: 3 },
     rows: [
       { pos: 'FWD', count: 3 },
       { pos: 'MID', count: 4 },
       { pos: 'DEF', count: 3 },
+      { pos: 'GK', count: 1 },
+    ],
+  },
+  {
+    name: '5-3-2',
+    required: { GK: 1, DEF: 5, MID: 3, FWD: 2 },
+    rows: [
+      { pos: 'FWD', count: 2 },
+      { pos: 'MID', count: 3 },
+      { pos: 'DEF', count: 5 },
+      { pos: 'GK', count: 1 },
+    ],
+  },
+  {
+    name: '5-2-1-2',
+    required: { GK: 1, DEF: 5, MID: 3, FWD: 2 },
+    rows: [
+      { pos: 'FWD', count: 2 },
+      { pos: 'MID', count: 1 },
+      { pos: 'MID', count: 2 },
+      { pos: 'DEF', count: 5 },
       { pos: 'GK', count: 1 },
     ],
   },
