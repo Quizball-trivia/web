@@ -45,8 +45,14 @@ const socketMock = vi.hoisted(() => {
   };
 });
 
+const reconnectSocketMock = vi.hoisted(() => vi.fn());
+
 vi.mock('@/lib/realtime/useRealtimeConnection', () => ({
   useRealtimeConnection: () => socketMock.socket,
+}));
+
+vi.mock('@/lib/realtime/socket-client', () => ({
+  reconnectSocket: reconnectSocketMock,
 }));
 
 const formation: PublicAuctionFormation = {
@@ -130,6 +136,7 @@ function matchState(overrides: Partial<PublicAuctionMatchState> = {}): PublicAuc
 describe('useRealtimeAuctionMatch', () => {
   beforeEach(() => {
     socketMock.reset();
+    reconnectSocketMock.mockClear();
   });
 
   afterEach(() => {
@@ -423,6 +430,68 @@ describe('useRealtimeAuctionMatch', () => {
     expect(result.current.status).toBe('finished');
     expect(result.current.state?.phase).toBe('results');
     expect(result.current.state?.completedRounds).toHaveLength(1);
+  });
+
+  it('soft-reconnects after a state-version gap so backend hydration can repair state', () => {
+    vi.useFakeTimers();
+
+    const { result } = renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      selfUserId: 'user-1',
+      locale: 'en',
+      formation: '4-3-3',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    act(() => {
+      socketMock.trigger('auction:match_started', {
+        matchId: 'match-1',
+        locale: 'en',
+        state: matchState({ version: 1 }),
+      });
+    });
+
+    act(() => {
+      socketMock.trigger('auction:bid_accepted', {
+        matchId: 'match-1',
+        roundId: 'round-1',
+        seatId: 'seat-human',
+        amount: 40_000_000,
+        round: round({
+          bids: [{ seatId: 'seat-human', amount: 40_000_000, placedAt: '2026-06-20T10:00:01.000Z' }],
+          highestBidderSeatId: 'seat-human',
+          highestBid: 40_000_000,
+        }),
+        stateVersion: 4,
+      });
+    });
+
+    expect(result.current.versionGapDetected).toBe(true);
+    expect(reconnectSocketMock).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(250);
+    });
+
+    expect(reconnectSocketMock).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      socketMock.trigger('auction:state', {
+        matchId: 'match-1',
+        state: matchState({
+          version: 5,
+          phase: 'bidding',
+          currentRound: round({
+            bids: [{ seatId: 'seat-human', amount: 40_000_000, placedAt: '2026-06-20T10:00:01.000Z' }],
+            highestBidderSeatId: 'seat-human',
+            highestBid: 40_000_000,
+          }),
+        }),
+        stateVersion: 5,
+      });
+    });
+
+    expect(result.current.versionGapDetected).toBe(false);
   });
 
   it('surfaces auction errors without logging sensitive metadata', () => {

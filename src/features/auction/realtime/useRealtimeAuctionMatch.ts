@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRealtimeConnection } from '@/lib/realtime/useRealtimeConnection';
+import { reconnectSocket } from '@/lib/realtime/socket-client';
 import type { AuctionActions } from '../hooks/useAuctionGame';
 import type { AuctionGameState } from '../types';
 import type {
@@ -33,6 +34,7 @@ import {
 } from './auction-realtime.reducer';
 
 const POST_CONNECT_AUCTION_HYDRATION_GRACE_MS = 500;
+const VERSION_GAP_RECONNECT_DELAY_MS = 250;
 
 type AuctionConnectionStatus =
   | 'auth_required'
@@ -76,6 +78,8 @@ export function useRealtimeAuctionMatch({
   const [error, setError] = useState<string | null>(null);
   const startRequestedRef = useRef(false);
   const autoStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const versionGapReconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const recoveredVersionGapKeyRef = useRef<string | null>(null);
 
   const publicState = realtimeState.publicState;
   const matchId = publicState?.matchId ?? null;
@@ -128,6 +132,11 @@ export function useRealtimeAuctionMatch({
         clearTimeout(autoStartTimerRef.current);
         autoStartTimerRef.current = null;
       }
+      if (versionGapReconnectTimerRef.current) {
+        clearTimeout(versionGapReconnectTimerRef.current);
+        versionGapReconnectTimerRef.current = null;
+      }
+      recoveredVersionGapKeyRef.current = null;
       queueMicrotask(() => {
         setRealtimeState(EMPTY_AUCTION_REALTIME_STATE);
         setError(null);
@@ -146,6 +155,33 @@ export function useRealtimeAuctionMatch({
       }
     };
   }, [enabled, isConnected, publicState, requestStart, selfUserId]);
+
+  useEffect(() => {
+    if (!enabled || !isConnected || !publicState || !realtimeState.versionGapDetected) {
+      recoveredVersionGapKeyRef.current = null;
+      return;
+    }
+    if (publicState.phase === 'finished') return;
+
+    const gapKey = `${publicState.matchId}:${publicState.version}`;
+    if (recoveredVersionGapKeyRef.current === gapKey) return;
+    recoveredVersionGapKeyRef.current = gapKey;
+
+    if (versionGapReconnectTimerRef.current) {
+      clearTimeout(versionGapReconnectTimerRef.current);
+    }
+    versionGapReconnectTimerRef.current = setTimeout(() => {
+      versionGapReconnectTimerRef.current = null;
+      reconnectSocket();
+    }, VERSION_GAP_RECONNECT_DELAY_MS);
+
+    return () => {
+      if (versionGapReconnectTimerRef.current) {
+        clearTimeout(versionGapReconnectTimerRef.current);
+        versionGapReconnectTimerRef.current = null;
+      }
+    };
+  }, [enabled, isConnected, publicState, realtimeState.versionGapDetected]);
 
   useEffect(() => {
     const apply = <T extends Parameters<typeof applyAuctionRealtimeEvent>[1]>(event: T) => {
