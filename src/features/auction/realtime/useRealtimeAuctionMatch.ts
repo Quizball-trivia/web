@@ -46,6 +46,9 @@ import {
 
 const POST_CONNECT_AUCTION_HYDRATION_GRACE_MS = 500;
 const VERSION_GAP_RECONNECT_DELAY_MS = 250;
+// If a match is found but no state arrives in this window, reconnect once to
+// force the server's rejoin (which joins the match room and re-emits state).
+const MATCH_FOUND_REJOIN_DELAY_MS = 1_500;
 
 type AuctionConnectionStatus =
   | 'auth_required'
@@ -104,6 +107,8 @@ export type AuctionSearchState = {
   fallbackAtMs: number | null;
   botCount?: number;
   humanUserIds?: string[];
+  /** Server-authoritative pre-match countdown end, converted to client clock. */
+  countdownEndsAtMs?: number | null;
 };
 
 export function useRealtimeAuctionMatch({
@@ -130,6 +135,8 @@ export function useRealtimeAuctionMatch({
   const autoStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const versionGapReconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recoveredVersionGapKeyRef = useRef<string | null>(null);
+  const matchFoundRejoinTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const matchFoundRejoinKeyRef = useRef<string | null>(null);
   const serverTimeOffsetMsRef = useRef<number | null>(null);
   const pendingTurnActionRef = useRef<AuctionPendingTurnAction | null>(null);
   const publicStateRef = useRef<AuctionRealtimeState['publicState']>(null);
@@ -373,7 +380,13 @@ export function useRealtimeAuctionMatch({
     }
     if (publicState.phase === 'finished') return;
 
-    const gapKey = `${publicState.matchId}:${publicState.version}`;
+    // Key the recovery by matchId ONLY (not version). Reconnecting drops the
+    // shared socket and the match advances several versions while we're away,
+    // so the next state always looks like a fresh gap — keying by version made
+    // this reconnect every few seconds forever. One reconnect per match is the
+    // most a genuine one-off gap should ever need; the rejoin-on-connect and
+    // the next full state snapshot self-heal the rest.
+    const gapKey = publicState.matchId;
     if (recoveredVersionGapKeyRef.current === gapKey) return;
     recoveredVersionGapKeyRef.current = gapKey;
 
@@ -460,7 +473,7 @@ export function useRealtimeAuctionMatch({
 
     const onError = (payload: AuctionErrorPayload) => {
       clearPendingForMatch(null);
-      setError(`${payload.message} (${payload.code})`);
+      setError(friendlyAuctionError(payload, locale));
     };
     const onMatchStarted = (payload: AuctionMatchStartedPayload) =>
       apply({ type: 'match_started', payload });
@@ -515,6 +528,13 @@ export function useRealtimeAuctionMatch({
         ignoredMatchIdsRef.current.add(payload.matchId);
         return;
       }
+      // Convert the server's absolute countdown end to this client's clock
+      // (server time - offset) so all 3 players count down to the same instant.
+      const offset = serverTimeOffsetMsRef.current ?? 0;
+      const countdownServerMs = payload.countdownEndsAt ? Date.parse(payload.countdownEndsAt) : NaN;
+      const countdownEndsAtMs = Number.isFinite(countdownServerMs)
+        ? countdownServerMs - offset
+        : null;
       setSearchValue({
         phase: 'match_found',
         searchId: searchRef.current?.searchId ?? null,
@@ -525,8 +545,31 @@ export function useRealtimeAuctionMatch({
         fallbackAtMs: null,
         botCount: payload.botCount,
         humanUserIds: [...payload.humanUserIds],
+        countdownEndsAtMs,
       });
       startRequestedRef.current = true;
+
+      // The match's state/round events are broadcast to the match room. The
+      // server joins our sockets to that room at match creation, but if this
+      // socket wasn't the one joined (timing/multi-socket), the match state
+      // never arrives and we'd hang on "connecting players". If no public
+      // state shows up shortly after match_found, reconnect ONCE — that fires
+      // the server's rejoin-on-connect, which joins the room and re-emits
+      // state. Guarded so it can't loop.
+      if (matchFoundRejoinTimerRef.current) {
+        clearTimeout(matchFoundRejoinTimerRef.current);
+      }
+      matchFoundRejoinTimerRef.current = setTimeout(() => {
+        matchFoundRejoinTimerRef.current = null;
+        if (
+          !publicStateRef.current &&
+          !searchCancelledRef.current &&
+          matchFoundRejoinKeyRef.current !== payload.matchId
+        ) {
+          matchFoundRejoinKeyRef.current = payload.matchId;
+          reconnectSocket();
+        }
+      }, MATCH_FOUND_REJOIN_DELAY_MS);
     };
     const onSearchCancelled = (payload: AuctionSearchCancelledPayload) => {
       searchCancelledRef.current = true;
@@ -639,6 +682,10 @@ export function useRealtimeAuctionMatch({
       socket.off('auction:solo_pick_selected', onSoloPickSelected);
       socket.off('auction:match_finished', onMatchFinished);
       socket.off('auction:waiting_for_ready', onWaitingForReady);
+      if (matchFoundRejoinTimerRef.current) {
+        clearTimeout(matchFoundRejoinTimerRef.current);
+        matchFoundRejoinTimerRef.current = null;
+      }
     };
   }, [humanAvatarSeed, locale, selfUserId, setPendingTurnActionValue, setSearchValue, socket, updateServerTimeOffset]);
 
@@ -683,6 +730,14 @@ export function useRealtimeAuctionMatch({
     pickSoloOption: (option: 'A' | 'B') => {
       if (!matchId) return;
       socket.emit('auction:solo_pick_select', { matchId, option });
+    },
+    forfeit: () => {
+      if (!matchId) return;
+      // Permanently leave the match. The server removes this seat, keeps the
+      // match running for the others, and sends this player their result.
+      if (socket.connected) {
+        socket.emit('auction:forfeit', { matchId });
+      }
     },
     setPhase: () => {},
     cancelSearch: () => {
@@ -769,6 +824,30 @@ function toAuctionPauseState(payload: AuctionPausedPayload | AuctionPlayerForfei
     remainingReconnects: 'remainingReconnects' in payload ? payload.remainingReconnects : 0,
     reason: payload.reason,
   };
+}
+
+// Map server auction error codes to friendly, localized messages. The server
+// sends raw English + a code (e.g. "auction_search_blocked"); we never show
+// that verbatim. Unknown codes fall back to a generic translated message.
+const AUCTION_ERROR_MESSAGES: Record<string, { en: string; ka: string }> = {
+  auction_search_blocked: {
+    en: "You're already in a match. Reconnecting…",
+    ka: 'თქვენ უკვე მატჩში ხართ. ხელახლა დაკავშირება…',
+  },
+  auction_content_unavailable: {
+    en: 'No auction content is available right now.',
+    ka: 'ამჟამად აუქციონის კონტენტი მიუწვდომელია.',
+  },
+};
+
+const AUCTION_ERROR_GENERIC = {
+  en: 'Something went wrong. Please try again.',
+  ka: 'რაღაც შეცდომა მოხდა. სცადეთ თავიდან.',
+};
+
+function friendlyAuctionError(payload: AuctionErrorPayload, locale: 'en' | 'ka'): string {
+  const mapped = AUCTION_ERROR_MESSAGES[payload.code]?.[locale];
+  return mapped ?? AUCTION_ERROR_GENERIC[locale];
 }
 
 function computeAuctionServerTimeOffsetMs(serverNow: string | undefined, receivedAtMs = Date.now()): number | undefined {

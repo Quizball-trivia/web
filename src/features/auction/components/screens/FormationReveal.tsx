@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { motion } from 'motion/react';
 import type { AuctionGameState, AuctionPlayer } from '../../types';
 import { createEmptyTeam } from '../../data';
@@ -8,15 +9,30 @@ import { SCREEN_GLOW } from '../shared/ScreenBackdrop';
 import { AuctionScreen } from '../shared/AuctionScreen';
 import { SquadPitch } from '../pitch/SquadPitch';
 
-/** Intro screen: announces the (shared) formation and shows the empty pitch layout. */
+/**
+ * Formation reveal: announces the shared formation and the empty pitch layout.
+ *
+ * Two modes:
+ *  - `onContinue` only -> shows a "Start" button (user-driven).
+ *  - `autoAdvanceMs` set -> no button; auto-continues after the delay. Used
+ *    post-matchmaking, as a brief beat between "match found" and round 1.
+ */
 export function FormationReveal({
   state,
   onContinue,
+  autoAdvanceMs,
 }: {
   state: AuctionGameState;
   onContinue: () => void;
+  autoAdvanceMs?: number;
 }) {
   const { t } = useLocale();
+
+  useEffect(() => {
+    if (!autoAdvanceMs) return;
+    const timer = setTimeout(onContinue, autoAdvanceMs);
+    return () => clearTimeout(timer);
+  }, [autoAdvanceMs, onContinue]);
   // An empty squad in the chosen formation — renders the real pitch with all
   // position slots laid out, so players see the actual layout they'll fill.
   const emptyPlayer: AuctionPlayer = {
@@ -84,16 +100,27 @@ export function FormationReveal({
           {t('auctionGame.allPlayersSameFormation')}
         </motion.div>
 
-        <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.7 }}
-          whileTap={{ scale: 0.97 }}
-          onClick={onContinue}
-          className="mt-4 flex h-14 w-56 items-center justify-center rounded-[20px] bg-brand-green font-poppins text-lg font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none"
-        >
-          {t('auctionGame.startAuction')}
-        </motion.button>
+        {autoAdvanceMs ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.7 }}
+            className="mt-4 flex h-14 items-center font-poppins text-sm font-semibold uppercase tracking-wide text-white/60"
+          >
+            {t('auctionGame.getReady')}
+          </motion.div>
+        ) : (
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.7 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={onContinue}
+            className="mt-4 flex h-14 w-56 items-center justify-center rounded-[20px] bg-brand-green font-poppins text-lg font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none"
+          >
+            {t('auctionGame.startAuction')}
+          </motion.button>
+        )}
       </motion.div>
     </AuctionScreen>
   );

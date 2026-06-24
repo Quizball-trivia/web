@@ -19,6 +19,12 @@ export const POS_COLORS: Record<PositionGroup, string> = {
 /** Brand purple used by the auction card + mystery option. */
 export const AUCTION_PURPLE = '#6B2FB3';
 
+/** Quit/leave modal theme so it matches the auction card (vs the ranked blue). */
+export const AUCTION_QUIT_MODAL_THEME = {
+  background: 'linear-gradient(to bottom, #6B2FB3 35%, #401C6B)',
+  borderColor: '#401C6B',
+} as const;
+
 /** Podium / rank medal colours (gold, silver, bronze), neutral for 4th+. */
 export const MEDAL_COLORS = ['#FFD700', '#C0C0C0', '#CD7F32'] as const;
 export const medalColor = (rank0: number) => MEDAL_COLORS[rank0] ?? '#566570';

@@ -16,8 +16,10 @@ vi.mock('@/contexts/LocaleContext', () => ({
       if (key === 'auctionGame.startAuction') return 'Start Auction';
       if (key === 'auctionGame.findingPlayers') return 'Finding players';
       if (key === 'auctionGame.lookingForOpponents') return `Looking for ${String(params?.count ?? 0)} opponents`;
-      if (key === 'auctionGame.searchStatus') return `${String(params?.count ?? 0)}/3 players found · ${String(params?.seats ?? 0)} seats`;
+      if (key === 'auctionGame.searchStatus') return `${String(params?.count ?? 0)}/3 players found`;
       if (key === 'auctionGame.connectingPlayers') return 'Connecting players...';
+      if (key === 'auctionGame.auctionUnavailable') return 'Auction unavailable';
+      if (key === 'auctionGame.youLabel') return 'You';
       if (key === 'common.cancel') return 'Cancel';
       if (key === 'common.reconnecting') return 'Reconnecting...';
       if (key === 'common.connectionBad') return 'Connection problem';
@@ -158,6 +160,24 @@ vi.mock('../components/screens/FormationReveal', () => ({
   ),
 }));
 
+vi.mock('../components/screens/LottieSearch', () => ({
+  // Stub the Lottie searching screen (the real one needs a WASM player +
+  // IntersectionObserver, unavailable in jsdom). Renders the testable surface.
+  LottieSearch: ({ joined, total, onCancel }: { joined: number; total: number; onCancel?: () => void }) => (
+    <div data-testid="lottie-search">
+      <span>Finding players</span>
+      <span>
+        {joined}/{total} players found
+      </span>
+      {onCancel && (
+        <button type="button" onClick={onCancel}>
+          Cancel
+        </button>
+      )}
+    </div>
+  ),
+}));
+
 vi.mock('../components/AuctionGameScreen', () => ({
   AuctionGameScreen: ({ serverDrivenTransitions }: { serverDrivenTransitions?: boolean }) => (
     <div
@@ -195,21 +215,11 @@ describe('AuctionFlowScreen live mode', () => {
     vi.restoreAllMocks();
   });
 
-  it('waits on the formation screen before auto-starting a new realtime Auction match', () => {
+  it('auto-starts matchmaking immediately (no formation gate before searching)', () => {
     render(<AuctionFlowScreen username="Player" avatarSeed="avatar-1" mode="live" />);
 
-    expect(screen.getByTestId('formation-start')).toHaveTextContent('Start 4-3-3');
-    expect(realtimeMock.calls.at(-1)).toMatchObject({
-      enabled: true,
-      autoStart: false,
-      matchmakingMode: 'search',
-      selfUserId: 'user-1',
-      locale: 'en',
-      formation: '4-3-3',
-    });
-
-    fireEvent.click(screen.getByTestId('formation-start'));
-
+    // No "Start Auction" gate — search begins on mount.
+    expect(screen.queryByTestId('formation-start')).not.toBeInTheDocument();
     expect(realtimeMock.calls.at(-1)).toMatchObject({
       enabled: true,
       autoStart: true,
@@ -274,7 +284,7 @@ describe('AuctionFlowScreen live mode', () => {
     expect(screen.getByTestId('auction-game')).toBeInTheDocument();
     expect(realtimeMock.calls.at(-1)).toMatchObject({
       enabled: true,
-      autoStart: false,
+      autoStart: true,
       matchmakingMode: 'search',
       selfUserId: 'user-1',
     });
@@ -296,10 +306,10 @@ describe('AuctionFlowScreen live mode', () => {
     };
 
     render(<AuctionFlowScreen username="Player" avatarSeed="avatar-1" mode="live" />);
-    fireEvent.click(screen.getByTestId('formation-start'));
 
+    // Search shows immediately on mount (no formation gate to click through).
     expect(screen.getByText('Finding players')).toBeInTheDocument();
-    expect(screen.getByText('2/3 players found · 1 seats')).toBeInTheDocument();
+    expect(screen.getByText('2/3 players found')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 

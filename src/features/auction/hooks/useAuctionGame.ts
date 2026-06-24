@@ -48,6 +48,8 @@ export interface AuctionActions {
   pickSoloOption: (option: 'A' | 'B') => void;
   setPhase: (phase: AuctionPhase) => void;
   cancelSearch?: () => void;
+  /** Permanently leave/forfeit the live match (live mode only). */
+  forfeit?: () => void;
   pendingTurnAction?: AuctionPendingTurnAction | null;
 }
 

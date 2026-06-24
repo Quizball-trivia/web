@@ -13,10 +13,13 @@
  */
 
 import { useState, useCallback } from 'react';
-import { AuctionFlowScreen } from '@/features/auction/AuctionFlowScreen';
+import { QuitMatchModal } from '@/components/match/QuitMatchModal';
+import { AUCTION_QUIT_MODAL_THEME } from '@/features/auction/constants/auction.constants';
 import { AuctionGameScreen } from '@/features/auction/components/AuctionGameScreen';
 import { AuctionShowdownScreen } from '@/features/auction/components/AuctionShowdownScreen';
 import { AuctionResultsScreen } from '@/features/auction/components/AuctionResultsScreen';
+import { LottieSearch, LottieSearchDemo } from '@/features/auction/components/screens/LottieSearch';
+import { MatchCountdown } from '@/features/auction/components/screens/MatchCountdown';
 import type { AuctionActions } from '@/features/auction/hooks/useAuctionGame';
 import type {
   AuctionGameState,
@@ -131,6 +134,31 @@ function Game({ state }: { state: AuctionGameState }) {
   return <AuctionGameScreen state={state} actions={makeActions()} humanPlayerId={HUMAN_ID} />;
 }
 
+/** The REAL quit/leave/forfeit modal currently used in matches (same as ranked).
+ *  This is the one we'll modify. */
+function QuitModalScenario() {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="relative flex min-h-screen items-center justify-center bg-surface-page-alt">
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="rounded-full border border-white/20 bg-white/10 px-6 py-2 font-poppins text-xs font-black uppercase text-white"
+      >
+        Open quit modal
+      </button>
+      <QuitMatchModal
+        open={open}
+        onOpenChange={setOpen}
+        onConfirm={() => setOpen(false)}
+        onSecondaryConfirm={() => setOpen(false)}
+        playerClubId="real-madrid"
+        theme={AUCTION_QUIT_MODAL_THEME}
+      />
+    </div>
+  );
+}
+
 function ResultsScenario({ humanWins }: { humanWins: boolean }) {
   // Give the human the most valuable team when they win, else a bot.
   const players = basePlayers();
@@ -154,10 +182,46 @@ function ResultsScenario({ humanWins }: { humanWins: boolean }) {
 
 const SCENARIOS: Scenario[] = [
   {
-    id: 'matchmaking',
-    label: 'Matchmaking (searching)',
-    group: 'Flow',
-    render: () => <AuctionFlowScreen username="YouPlayer" avatarSeed="avatar-1" />,
+    id: 'lottie-cycle',
+    label: 'Search — full cycle (1→2→3)',
+    group: 'Auction search',
+    render: () => <LottieSearchDemo />,
+  },
+  {
+    id: 'lottie-cycle-ka',
+    label: 'Search — full cycle (KA)',
+    group: 'Auction search',
+    render: () => <LottieSearchDemo locale="ka" />,
+  },
+  {
+    id: 'lottie-1',
+    label: 'Search — 1 alone (fifa)',
+    group: 'Auction search',
+    render: () => <LottieSearch joined={1} total={3} selfAvatarSeed="avatar-1" onCancel={() => {}} />,
+  },
+  {
+    id: 'lottie-2',
+    label: 'Search — 2 joined (Shoes)',
+    group: 'Auction search',
+    render: () => <LottieSearch joined={2} total={3} selfAvatarSeed="avatar-1" onCancel={() => {}} />,
+  },
+  {
+    id: 'lottie-3',
+    label: 'Search — 3 full (#3)',
+    group: 'Auction search',
+    render: () => <LottieSearch joined={3} total={3} selfAvatarSeed="avatar-1" onCancel={() => {}} />,
+  },
+  {
+    id: 'match-countdown',
+    label: 'Match countdown (GET READY 5→1)',
+    group: 'Auction search',
+    render: () => <MatchCountdown players={basePlayers()} onComplete={() => {}} />,
+  },
+  {
+    id: 'quit-modal',
+    label: 'Quit modal (current — same as ranked)',
+    group: 'Auction search',
+    render: () => <QuitModalScenario />,
   },
   { id: 'showdown', label: 'Showdown (VS intros)', group: 'Flow', render: () => <ShowdownScenario /> },
   // One formation-reveal scenario per formation so you can preview slot placement.

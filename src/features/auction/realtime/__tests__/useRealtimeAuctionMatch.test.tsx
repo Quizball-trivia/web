@@ -1194,7 +1194,10 @@ describe('useRealtimeAuctionMatch', () => {
       });
     });
 
-    expect(result.current.error).toBe('Auction content unavailable (auction_content_unavailable)');
+    // Raw server message + code is NEVER shown — mapped to a friendly,
+    // localized message instead (no '(code)' suffix, no sensitive meta).
+    expect(result.current.error).toBe('No auction content is available right now.');
+    expect(result.current.error).not.toContain('auction_content_unavailable');
     expect(result.current.status).toBe('error');
   });
 });

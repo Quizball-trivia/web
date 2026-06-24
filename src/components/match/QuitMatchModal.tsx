@@ -47,6 +47,14 @@ interface QuitMatchModalProps {
   /** User's favourite club ID (kebab-case slug). When provided, the modal
    *  picks a random famous player from that club's roster for the headline. */
   playerClubId?: string | null;
+  /** Optional card theme override. Defaults to the ranked blue gradient; the
+   *  auction flow passes its purple so the modal matches the auction card. */
+  theme?: {
+    /** CSS `background` for the card (e.g. a gradient). */
+    background: string;
+    /** CSS border color for the card. */
+    borderColor: string;
+  };
 }
 
 export function QuitMatchModal({
@@ -58,6 +66,7 @@ export function QuitMatchModal({
   secondaryConfirmLabel,
   description,
   playerClubId = null,
+  theme,
 }: QuitMatchModalProps) {
   const { t } = useLocale();
   const resolvedConfirm = confirmLabel ?? t("quitMatch.forfeitMatch");
@@ -88,8 +97,8 @@ export function QuitMatchModal({
         // modal-specific hues — they're not used elsewhere and don't
         // warrant a global token.
         style={{
-          background: 'linear-gradient(to bottom, #1645FF 35%, #1A35A1)',
-          borderColor: '#1A35A1',
+          background: theme?.background ?? 'linear-gradient(to bottom, #1645FF 35%, #1A35A1)',
+          borderColor: theme?.borderColor ?? '#1A35A1',
         }}
       >
         {/* Three-line hook — fixed first + last lines, player name in the middle. */}

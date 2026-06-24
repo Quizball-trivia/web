@@ -1,24 +1,26 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import { X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useAuthStore } from '@/stores/auth.store';
+import { QuitMatchModal } from '@/components/match/QuitMatchModal';
 import { useRealtimeConnectionHealth } from '@/lib/realtime/connection-health';
-import { poppins } from './constants/auction.constants';
+import { poppins, AUCTION_QUIT_MODAL_THEME } from './constants/auction.constants';
 import { useAuctionGame } from './hooks/useAuctionGame';
 import { useRealtimeAuctionMatch, type AuctionPauseState, type AuctionSearchState } from './realtime/useRealtimeAuctionMatch';
 import { AuctionShowdownScreen } from './components/AuctionShowdownScreen';
 import { AuctionGameScreen } from './components/AuctionGameScreen';
 import { AuctionResultsScreen } from './components/AuctionResultsScreen';
 import { FormationReveal } from './components/screens/FormationReveal';
-import { FORMATIONS } from './data';
-import type { AuctionGameState, Formation } from './types';
+import { LottieSearch } from './components/screens/LottieSearch';
+import { MatchCountdown } from './components/screens/MatchCountdown';
 import type { AuctionFormationName } from '@/lib/realtime/socket.types';
 
+// The matchmaking search still sends a formation name (the hook requires one),
+// but the SERVER picks the real formation randomly and ignores this value.
 const LIVE_AUCTION_FORMATION_NAME: AuctionFormationName = '4-3-3';
-const LIVE_AUCTION_FORMATION =
-  FORMATIONS.find((formation) => formation.name === LIVE_AUCTION_FORMATION_NAME) ?? FORMATIONS[0];
 
 interface AuctionFlowScreenProps {
   username: string;
@@ -124,7 +126,14 @@ function AuctionMockFlowScreen({ username, avatarSeed }: Omit<AuctionFlowScreenP
 function AuctionRealtimeFlowScreen({ avatarSeed }: Omit<AuctionFlowScreenProps, 'mode'>) {
   const router = useRouter();
   const { locale, t } = useLocale();
-  const [auctionStarted, setAuctionStarted] = useState(false);
+  // Start matchmaking as soon as the screen opens — searching comes first, the
+  // formation is shown later (briefly) once a match is found.
+  const [auctionStarted, setAuctionStarted] = useState(true);
+  // Once all 3 bidders are in we play a short "GET READY" countdown before the
+  // formation reveal. Tracked so it only plays once per match.
+  const [countdownDone, setCountdownDone] = useState(false);
+  // Leave/forfeit confirmation while in an active match.
+  const [showQuitModal, setShowQuitModal] = useState(false);
   const authUser = useAuthStore((store) => store.user);
   const authStatus = useAuthStore((store) => store.status);
   const connectionHealth = useRealtimeConnectionHealth();
@@ -175,32 +184,62 @@ function AuctionRealtimeFlowScreen({ avatarSeed }: Omit<AuctionFlowScreenProps, 
     router.push('/play');
   }, [router]);
 
+  // Leaving an in-progress match asks for confirmation (like ranked): keep
+  // playing / leave temporarily (rejoinable) / forfeit (match continues for the
+  // others, this player gets their result screen).
+  const handleLeaveTemporary = useCallback(() => {
+    setShowQuitModal(false);
+    router.push('/play');
+  }, [router]);
+
+  const handleForfeit = useCallback(() => {
+    setShowQuitModal(false);
+    actions.forfeit?.();
+    router.push('/play');
+  }, [actions, router]);
+
   const handleCancelSearch = useCallback(() => {
     actions.cancelSearch?.();
     router.push('/play');
   }, [actions, router]);
 
-  if (!auctionStarted && authStatus === 'authenticated' && authUser?.id && !state) {
+  if (!state || !resolvedHumanPlayerId || status === 'auth_required') {
+    const searchError =
+      status === 'auth_required' && authRequired ? 'Sign in to play Auction.' : error;
+    // Error / auth states fall back to the plain screen (it shows the message);
+    // the normal searching state shows the Lottie loaders that swap as bidders join.
+    if (searchError) {
+      return <MockSearchingScreen search={search} error={searchError} />;
+    }
     return (
-      <FormationReveal
-        state={createLiveFormationPreviewState(LIVE_AUCTION_FORMATION)}
-        onContinue={() => setAuctionStarted(true)}
+      <LottieSearch
+        joined={Math.max(search?.queuedUserCount ?? 1, 1)}
+        total={3}
+        selfAvatarSeed={avatarSeed}
+        onCancel={auctionStarted && !state ? handleCancelSearch : undefined}
+        locale={locale === 'ka' ? 'ka' : 'en'}
       />
     );
   }
 
-  if (!state || !resolvedHumanPlayerId || status === 'auth_required') {
-    return (
-      <MockSearchingScreen
-        search={search}
-        onCancel={auctionStarted && !state ? handleCancelSearch : undefined}
-        error={
-          status === 'auth_required' && authRequired
-            ? 'Sign in to play Auction.'
-            : error
-        }
-      />
-    );
+  // 'created' -> client 'matchmaking': a match exists and all players are
+  // connecting. The SERVER has already chosen the formation (it's in `state`)
+  // and holds the round behind its UI-ready gate until everyone is ready.
+  // While that gate waits we play a short "GET READY" countdown, then the
+  // server's formation reveal. The server — not these timers — decides when the
+  // round actually starts (phase advances to 'clue-reveal').
+  if (state.phase === 'matchmaking') {
+    if (!countdownDone) {
+      return (
+        <MatchCountdown
+          players={state.players}
+          endsAtMs={search?.countdownEndsAtMs ?? null}
+          locale={locale === 'ka' ? 'ka' : 'en'}
+          onComplete={() => setCountdownDone(true)}
+        />
+      );
+    }
+    return <FormationReveal state={state} onContinue={() => {}} autoAdvanceMs={3000} />;
   }
 
   if (
@@ -217,6 +256,15 @@ function AuctionRealtimeFlowScreen({ avatarSeed }: Omit<AuctionFlowScreenProps, 
           humanPlayerId={resolvedHumanPlayerId}
           serverDrivenTransitions
         />
+        {/* Leave button — opens the quit/forfeit confirmation. */}
+        <button
+          type="button"
+          onClick={() => setShowQuitModal(true)}
+          aria-label={t('common.cancel')}
+          className="fixed left-3 top-3 z-50 flex size-10 items-center justify-center rounded-full bg-black/40 text-white/80 backdrop-blur transition hover:bg-black/60 hover:text-white"
+        >
+          <X className="size-5" />
+        </button>
         {liveWarningMessage && (
           <LiveAuctionWarning
             message={liveWarningMessage}
@@ -225,6 +273,14 @@ function AuctionRealtimeFlowScreen({ avatarSeed }: Omit<AuctionFlowScreenProps, 
         {pause && (
           <LiveAuctionPauseOverlay pause={pause} />
         )}
+        <QuitMatchModal
+          open={showQuitModal}
+          onOpenChange={setShowQuitModal}
+          onConfirm={handleForfeit}
+          onSecondaryConfirm={handleLeaveTemporary}
+          playerClubId={authUser?.favorite_club ?? null}
+          theme={AUCTION_QUIT_MODAL_THEME}
+        />
       </>
     );
   }
@@ -243,20 +299,7 @@ function AuctionRealtimeFlowScreen({ avatarSeed }: Omit<AuctionFlowScreenProps, 
   return <MockSearchingScreen error={error} />;
 }
 
-function createLiveFormationPreviewState(formation: Formation): AuctionGameState {
-  return {
-    phase: 'formation',
-    players: [],
-    formation,
-    currentRound: null,
-    roundIndex: 0,
-    totalRounds: 0,
-    completedRounds: [],
-    soloPick: null,
-  };
-}
-
-function MockSearchingScreen({
+export function MockSearchingScreen({
   error,
   search,
   onCancel,
@@ -272,7 +315,6 @@ function MockSearchingScreen({
       : search && search.phase !== 'cancelled'
         ? t('auctionGame.searchStatus', {
             count: search.queuedUserCount,
-            seats: search.seatsNeeded,
           })
         : t('auctionGame.lookingForOpponents', { count: 2 }));
 
