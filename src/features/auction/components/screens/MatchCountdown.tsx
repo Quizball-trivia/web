@@ -1,12 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
-import { AvatarPreview } from '@/components/AvatarPreview';
-import { getTierFrameSrc } from '@/utils/tierVisuals';
+import { useLocale } from '@/contexts/LocaleContext';
 import { poppins } from '../../constants/auction.constants';
 import { ScreenBackdrop, SCREEN_GLOW } from '../shared/ScreenBackdrop';
+import { FramedAvatar } from '../shared/FramedAvatar';
 import type { AuctionPlayer } from '../../types';
 
 /**
@@ -20,17 +19,11 @@ interface MatchCountdownProps {
   players: AuctionPlayer[];
   /** Absolute client-clock time the countdown ends. Falls back to now+5s. */
   endsAtMs?: number | null;
-  locale?: 'en' | 'ka';
   onComplete: () => void;
 }
 
-const COPY = {
-  en: { ready: 'Get Ready', go: 'Go!' },
-  ka: { ready: 'მოემზადე', go: 'წავიდა!' },
-} as const;
-
-export function MatchCountdown({ players, endsAtMs, locale = 'en', onComplete }: MatchCountdownProps) {
-  const c = COPY[locale];
+export function MatchCountdown({ players, endsAtMs, onComplete }: MatchCountdownProps) {
+  const { t } = useLocale();
   // Resolve the target once (so prop jitter doesn't restart the countdown).
   const [targetMs] = useState(() => endsAtMs ?? Date.now() + 5_000);
   const [count, setCount] = useState(() => Math.max(0, Math.ceil((targetMs - Date.now()) / 1000)));
@@ -61,14 +54,13 @@ export function MatchCountdown({ players, endsAtMs, locale = 'en', onComplete }:
           className="mb-6 font-poppins text-sm font-black uppercase tracking-[0.3em] text-brand-yellow"
           style={poppins}
         >
-          {count > 0 ? c.ready : c.go}
+          {count > 0 ? t('auctionGame.countdownReady') : t('auctionGame.countdownGo')}
         </div>
 
         {/* Matched players */}
         <div className="flex items-end justify-center gap-3">
           {shown.map((p, i) => {
             const w = i === 0 ? 92 : 76;
-            const h = Math.round(w * 1.58);
             return (
               <motion.div
                 key={p.id}
@@ -77,18 +69,7 @@ export function MatchCountdown({ players, endsAtMs, locale = 'en', onComplete }:
                 transition={{ delay: i * 0.12, type: 'spring', stiffness: 240, damping: 20 }}
                 className="flex flex-col items-center"
               >
-                <div className="relative" style={{ width: w, height: h }}>
-                  <Image
-                    src={getTierFrameSrc('Academy')}
-                    alt=""
-                    width={w}
-                    height={h}
-                    className="pointer-events-none absolute inset-0 z-0 h-full w-full object-contain"
-                  />
-                  <div className="absolute inset-x-0 bottom-[8%] top-[22%] z-10 flex items-center justify-center overflow-hidden">
-                    <AvatarPreview customization={{ base: p.avatarSeed || 'avatar-1' }} width={Math.round(w * 0.64)} />
-                  </div>
-                </div>
+                <FramedAvatar width={w} customization={p.avatarCustomization} />
                 <span
                   className="mt-1.5 max-w-[84px] truncate font-poppins text-[11px] font-bold uppercase tracking-wide text-white/80"
                   style={poppins}

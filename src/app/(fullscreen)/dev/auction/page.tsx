@@ -20,6 +20,8 @@ import { AuctionShowdownScreen } from '@/features/auction/components/AuctionShow
 import { AuctionResultsScreen } from '@/features/auction/components/AuctionResultsScreen';
 import { LottieSearch, LottieSearchDemo } from '@/features/auction/components/screens/LottieSearch';
 import { MatchCountdown } from '@/features/auction/components/screens/MatchCountdown';
+import { AuctionStatusOverlay } from '@/features/auction/components/shared/AuctionStatusOverlay';
+import { LocaleProvider, useLocale } from '@/contexts/LocaleContext';
 import type { AuctionActions } from '@/features/auction/hooks/useAuctionGame';
 import type {
   AuctionGameState,
@@ -35,6 +37,7 @@ import {
   STARTING_BUDGET,
   createEmptyTeam,
 } from '@/features/auction/data';
+import { randomBotAvatar } from '@/features/auction/data/botAvatars';
 
 const HUMAN_ID = 'human-player';
 const FORMATION: Formation = FORMATIONS[0]; // 4-3-3
@@ -56,7 +59,17 @@ function makePlayer(
   (Object.keys(filled) as PositionGroup[]).forEach((pos) => {
     team.slots[pos] = byPos(pos).slice(0, filled[pos] ?? 0);
   });
-  return { id, username, avatarSeed, budget, team, isBot, isEliminated: false };
+  return {
+    id,
+    username,
+    avatarSeed,
+    // Bots get a random layered avatar (like live); the human keeps its seed.
+    avatarCustomization: isBot ? randomBotAvatar(id) : undefined,
+    budget,
+    team,
+    isBot,
+    isEliminated: false,
+  };
 }
 
 function basePlayers(): AuctionPlayer[] {
@@ -159,7 +172,15 @@ function QuitModalScenario() {
   );
 }
 
-function ResultsScenario({ humanWins }: { humanWins: boolean }) {
+function ResultsScenario({
+  humanWins,
+  coinsAwarded,
+  forfeited,
+}: {
+  humanWins: boolean;
+  coinsAwarded?: number | null;
+  forfeited?: boolean;
+}) {
   // Give the human the most valuable team when they win, else a bot.
   const players = basePlayers();
   if (humanWins) {
@@ -176,6 +197,8 @@ function ResultsScenario({ humanWins }: { humanWins: boolean }) {
       humanPlayerId={HUMAN_ID}
       onPlayAgain={() => {}}
       onExit={() => {}}
+      coinsAwarded={coinsAwarded}
+      forfeited={forfeited}
     />
   );
 }
@@ -191,7 +214,11 @@ const SCENARIOS: Scenario[] = [
     id: 'lottie-cycle-ka',
     label: 'Search — full cycle (KA)',
     group: 'Auction search',
-    render: () => <LottieSearchDemo locale="ka" />,
+    render: () => (
+      <LocaleProvider initialLocale="ka">
+        <LottieSearchDemo />
+      </LocaleProvider>
+    ),
   },
   {
     id: 'lottie-1',
@@ -363,9 +390,27 @@ const SCENARIOS: Scenario[] = [
       );
     },
   },
-  { id: 'results-win', label: 'Results — YOU win', group: 'End', render: () => <ResultsScenario humanWins /> },
-  { id: 'results-lose', label: 'Results — you lose', group: 'End', render: () => <ResultsScenario humanWins={false} /> },
+  { id: 'finalizing', label: 'Overlay — Finalizing match', group: 'End', render: () => <FinalizingOverlayScenario /> },
+  { id: 'loading-results', label: 'Overlay — Loading results', group: 'End', render: () => <LoadingResultsOverlayScenario /> },
+  { id: 'results-win', label: 'Results — YOU win (+500)', group: 'End', render: () => <ResultsScenario humanWins coinsAwarded={500} /> },
+  { id: 'results-lose', label: 'Results — you finish (+300)', group: 'End', render: () => <ResultsScenario humanWins={false} coinsAwarded={300} /> },
+  { id: 'results-forfeit', label: 'Results — you forfeited (no coins)', group: 'End', render: () => <ResultsScenario humanWins={false} forfeited /> },
 ];
+
+function FinalizingOverlayScenario() {
+  const { t } = useLocale();
+  return (
+    <AuctionStatusOverlay
+      title={t('auctionGame.finalizingMatch')}
+      subtitle={t('auctionGame.calculatingResults')}
+    />
+  );
+}
+
+function LoadingResultsOverlayScenario() {
+  const { t } = useLocale();
+  return <AuctionStatusOverlay title={t('auctionGame.loadingResults')} />;
+}
 
 export default function DevAuctionPage() {
   const [activeId, setActiveId] = useState<string>('formation-4-3-3');

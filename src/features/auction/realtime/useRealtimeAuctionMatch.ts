@@ -6,6 +6,7 @@ import { reconnectSocket } from '@/lib/realtime/socket-client';
 import { logger } from '@/utils/logger';
 import type { AuctionActions, AuctionPendingTurnAction } from '../hooks/useAuctionGame';
 import type { AuctionGameState } from '../types';
+import type { AvatarCustomization } from '@/types/game';
 import type {
   AuctionBiddingStartedPayload,
   AuctionBidAcceptedPayload,
@@ -16,6 +17,8 @@ import type {
   AuctionPausedPayload,
   AuctionPlayerForfeitedPayload,
   AuctionResumePayload,
+  AuctionRejoinAvailablePayload,
+  AuctionResumeCountdownPayload,
   AuctionSearchCancelledPayload,
   AuctionSearchStartedPayload,
   AuctionSearchStatusPayload,
@@ -33,6 +36,7 @@ import type {
   AuctionTurnTimeoutPayload,
   AuctionFormationName,
   AuctionUiReadyPhase,
+  ServerToClientEvents,
 } from '@/lib/realtime/socket.types';
 import {
   findMyAuctionSeatId,
@@ -66,6 +70,8 @@ export interface UseRealtimeAuctionMatchParams {
   locale: 'en' | 'ka';
   formation?: AuctionFormationName;
   humanAvatarSeed: string;
+  /** Real logged-in user's layered avatar (rendered on the human seat). */
+  humanAvatarCustomization?: AvatarCustomization | null;
 }
 
 export interface UseRealtimeAuctionMatchResult {
@@ -79,7 +85,13 @@ export interface UseRealtimeAuctionMatchResult {
   versionGapDetected: boolean;
   waitingForReady: AuctionWaitingForReadyState | null;
   pause: AuctionPauseState | null;
+  /** Set when reloading into a paused match this client was disconnected from. */
+  rejoinAvailable: AuctionRejoinAvailablePayload | null;
+  /** Server resume "get ready" countdown end (this client's clock). */
+  resumeCountdownEndsAtMs: number | null;
   search: AuctionSearchState | null;
+  /** Coins this client earned for the finished match (500 win / 300 finish / 0). null until settled. */
+  coinsAwarded: number | null;
 }
 
 export type AuctionWaitingForReadyState = AuctionWaitingForReadyPayload & {
@@ -119,6 +131,7 @@ export function useRealtimeAuctionMatch({
   locale,
   formation,
   humanAvatarSeed,
+  humanAvatarCustomization,
 }: UseRealtimeAuctionMatchParams): UseRealtimeAuctionMatchResult {
   const socket = useRealtimeConnection({ enabled, selfUserId });
   const [isConnected, setIsConnected] = useState(() => socket.connected);
@@ -129,6 +142,15 @@ export function useRealtimeAuctionMatch({
   const [pendingTurnAction, setPendingTurnAction] = useState<AuctionPendingTurnAction | null>(null);
   const [waitingForReady, setWaitingForReady] = useState<AuctionWaitingForReadyState | null>(null);
   const [pause, setPause] = useState<AuctionPauseState | null>(null);
+  // Reload-into-paused-match: server prompts to rejoin; we show a prompt and the
+  // user opts in (auction:rejoin). Mirrors ranked's rejoin handshake.
+  const [rejoinAvailable, setRejoinAvailable] = useState<AuctionRejoinAvailablePayload | null>(null);
+  // Server-authoritative resume "get ready" countdown end (this client's clock).
+  const [resumeCountdownEndsAtMs, setResumeCountdownEndsAtMs] = useState<number | null>(null);
+  // Coins this client earned for the finished match (win = 500, finish = 300,
+  // forfeit = 0). Set from match_finished's per-user map; drives the reward
+  // animation on the results screen. null until/unless the match settles.
+  const [coinsAwarded, setCoinsAwarded] = useState<number | null>(null);
   const [search, setSearch] = useState<AuctionSearchState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const startRequestedRef = useRef(false);
@@ -162,10 +184,11 @@ export function useRealtimeAuctionMatch({
         ? toClientAuctionState(publicState, {
             humanSeatId: humanPlayerId,
             humanAvatarSeed,
+            humanAvatarCustomization,
             serverTimeOffsetMs,
           })
         : null,
-    [humanAvatarSeed, humanPlayerId, publicState, serverTimeOffsetMs],
+    [humanAvatarSeed, humanAvatarCustomization, humanPlayerId, publicState, serverTimeOffsetMs],
   );
 
   const updateServerTimeOffset = useCallback((serverNow: string | undefined): number | null => {
@@ -419,7 +442,10 @@ export function useRealtimeAuctionMatch({
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [enabled, matchId, publicState?.phase]);
+    // `socket` (a stable singleton from useRealtimeConnection) is included so the
+    // handler always reads the live `socket.connected`; `reconnectSocket` is a
+    // module-level import and needs no dep.
+  }, [enabled, matchId, publicState?.phase, socket]);
 
   useEffect(() => {
     const clearPendingForMatch = (eventMatchId: string | null | undefined) => {
@@ -436,6 +462,9 @@ export function useRealtimeAuctionMatch({
         try {
           const next = applyAuctionRealtimeEvent(prev, event);
           if (next.publicState) {
+            // Probe call: result discarded — this only surfaces an adapter throw
+            // early so we can reconnect for repair. Avatar inputs don't affect
+            // whether it throws, so they're intentionally omitted here.
             toClientAuctionState(next.publicState, {
               humanSeatId: findMyAuctionSeatId(next.publicState, selfUserId),
               humanAvatarSeed,
@@ -501,8 +530,12 @@ export function useRealtimeAuctionMatch({
       apply({ type: 'solo_pick_started', payload });
     const onSoloPickSelected = (payload: AuctionSoloPickSelectedPayload) =>
       apply({ type: 'solo_pick_selected', payload });
-    const onMatchFinished = (payload: AuctionMatchFinishedPayload) =>
+    const onMatchFinished = (payload: AuctionMatchFinishedPayload) => {
+      if (selfUserId) {
+        setCoinsAwarded(payload.coinsByUserId?.[selfUserId] ?? 0);
+      }
       apply({ type: 'match_finished', payload });
+    };
     const onWaitingForReady = (payload: AuctionWaitingForReadyPayload) => {
       const offset = updateServerTimeOffset(payload.serverNow);
       const forceStartsAtMs = Date.parse(payload.forceStartsAt);
@@ -615,7 +648,21 @@ export function useRealtimeAuctionMatch({
         },
       });
       setPause(null);
+      setResumeCountdownEndsAtMs(null);
+      setRejoinAvailable(null);
       setError(null);
+    };
+    const onRejoinAvailable = (payload: AuctionRejoinAvailablePayload) => {
+      updateServerTimeOffset(payload.serverNow);
+      setRejoinAvailable(payload);
+    };
+    const onResumeCountdown = (payload: AuctionResumeCountdownPayload) => {
+      const offset = updateServerTimeOffset(payload.serverNow);
+      const endsAtMs = Date.parse(payload.countdownEndsAt);
+      setRejoinAvailable(null);
+      setResumeCountdownEndsAtMs(
+        Number.isFinite(endsAtMs) ? endsAtMs - (offset ?? 0) : Date.now() + 5000,
+      );
     };
     const onPlayerForfeited = (payload: AuctionPlayerForfeitedPayload) => {
       updateServerTimeOffset(payload.serverNow);
@@ -632,56 +679,57 @@ export function useRealtimeAuctionMatch({
       setPendingTurnActionValue(null);
     };
 
-    socket.on('auction:error', onError);
-    socket.on('auction:search_start', onSearchStarted);
-    socket.on('auction:search_status', onSearchStatus);
-    socket.on('auction:search_cancelled', onSearchCancelled);
-    socket.on('auction:match_found', onMatchFound);
-    socket.on('auction:match_started', onMatchStarted);
-    socket.on('auction:state', onState);
-    socket.on('auction:round_started', onRoundStarted);
-    socket.on('auction:clue_revealed', onClueRevealed);
-    socket.on('auction:bidding_started', onBiddingStarted);
-    socket.on('auction:turn_started', onTurnStarted);
-    socket.on('auction:bid_accepted', onBidAccepted);
-    socket.on('auction:fold_accepted', onFoldAccepted);
-    socket.on('auction:turn_timeout', onTurnTimeout);
-    socket.on('auction:opponent_disconnected', onOpponentDisconnected);
-    socket.on('auction:paused', onPaused);
-    socket.on('auction:resume', onResume);
-    socket.on('auction:player_forfeited', onPlayerForfeited);
-    socket.on('auction:round_revealed', onRoundRevealed);
-    socket.on('auction:squad_updated', onSquadUpdated);
-    socket.on('auction:solo_pick_started', onSoloPickStarted);
-    socket.on('auction:solo_pick_selected', onSoloPickSelected);
-    socket.on('auction:match_finished', onMatchFinished);
-    socket.on('auction:waiting_for_ready', onWaitingForReady);
+    // Single source of truth for listeners: `bind` registers each handler AND
+    // records the [event, handler] pair, so cleanup replays exactly what was
+    // registered — no hand-mirrored `off` list to drift out of sync. Each call
+    // site stays fully type-checked (handler must match the event's payload);
+    // the cast is only on the socket.io plumbing, whose generic listener type
+    // (FallbackToUntypedListener) doesn't simplify under a generic event param.
+    type Listener = (...args: never[]) => void;
+    const bound: Array<[keyof ServerToClientEvents, Listener]> = [];
+    // socket.on/off are typed per-event via overloads that don't resolve under a
+    // generic event param; treat them as (event, listener) only inside bind. Call
+    // sites below stay fully type-checked — `handler` must match the event payload.
+    const rawOn = socket.on.bind(socket) as (event: string, handler: Listener) => void;
+    const bind = <E extends keyof ServerToClientEvents>(
+      event: E,
+      handler: ServerToClientEvents[E],
+    ) => {
+      rawOn(event, handler as Listener);
+      bound.push([event, handler as Listener]);
+    };
+
+    bind('auction:error', onError);
+    bind('auction:search_start', onSearchStarted);
+    bind('auction:search_status', onSearchStatus);
+    bind('auction:search_cancelled', onSearchCancelled);
+    bind('auction:match_found', onMatchFound);
+    bind('auction:match_started', onMatchStarted);
+    bind('auction:state', onState);
+    bind('auction:round_started', onRoundStarted);
+    bind('auction:clue_revealed', onClueRevealed);
+    bind('auction:bidding_started', onBiddingStarted);
+    bind('auction:turn_started', onTurnStarted);
+    bind('auction:bid_accepted', onBidAccepted);
+    bind('auction:fold_accepted', onFoldAccepted);
+    bind('auction:turn_timeout', onTurnTimeout);
+    bind('auction:opponent_disconnected', onOpponentDisconnected);
+    bind('auction:paused', onPaused);
+    bind('auction:resume', onResume);
+    bind('auction:rejoin_available', onRejoinAvailable);
+    bind('auction:resume_countdown', onResumeCountdown);
+    bind('auction:player_forfeited', onPlayerForfeited);
+    bind('auction:round_revealed', onRoundRevealed);
+    bind('auction:squad_updated', onSquadUpdated);
+    bind('auction:solo_pick_started', onSoloPickStarted);
+    bind('auction:solo_pick_selected', onSoloPickSelected);
+    bind('auction:match_finished', onMatchFinished);
+    bind('auction:waiting_for_ready', onWaitingForReady);
 
     return () => {
-      socket.off('auction:error', onError);
-      socket.off('auction:search_start', onSearchStarted);
-      socket.off('auction:search_status', onSearchStatus);
-      socket.off('auction:search_cancelled', onSearchCancelled);
-      socket.off('auction:match_found', onMatchFound);
-      socket.off('auction:match_started', onMatchStarted);
-      socket.off('auction:state', onState);
-      socket.off('auction:round_started', onRoundStarted);
-      socket.off('auction:clue_revealed', onClueRevealed);
-      socket.off('auction:bidding_started', onBiddingStarted);
-      socket.off('auction:turn_started', onTurnStarted);
-      socket.off('auction:bid_accepted', onBidAccepted);
-      socket.off('auction:fold_accepted', onFoldAccepted);
-      socket.off('auction:turn_timeout', onTurnTimeout);
-      socket.off('auction:opponent_disconnected', onOpponentDisconnected);
-      socket.off('auction:paused', onPaused);
-      socket.off('auction:resume', onResume);
-      socket.off('auction:player_forfeited', onPlayerForfeited);
-      socket.off('auction:round_revealed', onRoundRevealed);
-      socket.off('auction:squad_updated', onSquadUpdated);
-      socket.off('auction:solo_pick_started', onSoloPickStarted);
-      socket.off('auction:solo_pick_selected', onSoloPickSelected);
-      socket.off('auction:match_finished', onMatchFinished);
-      socket.off('auction:waiting_for_ready', onWaitingForReady);
+      for (const [event, handler] of bound) {
+        socket.off(event, handler);
+      }
       if (matchFoundRejoinTimerRef.current) {
         clearTimeout(matchFoundRejoinTimerRef.current);
         matchFoundRejoinTimerRef.current = null;
@@ -739,6 +787,13 @@ export function useRealtimeAuctionMatch({
         socket.emit('auction:forfeit', { matchId });
       }
     },
+    rejoin: (rejoinMatchId: string) => {
+      // Opt in to rejoin a paused match after a reload. matchId comes from the
+      // rejoin_available prompt (publicState's matchId isn't set yet here).
+      if (socket.connected) {
+        socket.emit('auction:rejoin', { matchId: rejoinMatchId });
+      }
+    },
     setPhase: () => {},
     cancelSearch: () => {
       searchCancelledRef.current = true;
@@ -791,7 +846,10 @@ export function useRealtimeAuctionMatch({
     versionGapDetected: realtimeState.versionGapDetected,
     waitingForReady,
     pause,
+    rejoinAvailable,
+    resumeCountdownEndsAtMs,
     search,
+    coinsAwarded,
   };
 }
 

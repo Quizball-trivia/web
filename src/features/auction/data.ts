@@ -1,4 +1,5 @@
 import type { Footballer, Formation, AuctionPlayer, AuctionTeam, PositionGroup } from './types';
+import { randomBotAvatar } from './data/botAvatars';
 
 export const STARTING_BUDGET = 1_000_000_000;
 export const MIN_BID_INCREMENT = 5_000_000;
@@ -518,6 +519,7 @@ export function createBotPlayer(
 ): AuctionPlayer {
   return {
     ...bot,
+    avatarCustomization: randomBotAvatar(bot.id),
     budget: STARTING_BUDGET,
     team: createEmptyTeam(formation),
     isEliminated: false,

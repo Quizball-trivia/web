@@ -50,6 +50,8 @@ export interface AuctionActions {
   cancelSearch?: () => void;
   /** Permanently leave/forfeit the live match (live mode only). */
   forfeit?: () => void;
+  /** Opt in to rejoin a paused match after a reload (live mode only). */
+  rejoin?: (matchId: string) => void;
   pendingTurnAction?: AuctionPendingTurnAction | null;
 }
 

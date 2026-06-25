@@ -15,6 +15,8 @@ import type {
   PublicAuctionRoundState,
   PublicAuctionSoloPickOptionState,
 } from '@/lib/realtime/socket.types';
+import type { AvatarCustomization } from '@/types/game';
+import { randomBotAvatar } from '../data/botAvatars';
 
 const POSITION_GROUPS = ['GK', 'DEF', 'MID', 'FWD'] as const satisfies readonly PositionGroup[];
 const DEFAULT_AUCTION_CLUE_COUNT = 3;
@@ -22,6 +24,8 @@ const DEFAULT_AUCTION_CLUE_COUNT = 3;
 export interface AuctionStateAdapterOptions {
   humanSeatId?: string | null;
   humanAvatarSeed?: string;
+  /** The real logged-in user's layered avatar — used for the human seat. */
+  humanAvatarCustomization?: AvatarCustomization | null;
   serverTimeOffsetMs?: number | null;
 }
 
@@ -113,14 +117,23 @@ function toClientPlayer(
   index: number,
   options: AuctionStateAdapterOptions,
 ): AuctionPlayer {
-  const avatarSeed = player.seatId === options.humanSeatId
+  const isHuman = player.seatId === options.humanSeatId;
+  const avatarSeed = isHuman
     ? options.humanAvatarSeed ?? 'avatar-1'
     : `avatar-${(index % 4) + 1}`;
+
+  // Human → real layered avatar (from the logged-in user, client-side).
+  // Real opponent → their avatar from the server (avatarCustomization).
+  // Bot / no data → a deterministic random avatar keyed by seatId.
+  const avatarCustomization: AvatarCustomization = isHuman
+    ? options.humanAvatarCustomization ?? { base: avatarSeed }
+    : player.avatarCustomization ?? randomBotAvatar(player.seatId);
 
   return {
     id: player.seatId,
     username: player.displayName,
     avatarSeed,
+    avatarCustomization,
     budget: player.budget,
     team: {
       formation,

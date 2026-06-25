@@ -53,6 +53,10 @@ export function SquadPitch({
           The img's CSS width = container HEIGHT and CSS height = container WIDTH
           (because rotation swaps axes); object-fill stretches it edge-to-edge so
           both goal areas stay fully visible. */}
+      {/* Raw <img> on purpose: this is a rotated (-90°), axis-swapped, object-fill
+          stretched background; next/image manages intrinsic sizing/layout and
+          would fight the rotation + w-[125%] overflow trick. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/assets/stadium-green.webp"
         alt=""

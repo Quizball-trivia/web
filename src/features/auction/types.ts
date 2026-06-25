@@ -1,3 +1,5 @@
+import type { AvatarCustomization } from '@/types/game';
+
 export type PositionGroup = 'GK' | 'DEF' | 'MID' | 'FWD';
 
 export interface Footballer {
@@ -15,6 +17,12 @@ export interface AuctionPlayer {
   id: string;
   username: string;
   avatarSeed: string;
+  /**
+   * Layered avatar to render (real for the human, random for bots). Preferred
+   * over avatarSeed by the avatar components; avatarSeed is the fallback when
+   * absent (mock flow / tests). The live adapter always populates it.
+   */
+  avatarCustomization?: AvatarCustomization;
   budget: number;
   team: AuctionTeam;
   isBot: boolean;

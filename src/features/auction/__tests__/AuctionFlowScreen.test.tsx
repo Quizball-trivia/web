@@ -19,6 +19,7 @@ vi.mock('@/contexts/LocaleContext', () => ({
       if (key === 'auctionGame.searchStatus') return `${String(params?.count ?? 0)}/3 players found`;
       if (key === 'auctionGame.connectingPlayers') return 'Connecting players...';
       if (key === 'auctionGame.auctionUnavailable') return 'Auction unavailable';
+      if (key === 'auctionGame.signInToPlay') return 'Sign in to play Auction.';
       if (key === 'auctionGame.youLabel') return 'You';
       if (key === 'common.cancel') return 'Cancel';
       if (key === 'common.reconnecting') return 'Reconnecting...';
