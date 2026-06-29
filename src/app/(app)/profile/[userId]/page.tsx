@@ -7,6 +7,7 @@ import { usePublicProfile, useUserAchievements } from "@/lib/queries/users.queri
 import { useRecentMatches } from "@/lib/queries/stats.queries";
 import { useAuthStore } from "@/stores/auth.store";
 import { ProfileWeb, toProfileRecentMatch } from "@/features/profile/ProfileWeb";
+import { MAX_MATCHES_COUNT } from "@/lib/constants/matches";
 import { ApiError } from "@/lib/api/api";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { PlayerStats } from "@/types/game";
@@ -39,7 +40,7 @@ function PublicProfileContent({ userId }: { userId: string }) {
     data: recentMatches = [],
     isLoading: recentMatchesLoading,
     error: recentMatchesError,
-  } = useRecentMatches(20, userId);
+  } = useRecentMatches(MAX_MATCHES_COUNT, userId);
 
   if (isLoading) {
     return (
