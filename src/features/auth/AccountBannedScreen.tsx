@@ -13,7 +13,7 @@ import { ShieldX } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useAuthStore } from '@/stores/auth.store';
 
-const SUPPORT_EMAIL = 'support@quizball.com';
+const SUPPORT_EMAIL = 'nika@quizball.io';
 
 export function AccountBannedScreen() {
   const { t } = useLocale();
