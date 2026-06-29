@@ -14,6 +14,7 @@ import { queryKeys } from "@/lib/queries/queryKeys";
 import { useLocale } from "@/contexts/LocaleContext";
 import { LOCALES, type Locale } from "@/lib/i18n/messages";
 import { toProfileRecentMatch } from "@/features/profile/ProfileWeb";
+import { MAX_MATCHES_COUNT } from "@/lib/constants/matches";
 import { useEffect } from "react";
 import { useMyAchievements } from "@/lib/queries/users.queries";
 import { decodeAvatarCustomization } from "@/lib/avatars";
@@ -30,7 +31,7 @@ export default function ProfilePage() {
     data: recentMatches = [],
     isLoading: recentMatchesLoading,
     error: recentMatchesError,
-  } = useRecentMatches(20);
+  } = useRecentMatches(MAX_MATCHES_COUNT);
   const { data: matchStatsSummary = null } = useMatchStatsSummary();
   const { data: rankedProfile, isLoading: rankedProfileLoading } = useRankedProfile();
   const { data: userRanks } = useUserRanks();
