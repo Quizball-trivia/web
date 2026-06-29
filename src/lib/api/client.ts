@@ -35,6 +35,20 @@ export async function apiFetch<
   try {
     return await api.request(method, path, options);
   } catch (error) {
+    // A "banned" 401 is a terminal account state, not a token problem. Refreshing
+    // or retrying is pointless and — because the post-OAuth session auto-refreshes —
+    // can replace this precise ban error with a generic "no token" 401 (details:
+    // null), so callers can't detect the ban. Throw the clean ban error as-is.
+    const isBanned =
+      error instanceof ApiError &&
+      error.status === 401 &&
+      typeof error.data === "object" &&
+      error.data !== null &&
+      (error.data as { details?: { reason?: unknown } }).details?.reason === "banned";
+    if (isBanned) {
+      throw error;
+    }
+
     const canRefresh =
       error instanceof ApiError &&
       error.status === 401 &&

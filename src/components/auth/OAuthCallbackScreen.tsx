@@ -5,6 +5,7 @@ import { AlertCircle, ArrowLeft, RotateCcw } from 'lucide-react';
 import { motion } from 'motion/react';
 import {
   consumeRedirectOAuthProvider,
+  isBannedAuthError,
   isPendingDeletionAuthError,
   restorePendingDeletionWithToken,
 } from '@/lib/auth/auth.service';
@@ -98,6 +99,7 @@ export function OAuthCallbackScreen() {
   const { t } = useLocale();
   const router = useRouter();
   const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
+  const setBanned = useAuthStore((state) => state.setBanned);
   const [error, setError] = useState<string | null>(null);
   const [pendingRestoreAvailable, setPendingRestoreAvailable] = useState(false);
   const [restoreSubmitting, setRestoreSubmitting] = useState(false);
@@ -169,6 +171,10 @@ export function OAuthCallbackScreen() {
         try {
           authenticatedUser = await fetchCurrentUser();
         } catch (bootstrapError) {
+          if (isBannedAuthError(bootstrapError)) {
+            setBanned();
+            return;
+          }
           if (isPendingDeletionAuthError(bootstrapError)) {
             setPendingRestoreAvailable(true);
             return;
@@ -195,7 +201,7 @@ export function OAuthCallbackScreen() {
       }
     };
     processCallback();
-  }, [router, setAuthenticated, t]);
+  }, [router, setAuthenticated, setBanned, t]);
 
   const handleRestore = async () => {
     if (!pendingRestoreAvailable || restoreSubmitting) {
