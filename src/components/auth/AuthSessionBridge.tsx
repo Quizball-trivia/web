@@ -8,8 +8,24 @@ import { useAuthStore } from '@/stores/auth.store';
 export function AuthSessionBridge() {
   useEffect(() => {
     const { data } = getSupabaseClient().auth.onAuthStateChange((event) => {
+      // "banned" is terminal. setBanned() signs the user out, which fires
+      // SIGNED_OUT (and the post-OAuth session churn fires SIGNED_IN /
+      // TOKEN_REFRESHED). If we let those flip the status to anonymous or
+      // re-bootstrap, we get an infinite ban -> signout -> re-auth -> ban loop
+      // (the screen flashes and /me is hammered). Ignore all auth events while
+      // banned; only an explicit "Back to start" (setAnonymous) leaves the state.
+      if (useAuthStore.getState().status === 'banned') {
+        return;
+      }
+
       if (event === 'SIGNED_OUT') {
         window.setTimeout(() => {
+          // Re-check inside the deferred callback: a SIGNED_OUT queued before the
+          // store became banned could otherwise still run setAnonymous() after
+          // setBanned(), undoing the terminal banned state.
+          if (useAuthStore.getState().status === 'banned') {
+            return;
+          }
           useAuthStore.getState().setAnonymous();
         }, 0);
         return;
