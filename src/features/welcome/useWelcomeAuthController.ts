@@ -515,6 +515,10 @@ export function useWelcomeAuthController() {
         try {
           await verifyGeorgianPhoneOtp(normalizedPhone, authOtp);
         } catch (error) {
+          if (isBannedAuthError(error)) {
+            setBanned();
+            return;
+          }
           if (isPendingDeletionAuthError(error)) {
             setPendingRestoreAction({ kind: 'phone', phone: normalizedPhone, token: authOtp });
             setAuthNoticeModal('pending-deletion');
@@ -532,7 +536,7 @@ export function useWelcomeAuthController() {
         setAuthSubmitting(false);
       }
     },
-    [authOtp, authPhone, bootstrap, phoneOtpSent, resetAuthFeedback, resetAuthForm, t],
+    [authOtp, authPhone, bootstrap, phoneOtpSent, resetAuthFeedback, resetAuthForm, setBanned, t],
   );
 
   const handlePhoneFieldChange = useCallback(
