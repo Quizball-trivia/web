@@ -796,6 +796,12 @@
     "forgotPassword": "Forgot password?",
     "loginError": "Email or password is incorrect. If you joined with Google, use Continue with Google."
   },
+  "accountBanned": {
+    "title": "ACCOUNT BANNED",
+    "description": "This account has been permanently banned for violating our fair-play rules.",
+    "contact": "If you believe this is a mistake, contact support.",
+    "back": "Back to start"
+  },
   "appAuthGate": {
     "warmingUp": "Warming Up...",
     "redirecting": "Redirecting..."

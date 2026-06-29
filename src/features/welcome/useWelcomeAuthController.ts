@@ -22,6 +22,7 @@ import {
   register,
   forgotPassword,
   isPendingDeletionAuthError,
+  isBannedAuthError,
   restorePendingDeletionWithLogin,
   socialLogin,
   socialLoginWithIdToken,
@@ -62,6 +63,7 @@ type PendingRestoreAction =
 export function useWelcomeAuthController() {
   const { t, locale } = useLocale();
   const bootstrap = useAuthStore((state) => state.bootstrap);
+  const setBanned = useAuthStore((state) => state.setBanned);
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ?? '';
   const inAppBrowserApp = useMemo(() => getInAppBrowserApp(), []);
   const authInAppBrowser = inAppBrowserApp !== null;
@@ -202,6 +204,10 @@ export function useWelcomeAuthController() {
         await bootstrap({ force: true });
         setLoginOpen(false);
       } catch (error) {
+        if (isBannedAuthError(error)) {
+          setBanned();
+          return;
+        }
         if (isPendingDeletionAuthError(error)) {
           setPendingRestoreAction({
             kind: 'social-token',
@@ -220,7 +226,7 @@ export function useWelcomeAuthController() {
         setSocialSubmitting(null);
       }
     },
-    [bootstrap, t],
+    [bootstrap, setBanned, t],
   );
 
   // Fallback for when the overlaid GIS button never rendered: try One Tap,
@@ -244,6 +250,11 @@ export function useWelcomeAuthController() {
         await bootstrap({ force: true });
         return;
       } catch (gisError) {
+        if (googleIdentity && isBannedAuthError(gisError)) {
+          setBanned();
+          setSocialSubmitting(null);
+          return;
+        }
         if (googleIdentity && isPendingDeletionAuthError(gisError)) {
           setPendingRestoreAction({
             kind: 'social-token',
@@ -272,6 +283,7 @@ export function useWelcomeAuthController() {
     authInAppBrowser,
     bootstrap,
     googleClientId,
+    setBanned,
     showOpenInBrowserInstructions,
     socialSubmitting,
   ]);
@@ -342,6 +354,10 @@ export function useWelcomeAuthController() {
           try {
             await login(authEmail, authPassword);
           } catch (error) {
+            if (isBannedAuthError(error)) {
+              setBanned();
+              return;
+            }
             if (isPendingDeletionAuthError(error)) {
               setPendingRestoreAction({ kind: 'email', email: authEmail, password: authPassword });
               setAuthNoticeModal('pending-deletion');
@@ -368,7 +384,7 @@ export function useWelcomeAuthController() {
         setAuthSubmitting(false);
       }
     },
-    [authConfirmPassword, authEmail, authMode, authPassword, bootstrap, locale, resetAuthFeedback, resetAuthForm, t],
+    [authConfirmPassword, authEmail, authMode, authPassword, bootstrap, locale, resetAuthFeedback, resetAuthForm, setBanned, t],
   );
 
   const handleCloseAuthNoticeModal = useCallback(() => {
@@ -499,6 +515,10 @@ export function useWelcomeAuthController() {
         try {
           await verifyGeorgianPhoneOtp(normalizedPhone, authOtp);
         } catch (error) {
+          if (isBannedAuthError(error)) {
+            setBanned();
+            return;
+          }
           if (isPendingDeletionAuthError(error)) {
             setPendingRestoreAction({ kind: 'phone', phone: normalizedPhone, token: authOtp });
             setAuthNoticeModal('pending-deletion');
@@ -516,7 +536,7 @@ export function useWelcomeAuthController() {
         setAuthSubmitting(false);
       }
     },
-    [authOtp, authPhone, bootstrap, phoneOtpSent, resetAuthFeedback, resetAuthForm, t],
+    [authOtp, authPhone, bootstrap, phoneOtpSent, resetAuthFeedback, resetAuthForm, setBanned, t],
   );
 
   const handlePhoneFieldChange = useCallback(

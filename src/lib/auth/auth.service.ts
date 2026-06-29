@@ -178,19 +178,26 @@ export async function register(payload: RegisterPayload): Promise<RegisterResult
   };
 }
 
-export function isPendingDeletionAuthError(error: unknown): boolean {
+function authErrorReason(error: unknown): string | null {
   if (!(error instanceof ApiError)) {
-    return false;
+    return null;
   }
   const details = error.data && typeof error.data === "object" && "details" in error.data
     ? (error.data as { details?: unknown }).details
     : null;
-  return Boolean(
-    details &&
-      typeof details === "object" &&
-      "reason" in details &&
-      (details as { reason?: unknown }).reason === "pending_deletion",
-  );
+  if (details && typeof details === "object" && "reason" in details) {
+    const reason = (details as { reason?: unknown }).reason;
+    return typeof reason === "string" ? reason : null;
+  }
+  return null;
+}
+
+export function isPendingDeletionAuthError(error: unknown): boolean {
+  return authErrorReason(error) === "pending_deletion";
+}
+
+export function isBannedAuthError(error: unknown): boolean {
+  return authErrorReason(error) === "banned";
 }
 
 /**
