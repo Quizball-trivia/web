@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth.store";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
+import { AccountBannedScreen } from "@/features/auth/AccountBannedScreen";
 import { isOnboardingComplete } from "@/lib/auth/onboarding";
 import { consumePostAuthRedirect, rememberPostAuthRedirect } from "@/lib/auth/postAuthRedirect";
 import { useLocale } from "@/contexts/LocaleContext";
@@ -59,6 +60,10 @@ export default function AppAuthGate({ children }: AppAuthGateProps) {
 
   if (isDevelopmentDevRoute) {
     return <>{children}</>;
+  }
+
+  if (status === "banned") {
+    return <AccountBannedScreen />;
   }
 
   if (status === "loading") {

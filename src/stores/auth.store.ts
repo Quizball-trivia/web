@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { fetchCurrentUser } from "@/lib/auth/session";
 import { clearTokens } from "@/lib/auth/tokenStorage";
-import { logout as logoutService } from "@/lib/auth/auth.service";
+import { logout as logoutService, isBannedAuthError } from "@/lib/auth/auth.service";
 import { ApiError } from "@/lib/api/api";
 import type { User } from "@/lib/types";
 import { logger } from "@/utils/logger";
@@ -11,7 +11,7 @@ import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { getSupabaseSession, signOutLocal } from "@/lib/auth/supabase";
 import { disconnectSocket } from "@/lib/realtime/socket-client";
 
-type AuthStatus = "loading" | "anonymous" | "authenticated";
+type AuthStatus = "loading" | "anonymous" | "authenticated" | "banned";
 const BOOTSTRAP_TRANSIENT_RETRY_MS = 300;
 
 type AuthState = {
@@ -21,6 +21,7 @@ type AuthState = {
   bootstrap: (options?: { force?: boolean }) => Promise<void>;
   setAuthenticated: (user: User) => void;
   setAnonymous: () => void;
+  setBanned: () => void;
   patchProgression: (progression: User["progression"]) => void;
   logout: () => Promise<void>;
 };
@@ -81,6 +82,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     resetUser();
     set({ status: "anonymous", user: null, hasBootstrapped: true });
   },
+  setBanned: () => {
+    // Tear down the local session like a sign-out, but land on the dedicated
+    // "banned" status so the app root renders the ACCOUNT BANNED screen instead
+    // of the anonymous landing page.
+    clearLocalSession();
+    resetUser();
+    void signOutLocal().catch(() => {});
+    disconnectSocket();
+    set({ status: "banned", user: null, hasBootstrapped: true });
+  },
   patchProgression: (progression) => {
     const { user } = get();
     if (!user) return;
@@ -129,6 +140,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       syncAnalyticsUser(user);
     } catch (error) {
       logger.warn("Auth bootstrap failed", error);
+      if (isBannedAuthError(error)) {
+        logger.warn("Auth bootstrap: account banned");
+        get().setBanned();
+        return;
+      }
       if (isAuthFailure(error)) {
         try {
           await signOutLocal();
@@ -155,6 +171,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ status: "authenticated", user, hasBootstrapped: true });
         syncAnalyticsUser(user);
       } catch (retryError) {
+        if (isBannedAuthError(retryError)) {
+          logger.warn("Auth bootstrap retry: account banned");
+          get().setBanned();
+          return;
+        }
         if (isAuthFailure(retryError)) {
           logger.warn("Auth bootstrap transient retry failed terminally");
           clearLocalSession();

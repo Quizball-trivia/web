@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth.store";
 import { getPostAuthEntryRoute } from "@/lib/auth/postAuthRedirect";
+import { AccountBannedScreen } from "@/features/auth/AccountBannedScreen";
 
 type PublicOnlyGateProps = {
   children: React.ReactNode;
@@ -35,6 +36,10 @@ export default function PublicOnlyGate({ children }: PublicOnlyGateProps) {
 
   if (status === "authenticated") {
     return null;
+  }
+
+  if (status === "banned") {
+    return <AccountBannedScreen />;
   }
 
   return <>{children}</>;
