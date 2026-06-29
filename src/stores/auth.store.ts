@@ -115,6 +115,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return;
     }
 
+    // "banned" is terminal: setBanned() signed the user out, so a re-bootstrap
+    // would find no Supabase session and silently flip the status back to
+    // "anonymous" — dropping the ACCOUNT BANNED screen (it would flash and
+    // vanish). Stay banned until the user explicitly leaves (setAnonymous).
+    if (status === "banned") {
+      return;
+    }
+
     if (!force && hasBootstrapped && status !== "loading") {
       return;
     }
