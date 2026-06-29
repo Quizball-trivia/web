@@ -20,6 +20,12 @@ export function AuthSessionBridge() {
 
       if (event === 'SIGNED_OUT') {
         window.setTimeout(() => {
+          // Re-check inside the deferred callback: a SIGNED_OUT queued before the
+          // store became banned could otherwise still run setAnonymous() after
+          // setBanned(), undoing the terminal banned state.
+          if (useAuthStore.getState().status === 'banned') {
+            return;
+          }
           useAuthStore.getState().setAnonymous();
         }, 0);
         return;
