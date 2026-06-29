@@ -443,7 +443,7 @@ describe('RealtimePartyQuizScreen — overlays', () => {
     });
     renderScreen();
     expect(screen.getByText(/opponent forfeited/i)).toBeInTheDocument();
-    expect(screen.getByText('Opponent quit')).toBeInTheDocument();
+    expect(screen.getByText('You win — your opponent left')).toBeInTheDocument();
   });
 
   it('renders the pause overlay when matchPaused and pauseUntil is in the future', () => {

@@ -4,17 +4,19 @@ import { motion } from 'motion/react';
 import Image from 'next/image';
 import { Crown } from 'lucide-react';
 import { AvatarPreview } from '@/components/AvatarPreview';
-import type { AuctionGameState, AuctionPlayer, PositionGroup } from '../types';
-import { formatMoney, getTotalTeamValue, getFilledCount, isTeamComplete } from '../data';
-import { POS_COLORS, poppins, medalColor } from '../constants/auction.constants';
+import type { AuctionGameState, AuctionPlayer } from '../types';
+import { formatMoney, getTotalTeamValue, getFilledCount, isTeamComplete, lastName, POSITION_ORDER } from '../data';
+import { POS_COLORS, poppins, medalColor, MEDAL_COLORS } from '../constants/auction.constants';
+import { ScreenBackdrop, SCREEN_GLOW } from './shared/ScreenBackdrop';
+import { AuctionPrimaryButton } from './shared/AuctionPrimaryButton';
 import { useLocale } from '@/contexts/LocaleContext';
 import { cn } from '@/lib/utils';
 
 // ─── Podium (top 3) — gold / silver / bronze, matching the Betsson leaderboard ─
 const PODIUM_STYLE: Record<1 | 2 | 3, { medal: string; gradientFrom: string; gradientTo: string; height: string; order: string }> = {
-  1: { medal: '#FFD700', gradientFrom: 'rgba(255,215,0,0.9)', gradientTo: 'rgba(255,176,0,0.4)', height: 'h-28 sm:h-36', order: 'order-2' },
-  2: { medal: '#C0C0C0', gradientFrom: 'rgba(214,214,222,0.85)', gradientTo: 'rgba(160,160,170,0.35)', height: 'h-20 sm:h-28', order: 'order-1' },
-  3: { medal: '#CD7F32', gradientFrom: 'rgba(205,127,50,0.9)', gradientTo: 'rgba(160,90,30,0.4)', height: 'h-16 sm:h-24', order: 'order-3' },
+  1: { medal: MEDAL_COLORS[0], gradientFrom: 'rgba(255,215,0,0.9)', gradientTo: 'rgba(255,176,0,0.4)', height: 'h-28 sm:h-36', order: 'order-2' },
+  2: { medal: MEDAL_COLORS[1], gradientFrom: 'rgba(214,214,222,0.85)', gradientTo: 'rgba(160,160,170,0.35)', height: 'h-20 sm:h-28', order: 'order-1' },
+  3: { medal: MEDAL_COLORS[2], gradientFrom: 'rgba(205,127,50,0.9)', gradientTo: 'rgba(160,90,30,0.4)', height: 'h-16 sm:h-24', order: 'order-3' },
 };
 
 function PodiumColumn({
@@ -44,7 +46,7 @@ function PodiumColumn({
         {rank === 1 && (
           <Crown className="absolute -top-5 left-1/2 size-5 -translate-x-1/2" style={{ color: s.medal }} fill="currentColor" />
         )}
-        <AvatarPreview customization={{ base: player.avatarSeed || 'avatar-1' }} width={rank === 1 ? 64 : 52} />
+        <AvatarPreview customization={player.avatarCustomization ?? { base: player.avatarSeed || 'avatar-1' }} width={rank === 1 ? 64 : 52} />
       </div>
       {/* Name */}
       <div className="mb-1 flex max-w-full items-center gap-1">
@@ -74,11 +76,17 @@ export function AuctionResultsScreen({
   humanPlayerId,
   onPlayAgain,
   onExit,
+  coinsAwarded,
+  forfeited = false,
 }: {
   state: AuctionGameState;
   humanPlayerId: string;
   onPlayAgain: () => void;
   onExit: () => void;
+  /** Coins this player earned (500 win / 300 finish). 0/null = none shown. */
+  coinsAwarded?: number | null;
+  /** This player left/forfeited: show the forfeit result, never coins. */
+  forfeited?: boolean;
 }) {
   const { t } = useLocale();
   const ordinal = (n: number) => {
@@ -101,22 +109,13 @@ export function AuctionResultsScreen({
 
   const winner = rankedPlayers[0];
   const humanRank = rankedPlayers.findIndex((p) => p.id === humanPlayerId);
-  const humanWon = winner?.id === humanPlayerId;
+  const humanWon = !forfeited && winner?.id === humanPlayerId;
+  // Coins are never shown on a forfeit (the leaver gets nothing).
+  const showCoins = !forfeited && (coinsAwarded ?? 0) > 0;
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-surface-page-alt p-3 md:p-6">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(circle at top center, rgba(28,176,246,0.08), transparent 32%), radial-gradient(circle at bottom left, rgba(88,204,2,0.06), transparent 28%)',
-        }}
-      />
+      <ScreenBackdrop glow={SCREEN_GLOW.results} />
 
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
@@ -153,19 +152,47 @@ export function AuctionResultsScreen({
             )}
           </motion.div>
           <h1
-            className="font-poppins text-[2.5rem] font-black uppercase tracking-[0] sm:text-[3rem]"
-            style={{
-              lineHeight: '1.3',
-              color: humanWon ? '#22C55E' : '#FACC15',
-            }}
+            className={cn(
+              'font-poppins text-[2.5rem] font-black uppercase tracking-[0] sm:text-[3rem]',
+              forfeited ? 'text-brand-red' : humanWon ? 'text-brand-green' : 'text-brand-yellow',
+            )}
+            style={{ lineHeight: '1.3' }}
           >
-            {humanWon ? t('auctionGame.youWin') : t('auctionGame.auctionOver')}
+            {forfeited
+              ? t('auctionGame.lostByForfeit')
+              : humanWon
+                ? t('auctionGame.youWin')
+                : t('auctionGame.auctionOver')}
           </h1>
           <p className="mt-1 font-poppins text-sm font-semibold text-white/50 uppercase">
-            {humanWon
-              ? t('auctionGame.highestTeamValueSubtitle')
-              : t('auctionGame.youFinishedRank', { rank: ordinal(humanRank + 1) })}
+            {forfeited
+              ? t('auctionGame.lostByForfeitSubtitle')
+              : humanWon
+                ? t('auctionGame.highestTeamValueSubtitle')
+                : t('auctionGame.youFinishedRank', { rank: ordinal(humanRank + 1) })}
           </p>
+
+          {/* Coin reward — animated chip (win = +500, finish = +300). Never on
+              a forfeit. */}
+          {showCoins && (
+            <motion.div
+              initial={{ scale: 0, opacity: 0, y: 8 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              transition={{ delay: 0.55, type: 'spring', stiffness: 320, damping: 16 }}
+              className="mt-3 inline-flex items-center gap-2 rounded-full bg-brand-yellow/15 px-4 py-2 ring-1 ring-brand-yellow/40"
+            >
+              <motion.div
+                initial={{ rotate: -20, scale: 0.6 }}
+                animate={{ rotate: 0, scale: 1 }}
+                transition={{ delay: 0.65, type: 'spring', stiffness: 360, damping: 12 }}
+              >
+                <Image src="/assets/coin-1.png" alt="" width={24} height={24} className="size-6 object-contain" />
+              </motion.div>
+              <span className="font-poppins text-lg font-black tabular-nums text-brand-yellow" style={poppins}>
+                {t('auctionGame.coinsEarned', { coins: coinsAwarded ?? 0 })}
+              </span>
+            </motion.div>
+          )}
         </div>
 
         {/* Podium — top 3 (party-quiz style) */}
@@ -238,14 +265,14 @@ export function AuctionResultsScreen({
 
                 {/* Squad chips — solid position colours */}
                 <div className="mt-2.5 flex flex-wrap gap-1">
-                  {(['GK', 'DEF', 'MID', 'FWD'] as PositionGroup[]).flatMap((pos) =>
+                  {POSITION_ORDER.flatMap((pos) =>
                     player.team.slots[pos].map((f) => (
                       <span
                         key={f.id}
                         className="rounded-[8px] px-1.5 py-0.5 text-[10px] font-bold"
                         style={{ backgroundColor: POS_COLORS[pos], color: '#0b1418' }}
                       >
-                        {f.name.split(' ').pop()}
+                        {lastName(f.name)}
                       </span>
                     )),
                   )}
@@ -277,20 +304,12 @@ export function AuctionResultsScreen({
           transition={{ delay: 1.2 }}
           className="mx-auto flex w-full max-w-[498px] flex-col items-stretch gap-3 pt-2"
         >
-          <button
-            type="button"
-            onClick={onPlayAgain}
-            className="flex h-[64px] w-full items-center justify-center rounded-[20px] bg-brand-green font-poppins font-semibold uppercase text-white text-[1.5rem] shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none"
-          >
+          <AuctionPrimaryButton onClick={onPlayAgain} size="wide">
             {t('auctionGame.playAgain')}
-          </button>
-          <button
-            type="button"
-            onClick={onExit}
-            className="flex h-[64px] w-full items-center justify-center rounded-[20px] border-[3px] border-brand-green bg-transparent font-poppins font-semibold uppercase text-white text-[1.5rem] transition-colors hover:bg-brand-green/10 active:translate-y-[2px]"
-          >
+          </AuctionPrimaryButton>
+          <AuctionPrimaryButton onClick={onExit} size="wide" variant="outline">
             {t('auctionGame.exit')}
-          </button>
+          </AuctionPrimaryButton>
         </motion.div>
       </motion.div>
     </div>

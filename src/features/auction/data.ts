@@ -1,8 +1,13 @@
 import type { Footballer, Formation, AuctionPlayer, AuctionTeam, PositionGroup } from './types';
+import { randomBotAvatar } from './data/botAvatars';
 
 export const STARTING_BUDGET = 1_000_000_000;
-export const BID_COUNTDOWN_MS = 10_000;
 export const MIN_BID_INCREMENT = 5_000_000;
+// Turn time limits: the opener (first turn, no standing bid) gets longer to read
+// the clues and decide; every turn after is fast. Shared by the game hook (timer
+// scheduling) and the UI (countdown bar) so they can never drift.
+export const OPENING_TURN_MS = 30_000;
+export const RAISE_TURN_MS = 10_000;
 // Delay between each clue reveal during the pre-bid clue-reveal phase.
 // One extra tick of this duration is added after the last clue so players have
 // a beat to read it before bidding opens.
@@ -15,6 +20,10 @@ export function getFootballerPlaceholderImage(id: string): string {
   return `https://api.dicebear.com/9.x/lorelei/svg?seed=${encodeURIComponent(id)}&radius=50`;
 }
 
+// Popular real / FIFA formations. `required` is the per-group total (always
+// sums to 11 outfield+GK) the game logic relies on; `rows` is display-only and
+// splits a group into visual bands (e.g. 4-2-3-1 shows MID as a 3-band over a
+// 2-band) so the pitch renders the recognisable shape.
 export const FORMATIONS: Formation[] = [
   {
     name: '4-3-3',
@@ -37,16 +46,6 @@ export const FORMATIONS: Formation[] = [
     ],
   },
   {
-    name: '3-5-2',
-    required: { GK: 1, DEF: 3, MID: 5, FWD: 2 },
-    rows: [
-      { pos: 'FWD', count: 2 },
-      { pos: 'MID', count: 5 },
-      { pos: 'DEF', count: 3 },
-      { pos: 'GK', count: 1 },
-    ],
-  },
-  {
     name: '4-2-3-1',
     required: { GK: 1, DEF: 4, MID: 5, FWD: 1 },
     rows: [
@@ -58,12 +57,88 @@ export const FORMATIONS: Formation[] = [
     ],
   },
   {
+    name: '4-3-1-2',
+    required: { GK: 1, DEF: 4, MID: 4, FWD: 2 },
+    rows: [
+      { pos: 'FWD', count: 2 },
+      { pos: 'MID', count: 1 },
+      { pos: 'MID', count: 3 },
+      { pos: 'DEF', count: 4 },
+      { pos: 'GK', count: 1 },
+    ],
+  },
+  {
+    name: '4-1-2-1-2',
+    required: { GK: 1, DEF: 4, MID: 4, FWD: 2 },
+    rows: [
+      { pos: 'FWD', count: 2 },
+      { pos: 'MID', count: 1 },
+      { pos: 'MID', count: 2 },
+      { pos: 'MID', count: 1 },
+      { pos: 'DEF', count: 4 },
+      { pos: 'GK', count: 1 },
+    ],
+  },
+  {
+    name: '4-2-2-2',
+    required: { GK: 1, DEF: 4, MID: 4, FWD: 2 },
+    rows: [
+      { pos: 'FWD', count: 2 },
+      { pos: 'MID', count: 2 },
+      { pos: 'MID', count: 2 },
+      { pos: 'DEF', count: 4 },
+      { pos: 'GK', count: 1 },
+    ],
+  },
+  {
+    name: '4-4-1-1',
+    required: { GK: 1, DEF: 4, MID: 4, FWD: 2 },
+    rows: [
+      { pos: 'FWD', count: 1 },
+      { pos: 'FWD', count: 1 },
+      { pos: 'MID', count: 4 },
+      { pos: 'DEF', count: 4 },
+      { pos: 'GK', count: 1 },
+    ],
+  },
+  {
+    name: '3-5-2',
+    required: { GK: 1, DEF: 3, MID: 5, FWD: 2 },
+    rows: [
+      { pos: 'FWD', count: 2 },
+      { pos: 'MID', count: 5 },
+      { pos: 'DEF', count: 3 },
+      { pos: 'GK', count: 1 },
+    ],
+  },
+  {
     name: '3-4-3',
     required: { GK: 1, DEF: 3, MID: 4, FWD: 3 },
     rows: [
       { pos: 'FWD', count: 3 },
       { pos: 'MID', count: 4 },
       { pos: 'DEF', count: 3 },
+      { pos: 'GK', count: 1 },
+    ],
+  },
+  {
+    name: '5-3-2',
+    required: { GK: 1, DEF: 5, MID: 3, FWD: 2 },
+    rows: [
+      { pos: 'FWD', count: 2 },
+      { pos: 'MID', count: 3 },
+      { pos: 'DEF', count: 5 },
+      { pos: 'GK', count: 1 },
+    ],
+  },
+  {
+    name: '5-2-1-2',
+    required: { GK: 1, DEF: 5, MID: 3, FWD: 2 },
+    rows: [
+      { pos: 'FWD', count: 2 },
+      { pos: 'MID', count: 1 },
+      { pos: 'MID', count: 2 },
+      { pos: 'DEF', count: 5 },
       { pos: 'GK', count: 1 },
     ],
   },
@@ -444,6 +519,7 @@ export function createBotPlayer(
 ): AuctionPlayer {
   return {
     ...bot,
+    avatarCustomization: randomBotAvatar(bot.id),
     budget: STARTING_BUDGET,
     team: createEmptyTeam(formation),
     isEliminated: false,
@@ -491,6 +567,18 @@ export function getMaxBid(player: AuctionPlayer): number {
   return Math.max(0, player.budget - (emptySlots - 1) * MIN_PLAYER_COST);
 }
 
+/** Minimum legal bid: a min-increment raise over the standing bid, or the
+ *  starting price when no one has bid yet. Single source of truth shared by the
+ *  bot, human-bid validation, and the bidding UI so they cannot drift. */
+export function getMinBid(round: { highestBid: number; startingPrice: number }): number {
+  return round.highestBid > 0 ? round.highestBid + MIN_BID_INCREMENT : round.startingPrice;
+}
+
+/** Display surname: the last whitespace-separated token of a footballer's name. */
+export function lastName(name: string): string {
+  return name.split(' ').pop() ?? name;
+}
+
 export function formatMoney(amount: number): string {
   if (amount >= 1_000_000_000) {
     const val = amount / 1_000_000_000;
@@ -505,12 +593,5 @@ export function formatMoney(amount: number): string {
   }
   return `$${amount}`;
 }
-
-export const POSITION_LABELS: Record<PositionGroup, string> = {
-  GK: 'Goalkeeper',
-  DEF: 'Defender',
-  MID: 'Midfielder',
-  FWD: 'Forward',
-};
 
 export const POSITION_ORDER: PositionGroup[] = ['GK', 'DEF', 'MID', 'FWD'];

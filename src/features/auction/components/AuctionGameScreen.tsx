@@ -12,10 +12,12 @@ export function AuctionGameScreen({
   state,
   actions,
   humanPlayerId,
+  serverDrivenTransitions = false,
 }: {
   state: AuctionGameState;
   actions: AuctionActions;
   humanPlayerId: string;
+  serverDrivenTransitions?: boolean;
 }) {
   if (state.phase === 'formation') {
     return <FormationReveal state={state} onContinue={() => actions.setPhase('bidding')} />;
@@ -26,7 +28,14 @@ export function AuctionGameScreen({
   }
 
   if (state.phase === 'reveal') {
-    return <RevealScreen state={state} actions={actions} humanPlayerId={humanPlayerId} />;
+    return (
+      <RevealScreen
+        state={state}
+        actions={actions}
+        humanPlayerId={humanPlayerId}
+        serverDrivenTransitions={serverDrivenTransitions}
+      />
+    );
   }
 
   if (state.phase === 'solo-pick') {

@@ -2,7 +2,7 @@
 
 import { motion } from 'motion/react';
 import type { AuctionPlayer, Formation, PositionGroup } from '../../types';
-import { getRemainingSlots } from '../../data';
+import { getRemainingSlots, lastName } from '../../data';
 import { POS_COLORS, poppins } from '../../constants/auction.constants';
 import { useLocale } from '@/contexts/LocaleContext';
 import { PlayerPhoto } from '../shared/PlayerPhoto';
@@ -53,6 +53,10 @@ export function SquadPitch({
           The img's CSS width = container HEIGHT and CSS height = container WIDTH
           (because rotation swaps axes); object-fill stretches it edge-to-edge so
           both goal areas stay fully visible. */}
+      {/* Raw <img> on purpose: this is a rotated (-90°), axis-swapped, object-fill
+          stretched background; next/image manages intrinsic sizing/layout and
+          would fight the rotation + w-[125%] overflow trick. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/assets/stadium-green.webp"
         alt=""
@@ -170,7 +174,7 @@ export function SquadPitch({
                           className={`${nameFs} text-white/90 text-center leading-tight font-semibold`}
                           style={{ maxWidth: circle + 16, ...poppins, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}
                         >
-                          {f.name.split(' ').pop()}
+                          {lastName(f.name)}
                         </motion.span>
                       )}
                     </div>

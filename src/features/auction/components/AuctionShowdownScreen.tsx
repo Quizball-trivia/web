@@ -10,6 +10,7 @@ import { getTierFrameSrc } from '@/utils/tierVisuals';
 import { getClub } from '@/lib/clubs';
 import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
+import type { AvatarCustomization } from '@/types/game';
 import type { AuctionPlayer } from '../types';
 
 // Placeholder country + club per seat until the backend supplies real user
@@ -22,6 +23,7 @@ import { poppins } from '../constants/auction.constants';
 
 function FramedAvatar({
   avatarSeed,
+  customization,
   width,
   mirror,
   className,
@@ -29,6 +31,7 @@ function FramedAvatar({
   clubId,
 }: {
   avatarSeed: string;
+  customization?: AvatarCustomization | null;
   width: number;
   mirror?: boolean;
   className?: string;
@@ -52,7 +55,7 @@ function FramedAvatar({
       />
       <div className="absolute inset-x-0 bottom-[8%] top-[22%] z-10 flex items-center justify-center overflow-hidden">
         <AvatarPreview
-          customization={{ base: avatarSeed || 'avatar-1' }}
+          customization={customization ?? { base: avatarSeed || 'avatar-1' }}
           width={Math.round(frameW * 0.64)}
           className={cn(mirror && '-scale-x-100')}
         />
@@ -144,6 +147,7 @@ function PlayerSide({
         </motion.div>
         <FramedAvatar
           avatarSeed={player.avatarSeed}
+          customization={player.avatarCustomization}
           width={88}
           mirror={mirror}
           className="sm:hidden"
@@ -152,6 +156,7 @@ function PlayerSide({
         />
         <FramedAvatar
           avatarSeed={player.avatarSeed}
+          customization={player.avatarCustomization}
           width={180}
           mirror={mirror}
           className="hidden sm:block md:hidden"
@@ -160,6 +165,7 @@ function PlayerSide({
         />
         <FramedAvatar
           avatarSeed={player.avatarSeed}
+          customization={player.avatarCustomization}
           width={220}
           mirror={mirror}
           className="hidden md:block"

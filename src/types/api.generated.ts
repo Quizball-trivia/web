@@ -1126,9 +1126,9 @@ export interface paths {
                                 /** Format: uuid */
                                 matchId: string;
                                 /** @enum {string} */
-                                mode: "friendly" | "ranked";
+                                mode: "friendly" | "ranked" | "auction";
                                 /** @enum {string} */
-                                competition: "friendly" | "placement" | "ranked";
+                                competition: "friendly" | "placement" | "ranked" | "auction";
                                 /** @enum {string} */
                                 status: "completed" | "abandoned";
                                 /** @enum {string} */
@@ -1143,8 +1143,34 @@ export interface paths {
                                 opponentPenaltyGoals: number;
                                 /** @enum {string|null} */
                                 winnerDecisionMethod: "goals" | "penalty_goals" | "total_points" | "total_points_fallback" | "forfeit" | null;
+                                /** @default false */
                                 cancelledNoContest: boolean;
                                 rpDelta: number | null;
+                                placement: number | null;
+                                /** @default 2 */
+                                playerCount: number;
+                                /** @default [] */
+                                opponents: {
+                                    /** Format: uuid */
+                                    id: string | null;
+                                    username: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    avatarCustomization: {
+                                        /** @enum {string} */
+                                        skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
+                                        /** @enum {string} */
+                                        jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro" | "jersey_georgia_retro" | "jersey_psg_retro";
+                                        /** @enum {string} */
+                                        hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
+                                        /** @enum {string} */
+                                        glasses?: "glasses_wayfarer" | "glasses_round" | "glasses_aviator";
+                                        /** @enum {string} */
+                                        facialHair?: "stache" | "beard";
+                                    } | null;
+                                    isAi: boolean;
+                                    placement: number | null;
+                                }[];
                                 opponent: {
                                     /** Format: uuid */
                                     id: string | null;
@@ -1234,6 +1260,22 @@ export interface paths {
                                 losses: number;
                                 draws: number;
                                 winRate: number;
+                            };
+                            rankedSeasons: {
+                                regular: {
+                                    gamesPlayed: number;
+                                    wins: number;
+                                    losses: number;
+                                    draws: number;
+                                    winRate: number;
+                                };
+                                event: {
+                                    gamesPlayed: number;
+                                    wins: number;
+                                    losses: number;
+                                    draws: number;
+                                    winRate: number;
+                                };
                             };
                         };
                     };
@@ -1389,6 +1431,71 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/leaderboard/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reset the global leaderboard (ranks & placement)
+         * @description Requires admin role. Archives current standings into the reset archive tables, then sets every real user's RP to 0 (tier 'Academy') and clears placement progress so all users re-do placement.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        confirm: true;
+                        notes?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Leaderboard reset summary */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LeaderboardResetResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -1839,6 +1946,8 @@ export interface paths {
                         }[];
                         reason: string;
                         idempotencyKey?: string;
+                        /** @default false */
+                        notify?: boolean;
                     };
                 };
             };
@@ -1921,7 +2030,7 @@ export interface paths {
                 query?: {
                     userId?: string;
                     purchaseId?: string;
-                    eventType?: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded";
+                    eventType?: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset";
                     outcome?: "success" | "failure";
                     from?: string;
                     to?: string;
@@ -1945,7 +2054,7 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
-                                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded";
+                                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset";
                                 /** @enum {string} */
                                 outcome: "success" | "failure";
                                 /** Format: uuid */
@@ -2003,6 +2112,80 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/store/admin/reset-ticket-window": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reset a user ticket-purchase window
+         * @description Requires admin role. Voids the user's completed ticket-pack purchases inside the rolling 24h window so the per-day purchase cap no longer blocks them.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        userId: string;
+                        reason: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Reset result with refreshed wallet */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ResetTicketWindowResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description User not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -2384,6 +2567,164 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List users with progression, RP and wallet
+         * @description Requires admin role. Paginated and searchable by nickname/email.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    page?: number;
+                    limit?: number;
+                    orderBy?: "created_at" | "total_xp" | "rp" | "nickname";
+                    orderDir?: "asc" | "desc";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Paginated users list */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminUsersListResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{userId}/progression": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Set or grant a user XP and/or RP
+         * @description Requires admin role. At least one of `xp` or `rp` must be provided (enforced server-side). Records the acting admin id for audit. Each of xp/rp may be a set (absolute) or delta (grant).
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        xp?: {
+                            /** @enum {string} */
+                            mode: "set" | "delta";
+                            value: number;
+                        };
+                        rp?: {
+                            /** @enum {string} */
+                            mode: "set" | "delta";
+                            value: number;
+                        };
+                        reason: string;
+                        /** @default true */
+                        notify?: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Progression updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminProgressionResult"];
+                    };
+                };
+                /** @description Invalid adjustment request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description User not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/api/v1/users/me/achievements": {
@@ -3252,84 +3593,6 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/presence/ping": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Heartbeat presence ping
-         * @description Records the caller (anonymous or logged-in) as currently online and returns the site-wide online count. Public — accepts requests without authentication.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Online count */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["OnlineCountResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/presence/online": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get site-wide online count
-         * @description Returns the current count of visitors online site-wide.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Online count */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["OnlineCountResponse"];
                     };
                 };
             };
@@ -5290,6 +5553,584 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the current user notifications */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    before?: string;
+                    beforeId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Notification feed with unread count */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListNotificationsResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the current user unread notification count */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Unread count */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UnreadCountResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/{notificationId}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark a notification as read */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    notificationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Updated unread count */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UnreadCountResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/read-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark all notifications as read */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Updated unread count (zero) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UnreadCountResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/announcements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List active announcements (player News feed) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Active announcements, newest first */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListAnnouncementsResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/announcements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List all announcements (admin) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description All announcements, newest first */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListAnnouncementsResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create an announcement (admin) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        title: {
+                            [key: string]: string;
+                        };
+                        body: {
+                            [key: string]: string;
+                        };
+                        /**
+                         * @default update
+                         * @enum {string}
+                         */
+                        type?: "update" | "info" | "event";
+                        /** @default true */
+                        isActive?: boolean;
+                        /** Format: date-time */
+                        activeFrom?: string | null;
+                        /** Format: date-time */
+                        activeTo?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Created announcement */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Announcement"];
+                    };
+                };
+                /** @description Invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/announcements/{announcementId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete an announcement (admin) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    announcementId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid announcement id */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Update an announcement (admin) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    announcementId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        title?: {
+                            [key: string]: string;
+                        };
+                        body?: {
+                            [key: string]: string;
+                        };
+                        /** @enum {string} */
+                        type?: "update" | "info" | "event";
+                        isActive?: boolean;
+                        /** Format: date-time */
+                        activeFrom?: string | null;
+                        /** Format: date-time */
+                        activeTo?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated announcement */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Announcement"];
+                    };
+                };
+                /** @description Invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit contact / bug-report feedback (emailed to support) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        category: "bug" | "feedback" | "other";
+                        message: string;
+                        /** Format: email */
+                        email: string;
+                        nickname: string;
+                        context?: string;
+                        attachments?: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Feedback received */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SubmitFeedbackResponse"];
+                    };
+                };
+                /** @description Invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Too many submissions (rate limited) */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Email provider error */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -5360,9 +6201,9 @@ export interface components {
                 /** Format: uuid */
                 matchId: string;
                 /** @enum {string} */
-                mode: "friendly" | "ranked";
+                mode: "friendly" | "ranked" | "auction";
                 /** @enum {string} */
-                competition: "friendly" | "placement" | "ranked";
+                competition: "friendly" | "placement" | "ranked" | "auction";
                 /** @enum {string} */
                 status: "completed" | "abandoned";
                 /** @enum {string} */
@@ -5377,8 +6218,34 @@ export interface components {
                 opponentPenaltyGoals: number;
                 /** @enum {string|null} */
                 winnerDecisionMethod: "goals" | "penalty_goals" | "total_points" | "total_points_fallback" | "forfeit" | null;
+                /** @default false */
                 cancelledNoContest: boolean;
                 rpDelta: number | null;
+                placement: number | null;
+                /** @default 2 */
+                playerCount: number;
+                /** @default [] */
+                opponents: {
+                    /** Format: uuid */
+                    id: string | null;
+                    username: string;
+                    /** Format: uri */
+                    avatarUrl: string | null;
+                    avatarCustomization: {
+                        /** @enum {string} */
+                        skin?: "skin_male_white" | "skin_male_white_alt" | "skin_male_dark" | "skin_male_dark_alt";
+                        /** @enum {string} */
+                        jersey?: "jersey_green" | "jersey_blue" | "jersey_yellow" | "jersey_red" | "jersey_violet" | "jersey_pink" | "jersey_real" | "jersey_liverpool" | "jersey_barcelona" | "jersey_milan" | "jersey_bayern" | "jersey_brazil_retro" | "jersey_argentina_retro" | "jersey_france_retro" | "jersey_germany_retro" | "jersey_netherlands_retro" | "jersey_georgia_retro" | "jersey_psg_retro";
+                        /** @enum {string} */
+                        hair?: "hair_boy_basic" | "hair_girl_basic" | "hair_hamsik" | "hair_ramos" | "hair_ronaldo_brazil" | "hair_ronaldo_goat";
+                        /** @enum {string} */
+                        glasses?: "glasses_wayfarer" | "glasses_round" | "glasses_aviator";
+                        /** @enum {string} */
+                        facialHair?: "stache" | "beard";
+                    } | null;
+                    isAi: boolean;
+                    placement: number | null;
+                }[];
                 opponent: {
                     /** Format: uuid */
                     id: string | null;
@@ -5425,6 +6292,22 @@ export interface components {
                 draws: number;
                 winRate: number;
             };
+            rankedSeasons: {
+                regular: {
+                    gamesPlayed: number;
+                    wins: number;
+                    losses: number;
+                    draws: number;
+                    winRate: number;
+                };
+                event: {
+                    gamesPlayed: number;
+                    wins: number;
+                    losses: number;
+                    draws: number;
+                    winRate: number;
+                };
+            };
         };
         RankedProfileResponse: {
             rp: number;
@@ -5438,6 +6321,13 @@ export interface components {
             currentWinStreak: number;
             /** Format: date-time */
             lastRankedMatchAt: string | null;
+        };
+        LeaderboardResetResponse: {
+            /** Format: uuid */
+            batchId: string;
+            profilesReset: number;
+            profilesArchived: number;
+            rpChangesArchived: number;
         };
         StoreProductsResponse: {
             items: {
@@ -5537,7 +6427,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded";
+            eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset";
             /** @enum {string} */
             outcome: "success" | "failure";
             /** Format: uuid */
@@ -5571,7 +6461,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded";
+                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset";
                 /** @enum {string} */
                 outcome: "success" | "failure";
                 /** Format: uuid */
@@ -5604,6 +6494,20 @@ export interface components {
             limit: number;
             total: number;
             totalPages: number;
+        };
+        ResetTicketWindowResponse: {
+            voided: number;
+            wallet: {
+                coins: number;
+                tickets: number;
+                ticketPurchaseCooldown: {
+                    canBuy: boolean;
+                    /** Format: date-time */
+                    nextAvailableAt: string | null;
+                    remainingSeconds: number;
+                    ticketsRemainingInWindow: number;
+                };
+            };
         };
         ProgressionResponse: {
             level: number;
@@ -5700,6 +6604,39 @@ export interface components {
                 /** Format: date-time */
                 unlockedAt: string | null;
             }[];
+        };
+        AdminUsersListResponse: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                email: string | null;
+                nickname: string | null;
+                country: string | null;
+                /** Format: uri */
+                avatar_url: string | null;
+                total_xp: number;
+                level: number;
+                rp: number | null;
+                tier: string | null;
+                /** @enum {string|null} */
+                placement_status: "unplaced" | "in_progress" | "placed" | null;
+                coins: number;
+                tickets: number;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+            page: number;
+            limit: number;
+            total: number;
+            totalPages: number;
+        };
+        AdminProgressionResult: {
+            /** Format: uuid */
+            userId: string;
+            total_xp: number;
+            level: number;
+            rp: number | null;
+            tier: string | null;
         };
         FriendsResponse: {
             friends: {
@@ -5913,9 +6850,6 @@ export interface components {
                     };
                 }[];
             };
-        };
-        OnlineCountResponse: {
-            online: number;
         };
         CategoryResponse: {
             /** Format: uuid */
@@ -6534,6 +7468,78 @@ export interface components {
                 mediumCount: number;
                 hardCount: number;
             }[];
+        };
+        ListNotificationsResponse: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                type: "points_adjustment" | "season_award" | "announcement" | "friend_request";
+                title: {
+                    [key: string]: string;
+                };
+                body: {
+                    [key: string]: string;
+                } | null;
+                data: {
+                    [key: string]: unknown;
+                };
+                /** Format: date-time */
+                readAt: string | null;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+            unreadCount: number;
+        };
+        UnreadCountResponse: {
+            unreadCount: number;
+        };
+        Announcement: {
+            /** Format: uuid */
+            id: string;
+            title: {
+                [key: string]: string;
+            };
+            body: {
+                [key: string]: string;
+            };
+            /** @enum {string} */
+            type: "update" | "info" | "event";
+            isActive: boolean;
+            /** Format: date-time */
+            activeFrom: string | null;
+            /** Format: date-time */
+            activeTo: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ListAnnouncementsResponse: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                title: {
+                    [key: string]: string;
+                };
+                body: {
+                    [key: string]: string;
+                };
+                /** @enum {string} */
+                type: "update" | "info" | "event";
+                isActive: boolean;
+                /** Format: date-time */
+                activeFrom: string | null;
+                /** Format: date-time */
+                activeTo: string | null;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+        };
+        SubmitFeedbackResponse: {
+            ok: boolean;
         };
     };
     responses: never;
