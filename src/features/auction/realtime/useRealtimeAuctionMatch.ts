@@ -151,6 +151,29 @@ export function useRealtimeAuctionMatch({
   // forfeit = 0). Set from match_finished's per-user map; drives the reward
   // animation on the results screen. null until/unless the match settles.
   const [coinsAwarded, setCoinsAwarded] = useState<number | null>(null);
+
+  // Watchdog: the rejoin prompt is only valid for the grace window. If the
+  // player doesn't tap in time (seat forfeits server-side), auto-dismiss so
+  // the UI falls through to the normal flow instead of hanging on the prompt.
+  useEffect(() => {
+    if (!rejoinAvailable) return;
+    const id = window.setTimeout(
+      () => setRejoinAvailable(null),
+      Math.max(0, rejoinAvailable.graceMs) + 3_000,
+    );
+    return () => window.clearTimeout(id);
+  }, [rejoinAvailable]);
+
+  // Watchdog: if the server's auction:resume never arrives (dropped socket at
+  // the wrong instant), don't leave the client on the countdown screen forever.
+  useEffect(() => {
+    if (resumeCountdownEndsAtMs === null) return;
+    const id = window.setTimeout(
+      () => setResumeCountdownEndsAtMs(null),
+      Math.max(0, resumeCountdownEndsAtMs - Date.now()) + 4_000,
+    );
+    return () => window.clearTimeout(id);
+  }, [resumeCountdownEndsAtMs]);
   const [search, setSearch] = useState<AuctionSearchState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const startRequestedRef = useRef(false);
@@ -501,13 +524,26 @@ export function useRealtimeAuctionMatch({
     };
 
     const onError = (payload: AuctionErrorPayload) => {
+      if (payload.code === 'auction_rejoin_unavailable') {
+        // The rejoin prompt expired (grace ran out / match ended before the
+        // tap). Drop the blocking prompt + countdown and fall through to the
+        // normal flow — this is not a visible error condition.
+        setRejoinAvailable(null);
+        setResumeCountdownEndsAtMs(null);
+        return;
+      }
       clearPendingForMatch(null);
       setError(friendlyAuctionError(payload, locale));
     };
     const onMatchStarted = (payload: AuctionMatchStartedPayload) =>
       apply({ type: 'match_started', payload });
-    const onState = (payload: AuctionStatePayload) =>
+    const onState = (payload: AuctionStatePayload) => {
+      // A full snapshot proves this socket is attached and hydrated — any
+      // pending rejoin prompt is obsolete (stale prompts otherwise stick
+      // forever, since nothing else clears them on this path).
+      setRejoinAvailable(null);
       apply({ type: 'state', payload });
+    };
     const onRoundStarted = (payload: AuctionRoundStartedPayload) =>
       apply({ type: 'round_started', payload });
     const onClueRevealed = (payload: AuctionClueRevealedPayload) =>
