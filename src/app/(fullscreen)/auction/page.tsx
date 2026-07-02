@@ -10,6 +10,8 @@ export default function AuctionPage() {
     <AuctionFlowScreen
       username={player?.username ?? 'Player'}
       avatarSeed={player?.avatar ?? 'avatar-1'}
+      avatarCustomization={player?.avatarCustomization ?? null}
+      mode="live"
     />
   );
 }

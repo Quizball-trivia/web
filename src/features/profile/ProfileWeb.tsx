@@ -51,7 +51,7 @@ import ClubSelect from '@/features/onboarding/ClubSelect';
 export interface ProfileRecentMatch {
   id: string | number;
   mode: string;
-  competition: "friendly" | "placement" | "ranked";
+  competition: "friendly" | "placement" | "ranked" | "auction";
   result: 'Win' | 'Loss' | 'Draw';
   time: string;
   rpDelta: number | null;

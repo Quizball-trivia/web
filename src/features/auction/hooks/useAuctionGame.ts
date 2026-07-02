@@ -14,6 +14,10 @@ import {
   MIN_PLAYER_COST,
   CLUE_REVEAL_INTERVAL_MS,
   MIN_BID_INCREMENT,
+  OPENING_TURN_MS,
+  RAISE_TURN_MS,
+  POSITION_ORDER,
+  getMinBid,
   createBotPlayer,
   createEmptyTeam,
   getRandomFormation,
@@ -32,6 +36,10 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+export type AuctionPendingTurnAction =
+  | { kind: 'bid'; amount: number; matchId: string; roundId: string | null }
+  | { kind: 'fold'; matchId: string; roundId: string | null };
+
 export interface AuctionActions {
   startGame: (playerCount?: number) => void;
   placeBid: (amount: number) => void;
@@ -39,14 +47,15 @@ export interface AuctionActions {
   confirmReveal: () => void;
   pickSoloOption: (option: 'A' | 'B') => void;
   setPhase: (phase: AuctionPhase) => void;
+  cancelSearch?: () => void;
+  /** Permanently leave/forfeit the live match (live mode only). */
+  forfeit?: () => void;
+  /** Opt in to rejoin a paused match after a reload (live mode only). */
+  rejoin?: (matchId: string) => void;
+  pendingTurnAction?: AuctionPendingTurnAction | null;
 }
 
 const HUMAN_PLAYER_ID = 'human-player';
-
-// Turn time limits: the opener (first turn, no standing bid) gets longer to
-// read the clues and decide; every turn after that is fast. Same for everyone.
-const OPENING_TURN_MS = 30_000;
-const RAISE_TURN_MS = 10_000;
 
 /** Players still in the running for this round: in turn order, not folded,
  *  not eliminated, and still need the position. */
@@ -158,7 +167,7 @@ export function useAuctionGame(humanUsername: string, humanAvatarSeed: string) {
         return { ...prev, phase: 'results', currentRound: null, soloPick: null };
       }
 
-      const positions = (['GK', 'DEF', 'MID', 'FWD'] as PositionGroup[]).filter(
+      const positions = POSITION_ORDER.filter(
         (pos) =>
           active.some((p) => needsPosition(p, pos)) && poolRef.current[pos].length > 0,
       );
@@ -365,7 +374,7 @@ export function useAuctionGame(humanUsername: string, humanAvatarSeed: string) {
         if (!bot) return prev;
 
         const maxBid = getMaxBid(bot);
-        const minBid = r.highestBid > 0 ? r.highestBid + MIN_BID_INCREMENT : r.startingPrice;
+        const minBid = getMinBid(r);
 
         // Bot's max willingness: a fraction of the footballer's value (placeholder
         // heuristic; replaced by the real AI difficulty system later).
@@ -465,7 +474,7 @@ export function useAuctionGame(humanUsername: string, humanAvatarSeed: string) {
 
         const maxBid = getMaxBid(human);
         if (amount > maxBid) return prev;
-        const minBid = round.highestBid > 0 ? round.highestBid + MIN_BID_INCREMENT : round.startingPrice;
+        const minBid = getMinBid(round);
         if (amount < minBid) return prev;
 
         const bidded = {
