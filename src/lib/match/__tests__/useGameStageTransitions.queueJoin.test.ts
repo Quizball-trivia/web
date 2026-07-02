@@ -132,6 +132,22 @@ describe('ranked matchmaking initial queue join', () => {
     expect(window.sessionStorage.getItem('quizball.ranked_queue.intent')).toBeNull();
   });
 
+  it('falls back to unknown source when no ranked queue intent is stored', () => {
+    const socket = createSocket();
+
+    renderTransitions(socket);
+
+    expect(socket.emit).toHaveBeenCalledWith(
+      'ranked:queue_join',
+      expect.objectContaining({
+        searchMode: 'human_first',
+        source: 'unknown',
+        reason: 'initial',
+        clientRequestId: expect.any(String),
+      })
+    );
+  });
+
   it('retries a missing queue ack with the same client request id', async () => {
     vi.useFakeTimers();
     try {
