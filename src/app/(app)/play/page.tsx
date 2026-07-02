@@ -18,7 +18,7 @@ import type { CategorySummary, GameQuestion } from "@/lib/domain";
 import type { ListQuestionsQuery } from "@/lib/repositories/questions.repo";
 import { QUESTION_COUNT } from "@/lib/constants/game";
 import { queryKeys } from "@/lib/queries/queryKeys";
-import { trackModeSelected } from "@/lib/analytics/game-events";
+import { markRankedQueueIntent, trackModeSelected } from "@/lib/analytics/game-events";
 import { shuffleArray } from "@/lib/utils";
 import { useLocale } from "@/contexts/LocaleContext";
 import { logSocketDebug } from "@/lib/realtime/socket-client";
@@ -117,6 +117,7 @@ export default function PlayPage() {
         liveTickets,
         requiredTickets: RANKED_TICKET_COST,
       });
+      markRankedQueueIntent("mode_select");
       startSession({
         ...params,
         matchType: "ranked",
