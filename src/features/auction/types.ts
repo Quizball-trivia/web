@@ -27,6 +27,8 @@ export interface AuctionPlayer {
   team: AuctionTeam;
   isBot: boolean;
   isEliminated: boolean;
+  /** Quit / disconnect-forfeited out (ranks below everyone; no coins). */
+  forfeited?: boolean;
 }
 
 export interface AuctionTeam {

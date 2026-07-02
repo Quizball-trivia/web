@@ -154,6 +154,7 @@ function toClientPlayer(
     },
     isBot: player.isBot,
     isEliminated: player.isEliminated,
+    forfeited: player.forfeited ?? false,
   };
 }
 

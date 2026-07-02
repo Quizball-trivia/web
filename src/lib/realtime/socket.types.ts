@@ -779,6 +779,8 @@ export interface PublicAuctionPlayer {
   budget: number;
   team: PublicAuctionTeam;
   isEliminated: boolean;
+  /** Quit / disconnect-forfeited (ranks below everyone; no coins). */
+  forfeited?: boolean;
 }
 
 export interface PublicAuctionBidState {

@@ -103,6 +103,11 @@ export function AuctionResultsScreen({
       filledCount: getFilledCount(p.team),
     }))
     .sort((a, b) => {
+      // Forfeiters always rank last (matches the server's rankAuctionPlayers) —
+      // quitting while ahead can never win.
+      const aForfeited = Boolean(a.forfeited);
+      const bForfeited = Boolean(b.forfeited);
+      if (aForfeited !== bForfeited) return aForfeited ? 1 : -1;
       if (a.teamComplete !== b.teamComplete) return a.teamComplete ? -1 : 1;
       return b.teamValue - a.teamValue;
     });
