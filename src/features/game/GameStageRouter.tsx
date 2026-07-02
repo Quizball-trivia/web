@@ -26,7 +26,9 @@ import { useGameStageState } from "@/features/game/hooks/useGameStageState";
 import { useStoreWallet, getStoreWalletQuery } from "@/lib/queries/store.queries";
 import {
   markExitToPlayPending,
+  markRankedQueueIntent,
   trackExitToPlayStarted,
+  trackRankedPlayAgainClicked,
   trackResultsMainMenuClicked,
   type ExitToPlaySource,
 } from "@/lib/analytics/game-events";
@@ -472,6 +474,15 @@ export function GameStageRouter() {
           playAgainHint={playAgainHint}
           onPlayAgain={async () => {
             if (matchType === "ranked") {
+              trackRankedPlayAgainClicked({
+                matchId: final?.matchId ?? realtimeMatch.matchId ?? null,
+                matchType,
+                mode: (realtimeMatch as { mode?: string | null }).mode ?? config?.mode ?? matchType,
+                stage,
+                cachedTickets: storeWallet?.tickets ?? null,
+                walletFetching,
+                playAgainDisabled,
+              });
               // Revalidate against the live wallet — the cached value can lag
               // the post-match invalidation refetch (mirrors play/page.tsx).
               let liveTickets = storeWallet?.tickets ?? 0;
@@ -490,6 +501,7 @@ export function GameStageRouter() {
                 toast.error(t("modeConfirm.notEnoughTickets"));
                 return;
               }
+              markRankedQueueIntent("play_again");
               resetRealtime();
               clearRankedMatchmaking();
               setStage("matchmaking");
