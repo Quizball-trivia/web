@@ -38,6 +38,8 @@ describe('ranked matchmaking initial queue join', () => {
     // The hook's geo-hint probe may call fetch on mount; keep the suite
     // hermetic — the hint silently falls back to the locale-derived value.
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network disabled in unit tests')));
+    window.sessionStorage.clear();
+    window.localStorage.clear();
     useRealtimeMatchStore.getState().reset();
     useRankedMatchmakingStore.getState().clearRankedMatchmaking?.();
     useRankedMatchmakingStore.setState({
@@ -48,6 +50,8 @@ describe('ranked matchmaking initial queue join', () => {
   });
 
   afterEach(() => {
+    window.sessionStorage.clear();
+    window.localStorage.clear();
     vi.unstubAllGlobals();
   });
 
@@ -103,6 +107,71 @@ describe('ranked matchmaking initial queue join', () => {
     );
   });
 
+  it('includes the stored ranked queue intent on the first queue join', () => {
+    window.sessionStorage.setItem(
+      'quizball.ranked_queue.intent',
+      JSON.stringify({
+        source: 'play_again',
+        clientRequestId: 'client-request-1',
+        createdAtMs: Date.now(),
+      })
+    );
+    const socket = createSocket();
+
+    renderTransitions(socket);
+
+    expect(socket.emit).toHaveBeenCalledWith(
+      'ranked:queue_join',
+      expect.objectContaining({
+        searchMode: 'human_first',
+        source: 'play_again',
+        reason: 'initial',
+        clientRequestId: 'client-request-1',
+      })
+    );
+    expect(window.sessionStorage.getItem('quizball.ranked_queue.intent')).toBeNull();
+  });
+
+  it('retries a missing queue ack with the same client request id', async () => {
+    vi.useFakeTimers();
+    try {
+      window.sessionStorage.setItem(
+        'quizball.ranked_queue.intent',
+        JSON.stringify({
+          source: 'mode_select',
+          clientRequestId: 'client-request-ack-timeout',
+          createdAtMs: Date.now(),
+        })
+      );
+      useRealtimeMatchStore.setState({ sessionState: null });
+      const socket = createSocket();
+
+      renderTransitions(socket);
+      expect(socket.emit).toHaveBeenCalledWith(
+        'ranked:queue_join',
+        expect.objectContaining({
+          source: 'mode_select',
+          reason: 'initial',
+          clientRequestId: 'client-request-ack-timeout',
+        })
+      );
+
+      (socket.emit as ReturnType<typeof vi.fn>).mockClear();
+      await vi.advanceTimersByTimeAsync(2600); // > RANKED_QUEUE_ACK_TIMEOUT_MS
+
+      expect(socket.emit).toHaveBeenCalledWith(
+        'ranked:queue_join',
+        expect.objectContaining({
+          source: 'mode_select',
+          reason: 'retry',
+          clientRequestId: 'client-request-ack-timeout',
+        })
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('re-joins after a silent search loss (acked search + server says IDLE, no error code)', async () => {
     vi.useFakeTimers();
     try {
@@ -135,7 +204,7 @@ describe('ranked matchmaking initial queue join', () => {
 
       expect(socket.emit).toHaveBeenCalledWith(
         'ranked:queue_join',
-        expect.objectContaining({ searchMode: 'human_first' })
+        expect.objectContaining({ searchMode: 'human_first', reason: 'recovery_retry' })
       );
     } finally {
       vi.useRealTimers();

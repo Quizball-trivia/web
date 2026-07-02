@@ -672,6 +672,9 @@ export interface RankedMatchFoundPayload {
 
 export interface RankedQueueJoinPayload {
   searchMode?: 'human_first';
+  source?: 'mode_select' | 'play_again' | 'retry' | 'recovery' | 'unknown';
+  reason?: 'initial' | 'retry' | 'recovery_retry';
+  clientRequestId?: string;
   geoHint?: {
     ip?: string;
     city?: string;
