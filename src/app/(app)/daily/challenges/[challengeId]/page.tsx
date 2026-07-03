@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { MoneyDropGame } from "@/features/daily/MoneyDropGame";
 import { ClueGame } from "@/features/daily/ClueGame";
 import { CountdownGame } from "@/features/daily/CountdownGame";
@@ -25,6 +26,10 @@ import { createDailyChallengeSession } from "@/lib/repositories/dailyChallenges.
 import { toDailyChallengeSession } from "@/lib/mappers/dailyChallenge.mapper";
 import { useLocale } from "@/contexts/LocaleContext";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
+import {
+  type DailyChallengeCompletionSuccess,
+  isDailyChallengeAlreadyCompletedError,
+} from "@/lib/queries/dailyChallengeCompletion";
 
 function isDailyChallengeType(value: string): value is DailyChallengeType {
   return value in DAILY_CHALLENGE_VISUALS;
@@ -92,7 +97,25 @@ export default function ChallengePage() {
 
       void (async () => {
         try {
-          const result = await completeMutation.mutateAsync(score);
+          let completion: DailyChallengeCompletionSuccess;
+          try {
+            completion = {
+              status: "completed",
+              result: await completeMutation.mutateAsync(score),
+            };
+          } catch (error) {
+            if (!isDailyChallengeAlreadyCompletedError(error)) {
+              throw error;
+            }
+            completion = { status: "alreadyCompleted" };
+          }
+
+          if (completion.status === "alreadyCompleted") {
+            await invalidateAfterComplete();
+            return;
+          }
+
+          const { result } = completion;
           try {
             trackDailyChallengeCompleted({
               challengeType,
@@ -108,10 +131,13 @@ export default function ChallengePage() {
           await invalidateAfterComplete();
         } catch (error) {
           console.error('Daily challenge completion failed', error);
+          completeOnceRef.current = false;
+          toast.error(t("dailyGames.completionSaveFailed"));
+          await invalidateAfterComplete();
         }
       })();
     },
-    [addXP, challengeType, completeMutation, invalidateAfterComplete, router]
+    [addXP, challengeType, completeMutation, invalidateAfterComplete, router, t]
   );
 
   useEffect(() => {
