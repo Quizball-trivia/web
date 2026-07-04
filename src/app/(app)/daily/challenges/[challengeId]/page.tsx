@@ -96,25 +96,31 @@ export default function ChallengePage() {
       router.replace("/daily/challenges");
 
       void (async () => {
+        // Only a failed completion WRITE may surface the failure toast and
+        // re-arm the once-guard; post-write side effects (analytics, local XP,
+        // cache invalidation) can fail without the reward being lost, so each
+        // is guarded to log-and-continue.
+        let completion: DailyChallengeCompletionSuccess;
         try {
-          let completion: DailyChallengeCompletionSuccess;
-          try {
-            completion = {
-              status: "completed",
-              result: await completeMutation.mutateAsync(score),
-            };
-          } catch (error) {
-            if (!isDailyChallengeAlreadyCompletedError(error)) {
-              throw error;
-            }
+          completion = {
+            status: "completed",
+            result: await completeMutation.mutateAsync(score),
+          };
+        } catch (error) {
+          if (isDailyChallengeAlreadyCompletedError(error)) {
             completion = { status: "alreadyCompleted" };
-          }
-
-          if (completion.status === "alreadyCompleted") {
-            await invalidateAfterComplete();
+          } else {
+            console.error('Daily challenge completion failed', error);
+            completeOnceRef.current = false;
+            toast.error(t("dailyGames.completionSaveFailed"));
+            await invalidateAfterComplete().catch((invalidateError) => {
+              console.error('Post-failure invalidation failed', invalidateError);
+            });
             return;
           }
+        }
 
+        if (completion.status === "completed") {
           const { result } = completion;
           try {
             trackDailyChallengeCompleted({
@@ -125,16 +131,18 @@ export default function ChallengePage() {
           } catch (error) {
             console.error('Analytics trackDailyChallengeCompleted failed', error);
           }
-          if (result.xpAwarded > 0) {
-            addXP(result.xpAwarded);
+          try {
+            if (result.xpAwarded > 0) {
+              addXP(result.xpAwarded);
+            }
+          } catch (error) {
+            console.error('Applying XP reward failed', error);
           }
-          await invalidateAfterComplete();
-        } catch (error) {
-          console.error('Daily challenge completion failed', error);
-          completeOnceRef.current = false;
-          toast.error(t("dailyGames.completionSaveFailed"));
-          await invalidateAfterComplete();
         }
+
+        await invalidateAfterComplete().catch((invalidateError) => {
+          console.error('Post-completion invalidation failed', invalidateError);
+        });
       })();
     },
     [addXP, challengeType, completeMutation, invalidateAfterComplete, router, t]
