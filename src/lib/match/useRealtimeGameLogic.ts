@@ -187,7 +187,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     return () => clearTimeout(revealTimer);
   }, [blockReveal, currentQuestionIndex, emitQuestionRevealedAck, getSyncedNowMs, matchPaused, matchSlice.matchId, normalizedPlayableAtMs, setQuestionPhase, startCountdownActive]);
 
-  // Timer countdown effect — purely client-driven from when options appear
+  // Tracks the actual options-unlock instant; cleared when options hide.
   useEffect(() => {
     if (showOptions) {
       optionsShownAtRef.current ??= getSyncedNowMs();
