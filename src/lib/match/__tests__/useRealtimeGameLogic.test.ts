@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { ROUND_RESULT_HOLD_MS, useRealtimeGameLogic } from '../useRealtimeGameLogic';
+import { QUESTION_REVEAL_MS } from '@/features/possession/types/possession.types';
 import {
   PENALTY_RESULT_DISPLAY_DELAY_MS,
   PENALTY_RESULT_SEQUENCE_HOLD_MS,
@@ -19,8 +20,10 @@ import type {
 // Mocks
 // ---------------------------------------------------------------------------
 
+const socketEmitMock = vi.hoisted(() => vi.fn());
+
 vi.mock('@/lib/realtime/socket-client', () => ({
-  getSocket: () => ({ emit: vi.fn() }),
+  getSocket: () => ({ emit: socketEmitMock }),
 }));
 
 
@@ -84,6 +87,10 @@ function makeQuestion(
     phaseKind,
     shooterSeat,
   };
+}
+
+function getSocketEmitCalls(eventName: string) {
+  return socketEmitMock.mock.calls.filter((call) => call[0] === eventName);
 }
 
 function makeRoundResult(
@@ -165,7 +172,7 @@ function makeQuestionWithImmediatePlay(
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('useRealtimeGameLogic — roundResultHoldDone for goals', () => {
+describe('useRealtimeGameLogic', () => {
   beforeEach(() => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     vi.clearAllMocks();
@@ -196,6 +203,122 @@ describe('useRealtimeGameLogic — roundResultHoldDone for goals', () => {
 
     expect(result.current.state.currentQuestion?.qIndex).toBe(0);
     expect(result.current.state.showOptions).toBe(true);
+  });
+
+  it('emits reveal ack exactly once when options unlock and re-emits for the next question', async () => {
+    vi.setSystemTime(new Date('2026-06-14T12:00:00.000Z'));
+    seedMatch();
+    const store = useRealtimeMatchStore.getState();
+    const now = Date.now();
+
+    const { result } = renderHook(() =>
+      useRealtimeGameLogic({ transitionDelayMs: 1600 })
+    );
+
+    act(() => store.setMatchQuestion({
+      ...makeQuestion(1),
+      playableAt: new Date(now + 500).toISOString(),
+      deadlineAt: new Date(now + 10_500).toISOString(),
+    }));
+
+    await act(async () => { vi.advanceTimersByTime(499); });
+
+    expect(result.current.state.showOptions).toBe(false);
+    expect(getSocketEmitCalls('match:question_revealed')).toHaveLength(0);
+
+    await act(async () => { vi.advanceTimersByTime(1); });
+
+    expect(result.current.state.showOptions).toBe(true);
+    expect(getSocketEmitCalls('match:question_revealed')).toEqual([
+      ['match:question_revealed', { matchId: MATCH_ID, qIndex: 1 }],
+    ]);
+
+    act(() => store.setMatchPaused({ graceMs: 60_000, remainingReconnects: 2 }));
+    expect(result.current.state.showOptions).toBe(false);
+
+    act(() => store.clearMatchPaused());
+    await act(async () => { vi.advanceTimersByTime(50); });
+
+    expect(getSocketEmitCalls('match:question_revealed')).toHaveLength(1);
+
+    act(() => store.setMatchQuestion(makeQuestionWithImmediatePlay(2)));
+    await act(async () => { vi.advanceTimersByTime(50); });
+
+    expect(getSocketEmitCalls('match:question_revealed')).toEqual([
+      ['match:question_revealed', { matchId: MATCH_ID, qIndex: 1 }],
+      ['match:question_revealed', { matchId: MATCH_ID, qIndex: 2 }],
+    ]);
+  });
+
+  it('emits reveal ack when the fallback reveal delay unlocks options', async () => {
+    vi.setSystemTime(new Date('2026-06-14T12:05:00.000Z'));
+    seedMatch();
+    const store = useRealtimeMatchStore.getState();
+
+    const { result } = renderHook(() =>
+      useRealtimeGameLogic({ transitionDelayMs: 1600 })
+    );
+
+    act(() => store.setMatchQuestion(makeQuestion(3)));
+
+    expect(result.current.state.showOptions).toBe(false);
+
+    await act(async () => { vi.advanceTimersByTime(QUESTION_REVEAL_MS); });
+
+    expect(result.current.state.showOptions).toBe(true);
+    expect(getSocketEmitCalls('match:question_revealed')).toEqual([
+      ['match:question_revealed', { matchId: MATCH_ID, qIndex: 3 }],
+    ]);
+  });
+
+  it('measures answer time from actual unlock when options unlock after playableAt', async () => {
+    vi.setSystemTime(new Date('2026-06-14T12:10:00.000Z'));
+    seedMatch();
+    const store = useRealtimeMatchStore.getState();
+    const now = Date.now();
+    const playableAtMs = now + 1_000;
+
+    const { result, rerender } = renderHook(
+      ({ blockReveal }: { blockReveal: boolean }) =>
+        useRealtimeGameLogic({ transitionDelayMs: 1600, blockReveal }),
+      { initialProps: { blockReveal: true } }
+    );
+
+    act(() => store.setMatchQuestion({
+      ...makeQuestion(4),
+      playableAt: new Date(playableAtMs).toISOString(),
+      deadlineAt: new Date(now + 11_000).toISOString(),
+    }));
+
+    await act(async () => { vi.advanceTimersByTime(1_500); });
+
+    expect(result.current.state.showOptions).toBe(false);
+
+    act(() => rerender({ blockReveal: false }));
+    await act(async () => { vi.advanceTimersByTime(0); });
+
+    expect(result.current.state.showOptions).toBe(true);
+
+    const unlockedAtMs = Date.now();
+    expect(unlockedAtMs).toBeGreaterThan(playableAtMs);
+
+    await act(async () => { vi.advanceTimersByTime(2_000); });
+
+    act(() => result.current.actions.submitAnswer(2));
+
+    const answerCall = getSocketEmitCalls('match:answer').at(-1);
+    expect(answerCall).toEqual([
+      'match:answer',
+      {
+        matchId: MATCH_ID,
+        qIndex: 4,
+        selectedIndex: 2,
+        timeMs: Date.now() - unlockedAtMs,
+      },
+    ]);
+    expect(answerCall?.[1]).not.toMatchObject({
+      timeMs: Date.now() - playableAtMs,
+    });
   });
 
   it('sets roundResultHoldDone=true for normal goal round (baseline)', async () => {

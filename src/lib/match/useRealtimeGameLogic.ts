@@ -66,6 +66,9 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
   const answerAckRetryCountRef = useRef(0);
   const answerPayloadRef = useRef<{ matchId: string; qIndex: number; selectedIndex: number; timeMs: number } | null>(null);
   const answerSubmitElapsedRef = useRef<number | null>(null);
+  const optionsShownAtRef = useRef<number | null>(null);
+  const lastRevealAckQIndexRef = useRef<number | null>(null);
+  const previousQuestionIndexRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     matchPausedRef.current = matchPaused;
@@ -99,6 +102,19 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
   const startCountdownActive =
     countdownRemainingMs > 0 && (countdownReason === 'resume' || (currentQuestion?.qIndex ?? 0) === 0);
 
+  const emitQuestionRevealedAck = useCallback((matchId: string, qIndex: number) => {
+    if (lastRevealAckQIndexRef.current === qIndex) return;
+    lastRevealAckQIndexRef.current = qIndex;
+    try {
+      getSocket().emit('match:question_revealed', {
+        matchId,
+        qIndex,
+      });
+    } catch (error) {
+      logger.warn('Failed to emit match:question_revealed', { error });
+    }
+  }, []);
+
   useEffect(() => {
     if (!countdownEndsAt) return;
     const tick = () => setNowMs(getSyncedNowMs());
@@ -125,6 +141,10 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     answerAckRetryCountRef.current = 0;
     answerPayloadRef.current = null;
     answerSubmitElapsedRef.current = null;
+    if (previousQuestionIndexRef.current !== currentQuestionIndex) {
+      lastRevealAckQIndexRef.current = null;
+      previousQuestionIndexRef.current = currentQuestionIndex;
+    }
     setShowOptions(false);
     setTimeRemaining(initialTimeRemaining);
 
@@ -156,22 +176,25 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
       : QUESTION_REVEAL_MS;
     const revealTimer = setTimeout(() => {
       if (matchPausedRef.current) return;
+      optionsShownAtRef.current ??= getSyncedNowMs();
       setShowOptions(true);
       setQuestionPhase('playing');
+      if (matchSlice.matchId !== null) {
+        emitQuestionRevealedAck(matchSlice.matchId, currentQuestionIndex);
+      }
     }, revealDelayMs);
 
     return () => clearTimeout(revealTimer);
-  }, [blockReveal, currentQuestionIndex, getSyncedNowMs, matchPaused, normalizedPlayableAtMs, setQuestionPhase, startCountdownActive]);
+  }, [blockReveal, currentQuestionIndex, emitQuestionRevealedAck, getSyncedNowMs, matchPaused, matchSlice.matchId, normalizedPlayableAtMs, setQuestionPhase, startCountdownActive]);
 
   // Timer countdown effect — purely client-driven from when options appear
-  const optionsShownAtRef = useRef<number | null>(null);
   useEffect(() => {
     if (showOptions) {
-      optionsShownAtRef.current = normalizedPlayableAtMs ?? getSyncedNowMs();
+      optionsShownAtRef.current ??= getSyncedNowMs();
     } else {
       optionsShownAtRef.current = null;
     }
-  }, [getSyncedNowMs, normalizedPlayableAtMs, showOptions]);
+  }, [getSyncedNowMs, showOptions]);
 
   useEffect(() => {
     if (!showOptions || !currentQuestion) return;
@@ -388,7 +411,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     setSelectedAnswer(index);
     setSelectedAnswerQIndex(currentQuestion.qIndex);
 
-    const startedAt = normalizedPlayableAtMs ?? optionsShownAtRef.current ?? getSyncedNowMs();
+    const startedAt = optionsShownAtRef.current ?? normalizedPlayableAtMs ?? getSyncedNowMs();
     const now = normalizedQuestionDeadlineAtMs != null
       ? Math.min(getSyncedNowMs(), normalizedQuestionDeadlineAtMs)
       : getSyncedNowMs();
