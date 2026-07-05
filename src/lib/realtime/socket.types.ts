@@ -902,6 +902,7 @@ export interface ClientToServerEvents {
   'draft:ui_ready': (data: { lobbyId: string; turnUserId: string; banCount: number }) => void;
   'draft:ban': (data: { categoryId: string }) => void;
   'match:answer': (data: { matchId: string; qIndex: number; selectedIndex: number | null; timeMs: number }) => void;
+  'match:question_revealed': (data: { matchId: string; qIndex: number }) => void;
   'match:countdown_guess': (data: { matchId: string; qIndex: number; guess: string }) => void;
   'match:put_in_order_answer': (data: { matchId: string; qIndex: number; orderedItemIds: string[]; timeMs: number }) => void;
   'match:clues_answer': (data: MatchCluesAnswerPayload) => void;
