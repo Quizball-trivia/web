@@ -9,6 +9,12 @@ import {
 import { toDailyChallengeSession } from "@/lib/mappers/dailyChallenge.mapper";
 import type { DailyChallengeSummary, DailyChallengeType } from "@/lib/domain/dailyChallenge";
 import { useLocale } from "@/contexts/LocaleContext";
+import {
+  DAILY_CHALLENGE_COMPLETION_RETRY_DELAYS_MS,
+  getDailyChallengeCompletionRetryDelay,
+  isDailyChallengeAlreadyCompletedError,
+  isRetryableDailyChallengeCompletionError,
+} from "@/lib/queries/dailyChallengeCompletion";
 
 export function useDailyChallenges() {
   const { locale } = useLocale();
@@ -73,7 +79,13 @@ export function useCompleteDailyChallenge(challengeType: DailyChallengeType) {
       );
       return { previous };
     },
-    onError: (_error, _score, context) => {
+    retry: (failureCount, error) =>
+      failureCount < DAILY_CHALLENGE_COMPLETION_RETRY_DELAYS_MS.length &&
+      isRetryableDailyChallengeCompletionError(error),
+    retryDelay: (attemptIndex) => getDailyChallengeCompletionRetryDelay(attemptIndex),
+    onError: (error, _score, context) => {
+      if (isDailyChallengeAlreadyCompletedError(error)) return;
+
       // Write failed — restore the pre-mutation caches so the card isn't wrongly
       // shown as completed.
       context?.previous?.forEach(([key, data]) => queryClient.setQueryData(key, data));

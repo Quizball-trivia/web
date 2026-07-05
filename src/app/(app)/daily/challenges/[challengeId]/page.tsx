@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { MoneyDropGame } from "@/features/daily/MoneyDropGame";
 import { ClueGame } from "@/features/daily/ClueGame";
 import { CountdownGame } from "@/features/daily/CountdownGame";
@@ -25,6 +26,10 @@ import { createDailyChallengeSession } from "@/lib/repositories/dailyChallenges.
 import { toDailyChallengeSession } from "@/lib/mappers/dailyChallenge.mapper";
 import { useLocale } from "@/contexts/LocaleContext";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
+import {
+  type DailyChallengeCompletionSuccess,
+  isDailyChallengeAlreadyCompletedError,
+} from "@/lib/queries/dailyChallengeCompletion";
 
 function isDailyChallengeType(value: string): value is DailyChallengeType {
   return value in DAILY_CHALLENGE_VISUALS;
@@ -91,8 +96,32 @@ export default function ChallengePage() {
       router.replace("/daily/challenges");
 
       void (async () => {
+        // Only a failed completion WRITE may surface the failure toast and
+        // re-arm the once-guard; post-write side effects (analytics, local XP,
+        // cache invalidation) can fail without the reward being lost, so each
+        // is guarded to log-and-continue.
+        let completion: DailyChallengeCompletionSuccess;
         try {
-          const result = await completeMutation.mutateAsync(score);
+          completion = {
+            status: "completed",
+            result: await completeMutation.mutateAsync(score),
+          };
+        } catch (error) {
+          if (isDailyChallengeAlreadyCompletedError(error)) {
+            completion = { status: "alreadyCompleted" };
+          } else {
+            console.error('Daily challenge completion failed', error);
+            completeOnceRef.current = false;
+            toast.error(t("dailyGames.completionSaveFailed"));
+            await invalidateAfterComplete().catch((invalidateError) => {
+              console.error('Post-failure invalidation failed', invalidateError);
+            });
+            return;
+          }
+        }
+
+        if (completion.status === "completed") {
+          const { result } = completion;
           try {
             trackDailyChallengeCompleted({
               challengeType,
@@ -102,16 +131,21 @@ export default function ChallengePage() {
           } catch (error) {
             console.error('Analytics trackDailyChallengeCompleted failed', error);
           }
-          if (result.xpAwarded > 0) {
-            addXP(result.xpAwarded);
+          try {
+            if (result.xpAwarded > 0) {
+              addXP(result.xpAwarded);
+            }
+          } catch (error) {
+            console.error('Applying XP reward failed', error);
           }
-          await invalidateAfterComplete();
-        } catch (error) {
-          console.error('Daily challenge completion failed', error);
         }
+
+        await invalidateAfterComplete().catch((invalidateError) => {
+          console.error('Post-completion invalidation failed', invalidateError);
+        });
       })();
     },
-    [addXP, challengeType, completeMutation, invalidateAfterComplete, router]
+    [addXP, challengeType, completeMutation, invalidateAfterComplete, router, t]
   );
 
   useEffect(() => {

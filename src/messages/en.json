@@ -579,6 +579,7 @@
     "hubResetButton": "Reset",
     "hubResetSuccess": "{title} reset for today",
     "hubResetError": "Failed to reset daily challenge",
+    "completionSaveFailed": "Your challenge reward wasn't saved. Please replay the challenge to claim your coins and XP.",
     "introTag": "Daily Challenge",
     "introGetReady": "Get Ready",
     "unavailableTitle": "Challenge Unavailable",
