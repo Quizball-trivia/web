@@ -81,6 +81,9 @@ export function useGameStageState() {
   const rankedSearchDurationMs = useRankedMatchmakingStore((state) => state.rankedSearchDurationMs);
   const rankedSearchStartedAt = useRankedMatchmakingStore((state) => state.rankedSearchStartedAt);
   const rankedFoundOpponent = useRankedMatchmakingStore((state) => state.rankedFoundOpponent);
+  const rankedQueueLeftAt = useRankedMatchmakingStore((state) => state.rankedQueueLeftAt);
+  const rankedQueueLeftSeq = useRankedMatchmakingStore((state) => state.rankedQueueLeftSeq);
+  const rankedQueueLeftSource = useRankedMatchmakingStore((state) => state.rankedQueueLeftSource);
   const exitCompletedMatchToLobby = useRealtimeMatchStore((state) => state.exitCompletedMatchToLobby);
   const resetRealtime = useRealtimeMatchStore((state) => state.reset);
   const clearRankedMatchmaking = useRankedMatchmakingStore((state) => state.clearRankedMatchmaking);
@@ -251,6 +254,9 @@ export function useGameStageState() {
     rankedSearchDurationMs,
     rankedSearchStartedAt,
     rankedFoundOpponent,
+    rankedQueueLeftAt,
+    rankedQueueLeftSeq,
+    rankedQueueLeftSource,
     rankedProfile,
 
     // Socket

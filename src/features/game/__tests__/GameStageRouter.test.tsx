@@ -1,4 +1,4 @@
-import { fireEvent, render as rtlRender, screen } from '@testing-library/react';
+import { act, fireEvent, render as rtlRender, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReactElement } from 'react';
@@ -11,7 +11,12 @@ function render(ui: ReactElement) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  return rtlRender(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+  const view = rtlRender(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+  return {
+    ...view,
+    rerender: (nextUi: ReactElement) =>
+      view.rerender(<QueryClientProvider client={queryClient}>{nextUi}</QueryClientProvider>),
+  };
 }
 
 const router = {
@@ -42,6 +47,11 @@ const analyticsMocks = vi.hoisted(() => ({
   trackResultsMainMenuClicked: vi.fn(),
   trackExitToPlayStarted: vi.fn(),
   markExitToPlayPending: vi.fn(),
+  markRankedQueueIntent: vi.fn(),
+}));
+const toastMocks = vi.hoisted(() => ({
+  error: vi.fn(),
+  info: vi.fn(),
 }));
 
 function createInitialGameSessionState() {
@@ -83,6 +93,9 @@ function createInitialRankedMatchmakingState() {
     rankedSearchStartedAt: null,
     rankedFoundOpponent: null,
     rankedCancelRequestedAt: null,
+    rankedQueueLeftAt: null,
+    rankedQueueLeftSeq: 0,
+    rankedQueueLeftSource: null,
     markRankedSearchRequested: vi.fn(),
     markRankedCancelRequested: vi.fn(),
     clearRankedMatchmaking: vi.fn(),
@@ -170,6 +183,10 @@ vi.mock('@/lib/match/useGameStageTransitions', () => ({
 
 vi.mock('@/lib/analytics/game-events', () => analyticsMocks);
 
+vi.mock('sonner', () => ({
+  toast: toastMocks,
+}));
+
 vi.mock('@/lib/queries/ranked.queries', () => ({
   useRankedProfile: () => ({ data: rankedProfileData }),
 }));
@@ -191,9 +208,10 @@ vi.mock('@/lib/avatars', () => ({
 }));
 
 vi.mock('@/components/match/MatchmakingMapScreen', () => ({
-  MatchmakingMapScreen: (props: { onCancel: () => void }) => (
+  MatchmakingMapScreen: (props: { onCancel: () => void; notice?: { message: string } | null }) => (
     <div>
       <div>Matchmaking Map</div>
+      {props.notice ? <div role="status">{props.notice.message}</div> : null}
       <button type="button" onClick={props.onCancel}>Cancel Matchmaking</button>
     </div>
   ),
@@ -311,6 +329,118 @@ describe('GameStageRouter', () => {
     expect(socket.emit).toHaveBeenCalledWith('ranked:queue_leave');
     expect(socket.emit).toHaveBeenCalledWith('lobby:leave');
     expect(router.push).toHaveBeenCalledWith('/play');
+  });
+
+  it('recovers ranked boot when the paired opponent leaves before match:start', async () => {
+    gameSessionState.stage = 'categoryBlocking';
+    gameSessionState.config = {
+      mode: 'ranked',
+      matchType: 'ranked',
+      categoryName: 'Football',
+      categoryIcon: '⚽',
+    };
+    realtimeMatchState.match = null as never;
+    realtimeMatchState.lobby = {
+      lobbyId: 'lobby-1',
+      mode: 'ranked',
+      status: 'active',
+      inviteCode: null,
+      displayName: 'Ranked',
+      isPublic: false,
+      hostUserId: 'self-1',
+      settings: { gameMode: 'ranked_sim' },
+      members: [],
+    } as never;
+    realtimeMatchState.draft = {
+      lobbyId: 'lobby-1',
+      categories: [],
+      bans: {},
+      turnUserId: null,
+      halfOneCategoryId: 'category-1',
+    } as never;
+    realtimeMatchState.sessionState = {
+      state: 'IN_ACTIVE_MATCH',
+      activeMatchId: 'pending-match-1',
+      waitingLobbyId: 'lobby-1',
+      queueSearchId: null,
+      openLobbyIds: ['lobby-1'],
+      resolvedAt: '2026-07-07T00:00:00.000Z',
+    } as never;
+
+    const { rerender } = render(<GameStageRouter />);
+
+    realtimeMatchState.lobby = {
+      lobbyId: 'lobby-1',
+      mode: 'ranked',
+      status: 'closed',
+      inviteCode: null,
+      displayName: 'Ranked',
+      isPublic: false,
+      hostUserId: 'self-1',
+      settings: { gameMode: 'ranked_sim' },
+      members: [],
+    } as never;
+    realtimeMatchState.draft = null;
+    realtimeMatchState.sessionState = {
+      state: 'IDLE',
+      activeMatchId: null,
+      waitingLobbyId: null,
+      queueSearchId: null,
+      openLobbyIds: [],
+      resolvedAt: '2026-07-07T00:01:05.000Z',
+    } as never;
+    const rankedMutableState = rankedMatchmakingState as {
+      rankedQueueLeftAt: number | null;
+      rankedQueueLeftSeq: number;
+      rankedQueueLeftSource: 'server_event' | 'socket_error' | null;
+    };
+    rankedMutableState.rankedQueueLeftAt = Date.now();
+    rankedMutableState.rankedQueueLeftSeq += 1;
+    rankedMutableState.rankedQueueLeftSource = 'server_event';
+    rerender(<GameStageRouter />);
+
+    await waitFor(() => {
+      expect(gameSessionState.setStage).toHaveBeenCalledWith('matchmaking');
+    });
+    expect(analyticsMocks.markRankedQueueIntent).toHaveBeenCalledWith('recovery');
+    expect(toastMocks.info).toHaveBeenCalledWith("Opponent didn't show up");
+  });
+
+  it('returns to /play when ranked boot preparation exceeds the client timeout', async () => {
+    vi.useFakeTimers();
+    try {
+      gameSessionState.stage = 'categoryBlocking';
+      gameSessionState.config = {
+        mode: 'ranked',
+        matchType: 'ranked',
+        categoryName: 'Football',
+        categoryIcon: '⚽',
+      };
+      realtimeMatchState.match = null as never;
+      realtimeMatchState.lobby = null;
+      realtimeMatchState.draft = null;
+      realtimeMatchState.sessionState = {
+        state: 'IN_ACTIVE_MATCH',
+        activeMatchId: 'pending-match-1',
+        waitingLobbyId: null,
+        queueSearchId: null,
+        openLobbyIds: [],
+        resolvedAt: '2026-07-07T00:00:00.000Z',
+      } as never;
+
+      render(<GameStageRouter />);
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(90_000);
+      });
+
+      expect(toastMocks.info).toHaveBeenCalledWith("Opponent didn't show up");
+      expect(router.push).toHaveBeenCalledWith('/play');
+      expect(analyticsMocks.markRankedQueueIntent).not.toHaveBeenCalledWith('recovery');
+      expect(gameSessionState.setStage).not.toHaveBeenCalledWith('matchmaking');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('forfeit emits match:forfeit and moves the forfeiting player to the settling/results stage without navigating away', () => {

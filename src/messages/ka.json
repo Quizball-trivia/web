@@ -447,6 +447,7 @@
     "cancel": "გაუქმება",
     "opponentFallback": "მეტოქე",
     "preparingMatch": "მატჩის მომზადება...",
+    "opponentNoShow": "მეტოქე არ გამოჩნდა",
     "matchSetupStuck": "მატჩის დაწყება შეფერხდა",
     "matchSetupStuckDescription": "თავიდან სცადე მეტოქის ძიება. თუ პრობლემა განმეორდა, სერვერზე ხარვეზია.",
     "restartSearch": "ძიების თავიდან დაწყება",
