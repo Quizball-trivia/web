@@ -205,10 +205,11 @@ function computeHasSearchAck(
 }
 
 function hasActiveRealtimeSession(snapshot: ReturnType<typeof useRealtimeMatchStore.getState>): boolean {
+  const hasLiveLobby = Boolean(snapshot.lobby?.lobbyId && snapshot.lobby.status !== "closed");
   return Boolean(
     snapshot.match?.matchId ||
       snapshot.draft?.lobbyId ||
-      snapshot.lobby?.lobbyId ||
+      hasLiveLobby ||
       snapshot.sessionState?.activeMatchId ||
       snapshot.sessionState?.waitingLobbyId
   );
@@ -432,7 +433,7 @@ export function useGameStageTransitions({
         rankedRequestRef.current = true;
         logger.info("Ranked queue join skipped: existing realtime session/search state", {
           hasSearchAck,
-          hasLobby: Boolean(latestRealtime.lobby?.lobbyId),
+          hasLobby: Boolean(latestRealtime.lobby?.lobbyId && latestRealtime.lobby.status !== "closed"),
           hasDraft: Boolean(latestRealtime.draft?.lobbyId),
           activeMatchId: latestRealtime.sessionState?.activeMatchId ?? latestRealtime.match?.matchId ?? null,
           waitingLobbyId: latestRealtime.sessionState?.waitingLobbyId ?? latestRealtime.lobby?.lobbyId ?? null,
@@ -443,7 +444,7 @@ export function useGameStageTransitions({
         });
         logSocketDebug("ranked queue_join skipped existing state", {
           hasSearchAck,
-          hasLobby: Boolean(latestRealtime.lobby?.lobbyId),
+          hasLobby: Boolean(latestRealtime.lobby?.lobbyId && latestRealtime.lobby.status !== "closed"),
           hasDraft: Boolean(latestRealtime.draft?.lobbyId),
           ...getSocketDebugSnapshot(socket),
           sessionState: latestRealtime.sessionState?.state ?? "NO_SESSION",

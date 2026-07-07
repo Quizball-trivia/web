@@ -69,6 +69,7 @@ interface MatchmakingMapScreenProps {
   rankedSearchDurationMs?: number | null;
   rankedSearchStartedAt?: number | null;
   rankedFoundOpponent?: OpponentInfo | null;
+  notice?: { id: string; message: string } | null;
   selfUsername?: string;
   selfAvatarCustomization?: AvatarCustomization | null;
   debugInfo?: MatchmakingDebugInfo;
@@ -510,6 +511,7 @@ export function MatchmakingMapScreen({
   matchType,
   rankedSearchStartedAt = null,
   rankedFoundOpponent = null,
+  notice = null,
   debugInfo,
   onCancel,
   onRestart,
@@ -1087,6 +1089,22 @@ export function MatchmakingMapScreen({
               exit={{ opacity: 0, y: -20 }}
               className="flex flex-col items-center gap-3"
             >
+              <AnimatePresence>
+                {notice ? (
+                  <motion.div
+                    key={notice.id}
+                    role="status"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    className="mb-1 inline-flex max-w-[min(22rem,calc(100vw-2rem))] items-center gap-2 rounded-xl border border-white/10 bg-surface-map-panel/80 px-3 py-2 text-xs font-black uppercase tracking-wide text-white shadow-[0_10px_28px_rgba(0,0,0,0.24)] backdrop-blur-sm"
+                  >
+                    <TriangleAlert className="size-4 shrink-0 text-brand-gold" />
+                    <span>{notice.message}</span>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+
               {/* World Cup trophy + spinning ball */}
               <div className="flex items-center gap-2.5">
                 <Image

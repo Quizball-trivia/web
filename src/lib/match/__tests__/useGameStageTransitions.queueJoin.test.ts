@@ -46,6 +46,7 @@ describe('ranked matchmaking initial queue join', () => {
       rankedSearching: false,
       rankedSearchStartedAt: null,
       rankedFoundOpponent: null,
+      rankedQueueLeftSeq: 0,
     });
   });
 
