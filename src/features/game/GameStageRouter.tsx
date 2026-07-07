@@ -233,11 +233,16 @@ export function GameStageRouter() {
     rankedBootAbortHandledRef.current = true;
     rankedBootAbortPendingRef.current = false;
     showRankedBootAbortNotice();
+    resetRealtime();
+    clearRankedMatchmaking();
     markRankedQueueIntent("recovery");
     setStage("matchmaking");
   }, [
+    clearRankedMatchmaking,
     hasActiveRankedPairingEvidence,
     isRankedBootPreparing,
+    rankedQueueLeftSeq,
+    resetRealtime,
     sessionState,
     sessionState?.state,
     setStage,
