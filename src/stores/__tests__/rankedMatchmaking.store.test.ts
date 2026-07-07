@@ -16,6 +16,9 @@ function resetRankedStore() {
     rankedFoundMyRecentForm: null,
     rankedSearching: false,
     rankedCancelRequestedAt: null,
+    rankedQueueLeftAt: null,
+    rankedQueueLeftSeq: 0,
+    rankedQueueLeftSource: null,
   });
 }
 
@@ -60,5 +63,17 @@ describe('rankedMatchmaking.store', () => {
     expect(state.rankedSearching).toBe(false);
     expect(state.rankedFoundOpponent?.id).toBe('opp-new');
     expect(state.rankedFoundMyRecentForm).toEqual(['W', 'L', 'D']);
+  });
+
+  it('records server queue-left separately from local cancel state', () => {
+    const store = useRankedMatchmakingStore.getState();
+
+    store.setRankedQueueLeft('server_event');
+
+    const state = useRankedMatchmakingStore.getState();
+    expect(state.rankedQueueLeftAt).toEqual(expect.any(Number));
+    expect(state.rankedQueueLeftSeq).toBe(1);
+    expect(state.rankedQueueLeftSource).toBe('server_event');
+    expect(state.rankedCancelRequestedAt).toEqual(expect.any(Number));
   });
 });

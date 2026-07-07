@@ -192,7 +192,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
         meta: data.meta ?? null,
         ...getSocketDebugSnapshot(socket),
       });
-      useRankedMatchmakingStore.getState().setRankedQueueLeft();
+      useRankedMatchmakingStore.getState().setRankedQueueLeft('socket_error');
     }
     // Rollback optimistic draft ban on server rejection
     if (
@@ -619,7 +619,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   socket.on('ranked:queue_left', () => {
     logger.info('Socket event ranked:queue_left');
     logSocketDebug('ranked queue_left event', getSocketDebugSnapshot(socket));
-    useRankedMatchmakingStore.getState().setRankedQueueLeft();
+    useRankedMatchmakingStore.getState().setRankedQueueLeft('server_event');
   });
 
   socket.on('presence:online_count', (data: PresenceOnlineCountPayload) => {

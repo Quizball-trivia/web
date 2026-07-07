@@ -1163,6 +1163,7 @@
     "cancel": "Cancel",
     "opponentFallback": "Opponent",
     "preparingMatch": "Preparing match...",
+    "opponentNoShow": "Opponent didn't show up",
     "matchSetupStuck": "Match setup got stuck",
     "matchSetupStuckDescription": "Restart matchmaking and try again. If it keeps happening, the backend is still failing while preparing the draft.",
     "restartSearch": "Restart Search",

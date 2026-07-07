@@ -81,6 +81,9 @@ describe('registerSocketHandlers', () => {
       rankedFoundMyRecentForm: null,
       rankedSearching: false,
       rankedCancelRequestedAt: null,
+      rankedQueueLeftAt: null,
+      rankedQueueLeftSeq: 0,
+      rankedQueueLeftSource: null,
     });
     getMeMock.mockClear();
     authState.setAuthenticated.mockClear();

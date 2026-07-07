@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -34,6 +34,8 @@ import {
 } from "@/lib/analytics/game-events";
 
 const POSSESSION_TOTAL_QUESTIONS_FALLBACK = 12;
+const RANKED_BOOT_TIMEOUT_MS = 90_000;
+const RANKED_BOOT_NOTICE_DISMISS_MS = 8_000;
 
 function isAiOpponentInfo(opponentInfo: { id?: string; isAiOpponent?: boolean } | null | undefined): boolean {
   if (!opponentInfo) return false;
@@ -65,6 +67,9 @@ export function GameStageRouter() {
     rankedSearchDurationMs,
     rankedSearchStartedAt,
     rankedFoundOpponent,
+    rankedQueueLeftAt,
+    rankedQueueLeftSeq,
+    rankedQueueLeftSource,
     rankedProfile,
     socket,
     socketConnected,
@@ -97,6 +102,25 @@ export function GameStageRouter() {
 
   const returningToLobbyRef = useRef(false);
   const showingFinalResultsFromReplay = stage === "idle" && Boolean(realtimeMatch.finalResults);
+  const [rankedBootNotice, setRankedBootNotice] = useState<{ id: string; message: string } | null>(null);
+  const rankedBootHadPairingRef = useRef(false);
+  const rankedBootAbortPendingRef = useRef(false);
+  const rankedBootAbortHandledRef = useRef(false);
+  const lastRankedQueueLeftSeqRef = useRef(rankedQueueLeftSeq);
+  const hasLiveLobby = Boolean(realtimeLobby && realtimeLobby.status !== "closed");
+  const isRankedCategoryStage = stage === "categoryBlocking" && matchType === "ranked";
+  const hasActiveRankedPairingEvidence = Boolean(
+    realtimeDraft ||
+      hasLiveLobby ||
+      realtimeMatch.matchId ||
+      sessionState?.activeMatchId ||
+      sessionState?.waitingLobbyId ||
+      (sessionState?.openLobbyIds?.length ?? 0) > 0
+  );
+  const isRankedBootPreparing =
+    isRankedCategoryStage &&
+    !realtimeMatch.matchId &&
+    (!realtimeDraft || !hasLiveLobby);
 
   useGameStageTransitions({
     isMultiplayer,
@@ -155,6 +179,85 @@ export function GameStageRouter() {
     socket,
     stage,
   ]);
+
+  const showRankedBootAbortNotice = useCallback(() => {
+    const message = t("matchmaking.opponentNoShow");
+    setRankedBootNotice({ id: `ranked-boot-abort-${Date.now()}`, message });
+    toast.info(message);
+  }, [t]);
+
+  useEffect(() => {
+    if (!rankedBootNotice) return;
+    const timeoutId = window.setTimeout(() => {
+      setRankedBootNotice(null);
+    }, RANKED_BOOT_NOTICE_DISMISS_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [rankedBootNotice]);
+
+  useEffect(() => {
+    if (!isRankedCategoryStage) {
+      rankedBootHadPairingRef.current = false;
+      rankedBootAbortPendingRef.current = false;
+      rankedBootAbortHandledRef.current = false;
+      return;
+    }
+    if (hasActiveRankedPairingEvidence) {
+      rankedBootHadPairingRef.current = true;
+      rankedBootAbortHandledRef.current = false;
+    }
+  }, [hasActiveRankedPairingEvidence, isRankedCategoryStage]);
+
+  useEffect(() => {
+    if (lastRankedQueueLeftSeqRef.current === rankedQueueLeftSeq) return;
+    lastRankedQueueLeftSeqRef.current = rankedQueueLeftSeq;
+    if (
+      rankedQueueLeftAt !== null &&
+      rankedQueueLeftSource === "server_event" &&
+      isRankedCategoryStage &&
+      rankedBootHadPairingRef.current
+    ) {
+      rankedBootAbortPendingRef.current = true;
+    }
+  }, [isRankedCategoryStage, rankedQueueLeftAt, rankedQueueLeftSeq, rankedQueueLeftSource]);
+
+  useEffect(() => {
+    if (!isRankedBootPreparing || rankedBootAbortHandledRef.current) return;
+    if (!rankedBootHadPairingRef.current) return;
+    if (hasActiveRankedPairingEvidence) return;
+
+    const pairingDied =
+      rankedBootAbortPendingRef.current ||
+      (sessionState !== null && sessionState.state !== "IN_ACTIVE_MATCH");
+    if (!pairingDied) return;
+
+    rankedBootAbortHandledRef.current = true;
+    rankedBootAbortPendingRef.current = false;
+    showRankedBootAbortNotice();
+    resetRealtime();
+    clearRankedMatchmaking();
+    markRankedQueueIntent("recovery");
+    setStage("matchmaking");
+  }, [
+    clearRankedMatchmaking,
+    hasActiveRankedPairingEvidence,
+    isRankedBootPreparing,
+    rankedQueueLeftSeq,
+    resetRealtime,
+    sessionState,
+    sessionState?.state,
+    setStage,
+    showRankedBootAbortNotice,
+  ]);
+
+  useEffect(() => {
+    if (!isRankedBootPreparing) return;
+    const timeoutId = window.setTimeout(() => {
+      rankedBootAbortHandledRef.current = true;
+      showRankedBootAbortNotice();
+      exitToPlay("generic");
+    }, RANKED_BOOT_TIMEOUT_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [exitToPlay, isRankedBootPreparing, showRankedBootAbortNotice]);
 
   useEffect(() => {
     const inviteCode = realtimeLobby?.inviteCode;
@@ -252,7 +355,7 @@ export function GameStageRouter() {
       rankedSearching,
       rankedSearchStartedAt,
       rankedSearchDurationMs,
-      hasLobby: Boolean(realtimeLobby),
+      hasLobby: Boolean(realtimeLobby && realtimeLobby.status !== "closed"),
       hasMatch: Boolean(realtimeMatch.matchId),
       errorCode: realtimeError?.code ?? null,
     }),
@@ -293,6 +396,7 @@ export function GameStageRouter() {
           rankedSearchDurationMs={rankedSearchDurationMs}
           rankedSearchStartedAt={rankedSearchStartedAt}
           rankedFoundOpponent={rankedFoundOpponent}
+          notice={rankedBootNotice}
           selfUsername={player.username}
           selfAvatarCustomization={player.avatarCustomization}
           debugInfo={matchmakingDebugInfo}
