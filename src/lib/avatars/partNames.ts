@@ -25,6 +25,31 @@ const PART_NAME_KEY_MAP: Record<string, MessageKey> = {
   // Country name (not a club brand) — kept as "Georgia" in every locale
   // by design (ka.json mirrors en.json), the key just keeps it overridable.
   "Georgia": "store.partGeorgia",
+  "Man United": "store.partManUnited",
+  "Arsenal": "store.partArsenal",
+  "Man City": "store.partManCity",
+  "Newcastle": "store.partNewcastle",
+  "Dinamo Tbilisi": "store.partDinamoTbilisi",
+  "Dortmund": "store.partDortmund",
+  "Italy Home": "store.partItalyHome",
+  "Italy Away": "store.partItalyAway",
+  "Italy Third": "store.partItalyThird",
+  "England Home": "store.partEnglandHome",
+  "England Away": "store.partEnglandAway",
+  "Atletico Madrid": "store.partAtleticoMadrid",
+  "Napoli": "store.partNapoli",
+  "Inter": "store.partInter",
+  "Roma": "store.partRoma",
+  "Juventus": "store.partJuventus",
+  "Ajax": "store.partAjax",
+  "Wave": "store.partWave",
+  "Curly Crop": "store.partCurlyCrop",
+  "Cornrows": "store.partCornrows",
+  "Buzz Cut": "store.partBuzzCut",
+  "Side Part": "store.partSidePart",
+  "Leopard": "store.partLeopard",
+  "Handlebar": "store.partHandlebar",
+  "Stache & Goatee": "store.partStacheGoatee",
 };
 
 /**
