@@ -20,6 +20,7 @@ interface RankedMatchmakingState {
   rankedQueueLeftSource: 'server_event' | 'socket_error' | null;
   markRankedSearchRequested: () => void;
   markRankedCancelRequested: () => void;
+  invalidateRankedSearchAck: () => void;
   setRankedSearchStarted: (payload: { durationMs: number }) => void;
   setRankedMatchFound: (payload: { opponent: OpponentInfo; myRecentForm?: Array<'W' | 'L' | 'D'> }) => void;
   setRankedQueueLeft: (source?: 'server_event' | 'socket_error') => void;
@@ -50,6 +51,16 @@ export const useRankedMatchmakingStore = create<RankedMatchmakingState>((set) =>
       rankedSearching: false,
       rankedCancelRequestedAt: Date.now(),
       rankedQueueLeftSource: null,
+    });
+  },
+  invalidateRankedSearchAck: () => {
+    logger.info('Ranked matchmaking store invalidate search ack');
+    set((state) => {
+      if (!state.rankedSearchStartedAt) return state;
+      return {
+        rankedSearchDurationMs: null,
+        rankedSearchStartedAt: null,
+      };
     });
   },
   setRankedSearchStarted: ({ durationMs }) => {

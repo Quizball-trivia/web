@@ -30,7 +30,7 @@ export const createDraftSlice: StateCreator<RealtimeState, [], [], DraftSlice> =
       lobbyId: draft.lobbyId,
       categoryCount: draft.categories.length,
     });
-    set({
+    set((state) => ({
       draftPaused: false,
       draftPauseUntil: null,
       draftDisconnectedUserId: null,
@@ -38,11 +38,11 @@ export const createDraftSlice: StateCreator<RealtimeState, [], [], DraftSlice> =
       draft: {
         lobbyId: draft.lobbyId,
         categories: draft.categories,
-        bans: {},
+        bans: state.draft?.lobbyId === draft.lobbyId ? state.draft.bans : {},
         turnUserId: draft.turnUserId,
         halfOneCategoryId: null,
       },
-    });
+    }));
   },
 
   setDraftBan: (actorId, categoryId) =>

@@ -244,6 +244,46 @@ describe('registerSocketHandlers', () => {
     expect(state.matchPaused).toBe(false);
   });
 
+  it('auto-emits match:rejoin when rejoin is available on the kickoff ready gate', () => {
+    const opponent = { id: 'opp-1', username: 'Opponent', avatarUrl: null };
+    const participants = [
+      { userId: 'self-1', username: 'Me', avatarUrl: null, seat: 1 },
+      { userId: 'opp-1', username: 'Opponent', avatarUrl: null, seat: 2 },
+    ];
+
+    registerSocketHandlers();
+    useRealtimeMatchStore.getState().setMatchStart({
+      matchId: 'match-ready',
+      mode: 'ranked',
+      variant: 'ranked_sim',
+      mySeat: 1,
+      opponent,
+      participants,
+    });
+    useRealtimeMatchStore.getState().setMatchWaitingForReady({
+      matchId: 'match-ready',
+      phase: 'kickoff',
+      readyCount: 0,
+      totalCount: 2,
+      readyUserIds: [],
+      waitingUserIds: ['self-1', 'opp-1'],
+      forceStartsAt: new Date(Date.now() + 10_000).toISOString(),
+    });
+
+    mockSocket.fire('match:rejoin_available', {
+      matchId: 'match-ready',
+      mode: 'ranked',
+      variant: 'ranked_sim',
+      opponent,
+      participants,
+      graceMs: 60_000,
+      remainingReconnects: 2,
+    });
+
+    expect(mockSocket.socket.emit).toHaveBeenCalledWith('match:rejoin', { matchId: 'match-ready' });
+    expect(useRealtimeMatchStore.getState().rejoinMatch).toBeNull();
+  });
+
   it('patches ranked profile cache from match:final_results when rankedOutcome exists for self', () => {
     const profileKey = queryKeys.ranked.profile();
     let cachedProfile: Record<string, unknown> = {

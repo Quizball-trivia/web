@@ -243,6 +243,7 @@ export function useGameStageTransitions({
   const rankedGeoHintRef = useRef<RankedGeoHint | undefined>(undefined);
   const rankedQueueIntentRef = useRef<RankedQueueIntent | null>(null);
   const rankedRetryCountRef = useRef(0);
+  const rankedSocketDisconnectedRef = useRef(false);
   const lastRoundResolvedAtRef = useRef<number | null>(null);
   const lastRoundResolvedQRef = useRef<number | null>(null);
   const rankedSearchStartedAt = useRankedMatchmakingStore((state) => state.rankedSearchStartedAt);
@@ -407,6 +408,62 @@ export function useGameStageTransitions({
     },
     [socket]
   );
+
+  useEffect(() => {
+    const handleDisconnect = () => {
+      rankedSocketDisconnectedRef.current = true;
+    };
+
+    const handleConnect = () => {
+      if (!rankedSocketDisconnectedRef.current) return;
+      rankedSocketDisconnectedRef.current = false;
+      if (!isMultiplayer || config?.matchType !== "ranked" || stage !== "matchmaking") return;
+
+      const latestRealtime = useRealtimeMatchStore.getState();
+      const latestRanked = useRankedMatchmakingStore.getState();
+      const clientBelievesSearching = Boolean(
+        rankedRequestRef.current ||
+          latestRanked.rankedSearching ||
+          latestRanked.rankedSearchStartedAt
+      );
+      if (
+        !clientBelievesSearching ||
+        latestRanked.rankedFoundOpponent ||
+        latestRanked.rankedCancelRequestedAt !== null ||
+        hasActiveRealtimeSession(latestRealtime)
+      ) {
+        return;
+      }
+
+      latestRanked.invalidateRankedSearchAck();
+      rankedRequestRef.current = true;
+      rankedRetryCountRef.current = 0;
+      clearRankedAckTimer();
+      clearRankedRetryTimer();
+      logSocketDebug("ranked queue_join reconnect recovery", {
+        ...getSocketDebugSnapshot(socket),
+        sessionState: latestRealtime.sessionState?.state ?? "NO_SESSION",
+        queueSearchId: latestRealtime.sessionState?.queueSearchId ?? null,
+        rankedSearching: latestRanked.rankedSearching,
+      });
+      emitRankedQueueJoin("recovery_retry");
+    };
+
+    socket.on("disconnect", handleDisconnect);
+    socket.on("connect", handleConnect);
+    return () => {
+      socket.off("disconnect", handleDisconnect);
+      socket.off("connect", handleConnect);
+    };
+  }, [
+    clearRankedAckTimer,
+    clearRankedRetryTimer,
+    config?.matchType,
+    emitRankedQueueJoin,
+    isMultiplayer,
+    socket,
+    stage,
+  ]);
 
   useEffect(() => {
     if (!isMultiplayer || config?.matchType !== "ranked") return;
