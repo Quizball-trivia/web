@@ -152,6 +152,62 @@ describe('realtimeMatch.store — setMatchState shouldClearQuestion', () => {
     useRealtimeMatchStore.getState().reset();
   });
 
+  describe('draft start resync', () => {
+    it('preserves existing bans when draft:start replays the same lobby', () => {
+      const store = useRealtimeMatchStore.getState();
+
+      store.setDraftStart({
+        lobbyId: 'lobby-1',
+        categories: [
+          { id: 'cat-1', name: { en: 'Premier League' }, icon: null },
+          { id: 'cat-2', name: { en: 'World Cup' }, icon: null },
+        ],
+        turnUserId: USER_A,
+      });
+      store.setDraftBan(USER_A, 'cat-1');
+
+      store.setDraftStart({
+        lobbyId: 'lobby-1',
+        categories: [
+          { id: 'cat-1', name: { en: 'Premier League' }, icon: null },
+          { id: 'cat-2', name: { en: 'World Cup' }, icon: null },
+          { id: 'cat-3', name: { en: 'Champions League' }, icon: null },
+        ],
+        turnUserId: USER_B,
+      });
+
+      const draft = useRealtimeMatchStore.getState().draft;
+      expect(draft?.bans).toEqual({ [USER_A]: 'cat-1' });
+      expect(draft?.categories).toHaveLength(3);
+      expect(draft?.turnUserId).toBe(USER_B);
+    });
+
+    it('resets bans when draft:start moves to a new lobby', () => {
+      const store = useRealtimeMatchStore.getState();
+
+      store.setDraftStart({
+        lobbyId: 'lobby-1',
+        categories: [
+          { id: 'cat-1', name: { en: 'Premier League' }, icon: null },
+          { id: 'cat-2', name: { en: 'World Cup' }, icon: null },
+        ],
+        turnUserId: USER_A,
+      });
+      store.setDraftBan(USER_A, 'cat-1');
+
+      store.setDraftStart({
+        lobbyId: 'lobby-2',
+        categories: [
+          { id: 'cat-3', name: { en: 'Champions League' }, icon: null },
+          { id: 'cat-4', name: { en: 'Europa League' }, icon: null },
+        ],
+        turnUserId: USER_B,
+      });
+
+      expect(useRealtimeMatchStore.getState().draft?.bans).toEqual({});
+    });
+  });
+
   // -------------------------------------------------------------------------
   // HALFTIME — existing behavior (was already working)
   // -------------------------------------------------------------------------
