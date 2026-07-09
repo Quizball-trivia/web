@@ -79,7 +79,7 @@ export const ObjectiveCard = memo(function ObjectiveCard({
             <span className="tabular-nums text-white" style={{ ...poppins, fontSize: 12 }}>
               {objective.rewardCoins}
             </span>
-            <img src="/assets/coin-1.png" alt="" className="size-4 object-contain" />
+            <img src="/assets/coin-1.png?v=2" alt="" className="size-4 object-contain" />
           </div>
           <span className="tabular-nums text-white" style={{ ...poppins, fontSize: 11 }}>
             {objective.rewardXp} XP
