@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import { CoinIcon } from "./CoinIcon";
 import { AvatarPreview } from "@/components/AvatarPreview";
 import type { AvatarCustomization } from "@/types/game";
-import { HAIR_PARTS, type AvatarPart } from "@/lib/avatars/parts";
+import { type AvatarPart } from "@/lib/avatars/parts";
 import { useLocale } from "@/contexts/LocaleContext";
 
 const poppins = {
@@ -53,11 +53,12 @@ const SIZE_PCT: Record<NonNullable<ItemCardProps["imageSize"]>, number> = {
 // (eyes at ~30%, mouth at ~34–38% → face top ~7%, ~32% wide and centered).
 const MANNEQUIN_FACE_POS = { top: 2, left: 28, width: 44 };
 
-// Default hair shown over glasses/facial-hair items — reuses the exact preview
-// position of `hair_boy_basic` so the silhouette matches what users see when
-// the avatar has the default boy haircut equipped.
-const MANNEQUIN_DEFAULT_HAIR_POS =
-  HAIR_PARTS.find((p) => p.id === "hair_boy_basic")?.position ?? { top: -8, left: 18, width: 56 };
+// Default hair shown over glasses/facial-hair items. The mannequin head is
+// ~92% the size of the live avatar head and shifted right/down, so the boy
+// basic hair's live `position` doesn't fit here — this is that position run
+// through the head-to-mannequin transform (same mapping as the storePosition
+// overrides in parts.ts).
+const MANNEQUIN_DEFAULT_HAIR_POS = { top: -5, left: 22, width: 52 };
 
 // Head content (face + hair + item) natively sits at canvas top 0–40%. Translate
 // the wrapper down so the head zone lands in the middle of the card frame.
