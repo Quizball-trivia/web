@@ -464,10 +464,11 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
           className="relative rounded-full hover:bg-white/5"
         >
           <Image
-            src="/assets/bell.png"
+            src="/assets/bell.svg"
             alt=""
             width={24}
             height={24}
+            unoptimized
             className="size-6"
           />
           {badgeCount > 0 && (
