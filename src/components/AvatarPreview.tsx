@@ -50,13 +50,6 @@ export function AvatarPreview({ customization, width = 240, className = "" }: Av
         const partId = final[slot];
         const part = getAvatarPart(partId);
         if (!part) return null;
-        // Jerseys anchor to the canvas bottom: the skin torso runs to the very
-        // bottom edge, and jersey art heights vary by a few px, so top-anchoring
-        // leaves a sliver of torso visible under lighter hems on darker skins.
-        const anchor =
-          slot === "jersey"
-            ? { bottom: "0%" }
-            : { top: `${part.position.top}%` };
         return (
           <img
             key={slot}
@@ -64,7 +57,7 @@ export function AvatarPreview({ customization, width = 240, className = "" }: Av
             alt=""
             className="pointer-events-none absolute object-contain"
             style={{
-              ...anchor,
+              top: `${part.position.top}%`,
               left: `${part.position.left}%`,
               width: `${part.position.width}%`,
             }}
