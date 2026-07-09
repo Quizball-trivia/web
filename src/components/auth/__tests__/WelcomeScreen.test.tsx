@@ -134,6 +134,7 @@ vi.mock('@/lib/auth/auth.service', () => ({
         'details' in error.data &&
         (error.data as { details?: { reason?: string } }).details?.reason === 'pending_deletion',
     ),
+  isBannedAuthError: () => false,
   forgotPassword: (email: string, redirectTo: string) => forgotPasswordMock(email, redirectTo),
   socialLogin: (provider: string, redirect: string) => socialLoginMock(provider, redirect),
   socialLoginWithIdToken: (provider: string, idToken: string, nonce: string, options?: { restorePendingDeletion?: boolean }) =>

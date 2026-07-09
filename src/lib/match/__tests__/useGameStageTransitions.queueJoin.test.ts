@@ -12,8 +12,31 @@ vi.mock('@/lib/realtime/socket-client', () => ({
   logSocketDebug: vi.fn(),
 }));
 
-function createSocket() {
-  return { emit: vi.fn(), connected: true } as unknown as Socket;
+type TestSocket = Socket & {
+  emit: ReturnType<typeof vi.fn>;
+  trigger: (event: 'connect' | 'disconnect') => void;
+};
+
+function createSocket(): TestSocket {
+  const listeners = new Map<string, Set<() => void>>();
+  const socket = {
+    emit: vi.fn(),
+    connected: true,
+    on: vi.fn((event: string, handler: () => void) => {
+      const handlers = listeners.get(event) ?? new Set<() => void>();
+      handlers.add(handler);
+      listeners.set(event, handlers);
+      return socket;
+    }),
+    off: vi.fn((event: string, handler: () => void) => {
+      listeners.get(event)?.delete(handler);
+      return socket;
+    }),
+    trigger: (event: 'connect' | 'disconnect') => {
+      listeners.get(event)?.forEach((handler) => handler());
+    },
+  };
+  return socket as unknown as TestSocket;
 }
 
 const RANKED_CONFIG = { matchType: 'ranked' } as GameConfig;
@@ -226,6 +249,38 @@ describe('ranked matchmaking initial queue join', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('re-joins on socket reconnect even when the local session snapshot still looks queued', () => {
+    useRealtimeMatchStore.setState({
+      sessionState: {
+        state: 'IN_QUEUE',
+        activeMatchId: null,
+        waitingLobbyId: null,
+        queueSearchId: 'stale-search-1',
+      } as never,
+      error: null,
+    });
+    useRankedMatchmakingStore.setState({
+      rankedSearching: true,
+      rankedSearchStartedAt: Date.now() - 3000,
+      rankedFoundOpponent: null,
+    });
+    const socket = createSocket();
+
+    renderTransitions(socket);
+    expect(socket.emit).not.toHaveBeenCalledWith('ranked:queue_join', expect.anything());
+
+    socket.connected = false;
+    socket.trigger('disconnect');
+    socket.connected = true;
+    socket.trigger('connect');
+
+    expect(useRankedMatchmakingStore.getState().rankedSearchStartedAt).toBeNull();
+    expect(socket.emit).toHaveBeenCalledWith(
+      'ranked:queue_join',
+      expect.objectContaining({ searchMode: 'human_first', reason: 'recovery_retry' })
+    );
   });
 
   it('does NOT re-join while the server still confirms IN_QUEUE', async () => {
