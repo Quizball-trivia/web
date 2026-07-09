@@ -383,7 +383,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_real.webp?v=2",
     priceCoins: 30000,
     productSlug: "avatar_jersey_real",
-    position: { top: 43, left: 13, width: 70 },
+    position: { top: 42, left: 13, width: 70 },
   },
   {
     id: "jersey_barcelona",
@@ -482,7 +482,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_georgia_retro.webp?v=2",
     priceCoins: 50000,
     productSlug: "avatar_jersey_georgia_retro",
-    position: { top: 44, left: 13, width: 70 },
+    position: { top: 43, left: 13, width: 70 },
   },
   {
     id: "jersey_man_united",
@@ -491,7 +491,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_man_united.webp?v=2",
     priceCoins: 30000,
     productSlug: "avatar_jersey_man_united",
-    position: { top: 44, left: 13, width: 70 },
+    position: { top: 42, left: 13, width: 70 },
   },
   {
     id: "jersey_arsenal",
@@ -500,7 +500,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_arsenal.webp?v=2",
     priceCoins: 30000,
     productSlug: "avatar_jersey_arsenal",
-    position: { top: 44, left: 13, width: 70 },
+    position: { top: 42, left: 13, width: 70 },
   },
   {
     id: "jersey_man_city",
@@ -509,7 +509,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_man_city.webp?v=2",
     priceCoins: 30000,
     productSlug: "avatar_jersey_man_city",
-    position: { top: 44, left: 13, width: 70 },
+    position: { top: 42, left: 13, width: 70 },
   },
   {
     id: "jersey_newcastle",
@@ -518,7 +518,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_newcastle.webp?v=2",
     priceCoins: 30000,
     productSlug: "avatar_jersey_newcastle",
-    position: { top: 44, left: 13, width: 70 },
+    position: { top: 42, left: 13, width: 70 },
   },
   {
     id: "jersey_dinamo_tbilisi",
@@ -527,7 +527,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_dinamo_tbilisi.webp?v=2",
     priceCoins: 30000,
     productSlug: "avatar_jersey_dinamo_tbilisi",
-    position: { top: 44, left: 13, width: 70 },
+    position: { top: 42, left: 13, width: 70 },
   },
   {
     id: "jersey_dortmund",
@@ -536,7 +536,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_dortmund.webp?v=2",
     priceCoins: 30000,
     productSlug: "avatar_jersey_dortmund",
-    position: { top: 44, left: 13, width: 70 },
+    position: { top: 42, left: 13, width: 70 },
   },
   {
     id: "jersey_italy_home",
@@ -545,7 +545,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_italy_home.webp?v=2",
     priceCoins: 30000,
     productSlug: "avatar_jersey_italy_home",
-    position: { top: 44, left: 13, width: 70 },
+    position: { top: 43, left: 13, width: 70 },
   },
   {
     id: "jersey_italy_away",
@@ -554,7 +554,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_italy_away.webp?v=2",
     priceCoins: 30000,
     productSlug: "avatar_jersey_italy_away",
-    position: { top: 44, left: 13, width: 70 },
+    position: { top: 43, left: 13, width: 70 },
   },
   {
     id: "jersey_italy_third",
@@ -563,7 +563,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_italy_third.webp?v=2",
     priceCoins: 30000,
     productSlug: "avatar_jersey_italy_third",
-    position: { top: 44, left: 13, width: 70 },
+    position: { top: 43, left: 13, width: 70 },
   },
   {
     id: "jersey_england_home",
@@ -572,7 +572,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_england_home.webp?v=2",
     priceCoins: 30000,
     productSlug: "avatar_jersey_england_home",
-    position: { top: 44, left: 13, width: 70 },
+    position: { top: 43, left: 13, width: 70 },
   },
   {
     id: "jersey_england_away",
@@ -581,7 +581,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_england_away.webp?v=2",
     priceCoins: 30000,
     productSlug: "avatar_jersey_england_away",
-    position: { top: 44, left: 13, width: 70 },
+    position: { top: 43, left: 13, width: 70 },
   },
   {
     id: "jersey_atletico_madrid",
@@ -590,7 +590,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_atletico_madrid.webp?v=2",
     priceCoins: 30000,
     productSlug: "avatar_jersey_atletico_madrid",
-    position: { top: 44, left: 13, width: 70 },
+    position: { top: 43, left: 13, width: 70 },
   },
   {
     id: "jersey_napoli",
@@ -599,7 +599,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_napoli.webp?v=2",
     priceCoins: 30000,
     productSlug: "avatar_jersey_napoli",
-    position: { top: 44, left: 13, width: 70 },
+    position: { top: 42, left: 13, width: 70 },
   },
   {
     id: "jersey_inter",
@@ -608,7 +608,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_inter.webp?v=2",
     priceCoins: 30000,
     productSlug: "avatar_jersey_inter",
-    position: { top: 44, left: 13, width: 70 },
+    position: { top: 42, left: 13, width: 70 },
   },
   {
     id: "jersey_roma",
@@ -617,7 +617,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_roma.webp?v=2",
     priceCoins: 30000,
     productSlug: "avatar_jersey_roma",
-    position: { top: 44, left: 13, width: 70 },
+    position: { top: 43, left: 13, width: 70 },
   },
   {
     id: "jersey_juve",
@@ -626,7 +626,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_juve.webp?v=2",
     priceCoins: 30000,
     productSlug: "avatar_jersey_juve",
-    position: { top: 44, left: 13, width: 70 },
+    position: { top: 42, left: 13, width: 70 },
   },
   {
     id: "jersey_ajax",
@@ -635,7 +635,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_ajax.webp?v=2",
     priceCoins: 30000,
     productSlug: "avatar_jersey_ajax",
-    position: { top: 44, left: 13, width: 70 },
+    position: { top: 43, left: 13, width: 70 },
   },
 ];
 
