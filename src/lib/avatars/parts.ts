@@ -175,6 +175,7 @@ export const HAIR_PARTS: AvatarPart[] = [
     priceCoins: 20000,
     productSlug: "avatar_hair_wave",
     position: { top: -3, left: 17, width: 41 },
+    storePosition: { top: 0, left: 24, width: 38 },
   },
   {
     id: "hair_curly_crop",
@@ -184,6 +185,7 @@ export const HAIR_PARTS: AvatarPart[] = [
     priceCoins: 20000,
     productSlug: "avatar_hair_curly_crop",
     position: { top: -2, left: 25, width: 41 },
+    storePosition: { top: 1, left: 28, width: 38 },
   },
   {
     id: "hair_cornrows",
@@ -193,6 +195,7 @@ export const HAIR_PARTS: AvatarPart[] = [
     priceCoins: 20000,
     productSlug: "avatar_hair_cornrows",
     position: { top: -1, left: 25, width: 39 },
+    storePosition: { top: 1, left: 28, width: 36 },
   },
   {
     id: "hair_buzz",
@@ -202,6 +205,7 @@ export const HAIR_PARTS: AvatarPart[] = [
     priceCoins: 20000,
     productSlug: "avatar_hair_buzz",
     position: { top: 0, left: 26, width: 37 },
+    storePosition: { top: 2, left: 29, width: 34 },
   },
   {
     id: "hair_side_part",
@@ -211,6 +215,7 @@ export const HAIR_PARTS: AvatarPart[] = [
     priceCoins: 20000,
     productSlug: "avatar_hair_side_part",
     position: { top: -4, left: 24, width: 41 },
+    storePosition: { top: -1, left: 27, width: 38 },
   },
   {
     id: "hair_leopard",
@@ -220,6 +225,7 @@ export const HAIR_PARTS: AvatarPart[] = [
     priceCoins: 20000,
     productSlug: "avatar_hair_leopard",
     position: { top: -6, left: 25, width: 39 },
+    storePosition: { top: -3, left: 28, width: 36 },
   },
 ];
 
@@ -296,6 +302,7 @@ export const FACIAL_HAIR_PARTS: AvatarPart[] = [
     priceCoins: 15000,
     productSlug: "avatar_facial_handlebar",
     position: { top: 22, left: 53, width: 14 },
+    storePosition: { top: 23, left: 54, width: 13 },
   },
   {
     id: "stache_goatee",
@@ -305,6 +312,7 @@ export const FACIAL_HAIR_PARTS: AvatarPart[] = [
     priceCoins: 15000,
     productSlug: "avatar_facial_stache_goatee",
     position: { top: 22, left: 53, width: 14 },
+    storePosition: { top: 23, left: 54, width: 13 },
   },
 ];
 
