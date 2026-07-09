@@ -383,7 +383,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_real.webp",
     priceCoins: 30000,
     productSlug: "avatar_jersey_real",
-    position: { top: 44, left: 13, width: 70 },
+    position: { top: 43, left: 13, width: 70 },
   },
   {
     id: "jersey_barcelona",
@@ -401,7 +401,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_milan.webp",
     priceCoins: 30000,
     productSlug: "avatar_jersey_milan",
-    position: { top: 44, left: 13, width: 70 },
+    position: { top: 42, left: 13, width: 70 },
   },
   {
     id: "jersey_liverpool",
@@ -410,7 +410,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_liverpool.webp",
     priceCoins: 30000,
     productSlug: "avatar_jersey_liverpool",
-    position: { top: 44, left: 13, width: 70 },
+    position: { top: 42, left: 13, width: 70 },
   },
   {
     id: "jersey_bayern",
@@ -455,7 +455,7 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     asset: "/assets/store/jersey_france_retro.webp",
     priceCoins: 30000,
     productSlug: "avatar_jersey_france_retro",
-    position: { top: 44, left: 13, width: 70 },
+    position: { top: 43, left: 13, width: 70 },
   },
   {
     id: "jersey_germany_retro",
