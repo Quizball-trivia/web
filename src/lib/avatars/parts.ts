@@ -118,7 +118,7 @@ export const HAIR_PARTS: AvatarPart[] = [
     name: "Boy Basic",
     asset: "/assets/store/hair_boy_basic.webp?v=2",
     free: true,
-    position: { top: -8, left: 18, width: 56 },
+    position: { top: -8, left: 18, width: 55 },
   },
   {
     id: "hair_girl_basic",
@@ -137,7 +137,7 @@ export const HAIR_PARTS: AvatarPart[] = [
     asset: "/assets/store/hair_hamsik.webp?v=2",
     priceCoins: 10000,
     productSlug: "avatar_hair_hamsik",
-    position: { top: -10, left: 23, width: 43 },
+    position: { top: -12, left: 23, width: 43 },
   },
   {
     id: "hair_ramos",
@@ -146,7 +146,7 @@ export const HAIR_PARTS: AvatarPart[] = [
     asset: "/assets/store/hair_ramos.webp?v=2",
     priceCoins: 20000,
     productSlug: "avatar_hair_ramos",
-    position: { top: -3, left: 24, width: 42 },
+    position: { top: -3, left: 23, width: 42 },
   },
   {
     id: "hair_ronaldo_brazil",
@@ -155,7 +155,7 @@ export const HAIR_PARTS: AvatarPart[] = [
     asset: "/assets/store/hair_ronaldo_brazil.webp?v=2",
     priceCoins: 30000,
     productSlug: "avatar_hair_ronaldo_brazil",
-    position: { top: -1, left: 36, width: 32 },
+    position: { top: -1, left: 35, width: 32 },
   },
   {
     id: "hair_ronaldo_goat",
@@ -165,7 +165,7 @@ export const HAIR_PARTS: AvatarPart[] = [
     priceCoins: 30000,
     productSlug: "avatar_hair_ronaldo_goat",
     // Curly afro (231×206 native — wide). Shifted up to sit on crown.
-    position: { top: -8, left: 19, width: 48 },
+    position: { top: -9, left: 19, width: 48 },
   },
   {
     id: "hair_wave",
@@ -174,7 +174,7 @@ export const HAIR_PARTS: AvatarPart[] = [
     asset: "/assets/store/hair_wave.webp?v=2",
     priceCoins: 20000,
     productSlug: "avatar_hair_wave",
-    position: { top: -3, left: 17, width: 41 },
+    position: { top: -3, left: 18, width: 41 },
     storePosition: { top: 0, left: 24, width: 38 },
   },
   {
@@ -204,7 +204,7 @@ export const HAIR_PARTS: AvatarPart[] = [
     asset: "/assets/store/hair_buzz.webp?v=2",
     priceCoins: 20000,
     productSlug: "avatar_hair_buzz",
-    position: { top: 0, left: 26, width: 37 },
+    position: { top: 0, left: 25, width: 38 },
     storePosition: { top: 2, left: 29, width: 34 },
   },
   {
@@ -244,7 +244,7 @@ export const GLASSES_PARTS: AvatarPart[] = [
     priceCoins: 10000,
     productSlug: "avatar_glasses_wayfarer",
     // 241 × 92 → width 48.5% of canvas, height ~17%; centered on eye y=30%
-    position: { top: 13, left: 28, width: 44 },
+    position: { top: 13, left: 31, width: 44 },
   },
   {
     id: "glasses_round",
@@ -292,7 +292,7 @@ export const FACIAL_HAIR_PARTS: AvatarPart[] = [
     priceCoins: 15000,
     productSlug: "avatar_facial_beard",
     // 190 × 120 → width 38%, height ~22%; covers chin and lower jaw
-    position: { top: 24, left: 35, width: 38 },
+    position: { top: 24, left: 36, width: 37 },
   },
   {
     id: "handlebar",
