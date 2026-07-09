@@ -308,7 +308,7 @@ function NotificationRow({
         {body && <p className="font-poppins text-[11px] leading-snug text-white/75">{body}</p>}
         {hasDeltas ? (
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
-            <DeltaChip value={coinsDelta} icon="/assets/coin-1.png" />
+            <DeltaChip value={coinsDelta} icon="/assets/coin-1.png?v=2" />
             <DeltaChip value={ticketsDelta} icon="/assets/ticket-1.png" />
             <DeltaChip value={xpDelta} label="XP" />
             <DeltaChip value={rpDelta} label="RP" />
@@ -464,10 +464,11 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
           className="relative rounded-full hover:bg-white/5"
         >
           <Image
-            src="/assets/bell.png"
+            src="/assets/bell.svg"
             alt=""
             width={24}
             height={24}
+            unoptimized
             className="size-6"
           />
           {badgeCount > 0 && (

@@ -119,7 +119,7 @@ function BanCategoryCardComponent({
         !interactive && 'cursor-default',
         fadedOut && 'opacity-30 pointer-events-none',
       )}
-      style={{ backgroundColor: isBanned ? '#243B44' : color.bg }}
+      style={{ backgroundColor: isBanned ? '#262A33' : color.bg }}
     >
       {/* Artwork — either imageUrl as cover, or emoji as centered watermark */}
       {hasImage ? (

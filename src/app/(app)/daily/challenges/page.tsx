@@ -106,7 +106,7 @@ function ChallengeCard({
           <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 md:hidden">
             <span className="inline-flex h-6 items-center gap-1 rounded-full bg-white/70 px-2.5 text-[10px] font-black text-brand-gold-ink">
               {challenge.coinReward}
-              <Image src="/assets/coin-1.png" alt="" width={16} height={16} className="size-4 object-contain" />
+              <Image src="/assets/coin-1.png?v=2" alt="" width={16} height={16} className="size-4 object-contain" />
             </span>
             <span className="inline-flex h-6 items-center gap-1 rounded-full bg-brand-green-light px-2.5 text-[10px] font-black text-white">
               {challenge.xpReward} XP
@@ -119,7 +119,7 @@ function ChallengeCard({
           <div className="mt-auto mb-3 hidden w-full items-center justify-between gap-2 md:flex">
             <span className="inline-flex h-8 items-center gap-1.5 rounded-full bg-white/70 px-3.5 text-[16px] font-black tabular-nums text-brand-gold-ink">
               {challenge.coinReward}
-              <Image src="/assets/coin-1.png" alt="" width={20} height={20} className="size-5 object-contain" />
+              <Image src="/assets/coin-1.png?v=2" alt="" width={20} height={20} className="size-5 object-contain" />
             </span>
             <span className="inline-flex h-8 items-center gap-1 rounded-full bg-brand-green-light px-3.5 text-[16px] font-black text-white">
               {challenge.xpReward} XP
