@@ -44,6 +44,9 @@ const nextConfig: NextConfig = {
     // Serve AVIF where the browser supports it (smaller than webp at the
     // same visual quality), webp otherwise.
     formats: ["image/avif", "image/webp"],
+    // Local assets may carry a cache-busting query (e.g. /assets/coin-1.png?v=2
+    // after an in-place asset regeneration). Omitting `search` allows any query.
+    localPatterns: [{ pathname: "/**" }],
     // Whitelist the explicit qualities used by lib/images/remoteImage.ts.
     qualities: [70, 75, 90],
     remotePatterns: [
