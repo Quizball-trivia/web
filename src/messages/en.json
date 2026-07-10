@@ -39,6 +39,7 @@
     "price": "Price",
     "notSet": "Not set",
     "reconnecting": "Reconnecting…",
+    "offlineReconnecting": "You're offline — reconnecting…",
     "connectionUnstable": "Connection unstable",
     "connectionBad": "Connection problem",
     "connectionStable": "Connection stable",
