@@ -1176,6 +1176,7 @@
     "penaltyAriaLabel": "პენალტების სერია იწყება: უპასუხე სწორად და სწრაფად გოლის გასატანად",
     "getReady": "მოემზადე",
     "waitingForReconnect": "ველოდებით მის დაბრუნებას",
+    "opponentDisconnectedCancelIfNotReturn": "თუ არ დაბრუნდა, მატჩი გაუქმდება და ბილეთი დაგიბრუნდება",
     "opponentDisconnectedWinIfNotReturn": "თუ არ დაბრუნდა, მოიგებ {seconds} წამში",
     "opponentRestoringMatch": "მოწინააღმდეგე ბრუნდება… მატჩი აღდგება",
     "safeLeaveWinIn": "თუ არ დაბრუნდა, მოიგებ {seconds} წამში",

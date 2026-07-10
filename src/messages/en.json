@@ -1129,6 +1129,7 @@
     "penaltyAriaLabel": "Penalty shootout starting: answer correctly and faster to score",
     "getReady": "Get Ready",
     "waitingForReconnect": "Waiting for them to reconnect",
+    "opponentDisconnectedCancelIfNotReturn": "If they don't return, the match will be cancelled and your ticket refunded",
     "opponentDisconnectedWinIfNotReturn": "You win if they don't return in {seconds}s",
     "opponentRestoringMatch": "Opponent reconnecting… restoring match",
     "safeLeaveWinIn": "You win in {seconds}s if they don't return",

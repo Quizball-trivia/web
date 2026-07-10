@@ -1,4 +1,4 @@
-import { render, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RankedCategoryBlockingScreen } from '../RankedCategoryBlockingScreen';
@@ -41,7 +41,7 @@ function createRealtimeMatchState() {
       halfOneCategoryId: null,
     },
     draftPaused: false,
-    draftPauseUntil: null,
+    draftPauseUntil: null as number | null,
     match: null,
   };
 }
@@ -209,5 +209,15 @@ describe('RankedCategoryBlockingScreen', () => {
     render(<RankedCategoryBlockingScreen />);
 
     expect(socket.emit.mock.calls.filter(([eventName]) => eventName === 'draft:ui_ready')).toHaveLength(0);
+  });
+
+  it('promises cancellation and a ticket refund when the draft is paused', () => {
+    realtimeMatchState.draftPaused = true;
+    realtimeMatchState.draftPauseUntil = Date.now() + 8_000;
+
+    render(<RankedCategoryBlockingScreen />);
+
+    expect(screen.getByText('possession.opponentDisconnectedCancelIfNotReturn')).toBeInTheDocument();
+    expect(screen.queryByText('possession.opponentDisconnectedWinIfNotReturn')).not.toBeInTheDocument();
   });
 });
