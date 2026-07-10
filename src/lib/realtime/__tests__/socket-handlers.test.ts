@@ -166,6 +166,40 @@ describe('registerSocketHandlers', () => {
     expect(draft!.bans).toHaveProperty('user-456');
   });
 
+  it('turns MATCH_ABANDONED into a cancelled terminal state and refreshes the refunded wallet', () => {
+    const queryClient = {
+      invalidateQueries: vi.fn(),
+    };
+    registerSocketHandlers(queryClient as never);
+    useRealtimeMatchStore.getState().setMatchStart({
+      matchId: 'match-abandoned',
+      mode: 'ranked',
+      variant: 'ranked_sim',
+      mySeat: 1,
+      opponent: { id: 'opp-1', username: 'Opponent', avatarUrl: null },
+      participants: [],
+    });
+
+    mockSocket.fire('error', {
+      code: 'MATCH_ABANDONED',
+      message: 'Match abandoned because it could not be resolved from active progress',
+    });
+
+    const state = useRealtimeMatchStore.getState();
+    expect(state.match).toBeNull();
+    expect(state.cancelledMatch).toEqual({
+      matchId: 'match-abandoned',
+      ticketRefunded: true,
+    });
+    expect(state.error).toBeNull();
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: queryKeys.store.wallet(),
+    });
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: queryKeys.ranked.profile(),
+    });
+  });
+
   it('ignores ranked lobby state that arrives after local matchmaking cancel', () => {
     registerSocketHandlers();
     useRankedMatchmakingStore.getState().markRankedCancelRequested();

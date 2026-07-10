@@ -192,6 +192,22 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
 
   socket.on('error', (data: ErrorPayload) => {
     logger.warn('Socket event error', { code: data.code, message: data.message, meta: data.meta });
+    if (data.code === 'MATCH_ABANDONED') {
+      const current = useRealtimeMatchStore.getState();
+      const matchId = current.match?.matchId ?? current.sessionState?.activeMatchId;
+      if (matchId) {
+        current.setMatchCancelled({
+          matchId,
+          ticketRefunded: current.match?.mode === 'ranked',
+        });
+        const qc = getQueryClient();
+        if (qc) {
+          void qc.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+          void qc.invalidateQueries({ queryKey: queryKeys.ranked.profile() });
+        }
+        return;
+      }
+    }
     if (
       data.code === 'RANKED_QUEUE_BLOCKED' ||
       data.code === 'RANKED_QUEUE_UNAVAILABLE' ||

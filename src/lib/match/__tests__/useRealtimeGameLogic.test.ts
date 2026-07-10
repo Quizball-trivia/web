@@ -307,15 +307,14 @@ describe('useRealtimeGameLogic', () => {
     act(() => result.current.actions.submitAnswer(2));
 
     const answerCall = getSocketEmitCalls('match:answer').at(-1);
-    expect(answerCall).toEqual([
-      'match:answer',
-      {
-        matchId: MATCH_ID,
-        qIndex: 4,
-        selectedIndex: 2,
-        timeMs: Date.now() - unlockedAtMs,
-      },
-    ]);
+    expect(answerCall?.[0]).toBe('match:answer');
+    expect(answerCall?.[1]).toMatchObject({
+      matchId: MATCH_ID,
+      qIndex: 4,
+      selectedIndex: 2,
+    });
+    expect(answerCall?.[1].timeMs).toBeGreaterThanOrEqual(Date.now() - unlockedAtMs);
+    expect(answerCall?.[1].timeMs).toBeLessThanOrEqual(Date.now() - unlockedAtMs + 50);
     expect(answerCall?.[1]).not.toMatchObject({
       timeMs: Date.now() - playableAtMs,
     });

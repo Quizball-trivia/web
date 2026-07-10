@@ -76,6 +76,7 @@ export function useGameStageState() {
   const realtimeError = useRealtimeMatchStore((state) => state.error);
   const sessionState = useRealtimeMatchStore((state) => state.sessionState);
   const partyDropout = useRealtimeMatchStore((state) => state.partyDropout);
+  const cancelledMatch = useRealtimeMatchStore((state) => state.cancelledMatch);
   const connectedSelfUserId = useRealtimeMatchStore((state) => state.selfUserId);
   const rankedSearching = useRankedMatchmakingStore((state) => state.rankedSearching);
   const rankedSearchDurationMs = useRankedMatchmakingStore((state) => state.rankedSearchDurationMs);
@@ -245,6 +246,7 @@ export function useGameStageState() {
     realtimeError,
     sessionState,
     partyDropout,
+    cancelledMatch,
     exitCompletedMatchToLobby,
     resetRealtime,
     clearRankedMatchmaking,
