@@ -565,6 +565,7 @@
     "price": "ფასი",
     "notSet": "არ არის მითითებული",
     "reconnecting": "ხელახლა დაკავშირება…",
+    "offlineReconnecting": "ოფლაინ ხართ — ხელახლა დაკავშირება…",
     "connectionUnstable": "კავშირი არასტაბილურია",
     "connectionBad": "კავშირის პრობლემა",
     "connectionStable": "კავშირი სტაბილურია",
