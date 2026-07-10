@@ -58,6 +58,14 @@
     "social": "Social",
     "store": "Store"
   },
+  "matchCancelled": {
+    "eyebrow": "No contest",
+    "title": "Match cancelled",
+    "ticketRefunded": "Your ticket was refunded.",
+    "noResult": "No result was recorded.",
+    "playAgain": "Play Again",
+    "returnToPlay": "Return to Play"
+  },
   "auth": {
     "sessionEnded": "Your session has ended"
   },

@@ -15,7 +15,7 @@ import type {
   MatchWaitingForReadyPayload,
   ResolvedMatchQuestionPayload,
 } from '@/lib/realtime/socket.types';
-import type { DevPossessionAnimation, MatchStatus, RealtimeState } from './types';
+import type { CancelledMatchStatus, DevPossessionAnimation, MatchStatus, RealtimeState } from './types';
 import {
   constructFallbackMatchFromResults,
   extractPlayerTotals,
@@ -46,6 +46,7 @@ const PARTY_QUIZ_DEFAULT_COUNTDOWN_MS = 5000;
  */
 export interface MatchSlice {
   match: MatchStatus | null;
+  cancelledMatch: CancelledMatchStatus | null;
   devPossessionAnimation: DevPossessionAnimation | null;
   setMatchStart: (payload: MatchStartPayload) => void;
   setMatchCountdown: (payload: MatchCountdownPayload) => void;
@@ -69,6 +70,7 @@ export interface MatchSlice {
   setQuestionPhase: (phase: 'reveal' | 'playing') => void;
   setRoundResult: (payload: MatchRoundResultPayload) => void;
   setFinalResults: (payload: MatchFinalResultsPayload) => void;
+  setMatchCancelled: (payload: CancelledMatchStatus) => void;
   triggerDevPossessionAnimation: (payload: { result: 'goal' | 'saved' | 'miss'; attackerSeat: 1 | 2 }) => void;
   clearDevPossessionAnimation: () => void;
   exitCompletedMatchToLobby: () => void;
@@ -76,8 +78,9 @@ export interface MatchSlice {
 
 export const matchInitialState = {
   match: null,
+  cancelledMatch: null,
   devPossessionAnimation: null,
-} as const satisfies Pick<MatchSlice, 'match' | 'devPossessionAnimation'>;
+} as const satisfies Pick<MatchSlice, 'match' | 'cancelledMatch' | 'devPossessionAnimation'>;
 
 export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> = (set) => ({
   ...matchInitialState,
@@ -770,6 +773,25 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
           finalResults: payload,
         },
       };
+    });
+  },
+
+  setMatchCancelled: (payload) => {
+    logger.info('Realtime store set match cancelled', payload);
+    set({
+      match: null,
+      cancelledMatch: payload,
+      matchPaused: false,
+      pauseUntil: null,
+      pausedAt: null,
+      remainingReconnects: null,
+      draftPaused: false,
+      draftPauseUntil: null,
+      draftDisconnectedUserId: null,
+      rejoinMatch: null,
+      forfeitPending: null,
+      partyDropout: null,
+      error: null,
     });
   },
 

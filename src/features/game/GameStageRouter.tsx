@@ -8,6 +8,7 @@ import { MatchmakingMapScreen } from "@/components/match/MatchmakingMapScreen";
 import { ShowdownScreen } from "@/components/ShowdownScreen";
 import { RankedCategoryBlockingScreen } from "@/features/play/RankedCategoryBlockingScreen";
 import { RealtimeResultsScreen } from "./RealtimeResultsScreen";
+import { CancelledMatchScreen } from "./CancelledMatchScreen";
 import { RealtimePossessionMatchScreen } from "@/features/possession/RealtimePossessionMatchScreen";
 import { RealtimePartyQuizScreen } from "@/features/party/RealtimePartyQuizScreen";
 import { PartyQuizResultsScreen } from "@/features/party/PartyQuizResultsScreen";
@@ -60,6 +61,7 @@ export function GameStageRouter() {
     realtimeError,
     sessionState,
     partyDropout,
+    cancelledMatch,
     exitCompletedMatchToLobby,
     resetRealtime,
     clearRankedMatchmaking,
@@ -287,10 +289,48 @@ export function GameStageRouter() {
   ]);
 
   useEffect(() => {
-    if (stage === "idle" && !returningToLobbyRef.current && !realtimeMatch.finalResults) {
+    if (
+      stage === "idle" &&
+      !returningToLobbyRef.current &&
+      !realtimeMatch.finalResults &&
+      !cancelledMatch
+    ) {
       router.replace("/play");
     }
-  }, [realtimeMatch.finalResults, stage, router]);
+  }, [cancelledMatch, realtimeMatch.finalResults, stage, router]);
+
+  useEffect(() => {
+    const isDeadMatchStage =
+      stage === "showdown" ||
+      stage === "roundIntro" ||
+      stage === "playing" ||
+      stage === "roundResult" ||
+      stage === "roundTransition" ||
+      stage === "finalResults";
+    if (
+      sessionState?.state !== "IDLE" ||
+      !isDeadMatchStage ||
+      realtimeMatch.matchId ||
+      realtimeMatch.finalResults ||
+      cancelledMatch
+    ) {
+      return;
+    }
+    resetRealtime();
+    clearRankedMatchmaking();
+    resetGameSession();
+    router.replace("/play");
+  }, [
+    cancelledMatch,
+    clearRankedMatchmaking,
+    realtimeMatch.finalResults,
+    realtimeMatch.matchId,
+    resetGameSession,
+    resetRealtime,
+    router,
+    sessionState?.state,
+    stage,
+  ]);
 
   useEffect(() => {
     if (!partyDropout || realtimeMatch.finalResults) return;
@@ -374,6 +414,25 @@ export function GameStageRouter() {
       socketId,
     ]
   );
+
+  if (cancelledMatch) {
+    return (
+      <CancelledMatchScreen
+        ticketRefunded={cancelledMatch.ticketRefunded}
+        onPlayAgain={() => {
+          if (matchType === "ranked") {
+            markRankedQueueIntent("play_again");
+            resetRealtime();
+            clearRankedMatchmaking();
+            setStage("matchmaking");
+            return;
+          }
+          exitToPlay("generic");
+        }}
+        onReturnToPlay={() => exitToPlay("generic")}
+      />
+    );
+  }
 
   if (config?.mode === "training") {
     return <TrainingMatchScreen onComplete={() => exitToPlay("training_complete")} />;

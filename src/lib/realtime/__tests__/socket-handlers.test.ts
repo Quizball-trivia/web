@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
+import { useGameSessionStore } from '@/stores/gameSession.store';
 import { __setSocketOverride } from '../socket-client';
 import type { Socket } from 'socket.io-client';
 import type { ServerToClientEvents, ClientToServerEvents } from '../socket.types';
@@ -74,6 +75,7 @@ describe('registerSocketHandlers', () => {
     // Reset store to clean state
     useRealtimeMatchStore.getState().reset();
     useRealtimeMatchStore.setState({ selfUserId: null });
+    useGameSessionStore.getState().reset();
     useRankedMatchmakingStore.setState({
       rankedSearchDurationMs: null,
       rankedSearchStartedAt: null,
@@ -164,6 +166,69 @@ describe('registerSocketHandlers', () => {
     const draft = useRealtimeMatchStore.getState().draft;
     expect(draft).not.toBeNull();
     expect(draft!.bans).toHaveProperty('user-456');
+  });
+
+  it('turns MATCH_ABANDONED into a cancelled terminal state and refreshes the refunded wallet', () => {
+    const queryClient = {
+      invalidateQueries: vi.fn(),
+    };
+    registerSocketHandlers(queryClient as never);
+    useRealtimeMatchStore.getState().setMatchStart({
+      matchId: 'match-abandoned',
+      mode: 'ranked',
+      variant: 'ranked_sim',
+      mySeat: 1,
+      opponent: { id: 'opp-1', username: 'Opponent', avatarUrl: null },
+      participants: [],
+    });
+
+    mockSocket.fire('error', {
+      code: 'MATCH_ABANDONED',
+      message: 'Match abandoned because it could not be resolved from active progress',
+    });
+
+    const state = useRealtimeMatchStore.getState();
+    expect(state.match).toBeNull();
+    expect(state.cancelledMatch).toEqual({
+      matchId: 'match-abandoned',
+      ticketRefunded: true,
+    });
+    expect(state.error).toBeNull();
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: queryKeys.store.wallet(),
+    });
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: queryKeys.ranked.profile(),
+    });
+  });
+
+  it('preserves the ranked refund on the rehydrated active-match fallback', () => {
+    registerSocketHandlers();
+    useGameSessionStore.getState().startSession({
+      mode: 'ranked',
+      matchType: 'ranked',
+      opponentId: 'opp-1',
+      opponentUsername: 'Opponent',
+    });
+    useGameSessionStore.getState().setStage('playing');
+    useRealtimeMatchStore.getState().setSessionState({
+      state: 'IN_ACTIVE_MATCH',
+      waitingLobbyId: null,
+      activeMatchId: 'match-rehydrated',
+      queueSearchId: null,
+      openLobbyIds: [],
+      resolvedAt: '2026-07-10T00:00:00.000Z',
+    });
+
+    mockSocket.fire('error', {
+      code: 'MATCH_ABANDONED',
+      message: 'Match abandoned because it could not be resolved from active progress',
+    });
+
+    expect(useRealtimeMatchStore.getState().cancelledMatch).toEqual({
+      matchId: 'match-rehydrated',
+      ticketRefunded: true,
+    });
   });
 
   it('ignores ranked lobby state that arrives after local matchmaking cancel', () => {

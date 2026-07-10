@@ -73,6 +73,14 @@
     "changePasswordFailed": "პაროლის განახლება ვერ მოხერხდა. გთხოვთ, სცადოთ თავიდან.",
     "changePasswordSubmit": "პაროლის განახლება"
   },
+  "matchCancelled": {
+    "eyebrow": "შედეგი არ დაფიქსირდა",
+    "title": "მატჩი გაუქმდა",
+    "ticketRefunded": "ბილეთი დაგიბრუნდა.",
+    "noResult": "მატჩის შედეგი არ ჩაითვალა.",
+    "playAgain": "თავიდან თამაში",
+    "returnToPlay": "თამაშებზე დაბრუნება"
+  },
   "tiers": {
     "GOAT": "GOAT",
     "Academy": "აკადემია",

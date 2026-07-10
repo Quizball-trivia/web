@@ -78,6 +78,7 @@ function createInitialRealtimeMatchState() {
       ],
     },
     error: null,
+    cancelledMatch: null as { matchId: string; ticketRefunded: boolean } | null,
     sessionState: { state: 'READY' },
     selfUserId: 'self-1',
     exitCompletedMatchToLobby: vi.fn(),
@@ -237,6 +238,16 @@ vi.mock('@/features/game/RealtimeResultsScreen', () => ({
   },
 }));
 
+vi.mock('@/features/game/CancelledMatchScreen', () => ({
+  CancelledMatchScreen: (props: { onPlayAgain: () => void; onReturnToPlay: () => void }) => (
+    <div>
+      <div>Match Cancelled</div>
+      <button type="button" onClick={props.onPlayAgain}>Play Again</button>
+      <button type="button" onClick={props.onReturnToPlay}>Return to Play</button>
+    </div>
+  ),
+}));
+
 vi.mock('@/features/possession/RealtimePossessionMatchScreen', () => ({
   RealtimePossessionMatchScreen: (props: { onForfeit: () => void }) => (
     <div>
@@ -306,6 +317,50 @@ describe('GameStageRouter', () => {
     render(<GameStageRouter />);
 
     expect(screen.getByText('Realtime Possession Match')).toBeInTheDocument();
+  });
+
+  it('shows the cancelled terminal screen and requeues ranked Play Again with clean state', () => {
+    gameSessionState.stage = 'playing';
+    gameSessionState.config = {
+      mode: 'ranked',
+      matchType: 'ranked',
+      categoryName: 'Football',
+      categoryIcon: '⚽',
+    };
+    realtimeMatchState.match = null as never;
+    realtimeMatchState.cancelledMatch = {
+      matchId: 'match-abandoned',
+      ticketRefunded: true,
+    };
+
+    render(<GameStageRouter />);
+    fireEvent.click(screen.getByRole('button', { name: 'Play Again' }));
+
+    expect(screen.getByText('Match Cancelled')).toBeInTheDocument();
+    expect(analyticsMocks.markRankedQueueIntent).toHaveBeenCalledWith('play_again');
+    expect(realtimeMatchState.reset).toHaveBeenCalledTimes(1);
+    expect(rankedMatchmakingState.clearRankedMatchmaking).toHaveBeenCalledTimes(1);
+    expect(gameSessionState.setStage).toHaveBeenCalledWith('matchmaking');
+  });
+
+  it('returns a reloaded dead match stage to play when the server session is idle', async () => {
+    gameSessionState.stage = 'playing';
+    realtimeMatchState.match = null as never;
+    realtimeMatchState.sessionState = {
+      state: 'IDLE',
+      activeMatchId: null,
+      waitingLobbyId: null,
+      queueSearchId: null,
+      openLobbyIds: [],
+      resolvedAt: '2026-07-10T00:00:00.000Z',
+    } as never;
+
+    render(<GameStageRouter />);
+
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    expect(realtimeMatchState.reset).toHaveBeenCalledTimes(1);
+    expect(rankedMatchmakingState.clearRankedMatchmaking).toHaveBeenCalledTimes(1);
+    expect(gameSessionState.reset).toHaveBeenCalledTimes(1);
   });
 
   it('ranked matchmaking cancel marks the search cancelled before emitting leave', () => {

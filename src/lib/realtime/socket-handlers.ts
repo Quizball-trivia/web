@@ -1,6 +1,7 @@
 import { getSocket, getSocketDebugSnapshot, logSocketDebug } from './socket-client';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
+import { useGameSessionStore } from '@/stores/gameSession.store';
 import { QueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { logger } from '@/utils/logger';
@@ -192,6 +193,29 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
 
   socket.on('error', (data: ErrorPayload) => {
     logger.warn('Socket event error', { code: data.code, message: data.message, meta: data.meta });
+    if (data.code === 'MATCH_ABANDONED') {
+      const current = useRealtimeMatchStore.getState();
+      const matchId = current.match?.matchId ?? current.sessionState?.activeMatchId;
+      if (matchId) {
+        const rejoinMode = current.rejoinMatch?.matchId === matchId
+          ? current.rejoinMatch.mode
+          : null;
+        const gameSession = useGameSessionStore.getState();
+        const sessionMode = gameSession.stage === 'playing'
+          ? gameSession.config?.matchType
+          : null;
+        current.setMatchCancelled({
+          matchId,
+          ticketRefunded: (current.match?.mode ?? rejoinMode ?? sessionMode) === 'ranked',
+        });
+        const qc = getQueryClient();
+        if (qc) {
+          void qc.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+          void qc.invalidateQueries({ queryKey: queryKeys.ranked.profile() });
+        }
+        return;
+      }
+    }
     if (
       data.code === 'RANKED_QUEUE_BLOCKED' ||
       data.code === 'RANKED_QUEUE_UNAVAILABLE' ||

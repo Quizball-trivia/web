@@ -34,6 +34,7 @@ import type { RealtimeState } from './realtime-match/types';
 // (`import type { MatchStatus, DraftStatus, ... } from '@/stores/realtimeMatch.store'`).
 export type {
   DevPossessionAnimation,
+  CancelledMatchStatus,
   DraftStatus,
   ForfeitPendingStatus,
   LobbyBannerSuppressionReason,
