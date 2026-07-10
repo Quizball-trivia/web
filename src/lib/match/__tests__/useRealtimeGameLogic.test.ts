@@ -313,8 +313,9 @@ describe('useRealtimeGameLogic', () => {
       qIndex: 4,
       selectedIndex: 2,
     });
-    expect(answerCall?.[1].timeMs).toBeGreaterThanOrEqual(Date.now() - unlockedAtMs);
-    expect(answerCall?.[1].timeMs).toBeLessThanOrEqual(Date.now() - unlockedAtMs + 50);
+    const elapsedSinceUnlockMs = Date.now() - unlockedAtMs;
+    expect(answerCall?.[1].timeMs).toBeGreaterThanOrEqual(elapsedSinceUnlockMs - 50);
+    expect(answerCall?.[1].timeMs).toBeLessThanOrEqual(elapsedSinceUnlockMs);
     expect(answerCall?.[1]).not.toMatchObject({
       timeMs: Date.now() - playableAtMs,
     });

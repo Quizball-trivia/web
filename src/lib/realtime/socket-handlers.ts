@@ -1,6 +1,7 @@
 import { getSocket, getSocketDebugSnapshot, logSocketDebug } from './socket-client';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
+import { useGameSessionStore } from '@/stores/gameSession.store';
 import { QueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { logger } from '@/utils/logger';
@@ -196,9 +197,16 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       const current = useRealtimeMatchStore.getState();
       const matchId = current.match?.matchId ?? current.sessionState?.activeMatchId;
       if (matchId) {
+        const rejoinMode = current.rejoinMatch?.matchId === matchId
+          ? current.rejoinMatch.mode
+          : null;
+        const gameSession = useGameSessionStore.getState();
+        const sessionMode = gameSession.stage === 'playing'
+          ? gameSession.config?.matchType
+          : null;
         current.setMatchCancelled({
           matchId,
-          ticketRefunded: current.match?.mode === 'ranked',
+          ticketRefunded: (current.match?.mode ?? rejoinMode ?? sessionMode) === 'ranked',
         });
         const qc = getQueryClient();
         if (qc) {
