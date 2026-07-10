@@ -6,6 +6,7 @@ import { ShowdownScreen } from '@/components/ShowdownScreen';
 import { Volume2, VolumeX } from 'lucide-react';
 import { isMuted as getIsMuted, toggleMute } from '@/lib/sounds/gameSounds';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
+import { selectHasResolvedRound } from '@/stores/realtime-match/selectors';
 import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
 import { useGameSessionStore } from '@/stores/gameSession.store';
 import { getSocket } from '@/lib/realtime/socket-client';
@@ -65,6 +66,7 @@ export interface BanCategoryViewProps {
   timeLeft: number;
   paused?: boolean;
   pauseSeconds?: number | null;
+  hasResolvedRound?: boolean;
   soundMuted: boolean;
   onToggleSound: () => void;
   onBanCategory: (categoryId: string) => void;
@@ -148,6 +150,7 @@ export function BanCategoryView({
   timeLeft,
   paused = false,
   pauseSeconds = null,
+  hasResolvedRound = false,
   soundMuted,
   onToggleSound,
   onBanCategory,
@@ -182,7 +185,9 @@ export function BanCategoryView({
                 {t('possession.opponentDisconnected')}
               </div>
               <div className="mt-1 font-poppins text-sm font-semibold text-white/70">
-                {t('possession.waitingForReconnect')}
+                {hasResolvedRound
+                  ? t('possession.opponentDisconnectedWinIfNotReturn', { seconds: pauseSeconds })
+                  : t('possession.opponentDisconnectedCancelIfNotReturn')}
               </div>
               <div className="mt-4 inline-flex items-center justify-center rounded-full bg-black/30 px-6 py-2 font-poppins text-3xl font-semibold tabular-nums text-white">
                 {pauseSeconds}
@@ -326,6 +331,7 @@ export function RankedCategoryBlockingScreen() {
   const draft = useRealtimeMatchStore((state) => state.draft);
   const draftPaused = useRealtimeMatchStore((state) => state.draftPaused);
   const draftPauseUntil = useRealtimeMatchStore((state) => state.draftPauseUntil);
+  const hasResolvedRound = useRealtimeMatchStore(selectHasResolvedRound);
   const rankedFoundOpponent = useRankedMatchmakingStore((state) => state.rankedFoundOpponent);
   const rankedFoundMyRecentForm = useRankedMatchmakingStore((state) => state.rankedFoundMyRecentForm);
   const matchOpponent = useRealtimeMatchStore((state) => state.match?.opponent);
@@ -549,6 +555,7 @@ export function RankedCategoryBlockingScreen() {
       timeLeft={timeLeft}
       paused={draftPaused}
       pauseSeconds={pauseSeconds}
+      hasResolvedRound={hasResolvedRound}
       soundMuted={soundMuted}
       onToggleSound={() => setSoundMuted(toggleMute())}
       onBanCategory={handleBanCategory}
