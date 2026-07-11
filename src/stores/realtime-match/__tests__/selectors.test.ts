@@ -1,6 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { useRealtimeMatchStore } from '../../realtimeMatch.store';
-import { selectHasResolvedRound } from '../selectors';
+import { selectDraftCountdownSeconds, selectHasResolvedRound } from '../selectors';
+
+describe('selectDraftCountdownSeconds', () => {
+  it('counts down from the server deadline', () => {
+    expect(selectDraftCountdownSeconds({
+      draft: { forceAtMs: 145_001 },
+    }, 100_000)).toBe(46);
+  });
+
+  it('falls back to 15 seconds when the deadline is absent', () => {
+    expect(selectDraftCountdownSeconds({ draft: {} }, 100_000)).toBe(15);
+  });
+});
 
 function seedMatch() {
   useRealtimeMatchStore.getState().setSelfUserId('u1');

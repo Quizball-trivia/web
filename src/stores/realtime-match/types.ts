@@ -25,6 +25,7 @@ export interface DraftStatus {
   categories: DraftCategory[];
   bans: Record<string, string>;
   turnUserId: string | null;
+  forceAtMs?: number | null;
   halfOneCategoryId: string | null;
 }
 
@@ -149,7 +150,7 @@ export interface RealtimeState {
   suppressLobbyBanner: (durationMs?: number, reason?: LobbyBannerSuppressionReason) => void;
   clearLobbyBannerSuppression: () => void;
   setDraftStart: (draft: import('@/lib/realtime/socket.types').DraftState) => void;
-  setDraftBan: (actorId: string, categoryId: string) => void;
+  setDraftBan: (actorId: string, categoryId: string, forceAtMs?: number | null) => void;
   setDraftComplete: (halfOneCategoryId: string) => void;
   setMatchStart: (payload: import('@/lib/realtime/socket.types').MatchStartPayload) => void;
   setMatchCountdown: (payload: import('@/lib/realtime/socket.types').MatchCountdownPayload) => void;

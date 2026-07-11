@@ -265,9 +265,9 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     store.setDraftStart(data);
   });
 
-  socket.on('draft:banned', (data: { actorId: string; categoryId: string }) => {
+  socket.on('draft:banned', (data: { actorId: string; categoryId: string; forceAtMs?: number | null }) => {
     logger.info('Socket event draft:banned', data);
-    store.setDraftBan(data.actorId, data.categoryId);
+    store.setDraftBan(data.actorId, data.categoryId, data.forceAtMs);
   });
 
   socket.on('draft:complete', (data: { halfOneCategoryId: string }) => {
