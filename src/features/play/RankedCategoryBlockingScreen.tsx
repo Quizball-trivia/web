@@ -6,7 +6,10 @@ import { ShowdownScreen } from '@/components/ShowdownScreen';
 import { Volume2, VolumeX } from 'lucide-react';
 import { isMuted as getIsMuted, toggleMute } from '@/lib/sounds/gameSounds';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
-import { selectHasResolvedRound } from '@/stores/realtime-match/selectors';
+import {
+  selectDraftCountdownSeconds,
+  selectHasResolvedRound,
+} from '@/stores/realtime-match/selectors';
 import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
 import { useGameSessionStore } from '@/stores/gameSession.store';
 import { getSocket } from '@/lib/realtime/socket-client';
@@ -338,7 +341,9 @@ export function RankedCategoryBlockingScreen() {
   const myRecentForm = useRealtimeMatchStore((s) => s.match?.myRecentForm);
   const skipDraftShowdown = useGameSessionStore((state) => state.config?.skipDraftShowdown === true);
   const { data: rankedProfile } = useRankedProfile();
-  const [timeLeft, setTimeLeft] = useState(15);
+  const [timeLeft, setTimeLeft] = useState(() =>
+    selectDraftCountdownSeconds(useRealtimeMatchStore.getState())
+  );
   const [draftPauseNowMs, setDraftPauseNowMs] = useState(() => Date.now());
   const [showShowdown, setShowShowdown] = useState(() => {
     if (skipDraftShowdown) return false;
@@ -381,14 +386,12 @@ export function RankedCategoryBlockingScreen() {
 
   useEffect(() => {
     if (!draft || showShowdown || draftPaused) return;
-    setTimeLeft(15);
     autoBanFired.current = false;
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
+    const tick = () => setTimeLeft(selectDraftCountdownSeconds({ draft }));
+    tick();
+    const interval = setInterval(tick, 250);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft?.turnUserId, draft?.halfOneCategoryId, draft?.categories, draftPaused, showShowdown]);
+  }, [draft, draftPaused, showShowdown]);
 
   const draftBanCount = draft ? Object.keys(draft.bans).length : 0;
 

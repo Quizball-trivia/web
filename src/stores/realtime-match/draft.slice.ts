@@ -13,7 +13,7 @@ import { computeNextDraftTurn } from './reducers';
 export interface DraftSlice {
   draft: DraftStatus | null;
   setDraftStart: (draft: DraftState) => void;
-  setDraftBan: (actorId: string, categoryId: string) => void;
+  setDraftBan: (actorId: string, categoryId: string, forceAtMs?: number | null) => void;
   setDraftComplete: (halfOneCategoryId: string) => void;
   revertDraftBan: (actorId: string) => void;
 }
@@ -40,12 +40,14 @@ export const createDraftSlice: StateCreator<RealtimeState, [], [], DraftSlice> =
         categories: draft.categories,
         bans: state.draft?.lobbyId === draft.lobbyId ? state.draft.bans : {},
         turnUserId: draft.turnUserId,
+        forceAtMs: draft.forceAtMs,
+        turnAnchorMs: Date.now(),
         halfOneCategoryId: null,
       },
     }));
   },
 
-  setDraftBan: (actorId, categoryId) =>
+  setDraftBan: (actorId, categoryId, forceAtMs) =>
     set((state) => {
       if (!state.draft) return state;
       const nextTurn = computeNextDraftTurn(state.lobby?.members, actorId);
@@ -55,6 +57,8 @@ export const createDraftSlice: StateCreator<RealtimeState, [], [], DraftSlice> =
           ...state.draft,
           bans: { ...state.draft.bans, [actorId]: categoryId },
           turnUserId: nextTurn,
+          forceAtMs,
+          turnAnchorMs: Date.now(),
         },
       };
     }),
