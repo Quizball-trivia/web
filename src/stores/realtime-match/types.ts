@@ -1,5 +1,6 @@
 import type {
   DraftCategory,
+  DraftWaitingForReadyPayload,
   ErrorPayload,
   LobbyChallengeInvitePayload,
   LobbyState,
@@ -28,6 +29,8 @@ export interface DraftStatus {
   forceAtMs?: number | null;
   turnAnchorMs?: number | null;
   halfOneCategoryId: string | null;
+  turnActive: boolean;
+  waitingForReady: DraftWaitingForReadyPayload | null;
 }
 
 export interface MatchQuestionState {
@@ -151,6 +154,8 @@ export interface RealtimeState {
   suppressLobbyBanner: (durationMs?: number, reason?: LobbyBannerSuppressionReason) => void;
   clearLobbyBannerSuppression: () => void;
   setDraftStart: (draft: import('@/lib/realtime/socket.types').DraftState) => void;
+  setDraftWaitingForReady: (payload: DraftWaitingForReadyPayload) => void;
+  setDraftBegin: (payload: import('@/lib/realtime/socket.types').DraftBeginPayload) => void;
   setDraftBan: (actorId: string, categoryId: string, forceAtMs?: number | null) => void;
   setDraftComplete: (halfOneCategoryId: string) => void;
   setMatchStart: (payload: import('@/lib/realtime/socket.types').MatchStartPayload) => void;

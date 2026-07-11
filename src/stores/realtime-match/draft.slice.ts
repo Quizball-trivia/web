@@ -1,6 +1,6 @@
 import type { StateCreator } from 'zustand';
 import { logger } from '@/utils/logger';
-import type { DraftState } from '@/lib/realtime/socket.types';
+import type { DraftBeginPayload, DraftState, DraftWaitingForReadyPayload } from '@/lib/realtime/socket.types';
 import type { DraftStatus, RealtimeState } from './types';
 import { computeNextDraftTurn } from './reducers';
 
@@ -13,6 +13,8 @@ import { computeNextDraftTurn } from './reducers';
 export interface DraftSlice {
   draft: DraftStatus | null;
   setDraftStart: (draft: DraftState) => void;
+  setDraftWaitingForReady: (payload: DraftWaitingForReadyPayload) => void;
+  setDraftBegin: (payload: DraftBeginPayload) => void;
   setDraftBan: (actorId: string, categoryId: string, forceAtMs?: number | null) => void;
   setDraftComplete: (halfOneCategoryId: string) => void;
   revertDraftBan: (actorId: string) => void;
@@ -43,9 +45,32 @@ export const createDraftSlice: StateCreator<RealtimeState, [], [], DraftSlice> =
         forceAtMs: draft.forceAtMs,
         turnAnchorMs: Date.now(),
         halfOneCategoryId: null,
+        turnActive: draft.forceAtMs !== null,
+        waitingForReady: null,
       },
     }));
   },
+
+  setDraftWaitingForReady: (payload) =>
+    set((state) => ({
+      draft: state.draft?.lobbyId === payload.lobbyId
+        ? { ...state.draft, turnActive: false, waitingForReady: payload }
+        : state.draft,
+    })),
+
+  setDraftBegin: (payload) =>
+    set((state) => ({
+      draft: state.draft && (!payload.lobbyId || state.draft.lobbyId === payload.lobbyId)
+        ? {
+            ...state.draft,
+            turnUserId: payload.turnUserId,
+            forceAtMs: payload.forceAtMs,
+            turnAnchorMs: Date.now(),
+            turnActive: true,
+            waitingForReady: null,
+          }
+        : state.draft,
+    })),
 
   setDraftBan: (actorId, categoryId, forceAtMs) =>
     set((state) => {
@@ -59,6 +84,8 @@ export const createDraftSlice: StateCreator<RealtimeState, [], [], DraftSlice> =
           turnUserId: nextTurn,
           forceAtMs,
           turnAnchorMs: Date.now(),
+          turnActive: true,
+          waitingForReady: null,
         },
       };
     }),

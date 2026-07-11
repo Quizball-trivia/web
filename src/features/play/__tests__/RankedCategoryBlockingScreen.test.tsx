@@ -38,7 +38,15 @@ function createRealtimeMatchState() {
       ],
       bans: {},
       turnUserId: 'u1',
+      forceAtMs: (Date.now() + 15_000) as number | null,
       halfOneCategoryId: null,
+      turnActive: true,
+      waitingForReady: null as null | {
+        lobbyId: string;
+        readyUserIds: string[];
+        waitingUserIds: string[];
+        forceCancelAt: string;
+      },
     },
     draftPaused: false,
     draftPauseUntil: null as number | null,
@@ -159,8 +167,8 @@ vi.mock('@/components/AvatarDisplay', () => ({
 }));
 
 vi.mock('@/components/shared/BanCategoryCard', () => ({
-  BanCategoryCard: (props: { category: { name: string } }) => (
-    <button type="button">{props.category.name}</button>
+  BanCategoryCard: (props: { category: { name: string }; disabled: boolean }) => (
+    <button type="button" disabled={props.disabled}>{props.category.name}</button>
   ),
 }));
 
@@ -219,5 +227,39 @@ describe('RankedCategoryBlockingScreen', () => {
 
     expect(screen.getByText('possession.opponentDisconnectedCancelIfNotReturn')).toBeInTheDocument();
     expect(screen.queryByText('possession.opponentDisconnectedWinIfNotReturn')).not.toBeInTheDocument();
+  });
+
+  it('shows a live opponent ready-gate countdown and disables banning', () => {
+    realtimeMatchState.draft.turnActive = false;
+    realtimeMatchState.draft.forceAtMs = null;
+    realtimeMatchState.draft.waitingForReady = {
+      lobbyId: 'l1',
+      readyUserIds: ['u1'],
+      waitingUserIds: ['u2'],
+      forceCancelAt: new Date(Date.now() + 8_000).toISOString(),
+    };
+
+    render(<RankedCategoryBlockingScreen />);
+
+    expect(screen.getByText('banCategory.opponentConnecting')).toBeInTheDocument();
+    expect(screen.getByText('8')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'A' })).toBeDisabled();
+    expect(screen.queryByText('possession.halftime.yourTurn')).not.toBeInTheDocument();
+  });
+
+  it('shows a plain connecting state when only self is waiting', () => {
+    realtimeMatchState.draft.turnActive = false;
+    realtimeMatchState.draft.forceAtMs = null;
+    realtimeMatchState.draft.waitingForReady = {
+      lobbyId: 'l1',
+      readyUserIds: ['u2'],
+      waitingUserIds: ['u1'],
+      forceCancelAt: new Date(Date.now() + 8_000).toISOString(),
+    };
+
+    render(<RankedCategoryBlockingScreen />);
+
+    expect(screen.getByText('banCategory.connecting')).toBeInTheDocument();
+    expect(screen.queryByText('8')).not.toBeInTheDocument();
   });
 });

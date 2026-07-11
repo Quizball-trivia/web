@@ -170,6 +170,37 @@ describe('realtimeMatch.store — setMatchState shouldClearQuestion', () => {
   });
 
   describe('draft start resync', () => {
+    it('keeps a ready-gated draft inactive until draft:begin', () => {
+      const store = useRealtimeMatchStore.getState();
+      store.setDraftStart({
+        lobbyId: 'lobby-1',
+        categories: [{ id: 'cat-1', name: { en: 'Premier League' }, icon: null }],
+        turnUserId: USER_A,
+        forceAtMs: null,
+      });
+
+      expect(useRealtimeMatchStore.getState().draft?.turnActive).toBe(false);
+
+      store.setDraftBegin({ turnUserId: USER_A, forceAtMs: Date.now() + 12_000 });
+      const draft = useRealtimeMatchStore.getState().draft;
+      expect(draft?.turnActive).toBe(true);
+      expect(draft?.forceAtMs).toEqual(expect.any(Number));
+    });
+
+    it('activates legacy drafts when turn events arrive without draft:begin', () => {
+      const store = useRealtimeMatchStore.getState();
+      store.setDraftStart({
+        lobbyId: 'lobby-1',
+        categories: [{ id: 'cat-1', name: { en: 'Premier League' }, icon: null }],
+        turnUserId: USER_A,
+        forceAtMs: null,
+      });
+
+      store.setDraftBan(USER_B, 'cat-1', Date.now() + 15_000);
+
+      expect(useRealtimeMatchStore.getState().draft?.turnActive).toBe(true);
+    });
+
     it('preserves existing bans when draft:start replays the same lobby', () => {
       const store = useRealtimeMatchStore.getState();
 
