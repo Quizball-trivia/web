@@ -11,6 +11,7 @@ import { translate, normalizeLocale } from '@/lib/i18n/messages';
 import { toast } from 'sonner';
 import { getMe } from '@/lib/api/endpoints';
 import { useAuthStore } from '@/stores/auth.store';
+import { selectDraftCountdownSeconds } from '@/stores/realtime-match/selectors';
 import type {
   DraftState,
   ErrorPayload,
@@ -51,9 +52,54 @@ import type {
 // without needing to tear down and re-register all listeners.
 let _queryClient: QueryClient | null = null;
 let _handlersRegistered = false;
+let _draftUiReadyGate: { lobbyId: string; turnUserId: string; banCount: number } | null = null;
+let _draftUiReadyAckedKey: string | null = null;
 
 function getQueryClient(): QueryClient | null {
   return _queryClient;
+}
+
+function getDraftGateDebugSnapshot(atMs = Date.now()): Record<string, unknown> {
+  const state = useRealtimeMatchStore.getState();
+  const draft = state.draft;
+  return {
+    observedAtMs: atMs,
+    observedAt: new Date(atMs).toISOString(),
+    lobbyId: draft?.lobbyId ?? _draftUiReadyGate?.lobbyId ?? null,
+    turnUserId: draft?.turnUserId ?? _draftUiReadyGate?.turnUserId ?? null,
+    banCount: draft ? Object.keys(draft.bans).length : (_draftUiReadyGate?.banCount ?? null),
+    gateForceAtMs: draft?.forceAtMs ?? null,
+    gateForceRemainingMs:
+      typeof draft?.forceAtMs === 'number' ? Math.max(0, draft.forceAtMs - atMs) : null,
+    turnAnchorMs: draft?.turnAnchorMs ?? null,
+    turnActive: draft?.turnActive ?? false,
+    waitingForReady: draft?.waitingForReady ?? null,
+    draftPaused: state.draftPaused,
+    computedCountdownSeconds: draft ? selectDraftCountdownSeconds({ draft }, atMs) : null,
+  };
+}
+
+function logDraftGateEvent(event: string, payload?: unknown, atMs = Date.now()): void {
+  logger.info(`draft-gate-debug ${event}`, {
+    payload: payload ?? null,
+    ...getDraftGateDebugSnapshot(atMs),
+  });
+}
+
+function emitDraftUiReadyForOpenGate(): void {
+  if (!_draftUiReadyGate) return;
+  const socket = getSocket();
+  if (!socket.connected) return;
+  const socketConnectionKey = socket.id ?? 'connected';
+  const ackKey = `${_draftUiReadyGate.lobbyId}:${_draftUiReadyGate.banCount}:${socketConnectionKey}`;
+  if (_draftUiReadyAckedKey === ackKey) return;
+
+  socket.emit('draft:ui_ready', _draftUiReadyGate);
+  _draftUiReadyAckedKey = ackKey;
+  logDraftGateEvent('emit draft:ui_ready', {
+    ..._draftUiReadyGate,
+    socketId: socket.id ?? null,
+  });
 }
 
 function computeServerTimeOffsetMs(serverNow: string | undefined, receivedAtMs = Date.now()): number | undefined {
@@ -86,6 +132,30 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
 
   const socket = getSocket();
   const store = useRealtimeMatchStore.getState();
+
+  socket.on('connect', () => {
+    // Clear the dedupe on EVERY connect: with Socket.IO connection-state
+    // recovery a reconnect can keep the same socket.id, which would otherwise
+    // skip the ui_ready re-emit the server's gate needs.
+    _draftUiReadyAckedKey = null;
+    if (useRealtimeMatchStore.getState().draft || _draftUiReadyGate) {
+      logDraftGateEvent('socket connect during draft', {
+        socketId: socket.id ?? null,
+        connected: socket.connected,
+      });
+    }
+    emitDraftUiReadyForOpenGate();
+  });
+
+  socket.on('disconnect', (reason) => {
+    if (useRealtimeMatchStore.getState().draft || _draftUiReadyGate) {
+      logDraftGateEvent('socket disconnect during draft', {
+        socketId: socket.id ?? null,
+        connected: socket.connected,
+        reason,
+      });
+    }
+  });
 
   socket.on('session:state', (data: SessionStatePayload) => {
     logger.info('Socket event session:state', data);
@@ -256,49 +326,86 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   });
 
   socket.on('draft:start', (data: DraftState) => {
-    logger.info('Socket event draft:start', {
-      lobbyId: data.lobbyId,
-      categoryCount: data.categories.length,
-      turnUserId: data.turnUserId,
-    });
+    const receivedAtMs = Date.now();
     store.clearError();
     store.setDraftStart(data);
+    _draftUiReadyGate = {
+      lobbyId: data.lobbyId,
+      turnUserId: data.turnUserId,
+      banCount: Object.keys(useRealtimeMatchStore.getState().draft?.bans ?? {}).length,
+    };
+    logDraftGateEvent('received draft:start', {
+      ...data,
+      categoryCount: data.categories.length,
+    }, receivedAtMs);
+    emitDraftUiReadyForOpenGate();
   });
 
   socket.on('draft:waiting_for_ready', (data) => {
-    logger.info('Socket event draft:waiting_for_ready', { lobbyId: data.lobbyId });
+    const receivedAtMs = Date.now();
     store.setDraftWaitingForReady(data);
+    const state = useRealtimeMatchStore.getState();
+    const draft = state.draft;
+    if (draft?.lobbyId === data.lobbyId && draft.turnUserId) {
+      _draftUiReadyGate = {
+        lobbyId: data.lobbyId,
+        turnUserId: draft.turnUserId,
+        banCount: Object.keys(draft.bans).length,
+      };
+      if (state.selfUserId && data.waitingUserIds.includes(state.selfUserId)) {
+        _draftUiReadyAckedKey = null;
+      }
+      logDraftGateEvent('received draft:waiting_for_ready', data, receivedAtMs);
+      emitDraftUiReadyForOpenGate();
+    } else {
+      logDraftGateEvent('received draft:waiting_for_ready', data, receivedAtMs);
+    }
   });
 
   socket.on('draft:begin', (data) => {
-    logger.info('Socket event draft:begin', { lobbyId: data.lobbyId, turnUserId: data.turnUserId });
+    const receivedAtMs = Date.now();
+    _draftUiReadyGate = null;
+    _draftUiReadyAckedKey = null;
     store.setDraftBegin(data);
+    logDraftGateEvent('received draft:begin', data, receivedAtMs);
   });
 
   socket.on('draft:banned', (data: { actorId: string; categoryId: string; forceAtMs?: number | null }) => {
-    logger.info('Socket event draft:banned', data);
+    const receivedAtMs = Date.now();
     store.setDraftBan(data.actorId, data.categoryId, data.forceAtMs);
+    const draft = useRealtimeMatchStore.getState().draft;
+    if (draft?.turnUserId && !draft.halfOneCategoryId) {
+      _draftUiReadyGate = {
+        lobbyId: draft.lobbyId,
+        turnUserId: draft.turnUserId,
+        banCount: Object.keys(draft.bans).length,
+      };
+      logDraftGateEvent('received draft:banned', data, receivedAtMs);
+      emitDraftUiReadyForOpenGate();
+    } else {
+      logDraftGateEvent('received draft:banned', data, receivedAtMs);
+    }
   });
 
   socket.on('draft:complete', (data: { halfOneCategoryId: string }) => {
     logger.info('Socket event draft:complete', {
       halfOneCategoryId: data.halfOneCategoryId,
     });
+    _draftUiReadyGate = null;
+    _draftUiReadyAckedKey = null;
     store.setDraftComplete(data.halfOneCategoryId);
   });
 
   socket.on('draft:opponent_disconnected', (data: DraftOpponentDisconnectedPayload) => {
-    logger.info('Socket event draft:opponent_disconnected', {
-      lobbyId: data.lobbyId,
-      opponentId: data.opponentId,
-      graceMs: data.graceMs,
-    });
+    const receivedAtMs = Date.now();
     store.setDraftPaused(data);
+    logDraftGateEvent('received draft:opponent_disconnected', data, receivedAtMs);
   });
 
   socket.on('draft:resume', (data: DraftResumePayload) => {
-    logger.info('Socket event draft:resume', { lobbyId: data.lobbyId });
+    const receivedAtMs = Date.now();
     store.clearDraftPaused();
+    logDraftGateEvent('received draft:resume', data, receivedAtMs);
   });
 
   socket.on('match:start', (data: MatchStartPayload) => {
@@ -683,4 +790,6 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
 export function resetSocketHandlers(): void {
   _handlersRegistered = false;
   _queryClient = null;
+  _draftUiReadyGate = null;
+  _draftUiReadyAckedKey = null;
 }

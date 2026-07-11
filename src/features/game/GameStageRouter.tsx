@@ -106,9 +106,9 @@ export function GameStageRouter() {
   const showingFinalResultsFromReplay = stage === "idle" && Boolean(realtimeMatch.finalResults);
   const [rankedBootNotice, setRankedBootNotice] = useState<{ id: string; message: string } | null>(null);
   const rankedBootHadPairingRef = useRef(false);
-  const rankedBootAbortPendingRef = useRef(false);
   const rankedBootAbortHandledRef = useRef(false);
   const lastRankedQueueLeftSeqRef = useRef(rankedQueueLeftSeq);
+  const lastRankedBootSessionStateRef = useRef(sessionState?.state ?? null);
   const hasLiveLobby = Boolean(realtimeLobby && realtimeLobby.status !== "closed");
   const isRankedCategoryStage = stage === "categoryBlocking" && matchType === "ranked";
   const hasActiveRankedPairingEvidence = Boolean(
@@ -188,6 +188,16 @@ export function GameStageRouter() {
     toast.info(message);
   }, [t]);
 
+  const recoverRankedBoot = useCallback(() => {
+    if (rankedBootAbortHandledRef.current) return;
+    rankedBootAbortHandledRef.current = true;
+    showRankedBootAbortNotice();
+    resetRealtime();
+    clearRankedMatchmaking();
+    markRankedQueueIntent("recovery");
+    setStage("matchmaking");
+  }, [clearRankedMatchmaking, resetRealtime, setStage, showRankedBootAbortNotice]);
+
   useEffect(() => {
     if (!rankedBootNotice) return;
     const timeoutId = window.setTimeout(() => {
@@ -199,7 +209,6 @@ export function GameStageRouter() {
   useEffect(() => {
     if (!isRankedCategoryStage) {
       rankedBootHadPairingRef.current = false;
-      rankedBootAbortPendingRef.current = false;
       rankedBootAbortHandledRef.current = false;
       return;
     }
@@ -218,37 +227,45 @@ export function GameStageRouter() {
       isRankedCategoryStage &&
       rankedBootHadPairingRef.current
     ) {
-      rankedBootAbortPendingRef.current = true;
+      queueMicrotask(recoverRankedBoot);
     }
-  }, [isRankedCategoryStage, rankedQueueLeftAt, rankedQueueLeftSeq, rankedQueueLeftSource]);
+  }, [
+    isRankedCategoryStage,
+    rankedQueueLeftAt,
+    rankedQueueLeftSeq,
+    rankedQueueLeftSource,
+    recoverRankedBoot,
+  ]);
+
+  useEffect(() => {
+    const previousSessionState = lastRankedBootSessionStateRef.current;
+    lastRankedBootSessionStateRef.current = sessionState?.state ?? null;
+    if (
+      isRankedCategoryStage &&
+      rankedBootHadPairingRef.current &&
+      previousSessionState === "IN_ACTIVE_MATCH" &&
+      sessionState !== null &&
+      sessionState.state !== "IN_ACTIVE_MATCH"
+    ) {
+      queueMicrotask(recoverRankedBoot);
+    }
+  }, [isRankedCategoryStage, recoverRankedBoot, sessionState, sessionState?.state]);
 
   useEffect(() => {
     if (!isRankedBootPreparing || rankedBootAbortHandledRef.current) return;
     if (!rankedBootHadPairingRef.current) return;
     if (hasActiveRankedPairingEvidence) return;
 
-    const pairingDied =
-      rankedBootAbortPendingRef.current ||
-      (sessionState !== null && sessionState.state !== "IN_ACTIVE_MATCH");
+    const pairingDied = sessionState !== null && sessionState.state !== "IN_ACTIVE_MATCH";
     if (!pairingDied) return;
 
-    rankedBootAbortHandledRef.current = true;
-    rankedBootAbortPendingRef.current = false;
-    showRankedBootAbortNotice();
-    resetRealtime();
-    clearRankedMatchmaking();
-    markRankedQueueIntent("recovery");
-    setStage("matchmaking");
+    queueMicrotask(recoverRankedBoot);
   }, [
-    clearRankedMatchmaking,
     hasActiveRankedPairingEvidence,
     isRankedBootPreparing,
-    rankedQueueLeftSeq,
-    resetRealtime,
+    recoverRankedBoot,
     sessionState,
     sessionState?.state,
-    setStage,
-    showRankedBootAbortNotice,
   ]);
 
   useEffect(() => {

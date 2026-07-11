@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RankedCategoryBlockingScreen } from '../RankedCategoryBlockingScreen';
@@ -38,7 +38,8 @@ function createRealtimeMatchState() {
       ],
       bans: {},
       turnUserId: 'u1',
-      forceAtMs: (Date.now() + 15_000) as number | null,
+      forceAtMs: (Date.now() + 45_000) as number | null,
+      turnAnchorMs: Date.now(),
       halfOneCategoryId: null,
       turnActive: true,
       waitingForReady: null as null | {
@@ -193,20 +194,24 @@ describe('RankedCategoryBlockingScreen', () => {
     vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
   });
 
-  it('emits draft:ui_ready after the draft ban screen is shown', async () => {
+  it('rejoins the draft without owning the ui-ready gate acknowledgement', () => {
     render(<RankedCategoryBlockingScreen />);
 
-    await waitFor(() => {
-      expect(socket.emit).toHaveBeenCalledWith('draft:ui_ready', {
-        lobbyId: 'l1',
-        turnUserId: 'u1',
-        banCount: 0,
-      });
-    });
     expect(socket.emit).toHaveBeenCalledWith('draft:rejoin', { lobbyId: 'l1' });
+    expect(socket.emit.mock.calls.filter(([eventName]) => eventName === 'draft:ui_ready')).toHaveLength(0);
   });
 
-  it('does not emit draft:ui_ready while the draft showdown is still showing', () => {
+  it('renders 15 seconds from the authoritative 16-second human turn deadline', () => {
+    realtimeMatchState.draft.forceAtMs = Date.now() + 16_000;
+    realtimeMatchState.draft.turnAnchorMs = Date.now();
+
+    render(<RankedCategoryBlockingScreen />);
+
+    expect(screen.getByText('15')).toBeInTheDocument();
+    expect(screen.queryByText('16')).not.toBeInTheDocument();
+  });
+
+  it('does not make the showdown responsible for draft:ui_ready', () => {
     gameSessionState.config.skipDraftShowdown = false;
     rankedMatchmakingState.rankedFoundOpponent = {
       userId: 'u2',
@@ -247,7 +252,7 @@ describe('RankedCategoryBlockingScreen', () => {
     expect(screen.queryByText('possession.halftime.yourTurn')).not.toBeInTheDocument();
   });
 
-  it('shows a plain connecting state when only self is waiting', () => {
+  it('shows a gate countdown when only self is waiting', () => {
     realtimeMatchState.draft.turnActive = false;
     realtimeMatchState.draft.forceAtMs = null;
     realtimeMatchState.draft.waitingForReady = {
@@ -260,6 +265,6 @@ describe('RankedCategoryBlockingScreen', () => {
     render(<RankedCategoryBlockingScreen />);
 
     expect(screen.getByText('banCategory.connecting')).toBeInTheDocument();
-    expect(screen.queryByText('8')).not.toBeInTheDocument();
+    expect(screen.getByText('8')).toBeInTheDocument();
   });
 });

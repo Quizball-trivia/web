@@ -84,7 +84,9 @@ export const createDraftSlice: StateCreator<RealtimeState, [], [], DraftSlice> =
           turnUserId: nextTurn,
           forceAtMs,
           turnAnchorMs: Date.now(),
-          turnActive: true,
+          // undefined is the legacy protocol (turn starts immediately); null
+          // explicitly means no human countdown until draft:begin / AI turn.
+          turnActive: forceAtMs !== null,
           waitingForReady: null,
         },
       };

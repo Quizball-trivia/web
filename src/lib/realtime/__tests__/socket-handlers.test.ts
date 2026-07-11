@@ -52,7 +52,9 @@ function createMockSocket() {
     emit: vi.fn(),
   } as unknown as Socket<ServerToClientEvents, ClientToServerEvents>;
 
-  function fire<K extends keyof EventMap>(event: K, ...args: Parameters<EventMap[K]>) {
+  function fire<K extends keyof EventMap>(event: K, ...args: Parameters<EventMap[K]>): void;
+  function fire(event: string, ...args: unknown[]): void;
+  function fire(event: string, ...args: unknown[]) {
     const handlers = listeners.get(event as string);
     if (handlers) {
       for (const handler of handlers) {
@@ -166,6 +168,45 @@ describe('registerSocketHandlers', () => {
     const draft = useRealtimeMatchStore.getState().draft;
     expect(draft).not.toBeNull();
     expect(draft!.bans).toHaveProperty('user-456');
+  });
+
+  it('emits draft:ui_ready immediately when draft:start arrives', () => {
+    useRealtimeMatchStore.setState({ selfUserId: 'self-1' });
+    registerSocketHandlers();
+
+    mockSocket.fire('draft:start', {
+      lobbyId: 'lobby-ready',
+      categories: [{ id: 'cat-1', name: { en: 'Science' }, icon: '🔬' }],
+      turnUserId: 'self-1',
+      forceAtMs: null,
+    });
+
+    expect(mockSocket.socket.emit).toHaveBeenCalledWith('draft:ui_ready', {
+      lobbyId: 'lobby-ready',
+      turnUserId: 'self-1',
+      banCount: 0,
+    });
+  });
+
+  it('re-emits draft:ui_ready on a new socket connection while the gate is open', () => {
+    useRealtimeMatchStore.setState({ selfUserId: 'self-1' });
+    registerSocketHandlers();
+    mockSocket.fire('draft:start', {
+      lobbyId: 'lobby-ready',
+      categories: [{ id: 'cat-1', name: { en: 'Science' }, icon: '🔬' }],
+      turnUserId: 'self-1',
+      forceAtMs: null,
+    });
+    vi.mocked(mockSocket.socket.emit).mockClear();
+
+    Object.assign(mockSocket.socket, { id: 'reconnected-socket-id', connected: true });
+    mockSocket.fire('connect');
+
+    expect(mockSocket.socket.emit).toHaveBeenCalledWith('draft:ui_ready', {
+      lobbyId: 'lobby-ready',
+      turnUserId: 'self-1',
+      banCount: 0,
+    });
   });
 
   it('turns MATCH_ABANDONED into a cancelled terminal state and refreshes the refunded wallet', () => {

@@ -371,7 +371,6 @@ export function RankedCategoryBlockingScreen() {
   });
   const autoBanFired = useRef(false);
   const rejoinedDraftLobbyRef = useRef<string | null>(null);
-  const draftUiReadyRef = useRef<string | null>(null);
   const [soundMuted, setSoundMuted] = useState(() => getIsMuted());
 
   const opponentMember = useMemo(
@@ -416,39 +415,6 @@ export function RankedCategoryBlockingScreen() {
     const intervalId = setInterval(tick, 250);
     return () => clearInterval(intervalId);
   }, [draft?.waitingForReady]);
-
-  const draftBanCount = draft ? Object.keys(draft.bans).length : 0;
-
-  useEffect(() => {
-    if (!draft || !lobby || showShowdown || draftPaused || draft.halfOneCategoryId || !draft.turnUserId || !selfUserId) {
-      draftUiReadyRef.current = null;
-      return;
-    }
-
-    const lobbyId = draft.lobbyId ?? lobby.lobbyId;
-    const turnUserId = draft.turnUserId;
-    const readyKey = `${lobbyId}:${selfUserId}:${turnUserId}:${draftBanCount}`;
-    if (draftUiReadyRef.current === readyKey) return;
-
-    const frameId = window.requestAnimationFrame(() => {
-      getSocket().emit('draft:ui_ready', { lobbyId, turnUserId, banCount: draftBanCount });
-      draftUiReadyRef.current = readyKey;
-      logger.info('Socket emit draft:ui_ready', { lobbyId, turnUserId, banCount: draftBanCount });
-    });
-
-    return () => window.cancelAnimationFrame(frameId);
-  }, [
-    draft,
-    lobby,
-    draft?.lobbyId,
-    lobby?.lobbyId,
-    showShowdown,
-    draftPaused,
-    draft?.halfOneCategoryId,
-    draft?.turnUserId,
-    draftBanCount,
-    selfUserId,
-  ]);
 
   useEffect(() => {
     if (!draftPaused || !draftPauseUntil) return;
@@ -507,7 +473,7 @@ export function RankedCategoryBlockingScreen() {
   const forceCancelAtMs = draft?.waitingForReady
     ? Date.parse(draft.waitingForReady.forceCancelAt)
     : Number.NaN;
-  const waitingSeconds = opponentWaiting && Number.isFinite(forceCancelAtMs)
+  const waitingSeconds = draft?.waitingForReady && Number.isFinite(forceCancelAtMs)
     ? Math.max(0, Math.ceil((forceCancelAtMs - gateNowMs) / 1000))
     : null;
 

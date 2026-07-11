@@ -3,10 +3,14 @@ import { useRealtimeMatchStore } from '../../realtimeMatch.store';
 import { selectDraftCountdownSeconds, selectHasResolvedRound } from '../selectors';
 
 describe('selectDraftCountdownSeconds', () => {
-  it('counts down from the server deadline', () => {
+  it('counts down from the authoritative 16-second turn deadline as a 15..0 UI clock', () => {
     expect(selectDraftCountdownSeconds({
-      draft: { forceAtMs: 145_001 },
-    }, 100_000)).toBe(46);
+      draft: { forceAtMs: 116_000, turnAnchorMs: 100_000 },
+    }, 100_000)).toBe(15);
+
+    expect(selectDraftCountdownSeconds({
+      draft: { forceAtMs: 116_000, turnAnchorMs: 100_000 },
+    }, 104_001)).toBe(11);
   });
 
   it('falls back to 15 seconds when the deadline is absent', () => {
