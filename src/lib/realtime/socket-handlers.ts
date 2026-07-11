@@ -134,6 +134,10 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   const store = useRealtimeMatchStore.getState();
 
   socket.on('connect', () => {
+    // Clear the dedupe on EVERY connect: with Socket.IO connection-state
+    // recovery a reconnect can keep the same socket.id, which would otherwise
+    // skip the ui_ready re-emit the server's gate needs.
+    _draftUiReadyAckedKey = null;
     if (useRealtimeMatchStore.getState().draft || _draftUiReadyGate) {
       logDraftGateEvent('socket connect during draft', {
         socketId: socket.id ?? null,
