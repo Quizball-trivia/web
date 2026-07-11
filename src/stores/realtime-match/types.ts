@@ -26,7 +26,9 @@ export interface DraftStatus {
   categories: DraftCategory[];
   bans: Record<string, string>;
   turnUserId: string | null;
+  /** Backend UI-ready gate force deadline. Never use as the visible turn timer. */
   forceAtMs?: number | null;
+  /** Local anchor for the visible 15-second human turn countdown. */
   turnAnchorMs?: number | null;
   halfOneCategoryId: string | null;
   turnActive: boolean;

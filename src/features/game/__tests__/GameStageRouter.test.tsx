@@ -386,7 +386,7 @@ describe('GameStageRouter', () => {
     expect(router.push).toHaveBeenCalledWith('/play');
   });
 
-  it('recovers ranked boot when the paired opponent leaves before match:start', async () => {
+  it('recovers a live ranked draft immediately when ranked:queue_left lands', async () => {
     gameSessionState.stage = 'categoryBlocking';
     gameSessionState.config = {
       mode: 'ranked',
@@ -424,26 +424,6 @@ describe('GameStageRouter', () => {
 
     const { rerender } = render(<GameStageRouter />);
 
-    realtimeMatchState.lobby = {
-      lobbyId: 'lobby-1',
-      mode: 'ranked',
-      status: 'closed',
-      inviteCode: null,
-      displayName: 'Ranked',
-      isPublic: false,
-      hostUserId: 'self-1',
-      settings: { gameMode: 'ranked_sim' },
-      members: [],
-    } as never;
-    realtimeMatchState.draft = null;
-    realtimeMatchState.sessionState = {
-      state: 'IDLE',
-      activeMatchId: null,
-      waitingLobbyId: null,
-      queueSearchId: null,
-      openLobbyIds: [],
-      resolvedAt: '2026-07-07T00:01:05.000Z',
-    } as never;
     const rankedMutableState = rankedMatchmakingState as {
       rankedQueueLeftAt: number | null;
       rankedQueueLeftSeq: number;
@@ -457,6 +437,53 @@ describe('GameStageRouter', () => {
     await waitFor(() => {
       expect(gameSessionState.setStage).toHaveBeenCalledWith('matchmaking');
     });
+    expect(analyticsMocks.markRankedQueueIntent).toHaveBeenCalledWith('recovery');
+    expect(toastMocks.info).toHaveBeenCalledWith("Opponent didn't show up");
+  });
+
+  it('recovers a live ranked draft when the server session leaves the active match', async () => {
+    gameSessionState.stage = 'categoryBlocking';
+    gameSessionState.config = {
+      mode: 'ranked',
+      matchType: 'ranked',
+      categoryName: 'Football',
+      categoryIcon: '⚽',
+    };
+    realtimeMatchState.match = null as never;
+    realtimeMatchState.lobby = {
+      lobbyId: 'lobby-1',
+      mode: 'ranked',
+      status: 'active',
+      members: [],
+    } as never;
+    realtimeMatchState.draft = {
+      lobbyId: 'lobby-1',
+      categories: [],
+      bans: {},
+      turnUserId: 'self-1',
+      halfOneCategoryId: null,
+    } as never;
+    realtimeMatchState.sessionState = {
+      state: 'IN_ACTIVE_MATCH',
+      activeMatchId: 'pending-match-1',
+      waitingLobbyId: 'lobby-1',
+      queueSearchId: null,
+      openLobbyIds: ['lobby-1'],
+      resolvedAt: '2026-07-07T00:00:00.000Z',
+    } as never;
+
+    const { rerender } = render(<GameStageRouter />);
+    realtimeMatchState.sessionState = {
+      state: 'IDLE',
+      activeMatchId: null,
+      waitingLobbyId: null,
+      queueSearchId: null,
+      openLobbyIds: [],
+      resolvedAt: '2026-07-07T00:00:10.000Z',
+    } as never;
+    rerender(<GameStageRouter />);
+
+    await waitFor(() => expect(gameSessionState.setStage).toHaveBeenCalledWith('matchmaking'));
     expect(analyticsMocks.markRankedQueueIntent).toHaveBeenCalledWith('recovery');
     expect(toastMocks.info).toHaveBeenCalledWith("Opponent didn't show up");
   });

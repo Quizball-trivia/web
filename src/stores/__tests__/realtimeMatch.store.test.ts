@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useRealtimeMatchStore } from '../realtimeMatch.store';
+import { selectDraftCountdownSeconds } from '../realtime-match/selectors';
 import type {
   LobbyState,
   MatchFinalResultsPayload,
@@ -170,7 +171,7 @@ describe('realtimeMatch.store — setMatchState shouldClearQuestion', () => {
   });
 
   describe('draft start resync', () => {
-    it('keeps a ready-gated draft inactive until draft:begin', () => {
+    it('starts a <=15s human countdown after draft:begin instead of rendering forceAtMs', () => {
       const store = useRealtimeMatchStore.getState();
       store.setDraftStart({
         lobbyId: 'lobby-1',
@@ -181,10 +182,11 @@ describe('realtimeMatch.store — setMatchState shouldClearQuestion', () => {
 
       expect(useRealtimeMatchStore.getState().draft?.turnActive).toBe(false);
 
-      store.setDraftBegin({ turnUserId: USER_A, forceAtMs: Date.now() + 12_000 });
+      store.setDraftBegin({ turnUserId: USER_A, forceAtMs: Date.now() + 16_000 });
       const draft = useRealtimeMatchStore.getState().draft;
       expect(draft?.turnActive).toBe(true);
       expect(draft?.forceAtMs).toEqual(expect.any(Number));
+      expect(selectDraftCountdownSeconds({ draft })).toBeLessThanOrEqual(15);
     });
 
     it('activates legacy drafts when turn events arrive without draft:begin', () => {
